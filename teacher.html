@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Lærer – DEN SEJE APP</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: none;
+      margin: 40px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .logout-btn {
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #c62828;
+      color: white;
+      border: none;
+    }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 30px;
+      max-width: 800px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    input {
+      padding: 6px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    #createMessage {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h2>Lærerpanel</h2>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+  </div>
+
+  <div class="box">
+    <h3>Opret elev</h3>
+    <input type="email" id="studentEmail" placeholder="Elevens email">
+    <input type="password" id="studentPassword" placeholder="Midlertidig adgangskode">
+    <button id="createStudentBtn">Opret</button>
+    <div id="createMessage"></div>
+  </div>
+
+  <div class="box">
+    <h3>Dine elever</h3>
+    <div id="studentList">Indlæser...</div>
+  </div>
+
+  <script type="module" src="./js/supabase.js"></script>
+  <script type="module" src="./js/teacher.js"></script>
+
+</body>
+</html>

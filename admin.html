@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Super Admin Dashboard</title>
+  <script type="module" src="js/admin.js"></script>
+
+  <style>
+    body {
+      display: none;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f8f9fa;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .logout-btn {
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #c62828;
+      color: white;
+      border: none;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    h2 {
+      margin-top: 50px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 20px;
+      max-width: 500px;
+      margin-bottom: 40px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    th {
+      background: #efefef;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <h1>Super Admin Dashboard</h1>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+  </div>
+
+  <!-- ========================
+       CREATE TEACHER
+  ======================== -->
+
+  <div class="card">
+    <h2>Opret lærer</h2>
+    <input id="teacherEmail" placeholder="Lærer email" />
+    <input id="teacherPassword" placeholder="Midlertidig kode" />
+    <button id="createTeacherBtn">Opret lærer</button>
+    <p id="createTeacherMessage"></p>
+  </div>
+
+  <!-- ========================
+       STUDENT ATTEMPT STATS
+  ======================== -->
+
+  <h2>Student Attempt Statistics</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Total Attempts</th>
+        <th>Correct</th>
+        <th>Incorrect</th>
+        <th>Retries</th>
+        <th>Total XP</th>
+        <th>Last Attempt</th>
+      </tr>
+    </thead>
+    <tbody id="attemptTableBody"></tbody>
+  </table>
+
+  <!-- ========================
+       QUESTION PERFORMANCE
+  ======================== -->
+
+  <h2>Question Performance</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Question ID</th>
+        <th>Total Attempts</th>
+        <th>Correct</th>
+        <th>Incorrect</th>
+        <th>Retries</th>
+        <th>Success Rate (%)</th>
+        <th>Total XP Generated</th>
+        <th>Health</th>
+      </tr>
+    </thead>
+    <tbody id="questionPerfTableBody"></tbody>
+  </table>
+
+</body>
+</html>
