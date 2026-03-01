@@ -145,14 +145,17 @@ let activeSubmissionToken = null;
 ======================== */
 
 async function fetchProgress() {
+
   const { data, error } = await supabase
     .from("student_progress")
     .select("*")
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    logError("FETCH_PROGRESS_FAILED", error);
-    throw error;
+  if (error || !data) {
+    logError("FETCH_PROGRESS_FAILED_OR_EMPTY", error);
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+    return;
   }
 
   currentProfile = data;
@@ -297,7 +300,6 @@ function renderOptions(question) {
 
   optionsContainer.innerHTML = "";
 
-  // 🔥 NYT: styr rendering via answer_format
   if (question.answer_format === "year") {
 
     const input = document.createElement("input");
