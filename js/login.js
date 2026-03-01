@@ -30,14 +30,21 @@ loginBtn.addEventListener("click", async () => {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session.user.id;
 
-  const { data: profile, error: roleError } = await supabase
+  const { data: profile, error: roleError, status } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
-    .maybeSingle();   // <-- ændret her
+    .maybeSingle();
 
-  if (roleError || !profile) {
+  // 🔒 RLS 406 = ingen profil
+  if (status === 406 || !profile) {
     message.textContent = "Rolle ikke fundet.";
+    await supabase.auth.signOut();
+    return;
+  }
+
+  if (roleError) {
+    message.textContent = "Login fejl.";
     return;
   }
 
