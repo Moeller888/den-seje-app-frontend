@@ -34,7 +34,7 @@ loginBtn.addEventListener("click", async () => {
     .from("profiles")
     .select("role")
     .eq("id", userId)
-    .single();
+    .maybeSingle();   // <-- ændret her
 
   if (roleError || !profile) {
     message.textContent = "Rolle ikke fundet.";
