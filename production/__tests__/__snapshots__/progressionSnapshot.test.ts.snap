@@ -1,0 +1,50 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`progression snapshot > should generate stable plans for known objectives 1`] = `
+[
+  {
+    "objective": "ww2_poland_invasion_start_year",
+    "plan": [
+      {
+        "cognitive": "recall",
+        "objective": "ww2_poland_invasion_start_year",
+      },
+    ],
+  },
+  {
+    "objective": "ww2_poland_invasion_impact",
+    "plan": [
+      {
+        "cognitive": "explain",
+        "objective": "ww2_poland_invasion_impact",
+      },
+      {
+        "cognitive": "analyze",
+        "objective": "ww2_poland_invasion_impact",
+      },
+    ],
+  },
+  {
+    "objective": "ww2_france_fall_role",
+    "plan": [
+      {
+        "cognitive": "recall",
+        "objective": "ww2_france_fall_role",
+      },
+      {
+        "cognitive": "explain",
+        "objective": "ww2_france_fall_role",
+      },
+    ],
+  },
+  {
+    "objective": "ww2_france_fall_turning_point",
+    "plan": [
+      {
+        "cognitive": "analyze",
+        "objective": "ww2_france_fall_turning_point",
+      },
+    ],
+  },
+]
+`;

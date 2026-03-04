@@ -1,0 +1,16 @@
+﻿{
+  "name": "den-seje-app",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  }
+}

@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { selectNextQuestion } from "../_domain/selection.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!
@@ -9,18 +10,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Content-Type": "application/json"
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value))
-}
-
-function chooseDifficulty(effectiveMastery: number) {
-  const roll = Math.random()
-  if (roll < 0.5) return effectiveMastery + 1
-  if (roll < 0.75) return effectiveMastery
-  if (roll < 0.9) return effectiveMastery + 2
-  return effectiveMastery - 1
 }
 
 serve(async (req) => {
@@ -54,7 +43,6 @@ serve(async (req) => {
       })
     }
 
-    // 1️⃣ Open instance
     const { data: openInstance } = await supabase
       .from("question_instances")
       .select("*")
@@ -66,7 +54,7 @@ serve(async (req) => {
 
       const { data: question, error: questionError } = await supabase
         .from("questions")
-        .select("type, question_type, content, answer_format") // ✅ answer_format tilføjet
+        .select("type, question_type, content, answer_format")
         .eq("id", openInstance.question_id)
         .single()
 
@@ -84,11 +72,10 @@ serve(async (req) => {
         question_instance_id: openInstance.id,
         type: question.type,
         content: sanitizedContent,
-        answer_format: question.answer_format // ✅ tilføjet
+        answer_format: question.answer_format
       }), { headers: corsHeaders })
     }
 
-    // 2️⃣ Progress
     const { data: progress } = await supabase
       .from("student_progress")
       .select("mastery_level, mastery_balance")
@@ -102,16 +89,6 @@ serve(async (req) => {
       })
     }
 
-    const effectiveMastery =
-      progress.mastery_level +
-      clamp(progress.mastery_balance ?? 0, -2, 2)
-
-    const targetDifficulty = Math.max(
-      1,
-      chooseDifficulty(effectiveMastery)
-    )
-
-    // 3️⃣ Fetch ONLY auto questions
     const { data: questions, error: questionsError } = await supabase
       .from("questions")
       .select("*")
@@ -132,14 +109,11 @@ serve(async (req) => {
       })
     }
 
-    const sorted = questions
-      .map(q => ({
-        ...q,
-        distance: Math.abs(q.difficulty - targetDifficulty)
-      }))
-      .sort((a, b) => a.distance - b.distance)
-
-    const question = sorted[0]
+    const question = selectNextQuestion({
+      mastery_level: progress.mastery_level,
+      mastery_balance: progress.mastery_balance,
+      questions
+    })
 
     if (!question) {
       return new Response("No suitable question found", {
@@ -172,10 +146,10 @@ serve(async (req) => {
     delete sanitizedContent.correct
 
     return new Response(JSON.stringify({
-        question_instance_id: newInstance.id,
-        type: question.type,
-        content: sanitizedContent,
-        answer_format: question.answer_format // ✅ tilføjet
+      question_instance_id: newInstance.id,
+      type: question.type,
+      content: sanitizedContent,
+      answer_format: question.answer_format
     }), { headers: corsHeaders })
 
   } catch (err: any) {

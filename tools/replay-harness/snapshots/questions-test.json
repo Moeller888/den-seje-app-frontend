@@ -1,0 +1,7 @@
+{
+  "questions": [
+    { "id": "q1", "difficulty": 1 },
+    { "id": "q2", "difficulty": 2 },
+    { "id": "q3", "difficulty": 3 }
+  ]
+}

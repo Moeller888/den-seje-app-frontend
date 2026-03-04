@@ -1,4 +1,5 @@
-﻿import { generateProductionPlan } from "../progressionPolicy";
+﻿import { describe, it, expect } from "vitest";
+import { generateProductionPlan } from "../progressionPolicy";
 
 describe("progression snapshot", () => {
   it("should generate stable plans for known objectives", () => {

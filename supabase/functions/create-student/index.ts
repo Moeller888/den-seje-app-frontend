@@ -27,7 +27,6 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "")
 
-    // 🔐 Hent teacher
     const {
       data: { user },
       error: userError
@@ -64,7 +63,7 @@ serve(async (req) => {
         headers: corsHeaders
       })
 
-    // 🧠 Upsert profile (robust mod gamle rækker)
+    // 🧠 Upsert profile
     const { error: upsertError } = await supabase
       .from("profiles")
       .upsert({
