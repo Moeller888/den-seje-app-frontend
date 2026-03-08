@@ -63,7 +63,10 @@ function setState(newState) {
    AUTH
 ======================== */
 
+let studentId = null;
+
 async function checkAuthAndRole() {
+
   const { data: sessionData } = await supabase.auth.getSession();
 
   if (!sessionData.session) {
@@ -71,12 +74,12 @@ async function checkAuthAndRole() {
     return false;
   }
 
-  const userId = sessionData.session.user.id;
+  studentId = sessionData.session.user.id;
 
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", userId)
+    .eq("id", studentId)
     .maybeSingle();
 
   if (error || !profile || profile.role !== "student") {
@@ -139,6 +142,7 @@ const coinsEl = document.getElementById("coinsValue");
 let currentProfile = null;
 let currentInstanceId = null;
 let activeSubmissionToken = null;
+let questionShownAt = null;
 
 /* ========================
    PROFILE
@@ -167,7 +171,7 @@ function updateProfileUI() {
 
   profileLevelEl.textContent = currentProfile.level;
   xpValueEl.textContent = `${currentProfile.xp} XP`;
-  coinsEl.textContent = `${currentProfile.coins} ðŸª™`;
+  coinsEl.textContent = `${currentProfile.coins} ??`;
 
   const percent =
     (currentProfile.mastery_balance + 3) / 6 * 100;
@@ -210,8 +214,10 @@ async function submitAnswer(userAnswer) {
       "process-event",
       {
         body: {
+          student_id: studentId,
           question_instance_id: currentInstanceId,
-          user_answer: userAnswer
+          answer: userAnswer,
+          question_shown_at: questionShownAt
         }
       }
     );
@@ -245,7 +251,7 @@ async function submitAnswer(userAnswer) {
 
     logError("SUBMIT_FAILED", err);
 
-    feedback.textContent = "NetvÃ¦rksfejl. PrÃ¸v igen.";
+    feedback.textContent = "Netværksfejl. Prøv igen.";
     feedback.style.color = "orange";
 
     lockAllButtons(false);
@@ -376,6 +382,8 @@ async function loadAndRenderQuestion() {
   questionElement.textContent = question.content.question;
   feedback.textContent = "";
   feedback.style.color = "black";
+
+  questionShownAt = Date.now();
 
   renderOptions(question);
 
