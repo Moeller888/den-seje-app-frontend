@@ -117,7 +117,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       .maybeSingle();
 
 
-    currentProfile = data;`n    currentProfile = data;`n    logEvent("PROGRESS_FETCHED", { xp: data?.xp });
+    currentProfile = data;`n    logEvent("PROGRESS_FETCHED", { xp: data?.xp });
   }
 
   function updateProfileUI() {
