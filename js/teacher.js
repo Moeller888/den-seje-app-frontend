@@ -233,7 +233,7 @@ async function fetchReviewQueue() {
     const question = item.questions?.content;
 
     const criteriaList = (question.criteria || [])
-      .map(c => <li>? </li>)
+      .map(c => `<li>${c}</li>`)
       .join('');
 
     const block = document.createElement('div');
