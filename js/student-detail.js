@@ -35,7 +35,7 @@ if (!teacherId) throw new Error("Unauthorized");
 document.body.style.display = "block";
 
 // ========================
-// GET STUDENT ID FROM URL
+// GET STUDENT ID
 // ========================
 
 const params = new URLSearchParams(window.location.search);
@@ -52,31 +52,23 @@ if (!studentId) {
 
 async function fetchStudent() {
 
-  const { data: overview, error: overviewError } = await supabase
+  const { data: overview } = await supabase
     .from("teacher_student_overview")
     .select("*")
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
     .single();
 
-  if (overviewError || !overview) {
-    document.getElementById("studentInfo").textContent = "Adgang nÃ¦gtet.";
-    return;
-  }
-
-  const { data: mastery, error: masteryError } = await supabase
+  const { data: mastery } = await supabase
     .from("student_mastery_status")
     .select("*")
     .eq("student_id", studentId)
     .single();
 
-  if (masteryError || !mastery) {
-    document.getElementById("studentInfo").textContent = "Kunne ikke hente mastery-status.";
-    return;
-  }
-
   renderStudent(overview, mastery);
+
   await fetchEvents();
+  await fetchAnswersForReview();
 }
 
 // ========================
@@ -85,44 +77,47 @@ async function fetchStudent() {
 
 async function fetchEvents() {
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("student_events")
     .select("type, created_at")
     .eq("student_id", studentId)
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (error) {
-    document.getElementById("eventList").textContent = "Kunne ikke hente events.";
-    return;
-  }
-
   renderEvents(data);
 }
 
 // ========================
-// RENDER
+// FETCH ANSWERS FOR REVIEW
+// ========================
+
+async function fetchAnswersForReview() {
+
+  const { data } = await supabase
+    .from("student_answers")
+    .select(`
+      id,
+      answer_text,
+      ai_feedback,
+      status,
+      questions (
+        content
+      )
+    `)
+    .eq("student_id", studentId)
+    .eq("status", "pending")
+    .limit(5);
+
+  renderReview(data);
+}
+
+// ========================
+// RENDER STUDENT
 // ========================
 
 function renderStudent(student, mastery) {
 
   const container = document.getElementById("studentInfo");
-
-  const balance = mastery.mastery_balance;
-
-  let momentumColor = "#666";
-  let momentumLabel = "Stabil";
-
-  if (balance > 0) {
-    momentumColor = "green";
-    momentumLabel = "PÃ¥ vej op";
-  } else if (balance < 0) {
-    momentumColor = "red";
-    momentumLabel = "PÃ¥ vej ned";
-  }
-
-  const momentumDisplay =
-    balance > 0 ? `+${balance}` : balance;
 
   container.innerHTML = `
     <p><strong>Email:</strong> ${student.email}</p>
@@ -132,31 +127,19 @@ function renderStudent(student, mastery) {
     <hr>
 
     <p><strong>Mastery level:</strong> ${mastery.mastery_level}</p>
-
-    <p>
-      <strong>Momentum:</strong>
-      <span style="color: ${momentumColor}; font-weight: bold;">
-        ${momentumDisplay} (${momentumLabel})
-      </span>
-    </p>
-
-    <p><strong>Til nÃ¦ste niveau:</strong> ${mastery.distance_up} korrekt(e) svar</p>
-    <p><strong>Til niveau ned:</strong> ${mastery.distance_down} forkert(e) svar</p>
-
     <p><strong>Korrekt svarprocent:</strong> ${mastery.correct_ratio}%</p>
     <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers}</p>
-    <p><strong>ForsÃ¸g i alt:</strong> ${mastery.total_attempts}</p>
+    <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts}</p>
   `;
 }
 
+// ========================
+// RENDER EVENTS
+// ========================
+
 function renderEvents(events) {
 
-  const container = document.getElementById("eventList");
-
-  if (!events || events.length === 0) {
-    container.textContent = "Ingen events endnu.";
-    return;
-  }
+  const container = document.getElementById("reviewPanel");
 
   const table = document.createElement("table");
 
@@ -165,6 +148,7 @@ function renderEvents(events) {
     <th>Type</th>
     <th>Tidspunkt</th>
   `;
+
   table.appendChild(header);
 
   events.forEach(event => {
@@ -182,5 +166,68 @@ function renderEvents(events) {
   container.innerHTML = "";
   container.appendChild(table);
 }
+
+// ========================
+// RENDER REVIEW PANEL
+// ========================
+
+function renderReview(answers) {
+
+  const container = document.getElementById("reviewPanel");
+
+  answers.forEach(a => {
+
+    const box = document.createElement("div");
+    box.className = "box";
+
+    const question = a.questions?.content?.question ?? "Ukendt spørgsmål";
+
+    box.innerHTML = `
+      <h3>SPØRGSMÅL</h3>
+      <p>${question}</p>
+
+      <h3>ELEVENS SVAR</h3>
+      <p>${a.answer_text}</p>
+
+      <h3>FACIT (AI)</h3>
+      <p>${a.ai_feedback ?? "Ingen feedback"}</p>
+
+      <button data-id="${a.id}" class="approve">GODKEND</button>
+      <button data-id="${a.id}" class="reject">AFVIS</button>
+    `;
+
+    container.appendChild(box);
+  });
+
+  document.querySelectorAll(".approve").forEach(btn => {
+    btn.onclick = () => reviewAnswer(btn.dataset.id, true);
+  });
+
+  document.querySelectorAll(".reject").forEach(btn => {
+    btn.onclick = () => reviewAnswer(btn.dataset.id, false);
+  });
+}
+
+// ========================
+// REVIEW ACTION
+// ========================
+
+async function reviewAnswer(answerId, approve) {
+
+  await supabase
+    .from("student_answers")
+    .update({
+      status: approve ? "approved" : "rejected",
+      reviewed_at: new Date(),
+      teacher_id: teacherId
+    })
+    .eq("id", answerId);
+
+  location.reload();
+}
+
+// ========================
+// INIT
+// ========================
 
 await fetchStudent();

@@ -23,6 +23,10 @@ export function validateQuestion(input: unknown): ValidationResult {
   const structural = questionSchema.safeParse(input);
 
   if (!structural.success) {
+
+    console.error("ZOD STRUCTURAL ERRORS:");
+    console.error(JSON.stringify(structural.error.format(), null, 2));
+
     issues.push({
       type: "structural",
       severity: "error",
@@ -37,10 +41,7 @@ export function validateQuestion(input: unknown): ValidationResult {
 
   const data = structural.data;
 
-  // Semantic validation layer
   semanticValidator(data, issues);
-
-  // Constraint validation layer
   constraintValidator(data, issues);
 
   const hasErrors = issues.some(i => i.severity === "error");

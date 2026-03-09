@@ -2,7 +2,7 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <title>Elev detaljer – DEN SEJE APP</title>
+  <title>Elev detaljer � DEN SEJE APP</title>
 
   <style>
     body {
@@ -33,28 +33,45 @@
     th {
       background-color: #f4f4f4;
     }
+    
 
     button {
       padding: 8px 14px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-right: 10px;
+    }
+
+    .review-question {
+      margin-top: 15px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+    }
+
+    .review-question h4 {
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
 
   <button onclick="window.location.href='teacher.html'">
-    ← Tilbage
+    ? Tilbage
   </button>
 
   <div class="box">
     <h3>Elevinfo</h3>
-    <div id="studentInfo">Indlæser...</div>
+    <div id="studentInfo">Indl�ser...</div>
+  </div>
+
+  <div class="box">
+    <h3>Sp�rgsm�l til godkendelse</h3>
+    <div id="reviewPanel">Ingen svar til gennemgang.</div>
   </div>
 
   <div class="box">
     <h3>Seneste events</h3>
-    <div id="eventList">Indlæser...</div>
+    <div id="eventList">Indl�ser...</div>
   </div>
 
   <script type="module" src="./js/supabase.js"></script>

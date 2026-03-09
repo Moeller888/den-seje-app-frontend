@@ -1,15 +1,9 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { selectNextQuestion } from "../_domain/selection.ts"
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/json"
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 
 serve(async (req) => {
@@ -20,143 +14,220 @@ serve(async (req) => {
 
   try {
 
-    const authHeader = req.headers.get("Authorization")
-    if (!authHeader) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders })
-    }
-
     const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: { Authorization: req.headers.get("Authorization")! }
+        }
+      }
     )
 
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("Unauthorized")
 
-    if (userError || !user) {
-      return new Response("Invalid user", {
-        status: 401,
-        headers: corsHeaders
-      })
-    }
+    const student_id = user.id
 
-    const { data: openInstance } = await supabase
+    /* open instance */
+
+    const { data: existing } = await supabase
       .from("question_instances")
-      .select("*")
-      .eq("student_id", user.id)
+      .select(`
+        id,
+        question_id,
+        questions (
+          content,
+          answer_format
+        )
+      `)
+      .eq("student_id", student_id)
       .eq("answered", false)
       .maybeSingle()
 
-    if (openInstance) {
+    if (existing) {
 
-      const { data: question, error: questionError } = await supabase
-        .from("questions")
-        .select("type, question_type, content, answer_format")
-        .eq("id", openInstance.question_id)
-        .single()
+      const q = existing.questions
 
-      if (questionError || !question) {
-        return new Response("Question not found", {
-          status: 500,
-          headers: corsHeaders
-        })
-      }
-
-      const sanitizedContent = { ...question.content }
-      delete sanitizedContent.correct
-
-      return new Response(JSON.stringify({
-        question_instance_id: openInstance.id,
-        type: question.type,
-        content: sanitizedContent,
-        answer_format: question.answer_format
-      }), { headers: corsHeaders })
+      return new Response(
+        JSON.stringify({
+          question_instance_id: existing.id,
+          type: "open",
+          content: { question: q.content.question },
+          answer_format: q.answer_format
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200
+        }
+      )
     }
+
+    /* progress */
 
     const { data: progress } = await supabase
       .from("student_progress")
-      .select("mastery_level, mastery_balance")
-      .eq("student_id", user.id)
+      .select("*")
+      .eq("student_id", student_id)
       .single()
 
-    if (!progress) {
-      return new Response("Progress not found", {
-        status: 400,
-        headers: corsHeaders
+    const mastery = progress.mastery_level
+
+    /* cooldown */
+
+    const { data: recentEvents } = await supabase
+      .from("student_events")
+      .select("payload")
+      .eq("student_id", student_id)
+      .eq("type", "QUESTION_SHOWN")
+      .order("created_at", { ascending: false })
+      .limit(10)
+
+    const recentIds = recentEvents
+      ? recentEvents.map(e => e.payload.question_id)
+      : []
+
+    /* due reviews */
+
+    const { data: dueReviews } = await supabase
+      .from("question_instances")
+      .select(`
+        id,
+        question_id,
+        questions (
+          id,
+          content,
+          difficulty,
+          answer_format
+        )
+      `)
+      .eq("student_id", student_id)
+      .lte("next_review_at", new Date().toISOString())
+      .lt("incorrect_attempts", 3)
+      .order("next_review_at", { ascending: true })
+      .limit(20)
+
+    if (dueReviews && dueReviews.length > 0) {
+
+      const chosen = dueReviews[Math.floor(Math.random() * dueReviews.length)]
+
+      await supabase.from("student_events").insert({
+        student_id,
+        type: "QUESTION_SHOWN",
+        payload: {
+          question_instance_id: chosen.id,
+          question_id: chosen.question_id,
+          difficulty: chosen.questions.difficulty,
+          mastery_snapshot: mastery
+        }
       })
+
+      return new Response(
+        JSON.stringify({
+          question_instance_id: chosen.id,
+          type: "open",
+          content: { question: chosen.questions.content.question },
+          answer_format: chosen.questions.answer_format
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200
+        }
+      )
     }
 
-    const { data: questions, error: questionsError } = await supabase
+    /* candidate questions */
+
+    let query = supabase
       .from("questions")
       .select("*")
+      .lte("difficulty", mastery)
       .eq("is_active", true)
-      .eq("question_type", "auto")
 
-    if (questionsError) {
-      return new Response(questionsError.message, {
-        status: 500,
-        headers: corsHeaders
-      })
+    if (recentIds.length > 0) {
+      query = query.not("id", "in", `(${recentIds.join(",")})`)
     }
 
-    if (!questions || questions.length === 0) {
-      return new Response("No auto-evaluable questions", {
-        status: 404,
-        headers: corsHeaders
-      })
+    const { data: candidates } = await query.limit(200)
+
+    if (!candidates || candidates.length === 0) {
+      throw new Error("No questions available")
     }
 
-    const question = selectNextQuestion({
-      mastery_level: progress.mastery_level,
-      mastery_balance: progress.mastery_balance,
-      questions
+    /* fetch exposure counts */
+
+    const { data: seen } = await supabase
+      .from("question_instances")
+      .select("question_id")
+
+    const counts = {}
+
+    if (seen) {
+      for (const row of seen) {
+        counts[row.question_id] = (counts[row.question_id] || 0) + 1
+      }
+    }
+
+    /* sort by least seen */
+
+    candidates.sort((a, b) => {
+      const aSeen = counts[a.id] || 0
+      const bSeen = counts[b.id] || 0
+      return aSeen - bSeen
     })
 
-    if (!question) {
-      return new Response("No suitable question found", {
-        status: 500,
-        headers: corsHeaders
-      })
-    }
+    const pool = candidates.slice(0, 20)
 
-    const { data: newInstance, error: insertError } = await supabase
+    const question = pool[Math.floor(Math.random() * pool.length)]
+
+    const { data: instance } = await supabase
       .from("question_instances")
       .insert({
-        student_id: user.id,
+        student_id,
         question_id: question.id,
         correct_answer: question.content.correct,
         difficulty_at_time: question.difficulty,
-        mastery_snapshot: progress.mastery_level,
-        answered: false
+        mastery_snapshot: mastery,
+        answered: false,
+        next_review_at: new Date().toISOString(),
+        incorrect_attempts: 0
       })
       .select()
       .single()
 
-    if (insertError || !newInstance) {
-      return new Response(insertError?.message ?? "Insert failed", {
-        status: 500,
-        headers: corsHeaders
-      })
-    }
-
-    const sanitizedContent = { ...question.content }
-    delete sanitizedContent.correct
-
-    return new Response(JSON.stringify({
-      question_instance_id: newInstance.id,
-      type: question.type,
-      content: sanitizedContent,
-      answer_format: question.answer_format
-    }), { headers: corsHeaders })
-
-  } catch (err: any) {
-    return new Response(err?.message ?? "Server error", {
-      status: 500,
-      headers: corsHeaders
+    await supabase.from("student_events").insert({
+      student_id,
+      type: "QUESTION_SHOWN",
+      payload: {
+        question_instance_id: instance.id,
+        question_id: question.id,
+        difficulty: question.difficulty,
+        mastery_snapshot: mastery
+      }
     })
+
+    return new Response(
+      JSON.stringify({
+        question_instance_id: instance.id,
+        type: "open",
+        content: { question: question.content.question },
+        answer_format: question.answer_format
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200
+      }
+    )
+
+  } catch (err) {
+
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500
+      }
+    )
   }
 
 })

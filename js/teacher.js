@@ -206,3 +206,105 @@ const test = async () => {
 };
 
 test();
+async function fetchReviewQueue() {
+
+  const { data, error } = await supabase
+    .from('student_answers')
+    .select('id, answer_text, status, question_id, questions(content)')
+    .eq('status', 'pending')
+    .limit(10);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const container = document.getElementById('reviewPanel');
+
+  if (!data || data.length === 0) {
+    container.innerHTML = 'Ingen besvarelser til review.';
+    return;
+  }
+
+  container.innerHTML = '';
+
+  data.forEach(item => {
+
+    const question = item.questions?.content;
+
+    const criteriaList = (question.criteria || [])
+      .map(c => <li>? </li>)
+      .join('');
+
+    const block = document.createElement('div');
+    block.style.border = '1px solid #ccc';
+    block.style.padding = '15px';
+    block.style.marginBottom = '15px';
+
+    block.innerHTML = 
+      <strong>SPØRGSMÅL</strong><br>
+      <br><br>
+
+      <strong>ELEVENS SVAR</strong><br>
+      <br><br>
+
+      <strong>FACIT</strong><br>
+      <br><br>
+
+      <strong>KRITERIER</strong>
+      <ul>
+        
+      </ul>
+
+      <button onclick="approveAnswer('')">GODKEND</button>
+      <button onclick="rejectAnswer('')">AFVIS</button>
+    ;
+
+    container.appendChild(block);
+
+  });
+}
+
+fetchReviewQueue();
+
+
+async function approveAnswer(answerId) {
+
+  const { error } = await supabase
+    .from('student_answers')
+    .update({
+      status: 'approved',
+      reviewed_at: new Date().toISOString(),
+      teacher_id: teacherId
+    })
+    .eq('id', answerId);
+
+  if (error) {
+    console.error(error);
+    alert('Fejl ved godkendelse');
+    return;
+  }
+
+  fetchReviewQueue();
+}
+
+async function rejectAnswer(answerId) {
+
+  const { error } = await supabase
+    .from('student_answers')
+    .update({
+      status: 'rejected',
+      reviewed_at: new Date().toISOString(),
+      teacher_id: teacherId
+    })
+    .eq('id', answerId);
+
+  if (error) {
+    console.error(error);
+    alert('Fejl ved afvisning');
+    return;
+  }
+
+  fetchReviewQueue();
+}
+

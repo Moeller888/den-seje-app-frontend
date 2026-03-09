@@ -1,9 +1,9 @@
-﻿type CognitiveLevel = "recall" | "explain" | "apply" | "analyze";
+type CognitiveLevel = "recall" | "explain" | "apply" | "analyze";
 type ContentType = "number_input" | "text_input";
 type AnswerFormat = "year" | "text";
 
 export function normalizeAIContract(
-  aiOutput: { prompt: string; answer: string },
+  aiOutput: { prompt: string; answer: string; facit?: string; criteria?: string[] },
   learningObjective: string,
   index: number,
   difficulty: number,
@@ -36,7 +36,9 @@ export function normalizeAIContract(
       context: null,
       unit: null,
       min: null,
-      max: null
+      max: null,
+      facit: aiOutput.facit ?? null,
+      criteria: aiOutput.criteria ?? null
     };
 
     answer = {
@@ -44,7 +46,8 @@ export function normalizeAIContract(
       value: year,
       tolerance: {
         plus_minus: 0
-      }
+      },
+      normalization: null
     };
 
   } else if (contentType === "text_input") {
@@ -54,12 +57,19 @@ export function normalizeAIContract(
       prompt: aiOutput.prompt,
       context: null,
       placeholder: null,
-      max_length: 300
+      max_length: 300,
+      facit: aiOutput.facit ?? null,
+      criteria: aiOutput.criteria ?? null
     };
 
     answer = {
       format: "text",
-      value: aiOutput.answer
+      value: aiOutput.answer,
+      tolerance: null,
+      normalization: {
+        case_insensitive: true,
+        trim: true
+      }
     };
 
   } else {
@@ -82,7 +92,6 @@ export function normalizeAIContract(
     },
     content,
     answer,
-    constraints: undefined,
     quality: {
       author: "ai",
       review_required: true

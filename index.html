@@ -1,141 +1,125 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8">
-  <title>DEN SEJE APP</title>
+<meta charset="UTF-8">
+<title>DEN SEJE APP</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: none;
-      margin: 40px;
-    }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  display: none;
+  margin: 40px;
+}
 
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-    .logout-btn {
-      padding: 8px 14px;
-      cursor: pointer;
-      background: #c62828;
-      color: white;
-      border: none;
-    }
+.logout-btn {
+  padding: 8px 14px;
+  cursor: pointer;
+  background: #c62828;
+  color: white;
+  border: none;
+}
 
-    #profileBox {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 20px;
-      width: 320px;
-    }
+#profileBox {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 20px;
+  width: 320px;
+}
 
-    #xpBarContainer {
-      width: 100%;
-      height: 20px;
-      background-color: #eee;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 5px;
-    }
+#xpBarContainer {
+  width: 100%;
+  height: 20px;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+}
 
-    #xpBar {
-      height: 100%;
-      width: 0%;
-      background-color: #4caf50;
-      transition: width 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    }
+#xpBar {
+  height: 100%;
+  width: 0%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
 
-    #coinsValue {
-      display: inline-block;
-      transition: transform 0.3s ease;
-    }
+#coinsValue {
+  display: inline-block;
+}
 
-    #miniLevelBadge {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #222;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-weight: bold;
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-      z-index: 500;
-    }
+#levelUpOverlay {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background:rgba(0,0,0,0.85);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  font-size:48px;
+  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s ease;
+}
 
-    #miniLevelBadge.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
+#levelUpOverlay.show {
+  opacity:1;
+  pointer-events:auto;
+}
 
-    #levelUpOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 48px;
-      flex-direction: column;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 999;
-    }
-
-    #levelUpOverlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #levelUpOverlay small {
-      font-size: 24px;
-      margin-top: 10px;
-      color: gold;
-    }
-  </style>
+#levelUpOverlay small {
+  font-size:24px;
+  margin-top:10px;
+  color:gold;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="topbar">
-    <h1>DEN SEJE APP</h1>
-    <button id="logoutBtn" class="logout-btn">Logout</button>
-  </div>
+<div class="topbar">
+<h1>DEN SEJE APP</h1>
+<button id="logoutBtn" class="logout-btn">Logout</button>
+</div>
 
-  <div id="profileBox">
-    <p><strong>Profil-level:</strong> <span id="profileLevel"></span></p>
-    <p><strong>XP:</strong> <span id="xpValue"></span></p>
-    <p><strong>Coins:</strong> <span id="coinsValue"></span></p>
+<div id="profileBox">
 
-    <div id="xpBarContainer">
-      <div id="xpBar"></div>
-    </div>
-  </div>
+<p><strong>Profil-level:</strong> <span id="profileLevel"></span></p>
 
-  <div id="miniLevelBadge"></div>
+<p><strong>XP:</strong> <span id="xpValue"></span></p>
 
-  <h2 id="question"></h2>
-  <div id="options"></div>
-  <p id="feedback"></p>
+<p>
+<strong>Coins:</strong>
+<span id="coinsValue"></span> &#x1FA99;
+</p>
 
-  <div id="levelUpOverlay">
-    <div id="newLevelText"></div>
-    <small>+300 🪙</small>
-  </div>
+<div id="xpBarContainer">
+<div id="xpBar"></div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="./js/supabase.js"></script>
-  <script type="module" src="./js/app.js"></script>
+</div>
+
+<h2 id="question"></h2>
+<div id="options"></div>
+<p id="feedback"></p>
+
+<div id="levelUpOverlay">
+<div id="newLevelText"></div>
+<small>+300 &#x1FA99;</small>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="./js/supabase.js"></script>
+<script type="module" src="./js/app.js?v=4"></script>
 
 </body>
 </html>

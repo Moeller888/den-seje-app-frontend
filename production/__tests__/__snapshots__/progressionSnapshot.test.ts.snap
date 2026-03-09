@@ -1,50 +1,115 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+export const snapshot = {};
 
-exports[`progression snapshot > should generate stable plans for known objectives 1`] = `
-[
-  {
-    "objective": "ww2_poland_invasion_start_year",
-    "plan": [
-      {
-        "cognitive": "recall",
-        "objective": "ww2_poland_invasion_start_year",
-      },
-    ],
+snapshot[`progression snapshot � stable plans for known objectives 1`] = `
+{
+  plans: [
+    {
+      objective: "ww2_poland_invasion_start_year",
+      plan: [
+        {
+          cognitive: "recall",
+          objective: "ww2_poland_invasion_start_year",
+        },
+      ],
+    },
+    {
+      objective: "ww2_poland_invasion_impact",
+      plan: [
+        {
+          cognitive: "explain",
+          objective: "ww2_poland_invasion_impact",
+        },
+        {
+          cognitive: "analyze",
+          objective: "ww2_poland_invasion_impact",
+        },
+      ],
+    },
+    {
+      objective: "ww2_france_fall_role",
+      plan: [
+        {
+          cognitive: "recall",
+          objective: "ww2_france_fall_role",
+        },
+        {
+          cognitive: "explain",
+          objective: "ww2_france_fall_role",
+        },
+      ],
+    },
+    {
+      objective: "ww2_france_fall_turning_point",
+      plan: [
+        {
+          cognitive: "analyze",
+          objective: "ww2_france_fall_turning_point",
+        },
+      ],
+    },
+  ],
+  suffixRegistry: {
+    _alliance_status: {
+      cognitive: [
+        "recall",
+        "explain",
+      ],
+      type: "relation",
+    },
+    _consequence: {
+      cognitive: [
+        "explain",
+        "analyze",
+      ],
+      type: "causal",
+    },
+    _end_year: {
+      cognitive: [
+        "recall",
+      ],
+      type: "temporal_fact",
+    },
+    _impact: {
+      cognitive: [
+        "explain",
+        "analyze",
+      ],
+      type: "causal",
+    },
+    _outcome: {
+      cognitive: [
+        "recall",
+        "explain",
+      ],
+      type: "result",
+    },
+    _role: {
+      cognitive: [
+        "recall",
+        "explain",
+      ],
+      type: "actor_role",
+    },
+    _start_year: {
+      cognitive: [
+        "recall",
+      ],
+      type: "temporal_fact",
+    },
+    _strategy: {
+      cognitive: [
+        "explain",
+        "analyze",
+      ],
+      type: "strategic",
+    },
+    _turning_point: {
+      cognitive: [
+        "analyze",
+      ],
+      type: "analytical",
+    },
   },
-  {
-    "objective": "ww2_poland_invasion_impact",
-    "plan": [
-      {
-        "cognitive": "explain",
-        "objective": "ww2_poland_invasion_impact",
-      },
-      {
-        "cognitive": "analyze",
-        "objective": "ww2_poland_invasion_impact",
-      },
-    ],
-  },
-  {
-    "objective": "ww2_france_fall_role",
-    "plan": [
-      {
-        "cognitive": "recall",
-        "objective": "ww2_france_fall_role",
-      },
-      {
-        "cognitive": "explain",
-        "objective": "ww2_france_fall_role",
-      },
-    ],
-  },
-  {
-    "objective": "ww2_france_fall_turning_point",
-    "plan": [
-      {
-        "cognitive": "analyze",
-        "objective": "ww2_france_fall_turning_point",
-      },
-    ],
-  },
-]
+  taxonomyVersion: "1.0.0",
+}
 `;

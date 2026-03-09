@@ -1,17 +1,17 @@
-ï»¿ /**
+ /**
   * progressionPolicy.ts
   *
   * Deterministisk production-plan generator.
   *
   * REGLER:
-  * - LÃ¦ser global SUFFIX_REGISTRY
+  * - Læser global SUFFIX_REGISTRY
   * - Ekstraherer suffix deterministisk
   * - Ukendt suffix => throw (fail fast)
   * - Ingen implicit defaults
   * - Stabil sortering af cognitive levels
   */
 
- import { SUFFIX_REGISTRY, type Suffix } from "./objectiveTaxonomy";
+ import { SUFFIX_REGISTRY, type Suffix } from "./objectiveTaxonomy.ts";
 
  export type CognitiveLevel = "recall" | "explain" | "analyze";
 
@@ -26,24 +26,25 @@
   * Fail-fast hvis ingen match.
   */
  function extractSuffix(objective: string): Suffix {
-   const knownSuffixes = Object.keys(SUFFIX_REGISTRY) as Suffix[];
+  const knownSuffixes = (Object.keys(SUFFIX_REGISTRY) as Suffix[])
+    .sort((a, b) => b.length - a.length); // Longest suffix first
 
-   const match = knownSuffixes.find((suffix) =>
-     objective.endsWith(suffix)
-   );
+  const match = knownSuffixes.find((suffix) =>
+    objective.endsWith(suffix)
+  );
 
-   if (!match) {
-     throw new Error(
-       "[progressionPolicy] Unknown suffix in objective: " + objective
-     );
-   }
+  if (!match) {
+    throw new Error(
+      "[progressionPolicy] Unknown suffix in objective: " + objective
+    );
+  }
 
-   return match;
- }
+  return match;
+}
 
  /**
   * Stabil sorteringsorden for cognitive levels.
-  * Forhindrer snapshot-stÃ¸j.
+  * Forhindrer snapshot-støj.
   */
  const COGNITIVE_ORDER: Record<CognitiveLevel, number> = {
    recall: 0,
@@ -52,7 +53,7 @@
  };
 
  /**
-  * GenerÃ©r deterministisk production plan
+  * Generér deterministisk production plan
   */
  export function generateProductionPlan(
    objective: string
@@ -62,7 +63,7 @@
    const registryEntry = SUFFIX_REGISTRY[suffix];
 
    if (!registryEntry) {
-     // Ekstra sikkerhed (bÃ¸r aldrig ske pga. extractSuffix)
+     // Ekstra sikkerhed (bør aldrig ske pga. extractSuffix)
      throw new Error(
        "[progressionPolicy] Registry lookup failed for suffix: " + suffix
      );
@@ -77,3 +78,4 @@
      cognitive: level,
    }));
  }
+
