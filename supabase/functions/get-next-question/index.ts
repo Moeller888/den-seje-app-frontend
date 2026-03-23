@@ -42,8 +42,7 @@ serve(async (req) => {
         )
       `)
       .eq("student_id", student_id)
-      .eq("answered", false)
-      .limit(1).single()
+      .eq("answered", false).order("created_at", { ascending: false }).limit(1)
 
     if (existing) {
 
@@ -231,3 +230,5 @@ serve(async (req) => {
   }
 
 })
+
+
