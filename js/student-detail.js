@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+ï»¿import { supabase } from "./supabase.js";
 
 // ========================
 // AUTH CHECK
@@ -129,7 +129,7 @@ function renderStudent(student, mastery) {
     <p><strong>Mastery level:</strong> ${mastery.mastery_level}</p>
     <p><strong>Korrekt svarprocent:</strong> ${mastery.correct_ratio}%</p>
     <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers}</p>
-    <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts}</p>
+    <p><strong>ForsÃ¸g i alt:</strong> ${mastery.total_attempts}</p>
   `;
 }
 
@@ -180,10 +180,10 @@ function renderReview(answers) {
     const box = document.createElement("div");
     box.className = "box";
 
-    const question = a.questions?.content?.question ?? "Ukendt spørgsmål";
+    const question = a.questions?.content?.question ?? "Ukendt spÃ¸rgsmÃ¥l";
 
     box.innerHTML = `
-      <h3>SPØRGSMÅL</h3>
+      <h3>SPÃ˜RGSMÃ…L</h3>
       <p>${question}</p>
 
       <h3>ELEVENS SVAR</h3>

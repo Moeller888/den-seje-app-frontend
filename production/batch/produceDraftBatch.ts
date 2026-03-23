@@ -2,6 +2,12 @@ import { qualityGate } from "../qualityGate.ts";
 import { normalizeAIContract } from "../../tools/production/normalizeAIContract.ts";
 import { isSemanticallyDuplicate } from "../dedupe/semanticDuplicateCheck.ts";
 import type { QuestionRepository } from "../repository/questionRepository.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function produceDraftBatch(
   objectives: string[],
@@ -9,7 +15,13 @@ export async function produceDraftBatch(
   generateQuestion: (input: { objective: string; cognitive: string }) => Promise<any>
 ) {
 
-  const existingPrompts: string[] = [];
+  const { data } = await supabase
+    .from("questions")
+    .select("content")
+    .limit(200);
+
+  const existingPrompts: string[] =
+    data?.map((q: any) => q.content?.question).filter(Boolean) ?? [];
 
   let produced = 0;
   let duplicates = 0;
@@ -36,13 +48,13 @@ export async function produceDraftBatch(
 
     try {
       contract = normalizeAIContract(
-        ai, // aiOutput
-        objective,                                // learningObjective
-        0,                                        // index
-        1,                                        // difficulty
-        cognitive as any,                         // cognitiveLevel
-        "number_input",                           // contentType
-        "year"                                    // answerFormat
+        ai,
+        objective,
+        0,
+        1,
+        cognitive as any,
+        "number_input",
+        "year"
       );
     } catch (err) {
       console.error("Normalization failed:", err);

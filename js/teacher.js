@@ -213,6 +213,7 @@ async function fetchReviewQueue() {
     .select('id, answer_text, status, question_id, questions(content)')
     .eq('status', 'pending')
     .limit(10);
+  console.log('REVIEW DATA:', data);
 
   if (error) {
     console.error(error);
@@ -241,7 +242,7 @@ async function fetchReviewQueue() {
     block.style.padding = '15px';
     block.style.marginBottom = '15px';
 
-    block.innerHTML = 
+    block.innerHTML = ` 
       <strong>SPØRGSMÅL</strong><br>
       <br><br>
 
@@ -257,7 +258,7 @@ async function fetchReviewQueue() {
       </ul>
 
       <button onclick="approveAnswer('')">GODKEND</button>
-      <button onclick="rejectAnswer('')">AFVIS</button>
+      <button onclick="rejectAnswer('')">AFVIS</button>`;
     ;
 
     container.appendChild(block);

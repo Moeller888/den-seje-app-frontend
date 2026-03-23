@@ -136,6 +136,32 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   async function submitAnswer(userAnswer) {
 
+  if (isSubmitting) {
+    return;
+  }
+
+  isSubmitting = true;
+
+  if (isSubmitting) {
+    return;
+  }
+
+  isSubmitting = true;
+
+  if (isSubmitting) {
+    return;
+  }
+
+  isSubmitting = true;
+
+  if (uiState === UI_STATES.SUBMITTING_ANSWER) {
+    return;
+  }
+
+  if (activeSubmissionToken !== null) {
+    return;
+  }
+
     setState(UI_STATES.SUBMITTING_ANSWER);
 
     feedback.textContent = "Indsender...";
@@ -174,13 +200,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     } catch (err) {
 
-      logError("SUBMIT_FAILED", err);
+  logError("SUBMIT_FAILED", err);
 
-      feedback.textContent = "Netværksfejl.";
-      feedback.style.color = "orange";
+  feedback.textContent = "Allerede besvaret.";
+  feedback.style.color = "gray";
 
-      setState(UI_STATES.AWAITING_ANSWER);
-    }
+  setState(UI_STATES.TRANSITIONING);
+
+  setTimeout(() => {
+    loadAndRenderQuestion();
+  }, 200);
+
+  return;
+}, 200);
+
+  return;
+}
   }
 
   async function getNextQuestion() {
@@ -196,7 +231,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     currentInstanceId = data.question_instance_id;
 
-    return data;
+    console.log("INSTANCE_ID:", data.question_instance_id); return data;
   }
 
   function renderOptions(question) {
@@ -261,7 +296,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     renderOptions(question);
 
-    setState(UI_STATES.AWAITING_ANSWER);
+    setState(UI_STATES.TRANSITIONING);
   }
 
   await fetchProgress();
@@ -269,3 +304,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadAndRenderQuestion();
 
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+console.log('DEBUG_INSTANCE_HOOK_LOADED');

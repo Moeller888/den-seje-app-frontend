@@ -43,7 +43,7 @@ serve(async (req) => {
       `)
       .eq("student_id", student_id)
       .eq("answered", false)
-      .maybeSingle()
+      .limit(1).single()
 
     if (existing) {
 
@@ -111,7 +111,7 @@ serve(async (req) => {
 
       const chosen = dueReviews[Math.floor(Math.random() * dueReviews.length)]
 
-      await supabase.from("student_events").insert({
+      await supabase.from("student_events").upsert({
         student_id,
         type: "QUESTION_SHOWN",
         payload: {
@@ -141,7 +141,7 @@ serve(async (req) => {
     let query = supabase
       .from("questions")
       .select("*")
-      .lte("difficulty", mastery)
+      .gte("difficulty", mastery - 2).gte("difficulty", Math.max(1, mastery - 1)).lte("difficulty", mastery + 1)
       .eq("is_active", true)
 
     if (recentIds.length > 0) {
@@ -158,7 +158,7 @@ serve(async (req) => {
 
     const { data: seen } = await supabase
       .from("question_instances")
-      .select("question_id")
+      .select("question_id").eq("student_id", student_id)
 
     const counts = {}
 
@@ -178,11 +178,11 @@ serve(async (req) => {
 
     const pool = candidates.slice(0, 20)
 
-    const question = pool[Math.floor(Math.random() * pool.length)]
+    const weights = pool.map(q => 1 / (Math.abs(q.difficulty - mastery) * 10 + (counts[q.id] || 0) + 1)); const total = weights.reduce((a, b) => a + b, 0); let r = Math.random() * total; let question = pool[0]; for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) { question = pool[i]; break; } }
 
     const { data: instance } = await supabase
       .from("question_instances")
-      .insert({
+      .upsert({
         student_id,
         question_id: question.id,
         correct_answer: question.content.correct,
@@ -195,7 +195,7 @@ serve(async (req) => {
       .select()
       .single()
 
-    await supabase.from("student_events").insert({
+    await supabase.from("student_events").upsert({
       student_id,
       type: "QUESTION_SHOWN",
       payload: {

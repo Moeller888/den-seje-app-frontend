@@ -3,9 +3,15 @@ import { produceDraftBatch } from "../../production/batch/produceDraftBatch.ts";
 import { activateProductionBatch } from "../../production/batch/activateProductionBatch.ts";
 import { aiGenerate } from "./aiGenerate.ts";
 import { SUFFIX_REGISTRY } from "../../production/objectiveTaxonomy.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const repo = new SupabaseQuestionRepository();
 const args = Deno.args;
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 if (args.length === 0) {
   console.log("Usage:");
@@ -20,11 +26,21 @@ if (args.length === 0) {
 const command = args[0];
 
 async function generateQuestionWrapper(input: { objective: string; cognitive: string; avoid?: string[] }) {
+
+  const { data } = await supabase
+    .from("questions")
+    .select("content")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const recentPrompts =
+    data?.map((q: any) => q.content?.question).filter(Boolean) ?? [];
+
   return await aiGenerate(
     input.objective,
     1,
     input.cognitive as any,
-    input.avoid ?? []
+    recentPrompts
   );
 }
 

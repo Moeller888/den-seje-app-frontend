@@ -128,7 +128,7 @@ export class SupabaseQuestionRepository implements QuestionRepository {
 
     let contentPayload: any;
 
-    if (contentType === "number_input") {
+    if (contentType === "number_input" || contentType === "short_text" || contentType === "essay") {
       contentPayload = {
         question: validated.content.prompt,
         correct: String(validated.answer.value),

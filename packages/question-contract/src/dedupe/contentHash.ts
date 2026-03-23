@@ -1,4 +1,4 @@
-﻿import type { QuestionContract } from "../schema/questionContract.ts";
+import type { QuestionContract } from "../schema/questionContract.ts";
 
 function normalizeString(input: string): string {
   return input.trim().toLowerCase();
@@ -42,6 +42,8 @@ export async function contentHash(
 ): Promise<string> {
 
   const base = {
+    objective: question.pedagogy.learning_objective,
+    cognitive: question.pedagogy.cognitive_level,
     content: question.content,
     answer: question.answer
   };

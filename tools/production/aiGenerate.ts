@@ -38,7 +38,7 @@ ${avoid.map(q => "- " + q).join("\n")}
   return `
 Generate a Danish World War II question.
 
-Learning objective: ${objective}
+Learning objective: ${objective}`nObjective type is encoded in the suffix of the objective (e.g. _start_year, _end_year, _strategy, _consequence). Generate a question consistent with that semantic type.
 
 ${avoidBlock}
 
