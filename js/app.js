@@ -1,143 +1,118 @@
+﻿import { supabase } from "../supabaseClient.js"
+
 const UI_STATES = {
   LOADING_QUESTION: "LOADING_QUESTION",
   AWAITING_ANSWER: "AWAITING_ANSWER",
-};
+  SUBMITTING_ANSWER: "SUBMITTING_ANSWER",
+  TRANSITIONING: "TRANSITIONING"
+}
 
-let currentState = UI_STATES.LOADING_QUESTION;
-let currentQuestion = null;
-let questionShownAt = null;
-
-// =====================
-// STATE
-// =====================
+let currentState = null
+let currentInstanceId = null
+let questionShownAt = null
 
 function setState(newState) {
-  currentState = newState;
-  console.log("[STATE]", newState);
-  render();
+  currentState = newState
+  console.log("[STATE]", newState)
+  render()
 }
-
-// =====================
-// DOM
-// =====================
 
 function getEl(id) {
-  return document.getElementById(id);
+  const el = document.getElementById(id)
+  if (!el) console.error("Missing DOM element:", id)
+  return el
 }
-
-// =====================
-// RENDER
-// =====================
 
 function render() {
-  const questionEl = getEl("question");
-  const inputEl = getEl("answer");
+  const answer = getEl("answer")
+  const submit = getEl("submit")
 
-  if (!questionEl || !inputEl) {
-    console.error("Missing DOM elements");
-    return;
-  }
+  if (!answer || !submit) return
 
-  if (currentState === UI_STATES.LOADING_QUESTION) {
-    questionEl.innerText = "Indl�ser...";
-    inputEl.value = "";
-  }
-
-  if (currentState === UI_STATES.AWAITING_ANSWER) {
-    if (!currentQuestion) {
-      questionEl.innerText = "Ingen data";
-      return;
-    }
-
-    questionEl.innerText = currentQuestion.content.question;
-  }
+  answer.style.display = "block"
+  submit.style.display = "block"
 }
-
-// =====================
-// API
-// =====================
 
 async function getNextQuestion() {
-  const { data, error } = await supabase.functions.invoke("get-next-question");
+  try {
+    const { data, error } = await supabase.functions.invoke("get-next-question")
 
-  if (error) {
-    console.error("API ERROR:", error);
-    return null;
+    if (error) {
+      console.error("SUPABASE ERROR OBJECT:", error)
+
+      if (error.context) {
+        try {
+          const text = await error.context.text()
+          console.error("RAW RESPONSE:", text)
+        } catch (e) {
+          console.error("Could not read error body")
+        }
+      }
+
+      throw error
+    }
+
+    return data
+
+  } catch (err) {
+    console.error("API ERROR FULL:", err)
+    return null
   }
-
-  return data;
 }
 
-async function submitToBackend(answer) {
-  const { data, error } = await supabase.functions.invoke("process-event", {
-    body: {
-      question_instance_id: currentQuestion.question_instance_id,
-      answer: answer,
-      question_shown_at: questionShownAt
-    },
-  });
+async function submitToBackend(payload) {
+  try {
+    const { data, error } = await supabase.functions.invoke("process-event", {
+      body: payload
+    })
 
-  if (error) {
-    console.error("SUBMIT ERROR:", error);
-    return null;
+    if (error) throw error
+
+    console.log("BACKEND RESPONSE:", data)
+    return data
+
+  } catch (err) {
+    console.error("SUBMIT ERROR:", err)
+    return null
   }
-
-  console.log("BACKEND RESPONSE:", data);
-
-  return data;
 }
-
-// =====================
-// FLOW
-// =====================
 
 async function loadAndRenderQuestion() {
-  setState(UI_STATES.LOADING_QUESTION);
+  setState(UI_STATES.LOADING_QUESTION)
 
-  const question = await getNextQuestion();
+  const data = await getNextQuestion()
 
-  if (!question) {
-    console.error("No question returned");
-    return;
+  if (!data) {
+    console.error("No question returned")
+    return
   }
 
-  currentQuestion = question;
-  questionShownAt = Date.now();
+  currentInstanceId = data.question_instance_id
+  questionShownAt = Date.now()
 
-  console.log("INSTANCE_ID:", question.question_instance_id);
+  console.log("INSTANCE_ID:", currentInstanceId)
+  console.log("SHOWN_AT:", questionShownAt)
 
-  setState(UI_STATES.AWAITING_ANSWER);
+  document.getElementById("question").innerText =
+    data.question?.content?.question || "Ingen spørgsmål"
+
+  setState(UI_STATES.AWAITING_ANSWER)
 }
-
-// =====================
-// SUBMIT
-// =====================
 
 async function submitAnswer() {
-  const inputEl = getEl("answer");
+  const answer = document.getElementById("answer").value
 
-  if (!inputEl || !currentQuestion) {
-    console.error("Missing input or question");
-    return;
-  }
+  console.log("ANSWER:", answer)
 
-  const answer = inputEl.value;
+  await submitToBackend({
+    question_instance_id: currentInstanceId,
+    answer,
+    question_shown_at: questionShownAt
+  })
 
-  console.log("ANSWER:", answer);
-
-  const result = await submitToBackend(answer);
-
-  console.log("RESULT USED:", result);
-
-  await loadAndRenderQuestion();
+  await loadAndRenderQuestion()
 }
 
-// =====================
-// INIT
-// =====================
+document.getElementById("submit").addEventListener("click", submitAnswer)
 
-getEl("submit")?.addEventListener("click", submitAnswer);
-
-loadAndRenderQuestion();
-
-console.log('JS APP LOADED - CORRECT FILE');
+loadAndRenderQuestion()
