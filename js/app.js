@@ -67,6 +67,23 @@ async function getNextQuestion() {
   return data;
 }
 
+async function submitToBackend(answer) {
+  const { data, error } = await supabase.functions.invoke("process-event", {
+    body: {
+      event_type: "answer_submitted",
+      question_instance_id: currentQuestion.question_instance_id,
+      answer: answer,
+    },
+  });
+
+  if (error) {
+    console.error("SUBMIT ERROR:", error);
+    return null;
+  }
+
+  return data;
+}
+
 // =====================
 // FLOW
 // =====================
@@ -104,7 +121,7 @@ async function submitAnswer() {
 
   console.log("ANSWER:", answer);
 
-  // 👉 HER kommer senere: send til backend
+  await submitToBackend(answer);
 
   await loadAndRenderQuestion();
 }
