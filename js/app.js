@@ -139,3 +139,5 @@ async function submitAnswer() {
 getEl("submit")?.addEventListener("click", submitAnswer);
 
 loadAndRenderQuestion();
+
+console.log('JS APP LOADED - CORRECT FILE');
