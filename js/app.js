@@ -1,116 +1,102 @@
-import { supabase } from "./supabase.js";
-
-window.__sb = supabase;
-
-const DEBUG = true;
-
-let uiState = "IDLE";
-
-function logEvent(event, payload = {}) {
-  if (!DEBUG) return;
-  console.log("[APP EVENT]", {
-    timestamp: new Date().toISOString(),
-    state: uiState,
-    event,
-    ...payload
-  });
-}
-
-function logError(event, error) {
-  console.error("[APP ERROR]", {
-    timestamp: new Date().toISOString(),
-    state: uiState,
-    event,
-    error
-  });
-}
-
-const UI_STATES = {
-  IDLE: "IDLE",
+﻿const UI_STATES = {
   LOADING_QUESTION: "LOADING_QUESTION",
   AWAITING_ANSWER: "AWAITING_ANSWER",
   SUBMITTING_ANSWER: "SUBMITTING_ANSWER",
-  TRANSITIONING: "TRANSITIONING"
+  TRANSITIONING: "TRANSITIONING",
 };
 
+let currentState = UI_STATES.LOADING_QUESTION;
+let currentQuestion = null;
+
+// =====================
+// STATE
+// =====================
+
 function setState(newState) {
-  uiState = newState;
-  logEvent("STATE_CHANGED", { to: newState });
+  currentState = newState;
+  console.log("[STATE]", newState);
+  render();
 }
 
-let studentId = null;
+// =====================
+// RENDER
+// =====================
 
-async function checkAuthAndRole() {
-  const { data: sessionData } = await supabase.auth.getSession();
+function render() {
+  const questionEl = document.getElementById("question");
+  const inputEl = document.getElementById("answer");
+  const buttonEl = document.getElementById("submit");
 
-  if (!sessionData.session) {
-    window.location.replace("login.html");
-    return false;
+  if (!questionEl) return;
+
+  if (currentState === UI_STATES.LOADING_QUESTION) {
+    questionEl.innerText = "Indlæser...";
+    inputEl.style.display = "none";
+    buttonEl.style.display = "none";
   }
 
-  studentId = sessionData.session.user.id;
-
-  return true;
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-  const authorized = await checkAuthAndRole();
-  if (!authorized) return;
-
-  document.body.style.display = "block";
-
-  let currentInstanceId = null;
-  let questionShownAt = null;
-
-  async function submitAnswer(userAnswer) {
-    setState(UI_STATES.SUBMITTING_ANSWER);
-
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "process-event",
-        {
-          body: {
-            student_id: studentId,
-            question_instance_id: currentInstanceId,
-            answer: userAnswer,
-            question_shown_at: questionShownAt
-          }
-        }
-      );
-
-      if (error) { console.error("BACKEND ERROR FULL:", error); console.error("BACKEND ERROR JSON:", JSON.stringify(error)); throw error; }
-
-      setState(UI_STATES.TRANSITIONING);
-    } catch (err) {
-      logError("SUBMIT_FAILED", err);
-      setState(UI_STATES.AWAITING_ANSWER);
+  if (currentState === UI_STATES.AWAITING_ANSWER) {
+    if (!currentQuestion) {
+      questionEl.innerText = "Ingen data";
+      return;
     }
+
+    questionEl.innerText = currentQuestion.content.question;
+    inputEl.style.display = "block";
+    buttonEl.style.display = "block";
   }
 
-  async function getNextQuestion() {
-    const { data } = await supabase.functions.invoke(
-      "get-next-question",
-      { body: {} }
-    );
-
-    currentInstanceId = data.question_instance_id;
-
-    console.log("INSTANCE_ID:", currentInstanceId);
-
-    return data;
+  if (currentState === UI_STATES.SUBMITTING_ANSWER) {
+    buttonEl.disabled = true;
   }
 
-  async function loadAndRenderQuestion() {
-    setState(UI_STATES.LOADING_QUESTION);
+  if (currentState === UI_STATES.TRANSITIONING) {
+    questionEl.innerText = "Næste spørgsmål...";
+    inputEl.style.display = "none";
+    buttonEl.style.display = "none";
+  }
+}
 
-    const question = await getNextQuestion();
+// =====================
+// API
+// =====================
 
-    questionShownAt = Date.now();
+async function getNextQuestion() {
+  const { data, error } = await supabase.functions.invoke(
+    "get-next-question"
+  );
 
-    setState(UI_STATES.AWAITING_ANSWER);
+  if (error) {
+    console.error(error);
+    return null;
   }
 
-  await loadAndRenderQuestion();
-});
+  return data;
+}
 
+// =====================
+// FLOW
+// =====================
 
+async function loadAndRenderQuestion() {
+  setState(UI_STATES.LOADING_QUESTION);
+
+  const question = await getNextQuestion();
+
+  if (!question) {
+    console.error("No question returned");
+    return;
+  }
+
+  currentQuestion = question;
+
+  console.log("INSTANCE_ID:", question.question_instance_id);
+
+  setState(UI_STATES.AWAITING_ANSWER);
+}
+
+// =====================
+// INIT
+// =====================
+
+loadAndRenderQuestion();
