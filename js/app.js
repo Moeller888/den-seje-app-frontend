@@ -5,6 +5,7 @@
 
 let currentState = UI_STATES.LOADING_QUESTION;
 let currentQuestion = null;
+let questionShownAt = null;
 
 // =====================
 // STATE
@@ -70,9 +71,9 @@ async function getNextQuestion() {
 async function submitToBackend(answer) {
   const { data, error } = await supabase.functions.invoke("process-event", {
     body: {
-      event_type: "answer_submitted",
       question_instance_id: currentQuestion.question_instance_id,
       answer: answer,
+      question_shown_at: questionShownAt
     },
   });
 
@@ -99,8 +100,10 @@ async function loadAndRenderQuestion() {
   }
 
   currentQuestion = question;
+  questionShownAt = new Date().toISOString();
 
   console.log("INSTANCE_ID:", question.question_instance_id);
+  console.log("SHOWN_AT:", questionShownAt);
 
   setState(UI_STATES.AWAITING_ANSWER);
 }
