@@ -82,6 +82,8 @@ async function submitToBackend(answer) {
     return null;
   }
 
+  console.log("BACKEND RESPONSE:", data);
+
   return data;
 }
 
@@ -100,12 +102,9 @@ async function loadAndRenderQuestion() {
   }
 
   currentQuestion = question;
-
-  // 🔥 FIX: bigint timestamp (ikke ISO string)
   questionShownAt = Date.now();
 
   console.log("INSTANCE_ID:", question.question_instance_id);
-  console.log("SHOWN_AT:", questionShownAt);
 
   setState(UI_STATES.AWAITING_ANSWER);
 }
@@ -126,7 +125,9 @@ async function submitAnswer() {
 
   console.log("ANSWER:", answer);
 
-  await submitToBackend(answer);
+  const result = await submitToBackend(answer);
+
+  console.log("RESULT USED:", result);
 
   await loadAndRenderQuestion();
 }
