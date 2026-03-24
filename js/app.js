@@ -100,7 +100,9 @@ async function loadAndRenderQuestion() {
   }
 
   currentQuestion = question;
-  questionShownAt = new Date().toISOString();
+
+  // 🔥 FIX: bigint timestamp (ikke ISO string)
+  questionShownAt = Date.now();
 
   console.log("INSTANCE_ID:", question.question_instance_id);
   console.log("SHOWN_AT:", questionShownAt);
