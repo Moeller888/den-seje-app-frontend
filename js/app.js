@@ -78,7 +78,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
       );
 
-      if (error) throw error;
+      if (error) { console.error("BACKEND ERROR FULL:", error); console.error("BACKEND ERROR JSON:", JSON.stringify(error)); throw error; }
 
       setState(UI_STATES.TRANSITIONING);
     } catch (err) {
@@ -112,3 +112,5 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadAndRenderQuestion();
 });
+
+
