@@ -19,20 +19,32 @@ function setState(newState) {
 }
 
 // =====================
+// SAFE DOM GETTER
+// =====================
+
+function getEl(id) {
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn("Missing DOM element:", id);
+  }
+  return el;
+}
+
+// =====================
 // RENDER
 // =====================
 
 function render() {
-  const questionEl = document.getElementById("question");
-  const inputEl = document.getElementById("answer");
-  const buttonEl = document.getElementById("submit");
+  const questionEl = getEl("question");
+  const inputEl = getEl("answer");
+  const buttonEl = getEl("submit");
 
   if (!questionEl) return;
 
   if (currentState === UI_STATES.LOADING_QUESTION) {
     questionEl.innerText = "Indlæser...";
-    inputEl.style.display = "none";
-    buttonEl.style.display = "none";
+    if (inputEl) inputEl.style.display = "none";
+    if (buttonEl) buttonEl.style.display = "none";
   }
 
   if (currentState === UI_STATES.AWAITING_ANSWER) {
@@ -42,18 +54,19 @@ function render() {
     }
 
     questionEl.innerText = currentQuestion.content.question;
-    inputEl.style.display = "block";
-    buttonEl.style.display = "block";
+
+    if (inputEl) inputEl.style.display = "block";
+    if (buttonEl) buttonEl.style.display = "block";
   }
 
   if (currentState === UI_STATES.SUBMITTING_ANSWER) {
-    buttonEl.disabled = true;
+    if (buttonEl) buttonEl.disabled = true;
   }
 
   if (currentState === UI_STATES.TRANSITIONING) {
     questionEl.innerText = "Næste spørgsmål...";
-    inputEl.style.display = "none";
-    buttonEl.style.display = "none";
+    if (inputEl) inputEl.style.display = "none";
+    if (buttonEl) buttonEl.style.display = "none";
   }
 }
 
