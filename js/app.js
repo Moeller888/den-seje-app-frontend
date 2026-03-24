@@ -1,8 +1,13 @@
-﻿const UI_STATES = {
+﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  "https://tjzbehwfagiwpwodsgwg.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc"
+);
+
+const UI_STATES = {
   LOADING_QUESTION: "LOADING_QUESTION",
   AWAITING_ANSWER: "AWAITING_ANSWER",
-  SUBMITTING_ANSWER: "SUBMITTING_ANSWER",
-  TRANSITIONING: "TRANSITIONING",
 };
 
 let currentState = UI_STATES.LOADING_QUESTION;
@@ -19,15 +24,11 @@ function setState(newState) {
 }
 
 // =====================
-// SAFE DOM GETTER
+// DOM
 // =====================
 
 function getEl(id) {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.warn("Missing DOM element:", id);
-  }
-  return el;
+  return document.getElementById(id);
 }
 
 // =====================
@@ -36,15 +37,14 @@ function getEl(id) {
 
 function render() {
   const questionEl = getEl("question");
-  const inputEl = getEl("answer");
-  const buttonEl = getEl("submit");
 
-  if (!questionEl) return;
+  if (!questionEl) {
+    console.error("Missing #question element in HTML");
+    return;
+  }
 
   if (currentState === UI_STATES.LOADING_QUESTION) {
     questionEl.innerText = "Indlæser...";
-    if (inputEl) inputEl.style.display = "none";
-    if (buttonEl) buttonEl.style.display = "none";
   }
 
   if (currentState === UI_STATES.AWAITING_ANSWER) {
@@ -54,19 +54,6 @@ function render() {
     }
 
     questionEl.innerText = currentQuestion.content.question;
-
-    if (inputEl) inputEl.style.display = "block";
-    if (buttonEl) buttonEl.style.display = "block";
-  }
-
-  if (currentState === UI_STATES.SUBMITTING_ANSWER) {
-    if (buttonEl) buttonEl.disabled = true;
-  }
-
-  if (currentState === UI_STATES.TRANSITIONING) {
-    questionEl.innerText = "Næste spørgsmål...";
-    if (inputEl) inputEl.style.display = "none";
-    if (buttonEl) buttonEl.style.display = "none";
   }
 }
 
@@ -80,7 +67,7 @@ async function getNextQuestion() {
   );
 
   if (error) {
-    console.error(error);
+    console.error("API ERROR:", error);
     return null;
   }
 
