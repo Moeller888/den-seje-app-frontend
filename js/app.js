@@ -30,14 +30,16 @@ function getEl(id) {
 
 function render() {
   const questionEl = getEl("question");
+  const inputEl = getEl("answer");
 
-  if (!questionEl) {
-    console.error("Missing #question element in HTML");
+  if (!questionEl || !inputEl) {
+    console.error("Missing DOM elements");
     return;
   }
 
   if (currentState === UI_STATES.LOADING_QUESTION) {
     questionEl.innerText = "Indlæser...";
+    inputEl.value = "";
   }
 
   if (currentState === UI_STATES.AWAITING_ANSWER) {
@@ -55,9 +57,7 @@ function render() {
 // =====================
 
 async function getNextQuestion() {
-  const { data, error } = await supabase.functions.invoke(
-    "get-next-question"
-  );
+  const { data, error } = await supabase.functions.invoke("get-next-question");
 
   if (error) {
     console.error("API ERROR:", error);
@@ -89,7 +89,30 @@ async function loadAndRenderQuestion() {
 }
 
 // =====================
+// SUBMIT
+// =====================
+
+async function submitAnswer() {
+  const inputEl = getEl("answer");
+
+  if (!inputEl || !currentQuestion) {
+    console.error("Missing input or question");
+    return;
+  }
+
+  const answer = inputEl.value;
+
+  console.log("ANSWER:", answer);
+
+  // 👉 HER kommer senere: send til backend
+
+  await loadAndRenderQuestion();
+}
+
+// =====================
 // INIT
 // =====================
+
+getEl("submit")?.addEventListener("click", submitAnswer);
 
 loadAndRenderQuestion();
