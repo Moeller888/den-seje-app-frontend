@@ -1,4 +1,4 @@
-﻿const UI_STATES = {
+const UI_STATES = {
   LOADING_QUESTION: "LOADING_QUESTION",
   AWAITING_ANSWER: "AWAITING_ANSWER",
 };
@@ -39,7 +39,7 @@ function render() {
   }
 
   if (currentState === UI_STATES.LOADING_QUESTION) {
-    questionEl.innerText = "Indlæser...";
+    questionEl.innerText = "Indl�ser...";
     inputEl.value = "";
   }
 
