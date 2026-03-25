@@ -1,20 +1,22 @@
-﻿async function loadAndRenderQuestion() {
-  setState(UI_STATES.LOADING_QUESTION)
+﻿function render() {
+  const questionEl = document.getElementById("question")
 
-  const data = await getNextQuestion()
-
-  if (!data) {
-    console.error("No data from backend")
+  if (!questionEl) {
+    console.error("Missing #question element")
     return
   }
 
-  console.log("QUESTION DATA:", data)
+  console.log("RENDER STATE:", state)
 
-  // 🔥 DET HER MANGLEDE
-  state.instance_id = data.instance_id
-  state.question = data.question
-  state.correct = data.correct
-  state.answer_format = data.answer_format
+  if (state.current === UI_STATES.LOADING_QUESTION) {
+    questionEl.innerText = "Indlæser..."
+    return
+  }
 
-  setState(UI_STATES.AWAITING_ANSWER)
+  if (state.current === UI_STATES.AWAITING_ANSWER) {
+    questionEl.innerText = state.question || "Ingen spørgsmål"
+    return
+  }
+
+  questionEl.innerText = "Ingen spørgsmål"
 }
