@@ -1,17 +1,20 @@
-﻿async function getNextQuestion() {
-  const { data, error } = await supabase.functions.invoke("get-next-question")
+﻿async function loadAndRenderQuestion() {
+  setState(UI_STATES.LOADING_QUESTION)
 
-  if (error) {
-    console.error("API ERROR:", error)
-    return null
+  const data = await getNextQuestion()
+
+  if (!data) {
+    console.error("No data from backend")
+    return
   }
 
-  console.log("FULL RESPONSE:", data)
+  console.log("QUESTION DATA:", data)
 
-  return {
-    instance_id: data.instance_id,
-    question: data.question,
-    correct: data.correct,
-    answer_format: data.answer_format
-  }
+  // 🔥 DET HER MANGLEDE
+  state.instance_id = data.instance_id
+  state.question = data.question
+  state.correct = data.correct
+  state.answer_format = data.answer_format
+
+  setState(UI_STATES.AWAITING_ANSWER)
 }
