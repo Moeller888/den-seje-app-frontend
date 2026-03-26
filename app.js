@@ -1,13 +1,8 @@
-import { supabase } from "./supabase.js";
+ï»¿import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
-/* ========================
-   DEBUG / OBSERVABILITY
-======================== */
-
 const DEBUG = true;
-
 let uiState = "IDLE";
 
 function logEvent(event, payload = {}) {
@@ -28,10 +23,6 @@ function logError(event, error) {
     error
   });
 }
-
-/* ========================
-   UI STATE MACHINE
-======================== */
 
 const UI_STATES = {
   IDLE: "IDLE",
@@ -59,14 +50,9 @@ function setState(newState) {
   logEvent("STATE_CHANGED", { to: newState });
 }
 
-/* ========================
-   AUTH
-======================== */
-
 let studentId = null;
 
 async function checkAuthAndRole() {
-
   const { data: sessionData } = await supabase.auth.getSession();
 
   if (!sessionData.session) {
@@ -91,330 +77,118 @@ async function checkAuthAndRole() {
   return true;
 }
 
-const authorized = await checkAuthAndRole();
-if (!authorized) throw new Error("Unauthorized");
+document.addEventListener("DOMContentLoaded", async () => {
 
-document.body.style.display = "block";
+  const authorized = await checkAuthAndRole();
+  if (!authorized) return;
 
-/* ========================
-   BFCache Protection
-======================== */
+  const questionElement = document.getElementById("question");
+  const optionsContainer = document.getElementById("options");
+  const feedback = document.getElementById("feedback");
 
-window.addEventListener("pageshow", async (event) => {
-  if (event.persisted) {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      window.location.replace("login.html");
+  let currentInstanceId = null;
+  let questionShownAt = null;
+
+  async function fetchProgress() {
+    const { data } = await supabase
+      .from("student_progress")
+      .select("*")
+      .maybeSingle();
+
+    if (data) {
+      logEvent("PROGRESS_FETCHED", { xp: data.xp });
     }
   }
-});
 
-/* ========================
-   LOGOUT
-======================== */
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.replace("login.html");
-  });
-}
-
-/* ========================
-   DOM
-======================== */
-
-const questionElement = document.getElementById("question");
-const optionsContainer = document.getElementById("options");
-const feedback = document.getElementById("feedback");
-
-const profileLevelEl = document.getElementById("profileLevel");
-const xpValueEl = document.getElementById("xpValue");
-const xpBar = document.getElementById("xpBar");
-const coinsEl = document.getElementById("coinsValue");
-
-/* ========================
-   GLOBAL STATE
-======================== */
-
-let currentProfile = null;
-let currentInstanceId = null;
-let activeSubmissionToken = null;
-let questionShownAt = null;
-
-/* ========================
-   PROFILE
-======================== */
-
-async function fetchProgress() {
-
-  const { data, error } = await supabase
-    .from("student_progress")
-    .select("*")
-    .maybeSingle();
-
-  if (error || !data) {
-    logError("FETCH_PROGRESS_FAILED_OR_EMPTY", error);
-    await supabase.auth.signOut();
-    window.location.replace("login.html");
-    return;
-  }
-
-  currentProfile = data;
-  logEvent("PROGRESS_FETCHED", { xp: data.xp });
-}
-
-function updateProfileUI() {
-
-  if (!currentProfile) return;
-
-  profileLevelEl.textContent = currentProfile.level;
-  xpValueEl.textContent = `${currentProfile.xp} XP`;
-  coinsEl.textContent = `${currentProfile.coins} ??`;
-
-  const percent =
-    (currentProfile.mastery_balance + 3) / 6 * 100;
-
-  xpBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-}
-
-/* ========================
-   TOKEN
-======================== */
-
-function generateToken() {
-
-  if (self.crypto && typeof self.crypto.randomUUID === "function") {
-    return self.crypto.randomUUID();
-  }
-
-  return Math.random().toString(36).substring(2) + Date.now();
-}
-
-/* ========================
-   ANSWER SUBMIT
-======================== */
-
-async function submitAnswer(userAnswer) {
+  async function submitAnswer(userAnswer) {
 
   if (uiState !== UI_STATES.AWAITING_ANSWER) return;
 
   setState(UI_STATES.SUBMITTING_ANSWER);
 
-  lockAllButtons(true);
-  feedback.textContent = "Indsender...";
-
-  const token = generateToken();
-  activeSubmissionToken = token;
-
-  logEvent("SUBMIT_ANSWER", { instance: currentInstanceId });
-
-  try {
-
-    const { data, error } = await supabase.functions.invoke(
-      "process-event",
-      {
-        body: {
-          student_id: studentId,
-          question_instance_id: currentInstanceId,
-          answer: userAnswer,
-          question_shown_at: questionShownAt
-        }
-      }
-    );
-
-    if (activeSubmissionToken !== token) {
-      logEvent("STALE_RESPONSE_IGNORED");
-      return;
-    }
-
-    if (error) throw error;
-
-    if (!data) {
-      throw new Error("Invalid backend response");
-    }
-
-    currentProfile = data;
-    updateProfileUI();
-
-    feedback.textContent = data.is_correct ? "Korrekt!" : "Forkert.";
-    feedback.style.color = data.is_correct ? "green" : "red";
-
-    logEvent("ANSWER_PROCESSED", { correct: data.is_correct });
-
-    setState(UI_STATES.TRANSITIONING);
-
-    setTimeout(() => {
-      loadAndRenderQuestion();
-    }, 450);
-
-  } catch (err) {
-
-    logError("SUBMIT_FAILED", err);
-
-    feedback.textContent = "Netværksfejl. Prøv igen.";
-    feedback.style.color = "orange";
-
-    lockAllButtons(false);
-
-    setState(UI_STATES.AWAITING_ANSWER);
-  }
-}
-
-/* ========================
-   QUESTION FETCH
-======================== */
-
-async function getNextQuestion() {
-
-  if (uiState !== UI_STATES.LOADING_QUESTION) return null;
-
-  logEvent("REQUEST_NEXT_QUESTION");
-
   const { data, error } = await supabase.functions.invoke(
-    "get-next-question",
-    { body: {} }
+    "process-event",
+    {
+      body: {
+        student_id: studentId,
+        question_instance_id: currentInstanceId,
+        answer: userAnswer,
+        question_shown_at: questionShownAt
+      }
+    }
   );
 
   if (error) {
-    logError("GET_NEXT_QUESTION_FAILED", error);
-    throw error;
-  }
-
-  if (!data || !data.question_instance_id || !data.content) {
-    throw new Error("Invalid backend contract (get-next-question)");
-  }
-
-  currentInstanceId = data.question_instance_id;
-
-  logEvent("QUESTION_RECEIVED", { instance: currentInstanceId });
-
-  return data;
-}
-
-/* ========================
-   RENDER
-======================== */
-
-function lockAllButtons(lock) {
-
-  const buttons = optionsContainer.querySelectorAll("button");
-
-  buttons.forEach(btn => {
-    btn.disabled = lock;
-  });
-}
-
-function renderOptions(question) {
-
-  optionsContainer.innerHTML = "";
-
-  if (question.answer_format === "year") {
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.maxLength = 4;
-    input.inputMode = "numeric";
-    input.pattern = "[0-9]*";
-
-    input.addEventListener("input", () => {
-      input.value = input.value.replace(/\D/g, "").slice(0, 4);
-    });
-
-    const btn = document.createElement("button");
-    btn.textContent = "Svar";
-
-    btn.onclick = () => {
-      if (input.value.length !== 4) return;
-      submitAnswer(input.value);
-    };
-
-    optionsContainer.appendChild(input);
-    optionsContainer.appendChild(btn);
+    console.error("SUBMIT ERROR", error);
     return;
   }
 
-  if (question.type === "mc_single" && question.content?.options) {
+  if (data) {
+    feedback.textContent = data.is_correct ? "Korrekt!" : "Forkert.";
+    feedback.style.color = data.is_correct ? "green" : "red";
 
-    question.content.options.forEach(option => {
+    setState(UI_STATES.TRANSITIONING); setTimeout(() => { loadAndRenderQuestion(); }, 500);
+  }
+}
 
+async function getNextQuestion() {
+    setState(UI_STATES.LOADING_QUESTION);
+
+    const { data, error } = await supabase.functions.invoke(
+      "get-next-question",
+      { body: {} }
+    );
+
+    if (error) throw error;
+
+    const parsed = typeof data === "string" ? JSON.parse(data) : data;
+
+    currentInstanceId = parsed.question_instance_id;
+
+    logEvent("QUESTION_RECEIVED", { instance: currentInstanceId });
+
+    return parsed;
+  }
+
+  function renderOptions(question) {
+    optionsContainer.innerHTML = "";
+
+    if (question.answer_format === "year") {
+      const input = document.createElement("input"); input.type = "text"; input.placeholder = "Skriv dit svar her..."; input.maxLength = 4;
       const btn = document.createElement("button");
 
-      btn.textContent = option;
+      btn.textContent = "Svar";
 
-      btn.onclick = () => submitAnswer(option);
+      btn.onclick = () => {
+        if (input.value.length === 4) {
+          submitAnswer(input.value);
+        }
+      };
 
+      optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
-    });
+    }
   }
 
-  if (question.type === "text_input") {
+  async function loadAndRenderQuestion() {
+    const question = await getNextQuestion();
 
-    const textarea = document.createElement("textarea");
+    questionElement.textContent = question.content.question;
 
-    const btn = document.createElement("button");
-    btn.textContent = "Indsend svar";
+    feedback.textContent = "";
 
-    btn.onclick = () => {
+    questionShownAt = Date.now();
 
-      const answer = textarea.value.trim();
+    renderOptions(question);
 
-      if (!answer) return;
-
-      submitAnswer(answer);
-    };
-
-    optionsContainer.appendChild(textarea);
-    optionsContainer.appendChild(btn);
+    setState(UI_STATES.AWAITING_ANSWER);
   }
 
-  if (question.type === "number_input") {
+  await fetchProgress();
+  await loadAndRenderQuestion();
+});
 
-    const input = document.createElement("input");
-    input.type = "number";
 
-    const btn = document.createElement("button");
-    btn.textContent = "Svar";
 
-    btn.onclick = () => {
 
-      if (!input.value) return;
 
-      submitAnswer(input.value);
-    };
-
-    optionsContainer.appendChild(input);
-    optionsContainer.appendChild(btn);
-  }
-}
-
-async function loadAndRenderQuestion() {
-
-  setState(UI_STATES.LOADING_QUESTION);
-
-  const question = await getNextQuestion();
-
-  if (!question) return;
-
-  questionElement.textContent = question.content.question;
-
-  feedback.textContent = "";
-  feedback.style.color = "black";
-
-  questionShownAt = Date.now();
-
-  renderOptions(question);
-
-  setState(UI_STATES.AWAITING_ANSWER);
-}
-
-/* ========================
-   INIT
-======================== */
-
-await fetchProgress();
-updateProfileUI();
-
-await loadAndRenderQuestion();

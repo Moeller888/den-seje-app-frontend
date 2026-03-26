@@ -9,10 +9,13 @@ const corsHeaders = {
 
 function formatResponse(instance_id, q) {
   return {
-    instance_id,
-    question: q.content?.question,
-    correct: q.content?.correct,
-    answer_format: q.answer_format
+    question_instance_id: instance_id,
+    answer_format: q?.answer_format ?? null,
+    type: q?.type ?? null,
+    content: {
+      question: q?.content?.question ?? null,
+      options: q?.content?.options ?? null
+    }
   }
 }
 
@@ -39,10 +42,10 @@ serve(async (req) => {
 
     const student_id = user.id
 
-    // OPEN INSTANCE
+    // 1. OPEN INSTANCE
     const { data: openRows } = await supabase
       .from("question_instances")
-      .select("id, questions(content, answer_format)")
+      .select("id, questions(content, answer_format, type)")
       .eq("student_id", student_id)
       .eq("answered", false)
       .limit(1)
@@ -54,38 +57,38 @@ serve(async (req) => {
       ), { headers: corsHeaders })
     }
 
-    // PROGRESS
-    const { data: progressRows } = await supabase
-      .from("student_progress")
-      .select("mastery_level")
+    // 2. GET SEEN IDS
+    const { data: seenRows } = await supabase
+      .from("question_instances")
+      .select("question_id")
       .eq("student_id", student_id)
-      .limit(1)
 
-    const mastery = progressRows?.[0]?.mastery_level ?? 1
+    const seenIds = new Set(seenRows?.map(r => r.question_id))
 
-    // QUESTION
+    // 3. GET ALL QUESTIONS (simple & safe)
     const { data: questions } = await supabase
       .from("questions")
       .select("*")
       .eq("is_active", true)
-      .limit(1)
 
-    const q = questions?.[0]
-    if (!q) throw new Error("No question")
+    const q = questions?.find(q => !seenIds.has(q.id))
 
-    const difficulty = q.difficulty ?? 1
-    const correct = q.content?.correct
+    if (!q) {
+      return new Response(JSON.stringify({ step: "no_question" }), {
+        status: 500,
+        headers: corsHeaders
+      })
+    }
 
-    let instance
-
-    const { data, error } = await supabase
+    // 4. INSERT (duplicate-safe)
+    const { data: insertData, error: insertError } = await supabase
       .from("question_instances")
       .insert({
         student_id,
         question_id: q.id,
-        correct_answer: correct,
-        difficulty_at_time: difficulty,
-        mastery_snapshot: mastery,
+        correct_answer: q.content?.correct,
+        difficulty_at_time: q.difficulty ?? 1,
+        mastery_snapshot: 1,
         answered: false,
         next_review_at: new Date().toISOString(),
         incorrect_attempts: 0
@@ -93,29 +96,39 @@ serve(async (req) => {
       .select()
       .limit(1)
 
-    if (error && error.code === "23505") {
+    if (insertError && insertError.code === "23505") {
       const { data: existing } = await supabase
         .from("question_instances")
-        .select("id")
+        .select("id, questions(content, answer_format, type)")
         .eq("student_id", student_id)
         .eq("question_id", q.id)
         .limit(1)
 
-      instance = existing?.[0]
-    } else if (error) {
-      throw error
-    } else {
-      instance = data?.[0]
+      const inst = existing?.[0]
+
+      return new Response(JSON.stringify(
+        formatResponse(inst.id, inst.questions)
+      ), { headers: corsHeaders })
     }
 
-    if (!instance) throw new Error("No instance")
+    if (insertError) {
+      return new Response(JSON.stringify({
+        step: "insert",
+        error: insertError
+      }), { status: 500, headers: corsHeaders })
+    }
+
+    const instance = insertData?.[0]
 
     return new Response(JSON.stringify(
       formatResponse(instance.id, q)
     ), { headers: corsHeaders })
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({
+      step: "catch",
+      message: err?.message
+    }), {
       status: 500,
       headers: corsHeaders
     })
