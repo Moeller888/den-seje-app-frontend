@@ -85,6 +85,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const questionElement = document.getElementById("question");
   const optionsContainer = document.getElementById("options");
   const feedback = document.getElementById("feedback");
+  const levelEl = document.getElementById("level");
+  const xpEl = document.getElementById("xp");
+  const coinsEl = document.getElementById("coins");
 
   let currentInstanceId = null;
   let questionShownAt = null;
@@ -96,54 +99,64 @@ document.addEventListener("DOMContentLoaded", async () => {
       .maybeSingle();
 
     if (data) {
+      xpEl.textContent = data.xp ?? 0;
+      coinsEl.textContent = data.coins ?? 0;
+      levelEl.textContent = data.level ?? 1;
       logEvent("PROGRESS_FETCHED", { xp: data.xp });
     }
   }
 
   async function submitAnswer(userAnswer) {
 
-  if (uiState !== UI_STATES.AWAITING_ANSWER) return;
+    if (uiState !== UI_STATES.AWAITING_ANSWER) return;
 
-  setState(UI_STATES.SUBMITTING_ANSWER);
-
-  const { data, error } = await supabase.functions.invoke(
-    "process-event",
-    {
-      body: {
-        student_id: studentId,
-        question_instance_id: currentInstanceId,
-        answer: userAnswer,
-        question_shown_at: questionShownAt
-      }
-    }
-  );
-
-  if (error) {
-    console.error("SUBMIT ERROR", error);
-    return;
-  }
-
-  if (data) {
-    feedback.textContent = data.is_correct ? "Korrekt!" : "Forkert.";
-    feedback.style.color = data.is_correct ? "green" : "red";
-
-    setState(UI_STATES.TRANSITIONING); setTimeout(() => { loadAndRenderQuestion(); }, 500);
-  }
-}
-
-async function getNextQuestion() {
-    setState(UI_STATES.LOADING_QUESTION);
+    setState(UI_STATES.SUBMITTING_ANSWER);
 
     const { data, error } = await supabase.functions.invoke(
+      "process-event",
+      {
+        body: {
+          student_id: studentId,
+          question_instance_id: currentInstanceId,
+          answer: userAnswer,
+          question_shown_at: questionShownAt
+        }
+      }
+    );
+
+    if (error) {
+      logError("SUBMIT_ERROR", error);
+      return;
+    }
+
+    if (data) {
+      feedback.textContent = data.is_correct ? "Korrekt!" : "Forkert.";
+      feedback.style.color = data.is_correct ? "green" : "red";
+
+      await fetchProgress();
+      setState(UI_STATES.TRANSITIONING);
+      setTimeout(() => { loadAndRenderQuestion(); }, 500);
+    }
+  }
+
+  async function getNextQuestion() {
+    setState(UI_STATES.LOADING_QUESTION);
+
+    const { data } = await supabase.functions.invoke(
       "get-next-question",
       { body: {} }
     );
 
-    if (error) throw error;
-
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    currentInstanceId = parsed.question_instance_id;
+    console.log("RAW RESPONSE:", parsed);
+
+    if (!parsed || !parsed.content) {
+      console.error("INVALID RESPONSE FROM BACKEND:", parsed);
+      return null;
+    }
+
+    currentInstanceId = parsed.question_instance_id ?? null;
 
     logEvent("QUESTION_RECEIVED", { instance: currentInstanceId });
 
@@ -153,10 +166,18 @@ async function getNextQuestion() {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    if (question.answer_format === "year") {
-      const input = document.createElement("input"); input.type = "text"; input.placeholder = "Skriv dit svar her..."; input.maxLength = 4;
-      const btn = document.createElement("button");
+    if (!question) {
+      questionElement.textContent = "Fejl i data";
+      return;
+    }
 
+    if (question.answer_format === "year") {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Skriv dit svar her...";
+      input.maxLength = 4;
+
+      const btn = document.createElement("button");
       btn.textContent = "Svar";
 
       btn.onclick = () => {
@@ -168,10 +189,22 @@ async function getNextQuestion() {
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
     }
+
+    if (question.answer_format === "mc") {
+      const options = question.content.options ?? [];
+      for (const option of options) {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => { submitAnswer(option); };
+        optionsContainer.appendChild(btn);
+      }
+    }
   }
 
   async function loadAndRenderQuestion() {
     const question = await getNextQuestion();
+
+    if (!question) return;
 
     questionElement.textContent = question.content.question;
 
@@ -187,8 +220,3 @@ async function getNextQuestion() {
   await fetchProgress();
   await loadAndRenderQuestion();
 });
-
-
-
-
-
