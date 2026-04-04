@@ -65,8 +65,16 @@ serve(async (req) => {
       throw error
     }
 
+    const { data: instanceData } = await supabase
+      .from("question_instances")
+      .select("correct_answer")
+      .eq("id", question_instance_id)
+      .limit(1)
+
+    const correct_answer = (instanceData && instanceData.length > 0) ? instanceData[0].correct_answer : null
+
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ correct: data.correct, correct_answer }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200

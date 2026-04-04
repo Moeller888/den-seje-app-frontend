@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         feedback.textContent = "✅ Korrekt!";
         feedback.style.color = "green";
       } else {
-        feedback.textContent = "❌ Forkert";
+        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "");
         feedback.style.color = "red";
       }
       feedback.style.fontSize = "24px";
