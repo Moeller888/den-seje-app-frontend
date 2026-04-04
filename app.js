@@ -126,6 +126,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setState(UI_STATES.SUBMITTING_ANSWER);
 
+    const buttons = optionsContainer.querySelectorAll("button");
+    buttons.forEach(btn => btn.disabled = true);
+
     const { data, error } = await supabase.functions.invoke(
       "process-event",
       {
