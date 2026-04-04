@@ -144,8 +144,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (data) {
-      feedback.textContent = data.is_correct ? "Korrekt!" : "Forkert.";
-      feedback.style.color = data.is_correct ? "green" : "red";
+      if (data.correct) {
+        feedback.textContent = "✅ Korrekt!";
+        feedback.style.color = "green";
+      } else {
+        feedback.textContent = "❌ Forkert";
+        feedback.style.color = "red";
+      }
+      feedback.style.fontSize = "24px";
+      feedback.style.fontWeight = "bold";
 
       await fetchProgress();
       setState(UI_STATES.TRANSITIONING);
