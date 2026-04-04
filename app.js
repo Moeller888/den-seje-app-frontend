@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -151,11 +151,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         feedback.textContent = "✅ Korrekt!";
         feedback.style.color = "green";
       } else {
-        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "");
+        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
         feedback.style.color = "red";
       }
-      feedback.style.fontSize = "24px";
-      feedback.style.fontWeight = "bold";
 
       await fetchProgress();
       setState(UI_STATES.TRANSITIONING);
@@ -173,16 +171,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    console.log("RAW RESPONSE:", parsed);
-
     if (!parsed || !parsed.content) {
-      console.error("INVALID RESPONSE FROM BACKEND:", parsed);
       return null;
     }
 
     currentInstanceId = parsed.question_instance_id ?? null;
-
-    logEvent("QUESTION_RECEIVED", { instance: currentInstanceId });
 
     return parsed;
   }
@@ -190,15 +183,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    if (!question) {
-      questionElement.textContent = "Fejl i data";
-      return;
-    }
+    if (!question) return;
 
     if (question.answer_format === "year") {
       const input = document.createElement("input");
       input.type = "text";
-      input.placeholder = "Skriv dit svar her...";
       input.maxLength = 4;
 
       const btn = document.createElement("button");
@@ -206,7 +195,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       btn.onclick = () => {
         if (input.value.length === 4) {
-          submitAnswer(input.value);
+          const parsed = Number(input.value);
+          if (!Number.isNaN(parsed)) {
+            submitAnswer(parsed); // FIX
+          }
         }
       };
 
@@ -215,11 +207,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (question.answer_format === "mc") {
-      const options = question.content.options ?? [];
+      const options = question.content?.options ?? [];
+
       for (const option of options) {
         const btn = document.createElement("button");
         btn.textContent = option;
-        btn.onclick = () => { submitAnswer(option); };
+        btn.onclick = () => submitAnswer(option);
         optionsContainer.appendChild(btn);
       }
     }
@@ -227,17 +220,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadAndRenderQuestion() {
     const question = await getNextQuestion();
-
     if (!question) return;
 
     questionElement.textContent = question.content.question;
-
     feedback.textContent = "";
-
     questionShownAt = Date.now();
 
     renderOptions(question);
-
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
