@@ -88,6 +88,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const levelEl = document.getElementById("level");
   const xpEl = document.getElementById("xp");
   const coinsEl = document.getElementById("coins");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  logoutBtn.onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+  };
 
   let currentInstanceId = null;
   let questionShownAt = null;
