@@ -102,6 +102,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       xpEl.textContent = data.xp ?? 0;
       coinsEl.textContent = data.coins ?? 0;
       levelEl.textContent = data.level ?? 1;
+
+      const xpBar = document.getElementById("xp-bar");
+      const xp = data.xp ?? 0;
+      const level = data.level ?? 1;
+      const xpForNextLevel = level * 100;
+      const progress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
+      xpBar.style.width = (progress * 100) + "%";
+
       logEvent("PROGRESS_FETCHED", { xp: data.xp });
     }
   }
