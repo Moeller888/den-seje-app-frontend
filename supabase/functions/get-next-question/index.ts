@@ -1,132 +1,180 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
+function mapAnswerFormat(format: string | null) {
+  console.log("RAW FORMAT:", format);
+
+  if (!format) return "mc";
+
+  if (format.startsWith("mc")) return "mc";
+  if (format.includes("number")) return "number";
+  if (format.includes("text")) return "text";
+
+  console.log("UNKNOWN FORMAT:", format);
+  return "mc";
 }
 
-function debugResponse(payload) {
-  return new Response(JSON.stringify(payload, null, 2), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
-  })
-}
-
-function formatResponse(instance_id, q) {
-  return {
-    question_instance_id: instance_id,
-    answer_format: q?.answer_format ?? null,
-    type: q?.type ?? null,
-    content: {
-      question: q?.content?.question ?? null,
-      options: q?.content?.options ?? null
-    }
+function normalizeContent(raw: any) {
+  if (!raw || typeof raw !== "object") {
+    throw new Error("Invalid content: not an object");
   }
+
+  let question = raw.question;
+  let options = raw.options;
+  let correct = raw.correct;
+
+  if (typeof question !== "string" || question.trim().length === 0) {
+    throw new Error("Invalid content: missing question text");
+  }
+
+  if (!Array.isArray(options)) {
+    console.warn("OPTIONS NOT ARRAY → fixing");
+    options = [];
+  }
+
+  // Fix A/B/C/D problem
+  if (options.length > 0 && options.every(o => ["A","B","C","D"].includes(o))) {
+    console.warn("OPTIONS ARE LABELS → invalid data");
+  }
+
+  if (options.length === 0) {
+    console.warn("EMPTY OPTIONS → injecting fallback");
+    options = ["A","B","C","D"];
+  }
+
+  if (typeof correct !== "string") {
+    console.warn("INVALID CORRECT → nulling");
+    correct = null;
+  }
+
+  return {
+    question,
+    options,
+    correct
+  };
 }
 
 serve(async (req) => {
-
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders })
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-
-    const authHeader = req.headers.get("Authorization")
-
-    const supabaseAuth = createClient(
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
-        global: { headers: { Authorization: authHeader } }
+        global: {
+          headers: { Authorization: req.headers.get("Authorization")! },
+        },
       }
-    )
+    );
 
-    const { data: userData } = await supabaseAuth.auth.getUser()
-    const student_id = userData.user.id
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    )
-
-    // 🔥 CHECK FOR EXISTING UNANSWERED INSTANCE
-    const { data: openInstance } = await supabaseAdmin
-      .from("question_instances")
-      .select("id, question_id")
-      .eq("student_id", student_id)
-      .eq("answered", false)
-      .limit(1)
-
-    if (openInstance && openInstance.length > 0) {
-      const existingInstanceId = openInstance[0].id
-      const existingQuestionId = openInstance[0].question_id
-
-      const { data: existingQuestion } = await supabaseAdmin
-        .from("questions")
-        .select("*")
-        .eq("id", existingQuestionId)
-        .limit(1)
-
-      if (!existingQuestion || existingQuestion.length === 0) {
-        return debugResponse({ step: "existing_question_not_found" })
-      }
-
-      return debugResponse(formatResponse(existingInstanceId, existingQuestion[0]))
+    if (authError || !user) {
+      throw new Error("Unauthorized");
     }
 
-    // 🔥 HENT ALLEREDE SETE QUESTIONS
-    const { data: seenRows } = await supabaseAdmin
+    const student_id = user.id;
+
+    const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
-      .select("question_id")
+      .select(`
+        id,
+        question_id,
+        questions (
+          id,
+          content,
+          answer_format
+        )
+      `)
       .eq("student_id", student_id)
+      .lte("next_review_at", new Date().toISOString())
+      .order("next_review_at", { ascending: true })
+      .limit(1);
 
-    const seenIds = new Set((seenRows ?? []).map(r => r.question_id))
+    if (dueError) throw dueError;
 
-    // 🔥 HENT SPØRGSMÅL
-    const { data: questions } = await supabaseAdmin
+    if (dueInstances && dueInstances.length > 0) {
+      const instance = dueInstances[0];
+
+      const normalized = normalizeContent(instance.questions.content);
+
+      return new Response(
+        JSON.stringify({
+          question_instance_id: instance.id,
+          content: normalized, // ✅ FLAT
+          answer_format: mapAnswerFormat(instance.questions.answer_format),
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    const { data: randomQuestion, error: randomError } = await supabase
       .from("questions")
-      .select("*")
-      .eq("is_active", true)
+      .select("id, content, answer_format")
+      .order("random()")
+      .limit(1)
+      .single();
 
-    // 🔥 FIND FØRSTE IKKE SET
-    const q = questions?.find(q => !seenIds.has(q.id))
-
-    if (!q) {
-      return debugResponse({ step: "no_more_questions" })
+    if (randomError || !randomQuestion) {
+      return new Response(
+        JSON.stringify({ step: "no_questions" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
-    const { data: insertData, error: insertError } = await supabaseAdmin
+    const normalized = normalizeContent(randomQuestion.content);
+
+    const { data: newInstance, error: insertError } = await supabase
       .from("question_instances")
       .insert({
         student_id,
-        question_id: q.id,
-        correct_answer: q.content?.correct,
-        difficulty_at_time: q.difficulty ?? 1,
-        mastery_snapshot: q.difficulty ?? 1,
+        question_id: randomQuestion.id,
         answered: false,
         next_review_at: new Date().toISOString(),
-        incorrect_attempts: 0
       })
       .select("id")
+      .single();
 
-    if (insertError) {
-      return debugResponse({
-        step: "insert_error",
-        message: insertError.message,
-        code: insertError.code
-      })
-    }
+    if (insertError) throw insertError;
 
-    return debugResponse(formatResponse(insertData[0].id, q))
+    return new Response(
+      JSON.stringify({
+        question_instance_id: newInstance.id,
+        content: normalized, // ✅ FLAT
+        answer_format: mapAnswerFormat(randomQuestion.answer_format),
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
 
   } catch (err) {
-    return debugResponse({
-      step: "catch",
-      message: err?.message
-    })
+    return new Response(
+      JSON.stringify({
+        error: err.message,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
-
-})
+});

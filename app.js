@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient.js";
+﻿import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -146,19 +146,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (data) {
-      if (data.correct) {
-        feedback.textContent = "✅ Korrekt!";
-        feedback.style.color = "green";
-      } else {
-        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
-        feedback.style.color = "red";
-      }
+    console.log("FUNCTION RESPONSE:", data);
 
-      await fetchProgress();
-      setState(UI_STATES.TRANSITIONING);
-      setTimeout(() => { loadAndRenderQuestion(); }, 500);
+    if (!data || !data.status) {
+      logError("INVALID_RESPONSE", data);
+      return;
     }
+
+    // 🔥 ÉN sandhed: status
+    if (data.status === "pending") {
+      feedback.textContent = "⏳ Afventer lærerens vurdering";
+      feedback.style.color = "orange";
+
+    } else if (data.status === "correct") {
+      feedback.textContent = "✅ Korrekt!";
+      feedback.style.color = "green";
+
+    } else if (data.status === "incorrect") {
+      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      feedback.style.color = "red";
+
+    } else {
+      logError("UNKNOWN_STATUS", data.status);
+      return;
+    }
+
+    await fetchProgress();
+    setState(UI_STATES.TRANSITIONING);
+
+    // 🔥 deterministisk delay
+    let delay = 1000;
+
+    if (data.status === "correct") delay = 600;
+    if (data.status === "incorrect") delay = 2000;
+
+    setTimeout(() => { loadAndRenderQuestion(); }, delay);
   }
 
   async function getNextQuestion() {
@@ -183,9 +205,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    if (!question) return;
+    if (!question || !question.content) {
+      console.error("INVALID QUESTION:", question);
+      return;
+    }
 
-    if (question.answer_format === "year") {
+    const format = (question.answer_format || "").toLowerCase();
+    let options = question.content.options;
+
+    // 🔒 DEFENSIVE FIXES
+    if (!Array.isArray(options)) {
+      console.warn("OPTIONS NOT ARRAY → fallback");
+      options = [];
+    }
+
+    if (options.length === 0 && format.includes("mc")) {
+      console.warn("EMPTY OPTIONS → injecting fallback");
+      options = ["A", "B", "C", "D"];
+    }
+
+    // NUMBER
+    if (format.includes("number")) {
       const input = document.createElement("input");
       input.type = "text";
       input.maxLength = 4;
@@ -194,28 +234,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Svar";
 
       btn.onclick = () => {
-        if (input.value.length === 4) {
-          const parsed = Number(input.value);
-          if (!Number.isNaN(parsed)) {
-            submitAnswer(parsed); // FIX
-          }
+        const val = Number(input.value);
+        if (!Number.isNaN(val)) {
+          submitAnswer(String(val));
         }
       };
 
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
+      return;
     }
 
-    if (question.answer_format === "mc") {
-      const options = question.content?.options ?? [];
+    // TEXT
+    if (format === "text") {
+      const textarea = document.createElement("textarea");
 
-      for (const option of options) {
+      const btn = document.createElement("button");
+      btn.textContent = "Send svar";
+
+      btn.onclick = () => {
+        if (textarea.value.trim()) {
+          submitAnswer(textarea.value);
+        }
+      };
+
+      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(btn);
+      return;
+    }
+
+    // MC
+    if (format.includes("mc")) {
+      options.forEach((option) => {
         const btn = document.createElement("button");
         btn.textContent = option;
         btn.onclick = () => submitAnswer(option);
         optionsContainer.appendChild(btn);
-      }
+      });
+      return;
     }
+
+    console.error("UNKNOWN FORMAT:", format);
   }
 
   async function loadAndRenderQuestion() {
@@ -226,10 +285,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     feedback.textContent = "";
     questionShownAt = Date.now();
 
-    renderOptions(question);
+    console.log('FULL QUESTION:', question); renderOptions(question);
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
   await fetchProgress();
   await loadAndRenderQuestion();
 });
+
+console.log('APP LOADED DEBUG');
