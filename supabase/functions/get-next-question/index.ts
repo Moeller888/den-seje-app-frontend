@@ -7,21 +7,16 @@ const corsHeaders = {
 };
 
 function mapAnswerFormat(format: string | null) {
-  console.log("RAW FORMAT:", format);
-
   if (!format) return "mc";
-
   if (format.startsWith("mc")) return "mc";
   if (format.includes("number")) return "number";
   if (format.includes("text")) return "text";
-
-  console.log("UNKNOWN FORMAT:", format);
   return "mc";
 }
 
 function normalizeContent(raw: any) {
   if (!raw || typeof raw !== "object") {
-    throw new Error("Invalid content: not an object");
+    throw new Error("Invalid content");
   }
 
   let question = raw.question;
@@ -29,26 +24,18 @@ function normalizeContent(raw: any) {
   let correct = raw.correct;
 
   if (typeof question !== "string" || question.trim().length === 0) {
-    throw new Error("Invalid content: missing question text");
+    throw new Error("Missing question text");
   }
 
   if (!Array.isArray(options)) {
-    console.warn("OPTIONS NOT ARRAY → fixing");
     options = [];
   }
 
-  // Fix A/B/C/D problem
-  if (options.length > 0 && options.every(o => ["A","B","C","D"].includes(o))) {
-    console.warn("OPTIONS ARE LABELS → invalid data");
-  }
-
   if (options.length === 0) {
-    console.warn("EMPTY OPTIONS → injecting fallback");
-    options = ["A","B","C","D"];
+    options = ["A", "B", "C", "D"];
   }
 
   if (typeof correct !== "string") {
-    console.warn("INVALID CORRECT → nulling");
     correct = null;
   }
 
@@ -86,11 +73,13 @@ serve(async (req) => {
 
     const student_id = user.id;
 
+    // ?? Hent due instances
     const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
       .select(`
         id,
         question_id,
+        answered,
         questions (
           id,
           content,
@@ -100,19 +89,22 @@ serve(async (req) => {
       .eq("student_id", student_id)
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(1);
+      .limit(5);
 
     if (dueError) throw dueError;
 
-    if (dueInstances && dueInstances.length > 0) {
-      const instance = dueInstances[0];
+    // ?? HARD FILTER (stopper loop 100%)
+    const validDue = (dueInstances || []).filter(i => i.answered !== true);
+
+    if (validDue.length > 0) {
+      const instance = validDue[0];
 
       const normalized = normalizeContent(instance.questions.content);
 
       return new Response(
         JSON.stringify({
           question_instance_id: instance.id,
-          content: normalized, // ✅ FLAT
+          content: normalized,
           answer_format: mapAnswerFormat(instance.questions.answer_format),
         }),
         {
@@ -122,12 +114,13 @@ serve(async (req) => {
       );
     }
 
+    // ?? fallback: random question
     const { data: randomQuestion, error: randomError } = await supabase
       .from("questions")
       .select("id, content, answer_format")
       .order("random()")
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (randomError || !randomQuestion) {
       return new Response(
@@ -150,14 +143,14 @@ serve(async (req) => {
         next_review_at: new Date().toISOString(),
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (insertError) throw insertError;
 
     return new Response(
       JSON.stringify({
         question_instance_id: newInstance.id,
-        content: normalized, // ✅ FLAT
+        content: normalized,
         answer_format: mapAnswerFormat(randomQuestion.answer_format),
       }),
       {
@@ -166,7 +159,7 @@ serve(async (req) => {
       }
     );
 
-  } catch (err) {
+  } catch (err: any) {
     return new Response(
       JSON.stringify({
         error: err.message,

@@ -1,4 +1,4 @@
-ï»¿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -153,17 +153,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ðŸ”¥ Ã‰N sandhed: status
+    // ?? ÉN sandhed: status
     if (data.status === "pending") {
-      feedback.textContent = "â³ Afventer lÃ¦rerens vurdering";
+      feedback.textContent = "? Afventer lærerens vurdering";
       feedback.style.color = "orange";
 
     } else if (data.status === "correct") {
-      feedback.textContent = "âœ… Korrekt!";
+      feedback.textContent = "? Korrekt!";
       feedback.style.color = "green";
 
     } else if (data.status === "incorrect") {
-      feedback.textContent = "âŒ Forkert â€“ korrekt svar: " + (data.correct_answer ?? "ukendt");
+      feedback.textContent = "? Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
       feedback.style.color = "red";
 
     } else {
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await fetchProgress();
     setState(UI_STATES.TRANSITIONING);
 
-    // ðŸ”¥ deterministisk delay
+    // ?? deterministisk delay
     let delay = 1000;
 
     if (data.status === "correct") delay = 600;
@@ -184,9 +184,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function getNextQuestion() {
-    setState(UI_STATES.LOADING_QUESTION);
+  setState(UI_STATES.LOADING_QUESTION);
 
-    const { data } = await supabase.functions.invoke(
+  const { data, error } = await supabase.functions.invoke(
+    "get-next-question",
+    { body: {} }
+  );
+
+  if (error) {
+    logError("GET_QUESTION_ERROR", error);
+    return null;
+  }
+
+  const parsed = typeof data === "string" ? JSON.parse(data) : data;
+
+  console.log("RAW QUESTION RESPONSE:", parsed);
+
+  if (!parsed) return null;
+
+  if (parsed.step === "no_questions") {
+    console.warn("NO QUESTIONS FROM BACKEND");
+    return { step: "no_questions" };
+  }
+
+  if (!parsed.content || !parsed.content.question) {
+    logError("INVALID_QUESTION_FORMAT", parsed);
+    return null;
+  }
+
+  currentInstanceId = parsed.question_instance_id ?? null;
+
+  return parsed;
+} = await supabase.functions.invoke(
       "get-next-question",
       { body: {} }
     );
@@ -213,14 +242,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const format = (question.answer_format || "").toLowerCase();
     let options = question.content.options;
 
-    // ðŸ”’ DEFENSIVE FIXES
+    // ?? DEFENSIVE FIXES
     if (!Array.isArray(options)) {
-      console.warn("OPTIONS NOT ARRAY â†’ fallback");
+      console.warn("OPTIONS NOT ARRAY ? fallback");
       options = [];
     }
 
     if (options.length === 0 && format.includes("mc")) {
-      console.warn("EMPTY OPTIONS â†’ injecting fallback");
+      console.warn("EMPTY OPTIONS ? injecting fallback");
       options = ["A", "B", "C", "D"];
     }
 
@@ -278,16 +307,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadAndRenderQuestion() {
-    const question = await getNextQuestion();
-    if (!question) return;
+  const question = await getNextQuestion();
 
-    questionElement.textContent = question.content.question;
-    feedback.textContent = "";
-    questionShownAt = Date.now();
-
-    console.log('FULL QUESTION:', question); renderOptions(question);
-    setState(UI_STATES.AWAITING_ANSWER);
+  if (!question) {
+    questionElement.textContent = "?? Kunne ikke hente spørgsmål";
+    optionsContainer.innerHTML = "";
+    return;
   }
+
+  if (question.step === "no_questions") {
+    questionElement.textContent = "?? Du har ingen flere spørgsmål lige nu";
+    optionsContainer.innerHTML = "";
+    feedback.textContent = "";
+    return;
+  }
+
+  questionElement.textContent = question.content.question;
+  feedback.textContent = "";
+  questionShownAt = Date.now();
+
+  console.log("FULL QUESTION:", question);
+  renderOptions(question);
+
+  setState(UI_STATES.AWAITING_ANSWER);
+}
 
   await fetchProgress();
   await loadAndRenderQuestion();

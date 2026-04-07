@@ -66,11 +66,22 @@ serve(async (req) => {
     }
 
     const result = data;
-    const correct = result?.correct
+    const correct = result?.correct;
+
+    await supabase
+      .from("question_instances")
+      .update({
+        answered: true,
+        answered_at: new Date().toISOString(),
+        user_answer: answer,
+        was_correct: correct
+      })
+      .eq("id", question_instance_id);
+    console.log("CORRECT VALUE:", correct)
 
     // Only update next_review_at when the answer is definitively correct or incorrect.
     // Pending (correct === null/undefined) must not be made immediately due.
-    if (correct === true || correct === false) {
+    if (typeof correct === "boolean") {
       const nextReviewAt = new Date()
       if (correct === true) {
         // Correct → schedule 1 day from now
@@ -83,7 +94,7 @@ serve(async (req) => {
       const { error: updateError } = await supabase
         .from("question_instances")
         .update({ next_review_at: nextReviewAt.toISOString() })
-        .eq("id", question_instance_id)
+        .eq("id", question_instance_id).eq("student_id", user.id)
 
       if (updateError) {
         console.error("next_review_at update error:", updateError)
@@ -101,9 +112,11 @@ serve(async (req) => {
 
     const correct_answer = (instanceData && instanceData.length > 0) ? instanceData[0].correct_answer : null
 
+    const status = result?.correct === true ? "correct" : result?.correct === false ? "incorrect" : "pending"
+
     return new Response(
       JSON.stringify({
-        correct: result?.correct ?? false,
+        status,
         correct_answer
       }),
       {
@@ -129,3 +142,4 @@ serve(async (req) => {
   }
 
 })
+
