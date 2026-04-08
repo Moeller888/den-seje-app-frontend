@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -73,7 +73,7 @@ serve(async (req) => {
 
     const student_id = user.id;
 
-    // ?? Hent due instances
+    // Hent due instances
     const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
       .select(`
@@ -87,17 +87,21 @@ serve(async (req) => {
         )
       `)
       .eq("student_id", student_id)
+      .eq("answered", false)
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(5);
+      .limit(1);
 
     if (dueError) throw dueError;
 
-    // ?? HARD FILTER (stopper loop 100%)
     const validDue = (dueInstances || []).filter(i => i.answered !== true);
 
     if (validDue.length > 0) {
       const instance = validDue[0];
+
+      if (!instance.questions || !instance.questions.content) {
+        throw new Error("Missing question relation");
+      }
 
       const normalized = normalizeContent(instance.questions.content);
 
@@ -114,15 +118,15 @@ serve(async (req) => {
       );
     }
 
-    // ?? fallback: random question
-    const { data: randomQuestion, error: randomError } = await supabase
+    // fallback: første spørgsmål (simpel og stabil)
+    const { data: questions, error: randomError } = await supabase
       .from("questions")
       .select("id, content, answer_format")
-      .order("random()")
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    if (randomError || !randomQuestion) {
+    if (randomError) throw randomError;
+
+    if (!questions || questions.length === 0) {
       return new Response(
         JSON.stringify({ step: "no_questions" }),
         {
@@ -132,9 +136,15 @@ serve(async (req) => {
       );
     }
 
+    const randomQuestion = questions[0];
+
+    if (!randomQuestion.content) {
+      throw new Error("Question missing content");
+    }
+
     const normalized = normalizeContent(randomQuestion.content);
 
-    const { data: newInstance, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from("question_instances")
       .insert({
         student_id,
@@ -143,9 +153,15 @@ serve(async (req) => {
         next_review_at: new Date().toISOString(),
       })
       .select("id")
-      .maybeSingle();
+      .limit(1);
 
     if (insertError) throw insertError;
+
+    if (!inserted || inserted.length === 0) {
+      throw new Error("Insert failed");
+    }
+
+    const newInstance = inserted[0];
 
     return new Response(
       JSON.stringify({
@@ -160,9 +176,12 @@ serve(async (req) => {
     );
 
   } catch (err: any) {
+    console.error("EDGE FUNCTION ERROR:", err);
+
     return new Response(
       JSON.stringify({
-        error: err.message,
+        error: err?.message ?? "Unknown error",
+        stack: err?.stack ?? null
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

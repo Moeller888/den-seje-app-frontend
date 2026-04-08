@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -141,6 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (error) {
+      console.error("PROCESS EVENT ERROR:", error);
       logError("SUBMIT_ERROR", error);
       return;
     }
@@ -188,6 +189,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (error) {
+      console.error("FULL FUNCTION ERROR OBJECT:", error);
+
+      try {
+        const text = await error.context?.text?.();
+        console.error("RAW ERROR TEXT:", text);
+      } catch (e) {
+        console.error("COULD NOT READ ERROR BODY");
+      }
+
       logError("GET_QUESTION_ERROR", error);
       return null;
     }
