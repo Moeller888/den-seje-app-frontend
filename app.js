@@ -143,6 +143,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (error) {
       console.error("PROCESS EVENT ERROR:", error);
       logError("SUBMIT_ERROR", error);
+
+      feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
+      feedback.style.color = "red";
+
+      setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
@@ -150,6 +155,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!data || !data.status) {
       logError("INVALID_RESPONSE", data);
+
+      feedback.textContent = "⚠️ Ugyldigt svar fra server";
+      feedback.style.color = "red";
+
+      setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
@@ -167,6 +177,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } else {
       logError("UNKNOWN_STATUS", data.status);
+
+      feedback.textContent = "⚠️ Ukendt status fra server";
+      feedback.style.color = "red";
+
+      setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
@@ -226,12 +241,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     optionsContainer.innerHTML = "";
 
     const format = (question.answer_format || "").toLowerCase();
-    let options = question.content.options;
+    const content = question.content;
+
+    let options = content.options;
 
     if (!Array.isArray(options)) options = [];
 
-    if (options.length === 0 && format.includes("mc")) {
-      options = ["A", "B", "C", "D"];
+    if (content.force_text === true) {
+      const textarea = document.createElement("textarea");
+
+      const btn = document.createElement("button");
+      btn.textContent = "Send svar";
+
+      btn.onclick = () => {
+        if (textarea.value.trim()) {
+          submitAnswer(textarea.value);
+        }
+      };
+
+      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(btn);
+      return;
     }
 
     if (format.includes("number")) {
@@ -268,6 +298,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
       return;
+    }
+
+    if (options.length === 0 && format.includes("mc")) {
+      options = ["A", "B", "C", "D"];
     }
 
     options.forEach((option) => {

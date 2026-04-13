@@ -14,8 +14,6 @@ serve(async (req) => {
 
   try {
 
-    console.log("START process-event")
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -28,15 +26,11 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    console.log("USER:", user)
-
     if (authError || !user) {
       throw new Error("Unauthorized")
     }
 
     const body = await req.json()
-
-    console.log("BODY:", body)
 
     const {
       question_instance_id,
@@ -48,6 +42,7 @@ serve(async (req) => {
       throw new Error("Missing required fields")
     }
 
+    // 🔥 KALD RPC
     const { data, error } = await supabase.rpc(
       "process_question_attempt",
       {
@@ -58,61 +53,59 @@ serve(async (req) => {
       }
     )
 
-    console.log("RPC RESULT:", data)
-    console.log("RPC ERROR:", error)
-
     if (error) {
       throw error
     }
 
-    const result = data;
-    const correct = result?.correct;
+    const result = data
+    const status = result?.status ?? "pending"
 
+    const isCorrect =
+      status === "correct"
+        ? true
+        : status === "incorrect"
+        ? false
+        : null
+
+    // 🔥 UPDATE INSTANCE (kun hvis ikke allerede sat korrekt af SQL)
     await supabase
       .from("question_instances")
       .update({
-        answered: true,
-        answered_at: new Date().toISOString(),
         user_answer: answer,
-        was_correct: correct
+        was_correct: isCorrect
       })
-      .eq("id", question_instance_id);
-    console.log("CORRECT VALUE:", correct)
+      .eq("id", question_instance_id)
 
-    // Only update next_review_at when the answer is definitively correct or incorrect.
-    // Pending (correct === null/undefined) must not be made immediately due.
-    if (typeof correct === "boolean") {
+    // 🔥 NEXT REVIEW (kun ved MC)
+    if (status === "correct" || status === "incorrect") {
       const nextReviewAt = new Date()
-      if (correct === true) {
-        // Correct → schedule 1 day from now
+
+      if (status === "correct") {
         nextReviewAt.setDate(nextReviewAt.getDate() + 1)
       } else {
-        // Incorrect → retry in 10 minutes
         nextReviewAt.setMinutes(nextReviewAt.getMinutes() + 10)
       }
 
       const { error: updateError } = await supabase
         .from("question_instances")
         .update({ next_review_at: nextReviewAt.toISOString() })
-        .eq("id", question_instance_id).eq("student_id", user.id)
+        .eq("id", question_instance_id)
+        .eq("student_id", user.id)
 
-      if (updateError) {
-        console.error("next_review_at update error:", updateError)
-        throw updateError
-      }
-
-      console.log("next_review_at set to:", nextReviewAt.toISOString())
+      if (updateError) throw updateError
     }
 
+    // 🔥 HENT KORREKT SVAR
     const { data: instanceData } = await supabase
       .from("question_instances")
       .select("correct_answer")
       .eq("id", question_instance_id)
       .limit(1)
 
-    const correct_answer = (instanceData && instanceData.length > 0) ? instanceData[0].correct_answer : null
-
-    const status = result?.correct === true ? "correct" : result?.correct === false ? "incorrect" : "pending"
+    const correct_answer =
+      (instanceData && instanceData.length > 0)
+        ? instanceData[0].correct_answer
+        : null
 
     return new Response(
       JSON.stringify({
@@ -125,14 +118,11 @@ serve(async (req) => {
       }
     )
 
-  } catch (err) {
-
-    console.error("FULL ERROR:", err)
+  } catch (err: any) {
 
     return new Response(
       JSON.stringify({
-        error: err.message,
-        full: err
+        error: err.message ?? "Unknown error"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -142,4 +132,3 @@ serve(async (req) => {
   }
 
 })
-
