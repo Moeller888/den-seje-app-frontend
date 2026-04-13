@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Butik</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    .item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Butik</h1>
+
+<div id="coins"></div>
+<div id="shop"></div>
+
+<button onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
+
+<script type="module">
+import { supabase } from "./supabaseClient.js";
+
+const shopDiv = document.getElementById("shop");
+const coinsDiv = document.getElementById("coins");
+
+// 🔐 auth
+const { data: sessionData } = await supabase.auth.getSession();
+if (!sessionData.session) {
+  window.location.replace("login.html");
+}
+
+const userId = sessionData.session.user.id;
+
+// 💰 hent coins
+async function loadCoins() {
+  const { data } = await supabase
+    .from("student_progress")
+    .select("coins")
+    .eq("id", userId)
+    .maybeSingle();
+
+  coinsDiv.textContent = "Coins: " + (data?.coins ?? 0);
+}
+
+// 🛒 hent shop items
+async function loadShop() {
+  const { data: items } = await supabase
+    .from("shop_items")
+    .select("*");
+
+  shopDiv.innerHTML = "";
+
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    div.innerHTML = `
+      <strong>${item.name}</strong><br>
+      Pris: ${item.price} coins<br>
+      <button>Køb</button>
+    `;
+
+    const btn = div.querySelector("button");
+
+    btn.onclick = async () => {
+      const { data, error } = await supabase.functions.invoke("buy-item", {
+        body: { item_id: item.id }
+      });
+
+      if (error || data?.error) {
+        alert(data?.error || "Fejl");
+        return;
+      }
+
+      alert("Købt!");
+      await loadCoins();
+    };
+
+    shopDiv.appendChild(div);
+  });
+}
+
+await loadCoins();
+await loadShop();
+
+</script>
+
+</body>
+</html>

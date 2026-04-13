@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>DEN SEJE APP - Hub</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>DEN SEJE APP</h1>
+
+  <div class="menu">
+    <button id="playBtn">🎮 Spil</button>
+    <button id="shopBtn">🛒 Butik</button>
+    <button id="avatarBtn">👤 Avatar</button>
+    <button id="themesBtn">🎨 Temaer</button>
+    <button id="logoutBtn">🚪 Log ud</button>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./supabaseClient.js";
+
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      window.location.replace("login.html");
+    }
+
+    document.getElementById("playBtn").onclick = () => {
+      window.location.href = "index.html";
+    };
+
+    document.getElementById("shopBtn").onclick = () => {
+      window.location.href = "shop.html";
+    };
+
+    document.getElementById("avatarBtn").onclick = () => {
+      window.location.href = "avatar.html";
+    };
+
+    document.getElementById("themesBtn").onclick = () => {
+      window.location.href = "themes.html";
+    };
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await supabase.auth.signOut();
+      window.location.replace("login.html");
+    };
+  </script>
+
+</body>
+</html>
