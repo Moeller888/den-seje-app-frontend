@@ -17,6 +17,12 @@
 
     button {
       margin-top: 5px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -36,36 +42,58 @@ import { supabase } from "./supabaseClient.js";
 const shopDiv = document.getElementById("shop");
 const coinsDiv = document.getElementById("coins");
 
+// 🔐 AUTH CHECK
 const { data: sessionData } = await supabase.auth.getSession();
+
 if (!sessionData.session) {
   window.location.replace("login.html");
 }
 
 const userId = sessionData.session.user.id;
 
+// 💰 LOAD COINS (FIX: user_id)
 async function loadCoins() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("student_progress")
     .select("coins")
-    .eq("id", userId)
+    .eq("user_id", userId)
     .maybeSingle();
+
+  if (error) {
+    console.error("LOAD COINS ERROR:", error);
+    coinsDiv.textContent = "Fejl ved loading coins";
+    return;
+  }
 
   coinsDiv.textContent = "Coins: " + (data?.coins ?? 0);
 }
 
+// 🎒 LOAD OWNED ITEMS
 async function loadOwned() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_items")
     .select("item_id")
     .eq("user_id", userId);
 
+  if (error) {
+    console.error("LOAD OWNED ERROR:", error);
+    return [];
+  }
+
   return data?.map(x => x.item_id) ?? [];
 }
 
+// 🛒 LOAD SHOP
 async function loadShop() {
-  const { data: items } = await supabase
+  const { data: items, error } = await supabase
     .from("shop_items")
     .select("*");
+
+  if (error) {
+    console.error("LOAD SHOP ERROR:", error);
+    shopDiv.textContent = "Fejl ved loading shop";
+    return;
+  }
 
   const owned = await loadOwned();
 
@@ -89,7 +117,15 @@ async function loadShop() {
 
     if (!isOwned) {
       btn.onclick = async () => {
+
+        // 🔐 hent frisk session
         const { data: sessionData } = await supabase.auth.getSession();
+
+        if (!sessionData.session) {
+          alert("Ikke logget ind");
+          window.location.replace("login.html");
+          return;
+        }
 
         const { data, error } = await supabase.functions.invoke("buy-item", {
           body: { item_id: item.id },
@@ -99,10 +135,12 @@ async function loadShop() {
         });
 
         if (error || data?.error) {
-          alert(data?.error || "Fejl");
+          console.error("BUY ERROR:", error, data);
+          alert(data?.error || "Fejl ved køb");
           return;
         }
 
+        // 🔄 reload UI
         await loadCoins();
         await loadShop();
       };
@@ -112,6 +150,7 @@ async function loadShop() {
   });
 }
 
+// 🚀 INIT
 await loadCoins();
 await loadShop();
 
