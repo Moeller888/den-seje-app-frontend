@@ -56,7 +56,6 @@ async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
     .select("coins")
-    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
