@@ -3,7 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
 
-  // 🔥 Kontrolleret eksekvering (undgår race conditions)
+  // 🔥 KUN KØR .spec.ts FILES (MEGET VIGTIGT)
+  testMatch: '**/*.spec.ts',
+
   fullyParallel: false,
   workers: 1,
 
