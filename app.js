@@ -79,7 +79,7 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🔥 NY: Sikrer altid 4 svar
+// 🔥 Sikrer altid 4 svar
 function ensureFourOptions(options) {
   const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
 
@@ -97,6 +97,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const authorized = await checkAuthAndRole();
   if (!authorized) return;
+
+  await testBuyItem(); // 🔥 FLYTTET HER
 
   const questionElement = document.getElementById("question");
   const optionsContainer = document.getElementById("options");
@@ -155,7 +157,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (error) {
-      console.error("PROCESS EVENT ERROR:", error);
       logError("SUBMIT_ERROR", error);
 
       feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
@@ -164,8 +165,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
-
-    console.log("FUNCTION RESPONSE:", data);
 
     if (!data || !data.status) {
       logError("INVALID_RESPONSE", data);
@@ -224,8 +223,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    console.log("RAW QUESTION RESPONSE:", parsed);
-
     if (!parsed) return null;
 
     if (parsed.step === "no_questions") {
@@ -269,7 +266,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 🔥 KUN MC → sikre 4 svar
     if (format.includes("mc")) {
       options = ensureFourOptions(options);
     }
@@ -310,10 +306,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (options.length === 0 && format.includes("mc")) {
-      options = ["A", "B", "C", "D"];
-    }
-
     options.forEach((option) => {
       const btn = document.createElement("button");
       btn.textContent = option;
@@ -342,7 +334,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     feedback.textContent = "";
     questionShownAt = Date.now();
 
-    console.log("FULL QUESTION:", question);
     renderOptions(question);
 
     setState(UI_STATES.AWAITING_ANSWER);
@@ -354,14 +345,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 console.log("APP LOADED DEBUG");
 
-
-
+// 🔥 FIXET testBuyItem (med auth)
 async function testBuyItem() {
+  const { data: sessionData } = await supabase.auth.getSession();
+
   const { data, error } = await supabase.functions.invoke("buy-item", {
-    body: { item_id: "dark" }
+    body: { item_id: "dark" },
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`
+    }
   });
 
   console.log("BUY RESULT:", data, error);
 }
-
-testBuyItem();

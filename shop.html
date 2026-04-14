@@ -89,8 +89,13 @@ async function loadShop() {
 
     if (!isOwned) {
       btn.onclick = async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+
         const { data, error } = await supabase.functions.invoke("buy-item", {
-          body: { item_id: item.id }
+          body: { item_id: item.id },
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          }
         });
 
         if (error || data?.error) {
