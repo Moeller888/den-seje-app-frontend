@@ -26,11 +26,11 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (authError || !user) {
-      throw new Error("Unauthorized")
-    }
+    if (authError || !user) throw new Error("Unauthorized")
 
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body) throw new Error("Invalid JSON body")
 
     const {
       question_instance_id,
@@ -38,27 +38,27 @@ serve(async (req) => {
       question_shown_at
     } = body
 
-    if (!question_instance_id || !answer || !question_shown_at) {
+    if (!question_instance_id || !answer) {
       throw new Error("Missing required fields")
     }
 
-    // 🔥 KALD RPC
+    // 🔥 RPC
     const { data, error } = await supabase.rpc(
       "process_question_attempt",
       {
         p_student_id: user.id,
         p_question_instance_id: question_instance_id,
         p_answer: answer,
-        p_question_shown_at: question_shown_at
+        p_question_shown_at: question_shown_at ?? Date.now()
       }
     )
 
     if (error) {
+      console.error("RPC ERROR:", error)
       throw error
     }
 
-    const result = data
-    const status = result?.status ?? "pending"
+    const status = data?.status ?? "pending"
 
     const isCorrect =
       status === "correct"
@@ -67,7 +67,7 @@ serve(async (req) => {
         ? false
         : null
 
-    // 🔥 UPDATE INSTANCE (kun hvis ikke allerede sat korrekt af SQL)
+    // 🔥 UPDATE INSTANCE
     await supabase
       .from("question_instances")
       .update({
@@ -95,17 +95,14 @@ serve(async (req) => {
       if (updateError) throw updateError
     }
 
-    // 🔥 HENT KORREKT SVAR
+    // 🔥 hent correct_answer
     const { data: instanceData } = await supabase
       .from("question_instances")
       .select("correct_answer")
       .eq("id", question_instance_id)
       .limit(1)
 
-    const correct_answer =
-      (instanceData && instanceData.length > 0)
-        ? instanceData[0].correct_answer
-        : null
+    const correct_answer = instanceData?.[0]?.correct_answer ?? null
 
     return new Response(
       JSON.stringify({
@@ -120,9 +117,11 @@ serve(async (req) => {
 
   } catch (err: any) {
 
+    console.error("FULL ERROR:", err)
+
     return new Response(
       JSON.stringify({
-        error: err.message ?? "Unknown error"
+        error: err?.message ?? "Unknown error"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -79,6 +79,20 @@ async function checkAuthAndRole() {
   return true;
 }
 
+// 🔥 NY: Sikrer altid 4 svar
+function ensureFourOptions(options) {
+  const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
+
+  const unique = new Set(options);
+
+  while (unique.size < 4) {
+    const random = pool[Math.floor(Math.random() * pool.length)];
+    unique.add(random);
+  }
+
+  return Array.from(unique).sort(() => Math.random() - 0.5);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authorized = await checkAuthAndRole();
@@ -204,15 +218,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (error) {
-      console.error("FULL FUNCTION ERROR OBJECT:", error);
-
-      try {
-        const text = await error.context?.text?.();
-        console.error("RAW ERROR TEXT:", text);
-      } catch (e) {
-        console.error("COULD NOT READ ERROR BODY");
-      }
-
       logError("GET_QUESTION_ERROR", error);
       return null;
     }
@@ -262,6 +267,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
       return;
+    }
+
+    // 🔥 KUN MC → sikre 4 svar
+    if (format.includes("mc")) {
+      options = ensureFourOptions(options);
     }
 
     if (format.includes("number")) {
@@ -343,3 +353,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 console.log("APP LOADED DEBUG");
+
+
+
+async function testBuyItem() {
+  const { data, error } = await supabase.functions.invoke("buy-item", {
+    body: { item_id: "dark" }
+  });
+
+  console.log("BUY RESULT:", data, error);
+}
+
+testBuyItem();
