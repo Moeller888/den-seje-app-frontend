@@ -24,31 +24,26 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: {
+            Authorization: req.headers.get("authorization") || ""
+          }
+        }
+      }
     );
 
-    // 🔥 FIX: lowercase header
-    const authHeader = req.headers.get("authorization");
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "No auth" }),
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-
-    const { data: userData } = await supabase.auth.getUser(token);
-
-    if (!userData?.user) {
+    if (!user) {
       return new Response(
         JSON.stringify({ error: "Invalid user" }),
         { status: 401, headers: corsHeaders }
       );
     }
 
-    const userId = userData.user.id;
+    const userId = user.id;
 
     const { data: item, error: itemError } = await supabase
       .from("shop_items")

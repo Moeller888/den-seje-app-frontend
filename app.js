@@ -98,8 +98,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const authorized = await checkAuthAndRole();
   if (!authorized) return;
 
-  await testBuyItem(); // 🔥 FLYTTET HER
-
   const questionElement = document.getElementById("question");
   const optionsContainer = document.getElementById("options");
   const feedback = document.getElementById("feedback");
@@ -345,10 +343,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 console.log("APP LOADED DEBUG");
 
-async function testBuyItem() {
-  const { data, error } = await supabase.functions.invoke("buy-item", {
-    body: { item_id: "dark" }
-  });
-
-  console.log("BUY RESULT:", data, error);
-}
