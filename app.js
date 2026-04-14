@@ -345,15 +345,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 console.log("APP LOADED DEBUG");
 
-// 🔥 FIXET testBuyItem (med auth)
 async function testBuyItem() {
-  const { data: sessionData } = await supabase.auth.getSession();
-
   const { data, error } = await supabase.functions.invoke("buy-item", {
-    body: { item_id: "dark" },
-    headers: {
-      Authorization: `Bearer ${sessionData.session.access_token}`
-    }
+    body: { item_id: "dark" }
   });
 
   console.log("BUY RESULT:", data, error);
