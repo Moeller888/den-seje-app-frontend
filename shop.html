@@ -126,6 +126,12 @@ async function loadShop() {
           return;
         }
 
+        console.log("SESSION:", sessionData);
+
+        const token = sessionData?.session?.access_token;
+
+        console.log("TOKEN:", token);
+
         const { data, error } = await supabase.functions.invoke("buy-item", {
           body: { item_id: item.id },
           headers: {

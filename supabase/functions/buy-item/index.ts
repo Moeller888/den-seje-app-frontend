@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // 🔥 CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -16,66 +15,73 @@ serve(async (req) => {
     const { item_id } = await req.json();
 
     if (!item_id) {
-      return new Response(
-        JSON.stringify({ error: "Missing item_id" }),
-        { status: 400, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "Missing item_id" }), {
+        status: 400,
+        headers: corsHeaders
+      });
     }
 
+    // 🔥 SERVICE ROLE (backend authority)
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: {
-            Authorization: req.headers.get("authorization") || ""
-          }
-        }
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // 🔥 MANUEL AUTH (robust)
+    const authHeader = req.headers.get("authorization");
 
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid user" }),
-        { status: 401, headers: corsHeaders }
-      );
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No auth header" }), {
+        status: 401,
+        headers: corsHeaders
+      });
     }
 
-    const userId = user.id;
+    const token = authHeader.replace("Bearer ", "");
 
-    const { data: item, error: itemError } = await supabase
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data?.user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: corsHeaders
+      });
+    }
+
+    const userId = data.user.id;
+
+    // 🔥 RESTEN ER DIN LOGIK (samme som før)
+    const { data: item } = await supabase
       .from("shop_items")
       .select("*")
       .eq("id", item_id)
       .maybeSingle();
 
-    if (itemError || !item) {
-      return new Response(
-        JSON.stringify({ error: "Item not found" }),
-        { status: 404, headers: corsHeaders }
-      );
+    if (!item) {
+      return new Response(JSON.stringify({ error: "Item not found" }), {
+        status: 404,
+        headers: corsHeaders
+      });
     }
 
-    const { data: progress, error: progressError } = await supabase
+    const { data: progress } = await supabase
       .from("student_progress")
       .select("coins")
       .eq("id", userId)
       .maybeSingle();
 
-    if (progressError || !progress) {
-      return new Response(
-        JSON.stringify({ error: "User progress not found" }),
-        { status: 404, headers: corsHeaders }
-      );
+    if (!progress) {
+      return new Response(JSON.stringify({ error: "No progress" }), {
+        status: 404,
+        headers: corsHeaders
+      });
     }
 
     if (progress.coins < item.price) {
-      return new Response(
-        JSON.stringify({ error: "Not enough coins" }),
-        { status: 400, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "Not enough coins" }), {
+        status: 400,
+        headers: corsHeaders
+      });
     }
 
     const { data: existing } = await supabase
@@ -86,53 +92,37 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      return new Response(
-        JSON.stringify({ error: "Already owned" }),
-        { status: 400, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "Already owned" }), {
+        status: 400,
+        headers: corsHeaders
+      });
     }
 
     const newCoins = progress.coins - item.price;
 
-    const { error: updateError } = await supabase
+    await supabase
       .from("student_progress")
       .update({ coins: newCoins })
       .eq("id", userId);
 
-    if (updateError) {
-      return new Response(
-        JSON.stringify({ error: "Failed to update coins" }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    const { error: insertError } = await supabase
+    await supabase
       .from("user_items")
       .insert({
         user_id: userId,
-        item_id: item_id
+        item_id
       });
 
-    if (insertError) {
-      return new Response(
-        JSON.stringify({ error: "Failed to grant item" }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        item_id,
-        remaining_coins: newCoins
-      }),
-      { headers: corsHeaders }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      remaining_coins: newCoins
+    }), {
+      headers: corsHeaders
+    });
 
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "Unexpected error" }),
-      { status: 500, headers: corsHeaders }
-    );
+    return new Response(JSON.stringify({ error: "Unexpected error" }), {
+      status: 500,
+      headers: corsHeaders
+    });
   }
 });
