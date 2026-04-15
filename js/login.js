@@ -49,7 +49,7 @@ loginBtn.addEventListener("click", async () => {
   }
 
   if (profile.role === "student") {
-    window.location.href = "hub.html";
+    window.location.href = "index.html";
     return;
   }
 
