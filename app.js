@@ -254,9 +254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
-        if (textarea.value.trim()) {
-          submitAnswer(textarea.value);
-        }
+        submitAnswer(textarea.value);
       };
 
       optionsContainer.appendChild(textarea);
@@ -294,9 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
-        if (textarea.value.trim()) {
-          submitAnswer(textarea.value);
-        }
+        submitAnswer(textarea.value);
       };
 
       optionsContainer.appendChild(textarea);
