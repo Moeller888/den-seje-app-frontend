@@ -21,42 +21,44 @@ serve(async (req) => {
       });
     }
 
-    // ✅ USER CLIENT (forwarder auth korrekt)
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: {
-            Authorization:
-              req.headers.get("authorization") ??
-              req.headers.get("Authorization") ??
-              ""
-          }
-        }
-      }
-    );
+    // 🔐 MANUEL AUTH (STABIL)
+    const authHeader =
+      req.headers.get("authorization") ??
+      req.headers.get("Authorization");
 
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid user" }), {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No auth header" }), {
         status: 401,
         headers: corsHeaders
       });
     }
 
-    const userId = user.id;
+    const token = authHeader.replace("Bearer ", "");
 
-    // ✅ ADMIN CLIENT (DB only)
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+
+    const { data: userData, error: userError } =
+      await supabaseAuth.auth.getUser(token);
+
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: corsHeaders
+      });
+    }
+
+    const userId = userData.user.id;
+
+    // 🔥 ADMIN CLIENT (DB AUTHORITY)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // 📦 HENT ITEM
     const { data: item } = await supabaseAdmin
       .from("shop_items")
       .select("*")
@@ -70,10 +72,11 @@ serve(async (req) => {
       });
     }
 
+    // 💰 HENT COINS (FIX: student_id)
     const { data: progress } = await supabaseAdmin
       .from("student_progress")
       .select("coins")
-      .eq("id", userId)
+      .eq("student_id", userId)
       .maybeSingle();
 
     if (!progress) {
@@ -90,6 +93,7 @@ serve(async (req) => {
       });
     }
 
+    // 🎒 CHECK OM EJET
     const { data: existing } = await supabaseAdmin
       .from("user_items")
       .select("id")
@@ -106,11 +110,13 @@ serve(async (req) => {
 
     const newCoins = progress.coins - item.price;
 
+    // 💸 OPDATER COINS
     await supabaseAdmin
       .from("student_progress")
       .update({ coins: newCoins })
-      .eq("id", userId);
+      .eq("student_id", userId);
 
+    // 🎁 TILFØJ ITEM
     await supabaseAdmin
       .from("user_items")
       .insert({
@@ -125,7 +131,10 @@ serve(async (req) => {
       }),
       { headers: corsHeaders }
     );
+
   } catch (err) {
+    console.error("UNEXPECTED ERROR:", err);
+
     return new Response(JSON.stringify({ error: "Unexpected error" }), {
       status: 500,
       headers: corsHeaders
