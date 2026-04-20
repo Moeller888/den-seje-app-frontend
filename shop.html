@@ -131,15 +131,24 @@ async function loadShop() {
 
         const token = sessionData.session.access_token;
 
-        const { data, error } = await supabase.functions.invoke("buy-item", {
-          body: { item_id: item.id },
-          headers: {
-            Authorization: `Bearer ${token}`
+        const res = await fetch(
+          "https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/buy-item",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              item_id: item.id
+            })
           }
-        });
+        );
 
-        if (error || data?.error) {
-          console.error("BUY ERROR:", error, data);
+        const data = await res.json();
+
+        if (!res.ok || data?.error) {
+          console.error("BUY ERROR:", data);
           alert(data?.error || "Fejl ved køb");
           return;
         }
