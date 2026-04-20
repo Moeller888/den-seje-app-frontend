@@ -64,15 +64,15 @@ async function checkAuthAndRole() {
 
   studentId = sessionData.session.user.id;
 
-  const { data: profile, error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", studentId)
     .limit(1);
 
-  const safeProfile = Array.isArray(profile) ? profile[0] : null;
+  const profile = Array.isArray(data) ? data[0] : null;
 
-  if (error || !safeProfile || safeProfile.role !== "student") {
+  if (error || !profile || profile.role !== "student") {
     await supabase.auth.signOut();
     window.location.replace("login.html");
     return false;
@@ -83,7 +83,6 @@ async function checkAuthAndRole() {
 
 function ensureFourOptions(options) {
   const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
-
   const unique = new Set(options);
 
   while (unique.size < 4) {
@@ -122,7 +121,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     levelEl.textContent = level;
 
     const xpBar = document.getElementById("xp-bar");
-
     const xpForNextLevel = Math.max(level * 100, 1);
     const safeProgress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
 
@@ -144,17 +142,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const safeData = Array.isArray(data) ? data[0] : null;
+    const progress = Array.isArray(data) ? data[0] : null;
+    applyProgressToUI(progress);
 
-    if (!safeData) {
-      logEvent("NO_PROGRESS_FOUND");
-      applyProgressToUI(null);
-      return;
-    }
-
-    applyProgressToUI(safeData);
-
-    logEvent("PROGRESS_FETCHED", { xp: safeData.xp });
+    logEvent("PROGRESS_FETCHED", progress);
   }
 
   async function submitAnswer(userAnswer) {
@@ -178,56 +169,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     );
 
-    if (error) {
-      logError("SUBMIT_ERROR", error);
-
-      feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
-      feedback.style.color = "red";
-
+    if (error || !data || !data.status) {
+      logError("SUBMIT_ERROR", error || data);
+      feedback.textContent = "⚠️ Fejl ved svar";
       setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
-    if (!data || !data.status) {
-      logError("INVALID_RESPONSE", data);
-
-      feedback.textContent = "⚠️ Ugyldigt svar fra server";
-      feedback.style.color = "red";
-
-      setState(UI_STATES.AWAITING_ANSWER);
-      return;
-    }
-
-    if (data.status === "pending") {
-      feedback.textContent = "⏳ Afventer lærerens vurdering";
-      feedback.style.color = "orange";
-
-    } else if (data.status === "correct") {
+    if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
-      feedback.style.color = "green";
-
     } else if (data.status === "incorrect") {
-      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
-      feedback.style.color = "red";
-
+      feedback.textContent = "❌ Forkert";
     } else {
-      logError("UNKNOWN_STATUS", data.status);
-
-      feedback.textContent = "⚠️ Ukendt status fra server";
-      feedback.style.color = "red";
-
-      setState(UI_STATES.AWAITING_ANSWER);
-      return;
+      feedback.textContent = "⏳ Afventer";
     }
 
     await fetchProgress();
     setState(UI_STATES.TRANSITIONING);
 
-    let delay = 1000;
-    if (data.status === "correct") delay = 600;
-    if (data.status === "incorrect") delay = 2000;
-
-    setTimeout(() => { loadAndRenderQuestion(); }, delay);
+    setTimeout(() => {
+      loadAndRenderQuestion();
+    }, 800);
   }
 
   async function getNextQuestion() {
@@ -245,14 +207,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    if (!parsed) return null;
-
-    if (parsed.step === "no_questions") {
-      return { step: "no_questions" };
-    }
-
-    if (!parsed.content || !parsed.content.question) {
-      logError("INVALID_QUESTION_FORMAT", parsed);
+    if (!parsed || !parsed.content || !parsed.content.question) {
+      logError("INVALID_QUESTION", parsed);
       return null;
     }
 
@@ -264,67 +220,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    const format = (question.answer_format || "").toLowerCase();
-    const content = question.content;
-
-    let options = content.options;
+    let options = question.content.options;
 
     if (!Array.isArray(options)) options = [];
 
-    if (content.force_text === true) {
-      const textarea = document.createElement("textarea");
+    options = ensureFourOptions(options);
 
-      const btn = document.createElement("button");
-      btn.textContent = "Send svar";
-
-      btn.onclick = () => {
-        submitAnswer(textarea.value);
-      };
-
-      optionsContainer.appendChild(textarea);
-      optionsContainer.appendChild(btn);
-      return;
-    }
-
-    if (format.includes("mc")) {
-      options = ensureFourOptions(options);
-    }
-
-    if (format.includes("number")) {
-      const input = document.createElement("input");
-      input.type = "text";
-
-      const btn = document.createElement("button");
-      btn.textContent = "Svar";
-
-      btn.onclick = () => {
-        const val = Number(input.value);
-        if (!Number.isNaN(val)) {
-          submitAnswer(String(val));
-        }
-      };
-
-      optionsContainer.appendChild(input);
-      optionsContainer.appendChild(btn);
-      return;
-    }
-
-    if (format === "text") {
-      const textarea = document.createElement("textarea");
-
-      const btn = document.createElement("button");
-      btn.textContent = "Send svar";
-
-      btn.onclick = () => {
-        submitAnswer(textarea.value);
-      };
-
-      optionsContainer.appendChild(textarea);
-      optionsContainer.appendChild(btn);
-      return;
-    }
-
-    options.forEach((option) => {
+    options.forEach(option => {
       const btn = document.createElement("button");
       btn.textContent = option;
       btn.onclick = () => submitAnswer(option);
@@ -341,13 +243,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (question.step === "no_questions") {
-      questionElement.textContent = "🎉 Du har ingen flere spørgsmål lige nu";
-      optionsContainer.innerHTML = "";
-      feedback.textContent = "";
-      return;
-    }
-
     questionElement.textContent = question.content.question;
     feedback.textContent = "";
     questionShownAt = Date.now();
@@ -361,4 +256,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadAndRenderQuestion();
 });
 
-console.log("APP LOADED DEBUG");
+console.log("QUIZ PAGE LOADED");
