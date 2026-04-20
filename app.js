@@ -237,14 +237,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return parsed;
   }
 
-  // 🔥 HER ER DET ENESTE VIGTIGE FIX
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
-    // 🔢 NUMBER
+    // 🔢 NUMBER (samme som før)
     if (format === "number") {
       const row = document.createElement("div");
       row.className = "answer-row";
@@ -268,23 +267,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT
+    // ✏️ TEXT (🔥 NYT LAYOUT)
     if (format === "text") {
-      const row = document.createElement("div");
-      row.className = "answer-row";
-
       const textarea = document.createElement("textarea");
+      textarea.rows = 4; // 🔥 giver naturlig størrelse
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
+
+      // 🔥 gør knappen mindre visuelt tung
+      btn.style.width = "auto";
+      btn.style.marginTop = "10px";
+      btn.style.padding = "8px 16px";
 
       btn.onclick = () => {
         submitAnswer(textarea.value);
       };
 
-      row.appendChild(textarea);
-      row.appendChild(btn);
-      optionsContainer.appendChild(row);
+      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(btn);
       return;
     }
 
