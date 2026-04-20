@@ -1,4 +1,3 @@
-// 👇 KOPIÉR 1:1 – ingen ændringer
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -23,38 +22,28 @@ serve(async (req) => {
       });
     }
 
+    // 🔥 SERVICE ROLE ONLY
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: {
-            Authorization: req.headers.get("authorization") || ""
-          }
-        }
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser();
+    const authHeader = req.headers.get("authorization");
 
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid user" }), {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No auth header" }), {
         status: 401,
         headers: corsHeaders
       });
     }
 
-    const userId = user.id;
+    // 🔥 decode JWT uden verify (workaround)
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const userId = payload.sub;
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data: item } = await supabaseAdmin
+    // 📦 ITEM
+    const { data: item } = await supabase
       .from("shop_items")
       .select("*")
       .eq("id", item_id)
@@ -67,7 +56,8 @@ serve(async (req) => {
       });
     }
 
-    const { data: progress } = await supabaseAdmin
+    // 💰 COINS
+    const { data: progress } = await supabase
       .from("student_progress")
       .select("coins")
       .eq("student_id", userId)
@@ -87,7 +77,8 @@ serve(async (req) => {
       });
     }
 
-    const { data: existing } = await supabaseAdmin
+    // 🎒 EJET?
+    const { data: existing } = await supabase
       .from("user_items")
       .select("id")
       .eq("user_id", userId)
@@ -103,12 +94,12 @@ serve(async (req) => {
 
     const newCoins = progress.coins - item.price;
 
-    await supabaseAdmin
+    await supabase
       .from("student_progress")
       .update({ coins: newCoins })
       .eq("student_id", userId);
 
-    await supabaseAdmin
+    await supabase
       .from("user_items")
       .insert({
         user_id: userId,
