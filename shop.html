@@ -51,7 +51,10 @@ if (!sessionData.session) {
 
 const userId = sessionData.session.user.id;
 
-// 💰 LOAD COINS (FIX: student_id + robust)
+// 🔥 VIGTIG — hent din ANON KEY (samme som i supabaseClient.js)
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
+
+// 💰 LOAD COINS
 async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
@@ -67,7 +70,6 @@ async function loadCoins() {
   }
 
   const coins = data?.[0]?.coins ?? 0;
-
   coinsDiv.textContent = "Coins: " + coins;
 }
 
@@ -137,7 +139,8 @@ async function loadShop() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              "Authorization": `Bearer ${token}`,
+              "apikey": SUPABASE_ANON_KEY
             },
             body: JSON.stringify({
               item_id: item.id
