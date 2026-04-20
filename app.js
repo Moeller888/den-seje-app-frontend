@@ -82,54 +82,36 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🎭 LOAD AVATAR (VISUEL)
+// 🎭 FIXED AVATAR RENDER (HER ER RETTELSEN)
 async function loadActiveAvatar() {
   const avatarEl = document.getElementById("avatar-display");
+
   if (!avatarEl) return;
 
-  try {
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("active_avatar")
-      .eq("id", studentId)
-      .maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("active_avatar")
+    .eq("id", studentId)
+    .maybeSingle();
 
-    if (profileError) throw profileError;
+  const avatarId = profile?.active_avatar;
 
-    const avatarId = profile?.active_avatar;
-
-    if (!avatarId) {
-      avatarEl.textContent = "Ingen avatar valgt";
-      return;
-    }
-
-    const { data: item, error: itemError } = await supabase
-      .from("shop_items")
-      .select("name, image_url")
-      .eq("id", avatarId)
-      .maybeSingle();
-
-    if (itemError) throw itemError;
-
-    if (!item) {
-      avatarEl.textContent = "Avatar ikke fundet";
-      return;
-    }
-
-    // 🔥 VISUEL RENDER
-    avatarEl.innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px;">
-        <img 
-          src="${item.image_url || ""}" 
-          style="width:50px;height:50px;border-radius:8px;background:#ddd;"
-        >
-        <strong>${item.name}</strong>
-      </div>
-    `;
-  } catch (err) {
-    logError("AVATAR_LOAD_ERROR", err);
-    avatarEl.textContent = "⚠️ Avatar fejl";
+  if (!avatarId) {
+    avatarEl.textContent = "Ingen avatar";
+    return;
   }
+
+  const { data: item } = await supabase
+    .from("shop_items")
+    .select("name, image_url")
+    .eq("id", avatarId)
+    .maybeSingle();
+
+  // 🔥 HER: INGEN WRAPPER DIV
+  avatarEl.innerHTML = `
+    <img src="${item?.image_url || ""}" />
+    <div>${item?.name || "Avatar"}</div>
+  `;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -297,34 +279,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (format === "mc") {
-      if (!content || !Array.isArray(content.options) || content.options.length === 0) {
-        logError("INVALID_OPTIONS", content);
-
-        const errorMsg = document.createElement("p");
-        errorMsg.textContent = "⚠️ Spørgsmål mangler svarmuligheder";
-        errorMsg.style.color = "red";
-
-        optionsContainer.appendChild(errorMsg);
-        return;
-      }
-
       content.options.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
         btn.onclick = () => submitAnswer(option);
         optionsContainer.appendChild(btn);
       });
-
       return;
     }
-
-    logError("UNKNOWN_FORMAT", format);
-
-    const errorMsg = document.createElement("p");
-    errorMsg.textContent = "⚠️ Ukendt spørgsmålstype";
-    errorMsg.style.color = "red";
-
-    optionsContainer.appendChild(errorMsg);
   }
 
   async function loadAndRenderQuestion() {
@@ -332,7 +294,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
-      optionsContainer.innerHTML = "";
       return;
     }
 
@@ -347,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 🚀 INIT
   await fetchProgress();
-  await loadActiveAvatar(); // 🔥 vigtigt
+  await loadActiveAvatar();
   await loadAndRenderQuestion();
 });
 
