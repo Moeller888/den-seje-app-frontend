@@ -1,3 +1,106 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+----------------------------------------
+CODEBASE OVERVIEW
+----------------------------------------
+
+"Den Seje App" is a Danish educational platform where students answer questions to earn XP and coins, and teachers manage students and content.
+
+**Stack:**
+- Frontend: Vanilla JS + HTML pages, no build step, deployed to Vercel (`den-seje-app-frontend/` is the Vercel root)
+- Backend: Supabase (hosted) with Deno Edge Functions (`supabase/functions/`)
+- Tests: Playwright E2E, run against the live production URL
+
+**Roles:** `student`, `teacher`, `super_admin` — stored in `profiles.role`, checked on every page load.
+
+----------------------------------------
+COMMANDS
+----------------------------------------
+
+Run all tests (standard workflow):
+```
+.\fix-tests.ps1
+```
+This runs Playwright, and if tests fail it invokes Claude to auto-fix, then re-runs and auto-commits on green.
+
+Run tests manually (without auto-fix):
+```
+npx playwright test
+```
+
+Run a single test file:
+```
+npx playwright test tests/health.spec.ts
+```
+
+Deploy Supabase Edge Functions:
+```
+supabase functions deploy <function-name>
+```
+
+Deploy all functions:
+```
+supabase functions deploy
+```
+
+Push database migrations:
+```
+supabase db push
+```
+
+----------------------------------------
+ARCHITECTURE
+----------------------------------------
+
+**Frontend pages and their JS:**
+- `login.html` + `js/login.js` — email/password login, redirects by role
+- `index.html` + `app.js` — student quiz app (main feature)
+- `teacher.html` + `js/teacher.js` — teacher dashboard, student management
+- `admin.html` + `js/admin.js` — super_admin view
+- `shop.html` — student coin shop
+- `student-detail.html` + `js/student-detail.js` — per-student detail for teachers
+- `hub.html` — navigation hub
+
+`js/supabase.js` is the shared Supabase client for all `js/` modules. `supabaseClient.js` (root) is for ESM import in `app.js`.
+
+**Supabase Edge Functions** (`supabase/functions/`):
+- `get-next-question` — returns next question for student (no JWT required)
+- `process-event` — submits a student answer via `process_question_attempt` RPC, awards XP/coins
+- `buy-item` — handles shop purchases, verifies coins via RLS
+- `create-student` / `create-teacher` — admin account creation (no JWT)
+- `reset-student` — resets student progress
+- `question-context` — fetches question context (JWT required)
+
+All Edge Functions forward the `Authorization` header to run as the calling user (RLS is enforced server-side).
+
+**Student quiz state machine** (`app.js`):
+```
+IDLE → LOADING_QUESTION → AWAITING_ANSWER → SUBMITTING_ANSWER → TRANSITIONING → LOADING_QUESTION
+```
+Invalid transitions are blocked and logged. Never bypass this machine.
+
+**Progression engine** (`js/progression.js`):
+- Event-driven: no direct coin/XP mutation — only events (`MC_CORRECT`, `TEXT_APPROVED`, `XP_BOOST`, `REFUND`)
+- State is a pure aggregate of events, no side effects in the engine itself
+
+**Database patterns:**
+- Use `.maybeSingle()` (not `.single()`) unless the row is guaranteed to exist
+- Prefer `.limit(1)` + `[0]` with null check for safety
+- RLS enforces authorization; Edge Functions always forward the user's JWT
+
+**Deployment:**
+- Frontend: edit files in `den-seje-app-frontend/`, commit and push from the root `.git` — Vercel auto-deploys
+- Backend: `supabase functions deploy <name>` — functions are deployed independently from frontend
+
+**Tests** (`tests/`):
+- `health.spec.ts` — full student flow: login → question loads → answer → feedback → next question
+- `example.spec.ts` — additional flow tests
+- Tests run against `https://den-seje-app-frontend.vercel.app` (production), not localhost
+- Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
+
+----------------------------------------
 # SYSTEM RULES – PRODUCTION STRICT MODE
 
 You are working on a production system.
@@ -153,7 +256,7 @@ TEST & AUTOMATION WORKFLOW
 - Brug altid:
   .\fix-tests.ps1
 - Ingen manuelle test-loops
-- Ingen “jeg tror det virker”
+- Ingen "jeg tror det virker"
 
 34. TESTS ER GATEKEEPER
 
@@ -205,7 +308,7 @@ TEST INTEGRITY RULES (CRITICAL)
 41. TESTS MUST NOT BE WEAKENED
 
 - Do NOT increase timeouts unless root cause requires it
-- Do NOT replace logic with delays
+- Do NOT replace logic with assigns
 - Do NOT remove assertions
 - Do NOT bypass failing conditions
 

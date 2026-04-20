@@ -51,11 +51,12 @@ if (!sessionData.session) {
 
 const userId = sessionData.session.user.id;
 
-// 💰 LOAD COINS (FIX: user_id)
+// 💰 LOAD COINS
 async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
     .select("coins")
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
@@ -117,7 +118,6 @@ async function loadShop() {
     if (!isOwned) {
       btn.onclick = async () => {
 
-        // 🔐 hent frisk session
         const { data: sessionData } = await supabase.auth.getSession();
 
         if (!sessionData.session) {
@@ -126,17 +126,8 @@ async function loadShop() {
           return;
         }
 
-        console.log("SESSION:", sessionData);
-
-        const token = sessionData?.session?.access_token;
-
-        console.log("TOKEN:", token);
-
         const { data, error } = await supabase.functions.invoke("buy-item", {
-          body: { item_id: item.id },
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`
-          }
+          body: { item_id: item.id }
         });
 
         if (error || data?.error) {
@@ -145,7 +136,6 @@ async function loadShop() {
           return;
         }
 
-        // 🔄 reload UI
         await loadCoins();
         await loadShop();
       };

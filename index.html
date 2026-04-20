@@ -1,13 +1,35 @@
 ﻿<!DOCTYPE html>
 <html lang="da">
 <head>
-<link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <title>DEN SEJE APP</title>
+
+  <style>
+    #menu-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      cursor: pointer;
+    }
+
+    #logout-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- 🔥 MENU -->
+  <button id="menu-btn">☰ Menu</button>
+
+  <!-- 🔐 LOGOUT -->
   <button id="logout-btn">Log ud</button>
+
   <h1>DEN SEJE APP</h1>
 
   <div>
@@ -23,7 +45,14 @@
   <div id="feedback"></div>
   <div id="options"></div>
 
+  <script type="module">
+    document.getElementById("menu-btn").onclick = () => {
+      window.location.href = "hub.html";
+    };
+  </script>
+
   <script type="module" src="supabaseClient.js"></script>
   <script type="module" src="app.js"></script>
+
 </body>
 </html>
