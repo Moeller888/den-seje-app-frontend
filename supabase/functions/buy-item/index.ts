@@ -13,7 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { item_id } = await req.json();
+    const body = await req.json().catch(() => null);
+    const item_id = body?.item_id;
 
     if (!item_id) {
       return new Response(JSON.stringify({ error: "Missing item_id" }), {
@@ -22,57 +23,49 @@ serve(async (req) => {
       });
     }
 
-    // 🔥 SERVICE ROLE ONLY
-    const supabase = createClient(
+    // 🔐 Brug USER CONTEXT (ikke manuel decode)
+    const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: { Authorization: req.headers.get("Authorization")! }
+        }
+      }
     );
 
-    const authHeader = req.headers.get("authorization");
+    const {
+      data: { user },
+      error: authError
+    } = await supabaseUser.auth.getUser();
 
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No auth header" }), {
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: corsHeaders
       });
     }
 
-    // 🔥 decode JWT uden verify (workaround)
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const userId = payload.sub;
+    const userId = user.id;
+
+    // 🔥 SERVICE ROLE til writes
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     // 📦 ITEM
-    const { data: item } = await supabase
+    const { data: item, error: itemError } = await supabase
       .from("shop_items")
-      .select("*")
+      .select("id, price")
       .eq("id", item_id)
-      .maybeSingle();
+      .limit(1);
 
-    if (!item) {
+    const safeItem = item?.[0];
+
+    if (itemError || !safeItem) {
       return new Response(JSON.stringify({ error: "Item not found" }), {
         status: 404,
-        headers: corsHeaders
-      });
-    }
-
-    // 💰 COINS
-    const { data: progress } = await supabase
-      .from("student_progress")
-      .select("coins")
-      .eq("student_id", userId)
-      .maybeSingle();
-
-    if (!progress) {
-      return new Response(JSON.stringify({ error: "No progress" }), {
-        status: 404,
-        headers: corsHeaders
-      });
-    }
-
-    if (progress.coins < item.price) {
-      return new Response(JSON.stringify({ error: "Not enough coins" }), {
-        status: 400,
         headers: corsHeaders
       });
     }
@@ -83,28 +76,73 @@ serve(async (req) => {
       .select("id")
       .eq("user_id", userId)
       .eq("item_id", item_id)
-      .maybeSingle();
+      .limit(1);
 
-    if (existing) {
+    if (existing && existing.length > 0) {
       return new Response(JSON.stringify({ error: "Already owned" }), {
         status: 400,
         headers: corsHeaders
       });
     }
 
-    const newCoins = progress.coins - item.price;
+    // 💰 COINS
+    const { data: progress, error: progressError } = await supabase
+      .from("student_progress")
+      .select("coins")
+      .eq("student_id", userId)
+      .limit(1);
 
-    await supabase
+    const safeProgress = progress?.[0];
+
+    if (progressError || !safeProgress) {
+      return new Response(JSON.stringify({ error: "No progress" }), {
+        status: 404,
+        headers: corsHeaders
+      });
+    }
+
+    if (safeProgress.coins < safeItem.price) {
+      return new Response(JSON.stringify({ error: "Not enough coins" }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    const newCoins = safeProgress.coins - safeItem.price;
+
+    // 🔥 UPDATE COINS
+    const { error: updateError } = await supabase
       .from("student_progress")
       .update({ coins: newCoins })
       .eq("student_id", userId);
 
-    await supabase
+    if (updateError) {
+      return new Response(JSON.stringify({ error: "Failed to update coins" }), {
+        status: 500,
+        headers: corsHeaders
+      });
+    }
+
+    // 🔥 INSERT ITEM
+    const { error: insertError } = await supabase
       .from("user_items")
       .insert({
         user_id: userId,
         item_id
       });
+
+    if (insertError) {
+      // rollback coins
+      await supabase
+        .from("student_progress")
+        .update({ coins: safeProgress.coins })
+        .eq("student_id", userId);
+
+      return new Response(JSON.stringify({ error: "Failed to assign item" }), {
+        status: 500,
+        headers: corsHeaders
+      });
+    }
 
     return new Response(
       JSON.stringify({
@@ -115,7 +153,8 @@ serve(async (req) => {
     );
 
   } catch (err) {
-    console.error(err);
+    console.error("BUY ITEM ERROR:", err);
+
     return new Response(JSON.stringify({ error: "Unexpected error" }), {
       status: 500,
       headers: corsHeaders
