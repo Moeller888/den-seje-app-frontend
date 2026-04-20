@@ -11,21 +11,38 @@
       text-align: center;
     }
 
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
     .item {
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin: 10px auto;
-      max-width: 300px;
+      border: 2px solid #ccc;
+      padding: 10px;
+      width: 120px;
+      border-radius: 10px;
+      transition: 0.2s;
+      background: #fafafa;
+    }
+
+    .item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .item.active {
+      border-color: green;
+      background: #eaffea;
+      transform: scale(1.05);
     }
 
     button {
-      margin-top: 10px;
+      margin-top: 5px;
       cursor: pointer;
-    }
-
-    .active {
-      border: 2px solid green;
-      background: #eaffea;
     }
   </style>
 </head>
@@ -35,8 +52,10 @@
 <h1>Din Avatar</h1>
 
 <div id="current"></div>
-<div id="avatars"></div>
 
+<div class="grid" id="avatars"></div>
+
+<br>
 <button onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
 
 <script type="module">
@@ -54,7 +73,7 @@ if (!sessionData.session) {
 
 const userId = sessionData.session.user.id;
 
-// 🔥 LOAD ACTIVE AVATAR
+// 🔥 LOAD ACTIVE
 async function loadActive() {
   const { data } = await supabase
     .from("profiles")
@@ -74,7 +93,8 @@ async function loadOwnedAvatars() {
       shop_items (
         id,
         name,
-        type
+        type,
+        image_url
       )
     `)
     .eq("user_id", userId);
@@ -121,8 +141,8 @@ async function loadUI() {
   avatarsDiv.innerHTML = "";
 
   currentDiv.textContent = active
-    ? "Aktiv avatar ID: " + active
-    : "Ingen aktiv avatar";
+    ? "Aktiv avatar valgt"
+    : "Ingen avatar valgt";
 
   avatars.forEach(item => {
     const div = document.createElement("div");
@@ -133,7 +153,8 @@ async function loadUI() {
     }
 
     div.innerHTML = `
-      <strong>${item.name}</strong><br>
+      <img src="${item.image_url || ''}" alt="avatar">
+      <div><strong>${item.name}</strong></div>
       <button ${item.id === active ? "disabled" : ""}>
         ${item.id === active ? "Udstyret" : "Udstyr"}
       </button>
