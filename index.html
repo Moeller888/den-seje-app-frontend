@@ -32,25 +32,36 @@
 
   <h1>DEN SEJE APP</h1>
 
+  <!-- 🎭 AVATAR -->
+  <div id="avatar-display" style="margin-bottom: 10px; font-weight: bold;">
+    Indlæser avatar...
+  </div>
+
+  <!-- 📊 PROGRESS -->
   <div>
     <p>Profil-level: <span id="level">1</span></p>
     <p>XP: <span id="xp">0</span></p>
+
     <div id="xp-bar-container" style="width: 100%; height: 20px; background: #ddd;">
       <div id="xp-bar" style="height: 100%; background: green; width: 0%;"></div>
     </div>
+
     <p>Coins: <span id="coins">0</span></p>
   </div>
 
+  <!-- ❓ QUIZ -->
   <div id="question">Indlæser...</div>
   <div id="feedback"></div>
   <div id="options"></div>
 
+  <!-- 🔗 NAV -->
   <script type="module">
     document.getElementById("menu-btn").onclick = () => {
       window.location.href = "hub.html";
     };
   </script>
 
+  <!-- 🔌 SCRIPTS -->
   <script type="module" src="supabaseClient.js"></script>
   <script type="module" src="app.js"></script>
 

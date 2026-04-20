@@ -54,6 +54,7 @@ let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
 
+// 🔐 AUTH
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
 
@@ -79,6 +80,34 @@ async function checkAuthAndRole() {
   }
 
   return true;
+}
+
+// 🎭 LOAD AVATAR
+async function loadActiveAvatar() {
+  const avatarEl = document.getElementById("avatar-display");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("active_avatar")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  const avatarId = profile?.active_avatar;
+
+  if (!avatarId) {
+    if (avatarEl) avatarEl.textContent = "Ingen avatar valgt";
+    return;
+  }
+
+  const { data: item } = await supabase
+    .from("shop_items")
+    .select("name")
+    .eq("id", avatarId)
+    .maybeSingle();
+
+  if (avatarEl) {
+    avatarEl.textContent = "Avatar: " + (item?.name ?? "Ukendt");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -211,7 +240,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
-    // 🔢 NUMBER
     if (format === "number") {
       const input = document.createElement("input");
       input.type = "number";
@@ -231,7 +259,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT
     if (format === "text") {
       const textarea = document.createElement("textarea");
 
@@ -247,7 +274,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 🔘 MULTIPLE CHOICE (kun hvis eksplicit)
     if (format === "mc") {
       if (!content || !Array.isArray(content.options) || content.options.length === 0) {
         logError("INVALID_OPTIONS", content);
@@ -270,7 +296,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ❌ UKENDT FORMAT = HARD FAIL
     logError("UNKNOWN_FORMAT", format);
 
     const errorMsg = document.createElement("p");
@@ -284,8 +309,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const question = await getNextQuestion();
 
     console.log("RAW QUESTION OBJECT:", question);
-    console.log("OPTIONS:", question?.content?.options);
-    console.log("FORMAT:", question?.answer_format);
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
@@ -302,7 +325,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
+  // 🚀 INIT
   await fetchProgress();
+  await loadActiveAvatar();
   await loadAndRenderQuestion();
 });
 
