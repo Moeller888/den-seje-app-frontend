@@ -234,7 +234,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadAndRenderQuestion() {
     const question = await getNextQuestion();
 
-    console.log("RAW QUESTION OBJECT:", question); // 🔥 DETTE ER DET VIGTIGE
+    console.log("RAW QUESTION OBJECT:", question);
+    console.log("OPTIONS:", question?.content?.options);
+    console.log("FORMAT:", question?.answer_format);
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
