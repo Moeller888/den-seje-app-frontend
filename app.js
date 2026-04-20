@@ -81,18 +81,6 @@ async function checkAuthAndRole() {
   return true;
 }
 
-function ensureFourOptions(options) {
-  const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
-  const unique = new Set(options);
-
-  while (unique.size < 4) {
-    const random = pool[Math.floor(Math.random() * pool.length)];
-    unique.add(random);
-  }
-
-  return Array.from(unique).sort(() => Math.random() - 0.5);
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authorized = await checkAuthAndRole();
@@ -220,11 +208,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    let options = question.content.options;
+    const content = question?.content;
 
-    if (!Array.isArray(options)) options = [];
+    if (!content || !Array.isArray(content.options) || content.options.length === 0) {
+      logError("INVALID_OPTIONS", content);
 
-    options = ensureFourOptions(options);
+      const errorMsg = document.createElement("p");
+      errorMsg.textContent = "⚠️ Spørgsmål mangler svarmuligheder";
+      errorMsg.style.color = "red";
+
+      optionsContainer.appendChild(errorMsg);
+      return;
+    }
+
+    const options = content.options;
 
     options.forEach(option => {
       const btn = document.createElement("button");
