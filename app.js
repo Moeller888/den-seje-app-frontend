@@ -208,27 +208,76 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
+    const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
-    if (!content || !Array.isArray(content.options) || content.options.length === 0) {
-      logError("INVALID_OPTIONS", content);
+    // 🔢 NUMBER
+    if (format === "number") {
+      const input = document.createElement("input");
+      input.type = "number";
 
-      const errorMsg = document.createElement("p");
-      errorMsg.textContent = "⚠️ Spørgsmål mangler svarmuligheder";
-      errorMsg.style.color = "red";
+      const btn = document.createElement("button");
+      btn.textContent = "Svar";
 
-      optionsContainer.appendChild(errorMsg);
+      btn.onclick = () => {
+        const val = Number(input.value);
+        if (!Number.isNaN(val)) {
+          submitAnswer(String(val));
+        }
+      };
+
+      optionsContainer.appendChild(input);
+      optionsContainer.appendChild(btn);
       return;
     }
 
-    const options = content.options;
+    // ✏️ TEXT
+    if (format === "text") {
+      const textarea = document.createElement("textarea");
 
-    options.forEach(option => {
       const btn = document.createElement("button");
-      btn.textContent = option;
-      btn.onclick = () => submitAnswer(option);
+      btn.textContent = "Send svar";
+
+      btn.onclick = () => {
+        submitAnswer(textarea.value);
+      };
+
+      optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
-    });
+      return;
+    }
+
+    // 🔘 MULTIPLE CHOICE (kun hvis eksplicit)
+    if (format === "mc") {
+      if (!content || !Array.isArray(content.options) || content.options.length === 0) {
+        logError("INVALID_OPTIONS", content);
+
+        const errorMsg = document.createElement("p");
+        errorMsg.textContent = "⚠️ Spørgsmål mangler svarmuligheder";
+        errorMsg.style.color = "red";
+
+        optionsContainer.appendChild(errorMsg);
+        return;
+      }
+
+      content.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => submitAnswer(option);
+        optionsContainer.appendChild(btn);
+      });
+
+      return;
+    }
+
+    // ❌ UKENDT FORMAT = HARD FAIL
+    logError("UNKNOWN_FORMAT", format);
+
+    const errorMsg = document.createElement("p");
+    errorMsg.textContent = "⚠️ Ukendt spørgsmålstype";
+    errorMsg.style.color = "red";
+
+    optionsContainer.appendChild(errorMsg);
   }
 
   async function loadAndRenderQuestion() {
