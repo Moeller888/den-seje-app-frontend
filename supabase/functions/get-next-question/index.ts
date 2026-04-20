@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -14,29 +14,38 @@ function mapAnswerFormat(format: string | null) {
   return "mc";
 }
 
-function normalizeContent(raw: any) {
+// 🔥 FORMAT-AWARE NORMALIZATION
+function normalizeContent(raw: any, answer_format: string) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid content");
   }
 
-  let question = raw.question;
+  const question = raw.question;
   let options = raw.options;
-  let correct = raw.correct;
+  const correct = raw.correct ?? null;
 
   if (typeof question !== "string" || question.trim().length === 0) {
     throw new Error("Missing question text");
   }
 
-  if (!Array.isArray(options)) options = [];
+  // 🔘 MULTIPLE CHOICE
+  if (answer_format === "mc") {
+    if (!Array.isArray(options) || options.length < 2) {
+      throw new Error("MC question missing valid options");
+    }
 
-  // 🔥 ALTID 4 svarmuligheder
-  while (options.length < 4) {
-    options.push(`Option ${options.length + 1}`);
+    return {
+      question,
+      options,
+      correct,
+    };
   }
 
-  if (typeof correct !== "string") correct = null;
-
-  return { question, options, correct };
+  // 🔢 NUMBER / ✏️ TEXT
+  return {
+    question,
+    correct,
+  };
 }
 
 serve(async (req) => {
@@ -64,11 +73,10 @@ serve(async (req) => {
 
     const student_id = user.id;
 
-    // 🔥 BODY (kun én gang!)
     const body = await req.json().catch(() => ({}));
     const lastQuestionId = body?.last_question_id ?? null;
 
-    // 🔥 1. DUE QUESTIONS (ALTID prioritet)
+    // 🔥 1. DUE QUESTIONS
     const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
       .select(`
@@ -89,13 +97,15 @@ serve(async (req) => {
 
     if (dueInstances && dueInstances.length > 0) {
       const instance = dueInstances[0];
-      const normalized = normalizeContent(instance.questions.content);
+
+      const format = mapAnswerFormat(instance.questions.answer_format);
+      const normalized = normalizeContent(instance.questions.content, format);
 
       return new Response(
         JSON.stringify({
           question_instance_id: instance.id,
           content: normalized,
-          answer_format: mapAnswerFormat(instance.questions.answer_format),
+          answer_format: format,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -104,7 +114,7 @@ serve(async (req) => {
       );
     }
 
-    // 🔥 2. UPCOMING (ANTI-REPEAT HARD FIX)
+    // 🔥 2. UPCOMING
     const { data: upcoming, error: upcomingError } = await supabase
       .from("question_instances")
       .select(`
@@ -122,21 +132,19 @@ serve(async (req) => {
     if (upcomingError) throw upcomingError;
 
     if (upcoming && upcoming.length > 0) {
-
-      // 🔥 HARD FILTER (ingen gentagelse)
       const filtered = upcoming.filter(q => q.id !== lastQuestionId);
-
       const pool = filtered.length > 0 ? filtered : upcoming;
 
       const instance = pool[Math.floor(Math.random() * pool.length)];
 
-      const normalized = normalizeContent(instance.questions.content);
+      const format = mapAnswerFormat(instance.questions.answer_format);
+      const normalized = normalizeContent(instance.questions.content, format);
 
       return new Response(
         JSON.stringify({
           question_instance_id: instance.id,
           content: normalized,
-          answer_format: mapAnswerFormat(instance.questions.answer_format),
+          answer_format: format,
           preview: true,
         }),
         {
@@ -146,7 +154,7 @@ serve(async (req) => {
       );
     }
 
-    // 🔥 3. NYE SPØRGSMÅL
+    // 🔥 3. NEW QUESTIONS
     const { data: questions, error: questionError } = await supabase
       .from("questions")
       .select("id, content, answer_format")
@@ -159,7 +167,8 @@ serve(async (req) => {
     for (const q of questions || []) {
       if (!q.content) continue;
 
-      const normalized = normalizeContent(q.content);
+      const format = mapAnswerFormat(q.answer_format);
+      const normalized = normalizeContent(q.content, format);
 
       const { data, error } = await supabase
         .from("question_instances")
@@ -176,7 +185,7 @@ serve(async (req) => {
         .limit(1);
 
       if (!error && data && data.length > 0) {
-        inserted = { instance: data[0], question: q, normalized };
+        inserted = { instance: data[0], question: q, normalized, format };
         break;
       }
     }
@@ -195,7 +204,7 @@ serve(async (req) => {
       JSON.stringify({
         question_instance_id: inserted.instance.id,
         content: inserted.normalized,
-        answer_format: mapAnswerFormat(inserted.question.answer_format),
+        answer_format: inserted.format,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
