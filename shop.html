@@ -51,12 +51,12 @@ if (!sessionData.session) {
 
 const userId = sessionData.session.user.id;
 
-// 💰 LOAD COINS
+// 💰 LOAD COINS (FIX: student_id)
 async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
     .select("coins")
-    .eq("id", userId)
+    .eq("student_id", userId)
     .maybeSingle();
 
   if (error) {
