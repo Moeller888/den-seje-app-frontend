@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Avatar</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 10px auto;
+      max-width: 300px;
+    }
+
+    button {
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .active {
+      border: 2px solid green;
+      background: #eaffea;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Din Avatar</h1>
+
+<div id="current"></div>
+<div id="avatars"></div>
+
+<button onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
+
+<script type="module">
+import { supabase } from "./supabaseClient.js";
+
+const avatarsDiv = document.getElementById("avatars");
+const currentDiv = document.getElementById("current");
+
+// 🔐 AUTH
+const { data: sessionData } = await supabase.auth.getSession();
+
+if (!sessionData.session) {
+  window.location.replace("login.html");
+}
+
+const userId = sessionData.session.user.id;
+
+// 🔥 LOAD ACTIVE AVATAR
+async function loadActive() {
+  const { data } = await supabase
+    .from("profiles")
+    .select("active_avatar")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return data?.active_avatar ?? null;
+}
+
+// 🎒 LOAD OWNED AVATARS
+async function loadOwnedAvatars() {
+  const { data } = await supabase
+    .from("user_items")
+    .select(`
+      item_id,
+      shop_items (
+        id,
+        name,
+        type
+      )
+    `)
+    .eq("user_id", userId);
+
+  if (!data) return [];
+
+  return data
+    .map(x => x.shop_items)
+    .filter(item => item && item.type === "avatar");
+}
+
+// 🎯 EQUIP
+async function equip(itemId) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session.access_token;
+
+  const res = await fetch(
+    "https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/equip-avatar",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ item_id: itemId })
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok || data.error) {
+    alert(data.error || "Fejl");
+    return;
+  }
+
+  await loadUI();
+}
+
+// 🎨 RENDER
+async function loadUI() {
+  const active = await loadActive();
+  const avatars = await loadOwnedAvatars();
+
+  avatarsDiv.innerHTML = "";
+
+  currentDiv.textContent = active
+    ? "Aktiv avatar ID: " + active
+    : "Ingen aktiv avatar";
+
+  avatars.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    if (item.id === active) {
+      div.classList.add("active");
+    }
+
+    div.innerHTML = `
+      <strong>${item.name}</strong><br>
+      <button ${item.id === active ? "disabled" : ""}>
+        ${item.id === active ? "Udstyret" : "Udstyr"}
+      </button>
+    `;
+
+    const btn = div.querySelector("button");
+
+    if (item.id !== active) {
+      btn.onclick = () => equip(item.id);
+    }
+
+    avatarsDiv.appendChild(div);
+  });
+}
+
+// 🚀 INIT
+await loadUI();
+
+</script>
+
+</body>
+</html>
