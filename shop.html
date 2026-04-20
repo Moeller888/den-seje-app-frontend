@@ -51,7 +51,7 @@ if (!sessionData.session) {
 
 const userId = sessionData.session.user.id;
 
-// ✅ ROBUST LOAD COINS (FIX)
+// 💰 LOAD COINS (FIX: student_id + robust)
 async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
@@ -129,8 +129,13 @@ async function loadShop() {
           return;
         }
 
+        const token = sessionData.session.access_token;
+
         const { data, error } = await supabase.functions.invoke("buy-item", {
-          body: { item_id: item.id }
+          body: { item_id: item.id },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
 
         if (error || data?.error) {
