@@ -82,7 +82,7 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🎭 AVATAR (uændret — korrekt)
+// 🎭 AVATAR
 async function loadActiveAvatar() {
   const avatarEl = document.getElementById("avatar-display");
 
@@ -130,6 +130,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     await supabase.auth.signOut();
     window.location.replace("login.html");
   };
+
+  function flash(type) {
+    const el = document.querySelector(".question-box");
+
+    if (!el) return;
+
+    el.style.transition = "all 0.2s";
+
+    if (type === "correct") {
+      el.style.background = "#d4edda";
+      el.style.transform = "scale(1.02)";
+    } else {
+      el.style.background = "#f8d7da";
+      el.style.transform = "translateX(-5px)";
+    }
+
+    setTimeout(() => {
+      el.style.background = "";
+      el.style.transform = "";
+    }, 300);
+  }
 
   function applyProgressToUI(progress) {
     const xp = Number(progress?.xp ?? 0);
@@ -198,10 +219,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
-    } else if (data.status === "incorrect") {
-      feedback.textContent = "❌ Forkert";
+      flash("correct");
     } else {
-      feedback.textContent = "⏳ Afventer";
+      feedback.textContent = "❌ Forkert";
+      flash("incorrect");
     }
 
     await fetchProgress();
@@ -209,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setTimeout(() => {
       loadAndRenderQuestion();
-    }, 800);
+    }, 900); // 🔥 lidt længere delay
   }
 
   async function getNextQuestion() {
@@ -243,7 +264,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
-    // 🔢 NUMBER (samme som før)
     if (format === "number") {
       const row = document.createElement("div");
       row.className = "answer-row";
@@ -267,15 +287,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT (🔥 NYT LAYOUT)
     if (format === "text") {
       const textarea = document.createElement("textarea");
-      textarea.rows = 4; // 🔥 giver naturlig størrelse
+      textarea.rows = 4;
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
-
-      // 🔥 gør knappen mindre visuelt tung
       btn.style.width = "auto";
       btn.style.marginTop = "10px";
       btn.style.padding = "8px 16px";
@@ -289,7 +306,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 🔘 MC
     if (format === "mc") {
       content.options.forEach(option => {
         const btn = document.createElement("button");
@@ -297,7 +313,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         btn.onclick = () => submitAnswer(option);
         optionsContainer.appendChild(btn);
       });
-      return;
     }
   }
 
@@ -318,7 +333,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
-  // 🚀 INIT
   await fetchProgress();
   await loadActiveAvatar();
   await loadAndRenderQuestion();
