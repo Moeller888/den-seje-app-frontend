@@ -25,83 +25,109 @@
       cursor: pointer;
     }
 
-    .top-bar {
-      margin-top: 40px;
+    h1 {
       margin-bottom: 20px;
     }
 
+    /* 🔥 STATS INLINE */
+    .top-bar {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #xp-bar-container {
+      flex: 1;
+      height: 20px;
+      background: #ddd;
+    }
+
+    #xp-bar {
+      height: 100%;
+      background: green;
+      width: 0%;
+    }
+
+    /* 🔥 MAIN LAYOUT */
     .game-container {
       display: flex;
-      gap: 20px;
+      gap: 30px;
       align-items: flex-start;
     }
 
+    /* 🎭 AVATAR */
     .avatar-box {
-      width: 120px;
+      width: 140px;
       text-align: center;
     }
 
     .avatar-box img {
-      width: 100px;
-      height: 100px;
+      width: 100%;
       border-radius: 12px;
       background: #ddd;
     }
 
+    /* ❓ QUESTION */
     .question-box {
       flex: 1;
     }
 
     #question {
-      font-size: 20px;
-      margin-bottom: 10px;
+      font-size: 22px;
+      margin-bottom: 15px;
+    }
+
+    /* 🔥 INPUT ROW */
+    .answer-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .answer-row input,
+    .answer-row textarea {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .answer-row button {
+      padding: 10px 20px;
+      cursor: pointer;
     }
 
     #options button {
       display: block;
-      margin: 5px 0;
-      padding: 10px;
       width: 100%;
-      cursor: pointer;
-    }
-
-    textarea, input {
-      width: 100%;
+      margin-top: 8px;
       padding: 10px;
-      margin-top: 5px;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- NAV -->
   <button id="menu-btn">☰ Menu</button>
   <button id="logout-btn">Log ud</button>
 
   <h1>DEN SEJE APP</h1>
 
-  <!-- 📊 PROGRESS -->
   <div class="top-bar">
-    <p>Level: <span id="level">1</span></p>
-    <p>XP: <span id="xp">0</span></p>
+    <span>Level: <b id="level">1</b></span>
+    <span>XP: <b id="xp">0</b></span>
 
-    <div id="xp-bar-container" style="width: 100%; height: 20px; background: #ddd;">
-      <div id="xp-bar" style="height: 100%; background: green; width: 0%;"></div>
+    <div id="xp-bar-container">
+      <div id="xp-bar"></div>
     </div>
 
-    <p>Coins: <span id="coins">0</span></p>
+    <span>Coins: <b id="coins">0</b></span>
   </div>
 
-  <!-- 🎮 GAME AREA -->
   <div class="game-container">
 
-    <!-- 🎭 AVATAR -->
     <div class="avatar-box">
       <div id="avatar-display">Indlæser...</div>
     </div>
 
-    <!-- ❓ QUESTION -->
     <div class="question-box">
       <div id="question">Indlæser...</div>
       <div id="feedback"></div>
@@ -110,14 +136,12 @@
 
   </div>
 
-  <!-- NAV SCRIPT -->
   <script type="module">
     document.getElementById("menu-btn").onclick = () => {
       window.location.href = "hub.html";
     };
   </script>
 
-  <!-- APP -->
   <script type="module" src="supabaseClient.js"></script>
   <script type="module" src="app.js"></script>
 

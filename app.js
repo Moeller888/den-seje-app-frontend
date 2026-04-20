@@ -82,7 +82,7 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🎭 FIXED AVATAR RENDER (HER ER RETTELSEN)
+// 🎭 AVATAR (uændret — korrekt)
 async function loadActiveAvatar() {
   const avatarEl = document.getElementById("avatar-display");
 
@@ -107,7 +107,6 @@ async function loadActiveAvatar() {
     .eq("id", avatarId)
     .maybeSingle();
 
-  // 🔥 HER: INGEN WRAPPER DIV
   avatarEl.innerHTML = `
     <img src="${item?.image_url || ""}" />
     <div>${item?.name || "Avatar"}</div>
@@ -238,13 +237,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     return parsed;
   }
 
+  // 🔥 HER ER DET ENESTE VIGTIGE FIX
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
+    // 🔢 NUMBER
     if (format === "number") {
+      const row = document.createElement("div");
+      row.className = "answer-row";
+
       const input = document.createElement("input");
       input.type = "number";
 
@@ -258,12 +262,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       };
 
-      optionsContainer.appendChild(input);
-      optionsContainer.appendChild(btn);
+      row.appendChild(input);
+      row.appendChild(btn);
+      optionsContainer.appendChild(row);
       return;
     }
 
+    // ✏️ TEXT
     if (format === "text") {
+      const row = document.createElement("div");
+      row.className = "answer-row";
+
       const textarea = document.createElement("textarea");
 
       const btn = document.createElement("button");
@@ -273,11 +282,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         submitAnswer(textarea.value);
       };
 
-      optionsContainer.appendChild(textarea);
-      optionsContainer.appendChild(btn);
+      row.appendChild(textarea);
+      row.appendChild(btn);
+      optionsContainer.appendChild(row);
       return;
     }
 
+    // 🔘 MC
     if (format === "mc") {
       content.options.forEach(option => {
         const btn = document.createElement("button");
