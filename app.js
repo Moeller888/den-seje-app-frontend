@@ -57,7 +57,7 @@ let questionShownAt = null;
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
 
-  if (!sessionData.session) {
+  if (!sessionData?.session) {
     window.location.replace("login.html");
     return false;
   }
@@ -68,9 +68,11 @@ async function checkAuthAndRole() {
     .from("profiles")
     .select("role")
     .eq("id", studentId)
-    .maybeSingle();
+    .limit(1);
 
-  if (error || !profile || profile.role !== "student") {
+  const safeProfile = Array.isArray(profile) ? profile[0] : null;
+
+  if (error || !safeProfile || safeProfile.role !== "student") {
     await supabase.auth.signOut();
     window.location.replace("login.html");
     return false;
@@ -79,7 +81,6 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🔥 Sikrer altid 4 svar
 function ensureFourOptions(options) {
   const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
 
@@ -111,26 +112,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.replace("login.html");
   };
 
-  async function fetchProgress() {
-    const { data } = await supabase
-      .from("student_progress")
-      .select("*")
-      .maybeSingle();
+  function applyProgressToUI(progress) {
+    const xp = Number(progress?.xp ?? 0);
+    const coins = Number(progress?.coins ?? 0);
+    const level = Number(progress?.level ?? 1);
 
-    if (data) {
-      xpEl.textContent = data.xp ?? 0;
-      coinsEl.textContent = data.coins ?? 0;
-      levelEl.textContent = data.level ?? 1;
+    xpEl.textContent = xp;
+    coinsEl.textContent = coins;
+    levelEl.textContent = level;
 
-      const xpBar = document.getElementById("xp-bar");
-      const xp = data.xp ?? 0;
-      const level = data.level ?? 1;
-      const xpForNextLevel = level * 100;
-      const progress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
-      xpBar.style.width = (progress * 100) + "%";
+    const xpBar = document.getElementById("xp-bar");
 
-      logEvent("PROGRESS_FETCHED", { xp: data.xp });
+    const xpForNextLevel = Math.max(level * 100, 1);
+    const safeProgress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
+
+    if (xpBar) {
+      xpBar.style.width = (safeProgress * 100) + "%";
     }
+  }
+
+  async function fetchProgress() {
+    const { data, error } = await supabase
+      .from("student_progress")
+      .select("xp, coins, level")
+      .eq("student_id", studentId)
+      .limit(1);
+
+    if (error) {
+      logError("PROGRESS_FETCH_ERROR", error);
+      applyProgressToUI(null);
+      return;
+    }
+
+    const safeData = Array.isArray(data) ? data[0] : null;
+
+    if (!safeData) {
+      logEvent("NO_PROGRESS_FOUND");
+      applyProgressToUI(null);
+      return;
+    }
+
+    applyProgressToUI(safeData);
+
+    logEvent("PROGRESS_FETCHED", { xp: safeData.xp });
   }
 
   async function submitAnswer(userAnswer) {
@@ -338,4 +362,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 console.log("APP LOADED DEBUG");
-
