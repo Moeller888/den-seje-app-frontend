@@ -65,14 +65,34 @@ async function fetchReviewedAnswers() {
 
   container.innerHTML = "<b>Seneste feedback:</b>";
 
+  function scoreToXP(score) {
+    if (score === 1) return 0;
+    if (score === 2) return 10;
+    if (score === 3) return 25;
+    if (score === 4) return 50;
+    return 0;
+  }
+
   data.data.forEach(item => {
+    const xp = scoreToXP(item.teacher_score);
+
     const div = document.createElement("div");
 
+    div.style.marginTop = "10px";
+
     div.innerHTML = `
-      <div style="margin-top:10px">
+      <div>
         <b>Din besvarelse:</b> ${item.user_answer}<br>
-        <b>Score:</b> ${item.teacher_score}<br>
-        <b>Feedback:</b> ${item.feedback || "Ingen kommentar"}
+        <b>Feedback:</b> ${item.teacher_feedback || "Ingen kommentar"}<br>
+        <b>Score:</b> ${item.teacher_score}
+        <div style="
+          color: green;
+          font-weight: bold;
+          font-size: 18px;
+          margin-top: 5px;
+        ">
+          +${xp} XP
+        </div>
       </div>
     `;
 
