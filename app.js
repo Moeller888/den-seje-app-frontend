@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient.js";
+﻿import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -85,7 +85,6 @@ async function checkAuthAndRole() {
 // 🎭 AVATAR
 async function loadActiveAvatar() {
   const avatarEl = document.getElementById("avatar-display");
-
   if (!avatarEl) return;
 
   const { data: profile } = await supabase
@@ -116,11 +115,7 @@ async function loadActiveAvatar() {
 // 🔥 FEEDBACK
 function flash(type) {
   const el = document.querySelector(".question-box");
-
-  if (!el) {
-    console.warn("FLASH FAILED: .question-box ikke fundet");
-    return;
-  }
+  if (!el) return;
 
   const className = type === "correct"
     ? "correct-flash"
@@ -184,8 +179,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const progress = Array.isArray(data) ? data[0] : null;
     applyProgressToUI(progress);
-
-    logEvent("PROGRESS_FETCHED", progress);
   }
 
   async function submitAnswer(userAnswer, btnRef = null) {
@@ -194,7 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setState(UI_STATES.SUBMITTING_ANSWER);
 
-    // 🔥 disable + loader
     if (btnRef) {
       btnRef.disabled = true;
       btnRef.textContent = "…";
@@ -216,7 +208,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     if (error || !data || !data.status) {
-      logError("SUBMIT_ERROR", error || data);
       feedback.textContent = "⚠️ Fejl ved svar";
       setState(UI_STATES.AWAITING_ANSWER);
       return;
@@ -225,9 +216,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
       flash("correct");
-    } else {
+    } else if (data.status === "incorrect") {
       feedback.textContent = "❌ Forkert";
       flash("incorrect");
+    } else {
+      feedback.textContent = "⏳ Afventer vurdering";
     }
 
     await fetchProgress();
@@ -246,20 +239,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       { body: {} }
     );
 
-    if (error) {
-      logError("GET_QUESTION_ERROR", error);
-      return null;
-    }
+    if (error) return null;
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    if (!parsed || !parsed.content || !parsed.content.question) {
-      logError("INVALID_QUESTION", parsed);
-      return null;
-    }
+    if (!parsed?.content?.question) return null;
 
     currentInstanceId = parsed.question_instance_id ?? null;
-
     return parsed;
   }
 
@@ -290,7 +276,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       btn.onclick = submit;
 
-      input.addEventListener("keydown", (e) => {
+      input.addEventListener("keydown", e => {
         if (e.key === "Enter") submit();
       });
 
@@ -300,32 +286,58 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT
+    // ✏️ TEXT (🔥 MED ORDTÆLLER)
     if (format === "text") {
+
       const textarea = document.createElement("textarea");
-      textarea.rows = 4;
+      textarea.rows = 5;
+      textarea.placeholder = "Skriv mindst 20 ord...";
       textarea.autofocus = true;
+
+      const counter = document.createElement("div");
+      counter.style.fontSize = "14px";
+      counter.style.marginTop = "6px";
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
-      btn.style.width = "auto";
-      btn.style.marginTop = "10px";
-      btn.style.padding = "8px 16px";
+      btn.disabled = true;
+
+      function countWords(text) {
+        return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+      }
+
+      function update() {
+        const words = countWords(textarea.value);
+        counter.textContent = `Ord: ${words} / 20`;
+
+        if (words >= 20) {
+          counter.style.color = "green";
+          btn.disabled = false;
+        } else {
+          counter.style.color = "red";
+          btn.disabled = true;
+        }
+      }
+
+      textarea.addEventListener("input", update);
 
       const submit = () => {
-        submitAnswer(textarea.value, btn);
+        if (!btn.disabled) {
+          submitAnswer(textarea.value, btn);
+        }
       };
 
       btn.onclick = submit;
 
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+      textarea.addEventListener("keydown", e => {
+        if (e.key === "Enter" && e.ctrlKey) {
           e.preventDefault();
           submit();
         }
       });
 
       optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(counter);
       optionsContainer.appendChild(btn);
       return;
     }
@@ -338,11 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         btn.onclick = () => submitAnswer(option, btn);
         optionsContainer.appendChild(btn);
       });
-      return;
     }
-
-    // ❌ fallback
-    logError("UNKNOWN_FORMAT", format);
   }
 
   async function loadAndRenderQuestion() {
@@ -363,7 +371,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
-  // 🚀 INIT
   await fetchProgress();
   await loadActiveAvatar();
   await loadAndRenderQuestion();
