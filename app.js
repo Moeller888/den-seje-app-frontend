@@ -113,6 +113,26 @@ async function loadActiveAvatar() {
   `;
 }
 
+// 🔥 FEEDBACK (ROBUST)
+function flash(type) {
+  const el = document.querySelector(".question-box");
+
+  if (!el) {
+    console.warn("FLASH FAILED: .question-box ikke fundet");
+    return;
+  }
+
+  const className = type === "correct"
+    ? "correct-flash"
+    : "incorrect-flash";
+
+  el.classList.add(className);
+
+  setTimeout(() => {
+    el.classList.remove(className);
+  }, 300);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authorized = await checkAuthAndRole();
@@ -130,27 +150,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await supabase.auth.signOut();
     window.location.replace("login.html");
   };
-
-  function flash(type) {
-    const el = document.querySelector(".question-box");
-
-    if (!el) return;
-
-    el.style.transition = "all 0.2s";
-
-    if (type === "correct") {
-      el.style.background = "#d4edda";
-      el.style.transform = "scale(1.02)";
-    } else {
-      el.style.background = "#f8d7da";
-      el.style.transform = "translateX(-5px)";
-    }
-
-    setTimeout(() => {
-      el.style.background = "";
-      el.style.transform = "";
-    }, 300);
-  }
 
   function applyProgressToUI(progress) {
     const xp = Number(progress?.xp ?? 0);
@@ -230,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setTimeout(() => {
       loadAndRenderQuestion();
-    }, 900); // 🔥 lidt længere delay
+    }, 900);
   }
 
   async function getNextQuestion() {

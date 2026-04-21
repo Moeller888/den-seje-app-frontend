@@ -71,6 +71,9 @@
     /* ❓ QUESTION */
     .question-box {
       flex: 1;
+      padding: 15px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
     }
 
     #question {
@@ -100,6 +103,31 @@
       width: 100%;
       margin-top: 8px;
       padding: 10px;
+    }
+
+    /* 🔥 FEEDBACK ANIMATIONER */
+    .correct-flash {
+      background: #d4edda !important;
+      animation: pop 0.25s ease;
+    }
+
+    .incorrect-flash {
+      background: #f8d7da !important;
+      animation: shake 0.25s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
     }
   </style>
 </head>
