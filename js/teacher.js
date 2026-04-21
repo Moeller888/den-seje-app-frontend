@@ -100,7 +100,7 @@ createStudentBtn.addEventListener("click", async () => {
   }
 
   if (password.length < 6) {
-    createMessage.textContent = "Adgangskode skal være mindst 6 tegn.";
+    createMessage.textContent = "Adgangskode skal vaere mindst 6 tegn.";
     return;
   }
 
@@ -206,6 +206,11 @@ const test = async () => {
 };
 
 test();
+
+/* ========================
+   FETCH REVIEW QUEUE
+======================== */
+
 async function fetchReviewQueue() {
 
   const { data, error } = await supabase
@@ -221,96 +226,127 @@ async function fetchReviewQueue() {
     .is("teacher_score", null)
     .order("created_at", { ascending: false })
     .limit(10);
-  console.log('REVIEW DATA:', data);
+
+  console.log("REVIEW DATA:", data);
 
   if (error) {
     console.error(error);
     return;
   }
 
-  const container = document.getElementById('reviewPanel');
-
+  const container = document.getElementById("reviewPanel");
   container.innerHTML = "";
 
   if (!data || data.length === 0) {
-    container.innerHTML = '<p style="color:green;">Ingen ventende besvarelser 🎉</p>';
+    container.innerHTML = '<p style="color:green;">Ingen ventende besvarelser</p>';
     return;
   }
 
-  container.innerHTML = '';
-
   data.forEach(item => {
 
-    const question = item.questions?.content;
+    const content = item.questions?.content ?? {};
+    const questionText = content.question ?? "(intet sporgsmal)";
+    const answerText = item.user_answer ?? "(intet svar)";
+    const facit = content.answer ?? "";
+    const criteriaList = (content.criteria || []).map(c => `<li>${c}</li>`).join("");
 
-    const criteriaList = (question.criteria || [])
-      .map(c => `<li>${c}</li>`)
-      .join('');
+    const block = document.createElement("div");
+    block.style.border = "1px solid #ccc";
+    block.style.padding = "15px";
+    block.style.marginBottom = "15px";
 
-    const block = document.createElement('div');
-    block.style.border = '1px solid #ccc';
-    block.style.padding = '15px';
-    block.style.marginBottom = '15px';
+    const approveBtn = document.createElement("button");
+    approveBtn.textContent = "GODKEND";
+    approveBtn.onclick = () => approveAnswer(item.id);
 
-    block.innerHTML = ` 
-      <strong>SP�RGSM�L</strong><br>
-      <br><br>
+    const rejectBtn = document.createElement("button");
+    rejectBtn.textContent = "AFVIS";
+    rejectBtn.onclick = () => rejectAnswer(item.id);
+
+    block.innerHTML = `
+      <strong>SPORGSMAL</strong><br>
+      ${questionText}<br><br>
 
       <strong>ELEVENS SVAR</strong><br>
-      <br><br>
+      ${answerText}<br><br>
 
       <strong>FACIT</strong><br>
-      <br><br>
+      ${facit}<br><br>
 
       <strong>KRITERIER</strong>
-      <ul>
-        
-      </ul>
+      <ul>${criteriaList}</ul>
+    `;
 
-      <button onclick="approveAnswer('')">GODKEND</button>
-      <button onclick="rejectAnswer('')">AFVIS</button>`;
-    ;
+    block.appendChild(approveBtn);
+    block.appendChild(rejectBtn);
 
     container.appendChild(block);
-
   });
 }
 
 fetchReviewQueue();
 
+/* ========================
+   APPROVE ANSWER
+======================== */
 
-async function approveAnswer(answerId) {
+async function approveAnswer(instanceId, score = 4) {
 
-  const { error } = await supabase
-    .from('student_answers')
-    .update({
-      status: 'approved',
-      reviewed_at: new Date().toISOString(),
-      teacher_id: teacherId
-    })
-    .eq('id', answerId);
+  const { error } = await supabase.functions.invoke("review-answer", {
+    body: {
+      instance_id: instanceId,
+      score: score,
+      feedback: "Godt svar"
+    }
+  });
 
   if (error) {
     console.error(error);
-    alert('Fejl ved godkendelse');
+    alert("Fejl ved godkendelse");
     return;
   }
 
-  fetchReviewQueue();
+  await fetchReviewQueue();
 }
 
+/* ========================
+   REJECT ANSWER
+======================== */
+
+async function rejectAnswer(instanceId) {
+
+  const { error } = await supabase.functions.invoke("review-answer", {
+    body: {
+      instance_id: instanceId,
+      score: 1,
+      feedback: "Afvist"
+    }
+  });
+
+  if (error) {
+    console.error(error);
+    alert("Fejl ved afvisning");
+    return;
+  }
+
+  await fetchReviewQueue();
+}
+
+/* ========================
+   RESET PENDING
+======================== */
+
 async function resetPending() {
-  // 1️⃣ Første check (hurtig guard)
+
   const confirmReset = confirm(
-    "Er du sikker på, at du vil afvise ALLE ventende svar?\n\nDette kan ikke fortrydes."
+    "Er du sikker pa, at du vil afvise ALLE ventende svar?\n\nDette kan ikke fortrydes."
   );
   if (!confirmReset) return;
 
-  // 2️⃣ Andet check (bevidst handling)
-  const input = prompt('Skriv RESET for at bekræfte');
+  const input = prompt("Skriv RESET for at bekraefte");
 
   if (input !== "RESET") {
-    alert("Annulleret – ingen ændringer foretaget.");
+    alert("Annulleret - ingen aendringer foretaget.");
     return;
   }
 
@@ -319,39 +355,18 @@ async function resetPending() {
 
     if (error) {
       console.error("RESET ERROR:", error);
-      alert("⚠️ Fejl ved reset. Prøv igen.");
+      alert("Fejl ved reset. Proev igen.");
       return;
     }
 
-    alert("✅ Alle ventende svar er blevet afvist.");
+    alert("Alle ventende svar er blevet afvist.");
 
     await fetchReviewQueue();
 
   } catch (err) {
     console.error("UNEXPECTED RESET ERROR:", err);
-    alert("⚠️ Uventet fejl.");
+    alert("Uventet fejl.");
   }
 }
 
 document.getElementById("reset-btn")?.addEventListener("click", resetPending);
-
-async function rejectAnswer(answerId) {
-
-  const { error } = await supabase
-    .from('student_answers')
-    .update({
-      status: 'rejected',
-      reviewed_at: new Date().toISOString(),
-      teacher_id: teacherId
-    })
-    .eq('id', answerId);
-
-  if (error) {
-    console.error(error);
-    alert('Fejl ved afvisning');
-    return;
-  }
-
-  fetchReviewQueue();
-}
-
