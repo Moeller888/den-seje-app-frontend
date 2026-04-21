@@ -53,6 +53,7 @@ function setState(newState) {
 let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
+let currentQuestion = null; // 🔥 GLOBAL DEBUG / DATA
 
 // 🔐 AUTH
 async function checkAuthAndRole() {
@@ -249,14 +250,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return parsed;
   }
 
-  function renderOptions(question) {
+  function renderOptions(qData) {
     optionsContainer.innerHTML = "";
 
-    const format = (question?.answer_format || "").toLowerCase();
-    const content = question?.content;
-    const answerType = question?.answer_type || "short";
+    const format = (qData?.answer_format || "").toLowerCase();
+    const content = qData?.content;
+    const answerType = qData?.answer_type || "short";
 
-    // 🔢 NUMBER
     if (format === "number") {
       const row = document.createElement("div");
       row.className = "answer-row";
@@ -287,9 +287,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT
     if (format === "text") {
-
       const textarea = document.createElement("textarea");
       textarea.rows = answerType === "long" ? 6 : 3;
       textarea.autofocus = true;
@@ -332,7 +330,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // short answer
       const submit = () => {
         submitAnswer(textarea.value, btn);
       };
@@ -351,7 +348,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 🔘 MC
     if (format === "mc") {
       content.options.forEach(option => {
         const btn = document.createElement("button");
@@ -363,19 +359,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadAndRenderQuestion() {
-    const question = await getNextQuestion();
+    const qData = await getNextQuestion();
+    currentQuestion = qData; // 🔥 GLOBAL
 
-    if (!question) {
+    console.log("FULL QUESTION OBJECT:", qData);
+
+    if (!qData) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
       optionsContainer.innerHTML = "";
       return;
     }
 
-    questionElement.textContent = question.content.question;
+    questionElement.textContent = qData.content.question;
     feedback.textContent = "";
     questionShownAt = Date.now();
 
-    renderOptions(question);
+    renderOptions(qData);
 
     setState(UI_STATES.AWAITING_ANSWER);
   }
