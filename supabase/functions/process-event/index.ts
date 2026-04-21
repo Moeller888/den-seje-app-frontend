@@ -14,13 +14,11 @@ function normalize(str) {
     .replace(/\s+/g, " ")
 }
 
-// 🔥 smartere match (usa vs united states)
 function isTextCorrect(user, correct) {
   const u = normalize(user)
   const c = normalize(correct)
 
   if (!u || !c) return false
-
   if (u === c) return true
   if (u.includes(c) || c.includes(u)) return true
 
@@ -58,11 +56,13 @@ serve(async (req) => {
       question_shown_at
     } = body
 
+    console.log("DEBUG INPUT:", { question_instance_id, answer })
+
     if (!question_instance_id || !answer) {
       throw new Error("Missing required fields")
     }
 
-    // 🔥 HENT answer_type + data
+    // 🔥 HENT ALT DATA
     const { data: instanceData, error: instanceError } = await supabase
       .from("question_instances")
       .select(`
@@ -84,16 +84,20 @@ serve(async (req) => {
     const format = (instanceData.questions?.answer_format || "").toLowerCase()
     const answerType = instanceData.questions?.answer_type || "short"
 
+    console.log("DEBUG answerType:", answerType)
+    console.log("DEBUG format:", format)
+
     let status = "pending"
 
     // 🔥 LONG → ALTID pending
     if (answerType === "long") {
 
+      console.log("FLOW: LONG → pending")
       status = "pending"
 
     } else {
 
-      // 🔥 SHORT → evalueres
+      console.log("FLOW: SHORT → evaluate")
 
       if (format.includes("text")) {
 
@@ -125,7 +129,9 @@ serve(async (req) => {
         ? false
         : null
 
-    await supabase
+    console.log("DEBUG RESULT:", { status, isCorrect })
+
+    const { error: updateError } = await supabase
       .from("question_instances")
       .update({
         user_answer: answer,
@@ -133,7 +139,12 @@ serve(async (req) => {
       })
       .eq("id", question_instance_id)
 
-    // 🔥 spaced repetition KUN for short
+    if (updateError) {
+      console.error("UPDATE ERROR:", updateError)
+      throw updateError
+    }
+
+    // 🔥 spaced repetition kun for short
     if (status === "correct" || status === "incorrect") {
 
       const nextReviewAt = new Date()
