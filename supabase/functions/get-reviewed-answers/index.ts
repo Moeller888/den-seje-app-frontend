@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type"
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -15,24 +14,18 @@ serve(async (req) => {
 
   try {
 
-    // 🔥 KRITISK: brug Authorization header
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
         global: {
-          headers: {
-            Authorization: req.headers.get("Authorization")!
-          }
+          headers: { Authorization: req.headers.get("Authorization")! }
         }
       }
     );
 
     // 🔐 AUTH
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return new Response(
@@ -41,16 +34,30 @@ serve(async (req) => {
       );
     }
 
-    // 🔥 HENT REVIEWED ANSWERS
+    // 🔥 FETCH REVIEWED ANSWERS
     const { data, error } = await supabase
       .from("question_instances")
-      .select("user_answer, teacher_score, feedback")
+      .select(`
+        user_answer,
+        teacher_score,
+        feedback,
+        created_at
+      `)
       .eq("student_id", user.id)
       .not("teacher_score", "is", null)
-      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(5);
 
-    if (error) throw error;
+    if (error) {
+      console.error("QUERY ERROR:", error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({ data }),
@@ -60,12 +67,14 @@ serve(async (req) => {
       }
     );
 
-  } catch (err) {
+  } catch (err: any) {
 
     console.error("GET REVIEWED ANSWERS ERROR:", err);
 
     return new Response(
-      JSON.stringify({ error: "Unexpected error" }),
+      JSON.stringify({
+        error: err?.message ?? "Unexpected error"
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500
