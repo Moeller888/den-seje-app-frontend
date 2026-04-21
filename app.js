@@ -56,6 +56,8 @@ let questionShownAt = null;
 
 // 🔥 FETCH FEEDBACK
 async function fetchReviewedAnswers() {
+  console.log("FETCH REVIEW CALLED");
+
   const { data, error } = await supabase.functions.invoke("get-reviewed-answers");
 
   if (error || !data?.data) return;
