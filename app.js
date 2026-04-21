@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -53,6 +53,32 @@ function setState(newState) {
 let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
+
+// 🔥 FETCH FEEDBACK
+async function fetchReviewedAnswers() {
+  const { data, error } = await supabase.functions.invoke("get-reviewed-answers");
+
+  if (error || !data?.data) return;
+
+  const container = document.getElementById("review-feedback");
+  if (!container) return;
+
+  container.innerHTML = "<b>Seneste feedback:</b>";
+
+  data.data.forEach(item => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <div style="margin-top:10px">
+        <b>Din besvarelse:</b> ${item.user_answer}<br>
+        <b>Score:</b> ${item.teacher_score}<br>
+        <b>Feedback:</b> ${item.feedback || "Ingen kommentar"}
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
 
 // 🔐 AUTH
 async function checkAuthAndRole() {
@@ -173,7 +199,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (error) {
       logError("PROGRESS_FETCH_ERROR", error);
-      applyProgressToUI(null);
       return;
     }
 
@@ -181,7 +206,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyProgressToUI(progress);
   }
 
-  // 🔥 FIXET SUBMIT
   async function submitAnswer(userAnswer, btnRef = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
@@ -204,17 +228,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     );
 
-    // 🔥 ERROR
     if (error) {
-      logError("SUBMIT_ERROR", error);
       feedback.textContent = "⚠️ Fejl ved svar";
       setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
-    // 🔥 INVALID (NYT!)
     if (data?.status === "invalid") {
-      feedback.textContent = "⚠️ " + (data.error || "Svar ikke gyldigt");
+      feedback.textContent = "⚠️ " + data.error;
 
       if (btnRef) {
         btnRef.disabled = false;
@@ -225,7 +246,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 🔥 NORMAL FLOW
     if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
       flash("correct");
@@ -237,6 +257,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     await fetchProgress();
+    await fetchReviewedAnswers();
+
     setState(UI_STATES.TRANSITIONING);
 
     setTimeout(() => {
@@ -247,10 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function getNextQuestion() {
     setState(UI_STATES.LOADING_QUESTION);
 
-    const { data, error } = await supabase.functions.invoke(
-      "get-next-question",
-      { body: {} }
-    );
+    const { data, error } = await supabase.functions.invoke("get-next-question");
 
     if (error) {
       logError("GET_QUESTION_ERROR", error);
@@ -307,6 +326,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       btn.onclick = () => submitAnswer(textarea.value, btn);
 
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(counter);
       optionsContainer.appendChild(btn);
@@ -328,6 +354,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       };
 
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btn.click();
+      });
+
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
       return;
@@ -348,6 +378,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
+      optionsContainer.innerHTML = "";
       return;
     }
 
@@ -360,6 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   await fetchProgress();
+  await fetchReviewedAnswers();
   await loadActiveAvatar();
   await loadAndRenderQuestion();
 });
