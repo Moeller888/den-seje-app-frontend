@@ -297,7 +297,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (answerType === "long") {
         const counter = document.createElement("div");
-        btn.disabled = true;
 
         function countWords(text) {
           return text.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -306,23 +305,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         function update() {
           const words = countWords(textarea.value);
           counter.textContent = `Min. 20 ord (${words})`;
-
-          if (words >= 20) {
-            counter.style.color = "green";
-            btn.disabled = false;
-          } else {
-            counter.style.color = "red";
-            btn.disabled = true;
-          }
+          counter.style.color = words >= 20 ? "green" : "red";
         }
 
+        update();
         textarea.addEventListener("input", update);
 
-        btn.onclick = () => {
-          if (!btn.disabled) {
-            submitAnswer(textarea.value, btn);
-          }
-        };
+        btn.onclick = () => submitAnswer(textarea.value, btn);
 
         optionsContainer.appendChild(textarea);
         optionsContainer.appendChild(counter);
