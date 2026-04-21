@@ -254,13 +254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
-    const questionText = (content?.question || "").toLowerCase();
-
-    const isLongAnswer =
-      questionText.includes("analyser") ||
-      questionText.includes("forklar") ||
-      questionText.includes("vurder") ||
-      questionText.includes("diskuter");
+    const answerType = question?.answer_type || "short";
 
     // 🔢 NUMBER
     if (format === "number") {
@@ -297,13 +291,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (format === "text") {
 
       const textarea = document.createElement("textarea");
-      textarea.rows = isLongAnswer ? 6 : 3;
+      textarea.rows = answerType === "long" ? 6 : 3;
       textarea.autofocus = true;
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
 
-      if (isLongAnswer) {
+      if (answerType === "long") {
         const counter = document.createElement("div");
         btn.disabled = true;
 
@@ -338,7 +332,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // kort svar
+      // short answer
       const submit = () => {
         submitAnswer(textarea.value, btn);
       };

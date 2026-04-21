@@ -84,7 +84,8 @@ serve(async (req) => {
         next_review_at,
         questions (
           content,
-          answer_format
+          answer_format,
+          answer_type
         )
       `)
       .eq("student_id", student_id)
@@ -106,6 +107,7 @@ serve(async (req) => {
           question_instance_id: instance.id,
           content: normalized,
           answer_format: format,
+          answer_type: instance.questions.answer_type ?? "short",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -122,7 +124,8 @@ serve(async (req) => {
         next_review_at,
         questions (
           content,
-          answer_format
+          answer_format,
+          answer_type
         )
       `)
       .eq("student_id", student_id)
@@ -145,6 +148,7 @@ serve(async (req) => {
           question_instance_id: instance.id,
           content: normalized,
           answer_format: format,
+          answer_type: instance.questions.answer_type ?? "short",
           preview: true,
         }),
         {
@@ -157,7 +161,7 @@ serve(async (req) => {
     // 🔥 3. NEW QUESTIONS
     const { data: questions, error: questionError } = await supabase
       .from("questions")
-      .select("id, content, answer_format")
+      .select("id, content, answer_format, answer_type")
       .limit(50);
 
     if (questionError) throw questionError;
@@ -205,6 +209,7 @@ serve(async (req) => {
         question_instance_id: inserted.instance.id,
         content: inserted.normalized,
         answer_format: inserted.format,
+        answer_type: inserted.question.answer_type ?? "short",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
