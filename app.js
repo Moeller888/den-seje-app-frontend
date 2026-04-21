@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -113,7 +113,7 @@ async function loadActiveAvatar() {
   `;
 }
 
-// 🔥 FEEDBACK (ROBUST)
+// 🔥 FEEDBACK
 function flash(type) {
   const el = document.querySelector(".question-box");
 
@@ -188,11 +188,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     logEvent("PROGRESS_FETCHED", progress);
   }
 
-  async function submitAnswer(userAnswer) {
+  async function submitAnswer(userAnswer, btnRef = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
 
     setState(UI_STATES.SUBMITTING_ANSWER);
+
+    // 🔥 disable + loader
+    if (btnRef) {
+      btnRef.disabled = true;
+      btnRef.textContent = "…";
+    }
 
     const buttons = optionsContainer.querySelectorAll("button");
     buttons.forEach(btn => btn.disabled = true);
@@ -263,22 +269,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
 
+    // 🔢 NUMBER
     if (format === "number") {
       const row = document.createElement("div");
       row.className = "answer-row";
 
       const input = document.createElement("input");
       input.type = "number";
+      input.autofocus = true;
 
       const btn = document.createElement("button");
       btn.textContent = "Svar";
 
-      btn.onclick = () => {
+      const submit = () => {
         const val = Number(input.value);
         if (!Number.isNaN(val)) {
-          submitAnswer(String(val));
+          submitAnswer(String(val), btn);
         }
       };
+
+      btn.onclick = submit;
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submit();
+      });
 
       row.appendChild(input);
       row.appendChild(btn);
@@ -286,9 +300,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // ✏️ TEXT
     if (format === "text") {
       const textarea = document.createElement("textarea");
       textarea.rows = 4;
+      textarea.autofocus = true;
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
@@ -296,23 +312,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.style.marginTop = "10px";
       btn.style.padding = "8px 16px";
 
-      btn.onclick = () => {
-        submitAnswer(textarea.value);
+      const submit = () => {
+        submitAnswer(textarea.value, btn);
       };
+
+      btn.onclick = submit;
+
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          submit();
+        }
+      });
 
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
       return;
     }
 
+    // 🔘 MC
     if (format === "mc") {
       content.options.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
-        btn.onclick = () => submitAnswer(option);
+        btn.onclick = () => submitAnswer(option, btn);
         optionsContainer.appendChild(btn);
       });
+      return;
     }
+
+    // ❌ fallback
+    logError("UNKNOWN_FORMAT", format);
   }
 
   async function loadAndRenderQuestion() {
@@ -320,6 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
+      optionsContainer.innerHTML = "";
       return;
     }
 
@@ -332,6 +363,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
+  // 🚀 INIT
   await fetchProgress();
   await loadActiveAvatar();
   await loadAndRenderQuestion();
