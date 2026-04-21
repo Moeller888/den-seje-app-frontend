@@ -53,7 +53,6 @@ function setState(newState) {
 let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
-let currentQuestion = null; // 🔥 GLOBAL DEBUG / DATA
 
 // 🔐 AUTH
 async function checkAuthAndRole() {
@@ -113,7 +112,7 @@ async function loadActiveAvatar() {
   `;
 }
 
-// 🔥 FEEDBACK
+// 🔥 FEEDBACK FLASH
 function flash(type) {
   const el = document.querySelector(".question-box");
   if (!el) return;
@@ -182,6 +181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyProgressToUI(progress);
   }
 
+  // 🔥 FIXET SUBMIT
   async function submitAnswer(userAnswer, btnRef = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
@@ -193,14 +193,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnRef.textContent = "…";
     }
 
-    const buttons = optionsContainer.querySelectorAll("button");
-    buttons.forEach(btn => btn.disabled = true);
-
     const { data, error } = await supabase.functions.invoke(
       "process-event",
       {
         body: {
-          student_id: studentId,
           question_instance_id: currentInstanceId,
           answer: userAnswer,
           question_shown_at: questionShownAt
@@ -208,12 +204,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     );
 
-    if (error || !data || !data.status) {
+    // 🔥 ERROR
+    if (error) {
+      logError("SUBMIT_ERROR", error);
       feedback.textContent = "⚠️ Fejl ved svar";
       setState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
+    // 🔥 INVALID (NYT!)
+    if (data?.status === "invalid") {
+      feedback.textContent = "⚠️ " + (data.error || "Svar ikke gyldigt");
+
+      if (btnRef) {
+        btnRef.disabled = false;
+        btnRef.textContent = "Send svar";
+      }
+
+      setState(UI_STATES.AWAITING_ANSWER);
+      return;
+    }
+
+    // 🔥 NORMAL FLOW
     if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
       flash("correct");
@@ -240,99 +252,83 @@ document.addEventListener("DOMContentLoaded", async () => {
       { body: {} }
     );
 
-    if (error) return null;
+    if (error) {
+      logError("GET_QUESTION_ERROR", error);
+      return null;
+    }
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-    if (!parsed?.content?.question) return null;
+    if (!parsed || !parsed.content || !parsed.content.question) {
+      logError("INVALID_QUESTION", parsed);
+      return null;
+    }
 
     currentInstanceId = parsed.question_instance_id ?? null;
     return parsed;
   }
 
-  function renderOptions(qData) {
+  function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    const format = (qData?.answer_format || "").toLowerCase();
-    const content = qData?.content;
-    const answerType = qData?.answer_type || "short";
+    const format = (question?.answer_format || "").toLowerCase();
+    const answerType = question?.answer_type || "short";
+    const content = question?.content;
+
+    if (format === "text") {
+
+      const textarea = document.createElement("textarea");
+      textarea.rows = 4;
+      textarea.autofocus = true;
+
+      const counter = document.createElement("div");
+
+      function countWords(text) {
+        return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+      }
+
+      function update() {
+        const words = countWords(textarea.value);
+        counter.textContent = answerType === "long"
+          ? `Min. 20 ord (${words})`
+          : `${words} ord`;
+
+        counter.style.color =
+          answerType === "long"
+            ? (words >= 20 ? "green" : "red")
+            : "black";
+      }
+
+      update();
+      textarea.addEventListener("input", update);
+
+      const btn = document.createElement("button");
+      btn.textContent = "Send svar";
+
+      btn.onclick = () => submitAnswer(textarea.value, btn);
+
+      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(counter);
+      optionsContainer.appendChild(btn);
+
+      return;
+    }
 
     if (format === "number") {
-      const row = document.createElement("div");
-      row.className = "answer-row";
-
       const input = document.createElement("input");
       input.type = "number";
-      input.autofocus = true;
 
       const btn = document.createElement("button");
       btn.textContent = "Svar";
 
-      const submit = () => {
+      btn.onclick = () => {
         const val = Number(input.value);
         if (!Number.isNaN(val)) {
           submitAnswer(String(val), btn);
         }
       };
 
-      btn.onclick = submit;
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") submit();
-      });
-
-      row.appendChild(input);
-      row.appendChild(btn);
-      optionsContainer.appendChild(row);
-      return;
-    }
-
-    if (format === "text") {
-      const textarea = document.createElement("textarea");
-      textarea.rows = answerType === "long" ? 6 : 3;
-      textarea.autofocus = true;
-
-      const btn = document.createElement("button");
-      btn.textContent = "Send svar";
-
-      if (answerType === "long") {
-        const counter = document.createElement("div");
-
-        function countWords(text) {
-          return text.trim().split(/\s+/).filter(w => w.length > 0).length;
-        }
-
-        function update() {
-          const words = countWords(textarea.value);
-          counter.textContent = `Min. 20 ord (${words})`;
-          counter.style.color = words >= 20 ? "green" : "red";
-        }
-
-        update();
-        textarea.addEventListener("input", update);
-
-        btn.onclick = () => submitAnswer(textarea.value, btn);
-
-        optionsContainer.appendChild(textarea);
-        optionsContainer.appendChild(counter);
-        optionsContainer.appendChild(btn);
-        return;
-      }
-
-      const submit = () => {
-        submitAnswer(textarea.value, btn);
-      };
-
-      btn.onclick = submit;
-
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          submit();
-        }
-      });
-
-      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
       return;
     }
@@ -348,23 +344,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadAndRenderQuestion() {
-    const qData = await getNextQuestion();
-    currentQuestion = qData; // 🔥 GLOBAL
+    const question = await getNextQuestion();
 
-    console.log("FULL QUESTION OBJECT:", qData);
-
-    if (!qData) {
+    if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
-      optionsContainer.innerHTML = "";
       return;
     }
 
-    questionElement.textContent = qData.content.question;
+    questionElement.textContent = question.content.question;
     feedback.textContent = "";
     questionShownAt = Date.now();
 
-    renderOptions(qData);
-
+    renderOptions(question);
     setState(UI_STATES.AWAITING_ANSWER);
   }
 
