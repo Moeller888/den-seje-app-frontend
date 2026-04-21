@@ -98,16 +98,19 @@ serve(async (req) => {
 
     if (dueInstances && dueInstances.length > 0) {
       const instance = dueInstances[0];
+      const q = instance.questions;
 
-      const format = mapAnswerFormat(instance.questions.answer_format);
-      const normalized = normalizeContent(instance.questions.content, format);
+      if (!q) throw new Error("Missing joined question (due)");
+
+      const format = mapAnswerFormat(q.answer_format);
+      const normalized = normalizeContent(q.content, format);
 
       return new Response(
         JSON.stringify({
           question_instance_id: instance.id,
           content: normalized,
           answer_format: format,
-          answer_type: instance.questions.answer_type ?? "short",
+          answer_type: q.answer_type || "short",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -139,16 +142,19 @@ serve(async (req) => {
       const pool = filtered.length > 0 ? filtered : upcoming;
 
       const instance = pool[Math.floor(Math.random() * pool.length)];
+      const q = instance.questions;
 
-      const format = mapAnswerFormat(instance.questions.answer_format);
-      const normalized = normalizeContent(instance.questions.content, format);
+      if (!q) throw new Error("Missing joined question (upcoming)");
+
+      const format = mapAnswerFormat(q.answer_format);
+      const normalized = normalizeContent(q.content, format);
 
       return new Response(
         JSON.stringify({
           question_instance_id: instance.id,
           content: normalized,
           answer_format: format,
-          answer_type: instance.questions.answer_type ?? "short",
+          answer_type: q.answer_type || "short",
           preview: true,
         }),
         {
@@ -209,7 +215,7 @@ serve(async (req) => {
         question_instance_id: inserted.instance.id,
         content: inserted.normalized,
         answer_format: inserted.format,
-        answer_type: inserted.question.answer_type ?? "short",
+        answer_type: inserted.question?.answer_type || "short",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
