@@ -225,7 +225,7 @@ async function fetchReviewQueue() {
   container.innerHTML = "";
 
   if (!data || data.length === 0) {
-    container.innerHTML = 'Ingen besvarelser til review.';
+    container.innerHTML = '<p style="color:green;">Ingen ventende besvarelser 🎉</p>';
     return;
   }
 
