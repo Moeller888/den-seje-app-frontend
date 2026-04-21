@@ -25,6 +25,13 @@ function isTextCorrect(user, correct) {
   return false
 }
 
+function countWords(text) {
+  return (text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(w => w.length > 0).length
+}
+
 serve(async (req) => {
 
   if (req.method === "OPTIONS") {
@@ -62,7 +69,7 @@ serve(async (req) => {
       throw new Error("Missing required fields")
     }
 
-    // 🔥 HENT ALT DATA
+    // 🔥 HENT DATA inkl. answer_type
     const { data: instanceData, error: instanceError } = await supabase
       .from("question_instances")
       .select(`
@@ -89,8 +96,24 @@ serve(async (req) => {
 
     let status = "pending"
 
-    // 🔥 LONG → ALTID pending
+    // 🔥 LONG → kræver min. 20 ord
     if (answerType === "long") {
+
+      const words = countWords(answer)
+      console.log("DEBUG wordCount:", words)
+
+      if (words < 20) {
+        return new Response(
+          JSON.stringify({
+            status: "invalid",
+            error: "Svar skal være mindst 20 ord"
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400
+          }
+        )
+      }
 
       console.log("FLOW: LONG → pending")
       status = "pending"
