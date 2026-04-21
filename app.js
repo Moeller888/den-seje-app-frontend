@@ -97,6 +97,10 @@ async function fetchReviewedAnswers() {
     `;
 
     container.appendChild(div);
+
+    if (xp > 0) {
+      showXPPopup(xp);
+    }
   });
 }
 
@@ -156,6 +160,18 @@ async function loadActiveAvatar() {
     <img src="${item?.image_url || ""}" />
     <div>${item?.name || "Avatar"}</div>
   `;
+}
+
+function showXPPopup(amount) {
+  const popup = document.getElementById("xp-popup");
+  if (!popup) return;
+
+  popup.textContent = `+${amount} XP`;
+  popup.classList.remove("xp-show");
+
+  void popup.offsetWidth;
+
+  popup.classList.add("xp-show");
 }
 
 // 🔥 FEEDBACK FLASH
