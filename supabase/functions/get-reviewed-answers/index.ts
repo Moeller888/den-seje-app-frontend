@@ -34,13 +34,13 @@ serve(async (req) => {
       );
     }
 
-    // 🔥 FETCH REVIEWED ANSWERS
+    // 🔥 FETCH REVIEWED ANSWERS (FIXED)
     const { data, error } = await supabase
       .from("question_instances")
       .select(`
         user_answer,
         teacher_score,
-        feedback,
+        teacher_feedback,
         created_at
       `)
       .eq("student_id", user.id)
