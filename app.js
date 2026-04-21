@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient.js";
+﻿import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -175,15 +175,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   function applyProgressToUI(progress) {
     const xp = Number(progress?.xp ?? 0);
     const coins = Number(progress?.coins ?? 0);
-    const level = Number(progress?.level ?? 1);
+
+    // 🔥 ÉN sandhed: XP → LEVEL
+    const level = Math.floor(xp / 100) + 1;
 
     xpEl.textContent = xp;
     coinsEl.textContent = coins;
     levelEl.textContent = level;
 
+    // 🔥 XP BAR (kun progress i nuværende level)
     const xpBar = document.getElementById("xp-bar");
-    const xpForNextLevel = Math.max(level * 100, 1);
-    const safeProgress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
+
+    const xpForNextLevel = 100;
+    const progressInLevel = xp % xpForNextLevel;
+    const safeProgress = progressInLevel / xpForNextLevel;
 
     if (xpBar) {
       xpBar.style.width = (safeProgress * 100) + "%";
