@@ -209,9 +209,17 @@ test();
 async function fetchReviewQueue() {
 
   const { data, error } = await supabase
-    .from('student_answers')
-    .select('id, answer_text, status, question_id, questions(content)')
-    .eq('status', 'pending')
+    .from("question_instances")
+    .select(`
+      id,
+      user_answer,
+      teacher_score,
+      teacher_feedback,
+      question_id,
+      questions(content)
+    `)
+    .is("teacher_score", null)
+    .order("created_at", { ascending: false })
     .limit(10);
   console.log('REVIEW DATA:', data);
 
