@@ -222,6 +222,8 @@ async function fetchReviewQueue() {
 
   const container = document.getElementById('reviewPanel');
 
+  container.innerHTML = "";
+
   if (!data || data.length === 0) {
     container.innerHTML = 'Ingen besvarelser til review.';
     return;
