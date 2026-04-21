@@ -243,7 +243,7 @@ async function fetchReviewQueue() {
     block.style.marginBottom = '15px';
 
     block.innerHTML = ` 
-      <strong>SPØRGSMÅL</strong><br>
+      <strong>SPï¿½RGSMï¿½L</strong><br>
       <br><br>
 
       <strong>ELEVENS SVAR</strong><br>
@@ -288,6 +288,16 @@ async function approveAnswer(answerId) {
 
   fetchReviewQueue();
 }
+
+async function resetPending() {
+  const confirmReset = confirm("Er du sikker pÃ¥, at du vil afvise alle ventende svar?");
+  if (!confirmReset) return;
+
+  await supabase.functions.invoke("reset-pending");
+  location.reload();
+}
+
+document.getElementById("reset-btn")?.addEventListener("click", resetPending);
 
 async function rejectAnswer(answerId) {
 
