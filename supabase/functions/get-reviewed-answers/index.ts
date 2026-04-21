@@ -7,45 +7,46 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-
-    const supabase = createClient(
+    const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! }
-        }
+          headers: { Authorization: req.headers.get("Authorization")! },
+        },
       }
     );
 
-    // 🔐 AUTH
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseUser.auth.getUser();
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
-    // 🔥 FETCH REVIEWED ANSWERS (FIXED)
-    const { data, error } = await supabase
+    // 🔥 HENT KUN REVIEWED (med score)
+    const { data, error } = await supabaseUser
       .from("question_instances")
       .select(`
+        id,
         user_answer,
-        teacher_score,
         teacher_feedback,
-        created_at
+        teacher_score,
+        reviewed_at
       `)
       .eq("student_id", user.id)
       .not("teacher_score", "is", null)
-      .order("created_at", { ascending: false })
+      .order("reviewed_at", { ascending: false })
       .limit(5);
 
     if (error) {
@@ -54,7 +55,7 @@ serve(async (req) => {
         JSON.stringify({ error: error.message }),
         {
           status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -63,23 +64,19 @@ serve(async (req) => {
       JSON.stringify({ data }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200
+        status: 200,
       }
     );
 
   } catch (err: any) {
-
-    console.error("GET REVIEWED ANSWERS ERROR:", err);
+    console.error("FULL ERROR:", err);
 
     return new Response(
-      JSON.stringify({
-        error: err?.message ?? "Unexpected error"
-      }),
+      JSON.stringify({ error: err?.message ?? "Unknown error" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500
+        status: 500,
       }
     );
   }
-
 });
