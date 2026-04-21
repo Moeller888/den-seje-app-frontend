@@ -254,6 +254,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const format = (question?.answer_format || "").toLowerCase();
     const content = question?.content;
+    const questionText = (content?.question || "").toLowerCase();
+
+    const isLongAnswer =
+      questionText.includes("analyser") ||
+      questionText.includes("forklar") ||
+      questionText.includes("vurder") ||
+      questionText.includes("diskuter");
 
     // 🔢 NUMBER
     if (format === "number") {
@@ -276,7 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       btn.onclick = submit;
 
-      input.addEventListener("keydown", e => {
+      input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") submit();
       });
 
@@ -286,58 +293,66 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ✏️ TEXT (🔥 MED ORDTÆLLER)
+    // ✏️ TEXT
     if (format === "text") {
 
       const textarea = document.createElement("textarea");
-      textarea.rows = 5;
-      textarea.placeholder = "Skriv mindst 20 ord...";
+      textarea.rows = isLongAnswer ? 6 : 3;
       textarea.autofocus = true;
-
-      const counter = document.createElement("div");
-      counter.style.fontSize = "14px";
-      counter.style.marginTop = "6px";
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
-      btn.disabled = true;
 
-      function countWords(text) {
-        return text.trim().split(/\s+/).filter(w => w.length > 0).length;
-      }
+      if (isLongAnswer) {
+        const counter = document.createElement("div");
+        btn.disabled = true;
 
-      function update() {
-        const words = countWords(textarea.value);
-        counter.textContent = `Ord: ${words} / 20`;
-
-        if (words >= 20) {
-          counter.style.color = "green";
-          btn.disabled = false;
-        } else {
-          counter.style.color = "red";
-          btn.disabled = true;
+        function countWords(text) {
+          return text.trim().split(/\s+/).filter(w => w.length > 0).length;
         }
+
+        function update() {
+          const words = countWords(textarea.value);
+          counter.textContent = `Min. 20 ord (${words})`;
+
+          if (words >= 20) {
+            counter.style.color = "green";
+            btn.disabled = false;
+          } else {
+            counter.style.color = "red";
+            btn.disabled = true;
+          }
+        }
+
+        textarea.addEventListener("input", update);
+
+        btn.onclick = () => {
+          if (!btn.disabled) {
+            submitAnswer(textarea.value, btn);
+          }
+        };
+
+        optionsContainer.appendChild(textarea);
+        optionsContainer.appendChild(counter);
+        optionsContainer.appendChild(btn);
+        return;
       }
 
-      textarea.addEventListener("input", update);
-
+      // kort svar
       const submit = () => {
-        if (!btn.disabled) {
-          submitAnswer(textarea.value, btn);
-        }
+        submitAnswer(textarea.value, btn);
       };
 
       btn.onclick = submit;
 
-      textarea.addEventListener("keydown", e => {
-        if (e.key === "Enter" && e.ctrlKey) {
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
           e.preventDefault();
           submit();
         }
       });
 
       optionsContainer.appendChild(textarea);
-      optionsContainer.appendChild(counter);
       optionsContainer.appendChild(btn);
       return;
     }
