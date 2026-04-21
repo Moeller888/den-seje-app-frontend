@@ -214,8 +214,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const xp = Number(progress?.xp ?? 0);
     const coins = Number(progress?.coins ?? 0);
 
-    // 🔥 ÉN sandhed: XP → LEVEL
-    const level = Math.floor(xp / 100) + 1;
+    const level = Number(progress?.level ?? 1);
 
     xpEl.textContent = xp;
     coinsEl.textContent = coins;
