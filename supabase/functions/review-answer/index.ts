@@ -7,13 +7,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type"
 };
 
+function scoreToXP(score: number) {
+  if (score === 1) return 0;
+  if (score === 2) return 10;
+  if (score === 3) return 25;
+  if (score === 4) return 50;
+  return 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // 🔐 AUTH (user context)
+    // 🔐 AUTH
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -36,7 +44,6 @@ serve(async (req) => {
       });
     }
 
-    // 📦 BODY
     const body = await req.json().catch(() => null);
 
     if (!body) {
@@ -50,18 +57,31 @@ serve(async (req) => {
 
     if (!instance_id || score === undefined || score === null) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: instance_id, score" }),
+        JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    // 🔥 SERVICE ROLE (privileged for RPC)
+    // 🔥 SERVICE ROLE
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // 🔁 CALL RPC
+    // 🔍 find student_id
+    const { data: instance, error: instanceError } = await supabase
+      .from("question_instances")
+      .select("student_id")
+      .eq("id", instance_id)
+      .maybeSingle();
+
+    if (instanceError || !instance) {
+      throw new Error("Instance not found");
+    }
+
+    const student_id = instance.student_id;
+
+    // 🔁 RPC (gem vurdering)
     const { error: rpcError } = await supabase.rpc("review_answer", {
       p_instance_id: instance_id,
       p_score: score,
@@ -71,21 +91,40 @@ serve(async (req) => {
 
     if (rpcError) {
       console.error("RPC ERROR:", rpcError);
-      return new Response(JSON.stringify({ error: rpcError.message }), {
-        status: 500,
-        headers: corsHeaders
-      });
+      throw rpcError;
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    // 🔥 XP BONUS
+    const xpToAdd = scoreToXP(score);
+
+    if (xpToAdd > 0) {
+      const { data: progress, error: progressError } = await supabase
+        .from("student_progress")
+        .select("xp")
+        .eq("student_id", student_id)
+        .maybeSingle();
+
+      if (progressError) throw progressError;
+
+      const currentXP = progress?.xp ?? 0;
+
+      const { error: updateError } = await supabase
+        .from("student_progress")
+        .update({ xp: currentXP + xpToAdd })
+        .eq("student_id", student_id);
+
+      if (updateError) throw updateError;
+    }
+
+    return new Response(JSON.stringify({ ok: true, xp_awarded: xpToAdd }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
-  } catch (err) {
+  } catch (err: any) {
     console.error("REVIEW ANSWER ERROR:", err);
 
     return new Response(
-      JSON.stringify({ error: "Unexpected error" }),
+      JSON.stringify({ error: err?.message ?? "Unexpected error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
