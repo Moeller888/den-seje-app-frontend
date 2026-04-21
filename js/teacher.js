@@ -317,8 +317,7 @@ async function resetPending() {
 
     alert("✅ Alle ventende svar er blevet afvist.");
 
-    // reload UI
-    location.reload();
+    await fetchReviewQueue();
 
   } catch (err) {
     console.error("UNEXPECTED RESET ERROR:", err);
