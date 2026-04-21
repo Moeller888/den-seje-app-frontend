@@ -290,11 +290,38 @@ async function approveAnswer(answerId) {
 }
 
 async function resetPending() {
-  const confirmReset = confirm("Er du sikker på, at du vil afvise alle ventende svar?");
+  // 1️⃣ Første check (hurtig guard)
+  const confirmReset = confirm(
+    "Er du sikker på, at du vil afvise ALLE ventende svar?\n\nDette kan ikke fortrydes."
+  );
   if (!confirmReset) return;
 
-  await supabase.functions.invoke("reset-pending");
-  location.reload();
+  // 2️⃣ Andet check (bevidst handling)
+  const input = prompt('Skriv RESET for at bekræfte');
+
+  if (input !== "RESET") {
+    alert("Annulleret – ingen ændringer foretaget.");
+    return;
+  }
+
+  try {
+    const { error } = await supabase.functions.invoke("reset-pending");
+
+    if (error) {
+      console.error("RESET ERROR:", error);
+      alert("⚠️ Fejl ved reset. Prøv igen.");
+      return;
+    }
+
+    alert("✅ Alle ventende svar er blevet afvist.");
+
+    // reload UI
+    location.reload();
+
+  } catch (err) {
+    console.error("UNEXPECTED RESET ERROR:", err);
+    alert("⚠️ Uventet fejl.");
+  }
 }
 
 document.getElementById("reset-btn")?.addEventListener("click", resetPending);
