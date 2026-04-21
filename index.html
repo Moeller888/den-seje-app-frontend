@@ -124,15 +124,38 @@
       100% { transform: translateX(0); }
     }
 
-    /* 🔥 NYT: FEEDBACK PANEL */
-    #review-feedback {
-      margin-top: 20px;
-      padding: 10px;
-      background: #f5f5f5;
-      border-radius: 8px;
-      font-size: 14px;
+    /* 🔥 XP POPUP */
+    #xp-popup {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      font-size: 40px;
+      font-weight: bold;
+      color: gold;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
     }
 
+    .xp-show {
+      animation: xpPop 0.8s ease forwards;
+    }
+
+    @keyframes xpPop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -60%) scale(1.2);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -80%) scale(1);
+      }
+    }
   </style>
 </head>
 
@@ -164,13 +187,13 @@
       <div id="question">Indlæser...</div>
       <div id="feedback"></div>
       <div id="options"></div>
-
-      <!-- 🔥 DET HER MANGLER DU -->
       <div id="review-feedback"></div>
-
     </div>
 
   </div>
+
+  <!-- 🔥 XP POPUP -->
+  <div id="xp-popup"></div>
 
   <script type="module">
     document.getElementById("menu-btn").onclick = () => {
