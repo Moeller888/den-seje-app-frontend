@@ -4,9 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/json"
 }
 
-function normalize(str) {
+function normalize(str: string) {
   return (str || "")
     .toLowerCase()
     .trim()
@@ -14,7 +15,7 @@ function normalize(str) {
     .replace(/\s+/g, " ")
 }
 
-function isTextCorrect(user, correct) {
+function isTextCorrect(user: string, correct: string) {
   const u = normalize(user)
   const c = normalize(correct)
 
@@ -25,7 +26,7 @@ function isTextCorrect(user, correct) {
   return false
 }
 
-function countWords(text) {
+function countWords(text: string) {
   return (text || "")
     .trim()
     .split(/\s+/)
@@ -34,6 +35,7 @@ function countWords(text) {
 
 serve(async (req) => {
 
+  // ✅ CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }
@@ -68,7 +70,13 @@ serve(async (req) => {
       })
     }
 
-    const { question_instance_id, answer, question_shown_at } = body
+    const {
+      question_instance_id,
+      answer,
+      question_shown_at
+    } = body
+
+    console.log("DEBUG INPUT:", { question_instance_id, answer })
 
     if (!question_instance_id || !answer) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -77,46 +85,43 @@ serve(async (req) => {
       })
     }
 
-    // 🔥 HENT INSTANCE (uden join)
-    const { data: instance, error: instanceError } = await supabase
+    // 🔥 FETCH INSTANCE + META
+    const { data: instanceData, error: instanceError } = await supabase
       .from("question_instances")
-      .select("correct_answer, student_id, question_id")
+      .select(`
+        correct_answer,
+        student_id,
+        questions (
+          answer_format,
+          answer_type
+        )
+      `)
       .eq("id", question_instance_id)
-      .single()
+      .maybeSingle()
 
-    if (instanceError || !instance) {
+    if (instanceError || !instanceData) {
+      console.error("INSTANCE ERROR:", instanceError)
       return new Response(JSON.stringify({ error: "Instance not found" }), {
-        status: 400,
+        status: 500,
         headers: corsHeaders
       })
     }
 
-    // 🔥 HENT QUESTION SEPARAT (robust!)
-    const { data: question, error: questionError } = await supabase
-      .from("questions")
-      .select("answer_format, answer_type")
-      .eq("id", instance.question_id)
-      .single()
+    const questionMeta = instanceData.questions || {}
 
-    if (questionError || !question) {
-      return new Response(JSON.stringify({ error: "Question not found" }), {
-        status: 400,
-        headers: corsHeaders
-      })
-    }
+    const correct_answer = instanceData.correct_answer
+    const format = (questionMeta.answer_format || "").toLowerCase()
+    const answerType = questionMeta.answer_type || "short"
 
-    const correct_answer = instance.correct_answer
-    const format = (question.answer_format || "").toLowerCase()
-    const answerType = question.answer_type || "short"
-
-    console.log("DEBUG answerType:", answerType)
+    console.log("DEBUG META:", { format, answerType })
 
     let status = "pending"
 
-    // 🔥 LONG
+    // 🔥 LONG ANSWER → altid pending (men valider længde)
     if (answerType === "long") {
 
       const words = countWords(answer)
+      console.log("DEBUG wordCount:", words)
 
       if (words < 20) {
         return new Response(
@@ -124,24 +129,20 @@ serve(async (req) => {
             status: "invalid",
             error: "Svar skal være mindst 20 ord"
           }),
-          {
-            status: 400,
-            headers: corsHeaders
-          }
+          { status: 400, headers: corsHeaders }
         )
       }
 
+      console.log("FLOW: LONG → pending")
       status = "pending"
 
     } else {
 
-      // 🔥 SHORT
+      console.log("FLOW: SHORT → evaluate")
 
       if (format.includes("text")) {
-
         const correct = isTextCorrect(answer, correct_answer)
         status = correct ? "correct" : "incorrect"
-
       } else {
 
         const { data, error } = await supabase.rpc(
@@ -155,6 +156,7 @@ serve(async (req) => {
         )
 
         if (error) {
+          console.error("RPC ERROR:", error)
           return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: corsHeaders
@@ -172,7 +174,10 @@ serve(async (req) => {
         ? false
         : null
 
-    await supabase
+    console.log("DEBUG RESULT:", { status, isCorrect })
+
+    // 🔥 UPDATE ANSWER
+    const { error: updateError } = await supabase
       .from("question_instances")
       .update({
         user_answer: answer,
@@ -180,7 +185,15 @@ serve(async (req) => {
       })
       .eq("id", question_instance_id)
 
-    // 🔥 spaced repetition
+    if (updateError) {
+      console.error("UPDATE ERROR:", updateError)
+      return new Response(JSON.stringify({ error: updateError.message }), {
+        status: 500,
+        headers: corsHeaders
+      })
+    }
+
+    // 🔥 SPACED REPETITION (kun short)
     if (status === "correct" || status === "incorrect") {
 
       const nextReviewAt = new Date()
@@ -191,27 +204,37 @@ serve(async (req) => {
         nextReviewAt.setMinutes(nextReviewAt.getMinutes() + 10)
       }
 
-      await supabase
+      const { error: reviewError } = await supabase
         .from("question_instances")
         .update({ next_review_at: nextReviewAt.toISOString() })
         .eq("id", question_instance_id)
         .eq("student_id", user.id)
+
+      if (reviewError) {
+        console.error("REVIEW UPDATE ERROR:", reviewError)
+        return new Response(JSON.stringify({ error: reviewError.message }), {
+          status: 500,
+          headers: corsHeaders
+        })
+      }
     }
 
     return new Response(
-      JSON.stringify({ status }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      JSON.stringify({
+        status,
+        correct_answer
+      }),
+      { status: 200, headers: corsHeaders }
     )
 
-  } catch (err) {
+  } catch (err: any) {
 
-    console.error("CRASH:", err)
+    console.error("FULL ERROR:", err)
 
     return new Response(
-      JSON.stringify({ error: err?.message || "Unknown error" }),
+      JSON.stringify({
+        error: err?.message ?? "Unknown error"
+      }),
       {
         status: 500,
         headers: corsHeaders

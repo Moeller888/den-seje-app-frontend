@@ -29,7 +29,6 @@
       margin-bottom: 20px;
     }
 
-    /* 🔥 STATS INLINE */
     .top-bar {
       display: flex;
       gap: 30px;
@@ -49,14 +48,12 @@
       width: 0%;
     }
 
-    /* 🔥 MAIN LAYOUT */
     .game-container {
       display: flex;
       gap: 30px;
       align-items: flex-start;
     }
 
-    /* 🎭 AVATAR */
     .avatar-box {
       width: 140px;
       text-align: center;
@@ -68,7 +65,6 @@
       background: #ddd;
     }
 
-    /* ❓ QUESTION */
     .question-box {
       flex: 1;
       padding: 15px;
@@ -81,7 +77,6 @@
       margin-bottom: 15px;
     }
 
-    /* 🔥 INPUT ROW */
     .answer-row {
       display: flex;
       gap: 10px;
@@ -105,7 +100,6 @@
       padding: 10px;
     }
 
-    /* 🔥 FEEDBACK ANIMATIONER */
     .correct-flash {
       background: #d4edda !important;
       animation: pop 0.25s ease;
@@ -129,6 +123,16 @@
       75% { transform: translateX(-5px); }
       100% { transform: translateX(0); }
     }
+
+    /* 🔥 NYT: FEEDBACK PANEL */
+    #review-feedback {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
   </style>
 </head>
 
@@ -160,6 +164,10 @@
       <div id="question">Indlæser...</div>
       <div id="feedback"></div>
       <div id="options"></div>
+
+      <!-- 🔥 DET HER MANGLER DU -->
+      <div id="review-feedback"></div>
+
     </div>
 
   </div>
