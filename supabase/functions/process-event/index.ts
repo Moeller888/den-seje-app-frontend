@@ -21,10 +21,7 @@ function isTextCorrect(user, correct) {
 
   if (!u || !c) return false
 
-  // direkte match
   if (u === c) return true
-
-  // inkluderer hinanden (usa vs united states)
   if (u.includes(c) || c.includes(u)) return true
 
   return false
@@ -65,13 +62,15 @@ serve(async (req) => {
       throw new Error("Missing required fields")
     }
 
-    // 🔥 hent data
+    // 🔥 HENT answer_type + data
     const { data: instanceData, error: instanceError } = await supabase
       .from("question_instances")
       .select(`
         correct_answer,
+        student_id,
         questions (
-          answer_format
+          answer_format,
+          answer_type
         )
       `)
       .eq("id", question_instance_id)
@@ -83,35 +82,40 @@ serve(async (req) => {
 
     const correct_answer = instanceData.correct_answer
     const format = (instanceData.questions?.answer_format || "").toLowerCase()
+    const answerType = instanceData.questions?.answer_type || "short"
 
     let status = "pending"
 
-    // 🔥 TEXT LOGIK (FIX)
-    if (format.includes("text")) {
+    // 🔥 LONG → ALTID pending
+    if (answerType === "long") {
 
-      // 🔥 hvis langt spørgsmål → analyse → ALTID pending
-      if (answer.length > 20) {
-        status = "pending"
-      } else {
-        const correct = isTextCorrect(answer, correct_answer)
-        status = correct ? "correct" : "incorrect"
-      }
+      status = "pending"
 
     } else {
-      // 🔥 normal flow
-      const { data, error } = await supabase.rpc(
-        "process_question_attempt",
-        {
-          p_student_id: user.id,
-          p_question_instance_id: question_instance_id,
-          p_answer: answer,
-          p_question_shown_at: question_shown_at ?? Date.now()
-        }
-      )
 
-      if (error) throw error
+      // 🔥 SHORT → evalueres
 
-      status = data?.status ?? "pending"
+      if (format.includes("text")) {
+
+        const correct = isTextCorrect(answer, correct_answer)
+        status = correct ? "correct" : "incorrect"
+
+      } else {
+
+        const { data, error } = await supabase.rpc(
+          "process_question_attempt",
+          {
+            p_student_id: user.id,
+            p_question_instance_id: question_instance_id,
+            p_answer: answer,
+            p_question_shown_at: question_shown_at ?? Date.now()
+          }
+        )
+
+        if (error) throw error
+
+        status = data?.status ?? "pending"
+      }
     }
 
     const isCorrect =
@@ -129,8 +133,9 @@ serve(async (req) => {
       })
       .eq("id", question_instance_id)
 
-    // 🔥 review logic
+    // 🔥 spaced repetition KUN for short
     if (status === "correct" || status === "incorrect") {
+
       const nextReviewAt = new Date()
 
       if (status === "correct") {
