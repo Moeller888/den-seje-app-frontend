@@ -1,4 +1,4 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -14,7 +14,6 @@ function mapAnswerFormat(format: string | null) {
   return "mc";
 }
 
-// 🔥 FORMAT-AWARE NORMALIZATION
 function normalizeContent(raw: any, answer_format: string) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid content");
@@ -28,7 +27,6 @@ function normalizeContent(raw: any, answer_format: string) {
     throw new Error("Missing question text");
   }
 
-  // 🔘 MULTIPLE CHOICE
   if (answer_format === "mc") {
     if (!Array.isArray(options) || options.length < 2) {
       throw new Error("MC question missing valid options");
@@ -41,7 +39,6 @@ function normalizeContent(raw: any, answer_format: string) {
     };
   }
 
-  // 🔢 NUMBER / ✏️ TEXT
   return {
     question,
     correct,
@@ -92,79 +89,36 @@ serve(async (req) => {
       .eq("answered", false)
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(1);
+      .limit(10);
 
     if (dueError) throw dueError;
 
-    if (dueInstances && dueInstances.length > 0) {
-      const instance = dueInstances[0];
+    for (const instance of dueInstances || []) {
       const q = instance.questions;
+      if (!q) continue;
 
-      if (!q) throw new Error("Missing joined question (due)");
+      try {
+        const format = mapAnswerFormat(q.answer_format);
+        const normalized = normalizeContent(q.content, format);
 
-      const format = mapAnswerFormat(q.answer_format);
-      const normalized = normalizeContent(q.content, format);
-
-      return new Response(
-        JSON.stringify({
-          question_instance_id: instance.id,
-          content: normalized,
-          answer_format: format,
-          answer_type: q.answer_type || "short",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
+        return new Response(
+          JSON.stringify({
+            question_instance_id: instance.id,
+            content: normalized,
+            answer_format: format,
+            answer_type: q.answer_type || "short",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      } catch (e) {
+        console.error("Skipping due instance with bad content:", instance.id, e);
+      }
     }
 
-    // 🔥 2. UPCOMING
-    const { data: upcoming, error: upcomingError } = await supabase
-      .from("question_instances")
-      .select(`
-        id,
-        next_review_at,
-        questions (
-          content,
-          answer_format,
-          answer_type
-        )
-      `)
-      .eq("student_id", student_id)
-      .order("next_review_at", { ascending: true })
-      .limit(10);
-
-    if (upcomingError) throw upcomingError;
-
-    if (upcoming && upcoming.length > 0) {
-      const filtered = upcoming.filter(q => q.id !== lastQuestionId);
-      const pool = filtered.length > 0 ? filtered : upcoming;
-
-      const instance = pool[Math.floor(Math.random() * pool.length)];
-      const q = instance.questions;
-
-      if (!q) throw new Error("Missing joined question (upcoming)");
-
-      const format = mapAnswerFormat(q.answer_format);
-      const normalized = normalizeContent(q.content, format);
-
-      return new Response(
-        JSON.stringify({
-          question_instance_id: instance.id,
-          content: normalized,
-          answer_format: format,
-          answer_type: q.answer_type || "short",
-          preview: true,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
-
-    // 🔥 3. NEW QUESTIONS
+    // 🔥 2. NEW QUESTIONS
     const { data: questions, error: questionError } = await supabase
       .from("questions")
       .select("id, content, answer_format, answer_type")
@@ -177,8 +131,15 @@ serve(async (req) => {
     for (const q of questions || []) {
       if (!q.content) continue;
 
-      const format = mapAnswerFormat(q.answer_format);
-      const normalized = normalizeContent(q.content, format);
+      let format: string;
+      let normalized: any;
+      try {
+        format = mapAnswerFormat(q.answer_format);
+        normalized = normalizeContent(q.content, format);
+      } catch (e) {
+        console.error("Skipping question with bad content:", q.id, e);
+        continue;
+      }
 
       const { data, error } = await supabase
         .from("question_instances")

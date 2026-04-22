@@ -323,7 +323,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log("QUESTION RAW:", parsed);
 
-    if (!parsed || !parsed.content || !parsed.content.question) {
+    if (parsed.step === "no_questions") {
+      return { step: "no_questions" };
+    }
+
+    if (!parsed.content || !parsed.content.question) {
       console.error("INVALID QUESTION:", parsed);
       return null;
     }
@@ -427,6 +431,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
       optionsContainer.innerHTML = "";
+      return;
+    }
+
+    if (question.step === "no_questions") {
+      questionElement.textContent = "🎉 Du har ingen flere spørgsmål";
+      optionsContainer.innerHTML = "";
+      feedback.textContent = "";
       return;
     }
 
