@@ -121,252 +121,101 @@ createStudentBtn.addEventListener("click", async () => {
   studentEmailInput.value = "";
   studentPasswordInput.value = "";
 
-  await fetchStudents();
+  await loadStudentOverview();
 });
 
 /* ========================
-   FETCH STUDENTS
+   STUDENT OVERVIEW (PENDING)
 ======================== */
 
-async function fetchStudents() {
+function groupByStudent(rows) {
+  const map = {};
 
-  const { data, error } = await supabase
-    .from("teacher_student_overview")
-    .select("*")
-    .eq("teacher_id", teacherId);
+  rows.forEach(row => {
+    if (!row.student_id) return;
+    if (!row.user_answer || row.user_answer.trim() === "") return;
 
-  if (error) {
-    studentListContainer.textContent = "Fejl ved hentning.";
-    return;
-  }
+    if (!map[row.student_id]) {
+      map[row.student_id] = {
+        student_id: row.student_id,
+        email: row.profiles?.email ?? "Ukendt",
+        count: 0,
+        oldest: row.created_at
+      };
+    }
 
-  if (!data || data.length === 0) {
-    studentListContainer.textContent = "Ingen elever endnu.";
-    return;
-  }
+    map[row.student_id].count++;
 
-  renderStudents(data);
-}
-
-/* ========================
-   RENDER
-======================== */
-
-function renderStudents(students) {
-
-  studentListContainer.innerHTML = "";
-
-  const table = document.createElement("table");
-
-  const headerRow = document.createElement("tr");
-  headerRow.innerHTML = `
-    <th>Email</th>
-    <th>XP</th>
-    <th>Level</th>
-    <th>Mastery</th>
-    <th>Total korrekte</th>
-  `;
-  table.appendChild(headerRow);
-
-  students.forEach(student => {
-
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>
-        <a href="/student-detail.html?id=${student.student_id}">
-          ${student.email}
-        </a>
-      </td>
-      <td>${student.xp}</td>
-      <td>${student.level}</td>
-      <td>${student.mastery_level}</td>
-      <td>${student.total_correct_answers}</td>
-    `;
-
-    table.appendChild(row);
+    if (row.created_at < map[row.student_id].oldest) {
+      map[row.student_id].oldest = row.created_at;
+    }
   });
 
-  studentListContainer.appendChild(table);
+  return Object.values(map);
+}
+
+function renderStudentList(students) {
+  const container = document.getElementById("studentList");
+  container.innerHTML = "";
+
+  if (students.length === 0) {
+    container.innerHTML = "<p>Ingen ventende svar</p>";
+    return;
+  }
+
+  students.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "box";
+
+    div.innerHTML = `
+      <strong>${s.email}</strong><br>
+      Ventende svar: ${s.count}<br>
+      Ældste: ${new Date(s.oldest).toLocaleString()}
+      <br><br>
+    `;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Gå til elev";
+    btn.onclick = () => {
+      window.location.href = `student-detail.html?id=${s.student_id}`;
+    };
+
+    div.appendChild(btn);
+    container.appendChild(div);
+  });
+}
+
+async function loadStudentOverview() {
+  const { data, error } = await supabase
+    .from("question_instances")
+    .select(`
+      student_id,
+      created_at,
+      user_answer,
+      teacher_score,
+      profiles!question_instances_student_id_fkey (
+        email
+      )
+    `)
+    .is("teacher_score", null)
+    .not("user_answer", "is", null);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  console.log("DATA:", data);
+
+  const grouped = groupByStudent(data || []);
+  grouped.sort((a, b) => new Date(a.oldest) - new Date(b.oldest));
+  renderStudentList(grouped);
 }
 
 /* ========================
    INIT
 ======================== */
 
-await fetchStudents();
+await loadStudentOverview();
 
-/* ========================
-   OPTIONAL DEBUG TEST
-======================== */
 
-const test = async () => {
-  const { data, error } = await supabase.functions.invoke("get-next-question");
-  console.log("TEST RESULT:", data, error);
-};
-
-test();
-
-/* ========================
-   FETCH REVIEW QUEUE
-======================== */
-
-async function fetchReviewQueue() {
-
-  const { data, error } = await supabase
-    .from("question_instances")
-    .select(`
-      id,
-      user_answer,
-      teacher_score,
-      teacher_feedback,
-      question_id,
-      questions(content)
-    `)
-    .is("teacher_score", null)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  console.log("REVIEW DATA:", data);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const container = document.getElementById("reviewPanel");
-  container.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    container.innerHTML = '<p style="color:green;">Ingen ventende besvarelser</p>';
-    return;
-  }
-
-  data.forEach(item => {
-
-    const content = item.questions?.content ?? {};
-    const questionText = content.question ?? "(intet sporgsmal)";
-    const answerText = item.user_answer ?? "(intet svar)";
-    const facit = content.answer ?? "";
-    const criteriaList = (content.criteria || []).map(c => `<li>${c}</li>`).join("");
-
-    const block = document.createElement("div");
-    block.style.border = "1px solid #ccc";
-    block.style.padding = "15px";
-    block.style.marginBottom = "15px";
-
-    const approveBtn = document.createElement("button");
-    approveBtn.textContent = "GODKEND";
-    approveBtn.onclick = () => approveAnswer(item.id);
-
-    const rejectBtn = document.createElement("button");
-    rejectBtn.textContent = "AFVIS";
-    rejectBtn.onclick = () => rejectAnswer(item.id);
-
-    block.innerHTML = `
-      <strong>SPORGSMAL</strong><br>
-      ${questionText}<br><br>
-
-      <strong>ELEVENS SVAR</strong><br>
-      ${answerText}<br><br>
-
-      <strong>FACIT</strong><br>
-      ${facit}<br><br>
-
-      <strong>KRITERIER</strong>
-      <ul>${criteriaList}</ul>
-    `;
-
-    block.appendChild(approveBtn);
-    block.appendChild(rejectBtn);
-
-    container.appendChild(block);
-  });
-}
-
-fetchReviewQueue();
-
-/* ========================
-   APPROVE ANSWER
-======================== */
-
-async function approveAnswer(instanceId, score = 4) {
-
-  const { error } = await supabase.functions.invoke("review-answer", {
-    body: {
-      instance_id: instanceId,
-      score: score,
-      feedback: "Godt svar"
-    }
-  });
-
-  if (error) {
-    console.error(error);
-    alert("Fejl ved godkendelse");
-    return;
-  }
-
-  await fetchReviewQueue();
-}
-
-/* ========================
-   REJECT ANSWER
-======================== */
-
-async function rejectAnswer(instanceId) {
-
-  const { error } = await supabase.functions.invoke("review-answer", {
-    body: {
-      instance_id: instanceId,
-      score: 1,
-      feedback: "Afvist"
-    }
-  });
-
-  if (error) {
-    console.error(error);
-    alert("Fejl ved afvisning");
-    return;
-  }
-
-  await fetchReviewQueue();
-}
-
-/* ========================
-   RESET PENDING
-======================== */
-
-async function resetPending() {
-
-  const confirmReset = confirm(
-    "Er du sikker pa, at du vil afvise ALLE ventende svar?\n\nDette kan ikke fortrydes."
-  );
-  if (!confirmReset) return;
-
-  const input = prompt("Skriv RESET for at bekraefte");
-
-  if (input !== "RESET") {
-    alert("Annulleret - ingen aendringer foretaget.");
-    return;
-  }
-
-  try {
-    const { error } = await supabase.functions.invoke("reset-pending");
-
-    if (error) {
-      console.error("RESET ERROR:", error);
-      alert("Fejl ved reset. Proev igen.");
-      return;
-    }
-
-    alert("Alle ventende svar er blevet afvist.");
-
-    await fetchReviewQueue();
-
-  } catch (err) {
-    console.error("UNEXPECTED RESET ERROR:", err);
-    alert("Uventet fejl.");
-  }
-}
-
-document.getElementById("reset-btn")?.addEventListener("click", resetPending);

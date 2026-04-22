@@ -76,7 +76,8 @@ async function fetchStudent() {
 
 async function fetchQuestionInstances() {
 
-  const { data, error } = await supabase
+  // 🔴 Pending
+  const { data: pendingRaw, error: pError } = await supabase
     .from("question_instances")
     .select(`
       id,
@@ -84,19 +85,71 @@ async function fetchQuestionInstances() {
       teacher_score,
       teacher_feedback,
       created_at,
-      questions(content)
+      question_id
     `)
     .eq("student_id", studentId)
-    .order("created_at", { ascending: false })
-    .limit(20);
+    .is("teacher_score", null)
+    .not("user_answer", "is", null)
+    .neq("user_answer", "")
+    .order("created_at", { ascending: true })
+    .limit(50);
 
-  if (error) {
-    console.error(error);
+  if (pError) {
+    console.error(pError);
     return;
   }
 
-  const pending = data.filter(d => d.teacher_score === null);
-  const reviewed = data.filter(d => d.teacher_score !== null);
+  // 🟢 Reviewed
+  const { data: reviewedRaw, error: rError } = await supabase
+    .from("question_instances")
+    .select(`
+      id,
+      user_answer,
+      teacher_score,
+      teacher_feedback,
+      created_at,
+      question_id
+    `)
+    .eq("student_id", studentId)
+    .not("teacher_score", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(50);
+
+  if (rError) {
+    console.error(rError);
+    return;
+  }
+
+  const allIds = [
+    ...new Set(
+      [
+        ...(pendingRaw || []).map(p => p.question_id),
+        ...(reviewedRaw || []).map(p => p.question_id)
+      ].filter(Boolean)
+    )
+  ];
+
+  const { data: questionsData } = allIds.length
+    ? await supabase.from("questions").select("id, content").in("id", allIds)
+    : { data: [] };
+
+  const questionMap = Object.fromEntries(
+    (questionsData || []).map(q => [q.id, q.content])
+  );
+
+  const pending = (pendingRaw || [])
+    .filter(item => item.user_answer && item.user_answer.trim() !== "")
+    .map(item => ({
+      ...item,
+      content: questionMap[item.question_id] || {}
+    }));
+
+  const reviewed = (reviewedRaw || [])
+    .filter(item => item.user_answer && item.user_answer.trim() !== "")
+    .map(item => ({
+      ...item,
+      content: questionMap[item.question_id] || {}
+    }));
 
   renderReview(pending, reviewed);
 }
@@ -142,29 +195,51 @@ function renderReview(pending, reviewed) {
   }
 
   pending.forEach(item => {
+    console.log("PENDING ITEM:", item);
 
-    const content = item.questions?.content ?? {};
-    const question = content.question ?? "";
-    const answer = item.user_answer ?? "";
+    const raw = item.content;
+    let content = {};
+    try {
+      content = typeof raw === "string" ? JSON.parse(raw) : raw ?? {};
+    } catch {
+      console.warn("Invalid content JSON", raw);
+    }
+    const question =
+      content.question ??
+      content.text ??
+      "(mangler spørgsmål)";
+    const answer = item.user_answer ?? "(intet svar)";
+    const facit =
+      content.answer ??
+      content.correct ??
+      content.correct_answer ??
+      "(intet facit)";
 
     const box = document.createElement("div");
     box.className = "box";
 
-    const approveBtn = document.createElement("button");
-    approveBtn.textContent = "GODKEND";
-    approveBtn.onclick = () => approveAnswer(item.id);
-
-    const rejectBtn = document.createElement("button");
-    rejectBtn.textContent = "AFVIS";
-    rejectBtn.onclick = () => rejectAnswer(item.id);
-
     box.innerHTML = `
       <strong>SPØRGSMÅL</strong><br>${question}<br><br>
       <strong>SVAR</strong><br>${answer}<br><br>
+      <strong>FACIT</strong><br>${facit}<br><br>
     `;
 
-    box.appendChild(approveBtn);
-    box.appendChild(rejectBtn);
+    const scores = [
+      { score: 1, label: "1 – Afvist" },
+      { score: 2, label: "2 – OK" },
+      { score: 3, label: "3 – Godt" },
+      { score: 4, label: "4 – Perfekt" }
+    ];
+
+    scores.forEach(({ score, label }) => {
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.onclick = async () => {
+        btn.disabled = true;
+        await reviewAnswer(item.id, score);
+      };
+      box.appendChild(btn);
+    });
 
     container.appendChild(box);
   });
@@ -175,10 +250,20 @@ function renderReview(pending, reviewed) {
   container.appendChild(reviewedTitle);
 
   reviewed.forEach(item => {
+    console.log("REVIEWED ITEM:", item);
 
-    const content = item.questions?.content ?? {};
-    const question = content.question ?? "";
-    const answer = item.user_answer ?? "";
+    const raw = item.content;
+    let content = {};
+    try {
+      content = typeof raw === "string" ? JSON.parse(raw) : raw ?? {};
+    } catch {
+      console.warn("Invalid content JSON", raw);
+    }
+    const question =
+      content.question ??
+      content.text ??
+      "(mangler spørgsmål)";
+    const answer = item.user_answer ?? "(intet svar)";
 
     const box = document.createElement("div");
     box.className = "box";
@@ -195,29 +280,32 @@ function renderReview(pending, reviewed) {
 }
 
 // ========================
-// APPROVE / REJECT (KORREKT)
+// REVIEW ACTION
 // ========================
 
-async function approveAnswer(instanceId) {
-  await supabase.functions.invoke("review-answer", {
+async function reviewAnswer(instanceId, score) {
+  console.log("REVIEW CALLED", instanceId, score);
+
+  const feedbackMap = {
+    1: "Afvist",
+    2: "OK",
+    3: "Godt",
+    4: "Perfekt"
+  };
+
+  const { error } = await supabase.functions.invoke("review-answer", {
     body: {
       instance_id: instanceId,
-      score: 4,
-      feedback: "Godt svar"
+      score,
+      feedback: feedbackMap[score] ?? ""
     }
   });
 
-  await fetchQuestionInstances();
-}
-
-async function rejectAnswer(instanceId) {
-  await supabase.functions.invoke("review-answer", {
-    body: {
-      instance_id: instanceId,
-      score: 1,
-      feedback: "Afvist"
-    }
-  });
+  if (error) {
+    console.error("Review error:", error);
+    alert("Fejl ved vurdering");
+    return;
+  }
 
   await fetchQuestionInstances();
 }

@@ -259,14 +259,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnRef.textContent = "…";
     }
 
-    const { data, error } = await supabase.functions.invoke(
-      "process-event",
+    const { data, error } = await supabase.rpc(
+      "process_question_attempt",
       {
-        body: {
-          question_instance_id: currentInstanceId,
-          answer: userAnswer,
-          question_shown_at: questionShownAt
-        }
+        p_student_id: studentId,
+        p_question_instance_id: currentInstanceId,
+        p_answer: userAnswer,
+        p_question_shown_at: questionShownAt
       }
     );
 
@@ -313,19 +312,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { data, error } = await supabase.functions.invoke("get-next-question");
 
+    console.log("RAW RESPONSE:", data, error);
+
     if (error) {
-      logError("GET_QUESTION_ERROR", error);
+      console.error("GET QUESTION ERROR:", error);
       return null;
     }
 
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
+    console.log("QUESTION RAW:", parsed);
+
     if (!parsed || !parsed.content || !parsed.content.question) {
-      logError("INVALID_QUESTION", parsed);
+      console.error("INVALID QUESTION:", parsed);
       return null;
     }
 
     currentInstanceId = parsed.question_instance_id ?? null;
+
+    console.log("INSTANCE ID:", currentInstanceId);
+
     return parsed;
   }
 
