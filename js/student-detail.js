@@ -67,48 +67,38 @@ async function fetchStudent() {
 
   renderStudent(overview, mastery);
 
-  await fetchEvents();
-  await fetchAnswersForReview();
+  await fetchQuestionInstances();
 }
 
 // ========================
-// FETCH EVENTS
+// FETCH QUESTION INSTANCES (NY SANDHED)
 // ========================
 
-async function fetchEvents() {
+async function fetchQuestionInstances() {
 
-  const { data } = await supabase
-    .from("student_events")
-    .select("type, created_at")
+  const { data, error } = await supabase
+    .from("question_instances")
+    .select(`
+      id,
+      user_answer,
+      teacher_score,
+      teacher_feedback,
+      created_at,
+      questions(content)
+    `)
     .eq("student_id", studentId)
     .order("created_at", { ascending: false })
     .limit(20);
 
-  renderEvents(data);
-}
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-// ========================
-// FETCH ANSWERS FOR REVIEW
-// ========================
+  const pending = data.filter(d => d.teacher_score === null);
+  const reviewed = data.filter(d => d.teacher_score !== null);
 
-async function fetchAnswersForReview() {
-
-  const { data } = await supabase
-    .from("student_answers")
-    .select(`
-      id,
-      answer_text,
-      ai_feedback,
-      status,
-      questions (
-        content
-      )
-    `)
-    .eq("student_id", studentId)
-    .eq("status", "pending")
-    .limit(5);
-
-  renderReview(data);
+  renderReview(pending, reviewed);
 }
 
 // ========================
@@ -134,96 +124,102 @@ function renderStudent(student, mastery) {
 }
 
 // ========================
-// RENDER EVENTS
+// RENDER REVIEW
 // ========================
 
-function renderEvents(events) {
+function renderReview(pending, reviewed) {
 
   const container = document.getElementById("reviewPanel");
-
-  const table = document.createElement("table");
-
-  const header = document.createElement("tr");
-  header.innerHTML = `
-    <th>Type</th>
-    <th>Tidspunkt</th>
-  `;
-
-  table.appendChild(header);
-
-  events.forEach(event => {
-
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${event.type}</td>
-      <td>${new Date(event.created_at).toLocaleString()}</td>
-    `;
-
-    table.appendChild(row);
-  });
-
   container.innerHTML = "";
-  container.appendChild(table);
-}
 
-// ========================
-// RENDER REVIEW PANEL
-// ========================
+  // 🔴 Pending
+  const pendingTitle = document.createElement("h3");
+  pendingTitle.textContent = "Ventende svar";
+  container.appendChild(pendingTitle);
 
-function renderReview(answers) {
+  if (pending.length === 0) {
+    container.innerHTML += "<p>Ingen ventende svar</p>";
+  }
 
-  const container = document.getElementById("reviewPanel");
+  pending.forEach(item => {
 
-  answers.forEach(a => {
+    const content = item.questions?.content ?? {};
+    const question = content.question ?? "";
+    const answer = item.user_answer ?? "";
 
     const box = document.createElement("div");
     box.className = "box";
 
-    const question = a.questions?.content?.question ?? "Ukendt spørgsmål";
+    const approveBtn = document.createElement("button");
+    approveBtn.textContent = "GODKEND";
+    approveBtn.onclick = () => approveAnswer(item.id);
+
+    const rejectBtn = document.createElement("button");
+    rejectBtn.textContent = "AFVIS";
+    rejectBtn.onclick = () => rejectAnswer(item.id);
 
     box.innerHTML = `
-      <h3>SPØRGSMÅL</h3>
-      <p>${question}</p>
-
-      <h3>ELEVENS SVAR</h3>
-      <p>${a.answer_text}</p>
-
-      <h3>FACIT (AI)</h3>
-      <p>${a.ai_feedback ?? "Ingen feedback"}</p>
-
-      <button data-id="${a.id}" class="approve">GODKEND</button>
-      <button data-id="${a.id}" class="reject">AFVIS</button>
+      <strong>SPØRGSMÅL</strong><br>${question}<br><br>
+      <strong>SVAR</strong><br>${answer}<br><br>
     `;
+
+    box.appendChild(approveBtn);
+    box.appendChild(rejectBtn);
 
     container.appendChild(box);
   });
 
-  document.querySelectorAll(".approve").forEach(btn => {
-    btn.onclick = () => reviewAnswer(btn.dataset.id, true);
-  });
+  // 🟢 Reviewed
+  const reviewedTitle = document.createElement("h3");
+  reviewedTitle.textContent = "Vurderede svar";
+  container.appendChild(reviewedTitle);
 
-  document.querySelectorAll(".reject").forEach(btn => {
-    btn.onclick = () => reviewAnswer(btn.dataset.id, false);
+  reviewed.forEach(item => {
+
+    const content = item.questions?.content ?? {};
+    const question = content.question ?? "";
+    const answer = item.user_answer ?? "";
+
+    const box = document.createElement("div");
+    box.className = "box";
+
+    box.innerHTML = `
+      <strong>SPØRGSMÅL</strong><br>${question}<br><br>
+      <strong>SVAR</strong><br>${answer}<br><br>
+      <strong>Score:</strong> ${item.teacher_score}<br>
+      <strong>Feedback:</strong> ${item.teacher_feedback ?? ""}
+    `;
+
+    container.appendChild(box);
   });
 }
 
 // ========================
-// REVIEW ACTION
+// APPROVE / REJECT (KORREKT)
 // ========================
 
-async function reviewAnswer(answerId, approve) {
+async function approveAnswer(instanceId) {
+  await supabase.functions.invoke("review-answer", {
+    body: {
+      instance_id: instanceId,
+      score: 4,
+      feedback: "Godt svar"
+    }
+  });
 
-  await supabase
-    .from("student_answers")
-    .update({
-      status: approve ? "approved" : "rejected",
-      reviewed_at: new Date(),
-      teacher_id: teacherId
-    })
-    .eq("id", answerId);
+  await fetchQuestionInstances();
+}
 
-  location.reload();
+async function rejectAnswer(instanceId) {
+  await supabase.functions.invoke("review-answer", {
+    body: {
+      instance_id: instanceId,
+      score: 1,
+      feedback: "Afvist"
+    }
+  });
+
+  await fetchQuestionInstances();
 }
 
 // ========================
