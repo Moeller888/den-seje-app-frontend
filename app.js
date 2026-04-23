@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js";
 
 window.__sb = supabase;
 
@@ -50,80 +50,42 @@ function setState(newState) {
   logEvent("STATE_CHANGED", { to: newState });
 }
 
+function setUIState(newState) {
+  setState(newState);
+
+  const map = {
+    LOADING_QUESTION: "loading",
+    AWAITING_ANSWER: "ready",
+    TRANSITIONING: "loading",
+    SUBMITTING_ANSWER: "loading"
+  };
+
+  const domState = map[newState];
+  if (domState) {
+    const el = document.getElementById("question");
+    if (el) el.dataset.state = domState;
+  }
+}
+
 let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
 
-// 🔥 FETCH FEEDBACK
-async function fetchReviewedAnswers() {
-  console.log("FETCH REVIEW CALLED");
-
-  const { data, error } = await supabase.functions.invoke("get-reviewed-answers");
-
-  if (error || !data?.data) return;
-
-  const container = document.getElementById("review-feedback");
-  if (!container) return;
-
-  container.innerHTML = "<b>Seneste feedback:</b>";
-
-  function scoreToXP(score) {
-    if (score === 1) return 0;
-    if (score === 2) return 10;
-    if (score === 3) return 25;
-    if (score === 4) return 50;
-    return 0;
-  }
-
-  data.data.forEach(item => {
-    const xp = scoreToXP(item.teacher_score);
-
-    const div = document.createElement("div");
-
-    div.style.marginTop = "10px";
-
-    div.innerHTML = `
-      <div>
-        <b>Din besvarelse:</b> ${item.user_answer}<br>
-        <b>Feedback:</b> ${item.teacher_feedback || "Ingen kommentar"}<br>
-        <b>Score:</b> ${item.teacher_score}
-        <div style="
-          color: green;
-          font-weight: bold;
-          font-size: 18px;
-          margin-top: 5px;
-        ">
-          +${xp} XP
-        </div>
-      </div>
-    `;
-
-    container.appendChild(div);
-
-    if (xp > 0) {
-      showXPPopup(xp);
-    }
-  });
-}
-
-// 🔐 AUTH
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
 
-  if (!sessionData?.session) {
+  if (!sessionData.session) {
     window.location.replace("login.html");
     return false;
   }
 
   studentId = sessionData.session.user.id;
 
-  const { data, error } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", studentId)
-    .limit(1);
-
-  const profile = Array.isArray(data) ? data[0] : null;
+    .maybeSingle();
 
   if (error || !profile || profile.role !== "student") {
     await supabase.auth.signOut();
@@ -134,62 +96,18 @@ async function checkAuthAndRole() {
   return true;
 }
 
-// 🎭 AVATAR
-async function loadActiveAvatar() {
-  const avatarEl = document.getElementById("avatar-display");
-  if (!avatarEl) return;
+// 🔥 Sikrer altid 4 svar
+function ensureFourOptions(options) {
+  const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("active_avatar")
-    .eq("id", studentId)
-    .maybeSingle();
+  const unique = new Set(options);
 
-  const avatarId = profile?.active_avatar;
-
-  if (!avatarId) {
-    avatarEl.textContent = "Ingen avatar";
-    return;
+  while (unique.size < 4) {
+    const random = pool[Math.floor(Math.random() * pool.length)];
+    unique.add(random);
   }
 
-  const { data: item } = await supabase
-    .from("shop_items")
-    .select("name, image_url")
-    .eq("id", avatarId)
-    .maybeSingle();
-
-  avatarEl.innerHTML = `
-    <img src="${item?.image_url || ""}" />
-    <div>${item?.name || "Avatar"}</div>
-  `;
-}
-
-function showXPPopup(amount) {
-  const popup = document.getElementById("xp-popup");
-  if (!popup) return;
-
-  popup.textContent = `+${amount} XP`;
-  popup.classList.remove("xp-show");
-
-  void popup.offsetWidth;
-
-  popup.classList.add("xp-show");
-}
-
-// 🔥 FEEDBACK FLASH
-function flash(type) {
-  const el = document.querySelector(".question-box");
-  if (!el) return;
-
-  const className = type === "correct"
-    ? "correct-flash"
-    : "incorrect-flash";
-
-  el.classList.add(className);
-
-  setTimeout(() => {
-    el.classList.remove(className);
-  }, 300);
+  return Array.from(unique).sort(() => Math.random() - 0.5);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -210,107 +128,110 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.replace("login.html");
   };
 
-  function applyProgressToUI(progress) {
-    const xp = Number(progress?.xp ?? 0);
-    const coins = Number(progress?.coins ?? 0);
-
-    const level = Number(progress?.level ?? 1);
-
-    xpEl.textContent = xp;
-    coinsEl.textContent = coins;
-    levelEl.textContent = level;
-
-    // 🔥 XP BAR (kun progress i nuværende level)
-    const xpBar = document.getElementById("xp-bar");
-
-    const xpForNextLevel = 100;
-    const progressInLevel = xp % xpForNextLevel;
-    const safeProgress = progressInLevel / xpForNextLevel;
-
-    if (xpBar) {
-      xpBar.style.width = (safeProgress * 100) + "%";
-    }
-  }
-
   async function fetchProgress() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("student_progress")
-      .select("xp, coins, level")
-      .eq("student_id", studentId)
-      .limit(1);
+      .select("*")
+      .maybeSingle();
 
-    if (error) {
-      logError("PROGRESS_FETCH_ERROR", error);
-      return;
+    if (data) {
+      xpEl.textContent = data.xp ?? 0;
+      coinsEl.textContent = data.coins ?? 0;
+      levelEl.textContent = data.level ?? 1;
+
+      const xpBar = document.getElementById("xp-bar");
+      const xp = data.xp ?? 0;
+      const level = data.level ?? 1;
+      const xpForNextLevel = level * 100;
+      const progress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
+      xpBar.style.width = (progress * 100) + "%";
+
+      logEvent("PROGRESS_FETCHED", { xp: data.xp });
     }
-
-    const progress = Array.isArray(data) ? data[0] : null;
-    applyProgressToUI(progress);
   }
 
-  async function submitAnswer(userAnswer, btnRef = null) {
+  async function submitAnswer(userAnswer) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
 
-    setState(UI_STATES.SUBMITTING_ANSWER);
+    setUIState(UI_STATES.SUBMITTING_ANSWER);
 
-    if (btnRef) {
-      btnRef.disabled = true;
-      btnRef.textContent = "…";
-    }
+    const buttons = optionsContainer.querySelectorAll("button");
+    buttons.forEach(btn => btn.disabled = true);
 
-    const { data, error } = await supabase.rpc(
-      "process_question_attempt",
+    console.log("SUBMIT:", { studentId, currentInstanceId, userAnswer });
+
+    const { data, error } = await supabase.functions.invoke(
+      "process-event",
       {
-        p_student_id: studentId,
-        p_question_instance_id: currentInstanceId,
-        p_answer: userAnswer,
-        p_question_shown_at: questionShownAt
+        body: {
+          student_id: studentId,
+          question_instance_id: currentInstanceId,
+          answer: userAnswer,
+          question_shown_at: questionShownAt
+        }
       }
     );
 
     if (error) {
-      feedback.textContent = "⚠️ Fejl ved svar";
-      setState(UI_STATES.AWAITING_ANSWER);
+      logError("SUBMIT_ERROR", error);
+
+      feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
+      feedback.style.color = "red";
+
+      setUIState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
-    if (data?.status === "invalid") {
-      feedback.textContent = "⚠️ " + data.error;
+    if (!data || !data.status) {
+      logError("INVALID_RESPONSE", data);
 
-      if (btnRef) {
-        btnRef.disabled = false;
-        btnRef.textContent = "Send svar";
-      }
+      feedback.textContent = "⚠️ Ugyldigt svar fra server";
+      feedback.style.color = "red";
 
-      setState(UI_STATES.AWAITING_ANSWER);
+      setUIState(UI_STATES.AWAITING_ANSWER);
       return;
     }
 
-    if (data.status === "correct") {
+    if (data.status === "pending") {
+      feedback.textContent = "⏳ Afventer lærerens vurdering";
+      feedback.style.color = "orange";
+
+    } else if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
-      flash("correct");
+      feedback.style.color = "green";
+
     } else if (data.status === "incorrect") {
-      feedback.textContent = "❌ Forkert";
-      flash("incorrect");
+      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      feedback.style.color = "red";
+
     } else {
-      feedback.textContent = "⏳ Afventer vurdering";
+      logError("UNKNOWN_STATUS", data.status);
+
+      feedback.textContent = "⚠️ Ukendt status fra server";
+      feedback.style.color = "red";
+
+      setUIState(UI_STATES.AWAITING_ANSWER);
+      return;
     }
 
     await fetchProgress();
-    await fetchReviewedAnswers();
+    setUIState(UI_STATES.TRANSITIONING);
 
-    setState(UI_STATES.TRANSITIONING);
+    let delay = 1000;
+    if (data.status === "correct") delay = 600;
+    if (data.status === "incorrect") delay = 2000;
 
-    setTimeout(() => {
-      loadAndRenderQuestion();
-    }, 900);
+    setTimeout(() => { loadAndRenderQuestion(); }, delay);
   }
 
   async function getNextQuestion() {
-    setState(UI_STATES.LOADING_QUESTION);
+    setUIState(UI_STATES.LOADING_QUESTION);
 
-    const { data, error } = await supabase.functions.invoke("get-next-question");
+    const { data, error } = await supabase.functions.invoke(
+      "get-next-question",
+      { body: {} }
+    );
 
     console.log("RAW RESPONSE:", data, error);
 
@@ -322,6 +243,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
     console.log("QUESTION RAW:", parsed);
+
+    if (!parsed) return null;
 
     if (parsed.step === "no_questions") {
       return { step: "no_questions" };
@@ -342,59 +265,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
-    const format = (question?.answer_format || "").toLowerCase();
-    const answerType = question?.answer_type || "short";
-    const content = question?.content;
+    const format = (question.answer_format || "").toLowerCase();
+    const content = question.content;
 
-    if (format === "text") {
+    let options = content.options;
 
+    if (!Array.isArray(options)) options = [];
+
+    if (content.force_text === true) {
       const textarea = document.createElement("textarea");
-      textarea.rows = 4;
-      textarea.autofocus = true;
-
-      const counter = document.createElement("div");
-
-      function countWords(text) {
-        return text.trim().split(/\s+/).filter(w => w.length > 0).length;
-      }
-
-      function update() {
-        const words = countWords(textarea.value);
-        counter.textContent = answerType === "long"
-          ? `Min. 20 ord (${words})`
-          : `${words} ord`;
-
-        counter.style.color =
-          answerType === "long"
-            ? (words >= 20 ? "green" : "red")
-            : "black";
-      }
-
-      update();
-      textarea.addEventListener("input", update);
 
       const btn = document.createElement("button");
       btn.textContent = "Send svar";
 
-      btn.onclick = () => submitAnswer(textarea.value, btn);
-
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          btn.click();
-        }
-      });
+      btn.onclick = () => {
+        submitAnswer(textarea.value);
+      };
 
       optionsContainer.appendChild(textarea);
-      optionsContainer.appendChild(counter);
       optionsContainer.appendChild(btn);
-
       return;
     }
 
-    if (format === "number") {
+    if (format.includes("mc")) {
+      options = ensureFourOptions(options);
+    }
+
+    if (format.includes("number")) {
       const input = document.createElement("input");
-      input.type = "number";
+      input.type = "text";
 
       const btn = document.createElement("button");
       btn.textContent = "Svar";
@@ -402,27 +301,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.onclick = () => {
         const val = Number(input.value);
         if (!Number.isNaN(val)) {
-          submitAnswer(String(val), btn);
+          submitAnswer(String(val));
         }
       };
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") btn.click();
-      });
 
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
       return;
     }
 
-    if (format === "mc") {
-      content.options.forEach(option => {
-        const btn = document.createElement("button");
-        btn.textContent = option;
-        btn.onclick = () => submitAnswer(option, btn);
-        optionsContainer.appendChild(btn);
-      });
+    if (format === "text") {
+      const textarea = document.createElement("textarea");
+
+      const btn = document.createElement("button");
+      btn.textContent = "Send svar";
+
+      btn.onclick = () => {
+        submitAnswer(textarea.value);
+      };
+
+      optionsContainer.appendChild(textarea);
+      optionsContainer.appendChild(btn);
+      return;
     }
+
+    options.forEach((option) => {
+      const btn = document.createElement("button");
+      btn.textContent = option;
+      btn.onclick = () => submitAnswer(option);
+      optionsContainer.appendChild(btn);
+    });
   }
 
   async function loadAndRenderQuestion() {
@@ -430,12 +338,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!question) {
       questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
+      questionElement.dataset.state = "error";
       optionsContainer.innerHTML = "";
       return;
     }
 
     if (question.step === "no_questions") {
-      questionElement.textContent = "🎉 Du har ingen flere spørgsmål";
+      questionElement.textContent = "🎉 Du har ingen flere spørgsmål lige nu";
+      questionElement.dataset.state = "empty";
       optionsContainer.innerHTML = "";
       feedback.textContent = "";
       return;
@@ -446,13 +356,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     questionShownAt = Date.now();
 
     renderOptions(question);
-    setState(UI_STATES.AWAITING_ANSWER);
+
+    setUIState(UI_STATES.AWAITING_ANSWER);
   }
 
   await fetchProgress();
-  await fetchReviewedAnswers();
-  await loadActiveAvatar();
   await loadAndRenderQuestion();
 });
 
-console.log("QUIZ PAGE LOADED");
+console.log("APP LOADED DEBUG");
