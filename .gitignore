@@ -1,5 +1,6 @@
 .vercel
 .env*.local
+.env*
 
 # Playwright
 node_modules/

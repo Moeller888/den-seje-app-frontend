@@ -3,7 +3,8 @@
     "allow": [
       "Bash(vercel --prod)",
       "Bash(supabase functions:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(git *)"
     ]
   }
 }
