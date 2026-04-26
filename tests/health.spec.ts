@@ -11,8 +11,8 @@ test('App health check - full flow', async ({ page }) => {
   // Vent på app
   await page.waitForSelector('#logout-btn');
 
-  // Tjek at spørgsmål loader
-  await page.waitForSelector('#question');
+  // Wait for state machine to reach AWAITING_ANSWER (question fully loaded)
+  await page.waitForSelector('#question[data-state="ready"]');
 
   const questionText = await page.locator('#question').innerText();
   expect(questionText.length).toBeGreaterThan(5);
@@ -30,8 +30,8 @@ test('App health check - full flow', async ({ page }) => {
   const feedbackText = await page.locator('#feedback').innerText();
   expect(feedbackText.length).toBeGreaterThan(0);
 
-  // Vent på nyt spørgsmål
-  await page.waitForTimeout(1500);
+  // Wait for state machine to reach AWAITING_ANSWER with the next question
+  await page.waitForSelector('#question[data-state="ready"]');
 
   const newQuestion = await page.locator('#question').innerText();
   expect(newQuestion.length).toBeGreaterThan(5);
