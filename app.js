@@ -323,6 +323,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         submitAnswer(textarea.value);
       };
 
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          btn.onclick();
+        }
+      });
+
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
       return;
@@ -346,6 +353,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       };
 
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btn.onclick();
+      });
+
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
       return;
@@ -360,6 +371,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.onclick = () => {
         submitAnswer(textarea.value);
       };
+
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          btn.onclick();
+        }
+      });
 
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);

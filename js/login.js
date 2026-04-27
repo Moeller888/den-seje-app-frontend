@@ -5,6 +5,10 @@ const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const message = document.getElementById("message");
 
+passwordInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loginBtn.click();
+});
+
 loginBtn.addEventListener("click", async () => {
 
   const email = emailInput.value.trim();
