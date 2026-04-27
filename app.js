@@ -150,6 +150,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  async function fetchAvatar() {
+    const avatarDisplay = document.getElementById("avatar-display");
+    if (!avatarDisplay) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("active_avatar")
+      .eq("id", studentId)
+      .maybeSingle();
+
+    const activeId = profile?.active_avatar ?? null;
+
+    if (!activeId) {
+      avatarDisplay.textContent = "Ingen avatar";
+      return;
+    }
+
+    const { data: item } = await supabase
+      .from("shop_items")
+      .select("name, image_url")
+      .eq("id", activeId)
+      .maybeSingle();
+
+    if (!item) {
+      avatarDisplay.textContent = "Ingen avatar";
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.src = item.image_url || "";
+    img.alt = item.name || "Avatar";
+
+    avatarDisplay.innerHTML = "";
+    avatarDisplay.appendChild(img);
+  }
+
   async function submitAnswer(userAnswer) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
@@ -366,6 +402,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   await fetchProgress();
+  await fetchAvatar();
   await loadAndRenderQuestion();
 });
 
