@@ -228,10 +228,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function getNextQuestion() {
     setUIState(UI_STATES.LOADING_QUESTION);
 
-    const { data, error } = await supabase.functions.invoke(
+    let { data, error } = await supabase.functions.invoke(
       "get-next-question",
       { body: {} }
     );
+
+    if (error) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      ({ data, error } = await supabase.functions.invoke("get-next-question", { body: {} }));
+    }
 
     console.log("RAW RESPONSE:", data, error);
 
