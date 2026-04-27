@@ -2,14 +2,10 @@ import { supabase } from "./supabase.js";
 
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
 const message = document.getElementById("message");
 
-passwordInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") loginBtn.click();
-});
-
-loginBtn.addEventListener("click", async () => {
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
