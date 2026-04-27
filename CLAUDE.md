@@ -25,14 +25,21 @@ Run all tests (standard workflow):
 ```
 This runs Playwright, and if tests fail it invokes Claude to auto-fix, then re-runs and auto-commits on green.
 
-Run tests manually (without auto-fix):
+Hurtig smoke-test (daglig udvikling, ~10 sek.):
+```
+npx playwright test tests/example.spec.ts --project=chromium
+```
+Kør dette under aktiv udvikling for hurtigt at verificere core flow (login → spørgsmål → svar).
+
+Fuld test-suite (før push/release, ~55 sek.):
 ```
 npx playwright test
 ```
+Kører alle specs på Chromium, Firefox og WebKit. Skal altid køre og være grøn inden push.
 
 Run a single test file:
 ```
-npx playwright test tests/health.spec.ts
+npx playwright test tests/example.spec.ts
 ```
 
 Deploy Supabase Edge Functions:
@@ -95,8 +102,7 @@ Invalid transitions are blocked and logged. Never bypass this machine.
 - Backend: `supabase functions deploy <name>` — functions are deployed independently from frontend
 
 **Tests** (`tests/`):
-- `health.spec.ts` — full student flow: login → question loads → answer → feedback → next question
-- `example.spec.ts` — additional flow tests
+- `example.spec.ts` — full student flow: login → question loads → answer → feedback → next question, no-questions state
 - Tests run against `https://den-seje-app-frontend.vercel.app` (production), not localhost
 - Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
 
