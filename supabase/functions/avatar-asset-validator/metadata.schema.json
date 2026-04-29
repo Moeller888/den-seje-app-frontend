@@ -1,0 +1,471 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "den-seje-app/avatar/metadata.schema.json",
+  "title": "DEN SEJE APP — Avatar Asset Metadata Schema v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "identity",
+    "classification",
+    "visual",
+    "technical",
+    "validation",
+    "forbidden_reference_check",
+    "deployment",
+    "audit"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id",
+        "display_name",
+        "slot",
+        "version",
+        "status",
+        "created_by",
+        "created_at",
+        "approved_by",
+        "approved_at"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^(hat|shirt|shoe|inventory)_[a-z][a-z0-9_]+$",
+          "minLength": 5
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "slot": {
+          "type": "string",
+          "enum": ["hat", "shirt", "shoe", "inventory"]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "review", "approved", "production", "deprecated"]
+        },
+        "created_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "approved_by": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "approved_at": {
+          "oneOf": [
+            { "type": "string", "format": "date" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rarity",
+        "school_safe",
+        "moderation_required",
+        "whitelist_approved"
+      ],
+      "properties": {
+        "rarity": {
+          "type": "string",
+          "enum": ["standard", "uncommon", "rare", "legendary"]
+        },
+        "school_safe": {
+          "type": "boolean"
+        },
+        "moderation_required": {
+          "type": "boolean"
+        },
+        "whitelist_approved": {
+          "type": "boolean"
+        }
+      }
+    },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_color",
+        "secondary_color",
+        "accent_color",
+        "silhouette_type",
+        "thumbnail_priority"
+      ],
+      "properties": {
+        "primary_color": {
+          "type": "string",
+          "enum": [
+            "white", "black", "charcoal", "grey", "navy",
+            "forest", "coral", "sky", "lilac", "gold",
+            "silver", "warm_yellow"
+          ]
+        },
+        "secondary_color": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "white", "black", "charcoal", "grey", "navy",
+                "forest", "coral", "sky", "lilac", "gold",
+                "silver", "warm_yellow"
+              ]
+            },
+            { "type": "null" }
+          ]
+        },
+        "accent_color": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "white", "black", "charcoal", "grey", "navy",
+                "forest", "coral", "sky", "lilac", "gold",
+                "silver", "warm_yellow"
+              ]
+            },
+            { "type": "null" }
+          ]
+        },
+        "silhouette_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "thumbnail_priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "technical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "polycount_max",
+        "polycount_actual",
+        "texture_resolution",
+        "texture_format",
+        "texture_embedded",
+        "export_format",
+        "file_size_kb_max",
+        "file_size_kb_actual",
+        "attachment_type",
+        "attachment_bone",
+        "rig_required"
+      ],
+      "properties": {
+        "polycount_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "polycount_actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "texture_resolution": {
+          "type": "string",
+          "enum": ["128x128", "256x256", "512x512"]
+        },
+        "texture_format": {
+          "type": "string",
+          "const": "png"
+        },
+        "texture_embedded": {
+          "type": "boolean"
+        },
+        "export_format": {
+          "type": "string",
+          "const": "glb"
+        },
+        "file_size_kb_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "file_size_kb_actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "attachment_type": {
+          "type": "string",
+          "enum": ["parented", "skinned"]
+        },
+        "attachment_bone": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "attach_head",
+                "attach_hand_R",
+                "attach_hand_L",
+                "attach_foot_L",
+                "attach_foot_R"
+              ]
+            },
+            { "type": "null" }
+          ]
+        },
+        "rig_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyright_review_passed",
+        "school_safe_review_passed",
+        "thumbnail_readability_passed",
+        "clipping_test_passed",
+        "browser_validation_passed",
+        "qa_approved"
+      ],
+      "properties": {
+        "copyright_review_passed": { "type": "boolean" },
+        "school_safe_review_passed": { "type": "boolean" },
+        "thumbnail_readability_passed": { "type": "boolean" },
+        "clipping_test_passed": { "type": "boolean" },
+        "browser_validation_passed": { "type": "boolean" },
+        "qa_approved": { "type": "boolean" }
+      }
+    },
+    "forbidden_reference_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fortnite",
+        "roblox",
+        "minecraft",
+        "nike",
+        "adidas",
+        "jordan",
+        "marvel",
+        "disney",
+        "star_wars",
+        "political_symbols",
+        "nazi_symbols"
+      ],
+      "properties": {
+        "fortnite": { "type": "boolean" },
+        "roblox": { "type": "boolean" },
+        "minecraft": { "type": "boolean" },
+        "nike": { "type": "boolean" },
+        "adidas": { "type": "boolean" },
+        "jordan": { "type": "boolean" },
+        "marvel": { "type": "boolean" },
+        "disney": { "type": "boolean" },
+        "star_wars": { "type": "boolean" },
+        "political_symbols": { "type": "boolean" },
+        "nazi_symbols": { "type": "boolean" }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "production_enabled",
+        "release_group",
+        "rollout_stage"
+      ],
+      "properties": {
+        "production_enabled": {
+          "type": "boolean"
+        },
+        "release_group": {
+          "type": "string",
+          "pattern": "^v\\d+$"
+        },
+        "rollout_stage": {
+          "type": "string",
+          "enum": ["none", "staging", "canary", "production"]
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_modified_by",
+        "last_modified_at",
+        "review_notes"
+      ],
+      "properties": {
+        "last_modified_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "last_modified_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "review_notes": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "deployment": {
+            "properties": {
+              "production_enabled": { "const": true }
+            },
+            "required": ["production_enabled"]
+          }
+        },
+        "required": ["deployment"]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "status": { "enum": ["approved", "production"] }
+            }
+          },
+          "classification": {
+            "properties": {
+              "school_safe": { "const": true },
+              "whitelist_approved": { "const": true }
+            }
+          },
+          "validation": {
+            "properties": {
+              "copyright_review_passed": { "const": true },
+              "school_safe_review_passed": { "const": true },
+              "thumbnail_readability_passed": { "const": true },
+              "clipping_test_passed": { "const": true },
+              "browser_validation_passed": { "const": true },
+              "qa_approved": { "const": true }
+            }
+          },
+          "forbidden_reference_check": {
+            "properties": {
+              "fortnite": { "const": false },
+              "roblox": { "const": false },
+              "minecraft": { "const": false },
+              "nike": { "const": false },
+              "adidas": { "const": false },
+              "jordan": { "const": false },
+              "marvel": { "const": false },
+              "disney": { "const": false },
+              "star_wars": { "const": false },
+              "political_symbols": { "const": false },
+              "nazi_symbols": { "const": false }
+            }
+          },
+          "deployment": {
+            "properties": {
+              "rollout_stage": { "enum": ["staging", "canary", "production"] }
+            }
+          },
+          "technical": {
+            "properties": {
+              "texture_embedded": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "technical": {
+            "properties": {
+              "attachment_type": { "const": "parented" }
+            },
+            "required": ["attachment_type"]
+          }
+        },
+        "required": ["technical"]
+      },
+      "then": {
+        "properties": {
+          "technical": {
+            "properties": {
+              "attachment_bone": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "technical": {
+            "properties": {
+              "attachment_type": { "const": "skinned" }
+            },
+            "required": ["attachment_type"]
+          }
+        },
+        "required": ["technical"]
+      },
+      "then": {
+        "properties": {
+          "technical": {
+            "properties": {
+              "attachment_bone": { "type": "null" },
+              "rig_required": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "status": { "enum": ["approved", "production"] }
+            },
+            "required": ["status"]
+          }
+        },
+        "required": ["identity"]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "approved_by": { "type": "string", "minLength": 1 },
+              "approved_at": { "type": "string", "format": "date" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

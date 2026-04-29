@@ -481,3 +481,18 @@ entrypoint = "./functions/review-answer/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/reset-pending/index.ts"
+
+[functions.avatar-asset-validator]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/avatar-asset-validator/index.ts"
+
+[functions.avatar-asset-onboarding]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/avatar-asset-onboarding/index.ts"
+
+[functions.avatar-ingestion]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/avatar-ingestion/index.ts"
