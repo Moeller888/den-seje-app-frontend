@@ -12,6 +12,7 @@ import type {
 
 export async function createIngestionJob(
   supabase: SupabaseClient,
+  jobId: string,
   assetId: string,
   slot: string,
   stagingGlbPath: string,
@@ -21,6 +22,7 @@ export async function createIngestionJob(
   const { data, error } = await supabase
     .from("avatar_ingestion_jobs")
     .insert({
+      id: jobId,
       asset_id: assetId,
       slot,
       status: "pending",
@@ -109,13 +111,20 @@ export async function updateJobMeasuredValues(
   }
 }
 
+// Atomically marks a validating job as complete.
+// Guards on both status='validating' and claimed_at matching the value the caller
+// received when it claimed the job — a zombie worker that survived past the stale
+// threshold and was subsequently recovered+retried will hold a stale claimed_at
+// value and will find no row, causing this function to throw rather than silently
+// overwriting the re-claimed job's state.
 export async function completeIngestionJob(
   supabase: SupabaseClient,
   jobId: string,
+  claimedAt: string,
   onboardingAssetId: string,
   onboardingValidationRunId: string,
 ): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("avatar_ingestion_jobs")
     .update({
       status: "complete",
@@ -123,10 +132,19 @@ export async function completeIngestionJob(
       onboarding_asset_id: onboardingAssetId,
       onboarding_validation_run_id: onboardingValidationRunId,
     })
-    .eq("id", jobId);
+    .eq("id", jobId)
+    .eq("status", "validating")
+    .eq("claimed_at", claimedAt)
+    .select()
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to complete ingestion job "${jobId}": ${error.message}`);
+  }
+  if (data === null) {
+    throw new Error(
+      `Failed to complete ingestion job "${jobId}": job was modified concurrently (status or claimed_at mismatch)`,
+    );
   }
 }
 
@@ -304,6 +322,187 @@ export async function insertIngestionArtifact(
     );
   }
   return data as IngestionArtifactRecord;
+}
+
+// PostgreSQL unique_violation error code.
+// Used to distinguish constraint collisions from any other insert failure.
+const PG_UNIQUE_VIOLATION = "23505";
+
+// Inserts a staged artifact (glb_staged or thumbnail_staged) for a job.
+// If a row with the same (job_id, artifact_type) already exists — because the pipeline
+// is re-running on retry — returns the existing row with idempotent=true instead of
+// throwing. All other DB errors are re-thrown unchanged.
+export async function insertOrGetStagedArtifact(
+  supabase: SupabaseClient,
+  jobId: string,
+  artifactType: "glb_staged" | "thumbnail_staged",
+  bucket: string,
+  storagePath: string,
+  fileSizeBytes: number,
+): Promise<{ artifact: IngestionArtifactRecord; idempotent: boolean }> {
+  const { data, error } = await supabase
+    .from("avatar_ingestion_artifacts")
+    .insert({
+      job_id: jobId,
+      artifact_type: artifactType,
+      bucket,
+      storage_path: storagePath,
+      file_size_bytes: fileSizeBytes,
+      content_hash: null,
+      status: "staged",
+    })
+    .select()
+    .single();
+
+  if (!error) {
+    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+  }
+
+  if (error.code === PG_UNIQUE_VIOLATION) {
+    // A staged artifact of this type already exists for this job (prior run on retry path).
+    // Fetch and return the existing row so the pipeline can continue without interruption.
+    const { data: existing, error: fetchError } = await supabase
+      .from("avatar_ingestion_artifacts")
+      .select("*")
+      .eq("job_id", jobId)
+      .eq("artifact_type", artifactType)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new Error(
+        `Staged artifact collision for job "${jobId}", type "${artifactType}" but re-fetch failed: ${fetchError.message}`,
+      );
+    }
+    if (existing === null) {
+      throw new Error(
+        `Staged artifact collision for job "${jobId}", type "${artifactType}" but row not found on re-fetch`,
+      );
+    }
+    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+  }
+
+  // Not a unique violation — all other errors propagate unchanged.
+  throw new Error(
+    `Failed to insert ${artifactType} artifact for job "${jobId}": ${error.message}`,
+  );
+}
+
+// Inserts a glb_production artifact and returns it.
+// If the exact (artifact_type='glb_production', content_hash) pair already exists —
+// meaning this GLB was already promoted in a prior ingestion run — fetches and returns
+// the existing row with idempotent=true instead of throwing.
+// All other DB errors are re-thrown unchanged so callers can handle them correctly.
+export async function insertProductionGlbArtifact(
+  supabase: SupabaseClient,
+  jobId: string,
+  storagePath: string,
+  fileSizeBytes: number,
+  contentHash: string,
+): Promise<{ artifact: IngestionArtifactRecord; idempotent: boolean }> {
+  const { data, error } = await supabase
+    .from("avatar_ingestion_artifacts")
+    .insert({
+      job_id: jobId,
+      artifact_type: "glb_production",
+      bucket: "avatar-assets",
+      storage_path: storagePath,
+      file_size_bytes: fileSizeBytes,
+      content_hash: contentHash,
+      status: "staged",
+    })
+    .select()
+    .single();
+
+  if (!error) {
+    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+  }
+
+  if (error.code === PG_UNIQUE_VIOLATION) {
+    // This exact GLB content was already promoted in a prior run.
+    // Fetch the existing artifact row so the pipeline can continue as success.
+    const { data: existing, error: fetchError } = await supabase
+      .from("avatar_ingestion_artifacts")
+      .select("*")
+      .eq("artifact_type", "glb_production")
+      .eq("content_hash", contentHash)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new Error(
+        `GLB production artifact collision on content_hash "${contentHash}" but re-fetch failed: ${fetchError.message}`,
+      );
+    }
+    if (existing === null) {
+      throw new Error(
+        `GLB production artifact collision on content_hash "${contentHash}" but row not found on re-fetch`,
+      );
+    }
+    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+  }
+
+  // Not a unique violation — all other errors propagate unchanged.
+  throw new Error(
+    `Failed to insert glb_production artifact for job "${jobId}": ${error.message}`,
+  );
+}
+
+// Inserts a thumbnail_production artifact and returns it.
+// If the exact (artifact_type='thumbnail_production', content_hash) pair already exists —
+// meaning this thumbnail was already promoted in a prior ingestion run — fetches and returns
+// the existing row with idempotent=true instead of throwing.
+// All other DB errors are re-thrown unchanged so callers can handle them correctly.
+export async function insertProductionThumbnailArtifact(
+  supabase: SupabaseClient,
+  jobId: string,
+  storagePath: string,
+  fileSizeBytes: number,
+  contentHash: string,
+): Promise<{ artifact: IngestionArtifactRecord; idempotent: boolean }> {
+  const { data, error } = await supabase
+    .from("avatar_ingestion_artifacts")
+    .insert({
+      job_id: jobId,
+      artifact_type: "thumbnail_production",
+      bucket: "avatar-thumbnails",
+      storage_path: storagePath,
+      file_size_bytes: fileSizeBytes,
+      content_hash: contentHash,
+      status: "staged",
+    })
+    .select()
+    .single();
+
+  if (!error) {
+    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+  }
+
+  if (error.code === PG_UNIQUE_VIOLATION) {
+    // This exact thumbnail content was already promoted in a prior run.
+    // Fetch the existing artifact row so the pipeline can continue as success.
+    const { data: existing, error: fetchError } = await supabase
+      .from("avatar_ingestion_artifacts")
+      .select("*")
+      .eq("artifact_type", "thumbnail_production")
+      .eq("content_hash", contentHash)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new Error(
+        `Thumbnail production artifact collision on content_hash "${contentHash}" but re-fetch failed: ${fetchError.message}`,
+      );
+    }
+    if (existing === null) {
+      throw new Error(
+        `Thumbnail production artifact collision on content_hash "${contentHash}" but row not found on re-fetch`,
+      );
+    }
+    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+  }
+
+  // Not a unique violation — all other errors propagate unchanged.
+  throw new Error(
+    `Failed to insert thumbnail_production artifact for job "${jobId}": ${error.message}`,
+  );
 }
 
 export async function promoteArtifact(

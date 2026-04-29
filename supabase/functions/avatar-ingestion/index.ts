@@ -116,47 +116,41 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const request: InitRequest = { asset_id, slot, initiated_by };
 
     try {
+      // Generate UUID and construct paths before any DB write.
+      // Signed URLs are created first — if either fails, no job row is inserted
+      // and the caller receives a clean error with no orphan pending row in the DB.
+      const jobId = crypto.randomUUID();
+      const glbPath = `${jobId}/source.glb`;
+      const thumbPath = `${jobId}/thumbnail.png`;
+
+      let glbUploadUrl: string;
+      let thumbUploadUrl: string;
+      try {
+        [glbUploadUrl, thumbUploadUrl] = await Promise.all([
+          createSignedUploadUrl(supabase, "avatar-staging", glbPath),
+          createSignedUploadUrl(supabase, "avatar-staging", thumbPath),
+        ]);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return internalErrorResponse("init", `Failed to create signed upload URLs: ${msg}`);
+      }
+
+      // Both URLs are in hand — single atomic INSERT with all fields populated.
       let job;
       try {
         job = await createIngestionJob(
           supabase,
+          jobId,
           request.asset_id,
           request.slot,
-          "",  // staging paths are set after job creation using the job ID
-          "",
+          glbPath,
+          thumbPath,
           request.initiated_by,
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return internalErrorResponse("init", msg);
       }
-
-      // Paths are deterministic: {job_id}/source.glb and {job_id}/thumbnail.png
-      const glbPath = `${job.id}/source.glb`;
-      const thumbPath = `${job.id}/thumbnail.png`;
-
-      // Update the job record with the staging paths
-      // (We create job first so we have the UUID for path construction)
-      const { error: updateError } = await supabase
-        .from("avatar_ingestion_jobs")
-        .update({
-          staging_glb_path: glbPath,
-          staging_thumbnail_path: thumbPath,
-        })
-        .eq("id", job.id);
-
-      if (updateError) {
-        return internalErrorResponse(
-          "init",
-          `Failed to set staging paths: ${updateError.message}`,
-          job.id,
-        );
-      }
-
-      const [glbUploadUrl, thumbUploadUrl] = await Promise.all([
-        createSignedUploadUrl(supabase, "avatar-staging", glbPath),
-        createSignedUploadUrl(supabase, "avatar-staging", thumbPath),
-      ]);
 
       const responseBody: IngestionResponse = {
         success: true,

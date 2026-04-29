@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "./supabase.ts";
-import type { GlbAnalysisResult, IngestionJobRecord, PipelineResult } from "./types.ts";
+import type { GlbAnalysisResult, IngestionArtifactRecord, IngestionJobRecord, PipelineResult } from "./types.ts";
 import { analyzeGlb, validateThumbnailBytes } from "./glb-validator.ts";
 import {
   validateAssetIdNaming,
@@ -11,8 +11,10 @@ import {
   completeIngestionJob,
   failIngestionJob,
   getIngestionJob,
-  insertIngestionArtifact,
   insertIngestionEvent,
+  insertOrGetStagedArtifact,
+  insertProductionGlbArtifact,
+  insertProductionThumbnailArtifact,
   promoteArtifact,
   setAssetStoragePath,
   updateJobMeasuredValues,
@@ -205,16 +207,32 @@ async function runStages(
     { file_size_bytes: glbBytes.length },
   );
 
-  // Record staged GLB artifact
-  await insertIngestionArtifact(
-    supabase,
-    jobId,
-    "glb_staged",
-    BUCKET_STAGING,
-    job.staging_glb_path,
-    glbBytes.length,
-    null,
-  );
+  // Record staged GLB artifact — idempotent on retry (DB enforces one row per job per type).
+  try {
+    const glbStagedResult = await insertOrGetStagedArtifact(
+      supabase,
+      jobId,
+      "glb_staged",
+      BUCKET_STAGING,
+      job.staging_glb_path,
+      glbBytes.length,
+    );
+    if (glbStagedResult.idempotent) {
+      await logEvent(
+        supabase,
+        jobId,
+        "stage-3-glb-download",
+        "warning",
+        "glb_staged artifact already exists for this job (retry path) — reusing existing row",
+        { existing_artifact_id: glbStagedResult.artifact.id },
+      );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logEvent(supabase, jobId, "stage-3-glb-download", "failed", `GLB staged artifact record failed: ${msg}`);
+    await failIngestionJob(supabase, jobId, true, "stage-3-glb-download", msg, null);
+    return retryableFailure(jobId, "stage-3-glb-download", msg);
+  }
 
   // ── Stage 4: GLB integrity check ──────────────────────────────────────────
   await logEvent(supabase, jobId, "stage-4-glb-integrity", "started", "Checking GLB magic and version");
@@ -331,15 +349,32 @@ async function runStages(
     { file_size_bytes: thumbBytes.length },
   );
 
-  await insertIngestionArtifact(
-    supabase,
-    jobId,
-    "thumbnail_staged",
-    BUCKET_STAGING,
-    job.staging_thumbnail_path,
-    thumbBytes.length,
-    null,
-  );
+  // Record staged thumbnail artifact — idempotent on retry.
+  try {
+    const thumbStagedResult = await insertOrGetStagedArtifact(
+      supabase,
+      jobId,
+      "thumbnail_staged",
+      BUCKET_STAGING,
+      job.staging_thumbnail_path,
+      thumbBytes.length,
+    );
+    if (thumbStagedResult.idempotent) {
+      await logEvent(
+        supabase,
+        jobId,
+        "stage-7-thumbnail",
+        "warning",
+        "thumbnail_staged artifact already exists for this job (retry path) — reusing existing row",
+        { existing_artifact_id: thumbStagedResult.artifact.id },
+      );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logEvent(supabase, jobId, "stage-7-thumbnail", "failed", `Thumbnail staged artifact record failed: ${msg}`);
+    await failIngestionJob(supabase, jobId, true, "stage-7-thumbnail", msg, null);
+    return retryableFailure(jobId, "stage-7-thumbnail", msg);
+  }
 
   // ── Stage 8: Forbidden reference pre-check ────────────────────────────────
   await logEvent(
@@ -498,24 +533,41 @@ async function runStages(
     return retryableFailure(jobId, "stage-11-promote", msg);
   }
 
-  // Record and promote GLB production artifact
+  // Record and promote GLB production artifact.
+  // A content_hash collision (error code 23505) means this exact GLB was already
+  // promoted in a prior run — treat as idempotent success and continue the pipeline.
+  // Any other DB error propagates as retryable failure.
   let glbProductionArtifact;
+  let glbArtifactIdempotent: boolean;
   try {
-    glbProductionArtifact = await insertIngestionArtifact(
+    const result = await insertProductionGlbArtifact(
       supabase,
       jobId,
-      "glb_production",
-      BUCKET_ASSETS,
       glbProductionPath,
       glbBytes.length,
       glbHash,
     );
-    await promoteArtifact(supabase, glbProductionArtifact.id);
+    glbProductionArtifact = result.artifact;
+    glbArtifactIdempotent = result.idempotent;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await logEvent(supabase, jobId, "stage-11-promote", "failed", `GLB artifact record failed: ${msg}`);
     await failIngestionJob(supabase, jobId, true, "stage-11-promote", msg, null);
     return retryableFailure(jobId, "stage-11-promote", msg);
+  }
+
+  if (glbArtifactIdempotent) {
+    // Artifact already promoted in a prior run — write permanent audit record and continue.
+    await logEvent(
+      supabase,
+      jobId,
+      "stage-11-promote",
+      "warning",
+      `GLB production artifact with content_hash "${glbHash}" was already promoted (prior run) — continuing as idempotent success`,
+      { existing_artifact_id: glbProductionArtifact.id, content_hash: glbHash },
+    );
+  } else {
+    await promoteArtifact(supabase, glbProductionArtifact.id);
   }
 
   // GLB is confirmed in the bucket — set storage_path on the asset record now.
@@ -552,24 +604,49 @@ async function runStages(
     return retryableFailure(jobId, "stage-11-promote", msg);
   }
 
-  // Record and promote thumbnail production artifact
+  // Compute thumbnail hash separately so SHA-256 failure is distinct from artifact insertion failure.
+  let thumbHash: string;
   try {
-    const thumbHash = await sha256Hex(thumbBytes);
-    const thumbProductionArtifact = await insertIngestionArtifact(
+    thumbHash = await sha256Hex(thumbBytes);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logEvent(supabase, jobId, "stage-11-promote", "failed", `Thumbnail SHA-256 computation failed: ${msg}`);
+    await failIngestionJob(supabase, jobId, true, "stage-11-promote", msg, null);
+    return retryableFailure(jobId, "stage-11-promote", msg);
+  }
+
+  // Record and promote thumbnail production artifact — idempotent on content_hash collision.
+  let thumbProductionArtifact: IngestionArtifactRecord;
+  let thumbArtifactIdempotent: boolean;
+  try {
+    const result = await insertProductionThumbnailArtifact(
       supabase,
       jobId,
-      "thumbnail_production",
-      BUCKET_THUMBNAILS,
       thumbProductionPath,
       thumbBytes.length,
       thumbHash,
     );
-    await promoteArtifact(supabase, thumbProductionArtifact.id);
+    thumbProductionArtifact = result.artifact;
+    thumbArtifactIdempotent = result.idempotent;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await logEvent(supabase, jobId, "stage-11-promote", "failed", `Thumbnail artifact record failed: ${msg}`);
     await failIngestionJob(supabase, jobId, true, "stage-11-promote", msg, null);
     return retryableFailure(jobId, "stage-11-promote", msg);
+  }
+
+  if (thumbArtifactIdempotent) {
+    // Artifact already promoted in a prior run — write permanent audit record and continue.
+    await logEvent(
+      supabase,
+      jobId,
+      "stage-11-promote",
+      "warning",
+      `Thumbnail production artifact with content_hash "${thumbHash}" was already promoted (prior run) — continuing as idempotent success`,
+      { existing_artifact_id: thumbProductionArtifact.id, content_hash: thumbHash },
+    );
+  } else {
+    await promoteArtifact(supabase, thumbProductionArtifact.id);
   }
 
   await logEvent(
@@ -582,7 +659,7 @@ async function runStages(
 
   // ── Mark job complete ─────────────────────────────────────────────────────
   try {
-    await completeIngestionJob(supabase, jobId, onboardingAssetId, validationRunId);
+    await completeIngestionJob(supabase, jobId, job.claimed_at!, onboardingAssetId, validationRunId);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await logEvent(supabase, jobId, "stage-11-promote", "failed", `Failed to mark job complete: ${msg}`);
