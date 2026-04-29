@@ -4,6 +4,7 @@ import {
   createIngestionJob,
   getIngestionJob,
   getJobWithEventsAndArtifacts,
+  recoverStuckJob,
   resetJobForRetry,
 } from "./database.ts";
 import { createSignedUploadUrl } from "./storage.ts";
@@ -277,12 +278,67 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const request: RetryRequest = { job_id, retried_by };
 
+    // Stale-claim threshold must match STALE_CLAIM_THRESHOLD_MINUTES in database.ts.
+    const STALE_THRESHOLD_MS = 10 * 60 * 1000;
+
     try {
-      const job = await getIngestionJob(supabase, request.job_id);
+      let job = await getIngestionJob(supabase, request.job_id);
       if (job === null) {
         return notFoundResponse("retry", `Ingestion job "${request.job_id}" not found`);
       }
 
+      // ── Stale validating recovery ───────────────────────────────────────────
+      // A job stuck in 'validating' means the Edge Function that claimed it
+      // timed out before it could call failIngestionJob. If claimed_at is older
+      // than the threshold the function is definitely gone; recover to
+      // failed_retryable so the standard retry path can proceed.
+      if (job.status === "validating") {
+        const claimedAt = job.claimed_at ? new Date(job.claimed_at).getTime() : null;
+        const isStale = claimedAt !== null && Date.now() - claimedAt > STALE_THRESHOLD_MS;
+
+        if (!isStale) {
+          // Pipeline may still be running — do not touch it.
+          const claimedAtIso = job.claimed_at ?? "unknown";
+          const retryAfter = job.claimed_at
+            ? new Date(new Date(job.claimed_at).getTime() + STALE_THRESHOLD_MS).toISOString()
+            : "unknown";
+          return conflictResponse(
+            "retry",
+            `Job "${request.job_id}" is currently being processed (claimed at ${claimedAtIso}). ` +
+              `If it has not completed, retry after ${retryAfter}.`,
+            request.job_id,
+          );
+        }
+
+        // Atomically transition validating → failed_retryable.
+        // Returns null if another caller already recovered it concurrently.
+        const recovered = await recoverStuckJob(
+          supabase,
+          request.job_id,
+          job.claimed_at!,
+        );
+
+        if (recovered === null) {
+          // Concurrent recovery won the race — re-fetch to get current state.
+          const refetched = await getIngestionJob(supabase, request.job_id);
+          if (refetched === null) {
+            return notFoundResponse("retry", `Ingestion job "${request.job_id}" not found after concurrent recovery`);
+          }
+          job = refetched;
+          // If the concurrent winner already reset to pending, surface that.
+          if (job.status !== "failed_retryable") {
+            return conflictResponse(
+              "retry",
+              `Job "${request.job_id}" was recovered concurrently and is now "${job.status}"`,
+              request.job_id,
+            );
+          }
+        } else {
+          job = recovered;
+        }
+      }
+
+      // ── Standard retry path (status must be failed_retryable from here) ─────
       if (job.status !== "failed_retryable") {
         return conflictResponse(
           "retry",

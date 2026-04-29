@@ -198,6 +198,51 @@ export async function resetJobForRetry(
   return data as IngestionJobRecord | null;
 }
 
+// A validating job is considered stale if claimed_at is older than this threshold.
+// Supabase Edge Functions have a hard wall-clock timeout well below this value,
+// so any job still validating after 10 minutes was abandoned by a timed-out function.
+const STALE_CLAIM_THRESHOLD_MINUTES = 10;
+
+// Atomically recovers a stale validating job by transitioning it to failed_retryable.
+// Only succeeds when status = 'validating' AND claimed_at < now() - 10 minutes.
+// Returns the recovered job record, or null if the job was not stale
+// (still within the active window, already recovered, or no longer validating).
+// originalClaimedAt is sourced from the job record fetched by the caller —
+// same pattern as resetJobForRetry receiving currentRetryCount.
+export async function recoverStuckJob(
+  supabase: SupabaseClient,
+  jobId: string,
+  originalClaimedAt: string,
+): Promise<IngestionJobRecord | null> {
+  const thresholdTs = new Date(
+    Date.now() - STALE_CLAIM_THRESHOLD_MINUTES * 60 * 1000,
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("avatar_ingestion_jobs")
+    .update({
+      status: "failed_retryable",
+      failure_stage: "timeout",
+      failure_reason: "Edge Function timed out — job auto-recovered via retry",
+      failure_details: {
+        original_claimed_at: originalClaimedAt,
+        recovered_at: new Date().toISOString(),
+      },
+    })
+    .eq("id", jobId)
+    .eq("status", "validating")
+    .lt("claimed_at", thresholdTs)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `Failed to recover stuck ingestion job "${jobId}": ${error.message}`,
+    );
+  }
+  return data as IngestionJobRecord | null;
+}
+
 // ── Event operations ──────────────────────────────────────────────────────────
 
 export async function insertIngestionEvent(
