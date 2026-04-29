@@ -4,6 +4,7 @@ import {
   createIngestionJob,
   getIngestionJob,
   getJobWithEventsAndArtifacts,
+  insertIngestionEvent,
   recoverStuckJob,
   resetJobForRetry,
 } from "./database.ts";
@@ -335,6 +336,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
           }
         } else {
           job = recovered;
+          // Write a permanent, immutable event record proving the timeout recovery.
+          // This survives resetJobForRetry which clears failure fields on the job row.
+          // Failure here is non-fatal: the recovery already succeeded in the DB.
+          try {
+            await insertIngestionEvent(
+              supabase,
+              request.job_id,
+              "timeout-recovery",
+              "warning",
+              `Job auto-recovered from stuck validating state by ${request.retried_by}`,
+              {
+                original_claimed_at: job.claimed_at,
+                recovered_at: new Date().toISOString(),
+                retried_by: request.retried_by,
+              },
+            );
+          } catch {
+            // Event insertion failure must not abort the recovery.
+          }
         }
       }
 
