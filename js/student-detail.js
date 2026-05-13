@@ -18,7 +18,7 @@ async function checkAuthAndRole() {
     .from("profiles")
     .select("role")
     .eq("id", teacherId)
-    .single();
+    .maybeSingle();
 
   if (!profile || profile.role !== "teacher") {
     await supabase.auth.signOut();
@@ -33,6 +33,19 @@ const teacherId = await checkAuthAndRole();
 if (!teacherId) throw new Error("Unauthorized");
 
 document.body.style.display = "block";
+
+// ========================
+// BFCache Protection
+// ========================
+
+window.addEventListener("pageshow", async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      window.location.href = "login.html";
+    }
+  }
+});
 
 // ========================
 // GET STUDENT ID
@@ -64,6 +77,11 @@ async function fetchStudent() {
     .select("*")
     .eq("student_id", studentId)
     .single();
+
+  if (!overview || !mastery) {
+    document.getElementById("studentInfo").textContent = "Elev ikke fundet.";
+    return;
+  }
 
   renderStudent(overview, mastery);
 

@@ -45,7 +45,7 @@ async function checkAuthAndRole() {
     .from("profiles")
     .select("role")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
   if (error || !profile || profile.role !== "super_admin") {
     await supabase.auth.signOut();
@@ -308,7 +308,7 @@ async function loadAttemptStats() {
 
   attemptTableBody.innerHTML = "";
 
-  data.forEach(row => {
+  (data || []).forEach(row => {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `

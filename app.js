@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
       feedback.style.color = "red";
 
+      buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
       return;
     }
@@ -258,6 +259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.textContent = "⚠️ Ugyldigt svar fra server";
       feedback.style.color = "red";
 
+      buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
       return;
     }
@@ -283,6 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.textContent = "⚠️ Ukendt status fra server";
       feedback.style.color = "red";
 
+      buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
       return;
     }
@@ -442,7 +445,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const question = await getNextQuestion();
 
     if (!question) {
-      questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
+      questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål – genindlæs siden";
       questionElement.dataset.state = "error";
       optionsContainer.innerHTML = "";
       return;

@@ -11,3 +11,6 @@ node_modules/
 /playwright/.auth/
 .env
 KUN TIL MIG.txt
+
+# Debug/temp files
+debug.html

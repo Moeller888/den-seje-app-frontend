@@ -18,7 +18,7 @@ async function checkAuthAndRole() {
     .from("profiles")
     .select("role")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
   if (!profile || profile.role !== "teacher") {
     await supabase.auth.signOut();

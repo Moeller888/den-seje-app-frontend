@@ -59,7 +59,17 @@ if (!sessionData.session) {
   window.location.replace("login.html");
 }
 
-const userId = sessionData.session.user.id;
+const userId = sessionData.session?.user?.id ?? null;
+
+// BFCache: re-check session if page is restored from cache
+window.addEventListener("pageshow", async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      window.location.replace("login.html");
+    }
+  }
+});
 
 // 🔥 VIGTIG — hent din ANON KEY (samme som i supabaseClient.js)
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
@@ -151,6 +161,7 @@ async function loadShop() {
 
     if (!isOwned) {
       btn.onclick = async () => {
+        btn.disabled = true;
 
         const { data: sessionData } = await supabase.auth.getSession();
 
@@ -182,6 +193,7 @@ async function loadShop() {
         if (!res.ok || data?.error) {
           console.error("BUY ERROR:", data);
           alert(data?.error || "Fejl ved køb");
+          btn.disabled = false;
           return;
         }
 
