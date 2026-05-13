@@ -2,178 +2,250 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <title>Avatar</title>
-
+  <title>Min Avatar</title>
   <style>
     body {
-      font-family: Arial;
+      display: none;
+      font-family: Arial, sans-serif;
       padding: 20px;
-      text-align: center;
+      background: #f8f9fa;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    h1 { margin: 0; }
+
+    .coins {
+      margin-left: auto;
+      font-size: 16px;
+      color: #555;
     }
 
     .grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
     }
 
-    .item {
-      border: 2px solid #ccc;
-      padding: 10px;
-      width: 120px;
-      border-radius: 10px;
-      transition: 0.2s;
-      background: #fafafa;
-    }
-
-    .item img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
+    .item-card {
+      background: white;
+      border: 2px solid #ddd;
       border-radius: 8px;
+      padding: 14px;
+      text-align: center;
     }
 
-    .item.active {
-      border-color: green;
-      background: #eaffea;
-      transform: scale(1.05);
+    .item-card.equipped {
+      border-color: #1565c0;
+      background: #e3f2fd;
     }
 
-    button {
-      margin-top: 5px;
+    .item-name {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .rarity-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .equip-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
       cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #1565c0;
+      color: white;
+      font-size: 14px;
+    }
+
+    .equip-btn:disabled {
+      background: #4caf50;
+      cursor: default;
+    }
+
+    .empty-state {
+      color: #888;
+      font-size: 16px;
+      margin-top: 40px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #555;
+      color: white;
+      border: none;
+      border-radius: 4px;
     }
   </style>
 </head>
-
 <body>
 
-<h1>Din Avatar</h1>
+  <button class="back-btn" onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
 
-<div id="current"></div>
+  <div class="topbar">
+    <h1>Min Avatar</h1>
+    <span class="coins" id="coinBalance">Monter: …</span>
+  </div>
 
-<div class="grid" id="avatars"></div>
+  <div class="grid" id="inventoryGrid"></div>
+  <p class="empty-state" id="emptyState" style="display:none;">
+    Du ejer ingen ting endnu. Gå i <a href="shop.html">butikken</a> for at købe noget!
+  </p>
 
-<br>
-<button onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
+  <script type="module">
+    import { supabase } from "./supabaseClient.js";
 
-<script type="module">
-import { supabase } from "./supabaseClient.js";
+    const { data: sessionData } = await supabase.auth.getSession();
 
-const avatarsDiv = document.getElementById("avatars");
-const currentDiv = document.getElementById("current");
-
-// 🔐 AUTH
-const { data: sessionData } = await supabase.auth.getSession();
-
-if (!sessionData.session) {
-  window.location.replace("login.html");
-}
-
-const userId = sessionData.session.user.id;
-
-// 🔥 LOAD ACTIVE
-async function loadActive() {
-  const { data } = await supabase
-    .from("profiles")
-    .select("active_avatar")
-    .eq("id", userId)
-    .maybeSingle();
-
-  return data?.active_avatar ?? null;
-}
-
-// 🎒 LOAD OWNED AVATARS
-async function loadOwnedAvatars() {
-  const { data } = await supabase
-    .from("user_items")
-    .select(`
-      item_id,
-      shop_items (
-        id,
-        name,
-        type,
-        image_url
-      )
-    `)
-    .eq("user_id", userId);
-
-  if (!data) return [];
-
-  return data
-    .map(x => x.shop_items)
-    .filter(item => item && item.type === "avatar");
-}
-
-// 🎯 EQUIP
-async function equip(itemId) {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session.access_token;
-
-  const res = await fetch(
-    "https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/equip-avatar",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ item_id: itemId })
-    }
-  );
-
-  const data = await res.json();
-
-  if (!res.ok || data.error) {
-    alert(data.error || "Fejl");
-    return;
-  }
-
-  await loadUI();
-}
-
-// 🎨 RENDER
-async function loadUI() {
-  const active = await loadActive();
-  const avatars = await loadOwnedAvatars();
-
-  avatarsDiv.innerHTML = "";
-
-  currentDiv.textContent = active
-    ? "Aktiv avatar valgt"
-    : "Ingen avatar valgt";
-
-  avatars.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    if (item.id === active) {
-      div.classList.add("active");
+    if (!sessionData.session) {
+      window.location.replace("login.html");
+      throw new Error("Unauthorized");
     }
 
-    div.innerHTML = `
-      <img src="${item.image_url || ''}" alt="avatar">
-      <div><strong>${item.name}</strong></div>
-      <button ${item.id === active ? "disabled" : ""}>
-        ${item.id === active ? "Udstyret" : "Udstyr"}
-      </button>
-    `;
+    document.body.style.display = "block";
 
-    const btn = div.querySelector("button");
+    const userId = sessionData.session.user.id;
 
-    if (item.id !== active) {
-      btn.onclick = () => equip(item.id);
+    const RARITY_COLORS = {
+      common:    "#9e9e9e",
+      uncommon:  "#4caf50",
+      rare:      "#2196f3",
+      legendary: "#ffc107",
+    };
+
+    const RARITY_LABELS = {
+      common:    "Almindelig",
+      uncommon:  "Ualmindelig",
+      rare:      "Sjælden",
+      legendary: "Legendarisk",
+    };
+
+    const grid = document.getElementById("inventoryGrid");
+    const emptyState = document.getElementById("emptyState");
+    const coinBalance = document.getElementById("coinBalance");
+
+    async function load() {
+      // Load coins
+      const { data: progressData } = await supabase
+        .from("student_progress")
+        .select("coins")
+        .eq("student_id", userId);
+
+      const coins = progressData?.[0]?.coins ?? 0;
+      coinBalance.textContent = `Monter: ${coins}`;
+
+      // Load active avatar
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("active_avatar")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const activeAvatar = profileData?.active_avatar ?? null;
+
+      // Load owned item ids
+      const { data: userItems, error: uiError } = await supabase
+        .from("user_items")
+        .select("item_id")
+        .eq("user_id", userId);
+
+      if (uiError) {
+        console.error("LOAD INVENTORY ERROR:", uiError);
+        return;
+      }
+
+      const ownedIds = (userItems ?? []).map(r => r.item_id);
+
+      grid.innerHTML = "";
+
+      if (ownedIds.length === 0) {
+        emptyState.style.display = "block";
+        return;
+      }
+
+      emptyState.style.display = "none";
+
+      // Load shop metadata for owned items
+      const { data: shopItems, error: siError } = await supabase
+        .from("shop_items")
+        .select("id, name, price, rarity")
+        .in("id", ownedIds);
+
+      if (siError) {
+        console.error("LOAD SHOP ITEMS ERROR:", siError);
+        return;
+      }
+
+      (shopItems ?? []).forEach(item => {
+        const isEquipped = item.id === activeAvatar;
+        const color = RARITY_COLORS[item.rarity] ?? "#9e9e9e";
+        const label = RARITY_LABELS[item.rarity] ?? item.rarity;
+
+        const card = document.createElement("div");
+        card.className = "item-card" + (isEquipped ? " equipped" : "");
+        card.innerHTML = `
+          <div class="item-name">${item.name}</div>
+          <span class="rarity-badge" style="background:${color}">${label}</span>
+          <div style="font-size:13px;color:#666;margin-bottom:4px;">${item.price} monter</div>
+          <button class="equip-btn" ${isEquipped ? "disabled" : ""} data-item-id="${item.id}">
+            ${isEquipped ? "Udstyret ✓" : "Udstyr"}
+          </button>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    avatarsDiv.appendChild(div);
-  });
-}
+    // Equip delegation — attached once, re-render via load()
+    grid.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button.equip-btn[data-item-id]");
+      if (!btn || btn.disabled) return;
 
-// 🚀 INIT
-await loadUI();
+      const itemId = btn.dataset.itemId;
+      btn.disabled = true;
+      btn.textContent = "…";
 
-</script>
+      const { error } = await supabase.rpc("equip_item", { p_item_id: itemId });
+
+      if (error) {
+        console.error("EQUIP ERROR:", error);
+        alert("Kunne ikke udstyre: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Udstyr";
+        return;
+      }
+
+      await load();
+    });
+
+    await load();
+
+    window.addEventListener("pageshow", async (event) => {
+      if (event.persisted) {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          window.location.replace("login.html");
+        }
+      }
+    });
+  </script>
 
 </body>
 </html>

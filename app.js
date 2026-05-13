@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 
 window.__sb = supabase;
 
@@ -70,6 +71,8 @@ function setUIState(newState) {
 let studentId = null;
 let currentInstanceId = null;
 let questionShownAt = null;
+let lastKnownXp = 0;
+let lastKnownCoins = 0;
 
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
@@ -110,6 +113,15 @@ function ensureFourOptions(options) {
   return Array.from(unique).sort(() => Math.random() - 0.5);
 }
 
+window.addEventListener("pageshow", async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      window.location.replace("login.html");
+    }
+  }
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authorized = await checkAuthAndRole();
@@ -132,21 +144,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data } = await supabase
       .from("student_progress")
       .select("*")
+      .eq("student_id", studentId)
       .maybeSingle();
 
     if (data) {
-      xpEl.textContent = data.xp ?? 0;
-      coinsEl.textContent = data.coins ?? 0;
-      levelEl.textContent = data.level ?? 1;
+      lastKnownXp = data.xp ?? 0;
+      lastKnownCoins = data.coins ?? 0;
+
+      const { level, progress } = getXPProgressInLevel(lastKnownXp);
+
+      xpEl.textContent = lastKnownXp;
+      coinsEl.textContent = lastKnownCoins;
+      levelEl.textContent = level;
 
       const xpBar = document.getElementById("xp-bar");
-      const xp = data.xp ?? 0;
-      const level = data.level ?? 1;
-      const xpForNextLevel = level * 100;
-      const progress = Math.min((xp % xpForNextLevel) / xpForNextLevel, 1);
       xpBar.style.width = (progress * 100) + "%";
 
-      logEvent("PROGRESS_FETCHED", { xp: data.xp });
+      logEvent("PROGRESS_FETCHED", { xp: lastKnownXp, level });
     }
   }
 
@@ -184,6 +198,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     avatarDisplay.innerHTML = "";
     avatarDisplay.appendChild(img);
+  }
+
+  function showCoinPopup(amount) {
+    const popup = document.getElementById("xp-popup");
+    if (!popup) return;
+    popup.textContent = `+${amount} monter`;
+    popup.classList.remove("xp-show");
+    void popup.offsetWidth;
+    popup.classList.add("xp-show");
+    popup.addEventListener("animationend", () => popup.classList.remove("xp-show"), { once: true });
+  }
+
+  function showLevelUpOverlay(newLevel) {
+    const overlay = document.getElementById("level-up-overlay");
+    const text = document.getElementById("level-up-text");
+    if (!overlay || !text) return;
+    text.textContent = `Du er nu level ${newLevel}!`;
+    overlay.style.display = "flex";
+    setTimeout(() => { overlay.style.display = "none"; }, 2500);
   }
 
   async function submitAnswer(userAnswer) {
@@ -229,6 +262,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    const prevXp = lastKnownXp;
+    const prevCoins = lastKnownCoins;
+
     if (data.status === "pending") {
       feedback.textContent = "⏳ Afventer lærerens vurdering";
       feedback.style.color = "orange";
@@ -252,6 +288,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     await fetchProgress();
+
+    if (data.status === "correct") {
+      const coinDelta = lastKnownCoins - prevCoins;
+      if (coinDelta > 0) showCoinPopup(coinDelta);
+
+      const prevLevel = calculateLevelFromXP(prevXp);
+      const newLevel = calculateLevelFromXP(lastKnownXp);
+      if (newLevel > prevLevel) showLevelUpOverlay(newLevel);
+    }
+
     setUIState(UI_STATES.TRANSITIONING);
 
     let delay = 1000;

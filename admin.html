@@ -78,6 +78,23 @@
     tr:nth-child(even) {
       background: #fafafa;
     }
+
+    .jobs-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .jobs-last-refreshed {
+      color: #888;
+      font-size: 13px;
+    }
+
+    .jobs-error {
+      color: red;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 
@@ -99,6 +116,35 @@
     <button id="createTeacherBtn">Opret lærer</button>
     <p id="createTeacherMessage"></p>
   </div>
+
+  <!-- ========================
+       AVATAR GENERATION JOBS
+  ======================== -->
+
+  <h2>Avatar Generation Jobs</h2>
+
+  <div class="jobs-toolbar">
+    <button id="refreshJobsBtn">Refresh</button>
+    <span id="jobsLastRefreshed" class="jobs-last-refreshed"></span>
+  </div>
+
+  <p id="jobsError" class="jobs-error" style="display:none;"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Slot</th>
+        <th>Status</th>
+        <th>Retries</th>
+        <th>Started</th>
+        <th>Last update</th>
+        <th>Failure reason</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="jobsTableBody"></tbody>
+  </table>
 
   <!-- ========================
        STUDENT ATTEMPT STATS

@@ -186,28 +186,71 @@ function renderStudentList(students) {
 }
 
 async function loadStudentOverview() {
-  const { data, error } = await supabase
+  // Step 1: Get only students belonging to this teacher.
+  const { data: myStudents, error: studentsError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("teacher_id", teacherId)
+    .eq("role", "student");
+
+  if (studentsError) {
+    console.error(studentsError);
+    studentListContainer.innerHTML = "<p>Fejl ved indlæsning af elever</p>";
+    return;
+  }
+
+  const studentIds = (myStudents || []).map(s => s.id);
+
+  if (studentIds.length === 0) {
+    studentListContainer.innerHTML = "<p>Ingen elever tilknyttet</p>";
+    return;
+  }
+
+  // Step 2: Pending instances for this teacher's students only.
+  const { data: instancesRaw, error: instancesError } = await supabase
     .from("question_instances")
     .select(`
       student_id,
       created_at,
       user_answer,
       teacher_score,
+      question_id,
       profiles!question_instances_student_id_fkey (
         email
       )
     `)
+    .in("student_id", studentIds)
     .is("teacher_score", null)
     .not("user_answer", "is", null);
 
-  if (error) {
-    console.error(error);
+  if (instancesError) {
+    console.error(instancesError);
     return;
   }
 
-  console.log("DATA:", data);
+  const instances = instancesRaw || [];
 
-  const grouped = groupByStudent(data || []);
+  // Step 3: Identify which of those questions are long-answer type.
+  // Short-text is auto-graded; teachers only review long-answer submissions.
+  const questionIds = [...new Set(instances.map(r => r.question_id).filter(Boolean))];
+
+  if (questionIds.length === 0) {
+    renderStudentList([]);
+    return;
+  }
+
+  const { data: longQuestions } = await supabase
+    .from("questions")
+    .select("id")
+    .in("id", questionIds)
+    .eq("answer_type", "long");
+
+  const longQuestionIds = new Set((longQuestions || []).map(q => q.id));
+
+  // Step 4: Filter instances to long-answer only and group by student.
+  const longInstances = instances.filter(r => longQuestionIds.has(r.question_id));
+
+  const grouped = groupByStudent(longInstances);
   grouped.sort((a, b) => new Date(a.oldest) - new Date(b.oldest));
   renderStudentList(grouped);
 }
@@ -217,5 +260,3 @@ async function loadStudentOverview() {
 ======================== */
 
 await loadStudentOverview();
-
-

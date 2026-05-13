@@ -27,6 +27,8 @@ function logError(event, error) {
    AUTH CHECK (SUPER ADMIN)
 ======================== */
 
+let currentUserId = null;
+
 async function checkAuthAndRole() {
   const { data: sessionData } = await supabase.auth.getSession();
 
@@ -34,6 +36,8 @@ async function checkAuthAndRole() {
     window.location.replace("login.html");
     return false;
   }
+
+  currentUserId = sessionData.session.user.id;
 
   const userId = sessionData.session.user.id;
 
@@ -127,6 +131,157 @@ if (createTeacherBtn) {
 
     logEvent("CREATE_TEACHER_SUCCESS", { email });
   });
+}
+
+/* ========================
+   AVATAR GENERATION JOBS
+======================== */
+
+const jobsTableBody = document.getElementById("jobsTableBody");
+const jobsError = document.getElementById("jobsError");
+const jobsLastRefreshed = document.getElementById("jobsLastRefreshed");
+const refreshJobsBtn = document.getElementById("refreshJobsBtn");
+
+function statusBadge(status) {
+  const map = {
+    complete:              ["Complete",           "#2e7d32"],
+    generating:            ["Generating…",   "#1565c0"],
+    pending:               ["Pending",            "#555555"],
+    failed_retryable:      ["Failed (retryable)", "#e65100"],
+    failed_permanent:      ["Failed (permanent)", "#b71c1c"],
+    pending_manual_review: ["Awaiting review",    "#6a1b9a"],
+  };
+  const [label, bg] = map[status] ?? [status, "#999999"];
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:bold;color:#fff;background:${bg}">${label}</span>`;
+}
+
+function formatTs(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleString();
+}
+
+async function loadGenerationJobs() {
+  if (!jobsTableBody) return;
+
+  logEvent("LOAD_GENERATION_JOBS");
+
+  const { data, error } = await supabase
+    .from("avatar_generation_jobs")
+    .select("id, slot, status, retry_count, initiated_at, claimed_at, completed_at, failure_reason")
+    .order("initiated_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    logError("LOAD_GENERATION_JOBS_FAILED", error);
+    if (jobsError) {
+      jobsError.textContent = `Failed to load jobs: ${error.message}`;
+      jobsError.style.display = "block";
+    }
+    return;
+  }
+
+  if (jobsError) jobsError.style.display = "none";
+
+  jobsTableBody.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8" style="color:#888;text-align:center;padding:20px;">No generation jobs found.</td>`;
+    jobsTableBody.appendChild(tr);
+  } else {
+    data.forEach(row => {
+      // Last update: prefer completed_at (terminal state), then claimed_at (active state)
+      const lastUpdate = row.completed_at
+        ? formatTs(row.completed_at)
+        : row.claimed_at
+          ? formatTs(row.claimed_at)
+          : "—";
+
+      // Action buttons: retry for failed_retryable, process for pending
+      let actionHtml = "—";
+      if (row.status === "failed_retryable") {
+        actionHtml = `<button data-action="retry" data-job-id="${row.id}" style="background:#e65100;color:white;border:none;padding:4px 10px;cursor:pointer;border-radius:3px;">Retry</button>`;
+      } else if (row.status === "pending") {
+        actionHtml = `<button data-action="process" data-job-id="${row.id}" style="background:#1565c0;color:white;border:none;padding:4px 10px;cursor:pointer;border-radius:3px;">Process</button>`;
+      }
+
+      // Truncate long failure reasons; show full text on hover
+      let failureHtml = "—";
+      if (row.failure_reason) {
+        const truncated = row.failure_reason.length > 48
+          ? row.failure_reason.slice(0, 48) + "…"
+          : row.failure_reason;
+        failureHtml = `<span title="${row.failure_reason.replace(/"/g, "&quot;")}" style="color:#b71c1c;font-size:13px;">${truncated}</span>`;
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="font-family:monospace;font-size:13px;" title="${row.id}">${row.id.slice(0, 8)}</td>
+        <td>${row.slot ?? "—"}</td>
+        <td>${statusBadge(row.status)}</td>
+        <td>${row.retry_count} / 5</td>
+        <td>${formatTs(row.initiated_at)}</td>
+        <td>${lastUpdate}</td>
+        <td>${failureHtml}</td>
+        <td>${actionHtml}</td>
+      `;
+      jobsTableBody.appendChild(tr);
+    });
+  }
+
+  if (jobsLastRefreshed) {
+    jobsLastRefreshed.textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
+  }
+
+  logEvent("GENERATION_JOBS_RENDERED", { rows: data?.length ?? 0 });
+}
+
+// Event delegation: handles Retry and Process buttons for all rows
+if (jobsTableBody) {
+  jobsTableBody.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const jobId = btn.dataset.jobId;
+    if (!jobId) return;
+
+    btn.disabled = true;
+    btn.textContent = "Working…";
+
+    try {
+      if (action === "retry") {
+        const { data, error } = await supabase.functions.invoke(
+          "avatar-generation/retry",
+          { body: { job_id: jobId, retried_by: currentUserId ?? "admin" } }
+        );
+        if (error) throw new Error(error.message);
+        if (data && !data.success) throw new Error(data.message ?? "Retry failed");
+        logEvent("JOB_RETRY_SUCCESS", { jobId });
+
+      } else if (action === "process") {
+        const { data, error } = await supabase.functions.invoke(
+          "avatar-generation/process",
+          { body: { job_id: jobId } }
+        );
+        if (error) throw new Error(error.message);
+        if (data && !data.success) throw new Error(data.message ?? "Process failed");
+        logEvent("JOB_PROCESS_SUCCESS", { jobId });
+      }
+    } catch (err) {
+      logError("JOB_ACTION_FAILED", err);
+      alert(`Action failed: ${err.message}`);
+      btn.disabled = false;
+      btn.textContent = action === "retry" ? "Retry" : "Process";
+      return;
+    }
+
+    await loadGenerationJobs();
+  });
+}
+
+if (refreshJobsBtn) {
+  refreshJobsBtn.addEventListener("click", () => loadGenerationJobs());
 }
 
 /* ========================
@@ -232,5 +387,8 @@ async function loadQuestionPerformance() {
    INIT
 ======================== */
 
+await loadGenerationJobs();
 await loadAttemptStats();
 await loadQuestionPerformance();
+
+setInterval(loadGenerationJobs, 5000);

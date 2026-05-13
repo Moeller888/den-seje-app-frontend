@@ -50,7 +50,7 @@ const EVENT_DEFINITIONS = {
 
 export function calculateLevelFromXP(xp) {
   let level = 1;
-  let xpRemaining = xp;
+  let xpRemaining = Math.max(0, xp ?? 0);
 
   while (true) {
     const xpRequired = 50 + (level - 1) * 25;
@@ -64,6 +64,29 @@ export function calculateLevelFromXP(xp) {
   }
 
   return level;
+}
+
+// Returns level and progress fraction (0-1) within that level.
+// Single source of truth for XP bar rendering.
+export function getXPProgressInLevel(xp) {
+  let level = 1;
+  let xpRemaining = Math.max(0, xp ?? 0);
+
+  while (true) {
+    const xpRequired = 50 + (level - 1) * 25;
+
+    if (xpRemaining >= xpRequired) {
+      xpRemaining -= xpRequired;
+      level++;
+    } else {
+      return {
+        level,
+        xpIntoLevel: xpRemaining,
+        xpRequiredForLevel: xpRequired,
+        progress: xpRequired > 0 ? xpRemaining / xpRequired : 0,
+      };
+    }
+  }
 }
 
 function isMilestone(level) {

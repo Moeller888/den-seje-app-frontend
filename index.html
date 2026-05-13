@@ -156,6 +156,32 @@
         transform: translate(-50%, -80%) scale(1);
       }
     }
+
+    /* 🔥 LEVEL UP OVERLAY */
+    #level-up-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: gold;
+      text-align: center;
+    }
+
+    #level-up-overlay .level-up-title {
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 0 0 20px gold;
+      margin-bottom: 10px;
+    }
+
+    #level-up-overlay .level-up-subtitle {
+      font-size: 24px;
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -174,7 +200,7 @@
       <div id="xp-bar"></div>
     </div>
 
-    <span>Coins: <b id="coins">0</b></span>
+    <span>Monter: <b id="coins">0</b></span>
   </div>
 
   <div class="game-container">
@@ -194,6 +220,12 @@
 
   <!-- 🔥 XP POPUP -->
   <div id="xp-popup"></div>
+
+  <!-- 🔥 LEVEL UP OVERLAY -->
+  <div id="level-up-overlay">
+    <div class="level-up-title">LEVEL UP! 🎉</div>
+    <div class="level-up-subtitle" id="level-up-text"></div>
+  </div>
 
   <script type="module">
     document.getElementById("menu-btn").onclick = () => {
