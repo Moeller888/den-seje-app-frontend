@@ -82,6 +82,7 @@ export interface SubmitRequest {
   metadata: Record<string, unknown>;
   triggered_by: string;
   storage_path: string | null;
+  storage_bucket: string | null;
 }
 
 export interface ApproveRequest {

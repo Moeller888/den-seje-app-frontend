@@ -7,11 +7,13 @@ export interface StorageVerificationResult {
   error: string | null;
 }
 
-// Verify that a file exists at the given path in the avatar-assets bucket.
+// Verify that a file exists at the given path in the specified bucket.
+// Defaults to avatar-assets when no bucket is provided.
 // Uses a directory listing narrowed by filename — does not download the file.
 export async function verifyAssetFileExists(
   supabase: SupabaseClient,
   storagePath: string,
+  bucket: string = BUCKET,
 ): Promise<StorageVerificationResult> {
   if (!storagePath || storagePath.trim() === "") {
     return { exists: false, error: "storage_path is empty" };
@@ -27,7 +29,7 @@ export async function verifyAssetFileExists(
   }
 
   const { data, error } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .list(dir, { search: filename, limit: 1 });
 
   if (error) {
@@ -40,7 +42,7 @@ export async function verifyAssetFileExists(
   if (!data || data.length === 0) {
     return {
       exists: false,
-      error: `File not found at "${storagePath}" in bucket "${BUCKET}"`,
+      error: `File not found at "${storagePath}" in bucket "${bucket}"`,
     };
   }
 
@@ -48,7 +50,7 @@ export async function verifyAssetFileExists(
   if (!match) {
     return {
       exists: false,
-      error: `File "${filename}" not found at path "${storagePath}" in bucket "${BUCKET}"`,
+      error: `File "${filename}" not found at path "${storagePath}" in bucket "${bucket}"`,
     };
   }
 

@@ -114,7 +114,7 @@ export async function handleSubmit(
 ): Promise<WorkflowResult> {
   const ACTION = "submit";
 
-  const { metadata, triggered_by, storage_path } = request;
+  const { metadata, triggered_by, storage_path, storage_bucket } = request;
 
   if (!triggered_by || triggered_by.trim() === "") {
     return fail(ACTION, 400, "triggered_by is required", null);
@@ -125,7 +125,7 @@ export async function handleSubmit(
 
   // Step 1: verify storage file if a path was provided
   if (storage_path !== null && storage_path !== undefined) {
-    const storageResult = await verifyAssetFileExists(supabase, storage_path);
+    const storageResult = await verifyAssetFileExists(supabase, storage_path, storage_bucket ?? undefined);
     if (!storageResult.exists) {
       return fail(ACTION, 400, storageResult.error ?? "Storage file not found", null);
     }

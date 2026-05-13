@@ -23,8 +23,7 @@ serve(async (req) => {
       });
     }
 
-    // 🔐 Brug USER CONTEXT (ikke manuel decode)
-    const supabaseUser = createClient(
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
@@ -34,10 +33,7 @@ serve(async (req) => {
       }
     );
 
-    const {
-      data: { user },
-      error: authError
-    } = await supabaseUser.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -46,99 +42,35 @@ serve(async (req) => {
       });
     }
 
-    const userId = user.id;
+    // purchase_item is SECURITY DEFINER and uses auth.uid() internally.
+    // It validates item existence, ownership, and atomically deducts coins
+    // in a single transaction — no race condition possible.
+    const { data, error } = await supabase.rpc("purchase_item", {
+      p_item_id: item_id
+    });
 
-    // 🔥 SERVICE ROLE til writes
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // 📦 ITEM
-    const { data: item, error: itemError } = await supabase
-      .from("shop_items")
-      .select("id, price")
-      .eq("id", item_id)
-      .limit(1);
-
-    const safeItem = item?.[0];
-
-    if (itemError || !safeItem) {
-      return new Response(JSON.stringify({ error: "Item not found" }), {
-        status: 404,
-        headers: corsHeaders
-      });
-    }
-
-    // 🎒 EJET?
-    const { data: existing } = await supabase
-      .from("user_items")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("item_id", item_id)
-      .limit(1);
-
-    if (existing && existing.length > 0) {
-      return new Response(JSON.stringify({ error: "Already owned" }), {
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-
-    // 💰 COINS
-    const { data: progress, error: progressError } = await supabase
-      .from("student_progress")
-      .select("coins")
-      .eq("student_id", userId)
-      .limit(1);
-
-    const safeProgress = progress?.[0];
-
-    if (progressError || !safeProgress) {
-      return new Response(JSON.stringify({ error: "No progress" }), {
-        status: 404,
-        headers: corsHeaders
-      });
-    }
-
-    if (safeProgress.coins < safeItem.price) {
-      return new Response(JSON.stringify({ error: "Not enough coins" }), {
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-
-    const newCoins = safeProgress.coins - safeItem.price;
-
-    // 🔥 UPDATE COINS
-    const { error: updateError } = await supabase
-      .from("student_progress")
-      .update({ coins: newCoins })
-      .eq("student_id", userId);
-
-    if (updateError) {
-      return new Response(JSON.stringify({ error: "Failed to update coins" }), {
-        status: 500,
-        headers: corsHeaders
-      });
-    }
-
-    // 🔥 INSERT ITEM
-    const { error: insertError } = await supabase
-      .from("user_items")
-      .insert({
-        user_id: userId,
-        item_id
-      });
-
-    if (insertError) {
-      // rollback coins
-      await supabase
-        .from("student_progress")
-        .update({ coins: safeProgress.coins })
-        .eq("student_id", userId);
-
-      return new Response(JSON.stringify({ error: "Failed to assign item" }), {
+    if (error) {
+      const msg = error.message ?? "";
+      if (msg.includes("item_not_found")) {
+        return new Response(JSON.stringify({ error: "Item not found" }), {
+          status: 404,
+          headers: corsHeaders
+        });
+      }
+      if (msg.includes("already_owned")) {
+        return new Response(JSON.stringify({ error: "Already owned" }), {
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+      if (msg.includes("insufficient_coins")) {
+        return new Response(JSON.stringify({ error: "Not enough coins" }), {
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+      console.error("PURCHASE ERROR:", error);
+      return new Response(JSON.stringify({ error: "Purchase failed" }), {
         status: 500,
         headers: corsHeaders
       });
@@ -147,14 +79,13 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        remaining_coins: newCoins
+        remaining_coins: data?.remaining_coins ?? 0
       }),
       { headers: corsHeaders }
     );
 
   } catch (err) {
     console.error("BUY ITEM ERROR:", err);
-
     return new Response(JSON.stringify({ error: "Unexpected error" }), {
       status: 500,
       headers: corsHeaders

@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+
+  "identity": {
+    "asset_id": "REQUIRED_VALUE",
+    "display_name": "REQUIRED_VALUE",
+    "slot": "REQUIRED_VALUE",
+    "version": "REQUIRED_VALUE",
+    "status": "draft",
+    "created_by": "REQUIRED_VALUE",
+    "created_at": "REQUIRED_VALUE",
+    "approved_by": null,
+    "approved_at": null
+  },
+
+  "classification": {
+    "rarity": "REQUIRED_VALUE",
+    "school_safe": false,
+    "moderation_required": true,
+    "whitelist_approved": false
+  },
+
+  "visual": {
+    "primary_color": "REQUIRED_VALUE",
+    "secondary_color": null,
+    "accent_color": null,
+    "silhouette_type": "REQUIRED_VALUE",
+    "thumbnail_priority": 0
+  },
+
+  "technical": {
+    "polycount_max": 0,
+    "polycount_actual": 0,
+    "texture_resolution": "REQUIRED_VALUE",
+    "texture_format": "png",
+    "texture_embedded": false,
+    "export_format": "glb",
+    "file_size_kb_max": 0,
+    "file_size_kb_actual": 0,
+    "attachment_type": "REQUIRED_VALUE",
+    "attachment_bone": "REQUIRED_VALUE",
+    "rig_required": false
+  },
+
+  "validation": {
+    "copyright_review_passed": false,
+    "school_safe_review_passed": false,
+    "thumbnail_readability_passed": false,
+    "clipping_test_passed": false,
+    "browser_validation_passed": false,
+    "qa_approved": false
+  },
+
+  "forbidden_reference_check": {
+    "fortnite": false,
+    "roblox": false,
+    "minecraft": false,
+    "nike": false,
+    "adidas": false,
+    "jordan": false,
+    "marvel": false,
+    "disney": false,
+    "star_wars": false,
+    "political_symbols": false,
+    "nazi_symbols": false
+  },
+
+  "deployment": {
+    "production_enabled": false,
+    "release_group": "REQUIRED_VALUE",
+    "rollout_stage": "none"
+  },
+
+  "audit": {
+    "last_modified_by": "REQUIRED_VALUE",
+    "last_modified_at": "REQUIRED_VALUE",
+    "review_notes": null
+  }
+}

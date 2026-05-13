@@ -1,0 +1,11 @@
+{
+  "slot": "hat",
+  "generation_prompt": "A bright red baseball cap with a star logo",
+  "negative_prompt": null,
+  "policy_prompt": "school-safe, no brand references",
+  "model_provider": "stub",
+  "model_version": "0.1",
+  "initiated_by": "test-schema-audit",
+  "concept_image_bucket": null,
+  "concept_image_path": null
+}

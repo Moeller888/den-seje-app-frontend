@@ -118,11 +118,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const storage_path =
       typeof body["storage_path"] === "string" ? body["storage_path"] : null;
+    const storage_bucket =
+      typeof body["storage_bucket"] === "string" ? body["storage_bucket"] : null;
 
     const request: SubmitRequest = {
       metadata: metadata as Record<string, unknown>,
       triggered_by,
       storage_path,
+      storage_bucket,
     };
 
     try {

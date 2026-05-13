@@ -38,7 +38,7 @@ export async function createIngestionJob(
       `Failed to create ingestion job for asset "${assetId}": ${error.message}`,
     );
   }
-  return data as IngestionJobRecord;
+  return data as unknown as IngestionJobRecord;
 }
 
 // Atomically claims a pending job by setting status = 'validating'.
@@ -61,7 +61,7 @@ export async function claimIngestionJob(
   if (error) {
     throw new Error(`Failed to claim ingestion job "${jobId}": ${error.message}`);
   }
-  return data as IngestionJobRecord | null;
+  return data as unknown as IngestionJobRecord | null;
 }
 
 export async function getIngestionJob(
@@ -77,7 +77,7 @@ export async function getIngestionJob(
   if (error) {
     throw new Error(`Failed to fetch ingestion job "${jobId}": ${error.message}`);
   }
-  return data as IngestionJobRecord | null;
+  return data as unknown as IngestionJobRecord | null;
 }
 
 export async function updateJobMeasuredValues(
@@ -213,7 +213,7 @@ export async function resetJobForRetry(
       `Failed to reset ingestion job "${jobId}" for retry: ${error.message}`,
     );
   }
-  return data as IngestionJobRecord | null;
+  return data as unknown as IngestionJobRecord | null;
 }
 
 // A validating job is considered stale if claimed_at is older than this threshold.
@@ -258,7 +258,7 @@ export async function recoverStuckJob(
       `Failed to recover stuck ingestion job "${jobId}": ${error.message}`,
     );
   }
-  return data as IngestionJobRecord | null;
+  return data as unknown as IngestionJobRecord | null;
 }
 
 // ── Event operations ──────────────────────────────────────────────────────────
@@ -288,7 +288,7 @@ export async function insertIngestionEvent(
       `Failed to insert event for job "${jobId}", stage "${stage}": ${error.message}`,
     );
   }
-  return data as IngestionEventRecord;
+  return data as unknown as IngestionEventRecord;
 }
 
 // ── Artifact operations ───────────────────────────────────────────────────────
@@ -321,7 +321,7 @@ export async function insertIngestionArtifact(
       `Failed to insert artifact for job "${jobId}", type "${artifactType}": ${error.message}`,
     );
   }
-  return data as IngestionArtifactRecord;
+  return data as unknown as IngestionArtifactRecord;
 }
 
 // PostgreSQL unique_violation error code.
@@ -355,7 +355,7 @@ export async function insertOrGetStagedArtifact(
     .single();
 
   if (!error) {
-    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+    return { artifact: data as unknown as IngestionArtifactRecord, idempotent: false };
   }
 
   if (error.code === PG_UNIQUE_VIOLATION) {
@@ -378,7 +378,7 @@ export async function insertOrGetStagedArtifact(
         `Staged artifact collision for job "${jobId}", type "${artifactType}" but row not found on re-fetch`,
       );
     }
-    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+    return { artifact: existing as unknown as IngestionArtifactRecord, idempotent: true };
   }
 
   // Not a unique violation — all other errors propagate unchanged.
@@ -414,7 +414,7 @@ export async function insertProductionGlbArtifact(
     .single();
 
   if (!error) {
-    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+    return { artifact: data as unknown as IngestionArtifactRecord, idempotent: false };
   }
 
   if (error.code === PG_UNIQUE_VIOLATION) {
@@ -437,7 +437,7 @@ export async function insertProductionGlbArtifact(
         `GLB production artifact collision on content_hash "${contentHash}" but row not found on re-fetch`,
       );
     }
-    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+    return { artifact: existing as unknown as IngestionArtifactRecord, idempotent: true };
   }
 
   // Not a unique violation — all other errors propagate unchanged.
@@ -473,7 +473,7 @@ export async function insertProductionThumbnailArtifact(
     .single();
 
   if (!error) {
-    return { artifact: data as IngestionArtifactRecord, idempotent: false };
+    return { artifact: data as unknown as IngestionArtifactRecord, idempotent: false };
   }
 
   if (error.code === PG_UNIQUE_VIOLATION) {
@@ -496,7 +496,7 @@ export async function insertProductionThumbnailArtifact(
         `Thumbnail production artifact collision on content_hash "${contentHash}" but row not found on re-fetch`,
       );
     }
-    return { artifact: existing as IngestionArtifactRecord, idempotent: true };
+    return { artifact: existing as unknown as IngestionArtifactRecord, idempotent: true };
   }
 
   // Not a unique violation — all other errors propagate unchanged.
@@ -589,8 +589,8 @@ export async function getJobWithEventsAndArtifacts(
   }
 
   return {
-    job: jobResult.data as IngestionJobRecord | null,
-    events: (eventsResult.data ?? []) as IngestionEventRecord[],
-    artifacts: (artifactsResult.data ?? []) as IngestionArtifactRecord[],
+    job: jobResult.data as unknown as IngestionJobRecord | null,
+    events: (eventsResult.data ?? []) as unknown as IngestionEventRecord[],
+    artifacts: (artifactsResult.data ?? []) as unknown as IngestionArtifactRecord[],
   };
 }
