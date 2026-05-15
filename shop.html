@@ -2,98 +2,368 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Butik</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Arial;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #12122a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 16px;
     }
 
-    .item {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
+    /* ── Top bar ─────────────────────────────────────────── */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
     }
+
+    .back-btn {
+      padding: 8px 14px;
+      background: #2a2a4a;
+      color: #ccc;
+      border: 1px solid #3a3a5a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover { background: #333360; }
+
+    .topbar h1 { font-size: 20px; font-weight: bold; color: #fff; }
+
+    .coins-display {
+      margin-left: auto;
+      font-size: 15px;
+      color: #ffd700;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* ── Section header ──────────────────────────────────── */
+
+    .section-header {
+      font-size: 11px;
+      font-weight: bold;
+      color: #6666aa;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a5a;
+    }
+
+    /* ── Shop grid ───────────────────────────────────────── */
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Shop card ───────────────────────────────────────── */
+
+    .shop-card {
+      position: relative;
+      background: #10103a;
+      border: 2px solid #2a2a5a;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+      /* data-slot-type, data-rarity, data-item-id set in JS (F5) */
+    }
+
+    .shop-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Rarity border / glow variants */
+    .shop-card[data-rarity="uncommon"] {
+      border-color: #2e7d32;
+    }
+
+    .shop-card[data-rarity="rare"] {
+      border-color: #1976d2;
+      box-shadow: 0 0 12px rgba(25, 118, 210, 0.18);
+    }
+    .shop-card[data-rarity="rare"]:hover {
+      box-shadow: 0 8px 22px rgba(25, 118, 210, 0.3);
+    }
+
+    .shop-card[data-rarity="legendary"] {
+      border-color: #ffa000;
+      background: linear-gradient(160deg, #14102e 75%, #1c1400 100%);
+      box-shadow: 0 0 18px rgba(255, 160, 0, 0.22), inset 0 0 0 1px rgba(255, 215, 0, 0.07);
+    }
+    .shop-card[data-rarity="legendary"]:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(255, 160, 0, 0.38);
+    }
+
+    /* Legendary sparkle corner accents (static — no animation) */
+    .shop-card[data-rarity="legendary"]::before {
+      content: "✦";
+      position: absolute;
+      top: 6px; right: 8px;
+      font-size: 9px; color: #ffd700; opacity: 0.65;
+      pointer-events: none;
+    }
+    .shop-card[data-rarity="legendary"]::after {
+      content: "✦";
+      position: absolute;
+      bottom: 6px; left: 8px;
+      font-size: 7px; color: #ffd700; opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Owned cards */
+    .shop-card.is-owned { opacity: 0.68; }
+    .shop-card.is-owned .item-name { color: #667; }
+
+    /* ── Mini paper-doll preview (F1 + F2) ──────────────── */
+
+    .shop-preview {
+      position: relative;
+      width: 100px;
+      height: 150px;
+      margin: 0 auto 10px;
+      border-radius: 8px;
+      background: radial-gradient(ellipse at 50% 35%, #1e2060 0%, #090920 100%);
+      overflow: visible;
+      transition: transform 0.14s ease;
+    }
+
+    .shop-card:hover .shop-preview {
+      transform: scale(1.03);
+    }
+
+    /* Legendary: slightly larger preview for premium feel */
+    .shop-card[data-rarity="legendary"] .shop-preview {
+      width: 112px;
+      height: 168px;
+    }
+
+    /* Each layer: absolute, fills preview, same object-fit as avatar.html */
+    .preview-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* ── Card text + actions ─────────────────────────────── */
+
+    .item-name {
+      font-size: 13px;
+      font-weight: bold;
+      color: #e0e0e0;
+      margin-bottom: 5px;
+      line-height: 1.2;
+    }
+
+    .shop-card[data-rarity="legendary"] .item-name { color: #ffd700; }
 
     .rarity-badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 11px;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 10px;
       font-weight: bold;
       color: white;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
-    button {
-      margin-top: 5px;
+    .price-tag {
+      font-size: 13px;
+      color: #ffd700;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .price-tag .price-unit {
+      font-size: 11px;
+      color: #aa9900;
+      font-weight: normal;
+    }
+
+    /* F5: placeholder for future bundle/set badge — always in DOM, empty for now */
+    .card-badge {
+      min-height: 14px;
+      margin-bottom: 6px;
+      font-size: 9px;
+      color: #7c6fa0;
+      letter-spacing: 0.5px;
+      font-style: italic;
+    }
+
+    .buy-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: #1565c0;
+      transition: opacity 0.1s;
+    }
+    .buy-btn:hover:not(:disabled) { opacity: 0.88; }
+    .buy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .owned-label {
+      display: block;
+      width: 100%;
+      padding: 7px 4px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #66bb6a;
+      background: #0a2a0a;
+      border: 1px solid #2e7d32;
+      text-align: center;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    /* ── States ──────────────────────────────────────────── */
+
+    .shop-empty {
+      color: #3a3a6a;
+      font-size: 15px;
+      padding: 40px 16px;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .shop-error {
+      color: #ef5350;
+      font-size: 14px;
+      text-align: center;
+      padding: 32px;
+      grid-column: 1 / -1;
     }
   </style>
 </head>
-
 <body>
 
-<h1>Butik</h1>
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
+  <h1>Butik</h1>
+  <span class="coins-display" id="coinsDisplay">&#x1FA99; ...</span>
+</div>
 
-<div id="coins"></div>
-<div id="shop"></div>
-
-<button onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
+<div class="section-header">Tilgængelige items</div>
+<div class="shop-grid" id="shopGrid"></div>
 
 <script type="module">
 import { supabase } from "./supabaseClient.js";
 
-const shopDiv = document.getElementById("shop");
-const coinsDiv = document.getElementById("coins");
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
-// 🔐 AUTH CHECK
 const { data: sessionData } = await supabase.auth.getSession();
-
 if (!sessionData.session) {
   window.location.replace("login.html");
+  throw new Error("Unauthorized");
 }
 
 const userId = sessionData.session?.user?.id ?? null;
 
-// BFCache: re-check session if page is restored from cache
 window.addEventListener("pageshow", async (event) => {
   if (event.persisted) {
     const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      window.location.replace("login.html");
-    }
+    if (!data.session) window.location.replace("login.html");
   }
 });
 
-// 🔥 VIGTIG — hent din ANON KEY (samme som i supabaseClient.js)
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
-// 💰 LOAD COINS
+const BASE_BODY_SRC = "/assets/avatar/base/body.svg";
+
+const RARITY_COLORS = {
+  common:    "#757575",
+  uncommon:  "#388e3c",
+  rare:      "#1565c0",
+  legendary: "#f57f17",
+};
+const RARITY_LABELS = {
+  common:    "Almindelig",
+  uncommon:  "Ualmindelig",
+  rare:      "Sjælden",
+  legendary: "Legendarisk",
+};
+
+// Slot z-index: must match avatar.html and app.js
+const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
+
+// Sort order: legendary items shown first for maximum impact
+const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
+
+// ── Mini paper-doll preview (Feature #2) ─────────────────────────────────────
+// Creates a small preview container with base body + item layer stacked.
+// All SVGs share viewBox="0 0 160 240", so layers align in any container size.
+// Future: pass an array of { src, z } objects for bundle/outfit previews.
+function createMiniPaperDoll(imageUrl, slotType) {
+  const wrap = document.createElement("div");
+  wrap.className = "shop-preview";
+
+  const isAvatarSlot = !!slotType;
+
+  // Base body — only for avatar items (has a slot)
+  if (isAvatarSlot) {
+    const bodyImg = document.createElement("img");
+    bodyImg.className = "preview-layer";
+    bodyImg.src = BASE_BODY_SRC;
+    bodyImg.style.zIndex = "0";
+    bodyImg.alt = "";
+    wrap.appendChild(bodyImg);
+  }
+
+  // Item layer
+  if (imageUrl) {
+    const itemImg = document.createElement("img");
+    itemImg.className = "preview-layer";
+    itemImg.src = imageUrl;
+    itemImg.style.zIndex = String(SLOT_Z[slotType] ?? 1);
+    itemImg.alt = "";
+    wrap.appendChild(itemImg);
+  }
+
+  return wrap;
+}
+
+// ── In-memory state ───────────────────────────────────────────────────────────
+
+let ownedIds = [];
+
+// ── Data loading ──────────────────────────────────────────────────────────────
+
 async function loadCoins() {
   const { data, error } = await supabase
     .from("student_progress")
     .select("coins")
     .eq("student_id", userId);
 
-  console.log("COINS RAW:", { data, error });
-
   if (error) {
     console.error("LOAD COINS ERROR:", error);
-    coinsDiv.textContent = "Fejl ved indlæsning";
+    document.getElementById("coinsDisplay").textContent = "🪙 ?";
     return;
   }
 
   const coins = data?.[0]?.coins ?? 0;
-  coinsDiv.textContent = "Monter: " + coins;
+  document.getElementById("coinsDisplay").textContent = "🪙 " + coins;
 }
 
-// 🎒 LOAD OWNED ITEMS
 async function loadOwned() {
   const { data, error } = await supabase
     .from("user_items")
@@ -104,112 +374,127 @@ async function loadOwned() {
     console.error("LOAD OWNED ERROR:", error);
     return [];
   }
-
   return data?.map(x => x.item_id) ?? [];
 }
 
-// 🛒 LOAD SHOP
 async function loadShop() {
-  const { data: items, error } = await supabase
+  const shopGrid = document.getElementById("shopGrid");
+
+  const { data: rawItems, error } = await supabase
     .from("shop_items")
-    .select("*");
+    .select("id, name, price, rarity, type, image_url, slot_type, layer_order");
 
   if (error) {
     console.error("LOAD SHOP ERROR:", error);
-    shopDiv.textContent = "Fejl ved loading shop";
+    shopGrid.innerHTML = `<div class="shop-error">Fejl ved indlæsning af butik</div>`;
     return;
   }
 
-  const owned = await loadOwned();
+  ownedIds = await loadOwned();
 
-  shopDiv.innerHTML = "";
+  // Sort: legendary first → rare → uncommon → common, then price ascending
+  const items = [...(rawItems ?? [])].sort((a, b) => {
+    const ra = RARITY_SORT_ORDER[a.rarity] ?? 4;
+    const rb = RARITY_SORT_ORDER[b.rarity] ?? 4;
+    if (ra !== rb) return ra - rb;
+    return (a.price ?? 0) - (b.price ?? 0);
+  });
 
-  const RARITY_COLORS = {
-    common:    "#9e9e9e",
-    uncommon:  "#4caf50",
-    rare:      "#2196f3",
-    legendary: "#ffc107",
-  };
-  const RARITY_LABELS = {
-    common:    "Almindelig",
-    uncommon:  "Ualmindelig",
-    rare:      "Sjælden",
-    legendary: "Legendarisk",
-  };
+  shopGrid.innerHTML = "";
+
+  if (items.length === 0) {
+    shopGrid.innerHTML = `<div class="shop-empty">Ingen items tilgængelige endnu.</div>`;
+    return;
+  }
 
   items.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    const isOwned = owned.includes(item.id);
-    const rarityColor = RARITY_COLORS[item.rarity] ?? "#9e9e9e";
+    const isOwned     = ownedIds.includes(item.id);
+    const rarityColor = RARITY_COLORS[item.rarity] ?? "#555";
     const rarityLabel = RARITY_LABELS[item.rarity] ?? (item.rarity ?? "");
-    const rarityHtml = item.rarity
-      ? `<span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span><br>`
-      : "";
+    const isAvatarItem = item.type === "avatar";
 
-    div.innerHTML = `
-      <strong>${item.name}</strong><br>
-      ${rarityHtml}
-      Pris: ${item.price} monter<br>
-      <button ${isOwned ? "disabled" : ""}>
-        ${isOwned ? "Ejet" : "Køb"}
-      </button>
-    `;
+    const card = document.createElement("div");
+    card.className = "shop-card" + (isOwned ? " is-owned" : "");
 
-    const btn = div.querySelector("button");
+    // F5: data attributes for future targeting (bundles, featured, events)
+    card.dataset.rarity   = item.rarity ?? "common";
+    card.dataset.slotType = item.slot_type ?? "";
+    card.dataset.itemId   = item.id;
 
-    if (!isOwned) {
-      btn.onclick = async () => {
-        btn.disabled = true;
+    // F1 + F2: paper-doll preview
+    const previewEl = createMiniPaperDoll(
+      isAvatarItem ? (item.image_url ?? null) : null,
+      isAvatarItem ? (item.slot_type ?? null) : null
+    );
+    card.appendChild(previewEl);
 
-        const { data: sessionData } = await supabase.auth.getSession();
+    // Action: owned label vs buy button
+    const actionHtml = isOwned
+      ? `<span class="owned-label">&#10003; Ejet</span>`
+      : `<button class="buy-btn" data-item-id="${item.id}">Køb</button>`;
 
-        if (!sessionData.session) {
-          alert("Ikke logget ind");
-          window.location.replace("login.html");
-          return;
-        }
+    card.insertAdjacentHTML("beforeend", `
+      <div class="item-name">${item.name}</div>
+      <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>
+      ${!isOwned ? `<div class="price-tag">&#x1FA99; ${item.price} <span class="price-unit">monter</span></div>` : ""}
+      <div class="card-badge"></div>
+      ${actionHtml}
+    `);
 
-        const token = sessionData.session.access_token;
-
-        const res = await fetch(
-          "https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/buy-item",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "apikey": SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({
-              item_id: item.id
-            })
-          }
-        );
-
-        const data = await res.json();
-
-        if (!res.ok || data?.error) {
-          console.error("BUY ERROR:", data);
-          alert(data?.error || "Fejl ved køb");
-          btn.disabled = false;
-          return;
-        }
-
-        await loadCoins();
-        await loadShop();
-      };
-    }
-
-    shopDiv.appendChild(div);
+    shopGrid.appendChild(card);
   });
 }
 
-// 🚀 INIT
+// ── Buy handler — single delegated listener, attached once ────────────────────
+
+document.getElementById("shopGrid").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".buy-btn[data-item-id]");
+  if (!btn || btn.disabled) return;
+
+  btn.disabled = true;
+  btn.textContent = "...";
+
+  const itemId = btn.dataset.itemId;
+
+  const { data: fresh } = await supabase.auth.getSession();
+  if (!fresh.session) {
+    alert("Ikke logget ind");
+    window.location.replace("login.html");
+    return;
+  }
+
+  const res = await fetch(
+    "https://tjzbehwfagiwpwodsgwg.supabase.co/functions/v1/buy-item",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${fresh.session.access_token}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ item_id: itemId })
+    }
+  );
+
+  const result = await res.json();
+
+  if (!res.ok || result?.error) {
+    console.error("BUY ERROR:", result);
+    alert(result?.error || "Fejl ved køb");
+    btn.disabled = false;
+    btn.textContent = "Køb";
+    return;
+  }
+
+  // Refresh coins + re-render shop to show owned state
+  await loadCoins();
+  await loadShop();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 await loadCoins();
 await loadShop();
-
 </script>
 
 </body>
