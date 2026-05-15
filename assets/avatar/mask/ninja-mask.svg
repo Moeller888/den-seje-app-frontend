@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Mask body covering lower face (below nose line ~y=62) -->
+  <path d="M 50 62 Q 80 58 110 62 L 112 80 Q 80 86 48 80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+  <!-- Horizontal fold crease -->
+  <line x1="52" y1="71" x2="108" y2="71" stroke="#2d2d2d" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <!-- Left side wrap -->
+  <path d="M 50 62 Q 44 63 43 71 Q 44 79 48 80" fill="none" stroke="#111" stroke-width="1.2"/>
+  <!-- Right side wrap -->
+  <path d="M 110 62 Q 116 63 117 71 Q 116 79 112 80" fill="none" stroke="#111" stroke-width="1.2"/>
+  <!-- Top edge highlight -->
+  <path d="M 50 62 Q 80 59 110 62" fill="none" stroke="#3a3a3a" stroke-width="1"/>
+  <!-- Knot right side -->
+  <path d="M 112 70 Q 122 66 128 64 Q 124 70 122 76 Q 118 74 112 72 Z" fill="#111" stroke="#1a1a1a" stroke-width="0.8"/>
+</svg>

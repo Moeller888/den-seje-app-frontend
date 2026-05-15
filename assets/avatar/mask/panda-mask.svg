@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Panda ears (behind face) -->
+  <circle cx="58" cy="26" r="13" fill="#1a1a1a"/>
+  <circle cx="102" cy="26" r="13" fill="#1a1a1a"/>
+  <!-- Ear inner pink -->
+  <circle cx="58" cy="26" r="7" fill="#f8bbd0" opacity="0.6"/>
+  <circle cx="102" cy="26" r="7" fill="#f8bbd0" opacity="0.6"/>
+  <!-- White face -->
+  <ellipse cx="80" cy="52" rx="30" ry="28" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
+  <!-- Left black eye patch -->
+  <ellipse cx="67" cy="46" rx="11" ry="9" fill="#1a1a1a"/>
+  <!-- Right black eye patch -->
+  <ellipse cx="93" cy="46" rx="11" ry="9" fill="#1a1a1a"/>
+  <!-- Left white sclera -->
+  <ellipse cx="67" cy="46" rx="7" ry="6" fill="white"/>
+  <!-- Right white sclera -->
+  <ellipse cx="93" cy="46" rx="7" ry="6" fill="white"/>
+  <!-- Left pupil -->
+  <circle cx="68" cy="47" r="3.5" fill="#1a1a1a"/>
+  <circle cx="66" cy="45" r="1.2" fill="white" opacity="0.8"/>
+  <!-- Right pupil -->
+  <circle cx="92" cy="47" r="3.5" fill="#1a1a1a"/>
+  <circle cx="90" cy="45" r="1.2" fill="white" opacity="0.8"/>
+  <!-- Nose -->
+  <ellipse cx="80" cy="60" rx="5" ry="3.5" fill="#1a1a1a"/>
+  <!-- Smile -->
+  <path d="M 73 65 Q 80 71 87 65" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Blush left -->
+  <ellipse cx="60" cy="62" rx="6" ry="3.5" fill="#f48fb1" opacity="0.5"/>
+  <!-- Blush right -->
+  <ellipse cx="100" cy="62" rx="6" ry="3.5" fill="#f48fb1" opacity="0.5"/>
+</svg>
