@@ -345,6 +345,25 @@
       letter-spacing: 0.5px;
     }
 
+    /* "Ny!" badge — positioned on .item-card (top-left of card padding area,
+       to the left of the centered thumbnail, no SVG content overlap). */
+    .badge-new {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      z-index: 10;
+      background: #e53935;
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      pointer-events: none;
+      line-height: 1.4;
+    }
+
     /* Synergy theme hint (P4) */
     .synergy-hint {
       font-size: 9px;
@@ -506,6 +525,17 @@ const SLOT_EMOJIS = {
 // Rendering order — base body is always z=0; items stack above it.
 const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
 
+// "Ny!" badge: 48h window from purchase. created_at from Postgres lacks 'Z'
+// (timestamp without time zone) — append it to force UTC parsing.
+const NEW_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function isNewItem(createdAt) {
+  if (!createdAt) return false;
+  const utcStr = createdAt.endsWith("Z") ? createdAt : createdAt + "Z";
+  const t = new Date(utcStr).getTime();
+  return !isNaN(t) && Date.now() - t < NEW_THRESHOLD_MS;
+}
+
 // The slots shown in the preview status list (always, even if empty).
 const ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
 
@@ -533,6 +563,7 @@ const ITEM_THEMES = {
 
 let equippedSlots = {};  // { hat: "crown-golden", ... }
 let ownedItems    = [];  // shop_item rows for all owned items
+let createdAtMap  = {};  // item_id → created_at UTC string
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -555,16 +586,19 @@ async function loadAll() {
 
   equippedSlots = profileData?.equipped_slots ?? {};
 
-  // Owned item IDs
+  // Owned item IDs + purchase timestamps (for "Ny!" badge)
   const { data: userItems, error: uiError } = await supabase
     .from("user_items")
-    .select("item_id")
+    .select("item_id, created_at")
     .eq("user_id", userId);
 
   if (uiError) {
     console.error("LOAD INVENTORY ERROR:", uiError);
     return;
   }
+
+  createdAtMap = {};
+  (userItems ?? []).forEach(row => { createdAtMap[row.item_id] = row.created_at ?? null; });
 
   const ownedIds = (userItems ?? []).map(r => r.item_id);
 
@@ -719,6 +753,10 @@ function renderInventory() {
     const slotLabel   = hasSlot ? (SLOT_LABELS[item.slot_type] ?? item.slot_type) : "—";
     const slotEmoji   = hasSlot ? (SLOT_EMOJIS[item.slot_type] ?? "") : "";
 
+    // "Ny!" badge: within 48h of purchase
+    const isNew     = isNewItem(createdAtMap[item.id] ?? null);
+    const badgeHtml = isNew ? `<div class="badge-new">Ny!</div>` : "";
+
     // Synergy theme hint (P4) — shown on every item with a theme affiliation
     const theme    = ITEM_THEMES[item.id] ?? null;
     const themeHtml = theme
@@ -745,6 +783,7 @@ function renderInventory() {
     card.className = "item-card" + (isEquipped ? " equipped" : "");
     card.dataset.rarity = item.rarity ?? "common";  // used by rarity CSS (P2)
     card.innerHTML = `
+      ${badgeHtml}
       ${thumbHtml}
       <div class="item-name">${item.name}</div>
       <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>

@@ -161,6 +161,27 @@
       pointer-events: none;
     }
 
+    /* ── "Ny!" badge (and future label variants) ─────────── */
+    /* Positioned on .shop-preview (top-left SVG corner is sparse). */
+    /* Future badges (Event, Limited, Sale) follow the same pattern */
+    /* with different color/position combos via modifier classes.   */
+    .badge-new {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      z-index: 10;
+      background: #e53935;
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      pointer-events: none;
+      line-height: 1.4;
+    }
+
     /* ── Card text + actions ─────────────────────────────── */
 
     .item-name {
@@ -309,11 +330,23 @@ const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
 // Sort order: legendary items shown first for maximum impact
 const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
 
+// "Ny!" shows for 48 hours after purchase.
+// created_at from Postgres is UTC but lacks the 'Z' marker — append it
+// before parsing so Date treats it as UTC, not local time.
+const NEW_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function isNewItem(createdAt) {
+  if (!createdAt) return false;
+  const utcStr = createdAt.endsWith("Z") ? createdAt : createdAt + "Z";
+  const t = new Date(utcStr).getTime();
+  return !isNaN(t) && Date.now() - t < NEW_THRESHOLD_MS;
+}
+
 // ── Mini paper-doll preview (Feature #2) ─────────────────────────────────────
 // Creates a small preview container with base body + item layer stacked.
 // All SVGs share viewBox="0 0 160 240", so layers align in any container size.
 // Future: pass an array of { src, z } objects for bundle/outfit previews.
-function createMiniPaperDoll(imageUrl, slotType) {
+function createMiniPaperDoll(imageUrl, slotType, isNew) {
   const wrap = document.createElement("div");
   wrap.className = "shop-preview";
 
@@ -339,12 +372,20 @@ function createMiniPaperDoll(imageUrl, slotType) {
     wrap.appendChild(itemImg);
   }
 
+  // "Ny!" corner badge — inside preview, top-left SVG corner is sparsely populated
+  if (isNew) {
+    const badge = document.createElement("div");
+    badge.className = "badge-new";
+    badge.textContent = "Ny!";
+    wrap.appendChild(badge);
+  }
+
   return wrap;
 }
 
 // ── In-memory state ───────────────────────────────────────────────────────────
 
-let ownedIds = [];
+let ownedMap = new Map(); // item_id → created_at (UTC string)
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -367,14 +408,16 @@ async function loadCoins() {
 async function loadOwned() {
   const { data, error } = await supabase
     .from("user_items")
-    .select("item_id")
+    .select("item_id, created_at")
     .eq("user_id", userId);
 
   if (error) {
     console.error("LOAD OWNED ERROR:", error);
-    return [];
+    return new Map();
   }
-  return data?.map(x => x.item_id) ?? [];
+  const map = new Map();
+  (data ?? []).forEach(row => map.set(row.item_id, row.created_at ?? null));
+  return map;
 }
 
 async function loadShop() {
@@ -390,7 +433,7 @@ async function loadShop() {
     return;
   }
 
-  ownedIds = await loadOwned();
+  ownedMap = await loadOwned();
 
   // Sort: legendary first → rare → uncommon → common, then price ascending
   const items = [...(rawItems ?? [])].sort((a, b) => {
@@ -408,9 +451,11 @@ async function loadShop() {
   }
 
   items.forEach(item => {
-    const isOwned     = ownedIds.includes(item.id);
-    const rarityColor = RARITY_COLORS[item.rarity] ?? "#555";
-    const rarityLabel = RARITY_LABELS[item.rarity] ?? (item.rarity ?? "");
+    const isOwned      = ownedMap.has(item.id);
+    const createdAt    = ownedMap.get(item.id) ?? null;
+    const isNew        = isOwned && isNewItem(createdAt);
+    const rarityColor  = RARITY_COLORS[item.rarity] ?? "#555";
+    const rarityLabel  = RARITY_LABELS[item.rarity] ?? (item.rarity ?? "");
     const isAvatarItem = item.type === "avatar";
 
     const card = document.createElement("div");
@@ -421,10 +466,11 @@ async function loadShop() {
     card.dataset.slotType = item.slot_type ?? "";
     card.dataset.itemId   = item.id;
 
-    // F1 + F2: paper-doll preview
+    // F1 + F2: paper-doll preview (isNew drives badge inside preview)
     const previewEl = createMiniPaperDoll(
       isAvatarItem ? (item.image_url ?? null) : null,
-      isAvatarItem ? (item.slot_type ?? null) : null
+      isAvatarItem ? (item.slot_type ?? null) : null,
+      isNew
     );
     card.appendChild(previewEl);
 
