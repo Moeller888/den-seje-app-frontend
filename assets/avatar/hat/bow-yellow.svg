@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Left loop -->
+  <ellipse cx="62" cy="17" rx="21" ry="13" fill="#ffc107" stroke="#f57f17" stroke-width="1.5" transform="rotate(-18,62,17)"/>
+  <!-- Right loop -->
+  <ellipse cx="98" cy="17" rx="21" ry="13" fill="#ffc107" stroke="#f57f17" stroke-width="1.5" transform="rotate(18,98,17)"/>
+  <!-- Center knot -->
+  <ellipse cx="80" cy="17" rx="9" ry="8" fill="#ff8f00" stroke="#f57f17" stroke-width="1.5"/>
+  <!-- Left tail -->
+  <path d="M 72 22 L 58 38 L 67 40 Z" fill="#ffc107" stroke="#f57f17" stroke-width="1"/>
+  <!-- Right tail -->
+  <path d="M 88 22 L 102 38 L 93 40 Z" fill="#ffc107" stroke="#f57f17" stroke-width="1"/>
+  <!-- Shine -->
+  <ellipse cx="96" cy="13" rx="5" ry="3" fill="#fff9c4" opacity="0.5" transform="rotate(18,96,13)"/>
+</svg>

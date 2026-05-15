@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Left lens -->
+  <circle cx="67" cy="46" r="12" fill="rgba(144,202,249,0.38)" stroke="#333" stroke-width="2.5"/>
+  <!-- Right lens -->
+  <circle cx="93" cy="46" r="12" fill="rgba(144,202,249,0.38)" stroke="#333" stroke-width="2.5"/>
+  <!-- Bridge -->
+  <line x1="79" y1="46" x2="81" y2="46" stroke="#333" stroke-width="2.5"/>
+  <!-- Left temple -->
+  <line x1="55" y1="44" x2="40" y2="50" stroke="#333" stroke-width="2"/>
+  <!-- Right temple -->
+  <line x1="105" y1="44" x2="120" y2="50" stroke="#333" stroke-width="2"/>
+  <!-- Lens shine -->
+  <circle cx="62" cy="41" r="3" fill="white" opacity="0.45"/>
+  <circle cx="88" cy="41" r="3" fill="white" opacity="0.45"/>
+</svg>

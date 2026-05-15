@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Base band -->
+  <rect x="46" y="24" width="68" height="14" rx="3" fill="#ffd600" stroke="#f9a825" stroke-width="2"/>
+  <!-- Left point -->
+  <polygon points="46,24 57,3 68,24" fill="#ffea00" stroke="#f9a825" stroke-width="2"/>
+  <!-- Center point (taller) -->
+  <polygon points="69,24 80,1 91,24" fill="#ffea00" stroke="#f9a825" stroke-width="2"/>
+  <!-- Right point -->
+  <polygon points="92,24 103,3 114,24" fill="#ffea00" stroke="#f9a825" stroke-width="2"/>
+  <!-- Center gem (large) -->
+  <circle cx="80" cy="9" r="6" fill="#e53935" stroke="#b71c1c" stroke-width="1"/>
+  <!-- Side gems -->
+  <circle cx="57" cy="10" r="4" fill="#e53935" stroke="#b71c1c" stroke-width="1"/>
+  <circle cx="103" cy="10" r="4" fill="#e53935" stroke="#b71c1c" stroke-width="1"/>
+  <!-- Gem shines -->
+  <circle cx="78" cy="7" r="2" fill="white" opacity="0.8"/>
+  <circle cx="56" cy="9" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="102" cy="9" r="1.5" fill="white" opacity="0.7"/>
+</svg>

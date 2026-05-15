@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Cape back (behind body, wide) -->
+  <path d="M 38 98 L 18 228 Q 80 245 142 228 L 122 98 Z" fill="#c62828" opacity="0.92"/>
+  <!-- Cape inner lighter area -->
+  <path d="M 50 104 L 34 218 Q 80 232 126 218 L 110 104 Z" fill="#ef5350" opacity="0.35"/>
+  <!-- Cape shoulder left -->
+  <path d="M 38 98 Q 55 108 80 103 Q 55 95 38 98 Z" fill="#b71c1c"/>
+  <!-- Cape shoulder right -->
+  <path d="M 122 98 Q 105 108 80 103 Q 105 95 122 98 Z" fill="#b71c1c"/>
+  <!-- Collar clasp -->
+  <circle cx="80" cy="100" r="5" fill="#ffd600" stroke="#f9a825" stroke-width="1"/>
+</svg>

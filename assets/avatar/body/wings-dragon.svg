@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Left wing main -->
+  <path d="M 42 118 L 2 62 L 8 155 L 36 188 Z" fill="#43a047" stroke="#2e7d32" stroke-width="1.5"/>
+  <!-- Left wing upper membrane -->
+  <path d="M 42 118 L 2 62 L 18 100 Z" fill="#66bb6a" opacity="0.55"/>
+  <!-- Left wing lower membrane -->
+  <path d="M 42 118 L 8 155 L 22 140 Z" fill="#66bb6a" opacity="0.55"/>
+  <!-- Left wing veins -->
+  <line x1="42" y1="118" x2="2" y2="62" stroke="#1b5e20" stroke-width="1.5"/>
+  <line x1="42" y1="118" x2="8" y2="155" stroke="#1b5e20" stroke-width="1.5"/>
+  <line x1="42" y1="118" x2="36" y2="188" stroke="#1b5e20" stroke-width="1.5"/>
+  <!-- Right wing main -->
+  <path d="M 118 118 L 158 62 L 152 155 L 124 188 Z" fill="#43a047" stroke="#2e7d32" stroke-width="1.5"/>
+  <!-- Right wing upper membrane -->
+  <path d="M 118 118 L 158 62 L 142 100 Z" fill="#66bb6a" opacity="0.55"/>
+  <!-- Right wing lower membrane -->
+  <path d="M 118 118 L 152 155 L 138 140 Z" fill="#66bb6a" opacity="0.55"/>
+  <!-- Right wing veins -->
+  <line x1="118" y1="118" x2="158" y2="62" stroke="#1b5e20" stroke-width="1.5"/>
+  <line x1="118" y1="118" x2="152" y2="155" stroke="#1b5e20" stroke-width="1.5"/>
+  <line x1="118" y1="118" x2="124" y2="188" stroke="#1b5e20" stroke-width="1.5"/>
+</svg>

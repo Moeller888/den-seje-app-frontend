@@ -2,250 +2,612 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Min Avatar</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       display: none;
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f8f9fa;
+      background: #12122a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 16px;
     }
+
+    /* ── Top bar ─────────────────────────────────────────── */
 
     .topbar {
       display: flex;
       align-items: center;
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
-    h1 { margin: 0; }
+    .back-btn {
+      padding: 8px 14px;
+      background: #2a2a4a;
+      color: #ccc;
+      border: 1px solid #3a3a5a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover { background: #333360; }
+
+    .topbar h1 {
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+    }
 
     .coins {
       margin-left: auto;
-      font-size: 16px;
-      color: #555;
+      font-size: 15px;
+      color: #ffd700;
+      font-weight: bold;
+      white-space: nowrap;
     }
 
-    .grid {
+    /* ── Two-column layout ───────────────────────────────── */
+
+    .layout {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
+      grid-template-columns: 210px 1fr;
+      gap: 18px;
+      align-items: start;
     }
+
+    @media (max-width: 580px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Avatar panel ────────────────────────────────────── */
+
+    .avatar-panel {
+      background: #1a1a3e;
+      border: 1px solid #2a2a5a;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #6666aa;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      align-self: flex-start;
+    }
+
+    /* Paper-doll canvas */
+    #avatar-preview {
+      position: relative;
+      width: 160px;
+      height: 240px;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at 50% 30%, #1e2060 0%, #0a0a20 100%);
+      overflow: visible;
+      flex-shrink: 0;
+    }
+
+    .avatar-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Slot status list */
+    .slot-list {
+      width: 100%;
+    }
+
+    .slot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid #22224a;
+      gap: 8px;
+    }
+
+    .slot-row:last-child { border-bottom: none; }
+
+    .slot-name {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #555588;
+      min-width: 54px;
+      flex-shrink: 0;
+    }
+
+    .slot-item-name {
+      font-size: 12px;
+      color: #aad4ff;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .slot-empty {
+      font-size: 12px;
+      color: #3a3a6a;
+      font-style: italic;
+      text-align: right;
+    }
+
+    /* ── Inventory panel ─────────────────────────────────── */
+
+    .inventory-panel {
+      background: #1a1a3e;
+      border: 1px solid #2a2a5a;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .inventory-panel .panel-title {
+      margin-bottom: 14px;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── Item card ───────────────────────────────────────── */
 
     .item-card {
-      background: white;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      padding: 14px;
+      background: #10103a;
+      border: 2px solid #2a2a5a;
+      border-radius: 10px;
+      padding: 10px;
       text-align: center;
+      transition: border-color 0.12s, background 0.12s;
     }
 
     .item-card.equipped {
-      border-color: #1565c0;
-      background: #e3f2fd;
+      border-color: #4caf50;
+      background: #0a2a0a;
+    }
+
+    .item-thumb {
+      width: 88px;
+      height: 88px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 8px;
+      border-radius: 8px;
+      background: #1a1a50;
+    }
+
+    .item-thumb-placeholder {
+      width: 88px;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a50;
+      border-radius: 8px;
+      font-size: 32px;
+      margin: 0 auto 8px;
     }
 
     .item-name {
+      font-size: 13px;
       font-weight: bold;
-      margin-bottom: 6px;
+      color: #e0e0e0;
+      margin-bottom: 5px;
+      line-height: 1.2;
     }
 
     .rarity-badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 11px;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 10px;
       font-weight: bold;
       color: white;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
+    }
+
+    .slot-label {
+      font-size: 11px;
+      color: #555588;
+      margin-bottom: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .equip-btn {
       display: block;
       width: 100%;
-      padding: 8px;
-      margin-top: 10px;
-      cursor: pointer;
+      padding: 7px 4px;
       border: none;
-      border-radius: 4px;
-      background: #1565c0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
       color: white;
-      font-size: 14px;
+      background: #1565c0;
+      transition: opacity 0.1s;
     }
 
+    .equip-btn:hover:not(:disabled) { opacity: 0.85; }
+
     .equip-btn:disabled {
-      background: #4caf50;
-      cursor: default;
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .unequip-btn {
+      display: block;
+      width: 100%;
+      padding: 6px 4px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #ffcccc;
+      background: #5a1010;
+      margin-top: 5px;
+      transition: opacity 0.1s;
+    }
+
+    .unequip-btn:hover:not(:disabled) { opacity: 0.8; }
+
+    .unequip-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .equipped-label {
+      display: block;
+      font-size: 11px;
+      color: #66bb6a;
+      font-weight: bold;
+      margin-bottom: 4px;
     }
 
     .empty-state {
-      color: #888;
-      font-size: 16px;
-      margin-top: 40px;
+      color: #3a3a6a;
+      font-size: 15px;
+      padding: 32px 16px;
+      text-align: center;
     }
 
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 8px 14px;
-      cursor: pointer;
-      background: #555;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
+    .empty-state a { color: #4fc3f7; }
   </style>
 </head>
 <body>
 
-  <button class="back-btn" onclick="window.location.href='hub.html'">⬅️ Tilbage</button>
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
+  <h1>Min Avatar</h1>
+  <span class="coins" id="coinBalance">&#x1FA99; ...</span>
+</div>
 
-  <div class="topbar">
-    <h1>Min Avatar</h1>
-    <span class="coins" id="coinBalance">Monter: …</span>
+<div class="layout">
+
+  <!-- Left: paper-doll preview + slot status -->
+  <div class="avatar-panel">
+    <div class="panel-title">Preview</div>
+    <div id="avatar-preview"><!-- layers injected by JS --></div>
+    <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
   </div>
 
-  <div class="grid" id="inventoryGrid"></div>
-  <p class="empty-state" id="emptyState" style="display:none;">
-    Du ejer ingen ting endnu. Gå i <a href="shop.html">butikken</a> for at købe noget!
-  </p>
+  <!-- Right: inventory -->
+  <div class="inventory-panel">
+    <div class="panel-title">Dine items</div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <p class="empty-state" id="emptyState" style="display:none">
+      Du ejer ingen items endnu.<br>
+      <a href="shop.html">Gå i butikken</a> for at kobe noget!
+    </p>
+  </div>
 
-  <script type="module">
-    import { supabase } from "./supabaseClient.js";
+</div>
 
-    const { data: sessionData } = await supabase.auth.getSession();
+<script type="module">
+import { supabase } from "./supabaseClient.js";
 
-    if (!sessionData.session) {
-      window.location.replace("login.html");
-      throw new Error("Unauthorized");
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+const { data: sessionData } = await supabase.auth.getSession();
+if (!sessionData.session) {
+  window.location.replace("login.html");
+  throw new Error("Unauthorized");
+}
+
+document.body.style.display = "block";
+
+const userId = sessionData.session.user.id;
+
+window.addEventListener("pageshow", async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) window.location.replace("login.html");
+  }
+});
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const RARITY_COLORS = {
+  common:    "#757575",
+  uncommon:  "#388e3c",
+  rare:      "#1565c0",
+  legendary: "#f57f17",
+};
+
+const RARITY_LABELS = {
+  common:    "Almindelig",
+  uncommon:  "Ualmindelig",
+  rare:      "Sjaelden",
+  legendary: "Legendarisk",
+};
+
+const SLOT_LABELS = {
+  body:    "Krop",
+  shirt:   "Shirt",
+  hat:     "Hat",
+  glasses: "Briller",
+  mask:    "Maske",
+};
+
+const SLOT_EMOJIS = {
+  body:    "&#129411;",
+  shirt:   "&#128085;",
+  hat:     "&#127913;",
+  glasses: "&#128083;",
+  mask:    "&#127917;",
+};
+
+// Rendering order — base body is always z=0; items stack above it.
+const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
+
+// The slots shown in the preview status list (always, even if empty).
+const ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
+
+const BASE_SRC = "/assets/avatar/base/body.svg";
+
+// ── In-memory state ───────────────────────────────────────────────────────────
+
+let equippedSlots = {};  // { hat: "crown-golden", ... }
+let ownedItems    = [];  // shop_item rows for all owned items
+
+// ── Data loading ──────────────────────────────────────────────────────────────
+
+async function loadAll() {
+  // Coins
+  const { data: progressData } = await supabase
+    .from("student_progress")
+    .select("coins")
+    .eq("student_id", userId);
+
+  const coins = progressData?.[0]?.coins ?? 0;
+  document.getElementById("coinBalance").textContent = "🪙 " + coins;
+
+  // Equipped slots from profiles
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("equipped_slots")
+    .eq("id", userId)
+    .maybeSingle();
+
+  equippedSlots = profileData?.equipped_slots ?? {};
+
+  // Owned item IDs
+  const { data: userItems, error: uiError } = await supabase
+    .from("user_items")
+    .select("item_id")
+    .eq("user_id", userId);
+
+  if (uiError) {
+    console.error("LOAD INVENTORY ERROR:", uiError);
+    return;
+  }
+
+  const ownedIds = (userItems ?? []).map(r => r.item_id);
+
+  if (ownedIds.length === 0) {
+    ownedItems = [];
+    renderAll();
+    return;
+  }
+
+  // Shop metadata for owned items (includes slot_type, layer_order, image_url)
+  const { data: shopItems, error: siError } = await supabase
+    .from("shop_items")
+    .select("id, name, rarity, slot_type, layer_order, image_url")
+    .in("id", ownedIds);
+
+  if (siError) {
+    console.error("LOAD SHOP ITEMS ERROR:", siError);
+    return;
+  }
+
+  ownedItems = shopItems ?? [];
+  renderAll();
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+
+function renderAll() {
+  renderAvatar();
+  renderSlotList();
+  renderInventory();
+}
+
+function renderAvatar() {
+  const preview = document.getElementById("avatar-preview");
+  preview.innerHTML = "";
+
+  // Layer 0: base body (always visible)
+  const base = document.createElement("img");
+  base.className = "avatar-layer";
+  base.src = BASE_SRC;
+  base.style.zIndex = "0";
+  base.alt = "";
+  preview.appendChild(base);
+
+  // One layer per equipped slot, ordered by z-index
+  ALL_SLOTS.forEach(slot => {
+    const itemId = equippedSlots[slot];
+    if (!itemId) return;
+
+    const item = ownedItems.find(i => i.id === itemId);
+    if (!item || !item.image_url) return;
+
+    const img = document.createElement("img");
+    img.className = "avatar-layer";
+    img.src = item.image_url;
+    img.style.zIndex = String(SLOT_Z[slot] ?? 1);
+    img.alt = item.name ?? "";
+    preview.appendChild(img);
+  });
+}
+
+function renderSlotList() {
+  const list = document.getElementById("slotList");
+
+  list.innerHTML = ALL_SLOTS.map(slot => {
+    const itemId = equippedSlots[slot];
+    const item   = itemId ? ownedItems.find(i => i.id === itemId) : null;
+    const label  = SLOT_LABELS[slot] ?? slot;
+
+    return `
+      <div class="slot-row">
+        <span class="slot-name">${label}</span>
+        ${item
+          ? `<span class="slot-item-name">${item.name}</span>`
+          : `<span class="slot-empty">Tom</span>`}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderInventory() {
+  const grid       = document.getElementById("inventoryGrid");
+  const emptyState = document.getElementById("emptyState");
+
+  grid.innerHTML = "";
+
+  if (ownedItems.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+
+  emptyState.style.display = "none";
+
+  ownedItems.forEach(item => {
+    const equippedIdForSlot = item.slot_type ? (equippedSlots[item.slot_type] ?? null) : null;
+    const isEquipped        = equippedIdForSlot === item.id;
+    const hasSlot           = !!item.slot_type;
+
+    const rarityColor = RARITY_COLORS[item.rarity] ?? "#555";
+    const rarityLabel = RARITY_LABELS[item.rarity] ?? (item.rarity ?? "");
+    const slotLabel   = hasSlot ? (SLOT_LABELS[item.slot_type] ?? item.slot_type) : "—";
+    const slotEmoji   = hasSlot ? (SLOT_EMOJIS[item.slot_type] ?? "") : "";
+
+    const thumbHtml = item.image_url
+      ? `<img class="item-thumb" src="${item.image_url}" alt="${item.name ?? ""}">`
+      : `<div class="item-thumb-placeholder">${slotEmoji || "?"}</div>`;
+
+    let actionHtml;
+    if (!hasSlot) {
+      actionHtml = `<span style="font-size:11px;color:#444">Kan ikke udstyre</span>`;
+    } else if (isEquipped) {
+      actionHtml = `
+        <span class="equipped-label">&#10003; Udstyret</span>
+        <button class="unequip-btn" data-slot="${item.slot_type}">Fjern</button>
+      `;
+    } else {
+      actionHtml = `<button class="equip-btn" data-item-id="${item.id}">Udstyr</button>`;
     }
 
-    document.body.style.display = "block";
+    const card = document.createElement("div");
+    card.className = "item-card" + (isEquipped ? " equipped" : "");
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="item-name">${item.name}</div>
+      <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>
+      <div class="slot-label">${slotEmoji} ${slotLabel}</div>
+      ${actionHtml}
+    `;
+    grid.appendChild(card);
+  });
+}
 
-    const userId = sessionData.session.user.id;
+// ── Equip / Unequip ───────────────────────────────────────────────────────────
 
-    const RARITY_COLORS = {
-      common:    "#9e9e9e",
-      uncommon:  "#4caf50",
-      rare:      "#2196f3",
-      legendary: "#ffc107",
-    };
+document.getElementById("inventoryGrid").addEventListener("click", async (e) => {
+  const equipBtn   = e.target.closest(".equip-btn[data-item-id]");
+  const unequipBtn = e.target.closest(".unequip-btn[data-slot]");
 
-    const RARITY_LABELS = {
-      common:    "Almindelig",
-      uncommon:  "Ualmindelig",
-      rare:      "Sjælden",
-      legendary: "Legendarisk",
-    };
+  if (equipBtn && !equipBtn.disabled) {
+    equipBtn.disabled = true;
+    equipBtn.textContent = "...";
+    await handleEquip(equipBtn.dataset.itemId);
+    return;
+  }
 
-    const grid = document.getElementById("inventoryGrid");
-    const emptyState = document.getElementById("emptyState");
-    const coinBalance = document.getElementById("coinBalance");
+  if (unequipBtn && !unequipBtn.disabled) {
+    unequipBtn.disabled = true;
+    unequipBtn.textContent = "...";
+    await handleUnequip(unequipBtn.dataset.slot);
+  }
+});
 
-    async function load() {
-      // Load coins
-      const { data: progressData } = await supabase
-        .from("student_progress")
-        .select("coins")
-        .eq("student_id", userId);
+async function handleEquip(itemId) {
+  const { data, error } = await supabase.rpc("equip_item", { p_item_id: itemId });
 
-      const coins = progressData?.[0]?.coins ?? 0;
-      coinBalance.textContent = `Monter: ${coins}`;
+  if (error) {
+    console.error("EQUIP ERROR:", error);
+    alert("Kunne ikke udstyre: " + error.message);
+    renderInventory();
+    return;
+  }
 
-      // Load active avatar
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("active_avatar")
-        .eq("id", userId)
-        .maybeSingle();
+  const slot = data?.slot;
+  if (slot) {
+    equippedSlots = { ...equippedSlots, [slot]: itemId };
+  }
 
-      const activeAvatar = profileData?.active_avatar ?? null;
+  renderAll();
+}
 
-      // Load owned item ids
-      const { data: userItems, error: uiError } = await supabase
-        .from("user_items")
-        .select("item_id")
-        .eq("user_id", userId);
+async function handleUnequip(slot) {
+  const { error } = await supabase.rpc("unequip_item", { p_slot_type: slot });
 
-      if (uiError) {
-        console.error("LOAD INVENTORY ERROR:", uiError);
-        return;
-      }
+  if (error) {
+    console.error("UNEQUIP ERROR:", error);
+    alert("Kunne ikke fjerne: " + error.message);
+    renderInventory();
+    return;
+  }
 
-      const ownedIds = (userItems ?? []).map(r => r.item_id);
+  const next = { ...equippedSlots };
+  delete next[slot];
+  equippedSlots = next;
 
-      grid.innerHTML = "";
+  renderAll();
+}
 
-      if (ownedIds.length === 0) {
-        emptyState.style.display = "block";
-        return;
-      }
+// ── Init ──────────────────────────────────────────────────────────────────────
 
-      emptyState.style.display = "none";
-
-      // Load shop metadata for owned items
-      const { data: shopItems, error: siError } = await supabase
-        .from("shop_items")
-        .select("id, name, price, rarity")
-        .in("id", ownedIds);
-
-      if (siError) {
-        console.error("LOAD SHOP ITEMS ERROR:", siError);
-        return;
-      }
-
-      (shopItems ?? []).forEach(item => {
-        const isEquipped = item.id === activeAvatar;
-        const color = RARITY_COLORS[item.rarity] ?? "#9e9e9e";
-        const label = RARITY_LABELS[item.rarity] ?? item.rarity;
-
-        const card = document.createElement("div");
-        card.className = "item-card" + (isEquipped ? " equipped" : "");
-        card.innerHTML = `
-          <div class="item-name">${item.name}</div>
-          <span class="rarity-badge" style="background:${color}">${label}</span>
-          <div style="font-size:13px;color:#666;margin-bottom:4px;">${item.price} monter</div>
-          <button class="equip-btn" ${isEquipped ? "disabled" : ""} data-item-id="${item.id}">
-            ${isEquipped ? "Udstyret ✓" : "Udstyr"}
-          </button>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    // Equip delegation — attached once, re-render via load()
-    grid.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button.equip-btn[data-item-id]");
-      if (!btn || btn.disabled) return;
-
-      const itemId = btn.dataset.itemId;
-      btn.disabled = true;
-      btn.textContent = "…";
-
-      const { error } = await supabase.rpc("equip_item", { p_item_id: itemId });
-
-      if (error) {
-        console.error("EQUIP ERROR:", error);
-        alert("Kunne ikke udstyre: " + error.message);
-        btn.disabled = false;
-        btn.textContent = "Udstyr";
-        return;
-      }
-
-      await load();
-    });
-
-    await load();
-
-    window.addEventListener("pageshow", async (event) => {
-      if (event.persisted) {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          window.location.replace("login.html");
-        }
-      }
-    });
-  </script>
+await loadAll();
+</script>
 
 </body>
 </html>
