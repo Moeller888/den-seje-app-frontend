@@ -242,18 +242,29 @@
     .buy-btn:hover:not(:disabled) { opacity: 0.88; }
     .buy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    .owned-label {
+    .owned-indicator {
+      font-size: 11px;
+      color: #66bb6a;
+      text-align: center;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .avatar-cta-btn {
       display: block;
       width: 100%;
       padding: 7px 4px;
       border-radius: 6px;
+      cursor: pointer;
       font-size: 12px;
       font-weight: bold;
-      color: #66bb6a;
-      background: #0a2a0a;
-      border: 1px solid #2e7d32;
+      color: #90caf9;
+      background: #0d1a2e;
+      border: 1px solid #1565c0;
       text-align: center;
+      transition: background 0.12s, color 0.12s;
     }
+    .avatar-cta-btn:hover { background: #132844; color: #bbdefb; }
 
     /* ── States ──────────────────────────────────────────── */
 
@@ -474,9 +485,9 @@ async function loadShop() {
     );
     card.appendChild(previewEl);
 
-    // Action: owned label vs buy button
+    // Action: owned CTA vs buy button
     const actionHtml = isOwned
-      ? `<span class="owned-label">&#10003; Ejet</span>`
+      ? `<div class="owned-indicator">&#10003; Ejet</div><button class="avatar-cta-btn" data-action="goto-avatar">G&#229; til din avatar &#8594;</button>`
       : `<button class="buy-btn" data-item-id="${item.id}">Køb</button>`;
 
     card.insertAdjacentHTML("beforeend", `
@@ -494,6 +505,9 @@ async function loadShop() {
 // ── Buy handler — single delegated listener, attached once ────────────────────
 
 document.getElementById("shopGrid").addEventListener("click", async (e) => {
+  const cta = e.target.closest("[data-action='goto-avatar']");
+  if (cta) { window.location.href = "avatar.html"; return; }
+
   const btn = e.target.closest(".buy-btn[data-item-id]");
   if (!btn || btn.disabled) return;
 
