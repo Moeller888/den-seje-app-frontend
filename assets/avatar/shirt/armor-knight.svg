@@ -1,25 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
-  <!-- Chest plate -->
-  <rect x="40" y="92" width="80" height="88" rx="10" fill="#607d8b" stroke="#455a64" stroke-width="2"/>
+  <!-- Chest plate base -->
+  <rect x="40" y="92" width="80" height="88" rx="10" fill="#546e7a" stroke="#37474f" stroke-width="2"/>
   <!-- Chest highlight panel -->
-  <rect x="56" y="106" width="48" height="46" rx="6" fill="#78909c" stroke="#546e7a" stroke-width="1.5"/>
-  <!-- Vertical center line -->
-  <line x1="80" y1="106" x2="80" y2="152" stroke="#455a64" stroke-width="2"/>
+  <rect x="56" y="106" width="48" height="58" rx="6" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <!-- Panel top highlight -->
+  <rect x="56" y="106" width="48" height="8" rx="6" fill="#78909c" opacity="0.45"/>
+  <!-- Cross emblem (shield motif) -->
+  <rect x="76" y="112" width="8" height="26" rx="2" fill="#37474f" opacity="0.65"/>
+  <rect x="66" y="120" width="28" height="8" rx="2" fill="#37474f" opacity="0.65"/>
+  <!-- Vertical center seam -->
+  <line x1="80" y1="106" x2="80" y2="162" stroke="#37474f" stroke-width="1.5" opacity="0.7"/>
   <!-- Horizontal ribs -->
-  <line x1="56" y1="120" x2="104" y2="120" stroke="#546e7a" stroke-width="1.5"/>
-  <line x1="56" y1="134" x2="104" y2="134" stroke="#546e7a" stroke-width="1.5"/>
+  <line x1="56" y1="126" x2="104" y2="126" stroke="#455a64" stroke-width="1.2"/>
+  <line x1="56" y1="142" x2="104" y2="142" stroke="#455a64" stroke-width="1.2"/>
+  <line x1="56" y1="156" x2="104" y2="156" stroke="#455a64" stroke-width="1.2"/>
   <!-- Belt -->
-  <rect x="40" y="174" width="80" height="9" rx="4" fill="#37474f"/>
-  <rect x="74" y="174" width="12" height="9" fill="#ffd600" rx="2"/>
+  <rect x="40" y="174" width="80" height="8" rx="4" fill="#263238"/>
+  <!-- Belt buckle -->
+  <rect x="74" y="174" width="12" height="8" rx="2" fill="#ffd600"/>
+  <circle cx="80" cy="178" r="2.5" fill="#ff8f00"/>
   <!-- Left pauldron -->
-  <ellipse cx="30" cy="106" rx="20" ry="14" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <ellipse cx="29" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
+  <ellipse cx="28" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/>
   <!-- Right pauldron -->
-  <ellipse cx="130" cy="106" rx="20" ry="14" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <ellipse cx="131" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
+  <ellipse cx="132" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/>
   <!-- Left arm plate -->
-  <rect x="13" y="118" width="24" height="52" rx="10" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <rect x="12" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
   <!-- Right arm plate -->
-  <rect x="123" y="118" width="24" height="52" rx="10" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <rect x="126" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
   <!-- Arm highlights -->
-  <rect x="16" y="122" width="8" height="20" rx="4" fill="#78909c" opacity="0.6"/>
-  <rect x="136" y="122" width="8" height="20" rx="4" fill="#78909c" opacity="0.6"/>
+  <rect x="15" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/>
+  <rect x="137" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/>
+  <!-- Elbow guards -->
+  <ellipse cx="23" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/>
+  <ellipse cx="137" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/>
 </svg>

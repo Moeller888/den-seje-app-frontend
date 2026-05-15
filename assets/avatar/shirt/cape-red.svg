@@ -1,12 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
-  <!-- Cape back (behind body, wide) -->
-  <path d="M 38 98 L 18 228 Q 80 245 142 228 L 122 98 Z" fill="#c62828" opacity="0.92"/>
-  <!-- Cape inner lighter area -->
-  <path d="M 50 104 L 34 218 Q 80 232 126 218 L 110 104 Z" fill="#ef5350" opacity="0.35"/>
-  <!-- Cape shoulder left -->
-  <path d="M 38 98 Q 55 108 80 103 Q 55 95 38 98 Z" fill="#b71c1c"/>
-  <!-- Cape shoulder right -->
-  <path d="M 122 98 Q 105 108 80 103 Q 105 95 122 98 Z" fill="#b71c1c"/>
+  <defs>
+    <linearGradient id="cr-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d32f2f"/>
+      <stop offset="100%" stop-color="#b71c1c"/>
+    </linearGradient>
+  </defs>
+  <!-- Cape body -->
+  <path d="M 38 98 L 16 228 Q 80 250 144 228 L 122 98 Z" fill="url(#cr-red)" opacity="0.95"/>
+  <!-- Center fold shadow -->
+  <path d="M 80 98 L 74 230 Q 80 246 86 230 L 80 98 Z" fill="#7f0000" opacity="0.18"/>
+  <!-- Left side highlight -->
+  <path d="M 42 100 L 28 205 Q 50 218 64 210 L 60 106 Z" fill="#ef5350" opacity="0.15"/>
+  <!-- Right side highlight -->
+  <path d="M 118 100 L 132 205 Q 110 218 96 210 L 100 106 Z" fill="#ef5350" opacity="0.15"/>
+  <!-- Inner lining visible strip -->
+  <path d="M 54 104 L 38 222 Q 80 238 122 222 L 106 104 Z" fill="#ef5350" opacity="0.2"/>
+  <!-- Shoulder left drape -->
+  <path d="M 38 98 Q 56 110 80 105 Q 54 96 38 98 Z" fill="#b71c1c"/>
+  <!-- Shoulder right drape -->
+  <path d="M 122 98 Q 104 110 80 105 Q 106 96 122 98 Z" fill="#b71c1c"/>
   <!-- Collar clasp -->
-  <circle cx="80" cy="100" r="5" fill="#ffd600" stroke="#f9a825" stroke-width="1"/>
+  <circle cx="80" cy="101" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
+  <circle cx="80" cy="101" r="3" fill="#ff8f00"/>
+  <circle cx="79" cy="100" r="1" fill="white" opacity="0.6"/>
 </svg>

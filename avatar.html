@@ -87,6 +87,36 @@
       align-self: flex-start;
     }
 
+    /* ── Avatar wrap + aura (P5 future-effects structure) ── */
+
+    .avatar-wrap {
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Aura layer — currently only subtle glow for legendary.
+       Idle bounce, pulse, etc. can be wired here later
+       by adding CSS animations to .avatar-wrap[data-highest-rarity="legendary"] */
+    .avatar-aura {
+      position: absolute;
+      inset: -10px;
+      border-radius: 20px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .avatar-wrap[data-highest-rarity="legendary"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.09) 0%, transparent 65%);
+      opacity: 1;
+    }
+
+    .avatar-wrap[data-highest-rarity="rare"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(25,118,210,0.07) 0%, transparent 65%);
+      opacity: 1;
+    }
+
     /* Paper-doll canvas */
     #avatar-preview {
       position: relative;
@@ -95,7 +125,15 @@
       border-radius: 10px;
       background: radial-gradient(ellipse at 50% 30%, #1e2060 0%, #0a0a20 100%);
       overflow: visible;
-      flex-shrink: 0;
+    }
+
+    /* Preview border changes with highest-rarity equipped */
+    .avatar-wrap[data-highest-rarity="legendary"] #avatar-preview {
+      box-shadow: 0 0 0 2px rgba(255,215,0,0.5), 0 0 14px rgba(255,215,0,0.15);
+    }
+
+    .avatar-wrap[data-highest-rarity="rare"] #avatar-preview {
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.45), 0 0 10px rgba(25,118,210,0.12);
     }
 
     .avatar-layer {
@@ -106,6 +144,19 @@
       height: 100%;
       object-fit: contain;
       pointer-events: none;
+    }
+
+    /* Synergy active badge (shown under slot list) */
+    .synergy-active-badge {
+      width: 100%;
+      font-size: 10px;
+      color: #ce93d8;
+      text-align: center;
+      padding: 5px 10px;
+      background: #1a0a3a;
+      border: 1px solid #4a2a7a;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
     }
 
     /* Slot status list */
@@ -140,6 +191,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    /* Rarity dot in slot list */
+    .rarity-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     .slot-empty {
@@ -171,17 +235,66 @@
     /* ── Item card ───────────────────────────────────────── */
 
     .item-card {
+      position: relative;           /* needed for ::before/::after sparkles */
       background: #10103a;
       border: 2px solid #2a2a5a;
       border-radius: 10px;
       padding: 10px;
       text-align: center;
-      transition: border-color 0.12s, background 0.12s;
+      transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
     }
 
     .item-card.equipped {
       border-color: #4caf50;
       background: #0a2a0a;
+    }
+
+    /* Rarity borders + glows (P2) */
+    .item-card[data-rarity="uncommon"] {
+      border-color: #2e7d32;
+    }
+
+    .item-card[data-rarity="rare"] {
+      border-color: #1976d2;
+      box-shadow: 0 0 10px rgba(25,118,210,0.2);
+    }
+
+    .item-card[data-rarity="legendary"] {
+      border-color: #ffa000;
+      background: linear-gradient(160deg, #12102e 80%, #1c1400 100%);
+      box-shadow: 0 0 16px rgba(255,160,0,0.2), inset 0 0 0 1px rgba(255,215,0,0.08);
+    }
+
+    .item-card[data-rarity="legendary"] .item-name {
+      color: #ffd700;
+    }
+
+    .item-card.equipped[data-rarity="legendary"] {
+      border-color: #ffb300;
+      box-shadow: 0 0 22px rgba(255,179,0,0.35), 0 0 8px rgba(255,152,0,0.2);
+    }
+
+    /* Legendary sparkle corner accents (no animation — static) */
+    .item-card[data-rarity="legendary"]::before {
+      content: "✦";
+      position: absolute;
+      top: 5px;
+      right: 7px;
+      font-size: 9px;
+      color: #ffd700;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    .item-card[data-rarity="legendary"]::after {
+      content: "✦";
+      position: absolute;
+      bottom: 5px;
+      left: 7px;
+      font-size: 7px;
+      color: #ffd700;
+      opacity: 0.4;
+      pointer-events: none;
     }
 
     .item-thumb {
@@ -227,9 +340,19 @@
     .slot-label {
       font-size: 11px;
       color: #555588;
-      margin-bottom: 9px;
+      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    /* Synergy theme hint (P4) */
+    .synergy-hint {
+      font-size: 9px;
+      color: #7c6fa0;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+      font-style: italic;
     }
 
     .equip-btn {
@@ -303,8 +426,15 @@
   <!-- Left: paper-doll preview + slot status -->
   <div class="avatar-panel">
     <div class="panel-title">Preview</div>
-    <div id="avatar-preview"><!-- layers injected by JS --></div>
+
+    <!-- avatar-wrap holds aura + preview (P5 structure) -->
+    <div class="avatar-wrap" id="avatarWrap" data-highest-rarity="">
+      <div class="avatar-aura"></div>
+      <div id="avatar-preview"><!-- layers injected by JS --></div>
+    </div>
+
     <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
+    <div class="synergy-active-badge" id="synergyBadge" style="display:none"></div>
   </div>
 
   <!-- Right: inventory -->
@@ -313,7 +443,7 @@
     <div class="inventory-grid" id="inventoryGrid"></div>
     <p class="empty-state" id="emptyState" style="display:none">
       Du ejer ingen items endnu.<br>
-      <a href="shop.html">Gå i butikken</a> for at kobe noget!
+      <a href="shop.html">Gå i butikken</a> for at købe noget!
     </p>
   </div>
 
@@ -353,7 +483,7 @@ const RARITY_COLORS = {
 const RARITY_LABELS = {
   common:    "Almindelig",
   uncommon:  "Ualmindelig",
-  rare:      "Sjaelden",
+  rare:      "Sjælden",
   legendary: "Legendarisk",
 };
 
@@ -380,6 +510,24 @@ const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
 const ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
 
 const BASE_SRC = "/assets/avatar/base/body.svg";
+
+// Rarity priority for avatar-wrap highest-rarity attribute (P5)
+const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
+
+// Item → theme membership (P4). Items in the same theme can form a synergy.
+// Themes only appear when 2+ items of the same theme are simultaneously equipped.
+const ITEM_THEMES = {
+  "armor-knight": "Ridder-sæt",
+  "crown-golden": "Ridder-sæt",
+  "wings-dragon": "Drage-sæt",
+  "pirate-hat":   "Pirat-sæt",
+  "panda-mask":   "Panda-sæt",
+  "ninja-mask":   "Ninja-sæt",
+  "hero-mask":    "Helte-sæt",
+  "galaxy-cape":  "Galakse-sæt",
+  "cape-red":     "Kappe-sæt",
+  "crown-silver": "Is-sæt",
+};
 
 // ── In-memory state ───────────────────────────────────────────────────────────
 
@@ -441,6 +589,37 @@ async function loadAll() {
   renderAll();
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getHighestRarity() {
+  const equippedRarities = ALL_SLOTS
+    .map(slot => equippedSlots[slot])
+    .filter(Boolean)
+    .map(id => ownedItems.find(i => i.id === id)?.rarity)
+    .filter(Boolean);
+
+  for (const r of RARITY_ORDER) {
+    if (equippedRarities.includes(r)) return r;
+  }
+  return null;
+}
+
+function getActiveSynergy() {
+  const equippedThemes = ALL_SLOTS
+    .map(slot => equippedSlots[slot])
+    .filter(Boolean)
+    .map(id => ITEM_THEMES[id])
+    .filter(Boolean);
+
+  const counts = {};
+  for (const t of equippedThemes) counts[t] = (counts[t] ?? 0) + 1;
+
+  for (const [theme, count] of Object.entries(counts)) {
+    if (count >= 2) return theme;
+  }
+  return null;
+}
+
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
 function renderAll() {
@@ -451,6 +630,7 @@ function renderAll() {
 
 function renderAvatar() {
   const preview = document.getElementById("avatar-preview");
+  const wrap    = document.getElementById("avatarWrap");
   preview.innerHTML = "";
 
   // Layer 0: base body (always visible)
@@ -476,25 +656,44 @@ function renderAvatar() {
     img.alt = item.name ?? "";
     preview.appendChild(img);
   });
+
+  // Set highest rarity on wrap for CSS aura + border (P5)
+  if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
 }
 
 function renderSlotList() {
   const list = document.getElementById("slotList");
 
   list.innerHTML = ALL_SLOTS.map(slot => {
-    const itemId = equippedSlots[slot];
-    const item   = itemId ? ownedItems.find(i => i.id === itemId) : null;
-    const label  = SLOT_LABELS[slot] ?? slot;
+    const itemId   = equippedSlots[slot];
+    const item     = itemId ? ownedItems.find(i => i.id === itemId) : null;
+    const label    = SLOT_LABELS[slot] ?? slot;
+    const dotColor = item?.rarity ? (RARITY_COLORS[item.rarity] ?? null) : null;
 
     return `
       <div class="slot-row">
         <span class="slot-name">${label}</span>
         ${item
-          ? `<span class="slot-item-name">${item.name}</span>`
+          ? `<span class="slot-item-name">
+               ${dotColor ? `<span class="rarity-dot" style="background:${dotColor}"></span>` : ""}
+               ${item.name}
+             </span>`
           : `<span class="slot-empty">Tom</span>`}
       </div>
     `;
   }).join("");
+
+  // Synergy badge (P4) — only when 2+ items of same theme are equipped
+  const badge = document.getElementById("synergyBadge");
+  if (badge) {
+    const activeSynergy = getActiveSynergy();
+    if (activeSynergy) {
+      badge.textContent = "✨ " + activeSynergy + " aktiv";
+      badge.style.display = "block";
+    } else {
+      badge.style.display = "none";
+    }
+  }
 }
 
 function renderInventory() {
@@ -520,6 +719,12 @@ function renderInventory() {
     const slotLabel   = hasSlot ? (SLOT_LABELS[item.slot_type] ?? item.slot_type) : "—";
     const slotEmoji   = hasSlot ? (SLOT_EMOJIS[item.slot_type] ?? "") : "";
 
+    // Synergy theme hint (P4) — shown on every item with a theme affiliation
+    const theme    = ITEM_THEMES[item.id] ?? null;
+    const themeHtml = theme
+      ? `<div class="synergy-hint">&#9836; ${theme}</div>`
+      : "";
+
     const thumbHtml = item.image_url
       ? `<img class="item-thumb" src="${item.image_url}" alt="${item.name ?? ""}">`
       : `<div class="item-thumb-placeholder">${slotEmoji || "?"}</div>`;
@@ -538,11 +743,13 @@ function renderInventory() {
 
     const card = document.createElement("div");
     card.className = "item-card" + (isEquipped ? " equipped" : "");
+    card.dataset.rarity = item.rarity ?? "common";  // used by rarity CSS (P2)
     card.innerHTML = `
       ${thumbHtml}
       <div class="item-name">${item.name}</div>
       <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>
       <div class="slot-label">${slotEmoji} ${slotLabel}</div>
+      ${themeHtml}
       ${actionHtml}
     `;
     grid.appendChild(card);

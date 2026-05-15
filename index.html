@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="da">
 <head>
   <link rel="stylesheet" href="style.css">
@@ -50,20 +50,51 @@
 
     .game-container {
       display: flex;
-      gap: 30px;
+      gap: 24px;
       align-items: flex-start;
     }
 
+    /* ── Quiz avatar ─────────────────────────────────────────── */
+
     .avatar-box {
-      width: 140px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
-    .avatar-box img {
-      width: 100%;
+    #avatar-display {
+      position: relative;
+      width: 160px;
+      height: 240px;
       border-radius: 12px;
-      background: #ddd;
+      background: radial-gradient(ellipse at 50% 35%, #1e2060 0%, #080818 100%);
+      border: 2px solid #2a2a5a;
+      overflow: visible;
     }
+
+    .quiz-avatar-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .avatar-link {
+      font-size: 11px;
+      color: #7788bb;
+      text-decoration: none;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    .avatar-link:hover { color: #aabbee; }
+
+    /* ── Question area ───────────────────────────────────────── */
 
     .question-box {
       flex: 1;
@@ -182,6 +213,18 @@
       font-size: 24px;
       color: #fff;
     }
+
+    /* Responsive: narrow screens stack avatar above question */
+    @media (max-width: 520px) {
+      .game-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      #avatar-display {
+        width: 120px;
+        height: 180px;
+      }
+    }
   </style>
 </head>
 
@@ -206,7 +249,8 @@
   <div class="game-container">
 
     <div class="avatar-box">
-      <div id="avatar-display">Indlæser...</div>
+      <div id="avatar-display"></div>
+      <a href="avatar.html" class="avatar-link">&#128084; Skift udseende</a>
     </div>
 
     <div class="question-box">

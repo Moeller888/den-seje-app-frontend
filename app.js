@@ -168,36 +168,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     const avatarDisplay = document.getElementById("avatar-display");
     if (!avatarDisplay) return;
 
-    const { data: profile } = await supabase
+    const BASE_SRC = "/assets/avatar/base/body.svg";
+    const QUIZ_SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
+    const QUIZ_ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
+
+    avatarDisplay.innerHTML = "";
+
+    // Base body always visible — render immediately (no network wait)
+    const base = document.createElement("img");
+    base.className = "quiz-avatar-layer";
+    base.src = BASE_SRC;
+    base.style.zIndex = "0";
+    base.alt = "";
+    avatarDisplay.appendChild(base);
+
+    // Load equipped slots from profiles
+    const { data: profileData } = await supabase
       .from("profiles")
-      .select("active_avatar")
+      .select("equipped_slots")
       .eq("id", studentId)
       .maybeSingle();
 
-    const activeId = profile?.active_avatar ?? null;
+    const equippedSlots = profileData?.equipped_slots ?? {};
+    const equippedIds = Object.values(equippedSlots).filter(Boolean);
 
-    if (!activeId) {
-      avatarDisplay.textContent = "Ingen avatar";
-      return;
-    }
+    if (equippedIds.length === 0) return;
 
-    const { data: item } = await supabase
+    // Load image_url for each equipped item
+    const { data: shopItems } = await supabase
       .from("shop_items")
-      .select("name, image_url")
-      .eq("id", activeId)
-      .maybeSingle();
+      .select("id, image_url, slot_type")
+      .in("id", equippedIds);
 
-    if (!item) {
-      avatarDisplay.textContent = "Ingen avatar";
-      return;
-    }
+    if (!shopItems) return;
 
-    const img = document.createElement("img");
-    img.src = item.image_url || "";
-    img.alt = item.name || "Avatar";
+    QUIZ_ALL_SLOTS.forEach(slot => {
+      const itemId = equippedSlots[slot];
+      if (!itemId) return;
+      const item = shopItems.find(i => i.id === itemId);
+      if (!item || !item.image_url) return;
 
-    avatarDisplay.innerHTML = "";
-    avatarDisplay.appendChild(img);
+      const img = document.createElement("img");
+      img.className = "quiz-avatar-layer";
+      img.src = item.image_url;
+      img.style.zIndex = String(QUIZ_SLOT_Z[slot] ?? 1);
+      img.alt = "";
+      avatarDisplay.appendChild(img);
+    });
   }
 
   function showCoinPopup(amount) {
