@@ -20,6 +20,8 @@ const SOUND_MAP = {
 const MIN_INTERVAL_MS = 100;
 const _lastPlayed = {};
 const _cache      = {};
+let   _volume     = 0.30;
+let   _muted      = false;
 
 export function playSound(name) {
   const src = SOUND_MAP[name] ?? null;
@@ -32,10 +34,24 @@ export function playSound(name) {
   try {
     if (!_cache[name]) {
       const el  = new Audio(src);
-      el.volume = 0.3;
+      el.volume = _muted ? 0 : _volume;
       _cache[name] = el;
     }
     _cache[name].currentTime = 0;
     _cache[name].play().catch(() => {});
   } catch {}
+}
+
+export function setVolume(v) {
+  _volume = Math.max(0, Math.min(1, v));
+  for (const name of Object.keys(_cache)) {
+    _cache[name].volume = _muted ? 0 : _volume;
+  }
+}
+
+export function setMuted(b) {
+  _muted = !!b;
+  for (const name of Object.keys(_cache)) {
+    _cache[name].volume = _muted ? 0 : _volume;
+  }
 }
