@@ -266,6 +266,17 @@
     }
     .avatar-cta-btn:hover { background: #132844; color: #bbdefb; }
 
+    /* ── Coin spend flash ────────────────────────────────── */
+    @keyframes coinSpendFlash {
+      0%   { transform: scale(1);    opacity: 1;    }
+      30%  { transform: scale(0.86); opacity: 0.6;  }
+      100% { transform: scale(1);    opacity: 1;    }
+    }
+    .coins-spend-flash {
+      display: inline-block;
+      animation: coinSpendFlash 320ms ease;
+    }
+
     /* ── Post-purchase success state ────────────────────── */
 
     .buy-success-state {
@@ -343,7 +354,10 @@
 <div class="shop-grid" id="shopGrid"></div>
 
 <script type="module">
-import { supabase } from "./supabaseClient.js";
+import { supabase }   from "./supabaseClient.js";
+import { showToast }  from "./js/toast.js";
+import { playSound }  from "./js/audio.js";
+import { emit }       from "./js/events.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -518,10 +532,12 @@ async function loadShop() {
     const card = document.createElement("div");
     card.className = "shop-card" + (isOwned ? " is-owned" : "");
 
-    // F5: data attributes for future targeting (bundles, featured, events)
-    card.dataset.rarity   = item.rarity ?? "common";
-    card.dataset.slotType = item.slot_type ?? "";
-    card.dataset.itemId   = item.id;
+    // F5: data attributes for CSS/JS targeting — retention groundwork
+    card.dataset.rarity     = item.rarity ?? "common";
+    card.dataset.slotType   = item.slot_type ?? "";
+    card.dataset.itemId     = item.id;
+    card.dataset.isLimited  = String(item.is_limited  ?? false);
+    card.dataset.eventItem  = String(item.event_item  ?? false);
 
     // F1 + F2: paper-doll preview (isNew drives badge inside preview)
     const previewEl = createMiniPaperDoll(
@@ -608,16 +624,31 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
 
   if (!res.ok || result?.error) {
     console.error("BUY ERROR:", result);
-    alert(result?.error || "Fejl ved køb");
+    const errMsg = String(result?.error ?? "");
+    const isCoins = errMsg.toLowerCase().includes("coin") || errMsg.toLowerCase().includes("insufficient");
+    showToast(isCoins ? "Ikke nok monter!" : (errMsg || "Fejl ved køb – prøv igen"), "error");
     btn.disabled = false;
     btn.textContent = "Køb";
     return;
+  }
+
+  // Coin flash — triggers as the number updates
+  const coinsEl = document.getElementById("coinsDisplay");
+  if (coinsEl) {
+    coinsEl.classList.add("coins-spend-flash");
+    coinsEl.addEventListener("animationend", () => coinsEl.classList.remove("coins-spend-flash"), { once: true });
   }
 
   await loadCoins();
 
   // In-place card transition — no full re-render, preserves scroll position
   const card = btn.closest(".shop-card");
+  const itemRarity   = card?.dataset.rarity   ?? null;
+  const itemSlotType = card?.dataset.slotType ?? null;
+
+  showToast("✓ Køb gennemført!", "success");
+  playSound("buy");
+  emit("item:purchased", { itemId, rarity: itemRarity, slotType: itemSlotType });
   if (card) {
     card.classList.add("is-owned");
     const priceTag = card.querySelector(".price-tag");

@@ -430,6 +430,30 @@
     }
 
     .empty-state a { color: #4fc3f7; }
+
+    /* ── Equip layer fade-in (animate=true path only) ─────── */
+    @keyframes layerFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to   { opacity: 1; transform: scale(1);    }
+    }
+    .layer-fade-in { animation: layerFadeIn 280ms ease both; }
+
+    /* ── Legendary pulse on equip ─────────────────────────── */
+    @keyframes legendaryPulse {
+      0%   { box-shadow: none; }
+      35%  { box-shadow: 0 0 0 8px rgba(255,215,0,0.38), 0 0 28px rgba(255,215,0,0.2); }
+      100% { box-shadow: none; }
+    }
+    .legendary-pulse #avatar-preview { animation: legendaryPulse 600ms ease both; }
+
+    /* ── Equipped item hover polish ───────────────────────── */
+    .item-card.equipped:hover {
+      border-color: #66bb6a;
+      box-shadow: 0 0 14px rgba(76,175,80,0.28);
+    }
+    .item-card.equipped[data-rarity="legendary"]:hover {
+      box-shadow: 0 0 26px rgba(255,179,0,0.45);
+    }
   </style>
 </head>
 <body>
@@ -470,6 +494,9 @@
 
 <script type="module">
 import { supabase } from "./supabaseClient.js";
+import { showToast } from "./js/toast.js";
+import { playSound } from "./js/audio.js";
+import { emit }      from "./js/events.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -656,18 +683,18 @@ function getActiveSynergy() {
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
-function renderAll() {
-  renderAvatar();
+function renderAll(animate = false) {
+  renderAvatar(animate);
   renderSlotList();
   renderInventory();
 }
 
-function renderAvatar() {
+function renderAvatar(animate = false) {
   const preview = document.getElementById("avatar-preview");
   const wrap    = document.getElementById("avatarWrap");
   preview.innerHTML = "";
 
-  // Layer 0: base body (always visible)
+  // Layer 0: base body (always visible — never animated, always present)
   const base = document.createElement("img");
   base.className = "avatar-layer";
   base.src = BASE_SRC;
@@ -684,7 +711,7 @@ function renderAvatar() {
     if (!item || !item.image_url) return;
 
     const img = document.createElement("img");
-    img.className = "avatar-layer";
+    img.className = animate ? "avatar-layer layer-fade-in" : "avatar-layer";
     img.src = item.image_url;
     img.style.zIndex = String(SLOT_Z[slot] ?? 1);
     img.alt = item.name ?? "";
@@ -692,7 +719,16 @@ function renderAvatar() {
   });
 
   // Set highest rarity on wrap for CSS aura + border (P5)
-  if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
+  const highest = getHighestRarity() ?? "";
+  if (wrap) {
+    wrap.dataset.highestRarity = highest;
+    if (animate && highest === "legendary") {
+      wrap.classList.remove("legendary-pulse");
+      void wrap.offsetWidth;
+      wrap.classList.add("legendary-pulse");
+      setTimeout(() => wrap.classList.remove("legendary-pulse"), 650);
+    }
+  }
 }
 
 function renderSlotList() {
@@ -820,17 +856,22 @@ async function handleEquip(itemId) {
 
   if (error) {
     console.error("EQUIP ERROR:", error);
-    alert("Kunne ikke udstyre: " + error.message);
+    showToast("Kunne ikke udstyre – prøv igen", "error");
     renderInventory();
     return;
   }
 
-  const slot = data?.slot;
+  const slot = data?.slot ?? null;
   if (slot) {
     equippedSlots = { ...equippedSlots, [slot]: itemId };
   }
 
-  renderAll();
+  const item = ownedItems.find(i => i.id === itemId);
+  showToast("✓ " + (item?.name ?? "Item") + " udstyret", "success");
+  playSound("equip");
+  emit("item:equipped", { itemId, slot, rarity: item?.rarity ?? null });
+
+  renderAll(true);
 }
 
 async function handleUnequip(slot) {
@@ -838,7 +879,7 @@ async function handleUnequip(slot) {
 
   if (error) {
     console.error("UNEQUIP ERROR:", error);
-    alert("Kunne ikke fjerne: " + error.message);
+    showToast("Kunne ikke fjerne – prøv igen", "error");
     renderInventory();
     return;
   }
@@ -847,7 +888,8 @@ async function handleUnequip(slot) {
   delete next[slot];
   equippedSlots = next;
 
-  renderAll();
+  emit("item:unequipped", { slot });
+  renderAll(true);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
