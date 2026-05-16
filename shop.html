@@ -266,6 +266,52 @@
     }
     .avatar-cta-btn:hover { background: #132844; color: #bbdefb; }
 
+    /* ── Post-purchase success state ────────────────────── */
+
+    .buy-success-state {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .bought-success {
+      font-size: 12px;
+      font-weight: bold;
+      color: #66bb6a;
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .equip-now-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: #2e7d32;
+      transition: opacity 0.1s;
+    }
+    .equip-now-btn:hover:not(:disabled) { opacity: 0.88; }
+    .equip-now-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .later-btn {
+      display: block;
+      width: 100%;
+      padding: 5px 4px;
+      background: transparent;
+      border: 1px solid #2a2a5a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      color: #6666aa;
+      transition: border-color 0.1s, color 0.1s;
+    }
+    .later-btn:hover { border-color: #4444aa; color: #9999cc; }
+
     /* ── States ──────────────────────────────────────────── */
 
     .shop-empty {
@@ -508,6 +554,28 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
   const cta = e.target.closest("[data-action='goto-avatar']");
   if (cta) { window.location.href = "avatar.html"; return; }
 
+  const equipNowBtn = e.target.closest("[data-action='equip-now']");
+  if (equipNowBtn && !equipNowBtn.disabled) {
+    const itemId = equipNowBtn.dataset.itemId;
+    if (!itemId) return;
+    equipNowBtn.disabled = true;
+    equipNowBtn.textContent = "...";
+    const { error } = await supabase.rpc("equip_item", { p_item_id: itemId });
+    if (error) {
+      console.error("EQUIP ERROR:", error);
+      equipNowBtn.disabled = false;
+      equipNowBtn.textContent = "Udstyr nu";
+      const statusEl = equipNowBtn.closest(".buy-success-state")?.querySelector(".bought-success");
+      if (statusEl) { statusEl.textContent = "⚠️ Fejl – prøv igen"; statusEl.style.color = "#ef5350"; }
+      return;
+    }
+    window.location.href = "avatar.html";
+    return;
+  }
+
+  const laterBtn = e.target.closest("[data-action='buy-later']");
+  if (laterBtn) { await loadShop(); return; }
+
   const btn = e.target.closest(".buy-btn[data-item-id]");
   if (!btn || btn.disabled) return;
 
@@ -546,9 +614,34 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
     return;
   }
 
-  // Refresh coins + re-render shop to show owned state
   await loadCoins();
-  await loadShop();
+
+  // In-place card transition — no full re-render, preserves scroll position
+  const card = btn.closest(".shop-card");
+  if (card) {
+    card.classList.add("is-owned");
+    const priceTag = card.querySelector(".price-tag");
+    if (priceTag) priceTag.remove();
+
+    const hasSlot = !!card.dataset.slotType;
+    const successEl = document.createElement("div");
+    successEl.className = "buy-success-state";
+
+    if (hasSlot) {
+      successEl.innerHTML = `
+        <div class="bought-success">&#10003; K&#248;bt!</div>
+        <button class="equip-now-btn" data-action="equip-now" data-item-id="${itemId}">Udstyr nu</button>
+        <button class="later-btn" data-action="buy-later">Senere</button>
+      `;
+    } else {
+      successEl.innerHTML = `<div class="bought-success">&#10003; K&#248;bt!</div>`;
+      setTimeout(() => loadShop(), 1200);
+    }
+
+    btn.replaceWith(successEl);
+  } else {
+    await loadShop();
+  }
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
