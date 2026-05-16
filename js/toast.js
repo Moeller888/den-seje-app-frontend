@@ -4,6 +4,7 @@
 // Safe to import on any page — no duplicate DOM mounts per document load.
 
 const CONTAINER_ID = "dsj-toast-container";
+const STYLES_ID    = "dsj-toast-styles";
 
 const COLORS = {
   success: { bg: "#1b5e20", border: "#2e7d32", color: "#a5d6a7" },
@@ -14,8 +15,10 @@ const COLORS = {
 function ensureContainer() {
   if (document.getElementById(CONTAINER_ID)) return;
 
-  const style = document.createElement("style");
-  style.textContent = `
+  if (!document.getElementById(STYLES_ID)) {
+    const style = document.createElement("style");
+    style.id = STYLES_ID;
+    style.textContent = `
     #${CONTAINER_ID} {
       position: fixed;
       top: 16px;
@@ -50,7 +53,8 @@ function ensureContainer() {
       to   { opacity: 0; transform: translateX(18px); }
     }
   `;
-  document.head.appendChild(style);
+    document.head.appendChild(style);
+  }
 
   const container = document.createElement("div");
   container.id = CONTAINER_ID;
