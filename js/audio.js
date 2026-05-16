@@ -1,20 +1,25 @@
 // ── Audio hook ────────────────────────────────────────────────────────────────
-// Central registry for UI sounds. All entries are null until audio assets are
-// placed in /assets/audio/ and the path is set here.
-// playSound() is always safe to call — missing assets are graceful no-ops.
+// Central registry for UI sounds.
+// playSound() is always safe to call — null src = graceful no-op.
 //
-// Rate limiting: minimum 100ms between plays of the same sound.
-// Prevents audio stacking on rapid equip/buy taps without affecting single-tap feel.
-// No timers, no cleanup — _lastPlayed is bounded by SOUND_MAP key count.
+// Strategy: lazy singleton per sound name.
+// First call creates one HTMLAudioElement and caches it in _cache.
+// Subsequent calls reset currentTime and replay the cached element —
+// no re-decode, no GC churn, instant response.
+//
+// Rate limiting: 100ms minimum between plays of the same sound.
+// Prevents stacking on rapid taps. No timers, no cleanup.
+// _cache and _lastPlayed are bounded by SOUND_MAP key count.
 
 const SOUND_MAP = {
-  equip: null,  // activate: "/assets/audio/equip.mp3"
-  buy:   null,  // activate: "/assets/audio/buy.mp3"
-  error: null,  // activate: "/assets/audio/error.mp3"
+  equip: "/assets/audio/equip.wav",
+  buy:   "/assets/audio/buy.wav",
+  error: "/assets/audio/error.wav",
 };
 
 const MIN_INTERVAL_MS = 100;
 const _lastPlayed = {};
+const _cache      = {};
 
 export function playSound(name) {
   const src = SOUND_MAP[name] ?? null;
@@ -25,8 +30,12 @@ export function playSound(name) {
   _lastPlayed[name] = now;
 
   try {
-    const audio = new Audio(src);
-    audio.volume = 0.3;
-    audio.play().catch(() => {});
+    if (!_cache[name]) {
+      const el  = new Audio(src);
+      el.volume = 0.3;
+      _cache[name] = el;
+    }
+    _cache[name].currentTime = 0;
+    _cache[name].play().catch(() => {});
   } catch {}
 }
