@@ -1,5 +1,6 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
+import { playSound } from "./js/audio.js";
 
 window.__sb = supabase;
 
@@ -233,10 +234,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!overlay || !text) return;
     text.textContent = `Du er nu level ${newLevel}!`;
     overlay.style.display = "flex";
-    setTimeout(() => { overlay.style.display = "none"; }, 2500);
+    overlay.style.opacity = "0";
+    void overlay.offsetWidth;
+    overlay.style.opacity = "1";
+    setTimeout(() => {
+      overlay.style.opacity = "0";
+      setTimeout(() => { overlay.style.display = "none"; overlay.style.opacity = ""; }, 250);
+    }, 2250);
   }
 
-  async function submitAnswer(userAnswer) {
+  async function submitAnswer(userAnswer, clickedBtn = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
 
@@ -291,10 +298,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
       feedback.style.color = "green";
+      playSound("equip");
+      if (clickedBtn) {
+        clickedBtn.classList.add("correct-flash");
+        clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("correct-flash"), { once: true });
+      }
 
     } else if (data.status === "incorrect") {
       feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
       feedback.style.color = "red";
+      playSound("error");
+      if (clickedBtn) {
+        clickedBtn.classList.add("incorrect-flash");
+        clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("incorrect-flash"), { once: true });
+      }
 
     } else {
       logError("UNKNOWN_STATUS", data.status);
@@ -386,7 +403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
-        submitAnswer(textarea.value);
+        submitAnswer(textarea.value, btn);
       };
 
       textarea.addEventListener("keydown", (e) => {
@@ -415,7 +432,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.onclick = () => {
         const val = Number(input.value);
         if (!Number.isNaN(val)) {
-          submitAnswer(String(val));
+          submitAnswer(String(val), btn);
         }
       };
 
@@ -435,7 +452,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
-        submitAnswer(textarea.value);
+        submitAnswer(textarea.value, btn);
       };
 
       textarea.addEventListener("keydown", (e) => {
@@ -453,7 +470,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     options.forEach((option) => {
       const btn = document.createElement("button");
       btn.textContent = option;
-      btn.onclick = () => submitAnswer(option);
+      btn.onclick = () => submitAnswer(option, btn);
       optionsContainer.appendChild(btn);
     });
   }

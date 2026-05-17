@@ -857,6 +857,7 @@ async function handleEquip(itemId) {
   if (error) {
     console.error("EQUIP ERROR:", error);
     showToast("Kunne ikke udstyre – prøv igen", "error");
+    playSound("error");
     renderInventory();
     return;
   }
@@ -880,6 +881,7 @@ async function handleUnequip(slot) {
   if (error) {
     console.error("UNEQUIP ERROR:", error);
     showToast("Kunne ikke fjerne – prøv igen", "error");
+    playSound("error");
     renderInventory();
     return;
   }

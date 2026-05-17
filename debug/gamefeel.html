@@ -74,7 +74,7 @@
     .sandbox-grid {
       display: grid;
       grid-template-columns: 210px 1fr 252px;
-      grid-template-rows: auto auto;
+      grid-template-rows: auto auto auto;
       gap: 10px;
       padding: 10px 16px 16px;
       align-items: start;
@@ -102,6 +102,7 @@
     .panel-toast  { grid-column: 1; grid-row: 2; }
     .panel-avatar { grid-column: 2; grid-row: 1 / 3; }
     .panel-diag   { grid-column: 3; grid-row: 1 / 3; }
+    .panel-quiz   { grid-column: 1 / 4; grid-row: 3; }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     .sb-btn {
@@ -317,6 +318,135 @@
       margin-top: 5px;
       line-height: 1.5;
     }
+
+    /* ── Quiz feel panel ────────────────────────────────────────────── */
+
+    .quiz-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .quiz-row:last-child { margin-bottom: 0; }
+
+    .quiz-row-label {
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: var(--mono);
+      width: 100%;
+      margin-bottom: 2px;
+    }
+
+    /* Mimics a real quiz answer button (browser-default-ish look on light bg) */
+    .quiz-answer-btn {
+      padding: 9px 20px;
+      background: #f0f0f2;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      color: #222;
+      transition: background 0.1s;
+    }
+
+    /* Answer flash animations — identical to index.html */
+    @keyframes quizPop {
+      0%   { transform: scale(1);    }
+      50%  { transform: scale(1.03); }
+      100% { transform: scale(1);    }
+    }
+    @keyframes quizShake {
+      0%   { transform: translateX(0);   }
+      25%  { transform: translateX(-5px);}
+      50%  { transform: translateX(5px); }
+      75%  { transform: translateX(-5px);}
+      100% { transform: translateX(0);   }
+    }
+    .correct-flash-demo {
+      background: #d4edda !important;
+      border-color: #4caf50 !important;
+      animation: quizPop 250ms ease;
+    }
+    .incorrect-flash-demo {
+      background: #f8d7da !important;
+      border-color: #f44336 !important;
+      animation: quizShake 250ms ease;
+    }
+
+    /* XP bar demo — identical mechanics to index.html */
+    .xp-bar-demo-wrap {
+      flex: 1;
+      min-width: 160px;
+      height: 16px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .xp-bar-demo-fill {
+      height: 100%;
+      background: #4caf50;
+      width: 35%;
+      transition: width 350ms ease;
+      border-radius: 4px;
+    }
+
+    /* Coin popup demo */
+    .coin-popup-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 90px;
+      height: 44px;
+    }
+    #demoCoinPopup {
+      position: absolute;
+      font-size: 22px;
+      font-weight: bold;
+      color: gold;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    @keyframes demoCoinPop {
+      0%   { opacity: 0; transform: scale(0.6) translateY(0);    }
+      50%  { opacity: 1; transform: scale(1.1) translateY(-10px);}
+      100% { opacity: 0; transform: scale(1)   translateY(-22px);}
+    }
+    .coin-pop-show {
+      animation: demoCoinPop 800ms ease forwards;
+    }
+
+    /* Level-up demo overlay */
+    #demoLevelUpOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: gold;
+      text-align: center;
+      transition: opacity 250ms ease;
+    }
+    .demo-lvl-title {
+      font-size: 44px;
+      font-weight: bold;
+      text-shadow: 0 0 20px gold;
+      margin-bottom: 8px;
+    }
+    .demo-lvl-sub {
+      font-size: 20px;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -475,6 +605,46 @@
 
   </div>
 
+  <!-- ── Row 3: Quiz Feel (full width) ─────────────────────────────── -->
+  <div class="panel panel-quiz">
+    <div class="panel-h">Quiz Feel — Answer Feedback (index.html)</div>
+
+    <!-- Answer button flash -->
+    <div class="quiz-row">
+      <div class="quiz-row-label">Answer Button Flash (correct-flash / incorrect-flash)</div>
+      <button class="quiz-answer-btn" id="demoAnswerBtn">1942</button>
+      <button class="sb-btn c-green" id="btnCorrectFlash" style="width:auto;margin:0">&#10003; Correct (pop + equip.wav)</button>
+      <button class="sb-btn c-red"   id="btnIncorrectFlash" style="width:auto;margin:0">&#10007; Incorrect (shake + error.wav)</button>
+    </div>
+
+    <!-- XP bar fill -->
+    <div class="quiz-row">
+      <div class="quiz-row-label">XP Bar (transition: width 350ms ease)</div>
+      <div class="xp-bar-demo-wrap"><div class="xp-bar-demo-fill" id="demoXpFill"></div></div>
+      <button class="sb-btn c-dim" id="btnXpFill" style="width:auto;margin:0">&#8594; Fill XP</button>
+    </div>
+
+    <!-- Coin popup -->
+    <div class="quiz-row">
+      <div class="quiz-row-label">Coin Popup (xpPop — showCoinPopup)</div>
+      <div class="coin-popup-wrap"><span id="demoCoinPopup">+3 monter</span></div>
+      <button class="sb-btn c-gold" id="btnCoinPopup" style="width:auto;margin:0">&#9711; Show popup</button>
+    </div>
+
+    <!-- Level-up overlay -->
+    <div class="quiz-row">
+      <div class="quiz-row-label">Level-Up Overlay (250ms fade in/out &mdash; showLevelUpOverlay)</div>
+      <button class="sb-btn c-gold" id="btnLevelUp" style="width:auto;margin:0">&#8679; Trigger level up</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Level-up demo overlay (full-screen, mirrors index.html exactly) -->
+<div id="demoLevelUpOverlay">
+  <div class="demo-lvl-title">LEVEL UP! &#127881;</div>
+  <div class="demo-lvl-sub">Du er nu level 5!</div>
 </div>
 
 <script type="module">
@@ -516,15 +686,13 @@ const st = {
   audioUnlocked: false,
   toastCount:    0,
   layerIdx:      0,
-  // Per-sound tracking. We mirror audio.js rate-limit logic to predict
-  // whether a given press will actually result in a play.
   cache:   { equip: false, buy: false, error: false },
-  lastPlay: {},        // timestamp of last predicted-successful play
+  lastPlay: {},
   press:   { equip: 0, buy: 0, error: 0 },
   played:  { equip: 0, buy: 0, error: 0 },
 };
 
-const RATE_LIMIT_MS = 100; // must match audio.js MIN_INTERVAL_MS
+const RATE_LIMIT_MS = 100;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const avatarWrap      = document.getElementById("avatarWrap");
@@ -538,7 +706,6 @@ const volVal          = document.getElementById("volVal");
 const muteBtn         = document.getElementById("muteBtn");
 
 // ── Audio wrapper ─────────────────────────────────────────────────────────────
-// Mirrors audio.js rate-limit logic to track press vs actual-play counts.
 function play(name) {
   const now = Date.now();
   st.press[name]++;
@@ -602,7 +769,7 @@ function triggerLegendaryPulse() {
   const saved = avatarWrap.dataset.highestRarity;
   avatarWrap.dataset.highestRarity = "legendary";
   avatarWrap.classList.remove("legendary-pulse");
-  void avatarWrap.offsetWidth; // force reflow to restart animation
+  void avatarWrap.offsetWidth;
   avatarWrap.classList.add("legendary-pulse");
   setTimeout(() => {
     avatarWrap.classList.remove("legendary-pulse");
@@ -614,7 +781,7 @@ function triggerLegendaryPulse() {
 // ── Trigger: coin flash ───────────────────────────────────────────────────────
 function triggerCoinFlash() {
   coinDisplay.classList.remove("coins-spend-flash");
-  void coinDisplay.offsetWidth; // force reflow to restart animation
+  void coinDisplay.offsetWidth;
   coinDisplay.classList.add("coins-spend-flash");
   coinDisplay.addEventListener("animationend", () => coinDisplay.classList.remove("coins-spend-flash"), { once: true });
   refreshDiag();
@@ -654,6 +821,55 @@ document.getElementById("btnEquipAnim").addEventListener("click",    triggerEqui
 document.getElementById("btnLegPulse").addEventListener("click",     triggerLegendaryPulse);
 document.getElementById("btnCoinFlash").addEventListener("click",    triggerCoinFlash);
 document.getElementById("btnResetAvatar").addEventListener("click",  resetAvatar);
+
+// ── Quiz feel: answer button flash ────────────────────────────────────────────
+const demoAnswerBtn = document.getElementById("demoAnswerBtn");
+
+document.getElementById("btnCorrectFlash").addEventListener("click", () => {
+  demoAnswerBtn.classList.remove("correct-flash-demo", "incorrect-flash-demo");
+  void demoAnswerBtn.offsetWidth;
+  demoAnswerBtn.classList.add("correct-flash-demo");
+  demoAnswerBtn.addEventListener("animationend", () => demoAnswerBtn.classList.remove("correct-flash-demo"), { once: true });
+  play("equip");
+});
+
+document.getElementById("btnIncorrectFlash").addEventListener("click", () => {
+  demoAnswerBtn.classList.remove("correct-flash-demo", "incorrect-flash-demo");
+  void demoAnswerBtn.offsetWidth;
+  demoAnswerBtn.classList.add("incorrect-flash-demo");
+  demoAnswerBtn.addEventListener("animationend", () => demoAnswerBtn.classList.remove("incorrect-flash-demo"), { once: true });
+  play("error");
+});
+
+// ── Quiz feel: XP bar fill ────────────────────────────────────────────────────
+let xpPct = 35;
+document.getElementById("btnXpFill").addEventListener("click", () => {
+  xpPct = xpPct >= 90 ? 5 : xpPct + 20;
+  document.getElementById("demoXpFill").style.width = xpPct + "%";
+});
+
+// ── Quiz feel: coin popup ─────────────────────────────────────────────────────
+const demoCoinPopup = document.getElementById("demoCoinPopup");
+document.getElementById("btnCoinPopup").addEventListener("click", () => {
+  demoCoinPopup.classList.remove("coin-pop-show");
+  void demoCoinPopup.offsetWidth;
+  demoCoinPopup.classList.add("coin-pop-show");
+  demoCoinPopup.addEventListener("animationend", () => demoCoinPopup.classList.remove("coin-pop-show"), { once: true });
+});
+
+// ── Quiz feel: level-up overlay ───────────────────────────────────────────────
+const demoLevelUpOverlay = document.getElementById("demoLevelUpOverlay");
+document.getElementById("btnLevelUp").addEventListener("click", () => {
+  if (demoLevelUpOverlay.style.display === "flex") return;
+  demoLevelUpOverlay.style.display = "flex";
+  demoLevelUpOverlay.style.opacity = "0";
+  void demoLevelUpOverlay.offsetWidth;
+  demoLevelUpOverlay.style.opacity = "1";
+  setTimeout(() => {
+    demoLevelUpOverlay.style.opacity = "0";
+    setTimeout(() => { demoLevelUpOverlay.style.display = "none"; demoLevelUpOverlay.style.opacity = ""; }, 250);
+  }, 2250);
+});
 
 // ── Diagnostics renderer ──────────────────────────────────────────────────────
 function timeAgo(ts) {

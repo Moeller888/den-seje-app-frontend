@@ -46,6 +46,7 @@
       height: 100%;
       background: green;
       width: 0%;
+      transition: width 350ms ease;
     }
 
     .game-container {
@@ -200,6 +201,7 @@
       flex-direction: column;
       color: gold;
       text-align: center;
+      transition: opacity 250ms ease;
     }
 
     #level-up-overlay .level-up-title {
@@ -212,6 +214,11 @@
     #level-up-overlay .level-up-subtitle {
       font-size: 24px;
       color: #fff;
+    }
+
+    #feedback {
+      transition: color 150ms ease;
+      min-height: 1.5em;
     }
 
     /* Responsive: narrow screens stack avatar above question */

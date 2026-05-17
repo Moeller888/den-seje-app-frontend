@@ -627,6 +627,7 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
     const errMsg = String(result?.error ?? "");
     const isCoins = errMsg.toLowerCase().includes("coin") || errMsg.toLowerCase().includes("insufficient");
     showToast(isCoins ? "Ikke nok monter!" : (errMsg || "Fejl ved køb – prøv igen"), "error");
+    playSound("error");
     btn.disabled = false;
     btn.textContent = "Køb";
     return;
