@@ -358,6 +358,7 @@ import { supabase }   from "./supabaseClient.js";
 import { showToast }  from "./js/toast.js";
 import { playSound }  from "./js/audio.js";
 import { emit }       from "./js/events.js";
+import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -401,17 +402,6 @@ const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
 // Sort order: legendary items shown first for maximum impact
 const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
 
-// "Ny!" shows for 48 hours after purchase.
-// created_at from Postgres is UTC but lacks the 'Z' marker — append it
-// before parsing so Date treats it as UTC, not local time.
-const NEW_THRESHOLD_MS = 48 * 60 * 60 * 1000;
-
-function isNewItem(createdAt) {
-  if (!createdAt) return false;
-  const utcStr = createdAt.endsWith("Z") ? createdAt : createdAt + "Z";
-  const t = new Date(utcStr).getTime();
-  return !isNaN(t) && Date.now() - t < NEW_THRESHOLD_MS;
-}
 
 // ── Mini paper-doll preview (Feature #2) ─────────────────────────────────────
 // Creates a small preview container with base body + item layer stacked.
@@ -479,7 +469,7 @@ async function loadCoins() {
 async function loadOwned() {
   const { data, error } = await supabase
     .from("user_items")
-    .select("item_id, created_at")
+    .select("item_id")
     .eq("user_id", userId);
 
   if (error) {
@@ -487,7 +477,7 @@ async function loadOwned() {
     return new Map();
   }
   const map = new Map();
-  (data ?? []).forEach(row => map.set(row.item_id, row.created_at ?? null));
+  (data ?? []).forEach(row => map.set(row.item_id, true));
   return map;
 }
 
@@ -523,8 +513,7 @@ async function loadShop() {
 
   items.forEach(item => {
     const isOwned      = ownedMap.has(item.id);
-    const createdAt    = ownedMap.get(item.id) ?? null;
-    const isNew        = isOwned && isNewItem(createdAt);
+    const isNew        = hasBadge("shop", item.id);
     const rarityColor  = RARITY_COLORS[item.rarity] ?? "#555";
     const rarityLabel  = RARITY_LABELS[item.rarity] ?? (item.rarity ?? "");
     const isAvatarItem = item.type === "avatar";
@@ -555,7 +544,7 @@ async function loadShop() {
     card.insertAdjacentHTML("beforeend", `
       <div class="item-name">${item.name}</div>
       <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>
-      ${!isOwned ? `<div class="price-tag">&#x1FA99; ${item.price} <span class="price-unit">monter</span></div>` : ""}
+      ${!isOwned ? `<div class="price-tag">&#x1FA99; ${item.price} <span class="price-unit">mønter</span></div>` : ""}
       <div class="card-badge"></div>
       ${actionHtml}
     `);
@@ -626,7 +615,7 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
     console.error("BUY ERROR:", result);
     const errMsg = String(result?.error ?? "");
     const isCoins = errMsg.toLowerCase().includes("coin") || errMsg.toLowerCase().includes("insufficient");
-    showToast(isCoins ? "Ikke nok monter!" : (errMsg || "Fejl ved køb – prøv igen"), "error");
+    showToast(isCoins ? "Ikke nok mønter!" : (errMsg || "Fejl ved køb – prøv igen"), "error");
     playSound("error");
     btn.disabled = false;
     btn.textContent = "Køb";
@@ -649,6 +638,8 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
 
   showToast("✓ Køb gennemført!", "success");
   playSound("buy");
+  addBadge("shop", itemId);
+  addBadge("avatar", itemId);
   emit("item:purchased", { itemId, rarity: itemRarity, slotType: itemSlotType });
   if (card) {
     card.classList.add("is-owned");
@@ -678,6 +669,7 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+initBadges("shop");
 await loadCoins();
 await loadShop();
 </script>

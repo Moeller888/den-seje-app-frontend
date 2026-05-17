@@ -493,10 +493,11 @@
 </div>
 
 <script type="module">
-import { supabase } from "./supabaseClient.js";
-import { showToast } from "./js/toast.js";
-import { playSound } from "./js/audio.js";
-import { emit }      from "./js/events.js";
+import { supabase }    from "./supabaseClient.js";
+import { showToast }   from "./js/toast.js";
+import { playSound }   from "./js/audio.js";
+import { emit }        from "./js/events.js";
+import { initBadges, hasBadge } from "./js/newBadges.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -552,17 +553,6 @@ const SLOT_EMOJIS = {
 // Rendering order — base body is always z=0; items stack above it.
 const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
 
-// "Ny!" badge: 48h window from purchase. created_at from Postgres lacks 'Z'
-// (timestamp without time zone) — append it to force UTC parsing.
-const NEW_THRESHOLD_MS = 48 * 60 * 60 * 1000;
-
-function isNewItem(createdAt) {
-  if (!createdAt) return false;
-  const utcStr = createdAt.endsWith("Z") ? createdAt : createdAt + "Z";
-  const t = new Date(utcStr).getTime();
-  return !isNaN(t) && Date.now() - t < NEW_THRESHOLD_MS;
-}
-
 // The slots shown in the preview status list (always, even if empty).
 const ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
 
@@ -590,7 +580,6 @@ const ITEM_THEMES = {
 
 let equippedSlots = {};  // { hat: "crown-golden", ... }
 let ownedItems    = [];  // shop_item rows for all owned items
-let createdAtMap  = {};  // item_id → created_at UTC string
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -616,16 +605,13 @@ async function loadAll() {
   // Owned item IDs + purchase timestamps (for "Ny!" badge)
   const { data: userItems, error: uiError } = await supabase
     .from("user_items")
-    .select("item_id, created_at")
+    .select("item_id")
     .eq("user_id", userId);
 
   if (uiError) {
     console.error("LOAD INVENTORY ERROR:", uiError);
     return;
   }
-
-  createdAtMap = {};
-  (userItems ?? []).forEach(row => { createdAtMap[row.item_id] = row.created_at ?? null; });
 
   const ownedIds = (userItems ?? []).map(r => r.item_id);
 
@@ -789,8 +775,7 @@ function renderInventory() {
     const slotLabel   = hasSlot ? (SLOT_LABELS[item.slot_type] ?? item.slot_type) : "—";
     const slotEmoji   = hasSlot ? (SLOT_EMOJIS[item.slot_type] ?? "") : "";
 
-    // "Ny!" badge: within 48h of purchase
-    const isNew     = isNewItem(createdAtMap[item.id] ?? null);
+    const isNew     = hasBadge("avatar", item.id);
     const badgeHtml = isNew ? `<div class="badge-new">Ny!</div>` : "";
 
     // Synergy theme hint (P4) — shown on every item with a theme affiliation
@@ -897,6 +882,7 @@ async function handleUnequip(slot) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+initBadges("avatar");
 await loadAll();
 </script>
 

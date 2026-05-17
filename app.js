@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function showCoinPopup(amount) {
     const popup = document.getElementById("xp-popup");
     if (!popup) return;
-    popup.textContent = `+${amount} monter`;
+    popup.textContent = `+${amount} mønter`;
     popup.classList.remove("xp-show");
     void popup.offsetWidth;
     popup.classList.add("xp-show");
