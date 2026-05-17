@@ -14,6 +14,8 @@
     body {
       font-family: Arial;
       padding: 20px;
+      background: var(--bg-main);
+      color: var(--text-main);
     }
 
     #menu-btn {
@@ -32,6 +34,7 @@
 
     h1 {
       margin-bottom: 20px;
+      color: var(--text-bright);
     }
 
     .top-bar {
@@ -107,11 +110,14 @@
       padding: 15px;
       border-radius: 10px;
       transition: all 0.2s ease;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
     }
 
     #question {
       font-size: 22px;
       margin-bottom: 15px;
+      color: var(--text-bright);
     }
 
     .answer-row {
@@ -123,11 +129,20 @@
     .answer-row textarea {
       flex: 1;
       padding: 10px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
     }
 
     .answer-row button {
       padding: 10px 20px;
       cursor: pointer;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
+      font-family: inherit;
     }
 
     #options button {
@@ -135,15 +150,34 @@
       width: 100%;
       margin-top: 8px;
       padding: 10px;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+    }
+
+    #options button:hover {
+      background: var(--btn-bg-hover);
+      color: var(--text-main);
+    }
+
+    #options button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .correct-flash {
       background: var(--correct-bg) !important;
+      border-color: var(--success) !important;
       animation: pop 0.25s ease;
     }
 
     .incorrect-flash {
       background: var(--error-bg) !important;
+      border-color: var(--error) !important;
       animation: shake 0.25s ease;
     }
 
@@ -224,6 +258,10 @@
     #feedback {
       transition: color 150ms ease;
     }
+
+    .feedback-correct { color: var(--success-text); }
+    .feedback-error   { color: var(--error-bright); }
+    .feedback-pending { color: var(--coin); }
 
     /* Responsive: narrow screens stack avatar above question */
     @media (max-width: 520px) {

@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("SUBMIT_ERROR", error);
 
       feedback.textContent = "⚠️ Fejl ved svar – prøv igen";
-      feedback.style.color = "red";
+      feedback.className = "feedback-error";
 
       buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
@@ -281,7 +281,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("INVALID_RESPONSE", data);
 
       feedback.textContent = "⚠️ Ugyldigt svar fra server";
-      feedback.style.color = "red";
+      feedback.className = "feedback-error";
 
       buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
@@ -293,11 +293,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data.status === "pending") {
       feedback.textContent = "⏳ Afventer lærerens vurdering";
-      feedback.style.color = "orange";
+      feedback.className = "feedback-pending";
 
     } else if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
-      feedback.style.color = "green";
+      feedback.className = "feedback-correct";
       playSound("equip");
       if (clickedBtn) {
         clickedBtn.classList.add("correct-flash");
@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } else if (data.status === "incorrect") {
       feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
-      feedback.style.color = "red";
+      feedback.className = "feedback-error";
       playSound("error");
       if (clickedBtn) {
         clickedBtn.classList.add("incorrect-flash");
@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       logError("UNKNOWN_STATUS", data.status);
 
       feedback.textContent = "⚠️ Ukendt status fra server";
-      feedback.style.color = "red";
+      feedback.className = "feedback-error";
 
       buttons.forEach(btn => btn.disabled = false);
       setUIState(UI_STATES.AWAITING_ANSWER);
@@ -490,11 +490,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       questionElement.dataset.state = "empty";
       optionsContainer.innerHTML = "";
       feedback.textContent = "";
+      feedback.className = "";
       return;
     }
 
     questionElement.textContent = question.content.question;
     feedback.textContent = "";
+    feedback.className = "";
     questionShownAt = Date.now();
 
     renderOptions(question);
