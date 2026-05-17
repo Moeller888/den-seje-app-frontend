@@ -1,16 +1,11 @@
 // ── Toast system ──────────────────────────────────────────────────────────────
 // Usage: showToast("Message", "success" | "error" | "info", durationMs?)
-// Self-contained: injects its own styles + container on first call.
-// Safe to import on any page — no duplicate DOM mounts per document load.
+// Self-contained: injects its own base styles + container on first call.
+// Colors are driven by CSS classes (.dsj-toast--success etc.) defined in
+// theme.css, so toasts automatically follow the active theme.
 
 const CONTAINER_ID = "dsj-toast-container";
 const STYLES_ID    = "dsj-toast-styles";
-
-const COLORS = {
-  success: { bg: "#1b5e20", border: "#2e7d32", color: "#a5d6a7" },
-  error:   { bg: "#4a0000", border: "#c62828", color: "#ef9a9a" },
-  info:    { bg: "#0d1a2e", border: "#1565c0", color: "#90caf9" },
-};
 
 function ensureContainer() {
   if (document.getElementById(CONTAINER_ID)) return;
@@ -66,13 +61,9 @@ export function showToast(message, type = "info", duration = 2800) {
   const container = document.getElementById(CONTAINER_ID);
   if (!container) return;
 
-  const colors = COLORS[type] ?? COLORS.info;
   const toast = document.createElement("div");
-  toast.className = "dsj-toast";
+  toast.className = `dsj-toast dsj-toast--${type}`;
   toast.textContent = message;
-  toast.style.background  = colors.bg;
-  toast.style.borderColor = colors.border;
-  toast.style.color       = colors.color;
   container.appendChild(toast);
 
   setTimeout(() => {

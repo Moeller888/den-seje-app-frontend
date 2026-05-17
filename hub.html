@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DEN SEJE APP - Hub</title>
+  <link rel="stylesheet" href="css/theme.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: Arial, sans-serif;
-      background: #12122a;
-      color: #e0e0e0;
+      background: var(--bg-main);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -22,7 +23,7 @@
     h1 {
       font-size: 22px;
       font-weight: bold;
-      color: #fff;
+      color: var(--text-bright);
       margin-bottom: 32px;
       letter-spacing: 0.5px;
     }
@@ -39,9 +40,9 @@
       padding: 13px 16px;
       font-size: 15px;
       cursor: pointer;
-      background: #2a2a4a;
-      color: #ccc;
-      border: 1px solid #3a3a5a;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
       border-radius: 8px;
       text-align: left;
       transition: background 0.12s, color 0.12s;
@@ -49,20 +50,20 @@
     }
 
     .menu button:hover {
-      background: #333360;
-      color: #e0e0e0;
+      background: var(--btn-bg-hover);
+      color: var(--text-main);
     }
 
     #logoutBtn {
-      background: #2a1a1a;
-      border-color: #5a2a2a;
-      color: #aa8080;
+      background: var(--logout-bg);
+      border-color: var(--logout-border);
+      color: var(--logout-text);
       margin-top: 8px;
     }
 
     #logoutBtn:hover {
-      background: #3a1a1a;
-      color: #cc9090;
+      background: var(--logout-bg-hover);
+      color: var(--logout-text-hover);
     }
   </style>
 </head>

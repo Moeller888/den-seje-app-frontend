@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>[DEBUG] Game Feel Sandbox</title>
+  <link rel="stylesheet" href="../css/theme.css">
   <style>
     /* INTERNAL DEBUG TOOL — NOT FOR PRODUCTION */
 
@@ -201,7 +202,7 @@
       width: 160px;
       height: 240px;
       border-radius: 10px;
-      background: radial-gradient(ellipse at 50% 30%, #1e2060 0%, #0a0a20 100%);
+      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
       overflow: visible;
     }
     .avatar-wrap[data-highest-rarity="legendary"] #avatar-preview {
@@ -368,13 +369,13 @@
       100% { transform: translateX(0);   }
     }
     .correct-flash-demo {
-      background: #d4edda !important;
-      border-color: #4caf50 !important;
+      background: var(--correct-bg) !important;
+      border-color: var(--success) !important;
       animation: quizPop 250ms ease;
     }
     .incorrect-flash-demo {
-      background: #f8d7da !important;
-      border-color: #f44336 !important;
+      background: var(--error-bg) !important;
+      border-color: var(--error) !important;
       animation: quizShake 250ms ease;
     }
 
@@ -383,13 +384,13 @@
       flex: 1;
       min-width: 160px;
       height: 16px;
-      background: #ddd;
+      background: var(--xp-track);
       border-radius: 4px;
       overflow: hidden;
     }
     .xp-bar-demo-fill {
       height: 100%;
-      background: #4caf50;
+      background: var(--success);
       width: 35%;
       transition: width 350ms ease;
       border-radius: 4px;
@@ -428,24 +429,24 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.55);
+      background: var(--overlay);
       z-index: 9998;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      color: gold;
+      color: var(--coin);
       text-align: center;
       transition: opacity 250ms ease;
     }
     .demo-lvl-title {
       font-size: 44px;
       font-weight: bold;
-      text-shadow: 0 0 20px gold;
+      text-shadow: 0 0 20px var(--coin);
       margin-bottom: 8px;
     }
     .demo-lvl-sub {
       font-size: 20px;
-      color: #fff;
+      color: var(--text-bright);
     }
   </style>
 </head>

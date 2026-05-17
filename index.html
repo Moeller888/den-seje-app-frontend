@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="default">
 <head>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/theme.css">
   <meta charset="UTF-8">
   <title>DEN SEJE APP</title>
 
@@ -39,12 +40,12 @@
     #xp-bar-container {
       flex: 1;
       height: 20px;
-      background: #ddd;
+      background: var(--xp-track);
     }
 
     #xp-bar {
       height: 100%;
-      background: green;
+      background: var(--success);
       width: 0%;
       transition: width 350ms ease;
     }
@@ -70,8 +71,8 @@
       width: 160px;
       height: 240px;
       border-radius: 12px;
-      background: radial-gradient(ellipse at 50% 35%, #1e2060 0%, #080818 100%);
-      border: 2px solid #2a2a5a;
+      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      border: 2px solid var(--border);
       overflow: visible;
     }
 
@@ -87,13 +88,13 @@
 
     .avatar-link {
       font-size: 11px;
-      color: #7788bb;
+      color: var(--link);
       text-decoration: none;
       text-align: center;
       letter-spacing: 0.3px;
     }
 
-    .avatar-link:hover { color: #aabbee; }
+    .avatar-link:hover { color: var(--link-hover); }
 
     /* ── Question area ───────────────────────────────────────── */
 
@@ -133,12 +134,12 @@
     }
 
     .correct-flash {
-      background: #d4edda !important;
+      background: var(--correct-bg) !important;
       animation: pop 0.25s ease;
     }
 
     .incorrect-flash {
-      background: #f8d7da !important;
+      background: var(--error-bg) !important;
       animation: shake 0.25s ease;
     }
 
@@ -156,7 +157,7 @@
       100% { transform: translateX(0); }
     }
 
-    /* 🔥 XP POPUP */
+    /* XP POPUP */
     #xp-popup {
       position: fixed;
       top: 40%;
@@ -164,7 +165,7 @@
       transform: translate(-50%, -50%) scale(0.5);
       font-size: 40px;
       font-weight: bold;
-      color: gold;
+      color: var(--coin);
       opacity: 0;
       pointer-events: none;
       z-index: 999;
@@ -189,17 +190,17 @@
       }
     }
 
-    /* 🔥 LEVEL UP OVERLAY */
+    /* LEVEL UP OVERLAY */
     #level-up-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.55);
+      background: var(--overlay);
       z-index: 1000;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      color: gold;
+      color: var(--coin);
       text-align: center;
       transition: opacity 250ms ease;
     }
@@ -207,13 +208,13 @@
     #level-up-overlay .level-up-title {
       font-size: 48px;
       font-weight: bold;
-      text-shadow: 0 0 20px gold;
+      text-shadow: 0 0 20px var(--coin);
       margin-bottom: 10px;
     }
 
     #level-up-overlay .level-up-subtitle {
       font-size: 24px;
-      color: #fff;
+      color: var(--text-bright);
     }
 
     #feedback {

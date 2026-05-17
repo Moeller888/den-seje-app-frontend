@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEN SEJE APP — Central Theme System
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Usage:  <html data-theme="default">
+           <html data-theme="ice">
+
+   Rules:
+   - Components reference tokens only — never theme names
+   - Only visual identity tokens here: no spacing, layout, or timing
+   - Rarity tokens are fixed across all themes (legendary is always gold)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── DEFAULT theme ────────────────────────────────────────────────────────── */
+
+:root,
+[data-theme="default"] {
+
+  /* Backgrounds ─────────────────────────────────────────────────────────── */
+  --bg-main:       #12122a;   /* body / page background                      */
+  --bg-panel:      #1a1a3e;   /* raised panel / section card                 */
+  --bg-card:       #10103a;   /* item / shop card                            */
+  --bg-card-eq:    #0a2a0a;   /* equipped-item card tint                     */
+
+  /* Avatar canvas gradient stops ────────────────────────────────────────── */
+  --avatar-inner:  #1e2060;   /* radial gradient center (deep navy-blue)     */
+  --avatar-outer:  #0a0a20;   /* radial gradient edge (near black)           */
+
+  /* Text hierarchy ──────────────────────────────────────────────────────── */
+  --text-main:     #e0e0e0;   /* primary body text                           */
+  --text-bright:   #ffffff;   /* headings, strong emphasis                   */
+  --text-dim:      #cccccc;   /* secondary / button labels                   */
+  --text-label:    #6666aa;   /* panel titles, section headers               */
+  --text-muted:    #555588;   /* slot names, sub-labels                      */
+  --text-faint:    #3a3a6a;   /* empty states, disabled                      */
+
+  /* Borders ─────────────────────────────────────────────────────────────── */
+  --border:        #2a2a5a;   /* primary border                              */
+  --border-btn:    #3a3a5a;   /* button / interactive border                 */
+  --border-sep:    #22224a;   /* row separators                              */
+
+  /* Buttons ─────────────────────────────────────────────────────────────── */
+  --btn-bg:        #2a2a4a;   /* default button background                   */
+  --btn-bg-hover:  #333360;   /* button hover background                     */
+
+  /* Primary action (buy, equip) ─────────────────────────────────────────── */
+  --accent:        #1565c0;
+
+  /* Coin / gold ─────────────────────────────────────────────────────────── */
+  --coin:          #ffd700;   /* coin display, XP popup, gold UI elements    */
+  --coin-dim:      #aa9900;   /* muted coin label (price unit)               */
+
+  /* Success system ──────────────────────────────────────────────────────── */
+  --success:       #4caf50;   /* XP bar fill, equipped ring highlight        */
+  --success-text:  #66bb6a;   /* success labels, equipped text               */
+  --success-deep:  #2e7d32;   /* equip-now button, uncommon rarity border    */
+
+  /* Error / negative system ─────────────────────────────────────────────── */
+  --error:         #f44336;
+  --error-bright:  #ef5350;   /* error text, icons                           */
+  --error-deep:    #c62828;   /* error badge backgrounds                     */
+  --error-bg:      #f8d7da;   /* incorrect-answer flash (light)              */
+
+  /* Gamefeel feedback ───────────────────────────────────────────────────── */
+  --correct-bg:    #d4edda;   /* correct-answer flash (light green)          */
+  --xp-track:      #ddd;      /* XP bar track background                     */
+  --overlay:       rgba(0,0,0,0.55); /* level-up / modal overlay             */
+
+  /* Navigation links ────────────────────────────────────────────────────── */
+  --link:          #7788bb;
+  --link-hover:    #aabbee;
+  --info-text:     #90caf9;   /* info/secondary action labels                */
+  --slot-text:     #aad4ff;   /* equipped slot item name                     */
+
+  /* Synergy system ──────────────────────────────────────────────────────── */
+  --synergy-text:   #ce93d8;
+  --synergy-bg:     #1a0a3a;
+  --synergy-border: #4a2a7a;
+  --synergy-hint:   #7c6fa0;  /* theme-set hint, card-badge text             */
+
+  /* Destructive: unequip button ─────────────────────────────────────────── */
+  --unequip-bg:    #5a1010;
+  --unequip-text:  #ffcccc;
+
+  /* Destructive: logout button ──────────────────────────────────────────── */
+  --logout-bg:          #2a1a1a;
+  --logout-border:      #5a2a2a;
+  --logout-text:        #aa8080;
+  --logout-bg-hover:    #3a1a1a;
+  --logout-text-hover:  #cc9090;
+
+  /* "Ny!" badge ─────────────────────────────────────────────────────────── */
+  --badge-new:     #e53935;
+
+  /* Avatar → shop CTA button ────────────────────────────────────────────── */
+  --avatar-cta-bg:         #0d1a2e;
+  --avatar-cta-bg-hover:   #132844;
+  --avatar-cta-text:       #90caf9;
+  --avatar-cta-text-hover: #bbdefb;
+
+  /* Toasts (consumed by toast.js via CSS classes) ───────────────────────── */
+  --toast-success-bg:     #1b5e20;
+  --toast-success-border: #2e7d32;
+  --toast-success-text:   #a5d6a7;
+  --toast-error-bg:       #4a0000;
+  --toast-error-border:   #c62828;
+  --toast-error-text:     #ef9a9a;
+  --toast-info-bg:        #0d1a2e;
+  --toast-info-border:    #1565c0;
+  --toast-info-text:      #90caf9;
+
+  /* Rarity system — FIXED across all themes ─────────────────────────────── */
+  /* (Components use these for borders, labels, glows — never for bg-main)  */
+  --rarity-common:        #757575;
+  --rarity-uncommon:      #388e3c;
+  --rarity-rare:          #1976d2;
+  --rarity-legendary:     #f57f17;
+
+  --border-uncommon:      #2e7d32;
+  --border-rare:          #1976d2;
+  --border-legendary:     #ffa000;
+  --border-legendary-eq:  #ffb300;  /* legendary border when also equipped  */
+  --border-equipped:      #4caf50;
+}
+
+/* ── ICE theme ────────────────────────────────────────────────────────────── */
+/*    Overrides only; inherits all unset tokens from :root / default         */
+
+[data-theme="ice"] {
+
+  /* Backgrounds — cooler, deeper navy-to-blue shift */
+  --bg-main:       #0c1424;
+  --bg-panel:      #0f1e38;
+  --bg-card:       #091530;
+  --bg-card-eq:    #082820;
+
+  /* Avatar canvas — icy deep blue */
+  --avatar-inner:  #0e2858;
+  --avatar-outer:  #050c18;
+
+  /* Text — fractionally cooler */
+  --text-main:     #d0dff0;
+  --text-label:    #5577aa;
+  --text-muted:    #3d5580;
+  --text-faint:    #2a3d66;
+
+  /* Borders — cool blue family */
+  --border:        #1e3460;
+  --border-btn:    #253860;
+  --border-sep:    #1a2d55;
+
+  /* Buttons */
+  --btn-bg:        #162040;
+  --btn-bg-hover:  #1c2a52;
+
+  /* Primary action — cyan */
+  --accent:        #0288d1;
+
+  /* Links */
+  --link:          #6699cc;
+  --link-hover:    #88bbee;
+  --slot-text:     #8ac4f0;
+
+  /* Synergy — cooler shift */
+  --synergy-text:   #90d4f0;
+  --synergy-bg:     #0a1832;
+  --synergy-border: #1e3d70;
+  --synergy-hint:   #5577aa;
+
+  /* Avatar CTA — cooler blue */
+  --avatar-cta-bg:         #091828;
+  --avatar-cta-bg-hover:   #0e2240;
+  --avatar-cta-text:       #70bbf0;
+  --avatar-cta-text-hover: #a0d8ff;
+
+  /* Toasts — slightly cooler tones */
+  --toast-info-bg:     #091828;
+  --toast-info-border: #0288d1;
+  --toast-info-text:   #70bbf0;
+}
+
+/* ── Toast CSS classes (consumed by toast.js) ─────────────────────────────── */
+/*    These are in theme.css so they participate in the theme cascade.        */
+
+.dsj-toast--success {
+  background:   var(--toast-success-bg);
+  border-color: var(--toast-success-border);
+  color:        var(--toast-success-text);
+}
+.dsj-toast--error {
+  background:   var(--toast-error-bg);
+  border-color: var(--toast-error-border);
+  color:        var(--toast-error-text);
+}
+.dsj-toast--info {
+  background:   var(--toast-info-bg);
+  border-color: var(--toast-info-border);
+  color:        var(--toast-info-text);
+}
