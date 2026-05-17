@@ -686,7 +686,7 @@ const st = {
   audioUnlocked: false,
   toastCount:    0,
   layerIdx:      0,
-  cache:   { equip: false, buy: false, error: false },
+  cache:   { equip: true, buy: true, error: true },  // eager preload: always ready
   lastPlay: {},
   press:   { equip: 0, buy: 0, error: 0 },
   played:  { equip: 0, buy: 0, error: 0 },
@@ -896,7 +896,7 @@ function refreshDiag() {
     const cached  = st.cache[name];
     const cacheEl = document.getElementById("diag-cache-" + name);
     if (cacheEl) {
-      cacheEl.innerHTML  = `<span class="dot ${cached ? "dot-on" : "dot-off"}"></span>${cached ? "cached" : "not loaded"}`;
+      cacheEl.innerHTML  = `<span class="dot ${cached ? "dot-on" : "dot-off"}"></span>${cached ? "preloaded" : "not loaded"}`;
       cacheEl.className  = "diag-val " + (cached ? "cached" : "uncached");
     }
     setDiag("diag-ts-"  + name, timeAgo(st.lastPlay[name] ?? null));

@@ -1,11 +1,20 @@
 // ── Audio hook ────────────────────────────────────────────────────────────────
 // Central registry for UI sounds.
-// playSound() is always safe to call — null src = graceful no-op.
+// playSound() is always safe to call — unknown name = graceful no-op.
 //
-// Strategy: lazy singleton per sound name.
-// First call creates one HTMLAudioElement and caches it in _cache.
-// Subsequent calls reset currentTime and replay the cached element —
-// no re-decode, no GC churn, instant response.
+// Strategy: eager singleton per sound name.
+// All HTMLAudioElement instances are created and preloaded at module init,
+// so play() is never called on an unloaded element.
+//
+// Why this matters: with lazy init, play() was called on an element in
+// readyState=0 (HAVE_NOTHING). The browser deferred the play until the file
+// loaded — but that deferred callback fires outside any user-gesture context.
+// On the very first page interaction Chrome silences it (autoplay policy).
+// Subsequent calls hit a loaded element and play immediately. This is why
+// the first equip click was always silent and the second always worked.
+//
+// Eager preload eliminates the deferral: files start fetching on page load,
+// play() is called on a ready element, and no activation timing is consumed.
 //
 // Rate limiting: 100ms minimum between plays of the same sound.
 // Prevents stacking on rapid taps. No timers, no cleanup.
@@ -23,22 +32,26 @@ const _cache      = {};
 let   _volume     = 0.30;
 let   _muted      = false;
 
+// Eagerly create and preload all elements at module init.
+// Files begin fetching immediately; play() will never wait on a cold load.
+for (const [name, src] of Object.entries(SOUND_MAP)) {
+  const el = new Audio(src);
+  el.preload  = "auto";
+  el.volume   = _volume;
+  _cache[name] = el;
+}
+
 export function playSound(name) {
-  const src = SOUND_MAP[name] ?? null;
-  if (!src) return;
+  const el = _cache[name] ?? null;
+  if (!el) return;
 
   const now = Date.now();
   if (now - (_lastPlayed[name] ?? 0) < MIN_INTERVAL_MS) return;
   _lastPlayed[name] = now;
 
   try {
-    if (!_cache[name]) {
-      const el  = new Audio(src);
-      el.volume = _muted ? 0 : _volume;
-      _cache[name] = el;
-    }
-    _cache[name].currentTime = 0;
-    _cache[name].play().catch(() => {});
+    el.currentTime = 0;
+    el.play().catch(() => {});
   } catch {}
 }
 
