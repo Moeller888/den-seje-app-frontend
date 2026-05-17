@@ -4,11 +4,15 @@
 
    Usage:  <html data-theme="default">
            <html data-theme="ice">
+           <html data-theme="inferno">
+           <html data-theme="void">
+           <html data-theme="forest">
 
    Rules:
    - Components reference tokens only — never theme names
    - Only visual identity tokens here: no spacing, layout, or timing
    - Rarity tokens are fixed across all themes (legendary is always gold)
+   - Each theme block overrides only what it changes; all else inherits from :root
    ─────────────────────────────────────────────────────────────────────────── */
 
 /* ── DEFAULT theme ────────────────────────────────────────────────────────── */
@@ -177,6 +181,204 @@
   --toast-info-bg:     #091828;
   --toast-info-border: #0288d1;
   --toast-info-text:   #70bbf0;
+}
+
+/* ── INFERNO theme ────────────────────────────────────────────────────────── */
+/*    Warm reds, deep oranges, gold accents                                  */
+
+[data-theme="inferno"] {
+
+  /* Backgrounds — deep charred dark */
+  --bg-main:       #1a0800;
+  --bg-panel:      #2a1000;
+  --bg-card:       #150600;
+  --bg-card-eq:    #1a1200;
+
+  /* Avatar canvas — ember glow */
+  --avatar-inner:  #4a1800;
+  --avatar-outer:  #0c0200;
+
+  /* Text — warm amber tones */
+  --text-main:     #f0d0a0;
+  --text-bright:   #ffe0b0;
+  --text-dim:      #d8b880;
+  --text-label:    #aa6622;
+  --text-muted:    #885520;
+  --text-faint:    #553310;
+
+  /* Borders — scorched orange */
+  --border:        #4a2200;
+  --border-btn:    #5a3000;
+  --border-sep:    #3a1a00;
+
+  /* Buttons */
+  --btn-bg:        #3a1800;
+  --btn-bg-hover:  #4a2200;
+
+  /* Primary action — deep orange */
+  --accent:        #e65100;
+
+  /* Links */
+  --link:          #dd8844;
+  --link-hover:    #ffaa66;
+  --info-text:     #ffb74d;
+  --slot-text:     #ffcc88;
+
+  /* Synergy — golden amber */
+  --synergy-text:   #ffcc80;
+  --synergy-bg:     #2a1200;
+  --synergy-border: #6a3000;
+  --synergy-hint:   #aa6633;
+
+  /* Destructive: logout */
+  --logout-bg:          #2a1010;
+  --logout-border:      #5a2800;
+  --logout-text:        #aa7050;
+  --logout-bg-hover:    #3a1800;
+  --logout-text-hover:  #cc9060;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #180a00;
+  --avatar-cta-bg-hover:   #2a1200;
+  --avatar-cta-text:       #ffb74d;
+  --avatar-cta-text-hover: #ffcc80;
+
+  /* Toasts */
+  --toast-info-bg:     #1a0800;
+  --toast-info-border: #e65100;
+  --toast-info-text:   #ffb74d;
+}
+
+/* ── VOID theme ───────────────────────────────────────────────────────────── */
+/*    Deep space purple, high-contrast cyan accent                           */
+
+[data-theme="void"] {
+
+  /* Backgrounds — near-black with purple tint */
+  --bg-main:       #0d0016;
+  --bg-panel:      #160026;
+  --bg-card:       #0a0012;
+  --bg-card-eq:    #0a1e18;
+
+  /* Avatar canvas — deep void */
+  --avatar-inner:  #2c0060;
+  --avatar-outer:  #070010;
+
+  /* Text — cold cyan-white */
+  --text-main:     #c0e8ff;
+  --text-bright:   #e0f4ff;
+  --text-dim:      #9ec8f0;
+  --text-label:    #6060cc;
+  --text-muted:    #4455aa;
+  --text-faint:    #2a2a6a;
+
+  /* Borders — violet family */
+  --border:        #2e0066;
+  --border-btn:    #3e0088;
+  --border-sep:    #200044;
+
+  /* Buttons */
+  --btn-bg:        #200044;
+  --btn-bg-hover:  #2e0066;
+
+  /* Primary action — vivid cyan */
+  --accent:        #00bcd4;
+
+  /* Links */
+  --link:          #7799ee;
+  --link-hover:    #aaccff;
+  --info-text:     #80d8e8;
+  --slot-text:     #80d4ff;
+
+  /* Synergy — electric purple */
+  --synergy-text:   #e040fb;
+  --synergy-bg:     #0d001a;
+  --synergy-border: #5500aa;
+  --synergy-hint:   #7744cc;
+
+  /* Destructive: logout */
+  --logout-bg:          #1a0028;
+  --logout-border:      #440066;
+  --logout-text:        #7744aa;
+  --logout-bg-hover:    #220033;
+  --logout-text-hover:  #9966cc;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #0a001a;
+  --avatar-cta-bg-hover:   #160030;
+  --avatar-cta-text:       #80d8e8;
+  --avatar-cta-text-hover: #b0eeff;
+
+  /* Toasts */
+  --toast-info-bg:     #0a001a;
+  --toast-info-border: #00bcd4;
+  --toast-info-text:   #80d8e8;
+}
+
+/* ── FOREST theme ─────────────────────────────────────────────────────────── */
+/*    Muted greens, earthy browns, grounded palette                          */
+
+[data-theme="forest"] {
+
+  /* Backgrounds — deep forest floor */
+  --bg-main:       #0e1a0c;
+  --bg-panel:      #162214;
+  --bg-card:       #0a1408;
+  --bg-card-eq:    #0a1e0a;
+
+  /* Avatar canvas — canopy shadow */
+  --avatar-inner:  #1e3c18;
+  --avatar-outer:  #060e04;
+
+  /* Text — pale leaf green */
+  --text-main:     #c8ddc0;
+  --text-bright:   #ddeedd;
+  --text-dim:      #b0c8a8;
+  --text-label:    #5a7a4a;
+  --text-muted:    #445533;
+  --text-faint:    #2a3a22;
+
+  /* Borders — bark tones */
+  --border:        #2a4422;
+  --border-btn:    #3a5530;
+  --border-sep:    #1e3018;
+
+  /* Buttons */
+  --btn-bg:        #1e3018;
+  --btn-bg-hover:  #263c20;
+
+  /* Primary action — forest green */
+  --accent:        #388e3c;
+
+  /* Links */
+  --link:          #6a9955;
+  --link-hover:    #88bb66;
+  --info-text:     #90c480;
+  --slot-text:     #a0cc88;
+
+  /* Synergy — moss */
+  --synergy-text:   #aad4aa;
+  --synergy-bg:     #0e1a0a;
+  --synergy-border: #3a6030;
+  --synergy-hint:   #6a8855;
+
+  /* Destructive: logout */
+  --logout-bg:          #1a2210;
+  --logout-border:      #3a5022;
+  --logout-text:        #7a9055;
+  --logout-bg-hover:    #1e2814;
+  --logout-text-hover:  #99b070;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #0a1408;
+  --avatar-cta-bg-hover:   #122010;
+  --avatar-cta-text:       #90c480;
+  --avatar-cta-text-hover: #aad4aa;
+
+  /* Toasts */
+  --toast-info-bg:     #0a1408;
+  --toast-info-border: #388e3c;
+  --toast-info-text:   #90c480;
 }
 
 /* ── Toast CSS classes (consumed by toast.js) ─────────────────────────────── */

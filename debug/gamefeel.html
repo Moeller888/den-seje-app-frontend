@@ -75,7 +75,7 @@
     .sandbox-grid {
       display: grid;
       grid-template-columns: 210px 1fr 252px;
-      grid-template-rows: auto auto auto;
+      grid-template-rows: auto auto auto auto;
       gap: 10px;
       padding: 10px 16px 16px;
       align-items: start;
@@ -104,6 +104,7 @@
     .panel-avatar { grid-column: 2; grid-row: 1 / 3; }
     .panel-diag   { grid-column: 3; grid-row: 1 / 3; }
     .panel-quiz   { grid-column: 1 / 4; grid-row: 3; }
+    .panel-theme  { grid-column: 1 / 4; grid-row: 4; }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     .sb-btn {
@@ -129,6 +130,12 @@
     .sb-btn.c-blue  { border-left: 3px solid var(--accent); }
     .sb-btn.c-gold  { border-left: 3px solid var(--gold);   }
     .sb-btn.c-dim   { border-left: 3px solid var(--dim);    }
+    .sb-btn.c-purple { border-left: 3px solid #9c27b0; }
+    .sb-btn.active-theme {
+      border-color: var(--green);
+      background: #0a1a0a;
+      color: var(--green);
+    }
 
     /* ── Volume ─────────────────────────────────────────────────────── */
     .vol-section {
@@ -448,6 +455,68 @@
       font-size: 20px;
       color: var(--text-bright);
     }
+
+    /* ── Theme switcher panel ───────────────────────────────────────── */
+
+    .theme-switch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .theme-switch-row .sb-btn {
+      width: auto;
+      margin-bottom: 0;
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .theme-active-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--dim);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .theme-active-label span {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    /* Token visualization grid */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 6px;
+    }
+    .token-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .token-color {
+      width: 100%;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .token-name {
+      font-size: 8px;
+      font-family: var(--mono);
+      color: var(--dim);
+      text-align: center;
+      word-break: break-all;
+    }
+    .token-val {
+      font-size: 7px;
+      font-family: var(--mono);
+      color: #3a3a5a;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -615,6 +684,10 @@
         <span class="diag-key">layer</span>
         <span class="diag-val" id="diag-layer-idx">0 / 7</span>
       </div>
+      <div class="diag-row">
+        <span class="diag-key">active theme</span>
+        <span class="diag-val" id="diag-active-theme">default</span>
+      </div>
     </div>
 
   </div>
@@ -653,6 +726,24 @@
 
   </div>
 
+  <!-- ── Row 4: Theme Switcher (full width) ────────────────────────── -->
+  <div class="panel panel-theme">
+    <div class="panel-h">Theme Switcher — Live QA</div>
+
+    <div class="theme-active-label">
+      Active theme: <span id="themeActiveLabel">default</span>
+    </div>
+
+    <div class="theme-switch-row" id="themeSwitchRow">
+      <!-- Buttons injected by JS -->
+    </div>
+
+    <div class="sub-label" style="margin-bottom:8px">Token Preview (computed values for active theme)</div>
+    <div class="token-grid" id="tokenGrid">
+      <!-- Swatches injected by JS -->
+    </div>
+  </div>
+
 </div>
 
 <!-- Level-up demo overlay (full-screen, mirrors index.html exactly) -->
@@ -664,6 +755,7 @@
 <script type="module">
 import { playSound, setVolume, setMuted } from "../js/audio.js";
 import { showToast }                       from "../js/toast.js";
+import { applyTheme, VALID_THEMES }        from "../js/themeManager.js";
 
 // ── Demo layers — real assets, covers all slot types ──────────────────────────
 const DEMO_LAYERS = [
@@ -693,6 +785,14 @@ const RARITY_CLASS = {
   legendary: "r-legendary",
 };
 
+// Tokens to visualize in the token preview grid
+const PREVIEW_TOKENS = [
+  "--bg-main", "--bg-panel", "--bg-card",
+  "--text-main", "--text-dim", "--text-label",
+  "--accent", "--coin", "--success",
+  "--error", "--border", "--btn-bg",
+];
+
 // ── Sandbox state — fully local, no server ────────────────────────────────────
 const st = {
   volume:        30,
@@ -700,6 +800,7 @@ const st = {
   audioUnlocked: false,
   toastCount:    0,
   layerIdx:      0,
+  activeTheme:   "default",
   cache:   { equip: true, buy: true, error: true, unequip: true },  // eager preload: always ready
   lastPlay: {},
   press:   { equip: 0, buy: 0, error: 0, unequip: 0 },
@@ -824,6 +925,68 @@ muteBtn.addEventListener("click", () => {
   refreshDiag();
 });
 
+// ── Theme switcher ────────────────────────────────────────────────────────────
+
+function switchTheme(key) {
+  st.activeTheme = key;
+  applyTheme(key);
+  refreshThemePanel();
+  refreshDiag();
+}
+
+function refreshThemePanel() {
+  // Update active label
+  const label = document.getElementById("themeActiveLabel");
+  if (label) label.textContent = st.activeTheme;
+
+  // Update button highlight
+  const row = document.getElementById("themeSwitchRow");
+  if (row) {
+    for (const btn of row.querySelectorAll(".sb-btn")) {
+      btn.classList.toggle("active-theme", btn.dataset.themeKey === st.activeTheme);
+    }
+  }
+
+  // Rebuild token swatches (getComputedStyle reads the now-applied vars)
+  const grid = document.getElementById("tokenGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  const style = getComputedStyle(document.documentElement);
+  for (const token of PREVIEW_TOKENS) {
+    const val = style.getPropertyValue(token).trim();
+    if (!val) continue;
+    const swatch = document.createElement("div");
+    swatch.className = "token-swatch";
+    swatch.innerHTML = `
+      <div class="token-color" style="background:${val}"></div>
+      <div class="token-name">${token.replace("--", "")}</div>
+      <div class="token-val">${val}</div>
+    `;
+    grid.appendChild(swatch);
+  }
+}
+
+// Build theme switcher buttons
+function buildThemeSwitcherButtons() {
+  const row = document.getElementById("themeSwitchRow");
+  if (!row) return;
+  const colorMap = {
+    default: "c-dim",
+    ice:     "c-blue",
+    inferno: "c-red",
+    void:    "c-purple",
+    forest:  "c-green",
+  };
+  for (const key of VALID_THEMES) {
+    const btn = document.createElement("button");
+    btn.className = "sb-btn " + (colorMap[key] ?? "c-dim");
+    btn.dataset.themeKey = key;
+    btn.textContent = key;
+    btn.addEventListener("click", () => switchTheme(key));
+    row.appendChild(btn);
+  }
+}
+
 // ── Button wiring ─────────────────────────────────────────────────────────────
 document.getElementById("btnEquip").addEventListener("click",        () => play("equip"));
 document.getElementById("btnBuy").addEventListener("click",          () => play("buy"));
@@ -918,12 +1081,13 @@ function refreshDiag() {
     setDiag("diag-cnt-" + name, (st.press[name] ?? 0) + " / " + (st.played[name] ?? 0));
   }
 
-  setDiag("diag-volume",      st.muted ? "MUTED" : st.volume + "%", st.muted ? "warn" : "");
-  setDiag("diag-muted",       st.muted ? "yes" : "no",              st.muted ? "warn" : "");
-  setDiag("diag-unlocked",    st.audioUnlocked ? "yes" : "no",      st.audioUnlocked ? "cached" : "uncached");
-  setDiag("diag-toast-count", String(st.toastCount));
-  setDiag("diag-anim-count",  String(activeAnimCount()));
-  setDiag("diag-layer-idx",   st.layerIdx + " / " + (DEMO_LAYERS.length - 1));
+  setDiag("diag-volume",       st.muted ? "MUTED" : st.volume + "%", st.muted ? "warn" : "");
+  setDiag("diag-muted",        st.muted ? "yes" : "no",              st.muted ? "warn" : "");
+  setDiag("diag-unlocked",     st.audioUnlocked ? "yes" : "no",      st.audioUnlocked ? "cached" : "uncached");
+  setDiag("diag-toast-count",  String(st.toastCount));
+  setDiag("diag-anim-count",   String(activeAnimCount()));
+  setDiag("diag-layer-idx",    st.layerIdx + " / " + (DEMO_LAYERS.length - 1));
+  setDiag("diag-active-theme", st.activeTheme);
 }
 
 // Keep timestamps live without user interaction
@@ -931,6 +1095,8 @@ setInterval(refreshDiag, 500);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 buildAvatar(false);
+buildThemeSwitcherButtons();
+refreshThemePanel();
 refreshDiag();
 </script>
 </body>

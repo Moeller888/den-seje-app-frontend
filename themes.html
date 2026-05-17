@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Temaer</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── Topbar ─────────────────────────────────────────── */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .back-btn {
+      padding: 8px 14px;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .back-btn:hover { background: var(--btn-bg-hover); }
+
+    .topbar h1 { font-size: 20px; font-weight: bold; color: var(--text-bright); }
+
+    .coins-display {
+      margin-left: auto;
+      font-size: 15px;
+      color: var(--coin);
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* ── Section header ─────────────────────────────────── */
+
+    .section-header {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Themes grid ────────────────────────────────────── */
+
+    .themes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Theme card ─────────────────────────────────────── */
+
+    .theme-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .theme-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    }
+
+    /* Rarity borders — mirrors shop.html */
+    .theme-card[data-rarity="uncommon"] {
+      border-color: var(--border-uncommon);
+    }
+    .theme-card[data-rarity="rare"] {
+      border-color: var(--border-rare);
+      box-shadow: 0 0 12px rgba(25,118,210,0.18);
+    }
+    .theme-card[data-rarity="rare"]:hover {
+      box-shadow: 0 8px 22px rgba(25,118,210,0.3);
+    }
+    .theme-card[data-rarity="legendary"] {
+      border-color: var(--border-legendary);
+      background: linear-gradient(160deg, #14102e 75%, #1c1400 100%);
+      box-shadow: 0 0 18px rgba(255,160,0,0.22), inset 0 0 0 1px rgba(255,215,0,0.07);
+    }
+    .theme-card[data-rarity="legendary"]:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(255,160,0,0.38);
+    }
+    .theme-card[data-rarity="legendary"]::before {
+      content: "✦";
+      position: absolute;
+      top: 6px; right: 8px;
+      font-size: 9px; color: var(--coin); opacity: 0.65;
+      pointer-events: none;
+    }
+    .theme-card[data-rarity="legendary"]::after {
+      content: "✦";
+      position: absolute;
+      bottom: 6px; left: 8px;
+      font-size: 7px; color: var(--coin); opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Active card: green equipped ring */
+    .theme-card.is-active {
+      border-color: var(--border-equipped) !important;
+      box-shadow: 0 0 16px rgba(76,175,80,0.25) !important;
+    }
+
+    /* ── "Ny!" badge ─────────────────────────────────────── */
+
+    .badge-new {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      z-index: 10;
+      background: var(--badge-new);
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      pointer-events: none;
+      line-height: 1.4;
+    }
+
+    /* ── Theme preview panel ─────────────────────────────── */
+    /*
+     * The data-theme attribute on .theme-preview scopes that theme's
+     * CSS custom properties to this element and its children.
+     * .tp-bg uses var(--bg-main) which resolves from the nearest ancestor
+     * with that property defined — i.e. the [data-theme="X"] on this element.
+     * No hardcoded colors or duplication needed.
+     */
+    .theme-preview {
+      border: 1px solid var(--border); /* uses the PREVIEWED theme's border */
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .theme-preview .tp-bg {
+      height: 82px;
+      background: var(--bg-main);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .theme-preview .tp-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .theme-preview .tp-text-main {
+      font-size: 9px;
+      color: var(--text-main);
+      font-weight: bold;
+    }
+
+    .theme-preview .tp-text-dim {
+      font-size: 8px;
+      color: var(--text-dim);
+    }
+
+    .theme-preview .tp-bottom {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .theme-preview .tp-btn {
+      background: var(--accent);
+      color: #fff;
+      font-size: 8px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    .theme-preview .tp-coin {
+      font-size: 9px;
+      color: var(--coin);
+      font-weight: bold;
+      margin-left: auto;
+    }
+
+    /* ── Card text ──────────────────────────────────────── */
+
+    .theme-name {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-main);
+      margin-bottom: 5px;
+      line-height: 1.2;
+    }
+    .theme-card[data-rarity="legendary"] .theme-name { color: var(--coin); }
+
+    .rarity-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .theme-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .price-tag {
+      font-size: 13px;
+      color: var(--coin);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .price-tag .price-unit {
+      font-size: 11px;
+      color: var(--coin-dim);
+      font-weight: normal;
+    }
+
+    /* ── Buttons ────────────────────────────────────────── */
+
+    .buy-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: var(--accent);
+      transition: opacity 0.1s;
+    }
+    .buy-btn:hover:not(:disabled) { opacity: 0.88; }
+    .buy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .equip-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: var(--success-deep);
+      transition: opacity 0.1s;
+    }
+    .equip-btn:hover:not(:disabled) { opacity: 0.88; }
+    .equip-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .active-indicator {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--success-text);
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    .owned-indicator {
+      font-size: 11px;
+      color: var(--success-text);
+      text-align: center;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    /* Post-purchase in-place transition (mirrors shop.html) */
+    .buy-success-state {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .bought-success {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--success-text);
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    /* ── Coin spend flash ────────────────────────────────── */
+    @keyframes coinSpendFlash {
+      0%   { transform: scale(1);    opacity: 1;   }
+      30%  { transform: scale(0.86); opacity: 0.6; }
+      100% { transform: scale(1);    opacity: 1;   }
+    }
+    .coins-spend-flash {
+      display: inline-block;
+      animation: coinSpendFlash 320ms ease;
+    }
+
+    /* ── Empty / error states ────────────────────────────── */
+    .themes-empty {
+      color: var(--text-faint);
+      font-size: 15px;
+      padding: 40px 16px;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+    .themes-error {
+      color: var(--error-bright);
+      font-size: 14px;
+      text-align: center;
+      padding: 32px;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
+  <h1>Temaer</h1>
+  <span class="coins-display" id="coinsDisplay">&#x1FA99; ...</span>
+</div>
+
+<div class="section-header">Vælg dit tema</div>
+<div class="themes-grid" id="themesGrid"></div>
+
+<script type="module">
+import { supabase }                       from "./supabaseClient.js";
+import { showToast }                      from "./js/toast.js";
+import { playSound }                      from "./js/audio.js";
+import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
+import { applyTheme, persistTheme }       from "./js/themeManager.js";
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+const { data: sessionData } = await supabase.auth.getSession();
+if (!sessionData.session) {
+  window.location.replace("login.html");
+  throw new Error("Unauthorized");
+}
+const userId = sessionData.session.user.id;
+
+window.addEventListener("pageshow", async (event) => {
+  if (event.persisted) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) window.location.replace("login.html");
+  }
+});
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const RARITY_COLORS = {
+  common:    "#757575",
+  uncommon:  "#388e3c",
+  rare:      "#1565c0",
+  legendary: "#f57f17",
+};
+const RARITY_LABELS = {
+  common:    "Almindelig",
+  uncommon:  "Ualmindelig",
+  rare:      "Sjælden",
+  legendary: "Legendarisk",
+};
+const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
+
+// ── In-memory state ───────────────────────────────────────────────────────────
+
+let allThemes    = [];          // rows from the themes table, sorted
+let ownedIds     = new Set();   // theme ids the user currently owns
+let activeTheme  = "default";  // currently equipped theme key
+let coinsBalance = 0;
+
+// ── Data loading ──────────────────────────────────────────────────────────────
+
+async function loadCoins() {
+  const { data, error } = await supabase
+    .from("student_progress")
+    .select("coins")
+    .eq("student_id", userId);
+
+  if (error) {
+    console.error("LOAD COINS ERROR:", error);
+    document.getElementById("coinsDisplay").textContent = "🪙 ?";
+    return;
+  }
+  coinsBalance = data?.[0]?.coins ?? 0;
+  document.getElementById("coinsDisplay").textContent = "🪙 " + coinsBalance;
+}
+
+async function loadData() {
+  const grid = document.getElementById("themesGrid");
+
+  // Fetch catalog
+  const { data: themesData, error: tErr } = await supabase
+    .from("themes")
+    .select("id, name, rarity, price, description, always_owned");
+
+  if (tErr) {
+    console.error("LOAD THEMES ERROR:", tErr);
+    grid.innerHTML = `<div class="themes-error">Fejl ved indlæsning af temaer</div>`;
+    return;
+  }
+
+  // Fetch ownership rows
+  const { data: ownedData, error: oErr } = await supabase
+    .from("user_themes")
+    .select("theme_id")
+    .eq("user_id", userId);
+
+  if (oErr) {
+    console.error("LOAD OWNED THEMES ERROR:", oErr);
+  }
+
+  // Fetch active theme from profile
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("active_theme")
+    .eq("id", userId)
+    .maybeSingle();
+
+  // Build owned set — always_owned themes are implicitly owned by everyone
+  ownedIds = new Set();
+  (ownedData ?? []).forEach(r => ownedIds.add(r.theme_id));
+  (themesData ?? []).forEach(t => { if (t.always_owned) ownedIds.add(t.id); });
+
+  // Sort: legendary first, then price ascending within rarity
+  allThemes = [...(themesData ?? [])].sort((a, b) => {
+    const ra = RARITY_SORT_ORDER[a.rarity] ?? 4;
+    const rb = RARITY_SORT_ORDER[b.rarity] ?? 4;
+    if (ra !== rb) return ra - rb;
+    return (a.price ?? 0) - (b.price ?? 0);
+  });
+
+  activeTheme = profileData?.active_theme ?? "default";
+  applyTheme(activeTheme); // confirm server-side active theme
+
+  renderGrid();
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+
+function renderGrid() {
+  const grid = document.getElementById("themesGrid");
+  grid.innerHTML = "";
+
+  if (allThemes.length === 0) {
+    grid.innerHTML = `<div class="themes-empty">Ingen temaer tilgængelige endnu.</div>`;
+    return;
+  }
+
+  allThemes.forEach(theme => {
+    const isOwned     = ownedIds.has(theme.id);
+    const isActive    = theme.id === activeTheme;
+    const isNew       = hasBadge("themes", theme.id);
+    const rarityColor = RARITY_COLORS[theme.rarity] ?? "#555";
+    const rarityLabel = RARITY_LABELS[theme.rarity] ?? (theme.rarity ?? "");
+
+    const card = document.createElement("div");
+    card.className   = "theme-card" + (isActive ? " is-active" : "");
+    card.dataset.rarity  = theme.rarity ?? "common";
+    card.dataset.themeId = theme.id;
+
+    // "Ny!" badge — same lifecycle semantics as shop/avatar namespaces
+    const badgeHtml = isNew ? `<div class="badge-new">Ny!</div>` : "";
+
+    // Mini preview panel — data-theme scopes all CSS tokens to the previewed theme.
+    // The elements inside use var(--bg-main), var(--bg-panel), etc. which resolve
+    // from the nearest [data-theme] ancestor — this element, not <html>.
+    const previewHtml = `
+      <div class="theme-preview" data-theme="${theme.id}">
+        <div class="tp-bg">
+          <div class="tp-panel">
+            <div class="tp-text-main">Tekst eksempel</div>
+            <div class="tp-text-dim">Sekundær tekst</div>
+          </div>
+          <div class="tp-bottom">
+            <div class="tp-btn">Knap</div>
+            <div class="tp-coin">&#x1FA99; ${theme.price > 0 ? theme.price : "gratis"}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Action area — three distinct states
+    let actionHtml;
+    if (isActive) {
+      actionHtml = `<div class="active-indicator">&#10003; Aktiv</div>`;
+    } else if (isOwned) {
+      actionHtml = `
+        <div class="owned-indicator">&#10003; Ejet</div>
+        <button class="equip-btn" data-theme-id="${theme.id}">Udstyr</button>
+      `;
+    } else {
+      actionHtml = `
+        <div class="price-tag">&#x1FA99; ${theme.price} <span class="price-unit">mønter</span></div>
+        <button class="buy-btn" data-theme-id="${theme.id}">Køb</button>
+      `;
+    }
+
+    card.innerHTML = `
+      ${badgeHtml}
+      ${previewHtml}
+      <div class="theme-name">${theme.name}</div>
+      <span class="rarity-badge" style="background:${rarityColor}">${rarityLabel}</span>
+      <p class="theme-desc">${theme.description ?? ""}</p>
+      ${actionHtml}
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+// ── Buy flow ──────────────────────────────────────────────────────────────────
+
+async function handleBuy(themeId, btn) {
+  btn.disabled    = true;
+  btn.textContent = "...";
+
+  const { data: fresh } = await supabase.auth.getSession();
+  if (!fresh.session) {
+    window.location.replace("login.html");
+    return;
+  }
+
+  const { data, error } = await supabase.rpc("purchase_theme", { p_theme_id: themeId });
+
+  if (error) {
+    console.error("BUY THEME ERROR:", error);
+    const msg     = String(error.message ?? "").toLowerCase();
+    const isCoins = msg.includes("insufficient_coins") || msg.includes("insufficient") || msg.includes("coin");
+    showToast(isCoins ? "Ikke nok mønter!" : "Fejl ved køb – prøv igen", "error");
+    playSound("error");
+    btn.disabled    = false;
+    btn.textContent = "Køb";
+    return;
+  }
+
+  // Coin flash
+  const coinsEl = document.getElementById("coinsDisplay");
+  if (coinsEl) {
+    coinsEl.classList.add("coins-spend-flash");
+    coinsEl.addEventListener("animationend", () => coinsEl.classList.remove("coins-spend-flash"), { once: true });
+  }
+
+  // Update balance from RPC response
+  if (data?.remaining_coins != null) {
+    coinsBalance = data.remaining_coins;
+    if (coinsEl) coinsEl.textContent = "🪙 " + coinsBalance;
+  }
+
+  ownedIds.add(themeId);
+  addBadge("themes", themeId);
+  showToast("✓ Tema købt!", "success");
+  playSound("buy");
+
+  // In-place card transition — preserve scroll position
+  const card = btn.closest(".theme-card");
+  if (card) {
+    const priceTag = card.querySelector(".price-tag");
+    if (priceTag) priceTag.remove();
+
+    const successEl = document.createElement("div");
+    successEl.className = "buy-success-state";
+    successEl.innerHTML = `
+      <div class="bought-success">&#10003; Købt!</div>
+      <div class="owned-indicator">&#10003; Ejet</div>
+      <button class="equip-btn" data-theme-id="${themeId}">Udstyr nu</button>
+    `;
+    btn.replaceWith(successEl);
+  } else {
+    renderGrid();
+  }
+}
+
+// ── Equip flow ────────────────────────────────────────────────────────────────
+
+async function handleEquip(themeId, btn) {
+  btn.disabled    = true;
+  btn.textContent = "...";
+
+  const { error } = await persistTheme(themeId);
+
+  if (error) {
+    console.error("EQUIP THEME ERROR:", error);
+    showToast("Fejl – prøv igen", "error");
+    playSound("error");
+    btn.disabled    = false;
+    btn.textContent = "Udstyr";
+    return;
+  }
+
+  activeTheme = themeId;
+  showToast("✓ Tema aktiveret!", "success");
+  playSound("equip");
+  renderGrid(); // re-render to update active/owned states across all cards
+}
+
+// ── Event delegation ──────────────────────────────────────────────────────────
+
+document.getElementById("themesGrid").addEventListener("click", async (e) => {
+  const buyBtn   = e.target.closest(".buy-btn[data-theme-id]");
+  const equipBtn = e.target.closest(".equip-btn[data-theme-id]");
+
+  if (buyBtn   && !buyBtn.disabled)   await handleBuy(buyBtn.dataset.themeId, buyBtn);
+  if (equipBtn && !equipBtn.disabled) await handleEquip(equipBtn.dataset.themeId, equipBtn);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+initBadges("themes");
+await loadCoins();
+await loadData();
+</script>
+
+</body>
+</html>

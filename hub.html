@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="da" data-theme="default">
 <head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DEN SEJE APP - Hub</title>
@@ -81,12 +85,15 @@
   </div>
 
   <script type="module">
-    import { supabase } from "./supabaseClient.js";
+    import { supabase }   from "./supabaseClient.js";
+    import { loadTheme }  from "./js/themeManager.js";
 
     const { data: sessionData } = await supabase.auth.getSession();
 
     if (!sessionData.session) {
       window.location.replace("login.html");
+    } else {
+      loadTheme().catch(() => {});
     }
 
     document.getElementById("playBtn").onclick = () => {

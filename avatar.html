@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="da" data-theme="default">
 <head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Min Avatar</title>
@@ -499,6 +503,7 @@ import { showToast }   from "./js/toast.js";
 import { playSound }   from "./js/audio.js";
 import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
+import { loadTheme }   from "./js/themeManager.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -511,6 +516,8 @@ if (!sessionData.session) {
 document.body.style.display = "block";
 
 const userId = sessionData.session.user.id;
+
+loadTheme().catch(() => {});
 
 window.addEventListener("pageshow", async (event) => {
   if (event.persisted) {

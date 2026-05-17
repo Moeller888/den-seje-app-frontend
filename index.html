@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="da" data-theme="default">
 <head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/theme.css">
   <meta charset="UTF-8">
@@ -219,7 +223,6 @@
 
     #feedback {
       transition: color 150ms ease;
-      min-height: 1.5em;
     }
 
     /* Responsive: narrow screens stack avatar above question */
@@ -283,6 +286,12 @@
     document.getElementById("menu-btn").onclick = () => {
       window.location.href = "hub.html";
     };
+  </script>
+
+  <!-- Load active theme from server (non-blocking, falls back to cached/default) -->
+  <script type="module">
+    import { loadTheme } from "./js/themeManager.js";
+    loadTheme().catch(() => {});
   </script>
 
   <script type="module" src="supabaseClient.js"></script>
