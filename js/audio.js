@@ -21,9 +21,10 @@
 // _cache and _lastPlayed are bounded by SOUND_MAP key count.
 
 const SOUND_MAP = {
-  equip: "/assets/audio/equip.wav",
-  buy:   "/assets/audio/buy.wav",
-  error: "/assets/audio/error.wav",
+  equip:   "/assets/audio/equip.wav",
+  buy:     "/assets/audio/buy.wav",
+  error:   "/assets/audio/error.wav",
+  unequip: "/assets/audio/unequip.wav",
 };
 
 const MIN_INTERVAL_MS = 100;

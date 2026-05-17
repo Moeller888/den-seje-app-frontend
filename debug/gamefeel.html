@@ -469,6 +469,7 @@
     <button class="sb-btn c-green" id="btnEquip">&#9654; equip.wav</button>
     <button class="sb-btn c-blue"  id="btnBuy">&#9654; buy.wav</button>
     <button class="sb-btn c-red"   id="btnError">&#9654; error.wav</button>
+    <button class="sb-btn c-dim"   id="btnUnequip">&#9654; unequip.wav</button>
 
     <div class="vol-section">
       <div class="sub-label">Volume</div>
@@ -534,6 +535,10 @@
         <span class="diag-key">error</span>
         <span class="diag-val" id="diag-cache-error">—</span>
       </div>
+      <div class="diag-row">
+        <span class="diag-key">unequip</span>
+        <span class="diag-val" id="diag-cache-unequip">—</span>
+      </div>
     </div>
 
     <hr class="diag-sep">
@@ -552,6 +557,10 @@
         <span class="diag-key">error</span>
         <span class="diag-val" id="diag-ts-error">—</span>
       </div>
+      <div class="diag-row">
+        <span class="diag-key">unequip</span>
+        <span class="diag-val" id="diag-ts-unequip">—</span>
+      </div>
     </div>
 
     <hr class="diag-sep">
@@ -569,6 +578,10 @@
       <div class="diag-row">
         <span class="diag-key">error</span>
         <span class="diag-val" id="diag-cnt-error">0 / 0</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-key">unequip</span>
+        <span class="diag-val" id="diag-cnt-unequip">0 / 0</span>
       </div>
       <div class="rate-note">spam: "played" &lt; "pressed" when interval &lt; 100ms</div>
     </div>
@@ -686,10 +699,10 @@ const st = {
   audioUnlocked: false,
   toastCount:    0,
   layerIdx:      0,
-  cache:   { equip: true, buy: true, error: true },  // eager preload: always ready
+  cache:   { equip: true, buy: true, error: true, unequip: true },  // eager preload: always ready
   lastPlay: {},
-  press:   { equip: 0, buy: 0, error: 0 },
-  played:  { equip: 0, buy: 0, error: 0 },
+  press:   { equip: 0, buy: 0, error: 0, unequip: 0 },
+  played:  { equip: 0, buy: 0, error: 0, unequip: 0 },
 };
 
 const RATE_LIMIT_MS = 100;
@@ -814,6 +827,7 @@ muteBtn.addEventListener("click", () => {
 document.getElementById("btnEquip").addEventListener("click",        () => play("equip"));
 document.getElementById("btnBuy").addEventListener("click",          () => play("buy"));
 document.getElementById("btnError").addEventListener("click",        () => play("error"));
+document.getElementById("btnUnequip").addEventListener("click",      () => play("unequip"));
 document.getElementById("btnToastSuccess").addEventListener("click", () => toast("✓ Item udstyret!", "success"));
 document.getElementById("btnToastError").addEventListener("click",   () => toast("Ikke nok m\xF8nter", "error"));
 document.getElementById("btnToastInfo").addEventListener("click",    () => toast("Debug info besked", "info"));
@@ -892,7 +906,7 @@ function setDiag(id, text, extraClass) {
 }
 
 function refreshDiag() {
-  for (const name of ["equip", "buy", "error"]) {
+  for (const name of ["equip", "buy", "error", "unequip"]) {
     const cached  = st.cache[name];
     const cacheEl = document.getElementById("diag-cache-" + name);
     if (cacheEl) {
