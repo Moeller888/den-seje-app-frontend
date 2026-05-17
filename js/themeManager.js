@@ -10,13 +10,13 @@
 // (before the CSS link) so the cached theme is applied synchronously:
 //
 //   <script>
-//   (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];
+//   (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];
 //   try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
 //   </script>
 
 import { supabase } from "../supabaseClient.js";
 
-export const VALID_THEMES = ["default", "ice", "inferno", "void", "forest"];
+export const VALID_THEMES = ["default", "ice", "inferno", "void", "forest", "sakura", "aurora", "pearl", "meadow", "rose-gold"];
 const STORAGE_KEY         = "dsj_active_theme";
 const FALLBACK            = "default";
 

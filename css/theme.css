@@ -381,6 +381,374 @@
   --toast-info-text:   #90c480;
 }
 
+/* ── SAKURA theme ─────────────────────────────────────────────────────────── */
+/*    Soft, cozy, anime-inspired — warm plum darks, cherry blossom accent     */
+
+[data-theme="sakura"] {
+
+  /* Backgrounds — warm plum-black */
+  --bg-main:       #1a0f16;
+  --bg-panel:      #251520;
+  --bg-card:       #160c12;
+  --bg-card-eq:    #0f180f;
+
+  /* Avatar canvas — deep cherry */
+  --avatar-inner:  #3d1428;
+  --avatar-outer:  #0d0508;
+
+  /* Text — warm ivory-pink */
+  --text-main:     #f0e0e8;
+  --text-bright:   #fff0f5;
+  --text-dim:      #d4b8c4;
+  --text-label:    #9a6070;
+  --text-muted:    #6a3848;
+  --text-faint:    #3a1a28;
+
+  /* Borders — plum family */
+  --border:        #3a1a2a;
+  --border-btn:    #4a2236;
+  --border-sep:    #2a1220;
+
+  /* Buttons */
+  --btn-bg:        #2a1520;
+  --btn-bg-hover:  #361e2c;
+
+  /* Primary action — cherry blossom pink (not oversaturated) */
+  --accent:        #d4608a;
+
+  /* Links */
+  --link:          #c088a0;
+  --link-hover:    #e0a8c0;
+  --info-text:     #e8a0c0;
+  --slot-text:     #f0b8d0;
+
+  /* Synergy */
+  --synergy-text:   #f0a0d0;
+  --synergy-bg:     #1a0a14;
+  --synergy-border: #5a2040;
+  --synergy-hint:   #8a4860;
+
+  /* Destructive: logout */
+  --logout-bg:          #1e0e14;
+  --logout-border:      #4a1e30;
+  --logout-text:        #9a6070;
+  --logout-bg-hover:    #261418;
+  --logout-text-hover:  #c07888;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #140810;
+  --avatar-cta-bg-hover:   #200e1a;
+  --avatar-cta-text:       #e8a0c0;
+  --avatar-cta-text-hover: #f0c0d8;
+
+  /* Toasts */
+  --toast-info-bg:     #1a0a14;
+  --toast-info-border: #d4608a;
+  --toast-info-text:   #e8a0c0;
+}
+
+/* ── AURORA theme ─────────────────────────────────────────────────────────── */
+/*    Dreamy, magical, celestial — deep twilight blues, aurora violet accent   */
+
+[data-theme="aurora"] {
+
+  /* Backgrounds — deep twilight navy */
+  --bg-main:       #080e1a;
+  --bg-panel:      #0e1628;
+  --bg-card:       #060c14;
+  --bg-card-eq:    #0a1a1a;
+
+  /* Avatar canvas — deep violet */
+  --avatar-inner:  #1a1050;
+  --avatar-outer:  #040810;
+
+  /* Text — soft lavender-white */
+  --text-main:     #c8d8f8;
+  --text-bright:   #e8f0ff;
+  --text-dim:      #98b4e0;
+  --text-label:    #5568aa;
+  --text-muted:    #3a4878;
+  --text-faint:    #202848;
+
+  /* Borders — deep blue family */
+  --border:        #1e2850;
+  --border-btn:    #283468;
+  --border-sep:    #161e40;
+
+  /* Buttons */
+  --btn-bg:        #141e3c;
+  --btn-bg-hover:  #1c2850;
+
+  /* Primary action — aurora violet */
+  --accent:        #7c4de8;
+
+  /* Links */
+  --link:          #7090d8;
+  --link-hover:    #98b8f0;
+  --info-text:     #a0c0f8;
+  --slot-text:     #b0d0ff;
+
+  /* Synergy — deep aurora purple */
+  --synergy-text:   #c0a0ff;
+  --synergy-bg:     #08081e;
+  --synergy-border: #4830a0;
+  --synergy-hint:   #6855a8;
+
+  /* Destructive: logout */
+  --logout-bg:          #0e0e28;
+  --logout-border:      #302870;
+  --logout-text:        #5568aa;
+  --logout-bg-hover:    #141428;
+  --logout-text-hover:  #7888cc;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #080c1c;
+  --avatar-cta-bg-hover:   #10182c;
+  --avatar-cta-text:       #a0c0f8;
+  --avatar-cta-text-hover: #c0d8ff;
+
+  /* Toasts */
+  --toast-info-bg:     #080e1a;
+  --toast-info-border: #7c4de8;
+  --toast-info-text:   #a0c0f8;
+}
+
+/* ── PEARL theme ──────────────────────────────────────────────────────────── */
+/*    Minimalist, premium, clean — the only light theme; cool silver + navy   */
+
+[data-theme="pearl"] {
+
+  /* Backgrounds — cool silver-white (LIGHT theme) */
+  --bg-main:       #f0f2f5;
+  --bg-panel:      #ffffff;
+  --bg-card:       #e8ecf2;
+  --bg-card-eq:    #e4f0e8;
+
+  /* Avatar canvas — silvery gradient */
+  --avatar-inner:  #c8d4e8;
+  --avatar-outer:  #8898b0;
+
+  /* Text — dark navy for high contrast on light bg */
+  --text-main:     #1a2030;   /* ~14:1 on bg-main ✓ */
+  --text-bright:   #0a1020;
+  --text-dim:      #3a4860;   /* ~8:1 ✓ */
+  --text-label:    #485880;   /* ~5.5:1 ✓ */
+  --text-muted:    #506090;   /* ~5.3:1 ✓ */
+  --text-faint:    #a0b0c8;   /* intentionally faint (empty states) */
+
+  /* Borders — light silver */
+  --border:        #c8d0e0;
+  --border-btn:    #a8b4c8;
+  --border-sep:    #d8e0ea;
+
+  /* Buttons */
+  --btn-bg:        #e0e8f2;
+  --btn-bg-hover:  #ccd8ea;
+
+  /* Primary action — strong navy */
+  --accent:        #1e6ac0;
+
+  /* Coin — dark amber (readable on light bg) */
+  --coin:          #8a6800;
+  --coin-dim:      #6a5000;
+
+  /* Success — darker green for contrast on light */
+  --success:       #2a8c3a;
+  --success-text:  #1e7030;
+  --success-deep:  #165a25;
+
+  /* Error — darker red for contrast */
+  --error:         #c01818;
+  --error-bright:  #a81010;
+  --error-deep:    #901010;
+  --error-bg:      #fddede;
+
+  /* Gamefeel — visible on light bg */
+  --correct-bg:    #ddf5e4;
+  --xp-track:      #b8c8d8;
+
+  --overlay:       rgba(0,10,30,0.65);
+
+  /* Links */
+  --link:          #1e6ac0;
+  --link-hover:    #1550a0;
+  --info-text:     #2058a8;
+  --slot-text:     #1868c0;
+
+  /* Synergy — purple on light */
+  --synergy-text:   #6030b0;
+  --synergy-bg:     #f0eaf8;
+  --synergy-border: #b898e0;
+  --synergy-hint:   #8068b8;
+
+  /* Destructive: unequip */
+  --unequip-bg:    #fde8e8;
+  --unequip-text:  #c01818;
+
+  /* Destructive: logout */
+  --logout-bg:          #eceef4;
+  --logout-border:      #c0c8da;
+  --logout-text:        #7080a8;
+  --logout-bg-hover:    #e0e4ee;
+  --logout-text-hover:  #485880;
+
+  /* "Ny!" badge */
+  --badge-new:     #c01818;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #e8f0fa;
+  --avatar-cta-bg-hover:   #d8e8f6;
+  --avatar-cta-text:       #1e60b0;
+  --avatar-cta-text-hover: #1040a0;
+
+  /* Toasts — all light-bg variants */
+  --toast-success-bg:     #e8f5ea;
+  --toast-success-border: #2a8c3a;
+  --toast-success-text:   #165a25;
+  --toast-error-bg:       #fde8e8;
+  --toast-error-border:   #c01818;
+  --toast-error-text:     #901010;
+  --toast-info-bg:        #e8f0fa;
+  --toast-info-border:    #1e6ac0;
+  --toast-info-text:      #1550a0;
+}
+
+/* ── MEADOW theme ─────────────────────────────────────────────────────────── */
+/*    Cozy nature, cottagecore — warm earthy darks, soft sage-lime accent     */
+
+[data-theme="meadow"] {
+
+  /* Backgrounds — warm dark earth (warmer hue than forest) */
+  --bg-main:       #141a0c;
+  --bg-panel:      #1e2614;
+  --bg-card:       #101408;
+  --bg-card-eq:    #0e1c0c;
+
+  /* Avatar canvas — warm sage */
+  --avatar-inner:  #2c3c14;
+  --avatar-outer:  #080e04;
+
+  /* Text — warm sage-cream */
+  --text-main:     #d4dfc0;
+  --text-bright:   #e8f0d0;
+  --text-dim:      #b4c49a;
+  --text-label:    #7c8a50;
+  --text-muted:    #587040;
+  --text-faint:    #2e3e20;
+
+  /* Borders — warm earthy */
+  --border:        #324020;
+  --border-btn:    #425230;
+  --border-sep:    #262e18;
+
+  /* Buttons */
+  --btn-bg:        #263018;
+  --btn-bg-hover:  #303c22;
+
+  /* Primary action — warm sage-lime (softer than forest green) */
+  --accent:        #6ea840;
+
+  /* Links */
+  --link:          #88a858;
+  --link-hover:    #a8c870;
+  --info-text:     #a8cc70;
+  --slot-text:     #bcd888;
+
+  /* Synergy — warm moss */
+  --synergy-text:   #c8dca0;
+  --synergy-bg:     #10160a;
+  --synergy-border: #4c6428;
+  --synergy-hint:   #748c50;
+
+  /* Destructive: logout */
+  --logout-bg:          #1c2412;
+  --logout-border:      #42522a;
+  --logout-text:        #829254;
+  --logout-bg-hover:    #222c18;
+  --logout-text-hover:  #a2b268;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #10160a;
+  --avatar-cta-bg-hover:   #1a2410;
+  --avatar-cta-text:       #a8cc70;
+  --avatar-cta-text-hover: #c0dc90;
+
+  /* Toasts */
+  --toast-info-bg:     #10160a;
+  --toast-info-border: #6ea840;
+  --toast-info-text:   #a8cc70;
+}
+
+/* ── ROSE-GOLD theme ──────────────────────────────────────────────────────── */
+/*    Luxury, elegant — deep warm charcoal, rose-gold metallic accent         */
+
+[data-theme="rose-gold"] {
+
+  /* Backgrounds — deep warm charcoal */
+  --bg-main:       #18100e;
+  --bg-panel:      #221614;
+  --bg-card:       #140c0a;
+  --bg-card-eq:    #1a1408;
+
+  /* Avatar canvas — deep rose-warm */
+  --avatar-inner:  #3c2018;
+  --avatar-outer:  #080408;
+
+  /* Text — warm champagne */
+  --text-main:     #eedacc;
+  --text-bright:   #fff2e4;
+  --text-dim:      #d0b09a;
+  --text-label:    #aa7860;
+  --text-muted:    #7a5040;
+  --text-faint:    #4a2820;
+
+  /* Borders — warm dark */
+  --border:        #3a2018;
+  --border-btn:    #4c2c1e;
+  --border-sep:    #2a1810;
+
+  /* Buttons */
+  --btn-bg:        #2c1c14;
+  --btn-bg-hover:  #3a2018;
+
+  /* Primary action — rose-gold metallic */
+  --accent:        #c4836a;
+
+  /* Coin — champagne gold */
+  --coin:          #e0b880;
+  --coin-dim:      #a88040;
+
+  /* Links */
+  --link:          #c48870;
+  --link-hover:    #dba898;
+  --info-text:     #d4a888;
+  --slot-text:     #e0b898;
+
+  /* Synergy — warm amber */
+  --synergy-text:   #ddb090;
+  --synergy-bg:     #14080a;
+  --synergy-border: #6a3820;
+  --synergy-hint:   #9a6040;
+
+  /* Destructive: logout */
+  --logout-bg:          #1c1010;
+  --logout-border:      #4a2218;
+  --logout-text:        #9a6858;
+  --logout-bg-hover:    #241818;
+  --logout-text-hover:  #c08070;
+
+  /* Avatar CTA */
+  --avatar-cta-bg:         #100808;
+  --avatar-cta-bg-hover:   #1c1010;
+  --avatar-cta-text:       #d4a888;
+  --avatar-cta-text-hover: #e8c0a0;
+
+  /* Toasts */
+  --toast-info-bg:     #14080a;
+  --toast-info-border: #c4836a;
+  --toast-info-text:   #d4a888;
+}
+
 /* ── Toast CSS classes (consumed by toast.js) ─────────────────────────────── */
 /*    These are in theme.css so they participate in the theme cascade.        */
 

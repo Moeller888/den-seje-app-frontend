@@ -131,6 +131,11 @@
     .sb-btn.c-gold  { border-left: 3px solid var(--gold);   }
     .sb-btn.c-dim   { border-left: 3px solid var(--dim);    }
     .sb-btn.c-purple { border-left: 3px solid #9c27b0; }
+    .sb-btn.c-pink   { border-left: 3px solid #d4608a; }
+    .sb-btn.c-violet { border-left: 3px solid #7c4de8; }
+    .sb-btn.c-silver { border-left: 3px solid #8898b0; }
+    .sb-btn.c-sage   { border-left: 3px solid #6ea840; }
+    .sb-btn.c-gold   { border-left: 3px solid #c4836a; }
     .sb-btn.active-theme {
       border-color: var(--green);
       background: #0a1a0a;
@@ -971,11 +976,16 @@ function buildThemeSwitcherButtons() {
   const row = document.getElementById("themeSwitchRow");
   if (!row) return;
   const colorMap = {
-    default: "c-dim",
-    ice:     "c-blue",
-    inferno: "c-red",
-    void:    "c-purple",
-    forest:  "c-green",
+    default:   "c-dim",
+    ice:       "c-blue",
+    inferno:   "c-red",
+    void:      "c-purple",
+    forest:    "c-green",
+    sakura:    "c-pink",
+    aurora:    "c-violet",
+    pearl:     "c-silver",
+    meadow:    "c-sage",
+    "rose-gold": "c-gold",
   };
   for (const key of VALID_THEMES) {
     const btn = document.createElement("button");

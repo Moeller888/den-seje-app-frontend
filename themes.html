@@ -3,7 +3,7 @@
 <head>
   <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
   <script>
-  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -164,8 +164,14 @@
       margin-bottom: 10px;
     }
 
+    /* Accent bar — top strip that immediately communicates theme accent color */
+    .theme-preview .tp-accent-bar {
+      height: 3px;
+      background: var(--accent);
+    }
+
     .theme-preview .tp-bg {
-      height: 82px;
+      height: 78px;
       background: var(--bg-main);
       padding: 8px;
       display: flex;
@@ -190,6 +196,22 @@
     .theme-preview .tp-text-dim {
       font-size: 8px;
       color: var(--text-dim);
+    }
+
+    /* Mini XP bar — shows success/track colors */
+    .theme-preview .tp-xp-track {
+      height: 3px;
+      background: var(--xp-track);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .theme-preview .tp-xp-fill {
+      height: 100%;
+      width: 55%;
+      background: var(--success);
+      border-radius: 2px;
     }
 
     .theme-preview .tp-bottom {
@@ -501,10 +523,12 @@ function renderGrid() {
     // from the nearest [data-theme] ancestor — this element, not <html>.
     const previewHtml = `
       <div class="theme-preview" data-theme="${theme.id}">
+        <div class="tp-accent-bar"></div>
         <div class="tp-bg">
           <div class="tp-panel">
             <div class="tp-text-main">Tekst eksempel</div>
             <div class="tp-text-dim">Sekundær tekst</div>
+            <div class="tp-xp-track"><div class="tp-xp-fill"></div></div>
           </div>
           <div class="tp-bottom">
             <div class="tp-btn">Knap</div>
