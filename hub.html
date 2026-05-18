@@ -213,6 +213,7 @@
 
     .stat-chip--coins .stat-chip-value   { color: var(--coin); }
     .stat-chip--correct .stat-chip-value { color: var(--success-text); }
+    .stat-chip--streak .stat-chip-value  { color: var(--streak); }
 
     .stat-chip-label {
       font-size: 9px;
@@ -220,6 +221,12 @@
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--text-label);
+    }
+
+    .streak-best {
+      font-size: 9px;
+      color: var(--text-muted);
+      line-height: 1;
     }
 
     /* ── Bottom grid: nav + collection ──────────────── */
@@ -433,6 +440,12 @@
           <span class="stat-chip-value" id="statCorrect">—</span>
           <span class="stat-chip-label">Rigtige svar</span>
         </div>
+        <div class="stat-chip stat-chip--streak">
+          <span class="stat-chip-icon">🔥</span>
+          <span class="stat-chip-value" id="statStreak">—</span>
+          <span class="streak-best" id="statStreakBest">— rekord</span>
+          <span class="stat-chip-label">Streak</span>
+        </div>
       </div>
     </div>
 
@@ -547,7 +560,7 @@
     correctResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
-    supabase.from("student_progress").select("xp, coins").eq("student_id", userId),
+    supabase.from("student_progress").select("xp, coins, current_streak, longest_streak").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
     supabase.from("user_themes").select("theme_id").eq("user_id", userId),
@@ -562,8 +575,10 @@
 
   // ── Parse progression ─────────────────────────────────────────────────────────
 
-  const xp    = progressResult.data?.[0]?.xp    ?? 0;
-  const coins = progressResult.data?.[0]?.coins ?? 0;
+  const xp            = progressResult.data?.[0]?.xp             ?? 0;
+  const coins         = progressResult.data?.[0]?.coins          ?? 0;
+  const currentStreak = progressResult.data?.[0]?.current_streak ?? 0;
+  const longestStreak = progressResult.data?.[0]?.longest_streak ?? 0;
 
   const correctCount = correctResult.count ?? 0;
 
@@ -708,6 +723,12 @@
 
     const correctEl = document.getElementById("statCorrect");
     if (correctEl) correctEl.textContent = correctCount;
+
+    const streakEl = document.getElementById("statStreak");
+    if (streakEl) streakEl.textContent = currentStreak;
+
+    const streakBestEl = document.getElementById("statStreakBest");
+    if (streakBestEl) streakBestEl.textContent = longestStreak + " rekord";
   }
 
   // ── Collection rendering ──────────────────────────────────────────────────────

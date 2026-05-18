@@ -113,6 +113,9 @@
   --toast-info-border:    #1565c0;
   --toast-info-text:      #90caf9;
 
+  /* Streak system — warm orange, readable on all dark themes ───────────── */
+  --streak:               #ff6b35;   /* flame orange; value display in streak chip */
+
   /* Rarity system — FIXED across all themes ─────────────────────────────── */
   /* (Components use these for borders, labels, glows — never for bg-main)  */
   --rarity-common:        #757575;
@@ -577,6 +580,9 @@
 
   /* Primary action — strong navy */
   --accent:        #1e6ac0;
+
+  /* Streak — darker burnt orange for contrast on light background */
+  --streak:        #b84500;   /* 7.7:1 on white — passes AAA */
 
   /* Coin — dark amber (readable on light bg) */
   --coin:          #8a6800;
