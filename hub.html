@@ -541,6 +541,18 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .achievement-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    .achievement-panel:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
     }
 
     .achievement-panel-header {
@@ -579,7 +591,6 @@
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--btn-bg);
-      cursor: default;
     }
 
     .ach-badge--locked {
@@ -617,6 +628,24 @@
 
     .ach-badge--just-unlocked {
       animation: achUnlock 600ms ease both;
+    }
+
+    .ach-header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ach-see-all-arrow {
+      font-size: 18px;
+      color: var(--text-muted);
+      line-height: 1;
+      transition: transform 0.12s, color 0.12s;
+    }
+
+    .achievement-panel:hover .ach-see-all-arrow {
+      transform: translateX(3px);
+      color: var(--accent);
     }
 
     /* ── Daily reward modal overlay ──────────────────── */
@@ -819,11 +848,18 @@
 
   </div>
 
-  <!-- Achievements: permanent trophy shelf -->
-  <div class="achievement-panel">
+  <!-- Achievements: permanent trophy shelf — click opens achievements.html -->
+  <div class="achievement-panel"
+       onclick="window.location.href='achievements.html'"
+       tabindex="0"
+       role="button"
+       aria-label="Se alle præstationer">
     <div class="achievement-panel-header">
       <span class="achievement-panel-title">Præstationer</span>
-      <span class="achievement-count" id="achievementCount">— / 7</span>
+      <div class="ach-header-right">
+        <span class="achievement-count" id="achievementCount">— / 7</span>
+        <span class="ach-see-all-arrow" aria-hidden="true">&#8250;</span>
+      </div>
     </div>
     <div class="achievement-grid" id="achievementGrid">
       <!-- rendered by JS -->
@@ -1395,6 +1431,17 @@
       if (overlay) {
         overlay.classList.remove("visible");
         overlay.setAttribute("aria-hidden", "true");
+      }
+    });
+  }
+
+  // Achievement panel: keyboard navigation (Enter / Space → open page)
+  const achPanel = document.querySelector(".achievement-panel");
+  if (achPanel) {
+    achPanel.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        window.location.href = "achievements.html";
       }
     });
   }

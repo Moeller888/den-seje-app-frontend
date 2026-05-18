@@ -641,6 +641,86 @@
     .demo-ach-badge.just-unlocked {
       animation: demoAchUnlock 600ms ease both;
     }
+
+    /* ── Achievement cards (achievements.html preview) ──────────────────── */
+
+    .ach-card-demo-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .ach-card {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 12px 14px;
+      text-align: center;
+      transition: transform 0.14s, box-shadow 0.14s;
+    }
+    .ach-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+    .ach-card--unlocked {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px -3px var(--accent);
+    }
+    .ach-card--unlocked:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px -2px var(--accent);
+    }
+    .ach-card-icon {
+      font-size: 30px;
+      line-height: 1;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .ach-card--locked .ach-card-icon {
+      opacity: 0.25;
+      filter: grayscale(1);
+    }
+    .ach-card-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+    .ach-card--locked .ach-card-title { color: var(--text-dim); }
+    .ach-card-desc {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+    .ach-card--locked .ach-card-desc { color: var(--text-muted); }
+    .ach-card-status {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--success-text);
+    }
+    .ach-card-status--locked {
+      color: var(--text-muted);
+      font-weight: normal;
+      font-size: 11px;
+    }
+    .ach-card-progress { display: flex; flex-direction: column; gap: 4px; }
+    .ach-card-progress-track {
+      height: 4px;
+      background: var(--xp-track);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ach-card-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .ach-card-progress-text {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -903,6 +983,36 @@
     <!-- Mirror of hub.html achievement grid -->
     <div class="demo-ach-grid" id="demoAchGrid">
       <!-- injected by JS -->
+    </div>
+
+    <!-- Static card previews — use same CSS classes as achievements.html; theme switcher above drives tokens -->
+    <div class="quiz-row" style="margin-top:14px;margin-bottom:6px">
+      <div class="quiz-row-label">Achievement Cards (achievements.html) &mdash; Unlocked &middot; Locked+Progress &middot; Locked Binary</div>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--unlocked">
+        <span class="ach-card-icon">★</span>
+        <div class="ach-card-title">100 rigtige svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 100 spørgsmål i alt</div>
+        <div class="ach-card-status">✓ Opnået</div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">▲</span>
+        <div class="ach-card-title">Niveau 10</div>
+        <div class="ach-card-desc">Nå niveau 10</div>
+        <div class="ach-card-progress">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill" style="width:60%"></div>
+          </div>
+          <div class="ach-card-progress-text">6 / 10</div>
+        </div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">✦</span>
+        <div class="ach-card-title">Legendarisk item</div>
+        <div class="ach-card-desc">Anskaff dig et legendarisk avatar-item</div>
+        <div class="ach-card-status ach-card-status--locked">Låst</div>
+      </div>
     </div>
 
   </div>

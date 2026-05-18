@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Præstationer</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────── */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      padding: 8px 14px;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .back-btn:hover { background: var(--btn-bg-hover); }
+
+    .topbar h1 { font-size: 20px; font-weight: bold; color: var(--text-bright); }
+
+    .topbar-count {
+      margin-left: auto;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    /* ── Overview card ───────────────────────────────────── */
+
+    .overview {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .overview-stats {
+      display: flex;
+      gap: 28px;
+      margin-bottom: 12px;
+    }
+
+    .ov-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ov-value {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--text-bright);
+      line-height: 1;
+    }
+
+    .ov-value--accent { color: var(--accent); }
+
+    .ov-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .ov-bar-track {
+      height: 6px;
+      background: var(--xp-track);
+      border-radius: 3px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .ov-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    /* ── Section header ──────────────────────────────────── */
+
+    .section-header {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Achievement grid ────────────────────────────────── */
+
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Achievement card ────────────────────────────────── */
+
+    .ach-card {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 14px 16px;
+      text-align: center;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .ach-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* Unlocked: accent border + soft glow — uses the theme token directly,
+       so every theme's accent color drives the glow automatically. */
+    .ach-card--unlocked {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px -3px var(--accent);
+    }
+
+    .ach-card--unlocked:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px -2px var(--accent);
+    }
+
+    /* Icon */
+    .ach-card-icon {
+      font-size: 36px;
+      line-height: 1;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* Locked: icon grayed + dimmed — aspirational but clearly not owned */
+    .ach-card--locked .ach-card-icon {
+      opacity: 0.25;
+      filter: grayscale(1);
+    }
+
+    /* Title */
+    .ach-card-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      margin-bottom: 5px;
+      line-height: 1.25;
+    }
+
+    .ach-card--locked .ach-card-title { color: var(--text-dim); }
+
+    /* Description */
+    .ach-card-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .ach-card--locked .ach-card-desc { color: var(--text-muted); }
+
+    /* Unlocked status line */
+    .ach-card-status {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--success-text);
+    }
+
+    .ach-card-status--locked {
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    /* Progress bar (locked + quantified achievements) */
+    .ach-card-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ach-card-progress-track {
+      height: 4px;
+      background: var(--xp-track);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .ach-card-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    .ach-card-progress-text {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Unlock animation — fires when a card transitions from locked → unlocked */
+    @keyframes achCardUnlock {
+      0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
+      40%  { transform: scale(1.06); box-shadow: 0 0 0 4px var(--accent); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
+    }
+
+    .ach-card--just-unlocked {
+      animation: achCardUnlock 650ms ease both;
+    }
+
+    /* ── Empty / error states ────────────────────────────── */
+
+    .ach-grid-empty {
+      color: var(--text-faint);
+      font-size: 14px;
+      text-align: center;
+      padding: 32px 16px;
+      grid-column: 1 / -1;
+    }
+
+    .ach-grid-error {
+      color: var(--error-bright);
+      font-size: 13px;
+      text-align: center;
+      padding: 32px 16px;
+      grid-column: 1 / -1;
+    }
+
+    /* ── Mobile ──────────────────────────────────────────── */
+
+    @media (max-width: 480px) {
+      .ach-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .ach-card { padding: 16px 10px 12px; }
+      .ach-card-icon { font-size: 30px; }
+      .ach-card-title { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
+  <h1>Præstationer</h1>
+  <span class="topbar-count" id="topbarCount">— / —</span>
+</div>
+
+<div class="overview">
+  <div class="overview-stats">
+    <div class="ov-stat">
+      <span class="ov-value" id="ovEarned">—</span>
+      <span class="ov-label">Opnået</span>
+    </div>
+    <div class="ov-stat">
+      <span class="ov-value" id="ovTotal">—</span>
+      <span class="ov-label">I alt</span>
+    </div>
+    <div class="ov-stat">
+      <span class="ov-value ov-value--accent" id="ovPct">—%</span>
+      <span class="ov-label">Fuldført</span>
+    </div>
+  </div>
+  <div class="ov-bar-track">
+    <div class="ov-bar-fill" id="ovBarFill"
+         role="progressbar" aria-valuenow="0" aria-valuemax="100"
+         aria-label="Præstationer fuldført"></div>
+  </div>
+</div>
+
+<div class="section-header">Alle præstationer</div>
+<div class="ach-grid" id="achGrid"><!-- rendered by JS --></div>
+
+<script type="module">
+  import { supabase }             from "./supabaseClient.js";
+  import { loadTheme }            from "./js/themeManager.js";
+  import { getXPProgressInLevel } from "./js/progression.js";
+  import { showToast }            from "./js/toast.js";
+  import { playSound }            from "./js/audio.js";
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    window.location.replace("login.html");
+    throw new Error("Unauthorized");
+  }
+
+  const userId = sessionData.session.user.id;
+
+  loadTheme().catch(() => {});
+
+  window.addEventListener("pageshow", async (event) => {
+    if (event.persisted) {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) window.location.replace("login.html");
+    }
+  });
+
+  // ── Data fetch (all in parallel) ──────────────────────────────────────────
+
+  const [catalogResult, earnedResult, progressResult] = await Promise.all([
+    supabase.from("achievements").select("id, label, description, icon, sort_order").order("sort_order"),
+    supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
+    supabase.from("student_progress").select("correct_answers, xp, longest_streak").eq("student_id", userId).maybeSingle(),
+  ]);
+
+  // ── Parse ─────────────────────────────────────────────────────────────────
+
+  const achievements  = catalogResult.data ?? [];
+  const earnedIds     = new Set((earnedResult.data ?? []).map(r => r.achievement_id));
+  const sp            = progressResult.data ?? {};
+  const achCatalogMap = new Map(achievements.map(a => [a.id, a]));
+
+  // ── Progress helper — returns { current, total } or null for binary ────────
+
+  function getProgressForAchievement(id) {
+    const ca     = sp.correct_answers ?? 0;
+    const streak = sp.longest_streak  ?? 0;
+    const level  = getXPProgressInLevel(sp.xp ?? 0).level;
+
+    switch (id) {
+      case "first_correct":   return { current: Math.min(ca,     1),   total: 1   };
+      case "correct_10":      return { current: Math.min(ca,    10),   total: 10  };
+      case "correct_100":     return { current: Math.min(ca,   100),   total: 100 };
+      case "streak_7":        return { current: Math.min(streak,  7),  total: 7   };
+      case "level_10":        return { current: Math.min(level,  10),  total: 10  };
+      default:                return null;
+    }
+  }
+
+  // ── Counts ────────────────────────────────────────────────────────────────
+
+  function updateCounts() {
+    const earned = achievements.filter(a => earnedIds.has(a.id)).length;
+    const total  = achievements.length;
+    const pct    = total > 0 ? Math.round((earned / total) * 100) : 0;
+
+    const topbarEl = document.getElementById("topbarCount");
+    if (topbarEl) topbarEl.textContent = earned + " / " + total;
+
+    const earnedEl = document.getElementById("ovEarned");
+    if (earnedEl) earnedEl.textContent = String(earned);
+
+    const totalEl = document.getElementById("ovTotal");
+    if (totalEl) totalEl.textContent = String(total);
+
+    const pctEl = document.getElementById("ovPct");
+    if (pctEl) pctEl.textContent = pct + "%";
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const fill = document.getElementById("ovBarFill");
+        if (fill) {
+          fill.style.width = pct + "%";
+          fill.setAttribute("aria-valuenow", String(pct));
+        }
+      });
+    });
+  }
+
+  // ── Card builder ──────────────────────────────────────────────────────────
+
+  function buildCard(ach) {
+    const unlocked = earnedIds.has(ach.id);
+
+    const card = document.createElement("div");
+    card.className = "ach-card " + (unlocked ? "ach-card--unlocked" : "ach-card--locked");
+    card.id = "ach-card-" + ach.id;
+
+    const iconEl = document.createElement("span");
+    iconEl.className = "ach-card-icon";
+    iconEl.textContent = ach.icon ?? "";
+    card.appendChild(iconEl);
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "ach-card-title";
+    titleEl.textContent = ach.label ?? "";
+    card.appendChild(titleEl);
+
+    const descEl = document.createElement("div");
+    descEl.className = "ach-card-desc";
+    descEl.textContent = ach.description ?? "";
+    card.appendChild(descEl);
+
+    if (unlocked) {
+      const statusEl = document.createElement("div");
+      statusEl.className = "ach-card-status";
+      statusEl.textContent = "✓ Opnået";
+      card.appendChild(statusEl);
+    } else {
+      const prog = getProgressForAchievement(ach.id);
+      if (prog !== null) {
+        const pct = prog.total > 0 ? Math.min(100, Math.round((prog.current / prog.total) * 100)) : 0;
+
+        const progressEl = document.createElement("div");
+        progressEl.className = "ach-card-progress";
+
+        const trackEl = document.createElement("div");
+        trackEl.className = "ach-card-progress-track";
+
+        const fillEl = document.createElement("div");
+        fillEl.className = "ach-card-progress-fill";
+        fillEl.dataset.targetPct = String(pct);
+        fillEl.setAttribute("role", "progressbar");
+        fillEl.setAttribute("aria-valuenow", String(prog.current));
+        fillEl.setAttribute("aria-valuemax", String(prog.total));
+        fillEl.setAttribute("aria-label", (ach.label ?? "") + " fremgang");
+
+        trackEl.appendChild(fillEl);
+        progressEl.appendChild(trackEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "ach-card-progress-text";
+        textEl.textContent = prog.current + " / " + prog.total;
+        progressEl.appendChild(textEl);
+
+        card.appendChild(progressEl);
+      } else {
+        const lockedEl = document.createElement("div");
+        lockedEl.className = "ach-card-status ach-card-status--locked";
+        lockedEl.textContent = "Låst";
+        card.appendChild(lockedEl);
+      }
+    }
+
+    return card;
+  }
+
+  // ── Grid render ───────────────────────────────────────────────────────────
+
+  function renderGrid() {
+    const gridEl = document.getElementById("achGrid");
+    if (!gridEl) return;
+    gridEl.innerHTML = "";
+
+    if (catalogResult.error) {
+      gridEl.innerHTML = `<div class="ach-grid-error">Fejl ved indlæsning af præstationer</div>`;
+      return;
+    }
+
+    if (achievements.length === 0) {
+      gridEl.innerHTML = `<div class="ach-grid-empty">Ingen præstationer endnu.</div>`;
+      return;
+    }
+
+    for (const ach of achievements) {
+      gridEl.appendChild(buildCard(ach));
+    }
+
+    // Animate progress bars: double RAF so CSS transition fires from 0% baseline
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        gridEl.querySelectorAll(".ach-card-progress-fill[data-target-pct]").forEach(el => {
+          el.style.width = (el.dataset.targetPct ?? "0") + "%";
+        });
+      });
+    });
+  }
+
+  // ── Evaluate + notify (idempotent, non-blocking) ──────────────────────────
+
+  async function evaluateAndNotify() {
+    const { data: newlyUnlocked, error } = await supabase.rpc("evaluate_achievements");
+    if (error || !Array.isArray(newlyUnlocked) || newlyUnlocked.length === 0) return;
+
+    for (let i = 0; i < newlyUnlocked.length; i++) {
+      const id  = newlyUnlocked[i];
+      const ach = achCatalogMap.get(id);
+      if (!ach) continue;
+
+      setTimeout(() => {
+        showToast("Præstation opnået: " + ach.label + " " + (ach.icon ?? ""), "success", 3500);
+        playSound("buy");
+
+        earnedIds.add(id);
+
+        const cardEl = document.getElementById("ach-card-" + id);
+        if (cardEl) {
+          cardEl.classList.remove("ach-card--locked");
+          cardEl.classList.add("ach-card--unlocked", "ach-card--just-unlocked");
+
+          const bottomEl = cardEl.querySelector(".ach-card-progress, .ach-card-status--locked");
+          if (bottomEl) {
+            const statusEl = document.createElement("div");
+            statusEl.className = "ach-card-status";
+            statusEl.textContent = "✓ Opnået";
+            bottomEl.replaceWith(statusEl);
+          }
+
+          cardEl.addEventListener("animationend", () => {
+            cardEl.classList.remove("ach-card--just-unlocked");
+          }, { once: true });
+        }
+
+        updateCounts();
+      }, i * 350);
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  updateCounts();
+  renderGrid();
+  evaluateAndNotify();
+</script>
+
+</body>
+</html>
