@@ -20,7 +20,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
+      padding: 20px 16px 48px;
     }
 
     /* ── Hub container ───────────────────────────────── */
@@ -30,37 +30,163 @@
       max-width: 680px;
       display: flex;
       flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Profile hero card — full width, visually dominant ── */
+
+    .profile-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);   /* accent edge: theme-aware, marks this as the primary element */
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
       gap: 20px;
+      align-items: center;
     }
 
-    /* ── Header ─────────────────────────────────────── */
+    /* ── Avatar showcase (with optional rarity aura) ─── */
 
-    .hub-header {
-      text-align: center;
+    .avatar-showcase {
+      position: relative;
+      flex-shrink: 0;
     }
 
-    .hub-header h1 {
-      font-size: 20px;
+    .avatar-aura {
+      position: absolute;
+      inset: -10px;
+      border-radius: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .avatar-showcase[data-rarity="legendary"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.10) 0%, transparent 65%);
+      opacity: 1;
+    }
+
+    .avatar-showcase[data-rarity="rare"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(25,118,210,0.08) 0%, transparent 65%);
+      opacity: 1;
+    }
+
+    .profile-avatar {
+      position: relative;
+      width: 110px;
+      height: 165px;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      overflow: visible;
+      transition: box-shadow 0.3s;
+    }
+
+    .avatar-showcase[data-rarity="legendary"] .profile-avatar {
+      box-shadow: 0 0 0 2px rgba(255,215,0,0.5), 0 0 14px rgba(255,215,0,0.15);
+    }
+
+    .avatar-showcase[data-rarity="rare"] .profile-avatar {
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.45), 0 0 10px rgba(25,118,210,0.12);
+    }
+
+    .profile-avatar-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* ── Profile info block ──────────────────────────── */
+
+    .profile-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Level: two-line stat block — label above number */
+    .level-block {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .level-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-label);
+    }
+
+    .level-number {
+      font-size: 30px;
       font-weight: bold;
       color: var(--text-bright);
-      letter-spacing: 0.5px;
+      line-height: 1;
     }
 
-    /* ── Two-column layout: menu left, identity right ── */
+    /* Theme badge — pill with accent-colored border (theme-aware) */
+    .theme-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      background: var(--btn-bg);
+      border: 1.5px solid var(--accent);
+      color: var(--text-main);
+      align-self: flex-start;
+      white-space: nowrap;
+    }
 
-    .hub-layout {
+    /* Rarity icon colors — fixed per rarity, same as all other rarity indicators */
+    .tbadge-icon--legendary { color: #f57f17; font-size: 10px; }
+    .tbadge-icon--rare      { color: #1976d2; font-size: 10px; }
+    .tbadge-icon--uncommon  { color: #388e3c; font-size: 10px; }
+    .tbadge-icon--common    { color: var(--text-muted); font-size: 10px; }
+
+    /* XP section */
+    .xp-section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .xp-bar-track {
+      height: 8px;
+      background: var(--xp-track);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.7s ease;
+    }
+
+    .xp-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Bottom grid: nav + collection ──────────────── */
+
+    .hub-bottom {
       display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 16px;
+      grid-template-columns: 200px 1fr;
+      gap: 14px;
       align-items: start;
-    }
-
-    @media (max-width: 580px) {
-      .hub-layout {
-        grid-template-columns: 1fr;
-      }
-      /* On mobile, identity area appears above the menu */
-      .identity-area { order: -1; }
     }
 
     /* ── Navigation menu ─────────────────────────────── */
@@ -72,7 +198,7 @@
     }
 
     .menu button {
-      padding: 13px 16px;
+      padding: 12px 16px;
       font-size: 15px;
       cursor: pointer;
       background: var(--btn-bg);
@@ -99,119 +225,6 @@
     #logoutBtn:hover {
       background: var(--logout-bg-hover);
       color: var(--logout-text-hover);
-    }
-
-    /* ── Right column: identity + collection ─────────── */
-
-    .identity-area {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* ── Identity panel ──────────────────────────────── */
-
-    .identity-panel {
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    /* Mini paper-doll */
-
-    .mini-avatar-frame { flex-shrink: 0; }
-
-    .mini-avatar {
-      position: relative;
-      width: 80px;
-      height: 120px;
-      border-radius: 8px;
-      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
-      overflow: visible;
-      transition: box-shadow 0.3s;
-    }
-
-    .mini-avatar[data-rarity="legendary"] {
-      box-shadow: 0 0 0 1.5px rgba(255,215,0,0.5), 0 0 10px rgba(255,215,0,0.15);
-    }
-
-    .mini-avatar[data-rarity="rare"] {
-      box-shadow: 0 0 0 1.5px rgba(25,118,210,0.45), 0 0 8px rgba(25,118,210,0.12);
-    }
-
-    .mini-avatar-layer {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
-
-    /* Identity info */
-
-    .identity-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding-top: 2px;
-    }
-
-    .identity-level {
-      font-size: 18px;
-      font-weight: bold;
-      color: var(--text-bright);
-      line-height: 1;
-    }
-
-    .identity-theme {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    /* Accent-colored dot — always uses active theme's --accent token */
-    .theme-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      background: var(--accent);
-    }
-
-    .identity-xp-section {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .xp-bar-track {
-      height: 5px;
-      background: var(--xp-track);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .xp-bar-fill {
-      height: 100%;
-      background: var(--success);
-      border-radius: 3px;
-      width: 0%;
-      transition: width 0.7s ease;
-    }
-
-    .xp-label {
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.3px;
     }
 
     /* ── Collection panel ────────────────────────────── */
@@ -245,8 +258,6 @@
       color: var(--accent);
     }
 
-    /* Category bars */
-
     .category-bars {
       display: flex;
       flex-direction: column;
@@ -266,15 +277,8 @@
       align-items: baseline;
     }
 
-    .category-label {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .category-count {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
+    .category-label  { font-size: 11px; color: var(--text-dim); }
+    .category-count  { font-size: 10px; color: var(--text-muted); }
 
     .category-track {
       height: 4px;
@@ -292,7 +296,6 @@
     }
 
     /* Rarity chips */
-
     .rarity-chips {
       display: flex;
       flex-wrap: wrap;
@@ -311,13 +314,11 @@
       color: #fff;
     }
 
-    /* Fixed rarity colors — mirrors the rarity-badge pattern used across the app */
     .rarity-chip--legendary { background: #f57f17; }
     .rarity-chip--rare      { background: #1565c0; }
     .rarity-chip--uncommon  { background: #388e3c; }
     .rarity-chip--common    { background: #757575; }
 
-    /* Legendary chip icon: gentle pulse — marks ownership as special */
     .rarity-chip--legendary .chip-icon {
       display: inline-block;
       animation: legendaryIconPulse 3s ease-in-out infinite;
@@ -328,7 +329,6 @@
       50%       { opacity: 1; }
     }
 
-    /* Subtle completion glow when collection is fully complete */
     @keyframes completionGlow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
       50%       { box-shadow: 0 0 16px 2px rgba(76,175,80,0.18); }
@@ -337,6 +337,17 @@
     .collection-panel--complete {
       animation: completionGlow 4s ease-in-out infinite;
     }
+
+    /* ── Mobile ──────────────────────────────────────── */
+
+    @media (max-width: 540px) {
+      .profile-avatar {
+        width: 100px;
+        height: 150px;
+      }
+      .level-number { font-size: 26px; }
+      .hub-bottom   { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -344,13 +355,38 @@
 
 <div class="hub-container">
 
-  <div class="hub-header">
-    <h1>DEN SEJE APP</h1>
+  <!-- Profile hero: full width, first thing visible -->
+  <div class="profile-card">
+
+    <div class="avatar-showcase" id="avatarShowcase">
+      <div class="avatar-aura"></div>
+      <div class="profile-avatar" id="profileAvatar">
+        <!-- layers injected by JS -->
+      </div>
+    </div>
+
+    <div class="profile-info">
+      <div class="level-block">
+        <span class="level-label">Niveau</span>
+        <span class="level-number" id="levelNumber">—</span>
+      </div>
+      <div class="theme-badge" id="themeBadge">
+        <!-- rendered by JS -->
+      </div>
+      <div class="xp-section">
+        <div class="xp-bar-track">
+          <div class="xp-bar-fill" id="xpBarFill"
+               role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+        </div>
+        <div class="xp-label" id="xpLabel">...</div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="hub-layout">
+  <!-- Bottom: navigation + collection -->
+  <div class="hub-bottom">
 
-    <!-- Left: Navigation menu -->
     <nav class="menu">
       <button id="playBtn">🎮 Spil</button>
       <button id="shopBtn">🛒 Butik</button>
@@ -359,66 +395,38 @@
       <button id="logoutBtn">🚪 Log ud</button>
     </nav>
 
-    <!-- Right: Identity + Collection -->
-    <div class="identity-area">
-
-      <!-- Identity panel: mini avatar, level, theme, XP -->
-      <div class="identity-panel">
-        <div class="mini-avatar-frame">
-          <div class="mini-avatar" id="miniAvatar" data-rarity="">
-            <!-- layers injected by JS -->
+    <div class="collection-panel" id="collectionPanel">
+      <div class="collection-header">
+        <span class="collection-title">Min samling</span>
+        <span class="collection-pct" id="collectionPct">—</span>
+      </div>
+      <div class="category-bars">
+        <div class="category-row">
+          <div class="category-label-row">
+            <span class="category-label">Items</span>
+            <span class="category-count" id="itemsCount">—</span>
+          </div>
+          <div class="category-track">
+            <div class="category-fill" id="itemsFill"
+                 role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
           </div>
         </div>
-        <div class="identity-info">
-          <div class="identity-level" id="identityLevel">Niveau —</div>
-          <div class="identity-theme">
-            <span class="theme-dot"></span>
-            <span id="themeLabel">—</span>
+        <div class="category-row">
+          <div class="category-label-row">
+            <span class="category-label">Temaer</span>
+            <span class="category-count" id="themesCount">—</span>
           </div>
-          <div class="identity-xp-section">
-            <div class="xp-bar-track">
-              <div class="xp-bar-fill" id="xpBarFill"
-                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
-            </div>
-            <div class="xp-label" id="xpLabel">...</div>
+          <div class="category-track">
+            <div class="category-fill" id="themesFill"
+                 role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
           </div>
         </div>
       </div>
-
-      <!-- Collection summary: completion bars + rarity breakdown -->
-      <div class="collection-panel" id="collectionPanel">
-        <div class="collection-header">
-          <span class="collection-title">Min samling</span>
-          <span class="collection-pct" id="collectionPct">—</span>
-        </div>
-        <div class="category-bars">
-          <div class="category-row">
-            <div class="category-label-row">
-              <span class="category-label">Items</span>
-              <span class="category-count" id="itemsCount">—</span>
-            </div>
-            <div class="category-track">
-              <div class="category-fill" id="itemsFill"
-                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
-            </div>
-          </div>
-          <div class="category-row">
-            <div class="category-label-row">
-              <span class="category-label">Temaer</span>
-              <span class="category-count" id="themesCount">—</span>
-            </div>
-            <div class="category-track">
-              <div class="category-fill" id="themesFill"
-                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
-            </div>
-          </div>
-        </div>
-        <div class="rarity-chips" id="rarityChips">
-          <!-- rendered by JS -->
-        </div>
+      <div class="rarity-chips" id="rarityChips">
+        <!-- rendered by JS -->
       </div>
-
     </div>
+
   </div>
 </div>
 
@@ -464,6 +472,8 @@
   const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
   const BASE_SRC     = "/assets/avatar/base/body.svg";
 
+  const RARITY_ICONS = { legendary: "✦", rare: "◆", uncommon: "◇", common: "○" };
+
   const RARITY_CHIP_CFG = {
     legendary: { label: "Legendarisk", icon: "✦", cls: "rarity-chip--legendary" },
     rare:      { label: "Sjælden",     icon: "◆", cls: "rarity-chip--rare"      },
@@ -500,30 +510,27 @@
 
   // ── Parse items ───────────────────────────────────────────────────────────────
 
-  const allShopItems  = shopItemsResult.data ?? [];
-  const ownedItemIds  = new Set((userItemsResult.data ?? []).map(r => r.item_id));
-
-  // Count only items with a slot_type — these are the equippable avatar items
-  const equipableItems   = allShopItems.filter(i => !!i.slot_type);
-  const totalItems       = equipableItems.length;
-  const ownedItems       = equipableItems.filter(i => ownedItemIds.has(i.id));
-  const ownedItemsCount  = ownedItems.length;
+  const allShopItems    = shopItemsResult.data ?? [];
+  const ownedItemIds    = new Set((userItemsResult.data ?? []).map(r => r.item_id));
+  const equipableItems  = allShopItems.filter(i => !!i.slot_type);
+  const totalItems      = equipableItems.length;
+  const ownedItems      = equipableItems.filter(i => ownedItemIds.has(i.id));
+  const ownedItemsCount = ownedItems.length;
 
   // ── Parse themes ──────────────────────────────────────────────────────────────
 
   const allThemes     = themesResult.data ?? [];
   const ownedThemeSet = new Set((userThemesResult.data ?? []).map(r => r.theme_id));
-  // always_owned themes (e.g. "Standard") are implicitly owned by everyone
   allThemes.forEach(t => { if (t.always_owned) ownedThemeSet.add(t.id); });
 
   const totalThemes      = allThemes.length;
   const ownedThemesCount = ownedThemeSet.size;
 
-  // Active theme display name — look up in catalog, fall back to key
   const activeThemeObj  = allThemes.find(t => t.id === activeThemeId) ?? null;
   const activeThemeName = activeThemeObj?.name ?? activeThemeId;
+  const activeThemeRarity = activeThemeObj?.rarity ?? "common";
 
-  // ── Rarity breakdown (owned items + owned themes combined) ────────────────────
+  // ── Rarity breakdown (owned items + owned themes) ─────────────────────────────
 
   const rarityCounts = { legendary: 0, rare: 0, uncommon: 0, common: 0 };
 
@@ -561,23 +568,24 @@
     return null;
   }
 
-  // ── Mini avatar rendering ─────────────────────────────────────────────────────
+  // ── Profile avatar rendering ──────────────────────────────────────────────────
 
-  function renderMiniAvatar() {
-    const el = document.getElementById("miniAvatar");
-    if (!el) return;
+  function renderProfileAvatar() {
+    const avatarEl   = document.getElementById("profileAvatar");
+    const showcaseEl = document.getElementById("avatarShowcase");
+    if (!avatarEl || !showcaseEl) return;
 
-    el.innerHTML = "";
+    avatarEl.innerHTML = "";
 
     // Base body — always present
     const base = document.createElement("img");
-    base.className = "mini-avatar-layer";
+    base.className = "profile-avatar-layer";
     base.src = BASE_SRC;
     base.style.zIndex = "0";
     base.alt = "";
-    el.appendChild(base);
+    avatarEl.appendChild(base);
 
-    // One layer per equipped slot
+    // Equipped item layers
     ALL_SLOTS.forEach(slot => {
       const itemId = equippedSlots[slot];
       if (!itemId) return;
@@ -585,29 +593,43 @@
       if (!item || !item.image_url) return;
 
       const img = document.createElement("img");
-      img.className = "mini-avatar-layer";
+      img.className = "profile-avatar-layer";
       img.src = item.image_url;
       img.style.zIndex = String(SLOT_Z[slot] ?? 1);
       img.alt = "";
-      el.appendChild(img);
+      avatarEl.appendChild(img);
     });
 
-    // Rarity-based border glow (matches avatar.html aura logic)
-    el.dataset.rarity = getHighestEquippedRarity() ?? "";
+    // Rarity aura + border on showcase wrapper
+    showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";
   }
 
-  // ── Identity panel rendering ──────────────────────────────────────────────────
+  // ── Identity rendering ────────────────────────────────────────────────────────
 
   function renderIdentity() {
     const { level, xpIntoLevel, xpRequiredForLevel, progress } = getXPProgressInLevel(xp);
 
-    const levelEl = document.getElementById("identityLevel");
-    if (levelEl) levelEl.textContent = "Niveau " + level;
+    // Level number
+    const levelEl = document.getElementById("levelNumber");
+    if (levelEl) levelEl.textContent = level;
 
-    const themeLabelEl = document.getElementById("themeLabel");
-    if (themeLabelEl) themeLabelEl.textContent = activeThemeName;
+    // Theme badge: rarity icon + name
+    const badgeEl = document.getElementById("themeBadge");
+    if (badgeEl) {
+      badgeEl.innerHTML = "";
 
-    // XP bar — double RAF ensures CSS transition fires after initial 0% render
+      const iconSpan = document.createElement("span");
+      iconSpan.className = "tbadge-icon--" + activeThemeRarity;
+      iconSpan.textContent = RARITY_ICONS[activeThemeRarity] ?? "○";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = activeThemeName;
+
+      badgeEl.appendChild(iconSpan);
+      badgeEl.appendChild(nameSpan);
+    }
+
+    // XP bar — double RAF ensures CSS transition fires from initial 0%
     const xpFill = document.getElementById("xpBarFill");
     if (xpFill) {
       requestAnimationFrame(() => {
@@ -623,14 +645,12 @@
     if (xpLabelEl) xpLabelEl.textContent = xpIntoLevel + " / " + xpRequiredForLevel + " XP";
   }
 
-  // ── Collection panel rendering ────────────────────────────────────────────────
+  // ── Collection rendering ──────────────────────────────────────────────────────
 
   function renderCollection() {
-    // Total completion percentage
     const pctEl = document.getElementById("collectionPct");
     if (pctEl) pctEl.textContent = totalPct + "%";
 
-    // Items bar
     const itemsCountEl = document.getElementById("itemsCount");
     if (itemsCountEl) itemsCountEl.textContent = ownedItemsCount + " / " + totalItems;
 
@@ -644,7 +664,6 @@
       });
     }
 
-    // Themes bar
     const themesCountEl = document.getElementById("themesCount");
     if (themesCountEl) themesCountEl.textContent = ownedThemesCount + " / " + totalThemes;
 
@@ -658,7 +677,6 @@
       });
     }
 
-    // Rarity chips — only show rarities where owned count > 0
     const chipsEl = document.getElementById("rarityChips");
     if (chipsEl) {
       chipsEl.innerHTML = "";
@@ -677,7 +695,6 @@
       });
     }
 
-    // Completion glow for fully collected
     if (totalPct >= 100) {
       const panel = document.getElementById("collectionPanel");
       if (panel) panel.classList.add("collection-panel--complete");
@@ -686,7 +703,7 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────────
 
-  renderMiniAvatar();
+  renderProfileAvatar();
   renderIdentity();
   renderCollection();
 </script>
