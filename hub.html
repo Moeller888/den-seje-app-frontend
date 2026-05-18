@@ -180,6 +180,48 @@
       color: var(--text-muted);
     }
 
+    /* ── Stat chips (coins + correct answers) ────────── */
+
+    .stat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stat-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 14px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 72px;
+    }
+
+    .stat-chip-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .stat-chip-value {
+      font-size: 17px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .stat-chip--coins .stat-chip-value   { color: var(--coin); }
+    .stat-chip--correct .stat-chip-value { color: var(--success-text); }
+
+    .stat-chip-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
     /* ── Bottom grid: nav + collection ──────────────── */
 
     .hub-bottom {
@@ -380,6 +422,18 @@
         </div>
         <div class="xp-label" id="xpLabel">...</div>
       </div>
+      <div class="stat-chips">
+        <div class="stat-chip stat-chip--coins">
+          <span class="stat-chip-icon">🪙</span>
+          <span class="stat-chip-value" id="statCoins">—</span>
+          <span class="stat-chip-label">Mønter</span>
+        </div>
+        <div class="stat-chip stat-chip--correct">
+          <span class="stat-chip-icon">✓</span>
+          <span class="stat-chip-value" id="statCorrect">—</span>
+          <span class="stat-chip-label">Rigtige svar</span>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -490,6 +544,7 @@
     shopItemsResult,
     userThemesResult,
     themesResult,
+    correctResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins").eq("student_id", userId),
@@ -497,6 +552,7 @@
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
     supabase.from("user_themes").select("theme_id").eq("user_id", userId),
     supabase.from("themes").select("id, name, rarity, always_owned"),
+    supabase.from("question_instances").select("id", { count: "exact", head: true }).eq("student_id", userId).eq("was_correct", true).eq("answered", true),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -506,7 +562,10 @@
 
   // ── Parse progression ─────────────────────────────────────────────────────────
 
-  const xp = progressResult.data?.[0]?.xp ?? 0;
+  const xp    = progressResult.data?.[0]?.xp    ?? 0;
+  const coins = progressResult.data?.[0]?.coins ?? 0;
+
+  const correctCount = correctResult.count ?? 0;
 
   // ── Parse items ───────────────────────────────────────────────────────────────
 
@@ -643,6 +702,12 @@
 
     const xpLabelEl = document.getElementById("xpLabel");
     if (xpLabelEl) xpLabelEl.textContent = xpIntoLevel + " / " + xpRequiredForLevel + " XP";
+
+    const coinsEl = document.getElementById("statCoins");
+    if (coinsEl) coinsEl.textContent = coins;
+
+    const correctEl = document.getElementById("statCorrect");
+    if (correctEl) correctEl.textContent = correctCount;
   }
 
   // ── Collection rendering ──────────────────────────────────────────────────────
