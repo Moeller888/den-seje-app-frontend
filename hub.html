@@ -180,7 +180,7 @@
       color: var(--text-muted);
     }
 
-    /* ── Stat chips (coins + correct answers) ────────── */
+    /* ── Stat chips (coins + correct answers + streak) ── */
 
     .stat-chips {
       display: flex;
@@ -387,6 +387,227 @@
       animation: completionGlow 4s ease-in-out infinite;
     }
 
+    /* ── Retention section: daily reward + quests ────── */
+
+    .retention-section {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    /* ── Daily reward card ───────────────────────────── */
+
+    .daily-reward-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--coin);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .drc-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .drc-coin-amount {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--coin);
+      line-height: 1;
+    }
+
+    .drc-streak-line {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Quest panel ─────────────────────────────────── */
+
+    .quest-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .quest-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .quest-panel-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .quest-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quest-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .quest-row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .quest-label {
+      font-size: 13px;
+      color: var(--text-main);
+      flex: 1;
+    }
+
+    .quest-reward-badge {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--coin);
+      white-space: nowrap;
+    }
+
+    .quest-progress-track {
+      height: 4px;
+      background: var(--xp-track);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .quest-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .quest-row-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .quest-progress-text {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .quest-claim-btn {
+      padding: 4px 12px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 5px;
+      color: var(--text-main);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .quest-claim-btn:hover:not(:disabled) {
+      background: var(--btn-bg-hover);
+    }
+
+    .quest-claim-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    /* ── Daily reward modal overlay ──────────────────── */
+
+    .daily-reward-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .daily-reward-overlay.visible {
+      display: flex;
+    }
+
+    .daily-reward-modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--coin);
+      border-radius: 16px;
+      padding: 28px 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      max-width: 300px;
+      width: 90%;
+      animation: drmAppear 200ms ease;
+    }
+
+    @keyframes drmAppear {
+      from { transform: scale(0.92); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .dro-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-label);
+    }
+
+    .dro-coins {
+      font-size: 44px;
+      font-weight: bold;
+      color: var(--coin);
+      line-height: 1;
+    }
+
+    .dro-streak-info {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .dro-btn {
+      padding: 10px 28px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .dro-btn:hover {
+      opacity: 0.85;
+    }
+
     /* ── Mobile ──────────────────────────────────────── */
 
     @media (max-width: 540px) {
@@ -394,8 +615,9 @@
         width: 100px;
         height: 150px;
       }
-      .level-number { font-size: 26px; }
-      .hub-bottom   { grid-template-columns: 1fr; }
+      .level-number    { font-size: 26px; }
+      .hub-bottom      { grid-template-columns: 1fr; }
+      .retention-section { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -495,12 +717,42 @@
     </div>
 
   </div>
+
+  <!-- Retention: daily reward + daily quests -->
+  <div class="retention-section">
+
+    <div class="daily-reward-card" id="dailyRewardCard">
+      <!-- rendered by JS -->
+    </div>
+
+    <div class="quest-panel">
+      <div class="quest-panel-header">
+        <span class="quest-panel-title">Daglige mål</span>
+      </div>
+      <div id="questList"><!-- rendered by JS --></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Daily reward modal overlay -->
+<div id="dailyRewardOverlay" class="daily-reward-overlay"
+     role="dialog" aria-modal="true" aria-label="Daglig belønning" aria-hidden="true">
+  <div class="daily-reward-modal">
+    <div class="dro-title">Daglig belønning</div>
+    <div class="dro-coins" id="droCoins">+0 🪙</div>
+    <div class="dro-streak-info" id="droStreakInfo"></div>
+    <button class="dro-btn" id="droDismissBtn">Hent!</button>
+  </div>
 </div>
 
 <script type="module">
   import { supabase }  from "./supabaseClient.js";
   import { loadTheme } from "./js/themeManager.js";
   import { getXPProgressInLevel } from "./js/progression.js";
+  import { showToast } from "./js/toast.js";
+  import { playSound } from "./js/audio.js";
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -548,6 +800,10 @@
     common:    { label: "Almindelig",  icon: "○", cls: "rarity-chip--common"    },
   };
 
+  // ── Today (UTC) — used for quest date queries ─────────────────────────────────
+
+  const todayUTC = new Date().toISOString().slice(0, 10);
+
   // ── Data fetch (all in parallel) ──────────────────────────────────────────────
 
   const [
@@ -558,6 +814,9 @@
     userThemesResult,
     themesResult,
     correctResult,
+    rewardResult,
+    questsResult,
+    questProgressResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak").eq("student_id", userId),
@@ -566,6 +825,9 @@
     supabase.from("user_themes").select("theme_id").eq("user_id", userId),
     supabase.from("themes").select("id, name, rarity, always_owned"),
     supabase.from("question_instances").select("id", { count: "exact", head: true }).eq("student_id", userId).eq("was_correct", true).eq("answered", true),
+    supabase.from("daily_login_rewards").select("last_claimed_date").eq("student_id", userId).maybeSingle(),
+    supabase.from("daily_quests").select("id, quest_key, type, target, reward_coins, label, sort_order").eq("is_active", true).order("sort_order"),
+    supabase.from("student_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("quest_date", todayUTC),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -581,6 +843,11 @@
   const longestStreak = progressResult.data?.[0]?.longest_streak ?? 0;
 
   const correctCount = correctResult.count ?? 0;
+
+  // ── Parse retention data ──────────────────────────────────────────────────────
+
+  const alreadyClaimedToday = (rewardResult.data?.last_claimed_date === todayUTC);
+  const nextRewardCoins = Math.min(150, 25 + currentStreak * 15);
 
   // ── Parse items ───────────────────────────────────────────────────────────────
 
@@ -787,11 +1054,177 @@
     }
   }
 
+  // ── Daily reward card rendering ───────────────────────────────────────────────
+
+  function renderDailyRewardCard(claimed) {
+    const cardEl = document.getElementById("dailyRewardCard");
+    if (!cardEl) return;
+
+    if (claimed) {
+      cardEl.innerHTML =
+        `<div class="drc-title">Daglig belønning</div>` +
+        `<div class="drc-coin-amount">🪙</div>` +
+        `<div class="drc-streak-line">✓ Hentet i dag</div>`;
+    } else {
+      cardEl.innerHTML =
+        `<div class="drc-title">Daglig belønning</div>` +
+        `<div class="drc-coin-amount">+${nextRewardCoins}&thinsp;🪙</div>` +
+        `<div class="drc-streak-line">${currentStreak > 0 ? currentStreak + " dages streak" : "Log ind dagligt"}</div>`;
+    }
+  }
+
+  // Auto-claim daily reward (idempotent — safe to call on every page load)
+  async function claimDailyReward() {
+    const { data, error } = await supabase.rpc("claim_daily_reward");
+    if (error) return;
+    if (data?.status !== "claimed") return;
+
+    const claimedCoins  = data.coins  ?? 0;
+    const claimedStreak = data.streak ?? 0;
+
+    // Show modal
+    const overlay = document.getElementById("dailyRewardOverlay");
+    if (overlay) {
+      const droCoins = document.getElementById("droCoins");
+      if (droCoins) droCoins.textContent = "+" + claimedCoins + " 🪙";
+
+      const droStreak = document.getElementById("droStreakInfo");
+      if (droStreak) {
+        droStreak.textContent = claimedStreak > 0
+          ? claimedStreak + " dages streak! 🔥"
+          : "Velkommen tilbage!";
+      }
+
+      overlay.classList.add("visible");
+      overlay.setAttribute("aria-hidden", "false");
+      playSound("buy");
+    }
+
+    // Update coins chip to reflect awarded coins
+    const coinsEl = document.getElementById("statCoins");
+    if (coinsEl) {
+      const current = parseInt(coinsEl.textContent, 10) || 0;
+      coinsEl.textContent = current + claimedCoins;
+    }
+
+    renderDailyRewardCard(true);
+  }
+
+  // ── Quest rendering ───────────────────────────────────────────────────────────
+
+  function renderQuests() {
+    const quests = questsResult.data ?? [];
+    const progressMap = {};
+    for (const row of (questProgressResult.data ?? [])) {
+      progressMap[row.quest_id] = row;
+    }
+
+    const listEl = document.getElementById("questList");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+
+    if (quests.length === 0) {
+      listEl.innerHTML =
+        `<p style="font-size:12px;color:var(--text-muted)">Ingen aktive mål i dag</p>`;
+      return;
+    }
+
+    for (const quest of quests) {
+      const prog   = progressMap[quest.id] ?? { progress: 0, completed: false, claimed: false };
+      const capped = Math.min(prog.progress, quest.target);
+      const pct    = quest.target > 0
+        ? Math.min(100, Math.round((capped / quest.target) * 100))
+        : 0;
+
+      const claimBtnHtml = prog.claimed
+        ? `<button class="quest-claim-btn" disabled>&#10003; Hentet</button>`
+        : (prog.completed
+          ? `<button class="quest-claim-btn" data-quest-id="${quest.id}">Hent!</button>`
+          : `<button class="quest-claim-btn" disabled>${capped}&thinsp;/&thinsp;${quest.target}</button>`);
+
+      const row = document.createElement("div");
+      row.className = "quest-row";
+      row.innerHTML =
+        `<div class="quest-row-top">` +
+          `<span class="quest-label">${quest.label}</span>` +
+          `<span class="quest-reward-badge">+${quest.reward_coins}&thinsp;&#x1FA99;</span>` +
+        `</div>` +
+        `<div class="quest-progress-track">` +
+          `<div class="quest-progress-fill" style="width:${pct}%"></div>` +
+        `</div>` +
+        `<div class="quest-row-bottom">` +
+          `<span class="quest-progress-text">${capped} / ${quest.target}</span>` +
+          claimBtnHtml +
+        `</div>`;
+
+      listEl.appendChild(row);
+    }
+
+    // Wire claim buttons
+    listEl.querySelectorAll(".quest-claim-btn[data-quest-id]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const questId = btn.dataset.questId;
+        await claimQuestReward(questId, btn);
+      });
+    });
+  }
+
+  async function claimQuestReward(questId, btnEl) {
+    btnEl.disabled = true;
+
+    const { data, error } = await supabase.rpc("claim_quest_reward", {
+      p_quest_id:   questId,
+      p_quest_date: todayUTC,
+    });
+
+    if (error) {
+      showToast("Fejl ved hentning af belønning", "error");
+      btnEl.disabled = false;
+      return;
+    }
+
+    if (data?.status === "claimed") {
+      const coinsWon = data.coins ?? 0;
+      showToast("+" + coinsWon + " mønter! Mål gennemført 🎯", "success");
+      playSound("buy");
+
+      // Update coins chip live
+      const coinsEl = document.getElementById("statCoins");
+      if (coinsEl) {
+        const current = parseInt(coinsEl.textContent, 10) || 0;
+        coinsEl.textContent = current + coinsWon;
+      }
+
+      btnEl.textContent = "✓ Hentet";
+      btnEl.disabled = true;
+    } else {
+      showToast("Målet er ikke fuldført endnu", "info");
+      btnEl.disabled = false;
+    }
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   renderProfileAvatar();
   renderIdentity();
   renderCollection();
+  renderDailyRewardCard(alreadyClaimedToday);
+  renderQuests();
+
+  // Dismiss daily reward modal
+  const droDismissBtn = document.getElementById("droDismissBtn");
+  if (droDismissBtn) {
+    droDismissBtn.addEventListener("click", () => {
+      const overlay = document.getElementById("dailyRewardOverlay");
+      if (overlay) {
+        overlay.classList.remove("visible");
+        overlay.setAttribute("aria-hidden", "true");
+      }
+    });
+  }
+
+  // Auto-claim daily reward (async, non-blocking — idempotent RPC)
+  claimDailyReward();
 </script>
 
 </body>

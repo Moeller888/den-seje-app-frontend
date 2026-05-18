@@ -75,7 +75,7 @@
     .sandbox-grid {
       display: grid;
       grid-template-columns: 210px 1fr 252px;
-      grid-template-rows: auto auto auto auto;
+      grid-template-rows: auto auto auto auto auto;
       gap: 10px;
       padding: 10px 16px 16px;
       align-items: start;
@@ -99,12 +99,13 @@
       padding-bottom: 7px;
       border-bottom: 1px solid var(--border);
     }
-    .panel-audio  { grid-column: 1; grid-row: 1; }
-    .panel-toast  { grid-column: 1; grid-row: 2; }
-    .panel-avatar { grid-column: 2; grid-row: 1 / 3; }
-    .panel-diag   { grid-column: 3; grid-row: 1 / 3; }
-    .panel-quiz   { grid-column: 1 / 4; grid-row: 3; }
-    .panel-theme  { grid-column: 1 / 4; grid-row: 4; }
+    .panel-audio     { grid-column: 1; grid-row: 1; }
+    .panel-toast     { grid-column: 1; grid-row: 2; }
+    .panel-avatar    { grid-column: 2; grid-row: 1 / 3; }
+    .panel-diag      { grid-column: 3; grid-row: 1 / 3; }
+    .panel-quiz      { grid-column: 1 / 4; grid-row: 3; }
+    .panel-theme     { grid-column: 1 / 4; grid-row: 4; }
+    .panel-retention { grid-column: 1 / 4; grid-row: 5; }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     .sb-btn {
@@ -135,7 +136,7 @@
     .sb-btn.c-violet { border-left: 3px solid #7c4de8; }
     .sb-btn.c-silver { border-left: 3px solid #8898b0; }
     .sb-btn.c-sage   { border-left: 3px solid #6ea840; }
-    .sb-btn.c-gold   { border-left: 3px solid #c4836a; }
+    .sb-btn.c-orange { border-left: 3px solid var(--orange); }
     .sb-btn.active-theme {
       border-color: var(--green);
       background: #0a1a0a;
@@ -522,6 +523,74 @@
       color: #3a3a5a;
       text-align: center;
     }
+
+    /* ── Retention mock modal ───────────────────────────────────────── */
+
+    .mock-drm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    .mock-drm-overlay.visible { display: flex; }
+
+    .mock-drm-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--gold);
+      border-radius: 16px;
+      padding: 28px 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      max-width: 300px;
+      width: 90%;
+      animation: drmAppear 200ms ease;
+    }
+
+    @keyframes drmAppear {
+      from { transform: scale(0.92); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .mock-dro-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--dim);
+    }
+
+    .mock-dro-coins {
+      font-size: 44px;
+      font-weight: bold;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .mock-dro-streak {
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    .mock-dro-btn {
+      padding: 10px 28px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .mock-dro-btn:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
@@ -749,12 +818,42 @@
     </div>
   </div>
 
+  <!-- ── Row 5: Retention Loops (full width) ───────────────────────── -->
+  <div class="panel panel-retention">
+    <div class="panel-h">Retention Loops — Daily Reward &amp; Quests (hub.html)</div>
+
+    <div class="quiz-row">
+      <div class="quiz-row-label">Daily Login Reward Modal</div>
+      <button class="sb-btn c-gold"   id="btnDailyRewardFirst"  style="width:auto;margin:0">&#x1FA99; First login (streak 0) &rarr; +25 mønter</button>
+      <button class="sb-btn c-orange" id="btnDailyRewardStreak" style="width:auto;margin:0">&#x1FA99; Streak 5 &rarr; +100 mønter</button>
+      <button class="sb-btn c-orange" id="btnDailyRewardCap"    style="width:auto;margin:0">&#x1FA99; Streak 9+ (cap) &rarr; +150 mønter</button>
+    </div>
+
+    <div class="quiz-row">
+      <div class="quiz-row-label">Quest Claim &amp; Milestone Toasts</div>
+      <button class="sb-btn c-green" id="btnQuestClaim"    style="width:auto;margin:0">&#127919; Quest claimed (+50 mønter)</button>
+      <button class="sb-btn c-gold"  id="btnMilestone7"    style="width:auto;margin:0">&#127942; Streak milestone 7 dage (+200 mønter)</button>
+      <button class="sb-btn c-gold"  id="btnMilestone30"   style="width:auto;margin:0">&#127942; Streak milestone 30 dage (+1000 mønter)</button>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- Level-up demo overlay (full-screen, mirrors index.html exactly) -->
 <div id="demoLevelUpOverlay">
   <div class="demo-lvl-title">LEVEL UP! &#127881;</div>
   <div class="demo-lvl-sub">Du er nu level 5!</div>
+</div>
+
+<!-- Daily reward mock overlay (mirrors hub.html exactly) -->
+<div id="mockDrmOverlay" class="mock-drm-overlay">
+  <div class="mock-drm-modal">
+    <div class="mock-dro-title">Daglig belønning</div>
+    <div class="mock-dro-coins" id="mockDroCoins">+25 &#x1FA99;</div>
+    <div class="mock-dro-streak" id="mockDroStreak">Velkommen tilbage!</div>
+    <button class="mock-dro-btn" id="mockDroDismiss">Hent!</button>
+  </div>
 </div>
 
 <script type="module">
@@ -997,12 +1096,57 @@ function buildThemeSwitcherButtons() {
   }
 }
 
+// ── Retention: mock daily reward modal ────────────────────────────────────────
+
+function showMockDailyRewardModal(coins, streakText) {
+  const overlay  = document.getElementById("mockDrmOverlay");
+  const coinsEl  = document.getElementById("mockDroCoins");
+  const streakEl = document.getElementById("mockDroStreak");
+  if (!overlay) return;
+  if (coinsEl)  coinsEl.textContent  = "+" + coins + " 🪙";
+  if (streakEl) streakEl.textContent = streakText;
+  overlay.classList.add("visible");
+  play("buy");
+}
+
+document.getElementById("mockDroDismiss").addEventListener("click", () => {
+  const overlay = document.getElementById("mockDrmOverlay");
+  if (overlay) overlay.classList.remove("visible");
+});
+
+document.getElementById("btnDailyRewardFirst").addEventListener("click", () => {
+  showMockDailyRewardModal(25, "Velkommen tilbage!");
+});
+
+document.getElementById("btnDailyRewardStreak").addEventListener("click", () => {
+  showMockDailyRewardModal(100, "5 dages streak! 🔥");
+});
+
+document.getElementById("btnDailyRewardCap").addEventListener("click", () => {
+  showMockDailyRewardModal(150, "9+ dages streak! 🔥 Maks belønning!");
+});
+
+document.getElementById("btnQuestClaim").addEventListener("click", () => {
+  toast("+50 m\xF8nter! M\xE5l gennemf\xF8rt 🎯", "success");
+  play("buy");
+});
+
+document.getElementById("btnMilestone7").addEventListener("click", () => {
+  toast("+200 m\xF8nter! 7 dages streak 🏆", "success");
+  play("buy");
+});
+
+document.getElementById("btnMilestone30").addEventListener("click", () => {
+  toast("+1000 m\xF8nter! 30 dages streak 🏆🔥", "success");
+  play("buy");
+});
+
 // ── Button wiring ─────────────────────────────────────────────────────────────
 document.getElementById("btnEquip").addEventListener("click",        () => play("equip"));
 document.getElementById("btnBuy").addEventListener("click",          () => play("buy"));
 document.getElementById("btnError").addEventListener("click",        () => play("error"));
 document.getElementById("btnUnequip").addEventListener("click",      () => play("unequip"));
-document.getElementById("btnToastSuccess").addEventListener("click", () => toast("✓ Item udstyret!", "success"));
+document.getElementById("btnToastSuccess").addEventListener("click", () => toast("&#10003; Item udstyret!", "success"));
 document.getElementById("btnToastError").addEventListener("click",   () => toast("Ikke nok m\xF8nter", "error"));
 document.getElementById("btnToastInfo").addEventListener("click",    () => toast("Debug info besked", "info"));
 document.getElementById("btnEquipAnim").addEventListener("click",    triggerEquipAnim);
