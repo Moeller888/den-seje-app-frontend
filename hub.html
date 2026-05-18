@@ -534,6 +534,91 @@
       cursor: default;
     }
 
+    /* ── Achievement panel ───────────────────────────── */
+
+    .achievement-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .achievement-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .achievement-panel-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .achievement-count {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+      gap: 6px;
+    }
+
+    .ach-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--btn-bg);
+      cursor: default;
+    }
+
+    .ach-badge--locked {
+      opacity: 0.28;
+    }
+
+    .ach-badge--unlocked {
+      border-color: var(--accent);
+    }
+
+    .ach-badge-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .ach-badge-label {
+      font-size: 8px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text-label);
+      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ach-badge--unlocked .ach-badge-label {
+      color: var(--text-dim);
+    }
+
+    @keyframes achUnlock {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--accent); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+
+    .ach-badge--just-unlocked {
+      animation: achUnlock 600ms ease both;
+    }
+
     /* ── Daily reward modal overlay ──────────────────── */
 
     .daily-reward-overlay {
@@ -734,6 +819,17 @@
 
   </div>
 
+  <!-- Achievements: permanent trophy shelf -->
+  <div class="achievement-panel">
+    <div class="achievement-panel-header">
+      <span class="achievement-panel-title">Præstationer</span>
+      <span class="achievement-count" id="achievementCount">— / 7</span>
+    </div>
+    <div class="achievement-grid" id="achievementGrid">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
 </div>
 
 <!-- Daily reward modal overlay -->
@@ -800,6 +896,17 @@
     common:    { label: "Almindelig",  icon: "○", cls: "rarity-chip--common"    },
   };
 
+  // Client-side achievement catalog — must match DB seed in achievements table.
+  const ACHIEVEMENT_DEFS = [
+    { id: "first_correct",   label: "Første svar",  icon: "✓",  sortOrder: 1 },
+    { id: "correct_10",      label: "10 svar",       icon: "◎",  sortOrder: 2 },
+    { id: "correct_100",     label: "100 svar",      icon: "★",  sortOrder: 3 },
+    { id: "first_theme",     label: "Tema",          icon: "◈",  sortOrder: 4 },
+    { id: "first_legendary", label: "Legendarisk",  icon: "✦",  sortOrder: 5 },
+    { id: "streak_7",        label: "7 dage",        icon: "🔥", sortOrder: 6 },
+    { id: "level_10",        label: "Niveau 10",     icon: "▲",  sortOrder: 7 },
+  ];
+
   // ── Today (UTC) — used for quest date queries ─────────────────────────────────
 
   const todayUTC = new Date().toISOString().slice(0, 10);
@@ -816,6 +923,7 @@
     rewardResult,
     questsResult,
     questProgressResult,
+    userAchievementsResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
@@ -826,6 +934,7 @@
     supabase.from("daily_login_rewards").select("last_claimed_date").eq("student_id", userId).maybeSingle(),
     supabase.from("daily_quests").select("id, quest_key, type, target, reward_coins, label, sort_order").eq("is_active", true).order("sort_order"),
     supabase.from("student_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("quest_date", todayUTC),
+    supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -839,8 +948,7 @@
   const coins         = progressResult.data?.[0]?.coins          ?? 0;
   const currentStreak = progressResult.data?.[0]?.current_streak ?? 0;
   const longestStreak = progressResult.data?.[0]?.longest_streak ?? 0;
-
-  const correctCount = progressResult.data?.[0]?.correct_answers ?? 0;
+  const correctCount  = progressResult.data?.[0]?.correct_answers ?? 0;
 
   // ── Parse retention data ──────────────────────────────────────────────────────
 
@@ -868,6 +976,12 @@
   const activeThemeObj  = allThemes.find(t => t.id === activeThemeId) ?? null;
   const activeThemeName = activeThemeObj?.name ?? activeThemeId;
   const activeThemeRarity = activeThemeObj?.rarity ?? "common";
+
+  // ── Parse achievements ────────────────────────────────────────────────────────
+
+  const earnedAchievementIds = new Set(
+    (userAchievementsResult.data ?? []).map(r => r.achievement_id)
+  );
 
   // ── Rarity breakdown (owned items + owned themes) ─────────────────────────────
 
@@ -1084,7 +1198,7 @@
     const overlay = document.getElementById("dailyRewardOverlay");
     if (overlay) {
       const droCoins = document.getElementById("droCoins");
-      if (droCoins) droCoins.textContent = "+" + claimedCoins + " 🪙";
+      if (droCoins) droCoins.textContent = "+" + claimedCoins + " 🪙";
 
       const droStreak = document.getElementById("droStreakInfo");
       if (droStreak) {
@@ -1201,6 +1315,69 @@
     }
   }
 
+  // ── Achievement rendering ─────────────────────────────────────────────────────
+
+  function renderAchievements() {
+    const gridEl  = document.getElementById("achievementGrid");
+    const countEl = document.getElementById("achievementCount");
+    if (!gridEl) return;
+
+    const earnedCount = ACHIEVEMENT_DEFS.filter(d => earnedAchievementIds.has(d.id)).length;
+    const totalCount  = ACHIEVEMENT_DEFS.length;
+
+    if (countEl) countEl.textContent = earnedCount + " / " + totalCount;
+
+    gridEl.innerHTML = "";
+    for (const def of ACHIEVEMENT_DEFS) {
+      const unlocked = earnedAchievementIds.has(def.id);
+      const badge = document.createElement("div");
+      badge.className = "ach-badge " + (unlocked ? "ach-badge--unlocked" : "ach-badge--locked");
+      badge.id = "ach-" + def.id;
+      badge.title = def.label;
+      badge.innerHTML =
+        `<span class="ach-badge-icon">${def.icon}</span>` +
+        `<span class="ach-badge-label">${def.label}</span>`;
+      gridEl.appendChild(badge);
+    }
+  }
+
+  // Evaluate achievements on hub load; notify for anything newly unlocked.
+  // Called async, non-blocking — same pattern as claimDailyReward().
+  async function evaluateAndNotifyAchievements() {
+    const { data: newlyUnlocked, error } = await supabase.rpc("evaluate_achievements");
+    if (error || !Array.isArray(newlyUnlocked) || newlyUnlocked.length === 0) return;
+
+    for (let i = 0; i < newlyUnlocked.length; i++) {
+      const id  = newlyUnlocked[i];
+      const def = ACHIEVEMENT_DEFS.find(d => d.id === id);
+      if (!def) continue;
+
+      setTimeout(() => {
+        showToast("Præstation opnået: " + def.label + " " + def.icon, "success", 3500);
+        playSound("buy");
+
+        // Update local earned set and re-render the affected badge live.
+        earnedAchievementIds.add(id);
+
+        const badgeEl = document.getElementById("ach-" + id);
+        if (badgeEl) {
+          badgeEl.classList.remove("ach-badge--locked");
+          badgeEl.classList.add("ach-badge--unlocked", "ach-badge--just-unlocked");
+          badgeEl.addEventListener("animationend", () => {
+            badgeEl.classList.remove("ach-badge--just-unlocked");
+          }, { once: true });
+        }
+
+        // Update count chip.
+        const countEl = document.getElementById("achievementCount");
+        if (countEl) {
+          const newEarned = ACHIEVEMENT_DEFS.filter(d => earnedAchievementIds.has(d.id)).length;
+          countEl.textContent = newEarned + " / " + ACHIEVEMENT_DEFS.length;
+        }
+      }, i * 350);
+    }
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   renderProfileAvatar();
@@ -1208,6 +1385,7 @@
   renderCollection();
   renderDailyRewardCard(alreadyClaimedToday);
   renderQuests();
+  renderAchievements();
 
   // Dismiss daily reward modal
   const droDismissBtn = document.getElementById("droDismissBtn");
@@ -1221,8 +1399,9 @@
     });
   }
 
-  // Auto-claim daily reward (async, non-blocking — idempotent RPC)
+  // Async, non-blocking — idempotent RPCs, safe on every page load.
   claimDailyReward();
+  evaluateAndNotifyAchievements();
 </script>
 
 </body>

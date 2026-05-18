@@ -75,7 +75,7 @@
     .sandbox-grid {
       display: grid;
       grid-template-columns: 210px 1fr 252px;
-      grid-template-rows: auto auto auto auto auto;
+      grid-template-rows: auto auto auto auto auto auto;
       gap: 10px;
       padding: 10px 16px 16px;
       align-items: start;
@@ -99,13 +99,14 @@
       padding-bottom: 7px;
       border-bottom: 1px solid var(--border);
     }
-    .panel-audio     { grid-column: 1; grid-row: 1; }
-    .panel-toast     { grid-column: 1; grid-row: 2; }
-    .panel-avatar    { grid-column: 2; grid-row: 1 / 3; }
-    .panel-diag      { grid-column: 3; grid-row: 1 / 3; }
-    .panel-quiz      { grid-column: 1 / 4; grid-row: 3; }
-    .panel-theme     { grid-column: 1 / 4; grid-row: 4; }
-    .panel-retention { grid-column: 1 / 4; grid-row: 5; }
+    .panel-audio        { grid-column: 1; grid-row: 1; }
+    .panel-toast        { grid-column: 1; grid-row: 2; }
+    .panel-avatar       { grid-column: 2; grid-row: 1 / 3; }
+    .panel-diag         { grid-column: 3; grid-row: 1 / 3; }
+    .panel-quiz         { grid-column: 1 / 4; grid-row: 3; }
+    .panel-theme        { grid-column: 1 / 4; grid-row: 4; }
+    .panel-retention    { grid-column: 1 / 4; grid-row: 5; }
+    .panel-achievements { grid-column: 1 / 4; grid-row: 6; }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     .sb-btn {
@@ -591,6 +592,55 @@
       transition: opacity 0.15s;
     }
     .mock-dro-btn:hover { opacity: 0.85; }
+
+    /* ── Achievement mock badges ────────────────────────────────────── */
+
+    .demo-ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .demo-ach-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surf2);
+    }
+
+    .demo-ach-badge.unlocked {
+      border-color: var(--accent);
+    }
+
+    .demo-ach-badge.locked {
+      opacity: 0.28;
+    }
+
+    .demo-ach-icon  { font-size: 18px; line-height: 1; }
+    .demo-ach-label {
+      font-size: 8px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.25;
+    }
+    .demo-ach-badge.unlocked .demo-ach-label { color: var(--text); }
+
+    @keyframes demoAchUnlock {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--accent); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+    .demo-ach-badge.just-unlocked {
+      animation: demoAchUnlock 600ms ease both;
+    }
   </style>
 </head>
 <body>
@@ -838,6 +888,25 @@
 
   </div>
 
+  <!-- ── Row 6: Achievements (full width) ──────────────────────────── -->
+  <div class="panel panel-achievements">
+    <div class="panel-h">Achievements — Unlock Feel (hub.html)</div>
+
+    <div class="quiz-row">
+      <div class="quiz-row-label">Achievement Unlock Toast + Sound + Badge Pulse</div>
+      <button class="sb-btn c-green"  id="btnAchSingle"   style="width:auto;margin:0">&#10003; Single unlock (Første svar)</button>
+      <button class="sb-btn c-gold"   id="btnAchCascade"  style="width:auto;margin:0">&#9733; Cascade 3&times; (350ms stagger)</button>
+      <button class="sb-btn c-violet" id="btnAchAll"      style="width:auto;margin:0">&#10022; All 7 (full backfill feel)</button>
+      <button class="sb-btn c-dim"    id="btnAchReset"    style="width:auto;margin:0">&#8617; Reset badges</button>
+    </div>
+
+    <!-- Mirror of hub.html achievement grid -->
+    <div class="demo-ach-grid" id="demoAchGrid">
+      <!-- injected by JS -->
+    </div>
+
+  </div>
+
 </div>
 
 <!-- Level-up demo overlay (full-screen, mirrors index.html exactly) -->
@@ -897,6 +966,17 @@ const PREVIEW_TOKENS = [
   "--error", "--border", "--btn-bg",
 ];
 
+// Achievement definitions — mirrors hub.html ACHIEVEMENT_DEFS exactly
+const ACHIEVEMENT_DEFS = [
+  { id: "first_correct",   label: "Første svar",  icon: "✓",  },
+  { id: "correct_10",      label: "10 svar",       icon: "◎",  },
+  { id: "correct_100",     label: "100 svar",      icon: "★",  },
+  { id: "first_theme",     label: "Tema",          icon: "◈",  },
+  { id: "first_legendary", label: "Legendarisk",  icon: "✦",  },
+  { id: "streak_7",        label: "7 dage",        icon: "🔥", },
+  { id: "level_10",        label: "Niveau 10",     icon: "▲",  },
+];
+
 // ── Sandbox state — fully local, no server ────────────────────────────────────
 const st = {
   volume:        30,
@@ -909,6 +989,7 @@ const st = {
   lastPlay: {},
   press:   { equip: 0, buy: 0, error: 0, unequip: 0 },
   played:  { equip: 0, buy: 0, error: 0, unequip: 0 },
+  unlockedAchievements: new Set(),
 };
 
 const RATE_LIMIT_MS = 100;
@@ -946,9 +1027,9 @@ function play(name) {
 }
 
 // ── Toast wrapper ─────────────────────────────────────────────────────────────
-function toast(msg, type) {
+function toast(msg, type, duration) {
   st.toastCount++;
-  showToast(msg, type);
+  showToast(msg, type, duration);
   refreshDiag();
 }
 
@@ -1141,6 +1222,64 @@ document.getElementById("btnMilestone30").addEventListener("click", () => {
   play("buy");
 });
 
+// ── Achievement demo ──────────────────────────────────────────────────────────
+
+function buildDemoAchGrid() {
+  const grid = document.getElementById("demoAchGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (const def of ACHIEVEMENT_DEFS) {
+    const badge = document.createElement("div");
+    const unlocked = st.unlockedAchievements.has(def.id);
+    badge.className = "demo-ach-badge " + (unlocked ? "unlocked" : "locked");
+    badge.id = "demo-ach-" + def.id;
+    badge.title = def.label;
+    badge.innerHTML =
+      `<span class="demo-ach-icon">${def.icon}</span>` +
+      `<span class="demo-ach-label">${def.label}</span>`;
+    grid.appendChild(badge);
+  }
+}
+
+function triggerAchUnlock(id, delay) {
+  const def = ACHIEVEMENT_DEFS.find(d => d.id === id);
+  if (!def) return;
+
+  setTimeout(() => {
+    toast("Præstation opnået: " + def.label + " " + def.icon, "success", 3500);
+    play("buy");
+
+    st.unlockedAchievements.add(id);
+    const badgeEl = document.getElementById("demo-ach-" + id);
+    if (badgeEl) {
+      badgeEl.classList.remove("locked");
+      badgeEl.classList.add("unlocked", "just-unlocked");
+      badgeEl.addEventListener("animationend", () => {
+        badgeEl.classList.remove("just-unlocked");
+      }, { once: true });
+    }
+  }, delay);
+}
+
+document.getElementById("btnAchSingle").addEventListener("click", () => {
+  triggerAchUnlock("first_correct", 0);
+});
+
+document.getElementById("btnAchCascade").addEventListener("click", () => {
+  triggerAchUnlock("correct_10",    0);
+  triggerAchUnlock("first_theme",   350);
+  triggerAchUnlock("streak_7",      700);
+});
+
+document.getElementById("btnAchAll").addEventListener("click", () => {
+  ACHIEVEMENT_DEFS.forEach((def, i) => triggerAchUnlock(def.id, i * 350));
+});
+
+document.getElementById("btnAchReset").addEventListener("click", () => {
+  st.unlockedAchievements.clear();
+  buildDemoAchGrid();
+});
+
 // ── Button wiring ─────────────────────────────────────────────────────────────
 document.getElementById("btnEquip").addEventListener("click",        () => play("equip"));
 document.getElementById("btnBuy").addEventListener("click",          () => play("buy"));
@@ -1252,6 +1391,7 @@ buildAvatar(false);
 buildThemeSwitcherButtons();
 refreshThemePanel();
 refreshDiag();
+buildDemoAchGrid();
 </script>
 </body>
 </html>
