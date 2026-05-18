@@ -601,6 +601,16 @@
       border-color: var(--accent);
     }
 
+    /* Rarity-specific border for unlocked badges */
+    .ach-badge--unlocked[data-rarity="rare"] {
+      border-color: var(--border-rare);
+    }
+
+    .ach-badge--unlocked[data-rarity="legendary"] {
+      border-color: var(--border-legendary);
+      box-shadow: 0 0 6px -1px var(--border-legendary);
+    }
+
     .ach-badge-icon {
       font-size: 18px;
       line-height: 1;
@@ -626,8 +636,18 @@
       100% { transform: scale(1);    box-shadow: none; }
     }
 
+    @keyframes achUnlockLegendary {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.12); box-shadow: 0 0 0 3px var(--border-legendary); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+
     .ach-badge--just-unlocked {
       animation: achUnlock 600ms ease both;
+    }
+
+    .ach-badge--just-unlocked[data-rarity="legendary"] {
+      animation: achUnlockLegendary 650ms ease both;
     }
 
     .ach-header-right {
@@ -857,7 +877,7 @@
     <div class="achievement-panel-header">
       <span class="achievement-panel-title">Præstationer</span>
       <div class="ach-header-right">
-        <span class="achievement-count" id="achievementCount">— / 7</span>
+        <span class="achievement-count" id="achievementCount">— / 12</span>
         <span class="ach-see-all-arrow" aria-hidden="true">&#8250;</span>
       </div>
     </div>
@@ -934,13 +954,18 @@
 
   // Client-side achievement catalog — must match DB seed in achievements table.
   const ACHIEVEMENT_DEFS = [
-    { id: "first_correct",   label: "Første svar",  icon: "✓",  sortOrder: 1 },
-    { id: "correct_10",      label: "10 svar",       icon: "◎",  sortOrder: 2 },
-    { id: "correct_100",     label: "100 svar",      icon: "★",  sortOrder: 3 },
-    { id: "first_theme",     label: "Tema",          icon: "◈",  sortOrder: 4 },
-    { id: "first_legendary", label: "Legendarisk",  icon: "✦",  sortOrder: 5 },
-    { id: "streak_7",        label: "7 dage",        icon: "🔥", sortOrder: 6 },
-    { id: "level_10",        label: "Niveau 10",     icon: "▲",  sortOrder: 7 },
+    { id: "first_correct",   label: "Første svar",   icon: "✓",  sortOrder: 1,  rarity: "common"    },
+    { id: "correct_10",      label: "10 svar",        icon: "◎",  sortOrder: 2,  rarity: "common"    },
+    { id: "correct_100",     label: "100 svar",       icon: "★",  sortOrder: 3,  rarity: "rare"      },
+    { id: "first_theme",     label: "Tema",           icon: "◈",  sortOrder: 4,  rarity: "common"    },
+    { id: "first_legendary", label: "Legendarisk",   icon: "✦",  sortOrder: 5,  rarity: "rare"      },
+    { id: "streak_7",        label: "7 dage",         icon: "🔥", sortOrder: 6,  rarity: "rare"      },
+    { id: "level_10",        label: "Niveau 10",      icon: "▲",  sortOrder: 7,  rarity: "rare"      },
+    { id: "first_purchase",  label: "Første køb",    icon: "🛒", sortOrder: 8,  rarity: "common"    },
+    { id: "collector_5",     label: "5 items",        icon: "💎", sortOrder: 9,  rarity: "rare"      },
+    { id: "themes_3",        label: "3 temaer",       icon: "🎨", sortOrder: 10, rarity: "rare"      },
+    { id: "streak_30",       label: "30 dage",        icon: "⚡", sortOrder: 11, rarity: "legendary" },
+    { id: "correct_1000",    label: "1000 svar",      icon: "🏆", sortOrder: 12, rarity: "legendary" },
   ];
 
   // ── Today (UTC) — used for quest date queries ─────────────────────────────────
@@ -1370,6 +1395,7 @@
       badge.className = "ach-badge " + (unlocked ? "ach-badge--unlocked" : "ach-badge--locked");
       badge.id = "ach-" + def.id;
       badge.title = def.label;
+      badge.dataset.rarity = def.rarity ?? "common";
       badge.innerHTML =
         `<span class="ach-badge-icon">${def.icon}</span>` +
         `<span class="ach-badge-label">${def.label}</span>`;
@@ -1378,7 +1404,6 @@
   }
 
   // Evaluate achievements on hub load; notify for anything newly unlocked.
-  // Called async, non-blocking — same pattern as claimDailyReward().
   async function evaluateAndNotifyAchievements() {
     const { data: newlyUnlocked, error } = await supabase.rpc("evaluate_achievements");
     if (error || !Array.isArray(newlyUnlocked) || newlyUnlocked.length === 0) return;

@@ -617,6 +617,15 @@
       border-color: var(--accent);
     }
 
+    .demo-ach-badge.unlocked[data-rarity="rare"] {
+      border-color: var(--border-rare);
+    }
+
+    .demo-ach-badge.unlocked[data-rarity="legendary"] {
+      border-color: var(--border-legendary);
+      box-shadow: 0 0 6px -1px var(--border-legendary);
+    }
+
     .demo-ach-badge.locked {
       opacity: 0.28;
     }
@@ -638,8 +647,16 @@
       40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--accent); }
       100% { transform: scale(1);    box-shadow: none; }
     }
+    @keyframes demoAchUnlockLegendary {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.12); box-shadow: 0 0 0 3px var(--border-legendary); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
     .demo-ach-badge.just-unlocked {
       animation: demoAchUnlock 600ms ease both;
+    }
+    .demo-ach-badge.just-unlocked[data-rarity="legendary"] {
+      animation: demoAchUnlockLegendary 650ms ease both;
     }
 
     /* ── Achievement cards (achievements.html preview) ──────────────────── */
@@ -658,6 +675,7 @@
       padding: 18px 12px 14px;
       text-align: center;
       transition: transform 0.14s, box-shadow 0.14s;
+      position: relative;
     }
     .ach-card:hover {
       transform: translateY(-2px);
@@ -670,6 +688,37 @@
     .ach-card--unlocked:hover {
       box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px -2px var(--accent);
     }
+
+    /* Rare unlocked */
+    .ach-card--unlocked[data-rarity="rare"] {
+      border-color: var(--border-rare);
+      box-shadow: 0 0 14px -3px var(--border-rare);
+    }
+    .ach-card--unlocked[data-rarity="rare"]:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 18px -2px var(--border-rare);
+    }
+
+    /* Legendary unlocked */
+    .ach-card--unlocked[data-rarity="legendary"] {
+      border-color: var(--border-legendary);
+      box-shadow: 0 0 18px -2px var(--border-legendary);
+      background: linear-gradient(160deg, var(--bg-panel) 0%, rgba(255, 210, 0, 0.05) 100%);
+    }
+    .ach-card--unlocked[data-rarity="legendary"]:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 22px -1px var(--border-legendary);
+    }
+    .ach-card--unlocked[data-rarity="legendary"]::before,
+    .ach-card--unlocked[data-rarity="legendary"]::after {
+      content: '✦';
+      position: absolute;
+      font-size: 11px;
+      color: var(--border-legendary);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .ach-card--unlocked[data-rarity="legendary"]::before { top: -8px;    left: -4px;  }
+    .ach-card--unlocked[data-rarity="legendary"]::after  { bottom: -8px; right: -4px; }
+
     .ach-card-icon {
       font-size: 30px;
       line-height: 1;
@@ -705,6 +754,9 @@
       font-weight: normal;
       font-size: 11px;
     }
+    .ach-card-rarity { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+    .ach-card-rarity--rare      { color: var(--border-rare); }
+    .ach-card-rarity--legendary { color: var(--border-legendary); }
     .ach-card-progress { display: flex; flex-direction: column; gap: 4px; }
     .ach-card-progress-track {
       height: 4px;
@@ -976,18 +1028,18 @@
       <div class="quiz-row-label">Achievement Unlock Toast + Sound + Badge Pulse</div>
       <button class="sb-btn c-green"  id="btnAchSingle"   style="width:auto;margin:0">&#10003; Single unlock (Første svar)</button>
       <button class="sb-btn c-gold"   id="btnAchCascade"  style="width:auto;margin:0">&#9733; Cascade 3&times; (350ms stagger)</button>
-      <button class="sb-btn c-violet" id="btnAchAll"      style="width:auto;margin:0">&#10022; All 7 (full backfill feel)</button>
+      <button class="sb-btn c-violet" id="btnAchAll"      style="width:auto;margin:0">&#10022; All 12 (full backfill feel)</button>
       <button class="sb-btn c-dim"    id="btnAchReset"    style="width:auto;margin:0">&#8617; Reset badges</button>
     </div>
 
-    <!-- Mirror of hub.html achievement grid -->
+    <!-- Mirror of hub.html achievement grid — 12 badges -->
     <div class="demo-ach-grid" id="demoAchGrid">
       <!-- injected by JS -->
     </div>
 
-    <!-- Static card previews — use same CSS classes as achievements.html; theme switcher above drives tokens -->
+    <!-- Wave 1: static card previews — common / locked+progress / locked binary -->
     <div class="quiz-row" style="margin-top:14px;margin-bottom:6px">
-      <div class="quiz-row-label">Achievement Cards (achievements.html) &mdash; Unlocked &middot; Locked+Progress &middot; Locked Binary</div>
+      <div class="quiz-row-label">Wave 1 Cards (achievements.html) &mdash; Unlocked Common &middot; Locked+Progress &middot; Locked Binary</div>
     </div>
     <div class="ach-card-demo-row">
       <div class="ach-card ach-card--unlocked">
@@ -1012,6 +1064,69 @@
         <div class="ach-card-title">Legendarisk item</div>
         <div class="ach-card-desc">Anskaff dig et legendarisk avatar-item</div>
         <div class="ach-card-status ach-card-status--locked">Låst</div>
+      </div>
+    </div>
+
+    <!-- Wave 2: rarity tier comparison — common / rare unlocked / legendary unlocked -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Wave 2 — Rarity Tiers: Common Locked &middot; Rare Unlocked &middot; Legendary Unlocked</div>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">🛒</span>
+        <div class="ach-card-title">Første køb</div>
+        <div class="ach-card-desc">Anskaff dig et avatar-item eller et tema</div>
+        <div class="ach-card-status ach-card-status--locked">Låst</div>
+      </div>
+      <div class="ach-card ach-card--unlocked" data-rarity="rare">
+        <span class="ach-card-icon">💎</span>
+        <div class="ach-card-title">5 items</div>
+        <div class="ach-card-desc">Anskaff dig 5 avatar-items</div>
+        <div class="ach-card-status">✓ Opnået</div>
+      </div>
+      <div class="ach-card ach-card--unlocked" data-rarity="legendary">
+        <span class="ach-card-icon">🏆</span>
+        <div class="ach-card-title">1000 rigtige svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 1000 spørgsmål i alt</div>
+        <div class="ach-card-status">✓ Opnået</div>
+      </div>
+    </div>
+
+    <!-- Wave 2: locked rare/legendary showing rarity label teaser -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Wave 2 — Locked Rarity Teaser: Rare with label &middot; Legendary with label &middot; Legendary with progress</div>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">🎨</span>
+        <div class="ach-card-rarity ach-card-rarity--rare">Sjælden</div>
+        <div class="ach-card-title">3 temaer</div>
+        <div class="ach-card-desc">Lås op for 3 temaer</div>
+        <div class="ach-card-progress">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill" style="width:33%"></div>
+          </div>
+          <div class="ach-card-progress-text">1 / 3</div>
+        </div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">⚡</span>
+        <div class="ach-card-rarity ach-card-rarity--legendary">Legendarisk</div>
+        <div class="ach-card-title">30 dage i træk</div>
+        <div class="ach-card-desc">Oprethold en streak i 30 dage</div>
+        <div class="ach-card-status ach-card-status--locked">Låst</div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon">🏆</span>
+        <div class="ach-card-rarity ach-card-rarity--legendary">Legendarisk</div>
+        <div class="ach-card-title">1000 rigtige svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 1000 spørgsmål i alt</div>
+        <div class="ach-card-progress">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill" style="width:12%"></div>
+          </div>
+          <div class="ach-card-progress-text">120 / 1000</div>
+        </div>
       </div>
     </div>
 
@@ -1078,13 +1193,18 @@ const PREVIEW_TOKENS = [
 
 // Achievement definitions — mirrors hub.html ACHIEVEMENT_DEFS exactly
 const ACHIEVEMENT_DEFS = [
-  { id: "first_correct",   label: "Første svar",  icon: "✓",  },
-  { id: "correct_10",      label: "10 svar",       icon: "◎",  },
-  { id: "correct_100",     label: "100 svar",      icon: "★",  },
-  { id: "first_theme",     label: "Tema",          icon: "◈",  },
-  { id: "first_legendary", label: "Legendarisk",  icon: "✦",  },
-  { id: "streak_7",        label: "7 dage",        icon: "🔥", },
-  { id: "level_10",        label: "Niveau 10",     icon: "▲",  },
+  { id: "first_correct",   label: "Første svar",   icon: "✓",  rarity: "common"    },
+  { id: "correct_10",      label: "10 svar",        icon: "◎",  rarity: "common"    },
+  { id: "correct_100",     label: "100 svar",       icon: "★",  rarity: "rare"      },
+  { id: "first_theme",     label: "Tema",           icon: "◈",  rarity: "common"    },
+  { id: "first_legendary", label: "Legendarisk",   icon: "✦",  rarity: "rare"      },
+  { id: "streak_7",        label: "7 dage",         icon: "🔥", rarity: "rare"      },
+  { id: "level_10",        label: "Niveau 10",      icon: "▲",  rarity: "rare"      },
+  { id: "first_purchase",  label: "Første køb",    icon: "🛒", rarity: "common"    },
+  { id: "collector_5",     label: "5 items",        icon: "💎", rarity: "rare"      },
+  { id: "themes_3",        label: "3 temaer",       icon: "🎨", rarity: "rare"      },
+  { id: "streak_30",       label: "30 dage",        icon: "⚡", rarity: "legendary" },
+  { id: "correct_1000",    label: "1000 svar",      icon: "🏆", rarity: "legendary" },
 ];
 
 // ── Sandbox state — fully local, no server ────────────────────────────────────
@@ -1344,6 +1464,7 @@ function buildDemoAchGrid() {
     badge.className = "demo-ach-badge " + (unlocked ? "unlocked" : "locked");
     badge.id = "demo-ach-" + def.id;
     badge.title = def.label;
+    badge.dataset.rarity = def.rarity ?? "common";
     badge.innerHTML =
       `<span class="demo-ach-icon">${def.icon}</span>` +
       `<span class="demo-ach-label">${def.label}</span>`;

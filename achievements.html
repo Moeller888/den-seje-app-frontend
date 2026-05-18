@@ -138,6 +138,7 @@
       padding: 20px 14px 16px;
       text-align: center;
       transition: transform 0.14s ease, box-shadow 0.14s ease;
+      position: relative;
     }
 
     .ach-card:hover {
@@ -145,8 +146,7 @@
       box-shadow: 0 6px 18px rgba(0,0,0,0.3);
     }
 
-    /* Unlocked: accent border + soft glow — uses the theme token directly,
-       so every theme's accent color drives the glow automatically. */
+    /* Common unlocked: accent border + soft glow */
     .ach-card--unlocked {
       border-color: var(--accent);
       box-shadow: 0 0 14px -3px var(--accent);
@@ -156,6 +156,40 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px -2px var(--accent);
     }
 
+    /* Rare unlocked: rarity-themed blue border + glow */
+    .ach-card--unlocked[data-rarity="rare"] {
+      border-color: var(--border-rare);
+      box-shadow: 0 0 14px -3px var(--border-rare);
+    }
+
+    .ach-card--unlocked[data-rarity="rare"]:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 18px -2px var(--border-rare);
+    }
+
+    /* Legendary unlocked: gold border + glow + ambient warm tint + corner sparkles */
+    .ach-card--unlocked[data-rarity="legendary"] {
+      border-color: var(--border-legendary);
+      box-shadow: 0 0 18px -2px var(--border-legendary);
+      background: linear-gradient(160deg, var(--bg-panel) 0%, rgba(255, 210, 0, 0.05) 100%);
+    }
+
+    .ach-card--unlocked[data-rarity="legendary"]:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 22px -1px var(--border-legendary);
+    }
+
+    .ach-card--unlocked[data-rarity="legendary"]::before,
+    .ach-card--unlocked[data-rarity="legendary"]::after {
+      content: '✦';
+      position: absolute;
+      font-size: 11px;
+      color: var(--border-legendary);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .ach-card--unlocked[data-rarity="legendary"]::before { top: -8px;    left: -4px;  }
+    .ach-card--unlocked[data-rarity="legendary"]::after  { bottom: -8px; right: -4px; }
+
     /* Icon */
     .ach-card-icon {
       font-size: 36px;
@@ -164,11 +198,24 @@
       display: block;
     }
 
-    /* Locked: icon grayed + dimmed — aspirational but clearly not owned */
+    /* Locked: icon grayed + dimmed */
     .ach-card--locked .ach-card-icon {
       opacity: 0.25;
       filter: grayscale(1);
     }
+
+    /* Rarity label — shown on locked rare/legendary cards as an aspirational teaser */
+    .ach-card-rarity {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .ach-card-rarity--rare      { color: var(--border-rare); }
+    .ach-card-rarity--legendary { color: var(--border-legendary); }
 
     /* Title */
     .ach-card-title {
@@ -230,15 +277,28 @@
       color: var(--text-muted);
     }
 
-    /* Unlock animation — fires when a card transitions from locked → unlocked */
+    /* Unlock animations */
     @keyframes achCardUnlock {
       0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
       40%  { transform: scale(1.06); box-shadow: 0 0 0 4px var(--accent); }
       100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
     }
 
+    /* Legendary unlock — more dramatic ring + scale */
+    @keyframes achCardUnlockLegendary {
+      0%   { transform: scale(1);    box-shadow: 0 0 18px -2px var(--border-legendary); }
+      30%  { transform: scale(1.05); box-shadow: 0 0 0 5px var(--border-legendary), 0 0 32px 2px var(--border-legendary); }
+      65%  { transform: scale(1.09); box-shadow: 0 0 0 8px var(--border-legendary), 0 0 44px 4px var(--border-legendary); }
+      100% { transform: scale(1);    box-shadow: 0 0 18px -2px var(--border-legendary); }
+    }
+
     .ach-card--just-unlocked {
       animation: achCardUnlock 650ms ease both;
+    }
+
+    /* Legendary override — higher specificity wins */
+    .ach-card--just-unlocked[data-rarity="legendary"] {
+      animation: achCardUnlockLegendary 950ms ease both;
     }
 
     /* ── Empty / error states ────────────────────────────── */
@@ -333,18 +393,22 @@
 
   // ── Data fetch (all in parallel) ──────────────────────────────────────────
 
-  const [catalogResult, earnedResult, progressResult] = await Promise.all([
-    supabase.from("achievements").select("id, label, description, icon, sort_order").order("sort_order"),
+  const [catalogResult, earnedResult, progressResult, itemCountResult, themeCountResult] = await Promise.all([
+    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity").order("sort_order"),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("student_progress").select("correct_answers, xp, longest_streak").eq("student_id", userId).maybeSingle(),
+    supabase.from("user_items").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("user_themes").select("*", { count: "exact", head: true }).eq("user_id", userId),
   ]);
 
   // ── Parse ─────────────────────────────────────────────────────────────────
 
-  const achievements  = catalogResult.data ?? [];
-  const earnedIds     = new Set((earnedResult.data ?? []).map(r => r.achievement_id));
-  const sp            = progressResult.data ?? {};
-  const achCatalogMap = new Map(achievements.map(a => [a.id, a]));
+  const achievements       = catalogResult.data ?? [];
+  const earnedIds          = new Set((earnedResult.data ?? []).map(r => r.achievement_id));
+  const sp                 = progressResult.data ?? {};
+  const achCatalogMap      = new Map(achievements.map(a => [a.id, a]));
+  const itemCount          = itemCountResult.count ?? 0;
+  const acquiredThemeCount = themeCountResult.count ?? 0;
 
   // ── Progress helper — returns { current, total } or null for binary ────────
 
@@ -354,12 +418,16 @@
     const level  = getXPProgressInLevel(sp.xp ?? 0).level;
 
     switch (id) {
-      case "first_correct":   return { current: Math.min(ca,     1),   total: 1   };
-      case "correct_10":      return { current: Math.min(ca,    10),   total: 10  };
-      case "correct_100":     return { current: Math.min(ca,   100),   total: 100 };
-      case "streak_7":        return { current: Math.min(streak,  7),  total: 7   };
-      case "level_10":        return { current: Math.min(level,  10),  total: 10  };
-      default:                return null;
+      case "first_correct":  return { current: Math.min(ca,               1),    total: 1    };
+      case "correct_10":     return { current: Math.min(ca,              10),    total: 10   };
+      case "correct_100":    return { current: Math.min(ca,             100),    total: 100  };
+      case "correct_1000":   return { current: Math.min(ca,            1000),    total: 1000 };
+      case "streak_7":       return { current: Math.min(streak,           7),    total: 7    };
+      case "streak_30":      return { current: Math.min(streak,          30),    total: 30   };
+      case "level_10":       return { current: Math.min(level,           10),    total: 10   };
+      case "collector_5":    return { current: Math.min(itemCount,         5),   total: 5    };
+      case "themes_3":       return { current: Math.min(acquiredThemeCount, 3),  total: 3    };
+      default:               return null;
     }
   }
 
@@ -397,15 +465,25 @@
 
   function buildCard(ach) {
     const unlocked = earnedIds.has(ach.id);
+    const rarity   = ach.rarity ?? "common";
 
     const card = document.createElement("div");
     card.className = "ach-card " + (unlocked ? "ach-card--unlocked" : "ach-card--locked");
     card.id = "ach-card-" + ach.id;
+    card.dataset.rarity = rarity;
 
     const iconEl = document.createElement("span");
     iconEl.className = "ach-card-icon";
     iconEl.textContent = ach.icon ?? "";
     card.appendChild(iconEl);
+
+    // Rarity indicator — shown on locked rare/legendary cards as an aspirational teaser
+    if (!unlocked && (rarity === "rare" || rarity === "legendary")) {
+      const rarityEl = document.createElement("div");
+      rarityEl.className = "ach-card-rarity ach-card-rarity--" + rarity;
+      rarityEl.textContent = rarity === "legendary" ? "Legendarisk" : "Sjælden";
+      card.appendChild(rarityEl);
+    }
 
     const titleEl = document.createElement("div");
     titleEl.className = "ach-card-title";
@@ -514,6 +592,11 @@
           cardEl.classList.remove("ach-card--locked");
           cardEl.classList.add("ach-card--unlocked", "ach-card--just-unlocked");
 
+          // Remove rarity label (was on locked rare/legendary — border color now communicates tier)
+          const rarityLabelEl = cardEl.querySelector(".ach-card-rarity");
+          if (rarityLabelEl) rarityLabelEl.remove();
+
+          // Replace progress/locked status with "✓ Opnået"
           const bottomEl = cardEl.querySelector(".ach-card-progress, .ach-card-status--locked");
           if (bottomEl) {
             const statusEl = document.createElement("div");
