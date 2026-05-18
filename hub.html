@@ -813,18 +813,16 @@
     shopItemsResult,
     userThemesResult,
     themesResult,
-    correctResult,
     rewardResult,
     questsResult,
     questProgressResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
-    supabase.from("student_progress").select("xp, coins, current_streak, longest_streak").eq("student_id", userId),
+    supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
     supabase.from("user_themes").select("theme_id").eq("user_id", userId),
     supabase.from("themes").select("id, name, rarity, always_owned"),
-    supabase.from("question_instances").select("id", { count: "exact", head: true }).eq("student_id", userId).eq("was_correct", true).eq("answered", true),
     supabase.from("daily_login_rewards").select("last_claimed_date").eq("student_id", userId).maybeSingle(),
     supabase.from("daily_quests").select("id, quest_key, type, target, reward_coins, label, sort_order").eq("is_active", true).order("sort_order"),
     supabase.from("student_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("quest_date", todayUTC),
@@ -842,7 +840,7 @@
   const currentStreak = progressResult.data?.[0]?.current_streak ?? 0;
   const longestStreak = progressResult.data?.[0]?.longest_streak ?? 0;
 
-  const correctCount = correctResult.count ?? 0;
+  const correctCount = progressResult.data?.[0]?.correct_answers ?? 0;
 
   // ── Parse retention data ──────────────────────────────────────────────────────
 
