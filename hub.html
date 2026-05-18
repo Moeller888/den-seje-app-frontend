@@ -20,24 +20,55 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 40px;
+      padding: 24px 16px 48px;
     }
 
-    h1 {
-      font-size: 22px;
+    /* ── Hub container ───────────────────────────────── */
+
+    .hub-container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+
+    .hub-header {
+      text-align: center;
+    }
+
+    .hub-header h1 {
+      font-size: 20px;
       font-weight: bold;
       color: var(--text-bright);
-      margin-bottom: 32px;
       letter-spacing: 0.5px;
     }
+
+    /* ── Two-column layout: menu left, identity right ── */
+
+    .hub-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 580px) {
+      .hub-layout {
+        grid-template-columns: 1fr;
+      }
+      /* On mobile, identity area appears above the menu */
+      .identity-area { order: -1; }
+    }
+
+    /* ── Navigation menu ─────────────────────────────── */
 
     .menu {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      max-width: 280px;
+      gap: 9px;
     }
 
     .menu button {
@@ -62,61 +93,603 @@
       background: var(--logout-bg);
       border-color: var(--logout-border);
       color: var(--logout-text);
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     #logoutBtn:hover {
       background: var(--logout-bg-hover);
       color: var(--logout-text-hover);
     }
+
+    /* ── Right column: identity + collection ─────────── */
+
+    .identity-area {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Identity panel ──────────────────────────────── */
+
+    .identity-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    /* Mini paper-doll */
+
+    .mini-avatar-frame { flex-shrink: 0; }
+
+    .mini-avatar {
+      position: relative;
+      width: 80px;
+      height: 120px;
+      border-radius: 8px;
+      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      overflow: visible;
+      transition: box-shadow 0.3s;
+    }
+
+    .mini-avatar[data-rarity="legendary"] {
+      box-shadow: 0 0 0 1.5px rgba(255,215,0,0.5), 0 0 10px rgba(255,215,0,0.15);
+    }
+
+    .mini-avatar[data-rarity="rare"] {
+      box-shadow: 0 0 0 1.5px rgba(25,118,210,0.45), 0 0 8px rgba(25,118,210,0.12);
+    }
+
+    .mini-avatar-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Identity info */
+
+    .identity-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 2px;
+    }
+
+    .identity-level {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-bright);
+      line-height: 1;
+    }
+
+    .identity-theme {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* Accent-colored dot — always uses active theme's --accent token */
+    .theme-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--accent);
+    }
+
+    .identity-xp-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .xp-bar-track {
+      height: 5px;
+      background: var(--xp-track);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.7s ease;
+    }
+
+    .xp-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Collection panel ────────────────────────────── */
+
+    .collection-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: box-shadow 0.4s;
+    }
+
+    .collection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .collection-title {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .collection-pct {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    /* Category bars */
+
+    .category-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .category-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .category-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .category-label {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .category-count {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .category-track {
+      height: 4px;
+      background: var(--xp-track);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .category-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.7s ease;
+    }
+
+    /* Rarity chips */
+
+    .rarity-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 22px;
+    }
+
+    .rarity-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    /* Fixed rarity colors — mirrors the rarity-badge pattern used across the app */
+    .rarity-chip--legendary { background: #f57f17; }
+    .rarity-chip--rare      { background: #1565c0; }
+    .rarity-chip--uncommon  { background: #388e3c; }
+    .rarity-chip--common    { background: #757575; }
+
+    /* Legendary chip icon: gentle pulse — marks ownership as special */
+    .rarity-chip--legendary .chip-icon {
+      display: inline-block;
+      animation: legendaryIconPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes legendaryIconPulse {
+      0%, 100% { opacity: 0.75; }
+      50%       { opacity: 1; }
+    }
+
+    /* Subtle completion glow when collection is fully complete */
+    @keyframes completionGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+      50%       { box-shadow: 0 0 16px 2px rgba(76,175,80,0.18); }
+    }
+
+    .collection-panel--complete {
+      animation: completionGlow 4s ease-in-out infinite;
+    }
   </style>
 </head>
 
 <body>
 
-  <h1>DEN SEJE APP</h1>
+<div class="hub-container">
 
-  <div class="menu">
-    <button id="playBtn">🎮 Spil</button>
-    <button id="shopBtn">🛒 Butik</button>
-    <button id="avatarBtn">👤 Avatar</button>
-    <button id="themesBtn">🎨 Temaer</button>
-    <button id="logoutBtn">🚪 Log ud</button>
+  <div class="hub-header">
+    <h1>DEN SEJE APP</h1>
   </div>
 
-  <script type="module">
-    import { supabase }   from "./supabaseClient.js";
-    import { loadTheme }  from "./js/themeManager.js";
+  <div class="hub-layout">
 
-    const { data: sessionData } = await supabase.auth.getSession();
+    <!-- Left: Navigation menu -->
+    <nav class="menu">
+      <button id="playBtn">🎮 Spil</button>
+      <button id="shopBtn">🛒 Butik</button>
+      <button id="avatarBtn">👤 Avatar</button>
+      <button id="themesBtn">🎨 Temaer</button>
+      <button id="logoutBtn">🚪 Log ud</button>
+    </nav>
 
-    if (!sessionData.session) {
-      window.location.replace("login.html");
-    } else {
-      loadTheme().catch(() => {});
+    <!-- Right: Identity + Collection -->
+    <div class="identity-area">
+
+      <!-- Identity panel: mini avatar, level, theme, XP -->
+      <div class="identity-panel">
+        <div class="mini-avatar-frame">
+          <div class="mini-avatar" id="miniAvatar" data-rarity="">
+            <!-- layers injected by JS -->
+          </div>
+        </div>
+        <div class="identity-info">
+          <div class="identity-level" id="identityLevel">Niveau —</div>
+          <div class="identity-theme">
+            <span class="theme-dot"></span>
+            <span id="themeLabel">—</span>
+          </div>
+          <div class="identity-xp-section">
+            <div class="xp-bar-track">
+              <div class="xp-bar-fill" id="xpBarFill"
+                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+            </div>
+            <div class="xp-label" id="xpLabel">...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collection summary: completion bars + rarity breakdown -->
+      <div class="collection-panel" id="collectionPanel">
+        <div class="collection-header">
+          <span class="collection-title">Min samling</span>
+          <span class="collection-pct" id="collectionPct">—</span>
+        </div>
+        <div class="category-bars">
+          <div class="category-row">
+            <div class="category-label-row">
+              <span class="category-label">Items</span>
+              <span class="category-count" id="itemsCount">—</span>
+            </div>
+            <div class="category-track">
+              <div class="category-fill" id="itemsFill"
+                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+          <div class="category-row">
+            <div class="category-label-row">
+              <span class="category-label">Temaer</span>
+              <span class="category-count" id="themesCount">—</span>
+            </div>
+            <div class="category-track">
+              <div class="category-fill" id="themesFill"
+                   role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="rarity-chips" id="rarityChips">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase }  from "./supabaseClient.js";
+  import { loadTheme } from "./js/themeManager.js";
+  import { getXPProgressInLevel } from "./js/progression.js";
+
+  // ── Auth ──────────────────────────────────────────────────────────────────────
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    window.location.replace("login.html");
+    throw new Error("Unauthorized");
+  }
+
+  const userId = sessionData.session.user.id;
+
+  loadTheme().catch(() => {});
+
+  window.addEventListener("pageshow", async (event) => {
+    if (event.persisted) {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) window.location.replace("login.html");
+    }
+  });
+
+  // ── Navigation ────────────────────────────────────────────────────────────────
+
+  document.getElementById("playBtn").onclick   = () => { window.location.href = "index.html"; };
+  document.getElementById("shopBtn").onclick   = () => { window.location.href = "shop.html"; };
+  document.getElementById("avatarBtn").onclick = () => { window.location.href = "avatar.html"; };
+  document.getElementById("themesBtn").onclick = () => { window.location.href = "themes.html"; };
+  document.getElementById("logoutBtn").onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+  };
+
+  // ── Constants ─────────────────────────────────────────────────────────────────
+
+  const ALL_SLOTS    = ["body", "shirt", "hat", "glasses", "mask"];
+  const SLOT_Z       = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
+  const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
+  const BASE_SRC     = "/assets/avatar/base/body.svg";
+
+  const RARITY_CHIP_CFG = {
+    legendary: { label: "Legendarisk", icon: "✦", cls: "rarity-chip--legendary" },
+    rare:      { label: "Sjælden",     icon: "◆", cls: "rarity-chip--rare"      },
+    uncommon:  { label: "Ualmindelig", icon: "◆", cls: "rarity-chip--uncommon"  },
+    common:    { label: "Almindelig",  icon: "○", cls: "rarity-chip--common"    },
+  };
+
+  // ── Data fetch (all in parallel) ──────────────────────────────────────────────
+
+  const [
+    profileResult,
+    progressResult,
+    userItemsResult,
+    shopItemsResult,
+    userThemesResult,
+    themesResult,
+  ] = await Promise.all([
+    supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
+    supabase.from("student_progress").select("xp, coins").eq("student_id", userId),
+    supabase.from("user_items").select("item_id").eq("user_id", userId),
+    supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
+    supabase.from("user_themes").select("theme_id").eq("user_id", userId),
+    supabase.from("themes").select("id, name, rarity, always_owned"),
+  ]);
+
+  // ── Parse profile ─────────────────────────────────────────────────────────────
+
+  const equippedSlots = profileResult.data?.equipped_slots ?? {};
+  const activeThemeId = profileResult.data?.active_theme ?? "default";
+
+  // ── Parse progression ─────────────────────────────────────────────────────────
+
+  const xp = progressResult.data?.[0]?.xp ?? 0;
+
+  // ── Parse items ───────────────────────────────────────────────────────────────
+
+  const allShopItems  = shopItemsResult.data ?? [];
+  const ownedItemIds  = new Set((userItemsResult.data ?? []).map(r => r.item_id));
+
+  // Count only items with a slot_type — these are the equippable avatar items
+  const equipableItems   = allShopItems.filter(i => !!i.slot_type);
+  const totalItems       = equipableItems.length;
+  const ownedItems       = equipableItems.filter(i => ownedItemIds.has(i.id));
+  const ownedItemsCount  = ownedItems.length;
+
+  // ── Parse themes ──────────────────────────────────────────────────────────────
+
+  const allThemes     = themesResult.data ?? [];
+  const ownedThemeSet = new Set((userThemesResult.data ?? []).map(r => r.theme_id));
+  // always_owned themes (e.g. "Standard") are implicitly owned by everyone
+  allThemes.forEach(t => { if (t.always_owned) ownedThemeSet.add(t.id); });
+
+  const totalThemes      = allThemes.length;
+  const ownedThemesCount = ownedThemeSet.size;
+
+  // Active theme display name — look up in catalog, fall back to key
+  const activeThemeObj  = allThemes.find(t => t.id === activeThemeId) ?? null;
+  const activeThemeName = activeThemeObj?.name ?? activeThemeId;
+
+  // ── Rarity breakdown (owned items + owned themes combined) ────────────────────
+
+  const rarityCounts = { legendary: 0, rare: 0, uncommon: 0, common: 0 };
+
+  for (const item of ownedItems) {
+    const r = item.rarity;
+    if (r !== null && r !== undefined && r in rarityCounts) rarityCounts[r]++;
+  }
+
+  for (const theme of allThemes) {
+    if (!ownedThemeSet.has(theme.id)) continue;
+    const r = theme.rarity;
+    if (r !== null && r !== undefined && r in rarityCounts) rarityCounts[r]++;
+  }
+
+  // ── Completion calculations ───────────────────────────────────────────────────
+
+  const totalCosmetics  = totalItems + totalThemes;
+  const ownedCosmetics  = ownedItemsCount + ownedThemesCount;
+  const totalPct        = totalCosmetics > 0 ? Math.round((ownedCosmetics / totalCosmetics) * 100) : 0;
+  const itemsPct        = totalItems  > 0 ? Math.round((ownedItemsCount  / totalItems)  * 100) : 0;
+  const themesPct       = totalThemes > 0 ? Math.round((ownedThemesCount / totalThemes) * 100) : 0;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+
+  function getHighestEquippedRarity() {
+    const rarities = ALL_SLOTS
+      .map(slot => equippedSlots[slot])
+      .filter(Boolean)
+      .map(id => allShopItems.find(i => i.id === id)?.rarity)
+      .filter(Boolean);
+
+    for (const r of RARITY_ORDER) {
+      if (rarities.includes(r)) return r;
+    }
+    return null;
+  }
+
+  // ── Mini avatar rendering ─────────────────────────────────────────────────────
+
+  function renderMiniAvatar() {
+    const el = document.getElementById("miniAvatar");
+    if (!el) return;
+
+    el.innerHTML = "";
+
+    // Base body — always present
+    const base = document.createElement("img");
+    base.className = "mini-avatar-layer";
+    base.src = BASE_SRC;
+    base.style.zIndex = "0";
+    base.alt = "";
+    el.appendChild(base);
+
+    // One layer per equipped slot
+    ALL_SLOTS.forEach(slot => {
+      const itemId = equippedSlots[slot];
+      if (!itemId) return;
+      const item = allShopItems.find(i => i.id === itemId);
+      if (!item || !item.image_url) return;
+
+      const img = document.createElement("img");
+      img.className = "mini-avatar-layer";
+      img.src = item.image_url;
+      img.style.zIndex = String(SLOT_Z[slot] ?? 1);
+      img.alt = "";
+      el.appendChild(img);
+    });
+
+    // Rarity-based border glow (matches avatar.html aura logic)
+    el.dataset.rarity = getHighestEquippedRarity() ?? "";
+  }
+
+  // ── Identity panel rendering ──────────────────────────────────────────────────
+
+  function renderIdentity() {
+    const { level, xpIntoLevel, xpRequiredForLevel, progress } = getXPProgressInLevel(xp);
+
+    const levelEl = document.getElementById("identityLevel");
+    if (levelEl) levelEl.textContent = "Niveau " + level;
+
+    const themeLabelEl = document.getElementById("themeLabel");
+    if (themeLabelEl) themeLabelEl.textContent = activeThemeName;
+
+    // XP bar — double RAF ensures CSS transition fires after initial 0% render
+    const xpFill = document.getElementById("xpBarFill");
+    if (xpFill) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const pct = Math.round(progress * 100);
+          xpFill.style.width = pct + "%";
+          xpFill.setAttribute("aria-valuenow", pct);
+        });
+      });
     }
 
-    document.getElementById("playBtn").onclick = () => {
-      window.location.href = "index.html";
-    };
+    const xpLabelEl = document.getElementById("xpLabel");
+    if (xpLabelEl) xpLabelEl.textContent = xpIntoLevel + " / " + xpRequiredForLevel + " XP";
+  }
 
-    document.getElementById("shopBtn").onclick = () => {
-      window.location.href = "shop.html";
-    };
+  // ── Collection panel rendering ────────────────────────────────────────────────
 
-    document.getElementById("avatarBtn").onclick = () => {
-      window.location.href = "avatar.html";
-    };
+  function renderCollection() {
+    // Total completion percentage
+    const pctEl = document.getElementById("collectionPct");
+    if (pctEl) pctEl.textContent = totalPct + "%";
 
-    document.getElementById("themesBtn").onclick = () => {
-      window.location.href = "themes.html";
-    };
+    // Items bar
+    const itemsCountEl = document.getElementById("itemsCount");
+    if (itemsCountEl) itemsCountEl.textContent = ownedItemsCount + " / " + totalItems;
 
-    document.getElementById("logoutBtn").onclick = async () => {
-      await supabase.auth.signOut();
-      window.location.replace("login.html");
-    };
-  </script>
+    const itemsFill = document.getElementById("itemsFill");
+    if (itemsFill) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          itemsFill.style.width = itemsPct + "%";
+          itemsFill.setAttribute("aria-valuenow", itemsPct);
+        });
+      });
+    }
+
+    // Themes bar
+    const themesCountEl = document.getElementById("themesCount");
+    if (themesCountEl) themesCountEl.textContent = ownedThemesCount + " / " + totalThemes;
+
+    const themesFill = document.getElementById("themesFill");
+    if (themesFill) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          themesFill.style.width = themesPct + "%";
+          themesFill.setAttribute("aria-valuenow", themesPct);
+        });
+      });
+    }
+
+    // Rarity chips — only show rarities where owned count > 0
+    const chipsEl = document.getElementById("rarityChips");
+    if (chipsEl) {
+      chipsEl.innerHTML = "";
+      RARITY_ORDER.forEach(rarity => {
+        const count = rarityCounts[rarity] ?? 0;
+        if (count === 0) return;
+        const cfg = RARITY_CHIP_CFG[rarity];
+        if (!cfg) return;
+
+        const chip = document.createElement("div");
+        chip.className = "rarity-chip " + cfg.cls;
+        chip.innerHTML =
+          `<span class="chip-icon">${cfg.icon}</span>` +
+          `<span>${count} ${cfg.label}</span>`;
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    // Completion glow for fully collected
+    if (totalPct >= 100) {
+      const panel = document.getElementById("collectionPanel");
+      if (panel) panel.classList.add("collection-panel--complete");
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+
+  renderMiniAvatar();
+  renderIdentity();
+  renderCollection();
+</script>
 
 </body>
 </html>
