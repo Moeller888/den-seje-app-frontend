@@ -440,11 +440,11 @@
           <span class="stat-chip-value" id="statCorrect">—</span>
           <span class="stat-chip-label">Rigtige svar</span>
         </div>
-        <div class="stat-chip stat-chip--streak">
+        <div class="stat-chip stat-chip--streak" title="Daglig streak – vend tilbage næste dag for at holde den i live">
           <span class="stat-chip-icon">🔥</span>
           <span class="stat-chip-value" id="statStreak">—</span>
-          <span class="streak-best" id="statStreakBest">— rekord</span>
-          <span class="stat-chip-label">Streak</span>
+          <span class="streak-best" id="statStreakBest">Rekord: —</span>
+          <span class="stat-chip-label">Dage i træk</span>
         </div>
       </div>
     </div>
@@ -728,7 +728,7 @@
     if (streakEl) streakEl.textContent = currentStreak;
 
     const streakBestEl = document.getElementById("statStreakBest");
-    if (streakBestEl) streakBestEl.textContent = longestStreak + " rekord";
+    if (streakBestEl) streakBestEl.textContent = "Rekord: " + longestStreak;
   }
 
   // ── Collection rendering ──────────────────────────────────────────────────────
