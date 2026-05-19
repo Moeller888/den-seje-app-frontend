@@ -1119,6 +1119,7 @@
     userAchievementsResult,
     titlesResult,
     userTitlesResult,
+    prestigeResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
@@ -1132,6 +1133,7 @@
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("titles").select("id, name, rarity"),
     supabase.from("user_titles").select("title_id").eq("user_id", userId),
+    supabase.rpc("recalculate_prestige", { p_user_id: userId }),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -1216,13 +1218,9 @@
     if (r in rarityCounts) rarityCounts[r]++;
   }
 
-  // ── Prestige score ────────────────────────────────────────────────────────────
+  // ── Prestige score (server-authoritative) ────────────────────────────────────
 
-  const PRESTIGE_WEIGHT = { legendary: 12, rare: 5, uncommon: 2, common: 1 };
-  let prestigeScore = 0;
-  for (const rarity of Object.keys(rarityCounts)) {
-    prestigeScore += (PRESTIGE_WEIGHT[rarity] ?? 0) * (rarityCounts[rarity] ?? 0);
-  }
+  const prestigeScore = prestigeResult.data ?? 0;
 
   // ── Completion calculations ───────────────────────────────────────────────────
 
