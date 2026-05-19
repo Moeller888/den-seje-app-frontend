@@ -901,7 +901,50 @@
     }
 
     /* ── Panel grid extension for prestige row ───────── */
-    .panel-prestige { grid-column: 1 / 4; grid-row: 7; }
+    .panel-prestige     { grid-column: 1 / 4; grid-row: 7; }
+
+    /* ── Panel grid extension for leaderboard row ────── */
+    .panel-leaderboard  { grid-column: 1 / 4; grid-row: 8; }
+
+    /* ── Leaderboard demo styles ─────────────────────── */
+    .lb-demo-wrap       { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+    .lb-demo-col        { flex: 1; min-width: 200px; }
+    .lb-demo-label      { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: var(--dim); margin-bottom: 8px; font-family: var(--mono); }
+
+    /* Tier chips */
+    .lb-tier-legend     { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; padding: 8px 10px; background: var(--surf2); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; }
+    .lb-tier-chip       { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; border: 1.5px solid; font-size: 9px; font-weight: bold; white-space: nowrap; }
+    .lb-tier-novice     { border-color: #555577; color: #8888aa; }
+    .lb-tier-adept      { border-color: #2e7d32; color: #66bb6a; }
+    .lb-tier-expert     { border-color: #1565c0; color: #64b5f6; }
+    .lb-tier-master     { border-color: #e65100; color: #ffca28; }
+    .lb-tier-legend     { border-color: #9c27b0; color: #ce93d8; }
+
+    /* Mini podium */
+    .lb-podium          { display: flex; align-items: flex-end; gap: 5px; margin-bottom: 10px; }
+    .lb-pod-slot        { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .lb-pod-card        { width: 100%; background: var(--surf2); border: 1.5px solid var(--border); border-radius: 7px; padding: 8px 6px 6px; text-align: center; }
+    .lb-pod-slot--1 .lb-pod-card { border-color: #ffa000; box-shadow: 0 0 14px -4px #ffa000; }
+    .lb-pod-slot--2 .lb-pod-card { border-color: #9e9e9e; box-shadow: 0 0 8px -4px rgba(158,158,158,0.5); }
+    .lb-pod-slot--3 .lb-pod-card { border-color: #8d6e63; box-shadow: 0 0 8px -4px rgba(141,110,99,0.5); }
+    .lb-pod-card.you    { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .lb-pod-pedestal    { width: 100%; border-radius: 0 0 4px 4px; margin-top: 3px; }
+    .lb-pod-slot--1 .lb-pod-pedestal { height: 28px; background: linear-gradient(180deg, rgba(255,160,0,0.22) 0%, rgba(255,160,0,0.03) 100%); }
+    .lb-pod-slot--2 .lb-pod-pedestal { height: 18px; background: linear-gradient(180deg, rgba(158,158,158,0.18) 0%, rgba(158,158,158,0.03) 100%); }
+    .lb-pod-slot--3 .lb-pod-pedestal { height: 11px; background: linear-gradient(180deg, rgba(141,110,99,0.18) 0%, rgba(141,110,99,0.03) 100%); }
+    .lb-pod-medal       { font-size: 16px; margin-bottom: 4px; }
+    .lb-pod-name        { font-size: 10px; font-weight: bold; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+    .lb-pod-score       { font-size: 18px; font-weight: bold; color: var(--accent); line-height: 1; margin: 5px 0 3px; }
+    .lb-pod-tier        { font-size: 8px; }
+
+    /* Rank rows */
+    .lb-rank-list       { display: flex; flex-direction: column; gap: 4px; }
+    .lb-rank-row        { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--surf2); border: 1px solid var(--border); border-radius: 6px; }
+    .lb-rank-row.you    { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+    .lb-rank-num        { font-size: 11px; font-weight: bold; color: var(--dim); min-width: 22px; text-align: right; }
+    .lb-rank-name       { flex: 1; font-size: 12px; font-weight: bold; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-rank-score      { font-size: 13px; font-weight: bold; color: var(--accent); }
+    .lb-you-badge       { display: inline-block; font-size: 8px; font-weight: bold; text-transform: uppercase; padding: 1px 4px; border-radius: 2px; border: 1px solid var(--accent); color: var(--accent); margin-left: 3px; vertical-align: middle; }
 
     /* ── Prestige demo: mini collection panels ────────── */
     .prestige-demo-grid {
@@ -1648,6 +1691,147 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ── Row 8: Leaderboard Preview (full width) ───────────────────── -->
+  <div class="panel panel-leaderboard">
+    <div class="panel-h">Prestige Leaderboard &mdash; Page States &amp; Components (leaderboard.html)</div>
+
+    <!-- Tier legend -->
+    <div class="lb-demo-label">Prestige niveauer (tier legend)</div>
+    <div class="lb-tier-legend" style="margin-bottom:14px">
+      <span class="lb-tier-chip lb-tier-novice">Nybegynder <span style="opacity:.55;font-size:8px">0+</span></span>
+      <span class="lb-tier-chip lb-tier-adept">Lærling <span style="opacity:.55;font-size:8px">10+</span></span>
+      <span class="lb-tier-chip lb-tier-expert">Kyndig <span style="opacity:.55;font-size:8px">30+</span></span>
+      <span class="lb-tier-chip lb-tier-master">Mester <span style="opacity:.55;font-size:8px">75+</span></span>
+      <span class="lb-tier-chip lb-tier-legend">Legende <span style="opacity:.55;font-size:8px">150+</span></span>
+    </div>
+
+    <div class="lb-demo-wrap">
+
+      <!-- Variant 1: Full top 3 + rank list, current user at #2 (in podium) -->
+      <div class="lb-demo-col" style="flex:1.4;min-width:240px">
+        <div class="lb-demo-label">Podium — top 3 (bruger er #2)</div>
+        <div class="lb-podium">
+          <!-- #2 left, #1 center, #3 right — classic Olympic order -->
+          <div class="lb-pod-slot lb-pod-slot--2" style="order:1">
+            <div class="lb-pod-card you">
+              <div class="lb-pod-medal">🥈</div>
+              <div class="lb-pod-name">christian<span class="lb-you-badge">dig</span></div>
+              <div class="lb-pod-score">82</div>
+              <div class="lb-pod-tier"><span class="lb-tier-chip lb-tier-master">Mester</span></div>
+            </div>
+            <div class="lb-pod-pedestal"></div>
+          </div>
+          <div class="lb-pod-slot lb-pod-slot--1" style="order:2">
+            <div class="lb-pod-card">
+              <div class="lb-pod-medal">🥇</div>
+              <div class="lb-pod-name">sofie</div>
+              <div class="lb-pod-score">148</div>
+              <div class="lb-pod-tier"><span class="lb-tier-chip lb-tier-master">Mester</span></div>
+            </div>
+            <div class="lb-pod-pedestal"></div>
+          </div>
+          <div class="lb-pod-slot lb-pod-slot--3" style="order:3">
+            <div class="lb-pod-card">
+              <div class="lb-pod-medal">🥉</div>
+              <div class="lb-pod-name">lucas</div>
+              <div class="lb-pod-score">45</div>
+              <div class="lb-pod-tier"><span class="lb-tier-chip lb-tier-expert">Kyndig</span></div>
+            </div>
+            <div class="lb-pod-pedestal"></div>
+          </div>
+        </div>
+        <!-- Rank list rows 4+ -->
+        <div class="lb-demo-label" style="margin-top:8px">Rangliste #4+</div>
+        <div class="lb-rank-list">
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">4</div>
+            <div class="lb-rank-name">emma <span class="lb-tier-chip lb-tier-expert" style="font-size:8px;padding:1px 5px">Kyndig</span></div>
+            <div class="lb-rank-score">38</div>
+          </div>
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">5</div>
+            <div class="lb-rank-name">noah <span class="lb-tier-chip lb-tier-adept" style="font-size:8px;padding:1px 5px">Lærling</span></div>
+            <div class="lb-rank-score">17</div>
+          </div>
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">6</div>
+            <div class="lb-rank-name">mia <span class="lb-tier-chip lb-tier-novice" style="font-size:8px;padding:1px 5px">Nybegynder</span></div>
+            <div class="lb-rank-score">4</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: Current user outside top 50 — "Din placering" section -->
+      <div class="lb-demo-col">
+        <div class="lb-demo-label">Bruger udenfor top 50 &rarr; &ldquo;Din placering&rdquo;</div>
+        <div class="lb-rank-list" style="margin-bottom:8px">
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">1</div>
+            <div class="lb-rank-name">sofie <span class="lb-tier-chip lb-tier-master" style="font-size:8px;padding:1px 5px">Mester</span></div>
+            <div class="lb-rank-score">148</div>
+          </div>
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">2</div>
+            <div class="lb-rank-name">christian <span class="lb-tier-chip lb-tier-master" style="font-size:8px;padding:1px 5px">Mester</span></div>
+            <div class="lb-rank-score">82</div>
+          </div>
+          <div style="font-size:9px;color:var(--dim);text-align:center;padding:6px 0;font-family:var(--mono)">… 48 spillere …</div>
+        </div>
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border);font-family:var(--mono)">Din placering</div>
+        <div class="lb-rank-list">
+          <div class="lb-rank-row you">
+            <div class="lb-rank-num">63</div>
+            <div class="lb-rank-name">oliver<span class="lb-you-badge">dig</span> <span class="lb-tier-chip lb-tier-novice" style="font-size:8px;padding:1px 5px">Nybegynder</span></div>
+            <div class="lb-rank-score">2</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 3: Legendary tier showcase + title chips on podium -->
+      <div class="lb-demo-col">
+        <div class="lb-demo-label">Legende tier &amp; title chips</div>
+        <div class="lb-podium" style="justify-content:center">
+          <div class="lb-pod-slot lb-pod-slot--1" style="max-width:160px">
+            <div class="lb-pod-card">
+              <div class="lb-pod-medal">🥇</div>
+              <div class="lb-pod-name">valeria</div>
+              <span class="title-chip title-chip--legendary" style="margin:3px auto 0;font-size:9px;padding:2px 6px">
+                <span class="title-chip-rarity-icon">✦</span>
+                <span>Den Store Samler</span>
+              </span>
+              <div class="lb-pod-score">213</div>
+              <div class="lb-pod-tier"><span class="lb-tier-chip lb-tier-legend">Legende</span></div>
+            </div>
+            <div class="lb-pod-pedestal"></div>
+          </div>
+        </div>
+        <div class="lb-rank-list" style="margin-top:8px">
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">2</div>
+            <div class="lb-rank-name">
+              alex
+              <span class="title-chip title-chip--rare" style="font-size:8px;padding:1px 5px;margin-left:4px">
+                <span class="title-chip-rarity-icon">★</span><span>Natugle</span>
+              </span>
+            </div>
+            <div class="lb-rank-score">157</div>
+          </div>
+          <div class="lb-rank-row">
+            <div class="lb-rank-num">3</div>
+            <div class="lb-rank-name">
+              ida
+              <span class="title-chip title-chip--uncommon" style="font-size:8px;padding:1px 5px;margin-left:4px">
+                <span class="title-chip-rarity-icon">◆</span><span>Vedholdende</span>
+              </span>
+            </div>
+            <div class="lb-rank-score">151</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </div>

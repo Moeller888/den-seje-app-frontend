@@ -919,6 +919,7 @@
       <button id="shopBtn">🛒 Butik</button>
       <button id="avatarBtn">👤 Avatar</button>
       <button id="themesBtn">🎨 Temaer</button>
+      <button id="leaderboardBtn">🏆 Rangliste</button>
       <button id="logoutBtn">🚪 Log ud</button>
     </nav>
 
@@ -1055,10 +1056,11 @@
 
   // ── Navigation ────────────────────────────────────────────────────────────────
 
-  document.getElementById("playBtn").onclick   = () => { window.location.href = "index.html"; };
-  document.getElementById("shopBtn").onclick   = () => { window.location.href = "shop.html"; };
-  document.getElementById("avatarBtn").onclick = () => { window.location.href = "avatar.html"; };
-  document.getElementById("themesBtn").onclick = () => { window.location.href = "themes.html"; };
+  document.getElementById("playBtn").onclick        = () => { window.location.href = "index.html"; };
+  document.getElementById("shopBtn").onclick        = () => { window.location.href = "shop.html"; };
+  document.getElementById("avatarBtn").onclick      = () => { window.location.href = "avatar.html"; };
+  document.getElementById("themesBtn").onclick      = () => { window.location.href = "themes.html"; };
+  document.getElementById("leaderboardBtn").onclick = () => { window.location.href = "leaderboard.html"; };
   document.getElementById("logoutBtn").onclick = async () => {
     await supabase.auth.signOut();
     window.location.replace("login.html");

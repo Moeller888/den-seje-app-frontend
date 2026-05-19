@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rangliste</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────── */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      padding: 8px 14px;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-btn);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .back-btn:hover { background: var(--btn-bg-hover); }
+
+    .topbar h1 { font-size: 20px; font-weight: bold; color: var(--text-bright); }
+
+    .topbar-count {
+      margin-left: auto;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    /* ── State cards ─────────────────────────────────────── */
+
+    .state-card {
+      padding: 28px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 15px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .state-card--error {
+      color: #f44336;
+      border-color: #f44336;
+    }
+
+    /* ── Section header ──────────────────────────────────── */
+
+    .section-header {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-label);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Tier legend ─────────────────────────────────────── */
+
+    .tier-legend {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 10px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .tier-legend-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+      margin-right: 2px;
+      white-space: nowrap;
+    }
+
+    /* ── Tier chips — fixed rarity-aligned colors ─────────── */
+
+    .tier-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      border: 1.5px solid;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+
+    .tier-chip .tier-score {
+      font-size: 9px;
+      opacity: 0.65;
+    }
+
+    .tier-novice { border-color: #555577; color: #8888aa; }
+    .tier-adept  { border-color: #2e7d32; color: #66bb6a; }
+    .tier-expert { border-color: #1565c0; color: #64b5f6; }
+    .tier-master { border-color: #e65100; color: #ffca28; }
+    .tier-legend { border-color: #9c27b0; color: #ce93d8; }
+
+    /* ── Podium ──────────────────────────────────────────── */
+
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .podium-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      max-width: 210px;
+    }
+
+    .podium-card {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 10px 10px;
+      text-align: center;
+      position: relative;
+    }
+
+    .podium-card.is-current {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .podium-slot--1 .podium-card {
+      border-color: var(--border-legendary);
+      box-shadow: 0 0 22px -4px var(--border-legendary);
+    }
+
+    .podium-slot--2 .podium-card {
+      border-color: #9e9e9e;
+      box-shadow: 0 0 12px -4px rgba(158,158,158,0.45);
+    }
+
+    .podium-slot--3 .podium-card {
+      border-color: #8d6e63;
+      box-shadow: 0 0 12px -4px rgba(141,110,99,0.45);
+    }
+
+    .podium-pedestal {
+      width: 100%;
+      border-radius: 0 0 5px 5px;
+      margin-top: 4px;
+    }
+
+    .podium-slot--1 .podium-pedestal {
+      height: 36px;
+      background: linear-gradient(180deg, rgba(255,160,0,0.28) 0%, rgba(255,160,0,0.05) 100%);
+    }
+
+    .podium-slot--2 .podium-pedestal {
+      height: 22px;
+      background: linear-gradient(180deg, rgba(158,158,158,0.22) 0%, rgba(158,158,158,0.05) 100%);
+    }
+
+    .podium-slot--3 .podium-pedestal {
+      height: 14px;
+      background: linear-gradient(180deg, rgba(141,110,99,0.22) 0%, rgba(141,110,99,0.05) 100%);
+    }
+
+    .podium-medal  { font-size: 22px; line-height: 1; margin-bottom: 8px; }
+    .podium-name   { font-size: 13px; font-weight: bold; color: var(--text-bright); margin-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .podium-score  { font-size: 26px; font-weight: bold; color: var(--accent); line-height: 1; margin: 8px 0 6px; }
+    .podium-tier   { display: block; margin-top: 6px; }
+
+    .podium-empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 14px;
+      width: 100%;
+    }
+
+    /* ── "Dig" badge ─────────────────────────────────────── */
+
+    .you-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    /* ── Rank list (rows 4+) ─────────────────────────────── */
+
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .rank-row.is-current {
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .rank-num {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-dim);
+      min-width: 30px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .rank-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .rank-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rank-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .rank-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .rank-score {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .rank-xp {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    /* ── My placement (rank > 50) ────────────────────────── */
+
+    .my-placement-card {
+      border-color: var(--accent) !important;
+      box-shadow: inset 3px 0 0 var(--accent) !important;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <button class="back-btn" id="backBtn">← Tilbage</button>
+    <h1>Rangliste</h1>
+    <span class="topbar-count" id="playerCount" aria-live="polite"></span>
+  </div>
+
+  <div id="loadingState" class="state-card" aria-live="polite">Henter rangliste…</div>
+  <div id="errorState" class="state-card state-card--error" hidden role="alert"></div>
+
+  <div id="mainContent" hidden>
+
+    <div class="tier-legend" id="tierLegend" role="list" aria-label="Prestige niveauer"></div>
+
+    <div class="podium" id="podium" role="list" aria-label="Top 3 spillere"></div>
+
+    <div id="rankListSection" hidden>
+      <div class="section-header">Rangliste</div>
+      <div class="rank-list" id="rankList" role="list"></div>
+    </div>
+
+    <div id="myPlacementSection" hidden>
+      <div class="section-header">Din placering</div>
+      <div id="myPlacementRow"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+  import { supabase }            from "./supabaseClient.js";
+  import { loadTheme }           from "./js/themeManager.js";
+  import { calculateLevelFromXP } from "./js/progression.js";
+
+  // ── Auth ─────────────────────────────────────────────────────────────────
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    window.location.replace("login.html");
+    throw new Error("Unauthorized");
+  }
+
+  loadTheme().catch(() => {});
+
+  document.getElementById("backBtn").onclick = () => { window.location.href = "hub.html"; };
+
+  // ── Constants ─────────────────────────────────────────────────────────────
+
+  const RARITY_ICONS = { legendary: "✦", rare: "★", uncommon: "◆", common: "○" };
+
+  // Tiers ordered high → low (find() returns first match ≥ min).
+  const PRESTIGE_TIERS = [
+    { min: 150, label: "Legende",    cls: "tier-legend", score: "150+" },
+    { min:  75, label: "Mester",     cls: "tier-master", score: "75+"  },
+    { min:  30, label: "Kyndig",     cls: "tier-expert", score: "30+"  },
+    { min:  10, label: "Lærling",    cls: "tier-adept",  score: "10+"  },
+    { min:   0, label: "Nybegynder", cls: "tier-novice", score: "0+"   },
+  ];
+
+  function getTier(score) {
+    return PRESTIGE_TIERS.find(t => (score ?? 0) >= t.min)
+      ?? PRESTIGE_TIERS[PRESTIGE_TIERS.length - 1];
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g,  "&amp;")
+      .replace(/</g,  "&lt;")
+      .replace(/>/g,  "&gt;")
+      .replace(/"/g,  "&quot;");
+  }
+
+  function buildTitleChip(titleName, titleRarity) {
+    if (!titleName) return "";
+    const r    = titleRarity ?? "common";
+    const icon = RARITY_ICONS[r] ?? "○";
+    return `<span class="title-chip title-chip--${r}" aria-label="Titel: ${escapeHtml(titleName)}">` +
+      `<span class="title-chip-rarity-icon" aria-hidden="true">${icon}</span>` +
+      `<span>${escapeHtml(titleName)}</span>` +
+    `</span>`;
+  }
+
+  // ── Tier legend ───────────────────────────────────────────────────────────
+
+  function renderTierLegend() {
+    const el = document.getElementById("tierLegend");
+    el.innerHTML = '<span class="tier-legend-label">Niveauer:</span>';
+
+    // Render ascending (Nybegynder → Legende) for readability.
+    const ascending = [...PRESTIGE_TIERS].reverse();
+    for (const tier of ascending) {
+      const chip = document.createElement("span");
+      chip.className = "tier-chip " + tier.cls;
+      chip.setAttribute("role", "listitem");
+      chip.innerHTML =
+        escapeHtml(tier.label) +
+        `<span class="tier-score">${tier.score}</span>`;
+      el.appendChild(chip);
+    }
+  }
+
+  // ── Podium (top 3) ────────────────────────────────────────────────────────
+
+  // Slot styling per position (index in top-3 array, 0-based).
+  const SLOT_CLASSES  = ["podium-slot--1", "podium-slot--2", "podium-slot--3"];
+  const MEDALS        = ["🥇", "🥈", "🥉"];
+  // Classic Olympic layout: 2nd left (order 1), 1st center (order 2), 3rd right (order 3).
+  const CLASSIC_ORDER = [2, 1, 3];
+
+  function renderPodium(entries) {
+    const podiumEl = document.getElementById("podium");
+
+    // Cap at 3 entries regardless of ties.
+    const top = entries.filter(e => Number(e.player_rank) <= 3).slice(0, 3);
+
+    if (top.length === 0) {
+      podiumEl.innerHTML = '<p class="podium-empty">Ingen spillere endnu.</p>';
+      return;
+    }
+
+    podiumEl.innerHTML = "";
+    const useClassicOrder = top.length === 3;
+
+    top.forEach((entry, i) => {
+      const isCurrent = !!entry.is_current_user;
+      const tier      = getTier(entry.prestige_score);
+      const level     = calculateLevelFromXP(entry.xp ?? 0);
+      const youBadge  = isCurrent
+        ? ' <span class="you-badge" aria-label="(dig)">dig</span>'
+        : "";
+
+      const slot = document.createElement("div");
+      slot.className = "podium-slot " + (SLOT_CLASSES[i] ?? "podium-slot--3");
+      slot.setAttribute("role", "listitem");
+      if (useClassicOrder) slot.style.order = String(CLASSIC_ORDER[i] ?? i + 1);
+
+      slot.innerHTML =
+        `<div class="podium-card${isCurrent ? " is-current" : ""}"` +
+            ` aria-label="Plads ${i + 1}: ${escapeHtml(entry.display_name ?? "")}">` +
+          `<div class="podium-medal" aria-hidden="true">${MEDALS[i] ?? "🏅"}</div>` +
+          `<div class="podium-name">${escapeHtml(entry.display_name ?? "—")}${youBadge}</div>` +
+          buildTitleChip(entry.title_name, entry.title_rarity) +
+          `<div class="podium-score" aria-label="Prestige ${entry.prestige_score ?? 0}">${entry.prestige_score ?? 0}</div>` +
+          `<div class="podium-tier"><span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span></div>` +
+          `<div class="rank-xp" style="margin-top:4px;">Niveau ${level}</div>` +
+        `</div>` +
+        `<div class="podium-pedestal" aria-hidden="true"></div>`;
+
+      podiumEl.appendChild(slot);
+    });
+  }
+
+  // ── Rank list (positions 4+) ──────────────────────────────────────────────
+
+  function renderRankList(entries) {
+    const listEntries = entries.filter(
+      e => Number(e.player_rank) > 3 && Number(e.player_rank) <= 50
+    );
+
+    const sectionEl = document.getElementById("rankListSection");
+    const listEl    = document.getElementById("rankList");
+
+    if (listEntries.length === 0) {
+      sectionEl.hidden = true;
+      return;
+    }
+
+    sectionEl.hidden = false;
+    listEl.innerHTML = "";
+
+    for (const entry of listEntries) {
+      const rank      = Number(entry.player_rank);
+      const isCurrent = !!entry.is_current_user;
+      const tier      = getTier(entry.prestige_score);
+      const level     = calculateLevelFromXP(entry.xp ?? 0);
+      const youBadge  = isCurrent
+        ? ' <span class="you-badge" aria-label="(dig)">dig</span>'
+        : "";
+
+      const row = document.createElement("div");
+      row.className = "rank-row" + (isCurrent ? " is-current" : "");
+      row.setAttribute("role", "listitem");
+      row.setAttribute("aria-label", `Plads ${rank}: ${entry.display_name ?? ""}`);
+
+      row.innerHTML =
+        `<div class="rank-num" aria-hidden="true">${rank}</div>` +
+        `<div class="rank-info">` +
+          `<div class="rank-name">${escapeHtml(entry.display_name ?? "—")}${youBadge}</div>` +
+          `<div class="rank-meta">` +
+            `<span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span>` +
+            buildTitleChip(entry.title_name, entry.title_rarity) +
+          `</div>` +
+        `</div>` +
+        `<div class="rank-right">` +
+          `<div class="rank-score" aria-label="Prestige ${entry.prestige_score ?? 0}">${entry.prestige_score ?? 0}</div>` +
+          `<div class="rank-xp">Niveau ${level}</div>` +
+        `</div>`;
+
+      listEl.appendChild(row);
+    }
+  }
+
+  // ── My placement (rank > 50) ──────────────────────────────────────────────
+
+  function renderMyPlacement(entries) {
+    // Only show this section if the current user is beyond the top 50.
+    const myEntry   = entries.find(e => !!e.is_current_user && Number(e.player_rank) > 50);
+    const sectionEl = document.getElementById("myPlacementSection");
+
+    if (!myEntry) {
+      sectionEl.hidden = true;
+      return;
+    }
+
+    sectionEl.hidden = false;
+    const rank  = Number(myEntry.player_rank);
+    const tier  = getTier(myEntry.prestige_score);
+    const level = calculateLevelFromXP(myEntry.xp ?? 0);
+
+    document.getElementById("myPlacementRow").innerHTML =
+      `<div class="rank-row my-placement-card" role="listitem" aria-label="Din placering: #${rank}">` +
+        `<div class="rank-num" aria-hidden="true">${rank}</div>` +
+        `<div class="rank-info">` +
+          `<div class="rank-name">${escapeHtml(myEntry.display_name ?? "—")} <span class="you-badge">dig</span></div>` +
+          `<div class="rank-meta">` +
+            `<span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span>` +
+            buildTitleChip(myEntry.title_name, myEntry.title_rarity) +
+          `</div>` +
+        `</div>` +
+        `<div class="rank-right">` +
+          `<div class="rank-score">${myEntry.prestige_score ?? 0}</div>` +
+          `<div class="rank-xp">Niveau ${level}</div>` +
+        `</div>` +
+      `</div>`;
+  }
+
+  // ── Load & render ─────────────────────────────────────────────────────────
+
+  async function load() {
+    const loadingEl = document.getElementById("loadingState");
+    const errorEl   = document.getElementById("errorState");
+    const mainEl    = document.getElementById("mainContent");
+    const countEl   = document.getElementById("playerCount");
+
+    loadingEl.hidden = false;
+    errorEl.hidden   = true;
+    mainEl.hidden    = true;
+
+    const { data, error } = await supabase.rpc("get_leaderboard");
+
+    loadingEl.hidden = true;
+
+    if (error || data == null) {
+      errorEl.textContent = "Kunne ikke hente rangliste. Prøv igen.";
+      errorEl.hidden = false;
+      return;
+    }
+
+    const entries = Array.isArray(data) ? data : [];
+
+    // Count students in top-50 for the header.
+    const visibleCount = entries.filter(e => Number(e.player_rank) <= 50).length;
+    countEl.textContent = visibleCount > 0 ? visibleCount + " spillere" : "";
+
+    renderTierLegend();
+    renderPodium(entries);
+    renderRankList(entries);
+    renderMyPlacement(entries);
+
+    mainEl.hidden = false;
+  }
+
+  load().catch(err => {
+    console.error("Leaderboard load error:", err);
+    document.getElementById("loadingState").hidden = true;
+    const errorEl = document.getElementById("errorState");
+    errorEl.textContent = "Uventet fejl. Prøv igen.";
+    errorEl.hidden = false;
+  });
+</script>
+</body>
+</html>
