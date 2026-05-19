@@ -1020,7 +1020,7 @@
   const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
   const BASE_SRC     = "/assets/avatar/base/body.svg";
 
-  const RARITY_ICONS = { legendary: "✦", rare: "◆", uncommon: "◇", common: "○" };
+  const RARITY_ICONS = { legendary: "✦", rare: "★", uncommon: "◆", common: "○" };
 
   const RARITY_CHIP_CFG = {
     legendary: { label: "Legendarisk", icon: "✦", cls: "rarity-chip--legendary" },
@@ -1223,6 +1223,7 @@
         const r    = activeTitleDef.rarity ?? "common";
         const icon = RARITY_ICONS[r] ?? "○";
         titleChipEl.className = "title-chip title-chip--" + r;
+        titleChipEl.setAttribute("aria-label", "Aktiv titel: " + activeTitleDef.name);
         titleChipEl.innerHTML =
           `<span class="title-chip-rarity-icon" aria-hidden="true">${icon}</span>` +
           `<span>${activeTitleDef.name}</span>`;

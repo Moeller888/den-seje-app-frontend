@@ -114,7 +114,7 @@
   --toast-info-text:      #90caf9;
 
   /* Title chip — rarity-colored identity label ─────────────────────────── */
-  --title-chip-common-text:      var(--text-muted);
+  --title-chip-common-text:      var(--text-dim);
   --title-chip-common-border:    var(--border);
   --title-chip-uncommon-text:    #81c784;
   --title-chip-uncommon-border:  var(--border-uncommon);
@@ -667,6 +667,7 @@
   --toast-info-text:      #1550a0;
 
   /* Title chip — light-bg overrides */
+  --title-chip-common-border:    var(--border-btn);   /* #a8b4c8 — more visible on light bg */
   --title-chip-uncommon-text:    #1e5c22;
   --title-chip-rare-text:        #1044a0;
   --title-chip-legendary-text:   #7a3a00;
@@ -881,6 +882,15 @@
   align-self:     flex-start;
   letter-spacing: 0.4px;
   white-space:    nowrap;
+  max-width:      100%;
+  overflow:       hidden;
+}
+
+/* Truncate long title text without breaking the chip's flex layout */
+.title-chip span:not(.title-chip-rarity-icon) {
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  min-width:     0;
 }
 
 .title-chip--common   { border-color: var(--title-chip-common-border);    color: var(--title-chip-common-text); }
@@ -889,10 +899,12 @@
 .title-chip--legendary {
   border-color: var(--title-chip-legendary-border);
   color:        var(--title-chip-legendary-text);
-  box-shadow:   0 0 6px -1px var(--title-chip-legendary-border);
+  /* Visible glow without negative spread — adapts to Pearl's darker legendary border */
+  box-shadow:   0 0 8px 1px color-mix(in srgb, var(--title-chip-legendary-border) 40%, transparent);
 }
 
 .title-chip-rarity-icon {
   font-size: 9px;
   opacity:   0.75;
+  flex-shrink: 0;
 }

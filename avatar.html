@@ -495,6 +495,8 @@
       transition: opacity 0.1s, box-shadow 0.12s;
       letter-spacing: 0.3px;
       white-space: nowrap;
+      max-width: 220px;
+      overflow: hidden;
     }
 
     .title-equip-chip:hover:not(:disabled) { opacity: 0.82; }
@@ -506,15 +508,30 @@
     .title-equip-chip--legendary {
       border-color: var(--title-chip-legendary-border);
       color: var(--title-chip-legendary-text);
-      box-shadow: 0 0 5px -1px var(--title-chip-legendary-border);
+      box-shadow: 0 0 7px 1px color-mix(in srgb, var(--title-chip-legendary-border) 35%, transparent);
     }
 
+    /* Inset ring signals "equipped" without clashing with the browser focus outline */
     .title-equip-chip.active {
-      outline: 2px solid var(--success-text);
-      outline-offset: 1px;
+      box-shadow: inset 0 0 0 2px var(--success-text);
+    }
+    .title-equip-chip.active.title-equip-chip--legendary {
+      box-shadow: inset 0 0 0 2px var(--success-text),
+                  0 0 7px 1px color-mix(in srgb, var(--title-chip-legendary-border) 35%, transparent);
+    }
+    .title-equip-chip:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
-    .title-equip-chip-icon { font-size: 9px; opacity: 0.75; }
+    /* Truncate long title text within the flex chip */
+    .title-equip-chip > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .title-equip-chip-icon { font-size: 9px; opacity: 0.75; flex-shrink: 0; }
 
     .titles-empty {
       color: var(--text-faint);
@@ -940,6 +957,7 @@ function renderTitles() {
     btn.className = "title-equip-chip title-equip-chip--" + r + (isActive ? " active" : "");
     btn.dataset.titleId = t.id;
     btn.title = isActive ? "Klik for at fjerne titel" : "Klik for at udstyre";
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
     btn.innerHTML =
       `<span class="title-equip-chip-icon" aria-hidden="true">${icon}</span>` +
       `<span>${t.name}</span>`;
