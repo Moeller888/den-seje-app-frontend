@@ -459,6 +459,69 @@
     .item-card.equipped[data-rarity="legendary"]:hover {
       box-shadow: 0 0 26px rgba(255,179,0,0.45);
     }
+
+    /* ── Titles panel ────────────────────────────────────── */
+
+    .titles-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 18px;
+    }
+
+    .titles-panel .panel-title {
+      margin-bottom: 12px;
+    }
+
+    .titles-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .title-equip-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--title-chip-common-border);
+      background: var(--btn-bg);
+      color: var(--title-chip-common-text);
+      cursor: pointer;
+      transition: opacity 0.1s, box-shadow 0.12s;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .title-equip-chip:hover:not(:disabled) { opacity: 0.82; }
+    .title-equip-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .title-equip-chip--common   { border-color: var(--title-chip-common-border);    color: var(--title-chip-common-text); }
+    .title-equip-chip--uncommon { border-color: var(--title-chip-uncommon-border);  color: var(--title-chip-uncommon-text); }
+    .title-equip-chip--rare     { border-color: var(--title-chip-rare-border);      color: var(--title-chip-rare-text); }
+    .title-equip-chip--legendary {
+      border-color: var(--title-chip-legendary-border);
+      color: var(--title-chip-legendary-text);
+      box-shadow: 0 0 5px -1px var(--title-chip-legendary-border);
+    }
+
+    .title-equip-chip.active {
+      outline: 2px solid var(--success-text);
+      outline-offset: 1px;
+    }
+
+    .title-equip-chip-icon { font-size: 9px; opacity: 0.75; }
+
+    .titles-empty {
+      color: var(--text-faint);
+      font-size: 13px;
+      font-style: italic;
+      padding: 4px 0;
+    }
   </style>
 </head>
 <body>
@@ -495,6 +558,13 @@
     </p>
   </div>
 
+</div>
+
+<!-- Titles panel -->
+<div class="titles-panel" id="titlesPanel">
+  <div class="panel-title">Titler</div>
+  <div class="titles-grid" id="titlesGrid"></div>
+  <p class="titles-empty" id="titlesEmpty" style="display:none">Ingen titler optjent endnu.</p>
 </div>
 
 <script type="module">
@@ -540,6 +610,13 @@ const RARITY_LABELS = {
   uncommon:  "Ualmindelig",
   rare:      "Sjælden",
   legendary: "Legendarisk",
+};
+
+const RARITY_ICONS = {
+  common:    "○",
+  uncommon:  "◆",
+  rare:      "★",
+  legendary: "✦",
 };
 
 const SLOT_LABELS = {
@@ -589,6 +666,10 @@ const ITEM_THEMES = {
 let equippedSlots = {};  // { hat: "crown-golden", ... }
 let ownedItems    = [];  // shop_item rows for all owned items
 
+let activeTitleId  = null;
+let ownedTitleIds  = new Set();
+let allTitles      = [];
+
 // ── Data loading ──────────────────────────────────────────────────────────────
 
 async function loadAll() {
@@ -601,14 +682,23 @@ async function loadAll() {
   const coins = progressData?.[0]?.coins ?? 0;
   document.getElementById("coinBalance").textContent = "🪙 " + coins;
 
-  // Equipped slots from profiles
+  // Equipped slots + active title from profiles
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("equipped_slots")
+    .select("equipped_slots, active_title")
     .eq("id", userId)
     .maybeSingle();
 
   equippedSlots = profileData?.equipped_slots ?? {};
+  activeTitleId = profileData?.active_title ?? null;
+
+  // Titles catalog + ownership in parallel
+  const [titlesResult, userTitlesResult] = await Promise.all([
+    supabase.from("titles").select("id, name, rarity"),
+    supabase.from("user_titles").select("title_id").eq("user_id", userId)
+  ]);
+  allTitles     = titlesResult.data ?? [];
+  ownedTitleIds = new Set((userTitlesResult.data ?? []).map(r => r.title_id));
 
   // Owned item IDs + purchase timestamps (for "Ny!" badge)
   const { data: userItems, error: uiError } = await supabase
@@ -681,6 +771,7 @@ function renderAll(animate = false) {
   renderAvatar(animate);
   renderSlotList();
   renderInventory();
+  renderTitles();
 }
 
 function renderAvatar(animate = false) {
@@ -824,6 +915,38 @@ function renderInventory() {
   });
 }
 
+function renderTitles() {
+  const grid  = document.getElementById("titlesGrid");
+  const empty = document.getElementById("titlesEmpty");
+  if (!grid) return;
+
+  const owned = allTitles.filter(t => ownedTitleIds.has(t.id));
+
+  grid.innerHTML = "";
+
+  if (owned.length === 0) {
+    if (empty) empty.style.display = "block";
+    return;
+  }
+
+  if (empty) empty.style.display = "none";
+
+  owned.forEach(t => {
+    const r      = t.rarity ?? "common";
+    const icon   = RARITY_ICONS[r] ?? "○";
+    const isActive = activeTitleId === t.id;
+
+    const btn = document.createElement("button");
+    btn.className = "title-equip-chip title-equip-chip--" + r + (isActive ? " active" : "");
+    btn.dataset.titleId = t.id;
+    btn.title = isActive ? "Klik for at fjerne titel" : "Klik for at udstyre";
+    btn.innerHTML =
+      `<span class="title-equip-chip-icon" aria-hidden="true">${icon}</span>` +
+      `<span>${t.name}</span>`;
+    grid.appendChild(btn);
+  });
+}
+
 // ── Equip / Unequip ───────────────────────────────────────────────────────────
 
 document.getElementById("inventoryGrid").addEventListener("click", async (e) => {
@@ -842,6 +965,14 @@ document.getElementById("inventoryGrid").addEventListener("click", async (e) => 
     unequipBtn.textContent = "...";
     await handleUnequip(unequipBtn.dataset.slot);
   }
+});
+
+document.getElementById("titlesGrid").addEventListener("click", async (e) => {
+  const chip = e.target.closest(".title-equip-chip[data-title-id]");
+  if (!chip || chip.disabled) return;
+  chip.disabled = true;
+  await handleEquipTitle(chip.dataset.titleId);
+  chip.disabled = false;
 });
 
 async function handleEquip(itemId) {
@@ -886,6 +1017,31 @@ async function handleUnequip(slot) {
   playSound("unequip");
   emit("item:unequipped", { slot });
   renderAll(true);
+}
+
+async function handleEquipTitle(titleId) {
+  const newId = activeTitleId === titleId ? null : titleId;
+
+  const { error } = await supabase.rpc("set_active_title", { p_title_id: newId });
+
+  if (error) {
+    console.error("SET TITLE ERROR:", error);
+    showToast("Kunne ikke skifte titel – prøv igen", "error");
+    playSound("error");
+    return;
+  }
+
+  activeTitleId = newId;
+
+  if (newId === null) {
+    showToast("Titel fjernet", "success");
+  } else {
+    const titleDef = allTitles.find(t => t.id === newId);
+    showToast("✓ " + (titleDef?.name ?? newId) + " udstyret", "success");
+    playSound("equip");
+  }
+
+  renderTitles();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

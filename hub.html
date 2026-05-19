@@ -851,6 +851,7 @@
         <span class="level-label">Niveau</span>
         <span class="level-number" id="levelNumber">—</span>
       </div>
+      <div class="title-chip" id="titleChip" style="display:none" aria-label="Aktiv titel"></div>
       <div class="theme-badge" id="themeBadge">
         <!-- rendered by JS -->
       </div>
@@ -1065,8 +1066,9 @@
     questsResult,
     questProgressResult,
     userAchievementsResult,
+    titlesResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("equipped_slots, active_theme").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
@@ -1076,6 +1078,7 @@
     supabase.from("daily_quests").select("id, quest_key, type, target, reward_coins, label, sort_order").eq("is_active", true).order("sort_order"),
     supabase.from("student_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("quest_date", todayUTC),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
+    supabase.from("titles").select("id, name, rarity"),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -1117,6 +1120,12 @@
   const activeThemeObj  = allThemes.find(t => t.id === activeThemeId) ?? null;
   const activeThemeName = activeThemeObj?.name ?? activeThemeId;
   const activeThemeRarity = activeThemeObj?.rarity ?? "common";
+
+  // ── Parse active title ────────────────────────────────────────────────────────
+
+  const activeTitleId  = profileResult.data?.active_title ?? null;
+  const allTitles      = titlesResult.data ?? [];
+  const activeTitleDef = activeTitleId ? (allTitles.find(t => t.id === activeTitleId) ?? null) : null;
 
   // ── Parse achievements ────────────────────────────────────────────────────────
 
@@ -1206,6 +1215,22 @@
     // Level number
     const levelEl = document.getElementById("levelNumber");
     if (levelEl) levelEl.textContent = level;
+
+    // Title chip: shown only when a title is equipped
+    const titleChipEl = document.getElementById("titleChip");
+    if (titleChipEl) {
+      if (activeTitleDef) {
+        const r    = activeTitleDef.rarity ?? "common";
+        const icon = RARITY_ICONS[r] ?? "○";
+        titleChipEl.className = "title-chip title-chip--" + r;
+        titleChipEl.innerHTML =
+          `<span class="title-chip-rarity-icon" aria-hidden="true">${icon}</span>` +
+          `<span>${activeTitleDef.name}</span>`;
+        titleChipEl.style.display = "";
+      } else {
+        titleChipEl.style.display = "none";
+      }
+    }
 
     // Theme badge: rarity icon + name
     const badgeEl = document.getElementById("themeBadge");
@@ -1497,8 +1522,13 @@
   }
 
   const REWARD_NAMES = {
-    "forest":       "Skov-tema",
-    "crown-silver": "Sølvkrone",
+    "forest":           "Skov-tema",
+    "crown-silver":     "Sølvkrone",
+    "rookie":           "Rookie",
+    "vedholdende":      "Vedholdende",
+    "natugle":          "Natugle",
+    "hurtiglaerer":     "Hurtiglærer",
+    "den-store-samler": "Den Store Samler",
   };
 
   function formatRewardToast(grant) {
@@ -1506,6 +1536,7 @@
     if (grant.reward_type === "coins") return "+" + (grant.reward_amount ?? 0) + " mønter! 🪙";
     if (grant.reward_type === "theme") return "Tema optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎨";
     if (grant.reward_type === "item")  return "Item optjent: "  + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎁";
+    if (grant.reward_type === "title") return "Titel optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🏅";
     return "";
   }
 

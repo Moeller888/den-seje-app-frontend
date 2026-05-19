@@ -890,6 +890,15 @@
     .ach-card-reward--coins { color: var(--coin, #ffd700); }
     .ach-card-reward--theme { color: var(--accent); }
     .ach-card-reward--item  { color: var(--border-rare, #1976d2); }
+    .ach-card-reward--title { color: var(--text-dim); }
+    .ach-card[data-rarity="uncommon"] .ach-card-reward--title  { color: var(--border-uncommon); }
+    .ach-card[data-rarity="rare"]     .ach-card-reward--title  { color: var(--border-rare); }
+    .ach-card[data-rarity="legendary"] .ach-card-reward--title { color: var(--border-legendary); }
+
+    /* Auto-fill grid override for 4-card reward demo row */
+    .ach-card-demo-row--auto {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
   </style>
 </head>
 <body>
@@ -1331,12 +1340,13 @@
 
     <!-- Achievement Rewards — reward badge + toast previews -->
     <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
-      <div class="quiz-row-label">Achievement Rewards &mdash; Coin &middot; Theme &middot; Item</div>
+      <div class="quiz-row-label">Achievement Rewards &mdash; Coin &middot; Theme &middot; Item &middot; Title</div>
       <button class="sb-btn c-gold"   id="btnRewardCoins" style="width:auto;margin:0">&#x1FA99; Coin toast (+25 m&oslash;nter)</button>
       <button class="sb-btn c-blue"   id="btnRewardTheme" style="width:auto;margin:0">&#127912; Theme toast (Skov-tema)</button>
       <button class="sb-btn c-violet" id="btnRewardItem"  style="width:auto;margin:0">&#127873; Item toast (S&oslash;lvkrone)</button>
+      <button class="sb-btn c-blue"   id="btnRewardTitle" style="width:auto;margin:0">&#127885; Title toast (Natugle, rare)</button>
     </div>
-    <div class="ach-card-demo-row">
+    <div class="ach-card-demo-row ach-card-demo-row--auto">
       <div class="ach-card ach-card--locked">
         <span class="ach-card-icon" aria-hidden="true">◎</span>
         <div class="ach-card-title">10 svar</div>
@@ -1364,6 +1374,33 @@
         <div class="ach-card-status">✓ Opnået</div>
         <div class="ach-card-reward ach-card-reward--item">🎁 Sølvkrone</div>
       </div>
+      <div class="ach-card ach-card--unlocked" data-rarity="rare">
+        <span class="ach-card-icon" aria-hidden="true">🌙</span>
+        <div class="ach-card-rarity ach-card-rarity--rare">Sjælden</div>
+        <div class="ach-card-title">Natteuglen</div>
+        <div class="ach-card-desc">Svar rigtigt om natten</div>
+        <div class="ach-card-status">✓ Opnået</div>
+        <div class="ach-card-reward ach-card-reward--title">🏅 Natugle</div>
+      </div>
+    </div>
+
+    <!-- Title chips — rarity variant preview (avatar.html) -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Title Chips &mdash; Rarity Variants (avatar.html &amp; hub.html)</div>
+      <span class="title-chip title-chip--common"><span class="title-chip-rarity-icon" aria-hidden="true">○</span>Rookie</span>
+      <span class="title-chip title-chip--uncommon"><span class="title-chip-rarity-icon" aria-hidden="true">◆</span>Vedholdende</span>
+      <span class="title-chip title-chip--rare"><span class="title-chip-rarity-icon" aria-hidden="true">★</span>Natugle</span>
+      <span class="title-chip title-chip--legendary"><span class="title-chip-rarity-icon" aria-hidden="true">✦</span>Hurtiglærer</span>
+      <span class="title-chip title-chip--legendary"><span class="title-chip-rarity-icon" aria-hidden="true">✦</span>Den Store Samler</span>
+    </div>
+
+    <!-- Title unlock toasts — per rarity (hub.html) -->
+    <div class="quiz-row">
+      <div class="quiz-row-label">Title Unlock Toasts &mdash; per rarity (hub.html)</div>
+      <button class="sb-btn c-dim"    id="btnTitleToastCommon"    style="width:auto;margin:0">○ Rookie (common)</button>
+      <button class="sb-btn c-green"  id="btnTitleToastUncommon"  style="width:auto;margin:0">&#9670; Vedholdende (uncommon)</button>
+      <button class="sb-btn c-blue"   id="btnTitleToastRare"      style="width:auto;margin:0">&#10022; Natugle (rare)</button>
+      <button class="sb-btn c-gold"   id="btnTitleToastLegendary" style="width:auto;margin:0">&#10022; Hurtiglærer (legendary)</button>
     </div>
 
   </div>
@@ -1871,6 +1908,32 @@ document.getElementById("btnRewardTheme").addEventListener("click", () => {
 document.getElementById("btnRewardItem").addEventListener("click", () => {
   toast("Item optjent: S\xF8lvkrone! 🎁", "success", 3000);
   play("buy");
+});
+
+document.getElementById("btnRewardTitle").addEventListener("click", () => {
+  toast("Titel optjent: Natugle! 🏅", "rare", 3800);
+  play("equip");
+});
+
+document.getElementById("btnTitleToastCommon").addEventListener("click", () => {
+  toast("Titel optjent: Rookie! 🏅", "success", 2800);
+  play("buy");
+});
+
+document.getElementById("btnTitleToastUncommon").addEventListener("click", () => {
+  toast("Titel optjent: Vedholdende! 🏅", "uncommon", 3200);
+  play("buy");
+});
+
+document.getElementById("btnTitleToastRare").addEventListener("click", () => {
+  toast("Titel optjent: Natugle! 🏅", "rare", 3800);
+  play("equip");
+});
+
+document.getElementById("btnTitleToastLegendary").addEventListener("click", () => {
+  toast("Titel optjent: Hurtigl\xE6rer! 🏅", "legendary", 4500);
+  play("equip");
+  setTimeout(() => play("buy"), 70);
 });
 
 // ── Button wiring ─────────────────────────────────────────────────────────────

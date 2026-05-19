@@ -113,6 +113,16 @@
   --toast-info-border:    #1565c0;
   --toast-info-text:      #90caf9;
 
+  /* Title chip — rarity-colored identity label ─────────────────────────── */
+  --title-chip-common-text:      var(--text-muted);
+  --title-chip-common-border:    var(--border);
+  --title-chip-uncommon-text:    #81c784;
+  --title-chip-uncommon-border:  var(--border-uncommon);
+  --title-chip-rare-text:        #90caf9;
+  --title-chip-rare-border:      var(--border-rare);
+  --title-chip-legendary-text:   #ffe082;
+  --title-chip-legendary-border: var(--border-legendary);
+
   /* Rarity unlock toasts — dark-theme base (Pearl overrides below) ──────── */
   --toast-uncommon-bg:    #0e2e0e;
   --toast-uncommon-text:  #81c784;
@@ -656,6 +666,12 @@
   --toast-info-border:    #1e6ac0;
   --toast-info-text:      #1550a0;
 
+  /* Title chip — light-bg overrides */
+  --title-chip-uncommon-text:    #1e5c22;
+  --title-chip-rare-text:        #1044a0;
+  --title-chip-legendary-text:   #7a3a00;
+  --title-chip-legendary-border: #cc7700;
+
   /* Rarity unlock toasts — light-bg overrides (Pearl only) */
   --toast-uncommon-bg:    #e8f5ea;
   --toast-uncommon-text:  #165a25;
@@ -847,4 +863,36 @@
   color:        var(--toast-legendary-text);
   font-weight:  700;
   box-shadow:   0 0 12px 2px color-mix(in srgb, var(--border-legendary) 45%, transparent);
+}
+
+/* ── Title chip (hub.html identity hero, avatar.html title panel) ────────── */
+
+.title-chip {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            4px;
+  padding:        3px 10px 3px 8px;
+  border-radius:  4px;
+  font-size:      11px;
+  font-weight:    700;
+  border:         1px solid var(--title-chip-common-border);
+  background:     var(--btn-bg);
+  color:          var(--title-chip-common-text);
+  align-self:     flex-start;
+  letter-spacing: 0.4px;
+  white-space:    nowrap;
+}
+
+.title-chip--common   { border-color: var(--title-chip-common-border);    color: var(--title-chip-common-text); }
+.title-chip--uncommon { border-color: var(--title-chip-uncommon-border);  color: var(--title-chip-uncommon-text); }
+.title-chip--rare     { border-color: var(--title-chip-rare-border);      color: var(--title-chip-rare-text); }
+.title-chip--legendary {
+  border-color: var(--title-chip-legendary-border);
+  color:        var(--title-chip-legendary-text);
+  box-shadow:   0 0 6px -1px var(--title-chip-legendary-border);
+}
+
+.title-chip-rarity-icon {
+  font-size: 9px;
+  opacity:   0.75;
 }

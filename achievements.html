@@ -346,6 +346,10 @@
     .ach-card-reward--coins { color: var(--coin); }
     .ach-card-reward--theme { color: var(--accent); }
     .ach-card-reward--item  { color: var(--border-rare); }
+    .ach-card-reward--title { color: var(--text-dim); }
+    .ach-card[data-rarity="uncommon"] .ach-card-reward--title  { color: var(--border-uncommon); }
+    .ach-card[data-rarity="rare"]     .ach-card-reward--title  { color: var(--border-rare); }
+    .ach-card[data-rarity="legendary"] .ach-card-reward--title { color: var(--border-legendary); }
 
     /* Unlock animations */
     @keyframes achCardUnlock {
@@ -580,8 +584,13 @@
   // ── Reward helpers ────────────────────────────────────────────────────────
 
   const REWARD_NAMES = {
-    "forest":       "Skov-tema",
-    "crown-silver": "Sølvkrone",
+    "forest":           "Skov-tema",
+    "crown-silver":     "Sølvkrone",
+    "rookie":           "Rookie",
+    "vedholdende":      "Vedholdende",
+    "natugle":          "Natugle",
+    "hurtiglaerer":     "Hurtiglærer",
+    "den-store-samler": "Den Store Samler",
   };
 
   function formatRewardToast(grant) {
@@ -589,6 +598,7 @@
     if (grant.reward_type === "coins") return "+" + (grant.reward_amount ?? 0) + " mønter! 🪙";
     if (grant.reward_type === "theme") return "Tema optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎨";
     if (grant.reward_type === "item")  return "Item optjent: "  + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎁";
+    if (grant.reward_type === "title") return "Titel optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🏅";
     return "";
   }
 
@@ -762,6 +772,8 @@
         rewardEl.textContent = "🎨 " + (REWARD_NAMES[ach.reward_value ?? ""] ?? ach.reward_value ?? "");
       } else if (rewardType === "item") {
         rewardEl.textContent = "🎁 " + (REWARD_NAMES[ach.reward_value ?? ""] ?? ach.reward_value ?? "");
+      } else if (rewardType === "title") {
+        rewardEl.textContent = "🏅 " + (REWARD_NAMES[ach.reward_value ?? ""] ?? ach.reward_value ?? "");
       }
       if (rewardEl.textContent) card.appendChild(rewardEl);
     }
