@@ -313,6 +313,28 @@
       color: var(--text-muted);
     }
 
+    /* Near completion (≥75%): fill shifts to success signal */
+    .ach-card-progress-fill--near {
+      background: var(--success);
+    }
+
+    /* Complete-but-pending (100%): pulsing — evaluate_achievements hasn't run yet */
+    .ach-card-progress-fill--complete {
+      background: var(--success);
+      animation: progressReadyPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes progressReadyPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.60; }
+    }
+
+    /* Near-complete progress text: brighter + bolder hint */
+    .ach-card-progress--near .ach-card-progress-text {
+      color: var(--success-text);
+      font-weight: bold;
+    }
+
     /* Unlock animations */
     @keyframes achCardUnlock {
       0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
@@ -362,7 +384,8 @@
 
     /* Reduced motion: disable all card animations */
     @media (prefers-reduced-motion: reduce) {
-      .ach-card--hidden-locked { animation: none; }
+      .ach-card--hidden-locked,
+      .ach-card-progress-fill--complete { animation: none; }
       .ach-card--just-unlocked,
       .ach-card--just-unlocked[data-rarity="legendary"],
       .ach-card--just-revealed,
@@ -461,12 +484,13 @@
 
   // ── Data fetch (all in parallel) ──────────────────────────────────────────
 
-  const [catalogResult, earnedResult, progressResult, itemCountResult, themeCountResult] = await Promise.all([
-    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity, hidden").order("sort_order"),
+  const [catalogResult, earnedResult, progressResult, itemsResult, themeCountResult, shopItemsResult] = await Promise.all([
+    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity, hidden, progress_type, target_value").order("sort_order"),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("student_progress").select("correct_answers, xp, longest_streak").eq("student_id", userId).maybeSingle(),
-    supabase.from("user_items").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("user_themes").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("shop_items").select("id, rarity"),
   ]);
 
   // ── Parse ─────────────────────────────────────────────────────────────────
@@ -475,28 +499,33 @@
   const earnedIds          = new Set((earnedResult.data ?? []).map(r => r.achievement_id));
   const sp                 = progressResult.data ?? {};
   const achCatalogMap      = new Map(achievements.map(a => [a.id, a]));
-  const itemCount          = itemCountResult.count ?? 0;
+
+  const ownedItemIds       = new Set((itemsResult.data ?? []).map(r => r.item_id));
+  const shopItemMap        = new Map((shopItemsResult.data ?? []).map(i => [i.id, i]));
+  const itemCount          = ownedItemIds.size;
+  const legendaryItemCount = Array.from(ownedItemIds)
+    .filter(id => shopItemMap.get(id)?.rarity === "legendary").length;
   const acquiredThemeCount = themeCountResult.count ?? 0;
 
-  // ── Progress helper — returns { current, total } or null for binary ────────
+  // ── Progress helper — data-driven via progress_type + target_value from DB ──
 
-  function getProgressForAchievement(id) {
-    const ca     = sp.correct_answers ?? 0;
-    const streak = sp.longest_streak  ?? 0;
-    const level  = getXPProgressInLevel(sp.xp ?? 0).level;
+  const PROGRESS_CURRENT = {
+    correct_answers: sp.correct_answers ?? 0,
+    streak:          sp.longest_streak  ?? 0,
+    level:           getXPProgressInLevel(sp.xp ?? 0).level,
+    items_owned:     itemCount,
+    themes_acquired: acquiredThemeCount,
+    legendary_items: legendaryItemCount,
+    purchases:       itemCount + acquiredThemeCount,
+  };
 
-    switch (id) {
-      case "first_correct":  return { current: Math.min(ca,               1),    total: 1    };
-      case "correct_10":     return { current: Math.min(ca,              10),    total: 10   };
-      case "correct_100":    return { current: Math.min(ca,             100),    total: 100  };
-      case "correct_1000":   return { current: Math.min(ca,            1000),    total: 1000 };
-      case "streak_7":       return { current: Math.min(streak,           7),    total: 7    };
-      case "streak_30":      return { current: Math.min(streak,          30),    total: 30   };
-      case "level_10":       return { current: Math.min(level,           10),    total: 10   };
-      case "collector_5":    return { current: Math.min(itemCount,         5),   total: 5    };
-      case "themes_3":       return { current: Math.min(acquiredThemeCount, 3),  total: 3    };
-      default:               return null;
-    }
+  function getProgressForAchievement(ach) {
+    const type   = ach.progress_type ?? null;
+    const target = ach.target_value  ?? null;
+    if (!type || !target) return null;
+    const current = PROGRESS_CURRENT[type];
+    if (current === undefined) return null;
+    return { current: Math.min(current, target), total: target };
   }
 
   // ── Counts ────────────────────────────────────────────────────────────────
@@ -588,19 +617,25 @@
       statusEl.textContent = "Hemmeligt";
       card.appendChild(statusEl);
     } else {
-      const prog = getProgressForAchievement(ach.id);
+      const prog = getProgressForAchievement(ach);
       if (prog !== null) {
-        const pct = prog.total > 0 ? Math.min(100, Math.round((prog.current / prog.total) * 100)) : 0;
+        const pct        = prog.total > 0 ? Math.min(100, Math.round((prog.current / prog.total) * 100)) : 0;
+        const isNear     = pct >= 75 && pct < 100;
+        const isComplete = pct >= 100;
 
         const progressEl = document.createElement("div");
-        progressEl.className = "ach-card-progress";
+        progressEl.className = "ach-card-progress"
+          + (isNear || isComplete ? " ach-card-progress--near" : "");
 
         const trackEl = document.createElement("div");
         trackEl.className = "ach-card-progress-track";
 
         const fillEl = document.createElement("div");
-        fillEl.className = "ach-card-progress-fill";
-        fillEl.dataset.targetPct = String(pct);
+        fillEl.className = "ach-card-progress-fill"
+          + (isComplete ? " ach-card-progress-fill--complete"
+            : isNear    ? " ach-card-progress-fill--near"
+            :             "");
+        fillEl.dataset.targetPct = isComplete ? "100" : String(pct);
         fillEl.setAttribute("role", "progressbar");
         fillEl.setAttribute("aria-valuenow", String(prog.current));
         fillEl.setAttribute("aria-valuemax", String(prog.total));

@@ -796,6 +796,27 @@
       color: var(--text-muted);
     }
 
+    /* Near completion (≥75%): fill shifts to success signal */
+    .ach-card-progress-fill--near {
+      background: var(--success);
+    }
+
+    /* Complete-but-pending (100%): pulsing success */
+    .ach-card-progress-fill--complete {
+      background: var(--success);
+      animation: demoProgressReadyPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes demoProgressReadyPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.60; }
+    }
+
+    .ach-card-progress--near .ach-card-progress-text {
+      color: var(--success-text, #4caf50);
+      font-weight: bold;
+    }
+
     /* ── Hidden achievement card — mystery locked state ─── */
     .ach-card--hidden-locked {
       border-style: dashed;
@@ -1217,6 +1238,48 @@
             <div class="ach-card-progress-fill" style="width:12%"></div>
           </div>
           <div class="ach-card-progress-text">120 / 1000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress States — data-driven progress tracking (achievements.html) -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Progress Tracking &mdash; Early Progress &middot; Near Complete (&ge;75%) &middot; Complete Pending (100%)</div>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon" aria-hidden="true">◎</span>
+        <div class="ach-card-title">10 svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 10 spørgsmål</div>
+        <div class="ach-card-progress">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill" style="width:30%"></div>
+          </div>
+          <div class="ach-card-progress-text">3 / 10</div>
+        </div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon" aria-hidden="true">★</span>
+        <div class="ach-card-rarity ach-card-rarity--rare">Sjælden</div>
+        <div class="ach-card-title">100 svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 100 spørgsmål</div>
+        <div class="ach-card-progress ach-card-progress--near">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill ach-card-progress-fill--near" style="width:83%"></div>
+          </div>
+          <div class="ach-card-progress-text">83 / 100</div>
+        </div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon" aria-hidden="true">🔥</span>
+        <div class="ach-card-rarity ach-card-rarity--rare">Sjælden</div>
+        <div class="ach-card-title">7 dage</div>
+        <div class="ach-card-desc">Oprethold en streak i 7 dage</div>
+        <div class="ach-card-progress ach-card-progress--near">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill ach-card-progress-fill--complete" style="width:100%"></div>
+          </div>
+          <div class="ach-card-progress-text">7 / 7</div>
         </div>
       </div>
     </div>
