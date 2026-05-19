@@ -354,6 +354,21 @@
       100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
     }
 
+    /* Uncommon unlock — green ring, slightly stronger than common */
+    @keyframes achCardUnlockUncommon {
+      0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--border-uncommon); }
+      40%  { transform: scale(1.06); box-shadow: 0 0 0 4px var(--border-uncommon), 0 0 20px 1px var(--border-uncommon); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--border-uncommon); }
+    }
+
+    /* Rare unlock — blue ring, two-stage swell */
+    @keyframes achCardUnlockRare {
+      0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--border-rare); }
+      35%  { transform: scale(1.05); box-shadow: 0 0 0 4px var(--border-rare), 0 0 26px 2px var(--border-rare); }
+      65%  { transform: scale(1.08); box-shadow: 0 0 0 6px var(--border-rare), 0 0 36px 3px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--border-rare); }
+    }
+
     /* Legendary unlock — more dramatic ring + scale */
     @keyframes achCardUnlockLegendary {
       0%   { transform: scale(1);    box-shadow: 0 0 18px -2px var(--border-legendary); }
@@ -370,6 +385,13 @@
       100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); filter: blur(0); opacity: 1; }
     }
 
+    @keyframes achCardRevealRare {
+      0%   { transform: scale(0.94); filter: blur(2px); opacity: 0.5; }
+      40%  { transform: scale(1.04); filter: blur(0);   opacity: 1;   }
+      65%  { transform: scale(1.07); box-shadow: 0 0 0 5px var(--border-rare), 0 0 28px 2px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--border-rare); filter: blur(0); opacity: 1; }
+    }
+
     @keyframes achCardRevealLegendary {
       0%   { transform: scale(0.94); filter: blur(2px); opacity: 0.5; }
       35%  { transform: scale(1.04); filter: blur(0);   opacity: 1;   }
@@ -381,6 +403,14 @@
       animation: achCardUnlock 650ms ease both;
     }
 
+    .ach-card--just-unlocked[data-rarity="uncommon"] {
+      animation: achCardUnlockUncommon 700ms ease both;
+    }
+
+    .ach-card--just-unlocked[data-rarity="rare"] {
+      animation: achCardUnlockRare 800ms ease both;
+    }
+
     /* Legendary override — higher specificity wins */
     .ach-card--just-unlocked[data-rarity="legendary"] {
       animation: achCardUnlockLegendary 950ms ease both;
@@ -388,6 +418,10 @@
 
     .ach-card--just-revealed {
       animation: achCardReveal 750ms ease both;
+    }
+
+    .ach-card--just-revealed[data-rarity="rare"] {
+      animation: achCardRevealRare 800ms ease both;
     }
 
     .ach-card--just-revealed[data-rarity="legendary"] {
@@ -399,8 +433,11 @@
       .ach-card--hidden-locked,
       .ach-card-progress-fill--complete { animation: none; }
       .ach-card--just-unlocked,
+      .ach-card--just-unlocked[data-rarity="uncommon"],
+      .ach-card--just-unlocked[data-rarity="rare"],
       .ach-card--just-unlocked[data-rarity="legendary"],
       .ach-card--just-revealed,
+      .ach-card--just-revealed[data-rarity="rare"],
       .ach-card--just-revealed[data-rarity="legendary"] { animation: none; }
     }
 
@@ -553,6 +590,35 @@
     if (grant.reward_type === "theme") return "Tema optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎨";
     if (grant.reward_type === "item")  return "Item optjent: "  + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎁";
     return "";
+  }
+
+  // ── Rarity presentation helpers ───────────────────────────────────────────
+
+  const RARITY_WEIGHT = { legendary: 4, rare: 3, uncommon: 2, common: 1 };
+
+  function playSoundForRarity(rarity) {
+    if (rarity === "legendary") {
+      playSound("equip");
+      setTimeout(() => playSound("buy"), 70);
+    } else if (rarity === "rare") {
+      playSound("equip");
+    } else {
+      playSound("buy");
+    }
+  }
+
+  function toastTypeForRarity(rarity) {
+    if (rarity === "legendary") return "legendary";
+    if (rarity === "rare")      return "rare";
+    if (rarity === "uncommon")  return "uncommon";
+    return "success";
+  }
+
+  function toastDurationForRarity(rarity) {
+    if (rarity === "legendary") return 4500;
+    if (rarity === "rare")      return 3800;
+    if (rarity === "uncommon")  return 3200;
+    return 2800;
   }
 
   // ── Counts ────────────────────────────────────────────────────────────────
@@ -758,18 +824,29 @@
 
     if (!hasNewUnlocks) return;
 
-    for (let i = 0; i < newlyUnlocked.length; i++) {
-      const id  = newlyUnlocked[i];
-      const ach = achCatalogMap.get(id);
+    // Sort by rarity descending so legendary unlocks get immediate attention
+    const sorted = [...newlyUnlocked].sort((a, b) => {
+      const ra = achCatalogMap.get(a)?.rarity ?? "common";
+      const rb = achCatalogMap.get(b)?.rarity ?? "common";
+      return (RARITY_WEIGHT[rb] ?? 1) - (RARITY_WEIGHT[ra] ?? 1);
+    });
+
+    let cumDelay = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      const id     = sorted[i];
+      const ach    = achCatalogMap.get(id);
       if (!ach) continue;
+      const rarity = ach.rarity ?? "common";
+      const delay  = cumDelay;
+      cumDelay    += (rarity === "legendary" ? 520 : 380);
 
       setTimeout(() => {
         const isHidden = ach.hidden ?? false;
         const toastMsg = isHidden
           ? "Hemmelighed afsløret: " + ach.label + " " + (ach.icon ?? "")
           : "Præstation opnået: " + ach.label + " " + (ach.icon ?? "");
-        showToast(toastMsg, "success", 3500);
-        playSound("buy");
+        showToast(toastMsg, toastTypeForRarity(rarity), toastDurationForRarity(rarity));
+        playSoundForRarity(rarity);
 
         earnedIds.add(id);
 
@@ -782,7 +859,7 @@
 
           if (wasHiddenLocked) {
             // Reveal: replace ??? content with real achievement data
-            cardEl.dataset.rarity = ach.rarity ?? "common";
+            cardEl.dataset.rarity = rarity;
             cardEl.removeAttribute("aria-label");
 
             const iconEl = cardEl.querySelector(".ach-card-icon");
@@ -802,10 +879,7 @@
               hiddenStatusEl.replaceWith(statusEl);
             }
 
-            const revealClass = (ach.rarity === "legendary")
-              ? "ach-card--just-revealed"
-              : "ach-card--just-revealed";
-            cardEl.classList.add(revealClass);
+            cardEl.classList.add("ach-card--just-revealed");
             cardEl.addEventListener("animationend", () => {
               cardEl.classList.remove("ach-card--just-revealed");
             }, { once: true });
@@ -831,14 +905,14 @@
         }
 
         updateCounts();
-      }, i * 350);
+      }, delay);
 
       // Reward toast fires 300ms after the unlock toast for this achievement
       const grant = newUnlockedGrants.find(g => g.achievement_id === id);
       if (grant) {
         const rewardMsg = formatRewardToast(grant);
         if (rewardMsg) {
-          setTimeout(() => showToast(rewardMsg, "success", 3000), i * 350 + 300);
+          setTimeout(() => showToast(rewardMsg, toastTypeForRarity(rarity), 3000), delay + 300);
         }
       }
     }

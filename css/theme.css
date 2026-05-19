@@ -113,6 +113,14 @@
   --toast-info-border:    #1565c0;
   --toast-info-text:      #90caf9;
 
+  /* Rarity unlock toasts — dark-theme base (Pearl overrides below) ──────── */
+  --toast-uncommon-bg:    #0e2e0e;
+  --toast-uncommon-text:  #81c784;
+  --toast-rare-bg:        #0a1e3e;
+  --toast-rare-text:      #90caf9;
+  --toast-legendary-bg:   #1e1200;
+  --toast-legendary-text: #ffe082;
+
   /* Streak system — warm orange, readable on all dark themes ───────────── */
   --streak:               #ff6b35;   /* flame orange; value display in streak chip */
 
@@ -647,6 +655,14 @@
   --toast-info-bg:        #e8f0fa;
   --toast-info-border:    #1e6ac0;
   --toast-info-text:      #1550a0;
+
+  /* Rarity unlock toasts — light-bg overrides (Pearl only) */
+  --toast-uncommon-bg:    #e8f5ea;
+  --toast-uncommon-text:  #165a25;
+  --toast-rare-bg:        #e8f0fa;
+  --toast-rare-text:      #1044a0;
+  --toast-legendary-bg:   #fff8e0;
+  --toast-legendary-text: #6b4400;
 }
 
 /* ── MEADOW theme ─────────────────────────────────────────────────────────── */
@@ -812,4 +828,23 @@
   background:   var(--toast-info-bg);
   border-color: var(--toast-info-border);
   color:        var(--toast-info-text);
+}
+.dsj-toast--uncommon {
+  background:   var(--toast-uncommon-bg);
+  border-color: var(--border-uncommon);
+  color:        var(--toast-uncommon-text);
+  font-weight:  600;
+}
+.dsj-toast--rare {
+  background:   var(--toast-rare-bg);
+  border-color: var(--border-rare);
+  color:        var(--toast-rare-text);
+  font-weight:  600;
+}
+.dsj-toast--legendary {
+  background:   var(--toast-legendary-bg);
+  border-color: var(--border-legendary);
+  color:        var(--toast-legendary-text);
+  font-weight:  700;
+  box-shadow:   0 0 12px 2px color-mix(in srgb, var(--border-legendary) 45%, transparent);
 }

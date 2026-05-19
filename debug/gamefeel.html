@@ -669,16 +669,41 @@
       40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--accent); }
       100% { transform: scale(1);    box-shadow: none; }
     }
+    @keyframes demoAchUnlockUncommon {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--border-uncommon), 0 0 10px 1px var(--border-uncommon); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+    @keyframes demoAchUnlockRare {
+      0%   { transform: scale(1);    box-shadow: none; }
+      35%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--border-rare), 0 0 14px 2px var(--border-rare); }
+      65%  { transform: scale(1.12); box-shadow: 0 0 0 4px var(--border-rare), 0 0 20px 3px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
     @keyframes demoAchUnlockLegendary {
       0%   { transform: scale(1);    box-shadow: none; }
       40%  { transform: scale(1.12); box-shadow: 0 0 0 3px var(--border-legendary); }
       100% { transform: scale(1);    box-shadow: none; }
     }
+    @keyframes demoAchBadgeRevealRare {
+      0%   { transform: scale(0.88); filter: blur(1px); opacity: 0.4; }
+      50%  { transform: scale(1.14); filter: blur(0);   opacity: 1;   box-shadow: 0 0 0 3px var(--border-rare), 0 0 14px 2px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: none; filter: blur(0); opacity: 1; }
+    }
     .demo-ach-badge.just-unlocked {
       animation: demoAchUnlock 600ms ease both;
     }
+    .demo-ach-badge.just-unlocked[data-rarity="uncommon"] {
+      animation: demoAchUnlockUncommon 650ms ease both;
+    }
+    .demo-ach-badge.just-unlocked[data-rarity="rare"] {
+      animation: demoAchUnlockRare 750ms ease both;
+    }
     .demo-ach-badge.just-unlocked[data-rarity="legendary"] {
       animation: demoAchUnlockLegendary 650ms ease both;
+    }
+    .demo-ach-badge.just-revealed[data-rarity="rare"] {
+      animation: demoAchBadgeRevealRare 750ms ease both;
     }
 
     /* ── Achievement cards (achievements.html preview) ──────────────────── */
@@ -1128,6 +1153,15 @@
       <div class="quiz-row-label">Hidden Achievement Reveal</div>
       <button class="sb-btn c-blue"   id="btnRevealNightOwl"  style="width:auto;margin:0">&#127769; Reveal: Natteuglen (rare)</button>
       <button class="sb-btn c-gold"   id="btnRevealLegCombo"  style="width:auto;margin:0">&#128081; Reveal: Den Store Samler (legendary)</button>
+    </div>
+
+    <div class="quiz-row">
+      <div class="quiz-row-label">Per-Rarity Unlock Demo &mdash; toast type + sound + badge animation</div>
+      <button class="sb-btn c-green"  id="btnRarityCommon"    style="width:auto;margin:0">Common (Første svar)</button>
+      <button class="sb-btn c-green"  id="btnRarityUncommon"  style="width:auto;margin:0" style="border-color:var(--border-uncommon)">&#9670; Uncommon (7-dages streak)</button>
+      <button class="sb-btn c-blue"   id="btnRarityRare"      style="width:auto;margin:0">&#128142; Rare (5 items)</button>
+      <button class="sb-btn c-gold"   id="btnRarityLegendary" style="width:auto;margin:0">&#128081; Legendary (30-dages streak)</button>
+      <button class="sb-btn c-violet" id="btnRarityStacked"   style="width:auto;margin:0">&#9889; Stacked: rare + legendary (dom. stagger)</button>
     </div>
 
     <!-- Mirror of hub.html achievement grid — 12 badges -->
@@ -1688,13 +1722,42 @@ function buildDemoAchGrid() {
   }
 }
 
+const RARITY_WEIGHT_DEMO = { legendary: 4, rare: 3, uncommon: 2, common: 1 };
+
+function toastTypeForRarityDemo(rarity) {
+  if (rarity === "legendary") return "legendary";
+  if (rarity === "rare")      return "rare";
+  if (rarity === "uncommon")  return "uncommon";
+  return "success";
+}
+
+function toastDurationForRarityDemo(rarity) {
+  if (rarity === "legendary") return 4500;
+  if (rarity === "rare")      return 3800;
+  if (rarity === "uncommon")  return 3200;
+  return 2800;
+}
+
+function playSoundForRarityDemo(rarity) {
+  if (rarity === "legendary") {
+    play("equip");
+    setTimeout(() => play("buy"), 70);
+  } else if (rarity === "rare") {
+    play("equip");
+  } else {
+    play("buy");
+  }
+}
+
 function triggerAchUnlock(id, delay) {
   const def = ACHIEVEMENT_DEFS.find(d => d.id === id);
   if (!def) return;
+  const rarity = def.rarity ?? "common";
 
   setTimeout(() => {
-    toast("Præstation opnået: " + def.label + " " + def.icon, "success", 3500);
-    play("buy");
+    toast("Præstation opnået: " + def.label + " " + def.icon,
+          toastTypeForRarityDemo(rarity), toastDurationForRarityDemo(rarity));
+    playSoundForRarityDemo(rarity);
 
     st.unlockedAchievements.add(id);
     const badgeEl = document.getElementById("demo-ach-" + id);
@@ -1706,6 +1769,24 @@ function triggerAchUnlock(id, delay) {
       }, { once: true });
     }
   }, delay);
+}
+
+function triggerRarityDemo(ids) {
+  // Sort descending by rarity weight, then stagger with legendary=520ms others=380ms
+  const sorted = [...ids].sort((a, b) => {
+    const da = ACHIEVEMENT_DEFS.find(d => d.id === a);
+    const db = ACHIEVEMENT_DEFS.find(d => d.id === b);
+    const ra = da?.rarity ?? "common";
+    const rb = db?.rarity ?? "common";
+    return (RARITY_WEIGHT_DEMO[rb] ?? 1) - (RARITY_WEIGHT_DEMO[ra] ?? 1);
+  });
+  let cumDelay = 0;
+  for (const id of sorted) {
+    const def    = ACHIEVEMENT_DEFS.find(d => d.id === id);
+    const rarity = def?.rarity ?? "common";
+    triggerAchUnlock(id, cumDelay);
+    cumDelay += (rarity === "legendary" ? 520 : 380);
+  }
 }
 
 document.getElementById("btnAchSingle").addEventListener("click", () => {
@@ -1755,6 +1836,26 @@ document.getElementById("btnRevealNightOwl").addEventListener("click", () => {
 
 document.getElementById("btnRevealLegCombo").addEventListener("click", () => {
   triggerAchReveal("legendary_combo");
+});
+
+document.getElementById("btnRarityCommon").addEventListener("click", () => {
+  triggerAchUnlock("first_correct", 0);
+});
+
+document.getElementById("btnRarityUncommon").addEventListener("click", () => {
+  triggerAchUnlock("streak_7", 0);
+});
+
+document.getElementById("btnRarityRare").addEventListener("click", () => {
+  triggerAchUnlock("collector_5", 0);
+});
+
+document.getElementById("btnRarityLegendary").addEventListener("click", () => {
+  triggerAchUnlock("streak_30", 0);
+});
+
+document.getElementById("btnRarityStacked").addEventListener("click", () => {
+  triggerRarityDemo(["collector_5", "streak_30"]);
 });
 
 document.getElementById("btnRewardCoins").addEventListener("click", () => {

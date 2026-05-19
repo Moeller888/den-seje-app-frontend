@@ -649,6 +649,19 @@
       100% { transform: scale(1);    box-shadow: none; }
     }
 
+    @keyframes achUnlockUncommon {
+      0%   { transform: scale(1);    box-shadow: none; }
+      40%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--border-uncommon), 0 0 10px 1px var(--border-uncommon); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+
+    @keyframes achUnlockRare {
+      0%   { transform: scale(1);    box-shadow: none; }
+      35%  { transform: scale(1.10); box-shadow: 0 0 0 3px var(--border-rare), 0 0 14px 2px var(--border-rare); }
+      65%  { transform: scale(1.12); box-shadow: 0 0 0 4px var(--border-rare), 0 0 20px 3px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: none; }
+    }
+
     @keyframes achUnlockLegendary {
       0%   { transform: scale(1);    box-shadow: none; }
       40%  { transform: scale(1.12); box-shadow: 0 0 0 3px var(--border-legendary); }
@@ -662,6 +675,12 @@
       100% { transform: scale(1);    box-shadow: none; filter: blur(0); opacity: 1; }
     }
 
+    @keyframes achBadgeRevealRare {
+      0%   { transform: scale(0.88); filter: blur(1px); opacity: 0.4; }
+      50%  { transform: scale(1.14); filter: blur(0);   opacity: 1;   box-shadow: 0 0 0 3px var(--border-rare), 0 0 14px 2px var(--border-rare); }
+      100% { transform: scale(1);    box-shadow: none; filter: blur(0); opacity: 1; }
+    }
+
     @keyframes achBadgeRevealLegendary {
       0%   { transform: scale(0.88); filter: blur(1px); opacity: 0.4; }
       50%  { transform: scale(1.14); filter: blur(0);   opacity: 1;   box-shadow: 0 0 0 3px var(--border-legendary); }
@@ -672,12 +691,24 @@
       animation: achUnlock 600ms ease both;
     }
 
+    .ach-badge--just-unlocked[data-rarity="uncommon"] {
+      animation: achUnlockUncommon 650ms ease both;
+    }
+
+    .ach-badge--just-unlocked[data-rarity="rare"] {
+      animation: achUnlockRare 750ms ease both;
+    }
+
     .ach-badge--just-unlocked[data-rarity="legendary"] {
       animation: achUnlockLegendary 650ms ease both;
     }
 
     .ach-badge--just-revealed {
       animation: achBadgeReveal 700ms ease both;
+    }
+
+    .ach-badge--just-revealed[data-rarity="rare"] {
+      animation: achBadgeRevealRare 750ms ease both;
     }
 
     .ach-badge--just-revealed[data-rarity="legendary"] {
@@ -687,8 +718,11 @@
     @media (prefers-reduced-motion: reduce) {
       .ach-badge--hidden-locked { animation: none; }
       .ach-badge--just-unlocked,
+      .ach-badge--just-unlocked[data-rarity="uncommon"],
+      .ach-badge--just-unlocked[data-rarity="rare"],
       .ach-badge--just-unlocked[data-rarity="legendary"],
       .ach-badge--just-revealed,
+      .ach-badge--just-revealed[data-rarity="rare"],
       .ach-badge--just-revealed[data-rarity="legendary"] { animation: none; }
     }
 
@@ -1475,6 +1509,33 @@
     return "";
   }
 
+  const RARITY_WEIGHT = { legendary: 4, rare: 3, uncommon: 2, common: 1 };
+
+  function playSoundForRarity(rarity) {
+    if (rarity === "legendary") {
+      playSound("equip");
+      setTimeout(() => playSound("buy"), 70);
+    } else if (rarity === "rare") {
+      playSound("equip");
+    } else {
+      playSound("buy");
+    }
+  }
+
+  function toastTypeForRarity(rarity) {
+    if (rarity === "legendary") return "legendary";
+    if (rarity === "rare")      return "rare";
+    if (rarity === "uncommon")  return "uncommon";
+    return "success";
+  }
+
+  function toastDurationForRarity(rarity) {
+    if (rarity === "legendary") return 4500;
+    if (rarity === "rare")      return 3800;
+    if (rarity === "uncommon")  return 3200;
+    return 2800;
+  }
+
   // Evaluate achievements on hub load; notify for anything newly unlocked.
   async function evaluateAndNotifyAchievements() {
     const { data: newlyUnlocked, error: evalError } = await supabase.rpc("evaluate_achievements");
@@ -1497,18 +1558,29 @@
 
     if (!hasNewUnlocks) return;
 
-    for (let i = 0; i < newlyUnlocked.length; i++) {
-      const id  = newlyUnlocked[i];
-      const def = ACHIEVEMENT_DEFS.find(d => d.id === id);
+    // Sort by rarity descending so legendary unlocks get immediate attention
+    const sorted = [...newlyUnlocked].sort((a, b) => {
+      const ra = ACHIEVEMENT_DEFS.find(d => d.id === a)?.rarity ?? "common";
+      const rb = ACHIEVEMENT_DEFS.find(d => d.id === b)?.rarity ?? "common";
+      return (RARITY_WEIGHT[rb] ?? 1) - (RARITY_WEIGHT[ra] ?? 1);
+    });
+
+    let cumDelay = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      const id     = sorted[i];
+      const def    = ACHIEVEMENT_DEFS.find(d => d.id === id);
       if (!def) continue;
+      const rarity = def.rarity ?? "common";
+      const delay  = cumDelay;
+      cumDelay    += (rarity === "legendary" ? 520 : 380);
 
       setTimeout(() => {
         const isHidden = def.hidden ?? false;
         const toastMsg = isHidden
           ? "Hemmelighed afsløret: " + def.label + " " + def.icon
           : "Præstation opnået: " + def.label + " " + def.icon;
-        showToast(toastMsg, "success", 3500);
-        playSound("buy");
+        showToast(toastMsg, toastTypeForRarity(rarity), toastDurationForRarity(rarity));
+        playSoundForRarity(rarity);
 
         // Update local earned set and re-render the affected badge live.
         earnedAchievementIds.add(id);
@@ -1519,17 +1591,14 @@
 
           badgeEl.classList.remove("ach-badge--locked", "ach-badge--hidden-locked");
           badgeEl.classList.add("ach-badge--unlocked");
-          badgeEl.dataset.rarity = def.rarity ?? "common";
+          badgeEl.dataset.rarity = rarity;
           badgeEl.title = def.label;
 
           if (wasHiddenLocked) {
             badgeEl.innerHTML =
               `<span class="ach-badge-icon">${def.icon}</span>` +
               `<span class="ach-badge-label">${def.label}</span>`;
-            const revealCls = (def.rarity === "legendary")
-              ? "ach-badge--just-revealed"
-              : "ach-badge--just-revealed";
-            badgeEl.classList.add(revealCls);
+            badgeEl.classList.add("ach-badge--just-revealed");
             badgeEl.addEventListener("animationend", () => {
               badgeEl.classList.remove("ach-badge--just-revealed");
             }, { once: true });
@@ -1547,14 +1616,14 @@
           const newEarned = ACHIEVEMENT_DEFS.filter(d => earnedAchievementIds.has(d.id)).length;
           countEl.textContent = newEarned + " / " + ACHIEVEMENT_DEFS.length;
         }
-      }, i * 350);
+      }, delay);
 
       // Reward toast fires 300ms after the unlock toast for this achievement
       const grant = newUnlockedGrants.find(g => g.achievement_id === id);
       if (grant) {
         const rewardMsg = formatRewardToast(grant);
         if (rewardMsg) {
-          setTimeout(() => showToast(rewardMsg, "success", 3000), i * 350 + 300);
+          setTimeout(() => showToast(rewardMsg, toastTypeForRarity(rarity), 3000), delay + 300);
         }
       }
     }
