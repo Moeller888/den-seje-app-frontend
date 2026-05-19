@@ -256,7 +256,126 @@ async function loadStudentOverview() {
 }
 
 /* ========================
+   SPOTLIGHT MANAGEMENT
+======================== */
+
+const spotlightSelect      = document.getElementById("spotlightStudentSelect");
+const spotlightLabelSel    = document.getElementById("spotlightLabel");
+const spotlightMsgInput    = document.getElementById("spotlightMessage");
+const spotlightSetBtn      = document.getElementById("spotlightSetBtn");
+const spotlightRemoveBtn   = document.getElementById("spotlightRemoveBtn");
+const spotlightFeedbackEl  = document.getElementById("spotlightMessage2");
+const spotlightCurrentList = document.getElementById("spotlightCurrentList");
+
+async function loadSpotlightPanel() {
+  if (!spotlightSelect) return;
+
+  const { data, error } = await supabase.rpc("get_my_students");
+
+  if (error || !data) {
+    if (spotlightCurrentList) {
+      spotlightCurrentList.innerHTML = "<p>Fejl ved indlæsning af elever.</p>";
+    }
+    return;
+  }
+
+  const students = data ?? [];
+
+  // Populate the student dropdown.
+  spotlightSelect.innerHTML = '<option value="">— Vælg elev —</option>';
+  students.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value       = s.student_id;
+    opt.textContent = s.display_name + " (prestige: " + s.prestige_score + ")";
+    spotlightSelect.appendChild(opt);
+  });
+
+  // Show currently spotlighted students.
+  const spotlighted = students.filter(s => !!s.spotlight_label);
+  if (!spotlightCurrentList) return;
+
+  if (spotlighted.length === 0) {
+    spotlightCurrentList.innerHTML =
+      "<p style='color:#888;font-size:13px'>Ingen elever er fremhævet i øjeblikket.</p>";
+    return;
+  }
+
+  spotlightCurrentList.innerHTML =
+    "<p style='font-weight:bold;font-size:13px;margin-bottom:8px'>Aktive fremhævelser:</p>" +
+    spotlighted.map(s =>
+      `<div style='padding:6px 10px;background:#f5f5f5;border-radius:4px;margin-bottom:5px;font-size:13px'>` +
+        `<strong>${s.display_name}</strong> — ${s.spotlight_label}` +
+        (s.spotlight_message ? ` — "${s.spotlight_message}"` : "") +
+      `</div>`
+    ).join("");
+}
+
+if (spotlightSetBtn) {
+  spotlightSetBtn.addEventListener("click", async () => {
+    const studentId = spotlightSelect?.value ?? "";
+    const label     = spotlightLabelSel?.value ?? "Ugens indsats";
+    const message   = spotlightMsgInput?.value.trim() || null;
+
+    if (!studentId) {
+      spotlightFeedbackEl.style.color = "red";
+      spotlightFeedbackEl.textContent = "Vælg en elev først.";
+      return;
+    }
+
+    spotlightFeedbackEl.textContent = "";
+
+    const { error } = await supabase.rpc("set_spotlight", {
+      p_student_id: studentId,
+      p_label:      label,
+      p_message:    message,
+    });
+
+    if (error) {
+      spotlightFeedbackEl.style.color = "red";
+      spotlightFeedbackEl.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+      return;
+    }
+
+    spotlightFeedbackEl.style.color = "green";
+    spotlightFeedbackEl.textContent = "Fremhævelse sat!";
+    if (spotlightMsgInput) spotlightMsgInput.value = "";
+
+    await loadSpotlightPanel();
+  });
+}
+
+if (spotlightRemoveBtn) {
+  spotlightRemoveBtn.addEventListener("click", async () => {
+    const studentId = spotlightSelect?.value ?? "";
+
+    if (!studentId) {
+      spotlightFeedbackEl.style.color = "red";
+      spotlightFeedbackEl.textContent = "Vælg en elev først.";
+      return;
+    }
+
+    spotlightFeedbackEl.textContent = "";
+
+    const { error } = await supabase.rpc("remove_spotlight", {
+      p_student_id: studentId,
+    });
+
+    if (error) {
+      spotlightFeedbackEl.style.color = "red";
+      spotlightFeedbackEl.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+      return;
+    }
+
+    spotlightFeedbackEl.style.color = "green";
+    spotlightFeedbackEl.textContent = "Fremhævelse fjernet.";
+
+    await loadSpotlightPanel();
+  });
+}
+
+/* ========================
    INIT
 ======================== */
 
 await loadStudentOverview();
+await loadSpotlightPanel();

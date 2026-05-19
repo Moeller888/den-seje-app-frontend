@@ -903,8 +903,9 @@
     /* ── Panel grid extension for prestige row ───────── */
     .panel-prestige     { grid-column: 1 / 4; grid-row: 7; }
 
-    /* ── Panel grid extension for leaderboard row ────── */
+    /* ── Panel grid extensions ──────────────────────── */
     .panel-leaderboard  { grid-column: 1 / 4; grid-row: 8; }
+    .panel-social       { grid-column: 1 / 4; grid-row: 9; }
 
     /* ── Leaderboard demo styles ─────────────────────── */
     .lb-demo-wrap       { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
@@ -1827,6 +1828,105 @@
               </span>
             </div>
             <div class="lb-rank-score">151</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Row 9: Classroom Social System (full width) ──────────────────── -->
+  <div class="panel panel-social">
+    <div class="panel-h">Classroom Social System &mdash; Spotlight, Weekly Activity, Class Toggle (leaderboard.html + hub.html)</div>
+
+    <div class="lb-demo-wrap">
+
+      <!-- Variant 1: Teacher spotlight banner (hub.html) -->
+      <div class="lb-demo-col" style="min-width:220px">
+        <div class="lb-demo-label">Hub spotlight banner (lærer har fremhævet elev)</div>
+        <!-- Spotlight banner — mirrors hub.html .spotlight-banner -->
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surf2);border:1.5px solid #ffa000;border-radius:10px;box-shadow:0 0 16px -5px #ffa000;margin-bottom:10px">
+          <div style="font-size:24px;flex-shrink:0">✦</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:#ffa000;margin-bottom:3px">Ugens indsats</div>
+            <div style="font-size:13px;font-weight:bold;color:#ddd">Flot arbejde denne uge, Christian!</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surf2);border:1.5px solid #ffa000;border-radius:10px;box-shadow:0 0 16px -5px #ffa000">
+          <div style="font-size:24px;flex-shrink:0">✦</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:#ffa000;margin-bottom:3px">Flot udvikling</div>
+            <div style="font-size:13px;color:#999;font-style:italic">Din lærer har fremhævet dig</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: Weekly activity strip (Min klasse mode) -->
+      <div class="lb-demo-col" style="min-width:220px">
+        <div class="lb-demo-label">Ugens mest aktive (klassevisning)</div>
+        <!-- Top weekly player -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf2);border:1.5px solid var(--accent);border-radius:7px;margin-bottom:6px;position:relative;overflow:hidden">
+          <div style="font-size:20px">🥇</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:bold;color:#ddd">christian</div>
+            <div style="font-size:10px;color:var(--dim)">Ugens mest aktive spiller</div>
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:bold;color:var(--accent)">42</div>
+            <div style="font-size:8px;color:var(--dim);text-align:right">svar</div>
+          </div>
+        </div>
+        <!-- 2nd, 3rd -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-size:12px">🥈</span>
+            <span style="flex:1;font-size:12px;font-weight:bold;color:#bbb">sofie</span>
+            <span style="font-size:11px;color:var(--dim)">38 svar</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-size:12px">🥉</span>
+            <span style="flex:1;font-size:12px;font-weight:bold;color:#bbb">lucas</span>
+            <span style="font-size:11px;color:var(--dim)">29 svar</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 3: Mode toggle + spotlight badge in class leaderboard -->
+      <div class="lb-demo-col" style="min-width:220px">
+        <div class="lb-demo-label">Global / Min klasse toggle + spotlight badge</div>
+        <!-- Mode toggle -->
+        <div style="display:flex;gap:4px;background:var(--surf2);border:1px solid var(--border);border-radius:7px;padding:3px;margin-bottom:10px">
+          <button style="flex:1;padding:6px;border:none;border-radius:4px;background:var(--border);color:#ddd;font-size:11px;font-weight:bold;cursor:pointer">🌍 Alle</button>
+          <button style="flex:1;padding:6px;border:none;border-radius:4px;background:var(--accent);color:white;font-size:11px;font-weight:bold;cursor:pointer">🏫 Min klasse</button>
+        </div>
+        <!-- Rank rows with spotlight badge -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surf2);border:1.5px solid #ffa000;border-radius:6px;box-shadow:0 0 12px -4px #ffa000">
+            <div style="font-size:11px;font-weight:bold;color:var(--dim);min-width:20px;text-align:right">1</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:bold;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">sofie</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
+                <span class="lb-tier-chip lb-tier-master">Mester</span>
+                <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:3px;border:1px solid #ffa000;color:#ffa000;font-size:9px;font-weight:bold">✦ Ugens spiller</span>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:bold;color:var(--accent)">148</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surf2);border:1px solid var(--accent);box-shadow:inset 3px 0 0 var(--accent);border-radius:6px">
+            <div style="font-size:11px;font-weight:bold;color:var(--dim);min-width:20px;text-align:right">2</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:bold;color:#ddd">christian <span style="display:inline-block;font-size:8px;font-weight:bold;text-transform:uppercase;padding:1px 4px;border-radius:2px;border:1px solid var(--accent);color:var(--accent);vertical-align:middle;margin-left:3px">dig</span></div>
+              <div style="margin-top:2px"><span class="lb-tier-chip lb-tier-master">Mester</span></div>
+            </div>
+            <div style="font-size:14px;font-weight:bold;color:var(--accent)">82</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px">
+            <div style="font-size:11px;font-weight:bold;color:var(--dim);min-width:20px;text-align:right">3</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:bold;color:#ddd">lucas</div>
+              <div style="margin-top:2px"><span class="lb-tier-chip lb-tier-expert">Kyndig</span></div>
+            </div>
+            <div style="font-size:14px;font-weight:bold;color:var(--accent)">45</div>
           </div>
         </div>
       </div>

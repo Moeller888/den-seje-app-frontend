@@ -85,6 +85,44 @@
     <div id="studentList">Indlæser...</div>
   </div>
 
+  <div class="box">
+    <h3>Fremhæv en elev</h3>
+    <p style="margin-bottom:14px;color:#555;font-size:14px;">
+      Vælg en elev og giv dem en fremhævelse — eleven ser det på sin hub.
+    </p>
+
+    <div style="margin-bottom:12px">
+      <label for="spotlightStudentSelect" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Elev</label>
+      <select id="spotlightStudentSelect" style="padding:6px;min-width:200px;font-size:14px">
+        <option value="">— Vælg elev —</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <label for="spotlightLabel" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Type</label>
+      <select id="spotlightLabel" style="padding:6px;min-width:200px;font-size:14px">
+        <option value="Ugens indsats">Ugens indsats</option>
+        <option value="Flot udvikling">Flot udvikling</option>
+        <option value="Dagens samler">Dagens samler</option>
+        <option value="Ugens spiller">Ugens spiller</option>
+        <option value="Stor fremgang">Stor fremgang</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label for="spotlightMessage" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Besked (valgfri)</label>
+      <input type="text" id="spotlightMessage" maxlength="120"
+             placeholder="F.eks. Flot arbejde denne uge!"
+             style="padding:6px;width:100%;max-width:400px;font-size:14px;box-sizing:border-box">
+    </div>
+
+    <button id="spotlightSetBtn" style="padding:8px 16px;background:#1565c0;color:white;border:none;cursor:pointer;font-size:14px;border-radius:4px">Fremhæv elev</button>
+    <button id="spotlightRemoveBtn" style="padding:8px 16px;background:#c62828;color:white;border:none;cursor:pointer;font-size:14px;border-radius:4px;margin-left:8px">Fjern fremhævelse</button>
+    <div id="spotlightMessage2" style="margin-top:10px;font-weight:bold;font-size:14px"></div>
+
+    <div id="spotlightCurrentList" style="margin-top:18px"></div>
+  </div>
+
   <!--
   <div class="box">
     <div style="display:flex; justify-content:space-between; align-items:center;">

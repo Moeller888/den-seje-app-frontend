@@ -414,6 +414,57 @@
       color: var(--accent);
     }
 
+    /* ── Teacher spotlight banner ────────────────────── */
+
+    .spotlight-banner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-legendary);
+      border-radius: 12px;
+      box-shadow: 0 0 20px -6px var(--border-legendary);
+      animation: spotlightFadeIn 0.4s ease;
+    }
+
+    @keyframes spotlightFadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spotlight-banner { animation: none; }
+    }
+
+    .spotlight-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
+
+    .spotlight-content { flex: 1; min-width: 0; }
+
+    .spotlight-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--border-legendary);
+      margin-bottom: 4px;
+    }
+
+    .spotlight-message {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .spotlight-message--no-msg {
+      color: var(--text-dim);
+      font-weight: normal;
+      font-style: italic;
+    }
+
     /* ── Retention section: daily reward + quests ────── */
 
     .retention-section {
@@ -911,6 +962,9 @@
 
   </div>
 
+  <!-- Teacher spotlight banner — shown only when teacher has spotlighted this student -->
+  <div id="spotlightBanner" hidden aria-live="polite" aria-label="Lærer-fremhævelse"></div>
+
   <!-- Bottom: navigation + collection -->
   <div class="hub-bottom">
 
@@ -1122,6 +1176,7 @@
     titlesResult,
     userTitlesResult,
     prestigeResult,
+    spotlightResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
@@ -1136,6 +1191,7 @@
     supabase.from("titles").select("id, name, rarity"),
     supabase.from("user_titles").select("title_id").eq("user_id", userId),
     supabase.rpc("recalculate_prestige", { p_user_id: userId }),
+    supabase.rpc("get_my_spotlight"),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -1223,6 +1279,26 @@
   // ── Prestige score (server-authoritative) ────────────────────────────────────
 
   const prestigeScore = prestigeResult.data ?? 0;
+
+  // ── Teacher spotlight banner ──────────────────────────────────────────────────
+
+  const spotlight = Array.isArray(spotlightResult.data) ? (spotlightResult.data[0] ?? null) : null;
+  const spotlightBannerEl = document.getElementById("spotlightBanner");
+  if (spotlight && spotlightBannerEl) {
+    const label   = spotlight.label   ?? "Fremhævet";
+    const message = spotlight.message ?? null;
+    spotlightBannerEl.innerHTML =
+      `<div class="spotlight-banner">` +
+        `<div class="spotlight-icon" aria-hidden="true">✦</div>` +
+        `<div class="spotlight-content">` +
+          `<div class="spotlight-label">${label.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>` +
+          `<div class="spotlight-message${message ? "" : " spotlight-message--no-msg"}">` +
+            `${message ? message.replace(/</g,"&lt;").replace(/>/g,"&gt;") : "Din lærer har fremhævet dig"}` +
+          `</div>` +
+        `</div>` +
+      `</div>`;
+    spotlightBannerEl.hidden = false;
+  }
 
   // ── Completion calculations ───────────────────────────────────────────────────
 

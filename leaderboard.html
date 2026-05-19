@@ -31,7 +31,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .back-btn {
@@ -55,6 +55,42 @@
       font-weight: bold;
       color: var(--accent);
       white-space: nowrap;
+    }
+
+    /* ── Mode toggle ─────────────────────────────────────── */
+
+    .mode-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.14s, color 0.14s;
+    }
+
+    .mode-btn--active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .mode-btn:not(.mode-btn--active):hover {
+      background: var(--btn-bg-hover);
+      color: var(--text-main);
     }
 
     /* ── State cards ─────────────────────────────────────── */
@@ -140,6 +176,126 @@
     .tier-master { border-color: #e65100; color: #ffca28; }
     .tier-legend { border-color: #9c27b0; color: #ce93d8; }
 
+    /* ── Weekly activity strip ───────────────────────────── */
+
+    .weekly-strip {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+
+    .weekly-strip-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .weekly-strip-title {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    /* Top weekly player — highlighted */
+    .weekly-top-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--btn-bg);
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .weekly-top-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 60%, color-mix(in srgb, var(--accent) 6%, transparent) 100%);
+      pointer-events: none;
+    }
+
+    .weekly-top-medal { font-size: 22px; flex-shrink: 0; }
+
+    .weekly-top-info { flex: 1; min-width: 0; }
+
+    .weekly-top-name {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .weekly-top-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .weekly-top-count {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .weekly-top-count-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    /* Spotlight badge inside weekly card */
+    .spotlight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border-legendary);
+      color: var(--border-legendary);
+      font-size: 10px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* Remaining weekly players (2nd, 3rd) */
+    .weekly-rest-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .weekly-rest-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .weekly-rest-row.you {
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .weekly-rest-medal { font-size: 14px; flex-shrink: 0; }
+    .weekly-rest-name  { flex: 1; font-size: 13px; font-weight: bold; color: var(--text-bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .weekly-rest-count { font-size: 13px; font-weight: bold; color: var(--text-dim); flex-shrink: 0; }
+
     /* ── Podium ──────────────────────────────────────────── */
 
     .podium {
@@ -214,6 +370,12 @@
     .podium-name   { font-size: 13px; font-weight: bold; color: var(--text-bright); margin-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .podium-score  { font-size: 26px; font-weight: bold; color: var(--accent); line-height: 1; margin: 8px 0 6px; }
     .podium-tier   { display: block; margin-top: 6px; }
+
+    .podium-spotlight {
+      margin-top: 5px;
+      display: flex;
+      justify-content: center;
+    }
 
     .podium-empty {
       padding: 28px;
@@ -320,6 +482,25 @@
       border-color: var(--accent) !important;
       box-shadow: inset 3px 0 0 var(--accent) !important;
     }
+
+    /* ── Empty classroom ─────────────────────────────────── */
+
+    .empty-class-card {
+      padding: 32px 20px;
+      text-align: center;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .empty-class-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-class-text { font-size: 15px; color: var(--text-dim); }
+
+    /* ── Reduced motion ──────────────────────────────────── */
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -331,17 +512,36 @@
     <span class="topbar-count" id="playerCount" aria-live="polite"></span>
   </div>
 
+  <!-- Global / Min klasse toggle -->
+  <div class="mode-toggle" role="tablist" aria-label="Rangliste type">
+    <button class="mode-btn mode-btn--active" id="modeGlobal"
+            role="tab" aria-selected="true">🌍 Alle</button>
+    <button class="mode-btn" id="modeClass"
+            role="tab" aria-selected="false">🏫 Min klasse</button>
+  </div>
+
   <div id="loadingState" class="state-card" aria-live="polite">Henter rangliste…</div>
   <div id="errorState" class="state-card state-card--error" hidden role="alert"></div>
 
   <div id="mainContent" hidden>
+
+    <!-- Weekly activity (classroom mode only) -->
+    <div id="weeklySection" hidden>
+      <div class="weekly-strip">
+        <div class="weekly-strip-header">
+          <span class="weekly-strip-title">⚡ Ugens mest aktive</span>
+        </div>
+        <div id="weeklyTopCard"></div>
+        <div class="weekly-rest-list" id="weeklyRestList"></div>
+      </div>
+    </div>
 
     <div class="tier-legend" id="tierLegend" role="list" aria-label="Prestige niveauer"></div>
 
     <div class="podium" id="podium" role="list" aria-label="Top 3 spillere"></div>
 
     <div id="rankListSection" hidden>
-      <div class="section-header">Rangliste</div>
+      <div class="section-header" id="rankListHeader">Rangliste</div>
       <div class="rank-list" id="rankList" role="list"></div>
     </div>
 
@@ -355,8 +555,8 @@
 </div>
 
 <script type="module">
-  import { supabase }            from "./supabaseClient.js";
-  import { loadTheme }           from "./js/themeManager.js";
+  import { supabase }             from "./supabaseClient.js";
+  import { loadTheme }            from "./js/themeManager.js";
   import { calculateLevelFromXP } from "./js/progression.js";
 
   // ── Auth ─────────────────────────────────────────────────────────────────
@@ -375,7 +575,7 @@
 
   const RARITY_ICONS = { legendary: "✦", rare: "★", uncommon: "◆", common: "○" };
 
-  // Tiers ordered high → low (find() returns first match ≥ min).
+  // Ordered high → low: find() returns first tier whose min ≤ score.
   const PRESTIGE_TIERS = [
     { min: 150, label: "Legende",    cls: "tier-legend", score: "150+" },
     { min:  75, label: "Mester",     cls: "tier-master", score: "75+"  },
@@ -383,6 +583,41 @@
     { min:  10, label: "Lærling",    cls: "tier-adept",  score: "10+"  },
     { min:   0, label: "Nybegynder", cls: "tier-novice", score: "0+"   },
   ];
+
+  const MEDALS = ["🥇", "🥈", "🥉"];
+
+  // Classic Olympic podium order: 2nd left, 1st center, 3rd right.
+  const SLOT_CLASSES  = ["podium-slot--1", "podium-slot--2", "podium-slot--3"];
+  const CLASSIC_ORDER = [2, 1, 3];
+
+  // ── Mode state ────────────────────────────────────────────────────────────
+
+  let currentMode = "global"; // "global" | "class"
+
+  const modeGlobalBtn = document.getElementById("modeGlobal");
+  const modeClassBtn  = document.getElementById("modeClass");
+
+  modeGlobalBtn.addEventListener("click", () => {
+    if (currentMode === "global") return;
+    currentMode = "global";
+    modeGlobalBtn.classList.add("mode-btn--active");
+    modeGlobalBtn.setAttribute("aria-selected", "true");
+    modeClassBtn.classList.remove("mode-btn--active");
+    modeClassBtn.setAttribute("aria-selected", "false");
+    loadAndRender();
+  });
+
+  modeClassBtn.addEventListener("click", () => {
+    if (currentMode === "class") return;
+    currentMode = "class";
+    modeClassBtn.classList.add("mode-btn--active");
+    modeClassBtn.setAttribute("aria-selected", "true");
+    modeGlobalBtn.classList.remove("mode-btn--active");
+    modeGlobalBtn.setAttribute("aria-selected", "false");
+    loadAndRender();
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   function getTier(score) {
     return PRESTIGE_TIERS.find(t => (score ?? 0) >= t.min)
@@ -408,13 +643,17 @@
     `</span>`;
   }
 
+  function buildSpotlightBadge(label) {
+    if (!label) return "";
+    return `<span class="spotlight-badge" aria-label="Fremhævet: ${escapeHtml(label)}">` +
+      `✦ ${escapeHtml(label)}</span>`;
+  }
+
   // ── Tier legend ───────────────────────────────────────────────────────────
 
   function renderTierLegend() {
     const el = document.getElementById("tierLegend");
     el.innerHTML = '<span class="tier-legend-label">Niveauer:</span>';
-
-    // Render ascending (Nybegynder → Legende) for readability.
     const ascending = [...PRESTIGE_TIERS].reverse();
     for (const tier of ascending) {
       const chip = document.createElement("span");
@@ -427,18 +666,63 @@
     }
   }
 
+  // ── Weekly activity ───────────────────────────────────────────────────────
+
+  function renderWeeklyActivity(weeklyEntries) {
+    const section = document.getElementById("weeklySection");
+
+    // Only entries with actual activity (weekly_answers > 0).
+    const active = weeklyEntries.filter(e => Number(e.weekly_answers) > 0);
+
+    if (active.length === 0) {
+      section.hidden = true;
+      return;
+    }
+
+    section.hidden = false;
+
+    const top  = active[0];
+    const rest = active.slice(1, 3); // 2nd and 3rd
+
+    const topIsCurrent = !!top.is_current_user;
+    const youBadge = topIsCurrent
+      ? `<span class="you-badge" aria-label="(dig)">dig</span> `
+      : "";
+
+    const topCardEl = document.getElementById("weeklyTopCard");
+    topCardEl.innerHTML =
+      `<div class="weekly-top-card"${topIsCurrent ? ' style="border-width:2px"' : ''}>` +
+        `<div class="weekly-top-medal" aria-hidden="true">🥇</div>` +
+        `<div class="weekly-top-info">` +
+          `<div class="weekly-top-name">${youBadge}${escapeHtml(top.display_name ?? "—")}</div>` +
+          `<div class="weekly-top-sub">Ugens mest aktive spiller</div>` +
+        `</div>` +
+        `<div>` +
+          `<div class="weekly-top-count" aria-label="${top.weekly_answers} svar denne uge">${top.weekly_answers}</div>` +
+          `<div class="weekly-top-count-label">svar</div>` +
+        `</div>` +
+      `</div>`;
+
+    const restEl = document.getElementById("weeklyRestList");
+    restEl.innerHTML = "";
+    rest.forEach((entry, i) => {
+      const isCurrent = !!entry.is_current_user;
+      const row = document.createElement("div");
+      row.className = "weekly-rest-row" + (isCurrent ? " you" : "");
+      row.setAttribute("role", "listitem");
+      const yb = isCurrent ? `<span class="you-badge">dig</span> ` : "";
+      row.innerHTML =
+        `<span class="weekly-rest-medal" aria-hidden="true">${MEDALS[i + 1] ?? "🏅"}</span>` +
+        `<span class="weekly-rest-name">${yb}${escapeHtml(entry.display_name ?? "—")}</span>` +
+        `<span class="weekly-rest-count" aria-label="${entry.weekly_answers} svar">${entry.weekly_answers} svar</span>`;
+      restEl.appendChild(row);
+    });
+  }
+
   // ── Podium (top 3) ────────────────────────────────────────────────────────
 
-  // Slot styling per position (index in top-3 array, 0-based).
-  const SLOT_CLASSES  = ["podium-slot--1", "podium-slot--2", "podium-slot--3"];
-  const MEDALS        = ["🥇", "🥈", "🥉"];
-  // Classic Olympic layout: 2nd left (order 1), 1st center (order 2), 3rd right (order 3).
-  const CLASSIC_ORDER = [2, 1, 3];
-
-  function renderPodium(entries) {
+  function renderPodium(entries, isClassMode) {
     const podiumEl = document.getElementById("podium");
-
-    // Cap at 3 entries regardless of ties.
     const top = entries.filter(e => Number(e.player_rank) <= 3).slice(0, 3);
 
     if (top.length === 0) {
@@ -450,11 +734,14 @@
     const useClassicOrder = top.length === 3;
 
     top.forEach((entry, i) => {
-      const isCurrent = !!entry.is_current_user;
-      const tier      = getTier(entry.prestige_score);
-      const level     = calculateLevelFromXP(entry.xp ?? 0);
-      const youBadge  = isCurrent
-        ? ' <span class="you-badge" aria-label="(dig)">dig</span>'
+      const isCurrent     = !!entry.is_current_user;
+      const tier          = getTier(entry.prestige_score);
+      const level         = calculateLevelFromXP(entry.xp ?? 0);
+      const youBadge      = isCurrent
+        ? ` <span class="you-badge" aria-label="(dig)">dig</span>`
+        : "";
+      const spotlightHtml = isClassMode && entry.spotlight_label
+        ? `<div class="podium-spotlight">${buildSpotlightBadge(entry.spotlight_label)}</div>`
         : "";
 
       const slot = document.createElement("div");
@@ -468,9 +755,10 @@
           `<div class="podium-medal" aria-hidden="true">${MEDALS[i] ?? "🏅"}</div>` +
           `<div class="podium-name">${escapeHtml(entry.display_name ?? "—")}${youBadge}</div>` +
           buildTitleChip(entry.title_name, entry.title_rarity) +
+          spotlightHtml +
           `<div class="podium-score" aria-label="Prestige ${entry.prestige_score ?? 0}">${entry.prestige_score ?? 0}</div>` +
           `<div class="podium-tier"><span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span></div>` +
-          `<div class="rank-xp" style="margin-top:4px;">Niveau ${level}</div>` +
+          `<div class="rank-xp" style="margin-top:4px">Niveau ${level}</div>` +
         `</div>` +
         `<div class="podium-pedestal" aria-hidden="true"></div>`;
 
@@ -480,7 +768,7 @@
 
   // ── Rank list (positions 4+) ──────────────────────────────────────────────
 
-  function renderRankList(entries) {
+  function renderRankList(entries, isClassMode) {
     const listEntries = entries.filter(
       e => Number(e.player_rank) > 3 && Number(e.player_rank) <= 50
     );
@@ -502,7 +790,7 @@
       const tier      = getTier(entry.prestige_score);
       const level     = calculateLevelFromXP(entry.xp ?? 0);
       const youBadge  = isCurrent
-        ? ' <span class="you-badge" aria-label="(dig)">dig</span>'
+        ? ` <span class="you-badge" aria-label="(dig)">dig</span>`
         : "";
 
       const row = document.createElement("div");
@@ -517,6 +805,7 @@
           `<div class="rank-meta">` +
             `<span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span>` +
             buildTitleChip(entry.title_name, entry.title_rarity) +
+            (isClassMode && entry.spotlight_label ? buildSpotlightBadge(entry.spotlight_label) : "") +
           `</div>` +
         `</div>` +
         `<div class="rank-right">` +
@@ -530,8 +819,7 @@
 
   // ── My placement (rank > 50) ──────────────────────────────────────────────
 
-  function renderMyPlacement(entries) {
-    // Only show this section if the current user is beyond the top 50.
+  function renderMyPlacement(entries, isClassMode) {
     const myEntry   = entries.find(e => !!e.is_current_user && Number(e.player_rank) > 50);
     const sectionEl = document.getElementById("myPlacementSection");
 
@@ -553,6 +841,7 @@
           `<div class="rank-meta">` +
             `<span class="tier-chip ${tier.cls}">${escapeHtml(tier.label)}</span>` +
             buildTitleChip(myEntry.title_name, myEntry.title_rarity) +
+            (isClassMode && myEntry.spotlight_label ? buildSpotlightBadge(myEntry.spotlight_label) : "") +
           `</div>` +
         `</div>` +
         `<div class="rank-right">` +
@@ -562,44 +851,97 @@
       `</div>`;
   }
 
+  // ── Empty classroom state ─────────────────────────────────────────────────
+
+  function renderEmptyClassroom() {
+    document.getElementById("weeklySection").hidden = true;
+    document.getElementById("tierLegend").hidden    = true;
+    document.getElementById("podium").innerHTML =
+      `<div class="empty-class-card">` +
+        `<div class="empty-class-icon" aria-hidden="true">🏫</div>` +
+        `<div class="empty-class-text">Ingen klassekammerater endnu.</div>` +
+      `</div>`;
+    document.getElementById("rankListSection").hidden    = true;
+    document.getElementById("myPlacementSection").hidden = true;
+  }
+
   // ── Load & render ─────────────────────────────────────────────────────────
 
-  async function load() {
+  async function loadAndRender() {
     const loadingEl = document.getElementById("loadingState");
     const errorEl   = document.getElementById("errorState");
     const mainEl    = document.getElementById("mainContent");
     const countEl   = document.getElementById("playerCount");
+    const headerEl  = document.getElementById("rankListHeader");
 
     loadingEl.hidden = false;
     errorEl.hidden   = true;
     mainEl.hidden    = true;
 
-    const { data, error } = await supabase.rpc("get_leaderboard");
+    // Reset tier-legend visibility (may have been hidden by empty-class state).
+    document.getElementById("tierLegend").hidden = false;
+
+    const isClassMode = currentMode === "class";
+    headerEl.textContent = isClassMode ? "Klassens rangliste" : "Rangliste";
+
+    let leaderboardData = null;
+    let weeklyData      = null;
+    let loadError       = null;
+
+    if (isClassMode) {
+      const [lbResult, wkResult] = await Promise.all([
+        supabase.rpc("get_classroom_leaderboard"),
+        supabase.rpc("get_weekly_activity"),
+      ]);
+
+      if (lbResult.error) {
+        // "no_classroom" means the student has no teacher — show empty state.
+        if (lbResult.error.message?.includes("no_classroom")) {
+          loadingEl.hidden = true;
+          renderEmptyClassroom();
+          mainEl.hidden = false;
+          countEl.textContent = "";
+          return;
+        }
+        loadError = lbResult.error;
+      } else {
+        leaderboardData = lbResult.data;
+        weeklyData      = Array.isArray(wkResult.data) ? wkResult.data : [];
+      }
+    } else {
+      const { data, error } = await supabase.rpc("get_leaderboard");
+      if (error) loadError = error;
+      else leaderboardData = data;
+    }
 
     loadingEl.hidden = true;
 
-    if (error || data == null) {
+    if (loadError || leaderboardData == null) {
       errorEl.textContent = "Kunne ikke hente rangliste. Prøv igen.";
       errorEl.hidden = false;
       return;
     }
 
-    const entries = Array.isArray(data) ? data : [];
-
-    // Count students in top-50 for the header.
+    const entries      = Array.isArray(leaderboardData) ? leaderboardData : [];
     const visibleCount = entries.filter(e => Number(e.player_rank) <= 50).length;
-    countEl.textContent = visibleCount > 0 ? visibleCount + " spillere" : "";
+
+    countEl.textContent = visibleCount > 0
+      ? visibleCount + (isClassMode ? " i klassen" : " spillere")
+      : "";
 
     renderTierLegend();
-    renderPodium(entries);
-    renderRankList(entries);
-    renderMyPlacement(entries);
+    if (isClassMode && weeklyData) renderWeeklyActivity(weeklyData);
+    else document.getElementById("weeklySection").hidden = true;
+
+    renderPodium(entries, isClassMode);
+    renderRankList(entries, isClassMode);
+    renderMyPlacement(entries, isClassMode);
 
     mainEl.hidden = false;
   }
 
-  load().catch(err => {
-    console.error("Leaderboard load error:", err);
+  loadAndRender().catch(err => {
+    console.error("Leaderboard error:", err);
     document.getElementById("loadingState").hidden = true;
     const errorEl = document.getElementById("errorState");
     errorEl.textContent = "Uventet fejl. Prøv igen.";
