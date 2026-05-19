@@ -387,6 +387,33 @@
       animation: completionGlow 4s ease-in-out infinite;
     }
 
+    /* ── Prestige score row ──────────────────────────── */
+
+    .prestige-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 7px 10px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .prestige-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .prestige-score {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
     /* ── Retention section: daily reward + quests ────── */
 
     .retention-section {
@@ -921,6 +948,30 @@
                  role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
           </div>
         </div>
+        <div class="category-row">
+          <div class="category-label-row">
+            <span class="category-label">Præstationer</span>
+            <span class="category-count" id="achCount">—</span>
+          </div>
+          <div class="category-track">
+            <div class="category-fill" id="achFill"
+                 role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        <div class="category-row">
+          <div class="category-label-row">
+            <span class="category-label">Titler</span>
+            <span class="category-count" id="titlesCount">—</span>
+          </div>
+          <div class="category-track">
+            <div class="category-fill" id="titlesFill"
+                 role="progressbar" aria-valuenow="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+      </div>
+      <div class="prestige-row">
+        <span class="prestige-label">Prestige</span>
+        <span class="prestige-score" id="prestigeScore">—</span>
       </div>
       <div class="rarity-chips" id="rarityChips">
         <!-- rendered by JS -->
@@ -1024,7 +1075,7 @@
 
   const RARITY_CHIP_CFG = {
     legendary: { label: "Legendarisk", icon: "✦", cls: "rarity-chip--legendary" },
-    rare:      { label: "Sjælden",     icon: "◆", cls: "rarity-chip--rare"      },
+    rare:      { label: "Sjælden",     icon: "★", cls: "rarity-chip--rare"      },
     uncommon:  { label: "Ualmindelig", icon: "◆", cls: "rarity-chip--uncommon"  },
     common:    { label: "Almindelig",  icon: "○", cls: "rarity-chip--common"    },
   };
@@ -1067,6 +1118,7 @@
     questProgressResult,
     userAchievementsResult,
     titlesResult,
+    userTitlesResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
@@ -1079,6 +1131,7 @@
     supabase.from("student_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("quest_date", todayUTC),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("titles").select("id, name, rarity"),
+    supabase.from("user_titles").select("title_id").eq("user_id", userId),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -1123,9 +1176,13 @@
 
   // ── Parse active title ────────────────────────────────────────────────────────
 
-  const activeTitleId  = profileResult.data?.active_title ?? null;
-  const allTitles      = titlesResult.data ?? [];
-  const activeTitleDef = activeTitleId ? (allTitles.find(t => t.id === activeTitleId) ?? null) : null;
+  const activeTitleId    = profileResult.data?.active_title ?? null;
+  const allTitles        = titlesResult.data ?? [];
+  const activeTitleDef   = activeTitleId ? (allTitles.find(t => t.id === activeTitleId) ?? null) : null;
+  const ownedTitleIds    = new Set((userTitlesResult.data ?? []).map(r => r.title_id));
+  const ownedTitles      = allTitles.filter(t => ownedTitleIds.has(t.id));
+  const totalTitles      = allTitles.length;
+  const ownedTitlesCount = ownedTitles.length;
 
   // ── Parse achievements ────────────────────────────────────────────────────────
 
@@ -1148,13 +1205,38 @@
     if (r !== null && r !== undefined && r in rarityCounts) rarityCounts[r]++;
   }
 
+  for (const def of ACHIEVEMENT_DEFS) {
+    if (!earnedAchievementIds.has(def.id)) continue;
+    const r = def.rarity ?? "common";
+    if (r in rarityCounts) rarityCounts[r]++;
+  }
+
+  for (const title of ownedTitles) {
+    const r = title.rarity ?? "common";
+    if (r in rarityCounts) rarityCounts[r]++;
+  }
+
+  // ── Prestige score ────────────────────────────────────────────────────────────
+
+  const PRESTIGE_WEIGHT = { legendary: 12, rare: 5, uncommon: 2, common: 1 };
+  let prestigeScore = 0;
+  for (const rarity of Object.keys(rarityCounts)) {
+    prestigeScore += (PRESTIGE_WEIGHT[rarity] ?? 0) * (rarityCounts[rarity] ?? 0);
+  }
+
   // ── Completion calculations ───────────────────────────────────────────────────
 
-  const totalCosmetics  = totalItems + totalThemes;
-  const ownedCosmetics  = ownedItemsCount + ownedThemesCount;
-  const totalPct        = totalCosmetics > 0 ? Math.round((ownedCosmetics / totalCosmetics) * 100) : 0;
-  const itemsPct        = totalItems  > 0 ? Math.round((ownedItemsCount  / totalItems)  * 100) : 0;
-  const themesPct       = totalThemes > 0 ? Math.round((ownedThemesCount / totalThemes) * 100) : 0;
+  const totalAchievements       = ACHIEVEMENT_DEFS.length;
+  const earnedAchievementsCount = ACHIEVEMENT_DEFS.filter(d => earnedAchievementIds.has(d.id)).length;
+
+  const itemsPct        = totalItems        > 0 ? Math.round((ownedItemsCount        / totalItems)        * 100) : 0;
+  const themesPct       = totalThemes       > 0 ? Math.round((ownedThemesCount       / totalThemes)       * 100) : 0;
+  const achievementsPct = totalAchievements > 0 ? Math.round((earnedAchievementsCount / totalAchievements) * 100) : 0;
+  const titlesPct       = totalTitles       > 0 ? Math.round((ownedTitlesCount       / totalTitles)       * 100) : 0;
+
+  const totalAll = totalItems + totalThemes + totalAchievements + totalTitles;
+  const ownedAll = ownedItemsCount + ownedThemesCount + earnedAchievementsCount + ownedTitlesCount;
+  const totalPct = totalAll > 0 ? Math.round((ownedAll / totalAll) * 100) : 0;
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1308,6 +1390,35 @@
         });
       });
     }
+
+    const achCountEl = document.getElementById("achCount");
+    if (achCountEl) achCountEl.textContent = earnedAchievementsCount + " / " + totalAchievements;
+
+    const achFill = document.getElementById("achFill");
+    if (achFill) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          achFill.style.width = achievementsPct + "%";
+          achFill.setAttribute("aria-valuenow", achievementsPct);
+        });
+      });
+    }
+
+    const titlesCountEl = document.getElementById("titlesCount");
+    if (titlesCountEl) titlesCountEl.textContent = ownedTitlesCount + " / " + totalTitles;
+
+    const titlesFill = document.getElementById("titlesFill");
+    if (titlesFill) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          titlesFill.style.width = titlesPct + "%";
+          titlesFill.setAttribute("aria-valuenow", titlesPct);
+        });
+      });
+    }
+
+    const prestigeScoreEl = document.getElementById("prestigeScore");
+    if (prestigeScoreEl) prestigeScoreEl.textContent = prestigeScore;
 
     const chipsEl = document.getElementById("rarityChips");
     if (chipsEl) {
