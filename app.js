@@ -141,6 +141,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.replace("login.html");
   };
 
+  // Hidden achievement tracking — session-scoped, resets on page load.
+  let sessionCorrectStreak = 0;
+  let bestSessionStreak    = 0;
+
   async function fetchProgress() {
     const { data } = await supabase
       .from("student_progress")
@@ -294,6 +298,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (data.status === "pending") {
       feedback.textContent = "⏳ Afventer lærerens vurdering";
       feedback.className = "feedback-pending";
+      sessionCorrectStreak = 0;
 
     } else if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
@@ -304,6 +309,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("correct-flash"), { once: true });
       }
 
+      // Hidden achievement: perfect_five — track consecutive correct per session
+      sessionCorrectStreak++;
+      if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
+        bestSessionStreak = sessionCorrectStreak;
+        supabase.rpc("update_best_session_streak", { p_count: bestSessionStreak }).catch(() => {});
+      }
+
+      // Hidden achievement: night_owl — correct answer between 00:00–03:59 local time
+      if (new Date().getHours() < 4) {
+        supabase.rpc("set_night_correct").catch(() => {});
+      }
+
     } else if (data.status === "incorrect") {
       feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
       feedback.className = "feedback-error";
@@ -312,6 +329,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         clickedBtn.classList.add("incorrect-flash");
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("incorrect-flash"), { once: true });
       }
+      sessionCorrectStreak = 0;
 
     } else {
       logError("UNKNOWN_STATUS", data.status);

@@ -190,6 +190,42 @@
     .ach-card--unlocked[data-rarity="legendary"]::before { top: -8px;    left: -4px;  }
     .ach-card--unlocked[data-rarity="legendary"]::after  { bottom: -8px; right: -4px; }
 
+    /* ── Hidden locked card — mystery state ──────────────── */
+
+    .ach-card--hidden-locked {
+      border-style: dashed;
+      border-color: var(--border);
+      opacity: 0.62;
+      animation: hiddenCardPulse 4s ease-in-out infinite;
+    }
+
+    .ach-card--hidden-locked:hover {
+      opacity: 0.78;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation-play-state: paused;
+    }
+
+    @keyframes hiddenCardPulse {
+      0%, 100% { opacity: 0.62; }
+      50%       { opacity: 0.75; }
+    }
+
+    .ach-card--hidden-locked .ach-card-icon {
+      opacity: 0.18;
+      filter: grayscale(1) blur(1px);
+    }
+
+    .ach-card--hidden-locked .ach-card-title {
+      letter-spacing: 4px;
+      color: var(--text-muted);
+    }
+
+    .ach-card--hidden-locked .ach-card-desc {
+      font-style: italic;
+      color: var(--text-faint);
+    }
+
     /* Icon */
     .ach-card-icon {
       font-size: 36px;
@@ -292,6 +328,21 @@
       100% { transform: scale(1);    box-shadow: 0 0 18px -2px var(--border-legendary); }
     }
 
+    /* Hidden reveal — unblur + scale + ring burst */
+    @keyframes achCardReveal {
+      0%   { transform: scale(0.94); filter: blur(2px); opacity: 0.5; }
+      40%  { transform: scale(1.04); filter: blur(0);   opacity: 1;   }
+      68%  { transform: scale(1.07); box-shadow: 0 0 0 6px var(--accent), 0 0 26px 2px var(--accent); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); filter: blur(0); opacity: 1; }
+    }
+
+    @keyframes achCardRevealLegendary {
+      0%   { transform: scale(0.94); filter: blur(2px); opacity: 0.5; }
+      35%  { transform: scale(1.04); filter: blur(0);   opacity: 1;   }
+      60%  { transform: scale(1.08); box-shadow: 0 0 0 7px var(--border-legendary), 0 0 38px 4px var(--border-legendary); }
+      100% { transform: scale(1);    box-shadow: 0 0 18px -2px var(--border-legendary); filter: blur(0); opacity: 1; }
+    }
+
     .ach-card--just-unlocked {
       animation: achCardUnlock 650ms ease both;
     }
@@ -299,6 +350,23 @@
     /* Legendary override — higher specificity wins */
     .ach-card--just-unlocked[data-rarity="legendary"] {
       animation: achCardUnlockLegendary 950ms ease both;
+    }
+
+    .ach-card--just-revealed {
+      animation: achCardReveal 750ms ease both;
+    }
+
+    .ach-card--just-revealed[data-rarity="legendary"] {
+      animation: achCardRevealLegendary 950ms ease both;
+    }
+
+    /* Reduced motion: disable all card animations */
+    @media (prefers-reduced-motion: reduce) {
+      .ach-card--hidden-locked { animation: none; }
+      .ach-card--just-unlocked,
+      .ach-card--just-unlocked[data-rarity="legendary"],
+      .ach-card--just-revealed,
+      .ach-card--just-revealed[data-rarity="legendary"] { animation: none; }
     }
 
     /* ── Empty / error states ────────────────────────────── */
@@ -394,7 +462,7 @@
   // ── Data fetch (all in parallel) ──────────────────────────────────────────
 
   const [catalogResult, earnedResult, progressResult, itemCountResult, themeCountResult] = await Promise.all([
-    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity").order("sort_order"),
+    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity, hidden").order("sort_order"),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("student_progress").select("correct_answers, xp, longest_streak").eq("student_id", userId).maybeSingle(),
     supabase.from("user_items").select("*", { count: "exact", head: true }).eq("user_id", userId),
@@ -464,21 +532,35 @@
   // ── Card builder ──────────────────────────────────────────────────────────
 
   function buildCard(ach) {
-    const unlocked = earnedIds.has(ach.id);
-    const rarity   = ach.rarity ?? "common";
+    const unlocked       = earnedIds.has(ach.id);
+    const rarity         = ach.rarity ?? "common";
+    const isHiddenLocked = (ach.hidden ?? false) && !unlocked;
 
     const card = document.createElement("div");
-    card.className = "ach-card " + (unlocked ? "ach-card--unlocked" : "ach-card--locked");
     card.id = "ach-card-" + ach.id;
-    card.dataset.rarity = rarity;
+
+    if (isHiddenLocked) {
+      card.className = "ach-card ach-card--locked ach-card--hidden-locked";
+      card.dataset.rarity = "";
+      card.setAttribute("aria-label", "Hemmeligt præstation");
+    } else {
+      card.className = "ach-card " + (unlocked ? "ach-card--unlocked" : "ach-card--locked");
+      card.dataset.rarity = rarity;
+    }
 
     const iconEl = document.createElement("span");
     iconEl.className = "ach-card-icon";
-    iconEl.textContent = ach.icon ?? "";
+    iconEl.setAttribute("aria-hidden", "true");
+
+    if (isHiddenLocked) {
+      iconEl.textContent = "？";
+    } else {
+      iconEl.textContent = ach.icon ?? "";
+    }
     card.appendChild(iconEl);
 
-    // Rarity indicator — shown on locked rare/legendary cards as an aspirational teaser
-    if (!unlocked && (rarity === "rare" || rarity === "legendary")) {
+    // Rarity indicator — shown on locked (non-hidden) rare/legendary cards
+    if (!unlocked && !isHiddenLocked && (rarity === "rare" || rarity === "legendary")) {
       const rarityEl = document.createElement("div");
       rarityEl.className = "ach-card-rarity ach-card-rarity--" + rarity;
       rarityEl.textContent = rarity === "legendary" ? "Legendarisk" : "Sjælden";
@@ -487,18 +569,23 @@
 
     const titleEl = document.createElement("div");
     titleEl.className = "ach-card-title";
-    titleEl.textContent = ach.label ?? "";
+    titleEl.textContent = isHiddenLocked ? "???" : (ach.label ?? "");
     card.appendChild(titleEl);
 
     const descEl = document.createElement("div");
     descEl.className = "ach-card-desc";
-    descEl.textContent = ach.description ?? "";
+    descEl.textContent = isHiddenLocked ? "Hemmeligt" : (ach.description ?? "");
     card.appendChild(descEl);
 
     if (unlocked) {
       const statusEl = document.createElement("div");
       statusEl.className = "ach-card-status";
       statusEl.textContent = "✓ Opnået";
+      card.appendChild(statusEl);
+    } else if (isHiddenLocked) {
+      const statusEl = document.createElement("div");
+      statusEl.className = "ach-card-status ach-card-status--locked ach-card-status--hidden";
+      statusEl.textContent = "Hemmeligt";
       card.appendChild(statusEl);
     } else {
       const prog = getProgressForAchievement(ach.id);
@@ -582,32 +669,70 @@
       if (!ach) continue;
 
       setTimeout(() => {
-        showToast("Præstation opnået: " + ach.label + " " + (ach.icon ?? ""), "success", 3500);
+        const isHidden = ach.hidden ?? false;
+        const toastMsg = isHidden
+          ? "Hemmelighed afsløret: " + ach.label + " " + (ach.icon ?? "")
+          : "Præstation opnået: " + ach.label + " " + (ach.icon ?? "");
+        showToast(toastMsg, "success", 3500);
         playSound("buy");
 
         earnedIds.add(id);
 
         const cardEl = document.getElementById("ach-card-" + id);
         if (cardEl) {
-          cardEl.classList.remove("ach-card--locked");
-          cardEl.classList.add("ach-card--unlocked", "ach-card--just-unlocked");
+          const wasHiddenLocked = cardEl.classList.contains("ach-card--hidden-locked");
 
-          // Remove rarity label (was on locked rare/legendary — border color now communicates tier)
-          const rarityLabelEl = cardEl.querySelector(".ach-card-rarity");
-          if (rarityLabelEl) rarityLabelEl.remove();
+          cardEl.classList.remove("ach-card--locked", "ach-card--hidden-locked");
+          cardEl.classList.add("ach-card--unlocked");
 
-          // Replace progress/locked status with "✓ Opnået"
-          const bottomEl = cardEl.querySelector(".ach-card-progress, .ach-card-status--locked");
-          if (bottomEl) {
-            const statusEl = document.createElement("div");
-            statusEl.className = "ach-card-status";
-            statusEl.textContent = "✓ Opnået";
-            bottomEl.replaceWith(statusEl);
+          if (wasHiddenLocked) {
+            // Reveal: replace ??? content with real achievement data
+            cardEl.dataset.rarity = ach.rarity ?? "common";
+            cardEl.removeAttribute("aria-label");
+
+            const iconEl = cardEl.querySelector(".ach-card-icon");
+            if (iconEl) iconEl.textContent = ach.icon ?? "";
+
+            const titleEl = cardEl.querySelector(".ach-card-title");
+            if (titleEl) titleEl.textContent = ach.label ?? "";
+
+            const descEl = cardEl.querySelector(".ach-card-desc");
+            if (descEl) descEl.textContent = ach.description ?? "";
+
+            const hiddenStatusEl = cardEl.querySelector(".ach-card-status--hidden");
+            if (hiddenStatusEl) {
+              const statusEl = document.createElement("div");
+              statusEl.className = "ach-card-status";
+              statusEl.textContent = "✓ Opnået";
+              hiddenStatusEl.replaceWith(statusEl);
+            }
+
+            const revealClass = (ach.rarity === "legendary")
+              ? "ach-card--just-revealed"
+              : "ach-card--just-revealed";
+            cardEl.classList.add(revealClass);
+            cardEl.addEventListener("animationend", () => {
+              cardEl.classList.remove("ach-card--just-revealed");
+            }, { once: true });
+
+          } else {
+            // Normal unlock path
+            const rarityLabelEl = cardEl.querySelector(".ach-card-rarity");
+            if (rarityLabelEl) rarityLabelEl.remove();
+
+            const bottomEl = cardEl.querySelector(".ach-card-progress, .ach-card-status--locked");
+            if (bottomEl) {
+              const statusEl = document.createElement("div");
+              statusEl.className = "ach-card-status";
+              statusEl.textContent = "✓ Opnået";
+              bottomEl.replaceWith(statusEl);
+            }
+
+            cardEl.classList.add("ach-card--just-unlocked");
+            cardEl.addEventListener("animationend", () => {
+              cardEl.classList.remove("ach-card--just-unlocked");
+            }, { once: true });
           }
-
-          cardEl.addEventListener("animationend", () => {
-            cardEl.classList.remove("ach-card--just-unlocked");
-          }, { once: true });
         }
 
         updateCounts();

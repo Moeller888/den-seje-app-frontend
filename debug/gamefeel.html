@@ -630,6 +630,28 @@
       opacity: 0.28;
     }
 
+    /* Hidden locked badge — mystery treatment */
+    .demo-ach-badge.hidden-locked {
+      opacity: 0.42;
+      border-style: dashed;
+      border-color: var(--border);
+      animation: demoBadgeHiddenPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes demoBadgeHiddenPulse {
+      0%, 100% { opacity: 0.42; }
+      50%       { opacity: 0.58; }
+    }
+
+    @keyframes demoAchBadgeReveal {
+      0%   { transform: scale(0.88); filter: blur(1px); opacity: 0.4; }
+      50%  { transform: scale(1.14); filter: blur(0);   opacity: 1;   box-shadow: 0 0 0 3px var(--accent); }
+      100% { transform: scale(1);    box-shadow: none; filter: blur(0); opacity: 1; }
+    }
+    .demo-ach-badge.just-revealed {
+      animation: demoAchBadgeReveal 700ms ease both;
+    }
+
     .demo-ach-icon  { font-size: 18px; line-height: 1; }
     .demo-ach-label {
       font-size: 8px;
@@ -772,6 +794,44 @@
     .ach-card-progress-text {
       font-size: 10px;
       color: var(--text-muted);
+    }
+
+    /* ── Hidden achievement card — mystery locked state ─── */
+    .ach-card--hidden-locked {
+      border-style: dashed;
+      border-color: var(--border);
+      opacity: 0.62;
+      animation: demoCardHiddenPulse 4s ease-in-out infinite;
+    }
+    .ach-card--hidden-locked:hover {
+      opacity: 0.80;
+      animation-play-state: paused;
+    }
+    @keyframes demoCardHiddenPulse {
+      0%, 100% { opacity: 0.62; }
+      50%       { opacity: 0.76; }
+    }
+    .ach-card--hidden-locked .ach-card-icon {
+      opacity: 0.18;
+      filter: grayscale(1) blur(1px);
+    }
+    .ach-card--hidden-locked .ach-card-title {
+      letter-spacing: 4px;
+      color: var(--text-muted);
+    }
+    .ach-card--hidden-locked .ach-card-desc {
+      font-style: italic;
+      color: var(--text-faint);
+    }
+
+    @keyframes demoCardReveal {
+      0%   { transform: scale(0.94); filter: blur(2px); opacity: 0.5; }
+      40%  { transform: scale(1.04); filter: blur(0);   opacity: 1;   }
+      68%  { transform: scale(1.07); box-shadow: 0 0 0 6px var(--accent), 0 0 26px 2px var(--accent); }
+      100% { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); filter: blur(0); opacity: 1; }
+    }
+    .ach-card--just-revealed {
+      animation: demoCardReveal 750ms ease both;
     }
   </style>
 </head>
@@ -1028,8 +1088,14 @@
       <div class="quiz-row-label">Achievement Unlock Toast + Sound + Badge Pulse</div>
       <button class="sb-btn c-green"  id="btnAchSingle"   style="width:auto;margin:0">&#10003; Single unlock (Første svar)</button>
       <button class="sb-btn c-gold"   id="btnAchCascade"  style="width:auto;margin:0">&#9733; Cascade 3&times; (350ms stagger)</button>
-      <button class="sb-btn c-violet" id="btnAchAll"      style="width:auto;margin:0">&#10022; All 12 (full backfill feel)</button>
+      <button class="sb-btn c-violet" id="btnAchAll"      style="width:auto;margin:0">&#10022; All 16 (full backfill feel)</button>
       <button class="sb-btn c-dim"    id="btnAchReset"    style="width:auto;margin:0">&#8617; Reset badges</button>
+    </div>
+
+    <div class="quiz-row">
+      <div class="quiz-row-label">Hidden Achievement Reveal</div>
+      <button class="sb-btn c-blue"   id="btnRevealNightOwl"  style="width:auto;margin:0">&#127769; Reveal: Natteuglen (rare)</button>
+      <button class="sb-btn c-gold"   id="btnRevealLegCombo"  style="width:auto;margin:0">&#128081; Reveal: Den Store Samler (legendary)</button>
     </div>
 
     <!-- Mirror of hub.html achievement grid — 12 badges -->
@@ -1088,6 +1154,31 @@
         <span class="ach-card-icon">🏆</span>
         <div class="ach-card-title">1000 rigtige svar</div>
         <div class="ach-card-desc">Svar rigtigt på 1000 spørgsmål i alt</div>
+        <div class="ach-card-status">✓ Opnået</div>
+      </div>
+    </div>
+
+    <!-- Hidden achievements — mystery locked + reveal states -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Hidden Achievements — Mystery Locked &middot; Just Revealed (rare) &middot; Just Revealed (legendary)</div>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--locked ach-card--hidden-locked" id="demoHiddenCard1">
+        <span class="ach-card-icon" aria-hidden="true">？</span>
+        <div class="ach-card-title">???</div>
+        <div class="ach-card-desc">Hemmeligt</div>
+        <div class="ach-card-status ach-card-status--locked" style="color:var(--text-faint);font-style:italic">Hemmeligt</div>
+      </div>
+      <div class="ach-card ach-card--unlocked ach-card--just-revealed" data-rarity="rare" id="demoRevealedRare">
+        <span class="ach-card-icon">🌙</span>
+        <div class="ach-card-title">Natteuglen</div>
+        <div class="ach-card-desc">Svar rigtigt på et spørgsmål om natten</div>
+        <div class="ach-card-status">✓ Opnået</div>
+      </div>
+      <div class="ach-card ach-card--unlocked ach-card--just-revealed" data-rarity="legendary" id="demoRevealedLegendary">
+        <span class="ach-card-icon">👑</span>
+        <div class="ach-card-title">Den Store Samler</div>
+        <div class="ach-card-desc">Ejer et legendarisk item og et legendarisk tema</div>
         <div class="ach-card-status">✓ Opnået</div>
       </div>
     </div>
@@ -1193,18 +1284,22 @@ const PREVIEW_TOKENS = [
 
 // Achievement definitions — mirrors hub.html ACHIEVEMENT_DEFS exactly
 const ACHIEVEMENT_DEFS = [
-  { id: "first_correct",   label: "Første svar",   icon: "✓",  rarity: "common"    },
-  { id: "correct_10",      label: "10 svar",        icon: "◎",  rarity: "common"    },
-  { id: "correct_100",     label: "100 svar",       icon: "★",  rarity: "rare"      },
-  { id: "first_theme",     label: "Tema",           icon: "◈",  rarity: "common"    },
-  { id: "first_legendary", label: "Legendarisk",   icon: "✦",  rarity: "rare"      },
-  { id: "streak_7",        label: "7 dage",         icon: "🔥", rarity: "rare"      },
-  { id: "level_10",        label: "Niveau 10",      icon: "▲",  rarity: "rare"      },
-  { id: "first_purchase",  label: "Første køb",    icon: "🛒", rarity: "common"    },
-  { id: "collector_5",     label: "5 items",        icon: "💎", rarity: "rare"      },
-  { id: "themes_3",        label: "3 temaer",       icon: "🎨", rarity: "rare"      },
-  { id: "streak_30",       label: "30 dage",        icon: "⚡", rarity: "legendary" },
-  { id: "correct_1000",    label: "1000 svar",      icon: "🏆", rarity: "legendary" },
+  { id: "first_correct",   label: "Første svar",     icon: "✓",  rarity: "common",    hidden: false },
+  { id: "correct_10",      label: "10 svar",          icon: "◎",  rarity: "common",    hidden: false },
+  { id: "correct_100",     label: "100 svar",         icon: "★",  rarity: "rare",      hidden: false },
+  { id: "first_theme",     label: "Tema",             icon: "◈",  rarity: "common",    hidden: false },
+  { id: "first_legendary", label: "Legendarisk",     icon: "✦",  rarity: "rare",      hidden: false },
+  { id: "streak_7",        label: "7 dage",           icon: "🔥", rarity: "rare",      hidden: false },
+  { id: "level_10",        label: "Niveau 10",        icon: "▲",  rarity: "rare",      hidden: false },
+  { id: "first_purchase",  label: "Første køb",      icon: "🛒", rarity: "common",    hidden: false },
+  { id: "collector_5",     label: "5 items",          icon: "💎", rarity: "rare",      hidden: false },
+  { id: "themes_3",        label: "3 temaer",         icon: "🎨", rarity: "rare",      hidden: false },
+  { id: "streak_30",       label: "30 dage",          icon: "⚡", rarity: "legendary", hidden: false },
+  { id: "correct_1000",    label: "1000 svar",        icon: "🏆", rarity: "legendary", hidden: false },
+  { id: "night_owl",       label: "Natteuglen",       icon: "🌙", rarity: "rare",      hidden: true  },
+  { id: "perfect_five",    label: "Perfekt Fem",      icon: "⭐", rarity: "rare",      hidden: true  },
+  { id: "legendary_combo", label: "Den Store Samler", icon: "👑", rarity: "legendary", hidden: true  },
+  { id: "fast_learner",    label: "Hurtiglærer",      icon: "🚀", rarity: "legendary", hidden: true  },
 ];
 
 // ── Sandbox state — fully local, no server ────────────────────────────────────
@@ -1461,13 +1556,23 @@ function buildDemoAchGrid() {
   for (const def of ACHIEVEMENT_DEFS) {
     const badge = document.createElement("div");
     const unlocked = st.unlockedAchievements.has(def.id);
-    badge.className = "demo-ach-badge " + (unlocked ? "unlocked" : "locked");
+    const isHiddenLocked = (def.hidden ?? false) && !unlocked;
     badge.id = "demo-ach-" + def.id;
-    badge.title = def.label;
-    badge.dataset.rarity = def.rarity ?? "common";
-    badge.innerHTML =
-      `<span class="demo-ach-icon">${def.icon}</span>` +
-      `<span class="demo-ach-label">${def.label}</span>`;
+    if (isHiddenLocked) {
+      badge.className = "demo-ach-badge hidden-locked";
+      badge.title = "Hemmeligt";
+      badge.dataset.rarity = "";
+      badge.innerHTML =
+        `<span class="demo-ach-icon" aria-hidden="true">?</span>` +
+        `<span class="demo-ach-label">???</span>`;
+    } else {
+      badge.className = "demo-ach-badge " + (unlocked ? "unlocked" : "locked");
+      badge.title = def.label;
+      badge.dataset.rarity = def.rarity ?? "common";
+      badge.innerHTML =
+        `<span class="demo-ach-icon">${def.icon}</span>` +
+        `<span class="demo-ach-label">${def.label}</span>`;
+    }
     grid.appendChild(badge);
   }
 }
@@ -1509,6 +1614,36 @@ document.getElementById("btnAchAll").addEventListener("click", () => {
 document.getElementById("btnAchReset").addEventListener("click", () => {
   st.unlockedAchievements.clear();
   buildDemoAchGrid();
+});
+
+function triggerAchReveal(id) {
+  const def = ACHIEVEMENT_DEFS.find(d => d.id === id);
+  if (!def) return;
+
+  toast("Hemmelighed afsl\xF8ret: " + def.label + " " + def.icon, "success", 4000);
+  play("equip");
+
+  st.unlockedAchievements.add(id);
+  const badgeEl = document.getElementById("demo-ach-" + id);
+  if (!badgeEl) return;
+  badgeEl.classList.remove("locked", "hidden-locked");
+  badgeEl.classList.add("unlocked", "just-revealed");
+  badgeEl.dataset.rarity = def.rarity ?? "common";
+  badgeEl.title = def.label;
+  badgeEl.innerHTML =
+    `<span class="demo-ach-icon">${def.icon}</span>` +
+    `<span class="demo-ach-label">${def.label}</span>`;
+  badgeEl.addEventListener("animationend", () => {
+    badgeEl.classList.remove("just-revealed");
+  }, { once: true });
+}
+
+document.getElementById("btnRevealNightOwl").addEventListener("click", () => {
+  triggerAchReveal("night_owl");
+});
+
+document.getElementById("btnRevealLegCombo").addEventListener("click", () => {
+  triggerAchReveal("legendary_combo");
 });
 
 // ── Button wiring ─────────────────────────────────────────────────────────────
