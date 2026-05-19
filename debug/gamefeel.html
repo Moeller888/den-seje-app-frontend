@@ -854,6 +854,17 @@
     .ach-card--just-revealed {
       animation: demoCardReveal 750ms ease both;
     }
+
+    /* Reward badge — shown on all cards */
+    .ach-card-reward {
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 6px;
+      display: block;
+    }
+    .ach-card-reward--coins { color: var(--coin, #ffd700); }
+    .ach-card-reward--theme { color: var(--accent); }
+    .ach-card-reward--item  { color: var(--border-rare, #1976d2); }
   </style>
 </head>
 <body>
@@ -1284,6 +1295,43 @@
       </div>
     </div>
 
+    <!-- Achievement Rewards — reward badge + toast previews -->
+    <div class="quiz-row" style="margin-top:18px;margin-bottom:6px">
+      <div class="quiz-row-label">Achievement Rewards &mdash; Coin &middot; Theme &middot; Item</div>
+      <button class="sb-btn c-gold"   id="btnRewardCoins" style="width:auto;margin:0">&#x1FA99; Coin toast (+25 m&oslash;nter)</button>
+      <button class="sb-btn c-blue"   id="btnRewardTheme" style="width:auto;margin:0">&#127912; Theme toast (Skov-tema)</button>
+      <button class="sb-btn c-violet" id="btnRewardItem"  style="width:auto;margin:0">&#127873; Item toast (S&oslash;lvkrone)</button>
+    </div>
+    <div class="ach-card-demo-row">
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon" aria-hidden="true">◎</span>
+        <div class="ach-card-title">10 svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 10 spørgsmål</div>
+        <div class="ach-card-progress">
+          <div class="ach-card-progress-track">
+            <div class="ach-card-progress-fill" style="width:70%"></div>
+          </div>
+          <div class="ach-card-progress-text">7 / 10</div>
+        </div>
+        <div class="ach-card-reward ach-card-reward--coins">🪙 +10</div>
+      </div>
+      <div class="ach-card ach-card--locked">
+        <span class="ach-card-icon" aria-hidden="true">⚡</span>
+        <div class="ach-card-rarity ach-card-rarity--legendary">Legendarisk</div>
+        <div class="ach-card-title">30 dage i træk</div>
+        <div class="ach-card-desc">Oprethold en streak i 30 dage</div>
+        <div class="ach-card-status ach-card-status--locked">Låst</div>
+        <div class="ach-card-reward ach-card-reward--theme">🎨 Skov-tema</div>
+      </div>
+      <div class="ach-card ach-card--unlocked" data-rarity="legendary">
+        <span class="ach-card-icon" aria-hidden="true">🏆</span>
+        <div class="ach-card-title">1000 rigtige svar</div>
+        <div class="ach-card-desc">Svar rigtigt på 1000 spørgsmål i alt</div>
+        <div class="ach-card-status">✓ Opnået</div>
+        <div class="ach-card-reward ach-card-reward--item">🎁 Sølvkrone</div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -1707,6 +1755,21 @@ document.getElementById("btnRevealNightOwl").addEventListener("click", () => {
 
 document.getElementById("btnRevealLegCombo").addEventListener("click", () => {
   triggerAchReveal("legendary_combo");
+});
+
+document.getElementById("btnRewardCoins").addEventListener("click", () => {
+  toast("+25 m\xF8nter! 🪙", "success", 3000);
+  play("buy");
+});
+
+document.getElementById("btnRewardTheme").addEventListener("click", () => {
+  toast("Tema optjent: Skov-tema! 🎨", "success", 3000);
+  play("buy");
+});
+
+document.getElementById("btnRewardItem").addEventListener("click", () => {
+  toast("Item optjent: S\xF8lvkrone! 🎁", "success", 3000);
+  play("buy");
 });
 
 // ── Button wiring ─────────────────────────────────────────────────────────────

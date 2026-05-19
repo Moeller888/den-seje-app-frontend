@@ -1462,10 +1462,40 @@
     }
   }
 
+  const REWARD_NAMES = {
+    "forest":       "Skov-tema",
+    "crown-silver": "Sølvkrone",
+  };
+
+  function formatRewardToast(grant) {
+    if (!grant) return "";
+    if (grant.reward_type === "coins") return "+" + (grant.reward_amount ?? 0) + " mønter! 🪙";
+    if (grant.reward_type === "theme") return "Tema optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎨";
+    if (grant.reward_type === "item")  return "Item optjent: "  + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎁";
+    return "";
+  }
+
   // Evaluate achievements on hub load; notify for anything newly unlocked.
   async function evaluateAndNotifyAchievements() {
-    const { data: newlyUnlocked, error } = await supabase.rpc("evaluate_achievements");
-    if (error || !Array.isArray(newlyUnlocked) || newlyUnlocked.length === 0) return;
+    const { data: newlyUnlocked, error: evalError } = await supabase.rpc("evaluate_achievements");
+    const hasNewUnlocks = !evalError && Array.isArray(newlyUnlocked) && newlyUnlocked.length > 0;
+
+    // Grant all unclaimed rewards — newly unlocked AND historical backfill.
+    const allEarned = hasNewUnlocks
+      ? [...new Set([...Array.from(earnedAchievementIds), ...newlyUnlocked])]
+      : Array.from(earnedAchievementIds);
+
+    let newUnlockedGrants = [];
+    if (allEarned.length > 0) {
+      const { data: grants } = await supabase.rpc("grant_achievement_rewards", {
+        p_achievement_ids: allEarned,
+      });
+      if (hasNewUnlocks && Array.isArray(grants) && grants.length > 0) {
+        newUnlockedGrants = grants.filter(g => newlyUnlocked.includes(g.achievement_id));
+      }
+    }
+
+    if (!hasNewUnlocks) return;
 
     for (let i = 0; i < newlyUnlocked.length; i++) {
       const id  = newlyUnlocked[i];
@@ -1493,7 +1523,6 @@
           badgeEl.title = def.label;
 
           if (wasHiddenLocked) {
-            // Reveal: replace ??? content with real icon + label
             badgeEl.innerHTML =
               `<span class="ach-badge-icon">${def.icon}</span>` +
               `<span class="ach-badge-label">${def.label}</span>`;
@@ -1519,6 +1548,15 @@
           countEl.textContent = newEarned + " / " + ACHIEVEMENT_DEFS.length;
         }
       }, i * 350);
+
+      // Reward toast fires 300ms after the unlock toast for this achievement
+      const grant = newUnlockedGrants.find(g => g.achievement_id === id);
+      if (grant) {
+        const rewardMsg = formatRewardToast(grant);
+        if (rewardMsg) {
+          setTimeout(() => showToast(rewardMsg, "success", 3000), i * 350 + 300);
+        }
+      }
     }
   }
 

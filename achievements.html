@@ -335,6 +335,18 @@
       font-weight: bold;
     }
 
+    /* Reward badge — shown on all cards as earned preview */
+    .ach-card-reward {
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 6px;
+      display: block;
+    }
+
+    .ach-card-reward--coins { color: var(--coin); }
+    .ach-card-reward--theme { color: var(--accent); }
+    .ach-card-reward--item  { color: var(--border-rare); }
+
     /* Unlock animations */
     @keyframes achCardUnlock {
       0%   { transform: scale(1);    box-shadow: 0 0 14px -3px var(--accent); }
@@ -485,7 +497,7 @@
   // ── Data fetch (all in parallel) ──────────────────────────────────────────
 
   const [catalogResult, earnedResult, progressResult, itemsResult, themeCountResult, shopItemsResult] = await Promise.all([
-    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity, hidden, progress_type, target_value").order("sort_order"),
+    supabase.from("achievements").select("id, label, description, icon, sort_order, rarity, hidden, progress_type, target_value, reward_type, reward_value, reward_amount").order("sort_order"),
     supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
     supabase.from("student_progress").select("correct_answers, xp, longest_streak").eq("student_id", userId).maybeSingle(),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
@@ -526,6 +538,21 @@
     const current = PROGRESS_CURRENT[type];
     if (current === undefined) return null;
     return { current: Math.min(current, target), total: target };
+  }
+
+  // ── Reward helpers ────────────────────────────────────────────────────────
+
+  const REWARD_NAMES = {
+    "forest":       "Skov-tema",
+    "crown-silver": "Sølvkrone",
+  };
+
+  function formatRewardToast(grant) {
+    if (!grant) return "";
+    if (grant.reward_type === "coins") return "+" + (grant.reward_amount ?? 0) + " mønter! 🪙";
+    if (grant.reward_type === "theme") return "Tema optjent: " + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎨";
+    if (grant.reward_type === "item")  return "Item optjent: "  + (REWARD_NAMES[grant.reward_value] ?? grant.reward_value) + "! 🎁";
+    return "";
   }
 
   // ── Counts ────────────────────────────────────────────────────────────────
@@ -658,6 +685,21 @@
       }
     }
 
+    // Reward badge — shown on all cards (locked = preview, unlocked = earned)
+    const rewardType = ach.reward_type ?? null;
+    if (rewardType) {
+      const rewardEl = document.createElement("div");
+      rewardEl.className = "ach-card-reward ach-card-reward--" + rewardType;
+      if (rewardType === "coins") {
+        rewardEl.textContent = "🪙 +" + (ach.reward_amount ?? 0);
+      } else if (rewardType === "theme") {
+        rewardEl.textContent = "🎨 " + (REWARD_NAMES[ach.reward_value ?? ""] ?? ach.reward_value ?? "");
+      } else if (rewardType === "item") {
+        rewardEl.textContent = "🎁 " + (REWARD_NAMES[ach.reward_value ?? ""] ?? ach.reward_value ?? "");
+      }
+      if (rewardEl.textContent) card.appendChild(rewardEl);
+    }
+
     return card;
   }
 
@@ -695,8 +737,26 @@
   // ── Evaluate + notify (idempotent, non-blocking) ──────────────────────────
 
   async function evaluateAndNotify() {
-    const { data: newlyUnlocked, error } = await supabase.rpc("evaluate_achievements");
-    if (error || !Array.isArray(newlyUnlocked) || newlyUnlocked.length === 0) return;
+    const { data: newlyUnlocked, error: evalError } = await supabase.rpc("evaluate_achievements");
+    const hasNewUnlocks = !evalError && Array.isArray(newlyUnlocked) && newlyUnlocked.length > 0;
+
+    // Grant all unclaimed rewards — newly unlocked AND historical backfill.
+    // Historical grants are delivered silently (no toast) on first load after migration.
+    const allEarned = hasNewUnlocks
+      ? [...new Set([...Array.from(earnedIds), ...newlyUnlocked])]
+      : Array.from(earnedIds);
+
+    let newUnlockedGrants = [];
+    if (allEarned.length > 0) {
+      const { data: grants } = await supabase.rpc("grant_achievement_rewards", {
+        p_achievement_ids: allEarned,
+      });
+      if (hasNewUnlocks && Array.isArray(grants) && grants.length > 0) {
+        newUnlockedGrants = grants.filter(g => newlyUnlocked.includes(g.achievement_id));
+      }
+    }
+
+    if (!hasNewUnlocks) return;
 
     for (let i = 0; i < newlyUnlocked.length; i++) {
       const id  = newlyUnlocked[i];
@@ -772,6 +832,15 @@
 
         updateCounts();
       }, i * 350);
+
+      // Reward toast fires 300ms after the unlock toast for this achievement
+      const grant = newUnlockedGrants.find(g => g.achievement_id === id);
+      if (grant) {
+        const rewardMsg = formatRewardToast(grant);
+        if (rewardMsg) {
+          setTimeout(() => showToast(rewardMsg, "success", 3000), i * 350 + 300);
+        }
+      }
     }
   }
 
