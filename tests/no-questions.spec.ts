@@ -87,9 +87,10 @@ test('Shows empty state when no questions are available', async ({ page }) => {
   // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly
   const question = page.locator('#question');
 
-  await expect(question).toHaveAttribute('data-state', /loading|empty/, { timeout: 15000 });
+  // 20s: Vercel Edge Function cold start can take up to ~18s when suite has been idle
+  await expect(question).toHaveAttribute('data-state', /loading|empty/, { timeout: 20000 });
 
-  await expect(question).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
+  await expect(question).toHaveAttribute('data-state', 'empty', { timeout: 20000 });
 
   await expect(question).toContainText(/ingen flere spørgsmål/i);
 });
