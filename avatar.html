@@ -125,11 +125,12 @@
     /* Paper-doll canvas */
     #avatar-preview {
       position: relative;
-      width: 160px;
-      height: 240px;
-      border-radius: 10px;
-      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      width: 180px;
+      height: 270px;
+      border-radius: 12px;
+      background: radial-gradient(ellipse at 50% 28%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
       overflow: visible;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.3);
     }
 
     /* Preview border changes with highest-rarity equipped */
@@ -591,6 +592,10 @@ import { playSound }   from "./js/audio.js";
 import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
+import {
+  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC,
+  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
+} from "./js/avatar-layers.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -614,56 +619,9 @@ window.addEventListener("pageshow", async (event) => {
 });
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+// ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC, RARITY_* — from avatar-layers.js
 
-const RARITY_COLORS = {
-  common:    "#757575",
-  uncommon:  "#388e3c",
-  rare:      "#1565c0",
-  legendary: "#f57f17",
-};
-
-const RARITY_LABELS = {
-  common:    "Almindelig",
-  uncommon:  "Ualmindelig",
-  rare:      "Sjælden",
-  legendary: "Legendarisk",
-};
-
-const RARITY_ICONS = {
-  common:    "○",
-  uncommon:  "◆",
-  rare:      "★",
-  legendary: "✦",
-};
-
-const SLOT_LABELS = {
-  body:    "Krop",
-  shirt:   "Shirt",
-  hat:     "Hat",
-  glasses: "Briller",
-  mask:    "Maske",
-};
-
-const SLOT_EMOJIS = {
-  body:    "&#129411;",
-  shirt:   "&#128085;",
-  hat:     "&#127913;",
-  glasses: "&#128083;",
-  mask:    "&#127917;",
-};
-
-// Rendering order — base body is always z=0; items stack above it.
-const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
-
-// The slots shown in the preview status list (always, even if empty).
-const ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
-
-const BASE_SRC = "/assets/avatar/base/body.svg";
-
-// Rarity priority for avatar-wrap highest-rarity attribute (P5)
-const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
-
-// Item → theme membership (P4). Items in the same theme can form a synergy.
+// Item → theme membership. Items in the same theme can form a synergy.
 // Themes only appear when 2+ items of the same theme are simultaneously equipped.
 const ITEM_THEMES = {
   "armor-knight": "Ridder-sæt",

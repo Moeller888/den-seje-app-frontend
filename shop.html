@@ -65,6 +65,46 @@
       border-bottom: 1px solid var(--border);
     }
 
+    /* ── Category tabs ───────────────────────────────────── */
+
+    .category-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .cat-tab {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border-btn);
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+      white-space: nowrap;
+    }
+
+    .cat-tab:hover {
+      background: var(--btn-bg-hover);
+      color: var(--text-main);
+    }
+
+    .cat-tab--active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .cat-tab--active:hover {
+      background: var(--accent);
+      color: #fff;
+      opacity: 0.9;
+    }
+
     /* ── Shop grid ───────────────────────────────────────── */
 
     .shop-grid {
@@ -356,6 +396,12 @@
 </div>
 
 <div class="section-header">Tilgængelige items</div>
+<div class="category-tabs" id="categoryTabs">
+  <button class="cat-tab cat-tab--active" data-cat="alle">Alle</button>
+  <button class="cat-tab" data-cat="krop">Krop</button>
+  <button class="cat-tab" data-cat="hoved">Hoved</button>
+  <button class="cat-tab" data-cat="effekt">Effekt</button>
+</div>
 <div class="shop-grid" id="shopGrid"></div>
 
 <script type="module">
@@ -365,6 +411,9 @@ import { playSound }  from "./js/audio.js";
 import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
+import {
+  BASE_SRC, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES,
+} from "./js/avatar-layers.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -386,35 +435,11 @@ window.addEventListener("pageshow", async (event) => {
 });
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+// BASE_SRC, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES — from avatar-layers.js
 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
-const BASE_BODY_SRC = "/assets/avatar/base/body.svg";
-
-const RARITY_COLORS = {
-  common:    "#757575",
-  uncommon:  "#388e3c",
-  rare:      "#1565c0",
-  legendary: "#f57f17",
-};
-const RARITY_LABELS = {
-  common:    "Almindelig",
-  uncommon:  "Ualmindelig",
-  rare:      "Sjælden",
-  legendary: "Legendarisk",
-};
-
-// Slot z-index: must match avatar.html and app.js
-const SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
-
-// Sort order: legendary items shown first for maximum impact
-const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
-
-
-// ── Mini paper-doll preview (Feature #2) ─────────────────────────────────────
-// Creates a small preview container with base body + item layer stacked.
-// All SVGs share viewBox="0 0 160 240", so layers align in any container size.
-// Future: pass an array of { src, z } objects for bundle/outfit previews.
+// ── Mini paper-doll preview ────────────────────────────────────────────────────
 function createMiniPaperDoll(imageUrl, slotType, isNew) {
   const wrap = document.createElement("div");
   wrap.className = "shop-preview";
@@ -425,7 +450,7 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
   if (isAvatarSlot) {
     const bodyImg = document.createElement("img");
     bodyImg.className = "preview-layer";
-    bodyImg.src = BASE_BODY_SRC;
+    bodyImg.src = BASE_SRC;
     bodyImg.style.zIndex = "0";
     bodyImg.alt = "";
     wrap.appendChild(bodyImg);
@@ -559,6 +584,8 @@ async function loadShop() {
 
     shopGrid.appendChild(card);
   });
+
+  filterShopGrid();
 }
 
 // ── Buy handler — single delegated listener, attached once ────────────────────
@@ -673,6 +700,27 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
   } else {
     await loadShop();
   }
+});
+
+// ── Category tab filtering ────────────────────────────────────────────────────
+
+let activeCategory = "alle";
+
+function filterShopGrid() {
+  const catDef = SHOP_CATEGORIES.find(c => c.key === activeCategory);
+  document.querySelectorAll(".shop-card").forEach(card => {
+    const slotType = card.dataset.slotType ?? "";
+    const visible  = !catDef?.slots || catDef.slots.includes(slotType);
+    card.style.display = visible ? "" : "none";
+  });
+}
+
+document.getElementById("categoryTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".cat-tab[data-cat]");
+  if (!btn) return;
+  activeCategory = btn.dataset.cat;
+  document.querySelectorAll(".cat-tab").forEach(b => b.classList.toggle("cat-tab--active", b === btn));
+  filterShopGrid();
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────

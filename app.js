@@ -1,6 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
+import { ALL_SLOTS, SLOT_Z, BASE_SRC } from "./js/avatar-layers.js";
 
 window.__sb = supabase;
 
@@ -173,10 +174,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const avatarDisplay = document.getElementById("avatar-display");
     if (!avatarDisplay) return;
 
-    const BASE_SRC = "/assets/avatar/base/body.svg";
-    const QUIZ_SLOT_Z = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
-    const QUIZ_ALL_SLOTS = ["body", "shirt", "hat", "glasses", "mask"];
-
     avatarDisplay.innerHTML = "";
 
     // Base body always visible — render immediately (no network wait)
@@ -207,7 +204,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!shopItems) return;
 
-    QUIZ_ALL_SLOTS.forEach(slot => {
+    ALL_SLOTS.forEach(slot => {
       const itemId = equippedSlots[slot];
       if (!itemId) return;
       const item = shopItems.find(i => i.id === itemId);
@@ -216,7 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const img = document.createElement("img");
       img.className = "quiz-avatar-layer";
       img.src = item.image_url;
-      img.style.zIndex = String(QUIZ_SLOT_Z[slot] ?? 1);
+      img.style.zIndex = String(SLOT_Z[slot] ?? 1);
       img.alt = "";
       avatarDisplay.appendChild(img);
     });

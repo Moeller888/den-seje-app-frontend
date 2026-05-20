@@ -1148,6 +1148,7 @@
   import { getXPProgressInLevel } from "./js/progression.js";
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
+  import { ALL_SLOTS, SLOT_Z, BASE_SRC, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -1182,12 +1183,7 @@
 
   // ── Constants ─────────────────────────────────────────────────────────────────
 
-  const ALL_SLOTS    = ["body", "shirt", "hat", "glasses", "mask"];
-  const SLOT_Z       = { body: 1, shirt: 2, hat: 3, glasses: 4, mask: 5 };
-  const RARITY_ORDER = ["legendary", "rare", "uncommon", "common"];
-  const BASE_SRC     = "/assets/avatar/base/body.svg";
-
-  const RARITY_ICONS = { legendary: "✦", rare: "★", uncommon: "◆", common: "○" };
+  // ALL_SLOTS, SLOT_Z, BASE_SRC, RARITY_ORDER, RARITY_ICONS — imported from ./js/avatar-layers.js
 
   const RARITY_CHIP_CFG = {
     legendary: { label: "Legendarisk", icon: "✦", cls: "rarity-chip--legendary" },
