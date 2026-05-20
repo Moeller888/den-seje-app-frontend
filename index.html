@@ -212,6 +212,8 @@
       line-height: 1.4;
       transition: color 150ms ease;
     }
+    /* Hidden when empty — layout placeholder preserved via min-height */
+    #feedback:empty { visibility: hidden; }
 
     .feedback-correct { color: var(--success-text); }
     .feedback-error   { color: var(--error-bright); }
