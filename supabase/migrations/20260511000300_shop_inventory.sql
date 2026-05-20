@@ -23,6 +23,8 @@ INSERT INTO public.shop_items (id, name, price, type, rarity, image_url, data) V
   ('crown-golden',  'Guldkrone',    3000,   'avatar', 'legendary', NULL, '{}');
 
 -- SECURITY DEFINER RPC: equip an owned item for the calling user
+-- DROP first so return-type changes are allowed on replay
+DROP FUNCTION IF EXISTS public.equip_item(TEXT);
 CREATE OR REPLACE FUNCTION public.equip_item(p_item_id TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
