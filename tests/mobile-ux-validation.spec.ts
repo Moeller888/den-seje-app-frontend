@@ -42,9 +42,10 @@ async function loginAndWait(page: any) {
   // Submit the form — keyboard Enter is reliable across desktop+mobile contexts
   await page.locator('#loginBtn').click();
   // Wait for redirect to index.html (more reliable than element visibility)
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 15000 });
+  // 20s timeout: Vercel Edge Function cold starts can add 5-15s latency in a long suite
+  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
   // Wait for question to be fully loaded (state machine at AWAITING_ANSWER)
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 15000 });
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
 }
 
 // ── 1. Layout integrity on iPhone 12 ────────────────────────────────────────
