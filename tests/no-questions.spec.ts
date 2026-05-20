@@ -84,8 +84,7 @@ test('Shows empty state when no questions are available', async ({ page }) => {
   await page.fill('input[type="password"]', 'Cmiciquru5');
   await page.click('button');
 
-  await page.waitForSelector('#logout-btn');
-
+  // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly
   const question = page.locator('#question');
 
   await expect(question).toHaveAttribute('data-state', /loading|empty/, { timeout: 15000 });

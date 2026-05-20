@@ -7,10 +7,9 @@ test('Login and answer question flow works', async ({ page }) => {
   await page.fill('input[type="password"]', 'Cmiciquru5');
   await page.click('button');
 
-  await page.waitForSelector('#logout-btn', { timeout: 10000 });
-
   // Wait for state machine to reach AWAITING_ANSWER (question fully loaded)
-  await page.waitForSelector('#question[data-state="ready"]');
+  // logout-btn is intentionally hidden in the mobile redesign — use the state machine as the loaded signal
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: 15000 });
 
   const questionElement = page.locator('#question');
   const firstQuestionText = await questionElement.innerText();
