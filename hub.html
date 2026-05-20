@@ -465,6 +465,63 @@
       font-style: italic;
     }
 
+    /* ── Next Goal card ─────────────────────────────── */
+
+    .next-goal-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+    }
+
+    .next-goal-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .next-goal-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .next-goal-eyebrow {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+      margin-bottom: 2px;
+    }
+
+    .next-goal-text {
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .next-goal-btn {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--accent);
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 4px 0;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .next-goal-btn:hover { text-decoration: underline; }
+
+    /* New-user: hide collection noise until the user has meaningful progress */
+    .collection-panel[data-new-user] .prestige-row { display: none; }
+    .collection-panel[data-new-user] .rarity-chips  { display: none; }
+
     /* ── Retention section: daily reward + quests ────── */
 
     .retention-section {
@@ -964,6 +1021,9 @@
 
   <!-- Teacher spotlight banner — shown only when teacher has spotlighted this student -->
   <div id="spotlightBanner" hidden aria-live="polite" aria-label="Lærer-fremhævelse"></div>
+
+  <!-- Next Goal card — lightweight, client-side progress hint -->
+  <div id="nextGoalCard" hidden aria-live="polite"></div>
 
   <!-- Bottom: navigation + collection -->
   <div class="hub-bottom">
@@ -1848,6 +1908,137 @@
     }
   }
 
+  // ── Next Goal ─────────────────────────────────────────────────────────────────
+
+  function unitFor(id, remaining) {
+    if (id.startsWith("correct"))    return remaining === 1 ? "korrekt svar mere"  : "korrekte svar mere";
+    if (id.startsWith("streak"))     return remaining === 1 ? "dag mere"           : "dage mere";
+    if (id === "first_purchase" || id === "collector_5") return remaining === 1 ? "item mere" : "items mere";
+    if (id === "themes_3")           return remaining === 1 ? "tema mere"          : "temaer mere";
+    if (id === "level_10")           return remaining === 1 ? "niveau mere"        : "niveauer mere";
+    return "mere";
+  }
+
+  function computeNextGoal() {
+    const { level, xpIntoLevel, xpRequiredForLevel, progress } = getXPProgressInLevel(xp);
+
+    const TRACKABLE = [
+      { id: "first_correct",  label: "Første svar",  icon: "✓",  target: 1,    current: correctCount,     href: "index.html"  },
+      { id: "correct_10",     label: "10 svar",       icon: "◎",  target: 10,   current: correctCount,     href: "index.html"  },
+      { id: "correct_100",    label: "100 svar",      icon: "★",  target: 100,  current: correctCount,     href: "index.html"  },
+      { id: "correct_1000",   label: "1000 svar",     icon: "🏆", target: 1000, current: correctCount,     href: "index.html"  },
+      { id: "first_purchase", label: "Første køb",    icon: "🛒", target: 1,    current: ownedItemsCount,  href: "shop.html"   },
+      { id: "collector_5",    label: "5 items",        icon: "💎", target: 5,    current: ownedItemsCount,  href: "shop.html"   },
+      { id: "themes_3",       label: "3 temaer",       icon: "🎨", target: 3,    current: ownedThemesCount, href: "themes.html" },
+      { id: "streak_7",       label: "7 dage streak",  icon: "🔥", target: 7,    current: currentStreak,    href: null          },
+      { id: "streak_30",      label: "30 dage streak", icon: "⚡", target: 30,   current: currentStreak,    href: null          },
+      { id: "level_10",       label: "Niveau 10",      icon: "▲",  target: 10,   current: level,            href: "index.html"  },
+    ];
+
+    const HREF_LABEL = { "index.html": "Spil →", "shop.html": "Butik →", "themes.html": "Temaer →" };
+
+    // Achievement nearest to completion (at least 30% progress, not yet earned)
+    const achCandidates = TRACKABLE
+      .filter(t => !earnedAchievementIds.has(t.id) && t.current > 0 && t.current < t.target)
+      .map(t => ({ ...t, pct: t.current / t.target, remaining: t.target - t.current }))
+      .sort((a, b) => b.pct - a.pct);
+
+    if (achCandidates.length > 0 && achCandidates[0].pct >= 0.3) {
+      const c = achCandidates[0];
+      return {
+        icon: c.icon,
+        text: c.remaining + " " + unitFor(c.id, c.remaining) + " for at opnå: " + c.label,
+        href: c.href,
+        btnLabel: c.href ? (HREF_LABEL[c.href] ?? "Gå →") : null,
+      };
+    }
+
+    // XP close to leveling up
+    if (progress >= 0.65) {
+      const needed = xpRequiredForLevel - xpIntoLevel;
+      return {
+        icon: "▲",
+        text: needed + " XP mere til niveau " + (level + 1),
+        href: "index.html",
+        btnLabel: "Spil →",
+      };
+    }
+
+    // Daily quest nearly done
+    const quests = questsResult.data ?? [];
+    const qProgressMap = {};
+    for (const row of (questProgressResult.data ?? [])) qProgressMap[row.quest_id] = row;
+    const nearDoneQuest = quests
+      .map(q => {
+        const p = qProgressMap[q.id] ?? { progress: 0, completed: false };
+        const pct = q.target > 0 ? Math.min(1, p.progress / q.target) : 0;
+        return { ...q, completed: !!p.completed, pct };
+      })
+      .filter(q => !q.completed && q.pct >= 0.5)
+      .sort((a, b) => b.pct - a.pct)[0] ?? null;
+
+    if (nearDoneQuest) {
+      return {
+        icon: "🎯",
+        text: "Næsten færdig: " + nearDoneQuest.label,
+        href: "index.html",
+        btnLabel: "Spil →",
+      };
+    }
+
+    // New user: never answered a question
+    if (correctCount === 0) {
+      return {
+        icon: "🎮",
+        text: "Svar på dit første spørgsmål for at optjene XP og mønter",
+        href: "index.html",
+        btnLabel: "Spil →",
+      };
+    }
+
+    // Has coins but no items yet
+    if (ownedItemsCount === 0 && coins >= 30) {
+      return {
+        icon: "🛒",
+        text: "Brug dine mønter i butikken og tilpas din avatar",
+        href: "shop.html",
+        btnLabel: "Butik →",
+      };
+    }
+
+    return null;
+  }
+
+  function renderNextGoal() {
+    const cardEl = document.getElementById("nextGoalCard");
+    if (!cardEl) return;
+
+    const goal = computeNextGoal();
+    if (!goal) {
+      cardEl.hidden = true;
+      return;
+    }
+
+    const safeText = goal.text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    cardEl.innerHTML =
+      `<div class="next-goal-card">` +
+        `<div class="next-goal-icon" aria-hidden="true">${goal.icon}</div>` +
+        `<div class="next-goal-body">` +
+          `<div class="next-goal-eyebrow">Næste mål</div>` +
+          `<div class="next-goal-text">${safeText}</div>` +
+        `</div>` +
+        (goal.href && goal.btnLabel
+          ? `<button class="next-goal-btn" onclick="window.location.href='${goal.href}'">${goal.btnLabel}</button>`
+          : ""
+        ) +
+      `</div>`;
+    cardEl.hidden = false;
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   renderProfileAvatar();
@@ -1856,6 +2047,12 @@
   renderDailyRewardCard(alreadyClaimedToday);
   renderQuests();
   renderAchievements();
+  renderNextGoal();
+
+  // Suppress collection noise for brand-new users who have nothing yet
+  if (correctCount === 0 && ownedItemsCount === 0) {
+    document.getElementById("collectionPanel")?.setAttribute("data-new-user", "");
+  }
 
   // Dismiss daily reward modal
   const droDismissBtn = document.getElementById("droDismissBtn");
