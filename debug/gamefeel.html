@@ -1035,6 +1035,88 @@
       gap: 5px;
       margin-top: 10px;
     }
+
+    /* ── Next Goal demo (Row 10) ──────────────────────── */
+    .panel-nextgoal { grid-column: 1 / 4; grid-row: 10; }
+
+    /* Next-goal card — mirrors hub.html .next-goal-card exactly */
+    .demo-ng-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+    }
+    .demo-ng-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+    .demo-ng-body { flex: 1; min-width: 0; }
+    .demo-ng-eyebrow {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+      margin-bottom: 2px;
+    }
+    .demo-ng-text { font-size: 13px; color: var(--text-main); }
+    .demo-ng-btn {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--accent);
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 4px 0;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .demo-ng-btn:hover { text-decoration: underline; }
+
+    /* Grid for stacked variant demo cards */
+    .ng-demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .ng-demo-cell { display: flex; flex-direction: column; gap: 4px; }
+    .ng-demo-cell-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--dim);
+      font-family: var(--mono);
+    }
+
+    /* Hidden / "no goal" state placeholder */
+    .demo-ng-none {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-style: italic;
+    }
+
+    /* Onboarding before/after comparison */
+    .ng-onboarding-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 540px) {
+      .ng-onboarding-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1932,6 +2014,273 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- ── Row 10: Næste mål — Progression Guidance & Onboarding Clarity ──────── -->
+  <div class="panel panel-nextgoal">
+    <div class="panel-h">N&aelig;ste m&aring;l &mdash; Progression Guidance &amp; Onboarding Clarity (hub.html)</div>
+
+    <!-- ── Goal card variant gallery ─────────────────────────────────────── -->
+    <div class="quiz-row" style="margin-bottom:8px">
+      <div class="quiz-row-label">All Goal Card States &mdash; production heuristic priority order</div>
+    </div>
+
+    <div class="ng-demo-grid">
+
+      <!-- Variant 1: Brand-new user — never answered a question -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">1 &mdash; Ny bruger (0 svar, 0 items)</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🎮</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">Svar p&aring; dit f&oslash;rste sp&oslash;rgsm&aring;l for at optjene XP og m&oslash;nter</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 2: Early — answer achievement chase (common, ≥30% progress) -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">2 &mdash; Tidlig spiller (achievement &ge;30%)</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">◎</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">8 korrekte svar mere for at opn&aring;: 10 svar</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 3: Has coins but 0 items — shop nudge -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">3 &mdash; M&oslash;nter, 0 items &mdash; Butik &rarr;</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🛒</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">Brug dine m&oslash;nter i butikken og tilpas din avatar</div>
+          </div>
+          <button class="demo-ng-btn">Butik &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 4: Theme collection motivation — Temaer → CTA -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">4 &mdash; Kosmetisk motivation (temaer) &mdash; Temaer &rarr;</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🎨</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">2 temaer mere for at opn&aring;: 3 temaer</div>
+          </div>
+          <button class="demo-ng-btn">Temaer &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 5: XP ≥65% to next level -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">5 &mdash; XP t&aelig;t p&aring; niveau-op (&ge;65%)</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">▲</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">120 XP mere til niveau 8</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 6: Daily quest nearly done (≥50%) -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">6 &mdash; Dagligt m&aring;l n&aelig;sten f&aelig;rdig (&ge;50%)</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🎯</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">N&aelig;sten f&aelig;rdig: Svar 4 sp&oslash;rgsm&aring;l korrekt</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Variant 7: Streak goal — no CTA (habit, no navigation needed) -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">7 &mdash; Streak achievement &mdash; ingen CTA</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🔥</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">5 dage mere for at opn&aring;: 7 dage streak</div>
+          </div>
+          <!-- No CTA: streak is daily habit, no page to navigate to -->
+        </div>
+      </div>
+
+      <!-- Variant 8: Fully progressed — card hidden (no applicable goal) -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">8 &mdash; Avanceret spiller &mdash; intet m&aring;l (skjult)</div>
+        <div class="demo-ng-none">[ Næste mål-kortet er skjult — ingen n&aelig;rliggende m&aring;l ]</div>
+      </div>
+
+    </div>
+
+    <!-- ── Long goal text wrapping + accessibility ────────────────────── -->
+    <div class="quiz-row" style="margin-bottom:8px;margin-top:4px">
+      <div class="quiz-row-label">Long-Goal Wrapping &amp; CTA Parity &mdash; all 4 CTA variants</div>
+    </div>
+
+    <div class="ng-demo-grid">
+
+      <!-- Long text: 100-answer achievement in early stages -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">Lang tekst &mdash; ombrydning</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">★</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">83 korrekte svar mere for at opn&aring;: 100 svar — bliv ved med at spille for at komme n&aelig;rmere</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- All 4 CTA variants: Spil → -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">CTA: Spil &rarr;</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">◎</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">4 korrekte svar mere for at opn&aring;: 10 svar</div>
+          </div>
+          <button class="demo-ng-btn">Spil &rarr;</button>
+        </div>
+      </div>
+
+      <!-- CTA: Butik → -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">CTA: Butik &rarr;</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">💎</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">3 items mere for at opn&aring;: 5 items</div>
+          </div>
+          <button class="demo-ng-btn">Butik &rarr;</button>
+        </div>
+      </div>
+
+      <!-- CTA: Temaer → -->
+      <div class="ng-demo-cell">
+        <div class="ng-demo-cell-label">CTA: Temaer &rarr;</div>
+        <div class="demo-ng-card">
+          <div class="demo-ng-icon" aria-hidden="true">🎨</div>
+          <div class="demo-ng-body">
+            <div class="demo-ng-eyebrow">N&aelig;ste m&aring;l</div>
+            <div class="demo-ng-text">1 tema mere for at opn&aring;: 3 temaer</div>
+          </div>
+          <button class="demo-ng-btn">Temaer &rarr;</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Onboarding new-user collection panel: before vs. after ──────── -->
+    <div class="quiz-row" style="margin-top:6px;margin-bottom:6px">
+      <div class="quiz-row-label">Onboarding ny-bruger &mdash; Samling-panel: MED st&oslash;j (f&oslash;r) vs. UDEN st&oslash;j (efter)</div>
+    </div>
+
+    <div class="ng-onboarding-grid">
+
+      <!-- BEFORE: full collection panel with prestige + empty rarity chips (noise for day-1) -->
+      <div class="prestige-demo-panel">
+        <div class="prestige-demo-panel-title" style="color:var(--red)">
+          &#9888; UDEN ny-bruger logik &mdash; st&oslash;j for ny spiller
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Items</span>
+            <span class="demo-cat-count">0 / 20</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Temaer</span>
+            <span class="demo-cat-count">1 / 10</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:10%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Pr&aelig;stationer</span>
+            <span class="demo-cat-count">0 / 16</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Titler</span>
+            <span class="demo-cat-count">0 / 5</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <!-- Prestige row VISIBLE — pure noise at score 0 -->
+        <div class="demo-prestige-row" style="opacity:0.6">
+          <span class="demo-prestige-label">Prestige</span>
+          <span class="demo-prestige-score">0</span>
+        </div>
+        <!-- Rarity chips VISIBLE but empty — shows nothing, wastes vertical space -->
+        <div class="demo-rarity-chips" style="min-height:22px;border:1px dashed var(--border);border-radius:4px;padding:4px;">
+          <span style="font-size:9px;color:var(--dim);font-family:var(--mono);font-style:italic">ingen endnu&hellip;</span>
+        </div>
+      </div>
+
+      <!-- AFTER: new-user simplified — prestige row and rarity chips hidden -->
+      <div class="prestige-demo-panel">
+        <div class="prestige-demo-panel-title" style="color:var(--green)">
+          &#10003; MED ny-bruger logik &mdash; forenklet (data-new-user)
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Items</span>
+            <span class="demo-cat-count">0 / 20</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Temaer</span>
+            <span class="demo-cat-count">1 / 10</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:10%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Pr&aelig;stationer</span>
+            <span class="demo-cat-count">0 / 16</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <div class="demo-cat-row">
+          <div class="demo-cat-label-row">
+            <span class="demo-cat-label">Titler</span>
+            <span class="demo-cat-count">0 / 5</span>
+          </div>
+          <div class="demo-cat-track"><div class="demo-cat-fill" style="width:0%"></div></div>
+        </div>
+        <!-- Prestige row HIDDEN (display:none via data-new-user in production) -->
+        <!-- Rarity chips HIDDEN -->
+        <div style="font-size:9px;color:var(--green);font-family:var(--mono);margin-top:8px">
+          .prestige-row &rarr; display:none<br>
+          .rarity-chips &rarr; display:none
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 </div>
