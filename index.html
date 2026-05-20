@@ -5,203 +5,338 @@
   <script>
   (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
   </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DEN SEJE APP</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/theme.css">
-  <meta charset="UTF-8">
-  <title>DEN SEJE APP</title>
 
   <style>
+    /* ── Reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Arial;
-      padding: 20px;
+      font-family: Arial, sans-serif;
       background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Game shell — single centered column ─────────────────── */
+    .game-shell {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 16px 64px;
+    }
+
+    /* ── Topbar: back + coins ─────────────────────────────────── */
+    .game-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 10px;
+      flex-shrink: 0;
+    }
+
+    .topbar-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .topbar-back:hover {
+      background: var(--btn-bg-hover);
       color: var(--text-main);
     }
 
-    #menu-btn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      cursor: pointer;
-    }
-
-    #logout-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      color: var(--text-bright);
-    }
-
-    .top-bar {
-      display: flex;
-      gap: 30px;
+    .topbar-coins {
+      display: inline-flex;
       align-items: center;
-      margin-bottom: 20px;
+      gap: 5px;
+      padding: 6px 13px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--coin);
+    }
+
+    /* ── Identity strip: avatar + level + XP ─────────────────── */
+    .game-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    /* Small avatar — identity-supportive, not layout-defining */
+    #avatar-display {
+      position: relative;
+      width: 52px;
+      height: 78px;
+      border-radius: 8px;
+      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      border: 1.5px solid var(--border);
+      overflow: visible;
+      flex-shrink: 0;
+    }
+
+    .quiz-avatar-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Level + XP section */
+    .identity-progress {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .identity-level-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .identity-level {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .identity-level b {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-bright);
+      line-height: 1;
+    }
+
+    .identity-xp-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
     }
 
     #xp-bar-container {
-      flex: 1;
-      height: 20px;
+      height: 8px;
       background: var(--xp-track);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     #xp-bar {
       height: 100%;
       background: var(--success);
+      border-radius: 4px;
       width: 0%;
       transition: width 350ms ease;
     }
 
-    .game-container {
-      display: flex;
-      gap: 24px;
-      align-items: flex-start;
-    }
-
-    /* ── Quiz avatar ─────────────────────────────────────────── */
-
-    .avatar-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
+    /* ── Question card — the visual focal point ──────────────── */
+    .game-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 16px;
+      padding: 24px 20px 20px;
+      margin-bottom: 12px;
       flex-shrink: 0;
     }
 
-    #avatar-display {
-      position: relative;
-      width: 160px;
-      height: 240px;
-      border-radius: 12px;
-      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
-      border: 2px solid var(--border);
-      overflow: visible;
-    }
-
-    .quiz-avatar-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
-
-    .avatar-link {
-      font-size: 11px;
-      color: var(--link);
-      text-decoration: none;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
-
-    .avatar-link:hover { color: var(--link-hover); }
-
-    /* ── Question area ───────────────────────────────────────── */
-
-    .question-box {
-      flex: 1;
-      padding: 15px;
-      border-radius: 10px;
-      transition: all 0.2s ease;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-    }
-
     #question {
-      font-size: 22px;
-      margin-bottom: 15px;
+      font-size: 20px;
+      line-height: 1.55;
       color: var(--text-bright);
+      min-height: 60px;
     }
 
-    .answer-row {
+    #question[data-state="loading"] {
+      opacity: 0.45;
+      animation: questionPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes questionPulse {
+      0%, 100% { opacity: 0.35; }
+      50%       { opacity: 0.55; }
+    }
+
+    #question[data-state="empty"] {
+      color: var(--text-muted);
+      font-size: 17px;
+      text-align: center;
+      padding: 8px 0 12px;
+      min-height: 0;
+    }
+
+    #question[data-state="error"] {
+      color: var(--error-bright);
+      font-size: 15px;
+      min-height: 0;
+    }
+
+    #feedback {
+      margin-top: 14px;
+      font-size: 14px;
+      font-weight: bold;
+      min-height: 20px;
+      line-height: 1.4;
+      transition: color 150ms ease;
+    }
+
+    .feedback-correct { color: var(--success-text); }
+    .feedback-error   { color: var(--error-bright); }
+    .feedback-pending { color: var(--coin); }
+
+    #review-feedback {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ── Answer area ─────────────────────────────────────────── */
+    .answer-area {
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
-    .answer-row input,
-    .answer-row textarea {
-      flex: 1;
-      padding: 10px;
-      background: var(--bg-card);
-      color: var(--text-main);
-      border: 1px solid var(--border-btn);
-      border-radius: 6px;
-    }
-
-    .answer-row button {
-      padding: 10px 20px;
-      cursor: pointer;
-      background: var(--btn-bg);
-      color: var(--text-dim);
-      border: 1px solid var(--border-btn);
-      border-radius: 6px;
-      font-family: inherit;
-    }
-
+    /* MC option buttons */
     #options button {
-      display: block;
+      display: flex;
+      align-items: center;
       width: 100%;
-      margin-top: 8px;
-      padding: 10px;
+      min-height: 52px;
+      padding: 14px 18px;
+      margin: 0;
       background: var(--btn-bg);
       color: var(--text-dim);
-      border: 1px solid var(--border-btn);
-      border-radius: 6px;
+      border: 1.5px solid var(--border-btn);
+      border-radius: 12px;
       cursor: pointer;
       font-family: inherit;
+      font-size: 16px;
       text-align: left;
+      line-height: 1.3;
+      transition: background 0.1s, color 0.1s, border-color 0.1s, transform 0.08s;
     }
 
-    #options button:hover {
+    #options button:hover:not(:disabled) {
       background: var(--btn-bg-hover);
       color: var(--text-main);
+      border-color: var(--border);
+    }
+
+    #options button:active:not(:disabled) {
+      transform: scale(0.98);
     }
 
     #options button:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
+    /* Primary submit button (text / number answer types) */
+    #options button.submit-btn {
+      justify-content: center;
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+      font-weight: bold;
+    }
+
+    #options button.submit-btn:hover:not(:disabled) {
+      opacity: 0.88;
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* Text / number inputs */
+    #options input[type="text"],
+    #options textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-btn);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 16px;
+      line-height: 1.4;
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    #options input[type="text"]:focus,
+    #options textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.18);
+    }
+
+    /* ── Answer flash animations ─────────────────────────────── */
     .correct-flash {
       background: var(--correct-bg) !important;
       border-color: var(--success) !important;
+      color: var(--success-text) !important;
       animation: pop 0.25s ease;
     }
 
     .incorrect-flash {
       background: var(--error-bg) !important;
       border-color: var(--error) !important;
+      color: var(--error-bright) !important;
       animation: shake 0.25s ease;
     }
 
     @keyframes pop {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.03); }
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.025); }
       100% { transform: scale(1); }
     }
 
     @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-5px); }
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(-5px); }
+      50%  { transform: translateX(5px); }
+      75%  { transform: translateX(-5px); }
       100% { transform: translateX(0); }
     }
 
-    /* XP POPUP */
+    /* ── XP / coin popup ─────────────────────────────────────── */
     #xp-popup {
       position: fixed;
       top: 40%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0.5);
-      font-size: 40px;
+      font-size: 36px;
       font-weight: bold;
       color: var(--coin);
       opacity: 0;
@@ -209,26 +344,15 @@
       z-index: 999;
     }
 
-    .xp-show {
-      animation: xpPop 0.8s ease forwards;
-    }
+    .xp-show { animation: xpPop 0.8s ease forwards; }
 
     @keyframes xpPop {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
-      }
-      50% {
-        opacity: 1;
-        transform: translate(-50%, -60%) scale(1.2);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -80%) scale(1);
-      }
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      50%  { opacity: 1; transform: translate(-50%, -60%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
     }
 
-    /* LEVEL UP OVERLAY */
+    /* ── Level-up overlay ────────────────────────────────────── */
     #level-up-overlay {
       display: none;
       position: fixed;
@@ -243,97 +367,98 @@
       transition: opacity 250ms ease;
     }
 
-    #level-up-overlay .level-up-title {
+    .level-up-title {
       font-size: 48px;
       font-weight: bold;
       text-shadow: 0 0 20px var(--coin);
       margin-bottom: 10px;
     }
 
-    #level-up-overlay .level-up-subtitle {
+    .level-up-subtitle {
       font-size: 24px;
       color: var(--text-bright);
     }
 
-    #feedback {
-      transition: color 150ms ease;
+    /* ── Reduced motion ──────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      #xp-bar { transition: none; }
+      .correct-flash,
+      .incorrect-flash,
+      #question[data-state="loading"] { animation: none; }
     }
 
-    .feedback-correct { color: var(--success-text); }
-    .feedback-error   { color: var(--error-bright); }
-    .feedback-pending { color: var(--coin); }
-
-    /* Responsive: narrow screens stack avatar above question */
-    @media (max-width: 520px) {
-      .game-container {
-        flex-direction: column;
-        align-items: center;
-      }
-      #avatar-display {
-        width: 120px;
-        height: 180px;
-      }
+    /* ── Desktop: slightly more breathing room ───────────────── */
+    @media (min-width: 600px) {
+      .game-shell { padding: 0 0 64px; }
+      .game-card  { padding: 28px 24px 22px; }
     }
   </style>
 </head>
 
 <body>
 
-  <button id="menu-btn">☰ Menu</button>
-  <button id="logout-btn">Log ud</button>
+<div class="game-shell">
 
-  <h1>DEN SEJE APP</h1>
-
-  <div class="top-bar">
-    <span>Level: <b id="level">1</b></span>
-    <span>XP: <b id="xp">0</b></span>
-
-    <div id="xp-bar-container">
-      <div id="xp-bar"></div>
-    </div>
-
-    <span>Mønter: <b id="coins">0</b></span>
+  <!-- Topbar: navigation + live coin count -->
+  <div class="game-topbar">
+    <button class="topbar-back" id="menu-btn">&#8592; Hub</button>
+    <div class="topbar-coins">&#x1FA99; <span id="coins">&#8212;</span></div>
   </div>
 
-  <div class="game-container">
-
-    <div class="avatar-box">
-      <div id="avatar-display"></div>
-      <a href="avatar.html" class="avatar-link">&#128084; Skift udseende</a>
+  <!-- Identity strip: compact avatar + level + XP bar -->
+  <div class="game-identity">
+    <div id="avatar-display"></div>
+    <div class="identity-progress">
+      <div class="identity-level-row">
+        <span class="identity-level">Niveau <b id="level">&#8212;</b></span>
+        <span class="identity-xp-label"><span id="xp">&#8212;</span> XP</span>
+      </div>
+      <div id="xp-bar-container"
+           role="progressbar" aria-valuenow="0" aria-valuemax="100"
+           aria-label="XP fremskridt">
+        <div id="xp-bar"></div>
+      </div>
     </div>
-
-    <div class="question-box">
-      <div id="question">Indlæser...</div>
-      <div id="feedback"></div>
-      <div id="options"></div>
-      <div id="review-feedback"></div>
-    </div>
-
   </div>
 
-  <!-- 🔥 XP POPUP -->
-  <div id="xp-popup"></div>
-
-  <!-- 🔥 LEVEL UP OVERLAY -->
-  <div id="level-up-overlay">
-    <div class="level-up-title">LEVEL UP! 🎉</div>
-    <div class="level-up-subtitle" id="level-up-text"></div>
+  <!-- Question card: the visual and interaction focal point -->
+  <div class="game-card">
+    <div id="question">Indl&#230;ser&hellip;</div>
+    <div id="feedback"></div>
+    <div id="review-feedback"></div>
   </div>
 
-  <script type="module">
-    document.getElementById("menu-btn").onclick = () => {
-      window.location.href = "hub.html";
-    };
-  </script>
+  <!-- Answer area: MC buttons or text/number input + submit -->
+  <div id="options" class="answer-area"></div>
 
-  <!-- Load active theme from server (non-blocking, falls back to cached/default) -->
-  <script type="module">
-    import { loadTheme } from "./js/themeManager.js";
-    loadTheme().catch(() => {});
-  </script>
+</div>
 
-  <script type="module" src="supabaseClient.js"></script>
-  <script type="module" src="app.js"></script>
+<!-- XP / coin earned popup -->
+<div id="xp-popup"></div>
+
+<!-- Level-up fullscreen overlay -->
+<div id="level-up-overlay">
+  <div class="level-up-title">LEVEL UP! &#127881;</div>
+  <div class="level-up-subtitle" id="level-up-text"></div>
+</div>
+
+<!-- Logout button — hidden visually, wired by app.js -->
+<button id="logout-btn" style="display:none" aria-hidden="true"></button>
+
+<script type="module">
+  document.getElementById("menu-btn").onclick = () => {
+    window.location.href = "hub.html";
+  };
+</script>
+
+<!-- Load active theme from server (non-blocking, falls back to cached/default) -->
+<script type="module">
+  import { loadTheme } from "./js/themeManager.js";
+  loadTheme().catch(() => {});
+</script>
+
+<script type="module" src="supabaseClient.js"></script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>

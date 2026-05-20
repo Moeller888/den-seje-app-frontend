@@ -418,6 +418,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const textarea = document.createElement("textarea");
 
       const btn = document.createElement("button");
+      btn.className = "submit-btn";
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
@@ -445,6 +446,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.type = "text";
 
       const btn = document.createElement("button");
+      btn.className = "submit-btn";
       btn.textContent = "Svar";
 
       btn.onclick = () => {
@@ -467,6 +469,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const textarea = document.createElement("textarea");
 
       const btn = document.createElement("button");
+      btn.className = "submit-btn";
       btn.textContent = "Send svar";
 
       btn.onclick = () => {
