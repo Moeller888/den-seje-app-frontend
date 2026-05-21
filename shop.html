@@ -109,8 +109,8 @@
 
     .shop-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+      gap: 16px;
     }
 
     /* ── Shop card ───────────────────────────────────────── */
@@ -120,7 +120,7 @@
       background: var(--bg-card);
       border: 2px solid var(--border);
       border-radius: 12px;
-      padding: 12px;
+      padding: 14px 12px 12px;
       text-align: center;
       transition: transform 0.14s ease, box-shadow 0.14s ease;
       /* data-slot-type, data-rarity, data-item-id set in JS (F5) */
@@ -179,10 +179,10 @@
     .shop-preview {
       position: relative;
       width: 100px;
-      height: 150px;
-      margin: 0 auto 10px;
+      height: 164px;
+      margin: 0 auto 12px;
       border-radius: 8px;
-      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      background: radial-gradient(ellipse at 50% 30%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
       overflow: visible;
       transition: transform 0.14s ease;
     }
@@ -194,14 +194,14 @@
     /* Legendary: slightly larger preview for premium feel */
     .shop-card[data-rarity="legendary"] .shop-preview {
       width: 112px;
-      height: 168px;
+      height: 184px;
     }
 
-    /* Each layer: absolute, fills preview, same object-fit as avatar.html */
+    /* Each layer: inset ~7% horizontally, 4% vertically — breathing room without changing SVG assets */
     .preview-layer {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 4%; left: 7%;
+      width: 86%; height: 92%;
       object-fit: contain;
       pointer-events: none;
     }
