@@ -5,23 +5,19 @@
       <stop offset="40%" stop-color="#0d1b4d"/>
       <stop offset="100%" stop-color="#0a0e2e"/>
     </linearGradient>
-    <linearGradient id="gx-nebula" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6a1b9a" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#1565c0" stop-opacity="0.35"/>
-    </linearGradient>
   </defs>
 
-  <!-- ═══ LEFT SHOULDER MANTLE — visible above + outside arm ═══ -->
+  <!-- LEFT SHOULDER MANTLE — drapes from collar over left arm -->
   <path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z"
         fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
-  <!-- Stars on mantle visible zone (x=2–40, y=88–104) -->
+  <!-- Stars on left mantle (always-visible zone) -->
   <circle cx="16" cy="100" r="1.5" fill="white" opacity="0.9"/>
   <circle cx="8"  cy="114" r="1"   fill="white" opacity="0.85"/>
   <circle cx="22" cy="120" r="1.2" fill="white" opacity="0.8"/>
   <circle cx="32" cy="94"  r="1"   fill="white" opacity="0.9"/>
   <circle cx="10" cy="124" r="0.8" fill="white" opacity="0.75"/>
 
-  <!-- ═══ RIGHT SHOULDER MANTLE ═══ -->
+  <!-- RIGHT SHOULDER MANTLE -->
   <path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z"
         fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
   <!-- Stars on right mantle -->
@@ -31,47 +27,10 @@
   <circle cx="128" cy="94"  r="1"   fill="white" opacity="0.9"/>
   <circle cx="150" cy="124" r="0.8" fill="white" opacity="0.75"/>
 
-  <!-- ═══ LEFT SIDE PANEL — x=2–14, always visible ═══ -->
-  <path d="M 2 98 L 2 228 Q 6 238 14 236 L 14 126 L 2 130 Z" fill="url(#gx-main)"/>
-  <!-- Stars on left panel -->
-  <circle cx="7"  cy="140" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="10" cy="164" r="1"   fill="white" opacity="0.75"/>
-  <circle cx="6"  cy="190" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="9"  cy="212" r="1"   fill="white" opacity="0.8"/>
-  <!-- Gold left edge -->
-  <line x1="2" y1="98" x2="2" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- ═══ RIGHT SIDE PANEL — x=146–158, always visible ═══ -->
-  <path d="M 158 98 L 158 228 Q 154 238 146 236 L 146 126 L 158 130 Z" fill="url(#gx-main)"/>
-  <!-- Stars on right panel -->
-  <circle cx="153" cy="140" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="150" cy="164" r="1"   fill="white" opacity="0.75"/>
-  <circle cx="154" cy="190" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="151" cy="212" r="1"   fill="white" opacity="0.8"/>
-  <!-- Gold right edge -->
-  <line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- ═══ LOWER SKIRT — y=175+, bridges arm-end gap and covers below body ═══ -->
-  <path d="M 2 175 L 2 228 Q 80 248 158 228 L 158 175 Z" fill="url(#gx-main)"/>
-  <!-- Nebula in skirt -->
-  <ellipse cx="80" cy="224" rx="58" ry="12" fill="url(#gx-nebula)"/>
-  <!-- Stars in skirt -->
-  <circle cx="18"  cy="214" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="48"  cy="220" r="1"   fill="white" opacity="0.8"/>
-  <circle cx="80"  cy="211" r="2"   fill="white" opacity="0.95"/>
-  <circle cx="112" cy="219" r="1"   fill="white" opacity="0.8"/>
-  <circle cx="142" cy="213" r="1.5" fill="white" opacity="0.9"/>
-  <!-- Star sparkle -->
-  <path d="M 80 211 L 81.5 208 L 83 211 L 80 212.5 Z" fill="white" opacity="0.6"/>
-  <path d="M 80 211 L 78.5 208 L 77 211 L 80 212.5 Z" fill="white" opacity="0.6"/>
-  <!-- Gold hem -->
-  <path d="M 2 228 Q 80 248 158 228" fill="none" stroke="#ffd700" stroke-width="2"/>
-
-  <!-- ═══ COLLAR — visible flanking neck at y=84–96 ═══ -->
+  <!-- COLLAR — arc flanking neck, visible y=84–96 -->
   <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#2a0a4a"/>
-  <!-- Gold collar edge -->
   <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
-  <!-- Stars on collar wings (visible x=46–72 left, x=88–114 right) -->
+  <!-- Stars on collar wings -->
   <circle cx="56"  cy="86" r="1" fill="white" opacity="0.75"/>
   <circle cx="104" cy="86" r="1" fill="white" opacity="0.75"/>
   <!-- Clasp -->

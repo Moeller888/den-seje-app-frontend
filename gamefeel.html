@@ -137,7 +137,7 @@
 
 <!-- ── Section 0: Back-item composition strategy ──────────── -->
 <div class="section">
-  <div class="section-title">0 · Kompositionsstrategi — krop kohærent, back-items redesignet til at frame kroppen</div>
+  <div class="section-title">0 · Kompositionsstrategi — skulder-mantel som subtil draperingskosmetik, ikke geometrisk ramme</div>
   <div class="ba-grid" id="beforeAfterGrid"></div>
 </div>
 
@@ -183,9 +183,14 @@ const BASE = BASE_SRC;
 const SEPARATED_BODY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><circle cx="80" cy="50" r="30" fill="#F4C89C"/><circle cx="50" cy="52" r="8" fill="#F4C89C"/><circle cx="110" cy="52" r="8" fill="#F4C89C"/><rect x="72" y="78" width="16" height="16" fill="#F4C89C"/><rect x="48" y="94" width="64" height="84" rx="10" fill="#e0e0e0"/><rect x="10" y="102" width="20" height="62" rx="10" fill="#e0e0e0"/><rect x="130" y="102" width="20" height="62" rx="10" fill="#e0e0e0"/><circle cx="20" cy="168" r="8" fill="#F4C89C"/><circle cx="140" cy="168" r="8" fill="#F4C89C"/><rect x="52" y="176" width="24" height="54" rx="10" fill="#9e9e9e"/><rect x="84" y="176" width="24" height="54" rx="10" fill="#9e9e9e"/><ellipse cx="64" cy="231" rx="14" ry="6" fill="#616161"/><ellipse cx="96" cy="231" rx="14" ry="6" fill="#616161"/><circle cx="68" cy="46" r="5" fill="#333"/><circle cx="92" cy="46" r="5" fill="#333"/><circle cx="70" cy="44" r="2" fill="white"/><circle cx="94" cy="44" r="2" fill="white"/><ellipse cx="80" cy="56" rx="3" ry="2" fill="#e0a070"/><path d="M 70 64 Q 80 72 90 64" stroke="#c47a50" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M 64 94 L 80 108 L 96 94" fill="#d0d0d0" stroke="#bbb" stroke-width="1"/></svg>`;
 const SEPARATED_BASE = 'data:image/svg+xml,' + encodeURIComponent(SEPARATED_BODY_SVG);
 
-// Old rectangle-style cape — for comparison with new shoulder-mantle design
+// Old rectangle-style cape — the original full-rectangle design
 const OLD_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><path d="M 4 95 L 4 230 Q 80 252 156 230 L 156 95 Z" fill="#d32f2f" opacity="0.95"/><path d="M 80 95 L 74 231 Q 80 247 86 231 L 80 95 Z" fill="#7f0000" opacity="0.18"/><path d="M 4 95 Q 36 110 80 106 Q 34 95 4 95 Z" fill="#b71c1c"/><path d="M 156 95 Q 124 110 80 106 Q 126 95 156 95 Z" fill="#b71c1c"/><circle cx="80" cy="101" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="101" r="3" fill="#ff8f00"/></svg>`;
 const OLD_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OLD_CAPE_SVG);
+
+// Overbuilt frame-style cape — intermediate stage (mantle + side panels + skirt)
+// This is what the cape looked like BEFORE the simplification: avatar trapped inside a frame
+const OVERBUILT_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cr-ob" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d32f2f"/><stop offset="100%" stop-color="#b71c1c"/></linearGradient></defs><path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 40 92 Q 26 90 6 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 120 92 Q 134 90 154 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 2 98 L 2 228 Q 6 238 14 236 L 14 126 L 2 130 Z" fill="#c62828"/><line x1="2" y1="98" x2="2" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><path d="M 158 98 L 158 228 Q 154 238 146 236 L 146 126 L 158 130 Z" fill="#c62828"/><line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><path d="M 2 175 L 2 228 Q 80 248 158 228 L 158 175 Z" fill="#9a0007"/><path d="M 2 228 Q 80 248 158 228" fill="none" stroke="#ffd700" stroke-width="2"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
+const OVERBUILT_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OVERBUILT_CAPE_SVG);
 
 // All known item image paths (static list for sandbox)
 const ITEMS = [
@@ -253,29 +258,39 @@ const baPairs = [
     note: "At adskille arme fra torso giver bedre ryg-synlighed men ødelægger karakter-læsbarhed. Krop er genoprettet.",
   },
   {
-    title: "Rød Kappe — rektangel (fejl) vs. ramme-komposition (korrekt)",
+    title: "Rød Kappe — kappe-ramme (fejl) vs. skulder-mantel (korrekt)",
     beforeBase: BASE,
     beforeItems: [],
-    beforeItemUrls: [{ url: OLD_CAPE, slot: "back" }],
-    beforeLabel: "Én stor rektangel — alt skjult",
+    beforeItemUrls: [{ url: OVERBUILT_CAPE, slot: "back" }],
+    beforeLabel: "Sidepaneler + nederdel — avatar indrammet",
     afterBase: BASE,
     afterItems: ["cape-red"],
-    afterLabel: "Skulder-kappe + sidepaneler + nederdel",
-    note: "Ny kappe: krave-vinger synlige ved nakke (y=84–92), skulder-mantel synlig over arm, sidepaneler x=2–14 altid synlige, nederdel y=200+ fuldt synlig.",
+    afterLabel: "Kun skulder-mantel + krave — subtil og integreret",
+    note: "Sidepaneler (x=2–14, guld-kant til y=228) og nederdelen (y=175–228) skaber et geometrisk ramme-look. Kappen INDEHOLDER avataren fremfor at PYNTE den. Skulder-mantel alene er subtil, bærbar og premium.",
   },
   {
-    title: "Galakse-kappe — ramme-komposition",
+    title: "Galakse-kappe — simpel skulder-mantel med stjerner",
     beforeBase: BASE,
     beforeItems: [],
     beforeItemUrls: [{ url: OLD_CAPE, slot: "back" }],
     beforeLabel: "Gammel rektangel-stil",
     afterBase: BASE,
     afterItems: ["galaxy-cape"],
-    afterLabel: "Skulder-mantel + stjerner + guld-kant",
-    note: "Stjerner og guld-kant er koncentreret i de altid-synlige zoner: skulder-mantler, sidepaneler, nederdel.",
+    afterLabel: "Skulder-mantel + stjerner — fokuseret synlig zone",
+    note: "Stjerner koncentreret i de altid-synlige mantler. Ingen nederdel eller sidepaneler. Galaksen eksisterer præcis hvor man kan se den.",
   },
   {
-    title: "Dragevinger — skulder over kroppen",
+    title: "Skulder-mantel fokus — HVAD gør mantlen god?",
+    beforeBase: BASE,
+    beforeItems: ["cape-red"],
+    beforeLabel: "Rød kappe — skulder-mantel",
+    afterBase: BASE,
+    afterItems: ["galaxy-cape"],
+    afterLabel: "Galakse-kappe — skulder-mantel + stjerner",
+    note: "Mantlen er god fordi: (1) den starter ved kragen og følger skulderens naturlige linje, (2) den er synlig OVER armen, ikke bag den, (3) den tapper af naturligt — ingen hård kant. Klingen er stor nok til at læse, lille nok til ikke at dominere.",
+  },
+  {
+    title: "Dragevinger — original krop virker",
     beforeBase: SEPARATED_BASE,
     beforeItems: ["wings-dragon"],
     beforeLabel: "Adskilt krop (18px gap)",
@@ -295,14 +310,15 @@ const baPairs = [
     note: "Ridderdragt (z=2) lægger sig foran kroppen. Vinge-spidser og yderkanter forbliver synlige bag rustning.",
   },
   {
-    title: "Fuld loadout — alle lag korrekte",
+    title: "Fuld loadout — kappe støtter, dominerer ikke",
     beforeBase: BASE,
-    beforeItems: ["cape-red"],
-    beforeLabel: "Kun kappe",
+    beforeItems: [],
+    beforeItemUrls: [{ url: OVERBUILT_CAPE, slot: "back" }],
+    beforeLabel: "Overbuilt kappe — rammen dominerer",
     afterBase: BASE,
     afterItems: ["galaxy-cape", "armor-knight", "crown-golden", "panda-mask"],
-    afterLabel: "Fuld loadout",
-    note: "Galakse-kappens krave, skulder-mantler og sidepaneler er synlige bag rustning og maske. Krone sidder øverst.",
+    afterLabel: "Simpel kappe + fuld loadout — alle detaljer synlige",
+    note: "Med overbuilt kappe: de tunge sidepaneler og nederdel konkurrerer med rustning og krone. Med simpel kappe: galaksens skulder-mantel sætter kontekst, rustning og krone dominerer korrekt.",
   },
 ];
 
