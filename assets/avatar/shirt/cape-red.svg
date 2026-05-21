@@ -1,23 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
-    <linearGradient id="cr-tail" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#9a0007"/>
-      <stop offset="100%" stop-color="#6d0000"/>
+    <linearGradient id="cr-cloth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7a0000"/>
+      <stop offset="100%" stop-color="#4a0000"/>
     </linearGradient>
   </defs>
 
-  <!-- ═══ LOWER EMERGENCE — cape reappears beside legs after flowing behind body ═══ -->
-  <!-- Left tail — outside left leg (x=48), y=178–236 -->
-  <path d="M 48 178 Q 46 210 46 234 L 30 236 Q 28 208 30 178 Z"
-        fill="url(#cr-tail)"/>
-  <!-- Right tail — outside right leg (x=112), y=178–236 -->
-  <path d="M 112 178 Q 114 210 114 234 L 130 236 Q 132 208 130 178 Z"
-        fill="url(#cr-tail)"/>
-  <!-- Hem arc — cape bottom connecting the two tails -->
-  <path d="M 30 236 Q 80 239 130 236"
-        fill="none" stroke="#b71c1c" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <!-- ═══ CONTINUOUS BACK CLOTH ═══
+       One unified shape. Body (z=0) sits on top and occludes naturally.
+       Visible zones: collar wings (y=76–96), 4px arm edges (y=100–166),
+       beside legs (y=166–234), hem (y=234+). -->
+  <path d="M 46 90 L 10 100 L 10 236 Q 80 239 150 236 L 150 100 L 114 90 Q 80 82 46 90 Z"
+        fill="url(#cr-cloth)"/>
 
-  <!-- ═══ COLLAR — dark attachment at neck, visible y=76–96 ═══ -->
+  <!-- ═══ COLLAR — brighter overlay on the cloth, visible in neck gap zones ═══ -->
   <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/>
   <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
   <!-- Clasp -->

@@ -137,7 +137,7 @@
 
 <!-- ── Section 0: Back-item composition strategy ──────────── -->
 <div class="section">
-  <div class="section-title">0 · Kompositionsstrategi — unified flow: krave øverst → bag krop → haler ved ben</div>
+  <div class="section-title">0 · Kompositionsstrategi — ét kontinuerligt klæde bag avataren, naturlig okklusering af krop (z=0)</div>
   <div class="ba-grid" id="beforeAfterGrid"></div>
 </div>
 
@@ -196,6 +196,11 @@ const OVERBUILT_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OVERBUILT_CAPE
 // Felt like armor/wing panels flaring out at the sides rather than a flowing garment
 const SHOULDER_FLAP_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 40 92 Q 26 90 6 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 120 92 Q 134 90 154 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
 const SHOULDER_FLAP_CAPE = 'data:image/svg+xml,' + encodeURIComponent(SHOULDER_FLAP_CAPE_SVG);
+
+// Fragment cape — previous stage: separate disconnected tails (left tail + right tail)
+// The eye read these as two separate cape pieces, not one continuous garment
+const FRAGMENT_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cr-frag" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#9a0007"/><stop offset="100%" stop-color="#6d0000"/></linearGradient></defs><path d="M 48 178 Q 46 210 46 234 L 30 236 Q 28 208 30 178 Z" fill="url(#cr-frag)"/><path d="M 112 178 Q 114 210 114 234 L 130 236 Q 132 208 130 178 Z" fill="url(#cr-frag)"/><path d="M 30 236 Q 80 239 130 236" fill="none" stroke="#b71c1c" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
+const FRAGMENT_CAPE = 'data:image/svg+xml,' + encodeURIComponent(FRAGMENT_CAPE_SVG);
 
 // All known item image paths (static list for sandbox)
 const ITEMS = [
@@ -263,37 +268,37 @@ const baPairs = [
     note: "At adskille arme fra torso giver bedre ryg-synlighed men ødelægger karakter-læsbarhed. Krop er genoprettet.",
   },
   {
-    title: "Rød Kappe — skulder-vinge (fejl) vs. samlet flyde-kappe (korrekt)",
+    title: "Rød Kappe — fragmenterede haler (fejl) vs. kontinuerligt klæde (korrekt)",
     beforeBase: BASE,
     beforeItems: [],
-    beforeItemUrls: [{ url: SHOULDER_FLAP_CAPE, slot: "back" }],
-    beforeLabel: "Skulder-vinge — lysrøde paneler ved arme",
+    beforeItemUrls: [{ url: FRAGMENT_CAPE, slot: "back" }],
+    beforeLabel: "Fragmenter: to separate haler + løst krave",
     afterBase: BASE,
     afterItems: ["cape-red"],
-    afterLabel: "Unified flow — krave + kappehale ved ben",
-    note: "Skulder-vingerne (d32f2f) flarer udad og læses som rustningsvinger eller paneler — ikke stof. Den nye kappe har én mørk krave og genoptræder naturligt som haler ved benene. Kappen flyder BAG kroppen og viser sig igen nedenfor.",
+    afterLabel: "Ét kontinuerligt klæde — kroppen okkluderer naturligt",
+    note: "Fragmenterne (venstre hale + højre hale) læses som to separate objekter. Det kontinuerlige klæde M 46 90 L 10 100 ... 150 236 er ÉN form bag hele avataren. Kroppen (z=0) sidder ovenpå og okkluderer naturligt. Hjernen læser: 'ét stykke stof bag kroppen.'",
   },
   {
-    title: "Galakse-kappe — skulder-vinge vs. krave + nedre hale med stjerner",
+    title: "Galakse-kappe — kontinuerligt klæde med stjernebælte langs kanterne",
     beforeBase: BASE,
     beforeItems: [],
     beforeItemUrls: [{ url: OVERBUILT_CAPE, slot: "back" }],
-    beforeLabel: "Overbuilt ramme — alle geometrier på én gang",
+    beforeLabel: "Overbuilt ramme (gammel stil)",
     afterBase: BASE,
     afterItems: ["galaxy-cape"],
-    afterLabel: "Krave + nedre haler — stjerner præcis der de ses",
-    note: "Galaksens stjerner er nu i kappehalerne ved benene (y=178–236) og i kraven — kun hvor de faktisk er synlige. Ingen stjerner gemmes bag torso eller arme.",
+    afterLabel: "Kontinuerligt klæde — stjerner præcis i synlige zoner",
+    note: "Stjernerne er placeret i x=10–48 (venstre kant) og x=112–150 (højre kant), y=183–232 — de reelle synlige zoner ved siden af arme og ben. Hjernen ser: galaksen fortsætter bag kroppen, men okkluderes af den.",
   },
   {
-    title: "Kappe-flow princippet — hvad skulder-synlighed fejlede",
+    title: "Okklusionsforklaring — HVORFOR kontinuerligt klæde virker",
     beforeBase: BASE,
     beforeItems: [],
-    beforeItemUrls: [{ url: SHOULDER_FLAP_CAPE, slot: "back" }],
-    beforeLabel: "Skulder-vinge: lysrød ved torso-siden",
+    beforeItemUrls: [{ url: FRAGMENT_CAPE, slot: "back" }],
+    beforeLabel: "Fragmenter: hjernen ser to adskilte objekter",
     afterBase: BASE,
     afterItems: ["cape-red"],
-    afterLabel: "Nedre hale: mørk bag benene, naturlig genopkomst",
-    note: "Skulder-synlighed kræver brede, lysrøde flapper nær torso — læses som ekstra lag. Bene-synlighed kræver kun et smalt, mørkt stykke stof ved siden af benene — læses som kappe der hænger ned. Kroppen er foran. Kappen er bag. Halerne bevidner det.",
+    afterLabel: "Kontinuerligt: hjernen ser ét klæde bag kroppen",
+    note: "Synlig zone på kontinuerligt klæde: skulder-kant y=90–100 (4px), arm-kant x=10–14 / x=146–150 (4px hele højden), ben-zone x=10–48 / x=112–150 fra y=166+, hem y=234+. Alt er ÉN form. Kroppen (z=0) okkluderer resten. Ingen gaps, ingen brud.",
   },
   {
     title: "Dragevinger — original krop virker",
@@ -324,7 +329,7 @@ const baPairs = [
     afterBase: BASE,
     afterItems: ["galaxy-cape", "armor-knight", "crown-golden", "panda-mask"],
     afterLabel: "Unified flow kappe + fuld loadout — krone og rustning dominerer",
-    note: "Den unified-flow kappe bidrager med: krave som garment-logik øverst, stille tilstedeværelse bag kroppen, subtile haler ved benene. Ingenting konkurrerer med rustning eller krone. Kappen er der — men lader avataren skinne.",
+    note: "Det kontinuerlige klæde bidrager: krave som garment-attachment øverst, mørk tilstedeværelse bag kroppen (okkluderet), synlig kant langs arme og ben. Ingenting konkurrerer med rustning eller krone. Kappen er der — men er korrekt bagved.",
   },
 ];
 
