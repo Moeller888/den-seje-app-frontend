@@ -1395,25 +1395,25 @@
 
     avatarEl.innerHTML = "";
 
-    // Base body — always present
-    const base = document.createElement("img");
-    base.className = "profile-avatar-layer";
-    base.src = BASE_SRC;
-    base.style.zIndex = "0";
-    base.alt = "";
-    avatarEl.appendChild(base);
+    // Collect all layers, sort by z ascending, insert in that order so DOM
+    // paint order matches z-order (back items before body before front items)
+    const layers = [{ src: BASE_SRC, z: 0 }];
 
-    // Equipped item layers
     ALL_SLOTS.forEach(slot => {
       const itemId = equippedSlots[slot];
       if (!itemId) return;
       const item = allShopItems.find(i => i.id === itemId);
       if (!item || !item.image_url) return;
+      layers.push({ src: item.image_url, z: SLOT_Z[slot] ?? 1 });
+    });
 
+    layers.sort((a, b) => a.z - b.z);
+
+    layers.forEach(({ src, z }) => {
       const img = document.createElement("img");
       img.className = "profile-avatar-layer";
-      img.src = item.image_url;
-      img.style.zIndex = String(SLOT_Z[slot] ?? 1);
+      img.src = src;
+      img.style.zIndex = String(z);
       img.alt = "";
       avatarEl.appendChild(img);
     });

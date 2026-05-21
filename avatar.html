@@ -755,27 +755,26 @@ function renderAvatar(animate = false) {
   const wrap    = document.getElementById("avatarWrap");
   preview.innerHTML = "";
 
-  // Layer 0: base body (always visible — never animated, always present)
-  const base = document.createElement("img");
-  base.className = "avatar-layer";
-  base.src = BASE_SRC;
-  base.style.zIndex = "0";
-  base.alt = "";
-  preview.appendChild(base);
+  // Collect all layers, sort by z ascending, insert in that order so DOM
+  // paint order matches z-order (back items before body before front items)
+  const layers = [{ src: BASE_SRC, z: 0, alt: "", anim: false }];
 
-  // One layer per equipped slot, ordered by z-index
   ALL_SLOTS.forEach(slot => {
     const itemId = equippedSlots[slot];
     if (!itemId) return;
-
     const item = ownedItems.find(i => i.id === itemId);
     if (!item || !item.image_url) return;
+    layers.push({ src: item.image_url, z: SLOT_Z[slot] ?? 1, alt: item.name ?? "", anim: animate });
+  });
 
+  layers.sort((a, b) => a.z - b.z);
+
+  layers.forEach(({ src, z, alt, anim }) => {
     const img = document.createElement("img");
-    img.className = animate ? "avatar-layer layer-fade-in" : "avatar-layer";
-    img.src = item.image_url;
-    img.style.zIndex = String(SLOT_Z[slot] ?? 1);
-    img.alt = item.name ?? "";
+    img.className = anim ? "avatar-layer layer-fade-in" : "avatar-layer";
+    img.src = src;
+    img.style.zIndex = String(z);
+    img.alt = alt;
     preview.appendChild(img);
   });
 

@@ -210,12 +210,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       const item = shopItems.find(i => i.id === itemId);
       if (!item || !item.image_url) return;
 
+      const z = SLOT_Z[slot] ?? 1;
       const img = document.createElement("img");
       img.className = "quiz-avatar-layer";
       img.src = item.image_url;
-      img.style.zIndex = String(SLOT_Z[slot] ?? 1);
+      img.style.zIndex = String(z);
       img.alt = "";
-      avatarDisplay.appendChild(img);
+      // Back items (z<0) must appear before body in DOM — paint order determines compositing
+      if (z < 0) {
+        avatarDisplay.insertBefore(img, base);
+      } else {
+        avatarDisplay.appendChild(img);
+      }
     });
   }
 

@@ -148,6 +148,12 @@
   <div class="row" id="backRow"></div>
 </div>
 
+<!-- ── Section 1.5: DOM insertion order debug ─────────────── -->
+<div class="section">
+  <div class="section-title">1.5 · DOM-rækkefølge debug — HVORFOR kroppen forsvinder (root cause)</div>
+  <div class="row" id="domOrderRow"></div>
+</div>
+
 <!-- ── Section 2: Face/eyes layer demos ──────────────────── -->
 <div class="section">
   <div class="section-title">2 · Ansigt-items (z=6-7) — overlap med hoved</div>
@@ -430,6 +436,39 @@ ITEMS.filter(i => i.slot === "back").forEach(item => {
   spacer.style.height = "1px";
   spacer.style.flexBasis = "100%";
   backRow.appendChild(spacer);
+});
+
+// ── Section 1.5: DOM insertion order debug ────────────────────────────────────
+// Shows exactly why body disappears: DOM order overrides z-index when stacking
+// context is not honoured correctly. Fix: insert layers in ascending z order.
+const domOrderRow = document.getElementById("domOrderRow");
+const debugCape = ITEMS.find(i => i.id === "cape-red");
+const debugGalaxy = ITEMS.find(i => i.id === "galaxy-cape");
+
+[debugCape, debugGalaxy].forEach(item => {
+  if (!item) return;
+
+  // BUG: body inserted first (DOM pos 1, z=0), cape appended second (DOM pos 2, z=-1)
+  // DOM paint order dominates → cape (pos 2) paints on top of body (pos 1)
+  const cBug = canvas();
+  cBug.appendChild(layer(BASE, 0));           // FIRST in DOM: body (z=0)
+  cBug.appendChild(layer(item.url, -1));      // SECOND in DOM: cape (z=-1) → paints OVER body
+  cBug.appendChild(zChip(-1));
+  domOrderRow.appendChild(wrap(cBug,
+    `<strong>FEJL — ${item.name}</strong>` +
+    `Krop DOM-pos 1 (z=0) · Kappe DOM-pos 2 (z=-1) → kappe maler over krop`
+  ));
+
+  // FIX: sort by z ascending before inserting → cape (z=-1) is DOM pos 1, body (z=0) is DOM pos 2
+  // Both DOM order AND z-index agree: body is on top
+  const cFix = canvas();
+  cFix.appendChild(layer(item.url, -1));      // FIRST in DOM: cape (z=-1)
+  cFix.appendChild(layer(BASE, 0));           // SECOND in DOM: body (z=0) → paints OVER cape
+  cFix.appendChild(zChip(-1));
+  domOrderRow.appendChild(wrap(cFix,
+    `<strong>FIX — ${item.name}</strong>` +
+    `Kappe DOM-pos 1 (z=-1) · Krop DOM-pos 2 (z=0) → krop okkluderer kappe`
+  ));
 });
 
 // ── Section 2: Face/eyes items ────────────────────────────────────────────────
