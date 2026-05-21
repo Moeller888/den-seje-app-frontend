@@ -398,9 +398,11 @@
 <div class="section-header">Tilgængelige items</div>
 <div class="category-tabs" id="categoryTabs">
   <button class="cat-tab cat-tab--active" data-cat="alle">Alle</button>
-  <button class="cat-tab" data-cat="krop">Krop</button>
   <button class="cat-tab" data-cat="hoved">Hoved</button>
-  <button class="cat-tab" data-cat="effekt">Effekt</button>
+  <button class="cat-tab" data-cat="ansigt">Ansigt</button>
+  <button class="cat-tab" data-cat="ryg">Ryg</button>
+  <button class="cat-tab" data-cat="krop">Krop</button>
+  <button class="cat-tab" data-cat="effekter">Effekter</button>
 </div>
 <div class="shop-grid" id="shopGrid"></div>
 
@@ -457,11 +459,14 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
   }
 
   // Item layer
+  // Back items (z=-1) render behind the body in the real avatar.
+  // In this static preview we elevate them to z=2 so the item is always visible.
   if (imageUrl) {
     const itemImg = document.createElement("img");
     itemImg.className = "preview-layer";
     itemImg.src = imageUrl;
-    itemImg.style.zIndex = String(SLOT_Z[slotType] ?? 1);
+    const rawZ = SLOT_Z[slotType] ?? 1;
+    itemImg.style.zIndex = String(rawZ < 0 ? 2 : rawZ);
     itemImg.alt = "";
     wrap.appendChild(itemImg);
   }

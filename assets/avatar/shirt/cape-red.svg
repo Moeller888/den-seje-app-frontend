@@ -5,20 +5,20 @@
       <stop offset="100%" stop-color="#b71c1c"/>
     </linearGradient>
   </defs>
-  <!-- Cape body -->
-  <path d="M 38 98 L 16 228 Q 80 250 144 228 L 122 98 Z" fill="url(#cr-red)" opacity="0.95"/>
+  <!-- Cape body — extends to x=4/x=156 so it peeks out past the arms (x=14/x=146) at z=-1 -->
+  <path d="M 4 95 L 4 230 Q 80 252 156 230 L 156 95 Z" fill="url(#cr-red)" opacity="0.95"/>
   <!-- Center fold shadow -->
-  <path d="M 80 98 L 74 230 Q 80 246 86 230 L 80 98 Z" fill="#7f0000" opacity="0.18"/>
+  <path d="M 80 95 L 74 231 Q 80 247 86 231 L 80 95 Z" fill="#7f0000" opacity="0.18"/>
   <!-- Left side highlight -->
-  <path d="M 42 100 L 28 205 Q 50 218 64 210 L 60 106 Z" fill="#ef5350" opacity="0.15"/>
+  <path d="M 8 97 L 8 205 Q 34 218 52 210 L 44 104 Z" fill="#ef5350" opacity="0.13"/>
   <!-- Right side highlight -->
-  <path d="M 118 100 L 132 205 Q 110 218 96 210 L 100 106 Z" fill="#ef5350" opacity="0.15"/>
+  <path d="M 152 97 L 152 205 Q 126 218 108 210 L 116 104 Z" fill="#ef5350" opacity="0.13"/>
   <!-- Inner lining visible strip -->
-  <path d="M 54 104 L 38 222 Q 80 238 122 222 L 106 104 Z" fill="#ef5350" opacity="0.2"/>
+  <path d="M 28 100 L 20 226 Q 80 240 140 226 L 132 100 Z" fill="#ef5350" opacity="0.18"/>
   <!-- Shoulder left drape -->
-  <path d="M 38 98 Q 56 110 80 105 Q 54 96 38 98 Z" fill="#b71c1c"/>
+  <path d="M 4 95 Q 36 110 80 106 Q 34 95 4 95 Z" fill="#b71c1c"/>
   <!-- Shoulder right drape -->
-  <path d="M 122 98 Q 104 110 80 105 Q 106 96 122 98 Z" fill="#b71c1c"/>
+  <path d="M 156 95 Q 124 110 80 106 Q 126 95 156 95 Z" fill="#b71c1c"/>
   <!-- Collar clasp -->
   <circle cx="80" cy="101" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
   <circle cx="80" cy="101" r="3" fill="#ff8f00"/>

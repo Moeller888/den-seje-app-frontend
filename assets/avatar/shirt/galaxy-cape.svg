@@ -10,49 +10,49 @@
       <stop offset="100%" style="stop-color:#1565c0;stop-opacity:0.3"/>
     </linearGradient>
   </defs>
-  <!-- Cape back — wide, long -->
-  <path d="M 30 95 L 8 228 Q 80 250 152 228 L 130 95 Z" fill="url(#galaxyGrad)"/>
+  <!-- Cape back — top extends to x=4/x=156, well past arm bounds (x=14/x=146) -->
+  <path d="M 4 95 L 4 228 Q 80 250 156 228 L 156 95 Z" fill="url(#galaxyGrad)"/>
   <!-- Nebula cloud left -->
-  <ellipse cx="45" cy="155" rx="28" ry="18" fill="url(#nebulaGrad)"/>
+  <ellipse cx="38" cy="155" rx="28" ry="18" fill="url(#nebulaGrad)"/>
   <!-- Nebula cloud right -->
-  <ellipse cx="115" cy="175" rx="24" ry="16" fill="url(#nebulaGrad)"/>
+  <ellipse cx="122" cy="175" rx="24" ry="16" fill="url(#nebulaGrad)"/>
   <!-- Nebula cloud center -->
   <ellipse cx="80" cy="200" rx="32" ry="14" fill="#3d0973" opacity="0.3"/>
   <!-- Stars scattered -->
-  <circle cx="38" cy="115" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="55" cy="130" r="1" fill="white" opacity="0.8"/>
-  <circle cx="70" cy="108" r="2" fill="white" opacity="0.95"/>
-  <circle cx="92" cy="118" r="1.2" fill="white" opacity="0.85"/>
-  <circle cx="110" cy="125" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="125" cy="112" r="1" fill="white" opacity="0.8"/>
-  <circle cx="44" cy="148" r="1.2" fill="white" opacity="0.75"/>
-  <circle cx="118" cy="145" r="1.8" fill="white" opacity="0.9"/>
-  <circle cx="62" cy="168" r="1" fill="white" opacity="0.7"/>
-  <circle cx="98" cy="160" r="1.5" fill="white" opacity="0.85"/>
-  <circle cx="135" cy="158" r="1" fill="white" opacity="0.75"/>
-  <circle cx="28" cy="185" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="14" cy="112" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="28" cy="128" r="1" fill="white" opacity="0.8"/>
+  <circle cx="55" cy="108" r="2" fill="white" opacity="0.95"/>
+  <circle cx="88" cy="118" r="1.2" fill="white" opacity="0.85"/>
+  <circle cx="115" cy="125" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="140" cy="112" r="1" fill="white" opacity="0.8"/>
+  <circle cx="20" cy="148" r="1.2" fill="white" opacity="0.75"/>
+  <circle cx="138" cy="145" r="1.8" fill="white" opacity="0.9"/>
+  <circle cx="58" cy="168" r="1" fill="white" opacity="0.7"/>
+  <circle cx="100" cy="160" r="1.5" fill="white" opacity="0.85"/>
+  <circle cx="148" cy="158" r="1" fill="white" opacity="0.75"/>
+  <circle cx="10" cy="185" r="1.2" fill="white" opacity="0.8"/>
   <circle cx="80" cy="175" r="2" fill="white" opacity="0.9"/>
-  <circle cx="140" cy="185" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="55" cy="210" r="1" fill="white" opacity="0.7"/>
-  <circle cx="105" cy="215" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="148" cy="185" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="52" cy="210" r="1" fill="white" opacity="0.7"/>
+  <circle cx="108" cy="215" r="1.5" fill="white" opacity="0.8"/>
   <!-- Bright star sparkle -->
-  <path d="M 70 108 L 71.5 105 L 73 108 L 70 109.5 Z" fill="white" opacity="0.6"/>
-  <path d="M 70 108 L 68.5 105 L 67 108 L 70 109.5 Z" fill="white" opacity="0.6"/>
+  <path d="M 55 108 L 56.5 105 L 58 108 L 55 109.5 Z" fill="white" opacity="0.6"/>
+  <path d="M 55 108 L 53.5 105 L 52 108 L 55 109.5 Z" fill="white" opacity="0.6"/>
   <!-- Gold trim edge left -->
-  <path d="M 30 95 L 8 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 4 95 L 4 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
   <!-- Gold trim edge right -->
-  <path d="M 130 95 L 152 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 156 95 L 156 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
   <!-- Gold bottom hem -->
-  <path d="M 8 228 Q 80 250 152 228" fill="none" stroke="#ffd700" stroke-width="2"/>
+  <path d="M 4 228 Q 80 250 156 228" fill="none" stroke="#ffd700" stroke-width="2"/>
   <!-- Shoulder left -->
-  <path d="M 30 95 Q 50 108 80 103 Q 50 96 30 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
+  <path d="M 4 95 Q 36 108 80 103 Q 34 95 4 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
   <!-- Shoulder right -->
-  <path d="M 130 95 Q 110 108 80 103 Q 110 96 130 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
+  <path d="M 156 95 Q 124 108 80 103 Q 126 95 156 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
   <!-- Gold clasp -->
   <circle cx="80" cy="100" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
   <circle cx="80" cy="100" r="3" fill="#ff8f00"/>
-  <!-- Left arm side coverage -->
-  <path d="M 30 95 L 14 118 L 16 170 L 28 175 L 30 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
-  <!-- Right arm side coverage -->
-  <path d="M 130 95 L 146 118 L 144 170 L 132 175 L 130 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
+  <!-- Left arm side panel — visible strip beside the arm -->
+  <path d="M 4 95 L 4 118 L 8 170 L 20 175 L 18 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
+  <!-- Right arm side panel -->
+  <path d="M 156 95 L 156 118 L 152 170 L 140 175 L 142 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
 </svg>

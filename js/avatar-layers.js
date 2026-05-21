@@ -3,19 +3,19 @@
 // Never define SLOT_Z, ALL_SLOTS, or rarity constants in those files.
 
 export const SLOTS = {
-  back:     { z: -1, label: "Ryg",                emoji: "🦅", category: "Krop"   },
+  aura:     { z: -2, label: "Aura",               emoji: "✨", category: "Effekter" },
+  back:     { z: -1, label: "Ryg",                emoji: "🦅", category: "Ryg"    },
   body:     { z:  1, label: "Krop",               emoji: "🦎", category: "Krop"   },
-  torso:    { z:  2, label: "Overkrop",            emoji: "👕", category: "Krop"   },
+  torso:    { z:  2, label: "Overkrop",           emoji: "👕", category: "Krop"   },
   neck:     { z:  3, label: "Hals",               emoji: "📿", category: "Krop"   },
   hair:     { z:  4, label: "Hår",                emoji: "💈", category: "Hoved"  },
   headwear: { z:  5, label: "Hovedbeklædning",    emoji: "🎩", category: "Hoved"  },
-  face:     { z:  6, label: "Ansigt",             emoji: "🎭", category: "Hoved"  },
-  eyes:     { z:  7, label: "Briller",            emoji: "👓", category: "Hoved"  },
-  aura:     { z:  8, label: "Aura",               emoji: "✨", category: "Effekt" },
+  face:     { z:  6, label: "Ansigt",             emoji: "🎭", category: "Ansigt" },
+  eyes:     { z:  7, label: "Briller",            emoji: "👓", category: "Ansigt" },
 };
 
 // Ordered slot list — render in this order (lowest z first = rendered behind others)
-export const ALL_SLOTS = ["back", "body", "torso", "neck", "hair", "headwear", "face", "eyes", "aura"];
+export const ALL_SLOTS = ["aura", "back", "body", "torso", "neck", "hair", "headwear", "face", "eyes"];
 
 // Flat z-index lookup: slot name → CSS z-index value
 export const SLOT_Z      = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].z]));
@@ -24,10 +24,12 @@ export const SLOT_EMOJIS = Object.fromEntries(ALL_SLOTS.map(k => [k, SLOTS[k].em
 
 // Category definitions for shop tab UI — null slots means "show all"
 export const SHOP_CATEGORIES = [
-  { key: "alle",   label: "Alle",   slots: null },
-  { key: "krop",   label: "Krop",   slots: ["back", "body", "torso", "neck"] },
-  { key: "hoved",  label: "Hoved",  slots: ["hair", "headwear", "face", "eyes"] },
-  { key: "effekt", label: "Effekt", slots: ["aura"] },
+  { key: "alle",     label: "Alle",     slots: null },
+  { key: "hoved",    label: "Hoved",    slots: ["hair", "headwear"] },
+  { key: "ansigt",   label: "Ansigt",   slots: ["face", "eyes"] },
+  { key: "ryg",      label: "Ryg",      slots: ["back"] },
+  { key: "krop",     label: "Krop",     slots: ["body", "torso", "neck"] },
+  { key: "effekter", label: "Effekter", slots: ["aura"] },
 ];
 
 // Rarity system — fixed across all themes (never change per-theme)

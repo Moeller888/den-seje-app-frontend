@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gamefeel Sandbox</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .topbar {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+    }
+    .back-btn {
+      padding: 8px 14px; background: var(--btn-bg); color: var(--text-dim);
+      border: 1px solid var(--border-btn); border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+    h1 { font-size: 18px; font-weight: bold; color: var(--text-bright); }
+    .section { margin-bottom: 32px; }
+    .section-title {
+      font-size: 11px; font-weight: bold; color: var(--text-label);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+
+    /* ── Avatar canvas ──────────────────────────────────── */
+    .avatar-wrap {
+      position: relative; display: inline-block; flex-shrink: 0;
+    }
+    .avatar-canvas {
+      position: relative;
+      width: 120px; height: 180px;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at 50% 28%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      overflow: visible;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .avatar-canvas.lg {
+      width: 180px; height: 270px; border-radius: 12px;
+    }
+    .avatar-layer {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain; pointer-events: none;
+    }
+    .label {
+      font-size: 10px; color: var(--text-muted); text-align: center;
+      margin-top: 6px; max-width: 120px; line-height: 1.3;
+    }
+    .label strong { color: var(--text-main); display: block; margin-bottom: 2px; }
+
+    /* ── Z-indicator overlay ──────────────────────────── */
+    .z-chip {
+      position: absolute; bottom: 4px; right: 4px;
+      background: rgba(0,0,0,0.72); color: #fff;
+      font-size: 9px; padding: 2px 5px; border-radius: 3px;
+      pointer-events: none; z-index: 99;
+    }
+
+    /* ── Silhouette comparison ─────────────────────────── */
+    .compare-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-end; }
+    .compare-item { text-align: center; }
+
+    /* ── Overlap torture table ─────────────────────────── */
+    .torture-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='hub.html'">&#8592; Tilbage</button>
+  <h1>Gamefeel Sandbox — Avatar Layer Tests</h1>
+</div>
+
+<!-- ── Section 1: Back-item silhouette demos ──────────────── -->
+<div class="section">
+  <div class="section-title">1 · Ryg-items (z=-1) — silhuet-test</div>
+  <div class="row" id="backRow"></div>
+</div>
+
+<!-- ── Section 2: Face/eyes layer demos ──────────────────── -->
+<div class="section">
+  <div class="section-title">2 · Ansigt-items (z=6-7) — overlap med hoved</div>
+  <div class="row" id="faceRow"></div>
+</div>
+
+<!-- ── Section 3: Overlap torture tests ─────────────────── -->
+<div class="section">
+  <div class="section-title">3 · Overlap torture — alle kombinationer</div>
+  <div class="torture-grid" id="torturGrid"></div>
+</div>
+
+<!-- ── Section 4: Silhouette comparison ─────────────────── -->
+<div class="section">
+  <div class="section-title">4 · Silhuet-sammenligning — tom vs. fuld loadout</div>
+  <div class="compare-row" id="compareRow"></div>
+</div>
+
+<!-- ── Section 5: Layer order reference ─────────────────── -->
+<div class="section">
+  <div class="section-title">5 · Lag-rækkefølge reference</div>
+  <div id="layerRef"></div>
+</div>
+
+<script type="module">
+import {
+  ALL_SLOTS, SLOTS, SLOT_Z, SLOT_LABELS, BASE_SRC,
+  RARITY_LABELS, RARITY_COLORS
+} from "./js/avatar-layers.js";
+
+const BASE = BASE_SRC;
+
+// All known item image paths (static list for sandbox)
+const ITEMS = [
+  { id: "wings-dragon",  slot: "back",     url: "/assets/avatar/body/wings-dragon.svg",     name: "Dragevinger",    rarity: "rare" },
+  { id: "cape-red",      slot: "back",     url: "/assets/avatar/shirt/cape-red.svg",         name: "Rød Kappe",      rarity: "common" },
+  { id: "galaxy-cape",   slot: "back",     url: "/assets/avatar/shirt/galaxy-cape.svg",      name: "Galakse-kappe",  rarity: "uncommon" },
+  { id: "armor-knight",  slot: "torso",    url: "/assets/avatar/shirt/armor-knight.svg",     name: "Ridderdragt",    rarity: "uncommon" },
+  { id: "hat-blue",      slot: "headwear", url: "/assets/avatar/hat/hat-blue.svg",           name: "Blå Hat",        rarity: "common" },
+  { id: "bow-yellow",    slot: "headwear", url: "/assets/avatar/hat/bow-yellow.svg",         name: "Gul Sløjfe",     rarity: "common" },
+  { id: "crown-silver",  slot: "headwear", url: "/assets/avatar/hat/crown-silver.svg",       name: "Sølvkrone",      rarity: "uncommon" },
+  { id: "crown-golden",  slot: "headwear", url: "/assets/avatar/hat/crown-golden.svg",       name: "Guldkrone",      rarity: "legendary" },
+  { id: "pirate-hat",    slot: "headwear", url: "/assets/avatar/hat/pirate-hat.svg",         name: "Pirat-hat",      rarity: "common" },
+  { id: "glasses-round", slot: "eyes",     url: "/assets/avatar/glasses/glasses-round.svg",  name: "Runde Briller",  rarity: "common" },
+  { id: "ninja-mask",    slot: "face",     url: "/assets/avatar/mask/ninja-mask.svg",        name: "Ninja-maske",    rarity: "common" },
+  { id: "hero-mask",     slot: "face",     url: "/assets/avatar/mask/hero-mask.svg",         name: "Helte-maske",    rarity: "uncommon" },
+  { id: "panda-mask",    slot: "face",     url: "/assets/avatar/mask/panda-mask.svg",        name: "Panda-maske",    rarity: "rare" },
+];
+
+function canvas(size = "sm") {
+  const c = document.createElement("div");
+  c.className = "avatar-canvas" + (size === "lg" ? " lg" : "");
+  return c;
+}
+
+function layer(src, z) {
+  const img = document.createElement("img");
+  img.className = "avatar-layer";
+  img.src = src;
+  img.style.zIndex = String(z);
+  img.alt = "";
+  return img;
+}
+
+function zChip(z) {
+  const chip = document.createElement("div");
+  chip.className = "z-chip";
+  chip.textContent = "z=" + z;
+  return chip;
+}
+
+function wrap(canvasEl, labelHtml) {
+  const w = document.createElement("div");
+  w.className = "avatar-wrap";
+  w.appendChild(canvasEl);
+  const lbl = document.createElement("div");
+  lbl.className = "label";
+  lbl.innerHTML = labelHtml;
+  w.appendChild(lbl);
+  return w;
+}
+
+// ── Section 1: Back items ──────────────────────────────────────────────────────
+const backRow = document.getElementById("backRow");
+
+ITEMS.filter(i => i.slot === "back").forEach(item => {
+  // Show 1a: item alone (no body)
+  const c1 = canvas();
+  c1.appendChild(layer(item.url, SLOT_Z[item.slot]));
+  c1.appendChild(zChip(SLOT_Z[item.slot]));
+  backRow.appendChild(wrap(c1, `<strong>${item.name}</strong>Isoleret`));
+
+  // Show 1b: item behind body (correct z=-1)
+  const c2 = canvas();
+  c2.appendChild(layer(item.url, SLOT_Z[item.slot]));
+  c2.appendChild(layer(BASE, 0));
+  c2.appendChild(zChip(SLOT_Z[item.slot]));
+  backRow.appendChild(wrap(c2, `<strong>${item.name}</strong>Bag kroppen (z=-1)`));
+
+  // Show 1c: item in front of body (what z=1 looks like — wrong)
+  const c3 = canvas();
+  c3.appendChild(layer(BASE, 0));
+  c3.appendChild(layer(item.url, 1));
+  c3.appendChild(zChip(1));
+  backRow.appendChild(wrap(c3, `<strong>${item.name}</strong>Foran kroppen (z=1) — forkert`));
+
+  // Spacer
+  const spacer = document.createElement("div");
+  spacer.style.width = "1px";
+  spacer.style.height = "1px";
+  spacer.style.flexBasis = "100%";
+  backRow.appendChild(spacer);
+});
+
+// ── Section 2: Face/eyes items ────────────────────────────────────────────────
+const faceRow = document.getElementById("faceRow");
+
+ITEMS.filter(i => i.slot === "face" || i.slot === "eyes").forEach(item => {
+  // With body only
+  const c1 = canvas();
+  c1.appendChild(layer(BASE, 0));
+  c1.appendChild(layer(item.url, SLOT_Z[item.slot]));
+  c1.appendChild(zChip(SLOT_Z[item.slot]));
+  faceRow.appendChild(wrap(c1, `<strong>${item.name}</strong>${SLOT_LABELS[item.slot]} (z=${SLOT_Z[item.slot]})`));
+
+  // Mask + glasses combo
+  if (item.slot === "face") {
+    const glasses = ITEMS.find(i => i.slot === "eyes");
+    if (glasses) {
+      const c2 = canvas();
+      c2.appendChild(layer(BASE, 0));
+      c2.appendChild(layer(item.url, SLOT_Z["face"]));
+      c2.appendChild(layer(glasses.url, SLOT_Z["eyes"]));
+      faceRow.appendChild(wrap(c2, `<strong>${item.name}</strong>+ ${glasses.name}`));
+    }
+  }
+
+  // Mask + hat combo
+  if (item.slot === "face") {
+    const hat = ITEMS.find(i => i.slot === "headwear" && i.id === "hat-blue");
+    if (hat) {
+      const c3 = canvas();
+      c3.appendChild(layer(BASE, 0));
+      c3.appendChild(layer(item.url, SLOT_Z["face"]));
+      c3.appendChild(layer(hat.url, SLOT_Z["headwear"]));
+      faceRow.appendChild(wrap(c3, `<strong>${item.name}</strong>+ ${hat.name}`));
+    }
+  }
+});
+
+// ── Section 3: Overlap torture ───────────────────────────────────────────────
+const torturGrid = document.getElementById("torturGrid");
+
+const tortureLoadouts = [
+  { label: "Wings + Ridder", items: ["wings-dragon", "armor-knight"] },
+  { label: "Kappe + Ridder", items: ["cape-red", "armor-knight"] },
+  { label: "Galakse + Ridder", items: ["galaxy-cape", "armor-knight"] },
+  { label: "Panda + Hat", items: ["panda-mask", "hat-blue"] },
+  { label: "Ninja + Briller", items: ["ninja-mask", "glasses-round"] },
+  { label: "Helte + Hat", items: ["hero-mask", "hat-blue"] },
+  { label: "Wings + Krone", items: ["wings-dragon", "crown-golden"] },
+  { label: "Kappe + Krone + Ninja", items: ["cape-red", "crown-golden", "ninja-mask"] },
+  { label: "Fuld loadout", items: ["galaxy-cape", "armor-knight", "crown-golden", "panda-mask", "glasses-round"] },
+];
+
+tortureLoadouts.forEach(loadout => {
+  const c = canvas();
+  c.appendChild(layer(BASE, 0));
+  loadout.items.forEach(id => {
+    const item = ITEMS.find(i => i.id === id);
+    if (!item) return;
+    c.appendChild(layer(item.url, SLOT_Z[item.slot]));
+  });
+  torturGrid.appendChild(wrap(c, `<strong>${loadout.label}</strong>${loadout.items.join(", ")}`));
+});
+
+// ── Section 4: Silhouette comparison ─────────────────────────────────────────
+const compareRow = document.getElementById("compareRow");
+
+const silhouettes = [
+  { label: "Tom", items: [] },
+  { label: "Kun kappe", items: ["cape-red"] },
+  { label: "Kun wings", items: ["wings-dragon"] },
+  { label: "Wings + Ridder", items: ["wings-dragon", "armor-knight"] },
+  { label: "Galakse + Krone", items: ["galaxy-cape", "crown-golden"] },
+  { label: "Fuld loadout", items: ["galaxy-cape", "armor-knight", "crown-golden", "panda-mask"] },
+];
+
+silhouettes.forEach(s => {
+  const c = canvas("lg");
+  c.appendChild(layer(BASE, 0));
+  s.items.forEach(id => {
+    const item = ITEMS.find(i => i.id === id);
+    if (!item) return;
+    c.appendChild(layer(item.url, SLOT_Z[item.slot]));
+  });
+  const ci = document.createElement("div");
+  ci.className = "compare-item";
+  ci.appendChild(c);
+  const lbl = document.createElement("div");
+  lbl.className = "label";
+  lbl.innerHTML = `<strong>${s.label}</strong>`;
+  ci.appendChild(lbl);
+  compareRow.appendChild(ci);
+});
+
+// ── Section 5: Layer reference ───────────────────────────────────────────────
+const layerRef = document.getElementById("layerRef");
+const table = document.createElement("table");
+table.style.cssText = "border-collapse:collapse;font-size:12px;";
+table.innerHTML = `
+  <tr style="border-bottom:1px solid var(--border)">
+    <th style="padding:6px 14px 6px 0;text-align:left;color:var(--text-label);font-size:10px;text-transform:uppercase;letter-spacing:1px">Slot</th>
+    <th style="padding:6px 14px;text-align:center;color:var(--text-label);font-size:10px;text-transform:uppercase;letter-spacing:1px">z-index</th>
+    <th style="padding:6px 0;text-align:left;color:var(--text-label);font-size:10px;text-transform:uppercase;letter-spacing:1px">Items</th>
+  </tr>
+  ${ALL_SLOTS.slice().reverse().map(slot => {
+    const slotItems = ITEMS.filter(i => i.slot === slot);
+    const z = SLOT_Z[slot];
+    const note = z < 0 ? " ← bag kroppen" : z === 0 ? " ← basis-krop" : "";
+    return `<tr style="border-bottom:1px solid var(--border-sep)">
+      <td style="padding:5px 14px 5px 0;color:var(--text-main)">${SLOT_LABELS[slot] ?? slot}</td>
+      <td style="padding:5px 14px;text-align:center;font-weight:bold;color:${z < 0 ? "#ef5350" : z > 4 ? "#66bb6a" : "var(--text-dim)"}">${z}${note}</td>
+      <td style="padding:5px 0;color:var(--text-muted)">${slotItems.map(i => i.name).join(", ") || "—"}</td>
+    </tr>`;
+  }).join("")}
+`;
+layerRef.appendChild(table);
+</script>
+</body>
+</html>
