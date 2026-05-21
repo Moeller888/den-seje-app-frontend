@@ -16,7 +16,8 @@
   </defs>
 
   <!-- Continuous back cloth — body (z=0) occludes naturally -->
-  <path d="M 46 90 L 10 100 L 10 236 Q 80 239 150 236 L 150 100 L 114 90 Q 80 82 46 90 Z"
+  <!-- Hem sits flat at y=237 center — minimal sag = ethereal, weightless cosmic fabric -->
+  <path d="M 46 90 L 10 100 L 10 235 Q 80 237 150 235 L 150 100 L 114 90 Q 80 82 46 90 Z"
         fill="url(#gx-cloth)"/>
 
   <!-- Left nebula cloud — radial glow -->

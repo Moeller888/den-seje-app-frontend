@@ -128,6 +128,39 @@
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 16px;
     }
+
+    /* ── Cape philosophy rules ────────────────────────── */
+    .cape-rule-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .cape-rule-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .cape-rule-num {
+      font-size: 18px; font-weight: bold;
+      color: var(--text-dim); flex-shrink: 0; line-height: 1;
+    }
+    .cape-rule-text {
+      font-size: 10px; color: var(--text-muted); line-height: 1.55;
+    }
+    .cape-rule-text strong { color: var(--text-main); display: block; margin-bottom: 3px; font-size: 11px; }
+    .personality-row {
+      display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;
+    }
+    .personality-item { display: flex; flex-direction: column; align-items: center; }
+    .personality-label {
+      margin-top: 8px; font-size: 10px; text-align: center; max-width: 140px;
+      color: var(--text-muted); line-height: 1.4;
+    }
+    .personality-label strong { color: var(--text-bright); display: block; font-size: 11px; }
+    .personality-label em { color: var(--text-label); font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -182,6 +215,20 @@
 <div class="section">
   <div class="section-title">6 · Art Polish Pass — material kvalitet, raritetshierarki, silhuet-forfining</div>
   <div class="ba-grid" id="artPolishGrid"></div>
+</div>
+
+<!-- ── Section 7: Cape Philosophy ───────────────────────── -->
+<div class="section">
+  <div class="section-title">7 · Kappe-filosofi — arkitektur, personlighed og silhuet-hierarki</div>
+  <div class="cape-rule-grid" id="capeRuleGrid"></div>
+  <div class="row" style="margin-bottom:16px">
+    <div class="section-title" style="width:100%;margin-bottom:8px">7a · Korrekt arki. — kroppen dominerer, klædet er baggrund</div>
+    <div class="ba-grid" id="capeArchGrid" style="width:100%"></div>
+  </div>
+  <div class="section-title" style="margin-bottom:10px">7b · KappePersonligheder — samme arkitektur, forskellig karakter</div>
+  <div class="personality-row" id="personalityRow"></div>
+  <div class="section-title" style="margin-top:18px;margin-bottom:10px">7c · Loadout-harmoni — kappe skal ikke dominere fuld loadout</div>
+  <div class="row" id="loadoutHarmonyRow"></div>
 </div>
 
 <script type="module">
@@ -717,6 +764,199 @@ polishPairs.forEach(pair => {
   pairEl.appendChild(noteEl);
 
   artPolishGrid.appendChild(pairEl);
+});
+
+// ── Section 7: Cape Philosophy ───────────────────────────────────────────────
+
+// 7a — Philosophy rules
+const CAPE_RULES = [
+  {
+    num: "1",
+    title: "Ét kontinuerligt klæde",
+    body: "Alle kapper er ÉN unified cloth-form bag kroppen. Ingen fragmenter, ingen separate paneler. Hjernen fuldfører garmentet naturligt.",
+  },
+  {
+    num: "2",
+    title: "Kroppen dominerer",
+    body: "Klædet eksisterer bag avataren. Kroppen ejer forgrunden. Kappen bidrager til silhuetten — den kontrollerer den ikke.",
+  },
+  {
+    num: "3",
+    title: "Synlighed via kanter",
+    body: "Kappens tilstedeværelse aflæses fra: skulder-kant (y=90), arm-kanter (4px), ben-zone (x=10–48), hem (y=235+). Ingen store frontale flader.",
+  },
+  {
+    num: "4",
+    title: "Krave + clasp i front",
+    body: "Kun collar-delen (y=76–96) og claspen sidder foran kroppen. Resten er bagved. Det er det eneste tilladte front-detail.",
+  },
+  {
+    num: "5",
+    title: "Forskellig personlighed",
+    body: "Delt arkitektur — forskellig karakter. Tung = mere hem-sag, folds. Tynd = flad hem, sparse detail. Rødder = asymmetri. Legendary = glow-kant.",
+  },
+];
+
+const capeRuleGrid = document.getElementById("capeRuleGrid");
+CAPE_RULES.forEach(r => {
+  const card = document.createElement("div");
+  card.className = "cape-rule-card";
+  card.innerHTML = `<div class="cape-rule-num">${r.num}</div><div class="cape-rule-text"><strong>${r.title}</strong>${r.body}</div>`;
+  capeRuleGrid.appendChild(card);
+});
+
+// 7a — Architecture: overpowering vs correct
+const capeArchGrid = document.getElementById("capeArchGrid");
+
+function archPair(title, beforeUrl, beforeSlot, beforeLbl, afterUrl, afterSlot, afterLbl, note) {
+  const pairEl = document.createElement("div");
+  pairEl.className = "ba-pair";
+  const titleEl = document.createElement("div");
+  titleEl.className = "ba-pair-title";
+  titleEl.textContent = title;
+  pairEl.appendChild(titleEl);
+  const avatarsEl = document.createElement("div");
+  avatarsEl.className = "ba-avatars";
+
+  function col(baseUrl, itemUrl, slot, lbl, isAfter) {
+    const c_el = document.createElement("div");
+    const cv = canvas();
+    const layers = [{ src: baseUrl, z: 0 }];
+    if (itemUrl) layers.push({ src: itemUrl, z: SLOT_Z[slot] ?? 1 });
+    layers.sort((a, b) => a.z - b.z);
+    layers.forEach(({ src, z }) => cv.appendChild(layer(src, z)));
+    c_el.appendChild(cv);
+    const l = document.createElement("div");
+    l.className = isAfter ? "ba-label-after" : "ba-label-before";
+    l.textContent = lbl;
+    c_el.appendChild(l);
+    return c_el;
+  }
+
+  avatarsEl.appendChild(col(BASE, beforeUrl, beforeSlot, beforeLbl, false));
+  avatarsEl.appendChild(col(BASE, afterUrl, afterSlot, afterLbl, true));
+  pairEl.appendChild(avatarsEl);
+  if (note) {
+    const n = document.createElement("div");
+    n.className = "ba-note";
+    n.textContent = note;
+    pairEl.appendChild(n);
+  }
+  return pairEl;
+}
+
+// Overpowering: old full-rectangle cape vs correct continuous cloth
+capeArchGrid.appendChild(archPair(
+  "Klæde dominerer kroppen vs. korrekt",
+  OLD_CAPE, "back",
+  "FØR — stor frontflade, kroppen fanget",
+  ITEMS.find(i => i.id === "cape-red")?.url, "back",
+  "RIGTIGT — krop i front, klæde som baggrund",
+  "Det gamle rektangel fylder hele viewboxen — avataren træder ind i kappens form. Det kontinuerlige klæde gør det modsatte: kroppen ejer silhuetten, klædet er substrat bag den."
+));
+
+// Overbuilt frame vs correct
+capeArchGrid.appendChild(archPair(
+  "Frame-kappe vs. kontinuerlig",
+  OVERBUILT_CAPE, "back",
+  "FØR — frame geometri, kroppen indlejret",
+  ITEMS.find(i => i.id === "galaxy-cape")?.url, "back",
+  "RIGTIGT — kontinuerlig form, stjerner i synlige zoner",
+  "Frame-kappen laver en visuel boks rundt om avataren. Galakse-kappen er ét klæde bag kroppen. Stjernerne er kun i de reelt synlige kant-zoner (x=10–28, x=132–150, y=174–235). Hjernen ser: garmentet fortsætter bag kroppen."
+));
+
+// 7b — Personality parade
+const personalityRow = document.getElementById("personalityRow");
+
+// Future cape templates — ragged cloak and legendary cloak
+const RAGGED_CLOAK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="rg-cl" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3e2723"/><stop offset="50%" stop-color="#2a1510"/><stop offset="100%" stop-color="#150a06"/></linearGradient></defs><path d="M 46 90 L 10 100 L 10 218 Q 24 230 36 218 Q 50 206 58 224 Q 68 236 80 228 Q 92 220 102 232 Q 116 240 130 224 Q 142 212 150 220 L 150 100 L 114 90 Q 80 82 46 90 Z" fill="url(#rg-cl)"/><path d="M 10 218 Q 24 230 36 218 Q 50 206 58 224 Q 68 236 80 228 Q 92 220 102 232 Q 116 240 130 224 Q 142 212 150 220" fill="none" stroke="#1a0c08" stroke-width="1.2"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#4e2e22"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#795548" stroke-width="1"/><circle cx="80" cy="86" r="4.5" fill="#5d4037" stroke="#3e2723" stroke-width="1"/><circle cx="80" cy="86" r="2" fill="#795548"/></svg>`;
+
+const LEGENDARY_CLOTH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="lc-cl" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a0030"/><stop offset="40%" stop-color="#0d001a"/><stop offset="100%" stop-color="#04000c"/></linearGradient><radialGradient id="lc-glow" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="#b39ddb" stop-opacity="0.3"/><stop offset="100%" stop-color="#b39ddb" stop-opacity="0.0"/></radialGradient></defs><path d="M 46 90 L 10 100 L 10 237 Q 80 244 150 237 L 150 100 L 114 90 Q 80 82 46 90 Z" fill="url(#lc-cl)"/><ellipse cx="80" cy="240" rx="55" ry="10" fill="url(#lc-glow)"/><path d="M 10 237 Q 80 244 150 237" fill="none" stroke="#7e57c2" stroke-width="0.9" opacity="0.55"/><line x1="10" y1="102" x2="10" y2="237" stroke="#7e57c2" stroke-width="0.7" opacity="0.25"/><line x1="150" y1="102" x2="150" y2="237" stroke="#7e57c2" stroke-width="0.7" opacity="0.25"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#2d0050"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#b39ddb" stroke-width="1"/><circle cx="80" cy="86" r="5.5" fill="#7e57c2" stroke="#b39ddb" stroke-width="1"/><circle cx="80" cy="86" r="3" fill="#d1c4e9"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.8"/></svg>`;
+
+const RAGGED_CLOAK = 'data:image/svg+xml,' + encodeURIComponent(RAGGED_CLOAK_SVG);
+const LEGENDARY_CLOTH = 'data:image/svg+xml,' + encodeURIComponent(LEGENDARY_CLOTH_SVG);
+
+const personalities = [
+  {
+    url: ITEMS.find(i => i.id === "cape-red")?.url,
+    slot: "back",
+    name: "Rød Kappe",
+    rarity: "common",
+    desc: "Tung, kongelig. Hem-sag til y=244. 3 drape-folds. Bred silhuet. Massivt garment.",
+    personality: "Tung / Royal",
+  },
+  {
+    url: ITEMS.find(i => i.id === "galaxy-cape")?.url,
+    slot: "back",
+    name: "Galakse-kappe",
+    rarity: "uncommon",
+    desc: "Tynd, kosmisk. Flad hem y=237. Ingen folds. Sparse stjerner. Eterisk tilstedeværelse.",
+    personality: "Tynd / Kosmisk",
+  },
+  {
+    url: RAGGED_CLOAK,
+    slot: "back",
+    name: "Pjaltet Kappe",
+    rarity: "— (fremtid)",
+    desc: "Asymmetrisk revet hem. Uregelmæssig kant = alder og slid. Samme skulder-arkitektur.",
+    personality: "Asymmetrisk / Vejrbidt",
+  },
+  {
+    url: LEGENDARY_CLOTH,
+    slot: "back",
+    name: "Legendær Kappe",
+    rarity: "— (fremtid)",
+    desc: "Dyb lilla. Glow-linje langs hem og sider. Radial aura under hem. Klæde glimter i mørket.",
+    personality: "Glødende / Legendary",
+  },
+];
+
+personalities.forEach(p => {
+  const wrap = document.createElement("div");
+  wrap.className = "personality-item";
+  const cv = canvas();
+  const layers = [{ src: BASE, z: 0 }];
+  if (p.url) layers.push({ src: p.url, z: SLOT_Z[p.slot] ?? -1 });
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(({ src, z }) => cv.appendChild(layer(src, z)));
+  wrap.appendChild(cv);
+  const lbl = document.createElement("div");
+  lbl.className = "personality-label";
+  lbl.innerHTML = `<strong>${p.name}</strong><em>${p.personality}</em>${p.desc}`;
+  wrap.appendChild(lbl);
+  personalityRow.appendChild(wrap);
+});
+
+// 7c — Loadout harmony: each cape + armor + crown
+const loadoutHarmonyRow = document.getElementById("loadoutHarmonyRow");
+
+const harmonyLoadouts = [
+  { capeId: "cape-red",    label: "Rød Kappe + Rustning + Krone" },
+  { capeId: "galaxy-cape", label: "Galakse + Rustning + Krone" },
+];
+
+harmonyLoadouts.forEach(({ capeId, label }) => {
+  const wrap = document.createElement("div");
+  wrap.className = "compare-item";
+  const cv = canvas("lg");
+  const loadoutItems = [
+    { id: capeId,         slot: "back"    },
+    { id: "armor-knight", slot: "torso"   },
+    { id: "crown-golden", slot: "headwear"},
+  ];
+  const layers = [{ src: BASE, z: 0 }];
+  loadoutItems.forEach(({ id, slot }) => {
+    const item = ITEMS.find(i => i.id === id);
+    if (item) layers.push({ src: item.url, z: SLOT_Z[slot] ?? 1 });
+  });
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(({ src, z }) => cv.appendChild(layer(src, z)));
+  wrap.appendChild(cv);
+  const lbl = document.createElement("div");
+  lbl.className = "label";
+  lbl.innerHTML = `<strong>${label}</strong>Kappe i baggrund — krone + rustning dominerer`;
+  wrap.appendChild(lbl);
+  loadoutHarmonyRow.appendChild(wrap);
 });
 </script>
 </body>
