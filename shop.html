@@ -452,29 +452,24 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
   const wrap = document.createElement("div");
   wrap.className = "shop-preview";
 
-  const isAvatarSlot = !!slotType;
-
-  // Base body — only for avatar items (has a slot)
-  if (isAvatarSlot) {
-    const bodyImg = document.createElement("img");
-    bodyImg.className = "preview-layer";
-    bodyImg.src = BASE_SRC;
-    bodyImg.style.zIndex = "0";
-    bodyImg.alt = "";
-    wrap.appendChild(bodyImg);
-  }
-
-  // Item layer
-  // Back items (z=-1) render behind the body in the real avatar.
-  // In this static preview we elevate them to z=2 so the item is always visible.
-  if (imageUrl) {
-    const itemImg = document.createElement("img");
-    itemImg.className = "preview-layer";
-    itemImg.src = imageUrl;
-    const rawZ = SLOT_Z[slotType] ?? 1;
-    itemImg.style.zIndex = String(rawZ < 0 ? 2 : rawZ);
-    itemImg.alt = "";
-    wrap.appendChild(itemImg);
+  // Build layer list, sort by z ascending, append in that order.
+  // Matches avatar.html + gamefeel.html exactly:
+  // back (z=-1) appended before body (z=0) → body paints on top → correct occlusion.
+  // The old approach elevated back items to z=2 which put capes/wings IN FRONT of the body.
+  if (slotType) {
+    const layers = [{ src: BASE_SRC, z: 0 }];
+    if (imageUrl) {
+      layers.push({ src: imageUrl, z: SLOT_Z[slotType] ?? 1 });
+    }
+    layers.sort((a, b) => a.z - b.z);
+    layers.forEach(({ src, z }) => {
+      const img = document.createElement("img");
+      img.className = "preview-layer";
+      img.src = src;
+      img.style.zIndex = String(z);
+      img.alt = "";
+      wrap.appendChild(img);
+    });
   }
 
   // "Ny!" corner badge — inside preview, top-left SVG corner is sparsely populated
