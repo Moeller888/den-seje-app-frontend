@@ -1,33 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
-    <linearGradient id="gx-main" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="gx-tail" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#1a0533"/>
-      <stop offset="40%" stop-color="#0d1b4d"/>
       <stop offset="100%" stop-color="#0a0e2e"/>
+    </linearGradient>
+    <linearGradient id="gx-nebula" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6a1b9a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#1565c0" stop-opacity="0.4"/>
     </linearGradient>
   </defs>
 
-  <!-- LEFT SHOULDER MANTLE — drapes from collar over left arm -->
-  <path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z"
-        fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
-  <!-- Stars on left mantle (always-visible zone) -->
-  <circle cx="16" cy="100" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="8"  cy="114" r="1"   fill="white" opacity="0.85"/>
-  <circle cx="22" cy="120" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="32" cy="94"  r="1"   fill="white" opacity="0.9"/>
-  <circle cx="10" cy="124" r="0.8" fill="white" opacity="0.75"/>
+  <!-- ═══ LOWER EMERGENCE — cape reappears beside legs after flowing behind body ═══ -->
+  <!-- Left tail — outside left leg (x=48), y=178–236 -->
+  <path d="M 48 178 Q 46 210 46 234 L 30 236 Q 28 208 30 178 Z"
+        fill="url(#gx-tail)"/>
+  <!-- Nebula cloud in left tail -->
+  <ellipse cx="38" cy="208" rx="9" ry="16" fill="url(#gx-nebula)"/>
+  <!-- Stars in left tail -->
+  <circle cx="40" cy="190" r="1.2" fill="white" opacity="0.85"/>
+  <circle cx="34" cy="206" r="1"   fill="white" opacity="0.8"/>
+  <circle cx="42" cy="220" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="36" cy="232" r="0.8" fill="white" opacity="0.75"/>
 
-  <!-- RIGHT SHOULDER MANTLE -->
-  <path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z"
-        fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
-  <!-- Stars on right mantle -->
-  <circle cx="144" cy="100" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="152" cy="114" r="1"   fill="white" opacity="0.85"/>
-  <circle cx="138" cy="120" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="128" cy="94"  r="1"   fill="white" opacity="0.9"/>
-  <circle cx="150" cy="124" r="0.8" fill="white" opacity="0.75"/>
+  <!-- Right tail — outside right leg (x=112), y=178–236 -->
+  <path d="M 112 178 Q 114 210 114 234 L 130 236 Q 132 208 130 178 Z"
+        fill="url(#gx-tail)"/>
+  <!-- Nebula cloud in right tail -->
+  <ellipse cx="122" cy="208" rx="9" ry="16" fill="url(#gx-nebula)"/>
+  <!-- Stars in right tail -->
+  <circle cx="120" cy="190" r="1.2" fill="white" opacity="0.85"/>
+  <circle cx="126" cy="206" r="1"   fill="white" opacity="0.8"/>
+  <circle cx="118" cy="220" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="124" cy="232" r="0.8" fill="white" opacity="0.75"/>
 
-  <!-- COLLAR — arc flanking neck, visible y=84–96 -->
+  <!-- Gold hem arc -->
+  <path d="M 30 236 Q 80 239 130 236"
+        fill="none" stroke="#ffd700" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- ═══ COLLAR — dark attachment at neck, visible y=76–96 ═══ -->
   <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#2a0a4a"/>
   <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
   <!-- Stars on collar wings -->

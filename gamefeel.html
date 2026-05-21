@@ -137,7 +137,7 @@
 
 <!-- ── Section 0: Back-item composition strategy ──────────── -->
 <div class="section">
-  <div class="section-title">0 · Kompositionsstrategi — skulder-mantel som subtil draperingskosmetik, ikke geometrisk ramme</div>
+  <div class="section-title">0 · Kompositionsstrategi — unified flow: krave øverst → bag krop → haler ved ben</div>
   <div class="ba-grid" id="beforeAfterGrid"></div>
 </div>
 
@@ -191,6 +191,11 @@ const OLD_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OLD_CAPE_SVG);
 // This is what the cape looked like BEFORE the simplification: avatar trapped inside a frame
 const OVERBUILT_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cr-ob" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d32f2f"/><stop offset="100%" stop-color="#b71c1c"/></linearGradient></defs><path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 40 92 Q 26 90 6 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 120 92 Q 134 90 154 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 2 98 L 2 228 Q 6 238 14 236 L 14 126 L 2 130 Z" fill="#c62828"/><line x1="2" y1="98" x2="2" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><path d="M 158 98 L 158 228 Q 154 238 146 236 L 146 126 L 158 130 Z" fill="#c62828"/><line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><path d="M 2 175 L 2 228 Q 80 248 158 228 L 158 175 Z" fill="#9a0007"/><path d="M 2 228 Q 80 248 158 228" fill="none" stroke="#ffd700" stroke-width="2"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
 const OVERBUILT_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OVERBUILT_CAPE_SVG);
+
+// Shoulder-flap cape — previous stage: only collar + shoulder wings (no leg visibility)
+// Felt like armor/wing panels flaring out at the sides rather than a flowing garment
+const SHOULDER_FLAP_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 40 92 Q 26 90 6 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/><path d="M 120 92 Q 134 90 154 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
+const SHOULDER_FLAP_CAPE = 'data:image/svg+xml,' + encodeURIComponent(SHOULDER_FLAP_CAPE_SVG);
 
 // All known item image paths (static list for sandbox)
 const ITEMS = [
@@ -258,36 +263,37 @@ const baPairs = [
     note: "At adskille arme fra torso giver bedre ryg-synlighed men ødelægger karakter-læsbarhed. Krop er genoprettet.",
   },
   {
-    title: "Rød Kappe — kappe-ramme (fejl) vs. skulder-mantel (korrekt)",
+    title: "Rød Kappe — skulder-vinge (fejl) vs. samlet flyde-kappe (korrekt)",
+    beforeBase: BASE,
+    beforeItems: [],
+    beforeItemUrls: [{ url: SHOULDER_FLAP_CAPE, slot: "back" }],
+    beforeLabel: "Skulder-vinge — lysrøde paneler ved arme",
+    afterBase: BASE,
+    afterItems: ["cape-red"],
+    afterLabel: "Unified flow — krave + kappehale ved ben",
+    note: "Skulder-vingerne (d32f2f) flarer udad og læses som rustningsvinger eller paneler — ikke stof. Den nye kappe har én mørk krave og genoptræder naturligt som haler ved benene. Kappen flyder BAG kroppen og viser sig igen nedenfor.",
+  },
+  {
+    title: "Galakse-kappe — skulder-vinge vs. krave + nedre hale med stjerner",
     beforeBase: BASE,
     beforeItems: [],
     beforeItemUrls: [{ url: OVERBUILT_CAPE, slot: "back" }],
-    beforeLabel: "Sidepaneler + nederdel — avatar indrammet",
+    beforeLabel: "Overbuilt ramme — alle geometrier på én gang",
     afterBase: BASE,
-    afterItems: ["cape-red"],
-    afterLabel: "Kun skulder-mantel + krave — subtil og integreret",
-    note: "Sidepaneler (x=2–14, guld-kant til y=228) og nederdelen (y=175–228) skaber et geometrisk ramme-look. Kappen INDEHOLDER avataren fremfor at PYNTE den. Skulder-mantel alene er subtil, bærbar og premium.",
+    afterItems: ["galaxy-cape"],
+    afterLabel: "Krave + nedre haler — stjerner præcis der de ses",
+    note: "Galaksens stjerner er nu i kappehalerne ved benene (y=178–236) og i kraven — kun hvor de faktisk er synlige. Ingen stjerner gemmes bag torso eller arme.",
   },
   {
-    title: "Galakse-kappe — simpel skulder-mantel med stjerner",
+    title: "Kappe-flow princippet — hvad skulder-synlighed fejlede",
     beforeBase: BASE,
     beforeItems: [],
-    beforeItemUrls: [{ url: OLD_CAPE, slot: "back" }],
-    beforeLabel: "Gammel rektangel-stil",
+    beforeItemUrls: [{ url: SHOULDER_FLAP_CAPE, slot: "back" }],
+    beforeLabel: "Skulder-vinge: lysrød ved torso-siden",
     afterBase: BASE,
-    afterItems: ["galaxy-cape"],
-    afterLabel: "Skulder-mantel + stjerner — fokuseret synlig zone",
-    note: "Stjerner koncentreret i de altid-synlige mantler. Ingen nederdel eller sidepaneler. Galaksen eksisterer præcis hvor man kan se den.",
-  },
-  {
-    title: "Skulder-mantel fokus — HVAD gør mantlen god?",
-    beforeBase: BASE,
-    beforeItems: ["cape-red"],
-    beforeLabel: "Rød kappe — skulder-mantel",
-    afterBase: BASE,
-    afterItems: ["galaxy-cape"],
-    afterLabel: "Galakse-kappe — skulder-mantel + stjerner",
-    note: "Mantlen er god fordi: (1) den starter ved kragen og følger skulderens naturlige linje, (2) den er synlig OVER armen, ikke bag den, (3) den tapper af naturligt — ingen hård kant. Klingen er stor nok til at læse, lille nok til ikke at dominere.",
+    afterItems: ["cape-red"],
+    afterLabel: "Nedre hale: mørk bag benene, naturlig genopkomst",
+    note: "Skulder-synlighed kræver brede, lysrøde flapper nær torso — læses som ekstra lag. Bene-synlighed kræver kun et smalt, mørkt stykke stof ved siden af benene — læses som kappe der hænger ned. Kroppen er foran. Kappen er bag. Halerne bevidner det.",
   },
   {
     title: "Dragevinger — original krop virker",
@@ -310,15 +316,15 @@ const baPairs = [
     note: "Ridderdragt (z=2) lægger sig foran kroppen. Vinge-spidser og yderkanter forbliver synlige bag rustning.",
   },
   {
-    title: "Fuld loadout — kappe støtter, dominerer ikke",
+    title: "Fuld loadout — kappehaler bag benene, ingen konkurrence om opmærksomhed",
     beforeBase: BASE,
     beforeItems: [],
     beforeItemUrls: [{ url: OVERBUILT_CAPE, slot: "back" }],
-    beforeLabel: "Overbuilt kappe — rammen dominerer",
+    beforeLabel: "Overbuilt kappe — geometri konkurrerer med rustning",
     afterBase: BASE,
     afterItems: ["galaxy-cape", "armor-knight", "crown-golden", "panda-mask"],
-    afterLabel: "Simpel kappe + fuld loadout — alle detaljer synlige",
-    note: "Med overbuilt kappe: de tunge sidepaneler og nederdel konkurrerer med rustning og krone. Med simpel kappe: galaksens skulder-mantel sætter kontekst, rustning og krone dominerer korrekt.",
+    afterLabel: "Unified flow kappe + fuld loadout — krone og rustning dominerer",
+    note: "Den unified-flow kappe bidrager med: krave som garment-logik øverst, stille tilstedeværelse bag kroppen, subtile haler ved benene. Ingenting konkurrerer med rustning eller krone. Kappen er der — men lader avataren skinne.",
   },
 ];
 
