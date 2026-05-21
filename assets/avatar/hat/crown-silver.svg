@@ -1,38 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
     <linearGradient id="cs-silver" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f5f5f5"/>
-      <stop offset="50%" stop-color="#bdbdbd"/>
-      <stop offset="100%" stop-color="#757575"/>
+      <stop offset="0%"   stop-color="#f5f5f5"/>
+      <stop offset="35%"  stop-color="#d0d0d0"/>
+      <stop offset="70%"  stop-color="#9e9e9e"/>
+      <stop offset="100%" stop-color="#616161"/>
     </linearGradient>
   </defs>
+
   <!-- 5 crown points: tall-short-TALL-short-tall -->
   <polygon points="40,22 48,2 56,22"    fill="url(#cs-silver)" stroke="#616161" stroke-width="1"/>
   <polygon points="55,22 63,11 71,22"   fill="url(#cs-silver)" stroke="#616161" stroke-width="1"/>
   <polygon points="70,22 80,0 90,22"    fill="url(#cs-silver)" stroke="#616161" stroke-width="1.5"/>
   <polygon points="89,22 97,11 105,22"  fill="url(#cs-silver)" stroke="#616161" stroke-width="1"/>
   <polygon points="104,22 112,2 120,22" fill="url(#cs-silver)" stroke="#616161" stroke-width="1"/>
+
+  <!-- Tip highlights — metal catch-light at each spike apex -->
+  <circle cx="48"  cy="2"  r="1.4" fill="white" opacity="0.85"/>
+  <circle cx="63"  cy="11" r="1.1" fill="white" opacity="0.75"/>
+  <circle cx="80"  cy="0"  r="1.6" fill="white" opacity="0.9"/>
+  <circle cx="97"  cy="11" r="1.1" fill="white" opacity="0.75"/>
+  <circle cx="112" cy="2"  r="1.4" fill="white" opacity="0.85"/>
+
+  <!-- Left edge catch-light on each spike -->
+  <line x1="40" y1="22" x2="48" y2="2"   stroke="white" stroke-width="0.6" opacity="0.45"/>
+  <line x1="55" y1="22" x2="63" y2="11"  stroke="white" stroke-width="0.6" opacity="0.4"/>
+  <line x1="70" y1="22" x2="80" y2="0"   stroke="white" stroke-width="0.8" opacity="0.5"/>
+  <line x1="89" y1="22" x2="97" y2="11"  stroke="white" stroke-width="0.6" opacity="0.4"/>
+  <line x1="104" y1="22" x2="112" y2="2" stroke="white" stroke-width="0.6" opacity="0.45"/>
+
   <!-- Base band -->
   <rect x="40" y="22" width="80" height="15" rx="3" fill="url(#cs-silver)" stroke="#616161" stroke-width="1.5"/>
   <!-- Band top highlight -->
-  <rect x="40" y="22" width="80" height="4" rx="2" fill="white" opacity="0.5"/>
+  <rect x="40" y="22" width="80" height="4" rx="2" fill="white" opacity="0.45"/>
   <!-- Filigree detail -->
   <line x1="44" y1="30" x2="116" y2="30" stroke="#757575" stroke-width="0.7" stroke-dasharray="3,2.5" opacity="0.55"/>
-  <!-- Center sapphire -->
+
+  <!-- Center sapphire — facet hint -->
   <ellipse cx="80" cy="8" rx="6" ry="7" fill="#1565c0" stroke="#0d47a1" stroke-width="1"/>
   <ellipse cx="78" cy="5" rx="2.5" ry="3" fill="white" opacity="0.65"/>
+  <line x1="80" y1="2" x2="78" y2="8" stroke="#42a5f5" stroke-width="0.6" opacity="0.5"/>
+
   <!-- Left tall amethyst -->
   <ellipse cx="48" cy="8" rx="4" ry="5" fill="#6a1b9a" stroke="#4a148c" stroke-width="0.8"/>
   <ellipse cx="47" cy="6" rx="1.5" ry="2" fill="white" opacity="0.5"/>
+  <line x1="48" y1="4" x2="47" y2="9" stroke="#ce93d8" stroke-width="0.5" opacity="0.45"/>
+
   <!-- Right tall amethyst -->
   <ellipse cx="112" cy="8" rx="4" ry="5" fill="#6a1b9a" stroke="#4a148c" stroke-width="0.8"/>
   <ellipse cx="111" cy="6" rx="1.5" ry="2" fill="white" opacity="0.5"/>
+  <line x1="112" y1="4" x2="111" y2="9" stroke="#ce93d8" stroke-width="0.5" opacity="0.45"/>
+
   <!-- Left short emerald -->
   <circle cx="63" cy="13" r="3.5" fill="#2e7d32" stroke="#1b5e20" stroke-width="0.8"/>
   <circle cx="62" cy="11.5" r="1.3" fill="white" opacity="0.55"/>
+
   <!-- Right short emerald -->
   <circle cx="97" cy="13" r="3.5" fill="#2e7d32" stroke="#1b5e20" stroke-width="0.8"/>
   <circle cx="96" cy="11.5" r="1.3" fill="white" opacity="0.55"/>
+
   <!-- Band rivets -->
   <circle cx="52" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
   <circle cx="80" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>

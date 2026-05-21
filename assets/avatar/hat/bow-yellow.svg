@@ -3,20 +3,31 @@
   <ellipse cx="61" cy="17" rx="22" ry="14" fill="#ffa000" stroke="#e65100" stroke-width="1.5" transform="rotate(-20 61 17)"/>
   <!-- Left loop inner highlight -->
   <ellipse cx="59" cy="14" rx="13" ry="8" fill="#ffcc02" opacity="0.5" transform="rotate(-20 61 17)"/>
+  <!-- Left loop fold crease lines — cloth folding inward toward knot -->
+  <path d="M 48 10 Q 56 14 62 20" fill="none" stroke="#e65100" stroke-width="0.8" opacity="0.45" transform="rotate(-20 61 17)"/>
+  <path d="M 50 18 Q 57 20 62 24" fill="none" stroke="#bf360c" stroke-width="0.6" opacity="0.35" transform="rotate(-20 61 17)"/>
+
   <!-- Right loop outer -->
   <ellipse cx="99" cy="17" rx="22" ry="14" fill="#ffa000" stroke="#e65100" stroke-width="1.5" transform="rotate(20 99 17)"/>
   <!-- Right loop inner highlight -->
   <ellipse cx="101" cy="14" rx="13" ry="8" fill="#ffcc02" opacity="0.5" transform="rotate(20 99 17)"/>
+  <!-- Right loop fold crease lines -->
+  <path d="M 112 10 Q 104 14 98 20" fill="none" stroke="#e65100" stroke-width="0.8" opacity="0.45" transform="rotate(20 99 17)"/>
+  <path d="M 110 18 Q 103 20 98 24" fill="none" stroke="#bf360c" stroke-width="0.6" opacity="0.35" transform="rotate(20 99 17)"/>
+
   <!-- Left tail with angled end -->
   <path d="M 70 23 L 53 42 L 58 46 L 59 43 L 72 28 Z" fill="#ffa000" stroke="#e65100" stroke-width="1"/>
   <!-- Right tail with angled end -->
   <path d="M 90 23 L 107 42 L 102 46 L 101 43 L 88 28 Z" fill="#ffa000" stroke="#e65100" stroke-width="1"/>
+
   <!-- Center knot (shadow base) -->
   <ellipse cx="80" cy="18" rx="11" ry="10" fill="#bf360c"/>
   <!-- Center knot main -->
   <ellipse cx="80" cy="17" rx="10" ry="9" fill="#e65100" stroke="#bf360c" stroke-width="1.2"/>
   <!-- Knot highlight -->
   <ellipse cx="78" cy="14" rx="5" ry="4" fill="#ffcc02" opacity="0.4"/>
+  <!-- Knot center crease — cloth gathered tension -->
+  <line x1="80" y1="9" x2="80" y2="25" stroke="#bf360c" stroke-width="1" opacity="0.4"/>
   <!-- Where loops meet knot — shadow -->
   <ellipse cx="69" cy="17" rx="7" ry="9" fill="#bf360c" opacity="0.3"/>
   <ellipse cx="91" cy="17" rx="7" ry="9" fill="#bf360c" opacity="0.3"/>

@@ -1,38 +1,74 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
-  <!-- Chest plate base -->
-  <rect x="40" y="92" width="80" height="88" rx="10" fill="#546e7a" stroke="#37474f" stroke-width="2"/>
+  <defs>
+    <!-- Chest plate: directional light from upper-left -->
+    <linearGradient id="ak-plate" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#78909c"/>
+      <stop offset="40%"  stop-color="#546e7a"/>
+      <stop offset="100%" stop-color="#37474f"/>
+    </linearGradient>
+    <linearGradient id="ak-panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#8ea8b2"/>
+      <stop offset="100%" stop-color="#546e7a"/>
+    </linearGradient>
+    <linearGradient id="ak-arm" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#78909c"/>
+      <stop offset="100%" stop-color="#37474f"/>
+    </linearGradient>
+    <linearGradient id="ak-armR" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%"   stop-color="#78909c"/>
+      <stop offset="100%" stop-color="#37474f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Chest plate base — gradient lit from upper-left -->
+  <rect x="40" y="92" width="80" height="88" rx="10" fill="url(#ak-plate)" stroke="#263238" stroke-width="1.5"/>
+  <!-- Chest rim highlight — left edge catch-light -->
+  <line x1="40" y1="96" x2="40" y2="174" stroke="#b0bec5" stroke-width="1.2" opacity="0.55"/>
   <!-- Chest highlight panel -->
-  <rect x="56" y="106" width="48" height="58" rx="6" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/>
+  <rect x="56" y="106" width="48" height="58" rx="6" fill="url(#ak-panel)" stroke="#455a64" stroke-width="1.2"/>
   <!-- Panel top highlight -->
-  <rect x="56" y="106" width="48" height="8" rx="6" fill="#78909c" opacity="0.45"/>
+  <rect x="56" y="106" width="48" height="7" rx="5" fill="#cfd8dc" opacity="0.35"/>
   <!-- Cross emblem (shield motif) -->
-  <rect x="76" y="112" width="8" height="26" rx="2" fill="#37474f" opacity="0.65"/>
-  <rect x="66" y="120" width="28" height="8" rx="2" fill="#37474f" opacity="0.65"/>
+  <rect x="76" y="112" width="8" height="26" rx="2" fill="#263238" opacity="0.6"/>
+  <rect x="66" y="120" width="28" height="8" rx="2" fill="#263238" opacity="0.6"/>
+  <!-- Cross highlight — left faces of cross catch light -->
+  <rect x="76" y="112" width="2" height="26" rx="1" fill="#90a4ae" opacity="0.45"/>
   <!-- Vertical center seam -->
-  <line x1="80" y1="106" x2="80" y2="162" stroke="#37474f" stroke-width="1.5" opacity="0.7"/>
+  <line x1="80" y1="106" x2="80" y2="162" stroke="#37474f" stroke-width="1.2" opacity="0.6"/>
   <!-- Horizontal ribs -->
-  <line x1="56" y1="126" x2="104" y2="126" stroke="#455a64" stroke-width="1.2"/>
-  <line x1="56" y1="142" x2="104" y2="142" stroke="#455a64" stroke-width="1.2"/>
-  <line x1="56" y1="156" x2="104" y2="156" stroke="#455a64" stroke-width="1.2"/>
+  <line x1="56" y1="126" x2="104" y2="126" stroke="#455a64" stroke-width="1.1"/>
+  <line x1="56" y1="142" x2="104" y2="142" stroke="#455a64" stroke-width="1.1"/>
+  <line x1="56" y1="156" x2="104" y2="156" stroke="#455a64" stroke-width="1.1"/>
   <!-- Belt -->
-  <rect x="40" y="174" width="80" height="8" rx="4" fill="#263238"/>
+  <rect x="40" y="174" width="80" height="8" rx="4" fill="#1c2a30"/>
   <!-- Belt buckle -->
   <rect x="74" y="174" width="12" height="8" rx="2" fill="#ffd600"/>
   <circle cx="80" cy="178" r="2.5" fill="#ff8f00"/>
-  <!-- Left pauldron -->
-  <ellipse cx="29" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
-  <ellipse cx="28" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/>
+  <circle cx="79" cy="177" r="0.9" fill="white" opacity="0.5"/>
+
+  <!-- Left pauldron — gradient -->
+  <ellipse cx="29" cy="106" rx="20" ry="15" fill="url(#ak-plate)" stroke="#263238" stroke-width="1.2"/>
+  <!-- Pauldron rim light — top edge -->
+  <path d="M 12 101 Q 29 95 46 101" fill="none" stroke="#b0bec5" stroke-width="0.9" opacity="0.5"/>
+  <ellipse cx="27" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
+
   <!-- Right pauldron -->
-  <ellipse cx="131" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
-  <ellipse cx="132" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/>
-  <!-- Left arm plate -->
-  <rect x="12" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
-  <!-- Right arm plate -->
-  <rect x="126" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/>
-  <!-- Arm highlights -->
-  <rect x="15" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/>
-  <rect x="137" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/>
+  <ellipse cx="131" cy="106" rx="20" ry="15" fill="url(#ak-plate)" stroke="#263238" stroke-width="1.2"/>
+  <path d="M 114 101 Q 131 95 148 101" fill="none" stroke="#b0bec5" stroke-width="0.9" opacity="0.5"/>
+  <ellipse cx="133" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
+
+  <!-- Left arm plate — gradient left→right (light hits left face) -->
+  <rect x="12" y="119" width="22" height="52" rx="9" fill="url(#ak-arm)" stroke="#263238" stroke-width="1.2"/>
+  <!-- Left arm rim light -->
+  <line x1="12" y1="123" x2="12" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
+  <rect x="15" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
+
+  <!-- Right arm plate — mirrored gradient -->
+  <rect x="126" y="119" width="22" height="52" rx="9" fill="url(#ak-armR)" stroke="#263238" stroke-width="1.2"/>
+  <line x1="148" y1="123" x2="148" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
+  <rect x="137" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
+
   <!-- Elbow guards -->
-  <ellipse cx="23" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/>
-  <ellipse cx="137" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/>
+  <ellipse cx="23"  cy="150" rx="10" ry="6" fill="url(#ak-plate)" stroke="#263238" stroke-width="0.9"/>
+  <ellipse cx="137" cy="150" rx="10" ry="6" fill="url(#ak-plate)" stroke="#263238" stroke-width="0.9"/>
 </svg>

@@ -3,10 +3,12 @@
   <ellipse cx="80" cy="27" rx="46" ry="9" fill="#1a1a1a" stroke="#111" stroke-width="1"/>
   <!-- Crown -->
   <path d="M 44 27 L 48 3 L 80 8 L 112 3 L 116 27 Z" fill="#1a1a1a" stroke="#111" stroke-width="1"/>
-  <!-- Crown highlight left edge -->
+  <!-- Crown left highlight edge -->
   <line x1="48" y1="3" x2="44" y2="27" stroke="#333" stroke-width="1"/>
-  <!-- Crown highlight right edge -->
+  <!-- Crown right highlight edge -->
   <line x1="112" y1="3" x2="116" y2="27" stroke="#333" stroke-width="1"/>
+  <!-- Fabric crease — horizontal tension line across crown mid -->
+  <path d="M 46 16 Q 80 14 114 16" fill="none" stroke="#2a2a2a" stroke-width="0.8" opacity="0.55"/>
   <!-- White band -->
   <rect x="44" y="22" width="72" height="5" rx="2" fill="#eeeeee"/>
   <!-- Skull head -->
@@ -15,9 +17,9 @@
   <ellipse cx="76.5" cy="12" rx="2" ry="2.2" fill="#1a1a1a"/>
   <ellipse cx="83.5" cy="12" rx="2" ry="2.2" fill="#1a1a1a"/>
   <!-- Skull teeth -->
-  <rect x="75" y="16" width="2" height="3" rx="0.5" fill="white" stroke="#bbb" stroke-width="0.5"/>
+  <rect x="75"   y="16" width="2" height="3" rx="0.5" fill="white" stroke="#bbb" stroke-width="0.5"/>
   <rect x="78.5" y="16" width="2" height="3" rx="0.5" fill="white" stroke="#bbb" stroke-width="0.5"/>
-  <rect x="82" y="16" width="2" height="3" rx="0.5" fill="white" stroke="#bbb" stroke-width="0.5"/>
+  <rect x="82"   y="16" width="2" height="3" rx="0.5" fill="white" stroke="#bbb" stroke-width="0.5"/>
   <!-- Skull jaw -->
   <path d="M 74 16 Q 80 20 86 16" fill="none" stroke="#bbb" stroke-width="0.8"/>
   <!-- Crossbone left-right -->
@@ -26,13 +28,13 @@
   <circle cx="93" cy="13" r="2.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
   <!-- Crossbone top-bottom -->
   <line x1="80" y1="5" x2="80" y2="21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="80" cy="5" r="2.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
+  <circle cx="80" cy="5"  r="2.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
   <circle cx="80" cy="21" r="2.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
   <!-- Re-draw skull on top of crossbones -->
   <circle cx="80" cy="13" r="7" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8"/>
-  <ellipse cx="76.5" cy="12" rx="2" ry="2.2" fill="white"/>
-  <ellipse cx="83.5" cy="12" rx="2" ry="2.2" fill="white"/>
-  <rect x="75" y="15.5" width="2" height="2.5" rx="0.5" fill="white"/>
+  <ellipse cx="76.5" cy="12" rx="2"   ry="2.2" fill="white"/>
+  <ellipse cx="83.5" cy="12" rx="2"   ry="2.2" fill="white"/>
+  <rect x="75"   y="15.5" width="2" height="2.5" rx="0.5" fill="white"/>
   <rect x="78.5" y="15.5" width="2" height="2.5" rx="0.5" fill="white"/>
-  <rect x="82" y="15.5" width="2" height="2.5" rx="0.5" fill="white"/>
+  <rect x="82"   y="15.5" width="2" height="2.5" rx="0.5" fill="white"/>
 </svg>

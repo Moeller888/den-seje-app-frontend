@@ -1,23 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
     <linearGradient id="cr-cloth" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#7a0000"/>
-      <stop offset="100%" stop-color="#4a0000"/>
+      <stop offset="0%"   stop-color="#8c1212"/>
+      <stop offset="30%"  stop-color="#6d0000"/>
+      <stop offset="100%" stop-color="#2e0000"/>
     </linearGradient>
   </defs>
 
-  <!-- ═══ CONTINUOUS BACK CLOTH ═══
-       One unified shape. Body (z=0) sits on top and occludes naturally.
-       Visible zones: collar wings (y=76–96), 4px arm edges (y=100–166),
-       beside legs (y=166–234), hem (y=234+). -->
+  <!-- Continuous back cloth — body (z=0) occludes naturally -->
   <path d="M 46 90 L 10 100 L 10 236 Q 80 239 150 236 L 150 100 L 114 90 Q 80 82 46 90 Z"
         fill="url(#cr-cloth)"/>
 
-  <!-- ═══ COLLAR — brighter overlay on the cloth, visible in neck gap zones ═══ -->
-  <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/>
+  <!-- Center drape fold hint — cloth gravity line -->
+  <path d="M 80 97 Q 78 166 79 234 Q 80 238 81 234 Q 82 166 80 97 Z"
+        fill="#a02828" opacity="0.18"/>
+
+  <!-- Left shoulder crease -->
+  <path d="M 46 90 Q 60 94 72 97" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.4"/>
+  <!-- Right shoulder crease -->
+  <path d="M 114 90 Q 100 94 88 97" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Collar — brighter overlay in neck gap zone -->
+  <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9e0010"/>
   <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
+
   <!-- Clasp -->
   <circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
   <circle cx="80" cy="86" r="2.8" fill="#ff8f00"/>
-  <circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/>
+  <circle cx="79" cy="85" r="1"   fill="white" opacity="0.6"/>
 </svg>

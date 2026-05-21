@@ -178,6 +178,12 @@
   <div id="layerRef"></div>
 </div>
 
+<!-- ── Section 6: Art Polish Pass ───────────────────────── -->
+<div class="section">
+  <div class="section-title">6 · Art Polish Pass — material kvalitet, raritetshierarki, silhuet-forfining</div>
+  <div class="ba-grid" id="artPolishGrid"></div>
+</div>
+
 <script type="module">
 import {
   ALL_SLOTS, SLOTS, SLOT_Z, SLOT_LABELS, BASE_SRC,
@@ -585,6 +591,133 @@ table.innerHTML = `
   }).join("")}
 `;
 layerRef.appendChild(table);
+
+// ── Section 6: Art Polish Pass ───────────────────────────────────────────────
+const artPolishGrid = document.getElementById("artPolishGrid");
+
+// Old SVG snapshots — captured before polish pass
+const OLD_CAPE_RED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cr-cloth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7a0000"/><stop offset="100%" stop-color="#4a0000"/></linearGradient></defs><path d="M 46 90 L 10 100 L 10 236 Q 80 239 150 236 L 150 100 L 114 90 Q 80 82 46 90 Z" fill="url(#cr-cloth)"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/></svg>`;
+
+const OLD_WINGS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><path d="M 42 118 L 2 52 L 8 158 L 34 194 Z" fill="#388e3c" stroke="#1b5e20" stroke-width="1.5"/><path d="M 42 118 L 2 52 L 18 92 Z" fill="#4caf50" opacity="0.48"/><path d="M 42 118 L 8 118 L 10 148 Z" fill="#4caf50" opacity="0.38"/><path d="M 42 118 L 8 158 L 22 148 Z" fill="#4caf50" opacity="0.42"/><path d="M 2 52 L 8 158 L 34 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/><line x1="42" y1="118" x2="2" y2="52" stroke="#2e7d32" stroke-width="2"/><line x1="42" y1="118" x2="10" y2="96" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="8" y2="138" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="8" y2="158" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="34" y2="194" stroke="#1b5e20" stroke-width="1.5"/><circle cx="2" cy="52" r="4" fill="#1b5e20"/><circle cx="34" cy="194" r="3" fill="#1b5e20"/><path d="M 118 118 L 158 52 L 152 158 L 126 194 Z" fill="#388e3c" stroke="#1b5e20" stroke-width="1.5"/><path d="M 118 118 L 158 52 L 142 92 Z" fill="#4caf50" opacity="0.48"/><path d="M 118 118 L 152 118 L 150 148 Z" fill="#4caf50" opacity="0.38"/><path d="M 118 118 L 152 158 L 138 148 Z" fill="#4caf50" opacity="0.42"/><path d="M 158 52 L 152 158 L 126 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/><line x1="118" y1="118" x2="158" y2="52" stroke="#2e7d32" stroke-width="2"/><line x1="118" y1="118" x2="150" y2="96" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="152" y2="138" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="152" y2="158" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="126" y2="194" stroke="#1b5e20" stroke-width="1.5"/><circle cx="158" cy="52" r="4" fill="#1b5e20"/><circle cx="126" cy="194" r="3" fill="#1b5e20"/></svg>`;
+
+const OLD_ARMOR = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><rect x="40" y="92" width="80" height="88" rx="10" fill="#546e7a" stroke="#37474f" stroke-width="2"/><rect x="56" y="106" width="48" height="58" rx="6" fill="#607d8b" stroke="#455a64" stroke-width="1.5"/><rect x="56" y="106" width="48" height="8" rx="6" fill="#78909c" opacity="0.45"/><rect x="76" y="112" width="8" height="26" rx="2" fill="#37474f" opacity="0.65"/><rect x="66" y="120" width="28" height="8" rx="2" fill="#37474f" opacity="0.65"/><line x1="80" y1="106" x2="80" y2="162" stroke="#37474f" stroke-width="1.5" opacity="0.7"/><line x1="56" y1="126" x2="104" y2="126" stroke="#455a64" stroke-width="1.2"/><line x1="56" y1="142" x2="104" y2="142" stroke="#455a64" stroke-width="1.2"/><line x1="56" y1="156" x2="104" y2="156" stroke="#455a64" stroke-width="1.2"/><rect x="40" y="174" width="80" height="8" rx="4" fill="#263238"/><rect x="74" y="174" width="12" height="8" rx="2" fill="#ffd600"/><circle cx="80" cy="178" r="2.5" fill="#ff8f00"/><ellipse cx="29" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/><ellipse cx="28" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/><ellipse cx="131" cy="106" rx="20" ry="15" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/><ellipse cx="132" cy="103" rx="13" ry="8" fill="#607d8b" opacity="0.55"/><rect x="12" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/><rect x="126" y="119" width="22" height="52" rx="9" fill="#546e7a" stroke="#37474f" stroke-width="1.5"/><rect x="15" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/><rect x="137" y="123" width="8" height="22" rx="4" fill="#78909c" opacity="0.5"/><ellipse cx="23" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/><ellipse cx="137" cy="150" rx="10" ry="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/></svg>`;
+
+const OLD_CROWN_GOLDEN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cg-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff59d"/><stop offset="45%" stop-color="#ffd600"/><stop offset="100%" stop-color="#e65100"/></linearGradient></defs><polygon points="40,22 48,2 56,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="55,22 63,11 71,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="70,22 80,0 90,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1.5"/><polygon points="89,22 97,11 105,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="104,22 112,2 120,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><rect x="40" y="22" width="80" height="15" rx="3" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1.5"/><rect x="40" y="22" width="80" height="4" rx="2" fill="#fff9c4" opacity="0.5"/><line x1="44" y1="30" x2="116" y2="30" stroke="#bf360c" stroke-width="0.8" stroke-dasharray="3,2.5" opacity="0.6"/><ellipse cx="80" cy="8" rx="6" ry="7" fill="#c62828" stroke="#7f0000" stroke-width="1"/><ellipse cx="78" cy="5" rx="2.5" ry="3" fill="white" opacity="0.65"/><ellipse cx="48" cy="8" rx="4" ry="5" fill="#c62828" stroke="#7f0000" stroke-width="0.8"/><ellipse cx="47" cy="6" rx="1.5" ry="2" fill="white" opacity="0.55"/><ellipse cx="112" cy="8" rx="4" ry="5" fill="#c62828" stroke="#7f0000" stroke-width="0.8"/><ellipse cx="111" cy="6" rx="1.5" ry="2" fill="white" opacity="0.55"/><circle cx="63" cy="13" r="3.5" fill="#1565c0" stroke="#0d47a1" stroke-width="0.8"/><circle cx="62" cy="11.5" r="1.3" fill="white" opacity="0.6"/><circle cx="97" cy="13" r="3.5" fill="#1565c0" stroke="#0d47a1" stroke-width="0.8"/><circle cx="96" cy="11.5" r="1.3" fill="white" opacity="0.6"/><circle cx="52" cy="29" r="2" fill="#fff59d" stroke="#bf360c" stroke-width="0.8"/><circle cx="80" cy="29" r="2" fill="#fff59d" stroke="#bf360c" stroke-width="0.8"/><circle cx="108" cy="29" r="2" fill="#fff59d" stroke="#bf360c" stroke-width="0.8"/></svg>`;
+
+const OLD_PANDA = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><circle cx="58" cy="26" r="13" fill="#1a1a1a"/><circle cx="102" cy="26" r="13" fill="#1a1a1a"/><circle cx="58" cy="26" r="7" fill="#f8bbd0" opacity="0.6"/><circle cx="102" cy="26" r="7" fill="#f8bbd0" opacity="0.6"/><ellipse cx="80" cy="52" rx="30" ry="28" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/><ellipse cx="67" cy="46" rx="11" ry="9" fill="#1a1a1a"/><ellipse cx="93" cy="46" rx="11" ry="9" fill="#1a1a1a"/><ellipse cx="67" cy="46" rx="7" ry="6" fill="white"/><ellipse cx="93" cy="46" rx="7" ry="6" fill="white"/><circle cx="68" cy="47" r="3.5" fill="#1a1a1a"/><circle cx="66" cy="45" r="1.2" fill="white" opacity="0.8"/><circle cx="92" cy="47" r="3.5" fill="#1a1a1a"/><circle cx="90" cy="45" r="1.2" fill="white" opacity="0.8"/><ellipse cx="80" cy="60" rx="5" ry="3.5" fill="#1a1a1a"/><path d="M 73 65 Q 80 71 87 65" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="60" cy="62" rx="6" ry="3.5" fill="#f48fb1" opacity="0.5"/><ellipse cx="100" cy="62" rx="6" ry="3.5" fill="#f48fb1" opacity="0.5"/></svg>`;
+
+function dataUrl(svg) {
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
+function buildPolishAvatar(baseUrl, extraLayerUrl, extraLayerSlot) {
+  const col = document.createElement("div");
+  const c = canvas();
+  // sort layers by z so DOM order matches paint order
+  const layers = [{ src: baseUrl, z: 0 }];
+  if (extraLayerUrl) layers.push({ src: extraLayerUrl, z: SLOT_Z[extraLayerSlot] ?? 1 });
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(({ src, z }) => c.appendChild(layer(src, z)));
+  col.appendChild(c);
+  return col;
+}
+
+const polishPairs = [
+  {
+    title: "Rød Kappe — klædemateriale",
+    beforeBase: BASE,
+    beforeUrl: dataUrl(OLD_CAPE_RED),
+    beforeSlot: "back",
+    beforeLabel: "Flad 2-stop gradient — monotont, intet stof",
+    afterBase: BASE,
+    afterItemId: "cape-red",
+    afterLabel: "3-stop gradient + midterfold + skulderkryds — tyngde og fald",
+    note: "3-stop gradient (#8c1212 → #6d0000 → #2e0000) giver dybde langs hele kappens fald. Centerfold-stien antyder tyngdekraft — stoffet hænger nedad. Skulderkrydslinjerne viser stræk ved skulder-attachment. Hjernen læser: dette er et tungt stykke klæde.",
+  },
+  {
+    title: "Dragevinger — organisk membran",
+    beforeBase: BASE,
+    beforeUrl: dataUrl(OLD_WINGS),
+    beforeSlot: "back",
+    beforeLabel: "Flad #388e3c — plastik-look, ingen dybde",
+    afterBase: BASE,
+    afterItemId: "wings-dragon",
+    afterLabel: "Gradient membran + iridescentt highlight + skæl-buer",
+    note: "LinearGradient (#43a047 → #2e7d32 → #1a3a1c) giver membranerne lys-til-mørk dybde, som om lyset rammer fra oven. Teal highlight-linje (#80cbc4) langs øvre rygrad antyder iridescens — dragers skæl reflekterer uventet. Skæl-buer nær wingroot giver organisk tekstur. Wingtip-glow bekræfter: dette er et levende væsen.",
+  },
+  {
+    title: "Ridderdragt — metal retningslys",
+    beforeBase: BASE,
+    beforeUrl: dataUrl(OLD_ARMOR),
+    beforeSlot: "torso",
+    beforeLabel: "Flad #546e7a — stål ser ud som plast",
+    afterBase: BASE,
+    afterItemId: "armor-knight",
+    afterLabel: "Retningsgradient + rimlight + pauldron-highlight",
+    note: "LinearGradient (#78909c → #546e7a → #37474f) simulerer lys fra øverste venstre hjørne. Rimlight-linjer (#b0bec5) langs venstre kant af brystplade, arme og pauldrons bekræfter: stål er et reflekterende materiale. Pauldron-toplinje ser ud som poleret metaloverflade. Hjernen læser: det her vejer noget.",
+  },
+  {
+    title: "Guldkrone (LEGENDARY) — raritetssignatur",
+    beforeBase: BASE,
+    beforeUrl: dataUrl(OLD_CROWN_GOLDEN),
+    beforeSlot: "headwear",
+    beforeLabel: "3-stop gradient, ingen aura — ligner uncommon",
+    afterBase: BASE,
+    afterItemId: "crown-golden",
+    afterLabel: "4-stop gradient + glød-aura + spids-highlights + facet-linjer",
+    note: "4-stop gradient tilføjer varm orange mid-stop for rigere guld-læsning. Radial glød-aura (gul, 28% opacity) nedenfor kronen er det visuelle signal: 'dette er legendary'. Spids-highlights (hvide cirkler i hvert spidstip) fanger lys. Facet-linjer på ædelstenene antyder slibning. Sekundær filigran-linje tilføjer kompleksitet. Hjernen læser: dette er tier 1.",
+  },
+  {
+    title: "Panda-maske (RARE) — organisk pels og dybde",
+    beforeBase: BASE,
+    beforeUrl: dataUrl(OLD_PANDA),
+    beforeSlot: "face",
+    beforeLabel: "Flat pink opacity øre-indre — tegneserieagtig",
+    afterBase: BASE,
+    afterItemId: "panda-mask",
+    afterLabel: "Defineret pink + highlight + næsedybde + pels-striber",
+    note: "Øre-indre er nu solid #f06292 med #f8bbd0 highlight — to tydelige lag, ikke bare én opacity. Pels-striber langs ørekanter antyder hårtekstur. Næsehighlight-punkt (#555) giver næsen volumen. Blush er nu dobbelt-lag (ydre bredere, indre mørkere) for en blødere gradient-effekt. Hjernen læser: dette er en sød, organisk figur — ikke en flat ikon.",
+  },
+];
+
+polishPairs.forEach(pair => {
+  const pairEl = document.createElement("div");
+  pairEl.className = "ba-pair";
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "ba-pair-title";
+  titleEl.textContent = pair.title;
+  pairEl.appendChild(titleEl);
+
+  const avatarsEl = document.createElement("div");
+  avatarsEl.className = "ba-avatars";
+
+  // Before
+  const beforeCol = buildPolishAvatar(pair.beforeBase, pair.beforeUrl, pair.beforeSlot);
+  const beforeLbl = document.createElement("div");
+  beforeLbl.className = "ba-label-before";
+  beforeLbl.textContent = "FØR — " + pair.beforeLabel;
+  beforeCol.appendChild(beforeLbl);
+  avatarsEl.appendChild(beforeCol);
+
+  // After
+  const afterItem = ITEMS.find(i => i.id === pair.afterItemId);
+  const afterCol = buildPolishAvatar(pair.afterBase, afterItem?.url, afterItem?.slot);
+  const afterLbl = document.createElement("div");
+  afterLbl.className = "ba-label-after";
+  afterLbl.textContent = "EFTER — " + pair.afterLabel;
+  afterCol.appendChild(afterLbl);
+  avatarsEl.appendChild(afterCol);
+
+  pairEl.appendChild(avatarsEl);
+
+  const noteEl = document.createElement("div");
+  noteEl.className = "ba-note";
+  noteEl.textContent = pair.note;
+  pairEl.appendChild(noteEl);
+
+  artPolishGrid.appendChild(pairEl);
+});
 </script>
 </body>
 </html>
