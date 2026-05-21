@@ -39,6 +39,7 @@
     }
     .avatar-canvas {
       position: relative;
+      isolation: isolate;
       width: 120px; height: 180px;
       border-radius: 10px;
       background: radial-gradient(ellipse at 50% 28%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
@@ -137,7 +138,7 @@
 
 <!-- ── Section 0: Back-item composition strategy ──────────── -->
 <div class="section">
-  <div class="section-title">0 · Kompositionsstrategi — ét kontinuerligt klæde bag avataren, naturlig okklusering af krop (z=0)</div>
+  <div class="section-title">0 · Kompositionsstrategi — isolation:isolate på container → korrekt z-index stacking → krop okkluderer kappe naturligt</div>
   <div class="ba-grid" id="beforeAfterGrid"></div>
 </div>
 
