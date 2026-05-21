@@ -11,17 +11,6 @@
     </linearGradient>
   </defs>
 
-  <!-- ═══ CENTER FILL — hidden behind body ═══ -->
-  <path d="M 14 98 L 14 228 Q 80 248 146 228 L 146 98 Z" fill="url(#gx-main)"/>
-  <!-- Nebula clouds on fill (mostly hidden, adds depth) -->
-  <ellipse cx="50" cy="152" rx="28" ry="18" fill="url(#gx-nebula)"/>
-  <ellipse cx="110" cy="172" rx="24" ry="16" fill="url(#gx-nebula)"/>
-  <!-- Stars on fill -->
-  <circle cx="30" cy="118" r="1.5" fill="white" opacity="0.65"/>
-  <circle cx="62" cy="138" r="1" fill="white" opacity="0.6"/>
-  <circle cx="98" cy="128" r="1.5" fill="white" opacity="0.65"/>
-  <circle cx="128" cy="156" r="1" fill="white" opacity="0.6"/>
-
   <!-- ═══ LEFT SHOULDER MANTLE — visible above + outside arm ═══ -->
   <path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z"
         fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
@@ -62,8 +51,8 @@
   <!-- Gold right edge -->
   <line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
 
-  <!-- ═══ LOWER SKIRT — y=200+, below body/legs, fully visible ═══ -->
-  <path d="M 2 200 L 2 228 Q 80 248 158 228 L 158 200 Z" fill="url(#gx-main)"/>
+  <!-- ═══ LOWER SKIRT — y=175+, bridges arm-end gap and covers below body ═══ -->
+  <path d="M 2 175 L 2 228 Q 80 248 158 228 L 158 175 Z" fill="url(#gx-main)"/>
   <!-- Nebula in skirt -->
   <ellipse cx="80" cy="224" rx="58" ry="12" fill="url(#gx-nebula)"/>
   <!-- Stars in skirt -->
