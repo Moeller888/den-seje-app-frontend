@@ -6,24 +6,24 @@
   <circle cx="110" cy="52" r="8" fill="#F4C89C"/>
   <!-- Neck -->
   <rect x="72" y="78" width="16" height="16" fill="#F4C89C"/>
-  <!-- Body torso — x=48–112 (64px, was 80px x=40–120); narrows torso to expose back-item side strips -->
-  <rect x="48" y="94" width="64" height="84" rx="10" fill="#e0e0e0"/>
-  <!-- Left arm — x=10–30 (was x=14–40); moved outward, gap at x=30–48 reveals capes/wings behind body -->
-  <rect x="10" y="102" width="20" height="62" rx="10" fill="#e0e0e0"/>
-  <!-- Right arm — x=130–150 (was x=120–146); gap at x=112–130 reveals capes/wings -->
-  <rect x="130" y="102" width="20" height="62" rx="10" fill="#e0e0e0"/>
+  <!-- Body -->
+  <rect x="40" y="92" width="80" height="88" rx="10" fill="#e0e0e0"/>
+  <!-- Left arm -->
+  <rect x="14" y="98" width="26" height="68" rx="11" fill="#e0e0e0"/>
+  <!-- Right arm -->
+  <rect x="120" y="98" width="26" height="68" rx="11" fill="#e0e0e0"/>
   <!-- Left hand -->
-  <circle cx="20" cy="168" r="8" fill="#F4C89C"/>
+  <circle cx="27" cy="172" r="9" fill="#F4C89C"/>
   <!-- Right hand -->
-  <circle cx="140" cy="168" r="8" fill="#F4C89C"/>
+  <circle cx="133" cy="172" r="9" fill="#F4C89C"/>
   <!-- Left leg -->
-  <rect x="52" y="176" width="24" height="54" rx="10" fill="#9e9e9e"/>
+  <rect x="48" y="178" width="26" height="56" rx="10" fill="#9e9e9e"/>
   <!-- Right leg -->
-  <rect x="84" y="176" width="24" height="54" rx="10" fill="#9e9e9e"/>
+  <rect x="86" y="178" width="26" height="56" rx="10" fill="#9e9e9e"/>
   <!-- Left shoe -->
-  <ellipse cx="64" cy="231" rx="14" ry="6" fill="#616161"/>
+  <ellipse cx="61" cy="235" rx="16" ry="6" fill="#616161"/>
   <!-- Right shoe -->
-  <ellipse cx="96" cy="231" rx="14" ry="6" fill="#616161"/>
+  <ellipse cx="99" cy="235" rx="16" ry="6" fill="#616161"/>
   <!-- Eyes -->
   <circle cx="68" cy="46" r="5" fill="#333"/>
   <circle cx="92" cy="46" r="5" fill="#333"/>
@@ -35,5 +35,5 @@
   <!-- Mouth -->
   <path d="M 70 64 Q 80 72 90 64" stroke="#c47a50" stroke-width="2" fill="none" stroke-linecap="round"/>
   <!-- Shirt collar -->
-  <path d="M 64 94 L 80 108 L 96 94" fill="#d0d0d0" stroke="#bbb" stroke-width="1"/>
+  <path d="M 64 92 L 80 108 L 96 92" fill="#d0d0d0" stroke="#bbb" stroke-width="1"/>
 </svg>

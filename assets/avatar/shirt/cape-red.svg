@@ -1,26 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
-    <linearGradient id="cr-red" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="cr-main" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#d32f2f"/>
       <stop offset="100%" stop-color="#b71c1c"/>
     </linearGradient>
   </defs>
-  <!-- Cape body — extends to x=4/x=156 so it peeks out past the arms (x=14/x=146) at z=-1 -->
-  <path d="M 4 95 L 4 230 Q 80 252 156 230 L 156 95 Z" fill="url(#cr-red)" opacity="0.95"/>
+
+  <!-- ═══ CENTER FILL — hidden behind body, gives cape substance ═══ -->
+  <path d="M 14 98 L 14 228 Q 80 248 146 228 L 146 98 Z" fill="url(#cr-main)" opacity="0.95"/>
   <!-- Center fold shadow -->
-  <path d="M 80 95 L 74 231 Q 80 247 86 231 L 80 95 Z" fill="#7f0000" opacity="0.18"/>
-  <!-- Left side highlight -->
-  <path d="M 8 97 L 8 205 Q 34 218 52 210 L 44 104 Z" fill="#ef5350" opacity="0.13"/>
-  <!-- Right side highlight -->
-  <path d="M 152 97 L 152 205 Q 126 218 108 210 L 116 104 Z" fill="#ef5350" opacity="0.13"/>
-  <!-- Inner lining visible strip -->
-  <path d="M 28 100 L 20 226 Q 80 240 140 226 L 132 100 Z" fill="#ef5350" opacity="0.18"/>
-  <!-- Shoulder left drape -->
-  <path d="M 4 95 Q 36 110 80 106 Q 34 95 4 95 Z" fill="#b71c1c"/>
-  <!-- Shoulder right drape -->
-  <path d="M 156 95 Q 124 110 80 106 Q 126 95 156 95 Z" fill="#b71c1c"/>
-  <!-- Collar clasp -->
-  <circle cx="80" cy="101" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
-  <circle cx="80" cy="101" r="3" fill="#ff8f00"/>
-  <circle cx="79" cy="100" r="1" fill="white" opacity="0.6"/>
+  <path d="M 80 98 L 74 229 Q 80 246 86 229 L 80 98 Z" fill="#7f0000" opacity="0.18"/>
+
+  <!-- ═══ LEFT SHOULDER MANTLE ═══
+       Visible zone: y=88–98 (above arm/torso), x=2–46 fully clear
+       Transitions to side strip at x=2–14 from y=98 onward
+       Path: collar-left → outer top → outer bottom → inner bottom → inner top → torso corner -->
+  <path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z"
+        fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/>
+  <!-- Fold highlight — visible in shoulder zone -->
+  <path d="M 40 92 Q 26 90 6 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/>
+
+  <!-- ═══ RIGHT SHOULDER MANTLE ═══ -->
+  <path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z"
+        fill="#d32f2f" stroke="#b71c1c" stroke-width="0.8"/>
+  <path d="M 120 92 Q 134 90 154 100" fill="none" stroke="#ef5350" stroke-width="1.2" opacity="0.45"/>
+
+  <!-- ═══ LEFT SIDE PANEL — x=2–14, outside arm, always visible ═══ -->
+  <path d="M 2 98 L 2 228 Q 6 238 14 236 L 14 126 L 2 130 Z" fill="#c62828"/>
+  <!-- Gold edge -->
+  <line x1="2" y1="98" x2="2" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- ═══ RIGHT SIDE PANEL — x=146–158, outside arm, always visible ═══ -->
+  <path d="M 158 98 L 158 228 Q 154 238 146 236 L 146 126 L 158 130 Z" fill="#c62828"/>
+  <!-- Gold edge -->
+  <line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- ═══ LOWER SKIRT — y=198+, below body/legs, fully visible ═══ -->
+  <path d="M 2 200 L 2 228 Q 80 248 158 228 L 158 200 Z" fill="#9a0007"/>
+  <!-- Inner lining sheen -->
+  <path d="M 18 206 L 18 230 Q 80 244 142 230 L 142 206 Z" fill="#ef5350" opacity="0.12"/>
+  <!-- Gold hem -->
+  <path d="M 2 228 Q 80 248 158 228" fill="none" stroke="#ffd700" stroke-width="2"/>
+  <!-- Inner hem line -->
+  <path d="M 14 224 Q 80 242 146 224" fill="none" stroke="#ffd700" stroke-width="1" opacity="0.5"/>
+
+  <!-- ═══ COLLAR — visible flanking neck at y=84–96 ═══
+       Head ends y=80, neck x=72–88, torso starts y=92.
+       Arc wings (x=46–72 left, x=88–114 right) are fully visible at y=84–92. -->
+  <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9a0007"/>
+  <!-- Gold collar edge -->
+  <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
+  <!-- Clasp (center behind neck rect, collar wings visible on sides) -->
+  <circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
+  <circle cx="80" cy="86" r="2.8" fill="#ff8f00"/>
+  <circle cx="79" cy="85" r="1" fill="white" opacity="0.6"/>
 </svg>

@@ -1,58 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
-    <linearGradient id="galaxyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a0533;stop-opacity:1"/>
-      <stop offset="40%" style="stop-color:#0d1b4d;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#0a0e2e;stop-opacity:1"/>
+    <linearGradient id="gx-main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a0533"/>
+      <stop offset="40%" stop-color="#0d1b4d"/>
+      <stop offset="100%" stop-color="#0a0e2e"/>
     </linearGradient>
-    <linearGradient id="nebulaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6a1b9a;stop-opacity:0.4"/>
-      <stop offset="100%" style="stop-color:#1565c0;stop-opacity:0.3"/>
+    <linearGradient id="gx-nebula" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6a1b9a" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#1565c0" stop-opacity="0.35"/>
     </linearGradient>
   </defs>
-  <!-- Cape back — top extends to x=4/x=156, well past arm bounds (x=14/x=146) -->
-  <path d="M 4 95 L 4 228 Q 80 250 156 228 L 156 95 Z" fill="url(#galaxyGrad)"/>
-  <!-- Nebula cloud left -->
-  <ellipse cx="38" cy="155" rx="28" ry="18" fill="url(#nebulaGrad)"/>
-  <!-- Nebula cloud right -->
-  <ellipse cx="122" cy="175" rx="24" ry="16" fill="url(#nebulaGrad)"/>
-  <!-- Nebula cloud center -->
-  <ellipse cx="80" cy="200" rx="32" ry="14" fill="#3d0973" opacity="0.3"/>
-  <!-- Stars scattered -->
-  <circle cx="14" cy="112" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="28" cy="128" r="1" fill="white" opacity="0.8"/>
-  <circle cx="55" cy="108" r="2" fill="white" opacity="0.95"/>
-  <circle cx="88" cy="118" r="1.2" fill="white" opacity="0.85"/>
-  <circle cx="115" cy="125" r="1.5" fill="white" opacity="0.9"/>
-  <circle cx="140" cy="112" r="1" fill="white" opacity="0.8"/>
-  <circle cx="20" cy="148" r="1.2" fill="white" opacity="0.75"/>
-  <circle cx="138" cy="145" r="1.8" fill="white" opacity="0.9"/>
-  <circle cx="58" cy="168" r="1" fill="white" opacity="0.7"/>
-  <circle cx="100" cy="160" r="1.5" fill="white" opacity="0.85"/>
-  <circle cx="148" cy="158" r="1" fill="white" opacity="0.75"/>
-  <circle cx="10" cy="185" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="80" cy="175" r="2" fill="white" opacity="0.9"/>
-  <circle cx="148" cy="185" r="1.2" fill="white" opacity="0.8"/>
-  <circle cx="52" cy="210" r="1" fill="white" opacity="0.7"/>
-  <circle cx="108" cy="215" r="1.5" fill="white" opacity="0.8"/>
-  <!-- Bright star sparkle -->
-  <path d="M 55 108 L 56.5 105 L 58 108 L 55 109.5 Z" fill="white" opacity="0.6"/>
-  <path d="M 55 108 L 53.5 105 L 52 108 L 55 109.5 Z" fill="white" opacity="0.6"/>
-  <!-- Gold trim edge left -->
-  <path d="M 4 95 L 4 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
-  <!-- Gold trim edge right -->
-  <path d="M 156 95 L 156 228" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
-  <!-- Gold bottom hem -->
-  <path d="M 4 228 Q 80 250 156 228" fill="none" stroke="#ffd700" stroke-width="2"/>
-  <!-- Shoulder left -->
-  <path d="M 4 95 Q 36 108 80 103 Q 34 95 4 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
-  <!-- Shoulder right -->
-  <path d="M 156 95 Q 124 108 80 103 Q 126 95 156 95 Z" fill="#2a0a4a" stroke="#ffd700" stroke-width="1"/>
-  <!-- Gold clasp -->
-  <circle cx="80" cy="100" r="6" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
-  <circle cx="80" cy="100" r="3" fill="#ff8f00"/>
-  <!-- Left arm side panel — visible strip beside the arm -->
-  <path d="M 4 95 L 4 118 L 8 170 L 20 175 L 18 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
-  <!-- Right arm side panel -->
-  <path d="M 156 95 L 156 118 L 152 170 L 140 175 L 142 140 Z" fill="#0d1b4d" opacity="0.85" stroke="#ffd700" stroke-width="1"/>
+
+  <!-- ═══ CENTER FILL — hidden behind body ═══ -->
+  <path d="M 14 98 L 14 228 Q 80 248 146 228 L 146 98 Z" fill="url(#gx-main)"/>
+  <!-- Nebula clouds on fill (mostly hidden, adds depth) -->
+  <ellipse cx="50" cy="152" rx="28" ry="18" fill="url(#gx-nebula)"/>
+  <ellipse cx="110" cy="172" rx="24" ry="16" fill="url(#gx-nebula)"/>
+  <!-- Stars on fill -->
+  <circle cx="30" cy="118" r="1.5" fill="white" opacity="0.65"/>
+  <circle cx="62" cy="138" r="1" fill="white" opacity="0.6"/>
+  <circle cx="98" cy="128" r="1.5" fill="white" opacity="0.65"/>
+  <circle cx="128" cy="156" r="1" fill="white" opacity="0.6"/>
+
+  <!-- ═══ LEFT SHOULDER MANTLE — visible above + outside arm ═══ -->
+  <path d="M 46 88 L 2 98 L 2 130 L 14 126 L 38 104 L 40 92 Z"
+        fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
+  <!-- Stars on mantle visible zone (x=2–40, y=88–104) -->
+  <circle cx="16" cy="100" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="8"  cy="114" r="1"   fill="white" opacity="0.85"/>
+  <circle cx="22" cy="120" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="32" cy="94"  r="1"   fill="white" opacity="0.9"/>
+  <circle cx="10" cy="124" r="0.8" fill="white" opacity="0.75"/>
+
+  <!-- ═══ RIGHT SHOULDER MANTLE ═══ -->
+  <path d="M 114 88 L 158 98 L 158 130 L 146 126 L 122 104 L 120 92 Z"
+        fill="url(#gx-main)" stroke="#ffd700" stroke-width="0.8"/>
+  <!-- Stars on right mantle -->
+  <circle cx="144" cy="100" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="152" cy="114" r="1"   fill="white" opacity="0.85"/>
+  <circle cx="138" cy="120" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="128" cy="94"  r="1"   fill="white" opacity="0.9"/>
+  <circle cx="150" cy="124" r="0.8" fill="white" opacity="0.75"/>
+
+  <!-- ═══ LEFT SIDE PANEL — x=2–14, always visible ═══ -->
+  <path d="M 2 98 L 2 228 Q 6 238 14 236 L 14 126 L 2 130 Z" fill="url(#gx-main)"/>
+  <!-- Stars on left panel -->
+  <circle cx="7"  cy="140" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="10" cy="164" r="1"   fill="white" opacity="0.75"/>
+  <circle cx="6"  cy="190" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="9"  cy="212" r="1"   fill="white" opacity="0.8"/>
+  <!-- Gold left edge -->
+  <line x1="2" y1="98" x2="2" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- ═══ RIGHT SIDE PANEL — x=146–158, always visible ═══ -->
+  <path d="M 158 98 L 158 228 Q 154 238 146 236 L 146 126 L 158 130 Z" fill="url(#gx-main)"/>
+  <!-- Stars on right panel -->
+  <circle cx="153" cy="140" r="1.2" fill="white" opacity="0.8"/>
+  <circle cx="150" cy="164" r="1"   fill="white" opacity="0.75"/>
+  <circle cx="154" cy="190" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="151" cy="212" r="1"   fill="white" opacity="0.8"/>
+  <!-- Gold right edge -->
+  <line x1="158" y1="98" x2="158" y2="228" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- ═══ LOWER SKIRT — y=200+, below body/legs, fully visible ═══ -->
+  <path d="M 2 200 L 2 228 Q 80 248 158 228 L 158 200 Z" fill="url(#gx-main)"/>
+  <!-- Nebula in skirt -->
+  <ellipse cx="80" cy="224" rx="58" ry="12" fill="url(#gx-nebula)"/>
+  <!-- Stars in skirt -->
+  <circle cx="18"  cy="214" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="48"  cy="220" r="1"   fill="white" opacity="0.8"/>
+  <circle cx="80"  cy="211" r="2"   fill="white" opacity="0.95"/>
+  <circle cx="112" cy="219" r="1"   fill="white" opacity="0.8"/>
+  <circle cx="142" cy="213" r="1.5" fill="white" opacity="0.9"/>
+  <!-- Star sparkle -->
+  <path d="M 80 211 L 81.5 208 L 83 211 L 80 212.5 Z" fill="white" opacity="0.6"/>
+  <path d="M 80 211 L 78.5 208 L 77 211 L 80 212.5 Z" fill="white" opacity="0.6"/>
+  <!-- Gold hem -->
+  <path d="M 2 228 Q 80 248 158 228" fill="none" stroke="#ffd700" stroke-width="2"/>
+
+  <!-- ═══ COLLAR — visible flanking neck at y=84–96 ═══ -->
+  <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#2a0a4a"/>
+  <!-- Gold collar edge -->
+  <path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/>
+  <!-- Stars on collar wings (visible x=46–72 left, x=88–114 right) -->
+  <circle cx="56"  cy="86" r="1" fill="white" opacity="0.75"/>
+  <circle cx="104" cy="86" r="1" fill="white" opacity="0.75"/>
+  <!-- Clasp -->
+  <circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/>
+  <circle cx="80" cy="86" r="2.8" fill="#ff8f00"/>
+  <circle cx="79" cy="85" r="1"   fill="white" opacity="0.7"/>
 </svg>
