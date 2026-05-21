@@ -217,6 +217,12 @@
   <div class="ba-grid" id="artPolishGrid"></div>
 </div>
 
+<!-- ── Section 9: Storefront Redesign ────────────────────── -->
+<div class="section">
+  <div class="section-title">9 · Storefront Redesign — fra prototype-gitter til premium butik</div>
+  <div id="storefrontGrid" class="ba-grid"></div>
+</div>
+
 <!-- ── Section 8: Shop Preview Composition ──────────────── -->
 <div class="section">
   <div class="section-title">8 · Shop Preview Composition — breathing room, skala, scenebelysning</div>
@@ -771,6 +777,190 @@ polishPairs.forEach(pair => {
 
   artPolishGrid.appendChild(pairEl);
 });
+
+// ── Section 9: Storefront Redesign ──────────────────────────────────────────
+
+const storefrontGrid = document.getElementById("storefrontGrid");
+
+// Builds a full simulated shop card with configurable card + preview geometry.
+// Used for before/after storefront comparison — no dependency on live shop CSS.
+function storefrontCard(opts) {
+  // opts: { cardMinW, cardPad, previewW, previewH, layerTop, layerLeft, layerW, layerH,
+  //         gradientStyle, borderRadius, itemId, rarity, label }
+  const isLegendary = opts.rarity === "legendary";
+
+  const card = document.createElement("div");
+  card.style.cssText = `
+    position: relative;
+    width: ${opts.cardMinW}px;
+    background: ${isLegendary
+      ? "linear-gradient(160deg,#14102e 75%,#1c1400 100%)"
+      : "var(--bg-card)"};
+    border: 2px solid ${isLegendary
+      ? "#ffa000"
+      : opts.rarity === "rare"
+        ? "#1976d2"
+        : opts.rarity === "uncommon"
+          ? "#2e7d32"
+          : "var(--border)"};
+    border-radius: ${opts.borderRadius}px;
+    padding: ${opts.cardPad}px;
+    text-align: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    ${isLegendary ? "box-shadow: 0 0 16px rgba(255,160,0,0.22);" : ""}
+  `;
+
+  if (isLegendary) {
+    const spark = document.createElement("span");
+    spark.textContent = "✦";
+    spark.style.cssText = "position:absolute;top:7px;right:9px;font-size:9px;color:#ffd700;opacity:0.6;";
+    card.appendChild(spark);
+  }
+
+  // Preview stage
+  const preview = document.createElement("div");
+  preview.style.cssText = `
+    position: relative;
+    width: ${opts.previewW}px;
+    height: ${opts.previewH}px;
+    margin: 0 auto ${opts.cardPad}px;
+    border-radius: 8px;
+    background: ${opts.gradientStyle};
+    overflow: ${opts.overflow ?? "hidden"};
+    flex-shrink: 0;
+  `;
+
+  const lyrItems = [{ src: BASE, z: 0 }];
+  const it = ITEMS.find(i => i.id === opts.itemId);
+  if (it) lyrItems.push({ src: it.url, z: SLOT_Z[it.slot] ?? 1 });
+  lyrItems.sort((a, b) => a.z - b.z);
+  lyrItems.forEach(({ src, z }) => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    img.style.cssText = `
+      position:absolute; top:${opts.layerTop}; left:${opts.layerLeft};
+      width:${opts.layerW}; height:${opts.layerH};
+      object-fit:contain; pointer-events:none; z-index:${z};
+    `;
+    preview.appendChild(img);
+  });
+  card.appendChild(preview);
+
+  // Name
+  const nm = document.createElement("div");
+  nm.style.cssText = "font-size:13px;font-weight:bold;color:var(--text-main);margin-bottom:4px;";
+  nm.textContent = it?.name ?? "?";
+  card.appendChild(nm);
+
+  // Rarity badge
+  const rl = RARITY_LABELS[opts.rarity] ?? opts.rarity ?? "";
+  const rc = RARITY_COLORS[opts.rarity] ?? "#555";
+  const rb = document.createElement("span");
+  rb.style.cssText = `display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;color:white;background:${rc};margin-bottom:5px;`;
+  rb.textContent = rl;
+  card.appendChild(rb);
+
+  // Price
+  const pr = document.createElement("div");
+  pr.style.cssText = "font-size:13px;color:var(--coin);font-weight:bold;margin-bottom:8px;";
+  pr.innerHTML = "🪙 150 <span style='font-size:11px;color:var(--coin-dim);font-weight:normal;'>mønter</span>";
+  card.appendChild(pr);
+
+  // Button
+  const btn = document.createElement("div");
+  btn.style.cssText = "display:block;width:100%;padding:9px 4px;border-radius:6px;background:var(--accent);color:white;font-size:13px;font-weight:bold;box-sizing:border-box;";
+  btn.textContent = "Køb";
+  card.appendChild(btn);
+
+  return card;
+}
+
+// OLD card config: narrow (158px min), fixed 100px preview, dark gradient oval box
+const OLD_CARD = {
+  cardMinW: 158, cardPad: 12, borderRadius: 12,
+  previewW: 100, previewH: 164,
+  layerTop: "4%", layerLeft: "7%", layerW: "86%", layerH: "92%",
+  gradientStyle: "radial-gradient(ellipse at 50% 30%, #1e2060 0%, #0a0a20 100%)",
+  overflow: "visible",
+};
+
+// NEW card config: wider (188px min), fluid preview, atmospheric gradient
+const NEW_CARD = {
+  cardMinW: 188, cardPad: 14, borderRadius: 14,
+  previewW: 130, previewH: 152,
+  layerTop: "3%", layerLeft: "6%", layerW: "88%", layerH: "93%",
+  gradientStyle: "radial-gradient(ellipse at 50% 38%, #1e2060 0%, transparent 70%)",
+  overflow: "hidden",
+};
+
+const STOREFRONT_ITEMS = [
+  { id: "cape-red",      rarity: "common"    },
+  { id: "galaxy-cape",   rarity: "uncommon"  },
+  { id: "armor-knight",  rarity: "uncommon"  },
+  { id: "panda-mask",    rarity: "rare"      },
+  { id: "crown-golden",  rarity: "legendary" },
+];
+
+const sfPair = document.createElement("div");
+sfPair.className = "ba-pair";
+
+const sfTitle = document.createElement("div");
+sfTitle.className = "ba-pair-title";
+sfTitle.textContent = "Storefront Redesign — alle raritetsniveauer";
+sfPair.appendChild(sfTitle);
+
+const sfRow = document.createElement("div");
+sfRow.style.cssText = "display:flex;gap:28px;flex-wrap:wrap;margin-bottom:12px;";
+
+// Before group
+const sfOldGroup = document.createElement("div");
+sfOldGroup.style.cssText = "display:flex;flex-direction:column;gap:4px;";
+const sfOldLabel = document.createElement("div");
+sfOldLabel.className = "ba-label-before";
+sfOldLabel.textContent = "FØR — 158px kort, 100px preview, mørk oval boks indeni kort";
+sfOldLabel.style.marginBottom = "8px";
+sfOldGroup.appendChild(sfOldLabel);
+const sfOldCards = document.createElement("div");
+sfOldCards.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;";
+STOREFRONT_ITEMS.forEach(({ id, rarity }) => {
+  sfOldCards.appendChild(storefrontCard({ ...OLD_CARD, itemId: id, rarity }));
+});
+sfOldGroup.appendChild(sfOldCards);
+sfRow.appendChild(sfOldGroup);
+
+// After group
+const sfNewGroup = document.createElement("div");
+sfNewGroup.style.cssText = "display:flex;flex-direction:column;gap:4px;";
+const sfNewLabel = document.createElement("div");
+sfNewLabel.className = "ba-label-after";
+sfNewLabel.textContent = "EFTER — 188px kort, 130px fluid preview, atmosfærisk gradient";
+sfNewLabel.style.marginBottom = "8px";
+sfNewGroup.appendChild(sfNewLabel);
+const sfNewCards = document.createElement("div");
+sfNewCards.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;";
+STOREFRONT_ITEMS.forEach(({ id, rarity }) => {
+  const cfg = rarity === "legendary"
+    ? { ...NEW_CARD, previewW: 146, previewH: 170, itemId: id, rarity }
+    : { ...NEW_CARD, itemId: id, rarity };
+  sfNewCards.appendChild(storefrontCard(cfg));
+});
+sfNewGroup.appendChild(sfNewCards);
+sfRow.appendChild(sfNewGroup);
+
+sfPair.appendChild(sfRow);
+
+const sfNote = document.createElement("div");
+sfNote.className = "ba-note";
+sfNote.textContent = `
+  3 ændringer driver transformationen:
+  (1) BREDERE KORT (158→188px) — avataren behøver ikke squeeze ind i en smal spalte. Horisontal luft giver silhuetten plads.
+  (2) FLUID PREVIEW (100px fast → calc(100%-4px) max 130px) — preview fylder kortet proportionelt. Ingen smal boks inden i en bredere kort.
+  (3) ATMOSFÆRISK GRADIENT (avatar-inner→avatar-outer fast farve → avatar-inner→transparent) — den mørke oval boks forsvinder. Avataren "flyder" mod kortets baggrund i stedet for at sidde i en displayboks. Hjernen læser: karakter præsenteret på en scene — ikke et produkt i et vindue.
+`.trim();
+sfPair.appendChild(sfNote);
+storefrontGrid.appendChild(sfPair);
 
 // ── Section 8: Shop Preview Composition ─────────────────────────────────────
 
