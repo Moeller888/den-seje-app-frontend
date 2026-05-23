@@ -1,81 +1,219 @@
-﻿<!DOCTYPE html>
-<html lang="da">
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
 <head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
   <meta charset="UTF-8">
-  <title>Elev detaljer ø DEN SEJE APP</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elevdetaljer – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    input, textarea, select { font-size: 16px; }
+
     body {
-      font-family: Arial, sans-serif;
       display: none;
-      margin: 40px;
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
     }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────────── */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .topbar-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .back-btn {
+      padding: 7px 16px;
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: bold;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover {
+      background: var(--btn-bg);
+      color: var(--text-bright);
+    }
+
+    /* ── Panels ──────────────────────────────────────────────── */
 
     .box {
-      border: 1px solid #ccc;
-      padding: 20px;
-      margin-bottom: 30px;
-      max-width: 800px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px;
     }
+
+    .box > h3,
+    .box h3 {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .box p {
+      font-size: 14px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .box hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    .box strong {
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Dynamically injected review boxes ───────────────────── */
+
+    #reviewPanel .box {
+      background: var(--bg-main);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    #reviewPanel h3 {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 16px 0 10px;
+      padding: 0;
+      border: none;
+    }
+
+    #reviewPanel h3:first-child {
+      margin-top: 0;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+
+    button {
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: bold;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+      margin-right: 6px;
+      margin-top: 6px;
+    }
+
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Table ───────────────────────────────────────────────── */
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 12px;
+      font-size: 14px;
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
     }
 
     th {
-      background-color: #f4f4f4;
-    }
-    
-
-    button {
-      padding: 8px 14px;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-
-    .review-question {
-      margin-top: 15px;
-      padding: 15px;
-      border: 1px solid #ddd;
-      background: #fafafa;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
-    .review-question h4 {
-      margin-bottom: 5px;
+    td { color: var(--text-main); }
+
+    tr:hover td { background: var(--btn-bg); }
+
+    @media (min-width: 600px) {
+      .page { padding: 0; }
+      body { padding: 24px; }
     }
   </style>
 </head>
 <body>
 
-  <button onclick="window.location.href='teacher.html'">
-    ← Tilbage
-  </button>
+<div class="page">
 
-  <div class="box">
-    <h3>Elevinfo</h3>
-    <div id="studentInfo">indlæser...</div>
+  <div class="topbar">
+    <button class="back-btn" onclick="window.location.href='teacher.html'">← Tilbage</button>
+    <span class="topbar-title">Elevdetaljer</span>
   </div>
 
   <div class="box">
-    <h3>spørgsmål til godkendelse</h3>
+    <h3>Elevinfo</h3>
+    <div id="studentInfo">Indlæser...</div>
+  </div>
+
+  <div class="box">
+    <h3>Spørgsmål til godkendelse</h3>
     <div id="reviewPanel">Ingen svar til gennemgang.</div>
   </div>
 
   <div class="box">
     <h3>Seneste events</h3>
-    <div id="eventList">indlæser...</div>
+    <div id="eventList">Indlæser...</div>
   </div>
 
-  <script type="module" src="./js/supabase.js"></script>
-  <script type="module" src="./js/student-detail.js"></script>
+</div>
+
+<script type="module" src="./js/supabase.js"></script>
+<script type="module" src="./js/student-detail.js"></script>
 
 </body>
 </html>

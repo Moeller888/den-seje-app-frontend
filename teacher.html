@@ -1,82 +1,239 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="default">
 <head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
   <meta charset="UTF-8">
-  <title>Lærer – DEN SEJE APP</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lærerpanel – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    input, textarea, select { font-size: 16px; }
+
     body {
-      font-family: Arial, sans-serif;
       display: none;
-      margin: 40px;
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
     }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────────── */
 
     .topbar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .topbar-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-bright);
     }
 
     .logout-btn {
-      padding: 8px 14px;
+      margin-left: auto;
+      padding: 7px 16px;
+      background: transparent;
+      color: var(--error-bright, #ef5350);
+      border: 1px solid var(--error-bright, #ef5350);
+      border-radius: 20px;
       cursor: pointer;
-      background: #c62828;
-      color: white;
-      border: none;
+      font-size: 13px;
+      font-family: inherit;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
     }
 
-    .box {
-      border: 1px solid #ccc;
-      padding: 20px;
-      margin-bottom: 30px;
-      max-width: 800px;
+    .logout-btn:hover {
+      background: var(--error-bright, #ef5350);
+      color: #fff;
     }
+
+    /* ── Panel ───────────────────────────────────────────────── */
+
+    .box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .box h3 {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Form controls ───────────────────────────────────────── */
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    select {
+      padding: 8px 12px;
+      background: var(--bg-main);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-btn);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .form-group select,
+    .form-group input[type="text"] {
+      min-width: 200px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+
+    button {
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: bold;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    #spotlightRemoveBtn {
+      background: transparent;
+      color: var(--error-bright, #ef5350);
+      border: 1px solid var(--error-bright, #ef5350);
+    }
+
+    #spotlightRemoveBtn:hover {
+      background: var(--error-bright, #ef5350);
+      color: #fff;
+      opacity: 1;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    /* ── Table ───────────────────────────────────────────────── */
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 12px;
+      font-size: 14px;
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
     }
 
     th {
-      background-color: #f4f4f4;
-    }
-
-    input {
-      padding: 6px;
-      margin-right: 10px;
-    }
-
-    button {
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-
-    #createMessage {
-      margin-top: 10px;
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      font-size: 11px;
       font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    td { color: var(--text-main); }
+
+    tr:hover td { background: var(--btn-bg); }
+
+    /* ── Status messages ─────────────────────────────────────── */
+
+    #createMessage,
+    #spotlightMessage2 {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      min-height: 20px;
+    }
+
+    @media (min-width: 600px) {
+      .page { padding: 0; }
+      body { padding: 24px; }
     }
   </style>
 </head>
 <body>
 
+<div class="page">
+
   <div class="topbar">
-    <h2>Lærerpanel</h2>
-    <button id="logoutBtn" class="logout-btn">Logout</button>
+    <span class="topbar-title">Lærerpanel</span>
+    <button id="logoutBtn" class="logout-btn">Log ud</button>
   </div>
 
   <div class="box">
     <h3>Opret elev</h3>
-    <input type="email" id="studentEmail" placeholder="Elevens email">
-    <input type="password" id="studentPassword" placeholder="Midlertidig adgangskode">
-    <button id="createStudentBtn">Opret</button>
+    <div class="form-row">
+      <input type="email" id="studentEmail" placeholder="Elevens email">
+      <input type="password" id="studentPassword" placeholder="Midlertidig adgangskode">
+      <button id="createStudentBtn">Opret</button>
+    </div>
     <div id="createMessage"></div>
   </div>
 
@@ -87,20 +244,20 @@
 
   <div class="box">
     <h3>Fremhæv en elev</h3>
-    <p style="margin-bottom:14px;color:#555;font-size:14px;">
+    <p style="margin-bottom:14px;font-size:14px;color:var(--text-muted);">
       Vælg en elev og giv dem en fremhævelse — eleven ser det på sin hub.
     </p>
 
-    <div style="margin-bottom:12px">
-      <label for="spotlightStudentSelect" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Elev</label>
-      <select id="spotlightStudentSelect" style="padding:6px;min-width:200px;font-size:14px">
+    <div class="form-group">
+      <label class="form-label" for="spotlightStudentSelect">Elev</label>
+      <select id="spotlightStudentSelect">
         <option value="">— Vælg elev —</option>
       </select>
     </div>
 
-    <div style="margin-bottom:12px">
-      <label for="spotlightLabel" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Type</label>
-      <select id="spotlightLabel" style="padding:6px;min-width:200px;font-size:14px">
+    <div class="form-group">
+      <label class="form-label" for="spotlightLabel">Type</label>
+      <select id="spotlightLabel">
         <option value="Ugens indsats">Ugens indsats</option>
         <option value="Flot udvikling">Flot udvikling</option>
         <option value="Dagens samler">Dagens samler</option>
@@ -109,36 +266,24 @@
       </select>
     </div>
 
-    <div style="margin-bottom:16px">
-      <label for="spotlightMessage" style="display:block;font-weight:bold;margin-bottom:4px;font-size:14px">Besked (valgfri)</label>
+    <div class="form-group">
+      <label class="form-label" for="spotlightMessage">Besked (valgfri)</label>
       <input type="text" id="spotlightMessage" maxlength="120"
-             placeholder="F.eks. Flot arbejde denne uge!"
-             style="padding:6px;width:100%;max-width:400px;font-size:14px;box-sizing:border-box">
+             placeholder="F.eks. Flot arbejde denne uge!">
     </div>
 
-    <button id="spotlightSetBtn" style="padding:8px 16px;background:#1565c0;color:white;border:none;cursor:pointer;font-size:14px;border-radius:4px">Fremhæv elev</button>
-    <button id="spotlightRemoveBtn" style="padding:8px 16px;background:#c62828;color:white;border:none;cursor:pointer;font-size:14px;border-radius:4px;margin-left:8px">Fjern fremhævelse</button>
-    <div id="spotlightMessage2" style="margin-top:10px;font-weight:bold;font-size:14px"></div>
-
+    <div class="action-row">
+      <button id="spotlightSetBtn">Fremhæv elev</button>
+      <button id="spotlightRemoveBtn">Fjern fremhævelse</button>
+    </div>
+    <div id="spotlightMessage2"></div>
     <div id="spotlightCurrentList" style="margin-top:18px"></div>
   </div>
 
-  <!--
-  <div class="box">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3>Besvarelser til review</h3>
+</div>
 
-      <button id="reset-btn">
-        🔥 Reset alle
-      </button>
-    </div>
-
-    <div id="reviewPanel">Indlæser...</div>
-  </div>
-  -->
-
-  <script type="module" src="./js/supabase.js"></script>
-  <script type="module" src="./js/teacher.js"></script>
+<script type="module" src="./js/supabase.js"></script>
+<script type="module" src="./js/teacher.js"></script>
 
 </body>
 </html>
