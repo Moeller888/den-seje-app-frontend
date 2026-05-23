@@ -261,6 +261,19 @@
     .artdir-layer-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
     .artdir-layer-table tr:last-child td { border-bottom: none; }
 
+    /* ── Section 18: Aura Art Direction ─────────────── */
+    .aura-grid { display: flex; flex-direction: column; gap: 20px; }
+    .aura-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .aura-card--legendary { border-color: #f57f17; }
+    .aura-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .aura-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .aura-compare { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+    .aura-compare-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .aura-label-wrong { color: #ef5350; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .aura-label-right { color: #66bb6a; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .aura-rarity-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
+    .aura-rarity-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -409,6 +422,12 @@
   <div class="gs-grid" id="gsGrid17"></div>
 </div>
 
+<!-- ── Section 18: Aura Art Direction Evolution ───────────── -->
+<div class="section">
+  <div class="section-title">18 · Aura Art Direction — Atmosfære, ikke Effekt</div>
+  <div class="aura-grid" id="auraGrid18"></div>
+</div>
+
 <script type="module">
 import {
   ALL_SLOTS, SLOTS, SLOT_Z, SLOT_LABELS, BASE_SRC,
@@ -442,6 +461,10 @@ const FRAGMENT_CAPE = 'data:image/svg+xml,' + encodeURIComponent(FRAGMENT_CAPE_S
 
 // All known item image paths (static list for sandbox)
 const ITEMS = [
+  { id: "aura-ember",   slot: "aura",     url: "/assets/avatar/aura/aura-ember.svg",        name: "Ember-aura",     rarity: "common" },
+  { id: "aura-sky",     slot: "aura",     url: "/assets/avatar/aura/aura-sky.svg",          name: "Himmel-aura",    rarity: "uncommon" },
+  { id: "aura-arcane",  slot: "aura",     url: "/assets/avatar/aura/aura-arcane.svg",       name: "Arkane aura",    rarity: "rare" },
+  { id: "aura-gold",    slot: "aura",     url: "/assets/avatar/aura/aura-gold.svg",         name: "Guld-aura",      rarity: "legendary" },
   { id: "wings-dragon",  slot: "back",     url: "/assets/avatar/body/wings-dragon.svg",     name: "Dragevinger",    rarity: "rare" },
   { id: "cape-red",      slot: "back",     url: "/assets/avatar/shirt/cape-red.svg",         name: "Rød Kappe",      rarity: "common" },
   { id: "galaxy-cape",   slot: "back",     url: "/assets/avatar/shirt/galaxy-cape.svg",      name: "Galakse-kappe",  rarity: "uncommon" },
@@ -2582,6 +2605,209 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       </tbody>
     </table>`,
     "Hvert SVG-lag er designet som om det er et 3D mesh-lag. z-index = render-rækkefølge = bone-hierarki. Kappe er cloth-simulering (bag, svinger frit). Rustning er hard-surface (foran, rigid). Base-krop ER riggen — alle items er attachments. Migrationen fra SVG til 3D er en 1:1 mapping, ikke en redesign."
+  ));
+}());
+
+// ── Section 18: Aura Art Direction Evolution ──────────────────────────────────
+
+(function() {
+  const root = document.getElementById("auraGrid18");
+  if (!root) return;
+
+  const NOISY_AURA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><circle cx="80" cy="120" r="70" fill="white" opacity="0.8"/><ellipse cx="60" cy="100" rx="40" ry="50" fill="#ffff00" opacity="0.7"/><circle cx="80" cy="120" r="60" fill="none" stroke="#ff0000" stroke-width="4"/><circle cx="80" cy="120" r="80" fill="none" stroke="#ff8800" stroke-width="3"/></svg>`;
+  const NOISY_AURA = 'data:image/svg+xml,' + encodeURIComponent(NOISY_AURA_SVG);
+
+  function auraCard(title, bodyHtml, noteHtml, legendary) {
+    const el = document.createElement("div");
+    el.className = "aura-card" + (legendary ? " aura-card--legendary" : "");
+    el.innerHTML =
+      `<div class="aura-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="aura-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  function auraAvatar(auraSrc, label, labelClass) {
+    const col = document.createElement("div");
+    col.className = "aura-rarity-col";
+    const lbl = document.createElement("div");
+    lbl.className = labelClass || "label";
+    lbl.innerHTML = label;
+    col.appendChild(lbl);
+    const wrapEl = document.createElement("div");
+    wrapEl.className = "avatar-wrap";
+    const cv = canvas();
+    if (auraSrc) cv.appendChild(layer(auraSrc, SLOT_Z["aura"]));
+    cv.appendChild(layer(BASE, 0));
+    wrapEl.appendChild(cv);
+    col.appendChild(wrapEl);
+    return col;
+  }
+
+  // Card 1: Philosophy
+  root.appendChild(auraCard(
+    "Designfilosofi — atmosfære, ikke effekt",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ef5350;margin-bottom:6px">&#10005; Forkert tankegang</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● "Aura skal ses — gør den stor og lys"</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Solid ring, hvid kerne, gul blob</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Konkurrerer med karakteren</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Støj, ikke signal</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #66bb6a;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#66bb6a;margin-bottom:6px">&#10003; Rigtig tankegang</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● "Aura mærkes — karakter dominerer"</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Radial gradient, opacity 0.18–0.32</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Understøtter karakteren, slår ikke ihjel</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Subtil, aldrig fraværende</div>
+      </div>
+    </div>`,
+    "Auraen er z=-2: bag alt, synlig kun i transparente zoner. Det er ikke en fejl — det er designet. Auraen er lys der lækker igennem karakteren, ikke lys der omringer den. Max opacity: 0.32. Reglen: hvis auraen er det første du ser, er den for stærk."
+  ));
+
+  // Card 2: Rarity hierarchy — alle 4 auraer med kroppen
+  (function() {
+    const card = document.createElement("div");
+    card.className = "aura-card";
+    card.innerHTML = `<div class="aura-card-title">Sjældenhedshierarki — 4 niveauer, 4 farve-sprog</div>`;
+
+    const row = document.createElement("div");
+    row.className = "aura-rarity-row";
+
+    const tiers = [
+      { id: "aura-ember",  label: "<strong>Ember</strong><em style='display:block;font-size:9px;font-style:normal;color:var(--text-muted)'>Almindelig · 150 🪙</em>",  rarity: "common" },
+      { id: "aura-sky",    label: "<strong>Himmel</strong><em style='display:block;font-size:9px;font-style:normal;color:#2e7d32'>Ualmindelig · 350 🪙</em>", rarity: "uncommon" },
+      { id: "aura-arcane", label: "<strong>Arkane</strong><em style='display:block;font-size:9px;font-style:normal;color:#1565c0'>Sjælden · 800 🪙</em>",     rarity: "rare" },
+      { id: "aura-gold",   label: "<strong>Guld</strong><em style='display:block;font-size:9px;font-style:normal;color:#f57f17'>Legendarisk · 2500 🪙</em>", rarity: "legendary" },
+    ];
+
+    tiers.forEach(tier => {
+      const item = ITEMS.find(i => i.id === tier.id);
+      const lbl = `<div class="label" style="text-align:center">${tier.label}</div>`;
+      const col = document.createElement("div");
+      col.className = "aura-rarity-col";
+      col.innerHTML = lbl;
+      const wrapEl = document.createElement("div");
+      wrapEl.className = "avatar-wrap";
+      const cv = canvas();
+      if (item) cv.appendChild(layer(item.url, SLOT_Z["aura"]));
+      cv.appendChild(layer(BASE, 0));
+      wrapEl.appendChild(cv);
+      col.insertBefore(wrapEl, col.firstChild);
+      row.appendChild(col);
+    });
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="aura-note">Farve-sprog: Ember = varm orange (#ff7043), Himmel = kold blå (#29b6f6), Arkane = dyb violet (#7c4dff), Guld = varm guld (#ffd600). Hvert niveau tilføjer ét nyt gradient-lag og øger max opacity svagt. Legendarisk er den eneste med crown energy whispers og shoulder flares.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 3: Restrained vs noisy
+  (function() {
+    const card = document.createElement("div");
+    card.className = "aura-card";
+    card.innerHTML = `<div class="aura-card-title">Behersket vs. støjende — den rigtige opacity-disciplin</div>`;
+
+    const compare = document.createElement("div");
+    compare.className = "aura-compare";
+
+    const wrongCol = document.createElement("div");
+    wrongCol.className = "aura-compare-col";
+    wrongCol.innerHTML = `<div class="aura-label-wrong">FORKERT</div>`;
+    const wrongWrap = document.createElement("div");
+    wrongWrap.className = "avatar-wrap";
+    const wrongCv = canvas();
+    wrongCv.appendChild(layer(NOISY_AURA, SLOT_Z["aura"]));
+    wrongCv.appendChild(layer(BASE, 0));
+    wrongWrap.appendChild(wrongCv);
+    wrongCol.appendChild(wrongWrap);
+    wrongCol.innerHTML += `<div class="label">Hvid kerne + gul blob + solid ringe — karakteren forsvinder</div>`;
+
+    const rightCol = document.createElement("div");
+    rightCol.className = "aura-compare-col";
+    rightCol.innerHTML = `<div class="aura-label-right">KORREKT</div>`;
+    const rightWrap = document.createElement("div");
+    rightWrap.className = "avatar-wrap";
+    const rightCv = canvas();
+    const goldItem = ITEMS.find(i => i.id === "aura-gold");
+    if (goldItem) rightCv.appendChild(layer(goldItem.url, SLOT_Z["aura"]));
+    rightCv.appendChild(layer(BASE, 0));
+    rightWrap.appendChild(rightCv);
+    rightCol.appendChild(rightWrap);
+    rightCol.innerHTML += `<div class="label">Guld-aura: 4 radiale gradienter, max opacity 0.32 — atmosfære</div>`;
+
+    const arrow = document.createElement("div");
+    arrow.className = "ba-arrow";
+    arrow.textContent = "vs.";
+
+    compare.appendChild(wrongCol);
+    compare.appendChild(arrow);
+    compare.appendChild(rightCol);
+    card.appendChild(compare);
+    card.innerHTML += `<div class="aura-note">Den forkerte aura er et UX-problem: brugeren ser ikke karakteren, de ser effekten. Reglen: du må aldrig føle at du ser "en effekt" — du skal kun mærke at karakteren er anderledes belyst. Opacity > 0.35 på en enkelt fill er altid for meget.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 4: Silhouette preservation
+  root.appendChild(auraCard(
+    "Silhuet-bevarelse — auraen okkluderer aldrig karakteren",
+    `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">z=-2 principper</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Auraen er bag alt (z=-2). Den lækker igennem transparente zoner — benets sider, armenes kanter, luften over skuldrene. Kroppen forbliver 100% intakt.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Canvas-isolation</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4"><code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">isolation:isolate</code> på .avatar-canvas skaber stacking-kontekst. z=-2 maler OVER canvas-baggrunden men UNDER z=0 (krop). Auraen er "inden i" canvaset.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Full-canvas rect fill</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Alle auraer bruger <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">rect x=0 y=0 w=160 h=240</code> med radiale gradienter. SVG-rektanglet fylder hele viewBox — gradienten bestemmer hvad der er synligt.</div>
+      </div>
+    </div>`,
+    "Silhouette test: dæk aura-laget til og se karakteren. Fjern dækslet og se karakteren igen. Formen bør ikke ændre sig — kun det farvet ambient lys ændres. Auraen er ikke en form på karakteren. Den er en stemning rundt om den."
+  ));
+
+  // Card 5: Motion architecture
+  root.appendChild(auraCard(
+    "Bevægelses-arkitektur — crown whispers som animation-targets",
+    `<div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">SVG-elementer designet som CSS animation-targets</div>
+      <div style="font-family:monospace;font-size:11px;color:var(--text-main);line-height:1.8;background:var(--bg-main)">
+        <span style="color:#66bb6a">/* Guld-aura: 5 crown whispers + 2 shoulder flares */</span><br>
+        path stroke-dasharray="4,5" <span style="color:#ffd600">← stroke-dashoffset animation</span><br>
+        path stroke-dasharray="3,6" <span style="color:#ffd600">← staggered delay per whisper</span><br>
+        path stroke-dasharray="4,6" <span style="color:#ffd600">← shoulder flares, langsommere</span><br><br>
+        <span style="color:#66bb6a">/* Arkane-aura: 4 energy whispers */</span><br>
+        path stroke-dasharray="3,4" <span style="color:#7c4dff">← animated whispers</span><br>
+        path stroke-dasharray="2,5" <span style="color:#7c4dff">← subtler, langsommere</span>
+      </div>
+    </div>`,
+    "Alle aura-stier med stroke-dasharray er designet med den fremtidige animation i tankerne. CSS animation: stroke-dashoffset fra 0 til -totalLength giver et flowing energi-loop. Guld-aura har 5 whispers med forskellig dasharray — de animerer i staggered timing for organisk feel. Arkane har 4. Ember og Himmel har ingen whispers — de er rene radiale felt-auraer."
+  ));
+
+  // Card 6: 3D / VFX mapping table
+  root.appendChild(auraCard(
+    "3D/VFX-mapping — SVG-gradients → particle system ækvivalenter",
+    `<table class="artdir-layer-table">
+      <thead>
+        <tr>
+          <th>Rarity</th>
+          <th>SVG-implementering</th>
+          <th>3D/VFX-ækvivalent</th>
+          <th>Opacity budget</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:var(--text-muted)">Almindelig</td><td>1 radialGradient, 1 rect</td><td>Single additive particle emitter, low density</td><td>Max 0.18</td></tr>
+        <tr><td style="color:#2e7d32">Ualmindelig</td><td>2 radialGradients, 2 rects (field + head focus)</td><td>Dual emitter: ambient field + head-zone corona</td><td>Max 0.22</td></tr>
+        <tr><td style="color:#1565c0">Sjælden</td><td>3 gradienter + 4 animated whisper paths</td><td>Volumetric field + energy particle streams (4 emitters)</td><td>Max 0.28</td></tr>
+        <tr><td style="color:#f57f17">Legendarisk</td><td>4 gradienter + 5 crown whispers + 2 shoulder flares</td><td>Full VFX: volumetric + crown sparks + shoulder cascades</td><td>Max 0.32</td></tr>
+      </tbody>
+    </table>`,
+    "Opacity budget er den vigtigste regel i aura-design. Hvert rarity-lag tilføjer max 4-6 procentpoints mere max opacity. Den samlede visuelle intensitet er stadig behersket — legendarisk er ikke 10× louder end almindelig, det er 2× bredere og har bevægelse. Det er den rigtige skelnen.",
+    true
   ));
 }());
 </script>

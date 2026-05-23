@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <defs>
+    <!-- Outer ambient halo — large warm gold field -->
+    <radialGradient id="ag-outer" cx="50%" cy="40%" r="65%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#ffd600" stop-opacity="0.18"/>
+      <stop offset="60%"  stop-color="#ff8f00" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffd600" stop-opacity="0.0"/>
+    </radialGradient>
+    <!-- Inner core — hot center at chest -->
+    <radialGradient id="ag-inner" cx="50%" cy="42%" r="30%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#fff9c4" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffd600" stop-opacity="0.0"/>
+    </radialGradient>
+    <!-- Crown energy — legendary tier concentrates above head -->
+    <radialGradient id="ag-crown" cx="50%" cy="12%" r="32%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#ffd600" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#ffd600" stop-opacity="0.0"/>
+    </radialGradient>
+    <!-- Ground anchor — gold pools at feet, royalty grounds itself -->
+    <radialGradient id="ag-ground" cx="50%" cy="97%" r="32%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#ffb300" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#ffb300" stop-opacity="0.0"/>
+    </radialGradient>
+  </defs>
+  <!-- Layered fields — each adds depth without screaming -->
+  <rect x="0" y="0" width="160" height="240" fill="url(#ag-outer)"/>
+  <rect x="0" y="0" width="160" height="240" fill="url(#ag-inner)"/>
+  <rect x="0" y="0" width="160" height="240" fill="url(#ag-crown)"/>
+  <rect x="0" y="0" width="160" height="240" fill="url(#ag-ground)"/>
+  <!-- Crown energy whispers — 5 rising threads (future stroke-dashoffset targets) -->
+  <path d="M 75 22 Q 73 12 78 4"      fill="none" stroke="#ffd600" stroke-width="1.0" stroke-dasharray="4,5" opacity="0.45"/>
+  <path d="M 85 22 Q 87 12 82 4"      fill="none" stroke="#ffd600" stroke-width="1.0" stroke-dasharray="4,5" opacity="0.40"/>
+  <path d="M 68 28 Q 64 16 70 8"      fill="none" stroke="#ffb300" stroke-width="0.8" stroke-dasharray="3,6" opacity="0.38"/>
+  <path d="M 92 28 Q 96 16 90 8"      fill="none" stroke="#ffb300" stroke-width="0.8" stroke-dasharray="3,6" opacity="0.35"/>
+  <path d="M 80 18 Q 80 8 80 0"       fill="none" stroke="#fff9c4" stroke-width="0.9" stroke-dasharray="3,5" opacity="0.42"/>
+  <!-- Shoulder flares — legendary width, royalty commands space -->
+  <path d="M 18 100 Q 8 92 4 80"      fill="none" stroke="#ffd600" stroke-width="0.8" stroke-dasharray="4,6" opacity="0.30"/>
+  <path d="M 142 100 Q 152 92 156 80" fill="none" stroke="#ffd600" stroke-width="0.8" stroke-dasharray="4,6" opacity="0.27"/>
+</svg>

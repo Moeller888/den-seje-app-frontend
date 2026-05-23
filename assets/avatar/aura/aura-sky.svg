@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <defs>
+    <!-- Ambient field — wide sky-blue envelope -->
+    <radialGradient id="as-field" cx="50%" cy="42%" r="55%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#29b6f6" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#29b6f6" stop-opacity="0.0"/>
+    </radialGradient>
+    <!-- Head focus — stronger glow at crown -->
+    <radialGradient id="as-head" cx="50%" cy="18%" r="30%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#4fc3f7" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#29b6f6" stop-opacity="0.0"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="160" height="240" fill="url(#as-field)"/>
+  <rect x="0" y="0" width="160" height="240" fill="url(#as-head)"/>
+</svg>
