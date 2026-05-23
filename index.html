@@ -103,6 +103,7 @@
       border: 1.5px solid var(--border);
       overflow: visible;
       flex-shrink: 0;
+      animation: avatarBreathe 3.5s ease-in-out infinite;
     }
 
     .quiz-avatar-layer {
@@ -184,6 +185,11 @@
     #question[data-state="loading"] {
       opacity: 0.45;
       animation: questionPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes avatarBreathe {
+      0%, 100% { transform: translateY(0)    scale(1);     }
+      50%       { transform: translateY(-1px) scale(1.006); }
     }
 
     @keyframes questionPulse {
@@ -390,7 +396,8 @@
       #xp-bar { transition: none; }
       .correct-flash,
       .incorrect-flash,
-      #question[data-state="loading"] { animation: none; }
+      #question[data-state="loading"],
+      #avatar-display { animation: none; }
     }
 
     /* ── Desktop: slightly more breathing room ───────────────── */

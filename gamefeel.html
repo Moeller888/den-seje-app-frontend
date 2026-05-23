@@ -161,6 +161,21 @@
     }
     .personality-label strong { color: var(--text-bright); display: block; font-size: 11px; }
     .personality-label em { color: var(--text-label); font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-top: 2px; }
+
+    /* ── Section 12: Subtle Aliveness ──────────────────── */
+    @keyframes avatarBreathe {
+      0%, 100% { transform: translateY(0)    scale(1);     }
+      50%       { transform: translateY(-2px) scale(1.008); }
+    }
+    .alive-demo-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      width: 120px;
+      text-align: center;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -253,6 +268,12 @@
   <div class="personality-row" id="personalityRow"></div>
   <div class="section-title" style="margin-top:18px;margin-bottom:10px">7c · Loadout-harmoni — kappe skal ikke dominere fuld loadout</div>
   <div class="row" id="loadoutHarmonyRow"></div>
+</div>
+
+<!-- ── Section 12: Subtle Aliveness ──────────────────────── -->
+<div class="section">
+  <div class="section-title">12 · Subtle Aliveness — åndedrætsbevægelse, hover-polish, transition-smoothing</div>
+  <div id="alivenessGrid" class="ba-grid"></div>
 </div>
 
 <script type="module">
@@ -1485,6 +1506,139 @@ harmonyLoadouts.forEach(({ capeId, label }) => {
   wrap.appendChild(lbl);
   loadoutHarmonyRow.appendChild(wrap);
 });
+
+// ── Section 12: Subtle Aliveness ────────────────────────────────────────────
+
+const alivenessGrid = document.getElementById("alivenessGrid");
+
+// Pair 1: Static vs breathing avatar
+(function() {
+  const pair = document.createElement("div");
+  pair.className = "ba-pair";
+  pair.innerHTML = `<div class="ba-pair-title">Idle åndedrætsbevægelse — statisk vs. levende</div>`;
+
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:32px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;";
+
+  // Static
+  const staticGroup = document.createElement("div");
+  staticGroup.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:6px;";
+  const staticLabel = document.createElement("div");
+  staticLabel.className = "ba-label-before";
+  staticLabel.textContent = "STATISK";
+  const staticWrap = document.createElement("div");
+  staticWrap.className = "avatar-wrap";
+  const staticCv = canvas();
+  staticCv.appendChild(layer(BASE, 0));
+  staticCv.appendChild(layer(ITEMS.find(i => i.id === "armor-knight").url, 1));
+  staticWrap.appendChild(staticCv);
+  const staticNote = document.createElement("div");
+  staticNote.className = "label";
+  staticNote.textContent = "Ingen animation";
+  staticGroup.appendChild(staticLabel);
+  staticGroup.appendChild(staticWrap);
+  staticGroup.appendChild(staticNote);
+
+  // Arrow
+  const arrow = document.createElement("div");
+  arrow.className = "ba-arrow";
+  arrow.textContent = "→";
+
+  // Breathing
+  const aliveGroup = document.createElement("div");
+  aliveGroup.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:6px;";
+  const aliveLabel = document.createElement("div");
+  aliveLabel.className = "ba-label-after";
+  aliveLabel.textContent = "LEVENDE (3.5s)";
+  const aliveWrap = document.createElement("div");
+  aliveWrap.className = "avatar-wrap";
+  aliveWrap.style.animation = "avatarBreathe 3.5s ease-in-out infinite";
+  const aliveCv = canvas();
+  aliveCv.appendChild(layer(BASE, 0));
+  aliveCv.appendChild(layer(ITEMS.find(i => i.id === "armor-knight").url, 1));
+  aliveWrap.appendChild(aliveCv);
+  const aliveNote = document.createElement("div");
+  aliveNote.className = "label";
+  aliveNote.textContent = "translateY(-2px) scale(1.008)";
+  aliveGroup.appendChild(aliveLabel);
+  aliveGroup.appendChild(aliveWrap);
+  aliveGroup.appendChild(aliveNote);
+
+  row.appendChild(staticGroup);
+  row.appendChild(arrow);
+  row.appendChild(aliveGroup);
+  pair.appendChild(row);
+
+  const note = document.createElement("div");
+  note.className = "ba-note";
+  note.textContent = `Filosofi: 2px og 0.8% scale over 3.5s er under perceptionstærsklen for bevidst opmærksomhed, men hjernen registrerer det som "live". Bevægelsen må aldrig tiltrække øjet — den skal kun forhindre at figuren føles static. Til sammenligning: MMO idle-animationer bruger typisk 10–20px. Vi bruger 2px. Amplitude er proportional med visuel størrelse — identity-strip bruger 1px. Hover sætter animation-play-state: paused — figuren "holder vejret" mens du kigger.`;
+  pair.appendChild(note);
+  alivenessGrid.appendChild(pair);
+}());
+
+// Pair 2: Shop card hover polish — old vs new
+(function() {
+  const pair = document.createElement("div");
+  pair.className = "ba-pair";
+  pair.innerHTML = `<div class="ba-pair-title">Shop card hover-polish — translateY-only vs. translateY + scale</div>`;
+
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;";
+
+  function mockCard(labelText, labelColor, onEnter, onLeave) {
+    const card = document.createElement("div");
+    card.className = "alive-demo-card";
+    card.style.transition = "transform 0.18s ease, box-shadow 0.18s ease";
+    card.innerHTML = `
+      <div style="font-size:9px;color:${labelColor};margin-bottom:8px;line-height:1.4">${labelText}</div>
+      <div style="width:64px;height:80px;background:var(--bg-panel);border-radius:6px;margin:0 auto 8px;
+                  background:radial-gradient(ellipse at 50% 38%,var(--avatar-inner) 0%,transparent 70%);"></div>
+      <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;">Item</div>
+      <div style="font-size:9px;color:var(--text-muted);">hover mig</div>`;
+    card.addEventListener("mouseenter", onEnter);
+    card.addEventListener("mouseleave", onLeave);
+    return card;
+  }
+
+  row.appendChild(mockCard(
+    "GAMMEL<br>translateY(-3px)<br>0.14s",
+    "#ef5350",
+    e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.45)"; },
+    e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }
+  ));
+  row.appendChild(mockCard(
+    "NY<br>translateY(-2px) scale(1.01)<br>0.18s",
+    "#66bb6a",
+    e => { e.currentTarget.style.transform = "translateY(-2px) scale(1.01)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.38)"; },
+    e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }
+  ));
+
+  pair.appendChild(row);
+  const note = document.createElement("div");
+  note.className = "ba-note";
+  note.textContent = `Scale(1.01) giver "materiel løft" som translateY alene ikke kan. Kortene føles som om de fysisk løfter sig fra overfladen, ikke bare glider op. Transition 0.14s → 0.18s: langsommere easing = mere premium. Shadow opacity 0.45 → 0.38: reduceret dramatik. Legendary-cards: translateY(-3px) scale(1.015).`;
+  pair.appendChild(note);
+  alivenessGrid.appendChild(pair);
+}());
+
+// Pair 3: Reduced-motion princip
+(function() {
+  const pair = document.createElement("div");
+  pair.className = "ba-pair";
+  pair.innerHTML = `<div class="ba-pair-title">prefers-reduced-motion — tilgængelighed</div>`;
+  const note = document.createElement("div");
+  note.className = "ba-note";
+  note.innerHTML = `
+    <strong style="color:var(--text-main);display:block;margin-bottom:6px;">Regel: idle stoppes, bruger-initieret bevares</strong>
+    <span style="color:#ef5350">● Stoppes:</span> avatarBreathe på .avatar-wrap (avatar.html) og #avatar-display (index.html) — ambient, uopfordret<br>
+    <span style="color:#66bb6a">● Bevares:</span> Shop card hover-scale, equip-btn scale — disse er svar på brugerens handling<br><br>
+    OS-indstillingen fjerner motion der overrasker brugeren, ikke feedback på egne handlinger.
+    Accessibility-spec (WCAG 2.5.3) skelner: "animation that is not essential" skal kunne slås fra.
+    Hover-respons er essentiel — den bekræfter at brugerens input registreres.
+  `;
+  pair.appendChild(note);
+  alivenessGrid.appendChild(pair);
+}());
 </script>
 </body>
 </html>

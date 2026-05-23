@@ -98,7 +98,10 @@
       position: relative;
       display: inline-block;
       flex-shrink: 0;
+      animation: avatarBreathe 3.5s ease-in-out infinite;
     }
+
+    .avatar-wrap:hover { animation-play-state: paused; }
 
     /* Aura layer — currently only subtle glow for legendary.
        Idle bounce, pulse, etc. can be wired here later
@@ -248,8 +251,10 @@
       border-radius: 10px;
       padding: 10px;
       text-align: center;
-      transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
     }
+
+    .item-card:hover { transform: translateY(-1px); }
 
     .item-card.equipped {
       border-color: var(--border-equipped);
@@ -392,10 +397,10 @@
       font-weight: bold;
       color: white;
       background: var(--accent);
-      transition: opacity 0.1s;
+      transition: opacity 0.15s, transform 0.15s;
     }
 
-    .equip-btn:hover:not(:disabled) { opacity: 0.85; }
+    .equip-btn:hover:not(:disabled) { opacity: 0.85; transform: scale(1.01); }
 
     .equip-btn:disabled {
       opacity: 0.45;
@@ -437,6 +442,16 @@
     }
 
     .empty-state a { color: var(--info-text); }
+
+    /* ── Idle breathing — ultra-subtle, never demands attention ──── */
+    @keyframes avatarBreathe {
+      0%, 100% { transform: translateY(0)    scale(1);     }
+      50%       { transform: translateY(-2px) scale(1.008); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .avatar-wrap { animation: none; }
+    }
 
     /* ── Equip layer fade-in (animate=true path only) ─────── */
     @keyframes layerFadeIn {
