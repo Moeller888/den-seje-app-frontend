@@ -195,6 +195,34 @@
     .coll-rarity-header--uncommon  { color: #2e7d32; }
     .coll-rarity-header--common    { color: var(--text-muted); }
 
+    /* ── Section 15: Rhythm System ──────────────────── */
+    .rhythm-grid { display: flex; flex-direction: column; gap: 20px; }
+    .rhythm-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .rhythm-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .rhythm-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .rq-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .rq-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .rq-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .rq-label { font-size: 13px; color: var(--text-main); flex: 1; }
+    .rq-badge { font-size: 11px; font-weight: bold; color: var(--coin); white-space: nowrap; }
+    .rq-track { height: 4px; background: var(--xp-track); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+    .rq-fill  { height: 100%; background: var(--accent); border-radius: 2px; }
+    .rq-bottom { display: flex; align-items: center; justify-content: space-between; }
+    .rq-text  { font-size: 10px; color: var(--text-muted); }
+    .rq-claim { padding: 3px 10px; background: var(--btn-bg); border: 1px solid var(--border-btn); border-radius: 5px; color: var(--text-main); font-size: 11px; cursor: pointer; font-family: inherit; }
+    .rq-claim--done { padding: 3px 10px; background: var(--btn-bg); border: 1px solid var(--border-btn); border-radius: 5px; color: var(--text-muted); font-size: 11px; opacity: 0.4; }
+    .rng-card { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-main); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; }
+    .rng-eyebrow { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-label); margin-bottom: 2px; }
+    .rweek-chip { font-size: 10px; font-weight: bold; color: var(--text-muted); background: var(--btn-bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+    .rphil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rphil-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .rphil-col--bad  { border-left: 3px solid #ef5350; }
+    .rphil-col--good { border-left: 3px solid #66bb6a; }
+    .rphil-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .rphil-heading--bad  { color: #ef5350; }
+    .rphil-heading--good { color: #66bb6a; }
+    .rphil-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -323,6 +351,12 @@
 <div class="section">
   <div class="section-title">14 · Production Polish Sprint — konsistens, typografi, tilbage-knap, én produkt</div>
   <div class="polish-grid" id="polishGrid14"></div>
+</div>
+
+<!-- ── Section 15: Daily & Weekly Rhythm System ──────────── -->
+<div class="section">
+  <div class="section-title">15 · Daily &amp; Weekly Rhythm System — sund kadence, ikke grindy battle-pass</div>
+  <div class="rhythm-grid" id="rhythmGrid15"></div>
 </div>
 
 <script type="module">
@@ -1935,6 +1969,135 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>
   `;
   root.appendChild(summaryEl);
+}());
+
+// ── Section 15: Daily & Weekly Rhythm System ─────────────────────────────────
+
+(function() {
+  const root = document.getElementById("rhythmGrid15");
+  if (!root) return;
+
+  function card(title, bodyHtml, noteHtml) {
+    const el = document.createElement("div");
+    el.className = "rhythm-card";
+    el.innerHTML =
+      `<div class="rhythm-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="rhythm-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  function questRow(label, coins, progress, target, claimed) {
+    const pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0;
+    const left = target - Math.min(progress, target);
+    const btnHtml = claimed
+      ? `<span class="rq-claim--done">&#10003; Hentet</span>`
+      : (progress >= target
+          ? `<button class="rq-claim">Hent!</button>`
+          : `<span class="rq-text">${left} mere</span>`);
+    return `
+      <div class="rq-row">
+        <div class="rq-top">
+          <span class="rq-label">${label}</span>
+          <span class="rq-badge">+${coins}&thinsp;&#x1FA99;</span>
+        </div>
+        <div class="rq-track"><div class="rq-fill" style="width:${pct}%"></div></div>
+        <div class="rq-bottom">
+          <span class="rq-text">${progress} / ${target}</span>
+          ${btnHtml}
+        </div>
+      </div>`;
+  }
+
+  // Card 1: Daily quests
+  root.appendChild(card(
+    "Daglige mål — dagens fokus",
+    `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+       <span style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-label)">Daglige mål</span>
+     </div>` +
+    questRow("Besvar 5 spørgsmål",          30,  4, 5,  false) +
+    questRow("Svar rigtigt på 3 spørgsmål", 50,  3, 3,  false) +
+    questRow("Tjen 50 XP",                  25, 30, 50, false),
+    "Tre simple mål der nulstilles dagligt. Nok til at give en session struktur — ikke nok til at føles som et krav. Ingen straf for at misse: næste dag er en frisk start."
+  ));
+
+  // Card 2: Weekly quests
+  root.appendChild(card(
+    "Ugentlige mål — ugens fokus",
+    `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+       <span style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-label)">Ugentlige mål</span>
+       <span class="rweek-chip">Uge 21</span>
+     </div>` +
+    questRow("Besvar 20 spørgsmål denne uge", 150, 12,  20, false) +
+    questRow("Svar rigtigt på 10 spørgsmål",  200,  7,  10, false) +
+    questRow("Tjen 150 XP i løbet af ugen",   100, 80, 150, false),
+    "Ugentlige mål giver retning over en hel uge. De er ambitiøse nok til at kræve konsistens, men nemme nok til at en elev der spiller 3–4 dage kan nå dem. Belønningen er markant højere: 100–200 mønter."
+  ));
+
+  // Card 3: Next unlock preview
+  root.appendChild(card(
+    "Næste lås op — hvad er tættest på",
+    `<div style="display:flex;flex-direction:column;gap:8px">
+       <div class="rng-card">
+         <div style="font-size:16px;flex-shrink:0">★</div>
+         <div style="flex:1">
+           <div class="rng-eyebrow">Næste mål</div>
+           <div style="font-size:12px;color:var(--text-main)">3 korrekte svar mere for at opnå: 100 svar</div>
+         </div>
+         <button style="font-size:11px;font-weight:bold;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit">Spil →</button>
+       </div>
+       <div class="rng-card" style="border-left-color:var(--coin)">
+         <div style="font-size:16px;flex-shrink:0">🎯</div>
+         <div style="flex:1">
+           <div class="rng-eyebrow">Næste mål</div>
+           <div style="font-size:12px;color:var(--text-main)">Næsten færdig: Besvar 5 spørgsmål i dag</div>
+         </div>
+         <button style="font-size:11px;font-weight:bold;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit">Spil →</button>
+       </div>
+     </div>`,
+    "Næste Mål-kortet viser ét ting ad gangen — det tætteste. Prioritering: præstation nærmest completion (≥30%) → XP nær level-up (≥65%) → daglig quest næsten færdig (≥50%) → ny bruger onboarding → mønter klar til brug i butik."
+  ));
+
+  // Card 4: Return experience
+  root.appendChild(card(
+    "Return experience — varm velkomst, ikke pres",
+    `<div style="background:var(--bg-main);border:1px solid var(--border);border-top:3px solid var(--coin);border-radius:8px;padding:16px;text-align:center;max-width:280px;margin:0 auto">
+       <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:var(--text-label);margin-bottom:6px">Daglig belønning</div>
+       <div style="font-size:36px;font-weight:bold;color:var(--coin);line-height:1;margin-bottom:4px">+40&thinsp;🪙</div>
+       <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">2 dages streak! 🔥</div>
+       <div style="font-size:11px;color:var(--text-dim);line-height:1.4">1 mere for at færdiggøre: Besvar 5 spørgsmål</div>
+     </div>`,
+    "Daglig belønnings-modal viser en kontekstuel linje: hvad er tættest på at blive gennemført? Det sætter en agenda for sessionen — uden at det er et krav. <em>\"Du er tæt på\"</em> er en invitation, ikke et pres."
+  ));
+
+  // Card 5: Philosophy
+  const philCard = document.createElement("div");
+  philCard.className = "rhythm-card";
+  philCard.innerHTML = `
+    <div class="rhythm-card-title">Designprincip — nysgerrighed, ikke frygt</div>
+    <div class="rphil-grid">
+      <div class="rphil-col rphil-col--bad">
+        <div class="rphil-heading rphil-heading--bad">&#10005; Battle-pass psykologi</div>
+        <div class="rphil-item">● Streak-tab viser rød advarsel</div>
+        <div class="rphil-item">● "Du misser belønning hvis du ikke spiller"</div>
+        <div class="rphil-item">● Daglige mål tvinger specifikke handlinger</div>
+        <div class="rphil-item">● FOMO-baseret engagement</div>
+      </div>
+      <div class="rphil-col rphil-col--good">
+        <div class="rphil-heading rphil-heading--good">&#10003; Nysgerrighedsbaseret</div>
+        <div class="rphil-item">● Ingen straf for at misse en dag</div>
+        <div class="rphil-item">● "Se hvad du kan nå i dag" — invitation</div>
+        <div class="rphil-item">● Mål matcher naturlig brug</div>
+        <div class="rphil-item">● Fremgang motiverer, ikke frygt</div>
+      </div>
+    </div>
+    <div class="rhythm-note" style="margin-top:12px">
+      <strong style="color:var(--text-main)">Kernefølelse der designes efter:</strong><br>
+      Brugeren bør føle: <em>"Jeg undrer mig over hvad jeg kan nå i dag"</em> — ikke: <em>"Jeg er tvunget til at grinde eller miste fremgang"</em>.<br><br>
+      <strong style="color:var(--text-main)">Skolekontekst-regel:</strong> ingen mekanik der afstraffer fravær eller skaber stresskæde ved manglende login. Læring skal altid føles frivillig.
+    </div>
+  `;
+  root.appendChild(philCard);
 }());
 </script>
 </body>

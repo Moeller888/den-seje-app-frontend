@@ -956,6 +956,48 @@
 
     /* ── Mobile ──────────────────────────────────────── */
 
+    /* ── Weekly quest panel ─────────────────────────── */
+
+    .weekly-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .weekly-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .weekly-panel-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-label);
+    }
+
+    .weekly-week-chip {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--text-muted);
+      background: var(--btn-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+
+    /* Daily reward modal: context nudge line */
+    .dro-context-line {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.4;
+    }
+
     @media (max-width: 540px) {
       .profile-avatar {
         width: 100px;
@@ -1113,6 +1155,15 @@
 
   </div>
 
+  <!-- Weekly quests -->
+  <div class="weekly-panel">
+    <div class="weekly-panel-header">
+      <span class="weekly-panel-title">Ugentlige mål</span>
+      <span class="weekly-week-chip" id="weeklyWeekChip"></span>
+    </div>
+    <div id="weeklyQuestList"><!-- rendered by JS --></div>
+  </div>
+
   <!-- Achievements: permanent trophy shelf — click opens achievements.html -->
   <div class="achievement-panel"
        onclick="window.location.href='achievements.html'"
@@ -1140,6 +1191,7 @@
     <div class="dro-title">Daglig belønning</div>
     <div class="dro-coins" id="droCoins">+0 🪙</div>
     <div class="dro-streak-info" id="droStreakInfo"></div>
+    <div class="dro-context-line" id="droContextLine"></div>
     <button class="dro-btn" id="droDismissBtn">Hent!</button>
   </div>
 </div>
@@ -1219,6 +1271,20 @@
 
   const todayUTC = new Date().toISOString().slice(0, 10);
 
+  // Returns ISO week key matching PostgreSQL TO_CHAR(CURRENT_DATE, 'IYYY-IW')
+  // e.g. "2026-21" for the week containing 2026-05-23
+  function getISOWeekKey() {
+    const d = new Date();
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const year = date.getUTCFullYear();
+    const startOfYear = new Date(Date.UTC(year, 0, 1));
+    const weekNum = Math.ceil(((date - startOfYear) / 86400000 + 1) / 7);
+    return year + "-" + String(weekNum).padStart(2, "0");
+  }
+
+  const currentWeekKey = getISOWeekKey();
+
   // ── Data fetch (all in parallel) ──────────────────────────────────────────────
 
   const [
@@ -1236,6 +1302,8 @@
     userTitlesResult,
     prestigeResult,
     spotlightResult,
+    weeklyQuestsResult,
+    weeklyQuestProgressResult,
   ] = await Promise.all([
     supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
@@ -1251,6 +1319,8 @@
     supabase.from("user_titles").select("title_id").eq("user_id", userId),
     supabase.rpc("recalculate_prestige", { p_user_id: userId }),
     supabase.rpc("get_my_spotlight"),
+    supabase.from("weekly_quests").select("id, quest_key, type, target, reward_coins, label, sort_order").eq("is_active", true).order("sort_order"),
+    supabase.from("student_weekly_quest_progress").select("quest_id, progress, completed, claimed").eq("student_id", userId).eq("week_key", currentWeekKey),
   ]);
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
@@ -1620,6 +1690,46 @@
           : "Velkommen tilbage!";
       }
 
+      // Context nudge: find the nearest-done daily or weekly quest
+      const droContextEl = document.getElementById("droContextLine");
+      if (droContextEl) {
+        const allQuests = questsResult.data ?? [];
+        const qProgMap  = {};
+        for (const row of (questProgressResult.data ?? [])) qProgMap[row.quest_id] = row;
+
+        const nearDaily = allQuests
+          .map(q => {
+            const p = qProgMap[q.id] ?? { progress: 0, completed: false };
+            const pct = q.target > 0 ? Math.min(1, p.progress / q.target) : 0;
+            return { ...q, completed: !!p.completed, pct };
+          })
+          .filter(q => !q.completed && q.pct > 0)
+          .sort((a, b) => b.pct - a.pct)[0] ?? null;
+
+        const allWeeklyQuests = weeklyQuestsResult.data ?? [];
+        const wProgMap = {};
+        for (const row of (weeklyQuestProgressResult.data ?? [])) wProgMap[row.quest_id] = row;
+
+        const nearWeekly = allWeeklyQuests
+          .map(q => {
+            const p = wProgMap[q.id] ?? { progress: 0, completed: false };
+            const pct = q.target > 0 ? Math.min(1, p.progress / q.target) : 0;
+            return { ...q, completed: !!p.completed, pct };
+          })
+          .filter(q => !q.completed && q.pct > 0)
+          .sort((a, b) => b.pct - a.pct)[0] ?? null;
+
+        if (nearDaily && nearDaily.pct >= 0.5) {
+          const left = nearDaily.target - Math.min(nearDaily.progress ?? 0, nearDaily.target);
+          droContextEl.textContent = left + " mere for at færdiggøre: " + nearDaily.label;
+        } else if (nearWeekly && nearWeekly.pct >= 0.5) {
+          const left = nearWeekly.target - Math.min(nearWeekly.progress ?? 0, nearWeekly.target);
+          droContextEl.textContent = left + " mere for ugemål: " + nearWeekly.label;
+        } else {
+          droContextEl.textContent = "";
+        }
+      }
+
       overlay.classList.add("visible");
       overlay.setAttribute("aria-hidden", "false");
       playSound("buy");
@@ -1714,6 +1824,101 @@
       playSound("buy");
 
       // Update coins chip live
+      const coinsEl = document.getElementById("statCoins");
+      if (coinsEl) {
+        const current = parseInt(coinsEl.textContent, 10) || 0;
+        coinsEl.textContent = current + coinsWon;
+      }
+
+      btnEl.textContent = "✓ Hentet";
+      btnEl.disabled = true;
+    } else {
+      showToast("Målet er ikke fuldført endnu", "info");
+      btnEl.disabled = false;
+    }
+  }
+
+  // ── Weekly quest rendering ────────────────────────────────────────────────────
+
+  function renderWeeklyQuests() {
+    const quests = weeklyQuestsResult.data ?? [];
+    const progressMap = {};
+    for (const row of (weeklyQuestProgressResult.data ?? [])) {
+      progressMap[row.quest_id] = row;
+    }
+
+    const chipEl = document.getElementById("weeklyWeekChip");
+    if (chipEl) chipEl.textContent = "Uge " + currentWeekKey.split("-")[1];
+
+    const listEl = document.getElementById("weeklyQuestList");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+
+    if (quests.length === 0) {
+      listEl.innerHTML =
+        `<p style="font-size:12px;color:var(--text-muted)">Ingen aktive ugentlige mål</p>`;
+      return;
+    }
+
+    for (const quest of quests) {
+      const prog   = progressMap[quest.id] ?? { progress: 0, completed: false, claimed: false };
+      const capped = Math.min(prog.progress, quest.target);
+      const pct    = quest.target > 0
+        ? Math.min(100, Math.round((capped / quest.target) * 100))
+        : 0;
+
+      const claimBtnHtml = prog.claimed
+        ? `<button class="quest-claim-btn" disabled>&#10003; Hentet</button>`
+        : (prog.completed
+          ? `<button class="quest-claim-btn" data-weekly-quest-id="${quest.id}">Hent!</button>`
+          : `<button class="quest-claim-btn" disabled>${capped}&thinsp;/&thinsp;${quest.target}</button>`);
+
+      const row = document.createElement("div");
+      row.className = "quest-row";
+      row.innerHTML =
+        `<div class="quest-row-top">` +
+          `<span class="quest-label">${quest.label}</span>` +
+          `<span class="quest-reward-badge">+${quest.reward_coins}&thinsp;&#x1FA99;</span>` +
+        `</div>` +
+        `<div class="quest-progress-track">` +
+          `<div class="quest-progress-fill" style="width:${pct}%"></div>` +
+        `</div>` +
+        `<div class="quest-row-bottom">` +
+          `<span class="quest-progress-text">${capped} / ${quest.target}</span>` +
+          claimBtnHtml +
+        `</div>`;
+
+      listEl.appendChild(row);
+    }
+
+    listEl.querySelectorAll(".quest-claim-btn[data-weekly-quest-id]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const questId = btn.dataset.weeklyQuestId;
+        await claimWeeklyQuestReward(questId, btn);
+      });
+    });
+  }
+
+  async function claimWeeklyQuestReward(questId, btnEl) {
+    btnEl.disabled = true;
+
+    const { data, error } = await supabase.rpc("claim_weekly_quest_reward", {
+      p_quest_id: questId,
+      p_week_key: currentWeekKey,
+    });
+
+    if (error) {
+      showToast("Fejl ved hentning af belønning", "error");
+      btnEl.disabled = false;
+      return;
+    }
+
+    if (data === "claimed") {
+      const quest = (weeklyQuestsResult.data ?? []).find(q => q.id === questId);
+      const coinsWon = quest?.reward_coins ?? 0;
+      showToast("+" + coinsWon + " mønter! Ugemål gennemført 🎯", "success");
+      playSound("buy");
+
       const coinsEl = document.getElementById("statCoins");
       if (coinsEl) {
         const current = parseInt(coinsEl.textContent, 10) || 0;
@@ -2045,6 +2250,7 @@
   renderCollection();
   renderDailyRewardCard(alreadyClaimedToday);
   renderQuests();
+  renderWeeklyQuests();
   renderAchievements();
   renderNextGoal();
 
