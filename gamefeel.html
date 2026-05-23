@@ -217,6 +217,12 @@
   <div class="ba-grid" id="artPolishGrid"></div>
 </div>
 
+<!-- ── Section 11: Shop Preview Validation ───────────────── -->
+<div class="section">
+  <div class="section-title">11 · Shop Preview Validering — wings og galaxy-kappe korrekt bag kroppen</div>
+  <div id="previewValidationGrid" class="ba-grid"></div>
+</div>
+
 <!-- ── Section 10: Shop Preview Layer Bug ────────────────── -->
 <div class="section">
   <div class="section-title">10 · Shop Preview Layer Bug — z-elevation brød body-okklusion</div>
@@ -823,11 +829,11 @@ function brokenPreview(itemId) {
   return preview;
 }
 
-// Simulates the FIXED shop preview: sorted by z, back item first at z=-1, body at z=0
+// Simulates the FIXED shop preview: isolation:isolate stacking context + sorted z + append
 function fixedPreview(itemId) {
   const preview = document.createElement("div");
   preview.style.cssText = `
-    position:relative; width:130px; height:152px; border-radius:8px;
+    position:relative; isolation:isolate; width:130px; height:152px; border-radius:8px;
     background: radial-gradient(ellipse at 50% 38%, var(--avatar-inner) 0%, transparent 70%);
     overflow:hidden; flex-shrink:0;
   `;
@@ -886,7 +892,7 @@ const fixedGroup = document.createElement("div");
 fixedGroup.style.cssText = "display:flex;flex-direction:column;gap:4px;";
 const fixedLabel = document.createElement("div");
 fixedLabel.className = "ba-label-after";
-fixedLabel.textContent = "RIGTIGT — sort(z) + append: back-item z=-1 < body z=0 → krop okkluderer naturligt";
+fixedLabel.textContent = "RIGTIGT — isolation:isolate + sort(z) + append: stacking context → back-item (z=-1) foran gradient, bag body (z=0)";
 fixedLabel.style.marginBottom = "8px";
 fixedGroup.appendChild(fixedLabel);
 const fixedCards = document.createElement("div");
@@ -908,15 +914,74 @@ bugPair.appendChild(bugRow);
 
 const bugNote = document.createElement("div");
 bugNote.className = "ba-note";
-bugNote.textContent = `Root cause: shop.html createMiniPaperDoll() eleverede back-items fra z=-1 til z=2 \
-"so the item is always visible." Men dette bryder body-okklusion: body (z=0) < back-item (z=2) \
-→ kappe-SVG'ens HELE indhold renderes foran kroppen, inklusive det klæde der skal skjules bag torso. \
-Fix: sort-then-append med rigtige z-værdier (identisk med avatar.html og gamefeel.html). \
-back-item (z=-1) indsættes FØR body (z=0) i DOM. CSS z-index bekræfter: body (0) > back-item (-1) \
-→ krop ejer forgrunden. Klæde/vinger ses kun i side-zoner, ben-gaps og skulder-rim — \
-præcis som designet.`;
+bugNote.textContent = `Root cause — to fejl i kombination. (1) rawZ<0?2:rawZ eleverede back-items til z=2 foran body z=0. \
+(2) .shop-preview manglede isolation:isolate — uden en stacking context malede z=-1 elementer bag \
+nærmeste ancestor-baggrund (siderens root), ikke bag container-gradienten. \
+Resultat: back-items enten foran kroppen (fejl 1) eller usynlige bag root-baggrunden (fejl 2). \
+Fix: isolation:isolate på .shop-preview + sort-then-append. \
+isolation:isolate opretter en lokal stacking context: z=-1 maler FORAN .shop-preview gradient men BAG body (z=0). \
+Klæde/vinger synlige i side-zoner og skulder-rim — præcis som avatar.html (#avatar-preview har isolation:isolate linje 128).`;
 bugPair.appendChild(bugNote);
 layerBugGrid.appendChild(bugPair);
+
+// ── Section 11: Shop Preview Validation ─────────────────────────────────────
+// Shows the FINAL correct state: wings-dragon and galaxy-cape rendered with
+// isolation:isolate + sort-then-append, identical to shop.html and avatar.html.
+
+const previewValidationGrid = document.getElementById("previewValidationGrid");
+
+function validPreview(itemId) {
+  const preview = document.createElement("div");
+  preview.style.cssText = `
+    position:relative; isolation:isolate; width:130px; height:152px; border-radius:8px;
+    background: radial-gradient(ellipse at 50% 38%, var(--avatar-inner) 0%, transparent 70%);
+    overflow:hidden; flex-shrink:0;
+  `;
+  const item = ITEMS.find(i => i.id === itemId);
+  const layers = [{ src: BASE, z: 0 }];
+  if (item) layers.push({ src: item.url, z: SLOT_Z[item.slot] ?? 1 });
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(({ src, z }) => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    img.style.cssText = `position:absolute;top:3%;left:6%;width:88%;height:93%;object-fit:contain;z-index:${z};`;
+    preview.appendChild(img);
+  });
+  return preview;
+}
+
+const VALIDATE_ITEMS = ["wings-dragon", "galaxy-cape", "cape-red"];
+const valPair = document.createElement("div");
+valPair.className = "ba-pair";
+const valTitle = document.createElement("div");
+valTitle.className = "ba-pair-title";
+valTitle.textContent = "Validering — isolation:isolate + sort-then-append";
+valPair.appendChild(valTitle);
+
+const valCards = document.createElement("div");
+valCards.style.cssText = "display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;";
+VALIDATE_ITEMS.forEach(id => {
+  const itemDef = ITEMS.find(i => i.id === id);
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:6px;";
+  wrap.appendChild(validPreview(id));
+  const lbl = document.createElement("div");
+  lbl.style.cssText = "font-size:10px;color:var(--text-label);text-align:center;";
+  lbl.textContent = (itemDef?.name ?? id) + " (" + (itemDef?.slot ?? "?") + " z=" + (SLOT_Z[itemDef?.slot] ?? "?") + ")";
+  wrap.appendChild(lbl);
+  valCards.appendChild(wrap);
+});
+valPair.appendChild(valCards);
+
+const valNote = document.createElement("div");
+valNote.className = "ba-note";
+valNote.textContent = `Korrekt rendering: back-items (z=-1) vises i side-zoner og skulder-rim. \
+Krop (z=0) ejer forgrunden og okkluderer rødder. wings-dragon synlig ved x=2–14 og x=146–158 (udenfor arm-bredden). \
+galaxy-cape klæde skjult bag torso; krave/lås synlig i halszone. cape-red identisk. \
+Kritisk: isolation:isolate på .shop-preview (linje 184) matcher #avatar-preview isolation:isolate (avatar.html linje 128).`;
+valPair.appendChild(valNote);
+previewValidationGrid.appendChild(valPair);
 
 // ── Section 9: Storefront Redesign ──────────────────────────────────────────
 
