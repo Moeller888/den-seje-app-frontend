@@ -274,6 +274,23 @@
     .aura-rarity-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
     .aura-rarity-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 
+    /* ── Section 19: Loadout Composition Intelligence ─── */
+    .lci-grid { display: flex; flex-direction: column; gap: 20px; }
+    .lci-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .lci-card--warn { border-left: 3px solid #ef5350; }
+    .lci-card--good { border-left: 3px solid #66bb6a; }
+    .lci-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .lci-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .lci-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
+    .lci-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .lci-label { font-size: 10px; color: var(--text-muted); text-align: center; max-width: 110px; line-height: 1.3; }
+    .lci-label strong { color: var(--text-main); display: block; font-size: 11px; }
+    .lci-hierarchy { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .lci-hier-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; border-radius: 6px; }
+    .lci-hier-num { font-size: 16px; font-weight: bold; color: var(--text-dim); flex-shrink: 0; width: 20px; }
+    .lci-hier-body { font-size: 11px; color: var(--text-main); line-height: 1.4; }
+    .lci-hier-body strong { color: var(--text-bright); }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -426,6 +443,12 @@
 <div class="section">
   <div class="section-title">18 · Aura Art Direction — Atmosfære, ikke Effekt</div>
   <div class="aura-grid" id="auraGrid18"></div>
+</div>
+
+<!-- ── Section 19: Loadout Composition Intelligence ──────── -->
+<div class="section">
+  <div class="section-title">19 · Loadout Composition Intelligence — Silhuet, Hierarki, Atmosfære</div>
+  <div class="lci-grid" id="lciGrid19"></div>
 </div>
 
 <script type="module">
@@ -2808,6 +2831,233 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </table>`,
     "Opacity budget er den vigtigste regel i aura-design. Hvert rarity-lag tilføjer max 4-6 procentpoints mere max opacity. Den samlede visuelle intensitet er stadig behersket — legendarisk er ikke 10× louder end almindelig, det er 2× bredere og har bevægelse. Det er den rigtige skelnen.",
     true
+  ));
+}());
+
+// ── Section 19: Loadout Composition Intelligence ─────────────────────────────
+
+(function() {
+  const root = document.getElementById("lciGrid19");
+  if (!root) return;
+
+  function lciCard(title, bodyHtml, noteHtml, modifier) {
+    const el = document.createElement("div");
+    el.className = "lci-card" + (modifier ? " lci-card--" + modifier : "");
+    el.innerHTML =
+      `<div class="lci-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="lci-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  function combo(itemIds, labelHtml, note) {
+    const col = document.createElement("div");
+    col.className = "lci-col";
+    const wrapEl = document.createElement("div");
+    wrapEl.className = "avatar-wrap";
+    const cv = canvas();
+    itemIds.forEach(id => {
+      const item = ITEMS.find(i => i.id === id);
+      if (item) cv.appendChild(layer(item.url, SLOT_Z[item.slot]));
+    });
+    cv.appendChild(layer(BASE, 0));
+    wrapEl.appendChild(cv);
+    col.appendChild(wrapEl);
+    const lbl = document.createElement("div");
+    lbl.className = "lci-label";
+    lbl.innerHTML = labelHtml;
+    if (note) {
+      const n = document.createElement("span");
+      n.style.cssText = "display:block;margin-top:3px;font-size:9px;color:var(--text-muted);line-height:1.3;";
+      n.textContent = note;
+      lbl.appendChild(n);
+    }
+    col.appendChild(lbl);
+    return col;
+  }
+
+  // Card 1: Focal hierarchy
+  root.appendChild(lciCard(
+    "Fokal hierarki — hvad øjet ser FØRST",
+    `<div class="lci-hierarchy">
+      <div class="lci-hier-row" style="background:rgba(255,214,0,0.08)">
+        <div class="lci-hier-num">1</div>
+        <div class="lci-hier-body"><strong>Ansigt / Hoved</strong> — r=30 er den permanente anker-silhuet. Ingen item må FYLDE ansigts-zonen. Headwear forlænger opad, ikke erstatter.</div>
+      </div>
+      <div class="lci-hier-row" style="background:rgba(255,255,255,0.03)">
+        <div class="lci-hier-num">2</div>
+        <div class="lci-hier-body"><strong>Krop-silhuet</strong> — proportion, farve, materialeidentitet. Signalerer "hvem er denne person."</div>
+      </div>
+      <div class="lci-hier-row" style="background:rgba(255,255,255,0.02)">
+        <div class="lci-hier-num">3</div>
+        <div class="lci-hier-body"><strong>Ét stort cosmetic-statement</strong> — kappe ELLER vinger ELLER rustning. Ryg-items definerer bredden; torso definerer "jobbet." Ikke alle tre på én gang.</div>
+      </div>
+      <div class="lci-hier-row" style="background:rgba(255,255,255,0.015)">
+        <div class="lci-hier-num">4</div>
+        <div class="lci-hier-body"><strong>Atmosfærisk overlay (aura)</strong> — emotionel temperatur. Konkurrerer aldrig med niveau 1–3. Mærkes, ses ikke.</div>
+      </div>
+      <div class="lci-hier-row" style="background:rgba(255,255,255,0.008)">
+        <div class="lci-hier-num">5</div>
+        <div class="lci-hier-body"><strong>Detalje-accenter</strong> — clasp, juveler, konstellationslinjer. Synlige ved nærmere eftersyn. Usynlige på thumbnail.</div>
+      </div>
+    </div>`,
+    "Hierarkiet handler IKKE om raritet — det handler om visuel vægt. En legendarisk aura sidder på niveau 4 fordi dens funktion er atmosfære, ikke silhuet. En almindelig hat sidder på niveau 1 fordi den sidder i ansigts-zonen. Niveau 1 vinder altid — uanset raritet."
+  ));
+
+  // Card 2: Self-regulating composition
+  (function() {
+    const card = document.createElement("div");
+    card.className = "lci-card";
+    card.innerHTML = `<div class="lci-card-title">Selvregulerende system — jo mere udstyr, jo diskretere aura</div>`;
+
+    const row = document.createElement("div");
+    row.className = "lci-row";
+
+    [
+      { items: ["aura-gold"],                                                               label: "<strong>Aura alene</strong>",   note: "Fuld aura-ekspression — synlig i det meste af canvas" },
+      { items: ["aura-gold", "galaxy-cape"],                                                label: "<strong>+ Kappe</strong>",       note: "Kappe dækker ryg — aura reduceret til kanter" },
+      { items: ["aura-gold", "galaxy-cape", "armor-knight"],                                label: "<strong>+ Rustning</strong>",    note: "Torso dækket — aura kun i hjørner" },
+      { items: ["aura-gold", "galaxy-cape", "armor-knight", "crown-golden"],               label: "<strong>+ Krone</strong>",       note: "Hoved dækket — crown whispers alene synlige" },
+      { items: ["aura-gold", "galaxy-cape", "armor-knight", "crown-golden", "wings-dragon"], label: "<strong>Fuld loadout</strong>", note: "Aura er 'underklæde' — ambient, ikke dominant" },
+    ].forEach(cfg => row.appendChild(combo(cfg.items, cfg.label, cfg.note)));
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="lci-note">Dette er den vigtigste egenskab ved z=-2 aura-arkitekturen: <strong>den selvregulerer med loadout-densitet.</strong> Jo mere karakter, jo mere diskret aura — uden nogen logik i koden. z-rækkefølgen giver dette gratis: items på z=-1 til z=5 okkluderer aura naturligt. Auraen er mest ekspressiv på en nøgen krop og mest diskret i fuldt udstyr. Det er det rigtige design.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 3: Winning combinations
+  (function() {
+    const card = document.createElement("div");
+    card.className = "lci-card lci-card--good";
+    card.innerHTML = `<div class="lci-card-title">&#10003; Vellykkede kombinationer — farme-harmoni + silhuet-klarhed</div>`;
+
+    const row = document.createElement("div");
+    row.className = "lci-row";
+
+    [
+      { items: ["aura-ember", "cape-red"],                       label: "<strong>Ember + Rød Kappe</strong>",      note: "Varm farve-familie: orange + crimson" },
+      { items: ["aura-sky", "hero-mask"],                        label: "<strong>Himmel + Helte-maske</strong>",   note: "Kølig palét: sky blue + indigo navy" },
+      { items: ["aura-arcane", "galaxy-cape", "crown-golden"],   label: "<strong>Arkane + Galakse + Krone</strong>", note: "Kosmisk violet + guld = premium kontrast" },
+      { items: ["aura-gold", "armor-knight", "crown-golden"],    label: "<strong>Guld + Rustning + Krone</strong>",  note: "Alle guld-resonerende items — harmoni" },
+    ].forEach(w => row.appendChild(combo(w.items, w.label, w.note)));
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="lci-note">Fælles for alle vinderkombo'er: aura-farve og item-farve taler <strong>samme farvesprog</strong> (varm/varm, kølig/kølig). Auraen forstærker items' materialeidentitet frem for at konkurrere med den. Reglen: matcher aura-farven det dominerende items materiale-temperatur?</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 4: Anti-patterns
+  (function() {
+    const card = document.createElement("div");
+    card.className = "lci-card lci-card--warn";
+    card.innerHTML = `<div class="lci-card-title">&#10005; Anti-mønstre — overload, farve-clash, silhuet-støj</div>`;
+
+    const row = document.createElement("div");
+    row.className = "lci-row";
+
+    [
+      {
+        items: ["aura-gold", "wings-dragon", "crown-golden", "armor-knight", "hero-mask"],
+        label: "<strong>FULDT LEGENDÆR LOADOUT</strong>",
+        note: "Øjet ved ikke hvad det skal fokusere på. Alle items skriger."
+      },
+      {
+        items: ["aura-arcane", "cape-red"],
+        label: "<strong>Farve-clash</strong>",
+        note: "Violet aura + crimson cape = konkurrerende temperaturer"
+      },
+      {
+        items: ["aura-sky", "crown-golden"],
+        label: "<strong>Kold aura + varm krone</strong>",
+        note: "Blå felt mod guld krone — ingen fælles farvebro"
+      },
+    ].forEach(ap => row.appendChild(combo(ap.items, ap.label, ap.note)));
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="lci-note">
+      <strong style="color:#ef5350;display:block;margin-bottom:4px">Anti-mønster-regler:</strong>
+      ● Maks ét item der dominerer synsfelt + aura. To dominerende legendariske uden farme-bro = visuelt kaos.<br>
+      ● Farveklash: varm aura + kølig items (eller omvendt) uden farve-bro = konkurrence, ikke harmoni.<br>
+      ● Fuldt legendær loadout: skriv hellere én god sætning end fem dårlige på én gang.
+    </div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 5: Aura + wings interaction — the correct case
+  (function() {
+    const card = document.createElement("div");
+    card.className = "lci-card";
+    card.innerHTML = `<div class="lci-card-title">Aura + vinger — transparens-interaktion er korrekt arkitektur</div>`;
+
+    const row = document.createElement("div");
+    row.className = "lci-row";
+
+    [
+      { items: ["aura-sky",    "wings-dragon"], label: "<strong>Sky + Vinger</strong>",    note: "Blå aura lækker i vinge-transparens — kold atmosfære" },
+      { items: ["aura-arcane", "wings-dragon"], label: "<strong>Arkane + Vinger</strong>", note: "Violet field bag vinger — magisk energi" },
+      { items: ["aura-gold",   "wings-dragon"], label: "<strong>Guld + Vinger</strong>",   note: "Varm aura bag grønne vinger — komplementær" },
+    ].forEach(cfg => row.appendChild(combo(cfg.items, cfg.label, cfg.note)));
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="lci-note">Vinge-SVG'en har solid-fill membran-paths (grøn). I transparente huller mellem rygsøjler lækker auraen igennem. z=-2 (aura) → z=-1 (vinger) → z=0 (krop): rækkefølgen er garanteret korrekt. Auraen er ALDRIG foran vingerne. Effekten: vingerne ser ud til at have indre glød — som om energien driver dem. Dette er et arkitekturelt gratis feature, ikke et special case.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 6: Composition rules catalogue
+  root.appendChild(lciCard(
+    "Kompositionsregler — designkatalog",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #66bb6a;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#66bb6a;margin-bottom:8px">Farme-harmoni</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Varm aura → varm items (ember+cape-red, gold+crown)</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Kølig aura → kølig items (sky+hero-mask, arcane+armor)</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Kosmisk aura → kosmisk items (arcane+galaxy-cape)</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #66bb6a;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#66bb6a;margin-bottom:8px">Raritetsstrategi</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Bedst: ét legendarisk item + mix af lavere raritet</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Acceptabelt: to legendariske hvis ingen begge dominerer</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Risiko: 3+ legendariske + aura = synsfelt-overload</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid var(--text-muted);border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:var(--text-label);margin-bottom:8px">Zone-regler</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Hoved-zone: ét item (hat ELLER maske ELLER briller)</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Ryg-zone: kappe ELLER vinger (slot-system enforced)</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Aura-zone: altid niveau 4 hierarki — understøtter, dominerer ikke</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid var(--text-muted);border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:var(--text-label);margin-bottom:8px">Skalerings-test</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● 120×180px: silhuet aflæselig som sort form?</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● 54×81px: hoved + ét statement-item synligt?</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Aura: kun gradient-felt synligt på thumbnail (whispers usynlige) ✓</div>
+      </div>
+    </div>`,
+    "Kernereglen: ÉT STATEMENT PR. ZONE. 9 slots betyder ikke 9 items på én gang. De bedste loadouts har 3–4 items: krop, ét ryg-statement, ét hoved-item, aura. Resten er tomrum — og tomrum er ikke tom plads. Det er ånderum."
+  ));
+
+  // Card 7: Future adaptive systems
+  root.appendChild(lciCard(
+    "Fremtidige adaptive systemer — hvad arkitekturen allerede tillader",
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Adaptiv aura-opacity</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">JS tæller udstyrte slots og reducerer aura-opacity: 0 slots = 100%, 4 slots = 60%. Ingen SVG-ændring — CSS opacity på img-elementet.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Bevægelses-timing staggering</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Aura-gold's 5 crown whispers animerer med staggered delay: <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">animation-delay: 0s, 0.4s, 0.8s, 1.2s, 1.6s</code>. Organisk loop. Ingen JS.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Slot-aware aura-undertrykkel</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Hvis wings er udstyret: CSS <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">[data-has-wings] .aura-img { opacity: 0.7 }</code>. Shoulder flares er alligevel skjult bag vinger.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Kompositions-score</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">legendary=4, rare=3, uncommon=2, common=1. Score &gt; 12 med aura = UI-hint om at simplificere. Ren JS-logik, ingen DB-ændring.</div>
+      </div>
+    </div>`,
+    "Alle disse systemer bygger OVEN PÅ den eksisterende z-arkitektur. Ingen SVG-ændring, ingen DB-migration. Arkitekturen er designet som en platform — adaptive composition intelligence er et UX-lag, ikke et art-lag."
   ));
 }());
 </script>
