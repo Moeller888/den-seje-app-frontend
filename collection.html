@@ -680,7 +680,7 @@
   const userId = sessionData.session.user.id;
 
   loadTheme().catch(() => {});
-  document.body.style.display = "";
+  document.body.style.display = "block";
 
   document.getElementById("backBtn").onclick = () => { window.location.href = "hub.html"; };
 
@@ -1197,15 +1197,23 @@
     body.appendChild(breakdown);
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────────
+  // ── Init — each panel is isolated; one crash must not block others ───────────
 
-  renderHero();
-  renderCosmetics();
-  renderArchetypes();
-  renderAchievements();
-  renderTitles();
-  renderThemes();
-  renderPrestige();
+  function safeRender(name, fn) {
+    try {
+      fn();
+    } catch (err) {
+      console.error(`[collection] renderError in ${name}:`, err);
+    }
+  }
+
+  safeRender("hero",         renderHero);
+  safeRender("cosmetics",    renderCosmetics);
+  safeRender("archetypes",   renderArchetypes);
+  safeRender("achievements", renderAchievements);
+  safeRender("titles",       renderTitles);
+  safeRender("themes",       renderThemes);
+  safeRender("prestige",     renderPrestige);
 
 </script>
 
