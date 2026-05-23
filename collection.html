@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <!-- Anti-flicker: apply cached theme synchronously before CSS renders -->
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Min Samling – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    input, textarea, select { font-size: 16px; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: none; /* revealed after auth */
+    }
+
+    /* ── Page wrap ───────────────────────────────────────────── */
+    .page-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 16px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+
+    .topbar-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .topbar-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .topbar-spacer { width: 90px; }
+
+    /* ── Body: sidebar + main ────────────────────────────────── */
+    .page-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 700px) {
+      .page-body {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 20px;
+      }
+    }
+
+    /* ── Hero sidebar ────────────────────────────────────────── */
+    .hero-col { flex-shrink: 0; }
+
+    @media (min-width: 700px) {
+      .hero-col { width: 220px; position: sticky; top: 16px; }
+    }
+
+    .hero-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 18px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Avatar with breathing animation */
+    .hero-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar-aura {
+      position: absolute;
+      inset: -12px;
+      border-radius: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .hero-avatar-wrap[data-rarity="legendary"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.12) 0%, transparent 65%);
+      opacity: 1;
+    }
+
+    .hero-avatar-wrap[data-rarity="rare"] .avatar-aura {
+      background: radial-gradient(ellipse at 50% 40%, rgba(25,118,210,0.10) 0%, transparent 65%);
+      opacity: 1;
+    }
+
+    .hero-avatar {
+      position: relative;
+      isolation: isolate;
+      width: 120px;
+      height: 180px;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      border: 1.5px solid var(--border);
+      animation: avatarBreathe 3.5s ease-in-out infinite;
+    }
+
+    .hero-avatar:hover { animation-play-state: paused; }
+
+    .avatar-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    @keyframes avatarBreathe {
+      0%, 100% { transform: translateY(0) scale(1);     }
+      50%       { transform: translateY(-2px) scale(1.008); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-avatar { animation: none; }
+    }
+
+    /* Hero text info */
+    .hero-info {
+      width: 100%;
+      text-align: center;
+    }
+
+    .hero-level {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 3px;
+    }
+
+    .hero-level b {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .hero-title-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Prestige block */
+    .hero-prestige {
+      width: 100%;
+      text-align: center;
+      padding: 10px 0 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .prestige-eyebrow {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .prestige-score-big {
+      font-size: 42px;
+      font-weight: bold;
+      color: var(--coin);
+      line-height: 1.05;
+    }
+
+    .prestige-milestone-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 5px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      color: var(--text-dim);
+    }
+
+    /* Overview bars */
+    .hero-overview { width: 100%; }
+
+    .hero-overview-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .ov-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+    }
+
+    .ov-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      width: 80px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ov-track {
+      flex: 1;
+      height: 5px;
+      background: var(--xp-track);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .ov-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 400ms ease;
+    }
+
+    .ov-pct {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 26px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── Archives column ─────────────────────────────────────── */
+    .archives-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .arch-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .arch-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .arch-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .arch-count {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .arch-body { padding: 14px 16px; }
+
+    /* ── Rarity sections ─────────────────────────────────────── */
+    .rarity-section { margin-bottom: 16px; }
+    .rarity-section:last-child { margin-bottom: 0; }
+
+    .rarity-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .rarity-header--legendary { color: #f57f17; }
+    .rarity-header--rare      { color: #1565c0; }
+    .rarity-header--uncommon  { color: #2e7d32; }
+    .rarity-header--common    { color: var(--text-muted); }
+
+    /* ── Cosmetic item cards ──────────────────────────────────── */
+    .item-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .coll-item {
+      width: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .coll-preview {
+      position: relative;
+      isolation: isolate;
+      width: 54px;
+      height: 81px;
+      border-radius: 8px;
+      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .coll-preview-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Locked silhouette */
+    .coll-item--locked .coll-preview {
+      background: var(--bg-main);
+      border-color: var(--border);
+    }
+
+    .coll-item--locked .coll-preview-layer {
+      opacity: 0.07;
+      filter: saturate(0);
+    }
+
+    .coll-item--locked .coll-preview::after {
+      content: "?";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: rgba(255,255,255,0.3);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .coll-item-name {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.3;
+      max-width: 76px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .coll-item--locked .coll-item-name { color: var(--text-muted); }
+
+    /* ── Archetype grid ──────────────────────────────────────── */
+    .archetype-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 10px;
+    }
+
+    .archetype-card {
+      background: var(--btn-bg);
+      border: 1.5px solid var(--border-btn);
+      border-radius: 10px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      text-align: center;
+    }
+
+    .archetype-card--complete {
+      border-color: #388e3c;
+    }
+
+    .archetype-icon { font-size: 20px; line-height: 1; }
+
+    .archetype-name {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .archetype-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .archetype-prog {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .archetype-prog--complete { color: #388e3c; font-weight: bold; }
+
+    /* ── Achievement grid ────────────────────────────────────── */
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+    }
+
+    .ach-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .ach-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      border: 2px solid var(--border-btn);
+      background: var(--btn-bg);
+    }
+
+    .ach-badge--locked .ach-icon-wrap { opacity: 0.28; }
+
+    .ach-badge--legendary .ach-icon-wrap { border-color: #f57f17; }
+    .ach-badge--rare      .ach-icon-wrap { border-color: #1565c0; }
+    .ach-badge--uncommon  .ach-icon-wrap { border-color: #2e7d32; }
+
+    .ach-name {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.2;
+    }
+
+    .ach-badge--locked .ach-name { color: var(--text-muted); }
+
+    /* ── Title chips ─────────────────────────────────────────── */
+    .title-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .title-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1.5px solid var(--border-btn);
+      background: var(--btn-bg);
+      color: var(--text-dim);
+    }
+
+    .title-chip--equipped {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .title-chip--locked { opacity: 0.38; font-style: italic; }
+
+    .title-chip--legendary { border-color: #f57f17; color: #f57f17; }
+    .title-chip--rare      { border-color: #1565c0; color: #1565c0; }
+    .title-chip--uncommon  { border-color: #2e7d32; color: #2e7d32; }
+
+    .title-chip--equipped { color: #fff; border-color: var(--accent); }
+
+    /* ── Theme swatches ──────────────────────────────────────── */
+    .theme-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .theme-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: var(--btn-bg);
+      border: 1.5px solid var(--border-btn);
+      border-radius: 10px;
+    }
+
+    .theme-card--locked { opacity: 0.38; }
+
+    .theme-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .theme-name { font-size: 12px; color: var(--text-dim); }
+
+    .theme-rarity-icon { font-size: 10px; color: var(--text-muted); }
+
+    /* ── Prestige panel ──────────────────────────────────────── */
+    .prestige-milestone-track {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .milestone-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .milestone-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .milestone-name { font-size: 13px; color: var(--text-dim); flex: 1; }
+    .milestone-threshold { font-size: 12px; color: var(--text-muted); }
+
+    .milestone-row--reached .milestone-icon,
+    .milestone-row--reached .milestone-name { color: var(--coin); }
+    .milestone-row--current .milestone-name { font-weight: bold; color: var(--text-bright); }
+
+    .prestige-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .prest-source {
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .prest-source-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+    .prest-source-value { font-size: 16px; font-weight: bold; color: var(--coin); }
+  </style>
+</head>
+
+<body>
+
+<div class="page-wrap">
+
+  <div class="topbar">
+    <button class="topbar-back" id="backBtn">&#8592; Hub</button>
+    <span class="page-title">&#128216; Min Samling</span>
+    <div class="topbar-spacer"></div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Left: sticky hero card -->
+    <aside class="hero-col">
+      <div class="hero-card">
+        <div class="hero-avatar-wrap" id="heroAvatarWrap">
+          <div class="avatar-aura"></div>
+          <div class="hero-avatar" id="heroAvatar"></div>
+        </div>
+        <div class="hero-info">
+          <div class="hero-level">Niveau <b id="heroLevel">&#8212;</b></div>
+          <div id="heroTitleChipSlot"></div>
+        </div>
+        <div class="hero-prestige">
+          <div class="prestige-eyebrow">Prestige</div>
+          <div class="prestige-score-big" id="heroPrestigeScore">&#8212;</div>
+          <div id="heroMilestoneChipSlot"></div>
+        </div>
+        <div class="hero-overview" id="heroOverview"></div>
+      </div>
+    </aside>
+
+    <!-- Right: archive panels -->
+    <main class="archives-col">
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Kosmetik</span>
+          <span class="arch-count" id="cosmeticsCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="cosmeticsBody"></div>
+      </div>
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Arketyper</span>
+          <span class="arch-count" id="archetypesCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="archetypesBody"></div>
+      </div>
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Pr&#230;stationer</span>
+          <span class="arch-count" id="achCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="achBody"></div>
+      </div>
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Titler</span>
+          <span class="arch-count" id="titlesCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="titlesBody"></div>
+      </div>
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Temaer</span>
+          <span class="arch-count" id="themesCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="themesBody"></div>
+      </div>
+
+      <div class="arch-panel">
+        <div class="arch-header">
+          <span class="arch-title">Prestige</span>
+          <span class="arch-count" id="prestigeCount">&#8212;</span>
+        </div>
+        <div class="arch-body" id="prestigeBody"></div>
+      </div>
+
+    </main>
+
+  </div>
+
+</div>
+
+<script type="module">
+  import { supabase }             from "./supabaseClient.js";
+  import { loadTheme }            from "./js/themeManager.js";
+  import { calculateLevelFromXP } from "./js/progression.js";
+  import { ALL_SLOTS, SLOT_Z, BASE_SRC, RARITY_ORDER, RARITY_ICONS, RARITY_LABELS } from "./js/avatar-layers.js";
+
+  // ── Auth ──────────────────────────────────────────────────────────────────────
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    window.location.replace("login.html");
+    throw new Error("Unauthorized");
+  }
+
+  const userId = sessionData.session.user.id;
+
+  loadTheme().catch(() => {});
+  document.body.style.display = "";
+
+  document.getElementById("backBtn").onclick = () => { window.location.href = "hub.html"; };
+
+  window.addEventListener("pageshow", async (event) => {
+    if (event.persisted) {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) window.location.replace("login.html");
+    }
+  });
+
+  // ── Constants ─────────────────────────────────────────────────────────────────
+
+  // Must match DB seed in achievements table exactly (same as hub.html)
+  const ACHIEVEMENT_DEFS = [
+    { id: "first_correct",   label: "Første svar",     icon: "✓",  rarity: "common",    hidden: false },
+    { id: "correct_10",      label: "10 svar",               icon: "◎",  rarity: "common",    hidden: false },
+    { id: "correct_100",     label: "100 svar",              icon: "★",  rarity: "rare",      hidden: false },
+    { id: "first_theme",     label: "Tema",                  icon: "◈",  rarity: "common",    hidden: false },
+    { id: "first_legendary", label: "Legendarisk",           icon: "✦",  rarity: "rare",      hidden: false },
+    { id: "streak_7",        label: "7 dage",                icon: "🔥", rarity: "rare", hidden: false },
+    { id: "level_10",        label: "Niveau 10",             icon: "▲",  rarity: "rare",      hidden: false },
+    { id: "first_purchase",  label: "Første køb", icon: "🛒", rarity: "common",hidden: false },
+    { id: "collector_5",     label: "5 items",               icon: "💎", rarity: "rare", hidden: false },
+    { id: "themes_3",        label: "3 temaer",              icon: "🎨", rarity: "rare", hidden: false },
+    { id: "streak_30",       label: "30 dage",               icon: "⚡",  rarity: "legendary", hidden: false },
+    { id: "correct_1000",    label: "1000 svar",             icon: "🏆", rarity: "legendary", hidden: false },
+    { id: "night_owl",       label: "Natteuglen",            icon: "🌙", rarity: "rare",  hidden: true  },
+    { id: "perfect_five",    label: "Perfekt Fem",           icon: "⭐",  rarity: "rare",      hidden: true  },
+    { id: "legendary_combo", label: "Den Store Samler",      icon: "👑", rarity: "legendary", hidden: true  },
+    { id: "fast_learner",    label: "Hurtiglærer",      icon: "🚀", rarity: "legendary", hidden: true  },
+  ];
+
+  const ARCHETYPES = [
+    { id: "ridder",  name: "Ridder",  icon: "⚔",  desc: "Styrke og ære",         items: ["armor-knight", "crown-golden"] },
+    { id: "drage",   name: "Drage",   icon: "🐉", desc: "Magt og vildskab",      items: ["wings-dragon"] },
+    { id: "galakse", name: "Galakse", icon: "✦",  desc: "Kosmisk udstrækning",   items: ["galaxy-cape"] },
+    { id: "pirat",   name: "Pirat",   icon: "⚓",  desc: "Frihed og eventyr",           items: ["pirate-hat"] },
+    { id: "ninja",   name: "Ninja",   icon: "◉",  desc: "Præcision og skygge",   items: ["ninja-mask"] },
+    { id: "helte",   name: "Helt",    icon: "★",  desc: "Mod og retfærdighed",   items: ["hero-mask"] },
+    { id: "panda",   name: "Panda",   icon: "🐼", desc: "Sjov og nysgerrighed",  items: ["panda-mask"] },
+    { id: "kappe",   name: "Kappe",   icon: "◈",  desc: "Elegance og bevægelse", items: ["cape-red"] },
+    { id: "is",      name: "Is",      icon: "❄",  desc: "Kølig beherskelse",     items: ["crown-silver"] },
+  ];
+
+  const PRESTIGE_MILESTONES = [
+    { name: "Begynder", threshold: 10,  icon: "○" },
+    { name: "Samler",   threshold: 25,  icon: "◆" },
+    { name: "Kender",   threshold: 75,  icon: "★" },
+    { name: "Mester",   threshold: 200, icon: "✦" },
+    { name: "Legende",  threshold: 500, icon: "👑" },
+  ];
+
+  // Prestige weights — must match prestige_weight() SQL function exactly
+  const PRESTIGE_WEIGHTS = { common: 1, uncommon: 2, rare: 5, legendary: 12 };
+
+  // Accent swatch colors per theme id (cosmetic only — used for theme cards)
+  const THEME_SWATCHES = {
+    default:    "#1976d2",
+    ice:        "#4dd0e1",
+    inferno:    "#e64a19",
+    void:       "#7e57c2",
+    forest:     "#388e3c",
+    sakura:     "#e91e8c",
+    aurora:     "#00bcd4",
+    pearl:      "#90a4ae",
+    meadow:     "#8bc34a",
+    "rose-gold":"#c48b9f",
+  };
+
+  // ── Data fetch (all in parallel) ──────────────────────────────────────────────
+
+  const [
+    profileResult,
+    progressResult,
+    userItemsResult,
+    shopItemsResult,
+    userThemesResult,
+    themesResult,
+    userAchievementsResult,
+    titlesResult,
+    userTitlesResult,
+    prestigeResult,
+  ] = await Promise.all([
+    supabase.from("profiles").select("equipped_slots, active_title").eq("id", userId).maybeSingle(),
+    supabase.from("student_progress").select("xp").eq("student_id", userId),
+    supabase.from("user_items").select("item_id").eq("user_id", userId),
+    supabase.from("shop_items").select("id, name, rarity, slot_type, image_url"),
+    supabase.from("user_themes").select("theme_id").eq("user_id", userId),
+    supabase.from("themes").select("id, name, rarity, always_owned"),
+    supabase.from("user_achievements").select("achievement_id").eq("student_id", userId),
+    supabase.from("titles").select("id, name, rarity"),
+    supabase.from("user_titles").select("title_id").eq("user_id", userId),
+    supabase.rpc("recalculate_prestige", { p_user_id: userId }),
+  ]);
+
+  // ── Parse ─────────────────────────────────────────────────────────────────────
+
+  const equippedSlots  = profileResult.data?.equipped_slots ?? {};
+  const activeTitleId  = profileResult.data?.active_title ?? null;
+
+  const xp    = progressResult.data?.[0]?.xp ?? 0;
+  const level = calculateLevelFromXP(xp);
+
+  const allShopItems   = shopItemsResult.data ?? [];
+  const ownedItemIds   = new Set((userItemsResult.data ?? []).map(r => r.item_id));
+  const equipableItems = allShopItems.filter(i => !!i.slot_type);
+
+  const allThemes      = themesResult.data ?? [];
+  const ownedThemeSet  = new Set((userThemesResult.data ?? []).map(r => r.theme_id));
+  allThemes.forEach(t => { if (t.always_owned) ownedThemeSet.add(t.id); });
+
+  const allTitles      = titlesResult.data ?? [];
+  const ownedTitleIds  = new Set((userTitlesResult.data ?? []).map(r => r.title_id));
+
+  const earnedAchIds   = new Set((userAchievementsResult.data ?? []).map(r => r.achievement_id));
+
+  const prestigeScore  = typeof prestigeResult.data === "number" ? prestigeResult.data : 0;
+
+  const activeTitleDef = activeTitleId ? (allTitles.find(t => t.id === activeTitleId) ?? null) : null;
+
+  // ── Completion counts ─────────────────────────────────────────────────────────
+
+  const totalItems  = equipableItems.length;
+  const ownedItems  = equipableItems.filter(i => ownedItemIds.has(i.id)).length;
+
+  const totalThemes = allThemes.length;
+  const ownedThemes = ownedThemeSet.size;
+
+  const totalAch    = ACHIEVEMENT_DEFS.length;
+  const earnedAch   = ACHIEVEMENT_DEFS.filter(d => earnedAchIds.has(d.id)).length;
+
+  const totalTitles = allTitles.length;
+  const ownedTitles = allTitles.filter(t => ownedTitleIds.has(t.id)).length;
+
+  const totalAll = totalItems + totalThemes + totalAch + totalTitles;
+  const ownedAll = ownedItems + ownedThemes + earnedAch + ownedTitles;
+
+  function pct(owned, total) {
+    return total > 0 ? Math.round((owned / total) * 100) : 0;
+  }
+
+  // ── Prestige milestone ────────────────────────────────────────────────────────
+
+  const currentMilestone = [...PRESTIGE_MILESTONES].reverse().find(m => prestigeScore >= m.threshold) ?? null;
+
+  // ── Helper: highest rarity among equipped items (for aura) ───────────────────
+
+  function highestEquippedRarity(slots, items) {
+    const order = { legendary: 3, rare: 2, uncommon: 1, common: 0 };
+    let best = -1;
+    let bestRarity = null;
+    for (const slot of Object.keys(slots)) {
+      const id = slots[slot];
+      if (!id) continue;
+      const def = items.find(i => i.id === id);
+      if (!def?.rarity) continue;
+      const score = order[def.rarity] ?? -1;
+      if (score > best) { best = score; bestRarity = def.rarity; }
+    }
+    return bestRarity;
+  }
+
+  // ── Helper: build layered avatar into a container ────────────────────────────
+
+  function buildAvatar(container, slots) {
+    const layers = [{ src: BASE_SRC, z: 0 }];
+    for (const slot of Object.keys(slots)) {
+      const itemId = slots[slot];
+      if (!itemId) continue;
+      const def = equipableItems.find(i => i.id === itemId);
+      if (!def?.image_url) continue;
+      layers.push({ src: def.image_url, z: SLOT_Z[slot] ?? 1 });
+    }
+    layers.sort((a, b) => a.z - b.z);
+    for (const { src } of layers) {
+      const img = document.createElement("img");
+      img.src = src;
+      img.className = "avatar-layer";
+      img.alt = "";
+      container.appendChild(img);
+    }
+  }
+
+  // ── Render: hero card ─────────────────────────────────────────────────────────
+
+  function renderHero() {
+    buildAvatar(document.getElementById("heroAvatar"), equippedSlots);
+
+    const auraRarity = highestEquippedRarity(equippedSlots, equipableItems);
+    if (auraRarity) {
+      document.getElementById("heroAvatarWrap").dataset.rarity = auraRarity;
+    }
+
+    document.getElementById("heroLevel").textContent = level;
+
+    if (activeTitleDef) {
+      const chip = document.createElement("div");
+      chip.className = "hero-title-chip";
+      chip.textContent = activeTitleDef.name;
+      document.getElementById("heroTitleChipSlot").appendChild(chip);
+    }
+
+    document.getElementById("heroPrestigeScore").textContent = prestigeScore;
+
+    if (currentMilestone) {
+      const chip = document.createElement("div");
+      chip.className = "prestige-milestone-chip";
+      chip.textContent = `${currentMilestone.icon} ${currentMilestone.name}`;
+      document.getElementById("heroMilestoneChipSlot").appendChild(chip);
+    }
+
+    const ovEl = document.getElementById("heroOverview");
+
+    const title = document.createElement("div");
+    title.className = "hero-overview-title";
+    title.textContent = `Samling — ${pct(ownedAll, totalAll)}%`;
+    ovEl.appendChild(title);
+
+    const rows = [
+      { label: "Kosmetik",      owned: ownedItems,  total: totalItems  },
+      { label: "Temaer",        owned: ownedThemes, total: totalThemes },
+      { label: "Præstat.", owned: earnedAch,   total: totalAch    },
+      { label: "Titler",        owned: ownedTitles, total: totalTitles },
+    ];
+
+    for (const row of rows) {
+      const p = pct(row.owned, row.total);
+      const rowEl = document.createElement("div");
+      rowEl.className = "ov-row";
+      rowEl.innerHTML =
+        `<span class="ov-label">${row.label}</span>` +
+        `<div class="ov-track"><div class="ov-fill" style="width:${p}%"></div></div>` +
+        `<span class="ov-pct">${p}%</span>`;
+      ovEl.appendChild(rowEl);
+    }
+  }
+
+  // ── Render: cosmetics archive ─────────────────────────────────────────────────
+
+  function renderCosmetics() {
+    document.getElementById("cosmeticsCount").textContent = `${ownedItems} / ${totalItems}`;
+    const body = document.getElementById("cosmeticsBody");
+
+    for (const rarity of RARITY_ORDER) {
+      const inRarity = equipableItems.filter(i => i.rarity === rarity);
+      if (inRarity.length === 0) continue;
+
+      const section = document.createElement("div");
+      section.className = "rarity-section";
+
+      const header = document.createElement("div");
+      header.className = `rarity-header rarity-header--${rarity}`;
+      header.textContent = `${RARITY_ICONS[rarity] ?? ""} ${RARITY_LABELS[rarity] ?? rarity}`;
+      section.appendChild(header);
+
+      const grid = document.createElement("div");
+      grid.className = "item-grid";
+
+      for (const item of inRarity) {
+        const isOwned = ownedItemIds.has(item.id);
+        const cell = document.createElement("div");
+        cell.className = `coll-item${isOwned ? "" : " coll-item--locked"}`;
+
+        const preview = document.createElement("div");
+        preview.className = "coll-preview";
+
+        // Base body layer
+        const baseImg = document.createElement("img");
+        baseImg.className = "coll-preview-layer";
+        baseImg.src = BASE_SRC;
+        baseImg.alt = "";
+        baseImg.style.zIndex = "0";
+        preview.appendChild(baseImg);
+
+        // Item layer on top
+        if (item.image_url) {
+          const itemImg = document.createElement("img");
+          itemImg.className = "coll-preview-layer";
+          itemImg.src = item.image_url;
+          itemImg.alt = "";
+          itemImg.style.zIndex = String(SLOT_Z[item.slot_type] ?? 1);
+          preview.appendChild(itemImg);
+        }
+
+        cell.appendChild(preview);
+
+        const name = document.createElement("div");
+        name.className = "coll-item-name";
+        name.textContent = isOwned ? (item.name ?? item.id) : "???";
+        cell.appendChild(name);
+
+        grid.appendChild(cell);
+      }
+
+      section.appendChild(grid);
+      body.appendChild(section);
+    }
+  }
+
+  // ── Render: archetypes ────────────────────────────────────────────────────────
+
+  function renderArchetypes() {
+    const body = document.getElementById("archetypesBody");
+    const grid = document.createElement("div");
+    grid.className = "archetype-grid";
+
+    let completeCount = 0;
+
+    for (const arch of ARCHETYPES) {
+      const owned   = arch.items.filter(id => ownedItemIds.has(id)).length;
+      const total   = arch.items.length;
+      const isDone  = owned === total;
+      if (isDone) completeCount++;
+
+      const card = document.createElement("div");
+      card.className = `archetype-card${isDone ? " archetype-card--complete" : ""}`;
+
+      const iconEl = document.createElement("div");
+      iconEl.className = "archetype-icon";
+      iconEl.textContent = arch.icon;
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "archetype-name";
+      nameEl.textContent = arch.name;
+
+      const descEl = document.createElement("div");
+      descEl.className = "archetype-desc";
+      descEl.textContent = arch.desc;
+
+      const progEl = document.createElement("div");
+      progEl.className = `archetype-prog${isDone ? " archetype-prog--complete" : ""}`;
+      progEl.textContent = isDone ? "✓ Komplet" : `${owned} / ${total}`;
+
+      card.appendChild(iconEl);
+      card.appendChild(nameEl);
+      card.appendChild(descEl);
+      card.appendChild(progEl);
+      grid.appendChild(card);
+    }
+
+    body.appendChild(grid);
+    document.getElementById("archetypesCount").textContent = `${completeCount} / ${ARCHETYPES.length} komplette`;
+  }
+
+  // ── Render: achievements ──────────────────────────────────────────────────────
+
+  function renderAchievements() {
+    document.getElementById("achCount").textContent = `${earnedAch} / ${totalAch}`;
+    const body = document.getElementById("achBody");
+    const grid = document.createElement("div");
+    grid.className = "ach-grid";
+
+    for (const def of ACHIEVEMENT_DEFS) {
+      const isEarned = earnedAchIds.has(def.id);
+      const isHidden = def.hidden && !isEarned;
+
+      const badge = document.createElement("div");
+      badge.className = `ach-badge ach-badge--${isEarned ? "earned" : "locked"} ach-badge--${def.rarity}`;
+
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "ach-icon-wrap";
+      iconWrap.textContent = isHidden ? "?" : def.icon;
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "ach-name";
+      nameEl.textContent = isHidden ? "???" : def.label;
+
+      badge.appendChild(iconWrap);
+      badge.appendChild(nameEl);
+      grid.appendChild(badge);
+    }
+
+    body.appendChild(grid);
+  }
+
+  // ── Render: titles ────────────────────────────────────────────────────────────
+
+  function renderTitles() {
+    document.getElementById("titlesCount").textContent = `${ownedTitles} / ${totalTitles}`;
+    const body = document.getElementById("titlesBody");
+    const gridEl = document.createElement("div");
+    gridEl.className = "title-grid";
+
+    for (const title of allTitles) {
+      const isOwned    = ownedTitleIds.has(title.id);
+      const isEquipped = title.id === activeTitleId;
+      const rarity     = title.rarity ?? "common";
+
+      const chip = document.createElement("div");
+      const classes = ["title-chip"];
+      if (!isOwned) {
+        classes.push("title-chip--locked");
+      } else {
+        classes.push(`title-chip--${rarity}`);
+        if (isEquipped) classes.push("title-chip--equipped");
+      }
+      chip.className = classes.join(" ");
+
+      const iconEl = document.createElement("span");
+      iconEl.textContent = RARITY_ICONS[rarity] ?? "○";
+
+      const labelEl = document.createElement("span");
+      labelEl.textContent = isOwned ? title.name : "???";
+
+      chip.appendChild(iconEl);
+      chip.appendChild(labelEl);
+
+      if (isEquipped) {
+        const eq = document.createElement("span");
+        eq.style.cssText = "font-size:10px;opacity:0.8;";
+        eq.textContent = " ✓";
+        chip.appendChild(eq);
+      }
+
+      gridEl.appendChild(chip);
+    }
+
+    body.appendChild(gridEl);
+  }
+
+  // ── Render: themes ────────────────────────────────────────────────────────────
+
+  function renderThemes() {
+    document.getElementById("themesCount").textContent = `${ownedThemes} / ${totalThemes}`;
+    const body = document.getElementById("themesBody");
+    const gridEl = document.createElement("div");
+    gridEl.className = "theme-grid";
+
+    for (const theme of allThemes) {
+      const isOwned = ownedThemeSet.has(theme.id);
+      const rarity  = theme.rarity ?? "common";
+
+      const card = document.createElement("div");
+      card.className = `theme-card${isOwned ? "" : " theme-card--locked"}`;
+
+      const swatch = document.createElement("div");
+      swatch.className = "theme-swatch";
+      swatch.style.background = THEME_SWATCHES[theme.id] ?? "#888";
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "theme-name";
+      nameEl.textContent = isOwned ? theme.name : "???";
+
+      const riEl = document.createElement("span");
+      riEl.className = "theme-rarity-icon";
+      riEl.textContent = RARITY_ICONS[rarity] ?? "";
+
+      card.appendChild(swatch);
+      card.appendChild(nameEl);
+      card.appendChild(riEl);
+      gridEl.appendChild(card);
+    }
+
+    body.appendChild(gridEl);
+  }
+
+  // ── Render: prestige panel ────────────────────────────────────────────────────
+
+  function renderPrestige() {
+    document.getElementById("prestigeCount").textContent = `${prestigeScore} pt`;
+    const body = document.getElementById("prestigeBody");
+
+    // Milestone track
+    const trackEl = document.createElement("div");
+    trackEl.className = "prestige-milestone-track";
+
+    for (const m of PRESTIGE_MILESTONES) {
+      const reached = prestigeScore >= m.threshold;
+      const isCurr  = currentMilestone?.name === m.name;
+      const row = document.createElement("div");
+      row.className = [
+        "milestone-row",
+        reached ? "milestone-row--reached" : "",
+        isCurr  ? "milestone-row--current"  : "",
+      ].join(" ").trim();
+      row.innerHTML =
+        `<span class="milestone-icon">${m.icon}</span>` +
+        `<span class="milestone-name">${m.name}</span>` +
+        `<span class="milestone-threshold">${m.threshold} pt</span>`;
+      trackEl.appendChild(row);
+    }
+
+    body.appendChild(trackEl);
+
+    // Breakdown by collectible source — weights match prestige_weight() SQL exactly
+    function scoreFor(rarities) {
+      return rarities.reduce((sum, r) => sum + (PRESTIGE_WEIGHTS[r] ?? 0), 0);
+    }
+
+    const itemRarities  = equipableItems.filter(i => ownedItemIds.has(i.id)).map(i => i.rarity);
+    const themeRarities = allThemes.filter(t => ownedThemeSet.has(t.id)).map(t => t.rarity);
+    const achRarities   = ACHIEVEMENT_DEFS.filter(d => earnedAchIds.has(d.id)).map(d => d.rarity);
+    const titleRarities = allTitles.filter(t => ownedTitleIds.has(t.id)).map(t => t.rarity);
+
+    const breakdown = document.createElement("div");
+    breakdown.className = "prestige-breakdown";
+
+    const sources = [
+      { label: "Kosmetik",          score: scoreFor(itemRarities)  },
+      { label: "Temaer",            score: scoreFor(themeRarities) },
+      { label: "Præstationer", score: scoreFor(achRarities)   },
+      { label: "Titler",            score: scoreFor(titleRarities) },
+    ];
+
+    for (const src of sources) {
+      const el = document.createElement("div");
+      el.className = "prest-source";
+      el.innerHTML =
+        `<div class="prest-source-label">${src.label}</div>` +
+        `<div class="prest-source-value">${src.score} pt</div>`;
+      breakdown.appendChild(el);
+    }
+
+    body.appendChild(breakdown);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+
+  renderHero();
+  renderCosmetics();
+  renderArchetypes();
+  renderAchievements();
+  renderTitles();
+  renderThemes();
+  renderPrestige();
+
+</script>
+
+</body>
+</html>
