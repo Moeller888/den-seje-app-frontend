@@ -20,6 +20,17 @@
   <path d="M 55 100 Q 46 172 45 236" fill="none" stroke="#c03030" stroke-width="0.7" opacity="0.18"/>
   <path d="M 105 100 Q 114 172 115 236" fill="none" stroke="#c03030" stroke-width="0.7" opacity="0.18"/>
 
+  <!-- Horizontal tension folds: cloth tightens where it wraps around the back body plane.
+       These cross the vertical gravity lines — the intersection is where cloth has real physics. -->
+  <path d="M 12 148 Q 40 142 68 144" fill="none" stroke="#c03030" stroke-width="0.6" opacity="0.22"/>
+  <path d="M 92 144 Q 120 142 148 148" fill="none" stroke="#c03030" stroke-width="0.6" opacity="0.22"/>
+  <!-- Lower tension fold — cloth billows slightly wider at mid-section -->
+  <path d="M 10 188 Q 38 184 68 185" fill="none" stroke="#8c1212" stroke-width="0.5" opacity="0.18"/>
+  <path d="M 92 185 Q 122 184 150 188" fill="none" stroke="#8c1212" stroke-width="0.5" opacity="0.18"/>
+
+  <!-- Hem edge: dark bottom trim — cloth has a finished edge, not raw -->
+  <path d="M 10 234 Q 80 241 150 234" fill="none" stroke="#1a0000" stroke-width="2" opacity="0.35"/>
+
   <!-- Left shoulder crease -->
   <path d="M 46 90 Q 60 94 72 97" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.4"/>
   <!-- Right shoulder crease -->

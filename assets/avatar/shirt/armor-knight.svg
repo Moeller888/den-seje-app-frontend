@@ -28,19 +28,35 @@
   <rect x="56" y="106" width="48" height="58" rx="6" fill="url(#ak-panel)" stroke="#455a64" stroke-width="1.2"/>
   <!-- Panel top highlight -->
   <rect x="56" y="106" width="48" height="7" rx="5" fill="#cfd8dc" opacity="0.35"/>
-  <!-- Cross emblem (shield motif) -->
-  <rect x="76" y="112" width="8" height="26" rx="2" fill="#263238" opacity="0.6"/>
-  <rect x="66" y="120" width="28" height="8" rx="2" fill="#263238" opacity="0.6"/>
-  <!-- Cross highlight — left faces of cross catch light -->
-  <rect x="76" y="112" width="2" height="26" rx="1" fill="#90a4ae" opacity="0.45"/>
+  <!-- Heraldic sunburst on chest panel — 8-ray radiant, more identity than a plain cross -->
+  <!-- Sunburst rays: dark base -->
+  <line x1="80" y1="118" x2="80" y2="108" stroke="#263238" stroke-width="1.8" opacity="0.65"/>
+  <line x1="80" y1="118" x2="88" y2="110" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <line x1="80" y1="118" x2="90" y2="118" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <line x1="80" y1="118" x2="88" y2="126" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <line x1="80" y1="118" x2="80" y2="128" stroke="#263238" stroke-width="1.8" opacity="0.65"/>
+  <line x1="80" y1="118" x2="72" y2="126" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <line x1="80" y1="118" x2="70" y2="118" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <line x1="80" y1="118" x2="72" y2="110" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
+  <!-- Center medallion -->
+  <circle cx="80" cy="118" r="5.5" fill="#546e7a" stroke="#263238" stroke-width="1"/>
+  <circle cx="80" cy="118" r="3"   fill="#b0bec5"/>
+  <!-- Medallion shine -->
+  <circle cx="79" cy="117" r="1.2" fill="white" opacity="0.55"/>
+  <!-- Sunburst catch-light on top rays (upper-left light) -->
+  <line x1="80" y1="118" x2="72" y2="110" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+  <line x1="80" y1="118" x2="80" y2="108" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+
   <!-- Vertical center seam -->
   <line x1="80" y1="106" x2="80" y2="162" stroke="#37474f" stroke-width="1.2" opacity="0.6"/>
   <!-- Horizontal ribs -->
-  <line x1="56" y1="126" x2="104" y2="126" stroke="#455a64" stroke-width="1.1"/>
-  <line x1="56" y1="142" x2="104" y2="142" stroke="#455a64" stroke-width="1.1"/>
-  <line x1="56" y1="156" x2="104" y2="156" stroke="#455a64" stroke-width="1.1"/>
+  <line x1="56" y1="134" x2="104" y2="134" stroke="#455a64" stroke-width="1.1"/>
+  <line x1="56" y1="148" x2="104" y2="148" stroke="#455a64" stroke-width="1.1"/>
+  <line x1="56" y1="158" x2="104" y2="158" stroke="#455a64" stroke-width="1.1"/>
   <!-- Belt -->
   <rect x="40" y="174" width="80" height="8" rx="4" fill="#1c2a30"/>
+  <!-- Belt edge trim — finished construction, not raw -->
+  <line x1="40" y1="175" x2="120" y2="175" stroke="#37474f" stroke-width="0.7" opacity="0.6"/>
   <!-- Belt buckle -->
   <rect x="74" y="174" width="12" height="8" rx="2" fill="#ffd600"/>
   <circle cx="80" cy="178" r="2.5" fill="#ff8f00"/>

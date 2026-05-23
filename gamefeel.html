@@ -223,6 +223,26 @@
     .rphil-heading--good { color: #66bb6a; }
     .rphil-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
 
+    /* ── Section 16: Avatar Art Direction ──────────────── */
+    .artdir-grid { display: flex; flex-direction: column; gap: 20px; }
+    .artdir-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .artdir-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .artdir-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .artdir-compare { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+    .artdir-compare-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .artdir-label-before { color: #ef5350; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .artdir-label-after { color: #66bb6a; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .artdir-material-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .artdir-swatch { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; min-width: 120px; flex: 1; }
+    .artdir-swatch-title { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .artdir-swatch-body { font-size: 11px; color: var(--text-main); line-height: 1.5; }
+    .artdir-rarity-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .artdir-rarity-card { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; min-width: 100px; flex: 1; }
+    .artdir-layer-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .artdir-layer-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .artdir-layer-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+    .artdir-layer-table tr:last-child td { border-bottom: none; }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -357,6 +377,12 @@
 <div class="section">
   <div class="section-title">15 · Daily &amp; Weekly Rhythm System — sund kadence, ikke grindy battle-pass</div>
   <div class="rhythm-grid" id="rhythmGrid15"></div>
+</div>
+
+<!-- ── Section 16: Avatar Art Direction Foundation ────────── -->
+<div class="section">
+  <div class="section-title">16 · Avatar Art Direction — Foundation for 3D</div>
+  <div class="artdir-grid" id="artdirGrid16"></div>
 </div>
 
 <script type="module">
@@ -2098,6 +2124,202 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>
   `;
   root.appendChild(philCard);
+}());
+
+// ── Section 16: Avatar Art Direction Foundation ───────────────────────────────
+
+(function() {
+  const root = document.getElementById("artdirGrid16");
+  if (!root) return;
+
+  function artCard(title, bodyHtml, noteHtml) {
+    const el = document.createElement("div");
+    el.className = "artdir-card";
+    el.innerHTML =
+      `<div class="artdir-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="artdir-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  // Card 1: Philosophy
+  root.appendChild(artCard(
+    "Filosofi — fra SVG-kosmetik til avatar-identitetssystem",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ef5350;margin-bottom:6px">&#10005; Gammel tankegang</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● "Lad os gøre SVG'erne pænere"</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Mere gradienter = bedre kvalitet</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Items designes isoleret</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● 2D-first, 3D er "måske engang"</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #66bb6a;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#66bb6a;margin-bottom:6px">&#10003; Ny tankegang</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● "Byg en identitet der overlever 3D"</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Materiale-regler, ikke pynt</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Items er lag på ét rig</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● 2D er prototype for 3D-rig</div>
+      </div>
+    </div>`,
+    "Spørgsmålet er ikke: 'Hvordan laver vi bedre SVG-ikoner?' Spørgsmålet er: 'Hvis vi nu modellerede dette som et rigtigt 3D-rig — hvilke regler ville diktere HVERT enkelt designvalg?' Alle beslutninger om lys, materiale, form og silhuet i SVG-fasen skal være konsistente med den 3D-destination."
+  ));
+
+  // Card 2: Before/After body comparison
+  (function() {
+    const card = document.createElement("div");
+    card.className = "artdir-card";
+    card.innerHTML = `<div class="artdir-card-title">Referencekarakter — gammelt fundament vs. hero-krop</div>`;
+
+    const compare = document.createElement("div");
+    compare.className = "artdir-compare";
+
+    function buildBodyCompare(baseSrc, labelClass, labelText, caption) {
+      const col = document.createElement("div");
+      col.className = "artdir-compare-col";
+      const lbl = document.createElement("div");
+      lbl.className = labelClass;
+      lbl.textContent = labelText;
+      col.appendChild(lbl);
+      const wrapEl = document.createElement("div");
+      wrapEl.className = "avatar-wrap";
+      const c = canvas();
+      c.appendChild(layer(baseSrc, 0));
+      wrapEl.appendChild(c);
+      col.appendChild(wrapEl);
+      const cap = document.createElement("div");
+      cap.className = "label";
+      cap.textContent = caption;
+      col.appendChild(cap);
+      return col;
+    }
+
+    compare.appendChild(buildBodyCompare(SEPARATED_BASE, "artdir-label-before", "GAMMEL", "Flad geometri, ingen lys-model"));
+    const arrowEl = document.createElement("div");
+    arrowEl.className = "ba-arrow";
+    arrowEl.textContent = "→";
+    compare.appendChild(arrowEl);
+    compare.appendChild(buildBodyCompare(BASE, "artdir-label-after", "NY REFERENCE", "Enkelt lys, materialelag, identitet"));
+    card.appendChild(compare);
+
+    const note = document.createElement("div");
+    note.className = "artdir-note";
+    note.innerHTML = `
+      <strong style="color:var(--text-main);display:block;margin-bottom:6px">Hvad ændrede sig — og hvorfor det er rigtigt for 3D:</strong>
+      <span style="color:#66bb6a">● Ens lyskilde:</span> øverst-venstre på ALLE materialer (hud, skjorte, arm). I 3D: ét directional light, samme vinkel.<br>
+      <span style="color:#66bb6a">● Rim lights:</span> venstre-kant highlight på torso og arme. I 3D: rim light fra scene — SVG-versionen er render-output, ikke dekorering.<br>
+      <span style="color:#66bb6a">● Gradient-ID isolation:</span> b2-sk, b2-sh, b2-aL etc. Kort prefix = ingen kollision med item-gradients i SVG-rendering-konteksten.<br>
+      <span style="color:#66bb6a">● Låste ankerpunkter:</span> hoved cx=80 cy=50 r=30 · øjne cx=68/92 cy=47 · skjorte x=40 y=92 w=80 h=88. Alle items er forfattet til disse koordinater. Ændrer man dem bryder hele garderobens kosmetik-system.
+    `;
+    card.appendChild(note);
+    root.appendChild(card);
+  }());
+
+  // Card 3: Material language
+  root.appendChild(artCard(
+    "Materialsproget — tre overflader, tre regler",
+    `<div class="artdir-material-row">
+      <div class="artdir-swatch">
+        <div class="artdir-swatch-title" style="color:#F5C49A">Hud</div>
+        <div class="artdir-swatch-body">
+          Varm gylden-tan<br>
+          <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">#F5C49A → #E8A87C</code><br>
+          Blød gradient, ingen kant-stroke.<br>
+          Refleksion: diffus. Ingen spekulær.
+        </div>
+      </div>
+      <div class="artdir-swatch">
+        <div class="artdir-swatch-title" style="color:#78909c">Metal</div>
+        <div class="artdir-swatch-body">
+          Blå-grå stål (rustning)<br>
+          <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">#78909c → #37474f</code><br>
+          Hård kant-stroke #263238.<br>
+          Refleksion: spekulær highlight + rim.
+        </div>
+      </div>
+      <div class="artdir-swatch">
+        <div class="artdir-swatch-title" style="color:#c03030">Stof</div>
+        <div class="artdir-swatch-body">
+          Mørkt klæde (kappe)<br>
+          <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">#8c1212 → #2e0000</code><br>
+          Ingen kant-stroke på klædet selv.<br>
+          Refleksion: diffus med tyngdelinjer.
+        </div>
+      </div>
+    </div>`,
+    "Tre overflader — tre opførsler. Hud reflekterer diffust og aldrig hvid. Metal har spekulær highlight og rim-lys. Klæde har tyngde-linjer (faldlinjer) i stedet for highlight. Når et nyt item designes stilles ét spørgsmål: hvad er dette lavet af? Svaret dikterer gradient-retning, stroke-stil og highlight-placering."
+  ));
+
+  // Card 4: Shape language + rarity
+  root.appendChild(artCard(
+    "Formsprog + sjældenhedshierarki — kompleksitet matcher raritet",
+    `<div class="artdir-rarity-row">
+      <div class="artdir-rarity-card" style="border-left:3px solid #f57f17">
+        <div style="font-size:10px;font-weight:bold;color:#f57f17;margin-bottom:4px">✦ Legendarisk</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Store kurver · organisk form · kompleks silhuet · animeret effekt (aura). Fylder synsfelt — konkurrerer stadig ikke med ansigtet.</div>
+      </div>
+      <div class="artdir-rarity-card" style="border-left:3px solid #1565c0">
+        <div style="font-size:10px;font-weight:bold;color:#1565c0;margin-bottom:4px">★ Sjælden</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Definerede geometriske former. Heraldisk detail. Tydelig materialeidentitet. Kompleks men ikke kaotisk.</div>
+      </div>
+      <div class="artdir-rarity-card" style="border-left:3px solid #2e7d32">
+        <div style="font-size:10px;font-weight:bold;color:#2e7d32;margin-bottom:4px">◆ Ualmindelig</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Klare forme, middel kompleksitet. Enkelt accent-element (stjerner, guldkrave). Læsbar ved 54px.</div>
+      </div>
+      <div class="artdir-rarity-card" style="border-left:3px solid var(--text-muted)">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-muted);margin-bottom:4px">○ Almindelig</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Simple forme, ingen kompleksitet. Ét materiale, ingen accent. Perfekt læsbar ved 54px. Funktionel, ikke dekorativ.</div>
+      </div>
+    </div>`,
+    "Hierarkiet er visuelt: jo sjældnere, jo mere kompleks silhuet — men aldrig mere end head-radius. Reglen: intet item må dominere ansigtet. Legendariske items er store og imponerende nede på kroppen — ikke store i ansigts-zonen."
+  ));
+
+  // Card 5: Silhouette rules
+  root.appendChild(artCard(
+    "Silhuet-regler — hvad hjernen ser først",
+    `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Hoved</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Altid dominerende. r=30 er den primære silhuet-form. Headwear må max udvide 40% lodret. Masker/briller må max dække 30% af ansigtet.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Torso</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Sekundær silhuet. Items må udvide torso horisontalt (skulderstykker) men aldrig overstige hoved-bredde. Rustning sidder foran kroppen (z=2).</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:130px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ryg-items</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Altid bagved (z=-1). Kappen er ÉT kontinuerligt klæde. Kroppen okkluderer naturligt. Kappen bidrager til bredden forneden, aldrig foroven.</div>
+      </div>
+    </div>`,
+    "Silhouette readability at thumbnail size er den vigtigste kvalitetstest. 120×180px er vores thumbnail. Tre former skal være aflæselige som sort fyldt silhuet: hoved = rund dominant, kappe = bred forneden, arme = trekant-udstikkere."
+  ));
+
+  // Card 6: 3D migration layer-to-bone table
+  root.appendChild(artCard(
+    "3D-migrationsplan — SVG-lag → knogle-mapping",
+    `<table class="artdir-layer-table">
+      <thead>
+        <tr>
+          <th>z-index</th>
+          <th>SVG-lag</th>
+          <th>3D-ækvivalent</th>
+          <th>Bone-binding</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>−2</td><td>Aura</td><td>Particle system / shader overlay</td><td>Root bone — følger hele figuren</td></tr>
+        <tr><td>−1</td><td>Ryg-items (kappe, vinger)</td><td>Cloth simulation mesh</td><td>Spine + shoulder bones</td></tr>
+        <tr><td>0</td><td>Base-krop</td><td>Skinned mesh (rig)</td><td>Alle bones — dette ER riggen</td></tr>
+        <tr><td>1</td><td>Torso-overlay</td><td>Hard-surface armor mesh</td><td>Spine + clavicle bones</td></tr>
+        <tr><td>2</td><td>Bryst-item (rustning)</td><td>Hard-surface armor mesh</td><td>Chest bone, clampet til ryg-kurve</td></tr>
+        <tr><td>3</td><td>Hals-item</td><td>Accessory mesh</td><td>Neck bone</td></tr>
+        <tr><td>4</td><td>Hår</td><td>Hair simulation / cards</td><td>Head bone + physics spring</td></tr>
+        <tr><td>5</td><td>Hovedbeklædning</td><td>Hard-surface mesh</td><td>Head bone — stramt clampet</td></tr>
+        <tr><td>6</td><td>Ansigt-item (maske)</td><td>Face mesh overlay</td><td>Face bones (jaw, brow rig)</td></tr>
+        <tr><td>7</td><td>Øjne (briller)</td><td>Eye-socket mesh / shader</td><td>Eye bones</td></tr>
+      </tbody>
+    </table>`,
+    "Hvert SVG-lag er designet som om det er et 3D mesh-lag. z-index = render-rækkefølge = bone-hierarki. Kappe er cloth-simulering (bag, svinger frit). Rustning er hard-surface (foran, rigid). Base-krop ER riggen — alle items er attachments. Migrationen fra SVG til 3D er en 1:1 mapping, ikke en redesign."
+  ));
 }());
 </script>
 </body>
