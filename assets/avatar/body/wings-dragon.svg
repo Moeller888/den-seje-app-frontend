@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
   <defs>
     <!-- Wing membrane: bright emerald at top, deep forest at base -->
-    <linearGradient id="wg-memL" x1="1" y1="0" x2="0" y2="1">
+    <linearGradient id="wg-memL" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%"   stop-color="#43a047"/>
       <stop offset="55%"  stop-color="#2e7d32"/>
       <stop offset="100%" stop-color="#1a3a1c"/>

@@ -223,6 +223,24 @@
     .rphil-heading--good { color: #66bb6a; }
     .rphil-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
 
+    /* ── Section 17: Gold Standard Pipeline ─────────────── */
+    .gs-grid { display: flex; flex-direction: column; gap: 20px; }
+    .gs-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .gs-card--legendary { border-color: #f57f17; }
+    .gs-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .gs-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .gs-compare { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+    .gs-compare-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .gs-label-before { color: #ef5350; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .gs-label-after  { color: #66bb6a; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .gs-change-list { display: flex; flex-direction: column; gap: 3px; margin: 8px 0; }
+    .gs-change { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .gs-change::before { content: "→"; position: absolute; left: 0; color: #66bb6a; font-size: 10px; }
+    .gs-audit-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .gs-audit-item { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; flex: 1; min-width: 120px; }
+    .gs-audit-title { font-size: 10px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .gs-audit-body { font-size: 11px; color: var(--text-main); line-height: 1.45; }
+
     /* ── Section 16: Avatar Art Direction ──────────────── */
     .artdir-grid { display: flex; flex-direction: column; gap: 20px; }
     .artdir-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -383,6 +401,12 @@
 <div class="section">
   <div class="section-title">16 · Avatar Art Direction — Foundation for 3D</div>
   <div class="artdir-grid" id="artdirGrid16"></div>
+</div>
+
+<!-- ── Section 17: Gold Standard Cosmetic Pipeline ────────── -->
+<div class="section">
+  <div class="section-title">17 · Gold Standard Cosmetic Pipeline — definitive visual quality baseline</div>
+  <div class="gs-grid" id="gsGrid17"></div>
 </div>
 
 <script type="module">
@@ -2124,6 +2148,245 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>
   `;
   root.appendChild(philCard);
+}());
+
+// ── Section 17: Gold Standard Cosmetic Pipeline ──────────────────────────────
+
+(function() {
+  const root = document.getElementById("gsGrid17");
+  if (!root) return;
+
+  // ── Old SVG versions (pre-gold-standard) for before/after comparisons ──
+
+  const OLD_GALAXY_CAPE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="gx-cloth" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0d1b4d"/><stop offset="50%" stop-color="#0a1230"/><stop offset="100%" stop-color="#020509"/></linearGradient><radialGradient id="gx-nebL" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#7c3aed" stop-opacity="0.55"/><stop offset="100%" stop-color="#1e40af" stop-opacity="0.0"/></radialGradient><radialGradient id="gx-nebR" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#4f46e5" stop-opacity="0.5"/><stop offset="100%" stop-color="#0e1e6e" stop-opacity="0.0"/></radialGradient></defs><path d="M 46 90 L 10 100 L 10 235 Q 80 237 150 235 L 150 100 L 114 90 Q 80 82 46 90 Z" fill="url(#gx-cloth)"/><ellipse cx="22" cy="206" rx="18" ry="28" fill="url(#gx-nebL)"/><circle cx="14" cy="212" r="1.8" fill="white" opacity="0.95"/><circle cx="26" cy="198" r="1.3" fill="white" opacity="0.85"/><circle cx="16" cy="183" r="1.2" fill="white" opacity="0.82"/><circle cx="28" cy="222" r="1.0" fill="white" opacity="0.78"/><circle cx="18" cy="232" r="0.8" fill="white" opacity="0.7"/><circle cx="20" cy="174" r="0.7" fill="white" opacity="0.6"/><line x1="14" y1="212" x2="26" y2="198" stroke="white" stroke-width="0.4" opacity="0.18"/><ellipse cx="138" cy="206" rx="18" ry="28" fill="url(#gx-nebR)"/><circle cx="146" cy="212" r="1.8" fill="white" opacity="0.95"/><circle cx="134" cy="198" r="1.3" fill="white" opacity="0.85"/><circle cx="144" cy="183" r="1.2" fill="white" opacity="0.82"/><circle cx="132" cy="222" r="1.0" fill="white" opacity="0.78"/><circle cx="142" cy="232" r="0.8" fill="white" opacity="0.7"/><circle cx="140" cy="174" r="0.7" fill="white" opacity="0.6"/><line x1="146" y1="212" x2="134" y2="198" stroke="white" stroke-width="0.4" opacity="0.18"/><path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#2a0a4a"/><path d="M 46 88 Q 80 76 114 88" fill="none" stroke="#ffd700" stroke-width="1.2"/><circle cx="56" cy="86" r="1.1" fill="white" opacity="0.8"/><circle cx="104" cy="86" r="1.1" fill="white" opacity="0.8"/><circle cx="80" cy="86" r="5.5" fill="#ffd700" stroke="#f9a825" stroke-width="1.2"/><circle cx="80" cy="86" r="2.8" fill="#ff8f00"/><circle cx="79" cy="85" r="1" fill="white" opacity="0.7"/></svg>`;
+
+  const OLD_CROWN_GOLDEN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="cg-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff9c4"/><stop offset="25%" stop-color="#ffd600"/><stop offset="65%" stop-color="#ff9800"/><stop offset="100%" stop-color="#e65100"/></linearGradient><radialGradient id="cg-glow" cx="50%" cy="0%" r="80%"><stop offset="0%" stop-color="#ffd600" stop-opacity="0.28"/><stop offset="100%" stop-color="#ffd600" stop-opacity="0.0"/></radialGradient></defs><ellipse cx="80" cy="37" rx="55" ry="22" fill="url(#cg-glow)"/><polygon points="40,22 48,2 56,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="55,22 63,11 71,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="70,22 80,0 90,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1.5"/><polygon points="89,22 97,11 105,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><polygon points="104,22 112,2 120,22" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1"/><circle cx="48" cy="2" r="1.5" fill="#fff9c4" opacity="0.9"/><circle cx="63" cy="11" r="1.2" fill="#fff9c4" opacity="0.8"/><circle cx="80" cy="0" r="1.8" fill="white" opacity="0.95"/><circle cx="97" cy="11" r="1.2" fill="#fff9c4" opacity="0.8"/><circle cx="112" cy="2" r="1.5" fill="#fff9c4" opacity="0.9"/><line x1="40" y1="22" x2="48" y2="2" stroke="#fff9c4" stroke-width="0.7" opacity="0.5"/><line x1="55" y1="22" x2="63" y2="11" stroke="#fff9c4" stroke-width="0.7" opacity="0.45"/><line x1="70" y1="22" x2="80" y2="0" stroke="#fff9c4" stroke-width="0.9" opacity="0.55"/><line x1="89" y1="22" x2="97" y2="11" stroke="#fff9c4" stroke-width="0.7" opacity="0.45"/><line x1="104" y1="22" x2="112" y2="2" stroke="#fff9c4" stroke-width="0.7" opacity="0.5"/><rect x="40" y="22" width="80" height="15" rx="3" fill="url(#cg-body)" stroke="#bf360c" stroke-width="1.5"/><rect x="40" y="22" width="80" height="4" rx="2" fill="#fff9c4" opacity="0.45"/><line x1="44" y1="30" x2="116" y2="30" stroke="#bf360c" stroke-width="0.8" stroke-dasharray="3,2.5" opacity="0.6"/><line x1="44" y1="33" x2="116" y2="33" stroke="#ff8f00" stroke-width="0.5" stroke-dasharray="1.5,4" opacity="0.4"/><ellipse cx="80" cy="8" rx="6" ry="7" fill="#c62828" stroke="#7f0000" stroke-width="1"/><ellipse cx="78" cy="5" rx="2.5" ry="3" fill="white" opacity="0.65"/><line x1="80" y1="2" x2="78" y2="8" stroke="#ef5350" stroke-width="0.6" opacity="0.5"/><ellipse cx="48" cy="8" rx="4" ry="5" fill="#c62828" stroke="#7f0000" stroke-width="0.8"/><ellipse cx="47" cy="6" rx="1.5" ry="2" fill="white" opacity="0.55"/><line x1="48" y1="4" x2="47" y2="9" stroke="#ef5350" stroke-width="0.5" opacity="0.45"/><ellipse cx="112" cy="8" rx="4" ry="5" fill="#c62828" stroke="#7f0000" stroke-width="0.8"/><ellipse cx="111" cy="6" rx="1.5" ry="2" fill="white" opacity="0.55"/><line x1="112" y1="4" x2="111" y2="9" stroke="#ef5350" stroke-width="0.5" opacity="0.45"/><circle cx="63" cy="13" r="3.5" fill="#1565c0" stroke="#0d47a1" stroke-width="0.8"/><circle cx="62" cy="11.5" r="1.3" fill="white" opacity="0.6"/><circle cx="97" cy="13" r="3.5" fill="#1565c0" stroke="#0d47a1" stroke-width="0.8"/><circle cx="96" cy="11.5" r="1.3" fill="white" opacity="0.6"/><circle cx="52" cy="29" r="2" fill="#fff9c4" stroke="#bf360c" stroke-width="0.8"/><circle cx="80" cy="29" r="2" fill="#fff9c4" stroke="#bf360c" stroke-width="0.8"/><circle cx="108" cy="29" r="2" fill="#fff9c4" stroke="#bf360c" stroke-width="0.8"/></svg>`;
+
+  const OLD_HERO_MASK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><path d="M 44 50 L 51 37 L 62 46 L 78 43 L 82 43 L 98 46 L 109 37 L 116 50 L 109 58 L 98 54 L 82 57 L 78 57 L 62 54 Z" fill="#1a237e" stroke="#283593" stroke-width="1.2"/><path d="M 51 37 L 62 46 L 78 43 L 82 43 L 98 46 L 109 37" fill="none" stroke="#5c6bc0" stroke-width="0.9" opacity="0.55"/><ellipse cx="68" cy="47" rx="10" ry="7" fill="#1565c0" stroke="#1976d2" stroke-width="1.5"/><ellipse cx="68" cy="47" rx="7" ry="5" fill="#1e88e5" opacity="0.7"/><ellipse cx="68" cy="47" rx="5.5" ry="3.8" fill="none" stroke="#0d47a1" stroke-width="0.7" opacity="0.5"/><ellipse cx="92" cy="47" rx="10" ry="7" fill="#1565c0" stroke="#1976d2" stroke-width="1.5"/><ellipse cx="92" cy="47" rx="7" ry="5" fill="#1e88e5" opacity="0.7"/><ellipse cx="92" cy="47" rx="5.5" ry="3.8" fill="none" stroke="#0d47a1" stroke-width="0.7" opacity="0.5"/><path d="M 63 43 Q 66 42 70 44" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/><path d="M 87 43 Q 90 42 94 44" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/><path d="M 78 47 Q 80 46 82 47" fill="none" stroke="#283593" stroke-width="1.5"/><circle cx="44" cy="50" r="2" fill="#3949ab" opacity="0.7"/><circle cx="116" cy="50" r="2" fill="#3949ab" opacity="0.7"/><line x1="44" y1="50" x2="51" y2="37" stroke="#3949ab" stroke-width="1"/><line x1="116" y1="50" x2="109" y2="37" stroke="#3949ab" stroke-width="1"/></svg>`;
+
+  const OLD_WINGS_DRAGON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><defs><linearGradient id="wg-memL" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#43a047"/><stop offset="55%" stop-color="#2e7d32"/><stop offset="100%" stop-color="#1a3a1c"/></linearGradient><linearGradient id="wg-memR" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#43a047"/><stop offset="55%" stop-color="#2e7d32"/><stop offset="100%" stop-color="#1a3a1c"/></linearGradient></defs><path d="M 42 118 L 2 52 L 8 158 L 34 194 Z" fill="url(#wg-memL)" stroke="#1b5e20" stroke-width="1.5"/><path d="M 42 118 L 2 52 L 18 92 Z" fill="#66bb6a" opacity="0.35"/><path d="M 42 118 L 8 118 L 10 148 Z" fill="#66bb6a" opacity="0.28"/><path d="M 42 118 L 8 158 L 22 148 Z" fill="#66bb6a" opacity="0.32"/><path d="M 2 52 L 8 158 L 34 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/><line x1="42" y1="118" x2="2" y2="52" stroke="#1b5e20" stroke-width="2"/><line x1="42" y1="118" x2="10" y2="96" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="8" y2="138" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="8" y2="158" stroke="#2e7d32" stroke-width="1.5"/><line x1="42" y1="118" x2="34" y2="194" stroke="#1b5e20" stroke-width="1.5"/><line x1="42" y1="118" x2="4" y2="56" stroke="#80cbc4" stroke-width="0.8" opacity="0.45"/><path d="M 36 120 Q 30 115 28 122" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.55"/><path d="M 34 128 Q 28 124 26 132" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.5"/><circle cx="2" cy="52" r="4" fill="#1b5e20"/><circle cx="4" cy="54" r="1.5" fill="#80cbc4" opacity="0.5"/><circle cx="34" cy="194" r="3" fill="#1b5e20"/><path d="M 118 118 L 158 52 L 152 158 L 126 194 Z" fill="url(#wg-memR)" stroke="#1b5e20" stroke-width="1.5"/><path d="M 118 118 L 158 52 L 142 92 Z" fill="#66bb6a" opacity="0.35"/><path d="M 118 118 L 152 118 L 150 148 Z" fill="#66bb6a" opacity="0.28"/><path d="M 118 118 L 152 158 L 138 148 Z" fill="#66bb6a" opacity="0.32"/><path d="M 158 52 L 152 158 L 126 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/><line x1="118" y1="118" x2="158" y2="52" stroke="#1b5e20" stroke-width="2"/><line x1="118" y1="118" x2="150" y2="96" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="152" y2="138" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="152" y2="158" stroke="#2e7d32" stroke-width="1.5"/><line x1="118" y1="118" x2="126" y2="194" stroke="#1b5e20" stroke-width="1.5"/><line x1="118" y1="118" x2="156" y2="56" stroke="#80cbc4" stroke-width="0.8" opacity="0.45"/><path d="M 124 120 Q 130 115 132 122" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.55"/><path d="M 126 128 Q 132 124 134 132" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.5"/><circle cx="158" cy="52" r="4" fill="#1b5e20"/><circle cx="156" cy="54" r="1.5" fill="#80cbc4" opacity="0.5"/><circle cx="126" cy="194" r="3" fill="#1b5e20"/></svg>`;
+
+  const OLD_GALAXY_CAPE = 'data:image/svg+xml,' + encodeURIComponent(OLD_GALAXY_CAPE_SVG);
+  const OLD_CROWN_GOLDEN = 'data:image/svg+xml,' + encodeURIComponent(OLD_CROWN_GOLDEN_SVG);
+  const OLD_HERO_MASK = 'data:image/svg+xml,' + encodeURIComponent(OLD_HERO_MASK_SVG);
+  const OLD_WINGS_DRAGON = 'data:image/svg+xml,' + encodeURIComponent(OLD_WINGS_DRAGON_SVG);
+
+  function gsCard(title, bodyHtml, noteHtml, legendary) {
+    const el = document.createElement("div");
+    el.className = "gs-card" + (legendary ? " gs-card--legendary" : "");
+    el.innerHTML =
+      `<div class="gs-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="gs-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  function buildCompare(beforeSrc, beforeItems, afterSrc, afterItems, beforeCaption, afterCaption) {
+    const row = document.createElement("div");
+    row.className = "gs-compare";
+
+    function col(baseSrc, itemIds, labelClass, labelText, caption) {
+      const c = document.createElement("div");
+      c.className = "gs-compare-col";
+      const lbl = document.createElement("div");
+      lbl.className = labelClass;
+      lbl.textContent = labelText;
+      c.appendChild(lbl);
+      const wrapEl = document.createElement("div");
+      wrapEl.className = "avatar-wrap";
+      const cv = canvas();
+      (itemIds || []).forEach(id => {
+        const item = ITEMS.find(i => i.id === id);
+        if (item) cv.appendChild(layer(item.url, SLOT_Z[item.slot]));
+      });
+      cv.appendChild(layer(baseSrc, 0));
+      wrapEl.appendChild(cv);
+      c.appendChild(wrapEl);
+      const cap = document.createElement("div");
+      cap.className = "label";
+      cap.textContent = caption;
+      c.appendChild(cap);
+      return c;
+    }
+
+    row.appendChild(col(beforeSrc, beforeItems, "gs-label-before", "FØR", beforeCaption));
+    const arrow = document.createElement("div");
+    arrow.className = "ba-arrow";
+    arrow.textContent = "→";
+    row.appendChild(arrow);
+    row.appendChild(col(afterSrc, afterItems, "gs-label-after", "EFTER", afterCaption));
+    return row;
+  }
+
+  // Card 1: Philosophy
+  root.appendChild(gsCard(
+    "Designfilosofi — hvad gold standard faktisk betyder",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#ef5350;margin-bottom:6px">&#10005; Ikke det</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Flest gradienter = bedst</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Mest detalje = bedst</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Redesign identiteten</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Mass-polish alle items</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-left:3px solid #66bb6a;border-radius:8px;padding:12px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#66bb6a;margin-bottom:6px">&#10003; Hvad det er</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Konsistent lys-model på ALLE materialer</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Rigtig detaljetæthed for raritet</div>
+        <div style="font-size:11px;color:var(--text-main);margin-bottom:4px;line-height:1.4">● Identiteten bevares — kvalitet normaliseres</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">● Ét benchmark-item per kategori</div>
+      </div>
+    </div>`,
+    "Benchmark-sættet: galaxy-cape (cape), armor-knight (armor), crown-golden (crown), hero-mask (mask), wings-dragon (wings). Disse FEM items definerer fra nu af fremtidens standard. Alle fremtidige items designes op mod dem — ikke op mod deres lavere nabo."
+  ));
+
+  // Card 2: Galaxy cape — physics lines + stars
+  (function() {
+    const card = document.createElement("div");
+    card.className = "gs-card";
+    card.innerHTML = `<div class="gs-card-title">Galaxy-kappe — stof-fysik + stjerneudvidelse</div>`;
+    card.appendChild(buildCompare(
+      BASE, [], OLD_GALAXY_CAPE, [],
+      "Ingen faldlinjer, ingen overlækant, ingen arm-zone stjerner",
+      "Center-fold, spændings-folder, hem-trim, arm-zone stjerner"
+    ));
+    card.innerHTML += `
+      <div class="gs-change-list">
+        <div class="gs-change">Center drape fold (kosmisk lilla, opacity 6%) — tyngde selv i "vægtløst" stof</div>
+        <div class="gs-change">2× horizontale spændings-folder øverst (y=148) og 2× forneden (y=185) — cloth physics read</div>
+        <div class="gs-change">Hem edge trim (mørk, opacity 50%) — garmentet er færdiggjort, ikke råt</div>
+        <div class="gs-change">6× arm-zone stjerner (x=10–28 / x=136–148, y=122–158) — galaksen fylder HELE det synlige klæde</div>
+      </div>`;
+    card.innerHTML += `<div class="gs-note">cape-red og galaxy-cape er design-søskende: samme klæde-arkitektur (M 46 90 L 10 100 ... 150 235), samme collar-path, samme clasp. Galaxy-kapens stof-fysik var ufuldstendig ift. det den voksede ud af. Begge kapper har nu de samme cloth physics lines.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 3: Crown golden — gradient + stroke normalisation
+  (function() {
+    const card = document.createElement("div");
+    card.className = "gs-card gs-card--legendary";
+    card.innerHTML = `<div class="gs-card-title">Guldkrone — gradient normalisering + band rim lys</div>`;
+    card.appendChild(buildCompare(
+      BASE, [OLD_CROWN_GOLDEN ? null : "crown-golden"].filter(Boolean), OLD_CROWN_GOLDEN, [],
+      "Gradient 65%: #ff9800 (orange), 100%: #e65100 (rød-orange). Stroke: #bf360c (rød). Ingen band rim.",
+      "Gradient 65%: #ffb300 (rav-guld), 100%: #c77700 (mørk honning). Stroke: #9a6200 (mørk guld). Band rim lys."
+    ));
+
+    // Build a proper before/after with the actual OLD svg
+    const compare2 = buildCompare(OLD_CROWN_GOLDEN, [], BASE, ["crown-golden"], "Gammel: rød-orange skygge + stroke", "Ny: guld-familie hele vejen + rim lys");
+    card.appendChild(compare2);
+
+    card.innerHTML += `
+      <div class="gs-change-list">
+        <div class="gs-change">Gradient stop 65%: #ff9800 → #ffb300 — skyggen forbliver i guld-familien, ikke orange</div>
+        <div class="gs-change">Gradient stop 100%: #e65100 → #c77700 — dyb honning-guld, ikke rød-orange</div>
+        <div class="gs-change">Alle stroke: #bf360c → #9a6200 — kontur forbliver varm mørk guld, ikke rødbrunt</div>
+        <div class="gs-change">Band venstre-kant rim lys: line x=41, y=23-36, stroke #fff9c4 opacity 45% — øverst-venstre lys på bandet</div>
+        <div class="gs-change">Sekundær filigree: stroke #ff8f00 → #ffb300 — konsistens med korrigeret gradient</div>
+      </div>`;
+    card.innerHTML += `<div class="gs-note">Guld er ikke orange. #e65100 ("Deep Orange 900") i skygge-zonen trak kronen ind i et andet materiale-sprog. #c77700 er mørk rav-guld — korrekt skygvetone for poleret guld under øverst-venstre lys.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 4: Hero mask — material depth
+  (function() {
+    const card = document.createElement("div");
+    card.className = "gs-card";
+    card.innerHTML = `<div class="gs-card-title">Helte-maske — materialet har dybde (flad → gradient)</div>`;
+    card.appendChild(buildCompare(OLD_HERO_MASK, [], BASE, ["hero-mask"], "Flad #1a237e — plastik-look, ingen lys-model", "Gradient + rim + center crease — hård molded form"));
+    card.innerHTML += `
+      <div class="gs-change-list">
+        <div class="gs-change">Mask body fill: #1a237e (flat) → linearGradient hm-body (x1=0,y1=0 → x2=1,y2=1) — øverst-venstre lys</div>
+        <div class="gs-change">Gradient: #232ba8 → #1a237e → #0d1246 — venstre wing face lysere, højre side mørkere</div>
+        <div class="gs-change">Left wing tip line: #3949ab → #7986cb opacity 0.5 — catch-light på lys-siden (var mørk accent på begge sider)</div>
+        <div class="gs-change">Center crease: vertical line x=80 y=44-57 — masken er støbt, ikke flad plastplade</div>
+      </div>`;
+    card.innerHTML += `<div class="gs-note">En flad fill på en hard-surface item signalerer: dette er en tegneserie, ikke et materiale. Gradient-directionality (upper-left lit) er det eneste der skal til for at masken går fra prop til armor-grade. Lens-systemet var allerede godt (3 lag, shine arc, depth ring) — kun kroppen manglede materialet.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 5: Dragon wings — light direction fix
+  (function() {
+    const card = document.createElement("div");
+    card.className = "gs-card";
+    card.innerHTML = `<div class="gs-card-title">Dragevinger — gradient-retning korrigeret (rod → vinge-spids)</div>`;
+    card.appendChild(buildCompare(OLD_WINGS_DRAGON, [], BASE, ["wings-dragon"], "wg-memL x1=1,y1=0 → x2=0,y2=1: lys ved rod-top, mørk ved vinge-spids", "wg-memL x1=0,y1=0 → x2=1,y2=1: lys ved vinge-spids, mørk ved rod-bund"));
+    card.innerHTML += `
+      <div class="gs-change-list">
+        <div class="gs-change">wg-memL gradient: x1=1,y1=0 → x2=0,y2=1 (FORKERT) → x1=0,y1=0 → x2=1,y2=1 (KORREKT)</div>
+        <div class="gs-change">wg-memR beholdes uændret — var allerede korrekt (lys på inner face der vender mod scenen)</div>
+      </div>`;
+    card.innerHTML += `<div class="gs-note">SVG gradientUnits="objectBoundingBox" (default): (0,0) = øverst-venstre af shape-bbox = VINGE-SPIDSEN ved (2,52). Med den forkerte retning var rod-toppen (42,52) den lyseste punkt — modsat øverst-venstre lys-kilde. Fix: vinge-spidsen er den del der stikker ud mod den venstre side af scenen, og skal fange det direkte øverst-venstre lys.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 6: Full benchmark set — all 5 together on body
+  (function() {
+    const card = document.createElement("div");
+    card.className = "gs-card gs-card--legendary";
+    card.innerHTML = `<div class="gs-card-title">Gold Standard-sættet — alle 5 items på referencekarakter</div>`;
+
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:12px;";
+
+    const combos = [
+      { label: "Galaxy-kappe\n(benchmark cape)", items: ["galaxy-cape"] },
+      { label: "Ridder-rustning\n(benchmark armor)", items: ["armor-knight"] },
+      { label: "Guldkrone\n(benchmark crown)", items: ["crown-golden"] },
+      { label: "Helte-maske\n(benchmark mask)", items: ["hero-mask"] },
+      { label: "Dragevinger\n(benchmark wings)", items: ["wings-dragon"] },
+      { label: "Fuld loadout\n(kappe + rustning + krone)", items: ["galaxy-cape", "armor-knight", "crown-golden"] },
+    ];
+
+    combos.forEach(combo => {
+      const wrapEl = document.createElement("div");
+      wrapEl.className = "avatar-wrap";
+      const cv = canvas();
+      combo.items.forEach(id => {
+        const item = ITEMS.find(i => i.id === id);
+        if (item) cv.appendChild(layer(item.url, SLOT_Z[item.slot]));
+      });
+      cv.appendChild(layer(BASE, 0));
+      wrapEl.appendChild(cv);
+      const lbl = document.createElement("div");
+      lbl.className = "label";
+      lbl.style.whiteSpace = "pre-line";
+      lbl.innerHTML = `<strong>${combo.label.split("\n")[0]}</strong>${combo.label.split("\n")[1] || ""}`;
+      const col = document.createElement("div");
+      col.className = "avatar-wrap";
+      col.appendChild(wrapEl);
+      col.appendChild(lbl);
+      row.appendChild(col);
+    });
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="gs-note">Disse 5 items er nu den visuelle reference. Alle fremtidige items skrives op mod dette benchmark. Regel: kan et nyt item klares sig i fuld loadout med guldkrone + rustning + vinger uden at dominere? Hvis ja: korrekt arkitektur.</div>`;
+    root.appendChild(card);
+  }());
+
+  // Card 7: Material consistency audit
+  root.appendChild(gsCard(
+    "Material-konsistens-audit — alle 5 items mod kroppen",
+    `<div class="gs-audit-row">
+      <div class="gs-audit-item">
+        <div class="gs-audit-title">Lys-kilde</div>
+        <div class="gs-audit-body">Alle items: øverst-venstre.<br>Krop: ✓ b2-aL, b2-sh, b2-sk<br>Rustning: ✓ ak-plate, ak-arm<br>Kappe: ✓ top→bund<br>Krone: ✓ top→bund<br>Maske: ✓ NW→SE gradient<br>Vinger: ✓ tip→rod</div>
+      </div>
+      <div class="gs-audit-item">
+        <div class="gs-audit-title">Rim lights</div>
+        <div class="gs-audit-body">Krop: venstre-kant, skjorte + arme ✓<br>Rustning: venstre rim #b0bec5 ✓<br>Kappe: ingen (klæde, korrekt) ✓<br>Krone: spike catch-lights + band rim ✓<br>Maske: top edge + venstre wing ✓<br>Vinger: teal iridescent ✓</div>
+      </div>
+      <div class="gs-audit-item">
+        <div class="gs-audit-title">Stroke-sprog</div>
+        <div class="gs-audit-body">Metal: hård mørk stroke ✓<br>Klæde: ingen stroke ✓<br>Hud: subtil varm stroke ✓<br>Krone: #9a6200 (guld) ✓<br>Maske: #283593 (navy) ✓<br>Vinger: #1b5e20 (mørkegrøn) ✓</div>
+      </div>
+      <div class="gs-audit-item">
+        <div class="gs-audit-title">3D-læsbarhed</div>
+        <div class="gs-audit-body">Kappe: z=-1, cloth sim ✓<br>Rustning: z=2, hard surface ✓<br>Krone: z=5, head bone ✓<br>Maske: z=6, face rig ✓<br>Vinger: z=-1, cloth/rigid ✓<br>Aura: z=-2, ikke impl. endnu</div>
+      </div>
+    </div>`,
+    "Alle 5 benchmark items følger nu den SAMME lys-model som body.svg. Det er det eneste der kræves for at et 2D avatar-system kan porteres til 3D: én lys-kilde, konsistente materialer, korrekte z-lag. SVG-renderings er i dag et forhåndseksempel på hvad en realtime 3D-render med ét directional light ville producere."
+  ));
 }());
 
 // ── Section 16: Avatar Art Direction Foundation ───────────────────────────────
