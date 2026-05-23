@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <defs>
+    <linearGradient id="ex-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%"   stop-color="#F5C49A"/>
+      <stop offset="100%" stop-color="#E8A87C"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="50" r="30" fill="url(#ex-sk)"/>
+  <path d="M 80 20 A 30 30 0 0 1 80 80 Q 104 74 110 56 Q 114 40 106 28 Q 96 20 80 20 Z" fill="#d4956a" opacity="0.07"/>
+  <path d="M 52 44 Q 50 20 80 19 Q 110 20 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+  <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 52 44 Q 50 53 51 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <path d="M 108 44 Q 110 53 109 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <!-- FOCUSED: lower, flatter brows — concentration, engaged attention -->
+  <!-- Arch reduced from y=36 to y=38; ends lower from y=38.5 to y=39.5 -->
+  <path d="M 61 39.5 Q 67.5 38 74 39.5" fill="none" stroke="#4a3626" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M 86 39.5 Q 92.5 38 99 39.5" fill="none" stroke="#4a3626" stroke-width="1.9" stroke-linecap="round"/>
+  <ellipse cx="68" cy="47" rx="7" ry="6" fill="white"/>
+  <ellipse cx="92" cy="47" rx="7" ry="6" fill="white"/>
+  <circle cx="68" cy="47" r="4.5" fill="#6B4226"/>
+  <circle cx="92" cy="47" r="4.5" fill="#6B4226"/>
+  <circle cx="68" cy="47" r="2.5" fill="#180c05"/>
+  <circle cx="92" cy="47" r="2.5" fill="#180c05"/>
+  <circle cx="70" cy="44.5" r="1.9" fill="white"/>
+  <circle cx="94" cy="44.5" r="1.9" fill="white"/>
+  <circle cx="66" cy="48" r="0.9" fill="white" opacity="0.5"/>
+  <circle cx="90" cy="48" r="0.9" fill="white" opacity="0.5"/>
+  <!-- FOCUSED: eyelid crease lowered 1px — heavy lid, concentrated gaze -->
+  <path d="M 61 44 Q 68 42 75 44" fill="none" stroke="#1a0e06" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 85 44 Q 92 42 99 44" fill="none" stroke="#1a0e06" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 77 57 Q 78 62 80 62.5 Q 82 62 83 57" fill="none" stroke="#c07850" stroke-width="1.1" stroke-linecap="round"/>
+  <circle cx="77" cy="61.5" r="1.1" fill="#c07850" opacity="0.38"/>
+  <circle cx="83" cy="61.5" r="1.1" fill="#c07850" opacity="0.38"/>
+  <!-- FOCUSED: firm mouth — less curve, quiet determination -->
+  <path d="M 71 67 Q 80 71.5 89 67" stroke="#c07850" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Blush subtly reduced — concentration displaces warmth flush -->
+  <ellipse cx="61" cy="59" rx="9" ry="5.5" fill="#F4A0A0" opacity="0.10"/>
+  <ellipse cx="99" cy="59" rx="9" ry="5.5" fill="#F4A0A0" opacity="0.10"/>
+</svg>

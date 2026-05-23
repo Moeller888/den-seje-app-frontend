@@ -291,6 +291,42 @@
     .lci-hier-body { font-size: 11px; color: var(--text-main); line-height: 1.4; }
     .lci-hier-body strong { color: var(--text-bright); }
 
+    /* ── Section 20: Avatar Personality Evolution ──────── */
+    .pers-grid { display: flex; flex-direction: column; gap: 20px; }
+    .pers-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .pers-card--philosophy { border-top: 3px solid var(--accent); }
+    .pers-card--warn { border-left: 3px solid #ef5350; }
+    .pers-card--good { border-left: 3px solid #66bb6a; }
+    .pers-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .pers-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .expr-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
+    .expr-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .expr-label { font-size: 10px; color: var(--text-muted); text-align: center; max-width: 100px; line-height: 1.3; }
+    .expr-label strong { color: var(--text-bright); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .expr-label em { color: var(--text-label); font-style: normal; font-size: 9px; display: block; margin-top: 2px; }
+    .pers-state-list { display: flex; flex-direction: column; gap: 0; }
+    .pers-state-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .pers-state-row:last-child { border-bottom: none; }
+    .pers-state-name { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); width: 120px; flex-shrink: 0; }
+    .pers-state-expr { font-size: 11px; color: var(--text-main); width: 90px; flex-shrink: 0; }
+    .pers-state-why { font-size: 10px; color: var(--text-muted); flex: 1; line-height: 1.4; }
+    .pers-anatomy-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .pers-anatomy-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .pers-anatomy-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+    .pers-anatomy-table tr:last-child td { border-bottom: none; }
+    .pers-rig-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .pers-rig-zone { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; flex: 1; min-width: 120px; }
+    .pers-rig-bone { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+    .pers-rig-body { font-size: 10px; color: var(--text-main); line-height: 1.4; }
+    .pers-restraint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .pers-restraint-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .pers-restraint-col--bad  { border-left: 3px solid #ef5350; }
+    .pers-restraint-col--good { border-left: 3px solid #66bb6a; }
+    .pers-restraint-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .pers-restraint-heading--bad  { color: #ef5350; }
+    .pers-restraint-heading--good { color: #66bb6a; }
+    .pers-restraint-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -449,6 +485,12 @@
 <div class="section">
   <div class="section-title">19 · Loadout Composition Intelligence — Silhuet, Hierarki, Atmosfære</div>
   <div class="lci-grid" id="lciGrid19"></div>
+</div>
+
+<!-- ── Section 20: Avatar Personality Evolution ───────────── -->
+<div class="section">
+  <div class="section-title">20 · Avatar Personlighedsevolution — Fra Mannequin til Indbygget Karakter</div>
+  <div class="pers-grid" id="persGrid20"></div>
 </div>
 
 <script type="module">
@@ -3059,6 +3101,481 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>`,
     "Alle disse systemer bygger OVEN PÅ den eksisterende z-arkitektur. Ingen SVG-ændring, ingen DB-migration. Arkitekturen er designet som en platform — adaptive composition intelligence er et UX-lag, ikke et art-lag."
   ));
+}());
+
+// ── Section 20: Avatar Personality Evolution ─────────────────────────────────
+
+(function() {
+  const root = document.getElementById("persGrid20");
+  if (!root) return;
+
+  const EXPR = {
+    neutral:    "/assets/avatar/expressions/expr-neutral.svg",
+    focused:    "/assets/avatar/expressions/expr-focused.svg",
+    proud:      "/assets/avatar/expressions/expr-proud.svg",
+    curious:    "/assets/avatar/expressions/expr-curious.svg",
+    determined: "/assets/avatar/expressions/expr-determined.svg",
+  };
+
+  // Inline "exaggerated anime" face — what we deliberately avoid
+  const ANIME_FACE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+    <defs>
+      <linearGradient id="af-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+    </defs>
+    <circle cx="80" cy="50" r="30" fill="url(#af-sk)"/>
+    <path d="M 52 44 Q 50 20 80 19 Q 110 20 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+    <path d="M 52 44 Q 50 53 51 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M 108 44 Q 110 53 109 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M 57 35 Q 67.5 29 76 36" fill="none" stroke="#4a3626" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M 84 36 Q 92.5 29 103 35" fill="none" stroke="#4a3626" stroke-width="2.8" stroke-linecap="round"/>
+    <ellipse cx="68" cy="47" rx="9" ry="8.5" fill="white" stroke="#1a0e06" stroke-width="1.2"/>
+    <ellipse cx="92" cy="47" rx="9" ry="8.5" fill="white" stroke="#1a0e06" stroke-width="1.2"/>
+    <circle cx="68" cy="47" r="6" fill="#6B4226"/>
+    <circle cx="92" cy="47" r="6" fill="#6B4226"/>
+    <circle cx="68" cy="47" r="3.5" fill="#180c05"/>
+    <circle cx="92" cy="47" r="3.5" fill="#180c05"/>
+    <circle cx="71" cy="43" r="2.8" fill="white"/>
+    <circle cx="95" cy="43" r="2.8" fill="white"/>
+    <circle cx="65" cy="44" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="89" cy="44" r="1.5" fill="white" opacity="0.8"/>
+    <path d="M 65 66 Q 80 82 95 66" stroke="#c07850" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="57" cy="59" rx="14" ry="9" fill="#F4A0A0" opacity="0.45"/>
+    <ellipse cx="103" cy="59" rx="14" ry="9" fill="#F4A0A0" opacity="0.45"/>
+  </svg>`;
+  const ANIME_BASE = 'data:image/svg+xml,' + encodeURIComponent(ANIME_FACE_SVG);
+
+  // Inline "geometric template" face — the mannequin baseline
+  const MANNEQUIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+    <defs>
+      <linearGradient id="mn-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+    </defs>
+    <circle cx="80" cy="50" r="30" fill="url(#mn-sk)"/>
+    <path d="M 52 44 Q 50 20 80 19 Q 110 20 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+    <path d="M 52 44 Q 50 53 51 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M 108 44 Q 110 53 109 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <line x1="62" y1="38" x2="74" y2="38" stroke="#4a3626" stroke-width="1.9" stroke-linecap="round"/>
+    <line x1="86" y1="38" x2="98" y2="38" stroke="#4a3626" stroke-width="1.9" stroke-linecap="round"/>
+    <ellipse cx="68" cy="47" rx="7" ry="6" fill="white"/>
+    <ellipse cx="92" cy="47" rx="7" ry="6" fill="white"/>
+    <circle cx="68" cy="47" r="4.5" fill="#6B4226"/>
+    <circle cx="92" cy="47" r="4.5" fill="#6B4226"/>
+    <circle cx="68" cy="47" r="2.5" fill="#180c05"/>
+    <circle cx="92" cy="47" r="2.5" fill="#180c05"/>
+    <circle cx="70" cy="44.5" r="1.9" fill="white"/>
+    <circle cx="94" cy="44.5" r="1.9" fill="white"/>
+    <path d="M 61 43 Q 68 40.5 75 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M 85 43 Q 92 40.5 99 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="70" y1="66" x2="90" y2="66" stroke="#c07850" stroke-width="2" stroke-linecap="round"/>
+  </svg>`;
+  const MANNEQUIN_BASE = 'data:image/svg+xml,' + encodeURIComponent(MANNEQUIN_SVG);
+
+  function persCard(title, bodyHtml, noteHtml, modifier) {
+    const el = document.createElement("div");
+    el.className = "pers-card" + (modifier ? " " + modifier : "");
+    el.innerHTML =
+      `<div class="pers-card-title">${title}</div>` +
+      bodyHtml +
+      (noteHtml ? `<div class="pers-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  // Helper: build avatar canvas with base + optional expression overlay
+  function buildExpr(baseSrc, exprSrc, sizeCls) {
+    const c = document.createElement("div");
+    c.className = "avatar-canvas" + (sizeCls === "lg" ? " lg" : "");
+    const baseImg = document.createElement("img");
+    baseImg.className = "avatar-layer";
+    baseImg.src = baseSrc;
+    baseImg.style.zIndex = "0";
+    baseImg.alt = "";
+    c.appendChild(baseImg);
+    if (exprSrc) {
+      const exprImg = document.createElement("img");
+      exprImg.className = "avatar-layer";
+      exprImg.src = exprSrc;
+      exprImg.style.zIndex = "0";
+      exprImg.alt = "";
+      c.appendChild(exprImg);
+    }
+    return c;
+  }
+
+  // Helper: build avatar with full loadout + expression
+  function buildLoadout(exprSrc, itemIds) {
+    const c = document.createElement("div");
+    c.className = "avatar-canvas";
+    const baseImg = document.createElement("img");
+    baseImg.className = "avatar-layer";
+    baseImg.src = BASE;
+    baseImg.style.zIndex = "0";
+    baseImg.alt = "";
+    c.appendChild(baseImg);
+    if (exprSrc) {
+      const exprImg = document.createElement("img");
+      exprImg.className = "avatar-layer";
+      exprImg.src = exprSrc;
+      exprImg.style.zIndex = "0";
+      exprImg.alt = "";
+      c.appendChild(exprImg);
+    }
+    (itemIds || []).forEach(id => {
+      const item = ITEMS.find(x => x.id === id);
+      if (!item) return;
+      const img = document.createElement("img");
+      img.className = "avatar-layer";
+      img.src = item.url;
+      img.style.zIndex = String(SLOT_Z[item.slot] ?? 1);
+      img.alt = "";
+      c.appendChild(img);
+    });
+    return c;
+  }
+
+  // ── Card 1: Philosophy — Mannequin vs. Inhabited ──────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card pers-card--philosophy";
+    card.innerHTML = `<div class="pers-card-title">Filosofi — Fra Mannequin til Beboet Karakter</div>`;
+
+    const compare = document.createElement("div");
+    compare.className = "expr-row";
+    compare.style.marginBottom = "12px";
+
+    const cols = [
+      { src: null, expr: null, mannequin: true, label: "Mannequin", note: "Flade buer. Ingen blush. Neutral linje-mund. Geometrisk korrekt, emotionelt tomt." },
+      { src: BASE,  expr: null,                  label: "Neutral",   note: "Varm krop, blid bue, blush. Hvileudtryk — allerede varmt." },
+      { src: BASE,  expr: EXPR.proud,             label: "Stolt",     note: "+1px bue-top. Bredere smil. Mere blush. Samme koordinater, anden mening." },
+    ];
+
+    cols.forEach(col => {
+      const colEl = document.createElement("div");
+      colEl.className = "expr-col";
+      const c = buildExpr(col.mannequin ? MANNEQUIN_BASE : col.src, col.expr);
+      colEl.appendChild(c);
+      const lbl = document.createElement("div");
+      lbl.className = "expr-label";
+      lbl.innerHTML = `<strong>${col.label}</strong>${col.note}`;
+      colEl.appendChild(lbl);
+      compare.appendChild(colEl);
+    });
+
+    card.appendChild(compare);
+    card.innerHTML += `<div class="pers-note">Forskellen mellem mannequin og beboet karakter er ikke størrelse — det er sandhed. Mannequin-mundlinjen er symmetrisk og geometrisk. Den beboede mund er buet af en konkret følelse. Begge bruger præcis de samme koordinat-ankerpunkter. Det er forfatterskabet der ændrer sig, ikke arkitekturen.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 2: Expression Language — All 5 Expressions ──────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card";
+    card.innerHTML = `<div class="pers-card-title">Udtrykssprog — 5 Udtryk, 3 Anatomiske Signaler</div>`;
+
+    const row = document.createElement("div");
+    row.className = "expr-row";
+
+    const exprs = [
+      { key: "neutral",    label: "Neutral",     note: "Hvile-varme. Standard.",       trigger: "Idle · Retur" },
+      { key: "focused",    label: "Fokuseret",   note: "Lavere buer. Fastere mund.",    trigger: "Spørgsmål · Quiz" },
+      { key: "proud",      label: "Stolt",       note: "+1px bue. Bredere smil.",       trigger: "Level-up · Korrekt" },
+      { key: "curious",    label: "Nysgerrig",   note: "Asymm. venstre bue. Åben.",     trigger: "Nyt spørgsmål" },
+      { key: "determined", label: "Beslutsom",   note: "Indre bue-hjørner lavere.",     trigger: "Fejl · Udfordring" },
+    ];
+
+    exprs.forEach(e => {
+      const col = document.createElement("div");
+      col.className = "expr-col";
+      const c = buildExpr(BASE, EXPR[e.key]);
+      col.appendChild(c);
+      const lbl = document.createElement("div");
+      lbl.className = "expr-label";
+      lbl.innerHTML = `<strong>${e.label}</strong>${e.note}<em>${e.trigger}</em>`;
+      col.appendChild(lbl);
+      row.appendChild(col);
+    });
+
+    card.appendChild(row);
+
+    // Anatomy table
+    card.innerHTML += `<table class="pers-anatomy-table">
+      <thead><tr>
+        <th>Udtryk</th><th>Bryn-top Y</th><th>Øjenlåg Y</th><th>Mund-kurve Y</th><th>Mund-bredde</th><th>Blush</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Neutral</td>    <td>y=36.0</td><td>y=40.5</td><td>73</td><td>70–90</td><td>0.15</td></tr>
+        <tr><td>Fokuseret</td>  <td>y=38.0</td><td>y=42.0</td><td>71.5</td><td>71–89</td><td>0.10</td></tr>
+        <tr><td>Stolt</td>      <td>y=35.0</td><td>y=40.5</td><td>74.5</td><td>69–91</td><td>0.18</td></tr>
+        <tr><td>Nysgerrig</td>  <td>L=34 R=35.5</td><td>L=39.5 R=40.5</td><td>71</td><td>72–88</td><td>0.15</td></tr>
+        <tr><td>Beslutsom</td>  <td>y=37.5</td><td>y=41.0</td><td>70.5</td><td>71–89</td><td>0.12</td></tr>
+      </tbody>
+    </table>`;
+    card.innerHTML += `<div class="pers-note">Tre anatomiske signaler bærer al mening: (1) bryn-bue-top — 2–3px vertikal flytning ændrer følelseslejet. (2) øjenlåg-kreds — 1px lavere = tyngre, mere indadvendt blik. (3) mund-kurve-kontrolpunkt — Y ±3px skifter fra fast til åben. Intet overskrider 3px fra neutral. Det er nok.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 3: State → Expression Mapping ───────────────────────────────────
+
+  root.appendChild(persCard(
+    "Tilstand → Udtryk Mapping — Ambient, ikke Teatralsk",
+    `<div class="pers-state-list">
+      <div class="pers-state-row"><div class="pers-state-name">IDLE</div><div class="pers-state-expr">Neutral</div><div class="pers-state-why">Hviletilstand — varm og tilgængelig, ikke tom.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">LOADING_QUESTION</div><div class="pers-state-expr">Nysgerrig</div><div class="pers-state-why">Nyt spørgsmål ankommer — asymmetrisk bue signalerer åbent sind.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">AWAITING_ANSWER</div><div class="pers-state-expr">Fokuseret</div><div class="pers-state-why">Eleven er i gang — fastere udtryk signalerer opmærksomhed.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">SUBMITTING_ANSWER</div><div class="pers-state-expr">Fokuseret</div><div class="pers-state-why">Svar er sendt — koncentrationen holder, intet springer.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">TRANSITIONING</div><div class="pers-state-expr">Neutral</div><div class="pers-state-why">Pause mellem spørgsmål — nulstil varmt, ingen aflæselig stemning.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">LEVEL_UP (event)</div><div class="pers-state-expr">Stolt (3 sek.)</div><div class="pers-state-why">Fremgang belønnet — samlet tilfredshed, 3 sek. hold → neutral.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">CORRECT_ANSWER</div><div class="pers-state-expr">Stolt (kort)</div><div class="pers-state-why">Rigtigt svar — et øjebliks tilfredshed.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">WRONG_ANSWER</div><div class="pers-state-expr">Beslutsom</div><div class="pers-state-why">Fejl signalerer vilje til at fortsætte — ikke skuffelse, men resolution.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">STREAK_MILESTONE</div><div class="pers-state-expr">Beslutsom</div><div class="pers-state-why">Streak er momentum — fasthed, ikke jubel.</div></div>
+      <div class="pers-state-row"><div class="pers-state-name">ACHIEVEMENT_UNLOCK</div><div class="pers-state-expr">Stolt (3 sek.)</div><div class="pers-state-why">Achievement er reflekteret præstation — samlet stolthed.</div></div>
+    </div>`,
+    "Reglen: tilknyt kun udtryk der er SANDE. Når eleven har ret, er de faktisk glade. Når de har fejlet, er de faktisk besluttede på at prøve igen. Udtrykket beskriver elevens indre tilstand — ikke platformens ønske om at virke engagerende.",
+    "pers-card"
+  ));
+
+  // ── Card 4: Small-scale readability test ─────────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card";
+    card.innerHTML = `<div class="pers-card-title">Skalerings-test — Aflæselighed ved 54px (Leaderboard/Collection)</div>`;
+
+    const row = document.createElement("div");
+    row.className = "expr-row";
+
+    const exprs = ["neutral", "focused", "proud", "curious", "determined"];
+    const labels = ["Neutral", "Fokuseret", "Stolt", "Nysgerrig", "Beslutsom"];
+
+    exprs.forEach((e, i) => {
+      const col = document.createElement("div");
+      col.className = "expr-col";
+
+      // Tiny avatar: 54×81px
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:relative;isolation:isolate;width:54px;height:81px;border-radius:6px;border:1px solid var(--border);background:radial-gradient(ellipse at 50% 28%, var(--avatar-inner) 0%, var(--avatar-outer) 100%)";
+      [BASE, EXPR[e]].forEach((src, idx) => {
+        const img = document.createElement("img");
+        img.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none";
+        img.style.zIndex = "0";
+        img.src = src;
+        img.alt = "";
+        wrap.appendChild(img);
+      });
+      col.appendChild(wrap);
+
+      const lbl = document.createElement("div");
+      lbl.className = "expr-label";
+      lbl.innerHTML = `<strong style="font-size:9px">${labels[i]}</strong>`;
+      col.appendChild(lbl);
+      row.appendChild(col);
+    });
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="pers-note">Test: ved 54×81px skal brun-top og mund-kurve stadig aflæses som meningsfulde. Buer > 2px vertikal forskel er synlige ved 0.34× skala. Fokuseret (buer lavere) og Nysgerrig (asymmetri) er aflæselige ved thumbnail-størrelse. Beslutsom kræver 120px for bro-skygge — men bryn-vinkel læses alligevel. Dette er acceptable afvejninger: systemet er designet med 120px som minimum udtryk-skala, og thumbnail bekræfter identitet frem for nuance.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 5: Silhouette preservation with full loadout ────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card";
+    card.innerHTML = `<div class="pers-card-title">Silhuet-bevarelse — Udtryk Overlever Fuld Loadout</div>`;
+
+    const row = document.createElement("div");
+    row.className = "expr-row";
+    row.style.marginBottom = "12px";
+
+    const loadouts = [
+      { expr: null,             items: [],                                           label: "Ingen kosmetik\nKun udtryk" },
+      { expr: EXPR.proud,       items: ["aura-arcane", "wings-dragon"],              label: "Stolt\nVinger + aura" },
+      { expr: EXPR.focused,     items: ["aura-arcane", "wings-dragon", "armor-knight", "crown-golden"], label: "Fokuseret\nFuld legendary loadout" },
+      { expr: EXPR.determined,  items: ["aura-gold", "galaxy-cape", "crown-silver"], label: "Beslutsom\nKappe + krone + guld-aura" },
+    ];
+
+    loadouts.forEach(lo => {
+      const col = document.createElement("div");
+      col.className = "expr-col";
+      const c = buildLoadout(lo.expr, lo.items);
+      col.appendChild(c);
+      const lbl = document.createElement("div");
+      lbl.className = "expr-label";
+      lbl.innerHTML = `<strong>${lo.label.split("\n")[0]}</strong>${lo.label.split("\n")[1] || ""}`;
+      col.appendChild(lbl);
+      row.appendChild(col);
+    });
+
+    card.appendChild(row);
+    card.innerHTML += `<div class="pers-note">Udtryks-overlays opererer KUN inden for hoved-sfærens grænse (cx=80 cy=50 r=30). Masker (z=6) og briller (z=7) dækker udtryks-laget — korrekt. Headwear (z=5) sidder over. Vinger/kappe (z=-1) er bag. Aura (z=-2) er bag. Ingen kosmetik brydes. Udtryks-systemet er arkitekturelt neutralt ift. z-lag.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 6: Future 3D Rig Zone Visualization ─────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card";
+    card.innerHTML = `<div class="pers-card-title">Fremtidigt 3D-Rig — Bone Zone Specifikation</div>`;
+
+    // Visual rig diagram using SVG overlaid on avatar
+    const rigDemoWrap = document.createElement("div");
+    rigDemoWrap.style.cssText = "display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px";
+
+    // Avatar with rig zone overlay
+    const avWrap = document.createElement("div");
+    avWrap.style.cssText = "position:relative;isolation:isolate;display:inline-block";
+    const av = buildExpr(BASE, EXPR.neutral, "lg");
+    avWrap.appendChild(av);
+
+    // SVG overlay showing rig zones at lg scale (180×270 = 160×240 * 1.125)
+    const scale = 180 / 160;
+    const rig = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    rig.setAttribute("viewBox", "0 0 180 270");
+    rig.setAttribute("width", "180");
+    rig.setAttribute("height", "270");
+    rig.style.cssText = "position:absolute;top:0;left:0;pointer-events:none;z-index:99";
+
+    function addZone(cx, cy, r, color, label) {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", cx * scale);
+      circle.setAttribute("cy", cy * scale);
+      circle.setAttribute("r", r * scale);
+      circle.setAttribute("fill", color + "20");
+      circle.setAttribute("stroke", color);
+      circle.setAttribute("stroke-width", "1");
+      rig.appendChild(circle);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", cx * scale);
+      text.setAttribute("y", (cy - r - 2) * scale);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "6");
+      text.setAttribute("fill", color);
+      text.setAttribute("font-family", "monospace");
+      text.textContent = label;
+      rig.appendChild(text);
+    }
+
+    addZone(68, 37, 10, "#4fc3f7", "brow_L");
+    addZone(92, 37, 10, "#4fc3f7", "brow_R");
+    addZone(68, 47, 7,  "#66bb6a", "eye_L");
+    addZone(92, 47, 7,  "#66bb6a", "eye_R");
+    addZone(80, 68, 12, "#ffd600", "jaw");
+    avWrap.appendChild(rig);
+    rigDemoWrap.appendChild(avWrap);
+
+    // Zone descriptions
+    const zoneGrid = document.createElement("div");
+    zoneGrid.className = "pers-rig-row";
+    zoneGrid.style.cssText = "flex:1;flex-direction:column;min-width:200px;display:flex;flex-wrap:wrap;gap:8px";
+
+    const zones = [
+      { bone: "head", color: "#f57f17", desc: "cx=80 cy=50 r=30 — Rotationsaksel. Max ±3° pose-tilt. Alle kosmetik-ankre refererer hertil." },
+      { bone: "brow_L / brow_R", color: "#4fc3f7", desc: "Pivot cx=68/92 cy=37. Frontalis (løfter) og corrugator (trækker ind). Styrer bryn-top og -indre hjørne." },
+      { bone: "eye_L / eye_R", color: "#66bb6a", desc: "Pivot cx=68/92 cy=47. Øjenlåg-crease-position. Iris-vinkel (fremtid). Øjenbredde/højde." },
+      { bone: "jaw", color: "#ffd600", desc: "Pivot cx=80 cy=68. Mund-kurve-kontrolpunkt. Orbicularis oris zone. Åben/lukket mund." },
+      { bone: "neck", color: "#e91e63", desc: "Pivot cx=80 cy=85. Vejrtræknings-anker. Hals-forlængelse til skulder-rotation." },
+    ];
+
+    zones.forEach(z => {
+      const el = document.createElement("div");
+      el.className = "pers-rig-zone";
+      el.innerHTML = `<div class="pers-rig-bone" style="color:${z.color}">${z.bone}</div><div class="pers-rig-body">${z.desc}</div>`;
+      zoneGrid.appendChild(el);
+    });
+
+    rigDemoWrap.appendChild(zoneGrid);
+    card.appendChild(rigDemoWrap);
+    card.innerHTML += `<div class="pers-note">SVG-koordinat-systemet er isomorfisk med et 3D facial rig: hvert ankerpunkt svarer til en knogle-pivot i et standard humanoid rig. Bryn_L/R = frontalis bone. Eye_L/R = eyelid_upper bone. Jaw = jawbone. Neck = cervical C1 pivot. Alle udtryk er i dag implementeret som SVG path-ændringer — i 3D vil de samme ændringer mappes til blend shape weights eller bone rotation angles. Designet er fremtidssikret.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 7: Restraint vs. Exaggeration — Why Restraint Ages Better ────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "pers-card";
+    card.innerHTML = `<div class="pers-card-title">Tilbageholdenhed vs. Overdrivelse — Hvorfor Subtilitet Holder</div>`;
+
+    const compare = document.createElement("div");
+    compare.className = "expr-row";
+    compare.style.marginBottom = "12px";
+
+    const sides = [
+      { src: ANIME_BASE, label: "Anime/Overdrevet", note: "Stor øjenring, mega-buer, enormt smil, pink blush-felter. Kommunikerer alt på én gang. Ingen nuance.", bad: true },
+      { src: null, expr: EXPR.proud, label: "Vores standard: Stolt", note: "+1px bue-top. Bredere smil. Lidt mere blush. Siger det samme — med 95% mindre støj.", good: true },
+    ];
+
+    sides.forEach(s => {
+      const col = document.createElement("div");
+      col.className = "expr-col";
+      const c = buildExpr(s.src || BASE, s.src ? null : s.expr);
+      if (s.bad)  c.style.outline = "2px solid #ef5350";
+      if (s.good) c.style.outline = "2px solid #66bb6a";
+      col.appendChild(c);
+      const lbl = document.createElement("div");
+      lbl.className = "expr-label";
+      lbl.innerHTML = `<strong style="color:${s.bad ? '#ef5350' : '#66bb6a'}">${s.label}</strong>${s.note}`;
+      col.appendChild(lbl);
+      compare.appendChild(col);
+    });
+
+    card.appendChild(compare);
+
+    card.innerHTML += `<div class="pers-restraint-grid">
+      <div class="pers-restraint-col pers-restraint-col--bad">
+        <div class="pers-restraint-heading pers-restraint-heading--bad">&#10005; Overdrevet udtryk</div>
+        <div class="pers-restraint-item">● Udtrykker ét følelsesniveau</div>
+        <div class="pers-restraint-item">● Kollapserer ved 54px (visuelt støj)</div>
+        <div class="pers-restraint-item">● Virker barnligt for ældre elever</div>
+        <div class="pers-restraint-item">● Konkurrerer med kosmetik-læsbarhed</div>
+        <div class="pers-restraint-item">● Ældes dårligt (meme-æstetik)</div>
+        <div class="pers-restraint-item">● Kræver ny art direction for 3D-port</div>
+      </div>
+      <div class="pers-restraint-col pers-restraint-col--good">
+        <div class="pers-restraint-heading pers-restraint-heading--good">&#10003; Tilbageholden udtryk</div>
+        <div class="pers-restraint-item">● Udtrykker nuancer (5 distinkte tilstande)</div>
+        <div class="pers-restraint-item">● Aflæselig ved 120px+, elegant ved 54px</div>
+        <div class="pers-restraint-item">● Fungerer for 8–18-årige (bred aldersgruppe)</div>
+        <div class="pers-restraint-item">● Kosmetik dominerer — udtryk understøtter</div>
+        <div class="pers-restraint-item">● Tidløst — inspireret af illustration, ikke meme</div>
+        <div class="pers-restraint-item">● Direkte porterbar til 3D blend shapes</div>
+      </div>
+    </div>`;
+    card.innerHTML += `<div class="pers-note">Tilbageholdenhed er ikke manglende udtryk — det er præcist udtryk. Den menneskelige hjerne er trenet til at aflæse ansigter ved mikroskopiske ændringer. Et barn på 1 år genkender moderens smil fra 2 graders muskelbevægelse. Vores udtryk-system opererer i det præcise register: subtilt nok til at føles ægte, tydeligt nok til at kommunikere klart.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 8: Micro-motion & Future Integration ─────────────────────────────
+
+  root.appendChild(persCard(
+    "Mikro-bevægelse og Fremtidig Integration",
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Vejrtræknings-kompatibilitet</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Udtryks-overlays er fuld-canvas SVGs (160×240). De rider container-transformationen — <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">translateY(-2px) scale(1.008)</code> — præcis som body.svg. Ingen desync. Vejrtrækning og udtryk er uafhængige systemer der sameksisterer gratis.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Phase 2: Tilstandsmaskine-integration</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">app.js kalder <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">setExpression("focused")</code> ved setUIState(). En enkelt &lt;img&gt; element med <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">exprImg.src = EXPRESSIONS[state]</code> bytter overlay. Ingen container rebuild. Ingen z-lag ændring.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Phase 3: CSS Opacity Cross-fade</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">To overlay img-elementer: current (opacity 1→0) og next (opacity 0→1), <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">transition: opacity 400ms ease</code>. Ambient blend. Ikke-dramatisk. Under teatralsk tærskel (~350ms perception threshold).</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Phase 4: Pose-variation</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">CSS <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">rotate(±2.5deg)</code> på avatar-canvas ved state-ændringer. Hoved-tilt. Skulder-skift via translateX(±2px) på arm-elementer. Kræver SVG inline rendering (ikke img tags) for per-element transforms. Dette er Phase 4 — ikke Phase 1.</div>
+      </div>
+    </div>`,
+    "Avatar-personlighedssystemet er en platform, ikke en feature. Phase 1 (dette): assets + kontrakt + gamefeel dokumentation. Phase 2: app.js wiring. Phase 3: cross-fade. Phase 4: pose. Hvert trin er uafhængigt og leverer standalone værdi. Arkitekturen understøtter progressiv implementering uden refaktorering.",
+    "pers-card"
+  ));
+
 }());
 </script>
 </body>
