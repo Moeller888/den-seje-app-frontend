@@ -3,6 +3,7 @@ import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js"
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, BASE_SRC } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
+import { PresenceEngine } from "./js/avatar-presence-engine.js";
 
 window.__sb = supabase;
 
@@ -53,6 +54,7 @@ function setState(newState) {
   uiState = newState;
   logEvent("STATE_CHANGED", { to: newState });
   exprEngine?.onStateChange(newState);
+  presenceEngine?.onStateChange(newState);
 }
 
 function setUIState(newState) {
@@ -73,6 +75,7 @@ function setUIState(newState) {
 }
 
 let exprEngine = null;
+let presenceEngine = null;
 
 let studentId = null;
 let currentInstanceId = null;
@@ -312,6 +315,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.className = "feedback-correct";
       playSound("equip");
       exprEngine?.onGameEvent("CORRECT");
+      presenceEngine?.onGameEvent("CORRECT");
       if (clickedBtn) {
         clickedBtn.classList.add("correct-flash");
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("correct-flash"), { once: true });
@@ -334,6 +338,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.className = "feedback-error";
       playSound("error");
       exprEngine?.onGameEvent("INCORRECT");
+      presenceEngine?.onGameEvent("INCORRECT");
       if (clickedBtn) {
         clickedBtn.classList.add("incorrect-flash");
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("incorrect-flash"), { once: true });
@@ -362,6 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (newLevel > prevLevel) {
         showLevelUpOverlay(newLevel);
         exprEngine?.onGameEvent("LEVEL_UP");
+        presenceEngine?.onGameEvent("LEVEL_UP");
       }
     }
 
@@ -542,6 +548,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
     try { exprEngine = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+    try { presenceEngine = new PresenceEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
   }
   await loadAndRenderQuestion();
 });

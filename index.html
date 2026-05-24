@@ -94,6 +94,8 @@
 
     /* Small avatar — identity-supportive, not layout-defining */
     #avatar-display {
+      --breathe-shift: -1px;
+      --breathe-scale: 1.006;
       position: relative;
       isolation: isolate;
       width: 52px;
@@ -188,8 +190,8 @@
     }
 
     @keyframes avatarBreathe {
-      0%, 100% { transform: translateY(0)    scale(1);     }
-      50%       { transform: translateY(-1px) scale(1.006); }
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(var(--breathe-shift, -1px)) scale(var(--breathe-scale, 1.006)); }
     }
 
     @keyframes questionPulse {

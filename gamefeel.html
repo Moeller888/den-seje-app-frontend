@@ -372,6 +372,63 @@
     .pers-restraint-heading--good { color: #66bb6a; }
     .pers-restraint-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
 
+    /* ── Section 22: Attention & Presence System ──────── */
+    .ap-grid { display: flex; flex-direction: column; gap: 20px; }
+    .ap-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .ap-card--accent { border-top: 3px solid var(--accent); }
+    .ap-card--warn   { border-left: 3px solid #ef5350; }
+    .ap-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .ap-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .ap-contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .ap-contrast-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .ap-contrast-col--bad  { border-left: 3px solid #ef5350; }
+    .ap-contrast-col--good { border-left: 3px solid #66bb6a; }
+    .ap-contrast-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .ap-contrast-heading--bad  { color: #ef5350; }
+    .ap-contrast-heading--good { color: #66bb6a; }
+    .ap-contrast-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+    .ap-breath-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; justify-content: center; }
+    .ap-breath-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ap-mini-avatar { width: 36px; height: 54px; border-radius: 8px; border: 1px solid var(--border); }
+    .ap-breath-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+    .ap-breath-vals  { font-size: 9px; color: var(--text-muted); font-family: monospace; }
+    .ap-breath-desc  { font-size: 9px; color: var(--text-muted); text-align: center; max-width: 70px; line-height: 1.3; }
+    .ap-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .ap-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .ap-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .ap-table tr:last-child td { border-bottom: none; }
+    .ap-inertia-timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 10px; }
+    .ap-inertia-row { display: flex; align-items: flex-start; gap: 6px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .ap-inertia-row:last-child { border-bottom: none; }
+    .ap-inertia-time   { font-size: 9px; font-weight: bold; color: var(--accent); width: 56px; flex-shrink: 0; font-family: monospace; padding-top: 1px; }
+    .ap-inertia-event  { font-size: 9px; color: var(--text-label); width: 90px; flex-shrink: 0; padding-top: 1px; }
+    .ap-inertia-expr   { font-size: 9px; color: #66bb6a; width: 62px; flex-shrink: 0; padding-top: 1px; font-family: monospace; }
+    .ap-inertia-breath { font-size: 9px; color: #42a5f5; width: 100px; flex-shrink: 0; padding-top: 1px; font-family: monospace; }
+    .ap-inertia-note   { font-size: 10px; color: var(--text-muted); flex: 1; line-height: 1.4; }
+    .ap-gaze-samples { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; margin-bottom: 10px; justify-content: center; }
+    .ap-gaze-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ap-gaze-label { font-size: 10px; font-weight: bold; font-family: monospace; }
+    .ap-gaze-label--good { color: #66bb6a; }
+    .ap-gaze-label--warn { color: #ffa726; }
+    .ap-gaze-label--bad  { color: #ef5350; }
+    .ap-gaze-note { font-size: 9px; color: var(--text-muted); text-align: center; max-width: 80px; line-height: 1.3; }
+    .ap-idle-demo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+    .ap-idle-bar-wrap { height: 8px; background: var(--bg-main); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+    .ap-idle-bar { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.1s linear, background 0.5s ease; }
+    .ap-idle-status { font-size: 11px; color: var(--text-main); font-family: monospace; }
+    .ap-idle-state  { font-size: 10px; color: var(--text-dim); }
+    .ap-btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ap-btn { padding: 5px 12px; background: var(--btn-bg); border: 1px solid var(--border-btn); border-radius: 6px; color: var(--text-main); font-size: 11px; cursor: pointer; font-family: inherit; }
+    .ap-btn:hover { background: var(--btn-bg-hover); }
+    .ap-blend-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .ap-blend-zone { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; flex: 1; min-width: 200px; }
+    .ap-blend-layer  { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+    .ap-blend-now    { font-size: 9px; color: var(--text-muted); margin-bottom: 2px; }
+    .ap-blend-now em { color: var(--text-dim); font-style: normal; }
+    .ap-blend-future { font-size: 9px; color: var(--text-label); margin-bottom: 4px; }
+    .ap-blend-future em { color: #42a5f5; font-style: normal; }
+    .ap-blend-body   { font-size: 10px; color: var(--text-main); line-height: 1.4; }
+
     /* ── Section 14: Production Polish ───────────────── */
     .polish-grid { display: flex; flex-direction: column; gap: 20px; }
     .polish-pair { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -542,6 +599,12 @@
 <div class="section">
   <div class="section-title">21 · Expression Runtime &amp; Emotional Pacing — Levende karakter, ikke reaktiv maskot</div>
   <div class="rt-grid" id="rtGrid21"></div>
+</div>
+
+<!-- ── Section 22: Attention & Presence System ─────── -->
+<div class="section">
+  <div class="section-title">22 · Attention &amp; Presence System — Fra Reaktiv UI til Believable Karakter</div>
+  <div class="ap-grid" id="apGrid22"></div>
 </div>
 
 <script type="module">
@@ -4239,6 +4302,266 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>`,
     "Den nuværende 2D runtime er isomorfisk med en 3D animation controller. Hvert element (state layer, event layer, priority, hold, transitions) har et direkte 3D-ækvivalent. Porteringen kræver ingen redesign af LOGIKKEN — kun en re-mapping af MEKANISMER. Det er designet sådan med vilje.",
     "rt-card"
+  ));
+
+}());
+
+// ── Section 22: Attention & Presence System ───────────────────────────────────
+(function() {
+  const root = document.getElementById("apGrid22");
+  if (!root) return;
+
+  function makeCard(title, bodyHtml, note, extra) {
+    const card = document.createElement("div");
+    card.className = "ap-card" + (extra ? " " + extra : "");
+    let h = title ? `<div class="ap-card-title">${title}</div>` : "";
+    h += bodyHtml;
+    if (note) h += `<div class="ap-note">${note}</div>`;
+    card.innerHTML = h;
+    return card;
+  }
+
+  // ── Card 1: Philosophy ────────────────────────────────────────────────────────
+  root.appendChild(makeCard(
+    "Filosofi — Tilstedeværelse Gennem Tilbageholdenhed",
+    `<div class="ap-contrast-grid">
+      <div class="ap-contrast-col ap-contrast-col--bad">
+        <div class="ap-contrast-heading ap-contrast-heading--bad">AGERER EMOTION</div>
+        <div class="ap-contrast-item">✗ Trigger-animation per event</div>
+        <div class="ap-contrast-item">✗ Øjne følger cursor</div>
+        <div class="ap-contrast-item">✗ Konstant idle-bevægelse</div>
+        <div class="ap-contrast-item">✗ Performer følelse på cue</div>
+        <div class="ap-contrast-item">✗ Kræver brugerens opmærksomhed</div>
+      </div>
+      <div class="ap-contrast-col ap-contrast-col--good">
+        <div class="ap-contrast-heading ap-contrast-heading--good">HAR TILSTEDEVÆRELSE</div>
+        <div class="ap-contrast-item">✓ Vejrtrækning fortsætter uanset</div>
+        <div class="ap-contrast-item">✓ Øjne rolige og fremadvendte</div>
+        <div class="ap-contrast-item">✓ Stilhed mellem momenter</div>
+        <div class="ap-contrast-item">✓ Følelse har vægt og inerti</div>
+        <div class="ap-contrast-item">✓ Eksisterer uden at kræve</div>
+      </div>
+    </div>`,
+    "Systemet skifter fra 'avatar der reagerer' til 'karakter der er til stede'. Brugeren skal ikke tænke: 'avataren animerer'. De skal mærke: 'avataren eksisterer'. Tilstedeværelse opstår gennem timing, tilbageholdenhed, kontinuitet og emotionel inerti — ikke stor bevægelse.",
+    "ap-card--accent"
+  ));
+
+  // ── Card 2: Live Breathing Profiles ──────────────────────────────────────────
+  const profiles = [
+    { id: "neutral",    label: "Neutral",    dur: 3.5, y: 1.0, sc: 1.006, color: "#78909c", desc: "Hviletilstand" },
+    { id: "focused",    label: "Focused",    dur: 2.9, y: 0.7, sc: 1.004, color: "#42a5f5", desc: "Koncentration" },
+    { id: "proud",      label: "Proud",      dur: 4.0, y: 1.4, sc: 1.009, color: "#66bb6a", desc: "Fortjent tilfredshed" },
+    { id: "curious",    label: "Curious",    dur: 3.2, y: 1.0, sc: 1.006, color: "#ffa726", desc: "Årvågen interesse" },
+    { id: "determined", label: "Determined", dur: 2.6, y: 0.5, sc: 1.003, color: "#ef5350", desc: "Resolve under pres" },
+  ];
+
+  const styleEl = document.createElement("style");
+  styleEl.textContent = profiles.map(p =>
+    `@keyframes apB_${p.id}{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-${p.y}px) scale(${p.sc})}}`
+  ).join("");
+  document.head.appendChild(styleEl);
+
+  const breathCols = profiles.map(p => `
+    <div class="ap-breath-col">
+      <div class="ap-mini-avatar" style="background:radial-gradient(ellipse at 50% 35%,${p.color}55 0%,${p.color}22 100%);border-color:${p.color}66;animation:apB_${p.id} ${p.dur}s ease-in-out infinite;"></div>
+      <div class="ap-breath-label">${p.label}</div>
+      <div class="ap-breath-vals">${p.dur}s · −${p.y}px</div>
+      <div class="ap-breath-desc">${p.desc}</div>
+    </div>`).join("");
+
+  root.appendChild(makeCard(
+    "Vejrtrækningsprofiler — Levende Sammenligning",
+    `<div class="ap-breath-row">${breathCols}</div>`,
+    "Amplitude og rytme varierer med emotionel tilstand. Focused: lavere amplitude og kortere cyklus — koncentration reducerer idle-bevægelse. Proud: langsommere og fuld amplitude — kroppen afslappet og ekspansiv. Determined: hurtigst og mest begrænset — resolve = minimalt overskud af bevægelse.",
+    ""
+  ));
+
+  // ── Card 3: Breathing Values Table ───────────────────────────────────────────
+  root.appendChild(makeCard(
+    "Vejrtrækningsværdier — Designkontrakten",
+    `<table class="ap-table">
+      <thead><tr><th>Profil</th><th>Varighed</th><th>Amplitude Y</th><th>Scale Δ</th><th>Designregel</th></tr></thead>
+      <tbody>${profiles.map(p => `<tr>
+        <td><strong>${p.label}</strong></td>
+        <td>${p.dur}s</td>
+        <td>−${p.y}px</td>
+        <td>+${((p.sc - 1) * 1000).toFixed(1)}‰</td>
+        <td style="color:var(--text-muted)">${p.desc}</td>
+      </tr>`).join("")}</tbody>
+    </table>
+    <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">Implementering: CSS custom properties <code>--breathe-shift</code> og <code>--breathe-scale</code> sættes via JS på <code>#avatar-display</code>. Ændres live uden animation-restart. Keyframe anvender <code>var()</code> med fallback til neutral baseline.</p>`,
+    "Alle værdier er inden for ±50% af neutral baseline. Neutral er referencen — alle andre tilstande er kalibrerede afvigelser. Ved 52px visningsstørrelse mærkes ændringerne subbevidst; de ses ikke direkte.",
+    ""
+  ));
+
+  // ── Card 4: Emotional Inertia Timeline ───────────────────────────────────────
+  const inertiaRows = [
+    { time: "0ms",     event: "CORRECT svar",  expr: "proud",   breath: "focused (dwell)",   note: "Expression skifter øjeblikkeligt. Vejrtrækning holder i state-profil." },
+    { time: "+300ms",  event: "—",             expr: "proud",   breath: "focused → proud",   note: "Vejrtrækning begynder blødere overgang til proud-profil." },
+    { time: "+2200ms", event: "Hold udløber",  expr: "neutral", breath: "proud → focused",   note: "Expression returnerer til state-lag. Vejrtrækning følger langsomt." },
+    { time: "+2600ms", event: "—",             expr: "neutral", breath: "focused",            note: "Fuld settle. State-lag dominerer. Ingen bevidst overgang mærkbar." },
+  ];
+
+  root.appendChild(makeCard(
+    "Emotionel Inerti — Vejrtrækning Halter Bag Expression",
+    `<div class="ap-inertia-timeline">
+      <div class="ap-inertia-row" style="border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:2px">
+        <div class="ap-inertia-time" style="font-weight:bold;color:var(--text-label)">Tid</div>
+        <div class="ap-inertia-event" style="font-weight:bold;color:var(--text-label)">Event</div>
+        <div class="ap-inertia-expr" style="font-weight:bold;color:var(--text-label)">Expr.</div>
+        <div class="ap-inertia-breath" style="font-weight:bold;color:var(--text-label)">Vejrtrækning</div>
+        <div class="ap-inertia-note" style="font-weight:bold;color:var(--text-label)">Note</div>
+      </div>
+      ${inertiaRows.map(r => `<div class="ap-inertia-row">
+        <div class="ap-inertia-time">${r.time}</div>
+        <div class="ap-inertia-event">${r.event}</div>
+        <div class="ap-inertia-expr">${r.expr}</div>
+        <div class="ap-inertia-breath">${r.breath}</div>
+        <div class="ap-inertia-note">${r.note}</div>
+      </div>`).join("")}
+    </div>`,
+    "Vejrtrækning og expression er decoupled med formål. Kroppen indhenter følelsen — ikke omvendt. Det er biologisk korrekt og giver karakteren tidsmæssig dybde. Ingen øjeblikkelig 'emotion-swap'. Continuity opstår af sig selv.",
+    ""
+  ));
+
+  // ── Card 5: Gaze Design Philosophy ───────────────────────────────────────────
+  const gazeExamples = [
+    { px: 0,   label: "0px",   note: "Neutral centreret", q: "good" },
+    { px: 1.5, label: "1.5px", note: "Subtil — korrekt",  q: "good" },
+    { px: 5,   label: "5px",   note: "Synlig — grænse",   q: "warn" },
+    { px: 10,  label: "10px",  note: "Uncanny — aldrig",  q: "bad"  },
+  ];
+
+  const gazeCols = gazeExamples.map(g => `
+    <div class="ap-gaze-col">
+      <svg width="44" height="44" viewBox="0 0 44 44" style="border-radius:50%;background:#1e1e1e;border:1px solid var(--border)">
+        <circle cx="22" cy="22" r="13" fill="#f5c49a"/>
+        <ellipse cx="17" cy="20" rx="4" ry="3.5" fill="white"/>
+        <ellipse cx="27" cy="20" rx="4" ry="3.5" fill="white"/>
+        <circle cx="${17 + g.px * 0.25}" cy="20" r="2.5" fill="#4a3626"/>
+        <circle cx="${27 + g.px * 0.25}" cy="20" r="2.5" fill="#4a3626"/>
+        <circle cx="${17.8 + g.px * 0.25}" cy="19" r="1" fill="white" opacity="0.7"/>
+        <circle cx="${27.8 + g.px * 0.25}" cy="19" r="1" fill="white" opacity="0.7"/>
+        <path d="M ${16 + g.px * 0.1} 27 Q 22 ${29.5 + g.px * 0.05} ${28 + g.px * 0.1} 27" stroke="#c07850" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="ap-gaze-label ap-gaze-label--${g.q}">${g.label}</div>
+      <div class="ap-gaze-note">${g.note}</div>
+    </div>`).join("");
+
+  root.appendChild(makeCard(
+    "Blik-filosofi — 1.5px Reglen (v1: Designkontrakt)",
+    `<div class="ap-gaze-samples">${gazeCols}</div>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 8px">v1 implementerer vejrtrækningskoherens som produktionsklar tilstedeværelseseffekt. Blikretning forbliver designkontrakt: korrekt implementering kræver separate SVG-varianter per blikretning eller inline SVG med adresserbare pupilkoordinater. En translateX på hele overlay-billedet ville forskyve hele ansigtet — ikke kun øjnene.</p>
+    <p style="font-size:11px;color:var(--text-dim);margin:0">Max displacement: 1.5px ved 52px container = 2.9% horisontal forskydning. Grænsen på 3px er baseret på cosmetic-seam visibility ved alle understøttede opløsninger. Uncanny threshold: >5px = bevidst mærkbar. >8px = uklassisk.</p>`,
+    "Blikretning er en opmærksomhedssignal, ikke en performance. Det skal aldrig føles som tracking. Det er implikeret retning — ikke eksplicit stirren.",
+    "ap-card--warn"
+  ));
+
+  // ── Card 6: Attention Hierarchy ───────────────────────────────────────────────
+  const hierarchy = [
+    { target: "LEVEL_UP",      prio: 10, hold: "3000ms", breath: "proud",      rule: "Kritisk — override alt, kan ikke afbrydes" },
+    { target: "ACHIEVEMENT",   prio: 9,  hold: "3200ms", breath: "proud",      rule: "Kritisk — override alt, kan ikke afbrydes" },
+    { target: "REWARD_POPUP",  prio: 7,  hold: "2200ms", breath: "proud",      rule: "Event-lag — afbrydes kun af CRITICAL" },
+    { target: "INCORRECT",     prio: 5,  hold: "1400ms", breath: "determined", rule: "Event-lag — recovery, yielder til CRITICAL" },
+    { target: "QUESTION",      prio: 3,  hold: "—",      breath: "focused",    rule: "State-lag — default quiz-tilstand" },
+    { target: "IDLE",          prio: 0,  hold: "—",      breath: "neutral",    rule: "Nulpunkt — hviler, ingen krav" },
+  ];
+
+  root.appendChild(makeCard(
+    "Opmærksomhedshierarki — Prioritetsregler",
+    `<table class="ap-table">
+      <thead><tr><th>Mål</th><th>Prioritet</th><th>Hold</th><th>Vejrtrækning</th><th>Regel</th></tr></thead>
+      <tbody>${hierarchy.map(r => `<tr>
+        <td><strong>${r.target}</strong></td>
+        <td style="text-align:center;font-family:monospace">${r.prio}</td>
+        <td style="font-family:monospace">${r.hold}</td>
+        <td>${r.breath}</td>
+        <td style="color:var(--text-muted);font-size:10px">${r.rule}</td>
+      </tr>`).join("")}</tbody>
+    </table>`,
+    "Ens prioritet: eksisterende target holder — ingen flimmer mellem equal-weight krav. Systemet prioriterer roligt og uden hyperaktiv scanning. Calm resolution er designmålet.",
+    ""
+  ));
+
+  // ── Card 7: Idle Awareness ────────────────────────────────────────────────────
+  const idleCard = makeCard(
+    "Idle-bevidsthed — 30-sekunders Settle (10× Accelereret Demo)",
+    `<div class="ap-idle-demo">
+      <div class="ap-idle-bar-wrap"><div class="ap-idle-bar" id="ap22IdleBar"></div></div>
+      <div class="ap-idle-status" id="ap22IdleStatus">Klik "Start" for at simulere 30s idle (10× acceleration)</div>
+      <div class="ap-idle-state"  id="ap22IdleState">—</div>
+      <div class="ap-btn-row">
+        <button class="ap-btn" id="ap22IdleStart">Start simulation</button>
+        <button class="ap-btn" id="ap22IdleReset">Simuler interaktion (reset)</button>
+      </div>
+    </div>`,
+    "Efter 30s uden state-ændringer returnerer PresenceEngine vejrtrækning til neutral profil. Ingen synlig bevægelse — rent intern recentrering. Dækker lange quiz-pauser, læsetid, brugeren ser væk. Avataren settle roligt uden at kræve opmærksomhed.",
+    ""
+  );
+  root.appendChild(idleCard);
+
+  let ap22Interval = null;
+  let ap22Progress = 0;
+  const ap22Bar    = idleCard.querySelector("#ap22IdleBar");
+  const ap22Status = idleCard.querySelector("#ap22IdleStatus");
+  const ap22State  = idleCard.querySelector("#ap22IdleState");
+  const ap22Start  = idleCard.querySelector("#ap22IdleStart");
+  const ap22Reset  = idleCard.querySelector("#ap22IdleReset");
+
+  ap22Start.onclick = function() {
+    if (ap22Interval) clearInterval(ap22Interval);
+    ap22Progress = 0;
+    ap22Bar.style.background = "var(--accent)";
+    ap22State.textContent = "Tilstand: AWAITING_ANSWER — vejrtrækning: focused";
+    ap22Interval = setInterval(function() {
+      ap22Progress += (100 / 30) * 0.1;
+      if (ap22Progress >= 100) {
+        ap22Progress = 100;
+        clearInterval(ap22Interval);
+        ap22Interval = null;
+        ap22Bar.style.width = "100%";
+        ap22Bar.style.background = "#78909c";
+        ap22Status.textContent = "30s idle nået → vejrtrækning reset til neutral (ingen synlig ændring)";
+        ap22State.textContent = "Tilstand: IDLE SETTLE — vejrtrækning: neutral";
+        return;
+      }
+      ap22Bar.style.width = ap22Progress + "%";
+      var secs = Math.floor(ap22Progress * 30 / 100);
+      ap22Status.textContent = "Simuleret idle: " + secs + "s / 30s";
+    }, 100);
+  };
+
+  ap22Reset.onclick = function() {
+    if (ap22Interval) { clearInterval(ap22Interval); ap22Interval = null; }
+    ap22Progress = 0;
+    ap22Bar.style.width = "0%";
+    ap22Bar.style.background = "var(--accent)";
+    ap22Status.textContent = "Interaktion → idle timer reset til 0";
+    ap22State.textContent = "Tilstand: AWAITING_ANSWER — vejrtrækning: focused";
+  };
+
+  // ── Card 8: Future 3D Controller ─────────────────────────────────────────────
+  const layers3D = [
+    { layer: "Layer 0: Breathing",       now: "CSS animationDuration + --breathe-* vars",        future: "spine_01 bone oscillation, idle clip looping",             desc: "Kørende altid under alle andre lag. Amplitude = AnimatorParameter<float> breath_amp_w." },
+    { layer: "Layer 1: Expression",      now: "ExpressionEngine SVG overlay cross-fade",          future: "Head + facial blend shapes (proud_w, determined_w etc.)",  desc: "5 expression clips. Blend weights drives facial rig. Transition duration = fade_ms i CONFIGS." },
+    { layer: "Layer 1.5: Breathing Profil", now: "PresenceEngine --breathe-* setProperty",       future: "AnimatorParameter<float> breath_rate_w og breath_amp_w",   desc: "Modulerer spine_01 oscillation amplitude og frekvens. Koblet til expression state." },
+    { layer: "Layer 2: Event Hold",      now: "ExpressionEngine _eventTimer setTimeout",          future: "AnimationClip Once + HOLD_END → StateMachine transition", desc: "Hold = clip med fixed length. HOLD_END event trigger → return_to_idle transition." },
+    { layer: "Layer 3: Critical",        now: "PRIORITY.CRITICAL check + CRITICAL_EVENTS config", future: "Animation layer weight 1.0 = full override af lag 0–2",    desc: "100% weight masker alle lavere lag. LEVEL_UP proud blend = 1.0 i 3s." },
+    { layer: "Future: Gaze IK",          now: "ATTENTION_TARGETS contract (ikke implementeret)",  future: "IK target + eye bone LookAt constraint, max ±8°",          desc: "GazeTarget_3D placeret i scene. Eye bones IK-constrained. Smooth blend til idle-gaze ved inaktivitet." },
+  ];
+
+  root.appendChild(makeCard(
+    "Fremtidig 3D Controller-arkitektur — Systemet er Allerede Isomorfisk",
+    `<div class="ap-blend-grid">${layers3D.map(l => `
+      <div class="ap-blend-zone">
+        <div class="ap-blend-layer">${l.layer}</div>
+        <div class="ap-blend-now">I dag: <em>${l.now}</em></div>
+        <div class="ap-blend-future">3D: <em>${l.future}</em></div>
+        <div class="ap-blend-body">${l.desc}</div>
+      </div>`).join("")}
+    </div>`,
+    "Den nuværende 2D tilstedeværelsesmotor er designet isomorfisk med en 3D animation controller. Logikken (state-lag, event-lag, priority, hold, inertia) er identisk. Kun mekanismerne re-mappes. Porteringen kræver ingen redesign — kun oversættelse. Det er designet sådan med vilje.",
+    "ap-card--accent"
   ));
 
 }());
