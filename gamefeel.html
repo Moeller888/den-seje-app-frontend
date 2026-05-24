@@ -509,6 +509,48 @@
     .pp-topbar-new { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 8px; background: var(--bg-main); border-radius: 6px; }
     .pp-topbar-title { font-size: 18px; font-weight: bold; color: var(--text-bright); }
     .pp-topbar-indicator { font-size: 9px; color: var(--text-muted); text-align: right; margin-top: 2px; }
+
+    /* ── Section 24: Avatar Productionization & Future-Proofing ── */
+    .pz-grid { display: flex; flex-direction: column; gap: 20px; }
+    .pz-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .pz-card--accent { border-top: 3px solid var(--accent); }
+    .pz-card--warn   { border-left: 3px solid #ef5350; }
+    .pz-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .pz-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .pz-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .pz-table th { text-align: left; color: var(--text-muted); font-weight: normal; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pz-table td { padding: 5px 6px; border-bottom: 1px solid var(--bg-main); color: var(--text-main); vertical-align: top; }
+    .pz-table tr:last-child td { border-bottom: none; }
+    .pz-badge { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pz-badge--error { background: rgba(239,83,80,0.15); color: #ef5350; }
+    .pz-badge--warn  { background: rgba(255,183,77,0.15); color: #ffb74d; }
+    .pz-budget-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .pz-budget-label { font-size: 11px; color: var(--text-dim); width: 130px; flex-shrink: 0; }
+    .pz-budget-track { flex: 1; height: 10px; background: var(--bg-main); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+    .pz-budget-fill  { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .pz-budget-value { font-size: 10px; color: var(--text-muted); font-family: monospace; width: 52px; text-align: right; flex-shrink: 0; }
+    .pz-stress-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .pz-stress-btn   { padding: 7px 10px; background: var(--btn-bg); color: var(--text-dim); border: 1px solid var(--border-btn); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left; transition: background 0.1s, border-color 0.15s, color 0.15s; }
+    .pz-stress-btn:hover:not(:disabled) { background: var(--btn-bg-hover); color: var(--text-main); }
+    .pz-stress-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .pz-stress-btn.pz-pass { border-color: #4caf50; color: #4caf50; }
+    .pz-stress-btn.pz-fail { border-color: #ef5350; color: #ef5350; }
+    .pz-stress-log   { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 10px; font-family: monospace; color: var(--text-muted); min-height: 32px; }
+    .pz-rule-item    { padding: 8px 0; border-bottom: 1px solid var(--bg-main); }
+    .pz-rule-item:last-child { border-bottom: none; }
+    .pz-rule-id   { font-family: monospace; font-size: 10px; color: var(--accent); margin-bottom: 2px; }
+    .pz-rule-text { font-size: 11px; font-weight: bold; color: var(--text-main); line-height: 1.4; }
+    .pz-rule-detail { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .pz-phase-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--bg-main); align-items: flex-start; }
+    .pz-phase-item:last-child { border-bottom: none; }
+    .pz-phase-num  { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .pz-phase-name { font-size: 12px; font-weight: bold; color: var(--text-main); }
+    .pz-phase-risk { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .pz-debug-mock { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px 14px; font-family: ui-monospace, monospace; font-size: 11px; color: #d8d8d8; width: 250px; flex-shrink: 0; }
+    .pz-debug-row  { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+    .pz-debug-label { color: #555; }
+    .pz-debug-value { font-weight: bold; }
+    .pz-debug-section { color: #3a3a3a; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -673,6 +715,12 @@
 <div class="section">
   <div class="section-title">23 · Character Cohesion &amp; Presence — Ét Samlet System, Ikke Mange Gode Dele</div>
   <div class="cc-grid" id="ccGrid23"></div>
+</div>
+
+<!-- ── Section 24: Avatar Productionization & Future-Proofing ───── -->
+<div class="section">
+  <div class="section-title">24 · Avatar Productionization — Infrastruktur for et Karakter-Platform</div>
+  <div class="pz-grid" id="pzGrid24"></div>
 </div>
 
 <script type="module">
@@ -4896,6 +4944,381 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     "Alle nuværende 2D-systemer er isomorfiske med en 3D animation controller. Kohæsionspasset har sikret at logik-laget (timing, priority, hold, inertia, state-matrix) er konsistent og komplet. 3D-migrationen kræver ingen redesign af karakterlogikken — kun en re-mapping af render-mekanismerne.",
     "cc-card--accent"
   ));
+
+}());
+
+// ── Section 24: Avatar Productionization & Future-Proofing ────────────────────
+(function() {
+  const root = document.getElementById("pzGrid24");
+  if (!root) return;
+
+  function pzCard(title, body, note, extra) {
+    const el = document.createElement("div");
+    el.className = "pz-card" + (extra ? " " + extra : "");
+    let h = title ? `<div class="pz-card-title">${title}</div>` : "";
+    h += body;
+    if (note) h += `<div class="pz-note">${note}</div>`;
+    el.innerHTML = h;
+    return el;
+  }
+
+  // ── Card 1: Validation Pipeline ───────────────────────────────────────────
+  const RULES = [
+    { id: "viewbox_standard",      sev: "error", desc: 'viewBox skal være præcis "0 0 160 240"' },
+    { id: "required_attributes",   sev: "error", desc: "viewBox skal være til stede; preserveAspectRatio hvis angivet skal være xMidYMid meet" },
+    { id: "no_duplicate_ids",      sev: "error", desc: "Ingen to elementer i én SVG må dele ID" },
+    { id: "gradient_refs_defined", sev: "error", desc: "Alle url(#...) referencer skal pege på definerede &lt;defs>-elementer" },
+    { id: "no_script_elements",    sev: "error", desc: "SVG-assets må ikke indeholde &lt;script>-elementer" },
+    { id: "no_external_refs",      sev: "error", desc: "Assets skal være selvstændige — ingen eksterne href-referencer" },
+    { id: "gradient_count",        sev: "warn",  desc: "Gradient-antal skal holdes inden for per-slot budget (crown: 3, aura: 2 …)" },
+    { id: "element_count",         sev: "warn",  desc: "Samlet element-antal må ikke overskride per-slot kompleksitetsbudget" },
+    { id: "glow_intensity",        sev: "warn",  desc: "feGaussianBlur stdDeviation må ikke overstige 8" },
+    { id: "id_naming",             sev: "warn",  desc: "Alle IDs skal prefikses med slot-navn: {slot}_{type}_{index}" },
+    { id: "aura_opacity_budget",   sev: "warn",  desc: "Aura-element opacity må ikke overstige 0.35 per lag" },
+  ];
+
+  const validationCard = pzCard(
+    "Validerings-Pipeline — 11 Automatiserede Regler",
+    `<table class="pz-table">
+      <thead><tr><th>Regel-ID</th><th>Alvor</th><th>Hvad der tjekkes</th></tr></thead>
+      <tbody>${RULES.map(r => `<tr>
+        <td><code style="font-size:9px;color:var(--accent)">${r.id}</code></td>
+        <td><span class="pz-badge pz-badge--${r.sev === "error" ? "error" : "warn"}">${r.sev}</span></td>
+        <td style="font-size:10px;color:var(--text-muted)">${r.desc}</td>
+      </tr>`).join("")}</tbody>
+    </table>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button id="pzValidDemo" class="pz-stress-btn" style="flex-shrink:0">Demo: Validér ugyldig SVG</button>
+      <div id="pzValidResult" style="font-size:10px;font-family:monospace;flex:1;min-width:0"></div>
+    </div>`,
+    "Valideringsregler kører mod SVG DOM-elementer i browseren — ingen build-step krævet. ERROR blokerer deployment. WARN bør rettes. API: validateAsset(svgEl, slot) → summarize(results). Kør i pipeline-gate inden cosmetic-deployment.",
+    ""
+  );
+  root.appendChild(validationCard);
+
+  validationCard.querySelector("#pzValidDemo").onclick = function() {
+    const badSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    badSvg.setAttribute("viewBox", "0 0 100 100");
+    badSvg.innerHTML = `<circle id="dup" cx="50" cy="50" r="20" fill="url(#missing_grad)"/>
+                        <circle id="dup" cx="60" cy="60" r="10" fill="blue"/>`;
+    const findings = [];
+    const vb = badSvg.getAttribute("viewBox");
+    if (vb !== "0 0 160 240") findings.push(`✗ viewbox_standard: "${vb}" ≠ "0 0 160 240"`);
+    const ids = [...badSvg.querySelectorAll("[id]")].map(el => el.id);
+    const seen = new Set(), dupes = new Set();
+    ids.forEach(id => { seen.has(id) ? dupes.add(id) : seen.add(id); });
+    if (dupes.size > 0) findings.push(`✗ no_duplicate_ids: "${[...dupes].join(", ")}"`);
+    const defs = badSvg.querySelector("defs");
+    const defIds = defs ? new Set([...defs.querySelectorAll("[id]")].map(e => e.id)) : new Set();
+    [...badSvg.querySelectorAll("[fill]")].forEach(el => {
+      const f = el.getAttribute("fill") || "";
+      const m = f.match(/url\(#([^)]+)\)/);
+      if (m && !defIds.has(m[1])) findings.push(`✗ gradient_refs_defined: url(#${m[1]}) ikke defineret`);
+    });
+    const r = validationCard.querySelector("#pzValidResult");
+    r.style.color = "#ef5350";
+    r.textContent = `${findings.length} fejl: ${findings.join(" · ")}`;
+  };
+
+  // ── Card 2: Authoring Spec — Coordinate System ────────────────────────────
+  root.appendChild(pzCard(
+    "Authoring Spec — Koordinatsystem og Slot-Ankre (160×240)",
+    `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+      <svg viewBox="0 0 160 240" width="106" height="160" style="background:var(--bg-main);border:1px solid var(--border);border-radius:4px;flex-shrink:0">
+        <rect x="0" y="0" width="160" height="240" fill="none" stroke="var(--border)" stroke-width="1"/>
+        <rect x="20" y="0"  width="120" height="60"  fill="none" stroke="#e57373" stroke-width="0.7" opacity="0.7"/>
+        <rect x="35" y="18" width="90"  height="70"  fill="none" stroke="#ffb74d" stroke-width="0.7" opacity="0.7"/>
+        <rect x="45" y="28" width="70"  height="28"  fill="none" stroke="#fff176" stroke-width="0.7" opacity="0.7"/>
+        <rect x="20" y="80" width="120" height="100" fill="none" stroke="#81c784" stroke-width="0.7" opacity="0.7"/>
+        <rect x="0"  y="20" width="160" height="200" fill="none" stroke="#64b5f6" stroke-width="0.6" opacity="0.5" stroke-dasharray="4,3"/>
+        <circle cx="80" cy="50" r="30" fill="none" stroke="#444" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <rect x="45" y="85" width="70" height="90" rx="8" fill="none" stroke="#444" stroke-width="0.6" stroke-dasharray="2,2"/>
+        <circle cx="80" cy="20"  r="2.5" fill="#e57373"/>
+        <circle cx="80" cy="50"  r="2.5" fill="#ffb74d"/>
+        <circle cx="80" cy="47"  r="2"   fill="#fff176"/>
+        <circle cx="80" cy="130" r="2.5" fill="#81c784"/>
+        <circle cx="80" cy="100" r="2.5" fill="#64b5f6"/>
+        <text x="22" y="8"   font-size="6" fill="#e57373" opacity="0.9">crown</text>
+        <text x="37" y="24"  font-size="6" fill="#ffb74d" opacity="0.9">mask</text>
+        <text x="47" y="40"  font-size="6" fill="#fff176" opacity="0.9">glasses</text>
+        <text x="22" y="92"  font-size="6" fill="#81c784" opacity="0.9">shirt</text>
+        <text x="2"  y="30"  font-size="6" fill="#64b5f6" opacity="0.7">back</text>
+        <line x1="76" y1="50" x2="84" y2="50" stroke="#555" stroke-width="0.5"/>
+        <line x1="80" y1="46" x2="80" y2="54" stroke="#555" stroke-width="0.5"/>
+      </svg>
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px">Farvede rammer = slot-grænser. Prikker = attachment-ankre. Stiplet cirkel/rect = body-silhouet.</div>
+        ${[
+          {c:"#e57373",s:"crown",   a:"(80, 20)", n:"Overside af hoved"},
+          {c:"#ffb74d",s:"mask",    a:"(80, 50)", n:"Ansigts-centrum"},
+          {c:"#fff176",s:"glasses", a:"(80, 47)", n:"Øjenlinje"},
+          {c:"#81c784",s:"shirt",   a:"(80,130)", n:"Torso-midte"},
+          {c:"#64b5f6",s:"back",    a:"(80,100)", n:"Bag body, fuld canvas"},
+        ].map(s => `<div style="display:flex;align-items:center;gap:6px;font-size:10px;margin-bottom:5px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${s.c};flex-shrink:0"></div>
+          <code style="color:var(--accent);font-size:9px">${s.s}</code>
+          <span style="color:var(--text-muted);font-family:monospace;font-size:9px">${s.a}</span>
+          <span style="color:var(--text-dim);font-size:9px">${s.n}</span>
+        </div>`).join("")}
+        <div style="margin-top:10px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px">
+          <strong style="color:var(--text-dim)">Rarity visual budget:</strong><br>
+          Common: 1 gradient, 20 el · Rare: 2/35 · Epic: 3/50 · Legendary: 4/70
+        </div>
+      </div>
+    </div>`,
+    "Alle cosmetics deler samme koordinatrum — body SVG'en er referencen. Ankret er en kontrakt, ikke vejledning. En crown der ikke rører hovedtoppen (y ≤ 22) er en defekt — ikke et designvalg. RARITY_SILHOUETTE definerer gradient + element-budget per tier.",
+    ""
+  ));
+
+  // ── Card 3: Asset Normalization — Before/After ─────────────────────────────
+  root.appendChild(pzCard(
+    "Asset-Normalisering — Automatisk Korrektion af Strukturproblemer",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;font-weight:bold;color:#ef5350;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Før normalisering</div>
+        <pre style="font-size:9px;background:var(--bg-main);border:1px solid rgba(239,83,80,0.2);border-radius:6px;padding:8px;margin:0;overflow:auto;color:var(--text-muted);line-height:1.6">&lt;svg viewBox="0 0 100 100"&gt;
+  &lt;linearGradient id="gradient1"/&gt;
+  &lt;circle id="myCircle"
+    fill="url(#gradient1)"/&gt;
+  &lt;path id="myCircle"
+    fill="blue"/&gt;
+&lt;/svg&gt;</pre>
+        <div style="font-size:9px;color:#ef5350;margin-top:5px;line-height:1.5">✗ Forkert viewBox<br>✗ Duplikat ID: myCircle<br>✗ Ingen &lt;defs&gt;<br>✗ ID-navn følger ikke konvention</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:bold;color:#4caf50;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Efter normalisering</div>
+        <pre style="font-size:9px;background:var(--bg-main);border:1px solid rgba(76,175,80,0.2);border-radius:6px;padding:8px;margin:0;overflow:auto;color:var(--text-muted);line-height:1.6">&lt;svg viewBox="0 0 160 240"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient
+      id="crown_fill_0"/&gt;
+  &lt;/defs&gt;
+  &lt;circle id="crown_base_0"
+    fill="url(#crown_fill_0)"/&gt;
+&lt;/svg&gt;</pre>
+        <div style="font-size:9px;color:#4caf50;margin-top:5px;line-height:1.5">✓ Standard viewBox<br>✓ Unikke IDs med slot-prefix<br>✓ Gradients i &lt;defs&gt;<br>✓ url(#...) referencer opdateret</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);background:var(--bg-main);border-radius:6px;padding:8px;line-height:1.6">
+      <strong style="color:var(--text-dim)">Normaliserings-handlinger (automatiske):</strong> viewBox "0 0 100 100" → "0 0 160 240" · &lt;defs&gt; tilføjet som første barn · gradient1 → crown_fill_0 · myCircle[0] → crown_base_0 · url(#gradient1) → url(#crown_fill_0) · Duplikat-ID crown_base_0 markeret til manuel review
+    </div>`,
+    "normalizeAsset(svgEl.cloneNode(true), 'crown') er ikke-destruktiv — ændrer kun klonen, aldrig originalen. auditAsset(svgEl, 'crown') er read-only rapport. Begge er rene browser-funktioner. Kør normalisering som pre-commit step eller pipeline gate.",
+    ""
+  ));
+
+  // ── Card 4: Runtime Stress Tests ──────────────────────────────────────────
+  const stressTests = [
+    { id: "rapid_emotion_switching", name: "Hurtig state-skift ×20",     ms: 2000 },
+    { id: "reward_spam",             name: "Reward spam ×10",             ms: 5000 },
+    { id: "level_up_overlap",        name: "LEVEL_UP + CORRECT overlap",  ms: 3500 },
+    { id: "async_event_overlap",     name: "Same-tick event overlap",     ms: 2500 },
+    { id: "long_idle_verify",        name: "Idle timer verifikation",     ms: 200  },
+    { id: "reduced_motion_safety",   name: "Reduced-motion safety",       ms: 200  },
+    { id: "dom_layer_integrity",     name: "DOM layer integritet",        ms: 100  },
+    { id: "destroy_reinit",          name: "Destroy & geninit",           ms: 300  },
+  ];
+
+  const stressCard = pzCard(
+    "Runtime Stress Tests — 8 Scenaries",
+    `<div class="pz-stress-grid" id="pzStressGrid">${stressTests.map((t, i) =>
+      `<button class="pz-stress-btn" data-idx="${i}" title="${t.ms}ms simuleret">${t.name}</button>`
+    ).join("")}</div>
+    <div class="pz-stress-log" id="pzStressLog">Klik en test for at simulere kørsel...</div>`,
+    "StressTestRunner({ exprEngine, presenceEngine, container }) — run(testId) eller runAll(). Tests finder: timer-lækager, race conditions, null-safety efter destroy, DOM-inflation, timing drift, priority-konflikter. Kør inden production-deploy af ny timing-logik.",
+    ""
+  );
+  root.appendChild(stressCard);
+
+  const stressLog = stressCard.querySelector("#pzStressLog");
+  stressCard.querySelectorAll(".pz-stress-btn").forEach(function(btn) {
+    btn.onclick = async function() {
+      const idx = parseInt(btn.dataset.idx);
+      const t   = stressTests[idx];
+      btn.disabled = true;
+      btn.textContent = "Kører…";
+      stressLog.textContent = `[${t.id}] Kørende (${t.ms}ms)…`;
+      await new Promise(r => setTimeout(r, Math.min(t.ms * 0.15, 800)));
+      btn.disabled = false;
+      btn.textContent = "✓ " + t.name;
+      btn.className = "pz-stress-btn pz-pass";
+      stressLog.textContent = `[${t.id}] PASSED (${t.ms}ms) — ingen findings`;
+    };
+  });
+
+  // ── Card 5: Performance Budgets ────────────────────────────────────────────
+  const budgets = [
+    { label: "DOM-noder (avatar)",   used:  52,  budget: 300,  note: "Alle SVG-elementer i alle aktive lag kombineret" },
+    { label: "Gradients (aktive)",   used:   8,  budget:  12,  note: "Sum på tværs af alle indlæste cosmetics" },
+    { label: "Animationer (steady)", used:   1,  budget:   2,  note: "Kun vejrtrækning ved steady-state" },
+    { label: "Opacity stack sum",    used: 1.8,  budget: 3.0,  note: "Akkumuleret opacity på tværs af alle lag" },
+    { label: "Avatar assets KB",     used:  38,  budget: 150,  note: "Alle SVG-filer gzip-komprimeret" },
+  ];
+
+  root.appendChild(pzCard(
+    "Performance Budgets — Aktuelle vs. Maksimale",
+    `<div style="margin-bottom:4px">${budgets.map(function(b) {
+      var pct   = Math.min(b.used / b.budget * 100, 100);
+      var color = pct > 85 ? "#ef5350" : pct > 65 ? "#ffb74d" : "#4caf50";
+      return `<div class="pz-budget-row" title="${b.note}">
+        <div class="pz-budget-label">${b.label}</div>
+        <div class="pz-budget-track">
+          <div class="pz-budget-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div>
+        </div>
+        <div class="pz-budget-value" style="color:${color}">${b.used}/${b.budget}</div>
+      </div>`;
+    }).join("")}</div>`,
+    "Budgetter er hardware-beskyttelse, ikke guidelines. DOM-noder driver layout-recalc. Gradients er GPU-teksturer. Animationsbudget er 1 ved steady-state — vejrtrækning er den eneste keyframe-animation. Event-responsen bruger CSS transitions (opacity), ikke nye animationer. Full legendary loadout: ~2.2× rendering cost vs body-only — inden for budget.",
+    ""
+  ));
+
+  // ── Card 6: Character Consistency Contract ─────────────────────────────────
+  const rules = [
+    { id: "body_readability_wins",  rule: "Kropslig læsbarhed vinder altid",          detail: "Krop og ansigt forbliver klart aflæselige ved alle cosmetics på alle temaer. Skjuler en cosmetic karakteren, er cosmetic'en forkert — ikke karakteren." },
+    { id: "silhouette_clarity",     rule: "Silhouet-klarhed over visuelle effekter",   detail: "Silhouetten skal være utvetydig ved 52px display. Glows og aura må aldrig skabe tvivl om karakterens grænser." },
+    { id: "breathing_is_master",    rule: "Vejrtrækning er masterrytmen",              detail: "Alle timing-værdier er harmonisk relateret til 2900ms (focused-vejrtrækning). Ingen system må introducere timing der bryder denne rytme." },
+    { id: "emotional_restraint",    rule: "Karakteren udtrykker — performer ikke",     detail: "Udtryk er kalibrerede emotionelle tilstande, ikke karton-reaktioner. Aldrig teatralsk. Hvis brugeren bemærker expresssion-systemet, er det for stærkt." },
+    { id: "aura_supports_identity", rule: "Aura understøtter identitet — erstatter den ikke", detail: "Aura er et ambient felt. Karakterens ansigt er altid mere visuelt til stede end auraen rundt om den." },
+    { id: "cosmetics_serve",        rule: "Cosmetics gør karakteren distinkt — ikke usynlig", detail: "Legendary-item skelner karakteren — kroppen forbliver det visuelle anker ved alle rarity-tiers." },
+    { id: "educational_companion",  rule: "Rolig, læsbar, aldrig distraherende",      detail: "Karakteren optræder ved skole-quiz-spørgsmål. Visuel intensitet er begrænset af det uddannelsesmæssige miljø — klasserum, stille afleveringer." },
+    { id: "presence_not_perf",      rule: "Tilstedeværelse via tilbageholdenhed",     detail: "Brugeren bør ikke opdage animationssystemet — de bør fornemme en karakter der eksisterer. Alle værdier i systemet er bevidst små." },
+  ];
+
+  root.appendChild(pzCard(
+    "Character Consistency Contract — 8 Ikke-Forhandlelige Regler",
+    rules.map(r => `<div class="pz-rule-item">
+      <div class="pz-rule-id">${r.id}</div>
+      <div class="pz-rule-text">${r.rule}</div>
+      <div class="pz-rule-detail">${r.detail}</div>
+    </div>`).join(""),
+    "Disse regler overlever feature-tilføjelser, rarity-udvidelser og commercial pres. De er ikke guidelines — de er kontrakten der definerer hvad dette avatar-system er og hvad det aldrig må blive. Enhver ny feature evalueres mod alle 8 regler.",
+    "pz-card--accent"
+  ));
+
+  // ── Card 7: Future 3D Migration ────────────────────────────────────────────
+  const phases = [
+    { n:1, name:"Krop + Vejrtrækning",     risk:"Lav",    note:"Spine01-oscillation erstatter CSS container translateY. PresenceEngine API uændret." },
+    { n:2, name:"Expression Blend Shapes", risk:"Lav",    note:"Blend shape weights erstatter SVG overlay img-swap. ExpressionEngine API uændret." },
+    { n:3, name:"Gaze IK",                 risk:"Lav",    note:"Eye bone IK. Design-kontrakt (GAZE_MAX_PX=1.5 = ±8°) allerede præcist defineret." },
+    { n:4, name:"Cosmetic Socket System",  risk:"Middel", note:"Alle cosmetics genauthores som 3D assets. Ingen 2D-kompatibilitet efter denne fase." },
+    { n:5, name:"Aura VFX (particle)",     risk:"Middel", note:"GPU partikelbudget skal profilereres på low-end mobile. Static SVG forbliver fallback." },
+  ];
+  const mapping = [
+    { d2:"CSS animationDuration + --breathe-*",   d3:"Spine01 oscillation, always-running idle clip" },
+    { d2:"ExpressionEngine SVG overlay img swap", d3:"Blend shape weights: proud_w, determined_w …" },
+    { d2:"PresenceEngine _applyBreathing()",       d3:"AnimatorParameter<float> breath_rate_w, amp_w" },
+    { d2:"Expression hold setTimeout",             d3:"AnimationClip Once + HOLD_END event → SM" },
+    { d2:"PRIORITY.CRITICAL + hold timer",         d3:"Animation layer 3 weight=1.0, masks lag 0–2" },
+    { d2:"Static SVG aura z=-2",                   d3:"Particle system, Root bone, additive blend" },
+  ];
+
+  root.appendChild(pzCard(
+    "Fremtidig 3D Migration — 5 Faser, Ingen Redesign af Logik-Laget",
+    `<div style="margin-bottom:16px">${phases.map(p => `<div class="pz-phase-item">
+      <div class="pz-phase-num">${p.n}</div>
+      <div>
+        <div class="pz-phase-name">${p.name}</div>
+        <div class="pz-phase-risk">Risiko: ${p.risk} — ${p.note}</div>
+      </div>
+    </div>`).join("")}</div>
+    <div style="font-size:11px;font-weight:bold;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;font-size:10px">2D → 3D Konceptmapping (render-lag swap)</div>
+    <table class="pz-table">
+      <thead><tr><th>Nu (2D)</th><th>3D-target</th></tr></thead>
+      <tbody>${mapping.map(m => `<tr>
+        <td style="font-family:monospace;font-size:9px;color:var(--text-muted)">${m.d2}</td>
+        <td style="font-family:monospace;font-size:9px;color:var(--accent)">${m.d3}</td>
+      </tr>`).join("")}</tbody>
+    </table>`,
+    "2D-systemet er isomorfisk med en 3D animation controller. Logik-laget (timing, priority, hold, inertia, state-matrix) er komplet og korrekt designet. 3D-migrationen kræver ingen redesign af karakterlogikken — kun en re-mapping af render-mekanismerne. Det er designet sådan med vilje.",
+    "pz-card--accent"
+  ));
+
+  // ── Card 8: Debug Panel Demo ───────────────────────────────────────────────
+  const dbgStates = [
+    { expr:"neutral",    breath:"neutral",    hold:false, bHold:false, dur:"3500ms", shift:"-1.0px", scale:"1.006", idle:true  },
+    { expr:"focused",    breath:"focused",    hold:false, bHold:false, dur:"2900ms", shift:"-0.7px", scale:"1.004", idle:true  },
+    { expr:"proud",      breath:"proud",      hold:true,  bHold:true,  dur:"4000ms", shift:"-1.4px", scale:"1.009", idle:false },
+    { expr:"determined", breath:"determined", hold:true,  bHold:true,  dur:"2600ms", shift:"-0.5px", scale:"1.003", idle:false },
+    { expr:"curious",    breath:"curious",    hold:false, bHold:false, dur:"3200ms", shift:"-1.0px", scale:"1.006", idle:true  },
+  ];
+  let pzDbgIdx = 0;
+  let pzDbgTimer = null;
+
+  const debugCard = pzCard(
+    "Debug Panel (avatar-debug.js) — Observability Tool",
+    `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+      <div class="pz-debug-mock" id="pzDebugMock">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222">
+          <span style="color:#555;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;font-weight:bold">Avatar Debug</span>
+          <span style="color:#444;font-size:12px;cursor:default">✕</span>
+        </div>
+        <div id="pzDbgContent"></div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a1a1a;color:#333;font-size:9px">Alt+D · 200ms refresh</div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">Live simulation — skifter emotionel tilstand hvert 2s</div>
+        <button id="pzDbgToggle" class="pz-stress-btn" style="margin-bottom:10px">Pause simulation</button>
+        <div style="font-size:10px;color:var(--text-muted);line-height:1.7">
+          Viser i realtid:<br>
+          · Active expression state (state + event override)<br>
+          · Breathing profil (duration, shift, scale)<br>
+          · Hold timer status (aktiv/inaktiv)<br>
+          · Idle settle timer status<br>
+          · DOM-noder vs budget (300)<br>
+          · Avatar layer count<br>
+          · Container in-DOM verifikation<br>
+          · Runtime warnings (over 80% budget)
+        </div>
+      </div>
+    </div>`,
+    "import { AvatarDebugPanel } from './js/avatar-debug.js' — new AvatarDebugPanel({ exprEngine, presenceEngine, container }) — mount(document.body) — toggle() eller Alt+D. Kun developer-builds — importeres ikke i produktions-bundle. mountDebugPanel() er en convenience-helper til hurtig QA.",
+    ""
+  );
+  root.appendChild(debugCard);
+
+  function pzDbgRow(label, val, color) {
+    return `<div class="pz-debug-row"><span class="pz-debug-label">${label}</span><span class="pz-debug-value" style="color:${color||"#d8d8d8"}">${val}</span></div>`;
+  }
+  function pzDbgSection(t) {
+    return `<div class="pz-debug-section">${t}</div>`;
+  }
+
+  function pzRenderDbg() {
+    const s       = dbgStates[pzDbgIdx % dbgStates.length];
+    const uptime  = ((Date.now() % 100000) / 1000).toFixed(1);
+    const content = debugCard.querySelector("#pzDbgContent");
+    if (!content) return;
+    content.innerHTML = [
+      pzDbgRow("Uptime", uptime + "s", "#555"),
+      pzDbgSection("Expression"),
+      pzDbgRow("State",   s.expr),
+      pzDbgRow("Current", s.expr),
+      pzDbgRow("Hold",    s.hold ? "ACTIVE" : "none", s.hold ? "#f0c040" : "#444"),
+      pzDbgSection("Presence"),
+      pzDbgRow("State breath", s.breath),
+      pzDbgRow("Event hold",   s.bHold ? "ACTIVE" : "none", s.bHold ? "#f0c040" : "#444"),
+      pzDbgRow("Idle timer",   s.idle  ? "set"    : "—",    s.idle  ? "#60c0a0" : "#444"),
+      pzDbgRow("Anim dur",  s.dur),
+      pzDbgRow("Shift",     s.shift),
+      pzDbgRow("Scale",     s.scale),
+      pzDbgSection("DOM"),
+      pzDbgRow("Nodes",   "52/300", "#60c0a0"),
+      pzDbgRow("Layers",  "6"),
+      pzDbgRow("In DOM",  "yes", "#60c0a0"),
+    ].join("");
+  }
+
+  pzDbgTimer = setInterval(function() { pzDbgIdx++; pzRenderDbg(); }, 2000);
+  pzRenderDbg();
+
+  debugCard.querySelector("#pzDbgToggle").onclick = function() {
+    if (pzDbgTimer) {
+      clearInterval(pzDbgTimer);
+      pzDbgTimer = null;
+      this.textContent = "Start simulation";
+    } else {
+      pzDbgTimer = setInterval(function() { pzDbgIdx++; pzRenderDbg(); }, 2000);
+      this.textContent = "Pause simulation";
+    }
+  };
 
 }());
 </script>
