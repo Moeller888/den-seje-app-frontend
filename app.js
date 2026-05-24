@@ -2,6 +2,7 @@ import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, BASE_SRC } from "./js/avatar-layers.js";
+import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 
 window.__sb = supabase;
 
@@ -51,6 +52,7 @@ function setState(newState) {
 
   uiState = newState;
   logEvent("STATE_CHANGED", { to: newState });
+  exprEngine?.onStateChange(newState);
 }
 
 function setUIState(newState) {
@@ -69,6 +71,8 @@ function setUIState(newState) {
     if (el) el.dataset.state = domState;
   }
 }
+
+let exprEngine = null;
 
 let studentId = null;
 let currentInstanceId = null;
@@ -307,6 +311,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.textContent = "✅ Korrekt!";
       feedback.className = "feedback-correct";
       playSound("equip");
+      exprEngine?.onGameEvent("CORRECT");
       if (clickedBtn) {
         clickedBtn.classList.add("correct-flash");
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("correct-flash"), { once: true });
@@ -328,6 +333,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
       feedback.className = "feedback-error";
       playSound("error");
+      exprEngine?.onGameEvent("INCORRECT");
       if (clickedBtn) {
         clickedBtn.classList.add("incorrect-flash");
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("incorrect-flash"), { once: true });
@@ -353,7 +359,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const prevLevel = calculateLevelFromXP(prevXp);
       const newLevel = calculateLevelFromXP(lastKnownXp);
-      if (newLevel > prevLevel) showLevelUpOverlay(newLevel);
+      if (newLevel > prevLevel) {
+        showLevelUpOverlay(newLevel);
+        exprEngine?.onGameEvent("LEVEL_UP");
+      }
     }
 
     setUIState(UI_STATES.TRANSITIONING);
@@ -530,6 +539,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await fetchProgress();
   await fetchAvatar();
+  const avatarDisplay = document.getElementById("avatar-display");
+  if (avatarDisplay) {
+    try { exprEngine = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+  }
   await loadAndRenderQuestion();
 });
 

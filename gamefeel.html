@@ -291,6 +291,51 @@
     .lci-hier-body { font-size: 11px; color: var(--text-main); line-height: 1.4; }
     .lci-hier-body strong { color: var(--text-bright); }
 
+    /* ── Section 21: Expression Runtime & Emotional Pacing ─ */
+    .rt-grid { display: flex; flex-direction: column; gap: 20px; }
+    .rt-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .rt-card--warn { border-left: 3px solid #ef5350; }
+    .rt-card--good { border-left: 3px solid #66bb6a; }
+    .rt-card--accent { border-top: 3px solid var(--accent); }
+    .rt-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .rt-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .rt-demo-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-bottom: 12px; }
+    .rt-demo-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .rt-demo-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; text-align: center; }
+    .rt-demo-label--bad  { color: #ef5350; }
+    .rt-demo-label--good { color: #66bb6a; }
+    .rt-btn-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .rt-btn { padding: 5px 12px; background: var(--btn-bg); border: 1px solid var(--border-btn); border-radius: 6px; color: var(--text-main); font-size: 11px; cursor: pointer; font-family: inherit; }
+    .rt-btn:hover { background: var(--btn-bg-hover); }
+    .rt-btn--accent { border-color: var(--accent); color: var(--accent); }
+    .rt-status { font-size: 10px; color: var(--text-label); text-align: center; min-height: 14px; margin-top: 2px; font-family: monospace; }
+    .rt-timeline { display: flex; flex-direction: column; gap: 3px; }
+    .rt-tl-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .rt-tl-row:last-child { border-bottom: none; }
+    .rt-tl-state { font-size: 10px; font-weight: bold; color: var(--text-label); width: 140px; flex-shrink: 0; font-family: monospace; }
+    .rt-tl-expr  { font-size: 10px; color: var(--text-main); width: 80px; flex-shrink: 0; }
+    .rt-tl-note  { font-size: 10px; color: var(--text-muted); flex: 1; line-height: 1.4; }
+    .rt-timing-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .rt-timing-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .rt-timing-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .rt-timing-table tr:last-child td { border-bottom: none; }
+    .rt-badge { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .rt-badge--state    { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+    .rt-badge--event    { background: rgba(33,150,243,0.15); color: #42a5f5; }
+    .rt-badge--critical { background: rgba(245,127,23,0.18); color: #f57f17; }
+    .rt-blend-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .rt-blend-zone { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; flex: 1; min-width: 130px; }
+    .rt-blend-title { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+    .rt-blend-body  { font-size: 10px; color: var(--text-main); line-height: 1.4; }
+    .rt-restraint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .rt-restraint-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .rt-restraint-col--bad  { border-left: 3px solid #ef5350; }
+    .rt-restraint-col--good { border-left: 3px solid #66bb6a; }
+    .rt-restraint-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .rt-restraint-heading--bad  { color: #ef5350; }
+    .rt-restraint-heading--good { color: #66bb6a; }
+    .rt-restraint-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+
     /* ── Section 20: Avatar Personality Evolution ──────── */
     .pers-grid { display: flex; flex-direction: column; gap: 20px; }
     .pers-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -491,6 +536,12 @@
 <div class="section">
   <div class="section-title">20 · Avatar Personlighedsevolution — Fra Mannequin til Indbygget Karakter</div>
   <div class="pers-grid" id="persGrid20"></div>
+</div>
+
+<!-- ── Section 21: Expression Runtime & Emotional Pacing ─────── -->
+<div class="section">
+  <div class="section-title">21 · Expression Runtime &amp; Emotional Pacing — Levende karakter, ikke reaktiv maskot</div>
+  <div class="rt-grid" id="rtGrid21"></div>
 </div>
 
 <script type="module">
@@ -3574,6 +3625,620 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>`,
     "Avatar-personlighedssystemet er en platform, ikke en feature. Phase 1 (dette): assets + kontrakt + gamefeel dokumentation. Phase 2: app.js wiring. Phase 3: cross-fade. Phase 4: pose. Hvert trin er uafhængigt og leverer standalone værdi. Arkitekturen understøtter progressiv implementering uden refaktorering.",
     "pers-card"
+  ));
+
+}());
+
+// ── Section 21: Expression Runtime & Emotional Pacing ────────────────────────
+
+(function() {
+  const root = document.getElementById("rtGrid21");
+  if (!root) return;
+
+  const EXPR_PATHS = {
+    neutral:    "/assets/avatar/expressions/expr-neutral.svg",
+    focused:    "/assets/avatar/expressions/expr-focused.svg",
+    proud:      "/assets/avatar/expressions/expr-proud.svg",
+    curious:    "/assets/avatar/expressions/expr-curious.svg",
+    determined: "/assets/avatar/expressions/expr-determined.svg",
+  };
+
+  // Mini expression engine for gamefeel demos — mirrors production logic inline
+  // (No production import needed; keeps gamefeel self-contained)
+  function MiniEngine(container, prefersReducedMotion) {
+    const overlay = document.createElement("img");
+    overlay.className = "avatar-layer";
+    overlay.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0;opacity:1;transition:none";
+    overlay.src = EXPR_PATHS.neutral;
+    overlay.alt = "";
+    container.appendChild(overlay);
+
+    let displayed = "neutral";
+    let stateExpr = "neutral";
+    let eventExpr = null;
+    let eventTimer = null;
+    let fadeTimer = null;
+    const rm = prefersReducedMotion ?? false;
+
+    function crossFade(exprName, fadeDuration) {
+      if (!EXPR_PATHS[exprName]) exprName = "neutral";
+      if (displayed === exprName) return;
+      displayed = exprName;
+      if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
+      if (rm || fadeDuration <= 0) {
+        overlay.style.transition = "none";
+        overlay.src = EXPR_PATHS[exprName];
+        overlay.style.opacity = "1";
+        return;
+      }
+      const half = Math.max(60, Math.round(fadeDuration / 2));
+      overlay.style.transition = `opacity ${half}ms ease-in`;
+      overlay.style.opacity = "0";
+      fadeTimer = setTimeout(() => {
+        fadeTimer = null;
+        overlay.src = EXPR_PATHS[exprName];
+        overlay.style.transition = `opacity ${half}ms ease-out`;
+        overlay.style.opacity = "1";
+      }, half + 8);
+    }
+
+    return {
+      snap(exprName)  { crossFade(exprName, 0); },
+      fade(exprName, ms) { crossFade(exprName, ms ?? 200); },
+      setStateExpr(exprName, fadeMs) {
+        stateExpr = exprName;
+        if (!eventExpr) crossFade(exprName, fadeMs ?? 200);
+      },
+      fireEvent(exprName, holdMs, fadeMs) {
+        if (eventExpr === exprName && eventTimer) return;
+        if (eventTimer) clearTimeout(eventTimer);
+        eventExpr = exprName;
+        crossFade(exprName, fadeMs ?? 220);
+        eventTimer = setTimeout(() => {
+          eventTimer = null;
+          eventExpr = null;
+          crossFade(stateExpr, fadeMs ?? 200);
+        }, holdMs);
+      },
+      getDisplayed() { return displayed; },
+      getStatus() { return eventExpr ? `${eventExpr} (event aktiv)` : stateExpr; },
+    };
+  }
+
+  function rtCard(title, bodyHtml, noteHtml, modifier) {
+    const el = document.createElement("div");
+    el.className = "rt-card" + (modifier ? " " + modifier : "");
+    el.innerHTML = `<div class="rt-card-title">${title}</div>` + bodyHtml
+      + (noteHtml ? `<div class="rt-note">${noteHtml}</div>` : "");
+    return el;
+  }
+
+  function makeAvatarContainer(sizeCls) {
+    const c = document.createElement("div");
+    c.className = "avatar-canvas" + (sizeCls === "lg" ? " lg" : "");
+    const base = document.createElement("img");
+    base.className = "avatar-layer";
+    base.src = BASE;
+    base.style.zIndex = "0";
+    base.alt = "";
+    c.appendChild(base);
+    return c;
+  }
+
+  // ── Card 1: Snap vs Cross-fade ────────────────────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "rt-card";
+    card.innerHTML = `<div class="rt-card-title">Snap vs. Cross-fade — Øjeblikkelig vs. Ambient Overgang</div>`;
+
+    const demoRow = document.createElement("div");
+    demoRow.className = "rt-demo-row";
+
+    // Demo A: Snap (bad)
+    const colA = document.createElement("div");
+    colA.className = "rt-demo-col";
+    const labelA = document.createElement("div");
+    labelA.className = "rt-demo-label rt-demo-label--bad";
+    labelA.textContent = "Snap (fejl)";
+    const canvasA = makeAvatarContainer();
+    const engineA = MiniEngine(canvasA, false);
+    const btnRowA = document.createElement("div");
+    btnRowA.className = "rt-btn-row";
+    const statusA = document.createElement("div");
+    statusA.className = "rt-status";
+    statusA.textContent = "neutral";
+
+    const exprs = ["neutral","focused","proud","curious","determined"];
+    exprs.forEach(e => {
+      const btn = document.createElement("button");
+      btn.className = "rt-btn";
+      btn.textContent = e;
+      btn.onclick = () => { engineA.snap(e); statusA.textContent = e; };
+      btnRowA.appendChild(btn);
+    });
+
+    colA.appendChild(labelA);
+    colA.appendChild(canvasA);
+    colA.appendChild(btnRowA);
+    colA.appendChild(statusA);
+
+    // Demo B: Cross-fade (correct)
+    const colB = document.createElement("div");
+    colB.className = "rt-demo-col";
+    const labelB = document.createElement("div");
+    labelB.className = "rt-demo-label rt-demo-label--good";
+    labelB.textContent = "Cross-fade (korrekt)";
+    const canvasB = makeAvatarContainer();
+    const engineB = MiniEngine(canvasB, false);
+    const btnRowB = document.createElement("div");
+    btnRowB.className = "rt-btn-row";
+    const statusB = document.createElement("div");
+    statusB.className = "rt-status";
+    statusB.textContent = "neutral";
+
+    exprs.forEach(e => {
+      const btn = document.createElement("button");
+      btn.className = "rt-btn";
+      btn.textContent = e;
+      btn.onclick = () => { engineB.fade(e, 200); statusB.textContent = e; };
+      btnRowB.appendChild(btn);
+    });
+
+    colB.appendChild(labelB);
+    colB.appendChild(canvasB);
+    colB.appendChild(btnRowB);
+    colB.appendChild(statusB);
+
+    demoRow.appendChild(colA);
+    demoRow.appendChild(colB);
+    card.appendChild(demoRow);
+    card.innerHTML += `<div class="rt-note">Snap: UI-identisk animation. Udtrykket "teleporterer" — ingen emotionel overgang. Cross-fade (200ms): udtrykkene overlapper i en kort "neutral" midtstat — hjernen registrerer en blid emotionel ændring, ikke en mekanisk state-switch. Reglen: under 300ms er ambient. Over 400ms er teatralsk. Vi bruger 180–280ms afhængig af udtryks-intensitet.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 2: Emotional Pacing — Spam vs Paced ─────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "rt-card";
+    card.innerHTML = `<div class="rt-card-title">Emotionel Kadence — Event-spam vs. Paced Runtime</div>`;
+
+    const demoRow = document.createElement("div");
+    demoRow.className = "rt-demo-row";
+
+    // Demo: Spam (bad)
+    const colA = document.createElement("div");
+    colA.className = "rt-demo-col";
+    const labelA = document.createElement("div");
+    labelA.className = "rt-demo-label rt-demo-label--bad";
+    labelA.textContent = "Ingen pacing (fejl)";
+    const canvasA = makeAvatarContainer();
+    const engineA = MiniEngine(canvasA, false);
+    const btnRowA = document.createElement("div");
+    btnRowA.className = "rt-btn-row";
+    const statusA = document.createElement("div");
+    statusA.className = "rt-status";
+    statusA.textContent = "—";
+
+    const spamBtn = document.createElement("button");
+    spamBtn.className = "rt-btn";
+    spamBtn.textContent = "Fire 4 events (spam)";
+    spamBtn.onclick = () => {
+      const seq = [["proud",100],["determined",100],["proud",100],["curious",100]];
+      statusA.textContent = "Spammer...";
+      seq.forEach(([e, d], i) => {
+        setTimeout(() => {
+          engineA.snap(e);
+          statusA.textContent = e;
+        }, i * 150);
+      });
+    };
+    btnRowA.appendChild(spamBtn);
+    colA.appendChild(labelA);
+    colA.appendChild(canvasA);
+    colA.appendChild(btnRowA);
+    colA.appendChild(statusA);
+
+    // Demo: Paced (correct)
+    const colB = document.createElement("div");
+    colB.className = "rt-demo-col";
+    const labelB = document.createElement("div");
+    labelB.className = "rt-demo-label rt-demo-label--good";
+    labelB.textContent = "Med pacing (korrekt)";
+    const canvasB = makeAvatarContainer();
+    const engineB = MiniEngine(canvasB, false);
+    const btnRowB = document.createElement("div");
+    btnRowB.className = "rt-btn-row";
+    const statusB = document.createElement("div");
+    statusB.className = "rt-status";
+    statusB.textContent = "neutral";
+
+    const pacedBtns = [
+      ["Correct +", () => { engineB.fireEvent("proud", 2200, 260); statusB.textContent = "proud (2.2s hold)"; }],
+      ["Wrong ✗",   () => { engineB.fireEvent("determined", 1400, 220); statusB.textContent = "determined (1.4s)"; }],
+      ["Level-up ✦", () => { engineB.fireEvent("proud", 3000, 280); statusB.textContent = "proud CRITICAL (3s)"; }],
+    ];
+    pacedBtns.forEach(([label, fn]) => {
+      const btn = document.createElement("button");
+      btn.className = "rt-btn";
+      btn.textContent = label;
+      btn.onclick = fn;
+      btnRowB.appendChild(btn);
+    });
+    colB.appendChild(labelB);
+    colB.appendChild(canvasB);
+    colB.appendChild(btnRowB);
+    colB.appendChild(statusB);
+
+    demoRow.appendChild(colA);
+    demoRow.appendChild(colB);
+    card.appendChild(demoRow);
+    card.innerHTML += `<div class="rt-note">Spam: hvert event trigger et øjeblikkeligt ansigts-skift. Avataren virker hyperaktiv og upålidelig — en mascot der over-reagerer på hvert input. Paced: events har hold-timere. Proud holder 2.2s, determined holder 1.4s. Rapid consecutive events (f.eks. to rigtige svar) gen-starter IKKE proud-timeren — den holder sit oprindelige mål. Resultatet: avataren ser ud som om den faktisk føler noget, ikke bare flip-flopper tilfældigt.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 3: Priority System Demo ─────────────────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "rt-card";
+    card.innerHTML = `<div class="rt-card-title">Prioritetssystem — Critical Events Kan Ikke Afbrydes</div>`;
+
+    const demoRow = document.createElement("div");
+    demoRow.className = "rt-demo-row";
+
+    const col = document.createElement("div");
+    col.className = "rt-demo-col";
+    const canvasC = makeAvatarContainer();
+    let stateExprC = "focused";
+    let eventExprC = null;
+    let eventTimerC = null;
+    let criticalActive = false;
+
+    const overlayC = document.createElement("img");
+    overlayC.className = "avatar-layer";
+    overlayC.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0;opacity:1;transition:opacity 260ms ease-in-out";
+    overlayC.src = EXPR_PATHS.focused;
+    overlayC.alt = "";
+    canvasC.appendChild(overlayC);
+
+    const statusC = document.createElement("div");
+    statusC.className = "rt-status";
+    statusC.textContent = "focused (state)";
+
+    function showExprC(exprName, label) {
+      overlayC.style.opacity = "0";
+      setTimeout(() => { overlayC.src = EXPR_PATHS[exprName] ?? EXPR_PATHS.neutral; overlayC.style.opacity = "1"; }, 130);
+      statusC.textContent = label;
+    }
+
+    const btnRowC = document.createElement("div");
+    btnRowC.className = "rt-btn-row";
+
+    const focusedBtn = document.createElement("button");
+    focusedBtn.className = "rt-btn";
+    focusedBtn.textContent = "→ AWAITING_ANSWER";
+    focusedBtn.onclick = () => {
+      stateExprC = "focused";
+      if (!eventExprC) showExprC("focused", "focused (state)");
+    };
+
+    const levelUpBtn = document.createElement("button");
+    levelUpBtn.className = "rt-btn rt-btn--accent";
+    levelUpBtn.textContent = "✦ LEVEL_UP (critical)";
+    levelUpBtn.onclick = () => {
+      if (eventTimerC) clearTimeout(eventTimerC);
+      eventExprC = "proud";
+      criticalActive = true;
+      showExprC("proud", "proud — CRITICAL (3s, kan ikke afbrydes)");
+      eventTimerC = setTimeout(() => {
+        eventExprC = null;
+        criticalActive = false;
+        showExprC(stateExprC, stateExprC + " (state, genoptaget)");
+      }, 3000);
+    };
+
+    const incorrectBtn = document.createElement("button");
+    incorrectBtn.className = "rt-btn";
+    incorrectBtn.textContent = "✗ INCORRECT (during critical)";
+    incorrectBtn.onclick = () => {
+      if (criticalActive) {
+        statusC.textContent = "BLOKERET — critical holder (proud)";
+        return;
+      }
+      if (eventTimerC) clearTimeout(eventTimerC);
+      eventExprC = "determined";
+      showExprC("determined", "determined (1.4s)");
+      eventTimerC = setTimeout(() => {
+        eventExprC = null;
+        showExprC(stateExprC, stateExprC + " (state, genoptaget)");
+      }, 1400);
+    };
+
+    [focusedBtn, levelUpBtn, incorrectBtn].forEach(b => btnRowC.appendChild(b));
+
+    col.appendChild(canvasC);
+    col.appendChild(btnRowC);
+    col.appendChild(statusC);
+    demoRow.appendChild(col);
+
+    const explainCol = document.createElement("div");
+    explainCol.style.cssText = "flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px";
+    explainCol.innerHTML = `
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#f57f17;margin-bottom:4px">CRITICAL priority</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Level-up + achievement. Hold-timeren kan IKKE afbrydes. Ingen event med lavere prioritet kan skifte udtrykket mens critical er aktiv.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#42a5f5;margin-bottom:4px">EVENT priority</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Correct + incorrect. Holder hold-tid. Kan afbrydes af CRITICAL. Kan ikke gen-startes af samme event mens hold-timer kører.</div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:var(--text-label);margin-bottom:4px">STATE priority</div>
+        <div style="font-size:11px;color:var(--text-main);line-height:1.4">Quiz-tilstande (fokuseret, nysgerrig, neutral). Opdateres ved UI_STATE ændringer. Vises automatisk når event-timer udløber.</div>
+      </div>`;
+    demoRow.appendChild(explainCol);
+    card.appendChild(demoRow);
+    card.innerHTML += `<div class="rt-note">Prioritetssystemet sikrer at meningsfulde begivenheder respekteres. En level-up er platformens vigtigste positive signal — den skal ikke kunne afbrydes af et forkert svar et sekund efter. Reglen er simpel: CRITICAL slår alle andre, EVENT slår STATE, STATE er grundlinjen. Hvad der vises er altid: eventExpr ?? stateExpr.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 4: State Machine + Expression Flow ───────────────────────────────
+
+  root.appendChild(rtCard(
+    "State Mapping — Quiz-tilstandsmaskine → Udtryk",
+    `<div class="rt-timeline">
+      <div class="rt-tl-row"><div class="rt-tl-state">IDLE</div><div class="rt-tl-expr">neutral</div><div class="rt-tl-note">Startilstand — varm hvile. Sker kun ved sideindlæsning.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state">LOADING_QUESTION</div><div class="rt-tl-expr">curious</div><div class="rt-tl-note">Nyt spørgsmål ankommer. Asymmetrisk bryn-løft — åbent sind.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state">AWAITING_ANSWER</div><div class="rt-tl-expr">focused</div><div class="rt-tl-note">Eleven ser spørgsmålet og overvejer. Koncentration-signal.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state">SUBMITTING_ANSWER</div><div class="rt-tl-expr">focused</div><div class="rt-tl-note">Svar sendt, venter på server. Fasthed holder — ingen panic.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state">TRANSITIONING</div><div class="rt-tl-expr">neutral</div><div class="rt-tl-note">Pause mellem spørgsmål. Nulstil til varm neutral.</div></div>
+      <div class="rt-tl-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><div class="rt-tl-state" style="color:#66bb6a">EVENT: CORRECT</div><div class="rt-tl-expr" style="color:#66bb6a">proud</div><div class="rt-tl-note">2.2s hold. Derefter: stateExpr (current UI state). Kan ikke gen-startes.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state" style="color:#ef5350">EVENT: INCORRECT</div><div class="rt-tl-expr" style="color:#ef5350">determined</div><div class="rt-tl-note">1.4s hold. Resolve, ikke skuffelse. Vender til stateExpr.</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state" style="color:#f57f17">CRITICAL: LEVEL_UP</div><div class="rt-tl-expr" style="color:#f57f17">proud</div><div class="rt-tl-note">3.0s hold. Kan ikke afbrydes. Vender til stateExpr (ofte curious — ny spørgsmål er ved at loade).</div></div>
+      <div class="rt-tl-row"><div class="rt-tl-state" style="color:#f57f17">CRITICAL: ACHIEVEMENT</div><div class="rt-tl-expr" style="color:#f57f17">proud</div><div class="rt-tl-note">3.2s hold. Kan ikke afbrydes. Samme som level-up.</div></div>
+    </div>`,
+    "Det totale udtryksrum er 5 tilstande men kun 8–9 transitions. Reglen: MINIMUM antal udtryk-skift per spørgsmål-cyklus. En typisk cyklus ser sådan ud: curious (0.4s) → focused (spørgsmålstid) → proud eller determined (event) → neutral (transition) → curious (ny cyklus). 4 skift pr. 30–90 sekunders spørgsmål. Det er ikke for meget.",
+    "rt-card"
+  ));
+
+  // ── Card 5: Timing & Hold Durations ──────────────────────────────────────
+
+  root.appendChild(rtCard(
+    "Timing Budget — Hold, Fade, Cooldown",
+    `<table class="rt-timing-table">
+      <thead><tr>
+        <th>Udtryk</th>
+        <th>Prioritet</th>
+        <th>Hold</th>
+        <th>Fade (total)</th>
+        <th>Trigger</th>
+        <th>Returnerer til</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>neutral</td>
+          <td><span class="rt-badge rt-badge--state">STATE</span></td>
+          <td>—</td><td>240ms</td>
+          <td>IDLE, TRANSITIONING, hold-udløb</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>curious</td>
+          <td><span class="rt-badge rt-badge--state">STATE</span></td>
+          <td>—</td><td>200ms</td>
+          <td>LOADING_QUESTION</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>focused</td>
+          <td><span class="rt-badge rt-badge--state">STATE</span></td>
+          <td>—</td><td>180ms</td>
+          <td>AWAITING_ANSWER, SUBMITTING</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>determined</td>
+          <td><span class="rt-badge rt-badge--event">EVENT</span></td>
+          <td>1400ms</td><td>220ms</td>
+          <td>INCORRECT</td>
+          <td>stateExpr</td>
+        </tr>
+        <tr>
+          <td>proud (event)</td>
+          <td><span class="rt-badge rt-badge--event">EVENT</span></td>
+          <td>2200ms</td><td>260ms</td>
+          <td>CORRECT</td>
+          <td>stateExpr</td>
+        </tr>
+        <tr>
+          <td>proud (critical)</td>
+          <td><span class="rt-badge rt-badge--critical">CRITICAL</span></td>
+          <td>3000ms</td><td>280ms</td>
+          <td>LEVEL_UP</td>
+          <td>stateExpr</td>
+        </tr>
+        <tr>
+          <td>proud (critical)</td>
+          <td><span class="rt-badge rt-badge--critical">CRITICAL</span></td>
+          <td>3200ms</td><td>280ms</td>
+          <td>ACHIEVEMENT_UNLOCK</td>
+          <td>stateExpr</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:var(--text-label);margin-bottom:6px">Timing Rationale</div>
+      <div style="font-size:11px;color:var(--text-main);line-height:1.5">
+        <strong>Fade 180–280ms:</strong> Under human "emotional tracking" threshold (~300ms). Hjernen registrerer ændringen som en naturlig emotionel overgang — ikke en animation.<br>
+        <strong>Hold 1400ms (determined):</strong> Lang nok til at blive registreret (>1s) men kort nok til ikke at føles straf. Studenten er allerede ved at tænke videre.<br>
+        <strong>Hold 2200ms (proud/correct):</strong> Fuldt nok til at kvittere glæden. Afbrydes naturligt af næste spørgsmål's curious-transition.<br>
+        <strong>Hold 3000ms (level-up):</strong> Level-up er platformens vigtigste positive moment. Det fortjener 3 sekunder. Kan ikke afbrydes.<br>
+        <strong>Reduced motion:</strong> Alle fades er 0ms. Udtryk skifter instant. Indholdet er identisk — ingen information går tabt.
+      </div>
+    </div>`,
+    null,
+    "rt-card"
+  ));
+
+  // ── Card 6: Idle Return & State Stability ─────────────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "rt-card";
+    card.innerHTML = `<div class="rt-card-title">Tilstand-stabilitet — Idle Return &amp; State Stability</div>`;
+
+    const demoRow = document.createElement("div");
+    demoRow.className = "rt-demo-row";
+
+    const col = document.createElement("div");
+    col.className = "rt-demo-col";
+    const canvasI = makeAvatarContainer();
+    const engineI = MiniEngine(canvasI, false);
+    const statusI = document.createElement("div");
+    statusI.className = "rt-status";
+    statusI.textContent = "neutral";
+
+    // Simulate quiz flow: idle → curious → focused → correct → proud → (hold) → curious → focused
+    const flowBtn = document.createElement("button");
+    flowBtn.className = "rt-btn";
+    flowBtn.textContent = "▶ Simuler spørgsmåls-cyklus";
+    flowBtn.onclick = () => {
+      flowBtn.disabled = true;
+      const steps = [
+        [0,    "curious",    "STATE", 200,   null],
+        [600,  "focused",    "STATE", 180,   null],
+        [2200, "proud",      "EVENT", 260,   2200],
+        [2500, null,         "level-up critical", 280, 3000], // overlapping
+        [5700, "curious",    "STATE", 200,   null],
+        [6500, "focused",    "STATE", 180,   null],
+      ];
+
+      // Simpler: step-by-step
+      const seq = [
+        [0,     () => { engineI.setStateExpr("curious", 200); statusI.textContent = "curious (LOADING_QUESTION)"; }],
+        [700,   () => { engineI.setStateExpr("focused", 180); statusI.textContent = "focused (AWAITING_ANSWER)"; }],
+        [2200,  () => { engineI.fireEvent("proud", 2200, 260); statusI.textContent = "proud (CORRECT, 2.2s hold)"; }],
+        [4500,  () => { engineI.setStateExpr("curious", 200); statusI.textContent = "curious — hold udløbet, ny cyklus"; }],
+        [5200,  () => { engineI.setStateExpr("focused", 180); statusI.textContent = "focused (AWAITING_ANSWER)"; }],
+        [6800,  () => { flowBtn.disabled = false; statusI.textContent = "Cyklus færdig — tryk for at gentage"; }],
+      ];
+      seq.forEach(([t, fn]) => setTimeout(fn, t));
+    };
+
+    col.appendChild(canvasI);
+    col.appendChild(flowBtn);
+    col.appendChild(statusI);
+    demoRow.appendChild(col);
+
+    const explainI = document.createElement("div");
+    explainI.style.cssText = "flex:1;min-width:200px;font-size:11px;color:var(--text-dim);line-height:1.6";
+    explainI.innerHTML = `
+      <strong style="color:var(--text-main);display:block;margin-bottom:6px">Cyklus-forklaring:</strong>
+      t=0ms: curious (spørgsmål loader)<br>
+      t=700ms: focused (spørgsmål vises)<br>
+      t=2.2s: korrekt svar → proud (2.2s hold)<br>
+      t=4.4s: hold udløber → stateExpr = curious<br>
+      t=5.2s: awaiting → focused<br>
+      <br>
+      <strong style="color:var(--text-main)">Vigtigt:</strong> Hold-timeren og state-transitions er UAFHÆNGIGE. stateExpr opdateres altid ved state-skift. Når hold udløber vises den <em>nuværende</em> stateExpr — ikke den stateExpr der var aktiv da event fandt sted.`;
+    demoRow.appendChild(explainI);
+
+    card.appendChild(demoRow);
+    card.innerHTML += `<div class="rt-note">Stabilitet er systemets vigtigste kvalitet. En ustabil avatar der konstant skifter udtryk er mere forstyrrende end en der aldrig skifter. Systemet er designet til MINIMUM transitions per cyklus. En spørgsmåls-cyklus producerer 3–4 udtryk-skift. Sammenlignet med et adfærdssystem der synkroniserer på hvert event (10–15 skift) er dette drastisk roligere — og dramatisk mere troværdigt.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 7: Reduced Motion & Defensive Fallback ───────────────────────────
+
+  (function() {
+    const card = document.createElement("div");
+    card.className = "rt-card";
+    card.innerHTML = `<div class="rt-card-title">Reduced Motion &amp; Defensiv Fallback</div>`;
+
+    const demoRow = document.createElement("div");
+    demoRow.className = "rt-demo-row";
+
+    // Normal
+    const colN = document.createElement("div");
+    colN.className = "rt-demo-col";
+    const labelN = document.createElement("div");
+    labelN.className = "rt-demo-label rt-demo-label--good";
+    labelN.textContent = "Normal — fade";
+    const canvasN = makeAvatarContainer();
+    const engineN = MiniEngine(canvasN, false);
+    const statusN = document.createElement("div");
+    statusN.className = "rt-status";
+    statusN.textContent = "neutral";
+    const btnN = document.createElement("button");
+    btnN.className = "rt-btn";
+    btnN.textContent = "→ Stolt (fade 260ms)";
+    btnN.onclick = () => { engineN.fade("proud", 260); statusN.textContent = "proud (260ms fade)"; };
+    colN.appendChild(labelN);
+    colN.appendChild(canvasN);
+    colN.appendChild(btnN);
+    colN.appendChild(statusN);
+
+    // Reduced motion
+    const colR = document.createElement("div");
+    colR.className = "rt-demo-col";
+    const labelR = document.createElement("div");
+    labelR.className = "rt-demo-label";
+    labelR.textContent = "Reduced motion — instant";
+    const canvasR = makeAvatarContainer();
+    const engineR = MiniEngine(canvasR, true);
+    const statusR = document.createElement("div");
+    statusR.className = "rt-status";
+    statusR.textContent = "neutral";
+    const btnR = document.createElement("button");
+    btnR.className = "rt-btn";
+    btnR.textContent = "→ Stolt (instant)";
+    btnR.onclick = () => { engineR.snap("proud"); statusR.textContent = "proud (instant)"; };
+    colR.appendChild(labelR);
+    colR.appendChild(canvasR);
+    colR.appendChild(btnR);
+    colR.appendChild(statusR);
+
+    demoRow.appendChild(colN);
+    demoRow.appendChild(colR);
+    card.appendChild(demoRow);
+    card.innerHTML += `<div class="rt-note"><strong style="color:var(--text-main)">Reduced motion (prefers-reduced-motion: reduce):</strong> Alle opacity-transitions deaktiveres. Udtryk skifter instant. Ingen information mistes — udtrykkene er de samme, kun bevægelsen fjernes. Systemet detekterer automatisk via matchMedia().<br><br><strong style="color:var(--text-main)">Defensiv fallback-hierarki:</strong> (1) Ukendt udtryks-navn → "neutral". (2) SVG load-fejl → onerror sætter neutral.svg src. (3) ExpressionEngine constructor fejler → try/catch returnerer null, exprEngine = null, alle engine?.method() kald ignoreres. (4) Container ikke fundet → overlay er null, alle display-kald returnerer tidligt. Avataren forbliver altid funktionel med body.svg.</div>`;
+    root.appendChild(card);
+  }());
+
+  // ── Card 8: Future 3D Blend States ───────────────────────────────────────
+
+  root.appendChild(rtCard(
+    "Fremtidig 3D Blend-State Arkitektur",
+    `<div class="rt-blend-grid">
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">State Layer (i dag: SVG)</div>
+        <div class="rt-blend-body">UI-tilstand → SVG src swap. I 3D: AnimationStateMachine (Idle, Focus, Curious). Blend tree med transition weights. 1:1 mapping til nuværende STATE_EXPR_MAP.</div>
+      </div>
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">Event Layer (i dag: hold timer)</div>
+        <div class="rt-blend-body">Reward events → SVG fade. I 3D: AnimationEvent der sætter et blend-weight (proud_weight: 0→1→0 over hold_ms). Overlay-track i animation controller.</div>
+      </div>
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">Transition Engine (i dag: fade)</div>
+        <div class="rt-blend-body">Opacity cross-fade 180–280ms. I 3D: AnimationBlendTree med transition duration og custom easing. Blending i bone-space — blend shapes for facial rig.</div>
+      </div>
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">Priority System (i dag: JS logic)</div>
+        <div class="rt-blend-body">CRITICAL > EVENT > STATE. I 3D: Animation layer priorities i rig. Layer 0: idle/breathing. Layer 1: state expressions. Layer 2: event overlay. Layer 3: critical events (100% weight = full override).</div>
+      </div>
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">Micro-motion compat. (i dag: container CSS)</div>
+        <div class="rt-blend-body">Vejrtrækning = container CSS transform. Alle lag rider transformationen. I 3D: Breathing = spine_01 bone animation. Expressions = head bone + facial bones. Uafhængige lag. Blender naturligt.</div>
+      </div>
+      <div class="rt-blend-zone">
+        <div class="rt-blend-title">Hold System (i dag: setTimeout)</div>
+        <div class="rt-blend-body">setTimeout(fn, holdMs) → returnerer til stateExpr. I 3D: AnimationEvent "HOLD_END" → StateMachine transition "return_to_idle". Signal-drevet, ikke timer-drevet. Men semantisk identisk.</div>
+      </div>
+    </div>`,
+    "Den nuværende 2D runtime er isomorfisk med en 3D animation controller. Hvert element (state layer, event layer, priority, hold, transitions) har et direkte 3D-ækvivalent. Porteringen kræver ingen redesign af LOGIKKEN — kun en re-mapping af MEKANISMER. Det er designet sådan med vilje.",
+    "rt-card"
   ));
 
 }());
