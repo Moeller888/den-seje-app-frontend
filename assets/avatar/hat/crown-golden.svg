@@ -76,4 +76,7 @@
   <circle cx="52"  cy="29" r="2" fill="#fff9c4" stroke="#9a6200" stroke-width="0.8"/>
   <circle cx="80"  cy="29" r="2" fill="#fff9c4" stroke="#9a6200" stroke-width="0.8"/>
   <circle cx="108" cy="29" r="2" fill="#fff9c4" stroke="#9a6200" stroke-width="0.8"/>
+
+  <!-- Band contact shadow: band bottom presses onto head surface — crown has weight and sits ON the head -->
+  <path d="M 41 37 Q 80 41 119 37" fill="none" stroke="#7a4c00" stroke-width="1.8" opacity="0.22"/>
 </svg>

@@ -28,7 +28,7 @@
   <rect x="56" y="106" width="48" height="58" rx="6" fill="url(#ak-panel)" stroke="#455a64" stroke-width="1.2"/>
   <!-- Panel top highlight -->
   <rect x="56" y="106" width="48" height="7" rx="5" fill="#cfd8dc" opacity="0.35"/>
-  <!-- Heraldic sunburst on chest panel — 8-ray radiant, more identity than a plain cross -->
+  <!-- Heraldic sunburst on chest panel — 8-ray radiant -->
   <!-- Sunburst rays: dark base -->
   <line x1="80" y1="118" x2="80" y2="108" stroke="#263238" stroke-width="1.8" opacity="0.65"/>
   <line x1="80" y1="118" x2="88" y2="110" stroke="#263238" stroke-width="1.4" opacity="0.55"/>
@@ -55,36 +55,57 @@
   <line x1="56" y1="158" x2="104" y2="158" stroke="#455a64" stroke-width="1.1"/>
   <!-- Belt -->
   <rect x="40" y="174" width="80" height="8" rx="4" fill="#1c2a30"/>
-  <!-- Belt edge trim — finished construction, not raw -->
+  <!-- Belt edge trim -->
   <line x1="40" y1="175" x2="120" y2="175" stroke="#37474f" stroke-width="0.7" opacity="0.6"/>
   <!-- Belt buckle -->
   <rect x="74" y="174" width="12" height="8" rx="2" fill="#ffd600"/>
   <circle cx="80" cy="178" r="2.5" fill="#ff8f00"/>
   <circle cx="79" cy="177" r="0.9" fill="white" opacity="0.5"/>
 
-  <!-- Left pauldron — gradient -->
+  <!-- Left pauldron — sits ON the shoulder, not floats above it.
+       Weight shadow below pauldron implies it compresses the cloth beneath. -->
   <ellipse cx="29" cy="106" rx="20" ry="15" fill="url(#ak-plate)" stroke="#263238" stroke-width="1.2"/>
-  <!-- Pauldron rim light — top edge -->
+  <!-- Pauldron rim light — top edge catches upper-left scene light -->
   <path d="M 12 101 Q 29 95 46 101" fill="none" stroke="#b0bec5" stroke-width="0.9" opacity="0.5"/>
+  <!-- Pauldron upper face highlight — the top surface is most directly lit -->
   <ellipse cx="27" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
+  <!-- Pauldron-to-arm transition shadow: armor plate compresses down onto arm structure -->
+  <path d="M 12 114 Q 22 116 34 114" fill="none" stroke="#263238" stroke-width="1.5" opacity="0.35"/>
+  <!-- Pauldron inner edge shadow: occlusion where pauldron meets chest plate -->
+  <path d="M 44 100 Q 46 106 44 114" fill="none" stroke="#263238" stroke-width="2" opacity="0.30"/>
 
   <!-- Right pauldron -->
   <ellipse cx="131" cy="106" rx="20" ry="15" fill="url(#ak-plate)" stroke="#263238" stroke-width="1.2"/>
   <path d="M 114 101 Q 131 95 148 101" fill="none" stroke="#b0bec5" stroke-width="0.9" opacity="0.5"/>
   <ellipse cx="133" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
+  <!-- Right pauldron transition shadow -->
+  <path d="M 148 114 Q 138 116 126 114" fill="none" stroke="#263238" stroke-width="1.5" opacity="0.35"/>
+  <!-- Right pauldron inner edge shadow -->
+  <path d="M 116 100 Q 114 106 116 114" fill="none" stroke="#263238" stroke-width="2" opacity="0.30"/>
 
   <!-- Left arm plate — gradient left→right (light hits left face) -->
   <rect x="12" y="119" width="22" height="52" rx="9" fill="url(#ak-arm)" stroke="#263238" stroke-width="1.2"/>
   <!-- Left arm rim light -->
   <line x1="12" y1="123" x2="12" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
+  <!-- Left arm detail panel -->
   <rect x="15" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
+  <!-- Left arm forearm taper shadow: armor plate narrows toward wrist -->
+  <path d="M 32 148 Q 34 158 33 168" fill="none" stroke="#263238" stroke-width="3" opacity="0.22" stroke-linecap="round"/>
 
   <!-- Right arm plate — mirrored gradient -->
   <rect x="126" y="119" width="22" height="52" rx="9" fill="url(#ak-armR)" stroke="#263238" stroke-width="1.2"/>
   <line x1="148" y1="123" x2="148" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
   <rect x="137" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
+  <!-- Right arm forearm taper shadow -->
+  <path d="M 128 148 Q 126 158 127 168" fill="none" stroke="#263238" stroke-width="3" opacity="0.22" stroke-linecap="round"/>
 
-  <!-- Elbow guards -->
+  <!-- Elbow guards — sit ON the arm plate, implying structural depth -->
   <ellipse cx="23"  cy="150" rx="10" ry="6" fill="url(#ak-plate)" stroke="#263238" stroke-width="0.9"/>
   <ellipse cx="137" cy="150" rx="10" ry="6" fill="url(#ak-plate)" stroke="#263238" stroke-width="0.9"/>
+  <!-- Elbow guard rim light -->
+  <path d="M 14 148 Q 23 143 32 148" fill="none" stroke="#b0bec5" stroke-width="0.7" opacity="0.40"/>
+  <path d="M 128 148 Q 137 143 146 148" fill="none" stroke="#b0bec5" stroke-width="0.7" opacity="0.40"/>
+  <!-- Elbow guard under-shadow: depth below the guard, where it sits on the arm -->
+  <path d="M 14 153 Q 23 156 32 153" fill="none" stroke="#263238" stroke-width="1" opacity="0.28"/>
+  <path d="M 128 153 Q 137 156 146 153" fill="none" stroke="#263238" stroke-width="1" opacity="0.28"/>
 </svg>

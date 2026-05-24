@@ -28,13 +28,24 @@
   <path d="M 10 188 Q 38 184 68 185" fill="none" stroke="#8c1212" stroke-width="0.5" opacity="0.18"/>
   <path d="M 92 185 Q 122 184 150 188" fill="none" stroke="#8c1212" stroke-width="0.5" opacity="0.18"/>
 
-  <!-- Hem edge: dark bottom trim — cloth has a finished edge, not raw -->
+  <!-- Hem edge: dark bottom trim — cloth has a finished edge -->
   <path d="M 10 234 Q 80 241 150 234" fill="none" stroke="#1a0000" stroke-width="2" opacity="0.35"/>
 
-  <!-- Left shoulder crease -->
-  <path d="M 46 90 Q 60 94 72 97" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.4"/>
-  <!-- Right shoulder crease -->
-  <path d="M 114 90 Q 100 94 88 97" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.4"/>
+  <!-- Shoulder creases: cloth compresses and folds at the shoulder attachment point.
+       These imply the shoulder structure beneath the cloth. -->
+  <path d="M 46 90 Q 58 93 70 96" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.40"/>
+  <path d="M 114 90 Q 102 93 90 96" fill="none" stroke="#c03030" stroke-width="0.8" opacity="0.40"/>
+
+  <!-- Shoulder tension shadows: cloth wraps tightly around the shoulder corner.
+       Darker zone at the shoulder-to-back transition implies the shoulder mass below. -->
+  <path d="M 46 90 Q 42 96 44 106 Q 48 108 52 104 Q 56 96 46 90 Z"
+        fill="#5a0000" opacity="0.22"/>
+  <path d="M 114 90 Q 118 96 116 106 Q 112 108 108 104 Q 104 96 114 90 Z"
+        fill="#5a0000" opacity="0.22"/>
+
+  <!-- Cloth rim light on shoulder corners: upper-left light catches the raised shoulder drape -->
+  <path d="M 46 90 Q 44 94 46 100" fill="none" stroke="#d04040" stroke-width="0.9" opacity="0.28"/>
+  <path d="M 114 90 Q 116 94 114 100" fill="none" stroke="#d04040" stroke-width="0.9" opacity="0.22"/>
 
   <!-- Collar — brighter overlay in neck gap zone -->
   <path d="M 46 88 Q 80 76 114 88 Q 106 94 80 96 Q 54 94 46 88 Z" fill="#9e0010"/>

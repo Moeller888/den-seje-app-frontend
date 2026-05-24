@@ -33,6 +33,13 @@
   <!-- Hem edge: dark cosmic trim — finished garment, not raw -->
   <path d="M 10 233 Q 80 237 150 233" fill="none" stroke="#020509" stroke-width="1.5" opacity="0.5"/>
 
+  <!-- Shoulder creases: cloth compresses at shoulder attachment point — implies structure beneath -->
+  <path d="M 46 90 Q 58 93 70 96" fill="none" stroke="#4f46e5" stroke-width="0.7" opacity="0.30"/>
+  <path d="M 114 90 Q 102 93 90 96" fill="none" stroke="#4f46e5" stroke-width="0.7" opacity="0.30"/>
+  <!-- Shoulder tension shadows: cloth wraps around shoulder corner, darker beneath -->
+  <path d="M 46 90 Q 42 96 44 106 Q 48 108 52 104 Q 56 96 46 90 Z" fill="#05001a" opacity="0.20"/>
+  <path d="M 114 90 Q 118 96 116 106 Q 112 108 108 104 Q 104 96 114 90 Z" fill="#05001a" opacity="0.20"/>
+
   <!-- Left nebula cloud — radial glow in lower visible zone -->
   <ellipse cx="22" cy="206" rx="18" ry="28" fill="url(#gx-nebL)"/>
   <!-- Left stars — size hierarchy: anchor → medium → dust -->

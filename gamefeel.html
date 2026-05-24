@@ -551,6 +551,34 @@
     .pz-debug-label { color: #555; }
     .pz-debug-value { font-weight: bold; }
     .pz-debug-section { color: #3a3a3a; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; margin-bottom: 2px; }
+
+    /* ── Section 25: Volumetric Character Evolution ── */
+    .vc-grid { display: flex; flex-direction: column; gap: 20px; }
+    .vc-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .vc-card--accent { border-top: 3px solid var(--accent); }
+    .vc-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .vc-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .vc-compare { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+    .vc-compare-col { flex: 1; min-width: 140px; }
+    .vc-col-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .vc-col-label--before { color: #ef5350; }
+    .vc-col-label--after  { color: #66bb6a; }
+    .vc-svg-frame { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; justify-content: center; }
+    .vc-principle-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .vc-principle-item { font-size: 11px; color: var(--text-dim); padding: 7px 10px; background: var(--bg-main); border-radius: 6px; border-left: 2px solid var(--accent); line-height: 1.5; }
+    .vc-principle-item strong { color: var(--text-main); }
+    .vc-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .vc-table th { text-align: left; color: var(--text-muted); font-weight: normal; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .vc-table td { padding: 5px 6px; border-bottom: 1px solid var(--bg-main); color: var(--text-main); vertical-align: top; }
+    .vc-table tr:last-child td { border-bottom: none; }
+    .vc-toggle-btn { padding: 6px 14px; background: var(--btn-bg); color: var(--text-dim); border: 1px solid var(--border-btn); border-radius: 16px; cursor: pointer; font-size: 11px; font-family: inherit; transition: background 0.12s, color 0.12s; margin-top: 10px; }
+    .vc-toggle-btn:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .vc-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+    .vc-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-dim); }
+    .vc-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .vc-mass-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .vc-mass-label { font-size: 10px; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+    .vc-mass-bar { height: 8px; border-radius: 3px; background: var(--accent); opacity: 0.7; }
   </style>
 </head>
 <body>
@@ -721,6 +749,12 @@
 <div class="section">
   <div class="section-title">24 · Avatar Productionization — Infrastruktur for et Karakter-Platform</div>
   <div class="pz-grid" id="pzGrid24"></div>
+</div>
+
+<!-- ── Section 25: Volumetric Character Evolution ───────────────── -->
+<div class="section">
+  <div class="section-title">25 · Volumetric Character Evolution — Form, Masse og Strukturel Troværdighed</div>
+  <div class="vc-grid" id="vcGrid25"></div>
 </div>
 
 <script type="module">
@@ -5319,6 +5353,331 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       this.textContent = "Pause simulation";
     }
   };
+
+}());
+
+// ── Section 25: Volumetric Character Evolution ────────────────────────────────
+(function () {
+  const root = document.getElementById("vcGrid25");
+  if (!root) return;
+
+  function vcCard(title, body, note, accent) {
+    const d = document.createElement("div");
+    d.className = "vc-card" + (accent ? " vc-card--accent" : "");
+    d.innerHTML = `<div class="vc-card-title">${title}</div>${body}${note ? `<div class="vc-note">${note}</div>` : ""}`;
+    return d;
+  }
+
+  // ── Card 1: Core Philosophy ───────────────────────────────────────────────
+  root.appendChild(vcCard(
+    "Core Philosophy — Form Over Detail",
+    `<ul class="vc-principle-list">
+      <li class="vc-principle-item"><strong>Structural form reads at any scale.</strong> Surface detail disappears. At 52px, a gradient stop is invisible — but a shoulder silhouette reads instantly.</li>
+      <li class="vc-principle-item"><strong>Volume is created by shadows, not shapes.</strong> A correctly placed occlusion shadow does more structural work than an additional element.</li>
+      <li class="vc-principle-item"><strong>Believable mass requires three reads:</strong> light face, shadow face, edge. Two is a graphic. Three is a form.</li>
+      <li class="vc-principle-item"><strong>Overlap implies depth.</strong> If element A visually overlaps element B, A is in front. This spatial logic must be consistent across every loadout.</li>
+      <li class="vc-principle-item"><strong>Restraint is non-negotiable.</strong> Every added form element competes with the question text for student attention. The bar for addition is: "does the character feel more real?" — not "does it look more detailed?"</li>
+      <li class="vc-principle-item"><strong>3D-ready form thinking.</strong> All volume improvements should map to real 3D geometry. 2D tricks that collapse in 3D (perspective false-shading, scale illusions) are avoided.</li>
+    </ul>`,
+    "Goal: the character feels structurally believable and grounded — not more illustrated, not more realistic. The same warmth and readability, but with believable mass.",
+    true
+  ));
+
+  // ── Card 2: Body Construction Audit — flat vs. volumetric ────────────────
+  const auditSVG_flat = `<svg viewBox="0 0 160 200" width="140" height="175" style="display:block">
+    <rect x="48" y="148" width="26" height="48" rx="4" fill="#3e5662" stroke="#172028" stroke-width="0.8"/>
+    <rect x="86" y="148" width="26" height="48" rx="4" fill="#3e5662" stroke="#172028" stroke-width="0.8"/>
+    <rect x="40" y="72" width="80" height="80" rx="4" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <rect x="14" y="78" width="26" height="62" rx="4" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <rect x="120" y="78" width="26" height="62" rx="4" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <circle cx="27" cy="148" r="10" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <circle cx="133" cy="148" r="10" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <circle cx="80" cy="38" r="30" fill="#F5C49A" stroke="#d4956a" stroke-width="0.8"/>
+    <text x="4" y="8" font-size="8" fill="#ef5350" font-family="sans-serif" font-weight="bold">TUBE ARMS</text>
+    <line x1="14" y1="10" x2="14" y2="76" stroke="#ef5350" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.7"/>
+    <text x="44" y="68" font-size="7" fill="#ef5350" font-family="sans-serif">RECT TORSO</text>
+    <text x="46" y="160" font-size="7" fill="#ef5350" font-family="sans-serif">NO HIP</text>
+    <text x="44" y="140" font-size="7" fill="#ef5350" font-family="sans-serif">NO WAIST</text>
+  </svg>`;
+
+  const auditSVG_vol = `<svg viewBox="0 0 160 200" width="140" height="175" style="display:block">
+    <rect x="48" y="148" width="26" height="48" rx="11" fill="#3e5662" stroke="#172028" stroke-width="0.8"/>
+    <line x1="49" y1="152" x2="49" y2="192" stroke="#5c7a8a" stroke-width="0.9" opacity="0.42"/>
+    <path d="M 74 150 L 73 194" stroke="#172028" stroke-width="2.5" opacity="0.28"/>
+    <rect x="86" y="148" width="26" height="48" rx="11" fill="#3e5662" stroke="#172028" stroke-width="0.8"/>
+    <line x1="111" y1="152" x2="111" y2="192" stroke="#5c7a8a" stroke-width="0.9" opacity="0.38"/>
+    <path d="M 86 150 L 87 194" stroke="#172028" stroke-width="2.5" opacity="0.28"/>
+    <rect x="40" y="72" width="80" height="80" rx="10" fill="url(#b2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <ellipse cx="80" cy="88" rx="22" ry="14" fill="#96bece" opacity="0.07"/>
+    <path d="M 40 118 Q 37 130 40 148" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+    <path d="M 120 118 Q 123 130 120 148" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+    <rect x="14" y="78" width="26" height="62" rx="12" fill="url(#b2-aL)" stroke="#2c404a" stroke-width="1"/>
+    <line x1="15" y1="82" x2="15" y2="136" stroke="#96bece" stroke-width="1" opacity="0.38"/>
+    <path d="M 20 79 Q 16 88 18 100 Q 24 98 33 92 Q 40 85 38 79 Q 29 74 20 79 Z" fill="#7aacbe" opacity="0.26"/>
+    <rect x="120" y="78" width="26" height="62" rx="12" fill="url(#b2-aR)" stroke="#2c404a" stroke-width="1"/>
+    <line x1="145" y1="82" x2="145" y2="136" stroke="#96bece" stroke-width="1" opacity="0.35"/>
+    <path d="M 140 79 Q 144 88 142 100 Q 136 98 127 92 Q 120 85 122 79 Q 131 74 140 79 Z" fill="#7aacbe" opacity="0.22"/>
+    <circle cx="27" cy="148" r="10" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <circle cx="133" cy="148" r="10" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <circle cx="80" cy="38" r="30" fill="#F5C49A"/>
+    <path d="M 80 8 A 30 30 0 0 1 80 68 Q 104 62 110 44 Q 114 28 106 16 Q 96 8 80 8 Z" fill="#d4956a" opacity="0.10"/>
+    <path d="M 68 65 Q 80 70 92 65" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.22"/>
+    <text x="2" y="8" font-size="8" fill="#66bb6a" font-family="sans-serif" font-weight="bold">SHOULDER CAP</text>
+    <line x1="14" y1="10" x2="20" y2="76" stroke="#66bb6a" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.7"/>
+    <text x="42" y="115" font-size="7" fill="#66bb6a" font-family="sans-serif">WAIST SHADOW</text>
+    <text x="46" y="165" font-size="7" fill="#66bb6a" font-family="sans-serif">INNER THIGH</text>
+    <text x="42" y="130" font-size="7" fill="#66bb6a" font-family="sans-serif">CHEST PLANE</text>
+    <defs>
+      <linearGradient id="b2-sh" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7096a8"/><stop offset="55%" stop-color="#54717e"/><stop offset="100%" stop-color="#364f5a"/></linearGradient>
+      <linearGradient id="b2-aL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7aacbe"/><stop offset="100%" stop-color="#364f5a"/></linearGradient>
+      <linearGradient id="b2-aR" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#7aacbe"/><stop offset="100%" stop-color="#364f5a"/></linearGradient>
+    </defs>
+  </svg>`;
+
+  root.appendChild(vcCard(
+    "Body Construction Audit — Flat vs. Volumetric",
+    `<div class="vc-compare">
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--before">Before — Geometric Primitives</div>
+        <div class="vc-svg-frame">${auditSVG_flat}</div>
+      </div>
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--after">After — Volumetric Forms</div>
+        <div class="vc-svg-frame">${auditSVG_vol}</div>
+      </div>
+    </div>
+    <div class="vc-legend">
+      <div class="vc-legend-item"><div class="vc-legend-dot" style="background:#ef5350"></div>Flat problem</div>
+      <div class="vc-legend-item"><div class="vc-legend-dot" style="background:#66bb6a"></div>Volume improvement</div>
+      <div class="vc-legend-item"><div class="vc-legend-dot" style="background:#7aacbe"></div>Shoulder cap (new)</div>
+      <div class="vc-legend-item"><div class="vc-legend-dot" style="background:#1c2930"></div>Occlusion shadow (new)</div>
+    </div>`,
+    "The character geometry does not change. The bounding boxes stay identical for cosmetic compatibility. Volume is created by additive shadow and highlight layers within the existing structure.",
+    false
+  ));
+
+  // ── Card 3: Arm Construction — Tube vs. Structured ───────────────────────
+  const armFlat = `<svg viewBox="0 80 60 100" width="80" height="100" style="display:block">
+    <rect x="8" y="85" width="22" height="60" rx="4" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <line x1="9" y1="89" x2="9" y2="141" stroke="#96bece" stroke-width="1" opacity="0.38"/>
+    <rect x="12" y="91" width="6" height="18" rx="3" fill="#9cc4d8" opacity="0.25"/>
+    <circle cx="19" cy="151" r="9" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <text x="2" y="84" font-size="7" fill="#ef5350" font-family="sans-serif">TUBE</text>
+    <text x="2" y="92" font-size="7" fill="#ef5350" font-family="sans-serif">SAME WIDTH</text>
+    <text x="2" y="100" font-size="7" fill="#ef5350" font-family="sans-serif">TOP→WRIST</text>
+  </svg>`;
+
+  const armVol = `<svg viewBox="0 80 60 100" width="80" height="100" style="display:block">
+    <rect x="8" y="85" width="22" height="60" rx="12" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <line x1="9" y1="89" x2="9" y2="141" stroke="#96bece" stroke-width="1" opacity="0.38"/>
+    <!-- Deltoid form path -->
+    <path d="M 8 86 Q 10 84 18 87 Q 24 90 22 101 Q 18 109 10 107 Q 8 99 8 86 Z" fill="#9cc4d8" opacity="0.32"/>
+    <!-- Forearm inner shadow -->
+    <path d="M 27 120 Q 29 132 28 142" fill="none" stroke="#172028" stroke-width="4" opacity="0.18" stroke-linecap="round"/>
+    <!-- Elbow plane -->
+    <path d="M 11 120 Q 19 125 28 120" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
+    <circle cx="19" cy="151" r="9" fill="#E8A87C" stroke="#d4956a" stroke-width="0.8"/>
+    <text x="2" y="84" font-size="7" fill="#66bb6a" font-family="sans-serif">DELTOID</text>
+    <text x="2" y="92" font-size="7" fill="#66bb6a" font-family="sans-serif">FOREARM</text>
+    <text x="2" y="100" font-size="7" fill="#66bb6a" font-family="sans-serif">TAPER</text>
+  </svg>`;
+
+  root.appendChild(vcCard(
+    "Arm Construction — Tube vs. Structured",
+    `<div class="vc-compare">
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--before">Before — Tube arm</div>
+        <div class="vc-svg-frame">${armFlat}</div>
+      </div>
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--after">After — Structured arm</div>
+        <div class="vc-svg-frame">${armVol}</div>
+      </div>
+    </div>
+    <table class="vc-table" style="margin-top:12px">
+      <thead><tr><th>Zone</th><th>Before</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>Shoulder top</td><td style="color:#ef5350">rect corner</td><td style="color:#66bb6a">deltoid path (organic)</td></tr>
+        <tr><td>Upper arm</td><td style="color:#ef5350">uniform width 26px</td><td style="color:#66bb6a">deltoid bulge hint, brightened</td></tr>
+        <tr><td>Elbow</td><td style="color:#ef5350">—</td><td style="color:#66bb6a">plane-change arc (0.14 opacity)</td></tr>
+        <tr><td>Forearm</td><td style="color:#ef5350">uniform, no taper</td><td style="color:#66bb6a">inner shadow → visual narrowing</td></tr>
+        <tr><td>Wrist</td><td style="color:#ef5350">hard rect end</td><td style="color:#66bb6a">tapered into hand circle</td></tr>
+      </tbody>
+    </table>`,
+    "All improvements are additive overlays within the existing bounding rect. Armor plate compatibility is fully preserved — the arm plate sits on top of these layers.",
+    false
+  ));
+
+  // ── Card 4: Torso Flow — Waist Taper & Chest Plane ───────────────────────
+  const torsoFlat = `<svg viewBox="30 85 110 100" width="130" height="100" style="display:block">
+    <rect x="40" y="92" width="80" height="88" rx="4" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <line x1="41" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
+    <line x1="80" y1="97" x2="80" y2="174" stroke="#2c404a" stroke-width="0.8" opacity="0.3"/>
+    <rect x="40" y="174" width="80" height="9" rx="4" fill="#1c2930"/>
+    <text x="34" y="91" font-size="7" fill="#ef5350" font-family="sans-serif">NO CHEST PLANE</text>
+    <text x="34" y="155" font-size="7" fill="#ef5350" font-family="sans-serif">NO WAIST TAPER</text>
+    <text x="34" y="140" font-size="7" fill="#ef5350" font-family="sans-serif">PARALLEL EDGES</text>
+  </svg>`;
+
+  const torsoVol = `<svg viewBox="30 85 110 100" width="130" height="100" style="display:block">
+    <rect x="40" y="92" width="80" height="88" rx="10" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <line x1="41" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
+    <line x1="80" y1="97" x2="80" y2="178" stroke="#2c404a" stroke-width="0.8" opacity="0.3"/>
+    <!-- Chest plane -->
+    <ellipse cx="80" cy="116" rx="22" ry="16" fill="#96bece" opacity="0.07"/>
+    <!-- Pectoral shadow lines -->
+    <path d="M 67 100 Q 72 110 74 120" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.18"/>
+    <path d="M 93 100 Q 88 110 86 120" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.18"/>
+    <!-- Waist side shadows -->
+    <path d="M 40 148 Q 37 163 40 178" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+    <path d="M 120 148 Q 123 163 120 178" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+    <!-- Underarm crease -->
+    <path d="M 40 100 Q 41 110 40 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+    <path d="M 120 100 Q 119 110 120 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+    <rect x="40" y="174" width="80" height="9" rx="4" fill="#1c2930"/>
+    <text x="34" y="91" font-size="7" fill="#66bb6a" font-family="sans-serif">CHEST PLANE</text>
+    <text x="34" y="155" font-size="7" fill="#66bb6a" font-family="sans-serif">WAIST SHADOW</text>
+    <text x="34" y="140" font-size="7" fill="#66bb6a" font-family="sans-serif">UNDERARM CREASE</text>
+  </svg>`;
+
+  root.appendChild(vcCard(
+    "Torso Flow — Chest Plane, Waist Taper, Underarm Crease",
+    `<div class="vc-compare">
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--before">Before — Planar rect</div>
+        <div class="vc-svg-frame">${torsoFlat}</div>
+      </div>
+      <div class="vc-compare-col">
+        <div class="vc-col-label vc-col-label--after">After — Volumetric torso</div>
+        <div class="vc-svg-frame">${torsoVol}</div>
+      </div>
+    </div>`,
+    "Three specific shadows do all the work: (1) the chest plane ellipse brightens the upper chest, implying the sternum area facing the light. (2) The waist shadows create visual concavity at the sides — the torso rect has parallel edges, but the dark strips at the waist read as inward curves. (3) The underarm crease is the most critical: it places the arm in front of the torso at the shoulder axis.",
+    false
+  ));
+
+  // ── Card 5: Overlap Logic — Spatial Hierarchy ─────────────────────────────
+  root.appendChild(vcCard(
+    "Overlap Logic — How Forms Read Spatial Depth",
+    `<table class="vc-table">
+      <thead><tr><th>Relationship</th><th>What creates the read</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td>Head sits ON neck</td><td>Chin AO shadow at head/neck join</td><td>path M 68 77 Q 80 82 92 77, opacity 0.22</td></tr>
+        <tr><td>Arm inserts INTO torso</td><td>Underarm crease + shoulder cap</td><td>Occlusion line at torso edge; deltoid path over both</td></tr>
+        <tr><td>Chest overlaps belt</td><td>Belt z-position below torso bottom</td><td>Belt rect rendered after torso in SVG</td></tr>
+        <tr><td>Pauldron sits ON arm</td><td>Pauldron-to-arm transition shadow</td><td>Dark arc under pauldron bottom edge</td></tr>
+        <tr><td>Crown sits ON head</td><td>Band contact shadow on head surface</td><td>Arc below band bottom, opacity 0.22</td></tr>
+        <tr><td>Cape wraps shoulder</td><td>Shoulder tension shadow in cloth</td><td>Dark triangular fill at shoulder fold zone</td></tr>
+        <tr><td>Elbow guard ON arm</td><td>Guard rim light + under-shadow</td><td>Bright arc above, dark arc below guard</td></tr>
+      </tbody>
+    </table>`,
+    "Every depth relationship must be explicit. If two elements share a visual boundary with no shadow or light-break, they read as coplanar (same depth). The rule: wherever a form is in FRONT, add a shadow BENEATH it at the contact edge.",
+    false
+  ));
+
+  // ── Card 6: Shoulder Integration — The Critical Junction ─────────────────
+  const shoulderSVG = `<svg viewBox="0 85 80 60" width="200" height="140" style="display:block">
+    <!-- Torso rect -->
+    <rect x="40" y="92" width="36" height="50" rx="8" fill="#54717e" stroke="#2c404a" stroke-width="1"/>
+    <!-- Underarm crease -->
+    <path d="M 40 95 Q 41 104 40 114" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+    <!-- Arm rect -->
+    <rect x="14" y="98" width="26" height="45" rx="12" fill="#7aacbe" stroke="#2c404a" stroke-width="1"/>
+    <!-- Arm rim light -->
+    <line x1="15" y1="102" x2="15" y2="139" stroke="#96bece" stroke-width="1" opacity="0.38"/>
+    <!-- Deltoid form -->
+    <path d="M 14 99 Q 16 97 24 100 Q 30 103 28 114 Q 24 122 16 120 Q 14 112 14 99 Z" fill="#9cc4d8" opacity="0.32"/>
+    <!-- Shoulder cap -->
+    <path d="M 20 99 Q 13 108 16 121 Q 23 119 33 112 Q 40 105 38 99 Q 29 94 20 99 Z" fill="#7aacbe" opacity="0.26"/>
+    <path d="M 20 99 Q 29 94 38 99" fill="none" stroke="#a8d4e6" stroke-width="0.8" opacity="0.32"/>
+    <!-- Annotation arrows -->
+    <text x="2" y="102" font-size="6" fill="#ffb74d" font-family="sans-serif">deltoid</text>
+    <line x1="22" y1="102" x2="14" y2="103" stroke="#ffb74d" stroke-width="0.7" marker-end="url(#arr)"/>
+    <text x="2" y="115" font-size="6" fill="#80cbc4" font-family="sans-serif">shoulder</text>
+    <text x="2" y="121" font-size="6" fill="#80cbc4" font-family="sans-serif">cap</text>
+    <line x1="28" y1="108" x2="16" y2="116" stroke="#80cbc4" stroke-width="0.7"/>
+    <text x="42" y="106" font-size="6" fill="#b0bec5" font-family="sans-serif">underarm</text>
+    <text x="42" y="112" font-size="6" fill="#b0bec5" font-family="sans-serif">crease</text>
+    <defs><marker id="arr" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto"><path d="M 0 0 L 4 2 L 0 4 Z" fill="#ffb74d"/></marker></defs>
+  </svg>`;
+
+  root.appendChild(vcCard(
+    "Shoulder Integration — Bridging Arm and Torso",
+    `<div class="vc-svg-frame" style="margin-bottom:12px">${shoulderSVG}</div>
+    <ul class="vc-principle-list">
+      <li class="vc-principle-item"><strong>The problem:</strong> The arm rect (x=14) and the torso rect (x=40) are flush — their edges share the exact same vertical line. This creates a "paper cutout glued to paper cutout" read.</li>
+      <li class="vc-principle-item"><strong>Shoulder cap path:</strong> A rounded organic shape that overlaps both the arm and the torso at the junction. It renders ON TOP of both, creating the impression that a rounded mass (the deltoid) fills the corner between them.</li>
+      <li class="vc-principle-item"><strong>Highlight on cap top:</strong> The topmost edge of the shoulder cap catches the upper-left scene light, making it read as a raised curved surface rather than a flat overlay.</li>
+      <li class="vc-principle-item"><strong>Underarm crease:</strong> The occlusion shadow running down the torso edge at the arm attachment axis tells the eye: "the arm is in FRONT of the torso here." Without this line, they read as coplanar.</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 7: Material Interaction — How Materials Affect Each Other ─────────
+  root.appendChild(vcCard(
+    "Material Interaction — Cloth, Metal, Skin, Membrane",
+    `<table class="vc-table">
+      <thead><tr><th>Material pair</th><th>Interaction rule</th><th>Visual signal</th></tr></thead>
+      <tbody>
+        <tr><td>Armor plate → cloth body</td><td>Hard edge over soft form</td><td>Armor plate has a crisp dark-stroke boundary; cloth recedes behind it</td></tr>
+        <tr><td>Pauldron → arm plate</td><td>Upper form compresses lower</td><td>Shadow arc under pauldron bottom: "the weight of the pauldron is here"</td></tr>
+        <tr><td>Cape cloth → shoulder</td><td>Cloth wraps shoulder corner — tension zone</td><td>Dark triangular fold shadow where cloth bends around the mass</td></tr>
+        <tr><td>Crown band → head skin</td><td>Rigid band presses into soft surface</td><td>Dark arc below band bottom contact line — subtle indentation read</td></tr>
+        <tr><td>Elbow guard → arm</td><td>Hard guard sits on arm cylinder</td><td>Rim light above guard top, dark arc below guard bottom</td></tr>
+        <tr><td>Wing membrane → body</td><td>Membrane stretches from root attachment</td><td>Scale arcs at wing root imply the attachment zone where tension begins</td></tr>
+        <tr><td>Arm → torso</td><td>Arm mass inserts into torso</td><td>Underarm crease at junction axis; shoulder cap fills the corner</td></tr>
+      </tbody>
+    </table>`,
+    "The key insight: materials don't just sit next to each other — they interact. Hard on soft creates a shadow. Cloth on structure creates a tension fold. Rigid on elastic creates a contact indentation. Every material boundary is an opportunity to imply mass.",
+    false
+  ));
+
+  // ── Card 8: Silhouette Preservation — Form Without Bulk ──────────────────
+  const silhouetteDemo = `<svg viewBox="0 0 200 120" width="100%" height="120" style="display:block">
+    <!-- At-scale renders: show silhouettes only -->
+    <!-- LEFT: before -->
+    <text x="10" y="12" font-size="8" fill="#ef5350" font-family="sans-serif" font-weight="bold">BEFORE (52px read)</text>
+    <g transform="translate(10,18) scale(0.33)">
+      <rect x="48" y="138" width="26" height="50" rx="4" fill="#3e5662"/>
+      <rect x="86" y="138" width="26" height="50" rx="4" fill="#3e5662"/>
+      <rect x="40" y="62" width="80" height="80" rx="4" fill="#54717e"/>
+      <rect x="14" y="68" width="26" height="62" rx="4" fill="#54717e"/>
+      <rect x="120" y="68" width="26" height="62" rx="4" fill="#54717e"/>
+      <circle cx="80" cy="30" r="30" fill="#F5C49A"/>
+    </g>
+    <!-- RIGHT: after -->
+    <text x="105" y="12" font-size="8" fill="#66bb6a" font-family="sans-serif" font-weight="bold">AFTER (52px read)</text>
+    <g transform="translate(105,18) scale(0.33)">
+      <rect x="48" y="138" width="26" height="50" rx="11" fill="#3e5662"/>
+      <path d="M 74 140 L 73 186" stroke="#172028" stroke-width="2.5" opacity="0.28"/>
+      <rect x="86" y="138" width="26" height="50" rx="11" fill="#3e5662"/>
+      <path d="M 86 140 L 87 186" stroke="#172028" stroke-width="2.5" opacity="0.28"/>
+      <rect x="40" y="62" width="80" height="80" rx="10" fill="#54717e"/>
+      <path d="M 40 108 Q 37 124 40 145" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+      <path d="M 120 108 Q 123 124 120 145" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+      <rect x="14" y="68" width="26" height="62" rx="12" fill="#54717e"/>
+      <path d="M 20 69 Q 13 78 16 91 Q 23 89 33 82 Q 40 75 38 69 Q 29 64 20 69 Z" fill="#7aacbe" opacity="0.26"/>
+      <rect x="120" y="68" width="26" height="62" rx="12" fill="#54717e"/>
+      <circle cx="80" cy="30" r="30" fill="#F5C49A"/>
+      <path d="M 80 0 A 30 30 0 0 1 80 60 Q 104 54 110 36 Q 114 20 106 8 Q 96 0 80 0 Z" fill="#d4956a" opacity="0.10"/>
+    </g>
+    <!-- Silhouette overlay comparison -->
+    <text x="10" y="104" font-size="7" fill="#555" font-family="sans-serif">← Silhouette unchanged. Interior reads differently.</text>
+  </svg>`;
+
+  root.appendChild(vcCard(
+    "Silhouette Preservation — Same Outline, Better Interior",
+    `<div class="vc-svg-frame" style="margin-bottom:12px">${silhouetteDemo}</div>
+    <ul class="vc-principle-list">
+      <li class="vc-principle-item"><strong>The silhouette is sacred.</strong> At 52px display width, only the outline reads. Every volumetric improvement must preserve the existing outer silhouette exactly.</li>
+      <li class="vc-principle-item"><strong>Volume lives inside the silhouette.</strong> The shoulder cap, waist shadows, forearm taper — all stay within the existing bounding rects. They do not push edges outward.</li>
+      <li class="vc-principle-item"><strong>Cosmetic compatibility is preserved.</strong> Because the base rects have identical bounds, all cosmetic items (armor, cape, masks, crowns) overlay correctly. Nothing overflows or misaligns.</li>
+      <li class="vc-principle-item"><strong>Mobile-scale verification:</strong> At hub scale (~60px width), the shoulder cap reads as a slightly rounded shoulder silhouette. The waist shadow reads as body taper. The inner thigh shadow creates leg separation. All improvements survive the scale reduction.</li>
+    </ul>`,
+    "Core constraint: any volumetric improvement that requires changing the outer bounding geometry is REJECTED. The value is interior structural reads, not silhouette expansion.",
+    true
+  ));
 
 }());
 </script>
