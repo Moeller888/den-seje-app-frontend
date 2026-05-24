@@ -372,6 +372,68 @@
     .pers-restraint-heading--good { color: #66bb6a; }
     .pers-restraint-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
 
+    /* ── Section 23: Character Cohesion & Presence ────── */
+    .cc-grid { display: flex; flex-direction: column; gap: 20px; }
+    .cc-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .cc-card--accent { border-top: 3px solid var(--accent); }
+    .cc-card--warn   { border-left: 3px solid #ef5350; }
+    .cc-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .cc-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .cc-contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .cc-contrast-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .cc-contrast-col--bad  { border-left: 3px solid #ef5350; }
+    .cc-contrast-col--good { border-left: 3px solid #66bb6a; }
+    .cc-contrast-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .cc-contrast-heading--bad  { color: #ef5350; }
+    .cc-contrast-heading--good { color: #66bb6a; }
+    .cc-contrast-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+    .cc-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .cc-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .cc-table td { padding: 5px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    .cc-table tr:last-child td { border-bottom: none; }
+    .cc-bar-wrap { height: 8px; background: var(--bg-main); border-radius: 4px; overflow: hidden; min-width: 80px; }
+    .cc-bar { height: 100%; border-radius: 4px; }
+    .cc-matrix { display: flex; flex-direction: column; gap: 0; margin-bottom: 10px; }
+    .cc-matrix-row { display: flex; align-items: flex-start; gap: 6px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .cc-matrix-row:last-child { border-bottom: none; }
+    .cc-matrix-state { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; width: 80px; flex-shrink: 0; padding-top: 1px; }
+    .cc-matrix-cell  { font-size: 10px; color: var(--text-main); flex: 1; line-height: 1.4; padding-right: 8px; }
+    .cc-matrix-cell--dim { color: var(--text-muted); }
+    .cc-cog-diagram { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; }
+    .cc-cog-svg-wrap { flex-shrink: 0; }
+    .cc-cog-rules { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
+    .cc-cog-rule { font-size: 10px; color: var(--text-main); padding: 5px 8px; background: var(--bg-main); border-radius: 5px; border: 1px solid var(--border); line-height: 1.4; }
+    .cc-cog-rule strong { color: var(--text-bright); display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .cc-timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 10px; }
+    .cc-tl-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .cc-tl-row:last-child { border-bottom: none; }
+    .cc-tl-time { font-size: 9px; font-weight: bold; font-family: monospace; color: var(--accent); width: 60px; flex-shrink: 0; }
+    .cc-tl-event { font-size: 10px; color: var(--text-main); flex: 1; line-height: 1.3; }
+    .cc-tl-tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: bold; text-transform: uppercase; flex-shrink: 0; }
+    .cc-tl-tag--expr  { background: rgba(102,187,106,0.15); color: #66bb6a; }
+    .cc-tl-tag--breath { background: rgba(66,165,245,0.15); color: #42a5f5; }
+    .cc-tl-tag--ui    { background: rgba(255,167,38,0.15); color: #ffa726; }
+    .cc-tl-tag--settle { background: rgba(120,144,156,0.15); color: #78909c; }
+    .cc-aura-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .cc-aura-zone { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; flex: 1; min-width: 140px; }
+    .cc-aura-state { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+    .cc-aura-energy { font-size: 10px; color: var(--text-main); margin-bottom: 3px; line-height: 1.4; }
+    .cc-aura-timing { font-size: 9px; color: var(--text-muted); font-family: monospace; }
+    .cc-harmonic-chart { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .cc-harmonic-row { display: flex; align-items: center; gap: 8px; }
+    .cc-harmonic-label { font-size: 9px; color: var(--text-dim); width: 160px; flex-shrink: 0; text-align: right; font-family: monospace; }
+    .cc-harmonic-bar-wrap { flex: 1; height: 12px; background: var(--bg-main); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+    .cc-harmonic-bar { height: 100%; border-radius: 3px; }
+    .cc-harmonic-val { font-size: 9px; color: var(--text-muted); width: 48px; flex-shrink: 0; font-family: monospace; }
+    .cc-3d-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .cc-3d-zone { background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; flex: 1; min-width: 175px; }
+    .cc-3d-layer { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 3px; }
+    .cc-3d-now { font-size: 9px; color: var(--text-muted); margin-bottom: 2px; }
+    .cc-3d-now em { font-style: normal; color: var(--text-dim); }
+    .cc-3d-future em { font-style: normal; color: #42a5f5; }
+    .cc-3d-future { font-size: 9px; color: var(--text-label); margin-bottom: 4px; }
+    .cc-3d-body { font-size: 10px; color: var(--text-main); line-height: 1.4; }
+
     /* ── Section 22: Attention & Presence System ──────── */
     .ap-grid { display: flex; flex-direction: column; gap: 20px; }
     .ap-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -605,6 +667,12 @@
 <div class="section">
   <div class="section-title">22 · Attention &amp; Presence System — Fra Reaktiv UI til Believable Karakter</div>
   <div class="ap-grid" id="apGrid22"></div>
+</div>
+
+<!-- ── Section 23: Character Cohesion & Presence ───── -->
+<div class="section">
+  <div class="section-title">23 · Character Cohesion &amp; Presence — Ét Samlet System, Ikke Mange Gode Dele</div>
+  <div class="cc-grid" id="ccGrid23"></div>
 </div>
 
 <script type="module">
@@ -4562,6 +4630,271 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>`,
     "Den nuværende 2D tilstedeværelsesmotor er designet isomorfisk med en 3D animation controller. Logikken (state-lag, event-lag, priority, hold, inertia) er identisk. Kun mekanismerne re-mappes. Porteringen kræver ingen redesign — kun oversættelse. Det er designet sådan med vilje.",
     "ap-card--accent"
+  ));
+
+}());
+
+// ── Section 23: Character Cohesion & Presence ─────────────────────────────────
+(function() {
+  const root = document.getElementById("ccGrid23");
+  if (!root) return;
+
+  function card(title, body, note, extra) {
+    const el = document.createElement("div");
+    el.className = "cc-card" + (extra ? " " + extra : "");
+    let h = title ? `<div class="cc-card-title">${title}</div>` : "";
+    h += body;
+    if (note) h += `<div class="cc-note">${note}</div>`;
+    el.innerHTML = h;
+    return el;
+  }
+
+  // ── Card 1: Philosophy — Fragmented vs Cohesive ───────────────────────────
+  root.appendChild(card(
+    "Filosofi — Ét System, Ikke Mange Gode Dele",
+    `<div class="cc-contrast-grid">
+      <div class="cc-contrast-col cc-contrast-col--bad">
+        <div class="cc-contrast-heading cc-contrast-heading--bad">FRAGMENTERET KARAKTER</div>
+        <div class="cc-contrast-item">✗ Expression triggers isoleret</div>
+        <div class="cc-contrast-item">✗ Vejrtrækning kører på eget loop</div>
+        <div class="cc-contrast-item">✗ Aura er et uafhængigt VFX lag</div>
+        <div class="cc-contrast-item">✗ Reward-timing følger UX-logik alene</div>
+        <div class="cc-contrast-item">✗ Brugeren perciperer: "mange effekter"</div>
+      </div>
+      <div class="cc-contrast-col cc-contrast-col--good">
+        <div class="cc-contrast-heading cc-contrast-heading--good">KOHÆRENT KARAKTER</div>
+        <div class="cc-contrast-item">✓ Expression + vejrtrækning synkroniserede hold</div>
+        <div class="cc-contrast-item">✓ Alle timing-værdier harmonisk relaterede</div>
+        <div class="cc-contrast-item">✓ Aura følger karakterens emotionelle tilstand</div>
+        <div class="cc-contrast-item">✓ Reward-rytme = del af karakter-rytmen</div>
+        <div class="cc-contrast-item">✓ Brugeren føler: "én karakter"</div>
+      </div>
+    </div>`,
+    "Kohærence opstår ikke af mere kompleksitet. Den opstår af delt rytme, delt timing, delt emotionel logik. Det kritiske spørgsmål for hvert system: 'Er dette timing en del af det samme nervesystem?' Hvis ikke — juster eller fjern.",
+    "cc-card--accent"
+  ));
+
+  // ── Card 2: Harmonic Timing Chart ────────────────────────────────────────────
+  const MASTER = 2900;
+  const maxMs = 5800;
+  const timingItems = [
+    { label: "Breathing: proud",            ms: 4000, color: "#66bb6a", cat: "breathing" },
+    { label: "Breathing: neutral",          ms: 3500, color: "#78909c", cat: "breathing" },
+    { label: "ACHIEVEMENT hold",            ms: 3200, color: "#ffa726", cat: "hold" },
+    { label: "LEVEL_UP hold",               ms: 3000, color: "#ffa726", cat: "hold" },
+    { label: "Breathing: curious",          ms: 3200, color: "#78909c", cat: "breathing" },
+    { label: "Breathing: focused (master)", ms: 2900, color: "#42a5f5", cat: "master" },
+    { label: "Breathing: determined",       ms: 2600, color: "#ef5350", cat: "breathing" },
+    { label: "Proud hold (EVENT)",          ms: 2200, color: "#ffa726", cat: "hold" },
+    { label: "INCORRECT → next question",   ms: 2000, color: "#ef5350", cat: "reward" },
+    { label: "DETERMINED hold (EVENT)",     ms: 1400, color: "#ef5350", cat: "hold" },
+    { label: "Coin popup animation",        ms:  800, color: "#ffd600", cat: "reward" },
+    { label: "CORRECT → next question",     ms:  600, color: "#66bb6a", cat: "reward" },
+    { label: "Expression: proud fade",      ms:  260, color: "#66bb6a", cat: "transition" },
+  ];
+
+  const chartRows = timingItems.map(t => {
+    const pct = Math.min((t.ms / maxMs) * 100, 100);
+    const isMaster = t.ms === MASTER;
+    return `<div class="cc-harmonic-row">
+      <div class="cc-harmonic-label" style="${isMaster ? 'color:var(--accent);font-weight:bold' : ''}">${t.label}</div>
+      <div class="cc-harmonic-bar-wrap">
+        <div class="cc-harmonic-bar" style="width:${pct}%;background:${t.color};opacity:${isMaster ? 1 : 0.65}"></div>
+        ${isMaster ? `<div style="position:absolute;top:0;left:${pct}%;height:100%;width:1px;background:var(--accent);transform:translateX(-50%)"></div>` : ''}
+      </div>
+      <div class="cc-harmonic-val" style="${isMaster ? 'color:var(--accent)' : ''}">${t.ms}ms</div>
+    </div>`;
+  }).join("");
+
+  root.appendChild(card(
+    "Harmonisk Timing-audit — Alle Systemer, Ét Nervesystem",
+    `<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px">Master-rytme: FOCUSED vejrtrækning = 2900ms (blå linje). Alle andre værdier er afledt.</div>
+    <div class="cc-harmonic-chart">${chartRows}</div>`,
+    "Expression-hold og breathing-inertia er bevidst synkroniserede (1400ms, 2200ms, 3000ms, 3200ms). Kroppen indhenter følelsen på præcis det samme tidspunkt som expression-lageret returnerer. Reward-forsinkelser (600ms, 2000ms) falder naturligt inden for master-rytmen uden at føles tilfældige.",
+    ""
+  ));
+
+  // ── Card 3: Emotional State Matrix ───────────────────────────────────────────
+  const states = [
+    { id: "neutral",    color: "#78909c", expr: "neutral",    br: "3500ms · −1.0px",  aura: "Settled, baseline",    tone: "Rolig, tilgængelig" },
+    { id: "focused",    color: "#42a5f5", expr: "focused",    br: "2900ms · −0.7px",  aura: "Stabil, fast puls",    tone: "Engageret, tænker" },
+    { id: "proud",      color: "#66bb6a", expr: "proud",      br: "4000ms · −1.4px",  aura: "Varm, lettere rigere", tone: "Varm tilfredshed" },
+    { id: "curious",    color: "#ffa726", expr: "curious",    br: "3200ms · −1.0px",  aura: "Opmærksom, stabil",   tone: "Åbent engagement" },
+    { id: "determined", color: "#ef5350", expr: "determined", br: "2600ms · −0.5px",  aura: "Stram, tæt felt",     tone: "Resolut, fremad" },
+  ];
+
+  const matrixRows = states.map(s => `
+    <div class="cc-matrix-row">
+      <div class="cc-matrix-state" style="color:${s.color}">${s.id}</div>
+      <div class="cc-matrix-cell">${s.expr}</div>
+      <div class="cc-matrix-cell">${s.br}</div>
+      <div class="cc-matrix-cell cc-matrix-cell--dim">${s.aura}</div>
+      <div class="cc-matrix-cell cc-matrix-cell--dim">${s.tone}</div>
+    </div>`).join("");
+
+  root.appendChild(card(
+    "Emotionel State Matrix — Ét Svar Per System",
+    `<div style="display:flex;gap:6px;margin-bottom:8px">
+      ${["Tilstand","Expression","Vejrtrækning","Aura (fremtid)","Uddannelseston"].map((h,i) => `<div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-label);${i===0?'width:80px;flex-shrink:0':'flex:1'}">${h}</div>`).join("")}
+    </div>
+    <div class="cc-matrix">${matrixRows}</div>`,
+    "Hvert emotionelt state har ét svar i hvert system. Ingen konflikter, ingen uafhængige beslutninger. Hvis et nyt game event ønskes — find først dens plads i denne matrix. Passer den? Introducer. Passer den ikke — redesign eller fjern.",
+    ""
+  ));
+
+  // ── Card 4: Center of Gravity ─────────────────────────────────────────────────
+  const cogSVG = `<svg width="80" height="140" viewBox="0 0 80 140" style="display:block">
+    <rect x="0" y="0" width="80" height="140" rx="6" fill="var(--bg-main)" stroke="var(--border)" stroke-width="1"/>
+    <!-- crown zone -->
+    <rect x="4" y="4" width="72" height="22" rx="3" fill="#ffd60022" stroke="#ffd60066" stroke-width="1"/>
+    <text x="40" y="16" font-size="7" fill="#ffd600" text-anchor="middle" font-family="monospace">CROWN (v=4)</text>
+    <!-- head zone -->
+    <circle cx="40" cy="38" r="16" fill="#f5c49a22" stroke="#f5c49a55" stroke-width="1"/>
+    <text x="40" y="42" font-size="6" fill="#f5c49a" text-anchor="middle" font-family="monospace">HEAD</text>
+    <!-- COG marker -->
+    <line x1="8" y1="72" x2="72" y2="72" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="40" y="70" font-size="6" fill="var(--accent)" text-anchor="middle" font-family="monospace">COG y=85</text>
+    <!-- torso zone -->
+    <rect x="20" y="58" width="40" height="38" rx="3" fill="#42a5f522" stroke="#42a5f555" stroke-width="1"/>
+    <text x="40" y="80" font-size="6" fill="#42a5f5" text-anchor="middle" font-family="monospace">TORSO (v=2)</text>
+    <!-- back/aura zone -->
+    <rect x="4" y="100" width="72" height="34" rx="3" fill="#78909c22" stroke="#78909c55" stroke-width="1"/>
+    <text x="40" y="118" font-size="7" fill="#78909c" text-anchor="middle" font-family="monospace">BACK (v=3)</text>
+    <text x="40" y="128" font-size="6" fill="#78909c66" text-anchor="middle" font-family="monospace">AURA (v=2)</text>
+  </svg>`;
+
+  const cogRules = [
+    { combo: "Crown + Wings", verdict: "✓", note: "Crown-vægt modvejes af vinge-masse under hoved" },
+    { combo: "Crown + Cape",  verdict: "✓", note: "Cape forankrer den ophøjede krone naturligt" },
+    { combo: "Aura + alt",    verdict: "✓", note: "Aura er ambient — ingen retningsbestemt vægt" },
+    { combo: "Mask + Crown",  verdict: "⚠", note: "Dobbelt ansigt-masse — undgå yderligere back-items" },
+    { combo: "Full legendary",verdict: "✓", note: "Alle slots udfylder silhuetten jævnt — stabil" },
+  ];
+
+  root.appendChild(card(
+    "Tyngdepunktsregler — Visuel Balance i Loadouts",
+    `<div class="cc-cog-diagram">
+      <div class="cc-cog-svg-wrap">${cogSVG}</div>
+      <div class="cc-cog-rules">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">Visuel vægt per slot (1=minimal, 5=tung). Avatarens naturlige COG: y≈85 SVG-koordinater (øvre torso).</div>
+        ${cogRules.map(r => `<div class="cc-cog-rule">
+          <strong>${r.combo} ${r.verdict}</strong>
+          ${r.note}
+        </div>`).join("")}
+      </div>
+    </div>`,
+    "Vejrtræknings-animation på container-niveau = alle lag bevæger sig som én enhed. Ingen relativ displacement mulig — COG holdes konstant uanset loadout. Silhuet-hierarki brydes aldrig af PresenceEngine.",
+    ""
+  ));
+
+  // ── Card 5: Reward State Elegance — LEVEL_UP Timeline ────────────────────────
+  const lvlRows = [
+    { time: "0ms",     event: "API: newLevel > prevLevel detekteret",      tags: ["ui"] },
+    { time: "0ms",     event: "Expression: proud CRITICAL (3000ms hold)",  tags: ["expr"] },
+    { time: "0ms",     event: "Breathing: proud profil (3000ms hold)",     tags: ["breath"] },
+    { time: "0ms",     event: "Level-up overlay vises (opacity 0→1)",      tags: ["ui"] },
+    { time: "0ms",     event: "Coin popup starter (800ms animation)",      tags: ["ui"] },
+    { time: "800ms",   event: "Coin popup afslutter",                      tags: ["settle"] },
+    { time: "2250ms",  event: "Overlay begynder fade-out (250ms)",         tags: ["ui"] },
+    { time: "2500ms",  event: "Overlay forsvundet. Karakter: stadig proud", tags: ["settle"] },
+    { time: "3000ms",  event: "Expression + breathing returnerer til state-lag", tags: ["settle"] },
+    { time: "3500ms+", event: "Karakter er i TRANSITIONING → neutral",    tags: ["settle"] },
+  ];
+
+  const tagMap = {
+    expr:   ["cc-tl-tag--expr",   "EXPR"],
+    breath: ["cc-tl-tag--breath", "BREATH"],
+    ui:     ["cc-tl-tag--ui",     "UI"],
+    settle: ["cc-tl-tag--settle", "SETTLE"],
+  };
+
+  root.appendChild(card(
+    "Reward-elegance — LEVEL_UP Tidslinje (Alle Systemer)",
+    `<div class="cc-timeline">
+      ${lvlRows.map(r => `<div class="cc-tl-row">
+        <div class="cc-tl-time">${r.time}</div>
+        <div class="cc-tl-event">${r.event}</div>
+        ${r.tags.map(t => `<div class="cc-tl-tag ${tagMap[t][0]}">${tagMap[t][1]}</div>`).join("")}
+      </div>`).join("")}
+    </div>`,
+    "Overlayets forsvinden (2500ms) og karakterens pride-tilstand (3000ms) er bevidst forskudt med 500ms. De 500ms 'stille pride' efter overlayets forsvinding er intentionel: karakteren beholder sin tilstand naturligt — ceremoniel, ikke performativ. Reward-oplevelsen er varm og identitetsbekræftende, ikke arcade-agtig.",
+    ""
+  ));
+
+  // ── Card 6: Aura Cohesion ────────────────────────────────────────────────────
+  const auraStates = [
+    { state: "proud",      energy: "Lettere varmere opacity — fortjent varme, ikke gløden",    future: "4000ms puls" },
+    { state: "focused",    energy: "Stabil — puls-rate = vejrtrækning",                         future: "2900ms puls" },
+    { state: "determined", energy: "Strammere felt — ikke mørkere, bare tættere",               future: "2600ms puls" },
+    { state: "curious",    energy: "Uændret — aura observerer neutralt",                         future: "3200ms puls" },
+    { state: "neutral",    energy: "Baseline — fuldt ambient felt, reference",                   future: "3500ms puls" },
+  ];
+
+  root.appendChild(card(
+    "Aura Kohærence — Del af Karakterens Tilstand, Ikke VFX",
+    `<div class="cc-aura-grid">${auraStates.map(a => `
+      <div class="cc-aura-zone">
+        <div class="cc-aura-state">${a.state}</div>
+        <div class="cc-aura-energy">${a.energy}</div>
+        <div class="cc-aura-timing">Fremtidig puls: ${a.future}</div>
+      </div>`).join("")}
+    </div>
+    <p style="font-size:11px;color:var(--text-dim);margin:0">v1 auraer er statiske SVG'er — denne kontrakt gælder for fremtidige animerede varianter. Grænser: max opacity Δ=0.06, max scale Δ=0.03. Animationstiming SKAL bruge breathing-profil MS-værdier. Auraen må aldrig tiltrække opmærksomhed uafhængigt af karakteren.</p>`,
+    "Spørgsmålet der afgør om en aura-animation er korrekt: 'Hvis man fjernede expression og breathing, ville aura-ændringen stadig give mening?' Hvis ja — den er for selvstændig. Aura er akkompagnement, ikke melodi.",
+    ""
+  ));
+
+  // ── Card 7: Breathing as Master Rhythm ───────────────────────────────────────
+  root.appendChild(card(
+    "Vejrtrækning som Master-rytme — Det Fælles Nervesystem",
+    `<div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:10px">FOCUSED vejrtrækning = 2900ms (master-rytme T). Andre timing-værdier som multipla af T:</div>
+      ${[
+        { label: "Coin popup",           ms: 800,  ratio: "T/3.6",   color: "#ffd600" },
+        { label: "CORRECT delay",        ms: 600,  ratio: "T/4.8",   color: "#66bb6a" },
+        { label: "Determined hold",      ms: 1400, ratio: "T/2.1 ≈ T/2", color: "#ef5350" },
+        { label: "Proud hold (EVENT)",   ms: 2200, ratio: "T×0.76",  color: "#66bb6a" },
+        { label: "INCORRECT delay",      ms: 2000, ratio: "T×0.69",  color: "#ef5350" },
+        { label: "FOCUSED breathing",    ms: 2900, ratio: "T (master)", color: "#42a5f5" },
+        { label: "LEVEL_UP hold",        ms: 3000, ratio: "T×1.03",  color: "#ffa726" },
+        { label: "NEUTRAL breathing",    ms: 3500, ratio: "T×1.21",  color: "#78909c" },
+        { label: "PROUD breathing",      ms: 4000, ratio: "T×1.38",  color: "#66bb6a" },
+      ].map(r => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="font-size:9px;color:var(--text-dim);width:140px;flex-shrink:0;text-align:right">${r.label}</div>
+        <div style="font-size:9px;color:${r.ms === 2900 ? 'var(--accent)' : 'var(--text-muted)'};font-family:monospace;width:72px;flex-shrink:0">${r.ratio}</div>
+        <div style="flex:1;height:10px;background:var(--bg-panel);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
+          <div style="height:100%;width:${Math.min(r.ms/4000*100,100)}%;background:${r.color};opacity:${r.ms===2900?1:0.6};border-radius:3px"></div>
+        </div>
+        <div style="font-size:9px;font-family:monospace;color:${r.ms===2900?'var(--accent)':'var(--text-muted)'};width:44px;flex-shrink:0">${r.ms}ms</div>
+      </div>`).join("")}
+    </div>`,
+    "Synkroniseringen er aldrig eksplicit koreografi — den er subbevidst rytme. Brugeren oplever ikke at 'ting sker på slag'. De oplever at karakteren har en indre kontinuitet. Det er den ønskede effekt. Kortere fremtidigt: aura-puls binder til breathing-MS — systemet er da fuldstændigt harmonisk.",
+    ""
+  ));
+
+  // ── Card 8: Future 3D Unified Controller ─────────────────────────────────────
+  const unified3D = [
+    { layer: "Layer 0: Idle Breathing",    now: "CSS animationDuration + --breathe-* vars",      future: "spine_01 oscillation, always-running idle clip",        body: "Kørende under alle andre lag. Amplitude = AnimatorParameter<float> breath_amp. Aldrig slukket." },
+    { layer: "Layer 1: Expression State",  now: "ExpressionEngine SVG overlay",                  future: "Facial blend shapes + head bone rotation per state",     body: "Blend weights: proud_w, determined_w etc. Transition duration = fade_ms. Continuity via inertia." },
+    { layer: "Layer 1.5: Breath Profile",  now: "PresenceEngine setProperty animationDuration",  future: "AnimatorParameter<float> breath_rate_w, breath_amp_w",   body: "Modulerer spine_01 oscillation. Koblet til expression state — body follows emotion." },
+    { layer: "Layer 2: Event Overlay",     now: "Expression hold timer + breathing inertia",     future: "Animation clip Once + HOLD_END → return_to_idle event",  body: "Hold = clip med fixed duration. Breathing og expression hold synkroniserede via shared constant." },
+    { layer: "Layer 3: Critical",          now: "PRIORITY.CRITICAL + CRITICAL_EVENTS config",   future: "Layer weight 1.0 = fuld override af 0–2",                 body: "100% weight masker alle lavere lag. LEVEL_UP proud = 1.0 i 3s. Achievement = 1.0 i 3.2s." },
+    { layer: "Layer 4: Aura (future)",     now: "Static SVG at z=-2",                           future: "Particle system + shader, driven by emotional state",     body: "Aura opacity/scale driver = emotional_state_weight. Pulse timing = breathing_ms. Max Δ=0.06." },
+    { layer: "Layer 5: Gaze IK (future)", now: "ATTENTION_TARGETS contract (uimplementeret)",   future: "Eye bone LookAt IK, max ±8°, world-space GazeTarget_3D",  body: "Smooth blend fra idle-gaze ved inaktivitet. Priority: LEVEL_UP target > QUESTION target." },
+  ];
+
+  root.appendChild(card(
+    "Fremtidig 3D Unified Character Controller",
+    `<div class="cc-3d-grid">${unified3D.map(l => `
+      <div class="cc-3d-zone">
+        <div class="cc-3d-layer">${l.layer}</div>
+        <div class="cc-3d-now">Nu: <em>${l.now}</em></div>
+        <div class="cc-3d-future">3D: <em>${l.future}</em></div>
+        <div class="cc-3d-body">${l.body}</div>
+      </div>`).join("")}
+    </div>`,
+    "Alle nuværende 2D-systemer er isomorfiske med en 3D animation controller. Kohæsionspasset har sikret at logik-laget (timing, priority, hold, inertia, state-matrix) er konsistent og komplet. 3D-migrationen kræver ingen redesign af karakterlogikken — kun en re-mapping af render-mekanismerne.",
+    "cc-card--accent"
   ));
 
 }());
