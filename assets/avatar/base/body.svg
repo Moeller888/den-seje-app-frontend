@@ -122,6 +122,9 @@
   <!-- Hands: same center position (cx=27/133 cy=172) as original — full compat -->
   <circle cx="27" cy="172" r="10" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
   <circle cx="133" cy="172" r="10" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
+  <!-- Hand knuckle plane: faint arc implying underlying bone ridge — solid mass, not floating sphere -->
+  <path d="M 18 170 Q 27 167 36 170" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.16"/>
+  <path d="M 124 170 Q 133 167 142 170" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.16"/>
 
   <!-- Shoulder caps: deltoid mass bridging arm and torso — the most critical junction for
        avoiding "paper-cutout" feel. Rendered on top of arm to show outer shoulder roundness. -->
@@ -163,7 +166,7 @@
         fill="#d4956a" opacity="0.10"/>
 
   <!-- Chin AO shadow: occlusion where head sphere meets neck — removes "floating head" read -->
-  <path d="M 68 77 Q 80 82 92 77" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.22"/>
+  <path d="M 68 77 Q 80 82 92 77" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.27"/>
 
   <!-- Hair: minimal dark cap — headwear items sit at z=5, cover this cleanly.
        Simple enough to read at 60×90px (hub avatar), warm enough to be the default character. -->
@@ -196,6 +199,9 @@
   <!-- Secondary micro-shine: depth and life at any scale -->
   <circle cx="66" cy="48" r="0.9" fill="white" opacity="0.5"/>
   <circle cx="90" cy="48" r="0.9" fill="white" opacity="0.5"/>
+  <!-- Periorbital depth: under-eye shadow at lower orbital rim — implies eye socket anatomy, adds facial structure -->
+  <ellipse cx="68" cy="53" rx="5" ry="1.5" fill="#c07850" opacity="0.09"/>
+  <ellipse cx="92" cy="53" rx="5" ry="1.5" fill="#c07850" opacity="0.09"/>
   <!-- Upper eyelid crease: defines eye plane, readable at 60px -->
   <path d="M 61 43 Q 68 40.5 75 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
   <path d="M 85 43 Q 92 40.5 99 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
@@ -208,7 +214,7 @@
   <!-- Mouth: upward smile — warmth, educational context, approachability -->
   <path d="M 70 66 Q 80 73 90 66" stroke="#c07850" stroke-width="2" fill="none" stroke-linecap="round"/>
 
-  <!-- Cheek blush: soft educational warmth — very low opacity, disappears at small scale gracefully -->
-  <ellipse cx="61" cy="59" rx="9" ry="5.5" fill="#F4A0A0" opacity="0.15"/>
-  <ellipse cx="99" cy="59" rx="9" ry="5.5" fill="#F4A0A0" opacity="0.15"/>
+  <!-- Cheek blush: warm subsurface-scatter read — slightly deeper than pure pink for skin identity -->
+  <ellipse cx="61" cy="59" rx="9" ry="5.5" fill="#e87070" opacity="0.18"/>
+  <ellipse cx="99" cy="59" rx="9" ry="5.5" fill="#e87070" opacity="0.18"/>
 </svg>

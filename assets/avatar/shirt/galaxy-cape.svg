@@ -32,6 +32,8 @@
 
   <!-- Hem edge: dark cosmic trim — finished garment, not raw -->
   <path d="M 10 233 Q 80 237 150 233" fill="none" stroke="#020509" stroke-width="1.5" opacity="0.5"/>
+  <!-- Cosmic cloth catch-light: fabric plane facing viewer — cloth diffuse brightening, no specular -->
+  <ellipse cx="80" cy="178" rx="48" ry="22" fill="#4f46e5" opacity="0.08"/>
 
   <!-- Shoulder creases: cloth compresses at shoulder attachment point — implies structure beneath -->
   <path d="M 46 90 Q 58 93 70 96" fill="none" stroke="#4f46e5" stroke-width="0.7" opacity="0.30"/>

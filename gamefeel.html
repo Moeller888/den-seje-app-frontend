@@ -579,6 +579,31 @@
     .vc-mass-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
     .vc-mass-label { font-size: 10px; color: var(--text-muted); width: 90px; flex-shrink: 0; }
     .vc-mass-bar { height: 8px; border-radius: 3px; background: var(--accent); opacity: 0.7; }
+
+    /* ── Section 26: Surface Material Language ── */
+    .sm-grid { display: flex; flex-direction: column; gap: 20px; }
+    .sm-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .sm-card--accent { border-top: 3px solid #90caf9; }
+    .sm-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .sm-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .sm-compare { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+    .sm-compare-col { flex: 1; min-width: 140px; }
+    .sm-col-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .sm-col-label--before { color: #ef5350; }
+    .sm-col-label--after  { color: #66bb6a; }
+    .sm-svg-frame { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; justify-content: center; }
+    .sm-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .sm-item { font-size: 11px; color: var(--text-dim); padding: 7px 10px; background: var(--bg-main); border-radius: 6px; border-left: 2px solid #90caf9; line-height: 1.5; }
+    .sm-item strong { color: var(--text-main); }
+    .sm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .sm-table th { text-align: left; color: var(--text-muted); font-weight: normal; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sm-table td { padding: 5px 6px; border-bottom: 1px solid var(--bg-main); color: var(--text-main); vertical-align: top; }
+    .sm-table tr:last-child td { border-bottom: none; }
+    .sm-chip { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: bold; letter-spacing: 0.3px; }
+    .sm-chip-metal { background: #37474f; color: #b0bec5; }
+    .sm-chip-cloth { background: #3e0a0a; color: #c03030; }
+    .sm-chip-skin  { background: #5a3520; color: #F5C49A; }
+    .sm-chip-gem   { background: #1a237e; color: #90caf9; }
   </style>
 </head>
 <body>
@@ -755,6 +780,12 @@
 <div class="section">
   <div class="section-title">25 · Volumetric Character Evolution — Form, Masse og Strukturel Troværdighed</div>
   <div class="vc-grid" id="vcGrid25"></div>
+</div>
+
+<!-- ── Section 26: Surface Material Language ─────────────────────── -->
+<div class="section">
+  <div class="section-title">26 · Surface Material Language — Metal, Cloth, Skin og Gem Identity at Scale</div>
+  <div class="sm-grid" id="smGrid26"></div>
 </div>
 
 <script type="module">
@@ -5676,6 +5707,496 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       <li class="vc-principle-item"><strong>Mobile-scale verification:</strong> At hub scale (~60px width), the shoulder cap reads as a slightly rounded shoulder silhouette. The waist shadow reads as body taper. The inner thigh shadow creates leg separation. All improvements survive the scale reduction.</li>
     </ul>`,
     "Core constraint: any volumetric improvement that requires changing the outer bounding geometry is REJECTED. The value is interior structural reads, not silhouette expansion.",
+    true
+  ));
+
+}());
+
+// ── Section 26: Surface Material Language ─────────────────────────────────────
+(function () {
+  const root = document.getElementById("smGrid26");
+  if (!root) return;
+
+  function smCard(title, body, note, accent) {
+    const d = document.createElement("div");
+    d.className = "sm-card" + (accent ? " sm-card--accent" : "");
+    d.innerHTML = `<div class="sm-card-title">${title}</div>${body}${note ? `<div class="sm-note">${note}</div>` : ""}`;
+    return d;
+  }
+
+  // ── Card 1: Four Materials, One Light Source ──────────────────────────────
+  const fourMaterialsSVG = `<svg viewBox="0 0 290 155" width="100%" height="155" style="display:block">
+    <defs>
+      <radialGradient id="sm1-metal" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#cfd8dc"/><stop offset="35%" stop-color="#78909c"/><stop offset="100%" stop-color="#263238"/>
+      </radialGradient>
+      <linearGradient id="sm1-cloth" x1="0%" y1="0%" x2="20%" y2="100%">
+        <stop offset="0%" stop-color="#8c1212"/><stop offset="65%" stop-color="#5a0000"/><stop offset="100%" stop-color="#2e0000"/>
+      </linearGradient>
+      <radialGradient id="sm1-skin" cx="38%" cy="30%" r="68%">
+        <stop offset="0%" stop-color="#F5D4B0"/><stop offset="55%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#c07850"/>
+      </radialGradient>
+      <radialGradient id="sm1-gem" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#42a5f5"/><stop offset="50%" stop-color="#1565c0"/><stop offset="100%" stop-color="#0a237e"/>
+      </radialGradient>
+      <marker id="sm1arr" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto"><path d="M0 0 L4 2 L0 4Z" fill="#90caf9"/></marker>
+    </defs>
+    <text x="4" y="10" font-size="7.5" fill="#90caf9" font-family="sans-serif">☀ same scene light →</text>
+
+    <!-- METAL sphere -->
+    <circle cx="45" cy="67" r="30" fill="url(#sm1-metal)" stroke="#263238" stroke-width="0.5"/>
+    <circle cx="33" cy="52" r="7" fill="white" opacity="0.88"/>
+    <circle cx="31" cy="50" r="3" fill="white"/>
+    <path d="M 16 59 Q 13 67 16 75" fill="none" stroke="#cfd8dc" stroke-width="1.5" opacity="0.68"/>
+    <line x1="18" y1="47" x2="55" y2="83" stroke="#90a4ae" stroke-width="0.7" opacity="0.11"/>
+    <line x1="25" y1="45" x2="65" y2="84" stroke="#90a4ae" stroke-width="0.6" opacity="0.09"/>
+    <text x="24" y="110" font-size="8.5" fill="#b0bec5" font-family="sans-serif" font-weight="bold">METAL</text>
+    <text x="8" y="121" font-size="7" fill="#78909c" font-family="sans-serif">Sharp specular</text>
+    <text x="8" y="130" font-size="7" fill="#607d8b" font-family="sans-serif">Cool rim • Polish arcs</text>
+
+    <!-- CLOTH rectangle -->
+    <rect x="88" y="37" width="60" height="60" rx="3" fill="url(#sm1-cloth)"/>
+    <path d="M 118 40 Q 116 67 117 96" fill="#c03030" opacity="0.11"/>
+    <path d="M 89 59 Q 118 55 148 59" fill="none" stroke="#c03030" stroke-width="0.7" opacity="0.20"/>
+    <ellipse cx="118" cy="63" rx="24" ry="10" fill="#c03030" opacity="0.13"/>
+    <path d="M 88 95 Q 118 99 148 95" fill="none" stroke="#1a0000" stroke-width="2" opacity="0.50"/>
+    <text x="96" y="110" font-size="8.5" fill="#c03030" font-family="sans-serif" font-weight="bold">CLOTH</text>
+    <text x="82" y="121" font-size="7" fill="#8c1212" font-family="sans-serif">No specular • Diffuse only</text>
+    <text x="82" y="130" font-size="7" fill="#7a0000" font-family="sans-serif">Gravity folds • Hem darkness</text>
+
+    <!-- SKIN oval -->
+    <ellipse cx="192" cy="67" rx="27" ry="33" fill="url(#sm1-skin)" stroke="#d4956a" stroke-width="0.4"/>
+    <ellipse cx="181" cy="53" rx="9" ry="7" fill="#F5D4B0" opacity="0.48"/>
+    <ellipse cx="183" cy="80" rx="8" ry="4.5" fill="#e87070" opacity="0.22"/>
+    <ellipse cx="201" cy="80" rx="8" ry="4.5" fill="#e87070" opacity="0.22"/>
+    <ellipse cx="182" cy="64" rx="6.5" ry="2.2" fill="#c07850" opacity="0.14"/>
+    <path d="M 175 95 Q 192 99 209 95" fill="none" stroke="#c07850" stroke-width="2" opacity="0.23"/>
+    <text x="172" y="110" font-size="8.5" fill="#F5C49A" font-family="sans-serif" font-weight="bold">SKIN</text>
+    <text x="157" y="121" font-size="7" fill="#E8A87C" font-family="sans-serif">Warm diffuse • Subsurface</text>
+    <text x="157" y="130" font-size="7" fill="#d4956a" font-family="sans-serif">Orbital depth • Chin AO</text>
+
+    <!-- GEM diamond -->
+    <polygon points="260,37 283,67 260,97 237,67" fill="url(#sm1-gem)" stroke="#0d47a1" stroke-width="0.8"/>
+    <circle cx="248" cy="50" r="5" fill="white" opacity="0.92"/>
+    <circle cx="246" cy="48" r="2.2" fill="white"/>
+    <line x1="260" y1="37" x2="260" y2="97" stroke="#1565c0" stroke-width="0.5" opacity="0.40"/>
+    <line x1="237" y1="67" x2="283" y2="67" stroke="#1565c0" stroke-width="0.5" opacity="0.30"/>
+    <line x1="260" y1="37" x2="237" y2="67" stroke="#90caf9" stroke-width="0.5" opacity="0.40"/>
+    <polygon points="260,37 283,67 260,67" fill="#42a5f5" opacity="0.11"/>
+    <text x="238" y="110" font-size="8.5" fill="#90caf9" font-family="sans-serif" font-weight="bold">GEM</text>
+    <text x="224" y="121" font-size="7" fill="#42a5f5" font-family="sans-serif">Point specular • Facets</text>
+    <text x="224" y="130" font-size="7" fill="#1e88e5" font-family="sans-serif">Deep saturation • Refraction</text>
+
+    <text x="4" y="148" font-size="7" fill="#444" font-family="sans-serif" font-style="italic">Same upper-left light source. Four completely different surface responses. Each material needs its own signal vocabulary.</text>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Four Materials, One Light Source",
+    `<div class="sm-svg-frame">${fourMaterialsSVG}</div>
+    <ul class="sm-list" style="margin-top:12px">
+      <li class="sm-item"><strong>Section 25 established FORM</strong> — volume, mass, structural credibility through shadow placement.</li>
+      <li class="sm-item"><strong>Section 26 establishes SURFACE</strong> — the same form under the same light reads differently based on what it's MADE of.</li>
+      <li class="sm-item"><strong>At 52px, only the dominant signal survives.</strong> Each material gets one primary signal: metal→rim catch-light, cloth→gravity gradient, skin→warmth, gem→primary highlight.</li>
+      <li class="sm-item"><strong>Material identity is non-negotiable.</strong> If the student can't tell armor from cloth at a glance, the visual hierarchy breaks and the character becomes noise rather than character.</li>
+    </ul>`,
+    "Goal: each cosmetic category reads its material type at any display scale. Not photorealism — material identity.",
+    true
+  ));
+
+  // ── Card 2: Metal Identity — Annotated Armor ────────────────────────────
+  const metalAnnotationSVG = `<svg viewBox="0 0 260 195" width="100%" height="195" style="display:block">
+    <defs>
+      <linearGradient id="sm2-plate" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#78909c"/><stop offset="40%" stop-color="#546e7a"/><stop offset="100%" stop-color="#37474f"/>
+      </linearGradient>
+      <linearGradient id="sm2-panel" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8ea8b2"/><stop offset="100%" stop-color="#546e7a"/>
+      </linearGradient>
+      <marker id="sm2arr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#90caf9"/></marker>
+    </defs>
+    <!-- Chest plate -->
+    <rect x="40" y="10" width="110" height="118" rx="10" fill="url(#sm2-plate)" stroke="#263238" stroke-width="1.5"/>
+    <line x1="40" y1="14" x2="40" y2="122" stroke="#b0bec5" stroke-width="0.8" opacity="0.62"/>
+    <rect x="58" y="26" width="74" height="82" rx="6" fill="url(#sm2-panel)" stroke="#455a64" stroke-width="1.2"/>
+    <rect x="58" y="26" width="74" height="7" rx="5" fill="#cfd8dc" opacity="0.38"/>
+    <!-- Polish streaks -->
+    <line x1="48" y1="14" x2="130" y2="126" stroke="#b0bec5" stroke-width="0.6" opacity="0.07"/>
+    <line x1="58" y1="12" x2="148" y2="124" stroke="#b0bec5" stroke-width="0.5" opacity="0.06"/>
+    <line x1="38" y1="20" x2="118" y2="128" stroke="#b0bec5" stroke-width="0.5" opacity="0.06"/>
+    <line x1="95" y1="26" x2="95" y2="98" stroke="#37474f" stroke-width="1.2" opacity="0.60"/>
+    <line x1="58" y1="56" x2="132" y2="56" stroke="#455a64" stroke-width="1.1"/>
+    <line x1="58" y1="74" x2="132" y2="74" stroke="#455a64" stroke-width="1.1"/>
+    <!-- Pauldron partial -->
+    <ellipse cx="22" cy="26" rx="20" ry="15" fill="url(#sm2-plate)" stroke="#263238" stroke-width="1.2"/>
+    <path d="M 4 21 Q 22 14 40 21" fill="none" stroke="#b0bec5" stroke-width="0.9" opacity="0.55"/>
+    <ellipse cx="20" cy="23" rx="12" ry="7" fill="#78909c" opacity="0.40"/>
+    <!-- Pauldron polish arc -->
+    <ellipse cx="22" cy="28" rx="13" ry="8" fill="none" stroke="#b0bec5" stroke-width="0.7" opacity="0.15"/>
+    <!-- Annotations -->
+    <line x1="60" y1="27" x2="22" y2="10" stroke="#90caf9" stroke-width="0.8" marker-end="url(#sm2arr)"/>
+    <text x="2" y="8" font-size="7" fill="#90caf9" font-family="sans-serif">① Panel specular (narrow cone)</text>
+    <text x="142" y="50" font-size="7" fill="#90caf9" font-family="sans-serif">② Rim catch-light</text>
+    <line x1="140" y1="49" x2="42" y2="66" stroke="#90caf9" stroke-width="0.6" marker-end="url(#sm2arr)"/>
+    <text x="142" y="59" font-size="6.5" fill="#607d8b" font-family="sans-serif">(sharp, cool white)</text>
+    <text x="142" y="95" font-size="7" fill="#90caf9" font-family="sans-serif">③ Polish direction</text>
+    <line x1="140" y1="93" x2="90" y2="78" stroke="#90caf9" stroke-width="0.6" marker-end="url(#sm2arr)"/>
+    <text x="142" y="104" font-size="6.5" fill="#607d8b" font-family="sans-serif">(diagonal streaks)</text>
+    <text x="2" y="44" font-size="7" fill="#90caf9" font-family="sans-serif">④ Dome arc</text>
+    <line x1="20" y1="44" x2="22" y2="36" stroke="#90caf9" stroke-width="0.6" marker-end="url(#sm2arr)"/>
+    <text x="2" y="53" font-size="6.5" fill="#607d8b" font-family="sans-serif">(anisotropic polish)</text>
+    <!-- Summary -->
+    <text x="2" y="150" font-size="8" fill="#b0bec5" font-family="sans-serif" font-weight="bold">Metal: four concurrent surface signals</text>
+    <text x="2" y="162" font-size="7" fill="#78909c" font-family="sans-serif">① Narrow specular cone — not a soft glow, a precise hot spot</text>
+    <text x="2" y="172" font-size="7" fill="#78909c" font-family="sans-serif">② Cold-white rim catch-light — metal reflects the cool ambient sky at its edges</text>
+    <text x="2" y="182" font-size="7" fill="#607d8b" font-family="sans-serif">③ Polish direction streaks — the metal was ground and polished; that direction is visible</text>
+    <text x="2" y="192" font-size="7" fill="#607d8b" font-family="sans-serif">④ Anisotropic dome arc — curved surfaces show the polishing went AROUND the form</text>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Metal Surface Identity — Armor Knight",
+    `<div class="sm-svg-frame">${metalAnnotationSVG}</div>`,
+    "Metal reads through OPTICS: it captures and concentrates the scene light. Every metal surface signal is about light collection — a precise location, a cool tone, a directional polish. Remove any signal and it reads as painted matte, not forged steel."
+  ));
+
+  // ── Card 3: Cloth Identity — Annotated Cape ──────────────────────────────
+  const clothAnnotationSVG = `<svg viewBox="0 0 230 215" width="100%" height="215" style="display:block">
+    <defs>
+      <linearGradient id="sm3-cloth" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#8c1212"/><stop offset="30%" stop-color="#6d0000"/><stop offset="100%" stop-color="#2e0000"/>
+      </linearGradient>
+      <marker id="sm3arr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#ff7043"/></marker>
+    </defs>
+    <!-- Cape body -->
+    <path d="M 56 14 L 20 24 L 20 160 Q 90 167 160 160 L 160 24 L 124 14 Q 90 6 56 14 Z" fill="url(#sm3-cloth)"/>
+    <!-- Center fold -->
+    <path d="M 90 19 Q 88 88 89 158 Q 90 162 91 158 Q 92 88 90 19 Z" fill="#a02828" opacity="0.16"/>
+    <!-- Gravity folds -->
+    <path d="M 65 22 Q 56 94 55 158" fill="none" stroke="#c03030" stroke-width="0.7" opacity="0.18"/>
+    <path d="M 115 22 Q 124 94 125 158" fill="none" stroke="#c03030" stroke-width="0.7" opacity="0.18"/>
+    <!-- Tension fold -->
+    <path d="M 22 70 Q 50 64 78 66" fill="none" stroke="#c03030" stroke-width="0.6" opacity="0.22"/>
+    <path d="M 102 66 Q 130 64 158 70" fill="none" stroke="#c03030" stroke-width="0.6" opacity="0.22"/>
+    <!-- Catch-light band -->
+    <ellipse cx="90" cy="100" rx="48" ry="22" fill="#c03030" opacity="0.13"/>
+    <!-- Hem darkness -->
+    <path d="M 20 157 Q 90 164 160 157" fill="none" stroke="#1a0000" stroke-width="2" opacity="0.45"/>
+    <!-- Shoulder tension shadow -->
+    <path d="M 56 14 Q 52 20 54 30 Q 58 32 62 28 Q 66 20 56 14 Z" fill="#5a0000" opacity="0.22"/>
+    <!-- Annotations -->
+    <text x="168" y="22" font-size="7" fill="#ff7043" font-family="sans-serif">① No specular</text>
+    <line x1="166" y1="20" x2="120" y2="22" stroke="#ff7043" stroke-width="0.6" marker-end="url(#sm3arr)"/>
+    <text x="168" y="31" font-size="6.5" fill="#8c1212" font-family="sans-serif">(cloth absorbs light)</text>
+    <text x="168" y="70" font-size="7" fill="#ff7043" font-family="sans-serif">② Gravity folds</text>
+    <line x1="166" y1="68" x2="125" y2="82" stroke="#ff7043" stroke-width="0.6" marker-end="url(#sm3arr)"/>
+    <text x="168" y="79" font-size="6.5" fill="#8c1212" font-family="sans-serif">(vertical weight lines)</text>
+    <text x="168" y="104" font-size="7" fill="#ff7043" font-family="sans-serif">③ Catch-light band</text>
+    <line x1="166" y1="102" x2="138" y2="100" stroke="#ff7043" stroke-width="0.6" marker-end="url(#sm3arr)"/>
+    <text x="168" y="113" font-size="6.5" fill="#8c1212" font-family="sans-serif">(widest plane, soft)</text>
+    <text x="168" y="160" font-size="7" fill="#ff7043" font-family="sans-serif">④ Hem darkness</text>
+    <line x1="166" y1="158" x2="152" y2="157" stroke="#ff7043" stroke-width="0.6" marker-end="url(#sm3arr)"/>
+    <text x="168" y="169" font-size="6.5" fill="#8c1212" font-family="sans-serif">(cloth drapes; hem hangs)</text>
+    <!-- Summary -->
+    <text x="2" y="182" font-size="8" fill="#c03030" font-family="sans-serif" font-weight="bold">Cloth: physics over optics</text>
+    <text x="2" y="193" font-size="7" fill="#8c1212" font-family="sans-serif">Cloth absorbs light — no specular at all. It reads through gravity: folds, drape, hem weight.</text>
+    <text x="2" y="204" font-size="7" fill="#7a0000" font-family="sans-serif">The diffuse catch-light band is the ONLY brightening: broad, warm, centered on the viewer-facing plane.</text>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Cloth Surface Identity — Cape Red",
+    `<div class="sm-svg-frame">${clothAnnotationSVG}</div>`,
+    "Cloth reads through PHYSICS not optics. It has no specular response. Gravity is the vocabulary: folds go down, the hem hangs lowest, the widest plane catches the most ambient light. If it doesn't drape, it doesn't read as cloth."
+  ));
+
+  // ── Card 4: Skin Identity — Annotated Face ───────────────────────────────
+  const skinAnnotationSVG = `<svg viewBox="0 0 230 180" width="100%" height="180" style="display:block">
+    <defs>
+      <linearGradient id="sm4-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+      <marker id="sm4arr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#ffcc80"/></marker>
+    </defs>
+    <!-- Head sphere -->
+    <circle cx="80" cy="60" r="45" fill="url(#sm4-sk)"/>
+    <path d="M 80 15 A 45 45 0 0 1 80 105 Q 116 99 124 78 Q 128 60 120 44 Q 110 28 80 15 Z" fill="#d4956a" opacity="0.10"/>
+    <!-- Soft specular -->
+    <ellipse cx="60" cy="38" rx="14" ry="10" fill="#F5D4B0" opacity="0.42"/>
+    <!-- Cheek subsurface warmth -->
+    <ellipse cx="61" cy="72" rx="12" ry="7" fill="#e87070" opacity="0.19"/>
+    <ellipse cx="99" cy="72" rx="12" ry="7" fill="#e87070" opacity="0.19"/>
+    <!-- Periorbital depth -->
+    <ellipse cx="66" cy="66" rx="7" ry="2.5" fill="#c07850" opacity="0.13"/>
+    <ellipse cx="94" cy="66" rx="7" ry="2.5" fill="#c07850" opacity="0.13"/>
+    <!-- Eyes (reference) -->
+    <ellipse cx="66" cy="59" rx="8" ry="6" fill="white"/>
+    <circle cx="66" cy="59" r="4.5" fill="#6B4226"/>
+    <circle cx="66" cy="59" r="2.5" fill="#180c05"/>
+    <circle cx="68" cy="56.5" r="2" fill="white"/>
+    <ellipse cx="94" cy="59" rx="8" ry="6" fill="white"/>
+    <circle cx="94" cy="59" r="4.5" fill="#6B4226"/>
+    <circle cx="94" cy="59" r="2.5" fill="#180c05"/>
+    <circle cx="96" cy="56.5" r="2" fill="white"/>
+    <!-- Chin AO -->
+    <path d="M 62 98 Q 80 103 98 98" fill="none" stroke="#c07850" stroke-width="3" opacity="0.26"/>
+    <!-- Mouth (reference) -->
+    <path d="M 68 80 Q 80 88 92 80" stroke="#c07850" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- Annotations -->
+    <text x="140" y="36" font-size="7" fill="#ffcc80" font-family="sans-serif">① Soft specular</text>
+    <line x1="138" y1="34" x2="74" y2="40" stroke="#ffcc80" stroke-width="0.6" marker-end="url(#sm4arr)"/>
+    <text x="140" y="45" font-size="6.5" fill="#d4956a" font-family="sans-serif">(warm, broad — not sharp)</text>
+    <text x="140" y="62" font-size="7" fill="#ffcc80" font-family="sans-serif">② Orbital depth</text>
+    <line x1="138" y1="60" x2="100" y2="66" stroke="#ffcc80" stroke-width="0.6" marker-end="url(#sm4arr)"/>
+    <text x="140" y="71" font-size="6.5" fill="#d4956a" font-family="sans-serif">(under-eye socket anatomy)</text>
+    <text x="140" y="80" font-size="7" fill="#ffcc80" font-family="sans-serif">③ Subsurface warmth</text>
+    <line x1="138" y1="78" x2="108" y2="74" stroke="#ffcc80" stroke-width="0.6" marker-end="url(#sm4arr)"/>
+    <text x="140" y="89" font-size="6.5" fill="#d4956a" font-family="sans-serif">(cheek blush = blood vessels)</text>
+    <text x="140" y="100" font-size="7" fill="#ffcc80" font-family="sans-serif">④ Chin AO</text>
+    <line x1="138" y1="98" x2="96" y2="99" stroke="#ffcc80" stroke-width="0.6" marker-end="url(#sm4arr)"/>
+    <text x="140" y="109" font-size="6.5" fill="#d4956a" font-family="sans-serif">(head-neck occlusion zone)</text>
+    <!-- Summary -->
+    <text x="2" y="128" font-size="8" fill="#F5C49A" font-family="sans-serif" font-weight="bold">Skin: warmth + anatomy</text>
+    <text x="2" y="139" font-size="7" fill="#E8A87C" font-family="sans-serif">Skin scatters light internally — subsurface scatter makes cheeks warm under white light.</text>
+    <text x="2" y="149" font-size="7" fill="#d4956a" font-family="sans-serif">Orbital depth creates the impression of eye socket without requiring anatomical geometry.</text>
+    <text x="2" y="159" font-size="7" fill="#c07850" font-family="sans-serif">Chin AO separates head from neck — prevents the "floating head" read at any scale.</text>
+    <text x="2" y="169" font-size="7" fill="#a06030" font-family="sans-serif">Knuckle arc on hands: the same principle — a faint line reads the hand as a solid mass, not a sphere.</text>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Skin Surface Identity — Face and Hands",
+    `<div class="sm-svg-frame">${skinAnnotationSVG}</div>`,
+    "Skin reads through WARMTH and anatomy. It does not have a sharp specular — skin's highlight is broad and warm. The signal vocabulary is: subsurface warmth at cheeks, orbital shadow at eye area, occlusion shadow at junctions."
+  ));
+
+  // ── Card 5: Silver Crown Evolution ───────────────────────────────────────
+  const silverBeforeSVG = `<svg viewBox="0 0 160 50" width="150" height="47" style="display:block">
+    <defs>
+      <linearGradient id="sm5-old" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f5f5f5"/><stop offset="35%" stop-color="#d0d0d0"/><stop offset="70%" stop-color="#9e9e9e"/><stop offset="100%" stop-color="#616161"/>
+      </linearGradient>
+    </defs>
+    <polygon points="40,22 48,2 56,22"    fill="url(#sm5-old)" stroke="#616161" stroke-width="1"/>
+    <polygon points="55,22 63,11 71,22"   fill="url(#sm5-old)" stroke="#616161" stroke-width="1"/>
+    <polygon points="70,22 80,0 90,22"    fill="url(#sm5-old)" stroke="#616161" stroke-width="1.5"/>
+    <polygon points="89,22 97,11 105,22"  fill="url(#sm5-old)" stroke="#616161" stroke-width="1"/>
+    <polygon points="104,22 112,2 120,22" fill="url(#sm5-old)" stroke="#616161" stroke-width="1"/>
+    <circle cx="48" cy="2" r="1.4" fill="white" opacity="0.85"/>
+    <circle cx="63" cy="11" r="1.1" fill="white" opacity="0.75"/>
+    <circle cx="80" cy="0" r="1.6" fill="white" opacity="0.9"/>
+    <circle cx="97" cy="11" r="1.1" fill="white" opacity="0.75"/>
+    <circle cx="112" cy="2" r="1.4" fill="white" opacity="0.85"/>
+    <line x1="40" y1="22" x2="48" y2="2"   stroke="white" stroke-width="0.6" opacity="0.45"/>
+    <line x1="70" y1="22" x2="80" y2="0"   stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="104" y1="22" x2="112" y2="2" stroke="white" stroke-width="0.6" opacity="0.45"/>
+    <rect x="40" y="22" width="80" height="15" rx="3" fill="url(#sm5-old)" stroke="#616161" stroke-width="1.5"/>
+    <rect x="40" y="22" width="80" height="4" rx="2" fill="white" opacity="0.45"/>
+    <line x1="44" y1="30" x2="116" y2="30" stroke="#757575" stroke-width="0.7" stroke-dasharray="3,2.5" opacity="0.55"/>
+    <circle cx="52" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+    <circle cx="80" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+    <circle cx="108" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+  </svg>`;
+
+  const silverAfterSVG = `<svg viewBox="0 0 160 50" width="150" height="47" style="display:block">
+    <defs>
+      <linearGradient id="sm5-new" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f5f5f5"/><stop offset="35%" stop-color="#d0d0d0"/><stop offset="70%" stop-color="#9e9e9e"/><stop offset="100%" stop-color="#616161"/>
+      </linearGradient>
+    </defs>
+    <polygon points="40,22 48,2 56,22"    fill="url(#sm5-new)" stroke="#616161" stroke-width="1"/>
+    <polygon points="55,22 63,11 71,22"   fill="url(#sm5-new)" stroke="#616161" stroke-width="1"/>
+    <polygon points="70,22 80,0 90,22"    fill="url(#sm5-new)" stroke="#616161" stroke-width="1.5"/>
+    <polygon points="89,22 97,11 105,22"  fill="url(#sm5-new)" stroke="#616161" stroke-width="1"/>
+    <polygon points="104,22 112,2 120,22" fill="url(#sm5-new)" stroke="#616161" stroke-width="1"/>
+    <circle cx="48" cy="2" r="1.4" fill="white" opacity="0.85"/>
+    <circle cx="63" cy="11" r="1.1" fill="white" opacity="0.75"/>
+    <circle cx="80" cy="0" r="1.6" fill="white" opacity="0.9"/>
+    <circle cx="97" cy="11" r="1.1" fill="white" opacity="0.75"/>
+    <circle cx="112" cy="2" r="1.4" fill="white" opacity="0.85"/>
+    <line x1="40" y1="22" x2="48" y2="2"   stroke="white" stroke-width="0.6" opacity="0.45"/>
+    <line x1="70" y1="22" x2="80" y2="0"   stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="104" y1="22" x2="112" y2="2" stroke="white" stroke-width="0.6" opacity="0.45"/>
+    <rect x="40" y="22" width="80" height="15" rx="3" fill="url(#sm5-new)" stroke="#616161" stroke-width="1.5"/>
+    <rect x="40" y="22" width="80" height="3" rx="2" fill="white" opacity="0.52"/>
+    <path d="M 42 27 Q 80 25.5 118 27" fill="none" stroke="white" stroke-width="0.5" opacity="0.22"/>
+    <path d="M 42 32 Q 80 30.5 118 32" fill="none" stroke="white" stroke-width="0.4" opacity="0.14"/>
+    <line x1="44" y1="30" x2="116" y2="30" stroke="#757575" stroke-width="0.7" stroke-dasharray="3,2.5" opacity="0.55"/>
+    <circle cx="52" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+    <circle cx="80" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+    <circle cx="108" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+    <path d="M 41 37 Q 80 41 119 37" fill="none" stroke="#424242" stroke-width="1.8" opacity="0.18"/>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Silver Crown — Surface Material Evolution",
+    `<div class="sm-compare">
+      <div class="sm-compare-col">
+        <div class="sm-col-label sm-col-label--before">Before — flat gradient</div>
+        <div class="sm-svg-frame">${silverBeforeSVG}</div>
+        <ul class="sm-list" style="margin-top:8px">
+          <li class="sm-item" style="border-left-color:#ef5350">✗ No contact shadow — crown floats on head</li>
+          <li class="sm-item" style="border-left-color:#ef5350">✗ Flat wide band highlight — plastic read</li>
+          <li class="sm-item" style="border-left-color:#ef5350">✗ No polish direction — undifferentiated surface</li>
+        </ul>
+      </div>
+      <div class="sm-compare-col">
+        <div class="sm-col-label sm-col-label--after">After — metal identity</div>
+        <div class="sm-svg-frame">${silverAfterSVG}</div>
+        <ul class="sm-list" style="margin-top:8px">
+          <li class="sm-item" style="border-left-color:#66bb6a">✓ Contact shadow — crown has weight on head</li>
+          <li class="sm-item" style="border-left-color:#66bb6a">✓ Narrow crisp highlight — polished metal read</li>
+          <li class="sm-item" style="border-left-color:#66bb6a">✓ Circumferential polish arcs — metal was worked</li>
+        </ul>
+      </div>
+    </div>`,
+    "The silver crown previously looked like plastic — the gradient alone could be any smooth material. Three targeted signals (contact shadow, highlight precision, polish direction) establish it unambiguously as metal. Parity with the golden crown is now achieved."
+  ));
+
+  // ── Card 6: Scale Survival — 52px Signal Test ────────────────────────────
+  const scaleSVG = `<svg viewBox="0 0 280 180" width="100%" height="180" style="display:block">
+    <defs>
+      <radialGradient id="sm6-metal" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#cfd8dc"/><stop offset="35%" stop-color="#78909c"/><stop offset="100%" stop-color="#263238"/>
+      </radialGradient>
+      <linearGradient id="sm6-cloth" x1="0%" y1="0%" x2="20%" y2="100%">
+        <stop offset="0%" stop-color="#8c1212"/><stop offset="65%" stop-color="#5a0000"/><stop offset="100%" stop-color="#2e0000"/>
+      </linearGradient>
+      <radialGradient id="sm6-skin" cx="38%" cy="30%" r="68%">
+        <stop offset="0%" stop-color="#F5D4B0"/><stop offset="55%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#c07850"/>
+      </radialGradient>
+      <radialGradient id="sm6-gem" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#42a5f5"/><stop offset="50%" stop-color="#1565c0"/><stop offset="100%" stop-color="#0a237e"/>
+      </radialGradient>
+    </defs>
+    <!-- Column headers -->
+    <text x="2" y="12" font-size="7" fill="#555" font-family="sans-serif">Full size (debug scale)</text>
+    <text x="150" y="12" font-size="7" fill="#90caf9" font-family="sans-serif">52px display scale → surviving signal</text>
+
+    <!-- ROW 1: Metal -->
+    <text x="2" y="38" font-size="7.5" fill="#b0bec5" font-family="sans-serif" font-weight="bold">Metal</text>
+    <!-- Full size metal sphere -->
+    <circle cx="50" cy="55" r="22" fill="url(#sm6-metal)" stroke="#263238" stroke-width="0.5"/>
+    <circle cx="41" cy="43" r="5" fill="white" opacity="0.88"/>
+    <circle cx="40" cy="42" r="2.2" fill="white"/>
+    <path d="M 29 49 Q 27 55 29 61" fill="none" stroke="#cfd8dc" stroke-width="1.2" opacity="0.68"/>
+    <line x1="30" y1="41" x2="58" y2="69" stroke="#90a4ae" stroke-width="0.6" opacity="0.11"/>
+    <!-- 52px metal: tiny -->
+    <g transform="translate(155,44) scale(0.50)">
+      <circle cx="26" cy="22" r="22" fill="url(#sm6-metal)"/>
+      <circle cx="17" cy="10" r="5" fill="white" opacity="0.88"/>
+      <path d="M 5 16 Q 3 22 5 28" fill="none" stroke="#cfd8dc" stroke-width="1.2" opacity="0.68"/>
+    </g>
+    <text x="182" y="57" font-size="7" fill="#78909c" font-family="sans-serif">← rim light survives</text>
+    <text x="182" y="66" font-size="7" fill="#607d8b" font-family="sans-serif">← specular dot survives</text>
+    <text x="182" y="75" font-size="6.5" fill="#546e7a" font-family="sans-serif">streaks invisible at scale</text>
+
+    <!-- ROW 2: Cloth -->
+    <text x="2" y="95" font-size="7.5" fill="#c03030" font-family="sans-serif" font-weight="bold">Cloth</text>
+    <rect x="28" y="100" width="44" height="38" rx="3" fill="url(#sm6-cloth)"/>
+    <path d="M 50" y1="102" x2="50" y2="137" fill="#c03030" opacity="0.11"/>
+    <ellipse cx="50" cy="115" rx="17" ry="7" fill="#c03030" opacity="0.13"/>
+    <path d="M 28 136 Q 50 140 72 136" fill="none" stroke="#1a0000" stroke-width="1.8" opacity="0.50"/>
+    <!-- 52px cloth: tiny -->
+    <g transform="translate(153,98) scale(0.50)">
+      <rect x="0" y="0" width="44" height="38" rx="3" fill="url(#sm6-cloth)"/>
+      <path d="M 0 36 Q 22 40 44 36" fill="none" stroke="#1a0000" stroke-width="1.8" opacity="0.50"/>
+    </g>
+    <text x="182" y="115" font-size="7" fill="#8c1212" font-family="sans-serif">← gradient falloff survives</text>
+    <text x="182" y="124" font-size="7" fill="#7a0000" font-family="sans-serif">← hem darkness survives</text>
+    <text x="182" y="133" font-size="6.5" fill="#5a0000" font-family="sans-serif">individual folds invisible</text>
+
+    <!-- ROW 3: Skin -->
+    <text x="2" y="153" font-size="7.5" fill="#F5C49A" font-family="sans-serif" font-weight="bold">Skin</text>
+    <ellipse cx="50" cy="166" rx="20" ry="14" fill="url(#sm6-skin)"/>
+    <ellipse cx="44" cy="157" rx="6" ry="4" fill="#F5D4B0" opacity="0.48"/>
+    <ellipse cx="44" cy="169" rx="6" ry="3.5" fill="#e87070" opacity="0.22"/>
+    <!-- 52px skin: tiny -->
+    <g transform="translate(153,154) scale(0.50)">
+      <ellipse cx="26" cy="22" rx="20" ry="14" fill="url(#sm6-skin)"/>
+      <ellipse cx="20" cy="14" rx="6" ry="4" fill="#F5D4B0" opacity="0.48"/>
+      <ellipse cx="22" cy="26" rx="5" ry="3" fill="#e87070" opacity="0.22"/>
+    </g>
+    <text x="182" y="163" font-size="7" fill="#E8A87C" font-family="sans-serif">← warm tone survives</text>
+    <text x="182" y="172" font-size="7" fill="#d4956a" font-family="sans-serif">← cheek blush survives</text>
+    <text x="182" y="181" font-size="6.5" fill="#c07850" font-family="sans-serif">orbital shadow invisible</text>
+  </svg>`;
+
+  root.appendChild(smCard(
+    "Scale Survival Test — What Reads at 52px",
+    `<div class="sm-svg-frame">${scaleSVG}</div>
+    <ul class="sm-list" style="margin-top:12px">
+      <li class="sm-item"><strong>Metal:</strong> One specular dot and one rim catch-light are the only survivors. The polish direction streaks are invisible — they only contribute at debug scale. Design for the surviving signals.</li>
+      <li class="sm-item"><strong>Cloth:</strong> The gradient falloff and hem darkness survive. Individual fold lines disappear. The catch-light band reads as a subtle brightening in the cloth's mid-section.</li>
+      <li class="sm-item"><strong>Skin:</strong> Warm tone and cheek blush survive. The orbital depth is invisible at 52px — it only operates at 120px+ (student detail view, shop preview). Worth keeping for mid-scale.</li>
+      <li class="sm-item"><strong>Gem:</strong> Only the primary specular highlight dot survives. The facet lines and deep saturation collapse into a colored blur. The highlight makes it a gem rather than a painted dot.</li>
+    </ul>`,
+    "The design constraint: each material must have ONE signal that survives 52px. All other signals are bonuses that read at larger display scales. Build the 52px signal first, then layer the rest."
+  ));
+
+  // ── Card 7: Material Signal Matrix ────────────────────────────────────────
+  root.appendChild(smCard(
+    "Material Signal Matrix — Reference",
+    `<table class="sm-table">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Specular quality</th>
+          <th>Highlight color</th>
+          <th>Polish direction</th>
+          <th>Primary signal at 52px</th>
+          <th>Secondary signals</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="sm-chip sm-chip-metal">Metal</span></td>
+          <td>Sharp, narrow cone</td>
+          <td>Cool white / warm gold</td>
+          <td>Anisotropic arcs + diagonal streaks</td>
+          <td>Rim catch-light edge</td>
+          <td>Specular dot, dome arc, contact shadow</td>
+        </tr>
+        <tr>
+          <td><span class="sm-chip sm-chip-cloth">Cloth</span></td>
+          <td>None</td>
+          <td>N/A (diffuse only)</td>
+          <td>Gravity folds (vertical)</td>
+          <td>Gradient darkness to hem</td>
+          <td>Catch-light band, shoulder tension shadow</td>
+        </tr>
+        <tr>
+          <td><span class="sm-chip sm-chip-skin">Skin</span></td>
+          <td>Soft, broad</td>
+          <td>Warm white</td>
+          <td>None</td>
+          <td>Warm tone + cheek blush</td>
+          <td>Orbital depth, chin AO, knuckle arc</td>
+        </tr>
+        <tr>
+          <td><span class="sm-chip sm-chip-gem">Gem</span></td>
+          <td>Point, intense</td>
+          <td>Pure white</td>
+          <td>Facet grid</td>
+          <td>Primary highlight dot</td>
+          <td>Facet edge lines, internal refraction tint</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px">
+      <table class="sm-table">
+        <thead>
+          <tr>
+            <th>Cosmetic item</th><th>Material type</th><th>Section 26 additions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>body.svg (face)</td><td><span class="sm-chip sm-chip-skin">Skin</span></td><td>Periorbital depth, knuckle arc, deeper cheek warmth, stronger chin AO</td></tr>
+          <tr><td>armor-knight.svg</td><td><span class="sm-chip sm-chip-metal">Metal</span></td><td>Chest plate polish streaks, pauldron anisotropic arcs, sharper arm rim lights</td></tr>
+          <tr><td>crown-silver.svg</td><td><span class="sm-chip sm-chip-metal">Metal</span></td><td>Contact shadow (parity with golden), circumferential polish arcs, narrower highlight</td></tr>
+          <tr><td>crown-golden.svg</td><td><span class="sm-chip sm-chip-metal">Metal</span></td><td>Warm gold polish arcs on band</td></tr>
+          <tr><td>cape-red.svg</td><td><span class="sm-chip sm-chip-cloth">Cloth</span></td><td>Diffuse catch-light band at viewer-facing cloth plane</td></tr>
+          <tr><td>galaxy-cape.svg</td><td><span class="sm-chip sm-chip-cloth">Cloth</span></td><td>Cosmic cloth catch-light band</td></tr>
+        </tbody>
+      </table>
+    </div>`,
+    "Section 25 established form. Section 26 establishes surface identity. Every addition was BELOW the threshold of visual change at 52px in isolation — but together they make each material unambiguous. Metal reads as metal. Cloth reads as cloth. Skin reads as skin. Gem reads as gem.",
     true
   ));
 

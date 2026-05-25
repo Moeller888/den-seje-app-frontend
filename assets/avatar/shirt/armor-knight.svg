@@ -28,6 +28,10 @@
   <rect x="56" y="106" width="48" height="58" rx="6" fill="url(#ak-panel)" stroke="#455a64" stroke-width="1.2"/>
   <!-- Panel top highlight -->
   <rect x="56" y="106" width="48" height="7" rx="5" fill="#cfd8dc" opacity="0.35"/>
+  <!-- Chest plate polish direction: diagonal streaks upper-left to lower-right — metal identity signal -->
+  <line x1="48" y1="96" x2="112" y2="170" stroke="#b0bec5" stroke-width="0.6" opacity="0.06"/>
+  <line x1="58" y1="94" x2="120" y2="168" stroke="#b0bec5" stroke-width="0.5" opacity="0.05"/>
+  <line x1="38" y1="102" x2="108" y2="174" stroke="#b0bec5" stroke-width="0.5" opacity="0.05"/>
   <!-- Heraldic sunburst on chest panel — 8-ray radiant -->
   <!-- Sunburst rays: dark base -->
   <line x1="80" y1="118" x2="80" y2="108" stroke="#263238" stroke-width="1.8" opacity="0.65"/>
@@ -71,6 +75,8 @@
   <ellipse cx="27" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
   <!-- Pauldron-to-arm transition shadow: armor plate compresses down onto arm structure -->
   <path d="M 12 114 Q 22 116 34 114" fill="none" stroke="#263238" stroke-width="1.5" opacity="0.35"/>
+  <!-- Pauldron anisotropic arc: circular polish direction on dome surface — metal identity on curved forms -->
+  <ellipse cx="29" cy="108" rx="13" ry="8" fill="none" stroke="#b0bec5" stroke-width="0.7" opacity="0.14"/>
   <!-- Pauldron inner edge shadow: occlusion where pauldron meets chest plate -->
   <path d="M 44 100 Q 46 106 44 114" fill="none" stroke="#263238" stroke-width="2" opacity="0.30"/>
 
@@ -80,13 +86,15 @@
   <ellipse cx="133" cy="103" rx="12" ry="7" fill="#78909c" opacity="0.4"/>
   <!-- Right pauldron transition shadow -->
   <path d="M 148 114 Q 138 116 126 114" fill="none" stroke="#263238" stroke-width="1.5" opacity="0.35"/>
+  <!-- Right pauldron anisotropic arc -->
+  <ellipse cx="131" cy="108" rx="13" ry="8" fill="none" stroke="#b0bec5" stroke-width="0.7" opacity="0.12"/>
   <!-- Right pauldron inner edge shadow -->
   <path d="M 116 100 Q 114 106 116 114" fill="none" stroke="#263238" stroke-width="2" opacity="0.30"/>
 
   <!-- Left arm plate — gradient left→right (light hits left face) -->
   <rect x="12" y="119" width="22" height="52" rx="9" fill="url(#ak-arm)" stroke="#263238" stroke-width="1.2"/>
-  <!-- Left arm rim light -->
-  <line x1="12" y1="123" x2="12" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
+  <!-- Left arm rim light: narrower, brighter — sharper metal edge read -->
+  <line x1="12" y1="123" x2="12" y2="167" stroke="#b0bec5" stroke-width="0.8" opacity="0.62"/>
   <!-- Left arm detail panel -->
   <rect x="15" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
   <!-- Left arm forearm taper shadow: armor plate narrows toward wrist -->
@@ -94,7 +102,7 @@
 
   <!-- Right arm plate — mirrored gradient -->
   <rect x="126" y="119" width="22" height="52" rx="9" fill="url(#ak-armR)" stroke="#263238" stroke-width="1.2"/>
-  <line x1="148" y1="123" x2="148" y2="167" stroke="#b0bec5" stroke-width="1" opacity="0.45"/>
+  <line x1="148" y1="123" x2="148" y2="167" stroke="#b0bec5" stroke-width="0.8" opacity="0.60"/>
   <rect x="137" y="123" width="7" height="20" rx="4" fill="#90a4ae" opacity="0.4"/>
   <!-- Right arm forearm taper shadow -->
   <path d="M 128 148 Q 126 158 127 168" fill="none" stroke="#263238" stroke-width="3" opacity="0.22" stroke-linecap="round"/>

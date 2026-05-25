@@ -31,8 +31,11 @@
 
   <!-- Base band -->
   <rect x="40" y="22" width="80" height="15" rx="3" fill="url(#cs-silver)" stroke="#616161" stroke-width="1.5"/>
-  <!-- Band top highlight -->
-  <rect x="40" y="22" width="80" height="4" rx="2" fill="white" opacity="0.45"/>
+  <!-- Band top highlight: narrower and crisper for polished metal read -->
+  <rect x="40" y="22" width="80" height="3" rx="2" fill="white" opacity="0.52"/>
+  <!-- Silver band polish direction: horizontal arcs implying circumferential polishing — brushed metal identity -->
+  <path d="M 42 27 Q 80 25.5 118 27" fill="none" stroke="white" stroke-width="0.5" opacity="0.22"/>
+  <path d="M 42 32 Q 80 30.5 118 32" fill="none" stroke="white" stroke-width="0.4" opacity="0.14"/>
   <!-- Filigree detail -->
   <line x1="44" y1="30" x2="116" y2="30" stroke="#757575" stroke-width="0.7" stroke-dasharray="3,2.5" opacity="0.55"/>
 
@@ -63,4 +66,7 @@
   <circle cx="52" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
   <circle cx="80" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
   <circle cx="108" cy="29" r="2" fill="#e0e0e0" stroke="#757575" stroke-width="0.8"/>
+
+  <!-- Band contact shadow: crown weight sits on head surface — mass and gravity, matching golden crown treatment -->
+  <path d="M 41 37 Q 80 41 119 37" fill="none" stroke="#424242" stroke-width="1.8" opacity="0.18"/>
 </svg>

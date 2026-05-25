@@ -30,6 +30,8 @@
 
   <!-- Hem edge: dark bottom trim — cloth has a finished edge -->
   <path d="M 10 234 Q 80 241 150 234" fill="none" stroke="#1a0000" stroke-width="2" opacity="0.35"/>
+  <!-- Cloth catch-light band: broadest zone of cloth plane facing camera catches diffuse scene light — no specular, only diffuse brightening -->
+  <ellipse cx="80" cy="178" rx="48" ry="22" fill="#c03030" opacity="0.12"/>
 
   <!-- Shoulder creases: cloth compresses and folds at the shoulder attachment point.
        These imply the shoulder structure beneath the cloth. -->
