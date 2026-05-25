@@ -105,7 +105,7 @@
       border: 1.5px solid var(--border);
       overflow: visible;
       flex-shrink: 0;
-      animation: avatarBreathe 3.5s ease-in-out infinite;
+      animation: avatarBreathe 3.5s linear infinite;
     }
 
     .quiz-avatar-layer {
@@ -190,8 +190,9 @@
     }
 
     @keyframes avatarBreathe {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(var(--breathe-shift, -1px)) scale(var(--breathe-scale, 1.006)); }
+      0%   { transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      38%  { transform: translateY(var(--breathe-shift, -1px)) scale(var(--breathe-scale, 1.006)); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
+      100% { transform: translateY(0) scale(1); }
     }
 
     @keyframes questionPulse {

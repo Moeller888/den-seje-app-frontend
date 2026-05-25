@@ -16,12 +16,22 @@
       <stop offset="100%" stop-color="#7c4dff" stop-opacity="0.0"/>
     </radialGradient>
   </defs>
+
+  <style>
+    @keyframes ar-flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -7; } }
+    #ar-w1 { animation: ar-flow 3.6s linear infinite; animation-delay:  0.0s; }
+    #ar-w2 { animation: ar-flow 3.6s linear infinite; animation-delay: -1.0s; }
+    #ar-w3 { animation: ar-flow 4.0s linear infinite; animation-delay: -1.8s; }
+    #ar-w4 { animation: ar-flow 4.0s linear infinite; animation-delay: -2.7s; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
   <rect x="0" y="0" width="160" height="240" fill="url(#ar-field)"/>
   <rect x="0" y="0" width="160" height="240" fill="url(#ar-head)"/>
   <rect x="0" y="0" width="160" height="240" fill="url(#ar-ground)"/>
-  <!-- Energy whispers — future stroke-dashoffset animation targets -->
-  <path d="M 72 30 Q 68 20 75 12" fill="none" stroke="#b388ff" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.35"/>
-  <path d="M 88 28 Q 92 18 85 10" fill="none" stroke="#b388ff" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.30"/>
-  <path d="M 64 45 Q 58 35 65 25" fill="none" stroke="#7c4dff" stroke-width="0.6" stroke-dasharray="2,5" opacity="0.28"/>
-  <path d="M 96 45 Q 102 35 95 25" fill="none" stroke="#7c4dff" stroke-width="0.6" stroke-dasharray="2,5" opacity="0.25"/>
+  <!-- Energy whispers — dashoffset animation creates upward arcane particle flow -->
+  <path id="ar-w1" d="M 72 30 Q 68 20 75 12" fill="none" stroke="#b388ff" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.35"/>
+  <path id="ar-w2" d="M 88 28 Q 92 18 85 10" fill="none" stroke="#b388ff" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.30"/>
+  <path id="ar-w3" d="M 64 45 Q 58 35 65 25" fill="none" stroke="#7c4dff" stroke-width="0.6" stroke-dasharray="2,5" opacity="0.28"/>
+  <path id="ar-w4" d="M 96 45 Q 102 35 95 25" fill="none" stroke="#7c4dff" stroke-width="0.6" stroke-dasharray="2,5" opacity="0.25"/>
 </svg>

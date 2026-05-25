@@ -164,8 +164,9 @@
 
     /* ── Section 12: Subtle Aliveness ──────────────────── */
     @keyframes avatarBreathe {
-      0%, 100% { transform: translateY(0)    scale(1);     }
-      50%       { transform: translateY(-2px) scale(1.008); }
+      0%   { transform: translateY(0)    scale(1);     animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      38%  { transform: translateY(-2px) scale(1.008); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
+      100% { transform: translateY(0)    scale(1);     }
     }
     .alive-demo-card {
       background: var(--bg-card);
@@ -605,6 +606,60 @@
     .sm-chip-skin  { background: #5a3520; color: #F5C49A; }
     .sm-chip-gem   { background: #1a237e; color: #90caf9; }
 
+    /* ── Section 28: Stylized Motion Language ──────────────── */
+    .ml-grid { display: flex; flex-direction: column; gap: 20px; }
+    .ml-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .ml-card--accent { border-top: 3px solid #29b6f6; }
+    .ml-card--warn   { border-left: 3px solid #ef5350; }
+    .ml-card--good   { border-left: 3px solid #66bb6a; }
+    .ml-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .ml-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .ml-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; }
+    .ml-item { font-size: 11px; color: var(--text-main); line-height: 1.55; padding-left: 12px; position: relative; }
+    .ml-item::before { content: "·"; position: absolute; left: 0; color: var(--text-label); }
+    .ml-item strong { color: var(--text-bright); }
+    .ml-principle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .ml-principle-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .ml-principle-col--no  { border-left: 3px solid #ef5350; }
+    .ml-principle-col--yes { border-left: 3px solid #66bb6a; }
+    .ml-principle-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .ml-principle-heading--no  { color: #ef5350; }
+    .ml-principle-heading--yes { color: #66bb6a; }
+    .ml-principle-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+    .ml-timing-wrap { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .ml-timing-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--text-label); margin-bottom: 10px; }
+    .ml-timing-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .ml-timing-name { font-size: 10px; color: var(--text-dim); width: 60px; flex-shrink: 0; font-family: monospace; }
+    .ml-timing-bar { height: 14px; border-radius: 3px; position: relative; display: flex; flex-shrink: 0; overflow: hidden; }
+    .ml-timing-seg-out  { background: #ef5350; height: 100%; }
+    .ml-timing-seg-in   { background: #29b6f6; height: 100%; }
+    .ml-timing-note { font-size: 9px; color: var(--text-muted); flex: 1; line-height: 1.3; }
+    .ml-phase-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .ml-phase-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .ml-phase-table td { padding: 6px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.4; }
+    .ml-phase-table tr:last-child td { border-bottom: none; }
+    .ml-exclusion-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .ml-exclusion-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .ml-exclusion-table td { padding: 6px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.4; }
+    .ml-exclusion-table tr:last-child td { border-bottom: none; }
+    .ml-exclusion-table td:first-child { color: #ef5350; font-weight: bold; white-space: nowrap; }
+    .ml-demo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 12px; }
+    .ml-demo-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ml-demo-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; text-align: center; }
+    .ml-demo-label--static { color: #ef5350; }
+    .ml-demo-label--live   { color: #66bb6a; }
+    @keyframes ml-breathe-old {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(-2px) scale(1.008); }
+    }
+    @keyframes ml-breathe-new {
+      0%   { transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      38%  { transform: translateY(-2px) scale(1.008); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .ml-breathe-old { animation: ml-breathe-old 3.5s ease-in-out infinite; }
+    .ml-breathe-new { animation: ml-breathe-new 3.5s linear infinite; }
+
     /* ── Section 27: Shape Language & Character Identity ─── */
     .sl-grid { display: flex; flex-direction: column; gap: 20px; }
     .sl-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -820,6 +875,12 @@
 <div class="section">
   <div class="section-title">27 · Shape Language &amp; Character Identity — Silhouette Personality and Archetype-Driven Form Language</div>
   <div class="sl-grid" id="slGrid27"></div>
+</div>
+
+<!-- ── Section 28: Stylized Motion Language ──────────────────────── -->
+<div class="section">
+  <div class="section-title">28 · Stylized Motion Language — Weight, Restraint, Rhythm, and Emotional Clarity</div>
+  <div class="ml-grid" id="mlGrid28"></div>
 </div>
 
 <script type="module">
@@ -6621,6 +6682,284 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       <li class="sl-item"><strong>Eye shape:</strong> the 1.5px outer lift is visible at 90px+. At 52px/36px, the eye reads as a single warmth signal regardless — the lift is inside the eye area and contributes to general open-eye read.</li>
     </ul>`,
     "All shape-language improvements were verified across 5 display scales. Each change degrades gracefully — it either reads clearly at scale or disappears without breaking anything."
+  ));
+
+}());
+
+// ── Section 28: Stylized Motion Language ──────────────────────────────────────
+(function () {
+  const root = document.getElementById("mlGrid28");
+  if (!root) return;
+
+  function mlCard(title, body, note, accent) {
+    const d = document.createElement("div");
+    d.className = "ml-card" + (accent ? " ml-card--accent" : "");
+    d.innerHTML = `<div class="ml-card-title">${title}</div>${body}${note ? `<div class="ml-note">${note}</div>` : ""}`;
+    return d;
+  }
+
+  function avatarDemo(layers, size, animate) {
+    const w = Math.round(size * 160 / 240);
+    const h = size;
+    const imgs = layers.map(([src, z]) =>
+      `<img src="${src}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:${z}" alt="">`
+    ).join("");
+    return `<div class="${animate}" style="width:${w}px;height:${h}px;border-radius:${Math.max(4,Math.round(size*0.04))}px;background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);position:relative;isolation:isolate;overflow:visible;box-shadow:0 2px 10px rgba(0,0,0,0.35)">${imgs}</div>`;
+  }
+
+  const BASE   = "/assets/avatar/base/body.svg";
+  const CAPE   = "/assets/avatar/shirt/cape-red.svg";
+  const GALAXY = "/assets/avatar/shirt/galaxy-cape.svg";
+  const CROWN  = "/assets/avatar/hat/crown-golden.svg";
+  const GOLD   = "/assets/avatar/aura/aura-gold.svg";
+  const ARCANE = "/assets/avatar/aura/aura-arcane.svg";
+
+  // ── Card 1: Motion Philosophy ──────────────────────────────────────────────
+  root.appendChild(mlCard(
+    "Motion Philosophy — Presence Through Restraint",
+    `<div class="ml-principle-grid">
+      <div class="ml-principle-col ml-principle-col--no">
+        <div class="ml-principle-heading ml-principle-heading--no">Motion Is NOT</div>
+        <div class="ml-principle-item">Entertainment or spectacle</div>
+        <div class="ml-principle-item">Proof of technical capability</div>
+        <div class="ml-principle-item">A way to make the UI feel alive</div>
+        <div class="ml-principle-item">Compensation for weak static design</div>
+        <div class="ml-principle-item">User-directed attention</div>
+      </div>
+      <div class="ml-principle-col ml-principle-col--yes">
+        <div class="ml-principle-heading ml-principle-heading--yes">Motion IS</div>
+        <div class="ml-principle-item">Proof of existence — the character breathes therefore it is</div>
+        <div class="ml-principle-item">Emotional state confirmation — felt, not watched</div>
+        <div class="ml-principle-item">Weight and physics — gravity exists in this world</div>
+        <div class="ml-principle-item">Hierarchy — not all systems move equally</div>
+        <div class="ml-principle-item">Restraint — the absence of motion is also motion language</div>
+      </div>
+    </div>
+    <ul class="ml-list">
+      <li class="ml-item"><strong>The user must never think "the avatar is animated."</strong> They should feel "it exists." The moment animation is noticed as animation, it has failed.</li>
+      <li class="ml-item"><strong>Section 28 evolves three systems:</strong> breathing weight asymmetry (physiological easing), expression settling asymmetry (emotional inertia), and aura whisper flow (atmospheric presence). Each is a targeted upgrade, not a new layer of complexity.</li>
+      <li class="ml-item"><strong>Calmness, warmth, and emotional safety remain the constraints.</strong> No bounce. No anticipation frames. No cartoon kineticism. Premium restraint.</li>
+    </ul>`,
+    "Motion language is character. The same character that communicates through shape (Section 27) communicates through time. A character with intentional motion feels fundamentally different from one with functional animation — even when the amplitude difference is a single pixel.",
+    true
+  ));
+
+  // ── Card 2: Breathing Weight Asymmetry ────────────────────────────────────
+  root.appendChild(mlCard(
+    "Breathing Weight Asymmetry — Physiological Easing",
+    `<div class="ml-demo-row">
+      <div class="ml-demo-col">
+        <div class="ml-breathe-old">${avatarDemo([[BASE, 1], [CAPE, -1]], 120, "")}</div>
+        <div class="ml-demo-label ml-demo-label--static">Before — Symmetric</div>
+      </div>
+      <div class="ml-demo-col">
+        <div class="ml-breathe-new">${avatarDemo([[BASE, 1], [CAPE, -1]], 120, "")}</div>
+        <div class="ml-demo-label ml-demo-label--live">After — Weighted</div>
+      </div>
+    </div>
+    <div class="ml-timing-wrap">
+      <div class="ml-timing-label">Cycle Timing Comparison</div>
+      <div class="ml-timing-row">
+        <div class="ml-timing-name">Before</div>
+        <div class="ml-timing-bar" style="width:200px">
+          <div class="ml-timing-seg-out" style="width:100px" title="Inhale 50%"></div>
+          <div class="ml-timing-seg-in" style="width:100px" title="Exhale 50%"></div>
+        </div>
+        <div class="ml-timing-note">50% inhale / 50% exhale — symmetric, mechanical</div>
+      </div>
+      <div class="ml-timing-row">
+        <div class="ml-timing-name">After</div>
+        <div class="ml-timing-bar" style="width:200px">
+          <div class="ml-timing-seg-out" style="width:76px" title="Inhale 38%"></div>
+          <div class="ml-timing-seg-in" style="width:124px" title="Exhale 62%"></div>
+        </div>
+        <div class="ml-timing-note">38% inhale / 62% exhale — physiological weight</div>
+      </div>
+    </div>
+    <ul class="ml-list">
+      <li class="ml-item"><strong>Peak moves from 50% → 38% of the cycle.</strong> The body expands quickly (inhale rises with cubic-bezier(0.45,0,0.55,1)) and settles slowly (exhale falls with cubic-bezier(0.15,0,0.25,1)).</li>
+      <li class="ml-item"><strong>Why 38%?</strong> Physiological breathing is asymmetric — diaphragm contracts quickly on inhale, relaxes slowly on exhale. 38% produces the minimum perceptible asymmetry at 52px display scale. Below 35%, the difference disappears. Above 42%, it reads as a bounce.</li>
+      <li class="ml-item"><strong>The animation declaration changes from ease-in-out to linear</strong> — easing is now embedded per-keyframe via animation-timing-function, giving control over each phase independently.</li>
+      <li class="ml-item"><strong>All emotional breathing profiles inherit the same asymmetry.</strong> Proud (4000ms, 1.4px) and determined (2600ms, 0.5px) both feel weighted — the asymmetry is universal to the physiology, not the emotion.</li>
+    </ul>`,
+    "Symmetric breathing is what animation software produces by default. Asymmetric breathing is what bodies actually do. The difference is the difference between a clock ticking and a chest rising."
+  ));
+
+  // ── Card 3: Expression Settling Asymmetry ─────────────────────────────────
+  root.appendChild(mlCard(
+    "Expression Settling Asymmetry — Emotional Inertia",
+    `<div class="ml-timing-wrap">
+      <div class="ml-timing-label">Cross-Fade Phase Split (total duration = 100%)</div>
+      <div class="ml-timing-row">
+        <div class="ml-timing-name">Before</div>
+        <div class="ml-timing-bar" style="width:240px">
+          <div class="ml-timing-seg-out" style="width:120px" title="Fade-out 50%"></div>
+          <div class="ml-timing-seg-in" style="width:120px" title="Fade-in 50%"></div>
+        </div>
+        <div class="ml-timing-note">50% fade-out / 50% fade-in — symmetric, generic</div>
+      </div>
+      <div class="ml-timing-row">
+        <div class="ml-timing-name">After</div>
+        <div class="ml-timing-bar" style="width:240px">
+          <div class="ml-timing-seg-out" style="width:84px" title="Fade-out 35%"></div>
+          <div class="ml-timing-seg-in" style="width:156px" title="Fade-in 65%"></div>
+        </div>
+        <div class="ml-timing-note">35% fade-out / 65% fade-in — emotional inertia</div>
+      </div>
+    </div>
+    <ul class="ml-list">
+      <li class="ml-item"><strong>The old expression leaves at ease-in (accelerating away).</strong> Emotional inertia releases fast — we don't hold on to feelings once we've moved past them.</li>
+      <li class="ml-item"><strong>The new expression arrives at cubic-bezier(0.1,0,0.4,1) — very slow start, gentle settling.</strong> Emotions don't snap into place; they accumulate and resolve.</li>
+      <li class="ml-item"><strong>Example: proud after a correct answer.</strong> Before: the focused expression fades out over 130ms and proud fades in over 130ms — equal exchange. After: focused leaves in 91ms (quick release), proud arrives over 169ms (slow warm arrival and settle).</li>
+      <li class="ml-item"><strong>Minimum durations enforced:</strong> fade-out ≥ 60ms, fade-in ≥ 110ms. This prevents the new expression from popping in too fast at small total durations.</li>
+    </ul>`,
+    "Emotions arrive slowly and leave quickly. The expression engine now models this: the old state releases fast, and the new state settles into place with deliberate weight. The result is a character that feels emotionally continuous rather than emotionally switched."
+  ));
+
+  // ── Card 4: Aura Whisper Activation ───────────────────────────────────────
+  const auraRow = (label, layers, anim) => `
+    <div class="ml-demo-col">
+      <div class="${anim}">${avatarDemo(layers, 150, "")}</div>
+      <div class="ml-demo-label" style="color:${anim.includes('live')?'#66bb6a':'#ef5350'}">${label}</div>
+    </div>`;
+
+  root.appendChild(mlCard(
+    "Aura Whisper Activation — Atmospheric Particle Flow",
+    `<div class="ml-demo-row">
+      ${auraRow("Gold — Static (Before)", [[GOLD, 0], [BASE, 1], [CROWN, 5]], "ml-demo-label--static")}
+      ${auraRow("Gold — Live (After)", [[GOLD, 0], [BASE, 1], [CROWN, 5]], "ml-demo-label--live")}
+      ${auraRow("Arcane — Live", [[ARCANE, 0], [BASE, 1]], "ml-demo-label--live")}
+    </div>
+    <ul class="ml-list">
+      <li class="ml-item"><strong>7 paths in aura-gold.svg, 4 paths in aura-arcane.svg — all were marked "future stroke-dashoffset targets" in the SVG comments.</strong> Section 28 activates them.</li>
+      <li class="ml-item"><strong>Technique:</strong> stroke-dashoffset animation from 0 → −(pattern-unit) at linear timing. The dash pattern appears to flow in the direction of path travel — upward for crown whispers, outward for shoulder flares.</li>
+      <li class="ml-item"><strong>Staggered delays (−0.6s, −0.9s, −1.7s…) prevent the paths from pulsing in unison.</strong> Each thread moves independently, creating the impression of a living atmospheric field rather than a synchronized pulse.</li>
+      <li class="ml-item"><strong>prefers-reduced-motion is respected inside the SVG</strong> via an embedded @media query. Users who prefer reduced motion get the static aura — no animation at all.</li>
+      <li class="ml-item"><strong>The overall aura field (radial gradients) remains static.</strong> Only the whisper threads animate. The field itself is ambient — it doesn't need motion to feel present.</li>
+    </ul>`,
+    "The aura whisper paths were designed for animation from the beginning — the SVG comments said 'future stroke-dashoffset targets.' Section 28 makes good on that contract. The result is a legendary-tier aura that has genuine atmospheric presence."
+  ));
+
+  // ── Card 5: Motion Hierarchy ───────────────────────────────────────────────
+  root.appendChild(mlCard(
+    "Motion Hierarchy — Four Layers, One Coherent System",
+    `<table class="ml-phase-table">
+      <thead><tr>
+        <th>Layer</th><th>Priority</th><th>System</th><th>Frequency</th><th>Emotional Register</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Breathing</strong></td>
+          <td>Foundation (always active)</td>
+          <td>CSS @keyframes + JS custom properties</td>
+          <td>2600–4000ms cycle</td>
+          <td>Physiological — the body's resting state. Runs always under all other layers.</td>
+        </tr>
+        <tr>
+          <td><strong>Expression</strong></td>
+          <td>Secondary (quiz events)</td>
+          <td>JS ExpressionEngine, opacity cross-fade</td>
+          <td>Event-driven (answer, state change)</td>
+          <td>Emotional — reacts to quiz outcomes. Breathing continues uninterrupted beneath.</td>
+        </tr>
+        <tr>
+          <td><strong>Aura Whispers</strong></td>
+          <td>Atmospheric (cosmetic layer)</td>
+          <td>SVG-embedded CSS animations</td>
+          <td>2.8–4.2s cycle, staggered</td>
+          <td>Ambient — independent of quiz state. Always playing when aura is equipped.</td>
+        </tr>
+        <tr>
+          <td><strong>Cloth Motion</strong></td>
+          <td>Tertiary (future)</td>
+          <td>Not yet implemented</td>
+          <td>—</td>
+          <td>Physical — cloth lag on breathing, settle on state change. Design contract only.</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="ml-list">
+      <li class="ml-item"><strong>Breathing is the foundation.</strong> It runs always, at all states, beneath everything. The expression cross-fade does not pause breathing. The aura does not modulate breathing. Each layer is independent.</li>
+      <li class="ml-item"><strong>Independence is the design principle.</strong> Each motion layer has a single responsibility. There is no master "animation controller" — the coherence comes from the physics-inspired timing relationships, not from centralized coordination.</li>
+      <li class="ml-item"><strong>The hierarchy maps directly to the planned 3D rig</strong> (documented in avatar-presence.js): breathing → spine_01 bone (layer 0), expression → facial blend shapes (layer 1), aura → particle system (layer 2), cloth → cloth simulation (layer 3).</li>
+    </ul>`,
+    "Hierarchy means knowing which system takes precedence and which yields. In this system: breathing never stops, expression responds to events, aura drifts independently, cloth follows gravity. Each knows its place."
+  ));
+
+  // ── Card 6: Restraint Inventory — What Was NOT Done ───────────────────────
+  root.appendChild(mlCard(
+    "Restraint Inventory — What Was Intentionally Excluded",
+    `<table class="ml-exclusion-table">
+      <thead><tr><th>Excluded</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Bounce / overshoot</td>
+          <td>Bouncy easing signals "game for kids." The target register is warm, composed, premium. Bounce breaks the emotional register immediately.</td>
+        </tr>
+        <tr>
+          <td>Anticipation frames</td>
+          <td>Cartoon anticipation (squash before jump) is theatrical. This character is not performing. It is present.</td>
+        </tr>
+        <tr>
+          <td>Cloth physics simulation</td>
+          <td>The cape already has physics-implied geometry (tension folds, shoulder creases). Adding CSS animation now would add complexity without payoff. Cloth motion is a design contract for a future pass with proper lag/settle values.</td>
+        </tr>
+        <tr>
+          <td>Pulsing glow / breathing aura opacity</td>
+          <td>Pulsing aura is the most overused effect in educational gamification. It reads as "notification" not "presence." The aura field is static; only the fine whisper threads animate.</td>
+        </tr>
+        <tr>
+          <td>Idle fidgets / micro-animations</td>
+          <td>Random eye blinks, weight shifts, head turns — all require gaze variants or inline SVG. Design contract only. Adding stub animations now would produce uncanny valley results at 52px.</td>
+        </tr>
+        <tr>
+          <td>Entrance animations for avatar equips</td>
+          <td>layerFadeIn (280ms, scale 0.97→1) already exists in avatar.html. Adding more entrance theatrics would compete with it.</td>
+        </tr>
+        <tr>
+          <td>Per-theme motion variations</td>
+          <td>10 themes share the same motion system. Theme identity is color and texture. Giving each theme different breathing timing would create inconsistency without emotional benefit.</td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Restraint is not limitation — it is the design choice that lets every motion that DOES exist carry full weight. If everything moves, nothing is felt. The excluded items are not failures; they are boundaries that protect the signal-to-noise ratio of the motion language."
+  ));
+
+  // ── Card 7: Motion at Scale ────────────────────────────────────────────────
+  const scaleMotionDemo = (h, label) => {
+    const w = Math.round(h * 160 / 240);
+    return `<div class="ml-demo-col">
+      <div class="ml-breathe-new" style="width:${w}px;height:${h}px;border-radius:${Math.max(3,Math.round(h*0.04))}px;background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);position:relative;isolation:isolate;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
+        <img src="${GOLD}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0" alt="">
+        <img src="${BASE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+        <img src="${CAPE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:-1" alt="">
+        <img src="${CROWN}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:5" alt="">
+      </div>
+      <div class="ml-demo-label" style="font-size:9px;color:var(--text-dim);margin-top:4px;font-family:monospace">${label}</div>
+    </div>`;
+  };
+
+  root.appendChild(mlCard(
+    "Motion at Scale — What Survives, What Disappears",
+    `<div class="ml-demo-row" style="justify-content:center;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+      ${scaleMotionDemo(180, "Shop 180px")}
+      ${scaleMotionDemo(120, "Standard 120px")}
+      ${scaleMotionDemo(90,  "Collection 90px")}
+      ${scaleMotionDemo(60,  "Hub 60px")}
+      ${scaleMotionDemo(36,  "Leaderboard 36px")}
+    </div>
+    <table class="ml-phase-table">
+      <thead><tr><th>Scale</th><th>Breathing</th><th>Aura Whispers</th><th>Expression Fade</th></tr></thead>
+      <tbody>
+        <tr><td>180px (Shop)</td><td>Fully visible — 1.4px amplitude = 0.8% height. Clearly felt.</td><td>5 crown threads clearly visible. Stagger readable.</td><td>Full 65ms settle visible, warm arrival.</td></tr>
+        <tr><td>120px (Standard)</td><td>Visible — 1.4px = 1.2% height. Primary presence signal.</td><td>Whispers visible as subtle rising particles.</td><td>Asymmetry perceptible. Feels emotionally settled.</td></tr>
+        <tr><td>90px (Collection)</td><td>Felt more than seen. Contributes to alive vs. static read.</td><td>Faint particle drift present. Recognizable as gold aura.</td><td>Crossfade readable. Settling noticeable at slow expressions.</td></tr>
+        <tr><td>60px (Hub)</td><td>Subconscious — below threshold of conscious notice.</td><td>Barely perceptible. Aura field carries the identity signal.</td><td>Instant transitions feel abrupt — OK at this scale.</td></tr>
+        <tr><td>36px (Leaderboard)</td><td>Imperceptible as breathing. Contributes to "not-static" read.</td><td>Not visible. Field gradient is the presence signal.</td><td>Opacity transitions invisible at this scale.</td></tr>
+      </tbody>
+    </table>`,
+    "All motion is calibrated for the 52–120px range where the avatar is most commonly seen. At 36px, the system gracefully degrades — the avatar still doesn't feel 'frozen' even though no individual motion is legible. That quality is the goal.",
+    true
   ));
 
 }());

@@ -164,25 +164,28 @@ export class ExpressionEngine {
       return;
     }
 
-    // Cross-fade: fade out (half duration) → swap src → fade in (half duration)
+    // Cross-fade: asymmetric fade — old emotion releases quickly, new emotion settles slowly.
+    // 35% of total duration for fade-out (emotional inertia releases fast),
+    // 65% for fade-in (new state arrives gently and settles into place).
     this._clearFadeTimer();
-    const half = Math.max(80, Math.round(duration / 2));
+    const fadeOut = Math.max(60,  Math.round(duration * 0.35));
+    const fadeIn  = Math.max(110, Math.round(duration * 0.65));
 
-    this._overlay.style.transition = `opacity ${half}ms ease-in`;
+    this._overlay.style.transition = `opacity ${fadeOut}ms ease-in`;
     this._overlay.style.opacity = "0";
 
     this._fadeTimer = setTimeout(() => {
       this._fadeTimer = null;
       if (!this._overlay) return;
       this._overlay.src = src;
-      this._overlay.style.transition = `opacity ${half}ms ease-out`;
+      this._overlay.style.transition = `opacity ${fadeIn}ms cubic-bezier(0.1, 0, 0.4, 1)`;
       this._overlay.style.opacity = "1";
       // Fallback: if src fails to load, degrade gracefully to neutral
       this._overlay.onerror = () => {
         if (!this._overlay) return;
         this._overlay.src = EXPRESSIONS["neutral"] ?? "";
       };
-    }, half + 8);
+    }, fadeOut + 8);
   }
 
   // ── Init & Utilities ──────────────────────────────────────────────────────────
