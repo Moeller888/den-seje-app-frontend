@@ -730,6 +730,30 @@
     .sl-scale-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; justify-content: center; }
     .sl-scale-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .sl-scale-label { font-size: 9px; font-weight: bold; font-family: monospace; color: var(--text-dim); }
+
+    /* ── Section 30: Environmental Presence & World Integration ─── */
+    .ep-grid { display: flex; flex-direction: column; gap: 20px; }
+    .ep-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .ep-card--accent { border-top: 3px solid var(--accent); }
+    .ep-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .ep-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .ep-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .ep-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .ep-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .ep-item strong { color: var(--text-bright); }
+    .ep-theme-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .ep-theme-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .ep-theme-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: middle; }
+    .ep-theme-table tr:last-child td { border-bottom: none; }
+    .ep-scale-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+    .ep-scale-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ep-scale-label { font-size: 9px; color: var(--text-muted); text-align: center; }
+    .ep-contract-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .ep-contract-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .ep-contract-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+    .ep-contract-heading--ambient { color: #78909c; }
+    .ep-contract-heading--rarity  { color: #ffd600; }
+    .ep-contract-item { font-size: 10px; color: var(--text-main); line-height: 1.4; padding: 2px 0; }
   </style>
 </head>
 <body>
@@ -930,6 +954,12 @@
 <div class="section">
   <div class="section-title">29 · Interaction Presence &amp; Relational Timing — Quiet Social Awareness</div>
   <div class="ip-grid" id="ipGrid29"></div>
+</div>
+
+<!-- ── Section 30: Environmental Presence & World Integration ─── -->
+<div class="section">
+  <div class="section-title">30 · Environmental Presence &amp; World Integration — Contextual Belonging</div>
+  <div class="ep-grid" id="epGrid30"></div>
 </div>
 
 <script type="module">
@@ -7359,6 +7389,276 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       <li class="ip-item"><strong>The social restraint contract should be enforced at the animation asset level</strong> in 3D — by simply not creating "wave", "jump", or "clap" clips for the educational character rig. Restraint is a design constraint, not just a runtime policy.</li>
     </ul>`,
     "A believable 3D relational character is not built by adding more animations. It is built by designing the timing relationships between the animations you do have. The 2D system demonstrates this principle at every scale from 36px to 180px.",
+    true
+  ));
+
+}());
+
+// ── Section 30: Environmental Presence & World Integration ───────────────────
+(function () {
+  const root = document.getElementById("epGrid30");
+  if (!root) return;
+
+  const BASE = "/assets/avatar/base/body.svg";
+  const GOLD = "/assets/avatar/aura/aura-gold.svg";
+
+  function epCard(title, body, note, accent) {
+    const el = document.createElement("div");
+    el.className = "ep-card" + (accent ? " ep-card--accent" : "");
+    el.innerHTML = `<div class="ep-card-title">${title}</div>${body}` +
+      (note ? `<div class="ep-note">${note}</div>` : "");
+    return el;
+  }
+
+  // ── Card 1: Philosophy ────────────────────────────────────────────────────
+  root.appendChild(epCard(
+    "Filosofi — Kontekstuel Tilhørighed",
+    `<div class="ep-contract-grid">
+      <div class="ep-contract-col">
+        <div class="ep-contract-heading" style="color:#ef5350">PLACERET OVEN PÅ VERDEN</div>
+        <div class="ep-contract-item">✗ Avatar canvas har fast atmosfære uanset tema</div>
+        <div class="ep-contract-item">✗ Ingen visuel forbindelse til sidens farve-palette</div>
+        <div class="ep-contract-item">✗ Avataren "svæver" oven på panelet</div>
+        <div class="ep-contract-item">✗ Temaet ændrer UI-farver — men ikke avatarens aura</div>
+        <div class="ep-contract-item">✗ Brugeren perciperer: "et UI-element med en figur"</div>
+      </div>
+      <div class="ep-contract-col">
+        <div class="ep-contract-heading" style="color:#66bb6a">TILHØRENDE VERDENEN</div>
+        <div class="ep-contract-item">✓ Canvas ambient-glow matcher temaets farve-temperatur</div>
+        <div class="ep-contract-item">✓ Avataren lyder af det same lys som omgivelserne</div>
+        <div class="ep-contract-item">✓ Edge glow: canvas udsender lidt af sin egen farve</div>
+        <div class="ep-contract-item">✓ Temaet skifter → avatarens atmosfære skifter med</div>
+        <div class="ep-contract-item">✓ Brugeren føler: "én verden, én karakter"</div>
+      </div>
+    </div>
+    <ul class="ep-list">
+      <li class="ep-item"><strong>Environmental presence er ikke et visuelt trick.</strong> Det er et system-design-princip: alle visuelle systemer (baggrund, panel, farver, avatar) responderer som ét samlet miljø.</li>
+      <li class="ep-item"><strong>--avatar-ambient er bindeledet</strong> — en CSS custom property der oversætter temaets kanvas-farve til en atmosfærisk box-shadow på avatar-containeren.</li>
+      <li class="ep-item"><strong>Designregel:</strong> Effekten skal mærkes, ikke ses. Ingen bruger skal tænke "der er en glød på avataren." De skal bare føle at avataren hører til i interfacet.</li>
+    </ul>`,
+    "Contextual belonging opstår ikke af mere kompleksitet — det opstår af systemkoherens. --avatar-ambient tilføjer ét token og berører fire steder (CSS, game, hub, collection). Resultatet er en platform der føles som ét miljø.",
+    true
+  ));
+
+  // ── Card 2: Per-theme ambient identity table ──────────────────────────────
+  const themes = [
+    { name: "default",   inner: "#1e2060", ambient: "rgba(30,32,96,0.45)",    char: "Dyb navy-blå",     feel: "Akademisk ro" },
+    { name: "ice",       inner: "#0e2858", ambient: "rgba(14,40,88,0.48)",     char: "Kold mørk blå",    feel: "Isklar præcision" },
+    { name: "inferno",   inner: "#4a1800", ambient: "rgba(74,24,0,0.52)",      char: "Varm ember-rød",   feel: "Gløende energi" },
+    { name: "void",      inner: "#2c0060", ambient: "rgba(44,0,96,0.58)",      char: "Dybviolet",        feel: "Kosmisk tomrum" },
+    { name: "forest",    inner: "#1e3c18", ambient: "rgba(30,60,24,0.48)",     char: "Skovgrøn skygge",  feel: "Rodfæstet natur" },
+    { name: "sakura",    inner: "#3d1428", ambient: "rgba(61,20,40,0.48)",     char: "Varm blomme-rød",  feel: "Blød varme" },
+    { name: "aurora",    inner: "#1a1050", ambient: "rgba(26,16,80,0.50)",     char: "Tusmørke violet",  feel: "Drømmende celestiel" },
+    { name: "pearl",     inner: "#8898b0", ambient: "rgba(136,152,176,0.28)",  char: "Kølig sølv-grå",   feel: "Klar minimalisme" },
+    { name: "meadow",    inner: "#2c3c14", ambient: "rgba(44,60,20,0.48)",     char: "Varm sagebrun",    feel: "Hyggelig natur" },
+    { name: "rose-gold", inner: "#3c2018", ambient: "rgba(60,32,24,0.50)",     char: "Mørk rose-kul",    feel: "Luksus elegance" },
+  ];
+
+  root.appendChild(epCard(
+    "Per-Tema Atmosfærisk Identitet — --avatar-ambient",
+    `<table class="ep-theme-table">
+      <thead><tr>
+        <th>Tema</th>
+        <th>Kilde (--avatar-inner)</th>
+        <th>Ambient farve + preview</th>
+        <th>Atmosfærisk karakter</th>
+        <th>Feel</th>
+      </tr></thead>
+      <tbody>${themes.map(t => `
+        <tr>
+          <td><strong>${t.name}</strong></td>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">${t.inner}</code></td>
+          <td>
+            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:${t.ambient};border:1px solid var(--border);margin-right:5px;vertical-align:middle"></span>
+            <code style="font-size:8px;color:var(--text-muted)">${t.ambient}</code>
+          </td>
+          <td style="color:var(--text-muted);font-size:9px">${t.char}</td>
+          <td style="color:var(--text-dim);font-size:9px"><em>${t.feel}</em></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`,
+    "Alle ambient-farver er afledt af --avatar-inner (canvas-centerfarven) med 0.45–0.58 opacity. Pearl er undtagelsen: bruger --avatar-outer (#8898b0 = silver-gray) fordi inner er for lys til en shadow på lys baggrund, og opacity er reduceret til 0.28. Void er stærkest (0.58) fordi void-atmosfæren er mest distinkt.",
+    false
+  ));
+
+  // ── Card 3: Scale coherence demo ─────────────────────────────────────────
+  const scaleDemo = (w, h, label) => `<div class="ep-scale-col">
+    <div style="width:${w}px;height:${h}px;border-radius:${Math.max(3,Math.round(h*0.05))}px;
+      background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+      position:relative;isolation:isolate;overflow:visible;
+      box-shadow:var(--avatar-ambient)">
+      <img src="${BASE}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+    </div>
+    <div class="ep-scale-label">${label}</div>
+  </div>`;
+
+  root.appendChild(epCard(
+    "Skalerings-koherens — Ét Token, Alle Skalaer",
+    `<div class="ep-scale-row">
+      ${scaleDemo(35, 52,  "52px · game")}
+      ${scaleDemo(73, 110, "110px · hub")}
+      ${scaleDemo(120,180, "180px · collection")}
+    </div>
+    <ul class="ep-list">
+      <li class="ep-item">Samme <code style="font-size:10px;background:var(--btn-bg);padding:1px 4px;border-radius:3px">var(--avatar-ambient)</code> token ved alle tre skalaer — ingen skaleret override.</li>
+      <li class="ep-item"><strong>52px game:</strong> ambient næsten usynlig — men bidrager til subbevidst "ikke frosset" og "tilhørende" kvalitet.</li>
+      <li class="ep-item"><strong>110px hub:</strong> subtil atmosfærisk halo — avataren lyder svagt ind i panelet.</li>
+      <li class="ep-item"><strong>180px collection:</strong> klar tematisk atmosfære — identiteten bekræftes visuelt. Aldrig distraherende.</li>
+      <li class="ep-item">12px blur-radius ved 52px canvas = 23% af bredden. Ved 180px = 6.7%. <strong>Systemet skalerer sig selv naturligt.</strong></li>
+    </ul>`,
+    "En 12px box-shadow er designet til collection-skala (180px). Ved game-skala (52px) er den proportionelt større men opacity begrænser synlighed. Det er intentionelt: game-konteksten er primær for quiz-flow, ikke visual showcase.",
+    false
+  ));
+
+  // ── Card 4: Ambient vs drop shadow — light language ───────────────────────
+  root.appendChild(epCard(
+    "Lys-sprog — Ambient Glow vs. Drop Shadow",
+    `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="flex:1;min-width:150px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;color:#ef5350;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">DROP SHADOW (FORKERT)</div>
+        <div style="display:inline-block;width:52px;height:78px;border-radius:6px;
+          background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+          box-shadow:4px 8px 14px rgba(0,0,0,0.65);margin-bottom:8px"></div>
+        <div style="font-size:10px;color:var(--text-muted)">Retningsbestemt. Antyder ekstern lyskilde. Avataren "sidder på" overfladen.</div>
+      </div>
+      <div style="flex:1;min-width:150px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;color:#66bb6a;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">AMBIENT GLOW (KORREKT)</div>
+        <div style="display:inline-block;width:52px;height:78px;border-radius:6px;
+          background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+          box-shadow:var(--avatar-ambient);margin-bottom:8px"></div>
+        <div style="font-size:10px;color:var(--text-muted)">Omnidirektionel. Antyder at canvaset udsender sin farve. Avataren hører til i verdenen.</div>
+      </div>
+    </div>
+    <ul class="ep-list">
+      <li class="ep-item"><strong>Drop shadow</strong> fortæller "lys er over mig og til venstre" — siger intet om atmosfæren.</li>
+      <li class="ep-item"><strong>Ambient glow</strong> fortæller "jeg udsender lidt af min temafarve ind i rummet" — skaber environmental tilhørighed.</li>
+      <li class="ep-item"><strong>Hybrid (collection)</strong>: <code style="font-size:9px;background:var(--btn-bg);padding:1px 4px;border-radius:2px">var(--avatar-ambient)</code> + <code style="font-size:9px;background:var(--btn-bg);padding:1px 4px;border-radius:2px">0 4px 18px rgba(0,0,0,0.32)</code> — atmosfærisk glow og subtil dybde. Korrekt ved 180px.</li>
+    </ul>`,
+    "Den kritiske distinktion: en drop shadow fortæller 'dette element har dybde.' En ambient glow fortæller 'dette element hører til i sit miljø.' Section 30 handler om tilhørighed, ikke dybde.",
+    false
+  ));
+
+  // ── Card 5: Rarity vs ambient priority contract ───────────────────────────
+  root.appendChild(epCard(
+    "Rarity vs. Ambient — Priority Contract",
+    `<div class="ep-contract-grid">
+      <div class="ep-contract-col">
+        <div class="ep-contract-heading ep-contract-heading--ambient">AMBIENT (TEMA-GULV)</div>
+        <div class="ep-contract-item">Aktiv: ingen legendary/rare udstyret</div>
+        <div class="ep-contract-item">Signal: "jeg tilhører dette tema"</div>
+        <div class="ep-contract-item">Opacity: 0.28–0.58 (lav, atmosfærisk)</div>
+        <div class="ep-contract-item">Farve: canvas-afledt, tema-synkroniseret</div>
+        <div class="ep-contract-item">CSS: .profile-avatar { box-shadow: var(--avatar-ambient) }</div>
+      </div>
+      <div class="ep-contract-col">
+        <div class="ep-contract-heading ep-contract-heading--rarity">RARITY GLOW (OVERRIDE)</div>
+        <div class="ep-contract-item">Aktiv: legendary/rare udstyret</div>
+        <div class="ep-contract-item">Signal: "jeg bærer noget sjældent"</div>
+        <div class="ep-contract-item">Opacity: 0.45–0.50 (synlig, identitet)</div>
+        <div class="ep-contract-item">Farve: fast rarity-farve (guld/blå)</div>
+        <div class="ep-contract-item">CSS: [data-rarity="legendary"] { box-shadow: ... }</div>
+      </div>
+    </div>
+    <table class="ep-theme-table">
+      <thead><tr><th>Udstyrsniveau</th><th>Box-shadow</th><th>Hierarki</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Ingen / common / uncommon</td>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 3px;border-radius:2px">var(--avatar-ambient)</code> — tema-atmosfære aktiv</td>
+          <td style="color:var(--text-muted);font-size:9px">Laveste specificitet</td>
+        </tr>
+        <tr>
+          <td style="color:#1976d2">Rare udstyret</td>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 3px;border-radius:2px">0 0 0 2px rgba(25,118,210,0.45), 0 0 10px rgba(25,118,210,0.12)</code></td>
+          <td style="color:var(--text-muted);font-size:9px">[data-rarity="rare"] — override</td>
+        </tr>
+        <tr>
+          <td style="color:#f57f17">Legendary udstyret</td>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 3px;border-radius:2px">0 0 0 2px rgba(255,215,0,0.5), 0 0 14px rgba(255,215,0,0.15)</code></td>
+          <td style="color:var(--text-muted);font-size:9px">[data-rarity="legendary"] — override</td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Ambient er gulvet. Rarity er loftet. Rarity taler altid højere end tema-atmosfæren — en legendary krone fortjener sin egen glow. Systemet er hierarkisk korrekt: CSS specificitet løser konflikten uden logik.",
+    false
+  ));
+
+  // ── Card 6: Pearl light theme adaptation ─────────────────────────────────
+  root.appendChild(epCard(
+    "Pearl (Light Theme) — Ambient Adaptation",
+    `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="flex:1;min-width:180px;background:#f0f2f5;border:1px solid #c8d0e0;border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;color:#485880;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PEARL — LYS TEMA</div>
+        <div style="display:inline-block;width:52px;height:78px;border-radius:6px;
+          background:radial-gradient(ellipse at 50% 28%,#c8d4e8 0%,#8898b0 100%);
+          box-shadow:0 0 10px rgba(136,152,176,0.28);margin-bottom:8px"></div>
+        <div style="font-size:10px;color:#485880">Silver-grå ambient (rgba(136,152,176,0.28)) på lys baggrund. Blender naturligt. Næsten usynlig men kohærent.</div>
+      </div>
+      <div style="flex:1;min-width:180px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">MØR TEMAER — REFERENCE</div>
+        <div style="display:inline-block;width:52px;height:78px;border-radius:6px;
+          background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+          box-shadow:var(--avatar-ambient);margin-bottom:8px"></div>
+        <div style="font-size:10px;color:var(--text-muted)">Mørk, mættet ambient på mørk baggrund. Opacity 0.45–0.58. Shadow er mere fremtrædende relativt.</div>
+      </div>
+    </div>
+    <ul class="ep-list">
+      <li class="ep-item"><strong>Light theme challenge:</strong> en mørk box-shadow på lys baggrund læses som drop shadow, ikke atmosfærisk glow. Pearl løser dette med lys grå-blå farve + lavere opacity (0.28).</li>
+      <li class="ep-item"><strong>Pearl bruger --avatar-outer</strong> (#8898b0, neutral silver-gray) som ambient-kilde — ikke --avatar-inner (#c8d4e8, for lys).</li>
+      <li class="ep-item"><strong>Reglen:</strong> ambient-farven skal addere til baggrunden, ikke kontrahere. Mørk bg → mørk farve blender ind. Lys bg → lys farve blender ind.</li>
+    </ul>`,
+    "Pearl er et edge case der kræver bevidst håndtering. Den lavere opacity og lysere farve gør ambient næsten usynlig på Pearl — men den er der. Atmosfærisk koherens behøver ikke at ses. Det er nok at den virker.",
+    false
+  ));
+
+  // ── Card 7: Future 3D environmental architecture ──────────────────────────
+  root.appendChild(epCard(
+    "Fremtidig 3D Miljø-Arkitektur — Systemet Er Allerede Isomorfisk",
+    `<table class="ep-theme-table">
+      <thead><tr>
+        <th>2D System (nu)</th>
+        <th>3D Ækvivalent</th>
+        <th>Design Intent</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 3px;border-radius:2px">--avatar-ambient</code> box-shadow</td>
+          <td>Scene fill light / environment probe — ambient occlusion bake</td>
+          <td>Avatar reflekterer omgivende lys uanset retning</td>
+        </tr>
+        <tr>
+          <td>Tema-tinted ambient farve</td>
+          <td>Scene fog color + ambient light color</td>
+          <td>Verdens-atmosfæren sætter baggrundsbelysningens farvetemperatur</td>
+        </tr>
+        <tr>
+          <td>radial-gradient canvas baggrund</td>
+          <td>Emissive material med scene-matched farve</td>
+          <td>Avatar-canvaset udsender tematisk lys indefra</td>
+        </tr>
+        <tr>
+          <td>Rarity glow override</td>
+          <td>Point light ved avatar-position, farvetint = rarity farve</td>
+          <td>Sjældne items skaber eget lys — stærkere end ambient</td>
+        </tr>
+        <tr>
+          <td>Pearl lighter ambient (0.28)</td>
+          <td>High-key studio lighting — ingen scene fog, kølige area lights</td>
+          <td>Lyse temaer kræver høj-key miljø, ikke mørk ambient</td>
+        </tr>
+        <tr>
+          <td><code style="font-size:9px;background:var(--btn-bg);padding:1px 3px;border-radius:2px">overflow:visible</code> på canvas</td>
+          <td>Light leaks past avatar bounds — bloom/glow shader</td>
+          <td>Avatarens glow extends forbi sin geometri som i en rigtig 3D scene</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="ep-list">
+      <li class="ep-item"><strong>--avatar-ambient er semantisk identisk</strong> med en 3D scene's ambient light color + intensity. Det er ikke et CSS trick — det er en environmental lighting model implementeret i 2D.</li>
+      <li class="ep-item"><strong>Overflytning til 3D</strong> kræver kun re-mapping af farve-token til en ambient light node. Logikken er allerede korrekt og versioneret.</li>
+      <li class="ep-item">Section 30 etablerer det <strong>første miljø-lys-system</strong> på platformen — fundamentet for Phase 4+ world-atmosphere.</li>
+    </ul>`,
+    "En ambient box-shadow er et begrænset men komplet udtryk for environmental lighting. Den fortæller: 'dette element eksisterer i en verden, og verden er tematisk kohærent.' Det er nok for en 2D uddannelsesplatform på pilot-skala.",
     true
   ));
 
