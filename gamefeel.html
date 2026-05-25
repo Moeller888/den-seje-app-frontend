@@ -754,6 +754,32 @@
     .ep-contract-heading--ambient { color: #78909c; }
     .ep-contract-heading--rarity  { color: #ffd600; }
     .ep-contract-item { font-size: 10px; color: var(--text-main); line-height: 1.4; padding: 2px 0; }
+
+    /* ── Section 31: Iconic Identity & Symbolic Design ──────────── */
+    .id31-grid { display: flex; flex-direction: column; gap: 20px; }
+    .id31-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .id31-card--accent { border-top: 3px solid var(--coin); }
+    .id31-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .id31-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .id31-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .id31-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .id31-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .id31-item strong { color: var(--text-bright); }
+    .id31-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .id31-compare-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .id31-compare-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .id31-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .id31-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .id31-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: top; line-height: 1.4; }
+    .id31-table tr:last-child td { border-bottom: none; }
+    .id31-motif-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .id31-motif-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .id31-motif-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+    .id31-motif-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+    .id31-scale-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; justify-content: center; }
+    .id31-scale-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .id31-scale-label { font-size: 9px; color: var(--text-muted); text-align: center; }
+    .id31-svg-frame { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; overflow: hidden; }
   </style>
 </head>
 <body>
@@ -960,6 +986,12 @@
 <div class="section">
   <div class="section-title">30 · Environmental Presence &amp; World Integration — Contextual Belonging</div>
   <div class="ep-grid" id="epGrid30"></div>
+</div>
+
+<!-- ── Section 31: Iconic Identity & Symbolic Design ─────────── -->
+<div class="section">
+  <div class="section-title">31 · Iconic Identity &amp; Symbolic Design — Recognition Through Symbolic Consistency</div>
+  <div class="id31-grid" id="id31Grid"></div>
 </div>
 
 <script type="module">
@@ -7659,6 +7691,584 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       <li class="ep-item">Section 30 etablerer det <strong>første miljø-lys-system</strong> på platformen — fundamentet for Phase 4+ world-atmosphere.</li>
     </ul>`,
     "En ambient box-shadow er et begrænset men komplet udtryk for environmental lighting. Den fortæller: 'dette element eksisterer i en verden, og verden er tematisk kohærent.' Det er nok for en 2D uddannelsesplatform på pilot-skala.",
+    true
+  ));
+
+}());
+
+// ── Section 31: Iconic Identity & Symbolic Design ────────────────────────────
+(function () {
+  const root = document.getElementById("id31Grid");
+  if (!root) return;
+
+  const BASE   = "/assets/avatar/base/body.svg";
+  const NEUTRAL= "/assets/avatar/expressions/expr-neutral.svg";
+  const FOCUSED= "/assets/avatar/expressions/expr-focused.svg";
+  const PROUD  = "/assets/avatar/expressions/expr-proud.svg";
+  const DETERM = "/assets/avatar/expressions/expr-determined.svg";
+  const CAPE   = "/assets/avatar/shirt/cape-red.svg";
+  const GOLD   = "/assets/avatar/aura/aura-gold.svg";
+  const CROWN  = "/assets/avatar/hat/crown-golden.svg";
+
+  function id31Card(title, body, note, accent) {
+    const el = document.createElement("div");
+    el.className = "id31-card" + (accent ? " id31-card--accent" : "");
+    el.innerHTML = `<div class="id31-card-title">${title}</div>${body}` +
+      (note ? `<div class="id31-note">${note}</div>` : "");
+    return el;
+  }
+
+  function avatarAt(h, layers, cls) {
+    const w = Math.round(h * 160 / 240);
+    const r = Math.max(3, Math.round(h * 0.05));
+    let html = `<div class="${cls || "ml-breathe-new"}" style="width:${w}px;height:${h}px;border-radius:${r}px;
+      background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+      position:relative;isolation:isolate;overflow:visible;
+      box-shadow:var(--avatar-ambient)">`;
+    layers.forEach(([src, z]) => {
+      html += `<img src="${src}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:${z}" alt="">`;
+    });
+    return html + `</div>`;
+  }
+
+  // ── Card 1: Generic vs Iconic — Philosophy ───────────────────────────────────
+  const genericSVG = `<svg viewBox="0 0 140 220" width="70" height="110" style="display:block">
+    <defs>
+      <radialGradient id="id31-gen-bg" cx="50%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#2a1a2a"/><stop offset="100%" stop-color="#0a0008"/>
+      </radialGradient>
+    </defs>
+    <rect width="140" height="220" rx="8" fill="url(#id31-gen-bg)"/>
+    <!-- Generic: angular stance, weapon-ready, aggressive -->
+    <circle cx="70" cy="32" r="22" fill="#c8a080" stroke="#8a5030" stroke-width="1.5"/>
+    <!-- Aggressive brow lines -->
+    <line x1="52" y1="26" x2="62" y2="22" stroke="#333" stroke-width="2.5"/>
+    <line x1="78" y1="22" x2="88" y2="26" stroke="#333" stroke-width="2.5"/>
+    <!-- Frown mouth -->
+    <path d="M 60 38 Q 70 34 80 38" fill="none" stroke="#8a5030" stroke-width="1.5"/>
+    <!-- Hunched wide shoulders -->
+    <rect x="20" y="55" width="100" height="65" rx="4" fill="#3a2a1a" stroke="#5a3a1a" stroke-width="1"/>
+    <!-- Sharp shoulder spikes -->
+    <polygon points="20,60 8,45 20,55" fill="#5a3a1a"/>
+    <polygon points="120,60 132,45 120,55" fill="#5a3a1a"/>
+    <!-- Weapon-like arm extension -->
+    <rect x="118" y="72" width="22" height="8" rx="2" fill="#6a4a2a" transform="rotate(35 118 72)"/>
+    <polygon points="140,58 148,62 142,70" fill="#8a6a3a"/>
+    <!-- Legs — wide combat stance -->
+    <rect x="32" y="118" width="28" height="68" rx="6" fill="#3a2a1a" transform="rotate(-8 32 118)"/>
+    <rect x="80" y="118" width="28" height="68" rx="6" fill="#3a2a1a" transform="rotate(8 80 118)"/>
+    <!-- Genre label -->
+    <text x="70" y="210" font-size="7" fill="#ef5350" text-anchor="middle" font-family="sans-serif" font-weight="bold">GENERISK / FORKERT</text>
+  </svg>`;
+
+  const iconicSVG = `<svg viewBox="0 0 140 220" width="70" height="110" style="display:block">
+    <defs>
+      <radialGradient id="id31-dsj-bg" cx="50%" cy="28%" r="65%">
+        <stop offset="0%" stop-color="#1e2060"/><stop offset="100%" stop-color="#0a0a20"/>
+      </radialGradient>
+    </defs>
+    <rect width="140" height="220" rx="8" fill="url(#id31-dsj-bg)"/>
+    <!-- DSJ: upright, composed, educational -->
+    <circle cx="70" cy="34" r="24" fill="#F5C49A" stroke="#d4956a" stroke-width="1"/>
+    <!-- Calm brow — level, attentive -->
+    <line x1="54" y1="28" x2="64" y2="27" stroke="#3a2a1a" stroke-width="1.8"/>
+    <line x1="76" y1="27" x2="86" y2="28" stroke="#3a2a1a" stroke-width="1.8"/>
+    <!-- Eyes — wide, attentive -->
+    <circle cx="61" cy="33" r="4" fill="#3a2a1a"/>
+    <circle cx="79" cy="33" r="4" fill="#3a2a1a"/>
+    <circle cx="62.5" cy="32" r="1.2" fill="white"/>
+    <circle cx="80.5" cy="32" r="1.2" fill="white"/>
+    <!-- Neutral-calm mouth -->
+    <path d="M 62 42 Q 70 44 78 42" fill="none" stroke="#d4956a" stroke-width="1.2"/>
+    <!-- Level shoulders — composed -->
+    <rect x="28" y="58" width="84" height="62" rx="8" fill="#4a5088" stroke="#3a3a70" stroke-width="1"/>
+    <!-- Upright level shoulder line (no spikes) -->
+    <path d="M 28 62 Q 70 58 112 62" fill="none" stroke="#6a7ab0" stroke-width="0.8" opacity="0.5"/>
+    <!-- Arms — natural, not weapon-ready -->
+    <rect x="12" y="62" width="18" height="50" rx="8" fill="#4a5088"/>
+    <rect x="110" y="62" width="18" height="50" rx="8" fill="#4a5088"/>
+    <!-- Torso center line — settled -->
+    <line x1="70" y1="58" x2="70" y2="118" stroke="#3a3a70" stroke-width="0.8" opacity="0.4"/>
+    <!-- Legs — parallel, planted, composed -->
+    <rect x="38" y="120" width="26" height="64" rx="8" fill="#4a5088"/>
+    <rect x="76" y="120" width="26" height="64" rx="8" fill="#4a5088"/>
+    <!-- Feet — planted, stable -->
+    <rect x="34" y="178" width="32" height="10" rx="5" fill="#3a3a60"/>
+    <rect x="74" y="178" width="32" height="10" rx="5" fill="#3a3a60"/>
+    <!-- Subtle ambient glow -->
+    <rect width="140" height="220" rx="8" fill="none" stroke="rgba(30,32,96,0.4)" stroke-width="6"/>
+    <!-- Identity label -->
+    <text x="70" y="210" font-size="7" fill="#66bb6a" text-anchor="middle" font-family="sans-serif" font-weight="bold">DEN SEJE APP ✓</text>
+  </svg>`;
+
+  root.appendChild(id31Card(
+    "Filosofi — Generisk vs. Ikonisk: Hvad Er Forskellen?",
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="id31-compare-col">
+        <div class="id31-compare-heading" style="color:#ef5350">GENERISK KARAKTER</div>
+        <div style="display:flex;justify-content:center;margin-bottom:10px">${genericSVG}</div>
+        <ul class="id31-list">
+          <li class="id31-item">Aggressiv krop-stance</li>
+          <li class="id31-item">Skulder-spikes (genre: action RPG)</li>
+          <li class="id31-item">Bred kampholdning</li>
+          <li class="id31-item">Ingen ansigts-ro — rynkede bryn</li>
+          <li class="id31-item">Kunne tilhøre enhver app</li>
+        </ul>
+      </div>
+      <div class="id31-compare-col">
+        <div class="id31-compare-heading" style="color:#66bb6a">DEN SEJE APP KARAKTER</div>
+        <div style="display:flex;justify-content:center;margin-bottom:10px">${iconicSVG}</div>
+        <ul class="id31-list">
+          <li class="id31-item">Oprejst, rolig stance</li>
+          <li class="id31-item">Niveau-skuldre (genre: uddannelse)</li>
+          <li class="id31-item">Parallelle, plantede ben</li>
+          <li class="id31-item">Åbent, opmærksomt ansigt</li>
+          <li class="id31-item">Tilhører ét specifikt univers</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Ikonisk identitet opstår ikke af mere kompleksitet</strong> — den opstår af symbolsk konsistens. Hvert visuelt valg bekræfter den samme karakter-filosofi.</li>
+      <li class="id31-item"><strong>Det kritiske spørgsmål:</strong> "Hvis dette billede dukkede op uden for appen — ville nogen genkende det som DEN SEJE APP's univers?"</li>
+      <li class="id31-item"><strong>Målet er mærke-aftryk:</strong> ikke visuel kompleksitet. En karakter der er genkendt ved silhuet-tone alene.</li>
+    </ul>`,
+    "Ikonisk genkendelse er ikke et design-trick — det er et system-design-princip. Alle visuelle beslutninger (form, holdning, farve, bevægelse) skal bekræfte den samme filosofi: samlet beherskelse, nysgerrig parathed, uddannelsesmæssig ro.",
+    true
+  ));
+
+  // ── Card 2: Identity Audit ────────────────────────────────────────────────────
+  const auditData = [
+    { signal: "Vejrtrækning (breathing)",         strength: "★★★★★", status: "Stærk",   note: "Levende karakter ved alle skalaer. Sig. stærkeste identitets-signal." },
+    { signal: "5 udtryk, alle rolige",             strength: "★★★★★", status: "Stærk",   note: "Uddannelsessikkerhed + emotionel ro = genkendeligt register." },
+    { signal: "Oprejst, komposeret holdning",      strength: "★★★★☆", status: "Stærk",   note: "Definerer 'studerende' arketypen. Nu dokumenteret i avatar-identity.js." },
+    { signal: "Ansigts-proportion (25% højde)",    strength: "★★★★☆", status: "Stærk",   note: "Ansigtet dominerer ved 52px — rytmen er det primære identitets-anker." },
+    { signal: "Canvas ambient glow (Section 30)",  strength: "★★★★☆", status: "Stærk",   note: "Tema-atmosfærisk tilhørighed. Avataren hører til sin verden." },
+    { signal: "Symbolske motiv-sprog",             strength: "★★★☆☆", status: "Ny",      note: "Nu defineret i avatar-identity.js. Implicit i eksisterende design." },
+    { signal: "Cosmetic-verdenskoherens",          strength: "★★★☆☆", status: "Delvis",  note: "Kategorier er konsistente. Genre-drift anti-patterns nu dokumenteret." },
+    { signal: "Genkendelse uden kosmetik",         strength: "★★★☆☆", status: "Stærk",   note: "Nøgen krop kommunikerer 'studerende klar til at tænke' — korrekt." },
+  ];
+
+  root.appendChild(id31Card(
+    "Identitets-Audit — Hvad Ankrer Genkendelse I Dag",
+    `<table class="id31-table">
+      <thead><tr><th>Identitets-signal</th><th>Styrke</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>${auditData.map(r => `
+        <tr>
+          <td><strong>${r.signal}</strong></td>
+          <td style="color:#ffd600;letter-spacing:1px;white-space:nowrap">${r.strength}</td>
+          <td style="color:${r.status==="Stærk"?"#66bb6a":r.status==="Ny"?"#42a5f5":"#ffa726"};font-weight:bold;font-size:9px;white-space:nowrap">${r.status}</td>
+          <td style="color:var(--text-muted);font-size:9px">${r.note}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`,
+    "Audit-konklusion: Den stærkeste identitets-signal er vejrtrækning — en levende karakter ved alle skalaer. Ansigts-proportionen (25% af højden) er det primære visuelle anker ved 52px game-display. Symbolske motiver er nu dokumenteret for første gang — de var implicittes i designet, men udefinerede. Dette er den vigtigste vinding i Section 31.",
+    false
+  ));
+
+  // ── Card 3: Silhouette Zone Diagram ──────────────────────────────────────────
+  const zoneSVG = `<svg viewBox="0 0 320 260" width="100%" height="260" style="display:block">
+    <defs>
+      <radialGradient id="id31-zone-bg" cx="50%" cy="28%" r="65%">
+        <stop offset="0%" stop-color="#1e2060"/><stop offset="100%" stop-color="#0a0a20"/>
+      </radialGradient>
+      <marker id="id31arr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+        <path d="M0 0 L5 2.5 L0 5Z" fill="#90caf9"/>
+      </marker>
+    </defs>
+    <!-- Avatar canvas -->
+    <rect x="90" y="10" width="80" height="120" rx="6" fill="url(#id31-zone-bg)"/>
+    <!-- Zone overlays -->
+    <rect x="90" y="10"  width="80" height="30" rx="6" fill="rgba(102,187,106,0.15)" stroke="#66bb6a" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <rect x="90" y="40"  width="80" height="15" fill="rgba(66,165,245,0.10)" stroke="#42a5f5" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <rect x="90" y="55"  width="80" height="35" fill="rgba(255,167,38,0.10)" stroke="#ffa726" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <rect x="90" y="90"  width="80" height="28" fill="rgba(171,71,188,0.10)" stroke="#ab47bc" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <rect x="90" y="118" width="80" height="12" rx="0 0 6 6" fill="rgba(239,83,80,0.12)" stroke="#ef5350" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <!-- Head sphere guide -->
+    <circle cx="130" cy="28" r="14" fill="none" stroke="#66bb6a" stroke-width="0.6" opacity="0.4"/>
+    <!-- Body outline -->
+    <path d="M 100 40 Q 90 45 88 55 L 90 90 L 170 90 L 172 55 Q 170 45 160 40" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+    <!-- Annotations — left side -->
+    <line x1="90" y1="25"  x2="60" y2="25"  stroke="#66bb6a" stroke-width="0.8" marker-end="url(#id31arr)"/>
+    <text x="2"  y="22" font-size="7.5" fill="#66bb6a" font-family="sans-serif" font-weight="bold">① HOVED</text>
+    <text x="2"  y="31" font-size="6.5" fill="#66bb6a" font-family="sans-serif">25% · identitets-anker</text>
+
+    <line x1="90" y1="47"  x2="60" y2="47"  stroke="#42a5f5" stroke-width="0.8" marker-end="url(#id31arr)"/>
+    <text x="2"  y="44" font-size="7.5" fill="#42a5f5" font-family="sans-serif" font-weight="bold">② SKULDER</text>
+    <text x="2"  y="53" font-size="6.5" fill="#42a5f5" font-family="sans-serif">12.5% · niveau=ro</text>
+
+    <line x1="90" y1="72"  x2="60" y2="72"  stroke="#ffa726" stroke-width="0.8" marker-end="url(#id31arr)"/>
+    <text x="2"  y="69" font-size="7.5" fill="#ffa726" font-family="sans-serif" font-weight="bold">③ TORSO</text>
+    <text x="2"  y="78" font-size="6.5" fill="#ffa726" font-family="sans-serif">27% · tyngdepunkt</text>
+
+    <!-- Annotations — right side -->
+    <line x1="170" y1="104" x2="200" y2="104" stroke="#ab47bc" stroke-width="0.8" marker-end="url(#id31arr)"/>
+    <text x="202" y="101" font-size="7.5" fill="#ab47bc" font-family="sans-serif" font-weight="bold">④ HOFTE/BEN</text>
+    <text x="202" y="110" font-size="6.5" fill="#ab47bc" font-family="sans-serif">19% · stabilitet</text>
+
+    <line x1="170" y1="124" x2="200" y2="124" stroke="#ef5350" stroke-width="0.8" marker-end="url(#id31arr)"/>
+    <text x="202" y="121" font-size="7.5" fill="#ef5350" font-family="sans-serif" font-weight="bold">⑤ FØDDER</text>
+    <text x="202" y="130" font-size="6.5" fill="#ef5350" font-family="sans-serif">8% · rodfæstet</text>
+
+    <!-- Scale indicator -->
+    <line x1="82" y1="10" x2="82" y2="130" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+    <line x1="79" y1="10" x2="85" y2="10" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+    <line x1="79" y1="130" x2="85" y2="130" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+    <text x="76" y="72" font-size="7" fill="rgba(255,255,255,0.3)" font-family="sans-serif" transform="rotate(-90 76 72)">SVG 160×240</text>
+
+    <!-- 52px scale indicator -->
+    <text x="108" y="152" font-size="7" fill="#78909c" font-family="sans-serif" text-anchor="middle">52px game scale</text>
+    <rect x="96" y="155" width="24" height="36" rx="3" fill="none" stroke="#78909c" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <text x="108" y="196" font-size="6.5" fill="#78909c" font-family="sans-serif" text-anchor="middle">Ansigt = ~13px</text>
+    <!-- Head zone at game scale -->
+    <rect x="96" y="155" width="24" height="9" rx="3" fill="rgba(102,187,106,0.2)" stroke="#66bb6a" stroke-width="0.5"/>
+
+    <!-- Rule legend -->
+    <text x="170" y="155" font-size="8" fill="var(--text-bright)" font-family="sans-serif" font-weight="bold">Designregel:</text>
+    <text x="170" y="165" font-size="7.5" fill="#66bb6a" font-family="sans-serif">Ansigt ≥ 22% af højde</text>
+    <text x="170" y="175" font-size="7.5" fill="#42a5f5" font-family="sans-serif">Skuldre = niveau, aldrig hævet</text>
+    <text x="170" y="185" font-size="7.5" fill="#ffa726" font-family="sans-serif">Torso = visuelt anker-punkt</text>
+    <text x="170" y="195" font-size="7.5" fill="#ab47bc" font-family="sans-serif">Ben = parallelle, ikke kampstance</text>
+    <text x="170" y="205" font-size="7.5" fill="#ef5350" font-family="sans-serif">Fødder = plantede, aldrig svævende</text>
+  </svg>`;
+
+  root.appendChild(id31Card(
+    "Signatur Silhuet-Zoner — De 5 Proportionelle Identitets-Ankere",
+    `<div class="id31-svg-frame">${zoneSVG}</div>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Zone 1 (Hoved, 25%):</strong> Det primære identitets-signal ved alle skalaer. Ved 52px er ansigtet kun ~13px — brow/øje-rytme er den eneste læsbare udtryks-signal.</li>
+      <li class="id31-item"><strong>Zone 2 (Skuldre, 12.5%):</strong> Holdning sættes her. Niveau-skuldre signalerer komposeret ro. Hævede/skæve skuldre signalerer aggression eller defeat.</li>
+      <li class="id31-item"><strong>Zone 3 (Torso, 27%):</strong> Visuelt tyngdepunkt. Alle kosmetiske kategorier ankres til dette. Torso er aldrig "tom" — det er fundamentet.</li>
+      <li class="id31-item"><strong>Zone 4 (Hofte/Ben, 19%):</strong> Stabilitetszonen. Parallelle ben signalerer parathed. Bred kampholdning tilhører et andet univers.</li>
+      <li class="id31-item"><strong>Zone 5 (Fødder, 8%):</strong> Gravitationsbevis. Plantede fødder giver karakteren tyngde og tilstedeværelse.</li>
+    </ul>`,
+    "Disse zoner er ikke vilkårlige designvalg — de er uddannelsespsykologisk motiverede. Oprejst, stabilt og opmærksomt er præcis den holdning et engageret barn udviser i et klasseværelse. Avataren spejler den holdning.",
+    false
+  ));
+
+  // ── Card 4: Educational Prestige Language ─────────────────────────────────────
+  const prestigeRows = [
+    {
+      concept: "Præstation",
+      rpg: "Power explosion / level-up burst",
+      gacha: "Rare skin animation",
+      dsj: "Komposeret varme — proud breathing 4000ms",
+    },
+    {
+      concept: "Ekspertise",
+      rpg: "Stærkere våben / højere damage",
+      gacha: "Sjælden outfit / skin",
+      dsj: "Rolig autoritet — niveau-skuldre + crown-bue",
+    },
+    {
+      concept: "Aspiration",
+      rpg: "Næste power tier — aggressiv eskalering",
+      gacha: "Next pull / upgrade",
+      dsj: "Opadgående linjer — crown arc, aura-drift",
+    },
+    {
+      concept: "Autoritet",
+      rpg: "Kæmpe våben + intimiderende holdning",
+      gacha: "SSR legendary tier + effekter",
+      dsj: "Balanceret crown bue — tjent, ikke taget",
+    },
+    {
+      concept: "Identitet",
+      rpg: "Klasse/race archetype — warrior/mage/rogue",
+      gacha: "Cosmetic skin identity",
+      dsj: "Studerende-arketypen — nysgerrig og klar til at tænke",
+    },
+  ];
+
+  root.appendChild(id31Card(
+    "Uddannelses-Prestige-Sprog — Hvad 'Præstation' Betyder I Dette Univers",
+    `<table class="id31-table">
+      <thead>
+        <tr>
+          <th>Koncept</th>
+          <th style="color:#ef5350">Mobile RPG</th>
+          <th style="color:#ffa726">Gacha/MMO</th>
+          <th style="color:#66bb6a">DEN SEJE APP</th>
+        </tr>
+      </thead>
+      <tbody>${prestigeRows.map(r => `
+        <tr>
+          <td><strong>${r.concept}</strong></td>
+          <td style="color:var(--text-muted);font-size:9px">${r.rpg}</td>
+          <td style="color:var(--text-muted);font-size:9px">${r.gacha}</td>
+          <td style="color:#66bb6a;font-size:9px"><strong>${r.dsj}</strong></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Prestige i uddannelsesunivers ≠ power fantasy.</strong> Det er samlet vækst, rolig selvtillid og oprigtig nysgerrighed — ikke dominans.</li>
+      <li class="id31-item"><strong>Den legendariske crown</strong> er ikke et symbol på magt. Den er et symbol på fortjent fremgang — lidt bredere bue, varmere guld, ingenting mere.</li>
+      <li class="id31-item"><strong>Fejl-svar → determined (ikke skam).</strong> Resiliens fremad er prestige-sproget ved fiasko. Defeat-energi hører ikke til i dette univers.</li>
+    </ul>`,
+    "Prestige-sproget er det mest kulturelt specifikke element i hele identitetssystemet. En global app-platform kan bruge RPG prestige-sprog. En dansk klasseværelses-app kan ikke — og bør ikke.",
+    false
+  ));
+
+  // ── Card 5: Symbolic Shape Motifs ─────────────────────────────────────────────
+  const motifsSVG = `<svg viewBox="0 0 310 160" width="100%" height="160" style="display:block">
+    <!-- ① Upward Arc -->
+    <rect x="2" y="5" width="56" height="110" rx="5" fill="var(--bg-main)" stroke="var(--border)" stroke-width="0.8"/>
+    <text x="30" y="17" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">① OPADGÅENDE</text>
+    <text x="30" y="25" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">BUE</text>
+    <!-- Crown arc illustration -->
+    <path d="M 12 88 Q 30 50 48 88" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="30" cy="62" r="3" fill="#ffd700" opacity="0.6"/>
+    <!-- Whisper lines -->
+    <path d="M 20 75 Q 22 65 24 58" fill="none" stroke="#ffd700" stroke-width="1" opacity="0.4" stroke-dasharray="2,2"/>
+    <path d="M 40 75 Q 38 65 36 58" fill="none" stroke="#ffd700" stroke-width="1" opacity="0.4" stroke-dasharray="2,2"/>
+    <text x="30" y="104" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Crown arc</text>
+    <text x="30" y="113" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Aura whispers</text>
+
+    <!-- ② Settled Base -->
+    <rect x="62" y="5" width="56" height="110" rx="5" fill="var(--bg-main)" stroke="var(--border)" stroke-width="0.8"/>
+    <text x="90" y="17" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">② RODFÆSTET</text>
+    <text x="90" y="25" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">BASIS</text>
+    <!-- Heavy base, light top -->
+    <rect x="74" y="58" width="32" height="14" rx="3" fill="#4a5088" opacity="0.5"/>
+    <rect x="70" y="72" width="40" height="16" rx="3" fill="#4a5088" opacity="0.7"/>
+    <rect x="68" y="88" width="44" height="10" rx="4" fill="#3a3a70" opacity="0.9"/>
+    <!-- Gravity arrow -->
+    <line x1="90" y1="60" x2="90" y2="100" stroke="#78909c" stroke-width="1" marker-end="url(#id31arr)" opacity="0.5"/>
+    <text x="90" y="113" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Cape hem weight</text>
+
+    <!-- ③ Orbital Rhythm -->
+    <rect x="122" y="5" width="56" height="110" rx="5" fill="var(--bg-main)" stroke="var(--border)" stroke-width="0.8"/>
+    <text x="150" y="17" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">③ ORBITAL</text>
+    <text x="150" y="25" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">RYTME</text>
+    <!-- Concentric arcs -->
+    <circle cx="150" cy="68" r="24" fill="none" stroke="#ce93d8" stroke-width="0.8" opacity="0.3"/>
+    <circle cx="150" cy="68" r="16" fill="none" stroke="#ce93d8" stroke-width="0.8" opacity="0.5"/>
+    <circle cx="150" cy="68" r="8" fill="none" stroke="#ce93d8" stroke-width="1.2" opacity="0.7"/>
+    <circle cx="150" cy="68" r="3" fill="#ce93d8" opacity="0.6"/>
+    <text x="150" y="104" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Aura halos</text>
+    <text x="150" y="113" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Crown base arc</text>
+
+    <!-- ④ Arc Over Angle -->
+    <rect x="182" y="5" width="56" height="110" rx="5" fill="var(--bg-main)" stroke="var(--border)" stroke-width="0.8"/>
+    <text x="210" y="17" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">④ BUE OVER</text>
+    <text x="210" y="25" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">VINKEL</text>
+    <!-- Wrong: sharp angle -->
+    <path d="M 190 80 L 210 52 L 230 80" fill="none" stroke="#ef5350" stroke-width="2" stroke-linejoin="miter" opacity="0.7"/>
+    <text x="210" y="92" font-size="6" fill="#ef5350" text-anchor="middle" font-family="sans-serif">✗ spids</text>
+    <!-- Right: arc -->
+    <path d="M 190 65 Q 210 50 230 65" fill="none" stroke="#66bb6a" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+    <text x="210" y="78" font-size="6" fill="#66bb6a" text-anchor="middle" font-family="sans-serif">✓ bue</text>
+    <text x="210" y="104" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Cape hem shape</text>
+    <text x="210" y="113" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Armor edge rounding</text>
+
+    <!-- ⑤ Contained Extension -->
+    <rect x="242" y="5" width="66" height="110" rx="5" fill="var(--bg-main)" stroke="var(--border)" stroke-width="0.8"/>
+    <text x="275" y="17" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">⑤ INDEHOLDT</text>
+    <text x="275" y="25" font-size="7.5" fill="#90caf9" text-anchor="middle" font-family="sans-serif" font-weight="bold">UDVIDELSE</text>
+    <!-- Canvas boundary -->
+    <rect x="258" y="38" width="34" height="56" rx="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <!-- Wing extension beyond canvas -->
+    <path d="M 258 52 Q 244 62 242 75 Q 248 78 258 72" fill="rgba(66,165,245,0.15)" stroke="#42a5f5" stroke-width="0.8"/>
+    <path d="M 292 52 Q 306 62 308 75 Q 302 78 292 72" fill="rgba(66,165,245,0.15)" stroke="#42a5f5" stroke-width="0.8"/>
+    <!-- Body center -->
+    <rect x="264" y="42" width="22" height="48" rx="4" fill="#4a5088" opacity="0.6"/>
+    <!-- Center mark -->
+    <line x1="275" y1="38" x2="275" y2="94" stroke="#42a5f5" stroke-width="0.5" opacity="0.4" stroke-dasharray="2,2"/>
+    <text x="275" y="104" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Wing spread</text>
+    <text x="275" y="113" font-size="6.5" fill="var(--text-muted)" text-anchor="middle" font-family="sans-serif">Cape extension</text>
+
+    <!-- Legend -->
+    <text x="2" y="148" font-size="7" fill="var(--text-dim)" font-family="sans-serif">Alle 5 motiver bør forekomme i ethvert nyt kosmetisk item. Disse mønstre genfinder sig selv på tværs af alle kategorier og skalaer.</text>
+  </svg>`;
+
+  root.appendChild(id31Card(
+    "Symbolsk Form-Motiv-Sprog — De 5 Gentagende Geometriske Former",
+    `<div class="id31-svg-frame">${motifsSVG}</div>
+    <div class="id31-motif-grid">
+      ${[
+        { n:"① Opadgående Bue", d:"Crown-buer, skulder-linjer, aura-whispers bevæger sig opad. Aspirations-geometri." },
+        { n:"② Rodfæstet Basis", d:"Tyngde ved fødder/hofte-zone. Gravitationsanker. Karakteren er plantet, ikke svævende." },
+        { n:"③ Orbital Rytme", d:"Cirkulære/bue-former gentager sig: aura-halos, crown-bue, runde rustnings-kanter." },
+        { n:"④ Bue over Vinkel", d:"Ved valg mellem bue og spids vinkel: vælg bue. Varme over aggression." },
+        { n:"⑤ Indeholdt Udvidelse", d:"Kosmetik udvider sig forbi canvas-kant, men visuelt center forbliver i canvas-centrum." },
+      ].map(m => `<div class="id31-motif-cell">
+        <div class="id31-motif-title">${m.n}</div>
+        <div class="id31-motif-body">${m.d}</div>
+      </div>`).join("")}
+    </div>`,
+    "Et nyt kosmetisk item der ikke bruger mindst to af disse motiver er sandsynligvis ved at introducere genre-drift. Disse motiver er ikke regler for reglers skyld — de er den geometriske oversættelse af karakterens filosofi.",
+    false
+  ));
+
+  // ── Card 6: Motion as Identity ────────────────────────────────────────────────
+  const staticAvatar = `<div style="width:52px;height:78px;border-radius:6px;
+    background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+    position:relative;isolation:isolate;overflow:visible;
+    border:1.5px solid var(--border)">
+    <img src="${NEUTRAL}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+    <img src="${BASE}"    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0" alt="">
+  </div>`;
+
+  const liveAvatar = `<div class="ml-breathe-new" style="width:52px;height:78px;border-radius:6px;
+    background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+    position:relative;isolation:isolate;overflow:visible;
+    box-shadow:var(--avatar-ambient);border:1.5px solid var(--border)">
+    <img src="${NEUTRAL}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+    <img src="${BASE}"    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0" alt="">
+  </div>`;
+
+  root.appendChild(id31Card(
+    "Bevægelse som Identitet — Vejrtrækning ER Karakteren",
+    `<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-start">
+      <div style="text-align:center">
+        <div style="font-size:9px;font-weight:bold;color:#ef5350;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">STATISK (ikonet)</div>
+        ${staticAvatar}
+        <div style="font-size:9px;color:var(--text-muted);margin-top:6px;max-width:100px">Ingen animation.<br>Føles som et ikon.</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:9px;font-weight:bold;color:#66bb6a;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">LEVENDE (karakteren)</div>
+        ${liveAvatar}
+        <div style="font-size:9px;color:var(--text-muted);margin-top:6px;max-width:100px">3.5s vejrtrækning.<br>Føles som en tilstedeværelse.</div>
+      </div>
+    </div>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Vejrtrækning er det stærkeste identitets-signal i systemet.</strong> Det er det eneste element der er konstant ved alle skalaer, alle temaer, alle loadouts.</li>
+      <li class="id31-item"><strong>Stop vejrtrækningen og karakteren forsvinder.</strong> Det der er tilbage er et UI-element. Det der var der med vejrtrækning var en karakter.</li>
+      <li class="id31-item"><strong>Bevægelses-identiteten er specifik for dette univers:</strong> langsom (3500ms neutral), lille amplitude (1.0px), peak ved 38% (fysiologisk) — ikke standard ease-in-out loops.</li>
+      <li class="id31-item"><strong>prefers-reduced-motion respekteres altid</strong> — men reduktion af motion er ikke identitets-neutral. Det er et accessibility kompromis med en identitets-omkostning.</li>
+    </ul>`,
+    "Vejrtrækning som identitets-anker er ikke en teknisk beslutning — det er en filosofisk en. Det siger: 'vores karakter er levende, ikke animeret.' Den forskel mærkes, ikke ses.",
+    false
+  ));
+
+  // ── Card 7: Recognition at Scale ──────────────────────────────────────────────
+  const scaleItems = [
+    { h: 36,  label: "36px · Leaderboard", survives: "Oprejst silhuet + levende" },
+    { h: 52,  label: "52px · Game strip",  survives: "Tone + udtryk + atmosfære" },
+    { h: 78,  label: "78px · Small hub",   survives: "Karakter-personlighed" },
+    { h: 110, label: "110px · Hub",        survives: "Loadout-identitet" },
+    { h: 180, label: "180px · Collection", survives: "Fuld ikonisk status" },
+  ];
+
+  const scaleDemos = scaleItems.map(s => {
+    const w = Math.round(s.h * 160 / 240);
+    const r = Math.max(3, Math.round(s.h * 0.05));
+    return `<div class="id31-scale-col">
+      <div class="ml-breathe-new" style="width:${w}px;height:${s.h}px;border-radius:${r}px;
+        background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);
+        position:relative;isolation:isolate;overflow:visible;box-shadow:var(--avatar-ambient)">
+        <img src="${GOLD}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:-2" alt="">
+        <img src="${BASE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0" alt="">
+        <img src="${PROUD}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+        <img src="${CAPE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:-1" alt="">
+        <img src="${CROWN}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:5" alt="">
+      </div>
+      <div class="id31-scale-label">${s.label}</div>
+      <div style="font-size:8px;color:var(--text-muted);text-align:center;max-width:${Math.max(60,w+10)}px;line-height:1.3">${s.survives}</div>
+    </div>`;
+  }).join("");
+
+  root.appendChild(id31Card(
+    "Genkendelse ved Skala — Hvad Overlever",
+    `<div class="id31-scale-row">${scaleDemos}</div>
+    <table class="id31-table">
+      <thead><tr><th>Skala</th><th>Vejrtrækning</th><th>Udtryk</th><th>Kosmetik-identitet</th><th>Ikonisk status</th></tr></thead>
+      <tbody>
+        <tr><td>36px (Leaderboard)</td><td style="color:#66bb6a">✓ Levende</td><td style="color:#78909c">≈ Tone kun</td><td style="color:#ef5350">✗ Ikke synlig</td><td style="color:#ef5350">✗</td></tr>
+        <tr><td>52px (Game strip)</td><td style="color:#66bb6a">✓ Levende</td><td style="color:#66bb6a">✓ Læsbar</td><td style="color:#78909c">≈ Type kun</td><td style="color:#78909c">≈</td></tr>
+        <tr><td>78px</td><td style="color:#66bb6a">✓ Levende</td><td style="color:#66bb6a">✓ Klar</td><td style="color:#66bb6a">✓ Kategori synlig</td><td style="color:#78909c">≈</td></tr>
+        <tr><td>110px (Hub)</td><td style="color:#66bb6a">✓ Levende</td><td style="color:#66bb6a">✓ Klar</td><td style="color:#66bb6a">✓ Fuldt synlig</td><td style="color:#66bb6a">✓</td></tr>
+        <tr><td>180px (Collection)</td><td style="color:#66bb6a">✓ Levende</td><td style="color:#66bb6a">✓ Klar</td><td style="color:#66bb6a">✓ Komplet</td><td style="color:#66bb6a">✓ Fuld</td></tr>
+      </tbody>
+    </table>`,
+    "Genkendelse er ikke binær — den er progressiv. Ved 36px genkender brugeren 'levende ikke-frosset form.' Ved 180px genkender de 'DEN SEJE APP's uddannelseskarakter med dens specifikke verden.' Hvert trin er et lag af identitet der tilføjes.",
+    false
+  ));
+
+  // ── Card 8: Cosmetic World Coherence ──────────────────────────────────────────
+  const cosmetics = [
+    { cat: "Crown",   lang: "Balanceret autoritet",    motifs: "Opadgående bue + Orbital rytme",     risk: "Genre-drift → aggressiv spike-krone" },
+    { cat: "Cape",    lang: "Komposeret udvidelse",     motifs: "Bue over vinkel + Rodfæstet basis",  risk: "Genre-drift → manga-action kappe" },
+    { cat: "Wings",   lang: "Rolig ekspansion",         motifs: "Opadgående bue + Indeholdt udv.",    risk: "Genre-drift → engel/demon dualitet" },
+    { cat: "Armor",   lang: "Lærdomsfuld beskyttelse",  motifs: "Orbital rytme + Bue over vinkel",    risk: "Genre-drift → warrior-rustning" },
+    { cat: "Aura",    lang: "Atmosfærisk tilstedeværelse", motifs: "Orbital rytme + Rodfæstet basis", risk: "Genre-drift → power blast effekt" },
+    { cat: "Glasses", lang: "Intellektuel detalje",     motifs: "Orbital rytme + Indeholdt udv.",     risk: "Genre-drift → futuristisk/tech" },
+  ];
+
+  root.appendChild(id31Card(
+    "Kosmetic Verdenskoherens — Alle Kategorier, Ét Univers",
+    `<table class="id31-table">
+      <thead><tr><th>Kategori</th><th>Symbolsk Sprog</th><th>Nøgle-Motiver</th><th>Genre-Drift Risiko</th></tr></thead>
+      <tbody>${cosmetics.map(c => `
+        <tr>
+          <td><strong>${c.cat}</strong></td>
+          <td style="color:#66bb6a;font-size:9px">${c.lang}</td>
+          <td style="font-size:9px;color:var(--text-dim)">${c.motifs}</td>
+          <td style="font-size:9px;color:#ef5350;opacity:0.75">${c.risk}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Alle 6 kategorier skal feel som om de kom fra den samme verden.</strong> En bruger der ser dem side om side bør tænke "dette passer sammen" — ikke "disse er fra forskellige spil."</li>
+      <li class="id31-item"><strong>Koherens-testen:</strong> Tag to items fra forskellige kategorier. Sæt dem på samme avatar. Føles de som fra ét univers? Hvis ikke — en af dem har genre-driftet.</li>
+      <li class="id31-item"><strong>Genre-drift sker gradvist.</strong> Et item der er "lidt mere aggressivt" end standard er starten på en drift. avatar-identity.js's GENRE_DRIFT reference bør tjekkes for hvert nyt item.</li>
+    </ul>`,
+    "Verdenskoherens er sværere at vedligeholde end at etablere. Den kræver aktiv vedligeholdelse mod genre-drift — ikke bare ved lancering, men ved hvert nyt kosmetisk item der tilføjes til platformen.",
+    false
+  ));
+
+  // ── Card 9: Future 3D Iconic Universe ─────────────────────────────────────────
+  root.appendChild(id31Card(
+    "Fremtidig 3D Ikonisk Univers — Systemet Er Allerede Isomorfisk",
+    `<table class="id31-table">
+      <thead><tr>
+        <th>2D System (nu)</th>
+        <th>3D Ækvivalent</th>
+        <th>Ikonisk Intent</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Oprejst proportionel silhuet (5 zoner)</td>
+          <td>Character rig proportioner — spine, shoulder, hip ratios</td>
+          <td>Uddannelses-holdning som fundamental rig-parameter</td>
+        </tr>
+        <tr>
+          <td>Symbolske motiver (opadgående bue, etc.)</td>
+          <td>Modeling brief — arcs preferred over angles in concept art</td>
+          <td>Geometrisk filosofi overleveret til 3D modeller</td>
+        </tr>
+        <tr>
+          <td>5 udtryk, alle rolige</td>
+          <td>Blend shape library — uddannelsessikkerhed enforced på rig-niveau</td>
+          <td>Social restraint i selve animation-asset-biblioteket</td>
+        </tr>
+        <tr>
+          <td>Prestige-sprog (composed mastery)</td>
+          <td>Idle animation design brief — "curious readiness" arketypen</td>
+          <td>Den levende krop kommunikerer lærende arketypen</td>
+        </tr>
+        <tr>
+          <td>Genre-drift anti-patterns</td>
+          <td>Design review checklist — rejected: RPG weapons, anime power, esports</td>
+          <td>Identitets-principper som art direction constraints</td>
+        </tr>
+        <tr>
+          <td>Verdenskoherens per kategori</td>
+          <td>Art bible per cosmetic category — shapes, proportions, forbidden forms</td>
+          <td>Hvert kosmetisk item reviewed mod universe motif language</td>
+        </tr>
+        <tr>
+          <td>avatar-identity.js COHERENCE_TEST</td>
+          <td>Pre-ship design review — 7 questions, all must be "yes"</td>
+          <td>Identitets-review som del af shipping-processen</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="id31-list">
+      <li class="id31-item"><strong>Ikonisk 3D uddannelseskarakter ≠ Minecraft kids + Disney Pixar.</strong> DEN SEJE APP's identitet er specifik: rolig akademisk prestige, nysgerrig parathed, nordisk pædagogisk tilgang.</li>
+      <li class="id31-item"><strong>Det mest værdifulde ved Section 31</strong> er dokumentationen — ikke koden. avatar-identity.js er design-bibelen der forhindrer fremtidige teams i at lade platformen drifte mod et generisk fantasy-spil.</li>
+      <li class="id31-item"><strong>Ikonisk status nås ved gentagelse, ikke ved kompleksitet.</strong> Hvert Section 28-31 lag bygger den samme filosofi fra en ny vinkel. Den kumulative effekt er en karakter der føles specifik.</li>
+    </ul>`,
+    "Den ultimative test for ikonisk identitet: tre år fra nu, på en fremmed skærm — genkender nogen dette som DEN SEJE APP's karakter? Ikke fordi der er et logo. Men fordi holdningen, vejrtrækningen, proportionerne og den stilrene ro har en unik kombination der tilhører præcis ét sted.",
     true
   ));
 
