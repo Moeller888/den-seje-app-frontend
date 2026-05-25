@@ -810,6 +810,41 @@
     .lc32-rarity-cell { flex: 1; min-width: 80px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
     .lc32-rarity-name { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
     .lc32-rarity-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── Section 33 — Platform Coherence ── */
+    .pc33-grid { display: flex; flex-direction: column; gap: 20px; }
+    .pc33-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .pc33-card--accent { border-top: 3px solid var(--coin); }
+    .pc33-card--safe  { border-top: 3px solid var(--success, #4caf50); }
+    .pc33-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .pc33-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .pc33-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .pc33-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .pc33-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .pc33-item strong { color: var(--text-bright); }
+    .pc33-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .pc33-compare-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .pc33-compare-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .pc33-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .pc33-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .pc33-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: top; line-height: 1.4; }
+    .pc33-table tr:last-child td { border-bottom: none; }
+    .pc33-verdict { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pc33-verdict--ok   { background: rgba(76,175,80,0.15); color: #4caf50; }
+    .pc33-verdict--med  { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .pc33-verdict--high { background: rgba(229,115,115,0.15); color: #e57373; }
+    .pc33-tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .pc33-tier-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .pc33-tier-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .pc33-tier-dur { font-size: 11px; font-weight: bold; color: var(--text-bright); margin-bottom: 4px; }
+    .pc33-tier-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+    .pc33-copy-row { display: flex; gap: 10px; margin-bottom: 6px; align-items: baseline; }
+    .pc33-copy-avoid { font-size: 10px; color: #e57373; text-decoration: line-through; flex: 1; }
+    .pc33-copy-prefer { font-size: 10px; color: #4caf50; flex: 1; }
+    .pc33-area-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .pc33-area-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 9px; }
+    .pc33-area-name { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; }
+    .pc33-area-tone { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1025,6 +1060,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 32 — Legacy, Emotional Memory &amp; Long-Term Character Continuity</h2>
   <div class="lc32-grid" id="lc32Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 33 — Platform-Wide Emotional &amp; Visual Coherence</h2>
+  <div class="pc33-grid" id="pc33Grid"></div>
 </div>
 
 <script type="module">
@@ -8792,6 +8830,400 @@ const alivenessGrid = document.getElementById("alivenessGrid");
   if (btn1)   btn1.onclick   = () => applySession(1);
   if (btn10)  btn10.onclick  = () => applySession(10);
   if (btn100) btn100.onclick = () => applySession(100);
+
+}());
+
+// ── Section 33 — Platform-Wide Emotional & Visual Coherence ──────────────────
+(function () {
+  const root = document.getElementById("pc33Grid");
+  if (!root) return;
+
+  const SUCCESS = "#4caf50";
+  const RISK_C  = "#e57373";
+  const WARN    = "#ffc107";
+  const GOLD    = "#ffd700";
+
+  function pc33Card(title, body, note, accent) {
+    const el = document.createElement("div");
+    el.className = "pc33-card" + (accent ? " pc33-card--accent" : "");
+    el.innerHTML = `<div class="pc33-card-title">${title}</div>${body}` +
+      (note ? `<div class="pc33-note">${note}</div>` : "");
+    return el;
+  }
+
+  // ── Card 1: Fragmented vs Unified Platform Philosophy ─────────────────────
+  root.appendChild(pc33Card(
+    "01 — Fragmenteret vs Samlet Platform-Identitet",
+    `<div class="pc33-compare">
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${RISK_C}">Fragmenteret (fra)</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Avataren har én visuel kvalitet — resten er generisk produkt-UI</li>
+          <li class="pc33-item">Hvert system har sin egen tone — belønning er festlig, shop er game-aggressiv, leaderboard er konkurrencepræget</li>
+          <li class="pc33-item">Overgange er inkonsekvente — in-page er poleret, side-til-side er hårdt cut</li>
+          <li class="pc33-item">Belønningssprog er fra to verdener: "Korrekt!" og "LEVEL UP! 🎉"</li>
+          <li class="pc33-item">Lang-session: træthed fra akkumulerede inkonsistente signaler</li>
+          <li class="pc33-item">Brugeren mærker: "dette er en cool avatar i et ellers normalt produkt"</li>
+        </ul>
+      </div>
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${SUCCESS}">Samlet (til)</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Avatarens symbolske sprog genfindes i UI-geometri, spacing og farvebrug</li>
+          <li class="pc33-item">Ét emotionelt register tværs alt: rolig mestring, nysgerrig parathed, sammensat fremgang</li>
+          <li class="pc33-item">Overgangshierarki gælder hele platformen — fire tiers fra instant til ceremoniel</li>
+          <li class="pc33-item">Belønningssprog er konsistent: altid roligt, altid anerkendende, aldrig hype</li>
+          <li class="pc33-item">Lang-session: vedvarende ro — platformen eskalerer ikke over tid</li>
+          <li class="pc33-item">Brugeren mærker: "dette er ét sammenhængende læringsuniversum"</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Sammenhæng er et produktargument:</strong> En platform med konsistent emotionel tone kræver ikke at hvert system retfærdiggør sig selv visuelt — de trækker alle på den samme tillid.</li>
+      <li class="pc33-item"><strong>Avatarens standard er nu platform-standarden:</strong> Section 28–32 etablerede et modent karakter-sprog. Section 33 udvider det til alt andet.</li>
+    </ul>`,
+    "En elev der åbner platformen bør have én kontinuerlig emotionel oplevelse fra login til quiz til samling — ikke en serie af UI-skift.",
+    true
+  ));
+
+  // ── Card 2: Platform Coherence Audit ─────────────────────────────────────
+  root.appendChild(pc33Card(
+    "02 — Platform Kohærens-Audit",
+    `<table class="pc33-table">
+      <thead><tr><th>System</th><th>Verdict</th><th>Primær gap</th><th>Sværhed</th></tr></thead>
+      <tbody>
+        <tr><td>Hub</td><td><span class="pc33-verdict pc33-verdict--ok">Delvist kohærent</span></td><td>Navigationstitler varierer i energi; streak-display kan bære urgency-pres</td><td><span class="pc33-verdict pc33-verdict--ok">LAV</span></td></tr>
+        <tr><td>Quiz-spil</td><td><span class="pc33-verdict pc33-verdict--med">Delvist kohærent</span></td><td>"LEVEL UP! 🎉" overskrider platform-register; XP-popup (36px gold) kan føles højt efter lang session</td><td><span class="pc33-verdict pc33-verdict--med">MED</span></td></tr>
+        <tr><td>Shop</td><td><span class="pc33-verdict pc33-verdict--med">Fragmenterings-risiko</span></td><td>Kan føles som mobil-game-butik; køb-bekræftelse bør føles som en overvejelse, ikke et impulse-klik</td><td><span class="pc33-verdict pc33-verdict--med">MED</span></td></tr>
+        <tr><td>Avatar-samling</td><td><span class="pc33-verdict pc33-verdict--ok">Høj kohærens</span></td><td>Udrust/afudrust-timing ved legendarisk tier kan være mere ceremoniel</td><td><span class="pc33-verdict pc33-verdict--ok">LAV</span></td></tr>
+        <tr><td>Leaderboard</td><td><span class="pc33-verdict pc33-verdict--high">Kohærens-risiko</span></td><td>Rangering kan føles konkurrencepræget/esports hvis typografi/ikonografi læner sig aggressivt</td><td><span class="pc33-verdict pc33-verdict--high">HØJ</span></td></tr>
+        <tr><td>Achievements</td><td><span class="pc33-verdict pc33-verdict--ok">Delvist kohærent</span></td><td>Achievement-copy-tone kan stadig bruge spændings-energi snarere end rolig anerkendelse</td><td><span class="pc33-verdict pc33-verdict--ok">LAV</span></td></tr>
+        <tr><td>Belønnings-flows</td><td><span class="pc33-verdict pc33-verdict--med">Fragmenterings-risiko</span></td><td>Ingen unified vocabulary; streak-belønning kan skabe "jeg skal holde dette"-angst</td><td><span class="pc33-verdict pc33-verdict--med">MED</span></td></tr>
+        <tr><td>Modals/Popups</td><td><span class="pc33-verdict pc33-verdict--high">Proaktiv kontrakt nødvendig</span></td><td>Ingen platform-wide modal-filosofi endnu — MODAL_PHILOSOPHY defineret i platform-coherence.js</td><td><span class="pc33-verdict pc33-verdict--high">HØJ</span></td></tr>
+        <tr><td>Typografi</td><td><span class="pc33-verdict pc33-verdict--ok">Mild inkonsistens</span></td><td>Font-størrelser valgt per-komponent, ikke per-hierarki-niveau; label-behandling inkonsistent</td><td><span class="pc33-verdict pc33-verdict--ok">LAV</span></td></tr>
+        <tr><td>Spacing</td><td><span class="pc33-verdict pc33-verdict--ok">Mild inkonsistens</span></td><td>Padding-værdier varierer (14/16/20/24px) uden klar hierarki-regel</td><td><span class="pc33-verdict pc33-verdict--ok">LAV</span></td></tr>
+        <tr><td>Overgange</td><td><span class="pc33-verdict pc33-verdict--med">Inkonsistent</span></td><td>Side-til-side navigation: hårdt cut. In-page er poleret. Kløften er mærkbar.</td><td><span class="pc33-verdict pc33-verdict--med">MED</span></td></tr>
+      </tbody>
+    </table>`,
+    "Auditen identificerer to klasser af problemer: strukturelle (leaderboard, modals) der kræver proaktiv design-filosofi, og polish-gaps (typografi, spacing, overgange) der løses med konsistent application af eksisterende principper.",
+    false
+  ));
+
+  // ── Card 3: Emotional Tone Contract ──────────────────────────────────────
+  root.appendChild(pc33Card(
+    "03 — Emotionel Tone-Kontrakt: Ét Register For Hele Platformen",
+    `<div class="pc33-area-grid">
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Quiz-belønning</div>
+        <div class="pc33-area-tone">Rolig anerkendelse — svaret bekræfter viden, ikke platformens begejstring</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Quiz-fejl</div>
+        <div class="pc33-area-tone">Resilient — forkert svar er information, ikke fiasko. Ingen negativ avatar-emotion.</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Niveau-op</div>
+        <div class="pc33-area-tone">Ceremoniel anerkendelse — milepæl i en lang rejse, ikke en sejr over noget</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Achievements</div>
+        <div class="pc33-area-tone">Stille ceremoni — bekræftelse af tilbagelagt vej, ikke præmieannoncering</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Shop</div>
+        <div class="pc33-area-tone">Overvejet udtryk — eleven bygger sin identitet, ikke forbruger ressourcer</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Samling</div>
+        <div class="pc33-area-tone">Stille stolthed — et register af akkumulerede valg, ikke en trofæ-samling</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Leaderboard</div>
+        <div class="pc33-area-tone">Respektfuld prestige — andres fremgang er synlig men ikke våbeniseret mod brugeren</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Streaks</div>
+        <div class="pc33-area-tone">Blid registrering — en note om konsistens, aldrig en trussel</div>
+      </div>
+      <div class="pc33-area-cell">
+        <div class="pc33-area-name">Navigation</div>
+        <div class="pc33-area-tone">Rolig rumlig bevægelse — eleven bevæger sig i sit læringsrum, ikke et spilmenu</div>
+      </div>
+    </div>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Registeret er én skala:</strong> Fra stille → rolig → ceremoniel — aldrig festlig, aldrig dramatisk, aldrig anklagende.</li>
+      <li class="pc33-item"><strong>Konsistens er tillid:</strong> En elev der aldrig oplever et pludseligt stemningsskift behøver ikke at forsvare sig emotionelt mod platformen. Den er forudsigelig. Det er trygt.</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 4: Typography & Spacing Rhythm ───────────────────────────────────
+  root.appendChild(pc33Card(
+    "04 — Typografi & Spacing: Kompositionel Rytme",
+    `<table class="pc33-table" style="margin-bottom:14px">
+      <thead><tr><th>Niveau</th><th>Størrelse</th><th>Vægt</th><th>Brug</th></tr></thead>
+      <tbody>
+        <tr><td>Display</td><td>20–24px</td><td>Bold</td><td>Spørgsmålstekst, level-up overskrift, modal headline</td></tr>
+        <tr><td>Titel</td><td>16–18px</td><td>Bold</td><td>Sektionsoverskrifter, korttitler, achievement-navne</td></tr>
+        <tr><td>Brødtekst</td><td>14–16px</td><td>Normal</td><td>Brødtekst, svarmuligheder, beskrivelser</td></tr>
+        <tr><td>Label</td><td>11–13px</td><td>Normal</td><td>XP-labels, metadata, sekundær info, billedtekster</td></tr>
+        <tr><td>Mikro</td><td>9–11px</td><td>Normal</td><td>Tidsstempel, rarity-tag, understøttende annotering</td></tr>
+      </tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-label);margin-bottom:8px">Spacing-system (8px base)</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${[['xs','4px','Ikon-gap, tætte labels'],['sm','8px','Knap-indvendig padding, tag-gap'],['md','16px','Panel-padding (mobil), sektion-gap'],['lg','24px','Panel-padding (desktop), store sektioner'],['xl','32px','Større layout-opdeling'],['xxl','48px','Hero-sektioner']].map(([n,v,u])=>`<div style="display:flex;gap:8px;align-items:center"><div style="width:${parseInt(v)*1.5}px;height:8px;background:var(--accent);border-radius:2px;opacity:0.6;flex-shrink:0"></div><span style="font-size:9px;color:var(--text-dim)">${n}: ${v} — ${u}</span></div>`).join('')}
+        </div>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-label);margin-bottom:8px">Tæthedsprincip</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Spørgsmålskort: rummeligt — kognitiv fokus er der</li>
+          <li class="pc33-item">Leaderboard-rækker: kompakt — reference-information</li>
+          <li class="pc33-item">Level-up overlay: maksimalt sparse — ét nummer, ét øjeblik</li>
+          <li class="pc33-item">Informations-tæthed falder når emotionel vigtighed stiger</li>
+          <li class="pc33-item">Linjeafstand: 1.5 for læsning, 1.3 for interaktive elementer</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Uppercase + letter-spacing</strong> er reserveret til: sektionsoverskrifter, rarity-tags, system-labels. Ikke til brødtekst.</li>
+      <li class="pc33-item"><strong>Bold er reserveret</strong> til: numeriske data, nøgle-identifikatorer, CTA-copy. Ikke til dekorativ emphasis.</li>
+    </ul>`,
+    "Typografisk hierarki følger informationshierarki — ikke per-komponent-intuition. Konsistens her er usynlig men mærkbar: siden føles som én ting, ikke som mange komponenter.",
+    false
+  ));
+
+  // ── Card 5: Transition Hierarchy ─────────────────────────────────────────
+  root.appendChild(pc33Card(
+    "05 — Overgangshierarki: Fire Niveauer Af Bevægelses-Vægt",
+    `<div class="pc33-tier-grid">
+      <div class="pc33-tier-cell">
+        <div class="pc33-tier-title">Tier 1 — Instant</div>
+        <div class="pc33-tier-dur">0–80ms</div>
+        <div class="pc33-tier-body">Knap-active-states, input-fokus-ringe, toggle-switches. Umiddelbar taktil respons — UI'en bekræfter touchen.</div>
+      </div>
+      <div class="pc33-tier-cell">
+        <div class="pc33-tier-title">Tier 2 — Responsiv</div>
+        <div class="pc33-tier-dur">100–180ms</div>
+        <div class="pc33-tier-body">Knap-hover, panel-border-highlights, ikon-overgange. Responsiv men rolig — interfacet er levende uden at være animeret. ease kurve.</div>
+      </div>
+      <div class="pc33-tier-cell">
+        <div class="pc33-tier-title">Tier 3 — Meningsfuld</div>
+        <div class="pc33-tier-dur">250–400ms</div>
+        <div class="pc33-tier-body">Side-overgange, modal open/close, XP-bar-fyld, kort-reveal, svar-flash. Formålsbestemt bevægelse — tilstandsskiftet har vægt, øjet følger det. ease-out kurve.</div>
+      </div>
+      <div class="pc33-tier-cell">
+        <div class="pc33-tier-title">Tier 4 — Ceremoniel</div>
+        <div class="pc33-tier-dur">500ms–2000ms</div>
+        <div class="pc33-tier-body">Level-up overlay, achievement-unlock, legendarisk udrust, første afsløring. Platformen pauser med eleven — øjeblikket markeres. Overbrugt ødelægger ceremoni.</div>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid ${WARN};border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:${WARN};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Kritisk gap: Side-til-Side Navigation</div>
+      <div style="font-size:10px;color:var(--text-main);line-height:1.5">
+        <strong>Nuværende tilstand:</strong> Hårdt cut — ingen overgang mellem sider.<br>
+        <strong>Anbefalet:</strong> 150ms opacity-fade eller 200ms translateY(8px→0) på side-indhold ved DOMContentLoaded.<br>
+        <strong>Årsag:</strong> Avataren vejrtrækker ved 3500ms. Et 150ms side-fade føles sammensat i sammenligning. Det hårde cut bryder platformens ambient ro og understreger fragmenteringen.
+      </div>
+    </div>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Tier 4 er sjælden valuta:</strong> Hvis alt er ceremonielt er intet ceremonielt. Level-up er tier 4. En korrekt besvaret spørgsmål er tier 2.</li>
+      <li class="pc33-item"><strong>Overgange er ikke animation for animationens skyld</strong> — de kommunikerer tilstandsvægt. Et hårdt cut siger "dette er ligegyldigt." Et 250ms ease-out siger "dette er en reel ændring."</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 6: Reward Language — Live Comparison ────────────────────────────
+  root.appendChild(pc33Card(
+    "06 — Belønnings-Sprog: Hype vs Sammensat",
+    `<p style="font-size:10px;color:var(--text-muted);margin-bottom:10px">Sammenligning af belønnings-vokabular. Venstre: afvist. Højre: foretrukket.</p>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      ${[
+        ['LEVEL UP! 🎉', 'Niveau 12 nået'],
+        ['FANTASTISK! Det var PERFEKT!', 'Rigtigt'],
+        ['🔥 STREAK! Bevar den nu!', 'X dages aktivitet'],
+        ['🏆 ACHIEVEMENT UNLOCKED!', 'Du har opnået: Første 10 rigtige'],
+        ['KØB GENNEMFØRT! 🛒', 'Tilføjet til din samling'],
+        ['#47 — indhent dem foran dig!', 'Klasseposition: 47'],
+        ['Du er tæt på top 10! 😱', 'Du er i gang med en stille fremgang'],
+      ].map(([bad, good]) => `
+        <div class="pc33-copy-row">
+          <span class="pc33-copy-avoid">${bad}</span>
+          <span style="font-size:10px;color:var(--text-muted)">→</span>
+          <span class="pc33-copy-prefer">${good}</span>
+        </div>`).join('')}
+    </div>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Belønninger bekræfter fremgang</strong> — de fabrikerer ikke begejstring. Den tilfredsstillende følelse kommer fra akkumulering over sessioner, ikke fra spydspidser i dopamin.</li>
+      <li class="pc33-item"><strong>Hype-sprog habituerer:</strong> Den første "FANTASTISK!" giver et kick. Den hundrede giver ingenting. Sammensat sprog akkumulerer i stedet for at falme.</li>
+      <li class="pc33-item"><strong>Afviste mønstre:</strong> Store animerede tal der flyver mod brugeren, streak-flamme-ikonografi, nedtællings-timere, røde notifikations-badges, FOMO-sprog ("begrænset", "slutter snart").</li>
+    </ul>`,
+    "Prestige bør føles: tjent og værdigt — ikke vanedannende.",
+    true
+  ));
+
+  // ── Card 7: Modal & Notification Philosophy ───────────────────────────────
+  root.appendChild(pc33Card(
+    "07 — Modal & Notifikations-Filosofi",
+    `<div class="pc33-compare">
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${RISK_C}">Forbudte mønstre</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Popups der vises ved sideindlæsning uden brugerhandling</li>
+          <li class="pc33-item">Notifikationer der ikke kan afvises</li>
+          <li class="pc33-item">Overlays der skaber skyld ("Er du sikker på du vil forlade?")</li>
+          <li class="pc33-item">Nedtællings-timere i ethvert overlay</li>
+          <li class="pc33-item">Flere samtidige overlays</li>
+          <li class="pc33-item">"Bliv her"-interstitials ved navigation</li>
+          <li class="pc33-item">Streak-brud-skyld-overlays</li>
+          <li class="pc33-item">Achievement-spam (5+ toasts på 10 sekunder)</li>
+        </ul>
+      </div>
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${SUCCESS}">Interrupt-budget</div>
+        <ul class="pc33-list">
+          <li class="pc33-item" style="color:#4caf50">HØJ VÆRDI: Niveau-op, første achievement, session-afslutning</li>
+          <li class="pc33-item" style="color:${WARN}">MEDIUM: Streak-milepæl (7/14/30 dage), progression-kosmetik</li>
+          <li class="pc33-item">LAV: Individuel achievement → stille toast, ingen overlay</li>
+          <li class="pc33-item">INGEN AFBRYDELSE: Daglig login, streak-opdatering, shop-tilgængelighed, leaderboard-ændring</li>
+        </ul>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Tone-Regel</div>
+      <div style="font-size:10px;color:var(--text-main);line-height:1.5">En notifikation der kunne vises i en bank-app: OK. En notifikation der kunne vises i et mobil-casino: afvist.<br><br>Alle overlays bruger <code>var(--overlay)</code> — tema-bevidst, aldrig rå sort. Alle er afviselige ved klik udenfor. Toast auto-afviser på 3–4s.</div>
+    </div>`,
+    "Enhver notifikation skal fortjene retten til at afbryde elevens fokus. Platformen har et begrænset interrupt-budget — brug det klogt.",
+    false
+  ));
+
+  // ── Card 8: Ecosystem Visual Language ────────────────────────────────────
+  root.appendChild(pc33Card(
+    "08 — Økosystem Visuelt Sprog: Avataren Som Centrum",
+    `<table class="pc33-table">
+      <thead><tr><th>Princip</th><th>Regel</th><th>Anti-pattern</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Delt form-familie</td>
+          <td>Kort: 12–16px radius. Knapper: 20px (pill). Tags: 8px. Avatar-container: 8–10px. Arc-over-angle.</td>
+          <td>Skarpe 0px radius på interaktive elementer — for aggressivt for dette univers</td>
+        </tr>
+        <tr>
+          <td>Ambient filosofi</td>
+          <td>Alle meningsfulde beholdere har subtil ambient tilstedeværelse — ikke en hård kant</td>
+          <td>Flade farve-fyld uden dybde, som generisk form-UI</td>
+        </tr>
+        <tr>
+          <td>Farve-tilbageholdenhed</td>
+          <td>Farve bærer betydning — den er ikke dekoration. Accent = interaktiv affordance. Coin = økonomisk værdi. Success = bekræftet positiv outcome.</td>
+          <td>Accent-farve brugt til strukturel dekoration; success-grøn som brand-farve</td>
+        </tr>
+        <tr>
+          <td>Informationshierarki</td>
+          <td>Hvert skærmbillede har ét primært fokuspunkt. Sekundær info støtter — den konkurrerer ikke.</td>
+          <td>Tre elementer der alle visuelt råber højest på samme tid</td>
+        </tr>
+        <tr>
+          <td>Avatar som centrum</td>
+          <td>Hub: avatar er visuelt dominerende. Quiz: avatar er levende i identity-strip. Samling: avatar er primært indhold. Shop: items er tilføjelser til avatarens verden.</td>
+          <td>En side hvor avataren er et lille widget i hjørnet mens UI-elementer dominerer</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Det symbolske motiv-sprog (arc-over-angle, orbital rhythm, settled base)</strong> er ikke kun for avataren — det er geometri-filosofien for hele platformen. Knap-radius, kappe-kurver og kort-hjørner taler det samme geometriske sprog.</li>
+      <li class="pc33-item"><strong>Avatarens ambient-glød (--avatar-ambient)</strong> er et forvarsel om en platforms-bred filosofi: ingen hård kant, ingen flad overflade, alt har en subtil atmosfærisk tilstedeværelse.</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 9: Long-Session Comfort ──────────────────────────────────────────
+  root.appendChild(pc33Card(
+    "09 — Lang-Session Komfort: 20–40 Minutters Oplevelse",
+    `<div class="pc33-compare">
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${RISK_C}">Træthedskategorier</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Gentagende belønnings-animationer der ikke dæmpes — XP-popup ved spørgsmål 100 føles identisk med spørgsmål 1</li>
+          <li class="pc33-item">Høj kontrast i beslutnings-arealer — quiz-kort accent-border kan forårsage øjen-træthed</li>
+          <li class="pc33-item">Vejrtrækning ved 52px der bliver synlig som visuel støj hvis brugeren ikke fokuserer på avataren</li>
+          <li class="pc33-item">Achievement-toasts der vises midt i et lang flow-øjeblik — timing føles malplaceret</li>
+        </ul>
+      </div>
+      <div class="pc33-compare-col">
+        <div class="pc33-compare-heading" style="color:${SUCCESS}">Komfort-principper</div>
+        <ul class="pc33-list">
+          <li class="pc33-item">Bevægelse bør føles proportionelt mindre intensiv over en lang session — ikke bogstaveligt, men via pacing</li>
+          <li class="pc33-item">Farve bør ikke kæmpe om opmærksomhed — tema-systemets varme neutraler er lang-session default</li>
+          <li class="pc33-item">Belønnings-anerkendelse er proportional med session-længde: et korrekt svar ved minut 40 fortjener den samme ro som minut 1</li>
+          <li class="pc33-item">Eleven bør aldrig føle sig urolig over at lukke appen — ingen "bliv her"-energi, ingen skyld for at stoppe</li>
+        </ul>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Bæredygtigt engagement</div>
+      <div style="font-size:10px;color:var(--text-main);line-height:1.5">
+        <strong>Målet er:</strong> eleven ønsker at vende tilbage i morgen — ikke at de ikke kan stoppe i dag.<br>
+        <strong>Mekanismen:</strong> Rolige, konsistente belønninger der akkumulerer over tid. Ikke eskalerende dopamin-spydspidser der kræver næste hit.<br>
+        <strong>Design-test:</strong> En elev der har brugt platformen i 30 minutter bør føle sig tilfreds og rolig — ikke oprevet eller udmattet.
+      </div>
+    </div>`,
+    null,
+    false
+  ));
+
+  // ── Card 10: Future Educational Universe ──────────────────────────────────
+  root.appendChild(pc33Card(
+    "10 — Fremtidens Uddannelses-Univers: Sammenhæng Som Franchise-Fundament",
+    `<table class="pc33-table">
+      <thead><tr><th>Dimension</th><th>Princip</th><th>Risiko</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Franchise-sammenhæng</td>
+          <td>Hvert nyt system skal føles som om det altid har været en del af denne verden</td>
+          <td>Et feature der kunne eksistere umodificeret i Duolingo, Clash of Clans OG DEN SEJE APP kræver redesign</td>
+        </tr>
+        <tr>
+          <td>Lyd-filosofi (fremtidig)</td>
+          <td>Korrekt svar: én rolig tone. Niveau-op: varm, løst akkord. Achievement: behageligt, kort. Baggrund: ambient uddannelsesmiljø.</td>
+          <td>Klapsalver, eksplosions-lyde, folkemasse-lyde, alarm-lyde: alle afvist</td>
+        </tr>
+        <tr>
+          <td>Klasseværelses-integration</td>
+          <td>Platformen skal forblive komfortabel til brug i et klasseværelse — projiceret på whiteboard</td>
+          <td>Leaderboard der offentligt skammer lavt-præsterende elever; belønnings-animationer der distraherer klassen</td>
+        </tr>
+        <tr>
+          <td>Skalerbar prestige</td>
+          <td>Grey → gold progression forbliver meningsfuld ved 10× det nuværende antal items</td>
+          <td>Rarity-inflation: for mange legendariske items devaluerer tieren</td>
+        </tr>
+        <tr>
+          <td>Langsigtet tone-stabilitet</td>
+          <td>Platformens emotionelle register i år 5 er genkendeligt det samme som år 1</td>
+          <td>Tone-drift via feature-akkumulering — hvert enkelt tilskud ser fint ud, men aggregaten føles anderledes</td>
+        </tr>
+        <tr>
+          <td>Platform Coherence Test</td>
+          <td>10 spørgsmål checkes inden hvert nyt feature shipper</td>
+          <td>Spørgsmål 9 er afgørende: "Kunne dette feature eksistere umodificeret i et mobil-casino?"</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="pc33-list">
+      <li class="pc33-item"><strong>Section 33 er ikke en feature-list</strong> — det er en filosofi-udvidelse. platform-coherence.js dokumenterer hvad der ellers ville leve i folkeminder og kræve rekonstruktion ved hvert nyt team-skifte.</li>
+      <li class="pc33-item"><strong>Sammenhæng er det vigtigste platform-aktiv</strong> der er. Det er usynligt når det fungerer og smertefuldt synligt når det mangler. Den studerende der bruger platformen dagligt i tre år bør aldrig bemærke et brud i dens emotionelle register.</li>
+      <li class="pc33-item"><strong>Avatarens standard er nu platformens standard.</strong> Det er Section 33's centrale bidrag: at flytte det spørgsmål fra "er avataren sammenhængende?" til "er platformen sammenhængende?" — og svaret starter med: ja, fordi vi designede den til at være det.</li>
+    </ul>`,
+    "Den bedste platform-sammenhæng er usynlig. Brugeren mærker ikke systemerne — de mærker bare at stedet føles rigtigt.",
+    true
+  ));
 
 }());
 </script>
