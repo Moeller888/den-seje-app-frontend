@@ -606,6 +606,49 @@
     .sm-chip-skin  { background: #5a3520; color: #F5C49A; }
     .sm-chip-gem   { background: #1a237e; color: #90caf9; }
 
+    /* ── Section 29: Interaction Presence & Relational Timing ─ */
+    .ip-grid { display: flex; flex-direction: column; gap: 20px; }
+    .ip-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .ip-card--accent { border-top: 3px solid #26c6da; }
+    .ip-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .ip-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+    .ip-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; }
+    .ip-item { font-size: 11px; color: var(--text-main); line-height: 1.55; padding-left: 12px; position: relative; }
+    .ip-item::before { content: "·"; position: absolute; left: 0; color: var(--text-label); }
+    .ip-item strong { color: var(--text-bright); }
+    .ip-principle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .ip-principle-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .ip-principle-col--no  { border-left: 3px solid #ef5350; }
+    .ip-principle-col--yes { border-left: 3px solid #66bb6a; }
+    .ip-principle-heading { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .ip-principle-heading--no  { color: #ef5350; }
+    .ip-principle-heading--yes { color: #66bb6a; }
+    .ip-principle-item { font-size: 11px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+    .ip-timing-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .ip-timing-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .ip-timing-table td { padding: 6px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.4; }
+    .ip-timing-table tr:last-child td { border-bottom: none; }
+    .ip-timing-table td:first-child { font-family: monospace; font-size: 11px; color: var(--text-label); white-space: nowrap; }
+    .ip-contract-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+    .ip-contract-table th { text-align: left; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-label); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .ip-contract-table td { padding: 6px 8px; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.4; }
+    .ip-contract-table tr:last-child td { border-bottom: none; }
+    .ip-contract-table td:first-child { color: #ef5350; font-weight: bold; white-space: nowrap; }
+    .ip-seq-wrap { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .ip-seq-label { font-size: 10px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .ip-seq-row { display: flex; align-items: center; gap: 0; margin-bottom: 7px; flex-wrap: wrap; }
+    .ip-seq-event { background: rgba(239,83,80,0.12); border: 1px solid rgba(239,83,80,0.3); color: #ef9a9a; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-family: monospace; white-space: nowrap; }
+    .ip-seq-arrow { font-size: 10px; color: var(--text-dim); margin: 0 5px; flex-shrink: 0; }
+    .ip-seq-beat { background: rgba(38,198,218,0.10); border: 1px solid rgba(38,198,218,0.25); color: #80deea; font-size: 10px; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+    .ip-seq-response { background: rgba(102,187,106,0.12); border: 1px solid rgba(102,187,106,0.3); color: #a5d6a7; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-family: monospace; white-space: nowrap; }
+    .ip-seq-note { font-size: 9px; color: var(--text-muted); margin-top: 1px; margin-left: 4px; }
+    .ip-demo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 12px; }
+    .ip-demo-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ip-demo-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; text-align: center; color: var(--text-dim); }
+    .ip-scale-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; justify-content: center; }
+    .ip-scale-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ip-scale-label { font-size: 9px; font-family: monospace; color: var(--text-dim); }
+
     /* ── Section 28: Stylized Motion Language ──────────────── */
     .ml-grid { display: flex; flex-direction: column; gap: 20px; }
     .ml-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
@@ -881,6 +924,12 @@
 <div class="section">
   <div class="section-title">28 · Stylized Motion Language — Weight, Restraint, Rhythm, and Emotional Clarity</div>
   <div class="ml-grid" id="mlGrid28"></div>
+</div>
+
+<!-- ── Section 29: Interaction Presence & Relational Timing ─────── -->
+<div class="section">
+  <div class="section-title">29 · Interaction Presence &amp; Relational Timing — Quiet Social Awareness</div>
+  <div class="ip-grid" id="ipGrid29"></div>
 </div>
 
 <script type="module">
@@ -6959,6 +7008,357 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       </tbody>
     </table>`,
     "All motion is calibrated for the 52–120px range where the avatar is most commonly seen. At 36px, the system gracefully degrades — the avatar still doesn't feel 'frozen' even though no individual motion is legible. That quality is the goal.",
+    true
+  ));
+
+}());
+
+// ── Section 29: Interaction Presence & Relational Timing ──────────────────────
+(function () {
+  const root = document.getElementById("ipGrid29");
+  if (!root) return;
+
+  function ipCard(title, body, note, accent) {
+    const d = document.createElement("div");
+    d.className = "ip-card" + (accent ? " ip-card--accent" : "");
+    d.innerHTML = `<div class="ip-card-title">${title}</div>${body}${note ? `<div class="ip-note">${note}</div>` : ""}`;
+    return d;
+  }
+
+  function avatar(layers, h, animClass) {
+    const w = Math.round(h * 160 / 240);
+    const r = Math.max(4, Math.round(h * 0.04));
+    const imgs = layers.map(([src, z]) =>
+      `<img src="${src}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:${z}" alt="">`
+    ).join("");
+    return `<div class="${animClass || ''}" style="width:${w}px;height:${h}px;border-radius:${r}px;background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);position:relative;isolation:isolate;overflow:visible;box-shadow:0 2px 10px rgba(0,0,0,0.35)">${imgs}</div>`;
+  }
+
+  const BASE    = "/assets/avatar/base/body.svg";
+  const NEUTRAL = "/assets/avatar/expressions/expr-neutral.svg";
+  const FOCUSED = "/assets/avatar/expressions/expr-focused.svg";
+  const PROUD   = "/assets/avatar/expressions/expr-proud.svg";
+  const DETERM  = "/assets/avatar/expressions/expr-determined.svg";
+  const CAPE    = "/assets/avatar/shirt/cape-red.svg";
+  const GOLD    = "/assets/avatar/aura/aura-gold.svg";
+  const CROWN   = "/assets/avatar/hat/crown-golden.svg";
+
+  // ── Card 1: Philosophy ──────────────────────────────────────────────────────
+  root.appendChild(ipCard(
+    "Relational vs. Mechanical Presence",
+    `<div class="ip-principle-grid">
+      <div class="ip-principle-col ip-principle-col--no">
+        <div class="ip-principle-heading ip-principle-heading--no">Mechanical Response</div>
+        <div class="ip-principle-item">Event fires → reaction executes immediately</div>
+        <div class="ip-principle-item">Avatar responds to UI triggers</div>
+        <div class="ip-principle-item">Emotion is a state change, not a feeling</div>
+        <div class="ip-principle-item">Correct → proud (simultaneous)</div>
+        <div class="ip-principle-item">The timing feels like software</div>
+      </div>
+      <div class="ip-principle-col ip-principle-col--yes">
+        <div class="ip-principle-heading ip-principle-heading--yes">Relational Presence</div>
+        <div class="ip-principle-item">Event fires → beat of reception → response arrives</div>
+        <div class="ip-principle-item">Avatar participates in the learning moment</div>
+        <div class="ip-principle-item">Emotion arrives because the character received it</div>
+        <div class="ip-principle-item">Correct → [absorbs] → proud emerges</div>
+        <div class="ip-principle-item">The timing feels like a person</div>
+      </div>
+    </div>
+    <ul class="ip-list">
+      <li class="ip-item"><strong>Section 29 introduces three relational timing mechanisms:</strong> (1) beats of reception before event emotions arrive, (2) anticipation breath-hold during answer submission, (3) asymmetric delay weighting — significant moments get longer beats.</li>
+      <li class="ip-item"><strong>This is NOT about bigger reactions.</strong> Correct still triggers proud. Level-up still triggers critical expression. The change is purely in timing — when the emotion arrives relative to the event trigger.</li>
+      <li class="ip-item"><strong>The result is a character that feels emotionally present</strong> rather than emotionally wired. The difference is felt subconsciously, never consciously timed.</li>
+    </ul>`,
+    "Relational timing is the difference between a slot machine and a teacher. Both respond to input. Only one feels like it received the moment.",
+    true
+  ));
+
+  // ── Card 2: Acknowledgment Timing — Event Beats ─────────────────────────────
+  root.appendChild(ipCard(
+    "Beats of Reception — Event Acknowledgment Timing",
+    `<div class="ip-seq-wrap">
+      <div class="ip-seq-label">Event Sequence — Before (Mechanical)</div>
+      <div class="ip-seq-row">
+        <span class="ip-seq-event">CORRECT fires</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-response">PROUD expression</span>
+        <span class="ip-seq-arrow">+</span>
+        <span class="ip-seq-response">proud breathing</span>
+        <span class="ip-seq-note">t=0ms, simultaneous — mechanical</span>
+      </div>
+    </div>
+    <div class="ip-seq-wrap">
+      <div class="ip-seq-label">Event Sequence — After (Relational)</div>
+      <div class="ip-seq-row">
+        <span class="ip-seq-event">CORRECT fires</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">55ms beat (expr)</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-response">PROUD expression</span>
+        <span class="ip-seq-note" style="width:100%">t=55ms expression settles in over 169ms (65% of 260ms fade)</span>
+      </div>
+      <div class="ip-seq-row" style="margin-top:4px">
+        <span class="ip-seq-event">CORRECT fires</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">60ms beat (breath)</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-response">proud breathing</span>
+        <span class="ip-seq-note">t=60ms breathing rises (face and body arrive together)</span>
+      </div>
+    </div>
+    <table class="ip-timing-table">
+      <thead><tr><th>Event</th><th>Expr delay</th><th>Breath delay</th><th>Why this weight</th></tr></thead>
+      <tbody>
+        <tr><td>CORRECT</td><td>55ms</td><td>60ms</td><td>A beat to receive success before pride rises. Dignity over dopamine.</td></tr>
+        <tr><td>INCORRECT</td><td>35ms</td><td>40ms</td><td>Shorter — resilience arrives fast. No delay on steadying after failure.</td></tr>
+        <tr><td>LEVEL_UP</td><td>80ms</td><td>90ms</td><td>Significant beat for a significant moment. Let it land.</td></tr>
+        <tr><td>ACHIEVEMENT_UNLOCK</td><td>80ms</td><td>90ms</td><td>Same weight as level-up.</td></tr>
+      </tbody>
+    </table>
+    <ul class="ip-list">
+      <li class="ip-item"><strong>Expression and breathing delays are matched but slightly offset</strong> (55ms vs 60ms for CORRECT). Face arrives first by ~5ms — micro lead of expression over body, which is physiologically natural.</li>
+      <li class="ip-item"><strong>INCORRECT gets the shortest beat (35/40ms)</strong> because emotional support must be immediate. The "steadying" effect of determined/resilient breathing should not feel withheld.</li>
+      <li class="ip-item"><strong>During the beat window</strong>, setUIState('TRANSITIONING') fires (line 374 of app.js), shifting stateBreath to 'neutral'. So the actual sequence is: event → TRANSITIONING (brief neutral) → 55ms → proud. The neutral "landing" before proud is the beat made visible.</li>
+    </ul>`,
+    "55 milliseconds is imperceptible as a delay. It is perceptible as a character."
+  ));
+
+  // ── Card 3: Anticipation Rhythm — Submission Breath-Hold ────────────────────
+  root.appendChild(ipCard(
+    "Anticipation Rhythm — Submission Breath-Hold",
+    `<div class="ip-seq-wrap">
+      <div class="ip-seq-label">Answer Submission Flow</div>
+      <div class="ip-seq-row">
+        <span class="ip-seq-event">SUBMITTING_ANSWER</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">amplitude → 0.35px (held breath)</span>
+        <span class="ip-seq-note">vs. focused 0.7px — near-still, waiting</span>
+      </div>
+      <div class="ip-seq-row" style="margin-top:4px">
+        <span class="ip-seq-response">event arrives (&lt;300ms)</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">anticipation cleared</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">relational delay</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-response">event breathing</span>
+      </div>
+      <div class="ip-seq-row" style="margin-top:4px">
+        <span class="ip-seq-response">slow API (&gt;300ms)</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-beat">hold_cap_ms expires</span>
+        <span class="ip-seq-arrow">→</span>
+        <span class="ip-seq-response">returns to focused</span>
+        <span class="ip-seq-note">safe fallback, no stuck state</span>
+      </div>
+    </div>
+    <div class="ip-demo-row">
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [FOCUSED, 0], [CAPE, -1]], 120, "ml-breathe-new")}
+        <div class="ip-demo-label">Awaiting Answer<br><span style="color:var(--text-muted);font-size:9px">0.7px amplitude (focused)</span></div>
+      </div>
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [FOCUSED, 0], [CAPE, -1]], 120, "")}
+        <div class="ip-demo-label">Submitting<br><span style="color:var(--text-muted);font-size:9px">0.35px amplitude (held)</span></div>
+      </div>
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [PROUD, 0], [CAPE, -1]], 120, "ml-breathe-new")}
+        <div class="ip-demo-label">After Correct<br><span style="color:var(--text-muted);font-size:9px">1.4px amplitude (proud)</span></div>
+      </div>
+    </div>
+    <ul class="ip-list">
+      <li class="ip-item"><strong>The anticipation hold is skipped if an event hold is already active</strong> (rapid answering). This prevents the anticipation from interfering with an ongoing emotional state from a previous answer.</li>
+      <li class="ip-item"><strong>prefers-reduced-motion: anticipation hold is also skipped.</strong> Users who prefer reduced motion experience clean state transitions without the sub-threshold amplitude change.</li>
+      <li class="ip-item"><strong>The amplitude change (0.7px → 0.35px) is at the edge of perceptibility at 52px display scale.</strong> It contributes to the subconscious "waiting" quality without being noticeable as a distinct animation state.</li>
+    </ul>`,
+    "The avatar holds its breath while the answer is evaluated. This is not an animation — it is a character being present in the same moment the user is."
+  ));
+
+  // ── Card 4: Reward & Failure Response Language ───────────────────────────────
+  root.appendChild(ipCard(
+    "Reward Acknowledgment & Failure Response Language",
+    `<div class="ip-principle-grid">
+      <div class="ip-principle-col ip-principle-col--yes">
+        <div class="ip-principle-heading ip-principle-heading--yes">Correct — Proud with Restraint</div>
+        <div class="ip-principle-item"><strong>Hold: 2200ms</strong> — enough to feel meaningful, not enough to feel like celebration spam</div>
+        <div class="ip-principle-item">Expression: proud — warm composed satisfaction</div>
+        <div class="ip-principle-item">Breathing: 4000ms cycle, 1.4px — slower, fuller, earned</div>
+        <div class="ip-principle-item">Returns: to current state-layer expression (focused/neutral)</div>
+        <div class="ip-principle-item">What it communicates: "You did well. I'm with you."</div>
+      </div>
+      <div class="ip-principle-col ip-principle-col--no" style="border-left-color:#66bb6a">
+        <div class="ip-principle-heading" style="color:#ef5350">Incorrect — Resilience, Not Disappointment</div>
+        <div class="ip-principle-item"><strong>Hold: 1400ms</strong> — brief. Emotional support, not dwelling</div>
+        <div class="ip-principle-item">Expression: determined — resolve, focus, steadiness</div>
+        <div class="ip-principle-item">Breathing: 2600ms cycle, 0.5px — constrained, focused</div>
+        <div class="ip-principle-item">Returns: to current state-layer expression</div>
+        <div class="ip-principle-item">What it communicates: "Keep going. You're still here."</div>
+      </div>
+    </div>
+    <div class="ip-demo-row">
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [NEUTRAL, 0], [CAPE, -1]], 110, "ml-breathe-new")}
+        <div class="ip-demo-label" style="font-size:9px">neutral (baseline)</div>
+      </div>
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [PROUD, 0], [CAPE, -1], [GOLD, -2]], 110, "ml-breathe-new")}
+        <div class="ip-demo-label" style="color:#66bb6a;font-size:9px">correct → proud</div>
+      </div>
+      <div class="ip-demo-col">
+        ${avatar([[BASE, 1], [DETERM, 0], [CAPE, -1]], 110, "ml-breathe-new")}
+        <div class="ip-demo-label" style="color:#78909c;font-size:9px">incorrect → determined</div>
+      </div>
+    </div>
+    <ul class="ip-list">
+      <li class="ip-item"><strong>Incorrect never triggers sadness, concern, or disappointment.</strong> "Determined" communicates resilience: brow lowered slightly (resolve), mouth steady, breathing constrained (focused). The emotion is forward-facing, not backward-looking.</li>
+      <li class="ip-item"><strong>The incorrect hold (1400ms) is deliberately shorter than correct (2200ms).</strong> Dwelling in emotional steadiness after failure would feel condescending. The avatar acknowledges the moment and moves forward.</li>
+      <li class="ip-item"><strong>Level-up hold (3000ms) and achievement hold (3200ms) are the longest.</strong> These are genuinely significant moments. The pride expression holding for 3+ seconds communicates that the character shares in the significance, not just acknowledges it.</li>
+    </ul>`,
+    "The failure response is the most emotionally critical design decision in the system. A single frame of 'sad' expression would undo the educational trust the entire system is built on."
+  ));
+
+  // ── Card 5: Social Restraint Contract ───────────────────────────────────────
+  root.appendChild(ipCard(
+    "Social Restraint Contract — What the Avatar Intentionally Does NOT Do",
+    `<table class="ip-contract-table">
+      <thead><tr><th>Excluded Behavior</th><th>Why Excluded</th><th>What It Would Signal</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Waving / gesturing</td>
+          <td>Requires pose variants. Mascot energy — performing for the user rather than being with them.</td>
+          <td>Companion AI, friendly NPC — breaks educational register</td>
+        </tr>
+        <tr>
+          <td>Jumping / bouncing</td>
+          <td>Bouncy kineticism signals "celebration." The avatar doesn't celebrate — it recognizes.</td>
+          <td>Gamified hype — dopamine-maxxing, not learning support</td>
+        </tr>
+        <tr>
+          <td>Rapid gaze tracking</td>
+          <td>Eye-following creates uncanny valley at small scale. Gaze system is a future contract (Phase 2) requiring SVG variants.</td>
+          <td>Surveillance, not attention — unsettling at 52px</td>
+        </tr>
+        <tr>
+          <td>Applause / clapping</td>
+          <td>Teacher applause is condescending. Recognition is not applause.</td>
+          <td>Patronizing, infantilizing — wrong emotional register</td>
+        </tr>
+        <tr>
+          <td>Exaggerated expressions</td>
+          <td>Wide eyes, gaping mouth, shocked face. These are theatrical, not relational.</td>
+          <td>Cartoon mascot — not a classroom presence</td>
+        </tr>
+        <tr>
+          <td>Disappointment / sadness on incorrect</td>
+          <td>Incorrect answers should produce resilience, not shame. Sadness creates punitive emotional association.</td>
+          <td>Shame-based feedback — actively harmful to learning</td>
+        </tr>
+        <tr>
+          <td>Speech bubbles / dialogue</td>
+          <td>The avatar communicates through presence and expression, not words.</td>
+          <td>Talking mascot — breaks emotional safety register</td>
+        </tr>
+        <tr>
+          <td>Idle fidgets / blinks</td>
+          <td>Random micro-animations require gaze variants or inline SVG. Design contract for future. Stub implementation would produce uncanny valley at 52px.</td>
+          <td>Could feel natural at full render — currently not viable</td>
+        </tr>
+        <tr>
+          <td>Overfriendly excitement</td>
+          <td>Jumping to LEVEL_UP energy for a single correct answer. Reserve peak emotional investment for peak moments.</td>
+          <td>Attention-seeking — emotional manipulation</td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Social restraint is not limitation. It is the decision to be present without performing. The entire system is built on the premise that the avatar should feel like a calm, trustworthy presence — not an entertainer. Every excluded behavior protects that premise.",
+    true
+  ));
+
+  // ── Card 6: Relational Presence at Scale ────────────────────────────────────
+  const ipScaleDemo = (h, label) => {
+    const w = Math.round(h * 160 / 240);
+    return `<div class="ip-scale-col">
+      <div class="ml-breathe-new" style="width:${w}px;height:${h}px;border-radius:${Math.max(3,Math.round(h*0.04))}px;background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);position:relative;isolation:isolate;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
+        <img src="${GOLD}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0" alt="">
+        <img src="${BASE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1" alt="">
+        <img src="${CAPE}"  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:-1" alt="">
+        <img src="${CROWN}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:5" alt="">
+      </div>
+      <div class="ip-scale-label">${label}</div>
+    </div>`;
+  };
+
+  root.appendChild(ipCard(
+    "Relational Presence at Scale — What Survives",
+    `<div class="ip-scale-row">
+      ${ipScaleDemo(180, "Shop 180px")}
+      ${ipScaleDemo(120, "Standard 120px")}
+      ${ipScaleDemo(90,  "Collection 90px")}
+      ${ipScaleDemo(60,  "Hub 60px")}
+      ${ipScaleDemo(36,  "Leaderboard 36px")}
+    </div>
+    <table class="ip-timing-table">
+      <thead><tr><th>Scale</th><th>Relational Timing</th><th>Anticipation Hold</th><th>Presence Signal</th></tr></thead>
+      <tbody>
+        <tr><td>180px (Shop)</td><td>All delays fully effective. Beat before proud is readable.</td><td>0.35px hold visible as amplitude reduction.</td><td>Full relational character — closest to 3D screen quality.</td></tr>
+        <tr><td>120px (Standard)</td><td>Delays effective. Expression settling (65% fade-in) warm and visible.</td><td>Subconscious — barely visible but contributes to "waiting" feel.</td><td>Primary gameplay scale. Full relational presence.</td></tr>
+        <tr><td>90px (Collection)</td><td>Beat imperceptible as delay. Proud settling visible at slow speeds.</td><td>Not perceptible.</td><td>Breathing + expression change is presence signal.</td></tr>
+        <tr><td>60px (Hub)</td><td>Delays invisible. Expression change readable.</td><td>Not perceptible.</td><td>Breathing creates "not frozen" quality. Aura field.</td></tr>
+        <tr><td>36px (Leaderboard)</td><td>All timing invisible. Presence is static-vs-breathing distinction.</td><td>Not perceptible.</td><td>The avatar doesn't feel frozen. That is enough.</td></tr>
+      </tbody>
+    </table>`,
+    "At 36px, none of the relational timing mechanics are legible. But the system still produces a character that feels qualitatively different from a static icon — because the breathing never stops, the expression is correct for the moment, and the system is coherent across all scales."
+  ));
+
+  // ── Card 7: Future 3D Interaction Controller Thinking ───────────────────────
+  root.appendChild(ipCard(
+    "Future 3D Interaction Controller — Relational Character Architecture",
+    `<table class="ip-timing-table">
+      <thead><tr><th>Current 2D System</th><th>3D Controller Equivalent</th><th>Design Intent</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Relational delay (55ms expr, 60ms breath)</td>
+          <td>AnimationController.SetTrigger() with OnEnterState latency — state machine delays transition for X frames</td>
+          <td>The receiving beat before emotional response arrives</td>
+        </tr>
+        <tr>
+          <td>Anticipation hold (amplitude → 0.35px)</td>
+          <td>Spine bone subtle pull-back blend (weight 0.3) on SUBMITTING state — slight breath-hold body language</td>
+          <td>Physical acknowledgment of suspended moment</td>
+        </tr>
+        <tr>
+          <td>Relational delay weighting (LEVEL_UP 90ms > CORRECT 55ms)</td>
+          <td>Per-trigger latency config on AnimationController — heavier events → longer receiving frames</td>
+          <td>Event significance encoded in timing, not amplitude</td>
+        </tr>
+        <tr>
+          <td>INCORRECT → determined (resilience)</td>
+          <td>Idle layer blend: neutral_idle → focus_steady (no sad_idle in rig) — emotional safety enforced at animation layer</td>
+          <td>Resilience as default fallback, shame as impossible state</td>
+        </tr>
+        <tr>
+          <td>Asymmetric expression fade (35% out / 65% in)</td>
+          <td>AnimationClip blending: exit curve fast ease-in, enter curve slow ease-out — emotional settling built into blend graph</td>
+          <td>New states arrive slowly, old states release quickly</td>
+        </tr>
+        <tr>
+          <td>Idle settle after 30s (IDLE_SETTLE_MS)</td>
+          <td>BlendTree timeout: after 30s no input → blend to neutral_breathing layer — quiet recentering</td>
+          <td>Long-session emotional fatigue: the character rests</td>
+        </tr>
+        <tr>
+          <td>Social restraint contract (no waves, jumps, applause)</td>
+          <td>Animation library policy: exclude "performance" clips from educational build variant. Mascot rig ≠ relational character rig.</td>
+          <td>Restraint enforced at the animation asset level, not just code</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="ip-list">
+      <li class="ip-item"><strong>The entire 2D system is isomorphic to a 3D animation controller.</strong> Every timing value, every delay, every emotional state maps to a specific 3D concept. The migration is a change of rendering layer, not a redesign of the relational model.</li>
+      <li class="ip-item"><strong>The key 3D insight: "receiving beats" = per-trigger latency in the AnimationController.</strong> Unity's AnimatorController supports exit time and transition offset — the relational delay (55ms) maps directly to a 3-frame transition offset at 60fps.</li>
+      <li class="ip-item"><strong>The social restraint contract should be enforced at the animation asset level</strong> in 3D — by simply not creating "wave", "jump", or "clap" clips for the educational character rig. Restraint is a design constraint, not just a runtime policy.</li>
+    </ul>`,
+    "A believable 3D relational character is not built by adding more animations. It is built by designing the timing relationships between the animations you do have. The 2D system demonstrates this principle at every scale from 36px to 180px.",
     true
   ));
 

@@ -111,6 +111,31 @@ export const FUTURE_3D_TARGETS = {
   critical_override:{ mechanism: "Animation layer weight 1.0 = full override of layers 0–1", layer: 3 },
 };
 
+// ── Relational Timing ─────────────────────────────────────────────────────────
+// Delays between event trigger and emotional state arrival.
+// These are "beats of reception" — the breathing body absorbs the moment
+// before responding. The effect is felt as presence, not timed as delay.
+//
+// Values are deliberately minimal. At these durations, the user never
+// consciously registers a delay — they register a character.
+//
+// event_delays_ms: how long before event breathing profile arrives after trigger
+// anticipation:    breath-hold during answer submission — waits for result reveal
+
+export const RELATIONAL_TIMING = {
+  event_delays_ms: {
+    CORRECT:            60,   // breath absorbs the success before pride rises
+    INCORRECT:          40,   // shorter — steadying arrives fast, no delay on failure
+    LEVEL_UP:           90,   // significant beat — let the moment land
+    ACHIEVEMENT_UNLOCK: 90,   // same weight as level-up
+  },
+  anticipation: {
+    amplitude_y:     0.35,  // near-still — held breath (vs focused 0.7px)
+    amplitude_scale: 0.002, // minimal movement
+    hold_cap_ms:     300,   // max hold before releasing if event never arrives
+  },
+};
+
 // ── Silhouette Safety Contract ────────────────────────────────────────────────
 // All presence effects must be transparent to cosmetic layers.
 //

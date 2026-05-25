@@ -12,6 +12,16 @@
 
 import { EXPRESSIONS } from './avatar-personality.js';
 
+// ── Relational Delay — beats of reception before expression arrives ─────────────
+// Matches the presence engine's breathing delays so both systems respond together.
+// The face and body absorb the moment in unison before the emotion settles in.
+const RELATIONAL_DELAY_MS = {
+  CORRECT:            55,  // beat before pride arrives — face receives the success
+  INCORRECT:          35,  // shorter — resilience arrives quickly, never withheld
+  LEVEL_UP:           80,  // significant beat for a significant moment
+  ACHIEVEMENT_UNLOCK: 80,  // same weight as level-up
+};
+
 // ── Priority Levels ────────────────────────────────────────────────────────────
 const PRIORITY = {
   STATE:    1,  // normal quiz flow (curious, focused, neutral)
@@ -54,7 +64,8 @@ export class ExpressionEngine {
     this._eventExpr   = null;        // event-driven override (proud/determined) or null
     this._eventPriority = PRIORITY.STATE;
     this._eventTimer  = null;        // hold timer for event expression
-    this._fadeTimer   = null;        // ongoing fade-out/in timer
+    this._fadeTimer      = null;      // ongoing fade-out/in timer
+    this._relationalTimer = null;    // delay before event expression arrives
     this._displayed   = "neutral";   // what is actually shown right now
     this._overlay     = null;        // the single expression img element
     this._prefersRM   = this._detectReducedMotion();
@@ -77,6 +88,21 @@ export class ExpressionEngine {
 
   // Called for game events: "CORRECT" | "INCORRECT" | "LEVEL_UP" | "ACHIEVEMENT_UNLOCK"
   onGameEvent(eventName) {
+    // Relational delay — expression absorbs the moment before the emotion settles in.
+    // The face and breathing body respond together with matching beat durations.
+    const delay = RELATIONAL_DELAY_MS[eventName] ?? 0;
+    if (delay > 0) {
+      this._clearRelationalTimer();
+      this._relationalTimer = setTimeout(() => {
+        this._relationalTimer = null;
+        this._dispatchEvent(eventName);
+      }, delay);
+    } else {
+      this._dispatchEvent(eventName);
+    }
+  }
+
+  _dispatchEvent(eventName) {
     if (CRITICAL_EVENTS[eventName]) {
       this._triggerCritical(eventName);
       return;
@@ -95,6 +121,7 @@ export class ExpressionEngine {
   destroy() {
     this._clearEventTimer();
     this._clearFadeTimer();
+    this._clearRelationalTimer();
     if (this._overlay && this._overlay.parentNode) {
       this._overlay.parentNode.removeChild(this._overlay);
     }
@@ -229,6 +256,13 @@ export class ExpressionEngine {
     if (this._eventTimer) {
       clearTimeout(this._eventTimer);
       this._eventTimer = null;
+    }
+  }
+
+  _clearRelationalTimer() {
+    if (this._relationalTimer) {
+      clearTimeout(this._relationalTimer);
+      this._relationalTimer = null;
     }
   }
 
