@@ -13,7 +13,13 @@
       "Bash(npx supabase *)",
       "mcp__plugin_supabase_supabase__list_projects",
       "mcp__plugin_supabase_supabase__execute_sql",
-      "mcp__plugin_supabase_supabase__apply_migration"
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "Bash(powershell -command \"\\(Get-Content gamefeel.html\\).Count\")",
+      "Bash(powershell -command \"Select-String -Path gamefeel.html -Pattern 'ccGrid23|ppGrid|s23|s24|Section 23' | Select-Object -First 20\")",
+      "Bash(powershell -command \"Select-String -Path gamefeel.html -Pattern '</style>' | Select-Object -First 5\")",
+      "Bash(powershell -command \"Select-String -Path gamefeel.html -Pattern 'pp-|ppGrid|Section 24|s24' | Select-Object -First 30\")",
+      "Bash(powershell -command \"Select-String -Path gamefeel.html -Pattern 'pz-|Section 24|24 ·|ppGrid24' | Select-Object -First 20\")",
+      "PowerShell(Get-Content *)"
     ]
   }
 }
