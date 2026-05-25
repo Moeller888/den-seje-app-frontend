@@ -780,6 +780,36 @@
     .id31-scale-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .id31-scale-label { font-size: 9px; color: var(--text-muted); text-align: center; }
     .id31-svg-frame { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; overflow: hidden; }
+
+    /* ── Section 32 — Long-Term Continuity ── */
+    .lc32-grid { display: flex; flex-direction: column; gap: 20px; }
+    .lc32-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .lc32-card--accent { border-top: 3px solid var(--coin); }
+    .lc32-card--safe { border-top: 3px solid var(--success, #4caf50); }
+    .lc32-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .lc32-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .lc32-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .lc32-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .lc32-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .lc32-item strong { color: var(--text-bright); }
+    .lc32-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .lc32-compare-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .lc32-compare-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .lc32-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .lc32-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .lc32-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: top; line-height: 1.4; }
+    .lc32-table tr:last-child td { border-bottom: none; }
+    .lc32-verdict { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .lc32-verdict--strength { background: rgba(76,175,80,0.15); color: #4caf50; }
+    .lc32-verdict--risk { background: rgba(229,115,115,0.15); color: #e57373; }
+    .lc32-phase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .lc32-phase-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .lc32-phase-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+    .lc32-phase-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+    .lc32-rarity-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .lc32-rarity-cell { flex: 1; min-width: 80px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+    .lc32-rarity-name { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .lc32-rarity-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -992,6 +1022,9 @@
 <div class="section">
   <div class="section-title">31 · Iconic Identity &amp; Symbolic Design — Recognition Through Symbolic Consistency</div>
   <div class="id31-grid" id="id31Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 32 — Legacy, Emotional Memory &amp; Long-Term Character Continuity</h2>
+  <div class="lc32-grid" id="lc32Grid"></div>
 </div>
 
 <script type="module">
@@ -8271,6 +8304,494 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     "Den ultimative test for ikonisk identitet: tre år fra nu, på en fremmed skærm — genkender nogen dette som DEN SEJE APP's karakter? Ikke fordi der er et logo. Men fordi holdningen, vejrtrækningen, proportionerne og den stilrene ro har en unik kombination der tilhører præcis ét sted.",
     true
   ));
+
+}());
+
+// ── Section 32 — Legacy, Emotional Memory & Long-Term Character Continuity ────
+(function () {
+  const root = document.getElementById("lc32Grid");
+  if (!root) return;
+
+  // Colour constants matching the avatar palette
+  const GOLD    = "#ffd700";
+  const NEUTRAL = "#8899bb";
+  const EPIC    = "#a78bfa";
+  const RARE    = "#60a5fa";
+  const COMMON  = "#9ca3af";
+  const SUCCESS = "#4caf50";
+  const RISK_C  = "#e57373";
+
+  function lc32Card(title, body, note, accent) {
+    const el = document.createElement("div");
+    el.className = "lc32-card" + (accent ? " lc32-card--accent" : "");
+    el.innerHTML = `<div class="lc32-card-title">${title}</div>${body}` +
+      (note ? `<div class="lc32-note">${note}</div>` : "");
+    return el;
+  }
+
+  // ── Card 1: Disposable vs Enduring — Philosophy ───────────────────────────
+  root.appendChild(lc32Card(
+    "01 — Disposabel vs Vedvarende Karaktersystem",
+    `<div class="lc32-compare">
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${RISK_C}">Disposabel</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">Karakter føles frisk og ny — bliver usynlig over tid</li>
+          <li class="lc32-item">Identitet er bundet til novelty — kræver konstant fornyelse</li>
+          <li class="lc32-item">Session-baseret energi — "hvad sker der i dag?"</li>
+          <li class="lc32-item">Fejrer højlydt — men fejringen fades</li>
+          <li class="lc32-item">Brugeren husker events, ikke karakteren</li>
+          <li class="lc32-item">Design-loft: udfordringen er konstant at overgå sig selv</li>
+        </ul>
+      </div>
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${SUCCESS}">Vedvarende</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">Karakter føles stille og konsistent — genkendelig efter 2 år</li>
+          <li class="lc32-item">Identitet er bundet til symbolsk stabilitet — fornyelse er raffinement</li>
+          <li class="lc32-item">Historisk kontinuitet — "denne karakter har fulgt mig"</li>
+          <li class="lc32-item">Fejrer roligt — og fejringen fordybes over tid</li>
+          <li class="lc32-item">Brugeren husker karakteren, ikke events</li>
+          <li class="lc32-item">Design-loft: udfordringen er at forblive sig selv mens verdenen opdateres</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Nøgleforskellen:</strong> Disposable identity kræver eskaleringens økonomi — each update must be bigger than the last. Enduring identity er kompounderende — restraint on day 1 pays dividends on day 365.</li>
+      <li class="lc32-item"><strong>DEN SEJE APP's valg:</strong> Vedvarende. Den studerendes læringsrejse er måneder og år lang — karakteren skal matche den tidshorisont.</li>
+    </ul>`,
+    "Det memorablement karakter er ikke det mest spektakulære — det er det mest konsistente.",
+    true
+  ));
+
+  // ── Card 2: Continuity Audit — Strengths & Risks ─────────────────────────
+  root.appendChild(lc32Card(
+    "02 — Kontinuitetsaudit: Nuværende System",
+    `<table class="lc32-table">
+      <thead><tr>
+        <th>System</th>
+        <th>Verdict</th>
+        <th>Begrundelse</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>avatar-identity.js (symbolske motiver)</td>
+          <td><span class="lc32-verdict lc32-verdict--strength">Styrke</span></td>
+          <td>Immutable design contract — hvert kosmetik læser stadig som samme karakter om 3 år</td>
+        </tr>
+        <tr>
+          <td>Vejrtrækning som bevægelses-identitet</td>
+          <td><span class="lc32-verdict lc32-verdict--strength">Styrke</span></td>
+          <td>3500ms rhythm er identisk dag 1 og år 3 — genkendelse via motion physics</td>
+        </tr>
+        <tr>
+          <td>Emotionel tilbageholdenhed (GUARDRAILS)</td>
+          <td><span class="lc32-verdict lc32-verdict--strength">Styrke</span></td>
+          <td>Ingen overdrevne reaktioner = ingen eskaleringstrend over tid</td>
+        </tr>
+        <tr>
+          <td>Rarity prestige-sprog (QUIET_EXCELLENCE)</td>
+          <td><span class="lc32-verdict lc32-verdict--strength">Styrke</span></td>
+          <td>Grey → gold progression er stabil og læsbar selv efter lang fraværsperiode</td>
+        </tr>
+        <tr>
+          <td>Ingen eksplicit kontinuitets-kontrakt</td>
+          <td><span class="lc32-verdict lc32-verdict--risk">Risiko</span></td>
+          <td>Fremtidige features kan introducere eskalerende novelty der udhuler stabil identitet over tid → <em>løst: avatar-continuity.js</em></td>
+        </tr>
+        <tr>
+          <td>Achievement/retention-systemer</td>
+          <td><span class="lc32-verdict lc32-verdict--risk">Risiko</span></td>
+          <td>Streak-mekanik kan skabe emotionelt pres hvis ikke designet med EMOTIONAL_STABILITY-principper</td>
+        </tr>
+        <tr>
+          <td>Level-up overlay ("LEVEL UP! 🎉")</td>
+          <td><span class="lc32-verdict lc32-verdict--risk">Risiko</span></td>
+          <td>Identisk fejring ved niveau 2 og niveau 200 — flader rejsen ud; mitigering: LEGACY_MILESTONES-filosofi</td>
+        </tr>
+        <tr>
+          <td>Tema som kontekst, ikke identitet</td>
+          <td><span class="lc32-verdict lc32-verdict--risk">Risiko</span></td>
+          <td>Tema-skift må aldrig føles som et identitetsskift — SILHOUETTE_ZONES er tema-invariant</td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Systemets fundamentale styrker er designet til kontinuitet. De identificerede risici er strukturelle — de kan adresseres med design-disciplin, ikke tekniske patches.",
+    false
+  ));
+
+  // ── Card 3: Ritual & Rhythm Continuity ───────────────────────────────────
+  root.appendChild(lc32Card(
+    "03 — Ritual & Rytme Kontinuitet",
+    `<div class="lc32-phase-grid">
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Vejrtrækning som konstant</div>
+        <div class="lc32-phase-body">3500ms base-rytme er identisk dag 1 og år 3. En bruger der vender tilbage efter måneder genkender rytmen umiddelbart — den har ikke accelereret eller ændret sig.</div>
+      </div>
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Idle komposure</div>
+        <div class="lc32-phase-body">Karakteren returnerer altid til den samme rolige neutral efter enhver interaktion. Emotionel reset-punkt er altid NEUTRAL — akkumulerer aldrig varme over sessioner.</div>
+      </div>
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Belønnings-kadence</div>
+        <div class="lc32-phase-body">Korrekt svar → vejrtrækning udvider sig kortvarigt → returnerer til neutral. Identisk ved niveau 1 og niveau 300 — mestring inflationerer ikke responsen.</div>
+      </div>
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Prestige-stilhed</div>
+        <div class="lc32-phase-body">Ved højere prestige-tiers erhverver karakteren mere ro — ikke mere bevægelse. Legendarisk loadout er mere visuelt til stede, men ikke mere kinetisk aktiv.</div>
+      </div>
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Emotionel gulv</div>
+        <div class="lc32-phase-body">Uanset kosmetik eller niveau er default emotionel tilstand altid NEUTRAL. NEUTRAL vejrtrækning ved 52px er karakterens "hjem" — identisk efter 2 år som efter 2 dage.</div>
+      </div>
+      <div class="lc32-phase-cell">
+        <div class="lc32-phase-title">Konsistens-gevinst</div>
+        <div class="lc32-phase-body">Ritualer skaber kontekstuelt anker. Brugeren lærer ubevidst: "dette er hvad systemet føles som." Afvigelser fra ritualet er et tillidssbrud — ikke en nyhed.</div>
+      </div>
+    </div>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Rituale ≠ Repetition:</strong> Repetition er kedsommelig. Rituale er familiaritet der dybder over tid. Vejrtrækning er et rituale fordi dens formål (liv, parathed, nærvær) resonerer.</li>
+      <li class="lc32-item"><strong>Konsistens er design-arbejde:</strong> Det kræver mere disciplin at holde et system stabilt over 3 år end at tilføje ny animation. Kontinuitet er en aktiv designbeslutning.</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 4: Educational Legacy Language ───────────────────────────────────
+  root.appendChild(lc32Card(
+    "04 — Uddannelsesmæssig Arv-Sprog",
+    `<div class="lc32-compare">
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${RISK_C}">Gaming-arv (afvist)</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">Magt-akkumulering — "du er stærkere nu"</li>
+          <li class="lc32-item">Triumferende – "du har besejret X"</li>
+          <li class="lc32-item">Eskalerende fejring — hvert niveau højere end det forrige</li>
+          <li class="lc32-item">Ekstern validering — platformens godkendelse definerer fremgang</li>
+          <li class="lc32-item">Kompetitivt narrativ — range, rang, comparison</li>
+        </ul>
+      </div>
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${SUCCESS}">Uddannelses-arv (valgt)</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">Stille mestring — "din nysgerrighed er vokset"</li>
+          <li class="lc32-item">Vedholdende — "du er stadig her, stadig nysgerrig"</li>
+          <li class="lc32-item">Komponeret fremgang — hvert niveau er roligere end det forrige</li>
+          <li class="lc32-item">Intern identitet — kosmetikken afspejler den studerende, ikke platformens vurdering</li>
+          <li class="lc32-item">Personligt narrativ — rejsen er din, ikke en rangering</li>
+        </ul>
+      </div>
+    </div>
+    <table class="lc32-table">
+      <thead><tr><th>Arv-begreb</th><th>Visuel signal</th><th>Bevægelses-signal</th></tr></thead>
+      <tbody>
+        <tr><td>Stille mestring</td><td>Højere prestige = mere kompositorisk vægt, ikke større</td><td>Proud vejrtrækning (4000ms, 1.4px) — udvidet, fuld, langsom</td></tr>
+        <tr><td>Vedvarende nysgerrighed</td><td>Neutral udtryk ved alle prestige-niveauer — aldrig kedsomhed</td><td>Curious vejrtrækning forbliver tilgængeligt uanset niveau</td></tr>
+        <tr><td>Komponeret fremgang</td><td>Legendarisk: varm guldglød, fuld silhuet-vægt — intet råb</td><td>Ingen nye bevægelses-behaviors låses op ved progression</td></tr>
+        <tr><td>Tankefuld vedholdenhed</td><td>Udfyldte kosmetik-slots skaber en loadout-fortælling over tid</td><td>Konsistent vejrtrækning tværs alle progressions-tilstande</td></tr>
+      </tbody>
+    </table>`,
+    "Den studerende ved niveau 300 bør føle sig slået ned i sin ro og stille selvsikkerhed — ikke som en spilkarakter der har 'vundet'. Uddannelses-arv er akkumuleret stille kompetence.",
+    false
+  ));
+
+  // ── Card 5: Progression Memory Without Parasociality ─────────────────────
+  root.appendChild(lc32Card(
+    "05 — Progressions-Hukommelse Uden Parasocialitet",
+    `<ul class="lc32-list" style="margin-bottom:12px">
+      <li class="lc32-item"><strong>Hvad ændrer sig med progression:</strong> Varmere, mere raffineret ambient-glød. Mere kompositorisk vægt i silhuetten. Warmer atmospheric framing. PROUD vejrtrækning som default ved høj prestige.</li>
+      <li class="lc32-item"><strong>Hvad aldrig ændrer sig med progression:</strong> Neutral oprejst holdning. NEUTRAL vejrtrækning (3500ms) som reset-punkt. Alle 5 symbolske motiver læsbare på alle niveauer. Ingen udtryk er permanent aktiv ved højere niveauer.</li>
+    </ul>
+    <table class="lc32-table">
+      <thead><tr>
+        <th>Anti-pattern</th>
+        <th>Hvorfor det er afvist</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>"Avataren husker dig"</td>
+          <td>Simulerer en relation der ikke eksisterer — manipulativt attachment design</td>
+        </tr>
+        <tr>
+          <td>Eskalerende varme over sessioner</td>
+          <td>Brugere der bryder streak eller returnerer sent vil føle tabet som et tilbagetræk af kærlighed</td>
+        </tr>
+        <tr>
+          <td>Velkomst-tilbage reaktion</td>
+          <td>Antyder at karakteren har lagt mærke til fraværet — dette er fake intimitet</td>
+        </tr>
+        <tr>
+          <td>Personaliseret varme</td>
+          <td>Forskellig adfærd baseret på brugerspecifik session-count = relationssimulatition</td>
+        </tr>
+        <tr>
+          <td>Fraværs-reaktion (trist ved pause)</td>
+          <td>Emotionel skyld som retention-mekanik — det er manipulation, ikke pædagogik</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Kontinuitet via identitet:</strong> Karakteren føles persistent fordi DENS identitet er stabil — ikke fordi den simulerer et minde om dig. Det er en fundamental skelnen.</li>
+      <li class="lc32-item"><strong>Identitetsstabilitet = tilstrækkelig kontinuitet:</strong> En bruger der vender tilbage efter 60 dage skal tænke "der er min karakter" — ikke "karakteren har savnet mig".</li>
+    </ul>`,
+    "Progressions-hukommelse i DEN SEJE APP er symbolsk, ikke relationel. Karakteren vokser i kompositorisk autoritet — den simulerer aldrig at vide hvem brugeren er.",
+    true
+  ));
+
+  // ── Card 6: Emotional Stability Over Time ─────────────────────────────────
+  // Live demo: two breathing avatars — "escalating" vs "stable"
+  root.appendChild(lc32Card(
+    "06 — Emotionel Stabilitet Over Tid — Live Demo",
+    `<p style="font-size:10px;color:var(--text-muted);margin-bottom:12px">To vejrtrækningsmønstre. Venstre: emotionel eskalering over sessioner (afvist). Højre: stabil identitet (valgt).</p>
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:14px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div id="lc32EscalateAvatar" style="width:52px;height:78px;border-radius:8px;background:radial-gradient(ellipse at 50% 35%,#3a2060 0%,#1a0a30 100%);border:1.5px solid rgba(229,115,115,0.4);box-shadow:0 0 14px rgba(229,115,115,0.35);position:relative;"></div>
+        <span style="font-size:9px;color:${RISK_C};text-transform:uppercase;letter-spacing:0.8px">Eskalerende</span>
+        <span id="lc32EscalateLabel" style="font-size:9px;color:var(--text-muted)">Session 1</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div id="lc32StableAvatar" style="width:52px;height:78px;border-radius:8px;background:radial-gradient(ellipse at 50% 35%,#1e2060 0%,#0a0a20 100%);border:1.5px solid var(--border);box-shadow:0 0 12px rgba(30,32,96,0.45);position:relative;"></div>
+        <span style="font-size:9px;color:${SUCCESS};text-transform:uppercase;letter-spacing:0.8px">Stabil</span>
+        <span id="lc32StableLabel" style="font-size:9px;color:var(--text-muted)">Identisk alle sessioner</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+      <button id="lc32Sim1" style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--btn-bg);color:var(--text-dim);cursor:pointer">Session 1</button>
+      <button id="lc32Sim10" style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--btn-bg);color:var(--text-dim);cursor:pointer">Session 10</button>
+      <button id="lc32Sim100" style="font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--btn-bg);color:var(--text-dim);cursor:pointer">Session 100</button>
+    </div>
+    <table class="lc32-table">
+      <thead><tr><th>Princip</th><th>Regel</th><th>Årsag</th></tr></thead>
+      <tbody>
+        <tr><td>Stabilt gulv</td><td>NEUTRAL er altid start — aldrig varmere end NEUTRAL ved session-start</td><td>Brugere der bryder streak føler tabet som et tilbagetræk</td></tr>
+        <tr><td>Ingen eskalering</td><td>Emotionel amplitude stiger ikke over tid eller session-varighed</td><td>Langvarige brugere og første-gangs brugere modtager samme intensitet</td></tr>
+        <tr><td>Fravær-neutral</td><td>Bruger der vender tilbage efter 30 dage: identisk adfærd som dag 1</td><td>"Velkommen-tilbage" animationer simulerer en relation der ikke eksisterer</td></tr>
+        <tr><td>Sikre grænser</td><td>Karakteren anerkender spil-events — ikke personlige events</td><td>Personlige events antyder relations-bevidsthed = parasocial design</td></tr>
+        <tr><td>Fejl-fri-sorg</td><td>Forkert svar: ingen negativ emotionel signal fra karakteren</td><td>Emotionel skuffelse fra karakteren skaber skyld — det er manipulation</td></tr>
+      </tbody>
+    </table>`,
+    null,
+    false
+  ));
+
+  // ── Card 7: Symbolic Legacy — Prestige Framing ────────────────────────────
+  root.appendChild(lc32Card(
+    "07 — Symbolsk Arv: Prestige-Sprog Som Tid-Stabil Fortælling",
+    `<div class="lc32-rarity-row">
+      <div class="lc32-rarity-cell">
+        <div class="lc32-rarity-name" style="color:${COMMON}">Almindelig</div>
+        <div class="lc32-rarity-body">Oprejst nærvær, basis ambient. Fundamentet er allerede værdigt. <em>"Begynde her er allerede roligt."</em></div>
+      </div>
+      <div class="lc32-rarity-cell">
+        <div class="lc32-rarity-name" style="color:#86efac">Ualmindelig</div>
+        <div class="lc32-rarity-body">Subtil farveidentitet begynder at fremstå — første personlige signatur. <em>"Nysgerrighed gjort synlig."</em></div>
+      </div>
+      <div class="lc32-rarity-cell">
+        <div class="lc32-rarity-name" style="color:${RARE}">Sjælden</div>
+        <div class="lc32-rarity-body">Kosmetisk kategori-identitet læsbar — silhuet mere kompositorisk komplet. <em>"Vedvarende engagement har et ansigt."</em></div>
+      </div>
+      <div class="lc32-rarity-cell">
+        <div class="lc32-rarity-name" style="color:${EPIC}">Episk</div>
+        <div class="lc32-rarity-body">Miljøatmosfæren deltager — varmere ambient, fyldigere nærvær. <em>"Verden responderer på akkumuleret investering."</em></div>
+      </div>
+      <div class="lc32-rarity-cell">
+        <div class="lc32-rarity-name" style="color:${GOLD}">Legendarisk</div>
+        <div class="lc32-rarity-body">Varm guld-ambient, fuld symbolsk motiv-vokabular, maksimal kompositorisk autoritet. <em>"Stille excellence — komposure uden annoncering."</em></div>
+      </div>
+    </div>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Hvert rarity-tier er et register af det samme sprog</strong> — ikke en højere version. Legendarisk snakker ikke højere; det taler med større autoritet.</li>
+      <li class="lc32-item"><strong>Collection-modenhed:</strong> En fuldt udfyldt loadout bør læses som én sammenhængende æstetisk erklæring — ikke seks separate kosmetikker stablet. Hvert slot tilføjer nærvær til en unified identitet.</li>
+      <li class="lc32-item"><strong>Achievement-komposure:</strong> Achievement-unlocks bør føles som stille bekræftelser af vej — ikke eksplosive fejringer. Den studerende bekræfter sig selv, ikke platformens vurdering af dem.</li>
+      <li class="lc32-item"><strong>Uddannelses-aspiration:</strong> De højeste kosmetiske tiers kommunikerer akademisk identitet-som-aspiration — ikke power-fantasy-som-gaming-identitet. Spørgsmålet er stadig: ville en lærer føle sig tryg med dette på skærmen?</li>
+    </ul>`,
+    "Arv er earned and composed — aldrig høj. Den stille guldglød ved legendarisk tier er et løfte om vedholdenhed, ikke en triumf-fanfare.",
+    false
+  ));
+
+  // ── Card 8: Long-Term Visual Continuity — Identity Lock System ────────────
+  root.appendChild(lc32Card(
+    "08 — Langsigtet Visuel Kontinuitet: Identity Lock System",
+    `<table class="lc32-table">
+      <thead><tr>
+        <th>Lock</th>
+        <th>Hvad er beskyttet</th>
+        <th>Test</th>
+        <th>Violation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Silhuet-lock</td>
+          <td>5 SILHOUETTE_ZONES (HEAD 25%, NECK 12.5%, TORSO 27%, HIP 19%, FEET 8%)</td>
+          <td>Nyt kosmetik: læses zone-forholdet stadig korrekt?</td>
+          <td>Kosmetik der markant forskyder visuel masse udenfor zone-strukturen</td>
+        </tr>
+        <tr>
+          <td>Bevægelses-lock</td>
+          <td>Vejrtrækning (3500ms, 38% peak) som primær bevægelses-identitet</td>
+          <td>Efter 6 måneder med nye features: er vejrtrækning stadig det første øjet læser?</td>
+          <td>Ny sekundær animation der konkurrerer med vejrtrækning i visuel vægt</td>
+        </tr>
+        <tr>
+          <td>Symbolsk lock</td>
+          <td>Alle 5 SYMBOLIC_MOTIFS læsbare i ethvert kosmetik ved enhver prestige-tier</td>
+          <td>Legendarisk loadout ved 110px: kan man identificere 2+ symbolske motiver?</td>
+          <td>Kosmetikker der introducerer vinkelformet, aggressiv eller nedadvendt geometri</td>
+        </tr>
+        <tr>
+          <td>Emotionel-gulv-lock</td>
+          <td>NEUTRAL tilstand ved 52px: rolig uddannelsesledsager — ikke kriger, ikke maskot</td>
+          <td>Vis bare avatar (ingen kosmetik, NEUTRAL vejrtrækning) til ukendt person — hvad beskriver de?</td>
+          <td>Systemændring der forskyder bare-body emotionel read mod spænding eller aggressivitet</td>
+        </tr>
+        <tr>
+          <td>Tema-invariant lock</td>
+          <td>Karakteridentitet genkendelig tværs alle 10 temaer</td>
+          <td>Skift hurtigt temaer — føles karakteren som den samme karakter i forskellige miljøer?</td>
+          <td>Tema hvis farvepalette får avatar-silhuet eller udtryk til at læse anderledes</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Lock-systemet er ikke et frysesystem</strong> — det er et raffinementssystem. Fremtidige opdateringer må gerne tilføje detail og dybde, men de må aldrig bryde et lock.</li>
+      <li class="lc32-item"><strong>Locks er proaktive</strong> — de skal checkes FØR et nyt feature shipper, ikke efter en klage fra brugere om at karakteren "føles anderledes".</li>
+    </ul>`,
+    null,
+    false
+  ));
+
+  // ── Card 9: Non-Parasocial Continuity Principles ──────────────────────────
+  root.appendChild(lc32Card(
+    "09 — Ikke-Parasociale Kontinuitetsprincipper",
+    `<div class="lc32-compare">
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${RISK_C}">Parasociale signaler (afvist)</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">"Jeg savnede dig" — fraværs-reaktion</li>
+          <li class="lc32-item">"Velkommen tilbage!" med varm animation</li>
+          <li class="lc32-item">Eskalerende varme baseret på session-count</li>
+          <li class="lc32-item">Karakterens udtryk ændrer sig permanent ved lang brug</li>
+          <li class="lc32-item">Negativ emotionel signal ved streak-brud</li>
+          <li class="lc32-item">"Vi har arbejdet meget hårdt i dag" — fællesskabsfølelse</li>
+          <li class="lc32-item">Karakter ser ud til at vide hvem du er</li>
+        </ul>
+      </div>
+      <div class="lc32-compare-col">
+        <div class="lc32-compare-heading" style="color:${SUCCESS}">Sikker kontinuitet (valgt)</div>
+        <ul class="lc32-list">
+          <li class="lc32-item">Identisk adfærd dag 1 og dag 365</li>
+          <li class="lc32-item">Stabilt NEUTRAL som absolut gulv</li>
+          <li class="lc32-item">Vejrtrækning der er rolig og genkendelig altid</li>
+          <li class="lc32-item">Prestige-progression som visuel raffinement, ikke emotionel bonding</li>
+          <li class="lc32-item">Stille fejring — hverken forstærket eller dæmpet baseret på bruger-historik</li>
+          <li class="lc32-item">Karakteren anerkender spil-events, ikke personlige events</li>
+          <li class="lc32-item">Kontinuitet emergerer fra symbolsk identitet, ikke relations-simulation</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>Grænsen er tydelig:</strong> Karakteren må vide hvad der sker i spillet. Karakteren må IKKE vide noget om den person der sidder bag skærmen.</li>
+      <li class="lc32-item"><strong>Tilstrækkelig kontinuitet:</strong> En studerende der vender tilbage efter 3 måneder skal have følelsen af "der er min karakter, stadig rolig, stadig klar" — ikke "min karakter har savnet mig".</li>
+      <li class="lc32-item"><strong>Emotionel sikkerhed er lærings-infrastruktur:</strong> En studerende der ikke er bange for at skuffe karakteren er mere villig til at tage akademisk risiko. Non-parasocial design er direkte pædagogisk.</li>
+    </ul>`,
+    "Den mest respektfulde ting DEN SEJE APP kan gøre for brugeren: sikre at karakteren er konsistent og stille — og aldrig forsøger at skabe behov for sig selv.",
+    true
+  ));
+
+  // ── Card 10: Future 3D Continuity Universe ────────────────────────────────
+  root.appendChild(lc32Card(
+    "10 — Fremtidig 3D Langsigtet Karakter-Univers",
+    `<table class="lc32-table">
+      <thead><tr>
+        <th>Kontinuitetsprincip</th>
+        <th>3D Ækvivalent</th>
+        <th>Anti-pattern</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Identitets-persistens (SILHOUETTE_ZONES som rig-constraints)</td>
+          <td>Spine, skulder og hofte-proportioner encoder "curious learner" arketypen direkte i character rig</td>
+          <td>Redesignet 3D rig der er "mere udtryksfuld" på bekostning af holdnings-identitet</td>
+        </tr>
+        <tr>
+          <td>Bevægelses-kontinuitet (3500ms basis-vejrtrækning)</td>
+          <td>3D idle animation: langsom fysiologisk åndedragt — bryst stiger (38% mark), fuld frigivelse — ikke game-character fidget loop</td>
+          <td>Energiske idle animationer (vægtveksling, armsvingning) der konkurrerer med vejrtrækning</td>
+        </tr>
+        <tr>
+          <td>Symbolsk stabilitet (ARC_OVER_ANGLE i polygon-modellering)</td>
+          <td>Krone-buer, skulder-flow, kappe-kanter modelleret med arc-over-angle præference</td>
+          <td>Concept art der introducerer aggressiv kantet geometri begrundet i "3D ser bedre ud med hårde kanter"</td>
+        </tr>
+        <tr>
+          <td>Verdens-kontinuitet (GENRE_DRIFT test for seasonal/collab)</td>
+          <td>Sæsonmæssige items, collab-kosmetikker og platform-events passerer COHERENCE_TEST inden de shipper</td>
+          <td>Sæsonitems der introducerer et helt andet symbolsk vokabular (Halloween-aggressivitet, holiday kitsch)</td>
+        </tr>
+        <tr>
+          <td>Visuel aldring (raffinement, ikke kompleksitet)</td>
+          <td>Hvert design-generationsskifte løser små uklarheder i symbolsk sprog — lægger ikke nye systemer oven på gamle</td>
+          <td>Live-service eskalering: hvert sæson tilføjer nyt bevægelses-system, ny kosmetik-kategori, nyt VFX-lag</td>
+        </tr>
+        <tr>
+          <td>Franchise kontinuitet (app-ikon, merchandise, video)</td>
+          <td>POSTURE_IDENTITY og SYMBOLIC_MOTIFS er franchise-design-briefen — ikke kun spil-avatar-briefen</td>
+          <td>Merchandise-karakter der ligner en anden, mere aggressiv eller mascot-lignende entitet</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="lc32-list">
+      <li class="lc32-item"><strong>DEN SEJE APP's 3D fremtid er ikke Fortnite.</strong> Det er et stille, roligt, akademisk prestige-univers. Rig-designet, animation-briefen og art-direktionen starter med kontinuitetsprincipperne — ikke med "hvad ser fedt ud i 3D".</li>
+      <li class="lc32-item"><strong>Kontinuitet er det vigtigste franchise-aktiv.</strong> Om 5 år kan DEN SEJE APP have hundredvis af kosmetikker, sæsoner og platformopdateringer. Det eneste der garanterer at de alle stadig føles som én verden, er den kontinuitets-filosofi vi definerer nu.</li>
+      <li class="lc32-item"><strong>Section 32 er fundamentet.</strong> avatar-continuity.js dokumenterer i code hvad der ellers ville leve i folkeminder. Fremtidige teams og fremtidige versioner af AI-assistenter skal kunne læse den og forstå: <em>hvad vi beskytter og hvorfor</em>.</li>
+    </ul>`,
+    "Tre år fra nu: en bruger vender tilbage til DEN SEJE APP efter et år. Karakteren er rolig, oprejst, vejrtrækker det samme. Loadouten er den samme. Verdenen er raffineret men genkendelig. Den studerende tænker: \"dette er stadig mit sted.\" Ikke fordi platformen har holdt dem fast. Men fordi den aldrig ophørte med at være sig selv.",
+    true
+  ));
+
+  // ── Live emotional stability demo ─────────────────────────────────────────
+  const escalateEl  = document.getElementById("lc32EscalateAvatar");
+  const escalateLbl = document.getElementById("lc32EscalateLabel");
+  const stableEl    = document.getElementById("lc32StableAvatar");
+
+  const SESSIONS = {
+    1:   { dur: 2200, shift: -0.6, scale: 1.003, glow: "rgba(229,115,115,0.25)", label: "Session 1 — neutr. start" },
+    10:  { dur: 1600, shift: -1.2, scale: 1.010, glow: "rgba(229,115,115,0.45)", label: "Session 10 — varmere, hurtigere" },
+    100: { dur: 1100, shift: -2.0, scale: 1.018, glow: "rgba(229,115,115,0.70)", label: "Session 100 — afhængig eskalering" },
+  };
+
+  function applySession(n) {
+    const s = SESSIONS[n];
+    if (!s || !escalateEl) return;
+    const keyframes = [
+      { transform: "translateY(0) scale(1)", offset: 0 },
+      { transform: `translateY(${s.shift}px) scale(${s.scale})`, offset: 0.38 },
+      { transform: "translateY(0) scale(1)", offset: 1 },
+    ];
+    escalateEl.getAnimations().forEach(a => a.cancel());
+    escalateEl.animate(keyframes, { duration: s.dur, iterations: Infinity, easing: "linear" });
+    escalateEl.style.boxShadow = `0 0 18px ${s.glow}`;
+    escalateEl.style.borderColor = `${s.glow}`;
+    if (escalateLbl) escalateLbl.textContent = s.label;
+  }
+
+  // Stable avatar: always identical
+  if (stableEl) {
+    stableEl.animate([
+      { transform: "translateY(0) scale(1)", offset: 0 },
+      { transform: "translateY(-1px) scale(1.006)", offset: 0.38 },
+      { transform: "translateY(0) scale(1)", offset: 1 },
+    ], { duration: 3500, iterations: Infinity, easing: "linear" });
+  }
+
+  applySession(1);
+
+  const btn1   = document.getElementById("lc32Sim1");
+  const btn10  = document.getElementById("lc32Sim10");
+  const btn100 = document.getElementById("lc32Sim100");
+  if (btn1)   btn1.onclick   = () => applySession(1);
+  if (btn10)  btn10.onclick  = () => applySession(10);
+  if (btn100) btn100.onclick = () => applySession(100);
 
 }());
 </script>
