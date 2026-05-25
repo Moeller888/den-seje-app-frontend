@@ -58,8 +58,11 @@
 
   <!-- ── TORSO ── -->
 
-  <!-- Shirt body — same rect bounds (x40 y92 w80 h88) for full armor/cape compatibility -->
-  <rect x="40" y="92" width="80" height="88" rx="10" fill="url(#b2-sh)" stroke="#2c404a" stroke-width="1"/>
+  <!-- Shirt body — silhouette has intentional waist taper (2–3px inward at y≈150).
+       Outer bounds match armor/cape rect exactly at shoulders and belt.
+       The cubic beziers create the waist concavity through shape, not shadow tricks. -->
+  <path d="M 50 92 Q 40 92 40 102 L 40 130 C 43 140 43 160 40 170 L 40 180 L 120 180 C 117 160 117 140 120 130 L 120 102 Q 120 92 110 92 Z"
+        fill="url(#b2-sh)" stroke="#2c404a" stroke-width="1"/>
   <!-- Left edge catch-light: upper-left light source -->
   <line x1="41" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
   <!-- Vertical center seam: subtle garment construction read -->
@@ -168,9 +171,9 @@
   <!-- Chin AO shadow: occlusion where head sphere meets neck — removes "floating head" read -->
   <path d="M 68 77 Q 80 82 92 77" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.27"/>
 
-  <!-- Hair: minimal dark cap — headwear items sit at z=5, cover this cleanly.
-       Simple enough to read at 60×90px (hub avatar), warm enough to be the default character. -->
-  <path d="M 52 44 Q 50 20 80 19 Q 110 20 108 44 Q 98 28 80 28 Q 62 28 52 44 Z"
+  <!-- Hair: slight off-center peak (75,16) gives a natural side-part quality — the silhouette
+       has a directional identity instead of a mathematically symmetrical cap. Visible at 52px. -->
+  <path d="M 52 44 Q 50 18 75 16 Q 90 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z"
         fill="#4a3626"/>
   <!-- Hair specular: single highlight line, consistent upper-left light -->
   <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
@@ -202,9 +205,10 @@
   <!-- Periorbital depth: under-eye shadow at lower orbital rim — implies eye socket anatomy, adds facial structure -->
   <ellipse cx="68" cy="53" rx="5" ry="1.5" fill="#c07850" opacity="0.09"/>
   <ellipse cx="92" cy="53" rx="5" ry="1.5" fill="#c07850" opacity="0.09"/>
-  <!-- Upper eyelid crease: defines eye plane, readable at 60px -->
-  <path d="M 61 43 Q 68 40.5 75 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
-  <path d="M 85 43 Q 92 40.5 99 43" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- Upper eyelid crease: outer corner lifted 1.5px (43→41.5) — the upward tail at the outer
+       corner reads as alert warmth. Inner corner unchanged keeps it approachable, not intense. -->
+  <path d="M 61 43 Q 68 40.5 75 41.5" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M 85 43 Q 92 40.5 99 41.5" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
 
   <!-- Nose: V-bridge with nostril dots — never dominant, always supportive -->
   <path d="M 77 57 Q 78 62 80 62.5 Q 82 62 83 57" fill="none" stroke="#c07850" stroke-width="1.1" stroke-linecap="round"/>

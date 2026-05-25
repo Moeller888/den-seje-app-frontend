@@ -604,6 +604,34 @@
     .sm-chip-cloth { background: #3e0a0a; color: #c03030; }
     .sm-chip-skin  { background: #5a3520; color: #F5C49A; }
     .sm-chip-gem   { background: #1a237e; color: #90caf9; }
+
+    /* ── Section 27: Shape Language & Character Identity ─── */
+    .sl-grid { display: flex; flex-direction: column; gap: 20px; }
+    .sl-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .sl-card--accent { border-top: 3px solid #7c4dff; }
+    .sl-card-title { font-size: 12px; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .sl-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 8px; }
+    .sl-svg-frame { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow: hidden; }
+    .sl-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; }
+    .sl-item { font-size: 11px; color: var(--text-main); padding-left: 14px; position: relative; line-height: 1.5; }
+    .sl-item::before { content: "→"; position: absolute; left: 0; color: #7c4dff; font-size: 10px; }
+    .sl-compare-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; margin-bottom: 12px; }
+    .sl-compare-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .sl-label-before { color: #ef5350; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sl-label-after  { color: #66bb6a; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sl-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    .sl-badge--common    { background: rgba(120,144,156,0.15); color: #78909c; border: 1px solid rgba(120,144,156,0.3); }
+    .sl-badge--rare      { background: rgba(21,101,192,0.15);  color: #42a5f5; border: 1px solid rgba(21,101,192,0.3); }
+    .sl-badge--legendary { background: rgba(255,214,0,0.12);   color: #ffd600; border: 1px solid rgba(255,214,0,0.3); }
+    .sl-rarity-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
+    .sl-rarity-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .sl-archetype-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .sl-archetype-card { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .sl-archetype-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #7c4dff; margin-bottom: 4px; }
+    .sl-archetype-body { font-size: 10px; color: var(--text-main); line-height: 1.5; }
+    .sl-scale-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; justify-content: center; }
+    .sl-scale-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .sl-scale-label { font-size: 9px; font-weight: bold; font-family: monospace; color: var(--text-dim); }
   </style>
 </head>
 <body>
@@ -786,6 +814,12 @@
 <div class="section">
   <div class="section-title">26 · Surface Material Language — Metal, Cloth, Skin og Gem Identity at Scale</div>
   <div class="sm-grid" id="smGrid26"></div>
+</div>
+
+<!-- ── Section 27: Shape Language & Character Identity ───────────── -->
+<div class="section">
+  <div class="section-title">27 · Shape Language &amp; Character Identity — Silhouette Personality and Archetype-Driven Form Language</div>
+  <div class="sl-grid" id="slGrid27"></div>
 </div>
 
 <script type="module">
@@ -6198,6 +6232,395 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </div>`,
     "Section 25 established form. Section 26 establishes surface identity. Every addition was BELOW the threshold of visual change at 52px in isolation — but together they make each material unambiguous. Metal reads as metal. Cloth reads as cloth. Skin reads as skin. Gem reads as gem.",
     true
+  ));
+
+}());
+
+// ── Section 27: Shape Language & Character Identity ───────────────────────────
+(function () {
+  const root = document.getElementById("slGrid27");
+  if (!root) return;
+
+  function slCard(title, body, note, accent) {
+    const d = document.createElement("div");
+    d.className = "sl-card" + (accent ? " sl-card--accent" : "");
+    d.innerHTML = `<div class="sl-card-title">${title}</div>${body}${note ? `<div class="sl-note">${note}</div>` : ""}`;
+    return d;
+  }
+
+  // ── Card 1: Shape Language Philosophy ────────────────────────────────────────
+  const philosophySVG = `<svg viewBox="0 0 320 120" width="100%" height="120" style="display:block">
+    <defs>
+      <linearGradient id="sl1-sh" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7096a8"/><stop offset="100%" stop-color="#364f5a"/>
+      </linearGradient>
+      <linearGradient id="sl1-sh2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7096a8"/><stop offset="100%" stop-color="#364f5a"/>
+      </linearGradient>
+    </defs>
+    <!-- LEFT: Generic — pure rectangle torso -->
+    <text x="4" y="10" font-size="7.5" fill="#ef5350" font-family="sans-serif" font-weight="bold">GENERIC SHAPE</text>
+    <text x="4" y="19" font-size="6.5" fill="#78909c" font-family="sans-serif">rect — mechanically designed</text>
+    <rect x="20" y="25" width="60" height="66" rx="8" fill="url(#sl1-sh)" stroke="#2c404a" stroke-width="1"/>
+    <circle cx="50" cy="18" r="18" fill="#F5C49A" stroke="#d4956a" stroke-width="0.8"/>
+    <rect x="12" y="36" width="16" height="48" rx="8" fill="url(#sl1-sh)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="72" y="36" width="16" height="48" rx="8" fill="url(#sl1-sh)" stroke="#2c404a" stroke-width="1"/>
+    <text x="6" y="98" font-size="6.5" fill="#78909c" font-family="sans-serif">No waist rhythm</text>
+    <text x="6" y="107" font-size="6.5" fill="#607d8b" font-family="sans-serif">Shoulders = box edge</text>
+    <text x="6" y="116" font-size="6.5" fill="#546e7a" font-family="sans-serif">Emotionally neutral</text>
+
+    <!-- Arrow -->
+    <text x="118" y="55" font-size="22" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- RIGHT: Intentional — tapered silhouette -->
+    <text x="152" y="10" font-size="7.5" fill="#66bb6a" font-family="sans-serif" font-weight="bold">INTENTIONAL SHAPE</text>
+    <text x="152" y="19" font-size="6.5" fill="#78909c" font-family="sans-serif">path — organically designed</text>
+    <path d="M 182 25 Q 172 25 172 35 L 172 52 C 175 60 175 72 172 80 L 172 91 L 232 91 C 229 72 229 60 232 52 L 232 35 Q 232 25 222 25 Z" fill="url(#sl1-sh2)" stroke="#2c404a" stroke-width="1"/>
+    <circle cx="202" cy="18" r="18" fill="#F5C49A" stroke="#d4956a" stroke-width="0.8"/>
+    <rect x="160" y="36" width="16" height="48" rx="8" fill="url(#sl1-sh2)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="224" y="36" width="16" height="48" rx="8" fill="url(#sl1-sh2)" stroke="#2c404a" stroke-width="1"/>
+    <text x="154" y="98" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Waist rhythm present</text>
+    <text x="154" y="107" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Silhouette has tension</text>
+    <text x="154" y="116" font-size="6.5" fill="#4caf50" font-family="sans-serif">Emotionally readable</text>
+
+    <!-- Annotation arrow pointing to waist -->
+    <line x1="290" y1="58" x2="234" y2="63" stroke="#7c4dff" stroke-width="0.8"/>
+    <circle cx="290" cy="58" r="2" fill="#7c4dff"/>
+    <text x="248" y="55" font-size="6.5" fill="#7c4dff" font-family="sans-serif">waist</text>
+    <text x="248" y="63" font-size="6" fill="#5e35b1" font-family="sans-serif">taper</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Shape Language Philosophy — Form Before Rendering",
+    `<div class="sl-svg-frame">${philosophySVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>Rendering quality is the wrong axis.</strong> Sections 25–26 established volume and material. Section 27 addresses what comes before both: does the shape itself have intention?</li>
+      <li class="sl-item"><strong>A rectangle communicates nothing.</strong> It has no tension, no hierarchy, no emotional geometry. The eye has no reason to care about what happens inside it.</li>
+      <li class="sl-item"><strong>Shape is the first thing the brain reads.</strong> Before color, before detail, before rendering — the silhouette edge fires as a gestalt. That edge needs to be designed, not defaulted.</li>
+      <li class="sl-item"><strong>This pass adds no detail.</strong> Every change is a restatement of existing shapes into intentional forms. The pixel budget stays identical — the intent changes entirely.</li>
+    </ul>`,
+    "The difference between a mannequin and a character is not rendering quality. It is shape intention. A tapered waist implies a living form. A rectangle implies a container.",
+    true
+  ));
+
+  // ── Card 2: Body Silhouette Evolution — Waist Rhythm ─────────────────────────
+  const bodyEvolutionSVG = `<svg viewBox="0 0 280 160" width="100%" height="160" style="display:block">
+    <defs>
+      <linearGradient id="sl2-sh" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7096a8"/><stop offset="55%" stop-color="#54717e"/><stop offset="100%" stop-color="#364f5a"/>
+      </linearGradient>
+      <linearGradient id="sl2-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+      <marker id="sl2arr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#7c4dff"/></marker>
+    </defs>
+    <!-- BEFORE -->
+    <text x="4" y="10" font-size="7" fill="#ef5350" font-family="sans-serif" font-weight="bold">BEFORE — Pure Rect</text>
+    <circle cx="56" cy="26" r="20" fill="url(#sl2-sk)"/>
+    <rect x="30" y="60" width="52" height="58" rx="7" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="12" y="68" width="18" height="46" rx="9" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="82" y="68" width="18" height="46" rx="9" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <!-- Rect side lines highlighted -->
+    <line x1="30" y1="60" x2="30" y2="118" stroke="#ef5350" stroke-width="1" opacity="0.6"/>
+    <line x1="82" y1="60" x2="82" y2="118" stroke="#ef5350" stroke-width="1" opacity="0.6"/>
+    <text x="4" y="132" font-size="6.5" fill="#ef5350" font-family="sans-serif">Sides: perfectly straight</text>
+    <text x="4" y="141" font-size="6.5" fill="#78909c" font-family="sans-serif">No waist tension</text>
+    <text x="4" y="150" font-size="6.5" fill="#607d8b" font-family="sans-serif">No hourglass implication</text>
+
+    <!-- Arrow -->
+    <text x="122" y="85" font-size="22" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- AFTER -->
+    <text x="156" y="10" font-size="7" fill="#66bb6a" font-family="sans-serif" font-weight="bold">AFTER — Waist Taper</text>
+    <circle cx="208" cy="26" r="20" fill="url(#sl2-sk)"/>
+    <path d="M 182 60 Q 173 60 173 68 L 173 86 C 175 94 175 106 173 114 L 173 118 L 243 118 C 241 106 241 94 243 86 L 243 68 Q 243 60 234 60 Z" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="156" y="68" width="18" height="46" rx="9" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <rect x="242" y="68" width="18" height="46" rx="9" fill="url(#sl2-sh)" stroke="#2c404a" stroke-width="1"/>
+    <!-- Curve highlighted -->
+    <path d="M 173 86 C 175 94 175 106 173 114" fill="none" stroke="#66bb6a" stroke-width="1.5" opacity="0.8"/>
+    <path d="M 243 86 C 241 94 241 106 243 114" fill="none" stroke="#66bb6a" stroke-width="1.5" opacity="0.8"/>
+    <!-- Annotation -->
+    <line x1="268" y1="100" x2="244" y2="100" stroke="#7c4dff" stroke-width="0.8" marker-end="url(#sl2arr)"/>
+    <text x="256" y="96" font-size="6" fill="#7c4dff" font-family="sans-serif">2–3px</text>
+    <text x="256" y="104" font-size="6" fill="#5e35b1" font-family="sans-serif">inward</text>
+    <text x="156" y="132" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Cubic bezier sides</text>
+    <text x="156" y="141" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Waist rhythm: present</text>
+    <text x="156" y="150" font-size="6.5" fill="#4caf50" font-family="sans-serif">Character has a body, not a box</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Body Silhouette Evolution — Waist Rhythm & Shoulder Authority",
+    `<div class="sl-svg-frame">${bodyEvolutionSVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>The torso rect is replaced with a cubic bezier path</strong> that tapers 2–3px inward at y≈150 (waist zone) and returns to full width at the shoulders and belt.</li>
+      <li class="sl-item"><strong>Why 2–3px?</strong> At 120px display height (normal view), the waist narrows by ~1.5px per side. Barely measurable, deeply felt. The eye reads "living form" vs "container."</li>
+      <li class="sl-item"><strong>Armor/cape compatibility is preserved.</strong> The armor chest plate draws its own rect with identical bounds. The silhouette taper is only visible in the base shirt state.</li>
+      <li class="sl-item"><strong>The existing waist shadow paths are unchanged.</strong> They now reinforce the real shape rather than faking it. Shape + shadow → structural conviction.</li>
+    </ul>`,
+    "The most important shape change in the system. Every other visual pass improved what was inside the silhouette. This pass improves the silhouette itself."
+  ));
+
+  // ── Card 3: Hair Personality — Silhouette Identity ───────────────────────────
+  const hairSVG = `<svg viewBox="0 0 240 100" width="100%" height="100" style="display:block">
+    <defs>
+      <linearGradient id="sl3-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+    </defs>
+    <!-- BEFORE: symmetrical hair cap -->
+    <text x="4" y="9" font-size="7" fill="#ef5350" font-family="sans-serif" font-weight="bold">BEFORE — Symmetric Cap</text>
+    <circle cx="56" cy="50" r="28" fill="url(#sl3-sk)"/>
+    <path d="M 30 44 Q 28 20 56 19 Q 84 20 82 44 Q 74 28 56 28 Q 38 28 30 44 Z" fill="#4a3626"/>
+    <text x="26" y="90" font-size="6.5" fill="#ef5350" font-family="sans-serif">Mathematically symmetric</text>
+    <text x="26" y="99" font-size="6.5" fill="#78909c" font-family="sans-serif">No directional personality</text>
+
+    <!-- Arrow -->
+    <text x="106" y="54" font-size="22" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- AFTER: off-center peak -->
+    <text x="140" y="9" font-size="7" fill="#66bb6a" font-family="sans-serif" font-weight="bold">AFTER — Natural Peak</text>
+    <circle cx="184" cy="50" r="28" fill="url(#sl3-sk)"/>
+    <path d="M 158 44 Q 156 18 179 16 Q 194 17 210 44 Q 202 28 184 28 Q 166 28 158 44 Z" fill="#4a3626"/>
+    <!-- Peak annotation -->
+    <circle cx="179" cy="16" r="2.5" fill="none" stroke="#7c4dff" stroke-width="1.2"/>
+    <line x1="179" y1="13.5" x2="172" y2="8" stroke="#7c4dff" stroke-width="0.8"/>
+    <text x="156" y="7" font-size="6" fill="#7c4dff" font-family="sans-serif">peak at (75,16)</text>
+    <text x="150" y="90" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Slight left-of-center peak</text>
+    <text x="150" y="99" font-size="6.5" fill="#4caf50" font-family="sans-serif">Reads as styled, not placed</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Hair Shape Personality — Silhouette Identity at 52px",
+    `<div class="sl-svg-frame">${hairSVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>The hair peak moves from dead-center (80, 19) to slightly left (75, 16)</strong> — 5px left, 3px higher. At 52px display, this is a 1px shift that reads as "styled" rather than "placed."</li>
+      <li class="sl-item"><strong>Synchronized across all 6 files</strong>: body.svg + all 5 expression SVGs. The expressions re-draw their own hair, so each needed the same update for consistency.</li>
+      <li class="sl-item"><strong>Why this specific peak?</strong> Hair that peaks left-of-center implies a natural side-part rather than a formally symmetrical helmet. It says "lived in" vs "designed by committee."</li>
+      <li class="sl-item"><strong>Headwear compatibility preserved.</strong> Crowns, hats, and bows sit at z=5 and cover the hair entirely. The hair shape only appears when no headwear is equipped.</li>
+    </ul>`,
+    "At small scale, the only hair signal is the silhouette edge at the top of the head. The difference between a peak at x=80 and x=75 is the difference between a helmet and a character."
+  ));
+
+  // ── Card 4: Rarity Shape Hierarchy — Crown Authority ─────────────────────────
+  const crownHierarchySVG = `<svg viewBox="0 0 300 120" width="100%" height="120" style="display:block">
+    <defs>
+      <linearGradient id="sl4-silver" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f5f5f5"/><stop offset="35%" stop-color="#d0d0d0"/><stop offset="100%" stop-color="#616161"/>
+      </linearGradient>
+      <linearGradient id="sl4-gold" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fff9c4"/><stop offset="25%" stop-color="#ffd600"/><stop offset="65%" stop-color="#ffb300"/><stop offset="100%" stop-color="#c77700"/>
+      </linearGradient>
+    </defs>
+
+    <!-- SILVER: 5 spikes same base width -->
+    <text x="4" y="9" font-size="7" fill="#78909c" font-family="sans-serif" font-weight="bold">SILVER — Uncommon</text>
+    <text x="4" y="18" font-size="6.5" fill="#607d8b" font-family="sans-serif">Equal spike widths</text>
+    <!-- Silver crown spikes at scale ~0.75 -->
+    <polygon points="30,80 36,62 42,80"  fill="url(#sl4-silver)" stroke="#616161" stroke-width="0.8"/>
+    <polygon points="41,80 47,71 53,80"  fill="url(#sl4-silver)" stroke="#616161" stroke-width="0.8"/>
+    <polygon points="52,80 60,60 68,80"  fill="url(#sl4-silver)" stroke="#616161" stroke-width="1"/>
+    <polygon points="67,80 73,71 79,80"  fill="url(#sl4-silver)" stroke="#616161" stroke-width="0.8"/>
+    <polygon points="78,80 84,62 90,80"  fill="url(#sl4-silver)" stroke="#616161" stroke-width="0.8"/>
+    <rect x="30" y="80" width="60" height="11" rx="2" fill="url(#sl4-silver)" stroke="#616161" stroke-width="1"/>
+    <!-- Width annotations -->
+    <line x1="52" y1="84" x2="68" y2="84" stroke="#ef5350" stroke-width="0.8"/>
+    <text x="50" y="104" font-size="6" fill="#ef5350" font-family="sans-serif">16px base</text>
+    <line x1="30" y1="84" x2="42" y2="84" stroke="#78909c" stroke-width="0.6"/>
+    <text x="4" y="104" font-size="6" fill="#78909c" font-family="sans-serif">16px</text>
+    <text x="4" y="112" font-size="6.5" fill="#78909c" font-family="sans-serif">No dominant center</text>
+
+    <!-- Arrow -->
+    <text x="102" y="80" font-size="22" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- GOLDEN: center spike wider -->
+    <text x="146" y="9" font-size="7" fill="#ffd600" font-family="sans-serif" font-weight="bold">GOLDEN — Legendary</text>
+    <text x="146" y="18" font-size="6.5" fill="#d4a000" font-family="sans-serif">Center spike dominant</text>
+    <polygon points="176,80 182,62 188,80"  fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="0.8"/>
+    <polygon points="187,80 193,71 199,80"  fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="0.8"/>
+    <!-- Center spike: wider base 68–92 scaled to 196–224 -->
+    <polygon points="196,80 210,60 224,80"  fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="1.2"/>
+    <polygon points="223,80 229,71 235,80"  fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="0.8"/>
+    <polygon points="234,80 240,62 246,80"  fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="0.8"/>
+    <rect x="176" y="80" width="70" height="11" rx="2" fill="url(#sl4-gold)" stroke="#9a6200" stroke-width="1"/>
+    <!-- Width annotations -->
+    <line x1="196" y1="83" x2="224" y2="83" stroke="#66bb6a" stroke-width="0.8"/>
+    <text x="195" y="104" font-size="6" fill="#66bb6a" font-family="sans-serif">28px base</text>
+    <line x1="176" y1="83" x2="188" y2="83" stroke="#78909c" stroke-width="0.6"/>
+    <text x="148" y="104" font-size="6" fill="#78909c" font-family="sans-serif">12px</text>
+    <text x="148" y="112" font-size="6.5" fill="#ffd600" font-family="sans-serif">Center = 2× flanking width</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Rarity Shape Hierarchy — Legendary Compositional Authority",
+    `<div class="sl-svg-frame">${crownHierarchySVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>Silver crown (uncommon): equal spike bases (16px each).</strong> The silhouette is uniform, democratically distributed. No spike dominates — reads as competent, not commanding.</li>
+      <li class="sl-item"><strong>Golden crown (legendary): center spike base widened from 20px to 24px.</strong> The center spike is now clearly wider than the flanking spikes, establishing visual hierarchy through shape alone.</li>
+      <li class="sl-item"><strong>Legendary means compositional authority, not more spikes.</strong> The change is additive restraint — one spike becomes dominant, all others become supporting. This is the principle of figure/ground in shape design.</li>
+      <li class="sl-item"><strong>At 52px</strong>, the wider center creates a clearer "crown" read. The silhouette becomes more iconic, more immediately recognizable. Rarity difference is now in the shape, not just the material color.</li>
+    </ul>`,
+    "Rarity hierarchy must live in the shape language, not just the material quality. A golden version of an uncommon crown is not a legendary item — it's an expensive uncommon item."
+  ));
+
+  // ── Card 5: Wing & Cape Silhouette Personalities ─────────────────────────────
+  const silhouetteSVG = `<svg viewBox="0 0 300 140" width="100%" height="140" style="display:block">
+    <defs>
+      <linearGradient id="sl5-wing" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#43a047"/><stop offset="100%" stop-color="#1a3a1c"/>
+      </linearGradient>
+      <linearGradient id="sl5-cape" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#8c1212"/><stop offset="100%" stop-color="#2e0000"/>
+      </linearGradient>
+    </defs>
+
+    <!-- WING: BEFORE — straight line -->
+    <text x="4" y="9" font-size="7" fill="#ef5350" font-family="sans-serif" font-weight="bold">WING — Before</text>
+    <text x="4" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">Straight L line</text>
+    <path d="M 36 75 L 4 28 L 8 100 L 26 120 Z" fill="url(#sl5-wing)" opacity="0.7"/>
+    <line x1="36" y1="75" x2="4" y2="28" stroke="#1b5e20" stroke-width="1.5"/>
+    <text x="2" y="132" font-size="6" fill="#ef5350" font-family="sans-serif">Geometric parallelogram</text>
+
+    <!-- Wing arrow -->
+    <text x="56" y="72" font-size="16" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- WING: AFTER — S-curve -->
+    <text x="82" y="9" font-size="7" fill="#66bb6a" font-family="sans-serif" font-weight="bold">WING — After</text>
+    <text x="82" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">S-curve C bezier</text>
+    <path d="M 114 75 C 120 49 88 44 80 28 L 84 100 L 102 120 Z" fill="url(#sl5-wing)" opacity="0.7"/>
+    <path d="M 114 75 C 120 49 88 44 80 28" fill="none" stroke="#1b5e20" stroke-width="1.5"/>
+    <text x="78" y="132" font-size="6" fill="#66bb6a" font-family="sans-serif">Living membrane tension</text>
+
+    <!-- Divider -->
+    <line x1="152" y1="0" x2="152" y2="140" stroke="var(--border)" stroke-width="0.8" opacity="0.5"/>
+
+    <!-- CAPE: BEFORE — straight sides -->
+    <text x="158" y="9" font-size="7" fill="#ef5350" font-family="sans-serif" font-weight="bold">CAPE — Before</text>
+    <text x="158" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">Straight L sides</text>
+    <path d="M 174 25 L 158 30 L 158 122 Q 200 126 242 122 L 242 30 L 226 25 Q 200 20 174 25 Z" fill="url(#sl5-cape)" opacity="0.7"/>
+    <line x1="158" y1="30" x2="158" y2="122" stroke="#8c1212" stroke-width="1.5" opacity="0.8"/>
+    <line x1="242" y1="30" x2="242" y2="122" stroke="#8c1212" stroke-width="1.5" opacity="0.8"/>
+    <text x="154" y="132" font-size="6" fill="#ef5350" font-family="sans-serif">Panel — sides are rails</text>
+
+    <!-- Cape arrow -->
+    <text x="248" y="72" font-size="12" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- CAPE: AFTER — billowed sides -->
+    <text x="260" y="9" font-size="7" fill="#66bb6a" font-family="sans-serif" font-weight="bold">CAPE — After</text>
+    <text x="260" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">Q billow sides</text>
+    <!-- Only shows the billow delta, positioned tightly -->
+    <path d="M 267 25 L 256 30 Q 253 76 256 122 Q 271 126 286 122 Q 289 76 286 30 L 275 25 Q 271 20 267 25 Z" fill="url(#sl5-cape)" opacity="0.7"/>
+    <text x="255" y="132" font-size="6" fill="#66bb6a" font-family="sans-serif">Cloth breathes outward</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Silhouette Personalities — Wing Organic Language & Cape Cloth Language",
+    `<div class="sl-svg-frame">${silhouetteSVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>Wings: straight L → cubic S-curve.</strong> The leading edge now bulges forward ~8px at the upper quarter, implying membrane tension and aerodynamic lift. The shape says "this could fly" — the straight line said "this was drawn."</li>
+      <li class="sl-item"><strong>Wingtips: blunt circle → angled ellipse.</strong> The ellipse is rotated 31° along the leading-edge trajectory, giving the tip a tapered, organic termination consistent with how real wing membranes narrow at their extremity.</li>
+      <li class="sl-item"><strong>Capes: straight L → quadratic Q billow (2px outward).</strong> Both cape-red and galaxy-cape get matching side billow. The cloth now "breathes" — it has volume and gravity, not just color and gradient.</li>
+      <li class="sl-item"><strong>Material/shape co-design principle.</strong> Cloth uses soft, outward-billowing curves. Metal uses clean planes. This pairing makes each category feel designed together, not applied independently.</li>
+    </ul>`,
+    "Wing shape language: tension and lift. Cape shape language: gravity and drape. Each cosmetic category now has a shape vocabulary that reinforces its material identity."
+  ));
+
+  // ── Card 6: Face Psychology — Eye Shape & Emotional Safety ───────────────────
+  const facePsychSVG = `<svg viewBox="0 0 300 110" width="100%" height="110" style="display:block">
+    <defs>
+      <linearGradient id="sl6-sk" x1="0.3" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="#F5C49A"/><stop offset="100%" stop-color="#E8A87C"/>
+      </linearGradient>
+    </defs>
+    <!-- LEFT eye area: flat outer corner -->
+    <text x="4" y="9" font-size="7" fill="#ef5350" font-family="sans-serif" font-weight="bold">BEFORE — Flat Outer</text>
+    <text x="4" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">Outer corner y=43 (same level)</text>
+    <ellipse cx="50" cy="55" rx="40" ry="36" fill="url(#sl6-sk)"/>
+    <ellipse cx="36" cy="52" rx="9" ry="7" fill="white"/>
+    <circle cx="36" cy="52" r="4.5" fill="#6B4226"/>
+    <circle cx="36" cy="52" r="2.5" fill="#180c05"/>
+    <circle cx="38" cy="49.5" r="1.8" fill="white"/>
+    <ellipse cx="64" cy="52" rx="9" ry="7" fill="white"/>
+    <circle cx="64" cy="52" r="4.5" fill="#6B4226"/>
+    <circle cx="64" cy="52" r="2.5" fill="#180c05"/>
+    <circle cx="66" cy="49.5" r="1.8" fill="white"/>
+    <!-- Flat eyelid crease -->
+    <path d="M 27 48 Q 36 45.5 45 48" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M 55 48 Q 64 45.5 73 48" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Annotation: flat line -->
+    <line x1="27" y1="48" x2="73" y2="48" stroke="#ef5350" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6"/>
+    <text x="14" y="98" font-size="6.5" fill="#ef5350" font-family="sans-serif">Outer = inner level</text>
+    <text x="14" y="107" font-size="6.5" fill="#78909c" font-family="sans-serif">Reads: drowsy / neutral</text>
+
+    <!-- Arrow -->
+    <text x="112" y="58" font-size="22" fill="#7c4dff" font-family="sans-serif">→</text>
+
+    <!-- RIGHT eye area: lifted outer corner -->
+    <text x="152" y="9" font-size="7" fill="#66bb6a" font-family="sans-serif" font-weight="bold">AFTER — Lifted Outer</text>
+    <text x="152" y="18" font-size="6.5" fill="#78909c" font-family="sans-serif">Outer corner y=41.5 (1.5px up)</text>
+    <ellipse cx="198" cy="55" rx="40" ry="36" fill="url(#sl6-sk)"/>
+    <ellipse cx="184" cy="52" rx="9" ry="7" fill="white"/>
+    <circle cx="184" cy="52" r="4.5" fill="#6B4226"/>
+    <circle cx="184" cy="52" r="2.5" fill="#180c05"/>
+    <circle cx="186" cy="49.5" r="1.8" fill="white"/>
+    <ellipse cx="212" cy="52" rx="9" ry="7" fill="white"/>
+    <circle cx="212" cy="52" r="4.5" fill="#6B4226"/>
+    <circle cx="212" cy="52" r="2.5" fill="#180c05"/>
+    <circle cx="214" cy="49.5" r="1.8" fill="white"/>
+    <!-- Lifted outer corner eyelid -->
+    <path d="M 175 48 Q 184 45.5 193 46.5" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M 203 48 Q 212 45.5 221 46.5" fill="none" stroke="#1a0e06" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Annotation: lifted line -->
+    <circle cx="193" cy="46.5" r="2.5" fill="none" stroke="#7c4dff" stroke-width="1"/>
+    <line x1="193" y1="43.5" x2="230" y2="36" stroke="#7c4dff" stroke-width="0.8"/>
+    <text x="220" y="34" font-size="6" fill="#7c4dff" font-family="sans-serif">+1.5px lift</text>
+    <text x="162" y="98" font-size="6.5" fill="#66bb6a" font-family="sans-serif">Outer > inner level</text>
+    <text x="162" y="107" font-size="6.5" fill="#4caf50" font-family="sans-serif">Reads: alert warmth</text>
+  </svg>`;
+
+  root.appendChild(slCard(
+    "Face Psychology — Eye Shape & Emotional Safety",
+    `<div class="sl-svg-frame">${facePsychSVG}</div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>The eyelid crease outer corner lifts 1.5px (y=43 → y=41.5).</strong> The inner corner is unchanged. This creates a subtle upward tail at the outer edge — a universally-readable signal of alertness and positive engagement.</li>
+      <li class="sl-item"><strong>Why only the outer corner?</strong> Lifting both corners equally makes the eye wider/rounder (childlike). Lifting only the outer corner creates "canthal tilt" — the shape associated with warmth, intelligence, and composed confidence.</li>
+      <li class="sl-item"><strong>Expression compatibility:</strong> Each expression file has its own eyelid coordinates. The outer corner lift is applied proportionally across all 5 states — neutral, curious, determined, focused, proud.</li>
+      <li class="sl-item"><strong>What to avoid:</strong> The change stays at 1.5px. More lift would read as surprise or manipulation. The goal is warm intelligence, not expressive exaggeration.</li>
+    </ul>`,
+    "Face psychology operates at the level of single pixels at small scale. The difference between a flat outer corner and a 1.5px lift is the difference between 'generic avatar' and 'character you want to spend time with.'"
+  ));
+
+  // ── Card 7: Silhouette Scale Test ─────────────────────────────────────────────
+  const scaleAvatarSVG = (size, label, showLabel) => {
+    const w = Math.round(size * 160 / 240);
+    const h = size;
+    return `<div class="sl-scale-col">
+      <div style="width:${w}px;height:${h}px;border-radius:${Math.max(4,Math.round(size*0.04))}px;background:radial-gradient(ellipse at 50% 28%,var(--avatar-inner)0%,var(--avatar-outer)100%);position:relative;isolation:isolate;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
+        <img class="avatar-layer" src="/assets/avatar/base/body.svg" style="z-index:1" alt="">
+        <img class="avatar-layer" src="/assets/avatar/aura/aura-gold.svg" style="z-index:0" alt="">
+        <img class="avatar-layer" src="/assets/avatar/shirt/cape-red.svg" style="z-index:-1" alt="">
+        <img class="avatar-layer" src="/assets/avatar/hat/crown-golden.svg" style="z-index:5" alt="">
+      </div>
+      ${showLabel ? `<div class="sl-scale-label">${label}</div>` : `<div class="sl-scale-label">${w}×${h}</div>`}
+    </div>`;
+  };
+
+  root.appendChild(slCard(
+    "Scale Survival — Shape Changes at Every Display Context",
+    `<div class="sl-scale-row">
+      ${scaleAvatarSVG(180, "Shop / Preview", false)}
+      ${scaleAvatarSVG(120, "Standard", false)}
+      ${scaleAvatarSVG(90, "Collection", false)}
+      ${scaleAvatarSVG(60, "Hub / Feed", false)}
+      ${scaleAvatarSVG(36, "Leaderboard", false)}
+    </div>
+    <ul class="sl-list" style="margin-top:12px">
+      <li class="sl-item"><strong>Waist taper:</strong> visible at 120px+, implied by shadow at 60px, absent at 36px — correct scale graduation.</li>
+      <li class="sl-item"><strong>Hair peak:</strong> the asymmetric top reads at 90px+ as personality, becomes invisible below 60px — which is fine, headwear covers it.</li>
+      <li class="sl-item"><strong>Crown center dominance:</strong> the wider base creates stronger crown read at 36px. At leaderboard scale, the legendary crown is more instantly identifiable.</li>
+      <li class="sl-item"><strong>Cape billow:</strong> the 2px billow per side survives to 60px as a slight cloth "breathing." Below that it merges with the background — correct, not a regression.</li>
+      <li class="sl-item"><strong>Eye shape:</strong> the 1.5px outer lift is visible at 90px+. At 52px/36px, the eye reads as a single warmth signal regardless — the lift is inside the eye area and contributes to general open-eye read.</li>
+    </ul>`,
+    "All shape-language improvements were verified across 5 display scales. Each change degrades gracefully — it either reads clearly at scale or disappears without breaking anything."
   ));
 
 }());

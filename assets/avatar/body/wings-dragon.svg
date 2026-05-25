@@ -14,18 +14,19 @@
   </defs>
 
   <!-- ── LEFT WING ── -->
-  <!-- Main membrane — gradient fill -->
-  <path d="M 42 118 L 2 52 L 8 158 L 34 194 Z" fill="url(#wg-memL)" stroke="#1b5e20" stroke-width="1.5"/>
-  <!-- Upper membrane panel -->
-  <path d="M 42 118 L 2 52 L 18 92 Z" fill="#66bb6a" opacity="0.35"/>
+  <!-- Main membrane — S-curve leading edge (C bezier): forward bulge at top implies membrane
+       tension/lift; sweeps back to tip. Organic wing, not a geometric parallelogram. -->
+  <path d="M 42 118 C 48 85 10 70 2 52 L 8 158 L 34 194 Z" fill="url(#wg-memL)" stroke="#1b5e20" stroke-width="1.5"/>
+  <!-- Upper membrane panel — follows S-curve leading edge -->
+  <path d="M 42 118 C 48 85 10 70 2 52 L 18 92 Z" fill="#66bb6a" opacity="0.35"/>
   <!-- Mid membrane panel -->
   <path d="M 42 118 L 8 118 L 10 148 Z" fill="#66bb6a" opacity="0.28"/>
   <!-- Lower membrane panel -->
   <path d="M 42 118 L 8 158 L 22 148 Z" fill="#66bb6a" opacity="0.32"/>
   <!-- Outer edge darkening -->
   <path d="M 2 52 L 8 158 L 34 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Spines -->
-  <line x1="42" y1="118" x2="2"  y2="52"  stroke="#1b5e20" stroke-width="2"/>
+  <!-- Spines — leading spine follows S-curve for silhouette coherence -->
+  <path d="M 42 118 C 48 85 10 70 2 52" fill="none" stroke="#1b5e20" stroke-width="2"/>
   <line x1="42" y1="118" x2="10" y2="96"  stroke="#2e7d32" stroke-width="1.5"/>
   <line x1="42" y1="118" x2="8"  y2="138" stroke="#2e7d32" stroke-width="1.5"/>
   <line x1="42" y1="118" x2="8"  y2="158" stroke="#2e7d32" stroke-width="1.5"/>
@@ -35,18 +36,19 @@
   <!-- Scale arcs near wing root — organic texture hint -->
   <path d="M 36 120 Q 30 115 28 122" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.55"/>
   <path d="M 34 128 Q 28 124 26 132" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.5"/>
-  <!-- Wingtips -->
-  <circle cx="2"  cy="52"  r="4" fill="#1b5e20"/>
+  <!-- Wingtip: elongated ellipse angled along leading-edge direction — organic taper, not blunt circle -->
+  <ellipse cx="2" cy="52" rx="3.5" ry="5" fill="#1b5e20" transform="rotate(-31 2 52)"/>
   <circle cx="4"  cy="54"  r="1.5" fill="#80cbc4" opacity="0.5"/>
   <circle cx="34" cy="194" r="3" fill="#1b5e20"/>
 
   <!-- ── RIGHT WING ── -->
-  <path d="M 118 118 L 158 52 L 152 158 L 126 194 Z" fill="url(#wg-memR)" stroke="#1b5e20" stroke-width="1.5"/>
-  <path d="M 118 118 L 158 52 L 142 92 Z" fill="#66bb6a" opacity="0.35"/>
+  <!-- Main membrane — mirror S-curve: forward bulge at top, sweeps to tip -->
+  <path d="M 118 118 C 112 85 150 70 158 52 L 152 158 L 126 194 Z" fill="url(#wg-memR)" stroke="#1b5e20" stroke-width="1.5"/>
+  <path d="M 118 118 C 112 85 150 70 158 52 L 142 92 Z" fill="#66bb6a" opacity="0.35"/>
   <path d="M 118 118 L 152 118 L 150 148 Z" fill="#66bb6a" opacity="0.28"/>
   <path d="M 118 118 L 152 158 L 138 148 Z" fill="#66bb6a" opacity="0.32"/>
   <path d="M 158 52 L 152 158 L 126 194" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="118" y1="118" x2="158" y2="52"  stroke="#1b5e20" stroke-width="2"/>
+  <path d="M 118 118 C 112 85 150 70 158 52" fill="none" stroke="#1b5e20" stroke-width="2"/>
   <line x1="118" y1="118" x2="150" y2="96"  stroke="#2e7d32" stroke-width="1.5"/>
   <line x1="118" y1="118" x2="152" y2="138" stroke="#2e7d32" stroke-width="1.5"/>
   <line x1="118" y1="118" x2="152" y2="158" stroke="#2e7d32" stroke-width="1.5"/>
@@ -54,7 +56,8 @@
   <line x1="118" y1="118" x2="156" y2="56"  stroke="#80cbc4" stroke-width="0.8" opacity="0.45"/>
   <path d="M 124 120 Q 130 115 132 122" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.55"/>
   <path d="M 126 128 Q 132 124 134 132" fill="none" stroke="#2e7d32" stroke-width="0.9" opacity="0.5"/>
-  <circle cx="158" cy="52"  r="4" fill="#1b5e20"/>
+  <!-- Wingtip: elongated ellipse — mirror angle of left wing -->
+  <ellipse cx="158" cy="52" rx="3.5" ry="5" fill="#1b5e20" transform="rotate(31 158 52)"/>
   <circle cx="156" cy="54"  r="1.5" fill="#80cbc4" opacity="0.5"/>
   <circle cx="126" cy="194" r="3" fill="#1b5e20"/>
 </svg>

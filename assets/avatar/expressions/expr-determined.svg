@@ -7,7 +7,7 @@
   </defs>
   <circle cx="80" cy="50" r="30" fill="url(#ex-sk)"/>
   <path d="M 80 20 A 30 30 0 0 1 80 80 Q 104 74 110 56 Q 114 40 106 28 Q 96 20 80 20 Z" fill="#d4956a" opacity="0.07"/>
-  <path d="M 52 44 Q 50 20 80 19 Q 110 20 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+  <path d="M 52 44 Q 50 18 75 16 Q 90 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
   <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
   <path d="M 52 44 Q 50 53 51 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
   <path d="M 108 44 Q 110 53 109 58" stroke="#4a3626" stroke-width="2.8" fill="none" stroke-linecap="round"/>
@@ -30,8 +30,8 @@
   <circle cx="66" cy="48" r="0.9" fill="white" opacity="0.5"/>
   <circle cx="90" cy="48" r="0.9" fill="white" opacity="0.5"/>
   <!-- DETERMINED: eyelid 0.5px lower, slightly heavier — steady resolute gaze -->
-  <path d="M 61 43.5 Q 68 41 75 43.5" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M 85 43.5 Q 92 41 99 43.5" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M 61 43.5 Q 68 41 75 42" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M 85 43.5 Q 92 41 99 42" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"/>
   <path d="M 77 57 Q 78 62 80 62.5 Q 82 62 83 57" fill="none" stroke="#c07850" stroke-width="1.1" stroke-linecap="round"/>
   <circle cx="77" cy="61.5" r="1.1" fill="#c07850" opacity="0.38"/>
   <circle cx="83" cy="61.5" r="1.1" fill="#c07850" opacity="0.38"/>

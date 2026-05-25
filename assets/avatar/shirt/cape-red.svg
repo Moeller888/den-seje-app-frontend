@@ -7,9 +7,9 @@
     </linearGradient>
   </defs>
 
-  <!-- Continuous back cloth — body (z=0) occludes naturally -->
-  <!-- Hem sags to y=244 center — heavier cloth reads as substantial royal garment -->
-  <path d="M 46 90 L 10 100 L 10 237 Q 80 244 150 237 L 150 100 L 114 90 Q 80 82 46 90 Z"
+  <!-- Continuous back cloth — side walls have a gentle outward billow (Q control 2px outside)
+       breaking the straight-panel read into genuine cloth fabric with breathing room. -->
+  <path d="M 46 90 L 10 100 Q 6 168 10 237 Q 80 244 150 237 Q 154 168 150 100 L 114 90 Q 80 82 46 90 Z"
         fill="url(#cr-cloth)"/>
 
   <!-- Center drape fold — cloth gravity line -->

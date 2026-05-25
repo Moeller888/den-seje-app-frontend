@@ -20,7 +20,9 @@
   <!-- 5 crown points: tall-short-TALL-short-tall -->
   <polygon points="40,22 48,2 56,22"    fill="url(#cg-body)" stroke="#9a6200" stroke-width="1"/>
   <polygon points="55,22 63,11 71,22"   fill="url(#cg-body)" stroke="#9a6200" stroke-width="1"/>
-  <polygon points="70,22 80,0 90,22"    fill="url(#cg-body)" stroke="#9a6200" stroke-width="1.5"/>
+  <!-- Center spike: base widened to 68–92 (24px vs flanking 16px) — compositional authority.
+       The dominant center is the silhouette signal for "legendary" at any scale. -->
+  <polygon points="68,22 80,0 92,22"    fill="url(#cg-body)" stroke="#9a6200" stroke-width="1.5"/>
   <polygon points="89,22 97,11 105,22"  fill="url(#cg-body)" stroke="#9a6200" stroke-width="1"/>
   <polygon points="104,22 112,2 120,22" fill="url(#cg-body)" stroke="#9a6200" stroke-width="1"/>
 
@@ -34,7 +36,7 @@
   <!-- Left edge catch-light on each spike — upper-left light source -->
   <line x1="40"  y1="22" x2="48"  y2="2"  stroke="#fff9c4" stroke-width="0.7" opacity="0.5"/>
   <line x1="55"  y1="22" x2="63"  y2="11" stroke="#fff9c4" stroke-width="0.7" opacity="0.45"/>
-  <line x1="70"  y1="22" x2="80"  y2="0"  stroke="#fff9c4" stroke-width="0.9" opacity="0.55"/>
+  <line x1="68"  y1="22" x2="80"  y2="0"  stroke="#fff9c4" stroke-width="0.9" opacity="0.55"/>
   <line x1="89"  y1="22" x2="97"  y2="11" stroke="#fff9c4" stroke-width="0.7" opacity="0.45"/>
   <line x1="104" y1="22" x2="112" y2="2"  stroke="#fff9c4" stroke-width="0.7" opacity="0.5"/>
 
