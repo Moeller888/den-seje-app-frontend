@@ -1166,6 +1166,52 @@
     .co41-metric-tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
     .co41-metric-tag.keep { background: rgba(76,175,80,0.12); color: #4caf50; }
     .co41-metric-tag.avoid { background: rgba(239,83,80,0.12); color: #ef5350; }
+
+    /* Section 42 — Teacher Authoring Workspace & Pedagogical Tooling */
+    .tw42-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .tw42-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .tw42-card.accent { border-color: #5c2a3a; background: linear-gradient(135deg, #130508 0%, #0d0306 100%); }
+    .tw42-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #c47898; margin-bottom: 6px; }
+    .tw42-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .tw42-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .tw42-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .tw42-block { background: rgba(196, 120, 152, 0.06); border: 1px solid rgba(196, 120, 152, 0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .tw42-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #c47898; margin-bottom: 8px; }
+    .tw42-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .tw42-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .tw42-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .tw42-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .tw42-compare-label.stressful { color: #ef5350; }
+    .tw42-compare-label.humane { color: #c47898; }
+    .tw42-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .tw42-compare-item:last-child { border-bottom: none; }
+    .tw42-layer { border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; border-left: 3px solid; }
+    .tw42-layer-num { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+    .tw42-layer-fields { font-size: 10px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 3px; }
+    .tw42-layer-guide { font-size: 10px; font-style: italic; color: var(--text-muted); line-height: 1.4; }
+    .tw42-editor { background: rgba(0,0,0,0.25); border: 1px solid rgba(196,120,152,0.2); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .tw42-editor-line { font-size: 10px; color: var(--text-secondary); padding: 3px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .tw42-editor-icon { color: #c47898; flex-shrink: 0; font-size: 11px; margin-top: 1px; }
+    .tw42-editor-text { line-height: 1.4; }
+    .tw42-level { border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; border-left: 3px solid; }
+    .tw42-level-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 2px; }
+    .tw42-level-msg { font-size: 10px; color: var(--text-secondary); font-style: italic; line-height: 1.4; }
+    .tw42-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .tw42-rule:last-child { border-bottom: none; }
+    .tw42-rule::before { content: "→ "; color: #c47898; font-weight: 700; }
+    .tw42-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #c47898; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .tw42-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(196,120,152,0.1); color: #c47898; margin: 2px; }
+    .tw42-mockup { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-secondary); line-height: 1.8; }
+    .tw42-mockup-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; font-family: inherit; }
+    .tw42-qa-prompt { background: rgba(196,120,152,0.06); border: 1px solid rgba(196,120,152,0.15); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; font-size: 11px; font-style: italic; color: var(--text-secondary); line-height: 1.5; }
+    .tw42-qa-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .tw42-qa-btn { padding: 3px 10px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+    .tw42-qa-btn.yes { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .tw42-qa-btn.improve { background: rgba(196,120,152,0.12); color: #c47898; }
+    .tw42-signal { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .tw42-signal:last-child { border-bottom: none; }
+    .tw42-signal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .tw42-signal-text { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1408,6 +1454,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 41 — Pipeline Integration &amp; Content Operations</h2>
   <div class="co41-grid" id="co41Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 42 — Teacher Authoring Workspace &amp; Pedagogical Tooling</h2>
+  <div class="tw42-grid" id="tw42Grid"></div>
 </div>
 
 <script type="module">
@@ -12169,6 +12218,295 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="co41-quote">De bedste uddannelsesoperationer er usynlige for eleverne. De mærker bare at platformen altid respekterer dem — at hvert forkert svar fører til en forklaring der øger forståelsen frem for at blot gentage svaret.</div>',
     'Section 41 er ikke slutpunktet for indholds-operationer. Det er starten på en kultur af bæredygtig pædagogisk håndværk.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 42 — Teacher Authoring Workspace & Pedagogical Tooling ───────────
+(function () {
+  var grid = document.getElementById('tw42Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, variant) {
+    var el = document.createElement('div');
+    el.className = 'tw42-card' + (variant === 'accent' ? ' accent' : '');
+    el.innerHTML =
+      '<div class="tw42-label">Section 42 — Teacher Workspace</div>' +
+      '<div class="tw42-title">' + title + '</div>' +
+      '<div class="tw42-body">' + body + '</div>' +
+      (footer ? '<div class="tw42-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Stressful vs humane authoring (accent)
+  card('Fra datastress til pædagogisk håndværk: det menneskelige valg',
+    '<p style="margin:0 0 12px">Fremragende uddannelsessystemer mister lærere ved interface-laget — ikke ved filosofi-laget. Section 42 gør arkitekturen menneskelig.</p>' +
+    '<div class="tw42-compare">' +
+      '<div class="tw42-compare-col">' +
+        '<div class="tw42-compare-label stressful">Stressfuldt forfatning</div>' +
+        '<div class="tw42-compare-item">15 felter synlige på én gang</div>' +
+        '<div class="tw42-compare-item">JSONB-redigering direkte</div>' +
+        '<div class="tw42-compare-item">Røde "ukomplette" advarsler</div>' +
+        '<div class="tw42-compare-item">Berigelsesprocenter synlige</div>' +
+        '<div class="tw42-compare-item">Peer-sammenligningdata</div>' +
+        '<div class="tw42-compare-item">"AI har forbedret dit spørgsmål"</div>' +
+      '</div>' +
+      '<div class="tw42-compare-col">' +
+        '<div class="tw42-compare-label humane">Humant forfatning</div>' +
+        '<div class="tw42-compare-item">3 felter — laget viser resten</div>' +
+        '<div class="tw42-compare-item">Menneskesproglige felter</div>' +
+        '<div class="tw42-compare-item">Tier 0 er gyldigt, ikke fejl</div>' +
+        '<div class="tw42-compare-item">Ingen fuldstændighedsbars</div>' +
+        '<div class="tw42-compare-item">Ingen peer-tracking synlig</div>' +
+        '<div class="tw42-compare-item">Forslag kræver lærerbekræftelse</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-quote">Når en lærer lukker arbejdsrummet bør de tænke: "Jeg lavede noget godt i dag." Ikke: "Jeg behandlede data i dag."</div>',
+    'Arkitektur er kun god når de mennesker der bruger den føler sig gode ved at bruge den.',
+    'accent'
+  );
+
+  // Card 2 — Workflow audit findings
+  card('Workflow-audit: hvad der frustrerer og udmatter lærere',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Seks kilder til kognitiv overbelastning i nuværende forfatningsoplevelse — og hvad de signalerer om systemet.</p>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#ef5350"></div>' +
+      '<div class="tw42-signal-text"><strong>JSONB-barrieren:</strong> teknisk struktur kræves for pædagogisk arbejde — dette er en designfejl, ikke en brugerfejl</div>' +
+    '</div>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#ef5350"></div>' +
+      '<div class="tw42-signal-text"><strong>Konteksttomme felter:</strong> cognitive_skill-dropdown uden eksempler = arbitrære valg = ubrugelig metadata</div>' +
+    '</div>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#f59e0b"></div>' +
+      '<div class="tw42-signal-text"><strong>Tomt review_text-felt:</strong> blankt felt inviterer til blank skrivning. Skriveoverfladen skal guide, ikke bare vente</div>' +
+    '</div>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#f59e0b"></div>' +
+      '<div class="tw42-signal-text"><strong>Fri-tekst misconception_type:</strong> ingen vokabular-kontrol = "causal inversion", "Causal_Inversion", "årsag-effekt forveksling" = ubrugelig data</div>' +
+    '</div>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#888"></div>' +
+      '<div class="tw42-signal-text"><strong>Usynlige huller:</strong> ingen signal om at et høj-trafik spørgsmål mangler review_text — problemer er usynlige indtil elever lider dem</div>' +
+    '</div>' +
+    '<div class="tw42-signal">' +
+      '<div class="tw42-signal-dot" style="background:#888"></div>' +
+      '<div class="tw42-signal-text"><strong>Grænseløst arbejde:</strong> ingen fornemmelse af fremgang eller afslutning — berigelsesarbejdet føles uendeligt</div>' +
+    '</div>',
+    'Hvert frustrationspunkt er en designmulighed — ikke en brugersvaghed.',
+    ''
+  );
+
+  // Card 3 — Teacher Experience Contract
+  card('Lærers oplevelseskontrakt: hvad arbejdsrummet kommunikerer',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Arbejdsrummets karakter er ikke æstetisk — det er pædagogisk. Det kommunikerer hvad slags arbejde der foregår her.</p>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">6 karaktertræk arbejdsrummet skal have</div>' +
+      '<div class="tw42-block-body">' +
+        '<strong style="color:#c47898">Roligt:</strong> ingen visuel støj, ingen status-angst, ingen konkurrerende prioriteter på skærmen<br>' +
+        '<strong style="color:#c47898">Rummeligt:</strong> hver forfatningsoverflade har plads til at tænke<br>' +
+        '<strong style="color:#c47898">Vejledet:</strong> arbejdsrummet ved hvad der ville hjælpe næste — tilbyder aldrig kræver<br>' +
+        '<strong style="color:#c47898">Forståeligt:</strong> hvert felt har et menneskesprogsformål der ikke kræver teknisk dokumentation<br>' +
+        '<strong style="color:#c47898">Refleksivt:</strong> skriveoverflader inviterer til langsom omhyggelig komposition — ikke hasteindtastning<br>' +
+        '<strong style="color:#c47898">Håndværksorienteret:</strong> æstetikken kommunikerer at uddannelsesindhold er dygtighedsarbejde' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-block">' +
+      '<div class="tw42-block-title">Hvad arbejdsrummet aldrig kommunikerer</div>' +
+      '<div class="tw42-block-body">' +
+        '"Du har X spørgsmål under kvalitetstærsklen" — ingen præstationspres<br>' +
+        '"Din berigelsesrate er Y% af kollegernes" — ingen sammenligning<br>' +
+        '"Felt obligatorisk inden du kan fortsætte" for berigelsesfelter — progressiv er altid gyldig<br>' +
+        '"AI har forbedret dit spørgsmål" uden eksplicit forfattergennemgang og bekræftelse' +
+      '</div>' +
+    '</div>',
+    'Arbejdsrummet er en etisk handling — dets design er en løfte til lærerne der bruger det.',
+    ''
+  );
+
+  // Card 4 — Progressive authoring flow
+  card('Progressiv forfatningsflow: dybde altid tilgængelig, overvælde aldrig standard',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Arbejdsrummet afslører kompleksitet progressivt. Hvert lag er lærer-initieret — aldrig automatisk.</p>' +
+    '<div class="tw42-layer" style="background:rgba(80,80,80,0.08);border-color:#555">' +
+      '<div class="tw42-layer-num" style="color:#aaa">Lag 0 — Skriv spørgsmålet</div>' +
+      '<div class="tw42-layer-fields">Spørgsmålsstamme · Svarmuligheder · Korrekt svar</div>' +
+      '<div class="tw42-layer-guide">"Skriv det spørgsmål du vil at elever tænker over. Alt andet kan komme senere."</div>' +
+    '</div>' +
+    '<div class="tw42-layer" style="background:rgba(196,120,152,0.06);border-color:#c47898">' +
+      '<div class="tw42-layer-num" style="color:#c47898">Lag 1 — Tilføj kontekst og feedback</div>' +
+      '<div class="tw42-layer-fields">review_text · Koncepter (2–4) · Sværhedsgrad</div>' +
+      '<div class="tw42-layer-guide">"Når en elev tager fejl — hvad bør de forstå? Skriv til det øjeblik."</div>' +
+    '</div>' +
+    '<div class="tw42-layer" style="background:rgba(45,191,138,0.06);border-color:#2dbf8a">' +
+      '<div class="tw42-layer-num" style="color:#2dbf8a">Lag 2 — Undervis i misconceptionen</div>' +
+      '<div class="tw42-layer-fields">Misconception type · Kognitiv færdighed · Udfordringsrolle</div>' +
+      '<div class="tw42-layer-guide">"Hvilket forkert svar ville en elev med delvis forståelse vælge? Navngiv det mønster."</div>' +
+    '</div>' +
+    '<div class="tw42-layer" style="background:rgba(156,111,228,0.06);border-color:#9c6fe4">' +
+      '<div class="tw42-layer-num" style="color:#9c6fe4">Lag 3 — Uddyb forbindelserne</div>' +
+      '<div class="tw42-layer-fields">Tværfaglige links · Indsigtstype · review_text opgradering (Level 3+)</div>' +
+      '<div class="tw42-layer-guide">"Hvilken større idé berører dette spørgsmål? Hvor optræder dette mønster i andre domæner?"</div>' +
+    '</div>' +
+    '<div class="tw42-rule" style="margin-top:8px">Hvert lag er uafhængigt gemmbart — delvis berigelse er altid gyldig</div>' +
+    '<div class="tw42-rule">"Ikke nu" på ethvert lag-prompt er et gyldigt svar — gemt uden dom</div>',
+    'Dybde er altid tilgængelig. Overvælde er aldrig standard.',
+    ''
+  );
+
+  // Card 5 — review_text writing experience
+  card('review_text-skriveoplevel: et dedikeret pædagogisk forfatningsrum',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">review_text-editoren er kernen af pædagogisk håndværk. Den fortjener en dedikeret skriveoverflade — ikke et tekstfelt inde i en metadataformular.</p>' +
+    '<div class="tw42-editor">' +
+      '<div class="tw42-mockup-label">skriveoverflade-design</div>' +
+      '<div class="tw42-editor-line"><span class="tw42-editor-icon">📝</span><div class="tw42-editor-text"><strong>Bredde:</strong> fuld bredde skriveoverflade, generøs padding — skrivning skal føles rummeligt</div></div>' +
+      '<div class="tw42-editor-line"><span class="tw42-editor-icon">👁</span><div class="tw42-editor-text"><strong>Kontekst synlig:</strong> spørgsmålet og det korrekte svar er synlige mens review_text skrives</div></div>' +
+      '<div class="tw42-editor-line"><span class="tw42-editor-icon">📏</span><div class="tw42-editor-text"><strong>Ordtæller-guide:</strong> blød indikation af 2–4 sætningers ideel længde — en rækkevidde, ikke en grænse</div></div>' +
+      '<div class="tw42-editor-line"><span class="tw42-editor-icon">🎯</span><div class="tw42-editor-text"><strong>Niveau-indikator:</strong> blød etiket der viser nuværende Level (0–3) baseret på indhold — deskriptiv, ikke preskriptiv</div></div>' +
+      '<div class="tw42-editor-line"><span class="tw42-editor-icon">💡</span><div class="tw42-editor-text"><strong>Prompt-startere:</strong> valgfrie sætningsstartere tilgængelige: "Dette sker fordi...", "Hvad der gør dette svært er...", "Dette forbinder til..."</div></div>' +
+    '</div>' +
+    '<div class="tw42-level" style="background:rgba(80,80,80,0.08);border-color:#555">' +
+      '<div class="tw42-level-label" style="color:#888">Level 0-signal</div>' +
+      '<div class="tw42-level-msg">"Dette fortæller elever hvad — men ikke hvorfor. Overvej at starte med hvad eleven sandsynligvis troede."</div>' +
+    '</div>' +
+    '<div class="tw42-level" style="background:rgba(76,175,80,0.06);border-color:#4caf50">' +
+      '<div class="tw42-level-label" style="color:#4caf50">Level 3-signal</div>' +
+      '<div class="tw42-level-msg">"Guldstandard. Elever der tager fejl vil afslutte med at læse bedre uddannet end elever der svarede rigtigt."</div>' +
+    '</div>',
+    'Skriveoverfladen er en invitation til langsom, omhyggelig tænkning — ikke en formular.',
+    ''
+  );
+
+  // Card 6 — Misconception & concept tooling
+  card('Misconception & konceptværktøjer: assisterende, ikke autoritativ',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Forslag skal føles hjælpsomme — ikke autoritære. Læreren foreslår; vokabularet støtter. Læreren beslutter altid.</p>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">Misconception-tag interface</div>' +
+      '<div class="tw42-block-body">' +
+        '<strong>Inputmode:</strong> Dropdown med navngivne misconception-typer — lærer vælger, fri-tekster aldrig<br>' +
+        '<strong>Hvert valg har:</strong> Menneskesprogsetiket + én-sætnings beskrivelse af fejlmønstret det navngiver<br>' +
+        '<strong>Tildeling:</strong> Lærer vælger hvilken distraktor misconceptionen gælder for — visuel association<br>' +
+        '<strong>Preview:</strong> "Elever der vælger [Mulighed B] mener sandsynligvis [misconceptionsbeskrivelse]"<br>' +
+        '<strong>Override:</strong> "Tilføj brugerdefineret misconception-type" tilgængelig — for edge cases' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">Koncepttag interface</div>' +
+      '<div class="tw42-block-body">' +
+        '<strong>Inputmode:</strong> Tag-input med autofuldføring fra eksisterende konceptvokabular<br>' +
+        '<strong>Forslag:</strong> System foreslår koncepter baseret på spørgsmålstekst — lærer bekræfter eller afviser hvert<br>' +
+        '<strong>Visuelt:</strong> Accepterede tags optræder som chips med × for at fjerne — let og reversibelt<br>' +
+        '<strong>Blød grænse:</strong> Blød grænse på 6 koncepter med påmindelse: "Mest effektive spørgsmål fokuserer på 2–4 kerneider"' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-rule">Forslag vises som forslag, ikke preudfyldninger — lærer accepterer eller afviser aktivt</div>' +
+    '<div class="tw42-rule">System gemmer aldrig et forslag automatisk — lærerhandling kræves altid</div>' +
+    '<div class="tw42-rule">Forslagets tillidsgrad vises aldrig — det skaber falsk autoritet</div>',
+    'Læreren er den pædagogiske autoritet. Systemet er en informeret assistent.',
+    ''
+  );
+
+  // Card 7 — Pedagogical QA interface
+  card('Pædagogisk QA-interface: håndværksorienteret og hurtigt',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">QA bør føles som at læse en kollegas arbejde og tænke "dette er godt — her er én ting jeg ville overveje." Ikke: at køre indhold igennem en tjeklisteautomat.</p>' +
+    '<div class="tw42-block" style="margin-bottom:10px">' +
+      '<div class="tw42-block-title">5 review-prompts — vist én ad gangen</div>' +
+      '<div class="tw42-qa-prompt">"Når en elev læser dette spørgsmål, er det straks klart hvad der spørges om?"<div class="tw42-qa-actions"><span class="tw42-qa-btn yes">Ja, dette er klart</span><span class="tw42-qa-btn improve">Jeg vil forbedre dette</span></div></div>' +
+      '<div class="tw42-qa-prompt" style="opacity:0.5">"Hvis en elev vælger et forkert svar, ville de forstå noget meningsfuldt fra feedback?"<div class="tw42-qa-actions"><span class="tw42-qa-btn yes">Ja, feedback hjælper</span><span class="tw42-qa-btn improve">review_text trænger til arbejde</span></div></div>' +
+    '</div>' +
+    '<div class="tw42-block">' +
+      '<div class="tw42-block-title">Hvad QA aldrig gør</div>' +
+      '<div class="tw42-block-body">' +
+        'Blokerer et spørgsmål fra at nå elever<br>' +
+        'Viser en score eller rating<br>' +
+        'Sammenligner spørgsmålet med andre læreres spørgsmål<br>' +
+        'Kræver begrundelse for at springe et prompt over<br>' +
+        'Markerer automatisk et spørgsmål som fejlende uden lærergennemgang' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-quote">QA-gennemgang per spørgsmål bør tage under 5 minutter. Hvis det tager længere, trænger spørgsmålet til omskrivning — ikke mere QA.</div>',
+    '"Jeg er tilfreds med dette som det er" afslutter altid QA-løkken for det spørgsmål.',
+    ''
+  );
+
+  // Card 8 — Content health visibility
+  card('Indholdssundhedssynlighed: se klart uden dashboard-afhængighed',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Lærere bør kunne se hvad der kræver opmærksomhed — ikke hvor meget de har gjort. Forskellen er afgørende.</p>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">Sundhedsvisnings-design</div>' +
+      '<div class="tw42-block-body">' +
+        '<strong>Fokus:</strong> Spørgsmål der ville have gavn af opmærksomhed — ikke spørgsmål der "fejlede"<br>' +
+        '<strong>Sortering:</strong> Elevmøde-frekvens × berigelseshul — impact over oprettelsesdato<br>' +
+        '<strong>Visning:</strong> Hvert spørgsmål vises med: uddrag, mødeantal, tier, ét specifikt næste-skridt forslag<br>' +
+        '<strong>Batchstørrelse:</strong> Standard 10 spørgsmål maksimalt — forhindrer overvælde' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-block">' +
+      '<div class="tw42-block-title">Hvad synligheden undgår</div>' +
+      '<div class="tw42-block-body">' +
+        'Ingen "% fuldstændig" fremgangsbars — disse skaber fuldstændighedsangst<br>' +
+        'Ingen rød/advarsel-farvekodning for uberiget indhold — Tier 0 er gyldigt, ikke en fejl<br>' +
+        'Ingen sammenligning med tidligere perioder ("du berigede 3 færre spørgsmål denne uge")<br>' +
+        'Ingen individuel lærers berigelsesporing synlig for andre lærere<br>' +
+        'Ingen automatiske e-mails om berigelsesmål' +
+      '</div>' +
+    '</div>',
+    'Sundhedssporing handler om at se klart — ikke om at se produktiv ud.',
+    ''
+  );
+
+  // Card 9 — Teacher trust & educational ethics
+  card('Lærertillid og uddannelsesetik: ikke-overvågning som design-princip',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Platformen vil aldrig bruge sin synlighed i lærer-forfatningsadfærd til at evaluere, rangordne eller presse lærere.</p>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">5 overvågningsbegrænsninger</div>' +
+      '<div class="tw42-block-body">' +
+        'Lærers redigeringsmønstre deles aldrig med skoleledere<br>' +
+        'Berigelsesrater vises aldrig for peers eller ledelse<br>' +
+        'Tid brugt på spørgsmål spores aldrig eller vises<br>' +
+        'QA-historik er kun synlig for den forfattende lærer<br>' +
+        'Ingen "sidst redigeret af" attribution på elevvendt indhold — kun intern forfatterhistorik' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-block" style="margin-bottom:8px">' +
+      '<div class="tw42-block-title">Pædagogisk autoritet — 5 tilsagn</div>' +
+      '<div class="tw42-block-body">' +
+        'Lærerens misconception_type-valg overrider enhver systemslutning<br>' +
+        'Lærerens review_text overrider enhver systemskabelon<br>' +
+        'Lærerens QA-beslutning ("dette er fint som det er") afslutter QA-løkken<br>' +
+        'Lærere kan markere ethvert systemforslag som "ikke relevant for dette spørgsmål" — permanent<br>' +
+        'Hvert adaptivt valg kan forklares i én sætning til den forfattende lærer' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-quote">Systemet vil aldrig bruge sin synlighed i lærers arbejde til at evaluere dem. Den synlighed eksisterer for at forbedre platformen — ikke til at lede de mennesker der bruger den.</div>',
+    'Tillid er ikke en feature. Det er det fundament alle andre features hviler på.',
+    ''
+  );
+
+  // Card 10 — Future humane pedagogical tooling (accent)
+  card('Fremtidens humane pædagogiske værktøjer: anti-LMS-nordstjernen',
+    '<p style="margin:0 0 12px">Om fem år siger en lærer der har brugt dette arbejdsrum: "Jeg forstår mine elevers misconceptions bedre end jeg gjorde — fordi platformen hjalp mig med at tænke klart om hvad de sandsynligvis misforstår." Det er succesmålet. Ikke berigelsesrate. Ikke QA-score.</p>' +
+    '<div class="tw42-block" style="margin-bottom:10px">' +
+      '<div class="tw42-block-title">Anti-LMS principper</div>' +
+      '<div class="tw42-block-body">' +
+        'Enhver ny feature evalueres mod: "Tjener dette lærerens pædagogiske arbejde — eller andres rapporteringsbehov?"<br>' +
+        'Ingen feature der primært eksisterer for at generere analytics er acceptabel<br>' +
+        'Lærertid i arbejdsrummet bør falde over tid efterhånden som berigelse akkumuleres<br>' +
+        'Onboarding af en ny lærer bør føles som introduktion til et håndværksrum — ikke som enterprise-softwaretræning<br>' +
+        'Kompleksitetsloftet er det kognitive krav af Lag 3-berigelse — intet bør overskride dette' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-block">' +
+      '<div class="tw42-block-title">Kollaborativ håndværksfremtid</div>' +
+      '<div class="tw42-block-body">' +
+        'Co-forfatning: multiple lærere kan berige samme spørgsmål — med attribution og ændringshistorik<br>' +
+        'Delt review_text: en lærers særligt effektive review_text kan deles som model — andre tilpasser, kopierer ikke<br>' +
+        'Konceptkonsensus: når multiple lærere tagger samme koncepter uafhængigt noterer systemet enighed<br>' +
+        'Misconception-bibliotek: over tid opstår de mest pålideligt forudsigelige misconception-typer som et delt vokabular' +
+      '</div>' +
+    '</div>' +
+    '<div class="tw42-quote" style="margin-top:10px">Lærere er ikke brugere af systemet. De er medforfatter af det. Arbejdsrummet bør ære det.</div>',
+    'Section 42 er ikke slutpunktet for lærerværktøjer. Det er forpligtelsen til altid at bygge for menneskerne frem for systemet.',
     'accent'
   );
 
