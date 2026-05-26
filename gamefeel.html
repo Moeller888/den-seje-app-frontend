@@ -1462,6 +1462,46 @@
     .fr47-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
     .fr47-rule:last-child { border-bottom: none; }
     .fr47-rule::before { content: "→ "; color: #8a90c4; font-weight: 700; }
+
+    /* ── Section 48 — Gold-Standard Content Expansion ── */
+    .ce48-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ce48-card { background: #0a0a18; border: 1px solid #c4a87030; border-radius: 8px; padding: 18px; }
+    .ce48-card.accent { background: linear-gradient(135deg, #0d0b04 0%, #080703 100%); border-color: #c4a87060; }
+    .ce48-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #c4a870; margin-bottom: 8px; }
+    .ce48-title { font-size: 14px; font-weight: 700; color: #e8e8f0; margin-bottom: 10px; line-height: 1.3; }
+    .ce48-body { font-size: 12px; color: #b8b8c8; line-height: 1.6; }
+    .ce48-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #c4a87030; font-size: 11px; color: #c4a870; font-style: italic; }
+    .ce48-block { background: #c4a87012; border-left: 2px solid #c4a87040; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .ce48-block-title { font-size: 11px; font-weight: 600; color: #c4a870; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .ce48-block-body { font-size: 12px; color: #b8b8c8; line-height: 1.6; }
+    .ce48-node { display: inline-block; background: #c4a87020; border: 1px solid #c4a87050; color: #e8d5a0; font-size: 10px; padding: 3px 8px; border-radius: 12px; margin: 2px; }
+    .ce48-edge { font-size: 11px; color: #a0a0b8; padding: 4px 0; border-bottom: 1px solid #c4a87015; }
+    .ce48-edge-arrow { color: #c4a870; margin: 0 6px; }
+    .ce48-family { background: #0c0a14; border: 1px solid #c4a87025; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .ce48-family-name { font-size: 12px; font-weight: 600; color: #e0c880; margin-bottom: 3px; }
+    .ce48-family-error { font-size: 11px; color: #9090a8; line-height: 1.4; margin-bottom: 4px; }
+    .ce48-family-ids { font-size: 10px; color: #c4a870; }
+    .ce48-lo { background: #08080f; border: 1px solid #c4a87030; border-radius: 6px; padding: 12px; margin: 8px 0; }
+    .ce48-lo-id { font-size: 10px; color: #c4a870; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .ce48-lo-q { font-size: 12px; color: #e0e0f0; font-style: italic; margin-bottom: 6px; line-height: 1.4; }
+    .ce48-lo-hook { font-size: 11px; color: #a0a8b8; line-height: 1.5; border-left: 2px solid #c4a87050; padding-left: 10px; margin: 6px 0; }
+    .ce48-lo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .ce48-tag { font-size: 9px; background: #c4a87018; border: 1px solid #c4a87035; color: #c4a870; padding: 2px 7px; border-radius: 10px; }
+    .ce48-tag.deep { border-color: #c06040; color: #e08060; background: #c0604015; }
+    .ce48-tag.reinf { border-color: #40a080; color: #60c0a0; background: #40a08015; }
+    .ce48-wave-row { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; border-bottom: 1px solid #c4a87015; }
+    .ce48-wave-type { font-size: 10px; color: #c4a870; width: 100px; flex-shrink: 0; font-weight: 600; padding-top: 1px; }
+    .ce48-wave-ids { font-size: 10px; color: #9090a8; flex: 1; line-height: 1.7; }
+    .ce48-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+    .ce48-before { background: #180a08; border: 1px solid #c0404030; border-radius: 4px; padding: 10px; }
+    .ce48-after  { background: #081408; border: 1px solid #40a06030; border-radius: 4px; padding: 10px; }
+    .ce48-clabel { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .ce48-before .ce48-clabel { color: #c06040; }
+    .ce48-after  .ce48-clabel { color: #40c080; }
+    .ce48-cbody { font-size: 11px; color: #b0b0c0; line-height: 1.5; }
+    .ce48-quote { font-size: 12px; color: #c4a870; font-style: italic; border-left: 3px solid #c4a87060; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .ce48-rule { font-size: 11px; color: #a0a8b8; padding: 3px 0; }
+    .ce48-rule::before { content: "→ "; color: #c4a870; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1722,6 +1762,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 47 — Reality Cleanup &amp; Friction Reduction Sprint</h2>
   <div class="fr47-grid" id="fr47Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 48 — Gold-Standard Content Expansion: Democracy &amp; Power Pack</h2>
+  <div class="ce48-grid" id="ce48Grid"></div>
 </div>
 
 <script type="module">
@@ -14032,6 +14075,348 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="fr47-quote" style="margin-top:10px">DEN SEJE APP bør efter mange års brug føles som en uddannelsesmæssig partner der har lært at komme ud af vejen — nærværende når det tæller, usynlig når den bør.</div>',
     'Sektion 47 er afslutningen af oprydningsfasen. Alt herefter bygger på et renere fundament.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 48 — Gold-Standard Content Expansion: Democracy & Power Pack ────
+(function () {
+  var grid = document.getElementById('ce48Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'ce48-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ce48-label">Section 48 — Content Expansion</div>' +
+      '<div class="ce48-title">' + title + '</div>' +
+      '<div class="ce48-body">' + body + '</div>' +
+      (footer ? '<div class="ce48-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Thesis (accent)
+  card(
+    '40 spørgsmål. Ét domæne. Et begrebsøkosystem.',
+    '<p style="margin:0 0 10px">En læringsplatforms langsigtede kvalitet afgøres ikke af feature-antal eller spørgsmålsmængde. Den afgøres af om hvert enkelt spørgsmål ændrer forståelse.</p>' +
+    '<div class="ce48-block">' +
+      '<div class="ce48-block-title">Domænets nuværende tilstand</div>' +
+      '<div class="ce48-block-body">' +
+        'dp_001–dp_010 &nbsp;→ gold-standard-objects.js &nbsp;· 10 fuldt forfattede<br>' +
+        'dp_011–dp_018 &nbsp;→ classroom-validation.js &nbsp;· 8 fuldt forfattede<br>' +
+        'dp_019–dp_025 &nbsp;→ content-expansion.js &nbsp;&nbsp;&nbsp;&nbsp;· 7 gennemskrevne (fra outline)<br>' +
+        'dp_026–dp_040 &nbsp;→ content-expansion.js &nbsp;&nbsp;&nbsp;&nbsp;· 15 nye forfattede<br>' +
+        '<strong style="color:#c4a870">Total: 40 guldstandardobjekter</strong>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-block">' +
+      '<div class="ce48-block-title">Hvad denne fase leverer</div>' +
+      '<div class="ce48-block-body">' +
+        'Begrebskort med 15 noder og 14 relationer<br>' +
+        '6 misforståelsesfamilier med spørgsmålsklynger<br>' +
+        'Udvidede emner: populisme, demokratisk erosion, medieejerskab, sociale medier, civilsamfund, forfatning, domstolsprøvelse, partier, desinformation, demokratisk resiliens, lobbyisme, tidsbegrænsning, politisk apati, internationale institutioner' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-quote">Et domæne af 40 fremragende spørgsmål er mere værd end 400 middelmådige. Standarden er ikke "korrekt" — standarden er "oplysende."</div>',
+    'Sektion 48 afslutter Democracy & Power Pack\'s første fase. Domænet er nu tæt nok til at fungere som et selvstændigt begrebsøkosystem.',
+    'accent'
+  );
+
+  // Card 2 — Begrebskort
+  card(
+    'Begrebskort: Democracy &amp; Power',
+    '<div class="ce48-block" style="margin-bottom:10px">' +
+      '<div class="ce48-block-title">15 kernekoncepter</div>' +
+      '<div style="margin-top:6px">' +
+        '<span class="ce48-node">political_legitimacy</span>' +
+        '<span class="ce48-node">separation_of_powers</span>' +
+        '<span class="ce48-node">minority_rights</span>' +
+        '<span class="ce48-node">collective_action</span>' +
+        '<span class="ce48-node">representation</span>' +
+        '<span class="ce48-node">checks_and_balances</span>' +
+        '<span class="ce48-node">propaganda</span>' +
+        '<span class="ce48-node">power_distribution</span>' +
+        '<span class="ce48-node">civil_rights</span>' +
+        '<span class="ce48-node">accountability</span>' +
+        '<span class="ce48-node">populism</span>' +
+        '<span class="ce48-node">authoritarian_drift</span>' +
+        '<span class="ce48-node">media_and_democracy</span>' +
+        '<span class="ce48-node">civil_society</span>' +
+        '<span class="ce48-node">democratic_resilience</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-block">' +
+      '<div class="ce48-block-title">Nøglerelationer</div>' +
+      '<div class="ce48-edge">propaganda <span class="ce48-edge-arrow">→</span> political_legitimacy: underminerer</div>' +
+      '<div class="ce48-edge">populism <span class="ce48-edge-arrow">→</span> minority_rights: truer</div>' +
+      '<div class="ce48-edge">civil_society <span class="ce48-edge-arrow">→</span> democratic_resilience: bygger</div>' +
+      '<div class="ce48-edge">authoritarian_drift <span class="ce48-edge-arrow">→</span> checks_and_balances: afmonterer</div>' +
+      '<div class="ce48-edge">collective_action <span class="ce48-edge-arrow">→</span> accountability: producerer</div>' +
+      '<div class="ce48-edge">media_and_democracy <span class="ce48-edge-arrow">→</span> accountability: muliggør eller underminerer</div>' +
+      '<div class="ce48-edge">power_distribution <span class="ce48-edge-arrow">→</span> representation: forvrider</div>' +
+    '</div>' +
+    '<div class="ce48-quote" style="margin-top:8px">Sekvensprincip: spørgsmål bør bevæge sig langs kanter — hvert koncept forbereder det næste. Introducér aldrig en node uden at dens naboer er aktiverede.</div>',
+    'Begrebsgrafens form guider al sekvensering, indholdslogik og udvidelsesplanlægning fremover.'
+  );
+
+  // Card 3 — Misforståelsesfamilier
+  card(
+    '6 misforståelsesfamilier der driver domænet',
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">1. "Demokrati = flertalsstyre"</div>' +
+      '<div class="ce48-family-error">Sammenblander beslutningsproceduren (flertalsstemme) med systemet. Ignorerer mindretalsbeskyttelse og forfatningsmæssige grænser.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_002 · dp_004 · dp_024 · dp_032</div>' +
+    '</div>' +
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">2. "Propaganda = løgn"</div>' +
+      '<div class="ce48-family-error">Behandler propaganda som faktuelt falsk indhold. Misser at effektiv propaganda bruger selektive sandheder og emotionel ramme — ofte uden én falsk påstand.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_007 · dp_014 · dp_021 · dp_034</div>' +
+    '</div>' +
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">3. "Stærke ledere skaber stabile demokratier"</div>' +
+      '<div class="ce48-family-error">Sammenblander kortsigtet handlekraft med langsigtet institutionel sundhed. Historisk mønstervending: stærk personlig magt udhule institutionerne.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_001 · dp_008 · dp_027 · dp_038</div>' +
+    '</div>' +
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">4. "Institutioner betyder mindre end gode intentioner"</div>' +
+      '<div class="ce48-family-error">Aktørniveau-forklaring frem for strukturel. Ignorerer at institutioner former adfærd uanset intentioner.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_005 · dp_017 · dp_031 · dp_035</div>' +
+    '</div>' +
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">5. "Valg alene garanterer demokrati"</div>' +
+      '<div class="ce48-family-error">Forveksler den minimale betingelse (konkurrencepræget valg) med den tilstrækkelige betingelse. Mange autoritære regimer afholder valg.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_010 · dp_016 · dp_022 · dp_023</div>' +
+    '</div>' +
+    '<div class="ce48-family">' +
+      '<div class="ce48-family-name">6. "Demokratisk deltagelse = individuelt valg uden kollektiv effekt"</div>' +
+      '<div class="ce48-family-error">Behandler borgeradfærd som privat. Misser den kollektive handlingsstruktur: når alle ræsonnerer sådan, producerer summen demokratisk forfald.</div>' +
+      '<div class="ce48-family-ids">Spørgsmål: dp_004 · dp_013 · dp_030 · dp_036</div>' +
+    '</div>',
+    'Hvert spørgsmål i domænet kan henføres til én primær misforståelsesfamilie. Familierne er ikke uafhængige — de overlapper og forstærker hinanden.'
+  );
+
+  // Card 4 — dp_019–dp_022 (gennemskrevne)
+  card(
+    'Gennemskrevne objekter: dp_019–dp_022',
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_019 — Borgerrettigheder vs. menneskerettigheder</div>' +
+      '<div class="ce48-lo-q">Hvad er forskellen på borgerrettigheder og menneskerettigheder?</div>' +
+      '<div class="ce48-lo-hook">Skellet er ikke kun semantisk — det er et spørgsmål om hvem der garanterer dig hvad.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">false_equivalence</span><span class="ce48-tag reinf">reinforcement</span><span class="ce48-tag">comprehension</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_020 — Markedet og kollektive goder</div>' +
+      '<div class="ce48-lo-q">Hvad er det konkrete problem med at lade markedet bestemme over kollektive goder som rent vand eller national forsvar?</div>' +
+      '<div class="ce48-lo-hook">Markedet finansierer goder ved at ekskludere dem der ikke betaler. Det fungerer for brød. Det fungerer ikke for ren luft.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">scope_confusion</span><span class="ce48-tag">challenge</span><span class="ce48-tag">analysis</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_021 — Ekkokamre</div>' +
+      '<div class="ce48-lo-q">Hvad er et ekkokammer — og hvad er den primære mekanisme der skaber det?</div>' +
+      '<div class="ce48-lo-hook">Ekkokamre opstår ikke primært fordi folk er ideologisk snæversynede — de opstår fordi platforme er designet til engagement.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">surface_association</span><span class="ce48-tag reinf">reinforcement</span><span class="ce48-tag">analysis</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_022 — Ulovlig magt og legitimitet</div>' +
+      '<div class="ce48-lo-q">Kan en leder der kom til magten ulovligt alligevel regere legitimt?</div>' +
+      '<div class="ce48-lo-hook">Max Weber adskillede legalitet og legitimitet som begreber med god grund.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">causal_inversion</span><span class="ce48-tag deep">deep_challenge</span><span class="ce48-tag">evaluation</span></div>' +
+    '</div>',
+    'Alle 7 outline-objekter (dp_019–dp_025) er nu fuldt forfattede til Level 3 review_text-standard.'
+  );
+
+  // Card 5 — dp_023–dp_025 (gennemskrevne)
+  card(
+    'Gennemskrevne objekter: dp_023–dp_025',
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_023 — Direkte demokrati og skalering</div>' +
+      '<div class="ce48-lo-q">Hvorfor kan direkte demokrati skalere dårligt til moderne nationalstater?</div>' +
+      '<div class="ce48-lo-hook">Athen praktiserede direkte demokrati med måske 30.000–50.000 deltagere. En moderne nation kan ikke afholde daglige folkeafstemninger om hvert lovforslag.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">overgeneralization</span><span class="ce48-tag">challenge</span><span class="ce48-tag">evaluation</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_024 — Tocquevilles flertallets tyranni</div>' +
+      '<div class="ce48-lo-q">Hvad er Tocquevilles "flertallets tyranni" — og er det primært et juridisk eller socialt fænomen?</div>' +
+      '<div class="ce48-lo-hook">Tocqueville observerede i 1830\'ernes USA at det mest effektive tyranni ikke behøver love.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">scope_confusion</span><span class="ce48-tag deep">deep_challenge</span><span class="ce48-tag">evaluation</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_025 — Whistleblowing og moralsk forpligtelse</div>' +
+      '<div class="ce48-lo-q">Hvornår er whistleblowing moralsk forpligtende — frem for blot moralsk tilladt?</div>' +
+      '<div class="ce48-lo-hook">Snowden, Ellsberg, Manning — whistleblowere opererer i en etisk gråzone der ikke kan reduceres til "lyd et horn og vær en helt."</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">authority_bias</span><span class="ce48-tag deep">deep_challenge</span><span class="ce48-tag">evaluation</span></div>' +
+    '</div>' +
+    '<div class="ce48-block" style="margin-top:10px">' +
+      '<div class="ce48-block-title">Sektion 45–46 outline → fuldt forfattet</div>' +
+      '<div class="ce48-block-body">Alle 7 outline-objekter er nu forfattet til guldstandard. Hvert startede fra misforståelsen — ikke fra det korrekte svar. Alle har hook-sætning ≤ 20 ord.</div>' +
+    '</div>',
+    'dp_024 (Tocqueville) og dp_025 (whistleblowing) er de sværeste i begge serier — sekvenser dem altid efter 1–2 lettere objekter.'
+  );
+
+  // Card 6 — dp_026–dp_030 (ny udvidelse)
+  card(
+    'Ny udvidelse: dp_026–dp_030',
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_026 — Populisme vs. demokratisk protest</div>' +
+      '<div class="ce48-lo-q">Hvad adskiller populisme fra legitim demokratisk protest?</div>' +
+      '<div class="ce48-lo-hook">Populisme er ikke en politik — det er en narrativ struktur der opdeler samfundet i "det ægte folk" og "den korrupte elite."</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">false_equivalence</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_027 — Demokratisk erosion</div>' +
+      '<div class="ce48-lo-q">Hvad er det tidligste advarselstegn på at et demokrati er ved at erodere?</div>' +
+      '<div class="ce48-lo-hook">Demokratier bryder sjældent ned på én dag. De eroderer.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">surface_association</span><span class="ce48-tag deep">deep_challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_028 — Medieejerskabskoncentration</div>' +
+      '<div class="ce48-lo-q">Hvornår udgør koncentration af medieejerskab en specifik demokratisk trussel?</div>' +
+      '<div class="ce48-lo-hook">Mediefrihed er ikke kun frihed fra staten. Det er frihed til at rapportere — uanset ejerens interesser.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">surface_association</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_029 — Sociale medier og deliberation</div>' +
+      '<div class="ce48-lo-q">Hvad er den mest præcise måde sociale medier strukturelt svækker demokratisk deliberation?</div>' +
+      '<div class="ce48-lo-hook">Problemet med sociale medier og demokrati er ikke indholdet — det er arkitekturen.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">causal_inversion</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_030 — Civilsamfundets rolle</div>' +
+      '<div class="ce48-lo-q">Hvad er civilsamfundets vigtigste demokratiske funktion?</div>' +
+      '<div class="ce48-lo-hook">Tocqueville beundrede amerikanske foreninger mere end nogen anden demokratisk institution.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">scope_confusion</span><span class="ce48-tag">challenge</span><span class="ce48-tag">synthesis</span></div>' +
+    '</div>',
+    'Disse 5 objekter dækker de hidtil ubevæbnede koncepter: populisme, demokratisk erosion, medieøkologi og civilsamfund.'
+  );
+
+  // Card 7 — dp_031–dp_035
+  card(
+    'Ny udvidelse: dp_031–dp_035',
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_031 — Forfatningens kraft</div>' +
+      '<div class="ce48-lo-q">Hvad gør en forfatning til mere end et stykke papir?</div>' +
+      '<div class="ce48-lo-hook">Sovjetunionen havde en fremragende forfatning — på papiret. Den garanterede ytrings-, forsamlings- og religionsfrihed. Ingen efterlevede den.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">false_equivalence</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_032 — Domstolsprøvelsens dilemma</div>' +
+      '<div class="ce48-lo-q">Hvad er demokratiets dilemma med domstolsprøvelse af lovgivning?</div>' +
+      '<div class="ce48-lo-hook">Domstolsprøvelse er demokratiets selvmodsigelsesmekanisme: det beskytter demokratiets grundlag ved at begrænse demokratiets flertal.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">scope_confusion</span><span class="ce48-tag deep">deep_challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_033 — Politiske partier: funktion og fare</div>' +
+      '<div class="ce48-lo-q">Hvornår er politiske partier afgørende for demokratiet — og hvornår truer de det?</div>' +
+      '<div class="ce48-lo-hook">Et politisk parti er demokratiets koordineringsinstrument — men modne partisystemer kan degenerere til karteller.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">overgeneralization</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_034 — Desinformation vs. misinformation</div>' +
+      '<div class="ce48-lo-q">Hvad er den vigtige forskel på desinformation og misinformation?</div>' +
+      '<div class="ce48-lo-hook">Skellet er ikke trivielt — det bestemmer respons-strategien.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">false_equivalence</span><span class="ce48-tag reinf">reinforcement</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_035 — Demokratisk resiliens</div>' +
+      '<div class="ce48-lo-q">Hvad er den afgørende faktor for om et demokrati overlever en alvorlig krise?</div>' +
+      '<div class="ce48-lo-hook">Demokratier overlever ikke kriser fordi institutionerne er stærke nok. Institutioner er stærke fordi nøgleaktørerne vælger at respektere dem selv under pres.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">authority_bias</span><span class="ce48-tag deep">deep_challenge</span><span class="ce48-tag">synthesis</span></div>' +
+    '</div>',
+    'dp_035 (resiliens) er designet som sessionsafslutter: syntetiserer på tværs af koncepter uden at introducere ny kognitiv belastning.'
+  );
+
+  // Card 8 — dp_036–dp_040
+  card(
+    'Ny udvidelse: dp_036–dp_040',
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_036 — Formelt statsborgerskab vs. aktiv deltagelse</div>' +
+      '<div class="ce48-lo-q">Hvad er forskellen på at have formelt statsborgerskab og at være aktiv demokratisk deltager?</div>' +
+      '<div class="ce48-lo-hook">Man kan besidde et pas og aldrig bidrage til det demokrati passet tilhører.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">false_equivalence</span><span class="ce48-tag reinf">reinforcement</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_037 — Lobbyisme og demokrati</div>' +
+      '<div class="ce48-lo-q">Er lobbyisme nødvendigvis skadelig for demokratiet?</div>' +
+      '<div class="ce48-lo-hook">Lobbyisme er ikke ét fænomen. En patientforening der informerer parlamentarikere er noget andet end en tobaksindustri der forsinker videnskabeligt begrundet regulering.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">overgeneralization</span><span class="ce48-tag">challenge</span><span class="ce48-tag">evaluation</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_038 — Tidsbegrænsning af embeder</div>' +
+      '<div class="ce48-lo-q">Hvad er det stærkeste strukturelle argument for tidsbegrænsning af politiske embeder?</div>' +
+      '<div class="ce48-lo-hook">Tidsbegrænsning er ikke designet til at bringe variation — det er designet til at reducere institutionel kapring.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">causal_inversion</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_039 — Politisk apati</div>' +
+      '<div class="ce48-lo-q">Hvad er den mest strukturelt præcise forklaring på udbredt politisk apati?</div>' +
+      '<div class="ce48-lo-hook">Apati er ikke personlighedstræk — det er rationelt respons på institutionelle vilkår.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">authority_bias</span><span class="ce48-tag">challenge</span></div>' +
+    '</div>' +
+    '<div class="ce48-lo">' +
+      '<div class="ce48-lo-id">dp_040 — Internationale institutioner og demokrati</div>' +
+      '<div class="ce48-lo-q">Kan internationale institutioner som EU underminere nationalt demokrati?</div>' +
+      '<div class="ce48-lo-hook">EU-regulering vedtages af demokratisk legitimerede institutioner — men på anden vis end nationale parlamenter. Er dette demokratisk underminering? Det er et ægte spørgsmål.</div>' +
+      '<div class="ce48-lo-meta"><span class="ce48-tag">overgeneralization</span><span class="ce48-tag deep">deep_challenge</span></div>' +
+    '</div>',
+    'dp_039 (apati) og dp_040 (internationale institutioner) er de eneste åbne spørgsmål i domænet uden ét entydigt svar — sekventer dem sidst i en session.'
+  );
+
+  // Card 9 — Challenge wave + shallow vs deep
+  card(
+    'Challenge-bølgedesign &amp; indholdskvalitetsaudit',
+    '<div class="ce48-block" style="margin-bottom:10px">' +
+      '<div class="ce48-block-title">Domænets bølgefordeling (40 objekter)</div>' +
+      '<div class="ce48-wave-row"><div class="ce48-wave-type">reinforcement (9)</div><div class="ce48-wave-ids">dp_005 · dp_016 · dp_019 · dp_021 · dp_034 · dp_036 + 3 til sekvensering</div></div>' +
+      '<div class="ce48-wave-row"><div class="ce48-wave-type">challenge (20)</div><div class="ce48-wave-ids">dp_001 · dp_003 · dp_004 · dp_007 · dp_011 · dp_012 · dp_013 · dp_014 · dp_017 · dp_018 · dp_020 · dp_023 · dp_026 · dp_028 · dp_029 · dp_030 · dp_031 · dp_033 · dp_037 · dp_038 · dp_039</div></div>' +
+      '<div class="ce48-wave-row"><div class="ce48-wave-type">deep_challenge (11)</div><div class="ce48-wave-ids">dp_002 · dp_006 · dp_008 · dp_009 · dp_010 · dp_015 · dp_022 · dp_024 · dp_025 · dp_027 · dp_032 · dp_035 · dp_040</div></div>' +
+    '</div>' +
+    '<div class="ce48-block" style="margin-bottom:10px">' +
+      '<div class="ce48-block-title">Personlig relevans-spikes (træthedsnulstilling)</div>' +
+      '<div class="ce48-block-body">dp_007 · dp_021 · dp_029 (propaganda/ekkokamre/sociale medier) + dp_004 · dp_024 · dp_026 · dp_039<br>Sektion 46-fund: ét spike pr. 8 spørgsmål forlænger vedvarende engagement med 8–12 minutter</div>' +
+    '</div>' +
+    '<div class="ce48-compare">' +
+      '<div class="ce48-before">' +
+        '<div class="ce48-clabel">Overfladisk (afvist)</div>' +
+        '<div class="ce48-cbody"><em>Hvad er propaganda?</em><br>Tester definitionen. En elev der husker "partisk information" består. Ingen forståelse kræves. review_text: "Propaganda er information der bruges til at fremme en politisk sag."</div>' +
+      '</div>' +
+      '<div class="ce48-after">' +
+        '<div class="ce48-clabel">Dybde (guldstandard)</div>' +
+        '<div class="ce48-cbody"><em>Hvad gør propaganda mest effektiv?</em><br>Tvinger til at tænke på mekanismen. Udfordrer "propaganda = løgn". Hook: "Effektiv propaganda er ikke løgn — det er sand information strategisk udvalgt og indrammet."</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-rule">Ingen review_text begynder med "Det korrekte svar er"</div>' +
+    '<div class="ce48-rule">Ingen afledere som en elev kun ville vælge ved total uvidenhed</div>' +
+    '<div class="ce48-rule">Ingen spørgsmål der uændret kunne indgå i Trivial Pursuit</div>',
+    'Maks. 2 deep_challenge-objekter i træk. Én personlig-relevans-spike pr. 8-spørgsmålsvindue. Korte review_text-lænsetider = signal om afdrift — indsæt reinforcement-objekt.'
+  );
+
+  // Card 10 — Fremtidig indholdsfilosofi (accent)
+  card(
+    'Fremtidig indholdsfilosofi: hvornår et spørgsmål tjener sin plads',
+    '<p style="margin:0 0 10px">Platformens fremtidige kvalitet afhænger ikke af antallet af spørgsmål eller features. Det afhænger af om hvert enkelt spørgsmål fortjener at eksistere.</p>' +
+    '<div class="ce48-block">' +
+      '<div class="ce48-block-title">Kvalitetsport — før et spørgsmål godkendes</div>' +
+      '<div class="ce48-block-body">' +
+        '1. Starter spørgsmålet fra en reel elevmisforståelse — ikke et videnshul?<br>' +
+        '2. Ville en eftertænksom elev genuint vælge et forkert svar?<br>' +
+        '3. Forklarer review_text hvorfor misforståelsen var forståelig?<br>' +
+        '4. Slutter review_text med noget der inviterer eleven til at lægge mærke til mønsteret?<br>' +
+        '5. Er hook-sætningen ≤ 20 ord?<br>' +
+        '6. Er alle afledere plausible og navngivet med en misforståelsestype?' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-block">' +
+      '<div class="ce48-block-title">Kandidatdomæner til fremtidig udvidelse</div>' +
+      '<div class="ce48-block-body">' +
+        '<strong style="color:#c4a870">Økonomi &amp; Ulighed</strong> — misforståelsestæt: korrelation/kausalitet, markedseffektivitetsmyter<br>' +
+        '<strong style="color:#c4a870">Klima &amp; Handling</strong> — personlig resonans; stærke misforståelser om individuel vs. strukturel forandring<br>' +
+        '<strong style="color:#c4a870">Kriminalitet &amp; Straf</strong> — authority_bias-misforståelser; kobler til legitimitet og borgerrettigheder<br>' +
+        '<strong style="color:#c4a870">Global Magt &amp; Geopolitik</strong> — naturlig udvidelse af Democracy &amp; Power; suverænitet og intervention' +
+      '</div>' +
+    '</div>' +
+    '<div class="ce48-quote">DEN SEJE APP bør om ti år huskes som det sted hvor eleverne første gang forstod at demokrati ikke er en maskine der kører af sig selv — det er et fællesejet hus der rådner hvis ingen vedligeholder det.</div>',
+    'Sektion 48 afslutter Democracy & Power Pack fase 1. Domænet er nu tæt og dybt nok til at bruge i rigtige klassesessioner.',
     'accent'
   );
 
