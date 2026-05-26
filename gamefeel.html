@@ -1034,6 +1034,47 @@
     .ai38-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(156, 111, 228, 0.12); color: #9c6fe4; margin: 2px; }
     .ai38-phase-bar { height: 4px; border-radius: 2px; margin: 6px 0; background: rgba(156, 111, 228, 0.2); position: relative; overflow: hidden; }
     .ai38-phase-bar-fill { height: 100%; border-radius: 2px; background: #9c6fe4; }
+
+    /* Section 39 — Educational Content Intelligence */
+    .ci39-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ci39-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .ci39-card.accent { border-color: #8c4a1f; background: linear-gradient(135deg, #1a0c05 0%, #110700 100%); }
+    .ci39-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #e8825a; margin-bottom: 6px; }
+    .ci39-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .ci39-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .ci39-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .ci39-block { background: rgba(232, 130, 90, 0.07); border: 1px solid rgba(232, 130, 90, 0.2); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .ci39-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #e8825a; margin-bottom: 8px; }
+    .ci39-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .ci39-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .ci39-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .ci39-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .ci39-compare-label.shallow { color: #888; }
+    .ci39-compare-label.crafted { color: #e8825a; }
+    .ci39-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .ci39-compare-item:last-child { border-bottom: none; }
+    .ci39-ladder { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+    .ci39-rung { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border-left: 3px solid; }
+    .ci39-rung-level { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .ci39-rung-example { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.4; }
+    .ci39-rung-note { font-size: 9px; color: var(--text-muted); }
+    .ci39-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .ci39-rule:last-child { border-bottom: none; }
+    .ci39-rule::before { content: "→ "; color: #e8825a; font-weight: 700; }
+    .ci39-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #e8825a; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .ci39-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(232, 130, 90, 0.12); color: #e8825a; margin: 2px; }
+    .ci39-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .ci39-row:last-child { border-bottom: none; }
+    .ci39-row-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .ci39-row-text { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .ci39-row-label { font-weight: 700; color: var(--text-primary); font-size: 11px; }
+    .ci39-step { display: flex; gap: 10px; padding: 6px 0; }
+    .ci39-step-num { width: 20px; height: 20px; border-radius: 50%; background: rgba(232, 130, 90, 0.15); color: #e8825a; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .ci39-step-text { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+    .ci39-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; margin: 2px; }
+    .ci39-badge.reject { background: rgba(239,83,80,0.12); color: #ef5350; }
+    .ci39-badge.pass { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .ci39-badge.neutral { background: rgba(232,130,90,0.12); color: #e8825a; }
   </style>
 </head>
 <body>
@@ -1267,6 +1308,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 38 — Adaptive Concept Intelligence</h2>
   <div class="ai38-grid" id="ai38Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 39 — Educational Content Intelligence &amp; Authoring</h2>
+  <div class="ci39-grid" id="ci39Grid"></div>
 </div>
 
 <script type="module">
@@ -11154,6 +11198,299 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="ai38-quote" style="margin-top:12px">Systemet bliver genuint intelligent om hver elevs konceptuelle kort — ikke deres performance-score. Målet er en elev der tænker klarere, ikke en elev der scorer højere.</div>',
     'Section 38 er ikke slutpunktet. Det er det øjeblik platformens intelligens begynder at akkumulere.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 39 — Educational Content Intelligence & Authoring ────────────────
+(function () {
+  var grid = document.getElementById('ci39Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, variant) {
+    var el = document.createElement('div');
+    el.className = 'ci39-card' + (variant === 'accent' ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ci39-label">Section 39 — Content Intelligence</div>' +
+      '<div class="ci39-title">' + title + '</div>' +
+      '<div class="ci39-body">' + body + '</div>' +
+      (footer ? '<div class="ci39-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Shallow quiz vs meaningful educational content (accent)
+  card('Fra quizfabrik til intellektuelt håndværk',
+    '<p style="margin:0 0 12px">Section 39 stiller det egentlige spørgsmål: har indholdet fortjent den motor vi har bygget? En kraftfuld adaptiv platform med lavt indhold producerer stadig lavt indhold.</p>' +
+    '<div class="ci39-compare">' +
+      '<div class="ci39-compare-col">' +
+        '<div class="ci39-compare-label shallow">Lavkvalitets quizindhold</div>' +
+        '<div class="ci39-compare-item">Årstal og navne uden kontekst</div>' +
+        '<div class="ci39-compare-item">Distraktorer der er åbenlyst forkerte</div>' +
+        '<div class="ci39-compare-item">"Korrekt svar: 1789." — ingen indsigt</div>' +
+        '<div class="ci39-compare-item">Isolerede fakta, ingen konceptlinks</div>' +
+        '<div class="ci39-compare-item">Test af hukommelse, ikke forståelse</div>' +
+        '<div class="ci39-compare-item">Ingen læringsværdi i at tage fejl</div>' +
+      '</div>' +
+      '<div class="ci39-compare-col">' +
+        '<div class="ci39-compare-label crafted">Intellektuelt håndværk</div>' +
+        '<div class="ci39-compare-item">Spørgsmål der kræver ræsonnering</div>' +
+        '<div class="ci39-compare-item">Distraktorer der diagnosticerer tænkning</div>' +
+        '<div class="ci39-compare-item">review_text der forklarer konceptet</div>' +
+        '<div class="ci39-compare-item">Konceptlinks til tilstødende viden</div>' +
+        '<div class="ci39-compare-item">Test af forståelse og analyse</div>' +
+        '<div class="ci39-compare-item">Forkert svar = læringsmulighed</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-quote">Indholdskvalitet er læringskvalitet. Sektionerne 35–38 byggede motoren. Section 39 spørger: er brændslet værdigt?</div>',
+    'Den vigtigste audit er ikke teknisk. Det er pædagogisk.',
+    'accent'
+  );
+
+  // Card 2 — Content quality audit
+  card('Indholdskvalitets-audit: den ene test',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Et enkelt kriterium afgør om et spørgsmål hører hjemme i systemet:</p>' +
+    '<div class="ci39-block" style="margin-bottom:12px;border-color:rgba(232,130,90,0.4)">' +
+      '<div class="ci39-block-title" style="font-size:13px;font-style:italic;text-transform:none;letter-spacing:0">"Ville en eftertænksom lærer respektere dette indhold?"</div>' +
+    '</div>' +
+    '<div class="ci39-block" style="margin-bottom:8px">' +
+      '<div class="ci39-block-title">Kendetegn på svagt indhold</div>' +
+      '<div class="ci39-block-body">' +
+        '<span class="ci39-badge reject">✗</span> Ren hukommelse uden konceptuel krog<br>' +
+        '<span class="ci39-badge reject">✗</span> Åbenlyst forkerte distraktorer<br>' +
+        '<span class="ci39-badge reject">✗</span> review_text gentager svaret uden kontekst<br>' +
+        '<span class="ci39-badge reject">✗</span> Ingen misconception_type — lærer kan ikke diagnosticere<br>' +
+        '<span class="ci39-badge reject">✗</span> Isolerede fakta, ingen konceptlinks' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-block">' +
+      '<div class="ci39-block-title">Kendetegn på stærkt indhold</div>' +
+      '<div class="ci39-block-body">' +
+        '<span class="ci39-badge pass">✓</span> Kræver ræsonnering, ikke blot genkaldelse<br>' +
+        '<span class="ci39-badge pass">✓</span> Forkerte svar repræsenterer virkelige tankemønstre<br>' +
+        '<span class="ci39-badge pass">✓</span> review_text bygger forståelse frem for at gentage svar<br>' +
+        '<span class="ci39-badge pass">✓</span> En lærer kunne bruge dette til en klassediskussion<br>' +
+        '<span class="ci39-badge pass">✓</span> Eleven der tager fejl lærer noget af forklaringen' +
+      '</div>' +
+    '</div>',
+    'Audit-spørgsmålet er simpelt. Svaret kræver pædagogisk mod.',
+    ''
+  );
+
+  // Card 3 — Gold-standard question contract
+  card('Guldstandard-spørgsmålskontrakt: hvad et godt spørgsmål gør',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Et spørgsmål er ikke en test. Det er en invitation til at tænke.</p>' +
+    '<div class="ci39-row">' +
+      '<div class="ci39-row-icon">💡</div>' +
+      '<div><div class="ci39-row-label">Aktiverer nysgerrighed</div>' +
+      '<div class="ci39-row-text">Spørgsmålet gør eleven nysgerrig — ikke blot pligtig</div></div>' +
+    '</div>' +
+    '<div class="ci39-row">' +
+      '<div class="ci39-row-icon">🧠</div>' +
+      '<div><div class="ci39-row-label">Kræver reel kognitiv indsats</div>' +
+      '<div class="ci39-row-text">Korrekt svar kræver et mentalt skridt — ikke blot genkendelse</div></div>' +
+    '</div>' +
+    '<div class="ci39-row">' +
+      '<div class="ci39-row-icon">🎯</div>' +
+      '<div><div class="ci39-row-label">Respekterer eleven</div>' +
+      '<div class="ci39-row-text">Ingen gotcha-spørgsmål, ingen tricksprog, ingen falsk sværhedsgrad</div></div>' +
+    '</div>' +
+    '<div class="ci39-row">' +
+      '<div class="ci39-row-icon">🌐</div>' +
+      '<div><div class="ci39-row-label">Åbner mod tilstødende viden</div>' +
+      '<div class="ci39-row-text">Det korrekte svar fører til næste spørgsmål, ikke lukker ned</div></div>' +
+    '</div>' +
+    '<div class="ci39-row">' +
+      '<div class="ci39-row-icon">🔍</div>' +
+      '<div><div class="ci39-row-label">Har diskussionspotentiale</div>' +
+      '<div class="ci39-row-text">En lærer kunne bruge dette til at starte en samtale i klassen</div></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;padding:8px;background:rgba(232,130,90,0.07);border-radius:6px;font-size:10px;color:var(--text-muted)">' +
+      '<strong style="color:#e8825a">Svagt:</strong> "I hvilket år begyndte den franske revolution?"<br>' +
+      '<strong style="color:#e8825a">Stærkt:</strong> "Hvorfor blev stormingen af Bastillen et symbol selvom den frigjorde meget få fanger?"' +
+    '</div>',
+    'Spørgsmålskvalitet er ikke sværhedsgrad. Det er konceptuel ærlighed.',
+    ''
+  );
+
+  // Card 4 — Misconception-aware writing
+  card('Misconception-bevidst skriving: diagnostiske distraktorer',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Distraktorer bør undervise diagnostisk — ikke bedrage performativt. Et forkert svar er ikke en fælde. Det er et spejl.</p>' +
+    '<div class="ci39-block" style="margin-bottom:8px">' +
+      '<div class="ci39-block-title">Hvorfor elever vælger forkert</div>' +
+      '<div class="ci39-block-body">' +
+        '<span class="ci39-tag">causal_inversion</span> forveksler årsag og effekt<br>' +
+        '<span class="ci39-tag">overgeneralization</span> anvender en regel uden for gyldigt område<br>' +
+        '<span class="ci39-tag">false_equivalence</span> behandler to beslægtede begreber som identiske<br>' +
+        '<span class="ci39-tag">temporal_confusion</span> placerer begivenheder forkert i tid<br>' +
+        '<span class="ci39-tag">surface_association</span> vælger svar baseret på nøgleord, ikke ræsonnering<br>' +
+        '<span class="ci39-tag">authority_bias</span> vælger det mest kendte navn uanset relevans' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-rule">Hvert forkert svar repræsenterer et specifikt, navngivet misconception-mønster</div>' +
+    '<div class="ci39-rule">Forkerte svar er plausible for elever med delvis forståelse</div>' +
+    '<div class="ci39-rule">Åbenlyst absurde distraktorer er kvalitetsfejl, ikke humor</div>' +
+    '<div class="ci39-rule">Når 60% vælger "causal_inversion" ved læreren præcis hvad der skal adresseres i morgen</div>' +
+    '<div class="ci39-quote">Et godt forkert svar er diagnostisk guld. Et dårligt forkert svar er statistisk støj.</div>',
+    'Distractordesign er pedagogisk etik — ikke spil.',
+    ''
+  );
+
+  // Card 5 — review_text quality ladder
+  card('review_text-kvalitetsstige: fra svar til indsigt',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">review_text er ikke output. Det er en samtale. Det skal sige noget som det korrekte svar alene ikke kan.</p>' +
+    '<div class="ci39-ladder">' +
+      '<div class="ci39-rung" style="border-color:#555">' +
+        '<div class="ci39-rung-level" style="color:#888">Level 0 — Råt svar</div>' +
+        '<div class="ci39-rung-example">"Korrekt svar: 1789."</div>' +
+        '<div class="ci39-rung-note">Eleven der tog fejl lærer ingenting. Faktum gentages, ikke forklares.</div>' +
+      '</div>' +
+      '<div class="ci39-rung" style="border-color:#f59e0b">' +
+        '<div class="ci39-rung-level" style="color:#f59e0b">Level 1 — Kontekstuel forklaring</div>' +
+        '<div class="ci39-rung-example">"Den franske revolution begyndte i 1789 da Bastillen blev stormet — et symbolsk øjeblik hvor folkevrede blev politisk handling."</div>' +
+        '<div class="ci39-rung-note">Tilføjer kontekst. Eleven forstår HVORFOR svaret er hvad det er.</div>' +
+      '</div>' +
+      '<div class="ci39-rung" style="border-color:#e8825a">' +
+        '<div class="ci39-rung-level" style="color:#e8825a">Level 2 — Konceptuel forbindelsе</div>' +
+        '<div class="ci39-rung-example">"Dette øjeblik viser hvordan kollektiv frustration kan transformeres til politisk magt — et mønster der optræder i revolutioner gennem århundreder."</div>' +
+        '<div class="ci39-rung-note">Forbinder til større idé. Eleven vinder indsigt ud over det specifikke faktum.</div>' +
+      '</div>' +
+      '<div class="ci39-rung" style="border-color:#4caf50">' +
+        '<div class="ci39-rung-level" style="color:#4caf50">Level 3 — Refleksiv uddybning</div>' +
+        '<div class="ci39-rung-example">"Bemærk at Bastillen kun holdt 7 fanger da den blev stormet. Det der gjorde det magtfuldt var ikke hvad det indeholdt — men hvad det repræsenterede."</div>' +
+        '<div class="ci39-rung-note">Inviterer til refleksion. Eleven udfordres til at tænke over HVORFOR dette var meningsfuldt.</div>' +
+      '</div>' +
+    '</div>',
+    'Guldstandarden er Level 2–3. Level 0 er en kvalitetsfejl.',
+    ''
+  );
+
+  // Card 6 — Concept-link writing
+  card('Konceptlinks: viden der føles levende og forbundet',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Viden bør føles forbundet og levende — ikke en samling isolerede fakta. Konceptlinks er arkitekturen der gør dette muligt.</p>' +
+    '<div class="ci39-block" style="margin-bottom:8px">' +
+      '<div class="ci39-block-title">Tværfaglige broer</div>' +
+      '<div class="ci39-block-body">' +
+        '<strong style="color:#e8825a">Historie ↔ Politik:</strong> magt, legitimitet, kollektiv handling, repræsentation<br>' +
+        '<strong style="color:#e8825a">Matematik ↔ Fysik:</strong> modeller, approximation, måling, kraft<br>' +
+        '<strong style="color:#e8825a">Biologi ↔ Systemer:</strong> feedback-loops, emergens, adaptation, resiliens<br>' +
+        '<strong style="color:#e8825a">Sprog ↔ Overtalelse:</strong> framing, metafor, tone, publikum<br>' +
+        '<strong style="color:#e8825a">Geografi ↔ Økonomi:</strong> ressourcefordeling, handelsruter, komparativ fordel' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-rule">Konceptlinks tagges i questions.metadata.concepts — natursproglige navne</div>' +
+    '<div class="ci39-rule">review_text trækker forbindelsen eksplicit: "dette mønster optræder også i..."</div>' +
+    '<div class="ci39-rule">Tvangsgjorte forbindelser er værre end ingen forbindelser — kun reelle links tilføjes</div>' +
+    '<div class="ci39-rule">Prioritér forbindelser der overrasker elever produktivt</div>' +
+    '<div class="ci39-quote">Målet er en elev der ser biologisk adaptation og tænker på den franske revolutions sociale dynamik — fordi de begge handler om systemer under pres.</div>',
+    'Interdisciplinære konceptlinks er ikke pynt. De er selve uddannelsens substans.',
+    ''
+  );
+
+  // Card 7 — Insight-oriented distractors
+  card('Indsigts-orienterede distraktorer: det forkerte svar som læring',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Bevæg dig væk fra åbenlyst forkerte svar. Bevæg dig mod svar der afslører tankemønstre.</p>' +
+    '<div class="ci39-compare">' +
+      '<div class="ci39-compare-col">' +
+        '<div class="ci39-compare-label shallow">Svage distraktorer</div>' +
+        '<div class="ci39-compare-item">Åbenlyst umulige svar</div>' +
+        '<div class="ci39-compare-item">Tilfældig støj</div>' +
+        '<div class="ci39-compare-item">Trick-fælder</div>' +
+        '<div class="ci39-compare-item">Fylder pladsen ud</div>' +
+        '<div class="ci39-compare-item">Ingen diagnostisk signal</div>' +
+      '</div>' +
+      '<div class="ci39-compare-col">' +
+        '<div class="ci39-compare-label crafted">Stærke distraktorer</div>' +
+        '<div class="ci39-compare-item">Plausibel misconception</div>' +
+        '<div class="ci39-compare-item">Delvis forståelse</div>' +
+        '<div class="ci39-compare-item">Konceptuel forvirring</div>' +
+        '<div class="ci39-compare-item">Ræsonneringsdiagnostik</div>' +
+        '<div class="ci39-compare-item">Afslører tankemønstre</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-block" style="margin-top:10px">' +
+      '<div class="ci39-block-title">Kvalitetstest for en distraktor</div>' +
+      '<div class="ci39-block-body">' +
+        '"Ville en elev med delvis forståelse vælge dette?" → God distraktor<br>' +
+        '"Afslører dette noget om elevens tænkning?" → God distraktor<br>' +
+        '"Kan en lærer bruge dette til diagnostik?" → God distraktor<br>' +
+        '"Er dette åbenlyst absurd?" → Dårlig distraktor<br>' +
+        '"Valgte jeg dette fordi det var nemt at skrive?" → Dårlig distraktor' +
+      '</div>' +
+    '</div>',
+    'Hvert forkert svar er en datapunkt. Sørg for at det er meningsfuldt data.',
+    ''
+  );
+
+  // Card 8 — Pedagogical QA system
+  card('Pædagogisk QA-system: lærers respekt som standard',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Spørgsmål evalueres på 8 dimensioner. Mindst 6 skal bestås. Læreren kan altid overstyre med pædagogisk begrundelse.</p>' +
+    '<div class="ci39-block" style="margin-bottom:8px">' +
+      '<div class="ci39-block-title">De 8 QA-dimensioner</div>' +
+      '<div class="ci39-block-body">' +
+        '<strong>1. Konceptuel klarhed</strong> — er spørgsmålet utvetydigt?<br>' +
+        '<strong>2. Uddannelsesværdi</strong> — udvikler det forståelse, ikke blot genkaldelse?<br>' +
+        '<strong>3. Misconception-kvalitet</strong> — repræsenterer forkerte svar virkelige mønstre?<br>' +
+        '<strong>4. review_text-kvalitet</strong> — tilføjer forklaringen indsigt ud over svaret?<br>' +
+        '<strong>5. Nysgerrighedspotentiale</strong> — gør dette spørgsmål eleven nysgerrig?<br>' +
+        '<strong>6. Emotionel tone</strong> — er det respektfuldt og engagerende?<br>' +
+        '<strong>7. Udfordringens ægthed</strong> — er sværhedsgraden konceptuel, ikke sproglig?<br>' +
+        '<strong>8. Intellektuel værdighed</strong> — ville en eftertænksom underviser bruge dette?' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-rule">Automatisk QA identificerer åbenlyse fejl — lærer godkender eller afviser</div>' +
+    '<div class="ci39-rule">Lærerens skøn overstyrer altid algoritmisk gennemgang</div>' +
+    '<div class="ci39-rule">Indholdsmængde er aldrig et succeskriterie i sig selv</div>',
+    'QA er ikke bureaukrati. Det er respekt for eleven som lærende.',
+    ''
+  );
+
+  // Card 9 — Teacher authoring workflow
+  card('Lærers forfatterskab: bemyndigelse, ikke erstatning',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Systemet bemyndiger lærere — det erstatter dem ikke. Hvert metadatafelt skal være forståeligt og skrivbart af en eftertænksom ikke-teknisk lærer.</p>' +
+    '<div class="ci39-block" style="margin-bottom:8px">' +
+      '<div class="ci39-block-title">8-trins forfatterskabsworkflow</div>' +
+      '<div style="padding-top:4px">' +
+        '<div class="ci39-step"><div class="ci39-step-num">1</div><div class="ci39-step-text">Skriv spørgsmålsstammen — fokus på det koncept eleverne skal ræsonnere om</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">2</div><div class="ci39-step-text">Skriv det korrekte svar — det skal føles tilfredsstillende og klart</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">3</div><div class="ci39-step-text">Skriv 3 distraktorer — én per forventet misconception-mønster</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">4</div><div class="ci39-step-text">Tildel misconception_type til den mest diagnostiske distraktor</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">5</div><div class="ci39-step-text">Skriv review_text — start fra misconceptionen, forklar konceptet</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">6</div><div class="ci39-step-text">Tag koncepter — hvilke vidensdomæner berører dette spørgsmål?</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">7</div><div class="ci39-step-text">Tildel difficulty_type og cognitive_skill fra taxonomien</div></div>' +
+        '<div class="ci39-step"><div class="ci39-step-num">8</div><div class="ci39-step-text">Læs det som en elev — føles det fair og intellektuelt ærligt?</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-rule">Læreren skriver aldrig JSON direkte — alt via menneskelige felter</div>' +
+    '<div class="ci39-rule">Dropdown-selectorer for difficulty_type og cognitive_skill (ingen fritekst-fejl)</div>' +
+    '<div class="ci39-rule">Preview af review_text som eleven ser den, inden gemning</div>',
+    'Den bedste indholdssystem er usynlig for læreren. Det bare virker.',
+    ''
+  );
+
+  // Card 10 — Future content intelligence ecosystem (accent)
+  card('Fremtidens indholdsintelligens: platformen som intellektuelt håndværk',
+    '<p style="margin:0 0 12px">Over tid akkumulerer platformen ikke blot spørgsmål — men konceptuel visdom. Hvert spørgsmål bliver en del af et intellektuelt stof, ikke blot en quizbank.</p>' +
+    '<div class="ci39-block" style="margin-bottom:10px">' +
+      '<div class="ci39-block-title">Indholdets levetid</div>' +
+      '<div class="ci39-block-body">' +
+        'Spørgsmål tagget efter koncept, ikke emne — de overlever pensum-ændringer<br>' +
+        'review_text skrevet til at forblive sand ud over specifikke læseplaner<br>' +
+        'Misconception-mønstre er universelle: causal_inversion optræder i historie, biologi og økonomi<br>' +
+        'Konceptlinks bliver curriculum — forbindelserne mellem ideer er uddannelsen' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-block" style="margin-bottom:10px">' +
+      '<div class="ci39-block-title">Hvad vi aldrig må gøre</div>' +
+      '<div class="ci39-block-body">' +
+        '<span class="ci39-badge reject">✗</span> AI-genererede spørgsmålsbanker uden lærerkuration<br>' +
+        '<span class="ci39-badge reject">✗</span> Kvantitetsmål ("500 spørgsmål inden fredag")<br>' +
+        '<span class="ci39-badge reject">✗</span> Behandle indhold som infrastruktur frem for primært uddannelsesprodukt<br>' +
+        '<span class="ci39-badge reject">✗</span> Adskille indholdsforfatning fra pædagogisk hensigt' +
+      '</div>' +
+    '</div>' +
+    '<div class="ci39-quote">Platformen bliver et sted hvor elever føler at det er genuint værd at lære — fordi hvert spørgsmål, forklaring og forbindelse blev skabt af en eftertænksom underviser der troede på at indholdskvalitet er læringskvalitet.</div>',
+    'Section 39 er ikke slutpunktet for indholdsintelligens. Det er forpligtelsen til at indholdet altid fortjener sin motor.',
     'accent'
   );
 
