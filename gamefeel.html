@@ -1075,6 +1075,51 @@
     .ci39-badge.reject { background: rgba(239,83,80,0.12); color: #ef5350; }
     .ci39-badge.pass { background: rgba(76,175,80,0.12); color: #4caf50; }
     .ci39-badge.neutral { background: rgba(232,130,90,0.12); color: #e8825a; }
+
+    /* Section 40 — Pedagogical Enrichment Pipeline */
+    .pp40-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .pp40-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .pp40-card.accent { border-color: #1a5a8c; background: linear-gradient(135deg, #030e1a 0%, #010810 100%); }
+    .pp40-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #5ab4e8; margin-bottom: 6px; }
+    .pp40-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .pp40-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .pp40-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .pp40-block { background: rgba(90, 180, 232, 0.06); border: 1px solid rgba(90, 180, 232, 0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .pp40-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #5ab4e8; margin-bottom: 8px; }
+    .pp40-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .pp40-flow { display: flex; flex-direction: column; gap: 0; margin: 8px 0; }
+    .pp40-flow-step { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; position: relative; }
+    .pp40-flow-step:not(:last-child)::before { content: ""; position: absolute; left: 9px; top: 26px; width: 2px; height: calc(100% - 10px); background: rgba(90,180,232,0.2); }
+    .pp40-flow-dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(90,180,232,0.15); border: 1px solid rgba(90,180,232,0.3); color: #5ab4e8; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pp40-flow-text { font-size: 10px; color: var(--text-secondary); line-height: 1.5; padding-top: 2px; }
+    .pp40-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .pp40-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .pp40-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .pp40-compare-label.before { color: #888; }
+    .pp40-compare-label.after { color: #5ab4e8; }
+    .pp40-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .pp40-compare-item:last-child { border-bottom: none; }
+    .pp40-tier { display: flex; align-items: flex-start; gap: 10px; padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+    .pp40-tier-0 { background: rgba(100,100,100,0.08); border-left: 3px solid #555; }
+    .pp40-tier-1 { background: rgba(90,180,232,0.06); border-left: 3px solid #5ab4e8; }
+    .pp40-tier-2 { background: rgba(45,191,138,0.06); border-left: 3px solid #2dbf8a; }
+    .pp40-tier-3 { background: rgba(156,111,228,0.06); border-left: 3px solid #9c6fe4; }
+    .pp40-tier-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
+    .pp40-tier-desc { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+    .pp40-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .pp40-rule:last-child { border-bottom: none; }
+    .pp40-rule::before { content: "→ "; color: #5ab4e8; font-weight: 700; }
+    .pp40-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #5ab4e8; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .pp40-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(90,180,232,0.1); color: #5ab4e8; margin: 2px; }
+    .pp40-code { font-family: 'Courier New', monospace; font-size: 10px; background: rgba(0,0,0,0.35); border-radius: 6px; padding: 10px; color: #a8d8f0; margin: 8px 0; line-height: 1.7; white-space: pre; }
+    .pp40-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; margin: 2px; }
+    .pp40-badge.pass { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .pp40-badge.fail { background: rgba(239,83,80,0.12); color: #ef5350; }
+    .pp40-badge.warn { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .pp40-ladder { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+    .pp40-rung { border-radius: 6px; padding: 8px 10px; border-left: 3px solid; }
+    .pp40-rung-level { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
+    .pp40-rung-text { font-size: 10px; color: var(--text-secondary); font-style: italic; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1311,6 +1356,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 39 — Educational Content Intelligence &amp; Authoring</h2>
   <div class="ci39-grid" id="ci39Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 40 — Pedagogical Enrichment Pipeline</h2>
+  <div class="pp40-grid" id="pp40Grid"></div>
 </div>
 
 <script type="module">
@@ -11491,6 +11539,292 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="ci39-quote">Platformen bliver et sted hvor elever føler at det er genuint værd at lære — fordi hvert spørgsmål, forklaring og forbindelse blev skabt af en eftertænksom underviser der troede på at indholdskvalitet er læringskvalitet.</div>',
     'Section 39 er ikke slutpunktet for indholdsintelligens. Det er forpligtelsen til at indholdet altid fortjener sin motor.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 40 — Pedagogical Enrichment Pipeline ─────────────────────────────
+(function () {
+  var grid = document.getElementById('pp40Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, variant) {
+    var el = document.createElement('div');
+    el.className = 'pp40-card' + (variant === 'accent' ? ' accent' : '');
+    el.innerHTML =
+      '<div class="pp40-label">Section 40 — Enrichment Pipeline</div>' +
+      '<div class="pp40-title">' + title + '</div>' +
+      '<div class="pp40-body">' + body + '</div>' +
+      (footer ? '<div class="pp40-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Old pipeline vs enriched pipeline (accent)
+  card('Fra spørgsmålsgenerering til lærings-objekt-generering',
+    '<p style="margin:0 0 12px">Section 40 transformerer pipeline-output. Ikke ved at bygge en ny pipeline — men ved at lagde pædagogisk intelligens oven på den eksisterende infrastruktur.</p>' +
+    '<div class="pp40-compare">' +
+      '<div class="pp40-compare-col">' +
+        '<div class="pp40-compare-label before">Gammel pipeline-output</div>' +
+        '<div class="pp40-compare-item">{ question, options, correct }</div>' +
+        '<div class="pp40-compare-item">Ingen koncepttags</div>' +
+        '<div class="pp40-compare-item">Distraktorer = tilfældig udfyldelse</div>' +
+        '<div class="pp40-compare-item">Ingen review_text</div>' +
+        '<div class="pp40-compare-item">Ingen wave-metadata</div>' +
+        '<div class="pp40-compare-item">Ingen diagnostisk signal</div>' +
+      '</div>' +
+      '<div class="pp40-compare-col">' +
+        '<div class="pp40-compare-label after">Enriched pipeline-output</div>' +
+        '<div class="pp40-compare-item">+ metadata.concepts [ ]</div>' +
+        '<div class="pp40-compare-item">+ metadata.cognitive_skill</div>' +
+        '<div class="pp40-compare-item">+ metadata.misconception_type</div>' +
+        '<div class="pp40-compare-item">+ metadata.difficulty_type</div>' +
+        '<div class="pp40-compare-item">+ metadata.challenge_role</div>' +
+        '<div class="pp40-compare-item">+ review_text (Level 2–3)</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-quote">Infrastrukturen eksisterer allerede. questions.metadata JSONB er live (Section 37). Wave scoring læser den (Section 38). Pipeline-enrichment er ikke et nyt system — det er den eksisterende infrastruktur i fuld brug.</div>',
+    'Evolution, ikke erstatning. Hvert felt er additivt og bagud-kompatibelt.',
+    'accent'
+  );
+
+  // Card 2 — Pipeline Architecture Audit
+  card('Pipeline-arkitektur audit: de reelle flows',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Den eksisterende pipeline og dens naturlige enrichment-punkter.</p>' +
+    '<div class="pp40-flow">' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">1</div><div class="pp40-flow-text"><strong>Forfatter</strong> skriver spørgsmålsstamme + svar direkte til questions-tabellen</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">2</div><div class="pp40-flow-text"><strong>content JSONB</strong> — {question, options, correct, review_text?} — enrichment punkt A</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">3</div><div class="pp40-flow-text"><strong>metadata JSONB</strong> — null for de fleste spørgsmål — enrichment punkt B (kritisk)</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">4</div><div class="pp40-flow-text"><strong>get-next-question</strong> henter spørgsmål, anvender wave-sorting på metadata.difficulty_type</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">5</div><div class="pp40-flow-text"><strong>process-event</strong> evaluerer svar, returnerer review_text + misconception_type</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">6</div><div class="pp40-flow-text"><strong>question_instances.misconception_signal</strong> optages — enrichment punkt C</div></div>' +
+      '<div class="pp40-flow-step"><div class="pp40-flow-dot">7</div><div class="pp40-flow-text"><strong>get_concept_states()</strong> aggregerer concept-sundhed — klar til lærerdashboard</div></div>' +
+    '</div>' +
+    '<div class="pp40-rule">Enrichment punkt A = review_text (Section 37 — live)</div>' +
+    '<div class="pp40-rule">Enrichment punkt B = metadata JSONB (Section 37 — live, venter på indhold)</div>' +
+    '<div class="pp40-rule">Enrichment punkt C = misconception_signal (Section 38 — live)</div>',
+    'Tre enrichment-punkter eksisterer allerede. Section 40 definerer hvad der skal gå ind i dem.',
+    ''
+  );
+
+  // Card 3 — Learning Object Model
+  card('Lærings-objekt-modellen: spørgsmålets fulde form',
+    '<p style="margin:0 0 8px;font-size:11px;color:var(--text-secondary)">Fra question object til learning object. Alle nye felter er additive — ingen eksisterende spørgsmål brydes.</p>' +
+    '<div class="pp40-code">{\n' +
+    '  content: {\n' +
+    '    question:    "...",\n' +
+    '    options:     [...],\n' +
+    '    correct:     "...",\n' +
+    '    review_text: "..."    ← Level 2-3\n' +
+    '  },\n\n' +
+    '  metadata: {\n' +
+    '    concepts:       ["revolution", "symbolism"],\n' +
+    '    cognitive_skill: "analysis",\n' +
+    '    difficulty_type: "conceptual",\n' +
+    '    misconception_type: "causal_inversion",\n' +
+    '    challenge_role:  "reinforcement",\n' +
+    '    insight_type:    "causal_chain",\n' +
+    '    interdisciplinary_links: ["sociology"]\n' +
+    '  }\n' +
+    '}' +
+    '</div>' +
+    '<div class="pp40-rule">Alle metadata-felter er valgfrie — null metadata = wave score 0 = original rækkefølge</div>' +
+    '<div class="pp40-rule">Hvert felt er læsbart af en lærer uden teknisk dokumentation</div>' +
+    '<div class="pp40-rule">Ingen algoritmiske vægte gemmes i metadata — kun semantisk klassificering</div>',
+    'Lærings-objektet er ikke et spørgsmål med metadata. Det er en pædagogisk komplet instruktionstjeneste.',
+    ''
+  );
+
+  // Card 4 — Concept Extraction Layer
+  card('Konceptudvindingslaget: ideer frem for emner',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Systemet bør forstå ideer — ikke blot prompts. Koncepter er spørgsmålets semantiske fingeraftryk.</p>' +
+    '<div class="pp40-block" style="margin-bottom:8px">' +
+      '<div class="pp40-block-title">3 konceptlag</div>' +
+      '<div class="pp40-block-body">' +
+        '<strong style="color:#5ab4e8">Kerne-koncepter:</strong> det primære koncept spørgsmålet tester (1–2 koncepter)<br>' +
+        '<strong style="color:#2dbf8a">Understøttende koncepter:</strong> tilstødende koncepter der giver kerne-konceptet kontekst (2–4)<br>' +
+        '<strong style="color:#9c6fe4">Transferable koncepter:</strong> koncepter der forbinder spørgsmålet til andre domæner' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-block">' +
+      '<div class="pp40-block-title">Praktisk eksempel</div>' +
+      '<div class="pp40-block-body">' +
+        '<em>Spørgsmål: "Hvorfor matte stormingen af Bastillen selvom kun 7 fanger blev frigivet?"</em><br><br>' +
+        '<span class="pp40-tag">symbolism</span> <span style="color:var(--text-muted);font-size:10px">kerne</span><br>' +
+        '<span class="pp40-tag">collective_action</span> <span style="color:var(--text-muted);font-size:10px">kerne</span><br>' +
+        '<span class="pp40-tag">political_legitimacy</span> <span style="color:var(--text-muted);font-size:10px">understøttende</span><br>' +
+        '<span class="pp40-tag">social_movements</span> <span style="color:var(--text-muted);font-size:10px">transferable (sociologi)</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-quote">Tag koncepter efter hvad spørgsmålet tester — ikke hvad det nævner. Et spørgsmål om Napoleon kan teste "legitimitet" snarere end bare "Napoleon".</div>',
+    'Koncepter er curriculum. Forbindelserne mellem ideer er uddannelsen.',
+    ''
+  );
+
+  // Card 5 — Misconception Prediction Layer
+  card('Misconception-forudsigelseslaget: diagnostiske signaler',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Forkerte svar skal blive diagnostiske signaler — ikke tilfældig støj. Forudsig misconceptions FØR du skriver distraktorer.</p>' +
+    '<div class="pp40-block" style="margin-bottom:8px">' +
+      '<div class="pp40-block-title">5-trins forudsigelsessekvens</div>' +
+      '<div class="pp40-block-body">' +
+        '1. Identificer den korrekte kausale kæde spørgsmålet kræver<br>' +
+        '2. Spørg: hvor i denne kæde kunne en elev ræsonnere forkert?<br>' +
+        '3. Navngiv den specifikke fejltype fra taxonomien<br>' +
+        '4. Forfat en distraktor som en elev med denne fejl ville vælge<br>' +
+        '5. Tildel misconception_type så get_concept_states kan spore det' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-block">' +
+      '<div class="pp40-block-title">Misconception-taksonomi</div>' +
+      '<div class="pp40-block-body">' +
+        '<span class="pp40-tag">causal_inversion</span> — elev vender årsag og effekt<br>' +
+        '<span class="pp40-tag">overgeneralization</span> — elev anvender regel uden for gyldighedsområdet<br>' +
+        '<span class="pp40-tag">false_equivalence</span> — elev behandler to beslægtede begreber som identiske<br>' +
+        '<span class="pp40-tag">temporal_confusion</span> — elev misplacerer begivenheder i tid<br>' +
+        '<span class="pp40-tag">surface_association</span> — elev vælger svar ud fra nøgleord, ikke ræsonnering<br>' +
+        '<span class="pp40-tag">part_whole_error</span> — elev forveksler et specifikt tilfælde med det generelle princip' +
+      '</div>' +
+    '</div>',
+    'Når 60% vælger "causal_inversion" ved læreren præcis hvad der skal adresseres i morgen.',
+    ''
+  );
+
+  // Card 6 — Pedagogical Distractor Generation
+  card('Pædagogiske distraktorer: det diagnostiske forkerte svar',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">En distraktor er ikke et forkert svar. Det er en hypotese om hvordan elever tænker.</p>' +
+    '<div class="pp40-compare" style="margin-bottom:10px">' +
+      '<div class="pp40-compare-col">' +
+        '<div class="pp40-compare-label before">Svage distraktorer</div>' +
+        '<div class="pp40-compare-item">A) 1789 ← korrekt</div>' +
+        '<div class="pp40-compare-item">B) banan</div>' +
+        '<div class="pp40-compare-item">C) 1912</div>' +
+        '<div class="pp40-compare-item">D) Mars</div>' +
+        '<div style="margin-top:6px;font-size:10px;color:#ef5350">Ingen af disse repræsenterer virkelig elevtænkning</div>' +
+      '</div>' +
+      '<div class="pp40-compare-col">' +
+        '<div class="pp40-compare-label after">Stærke distraktorer</div>' +
+        '<div class="pp40-compare-item">A) Bastillen stormes ← korrekt</div>' +
+        '<div class="pp40-compare-item">B) Napoleon bliver kejser <span style="color:#888;font-size:9px">[temporal]</span></div>' +
+        '<div class="pp40-compare-item">C) Kong Louis henrettes <span style="color:#888;font-size:9px">[temporal]</span></div>' +
+        '<div class="pp40-compare-item">D) Rettighedserklæringen <span style="color:#888;font-size:9px">[scope]</span></div>' +
+        '<div style="margin-top:6px;font-size:10px;color:#4caf50">Hvert svar diagnosticerer en navngivet fejl</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-rule">3-distraktor-reglen: kan du ikke navngive misconceptionen — er distraktoren ikke pædagogisk forsvarlig</div>' +
+    '<div class="pp40-rule">Parallelt grammatisk struktur med det korrekte svar</div>' +
+    '<div class="pp40-rule">Plausibelt for elev med delvis forståelse — aldrig åbenlyst absurd</div>',
+    'Det forkerte svar afslører tænkning. Sørg for at det er meningsfuld tænkning det afslører.',
+    ''
+  );
+
+  // Card 7 — review_text enrichment ladder
+  card('review_text berigelse: 5-niveaus enrichment-stige',
+    '<p style="margin:0 0 8px;font-size:11px;color:var(--text-secondary)">Hvert niveau bygger på det forrige. Level 2–3 er standardmålet for de fleste spørgsmål.</p>' +
+    '<div class="pp40-ladder">' +
+      '<div class="pp40-rung" style="background:rgba(80,80,80,0.1);border-color:#555">' +
+        '<div class="pp40-rung-level" style="color:#888">Level 1 — Faktuelt</div>' +
+        '<div class="pp40-rung-text">"Bastillen blev stormet i 1789 som startskuddet til den franske revolution."</div>' +
+      '</div>' +
+      '<div class="pp40-rung" style="background:rgba(90,180,232,0.06);border-color:#5ab4e8">' +
+        '<div class="pp40-rung-level" style="color:#5ab4e8">Level 2 — Konceptuel</div>' +
+        '<div class="pp40-rung-text">"Bastillen symboliserede kongelig undertrykkelse — dens fald viste at kollektiv handling kunne omstyrte statsmagt."</div>' +
+      '</div>' +
+      '<div class="pp40-rung" style="background:rgba(45,191,138,0.06);border-color:#2dbf8a">' +
+        '<div class="pp40-rung-level" style="color:#2dbf8a">Level 3 — Kausal ramme</div>' +
+        '<div class="pp40-rung-text">"Da Bastillen faldt befriede det kun 7 fanger — men det beviste at kongen ikke længere kontrollerede gaderne. Det tab af legitimitet drev revolutionen fremad."</div>' +
+      '</div>' +
+      '<div class="pp40-rung" style="background:rgba(156,111,228,0.06);border-color:#9c6fe4">' +
+        '<div class="pp40-rung-level" style="color:#9c6fe4">Level 4 — Tværfagligt link</div>' +
+        '<div class="pp40-rung-text">"Skiftet fra individuel klage til kollektiv handling studeres i sociologi som social movement theory — samme dynamik ses i arbejdsstrejker og borgerrettighedsbevægelser."</div>' +
+      '</div>' +
+      '<div class="pp40-rung" style="background:rgba(232,130,90,0.06);border-color:#e8825a">' +
+        '<div class="pp40-rung-level" style="color:#e8825a">Level 5 — Refleksiv indsigt</div>' +
+        '<div class="pp40-rung-text">"I politik betyder perception af magt ofte mere end magt i sig selv. Bastillen var næsten tom — men dens fald kollapsede kongens autoritet. Symboler er ikke pynt: de er infrastruktur."</div>' +
+      '</div>' +
+    '</div>',
+    'Level 1 er et fallback. Level 5 er reserveret til genuint overraskende indsigter.',
+    ''
+  );
+
+  // Card 8 — Adaptive Learning Metadata
+  card('Adaptivt lærings-metadata: semantik der tjener motoren',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Metadata tjener læringsmotoren — men skal også kunne læses af en lærer der aldrig har hørt om wave scoring.</p>' +
+    '<div class="pp40-block" style="margin-bottom:8px">' +
+      '<div class="pp40-block-title">challenge_role — hvad er spørgsmålets rolle?</div>' +
+      '<div class="pp40-block-body">' +
+        '<span class="pp40-tag">challenge</span> Standard sværhedsgrad — normalt flow<br>' +
+        '<span class="pp40-tag">reinforcement</span> Efter én fejl — same koncept, reduceret kognitivt krav<br>' +
+        '<span class="pp40-tag">recovery</span> Efter 2+ fejl — mest tilgængelig version af konceptet<br>' +
+        '<span class="pp40-tag">reflection</span> Forbinder to tidligere sete koncepter<br>' +
+        '<span class="pp40-tag">transfer</span> Anvender koncept i nyt domæne — højeste krav' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-block" style="margin-bottom:8px">' +
+      '<div class="pp40-block-title">insight_type — hvilken indsigt udvikler det?</div>' +
+      '<div class="pp40-block-body">' +
+        '<span class="pp40-tag">causal_chain</span> — årsager og virkninger<br>' +
+        '<span class="pp40-tag">systems_shift</span> — systemer der skifter tilstand<br>' +
+        '<span class="pp40-tag">historical_parallel</span> — tilbagevendende historisk struktur<br>' +
+        '<span class="pp40-tag">threshold_concept</span> — gøre dette rigtigt er et ægte forståelsesskift' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-tier pp40-tier-0"><div class="pp40-tier-label" style="color:#888">Tier 0</div><div class="pp40-tier-desc">Ingen metadata → fungerer, uanriget</div></div>' +
+    '<div class="pp40-tier pp40-tier-1"><div class="pp40-tier-label" style="color:#5ab4e8">Tier 1</div><div class="pp40-tier-desc">+ difficulty_type + cognitive_skill → wave sorting aktiv</div></div>' +
+    '<div class="pp40-tier pp40-tier-2"><div class="pp40-tier-label" style="color:#2dbf8a">Tier 2</div><div class="pp40-tier-desc">+ concepts + misconception_type → diagnostik aktiv</div></div>' +
+    '<div class="pp40-tier pp40-tier-3"><div class="pp40-tier-label" style="color:#9c6fe4">Tier 3</div><div class="pp40-tier-desc">+ review_text + challenge_role + insight_type → fuldt lærings-objekt</div></div>',
+    'Progressive enrichment: spørgsmål kan sendes på Tier 0 og beriges gradvist.',
+    ''
+  );
+
+  // Card 9 — Pedagogical QA + Human override
+  card('Pædagogisk QA og menneskelig override-arkitektur',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">QA-laget gør det sværere at sende et dårligt spørgsmål end slet intet spørgsmål. Læreren kan altid overstyre med begrundelse.</p>' +
+    '<div class="pp40-block" style="margin-bottom:8px">' +
+      '<div class="pp40-block-title">8-trins QA-valideringssekvens</div>' +
+      '<div class="pp40-block-body">' +
+        '<span class="pp40-badge pass">✓</span> Strukturcheck: stamme + muligheder + korrekt svar<br>' +
+        '<span class="pp40-badge pass">✓</span> Distraktor-check: mindst én distraktor kan mappes til navngivet misconception<br>' +
+        '<span class="pp40-badge pass">✓</span> review_text-check: forklarer konceptet, gentager ikke bare svaret<br>' +
+        '<span class="pp40-badge pass">✓</span> Konceptcheck: 1–4 koncepter tagget med natursproglige navne<br>' +
+        '<span class="pp40-badge warn">?</span> Kognitiv-skill-check: cognitive_skill tildelt fra taxonomien<br>' +
+        '<span class="pp40-badge warn">?</span> Sværhedscheck: difficulty_type tildelt og passende til indholdet<br>' +
+        '<span class="pp40-badge pass">✓</span> Værdighed: respekterer eleven som intelligent lærende<br>' +
+        '<span class="pp40-badge pass">✓</span> Indsigt: en eftertænksom lærer kunne bruge dette til diskussion' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-rule">Automatisk QA er et first-pass filter — ikke en endelig dommer</div>' +
+    '<div class="pp40-rule">Læreren kan godkende QA-fejl med pædagogisk begrundelse (metadata.qa_override)</div>' +
+    '<div class="pp40-rule">QA-fejl sender spørgsmålet til review-kø — ikke sletning</div>' +
+    '<div class="pp40-rule">Alle overrides logges for at forbedre QA-reglerne over tid</div>' +
+    '<div class="pp40-quote">Systemet hjælper med pædagogisk håndværk — det erstatter det ikke. Lærere er centrale, bemyndigede, i stand til at inspicere og tilsidesætte alt.</div>',
+    'QA er ikke bureaukrati. Det er respekt for elevens tid og lærermulighed.',
+    ''
+  );
+
+  // Card 10 — Future learning object ecosystem (accent)
+  card('Fremtidens lærings-objekt-system: en levende pædagogisk organisme',
+    '<p style="margin:0 0 12px">Over tid akkumulerer pipelinen ikke blot spørgsmål med metadata. Den akkumulerer pædagogisk visdom om hvad der virker — og for hvem.</p>' +
+    '<div class="pp40-block" style="margin-bottom:10px">' +
+      '<div class="pp40-block-title">Næste pipeline-faser</div>' +
+      '<div class="pp40-block-body">' +
+        '<strong>Lærergrænseflade:</strong> strukturerede metadata-formularer — dropdown for difficulty_type, cognitive_skill<br><br>' +
+        '<strong>Forslags-lag:</strong> system foreslår difficulty_type ud fra spørgsmålsstamme — lærer bekræfter<br><br>' +
+        '<strong>Distraktor-review UI:</strong> visuel mapping af distraktor → misconception_type<br><br>' +
+        '<strong>review_text preview:</strong> live forhåndsvisning af feedback som eleven ser den<br><br>' +
+        '<strong>QA-dashboard:</strong> læserbar QA-rapport per spørgsmål — hvilke checks bestod, hvilke kræver opmærksomhed' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-block">' +
+      '<div class="pp40-block-title">Langtidsvision</div>' +
+      '<div class="pp40-block-body">' +
+        'Spørgsmål danner et konceptgraf — sekventering følger vidensforudsætninger<br>' +
+        'Misconception-aggregater på tværs af klasse → systematiske vs individuelle fejl<br>' +
+        'Spørgsmål med delte koncepter kan fremhæves på tværs af fag — transferlæring<br>' +
+        'Hvert spørgsmål akkumulerer en sundhedsscore fra elevpræstation + misconception-signalkvalitet' +
+      '</div>' +
+    '</div>' +
+    '<div class="pp40-quote" style="margin-top:12px">Pipelinen bliver et levende pædagogisk system hvor indhold forbedres over tid — ikke fordi en algoritme omskriver det, men fordi rigtige elevdata giver lærere bedre information til at forfine deres spørgsmål.</div>',
+    'Section 40 er ikke slutpunktet for pipeline-intelligens. Det er forpligtelsen til at pipelinen altid tjener eleven.',
     'accent'
   );
 
