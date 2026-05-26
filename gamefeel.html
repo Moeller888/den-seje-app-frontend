@@ -875,6 +875,40 @@
     .em34-soul-block { background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
     .em34-soul-label { font-size: 9px; font-weight: bold; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
     .em34-soul-text { font-size: 11px; color: var(--text-main); line-height: 1.6; }
+
+    /* ── Section 35 — Pedagogical Depth ── */
+    .ld35-grid { display: flex; flex-direction: column; gap: 20px; }
+    .ld35-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .ld35-card--accent { border-top: 3px solid var(--coin); }
+    .ld35-card--insight { border-top: 3px solid #34d399; }
+    .ld35-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .ld35-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .ld35-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .ld35-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .ld35-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .ld35-item strong { color: var(--text-bright); }
+    .ld35-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .ld35-compare-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .ld35-compare-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .ld35-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .ld35-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .ld35-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: top; line-height: 1.4; }
+    .ld35-table tr:last-child td { border-bottom: none; }
+    .ld35-pill { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ld35-pill--ok   { background: rgba(52,211,153,0.15); color: #34d399; }
+    .ld35-pill--risk { background: rgba(229,115,115,0.15); color: #e57373; }
+    .ld35-pill--med  { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .ld35-insight-block { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.2); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .ld35-insight-label { font-size: 9px; font-weight: bold; color: #34d399; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .ld35-insight-text { font-size: 11px; color: var(--text-main); line-height: 1.6; }
+    .ld35-moment-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+    .ld35-moment-ms { font-size: 9px; font-weight: bold; color: var(--text-label); min-width: 64px; padding-top: 1px; }
+    .ld35-moment-body { font-size: 10px; color: var(--text-main); line-height: 1.4; flex: 1; }
+    .ld35-moment-body em { color: var(--text-muted); }
+    .ld35-quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .ld35-quality-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .ld35-quality-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+    .ld35-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1096,6 +1130,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 34 — Educational Meaning Architecture</h2>
   <div class="em34-grid" id="em34Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 35 — Learning Experience &amp; Pedagogical Depth</h2>
+  <div class="ld35-grid" id="ld35Grid"></div>
 </div>
 
 <script type="module">
@@ -9701,6 +9738,453 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       <li class="em34-item"><strong>Menings-arkitekturen er et constraint</strong> på feature-udvikling, ikke blot et filosofi-dokument. Hvis et nyt system ikke kan bestå MEANING_TEST's ni spørgsmål, hører det ikke hjemme her.</li>
     </ul>`,
     "Den bedste test for et uddannelses-system: fjern alle ekstern belønninger. Er kernelearingen stadig værd at gøre? Svaret i DEN SEJE APP skal altid være ja.",
+    "accent"
+  ));
+
+}());
+
+// ── Section 35 — Learning Experience & Pedagogical Depth ─────────────────────
+(function () {
+  const root = document.getElementById("ld35Grid");
+  if (!root) return;
+
+  const SUCCESS = "#34d399";
+  const RISK_C  = "#e57373";
+  const WARN    = "#ffc107";
+
+  function ld35Card(title, body, note, mode) {
+    const el = document.createElement("div");
+    el.className = "ld35-card" + (mode === "accent" ? " ld35-card--accent" : mode === "insight" ? " ld35-card--insight" : "");
+    el.innerHTML = `<div class="ld35-card-title">${title}</div>${body}` +
+      (note ? `<div class="ld35-note">${note}</div>` : "");
+    return el;
+  }
+
+  // ── Card 1: Shallow vs Deep Learning Loop ─────────────────────────────────
+  root.appendChild(ld35Card(
+    "01 — Grunt vs Dybt Læringsloop",
+    `<div class="ld35-compare">
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${RISK_C}">Grunt loop</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Spørgsmål → svar → XP → næste spørgsmål</li>
+          <li class="ld35-item">Eleven behandler svar mekanisk — ingen ægte engagement</li>
+          <li class="ld35-item">Forkert svar: skuffelse → korrekt svar vist → videre</li>
+          <li class="ld35-item">Review feedback: "Svaret var X." — intet læringsmoment</li>
+          <li class="ld35-item">40 minutter: eleven har svaret på mange spørgsmål og lært lidt</li>
+          <li class="ld35-item">Eleven husker belønningerne — ikke det de lærte</li>
+          <li class="ld35-item">XP er årsagen. Forståelse er bieffekten.</li>
+        </ul>
+      </div>
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${SUCCESS}">Dybt loop</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Spørgsmål → nysgerrighed aktiveres → svar → indsigt → forståelse → XP</li>
+          <li class="ld35-item">Eleven engagerer sig genuint — spørgsmålet er interessant i sig selv</li>
+          <li class="ld35-item">Forkert svar: nysgerrighed → korrekt svar + forklaring → øjeblikket "ah"</li>
+          <li class="ld35-item">Review feedback: "Den Franske Revolution begyndte i 1789 — det år Bastillen stormededes og det gamle regime begyndte at krakelere."</li>
+          <li class="ld35-item">40 minutter: eleven har lært noget og ønsker at vide mere</li>
+          <li class="ld35-item">Eleven husker hvad de lærte — belønningerne var noter i marginen</li>
+          <li class="ld35-item">Forståelse er årsagen. XP er anerkendelsen.</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Den afgørende forskel:</strong> I det dybe loop er det forkerte svar ikke slutningen på et forsøg — det er begyndelsen på et læringsmoment. Review-feedbacken er det vigtigste indhold på platformen.</li>
+      <li class="ld35-item"><strong>Systemet er allerede klar:</strong> #review-feedback feltet eksisterer. Quiz-state-maskinen er velfungerende. Det åbne spørgsmål er kvaliteten af det indhold der vises.</li>
+    </ul>`,
+    "Platformen kan ikke skabe forståelse. Den kan skabe de betingelser der gør forståelse mulig — og det er hvad pedagogisk dybde handler om.",
+    "accent"
+  ));
+
+  // ── Card 2: Learning Experience Audit ────────────────────────────────────
+  root.appendChild(ld35Card(
+    "02 — Læringsoplevelse-Audit: Nuværende Tilstand",
+    `<table class="ld35-table">
+      <thead><tr><th>Område</th><th>Fund</th><th>Sværhed</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Quiz state machine</td>
+          <td><span class="ld35-pill ld35-pill--ok">Styrke</span> Ren, forudsigelig flow. Eleven er aldrig forvirret over sin tilstand.</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Feedback-timing (150ms)</td>
+          <td><span class="ld35-pill ld35-pill--ok">Styrke</span> Hurtig nok til at føles umiddelbar, kontrolleret nok til ikke at føles hastet.</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>#review-feedback infrastruktur</td>
+          <td><span class="ld35-pill ld35-pill--ok">Styrke</span> Infrastrukturen eksisterer. Det vigtigste pedagogiske øjeblik har et hjem.</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Review feedback indholdskvalitet</td>
+          <td><span class="ld35-pill ld35-pill--risk">Høj risiko</span> Infrastruktur eksisterer — men dybden af review-teksten er det vigtigste åbne variabel. Et svar der blot gentager det korrekte svar lærer mindre end ét der kort forklarer <em>hvorfor</em>.</td>
+          <td><span class="ld35-pill ld35-pill--risk">HØJ</span></td>
+        </tr>
+        <tr>
+          <td>Spørgsmåls-sekventering</td>
+          <td><span class="ld35-pill ld35-pill--med">Risiko</span> Ingen dokumenteret filosofi for ordeningsrækkefølge. Tilfældig rækkefølge kan skabe kognitive træthedsmønstre.</td>
+          <td><span class="ld35-pill ld35-pill--med">MED</span></td>
+        </tr>
+        <tr>
+          <td>Kognitiv vejrtrækning</td>
+          <td><span class="ld35-pill ld35-pill--med">Risiko</span> Ingen mekanisme for bevidst kognitiv åndedrætsrum — rytme-variation, konsoliderings-pause.</td>
+          <td><span class="ld35-pill ld35-pill--med">MED</span></td>
+        </tr>
+        <tr>
+          <td>Discovery-design</td>
+          <td><span class="ld35-pill ld35-pill--med">Gap</span> Nuværende loop: svar-behandl-videre. Intet designet rum for "aha"-øjeblikke eller begrebsforbindelser.</td>
+          <td><span class="ld35-pill ld35-pill--med">MED</span></td>
+        </tr>
+        <tr>
+          <td>Langsigtet kognitiv tekstur</td>
+          <td><span class="ld35-pill ld35-pill--ok">Lav prioritet</span> Efter 40 spørgsmål er strukturen identisk med det første — kognitivt fladt, men ikke et aktuelt produktsvigt.</td>
+          <td><span class="ld35-pill ld35-pill--ok">LAV</span></td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Den vigtigste konklusion: platformen er teknisk klar til dybde-læring. Det åbne spørgsmål er redaktionel kvalitet — spørgsmåls-design og review-feedback-indhold.",
+    null
+  ));
+
+  // ── Card 3: Question Design Contract ─────────────────────────────────────
+  root.appendChild(ld35Card(
+    "03 — Spørgsmåls-Design Kontrakt",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Et godt spørgsmål gør eleven nysgerrig på svaret — før de ved hvad det er.</div>
+    </div>
+    <div class="ld35-quality-grid">
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Nysgerrighed-aktivering</div>
+        <div class="ld35-quality-body">Spørgsmålet er interessant i sig selv. Test: ville eleven være nysgerrig uden XP tilknyttet?</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Begrebslig klarhed</div>
+        <div class="ld35-quality-body">Tester ægte forståelse, ikke overflade-recitation. En elev der forstår konceptet kan svare rigtigt.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Meningsfuld udfordring</div>
+        <div class="ld35-quality-body">Eleven er strakt — men ikke sprængt. Genuint kognitiv engagement, ikke kunstig vanskelighed.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Indsigt-potentiale</div>
+        <div class="ld35-quality-body">Det korrekte svar — især efter et forkert forsøg — har potentiale til at skabe reel indsigt.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Intellektuel respekt</div>
+        <div class="ld35-quality-body">Spørgsmålet behandler eleven som et tænkende menneske — ikke en hukommelses-bank.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Tankevækkende forkerte svar</div>
+        <div class="ld35-quality-body">I multiple-choice: forkerte muligheder repræsenterer ægte misforståelser — ikke åbenlyst forkerte lokkemidler.</div>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Review Feedback Eksempel</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9px;color:${RISK_C};font-weight:bold;margin-bottom:4px">Afvist (korrektion)</div>
+          <div style="font-size:10px;color:var(--text-main);font-style:italic;padding:8px;background:rgba(229,115,115,0.06);border-radius:6px;border:1px solid rgba(229,115,115,0.15)">"Svaret var: 1789"</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:${SUCCESS};font-weight:bold;margin-bottom:4px">Foretrukket (forklaring)</div>
+          <div style="font-size:10px;color:var(--text-main);font-style:italic;padding:8px;background:rgba(52,211,153,0.06);border-radius:6px;border:1px solid rgba(52,211,153,0.15)">"Den Franske Revolution begyndte i 1789 — det år Bastillen stormededes og det gamle regime begyndte at krakelere."</div>
+        </div>
+      </div>
+    </div>`,
+    "Review-feedback er det vigtigste indhold på platformen. Det fortjener mest redaktionel opmærksomhed af al tekst i systemet.",
+    "insight"
+  ));
+
+  // ── Card 4: Curiosity Architecture ───────────────────────────────────────
+  root.appendChild(ld35Card(
+    "04 — Nysgerrighed-Arkitektur",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Nysgerrighed kan ikke fabrikeres — men den kan beskyttes. Fjern det der dræber den: angst, hastværk, skam og meningsløs gentagelse.</div>
+    </div>
+    <div class="ld35-compare">
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${RISK_C}">Nysgerrighed-dræbere</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Tidspres — eleven skynder sig til et svar</li>
+          <li class="ld35-item">Skam ved forkert svar — eleven bliver risikosky</li>
+          <li class="ld35-item">Meningsløs gentagelse — eleven kender svaret</li>
+          <li class="ld35-item">Belønnings-prominens — XP-popup læses før review-feedback</li>
+          <li class="ld35-item">Kognitiv overbelastning — for mange svære spørgsmål</li>
+          <li class="ld35-item">Konkurrencepres — eleven tænker på rang, ikke spørgsmål</li>
+        </ul>
+      </div>
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${SUCCESS}">Nysgerrighed-støtter</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Spørgsmåls-framing der antyder hvorfor svaret betyder noget</li>
+          <li class="ld35-item">Review-feedback der kort belyser "hvorfor" — skaber en lille fortælling</li>
+          <li class="ld35-item">Rolig, uhastende interface — eleven kan dvæle ved et spørgsmål</li>
+          <li class="ld35-item">Udfordringsvariationer der skaber kontrast — efter et svært spørgsmål</li>
+          <li class="ld35-item">Fraværet af tidspres — eleven kan sidde med et spørgsmål</li>
+          <li class="ld35-item">Interessante forkerte svarmuligheder — spørgsmålet er et genuint puslespil</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Discovery-glæden:</strong> Følelsen af "det vidste jeg ikke, men nu ved jeg det, og det er interessant" er platformens kerneemotionelle produkt. Hvert forkert svar efterfulgt af en ægte forklaring er et discovery-øjeblik.</li>
+      <li class="ld35-item"><strong>Mønstergenkendelse:</strong> Den mest tilfredsstillende kognitive oplevelse er at bemærke et mønster — at forbinde dette spørgsmål med tidligere viden. Review-feedback kan eksplicit skabe forbindelser.</li>
+    </ul>`,
+    null,
+    null
+  ));
+
+  // ── Card 5: Challenge & Mastery Rhythm ───────────────────────────────────
+  root.appendChild(ld35Card(
+    "05 — Udfordring & Mestrings-Rytme",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Udfordring er ikke en skive der drejes op — det er en rytme der opretholdes. Målet er engagement, ikke vanskelighed.</div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Udfordringsbølge-mønster</div>
+      <div style="display:flex;gap:4px;align-items:flex-end;height:40px;margin-bottom:8px">
+        ${[3,5,4,7,5,3,6,8,5,4,7,5,3,6].map((h,i) => {
+          const color = h > 6 ? RISK_C : h > 4 ? WARN : SUCCESS;
+          return `<div style="flex:1;background:${color};border-radius:2px 2px 0 0;height:${h*5}px;opacity:0.7"></div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:9px;color:var(--text-muted)">Bølger: svær → tilgængelig → svær → tilgængelig. Ikke monoton eskalering. Grøn = tilgængelig (konsolidering). Orange = medium. Rød = svær (stræk).</div>
+    </div>
+    <div class="ld35-quality-grid">
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Udfordringsbølge</div>
+        <div class="ld35-quality-body">Kognitiv engagement er naturligt rytmisk — strækperioder efterfulgt af konsolideringsperioder.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Mestrings-stabilisering</div>
+        <div class="ld35-quality-body">Efter 3–4 korrekte svar: eleven skal føle sig slået ned, ikke øjeblikkeligt udfordret igen.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Kognitiv vejrtrækning</div>
+        <div class="ld35-quality-body">Tilgængelige spørgsmål er ikke spildt tid. De er konsolidering og selvtillids-genoprettelse.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Flow-støtte</div>
+        <div class="ld35-quality-body">Udfordring-færdigheds-balance der producerer flow: udfordrende nok til at kræve opmærksomhed, tilgængeligt nok til at føles opnåeligt.</div>
+      </div>
+    </div>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Anti-pattern:</strong> "Svære spørgsmål er bedre spørgsmål." De er ikke. Et tilgængeligt spørgsmål der konsoliderer nylig læring er like værdifuldt som et svært spørgsmål der strækker eleven.</li>
+    </ul>`,
+    null,
+    null
+  ));
+
+  // ── Card 6: Wrong Answer Experience ──────────────────────────────────────
+  root.appendChild(ld35Card(
+    "06 — Det Forkerte Svar: Designet Som Læringsøjeblik",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Et forkert svar er begyndelsen på læring — ikke slutningen på et forsøg.</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Læringsøjebliks-sekvens</div>
+      <div class="ld35-moment-row"><div class="ld35-moment-ms">0–150ms</div><div class="ld35-moment-body">Forkert feedback (shake, fejlfarve) <em>— Signal: den vej er lukket. Kort, mekanisk, ikke-emotionel.</em></div></div>
+      <div class="ld35-moment-row"><div class="ld35-moment-ms">150–400ms</div><div class="ld35-moment-body">Avatar: FOCUSED vejrtrækning <em>— Signal: opmærksom rekalibrering, ikke nød.</em></div></div>
+      <div class="ld35-moment-row" style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:6px;padding:6px 8px;margin-bottom:4px"><div class="ld35-moment-ms" style="color:#34d399">400–800ms</div><div class="ld35-moment-body"><strong>Korrekt svar + review-feedback vises</strong> <em>— LÆRINGSØJEBLIKKET. Mest omhyggeligt designet indhold.</em></div></div>
+      <div class="ld35-moment-row"><div class="ld35-moment-ms">800–2000ms</div><div class="ld35-moment-body">Eleven læser review-feedback <em>— UI er stille. Indsigten behandles.</em></div></div>
+      <div class="ld35-moment-row"><div class="ld35-moment-ms">2000ms+</div><div class="ld35-moment-body">Næste spørgsmål indlæses <em>— Eleven bevæger sig fremad med ny information.</em></div></div>
+    </div>
+    <div class="ld35-compare">
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${RISK_C}">Forbudte reaktioner</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Avatar: trist eller skuffet udtryk</li>
+          <li class="ld35-item">Feedback: "Øv!", "Desværre!"</li>
+          <li class="ld35-item">Streak: synligt faldende med animation</li>
+          <li class="ld35-item">XP-reduktion ved retry</li>
+          <li class="ld35-item">Pop-up: "giv ikke op!"</li>
+          <li class="ld35-item">Visuelt der dvæler ved fejltilstanden</li>
+        </ul>
+      </div>
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${SUCCESS}">Hvad det forkerte svar er</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Eleven prøvede én vej — systemet viste en anden</li>
+          <li class="ld35-item">Eleven engagerede sig med ægte usikkerhed</li>
+          <li class="ld35-item">Eleven er her stadig, prøver stadig</li>
+          <li class="ld35-item">Kognitiv modtagelighed er på sit højeste lige nu</li>
+          <li class="ld35-item">500 forklaringer efter 500 fejl = 500 læringsøjeblikke</li>
+        </ul>
+      </div>
+    </div>`,
+    "Det forkerte svar-flow bør føles som at træde ind i et læringsøjeblik — ikke som at overleve en fejl.",
+    "insight"
+  ));
+
+  // ── Card 7: Discovery & Insight Design ───────────────────────────────────
+  root.appendChild(ld35Card(
+    "07 — Discovery & Indsigt: Følelsen Af Forståelse",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Følelsen af at forstå noget man ikke forstod før er det dybeste emotionelle produkt platformen kan levere. Design for dette.</div>
+    </div>
+    <table class="ld35-table">
+      <thead><tr><th>Indsigts-type</th><th>Hvad det føles som</th><th>Hvad det kræver</th></tr></thead>
+      <tbody>
+        <tr><td>Fakta-opdagelse</td><td>"Det vidste jeg ikke" — genuint overrasket over information</td><td>Spørgsmål der framer fakta som interessant, ikke som krav</td></tr>
+        <tr><td>Begrebsforbindelse</td><td>"Dette er ligesom noget andet jeg ved" — mønster genkendes</td><td>Review-feedback der eksplicit forbinder til relateret viden</td></tr>
+        <tr><td>Misforståelses-korrektion</td><td>"Jeg troede X, men det er faktisk Y" — en model revideres</td><td>Forklaring der adresserer <em>hvad der typisk misforstås</em> om dette</td></tr>
+        <tr><td>Kompetence-øjeblik</td><td>"Det var faktisk svært, og jeg fik det rigtigt" — reel selvtillid</td><td>Spørgsmål der genuint kræver tænkning — ikke trivielt</td></tr>
+        <tr><td>Mønstergenkendelse</td><td>"Dette princip gælder for alt" — kategori-forståelse</td><td>Review-feedback der peger på det generelle princip bag det specifikke svar</td></tr>
+      </tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px">
+        <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Hvad støtter "aha"</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Rolig, uhastende interface</li>
+          <li class="ld35-item">Genuint forklarende review-feedback</li>
+          <li class="ld35-item">Nysgerrighed skabt af det forkerte svar</li>
+          <li class="ld35-item">Fravær af angst om performance</li>
+        </ul>
+      </div>
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px">
+        <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Hvad forhindrer "aha"</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Tidspres</li>
+          <li class="ld35-item">Skam ved forkert svar</li>
+          <li class="ld35-item">Belønnings-animationer der trækker fokus</li>
+          <li class="ld35-item">Kognitiv overbelastning</li>
+        </ul>
+      </div>
+    </div>`,
+    null,
+    null
+  ));
+
+  // ── Card 8: Cognitive Pacing & Long-Session Learning ─────────────────────
+  root.appendChild(ld35Card(
+    "08 — Kognitiv Pacing: 20–40 Minutters Læringsoplevelse",
+    `<div class="ld35-compare" style="margin-bottom:14px">
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${RISK_C}">Kognitive træthedsmønstre</div>
+        <ul class="ld35-list">
+          <li class="ld35-item"><strong>Kognitiv udfladning:</strong> Eleven behandler svar mekanisk — mønstermatchning snarere end forståelse</li>
+          <li class="ld35-item"><strong>Belønningsudmattelse:</strong> XP og mønter bliver usynlige — eleven stopper med at registrere dem. (Dette er faktisk sundt — intrinsisk engagement burde overtage.)</li>
+          <li class="ld35-item"><strong>Udfordringens monotoni:</strong> Hvert spørgsmål føles som samme indsatsniveau — ingen rytme-variation</li>
+        </ul>
+      </div>
+      <div class="ld35-compare-col">
+        <div class="ld35-compare-heading" style="color:${SUCCESS}">Lang-session principper</div>
+        <ul class="ld35-list">
+          <li class="ld35-item">Rytme-variation: sværhedsbølger, ikke en flad linje</li>
+          <li class="ld35-item">Fremgangs-bevidsthed: eleven mærker sessionens bue</li>
+          <li class="ld35-item">Stop-gracefully design: let at stoppe ved et tilfredsstillende øjeblik</li>
+          <li class="ld35-item">Intrinsisk engagement: efter extrinsiske belønninger habitueres, bærer nysgerrighed sessionen</li>
+        </ul>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Kognitiv Belastningsstyring</div>
+      <ul class="ld35-list">
+        <li class="ld35-item">Interface bærer så lidt kognitiv belastning som muligt — elevens fulde opmærksomhed er på spørgsmålet</li>
+        <li class="ld35-item">Ingen konkurrerende animationer mens et spørgsmål er aktivt</li>
+        <li class="ld35-item">Avatar-vejrtrækning ved 52px: rolig nok til ikke at trække fokus fra spørgsmåls-teksten</li>
+        <li class="ld35-item">Navigation og hjælpe-elementer kræver ikke opmærksomhed mens et spørgsmål er aktivt</li>
+      </ul>
+    </div>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Test:</strong> En elev der har brugt platformen i 30 minutter bør føle sig intellektuelt beriget — og rolig nok til at stoppe frivilligt.</li>
+    </ul>`,
+    null,
+    null
+  ));
+
+  // ── Card 9: Pedagogical Emotional Design ─────────────────────────────────
+  root.appendChild(ld35Card(
+    "09 — Pædagogisk Emotionel Design: Følelsestonen I Selve Læringen",
+    `<div class="ld35-insight-block">
+      <div class="ld35-insight-label">Kerneprinncip</div>
+      <div class="ld35-insight-text">Læring bør føles trygt, nysgerrig og lejlighedsvis glædeligt — aldrig presserende, skamfuldt eller performativt.</div>
+    </div>
+    <div class="ld35-quality-grid">
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Rolig fokus</div>
+        <div class="ld35-quality-body">Den baseline emotionelle tilstand i engageret læring. Alert men ikke spændt.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Tryg nysgerrighed</div>
+        <div class="ld35-quality-body">Eleven kan undre sig frit — inklusive om spørgsmål de er usikre på — uden at frygte konsekvensen af at tage fejl.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Tankefuld udfordring</div>
+        <div class="ld35-quality-body">Vanskelighed opleves som invitation snarere end trussel. "Dette kræver tænkning" — ikke "dette er en test af min værd."</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Intellektuel varme</div>
+        <div class="ld35-quality-body">Platformen behandler eleven som et tænkende menneske der finder ting interessante — ikke som en score der skal optimeres.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Komponeret fremgang</div>
+        <div class="ld35-quality-body">Følelsen af at bevæge sig fremad støt — ikke at race, ikke at stå stille, men at gøre vedvarende, meningsfuld fremgang.</div>
+      </div>
+      <div class="ld35-quality-cell">
+        <div class="ld35-quality-title">Resilient vedholdenhed</div>
+        <div class="ld35-quality-body">Efter et forkert svar returnerer eleven til Rolig Fokus — ikke kollapser ind i angst.</div>
+      </div>
+    </div>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Avatar-rollen:</strong> Avatarens rolige tilstedeværelse, stabile vejrtrækning og sammensatte neutrale udtryk forstærker dette emotionelle register. Den er opmærksom men ikke evaluerende.</li>
+      <li class="ld35-item"><strong>Forbudte lærings-emotioner:</strong> Hastværk, panik, performance-teater, konkurrende intelligens ("jeg skal være klogere end de andre"), skam-akkumulering.</li>
+    </ul>`,
+    "Platformen bør føles som at lære med en vidende, tålmodig, interesseret ledsager — ikke som at tage en eksamen.",
+    "insight"
+  ));
+
+  // ── Card 10: Future Learning Universe ────────────────────────────────────
+  root.appendChild(ld35Card(
+    "10 — Fremtidens Lærings-Univers: Pædagogisk Dybde Over Tid",
+    `<table class="ld35-table">
+      <thead><tr><th>Dimension</th><th>Princip</th><th>Anti-pattern</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Dyb læringskultur</td>
+          <td>En elev der bruger tid på et spørgsmål belønnes det samme som én der svarer hurtigt. Dybde er værdsat.</td>
+          <td>Implicit hastværks-kultur via interface-energi eller reward-timing</td>
+        </tr>
+        <tr>
+          <td>Sund mestring</td>
+          <td>Mestring føles som et uddybende forhold til et emne. Eleven der har besvaret 1000 matematikspørgsmål finder matematik mere interessant — ikke mindre.</td>
+          <td>Eleven der har besvaret 1000 spørgsmål og føler de har "afsluttet" matematik</td>
+        </tr>
+        <tr>
+          <td>Livslang nysgerrighed</td>
+          <td>Det bedste outcome: eleven bliver mere nysgerrig på verden <em>udenfor</em> platformen. Review-feedback der peger mod det større emne støtter dette.</td>
+          <td>Platform-begrænset læring: eleven er god til at svare på platformens spørgsmål men ikke nysgerrig udenfor</td>
+        </tr>
+        <tr>
+          <td>Klasseværelses-kompatibilitet</td>
+          <td>Spørgsmål tester ægte forståelse. Fejloplevelser modellerer sund fejl-kultur. Fremgang er lærer-dokumenterbar som bevis for reel læring.</td>
+          <td>Gotcha-spørgsmål, skam-svar-loops, metriker der ikke siger noget om forståelse</td>
+        </tr>
+        <tr>
+          <td>Reflektiv vækst</td>
+          <td>Den dybeste læring er retrospektiv — eleven der ser tilbage og ser hvad de nu forstår er mere motiveret end eleven der tæller fremad mod et mål.</td>
+          <td>Kun fremadrettet progression-framing ("X niveauer til næste")</td>
+        </tr>
+        <tr>
+          <td>Pædagogisk test</td>
+          <td>8 spørgsmål i PEDAGOGICAL_TEST checkes inden hvert spørgsmål-sæt og review-feedback-tekst shipper.</td>
+          <td>Spørgsmål der passerer mekanisk men fejler pædagogisk</td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="ld35-list">
+      <li class="ld35-item"><strong>Section 35's centrale bidrag:</strong> Platformen har nu en komplet designfilosofi fra system-arkitektur til sjæl til pædagogisk dybde. Det næste lag er eksekveringen — redaktionel kvalitet i spørgsmål og review-feedback.</li>
+      <li class="ld35-item"><strong>Den ultimative test:</strong> I fem år — vil studerende der brugte denne platform være mere nysgerrige på verden? Eller blot bedre til at svare på platformens spørgsmål? Svaret afgør om platformen har skabt læring eller har simuleret det.</li>
+    </ul>`,
+    "Meningsfulde uddannelsessystemer optimerer for forståelse og nysgerrighed — ikke svar-gennemstrømning.",
     "accent"
   ));
 
