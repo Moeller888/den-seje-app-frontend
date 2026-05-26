@@ -845,6 +845,36 @@
     .pc33-area-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 9px; }
     .pc33-area-name { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; }
     .pc33-area-tone { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── Section 34 — Educational Meaning ── */
+    .em34-grid { display: flex; flex-direction: column; gap: 20px; }
+    .em34-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .em34-card--accent { border-top: 3px solid var(--coin); }
+    .em34-card--soul   { border-top: 3px solid #a78bfa; }
+    .em34-card-title { font-size: 11px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .em34-note { margin-top: 12px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .em34-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .em34-item { font-size: 11px; color: var(--text-main); line-height: 1.4; padding-left: 14px; position: relative; }
+    .em34-item::before { content: "—"; position: absolute; left: 0; color: var(--text-label); }
+    .em34-item strong { color: var(--text-bright); }
+    .em34-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .em34-compare-col { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .em34-compare-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .em34-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+    .em34-table th { background: var(--btn-bg); color: var(--text-label); text-align: left; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .em34-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-sep); color: var(--text-main); vertical-align: top; line-height: 1.4; }
+    .em34-table tr:last-child td { border-bottom: none; }
+    .em34-pill { display: inline-block; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .em34-pill--ok   { background: rgba(76,175,80,0.15); color: #4caf50; }
+    .em34-pill--risk { background: rgba(229,115,115,0.15); color: #e57373; }
+    .em34-pill--part { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .em34-quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .em34-quality-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .em34-quality-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+    .em34-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+    .em34-soul-block { background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .em34-soul-label { font-size: 9px; font-weight: bold; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .em34-soul-text { font-size: 11px; color: var(--text-main); line-height: 1.6; }
   </style>
 </head>
 <body>
@@ -1063,6 +1093,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 33 — Platform-Wide Emotional &amp; Visual Coherence</h2>
   <div class="pc33-grid" id="pc33Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 34 — Educational Meaning Architecture</h2>
+  <div class="em34-grid" id="em34Grid"></div>
 </div>
 
 <script type="module">
@@ -9223,6 +9256,452 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     </ul>`,
     "Den bedste platform-sammenhæng er usynlig. Brugeren mærker ikke systemerne — de mærker bare at stedet føles rigtigt.",
     true
+  ));
+
+}());
+
+// ── Section 34 — Educational Meaning Architecture ─────────────────────────────
+(function () {
+  const root = document.getElementById("em34Grid");
+  if (!root) return;
+
+  const SUCCESS = "#4caf50";
+  const RISK_C  = "#e57373";
+  const WARN    = "#ffc107";
+  const SOUL    = "#a78bfa";
+  const GOLD    = "#ffd700";
+
+  function em34Card(title, body, note, mode) {
+    const el = document.createElement("div");
+    el.className = "em34-card" + (mode === "accent" ? " em34-card--accent" : mode === "soul" ? " em34-card--soul" : "");
+    el.innerHTML = `<div class="em34-card-title">${title}</div>${body}` +
+      (note ? `<div class="em34-note">${note}</div>` : "");
+    return el;
+  }
+
+  // ── Card 1: Hollow vs Meaningful Progression ──────────────────────────────
+  root.appendChild(em34Card(
+    "01 — Hul vs Meningsfuld Progression",
+    `<div class="em34-compare">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Hul progression</div>
+        <ul class="em34-list">
+          <li class="em34-item">XP akkumuleres — eleven ved ikke hvad det repræsenterer</li>
+          <li class="em34-item">Levels stiger — men ingenting ændrer sig i forholdet til læring</li>
+          <li class="em34-item">Legendarisk item — sjælden fordi sjælden, ikke fordi earned</li>
+          <li class="em34-item">Achievement unlocked — ikke klart hvad det bekræfter</li>
+          <li class="em34-item">Streak vedligeholdt — af frygt, ikke af lyst</li>
+          <li class="em34-item">Samling komplet — kompulse, ikke ekspressiv</li>
+          <li class="em34-item">Eleven husker belønningerne — ikke det de lærte</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Meningsfuld progression</div>
+        <ul class="em34-list">
+          <li class="em34-item">XP markerer øjeblikke af ægte intellektuel kontakt</li>
+          <li class="em34-item">Levels er rejse-notation — stille registrering af vedvarende engagement</li>
+          <li class="em34-item">Legendarisk item — synligt bevis på dyb, vedvarende nysgerrighed</li>
+          <li class="em34-item">Achievement — et mønster er blevet synligt: eleven har gjort dette igen og igen</li>
+          <li class="em34-item">Streak vedligeholdt — fordi rytmen er behagelig og naturlig</li>
+          <li class="em34-item">Samling ekspressiv — et selvportræt af en læringsrejse</li>
+          <li class="em34-item">Eleven husker hvad de lærte — belønningerne var noter i marginen</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="em34-list">
+      <li class="em34-item"><strong>Den afgørende test:</strong> Hvis alle ekstern belønninger fjernedes i morgen — ville kernelearingen stadig være værd at gøre? Hvis svaret er "nej", er platformen bygget på tom stimulation.</li>
+      <li class="em34-item"><strong>DEN SEJE APP's svar skal være "ja".</strong> Spørgsmålene er interessante. Feedbacken er informativ. Fremgangen er reel. Belønningerne er behagelige acknowledgments — ikke årsagen.</li>
+    </ul>`,
+    "Stimulation uden mening er hult. Meningen er det der holder en elev investeret i et år — ikke dopamin-spydspidserne.",
+    "accent"
+  ));
+
+  // ── Card 2: Meaning Audit ─────────────────────────────────────────────────
+  root.appendChild(em34Card(
+    "02 — Menings-Audit: Hvad Kommunikerer Systemerne Implicit?",
+    `<table class="em34-table">
+      <thead><tr><th>System</th><th>Nuværende signal</th><th>Tilsigtet signal</th><th>Risiko</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>XP</td>
+          <td>Akkumulering</td>
+          <td>Videns-engagement</td>
+          <td>For let XP = "tilstedeværelse > forståelse"</td>
+          <td><span class="em34-pill em34-pill--ok">Aligned</span></td>
+        </tr>
+        <tr>
+          <td>Levels</td>
+          <td>Stigende tal</td>
+          <td>Rejse-notation</td>
+          <td>Level-up overlay læser som sejr, ikke som rejsemarkering</td>
+          <td><span class="em34-pill em34-pill--part">Delvis risiko</span></td>
+        </tr>
+        <tr>
+          <td>Mønter</td>
+          <td>Valuta — tjent, brugt</td>
+          <td>Ekspressiv kapacitet</td>
+          <td>Mønter = grind-ressource vs. mønter = kreativ kapacitet</td>
+          <td><span class="em34-pill em34-pill--part">Delvis risiko</span></td>
+        </tr>
+        <tr>
+          <td>Kosmetik</td>
+          <td>Visuel tilpasning</td>
+          <td>Identitets-forfatterskap</td>
+          <td>Hul completionism hvis items = checkboxes</td>
+          <td><span class="em34-pill em34-pill--ok">Mestendels aligned</span></td>
+        </tr>
+        <tr>
+          <td>Achievements</td>
+          <td>Milepæle</td>
+          <td>Refleksive markører for mønstre</td>
+          <td>Achievement-spam skaber støj; hvert achievement skal markere et mønster</td>
+          <td><span class="em34-pill em34-pill--ok">Mestendels aligned</span></td>
+        </tr>
+        <tr>
+          <td>Streaks</td>
+          <td>Konsistens</td>
+          <td>Rytme — bæredygtig lærings-kadence</td>
+          <td>Strejke-angst: brud føles som tab, ikke som invitation til at vende tilbage</td>
+          <td><span class="em34-pill em34-pill--risk">Risiko</span></td>
+        </tr>
+        <tr>
+          <td>Rarity</td>
+          <td>Knaphed</td>
+          <td>Dybde af engagement</td>
+          <td>Rarity som knaphed = casino; rarity som earned meaning = meningsfuld</td>
+          <td><span class="em34-pill em34-pill--part">Delvis risiko</span></td>
+        </tr>
+        <tr>
+          <td>Leaderboard</td>
+          <td>Sammenligning</td>
+          <td>Kontekst for lærings-fællesskabet</td>
+          <td>Mest sårbart over for fejltolkning som dominanshierarki</td>
+          <td><span class="em34-pill em34-pill--risk">Risiko</span></td>
+        </tr>
+      </tbody>
+    </table>`,
+    "Auditen identificerer to strukturelle risici (streaks, leaderboard) og to framing-risici (levels, rarity) der kræver eksplicit menings-arkitektur snarere end mekanisk redesign.",
+    null
+  ));
+
+  // ── Card 3: Prestige Philosophy ───────────────────────────────────────────
+  root.appendChild(em34Card(
+    "03 — Prestige-Filosofi: Hvad Betyder Det At Have Opnået Noget Her",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Definition</div>
+      <div class="em34-soul-text">Prestige i dette univers er ikke en påstand om overlegenhed. Det er synligt bevis på vedvarende nysgerrighed.</div>
+    </div>
+    <div class="em34-compare" style="margin-bottom:10px">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Prestige er IKKE</div>
+        <ul class="em34-list">
+          <li class="em34-item">Magt — legendarisk elev er ikke stærkere</li>
+          <li class="em34-item">Overlegenhed — høj prestige giver ikke ret til at se ned</li>
+          <li class="em34-item">Dominans — leaderboard-top er ikke en trone</li>
+          <li class="em34-item">Status-fælde — noget man skal beskytte eller forsvare</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Prestige ER</div>
+        <ul class="em34-list">
+          <li class="em34-item">Sammensat mestring — eleven har fundet sit fodfæste</li>
+          <li class="em34-item">Tankefuld vedholdenhed — eleven er blevet, ikke tvunget men valgt</li>
+          <li class="em34-item">Uddannelses-modenhed — eleven ved ikke bare fakta, men hvordan man lærer</li>
+          <li class="em34-item">Vedvarende nysgerrighed — eleven spørger stadig "hvorfor" ved niveau 200</li>
+          <li class="em34-item">Identitets-raffinement — loadouten er et selvportræt, ikke en trofæ-samling</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="em34-list">
+      <li class="em34-item"><strong>Visuelt sprog:</strong> Prestige kommunikeres via kompositorisk autoritet, ikke visuel lyd. Common: "at begynde her er allerede sammensat." Legendary: "stille excellence — without announcement."</li>
+      <li class="em34-item"><strong>Pacings-princip:</strong> Prestige bør akkumulere i tempoet af ægte læring — hverken for hurtigt (hult) eller for langsomt (frustrerende). En elev der genuint har engageret sig i tre måneder bør kunne mærke at deres fremgang er reel.</li>
+    </ul>`,
+    null,
+    "soul"
+  ));
+
+  // ── Card 4: Mastery Language ──────────────────────────────────────────────
+  root.appendChild(em34Card(
+    "04 — Mesterings-Sprog: Hvad Kompetence Ser Og Føles Som Her",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Definition</div>
+      <div class="em34-soul-text">Mestring her er ikke elimineringen af vanskelighed — det er udviklingen af en stabil, nysgerrig relation til vanskelighed.</div>
+    </div>
+    <div class="em34-quality-grid">
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Klarhed</div>
+        <div class="em34-quality-body">Eleven kan formulere hvad de ved og hvorfor. Ikke recitation — ægte forståelse.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Rolig selvtillid</div>
+        <div class="em34-quality-body">Eleven nærmer sig svære spørgsmål uden angst — ikke fordi de ved de vil svare rigtigt, men fordi de ved de kan tænke.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Stabil forståelse</div>
+        <div class="em34-quality-body">Viden der holder under pres, forbinder på tværs af domæner og uddybes med brug.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Tankefuld evne</div>
+        <div class="em34-quality-body">Eleven kan bruge sin viden — anvende, sætte spørgsmålstegn ved, udvide, overføre.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Resiliens</div>
+        <div class="em34-quality-body">Eleven behandler forkerte svar som information, ikke som domme. Den vigtigste mestrings-kvalitet.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Intellektuel ro</div>
+        <div class="em34-quality-body">Den mestrede elev destabiliseres ikke let af svære spørgsmål. Deres ligevægt er tjent, ikke performet.</div>
+      </div>
+    </div>
+    <ul class="em34-list">
+      <li class="em34-item"><strong>Hvad mestring IKKE er:</strong> Aggression mod andre eller materialet. Overmod. Perfektionisme (mestring er ikke 100% korrekte svar). Optimerings-obsession (den mestrede elev "gamer" ikke systemet for maks XP).</li>
+      <li class="em34-item"><strong>Systemernes rolle:</strong> Korrekt svar → stille anerkendelse. Forkert svar → informativt, ikke dømmeligt. Progression akkumulerer naturligt. Legendariske items repræsenterer engagement-dybde, ikke fejlfri performance.</li>
+    </ul>`,
+    null,
+    null
+  ));
+
+  // ── Card 5: Resilience Contract ───────────────────────────────────────────
+  root.appendChild(em34Card(
+    "05 — Resiliens-Kontrakten: Hvad Fejl Betyder I Dette Univers",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Kerneprinncip</div>
+      <div class="em34-soul-text">Et forkert svar er information. Det er aldrig en dom over elevens intelligens, værd eller potentiale.</div>
+    </div>
+    <div class="em34-compare">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Forbudte fejl-reaktioner</div>
+        <ul class="em34-list">
+          <li class="em34-item">Avatar viser et trist eller skuffet udtryk</li>
+          <li class="em34-item">Feedback-tekst: "Øv!", "Desværre!", "Åh nej!"</li>
+          <li class="em34-item">Lyd der antyder fiasko (trist trompet)</li>
+          <li class="em34-item">Streak-tæller synligt faldende med animation</li>
+          <li class="em34-item">Pop-up: "giv ikke op!" — antyder eleven overvejede at give op</li>
+          <li class="em34-item">Reduktion i XP ved retry — straffer den vigtigste lærings-adfærd</li>
+          <li class="em34-item">Visuelt der dvæler ved den forkerte tilstand</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Hvad fejl betyder</div>
+        <ul class="em34-list">
+          <li class="em34-item"><strong>Iteration:</strong> eleven prøvede én vej; systemet viste en anden</li>
+          <li class="em34-item"><strong>Udforskning:</strong> eleven engagerede sig med ægte usikkerhed</li>
+          <li class="em34-item"><strong>Vedholdenhed:</strong> eleven er her stadig, prøver stadig</li>
+          <li class="em34-item"><strong>Lærings-rytme:</strong> fejl og korrektioner skaber produktiv kamp</li>
+          <li class="em34-item"><strong>Vækst:</strong> eleven der svarer forkert og derefter rigtigt har lært mere end den der svarede rigtigt én gang</li>
+        </ul>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Streak-Resiliens</div>
+      <div style="font-size:10px;color:var(--text-main);line-height:1.5">
+        <strong>Afvist:</strong> "Du mistede din 14-dages streak 😢"<br>
+        <strong>Foretrukket:</strong> "Din aktivitets-rytme starter igen fra i dag"<br><br>
+        Platformen ved ikke om elevens fravær skyldes sygdom, krise eller valg. Den behandler alle returnerende elever ens: med ro, uden drama.
+      </div>
+    </div>`,
+    "Det at vende tilbage efter fiasko er mere værdifuldt end aldrig at fejle. Systemet skal kommunikere dette — ikke bare undlade at straffe det.",
+    "accent"
+  ));
+
+  // ── Card 6: Collection & Cosmetic Meaning ────────────────────────────────
+  root.appendChild(em34Card(
+    "06 — Samlings-Mening: Kosmetik Som Selvportræt",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Definition</div>
+      <div class="em34-soul-text">En samling er et selvportræt af en læringsrejse — ikke en trofæ-samling.</div>
+    </div>
+    <table class="em34-table">
+      <thead><tr><th>Kosmetik-kategori</th><th>Symbolsk betydning</th></tr></thead>
+      <tbody>
+        <tr><td>Krone</td><td>Intellektuel aspiration — eleven placerer noget over sin tænkning, symboliserer hvad de stræber mod</td></tr>
+        <tr><td>Kappe</td><td>Beskyttelse og bevægelse — eleven bærer sin læringsrejse med sig</td></tr>
+        <tr><td>Rustning</td><td>Resiliens — eleven har udviklet en beskyttende relation til vanskelighed</td></tr>
+        <tr><td>Aura</td><td>Miljø-tilstedeværelse — elevens intellektuelle engagement er begyndt at påvirke rummet omkring dem</td></tr>
+        <tr><td>Briller</td><td>Klarhed og skelneevne — eleven har udviklet skarpere måder at se på</td></tr>
+        <tr><td>Ryg-item</td><td>Ekspressiv udvidelse — eleven rækker ud over deres umiddelbare form</td></tr>
+        <tr><td>Ansigts-item</td><td>Præsentation — hvordan eleven vælger at møde verden i dette læringsrum</td></tr>
+      </tbody>
+    </table>
+    <div class="em34-compare">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Samling er IKKE</div>
+        <ul class="em34-list">
+          <li class="em34-item">Completion-afhængighed — compulsive completion</li>
+          <li class="em34-item">Ejerskabs-pralereri mod andre elever</li>
+          <li class="em34-item">Hoarding-psykologi — urgency til at skaffe alt</li>
+          <li class="em34-item">FOMO — intet item er "begrænset" på en angstskabende måde</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Legendarisk mening</div>
+        <ul class="em34-list">
+          <li class="em34-item">Følelse: "dette passer til mig" — ikke "jeg fik endelig det sjældne"</li>
+          <li class="em34-item">Identitets-sprog: "sådan ser min avatar ud nu"</li>
+          <li class="em34-item">Visuelt: varm guld-ambient, fuld symbolsk vokabular — komposure</li>
+          <li class="em34-item">Emotionelt: at iføre sig noget der passer — ikke at vise et trofæ</li>
+        </ul>
+      </div>
+    </div>`,
+    null,
+    null
+  ));
+
+  // ── Card 7: Long-Term Growth Philosophy ──────────────────────────────────
+  root.appendChild(em34Card(
+    "07 — Langsigtet Vækst: Uddybning, Ikke Inflation",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Definition</div>
+      <div class="em34-soul-text">Vækst her er ikke inflation — det er uddybning. Eleven på niveau 300 er ikke en mere kraftfuld udgave af niveau 1-eleven. De er en mere rolig, mere kompetent, mere ekspressiv udgave.</div>
+    </div>
+    <div class="em34-quality-grid">
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Roligere</div>
+        <div class="em34-quality-body">Langtids-elever nærmer sig spørgsmål med mindre angst. Platformen har lært dem at usikkerhed er midlertidig.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Mere sammensat</div>
+        <div class="em34-quality-body">Eleven har udviklet en stabil relation til vanskelighed. De skynder sig ikke, panikker ikke.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Mere kapabel</div>
+        <div class="em34-quality-body">Eleven kan gøre ting med viden de ikke kunne før — anvende, overføre, sætte spørgsmålstegn.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Mere ekspressiv</div>
+        <div class="em34-quality-body">Elevens loadout-valg er mere intentionelle. De ved hvad de vil se ud som her.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Mere selvsikker</div>
+        <div class="em34-quality-body">Selvtillid tjent via demonstreret evne — ikke påstået via rang eller rarity.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Mere raffineret</div>
+        <div class="em34-quality-body">Langtids-elevens visuelle identitet er mere komplet, mere overvejet, mere sammenhængende.</div>
+      </div>
+    </div>
+    <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:9px;font-weight:bold;color:var(--text-label);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Vækst-Kurve Anti-Eskalering</div>
+      <div style="font-size:10px;color:var(--text-main);line-height:1.5">
+        Tidlig vækst: hurtig og synlig — opdagelses-fasen.<br>
+        Midterste vækst: aftager visuelt men uddybes kvalitativt.<br>
+        Langsigtet vækst: stille — eleven har fundet sin rytme. Nye kosmetikker og levels ankommer som naturlige ledsagere.<br><br>
+        <strong>Anti-pattern:</strong> Eskalerende kurver der kræver mere og mere indsats for samme synlige fremgang — det er grind-psykologi.
+      </div>
+    </div>`,
+    "Test: En elev på niveau 200 bør finde quizzen ligeså intrinsisk engagerende som på niveau 1 — ikke på grund af novelty, men på grund af kvalitet.",
+    null
+  ));
+
+  // ── Card 8: Intrinsic vs Extrinsic Motivation ────────────────────────────
+  root.appendChild(em34Card(
+    "08 — Intrinsisk vs Ekstrinsisk Motivation",
+    `<div class="em34-compare" style="margin-bottom:14px">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Ekstrinsisk (risiko)</div>
+        <div style="font-size:10px;color:var(--text-main);line-height:1.5;margin-bottom:8px">Eleven lærer for at få XP, mønter, kosmetikker og streaks. Fjern belønningerne, og de stopper.</div>
+        <ul class="em34-list">
+          <li class="em34-item">For hyppige reward-animationer afbryder kognitiv flow</li>
+          <li class="em34-item">Micro-rewards træner eleven til at forvente betaling for hver tanke</li>
+          <li class="em34-item">Streak-pres konverterer en intrinsisk rytme til en ekstrinsisk forpligtelse</li>
+          <li class="em34-item">Leaderboard-prominens gør sammenligning til standardlinsen</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Intrinsisk (mål)</div>
+        <div style="font-size:10px;color:var(--text-main);line-height:1.5;margin-bottom:8px">Eleven lærer fordi forståelsens akt er tilfredsstillende. Belønningerne er behagelige anerkendelser — ikke årsagen.</div>
+        <ul class="em34-list">
+          <li class="em34-item"><strong>Spørgsmåls-kvalitet:</strong> det stærkeste intrinsiske motivations-håndtag i platformen</li>
+          <li class="em34-item"><strong>Feedback som læring:</strong> korrekt svar efter fejl = en lille åbenbaring</li>
+          <li class="em34-item"><strong>Rolig vedholdenhed:</strong> intet angst-element crowder intrinsisk fokus ud</li>
+          <li class="em34-item"><strong>Identitets-investering:</strong> ægte æstetiske valg = ejerskab = intrinsisk engagement</li>
+          <li class="em34-item"><strong>Fremgangs-synlighed:</strong> XP og levels føles proportionale med ægte engagement</li>
+        </ul>
+      </div>
+    </div>
+    <ul class="em34-list">
+      <li class="em34-item"><strong>Ekstrinsiske belønninger skal kalibreres til at anerkende uden at overvælde</strong> — de er en note i marginen, ikke begivenheden.</li>
+      <li class="em34-item"><strong>Den vigtigste intrinsiske motor er spørgsmåls-kvaliteten</strong> — mere kraftfuld end ethvert reward-system. Hvis spørgsmålene er genuint interessante, ønsker eleven svaret før de ved hvilken XP de får.</li>
+    </ul>`,
+    null,
+    "accent"
+  ));
+
+  // ── Card 9: Educational Worldview — The Soul ─────────────────────────────
+  root.appendChild(em34Card(
+    "09 — Det Uddannelsesmæssige Verdenssyn: Platformens Sjæl",
+    `<div class="em34-soul-block">
+      <div class="em34-soul-label">Den elev dette univers beundrer</div>
+      <div class="em34-soul-text">Ikke den hurtigste. Ikke den mest korrekte. Ikke den højest rangerede. Men den elev der forbliver nysgerrig over for vanskelighed — og vender tilbage efter fravær.</div>
+    </div>
+    <div class="em34-quality-grid" style="margin-bottom:14px">
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Beundrede kvaliteter</div>
+        <div class="em34-quality-body">Vedvarende uden at være kompulsiv. Nysgerrig uden at være ængstelig. Selvsikker uden at være arrogant. Reflekterende uden at være selvkritisk.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Meningsfuld fremgang</div>
+        <div class="em34-quality-body">Synlig i: større lethed med ukendte spørgsmål. Mere overvejet æstetik. Roligere engagement med svært materiale. Fortrolighed med læringsrummet.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Hvad visdom ligner</div>
+        <div class="em34-quality-body">Ikke et højt niveau eller en legendarisk loadout. Det er en kvalitet i engagement: at nærme sig spørgsmål med nysgerrighed snarere end performance-angst.</div>
+      </div>
+      <div class="em34-quality-cell">
+        <div class="em34-quality-title">Hvad gør nogen legendarisk</div>
+        <div class="em34-quality-body">Ikke den med mest XP. Men den der har bygget en bæredygtig, meningsfuld relation til læring — og stadig er nysgerrig ved niveau 200.</div>
+      </div>
+    </div>
+    <div class="em34-soul-block">
+      <div class="em34-soul-label">Platformens dybeste løfte</div>
+      <div class="em34-soul-text">DEN SEJE APP lover ikke at gøre eleven til den bedste. Den lover at gøre læringsrejsen værd at tage — og at den studerende der er her om tre år vil se tilbage og mærke at de voksede.</div>
+    </div>`,
+    null,
+    "soul"
+  ));
+
+  // ── Card 10: Anti-Addiction & Future Ethics ───────────────────────────────
+  root.appendChild(em34Card(
+    "10 — Anti-Afhængigheds-Arkitektur & Fremtidens Etik",
+    `<div class="em34-compare">
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${RISK_C}">Forbudte mekanikker</div>
+        <ul class="em34-list">
+          <li class="em34-item">Variable ratio-belønninger — ingen "frugtautomat"-timing</li>
+          <li class="em34-item">Tab-aversion — ingen mekanik der gør eleven bange for at miste akkumuleret</li>
+          <li class="em34-item">Kunstig knaphed — ingen "begrænset tid"-items</li>
+          <li class="em34-item">Social sammenligning-pres — ingen rank-som-våben</li>
+          <li class="em34-item">Sunk cost-udnyttelse — ingen "du har allerede investeret X, bliv"</li>
+          <li class="em34-item">Ufuldstændige loops — ingen deliberat ufuldstændig samling</li>
+          <li class="em34-item">Skyld-mekanik — ingen system der straffer fravær emotionelt</li>
+        </ul>
+      </div>
+      <div class="em34-compare-col">
+        <div class="em34-compare-heading" style="color:${SUCCESS}">Sund engagement</div>
+        <ul class="em34-list">
+          <li class="em34-item">Eleven kan stoppe til enhver tid uden at miste noget</li>
+          <li class="em34-item">Eleven vender tilbage efter langt fravær uden angst</li>
+          <li class="em34-item">Elevens motivation stiger over tid pga. ægte evne-vækst</li>
+          <li class="em34-item">En forælder der ser eleven bruge platformen ser fokuseret, roligt engagement</li>
+          <li class="em34-item">En lærer der anbefaler platformen føler tillid til dens integritet</li>
+        </ul>
+      </div>
+    </div>
+    <table class="em34-table">
+      <thead><tr><th>Etisk dimension</th><th>Forpligtelse</th></tr></thead>
+      <tbody>
+        <tr><td>Uddannelsesmæssig værdighed</td><td>Hvert systems belønninger skal føles meningsfulde fordi de er tjent via ægte engagement — ikke via psykologiske tricks</td></tr>
+        <tr><td>Lærer-tillid</td><td>Lærere der anbefaler platformen gør en professionel vurdering af dens integritet. Platformen skal honørere den tillid.</td></tr>
+        <tr><td>Symbolsk sundhed</td><td>Prestige-vokabular (rarity, achievement, level) forbliver uddannelses-læsbart i år 5. Symbol-inflation er en aktiv risiko.</td></tr>
+        <tr><td>Langsigtet bæredygtighed</td><td>Test: en elev der har brugt platformen i 3 år — føler de sig beriget eller udtømt? Nysgerrig eller habitueret?</td></tr>
+      </tbody>
+    </table>
+    <ul class="em34-list">
+      <li class="em34-item"><strong>Den absolutte forpligtelse:</strong> DEN SEJE APP vil aldrig bruge psykologiske tvangsmidler — selv hvis de demonstrabelbart ville øge engagement-metrics.</li>
+      <li class="em34-item"><strong>Menings-arkitekturen er et constraint</strong> på feature-udvikling, ikke blot et filosofi-dokument. Hvis et nyt system ikke kan bestå MEANING_TEST's ni spørgsmål, hører det ikke hjemme her.</li>
+    </ul>`,
+    "Den bedste test for et uddannelses-system: fjern alle ekstern belønninger. Er kernelearingen stadig værd at gøre? Svaret i DEN SEJE APP skal altid være ja.",
+    "accent"
   ));
 
 }());
