@@ -37,19 +37,61 @@ function normalizeContent(raw: any, answer_format: string) {
       throw new Error("MC question missing valid options");
     }
 
-    return {
-      question,
-      options,
-      correct,
-      review_text,
-    };
+    return { question, options, correct, review_text };
   }
 
-  return {
-    question,
-    correct,
-    review_text,
-  };
+  return { question, correct, review_text };
+}
+
+// Wave-aware scoring: higher score = preferred for this wave phase.
+// Questions without metadata score 0 — no preference, existing order preserved.
+function getWaveScore(metadata: any, wavePhase: string, lastMisconceptionType: string | null): number {
+  if (!metadata || typeof metadata !== "object") return 0;
+
+  const difficultyType  = metadata.difficulty_type  ?? null;
+  const cognitiveSkill  = metadata.cognitive_skill  ?? null;
+  const misconceptionType = metadata.misconception_type ?? null;
+  let score = 0;
+
+  switch (wavePhase) {
+    case "recovery":
+      // Prefer factual/recall to restore confidence after repeated mistakes
+      if (difficultyType === "factual") score += 10;
+      if (cognitiveSkill === "recall")  score += 5;
+      // Bonus: targeted recovery — same misconception type at factual level
+      if (lastMisconceptionType && misconceptionType === lastMisconceptionType) score += 8;
+      break;
+
+    case "reinforcement":
+      // Prefer conceptual/comprehension to consolidate after one mistake
+      if (difficultyType === "conceptual")    score += 8;
+      if (cognitiveSkill === "comprehension") score += 5;
+      break;
+
+    case "deep_challenge":
+      // Prefer analytical/synthesis after sustained correct streak
+      if (difficultyType === "analytical") score += 10;
+      if (difficultyType === "applied")    score += 7;
+      if (cognitiveSkill === "synthesis" || cognitiveSkill === "evaluation") score += 5;
+      break;
+
+    case "challenge":
+    default:
+      // Slight preference for conceptual/applied — balanced mid-difficulty
+      if (difficultyType === "conceptual" || difficultyType === "applied") score += 3;
+      break;
+  }
+
+  return score;
+}
+
+function sortByWave(questions: any[], wavePhase: string, lastMisconceptionType: string | null): any[] {
+  if (wavePhase === "challenge") return questions; // No reordering in neutral phase
+  return [...questions].sort((a, b) => {
+    const aScore = getWaveScore(a.metadata, wavePhase, lastMisconceptionType);
+    const bScore = getWaveScore(b.metadata, wavePhase, lastMisconceptionType);
+    return bScore - aScore; // Descending: highest score = first
+  });
 }
 
 serve(async (req) => {
@@ -78,9 +120,14 @@ serve(async (req) => {
     const student_id = user.id;
 
     const body = await req.json().catch(() => ({}));
-    const lastQuestionId = body?.last_question_id ?? null;
+    const lastQuestionId      = body?.last_question_id ?? null;
+    const sessionContext      = body?.session_context ?? null;
+    const wavePhase           = (sessionContext?.wave_phase as string) ?? "challenge";
+    const lastMisconceptionType = (sessionContext?.last_misconception_type as string | null) ?? null;
 
-    // 🔥 1. DUE QUESTIONS
+    console.log("WAVE:", { wavePhase, lastMisconceptionType });
+
+    // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
       .select(`
@@ -101,7 +148,15 @@ serve(async (req) => {
 
     if (dueError) throw dueError;
 
-    for (const instance of dueInstances || []) {
+    // For due instances, apply wave ordering — spaced repetition still wins over new questions
+    // but within the due pool we prefer wave-appropriate questions first.
+    const sortedDue = sortByWave(
+      (dueInstances || []).filter(i => i.questions),
+      wavePhase,
+      lastMisconceptionType
+    );
+
+    for (const instance of sortedDue) {
       const q = instance.questions;
       if (!q) continue;
 
@@ -116,6 +171,7 @@ serve(async (req) => {
             answer_format: format,
             answer_type: q.answer_type || "short",
             metadata: q.metadata ?? null,
+            wave_phase: wavePhase,
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -127,7 +183,7 @@ serve(async (req) => {
       }
     }
 
-    // 🔥 2. NEW QUESTIONS
+    // 🔥 2. NEW QUESTIONS — wave-aware sorting determines which new question to introduce
     const { data: questions, error: questionError } = await supabase
       .from("questions")
       .select("id, content, answer_format, answer_type, metadata")
@@ -135,9 +191,13 @@ serve(async (req) => {
 
     if (questionError) throw questionError;
 
+    // Sort candidate questions by wave preference before attempting insertion.
+    // Questions without metadata score 0 and preserve their original order.
+    const sortedQuestions = sortByWave(questions || [], wavePhase, lastMisconceptionType);
+
     let inserted = null;
 
-    for (const q of questions || []) {
+    for (const q of sortedQuestions) {
       if (!q.content) continue;
 
       let format: string;
@@ -187,6 +247,7 @@ serve(async (req) => {
         answer_format: inserted.format,
         answer_type: inserted.question?.answer_type || "short",
         metadata: inserted.question?.metadata ?? null,
+        wave_phase: wavePhase,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

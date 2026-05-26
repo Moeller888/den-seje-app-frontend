@@ -204,6 +204,7 @@ serve(async (req) => {
           status: isCorrect ? "correct" : "incorrect",
           correct_answer,
           review_text: isCorrect ? null : reviewText,
+          misconception_type: isCorrect ? null : misconceptionType,
         }),
         { status: 200, headers: corsHeaders }
       )
@@ -271,6 +272,7 @@ serve(async (req) => {
         status,
         correct_answer: rpcData?.correct_answer ?? correct_answer,
         review_text: status === "incorrect" ? reviewText : null,
+        misconception_type: status === "incorrect" ? misconceptionType : null,
       }),
       { status: 200, headers: corsHeaders }
     )
