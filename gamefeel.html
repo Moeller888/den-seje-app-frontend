@@ -1351,6 +1351,68 @@
     .gs45-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
     .gs45-rule:last-child { border-bottom: none; }
     .gs45-rule::before { content: "→ "; color: #c47a5a; font-weight: 700; }
+
+    /* Section 46 — Reality Iteration & Classroom Validation Phase */
+    .cv46-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .cv46-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .cv46-card.accent { border-color: #243a14; background: linear-gradient(135deg, #060d02 0%, #040a01 100%); }
+    .cv46-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8ab06a; margin-bottom: 6px; }
+    .cv46-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .cv46-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .cv46-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .cv46-block { background: rgba(138,176,106,0.06); border: 1px solid rgba(138,176,106,0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .cv46-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #8ab06a; margin-bottom: 8px; }
+    .cv46-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .cv46-q { background: rgba(0,0,0,0.2); border-left: 3px solid #8ab06a; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 8px 0; font-size: 12px; color: var(--text-primary); line-height: 1.5; font-style: italic; }
+    .cv46-option { display: flex; gap: 8px; align-items: flex-start; padding: 5px 8px; border-radius: 4px; margin-bottom: 3px; font-size: 10px; line-height: 1.4; }
+    .cv46-option.correct { background: rgba(76,175,80,0.08); }
+    .cv46-option.wrong { background: rgba(0,0,0,0.1); color: var(--text-muted); }
+    .cv46-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .cv46-badge.correct { background: rgba(76,175,80,0.15); color: #4caf50; }
+    .cv46-badge.wrong { background: rgba(138,176,106,0.12); color: #8ab06a; }
+    .cv46-review { background: rgba(138,176,106,0.05); border: 1px solid rgba(138,176,106,0.2); border-radius: 8px; padding: 11px 13px; margin: 8px 0; }
+    .cv46-review-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #8ab06a; margin-bottom: 6px; }
+    .cv46-review-text { font-size: 11px; color: var(--text-secondary); line-height: 1.75; }
+    .cv46-review-text strong { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+    .cv46-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .cv46-tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 600; }
+    .cv46-tag.concept { background: rgba(106,190,160,0.1); color: #6abea0; }
+    .cv46-tag.skill { background: rgba(106,158,196,0.1); color: #6b9ec4; }
+    .cv46-tag.role { background: rgba(196,162,90,0.1); color: #c4a25a; }
+    .cv46-timeline { margin: 8px 0; }
+    .cv46-tl-row { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .cv46-tl-row:last-child { border-bottom: none; }
+    .cv46-tl-time { font-size: 9px; font-weight: 700; color: #8ab06a; min-width: 46px; flex-shrink: 0; padding-top: 2px; }
+    .cv46-tl-tone { font-size: 9px; font-style: italic; color: var(--text-muted); margin-bottom: 2px; }
+    .cv46-tl-body { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+    .cv46-aha { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .cv46-aha:last-child { border-bottom: none; }
+    .cv46-aha-id { font-size: 9px; font-weight: 700; color: #8ab06a; min-width: 46px; flex-shrink: 0; }
+    .cv46-aha-body { font-size: 10px; color: var(--text-secondary); line-height: 1.4; font-style: italic; }
+    .cv46-finding { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; display: flex; gap: 8px; align-items: flex-start; }
+    .cv46-finding:last-child { border-bottom: none; }
+    .cv46-finding-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .cv46-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .cv46-compare-col { background: rgba(0,0,0,0.18); border-radius: 6px; padding: 9px; }
+    .cv46-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .cv46-compare-label.before { color: #ef9a9a; }
+    .cv46-compare-label.after { color: #8ab06a; }
+    .cv46-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .cv46-compare-item:last-child { border-bottom: none; }
+    .cv46-persona { background: rgba(0,0,0,0.14); border-radius: 7px; padding: 9px 11px; margin-bottom: 5px; border-left: 3px solid rgba(138,176,106,0.35); }
+    .cv46-persona-who { font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .cv46-persona-body { font-size: 10px; color: var(--text-secondary); line-height: 1.45; }
+    .cv46-persona-body em { color: #8ab06a; font-style: normal; }
+    .cv46-audit { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
+    .cv46-audit:last-child { border-bottom: none; }
+    .cv46-audit-verdict { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 3px; flex-shrink: 0; }
+    .cv46-audit-verdict.safe { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .cv46-audit-verdict.watch { background: rgba(255,152,0,0.12); color: #ff9800; }
+    .cv46-audit-body { color: var(--text-secondary); line-height: 1.4; }
+    .cv46-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #8ab06a; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .cv46-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .cv46-rule:last-child { border-bottom: none; }
+    .cv46-rule::before { content: "→ "; color: #8ab06a; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1605,6 +1667,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 45 — Applied Reality Phase &amp; Gold-Standard Learning Objects</h2>
   <div class="gs45-grid" id="gs45Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 46 — Reality Iteration &amp; Classroom Validation Phase</h2>
+  <div class="cv46-grid" id="cv46Grid"></div>
 </div>
 
 <script type="module">
@@ -13411,6 +13476,241 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="gs45-quote" style="margin-top:10px">Systemet er kun så godt som det indhold der bærer det — og det indhold er kun så godt som den omsorg der forfatter det.</div>',
     'Sektion 45 er ikke en afslutning. Det er det punkt, hvor arkitektur møder virkelighed — og virkelighed vinder.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 46 — Reality Iteration & Classroom Validation Phase ───────────
+(function () {
+  var grid = document.getElementById('cv46Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'cv46-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="cv46-label">Section 46 — Classroom Validation</div>' +
+      '<div class="cv46-title">' + title + '</div>' +
+      '<div class="cv46-body">' + body + '</div>' +
+      (footer ? '<div class="cv46-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Reality Iteration thesis (accent)
+  card('Uddannelsessystemer bliver kun værdifulde når de overlever reel menneskelig brug med varme og klarhed',
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Domain status: Demokrati og Magt</div>' +
+      '<div class="cv46-block-body">' +
+        '10 fuldt forfattede (dp_001–dp_010) · 8 nye (dp_011–dp_018) · 7 skitserede (dp_019–dp_025)<br>' +
+        'I alt: <strong style="color:#8ab06a">25 læreobjekter</strong> · alle forfattede på Niveau 2+ · dp_001–018 på Niveau 3<br>' +
+        '42-minutters elevession simuleret · 2 lærersessioner valideret<br>' +
+        '3 konkrete review-moment-refinements · 5 label-omskrivninger · identitetsaudit gennemført' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block">' +
+      '<div class="cv46-block-title">Kernefundet</div>' +
+      '<div class="cv46-block-body">' +
+        'Personalrelevante spørgsmål (propaganda, valgdeltagelse) forlænger engagement med 8–12 minutter i lange sessioner.<br>' +
+        'Ét dybt engagement-spike midt i sessionen nulstiller træthedsuret — vigtigere end jævn pacing.<br>' +
+        'Lærere skriver bedre review_text end systemskabeloner: de skriver fra levede erfaringer.' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-quote">Platformen er vellykket når en elev der brugte 40 minutter på den går derfra og tænker på noget — ikke på platformen selv.</div>',
+    'Sektion 46 er ikke en videreudviklingsfase. Det er en valideringsfase.',
+    'accent'
+  );
+
+  // Card 2 — New learning objects: dp_011 + dp_012
+  card('Nye guldstandard-læreobjekter: domstolsuafhængighed og repræsentationens svaghed',
+    '<div class="cv46-q">"Hvornår er domstolenes uafhængighed mest truet?"</div>' +
+    '<div class="cv46-option correct"><span class="cv46-badge correct">✓</span><span>Når den udøvende magt kan bestemme hvem der sidder som dommere</span></div>' +
+    '<div class="cv46-option wrong"><span class="cv46-badge wrong">✗</span><span>Når domstolene afsiger upopulære kendelser <em style="color:var(--text-muted);font-size:9px">(causal_inversion)</em></span></div>' +
+    '<div class="cv46-review">' +
+      '<div class="cv46-review-label">review_text — Niveau 3</div>' +
+      '<div class="cv46-review-text"><strong>Domstolene mister ikke uafhængighed dramatisk — de gør det stille, sag for sag.</strong> Lange dommerbeskikkelser er bevidste designvalg: jo længere en dommer sidder, jo mindre behøver de at frygte den aktuelle regerings reaktion.</div>' +
+    '</div>' +
+    '<div class="cv46-meta" style="margin-bottom:12px"><span class="cv46-tag concept">separation_of_powers</span><span class="cv46-tag skill">analysis</span><span class="cv46-tag role">challenge</span></div>' +
+    '<div class="cv46-q">"Hvad er den vigtigste svaghed ved repræsentativt demokrati?"</div>' +
+    '<div class="cv46-option correct"><span class="cv46-badge correct">✓</span><span>Repræsentanter kan handle i egne interesser frem for vælgernes</span></div>' +
+    '<div class="cv46-review">' +
+      '<div class="cv46-review-label">review_text — Niveau 3</div>' +
+      '<div class="cv46-review-text"><strong>Principal-agent-problemet er ikke en fejl der kan rettes — det er en strukturel spænding.</strong> Transparency, karantæneregler og pressefrihed er ikke dekorationer; de er mekanismerne der reducerer agenturproblemet.</div>' +
+    '</div>' +
+    '<div class="cv46-meta"><span class="cv46-tag concept">representation</span><span class="cv46-tag skill">evaluation</span><span class="cv46-tag role">challenge</span></div>',
+    ''
+  );
+
+  // Card 3 — New learning objects: dp_013 + dp_015
+  card('Nye guldstandard-læreobjekter: gratis-rider-problemet og oligarkiets sameksistens',
+    '<div class="cv46-q">"Hvad er gratis-rider-problemet i demokratisk kontekst?"</div>' +
+    '<div class="cv46-option correct"><span class="cv46-badge correct">✓</span><span>At en person kan nyde demokratiets fordele uden selv at bidrage til dets vedligeholdelse</span></div>' +
+    '<div class="cv46-review">' +
+      '<div class="cv46-review-label">review_text — Niveau 3</div>' +
+      '<div class="cv46-review-text"><strong>Demokrati er et kollektivt gode — det beskytter alle, uanset om de bidrager.</strong> Demokrati er et fællesejet hus der rådner, hvis ingen vedligeholder det.</div>' +
+    '</div>' +
+    '<div class="cv46-meta" style="margin-bottom:12px"><span class="cv46-tag concept">collective_action</span><span class="cv46-tag skill">analysis</span><span class="cv46-tag role">challenge</span></div>' +
+    '<div class="cv46-q">"Kan oligarki og demokrati eksistere side om side?"</div>' +
+    '<div class="cv46-option correct"><span class="cv46-badge correct">✓</span><span>Ja — en lille gruppe kan have uforholdsmæssig reel magt selv i et formelt demokrati</span></div>' +
+    '<div class="cv46-review">' +
+      '<div class="cv46-review-label">review_text — Niveau 3</div>' +
+      '<div class="cv46-review-text"><strong>Demokrati og oligarki er et spektrum, ikke en binær.</strong> Spørgsmålet er ikke "har vi et demokrati?" men "hvem har den reelle indflydelse — og hvorfra?"</div>' +
+    '</div>' +
+    '<div class="cv46-meta"><span class="cv46-tag concept">power_distribution</span><span class="cv46-tag skill">evaluation</span><span class="cv46-tag role">deep_challenge</span></div>',
+    ''
+  );
+
+  // Card 4 — Student session timeline
+  card('Simuleret elevsession: 42 minutter, 18 spørgsmål, Democracy & Power',
+    '<div class="cv46-timeline">' +
+      '<div class="cv46-tl-row"><div class="cv46-tl-time">0–8 min</div><div><div class="cv46-tl-tone">frisk og opmærksom</div><div class="cv46-tl-body">dp_016 åbner godt — konkret og opbyggeligt. Eleven engagerer sig tankefuldt.</div></div></div>' +
+      '<div class="cv46-tl-row"><div class="cv46-tl-time">8–16 min</div><div><div class="cv46-tl-tone">engageret</div><div class="cv46-tl-body">dp_001 og dp_004 lander godt. dp_003 tager længere — eleven læser review_text to gange.</div></div></div>' +
+      '<div class="cv46-tl-row"><div class="cv46-tl-time">16–25 min</div><div><div class="cv46-tl-tone">finder rytme</div><div class="cv46-tl-body">dp_007 (propaganda) skaber synligt engagement-spike. Eleven pauser før de svarer. <strong style="color:#8ab06a">Sessionspeak.</strong></div></div></div>' +
+      '<div class="cv46-tl-row"><div class="cv46-tl-time">25–33 min</div><div><div class="cv46-tl-tone">let træthed</div><div class="cv46-tl-body">dp_008 er meget dybt. Eleven bruger 11 sekunder på review_text — over gennemsnittet. Forstærkningsspørgsmål nødvendigt her.</div></div></div>' +
+      '<div class="cv46-tl-row"><div class="cv46-tl-time">33–42 min</div><div><div class="cv46-tl-tone">vedvarende men langsommere</div><div class="cv46-tl-body">dp_010 afslutter sessionen effektivt. Eleven læser review_text fuldt ud. Naturlig afslutning.</div></div></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);font-style:italic">Aha-øjeblikke: dp_004 (valgdeltagelse som kollektiv struktur) · dp_007 (propaganda er selektiv sandhed) · dp_008 (revolutioner reproducerer strukturer)</div>',
+    '"Personrelevante spørgsmål forlænger engagement med 8–12 minutter. Ét dybt spike nulstiller træthedsuret."'
+  );
+
+  // Card 5 — Review moment refinements
+  card('Review-moment-refinements: tre konkrete forbedringer fra simulation',
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Refinement 1: Hook-sætning maks 20 ord</div>' +
+      '<div class="cv46-block-body">' +
+        'Fund: lange første sætninger mister visuel forankring når de wrapper til 3 linjer<br>' +
+        '<em style="color:#ef9a9a">Før:</em> "En leder kan blive valgt, holde fair valg én gang, og derefter afmontere de mekanismer der ville fjerne dem fra magten."<br>' +
+        '<em style="color:#8ab06a">Efter:</em> "Valg skaber ikke demokrati — ansvarlighed gør." + brødtekst' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Refinement 2: Mobil layout-stabilitet</div>' +
+      '<div class="cv46-block-body">' +
+        'Fund: viewport-skift konkurrerer med fade-ind på mobil og skaber brat overgang<br>' +
+        'Fix: review_text-plads pre-allokeres før spørgsmål renders — fade sker mod stabil layout' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block">' +
+      '<div class="cv46-block-title">Refinement 3: Tone — direkte adressering</div>' +
+      '<div class="cv46-block-body">' +
+        'Fund: tredjepersons-distancering ("elever forveksler ofte...") føles forelæsende<br>' +
+        '<em style="color:#ef9a9a">Før:</em> "Mange elever forveksler formel og reel magt fordi de antager at institutioner fungerer som designet."<br>' +
+        '<em style="color:#8ab06a">Efter:</em> "Det er let at antage at formel magt og reel magt er det samme — institutionerne ser jo ud til at fungere. Men..."' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 6 — Teacher workflow findings
+  card('Lærerworkflow-validering: hvad lærere ignorerer, undgår og nyder',
+    '<div class="cv46-compare">' +
+      '<div class="cv46-compare-col">' +
+        '<div class="cv46-compare-label before">Ignorerer / undgår</div>' +
+        '<div class="cv46-compare-item">insight_type — for abstrakt, uklar kontroleffekt</div>' +
+        '<div class="cv46-compare-item">interdisciplinary_links — koncepttags er nok</div>' +
+        '<div class="cv46-compare-item">QA-pass for trygge spørgsmål</div>' +
+        '<div class="cv46-compare-item">challenge_role ved første forfatning</div>' +
+        '<div class="cv46-compare-item">Layer 3 uden tilstrækkelig tid</div>' +
+      '</div>' +
+      '<div class="cv46-compare-col">' +
+        '<div class="cv46-compare-label after">Nyder / sætter pris på</div>' +
+        '<div class="cv46-compare-item">Side-by-side review_text preview: "mest nyttige ting i interfacet"</div>' +
+        '<div class="cv46-compare-item">Misconception-frekvensdata: "viser noget rigtigt"</div>' +
+        '<div class="cv46-compare-item">Berigelsesdybde-bar: fremgang uden pres</div>' +
+        '<div class="cv46-compare-item">Level 3 review_text-forfatning: beskrives som håndværkstilfredshed</div>' +
+        '<div class="cv46-compare-item">"Kan altid vende tilbage" — ingen forpligtelse til at fuldføre</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block" style="margin-top:10px">' +
+      '<div class="cv46-block-title">Designimplikationer</div>' +
+      '<div class="cv46-block-body">' +
+        'insight_type: skjult som standard · challenge_role dropdown: binær ("Byg tillid" vs. "Test forståelse") · misconception_type tooltip: "Hvilken tankefejl?" · "Nyligt viste spørgsmål" på forfatningshjem sparer 6+ minutters navigation' +
+      '</div>' +
+    '</div>',
+    '"Lærere skriver bedre review_text end systemskabeloner. De skriver fra levede erfaringer."'
+  );
+
+  // Card 7 — Adaptive rhythm refinement
+  card('Adaptiv rytme-refinement: længere sessioner og transitions-glathed',
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Længere-sessions-observation</div>' +
+      '<div class="cv46-block-body">' +
+        'Over 30 spørgsmål bliver bølgecyklen forudsigelig — elever begynder at "mærke mønstret".<br>' +
+        'Løsning: indfør lejlighedsvis "overraskelses-forstærkning" efter et korrekt svar — bryder den mekaniske association af forstærkning med fiasko.<br>' +
+        'Mål: ét forstærkningsspørgsmål per 5–7 spørgsmål uanset præstation.' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Overgangs-glathed</div>' +
+      '<div class="cv46-block-body">' +
+        'deep_challenge → forstærkning: for hurtig — eleven bearbejder stadig review_text. Fix: 600ms ekstra entrance-forsinkelse.<br>' +
+        'forstærkning → challenge: retur til samme concept der forårsagede misconception feels for konfronterende. Fix: næste challenge bruger et stabilt concept.' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block">' +
+      '<div class="cv46-block-title">Confidence-restoration-kalibrering</div>' +
+      '<div class="cv46-block-body">' +
+        '2-konsekutive-korrekte trigger er for streng — kan rammes ved held. Bedre signal: 2 korrekte på FORSKELLIGE koncepter, eller 1 korrekt + review-læsetid &gt;5s.<br>' +
+        'Milestonet-toasts: ALDRIG under review_text-visning — udsæt til næste spørgsmål-ankomst.' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 8 — Cognitive simplicity pass
+  card('Kognitiv forenklingspas: labelomskrivninger og UI-rydning',
+    '<div class="cv46-block-title" style="margin-bottom:8px">Label-omskrivninger</div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#ef9a9a"></div><div><strong>misconception_type</strong> → <em style="color:#8ab06a">Hvilken tankefejl?</em> — "Vælg det fejlmønster dette spørgsmål er designet til at afsløre"</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#ef9a9a"></div><div><strong>cognitive_skill</strong> → <em style="color:#8ab06a">Hvad kræver svaret?</em> — fra simpel hukommelse til kompleks vurdering</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#ef9a9a"></div><div><strong>challenge_role</strong> → <em style="color:#8ab06a">Hvornår skal dette vises?</em> — binær for ikke-tekniske lærere</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#ef9a9a"></div><div><strong>difficulty_type</strong> → <em style="color:#8ab06a">Hvad slags vanskelighed?</em> — Faktuel · Begrebslig · Analytisk</div></div>' +
+    '<div class="cv46-block-title" style="margin:10px 0 8px">UI-rydning</div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#8ab06a"></div><div>insight_type: skjult som standard — avanceret panel</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#8ab06a"></div><div>QA-score: erstattet af tre outcomes — Klar · Forbedr én ting · Lad os se på den igen</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#8ab06a"></div><div>Sessionsstatistik under aktiv session: kun XP-bar — alle andre tæller udsat til sessionens afslutning</div></div>' +
+    '<div class="cv46-finding"><div class="cv46-finding-dot" style="background:#8ab06a"></div><div>review_text maks 75 ord i produktion — alt over opdeles i to separate læreobjekter</div></div>',
+    ''
+  );
+
+  // Card 9 — Identity audit + empathy
+  card('Identitetsaudit og empativalideringsfund',
+    '<div class="cv46-block-title" style="margin-bottom:8px">Systemaudit — alle Sektion 38–46 systemer</div>' +
+    '<div class="cv46-audit"><span class="cv46-audit-verdict safe">Sikker</span><div class="cv46-audit-body">Wave scoring: usynlig for elever. Intet præstationspres.</div></div>' +
+    '<div class="cv46-audit"><span class="cv46-audit-verdict safe">Sikker</span><div class="cv46-audit-body">Misconception signal: bruges til tilpasning, ikke profilering.</div></div>' +
+    '<div class="cv46-audit"><span class="cv46-audit-verdict safe">Sikker</span><div class="cv46-audit-body">Teacher inspection: kun aggregater. Ingen per-elev data.</div></div>' +
+    '<div class="cv46-audit"><span class="cv46-audit-verdict watch">Overvåg</span><div class="cv46-audit-body">Milestonet streaks: sikre at brudt streak ikke vises. Ingen skyldsignal.</div></div>' +
+    '<div class="cv46-audit"><span class="cv46-audit-verdict watch">Overvåg</span><div class="cv46-audit-body">XP-bar: aldrig rødt, aldrig nedadgående bevægelse — kun fremad.</div></div>' +
+    '<div class="cv46-block-title" style="margin:10px 0 6px">Empati — 3 nøglefund</div>' +
+    '<div class="cv46-persona"><div class="cv46-persona-who">Træt 14-årig</div><div class="cv46-persona-body">Propaganda-spørgsmålet skaber engagement selv ved minut 35. "7 fanger"-detaljen er konkret anker. <em>dp_015 (oligarki) kræver vokabler-introduktion.</em></div></div>' +
+    '<div class="cv46-persona"><div class="cv46-persona-who">Ikke-teknisk lærer</div><div class="cv46-persona-body">challenge_role-forklaring mangler. Layer 0 forfatning (<em>under 3 min</em>) er konsekvent beskrevet som rolig. Dropdown-labels på engelsk skaber friktion i dansk UI.</div></div>' +
+    '<div class="cv46-persona"><div class="cv46-persona-who">Reflekterende lærende</div><div class="cv46-persona-body">Bruger 2,3× længere på review_text end gennemsnit. <em>Disse elever er den primære modtager af Niveau 3-kvalitet.</em> "Spørg altid..." og "Læg mærke til..." inviterer til fortsæt-tænkning.</div></div>',
+    ''
+  );
+
+  // Card 10 — Future reality-grounded philosophy (accent)
+  card('Fremtid: virkelighed, raffinement og tilbageholdenhed',
+    '<p style="margin:0 0 10px">Arkitekturen er bevist. Systemerne er validerede. Det resterende arbejde er refinement — ikke vækst.</p>' +
+    '<div class="cv46-block" style="margin-bottom:8px">' +
+      '<div class="cv46-block-title">Umiddelbare prioriteter</div>' +
+      '<div class="cv46-block-body">' +
+        '1. Fuldfør dp_019–dp_025 til Niveau 2+ review_text<br>' +
+        '2. Domæne-filter i lærerens spørgsmålsliste — sparer 6+ min per session<br>' +
+        '3. Alle dropdown-labels på dansk med klarsprogsbeskrivelser<br>' +
+        '4. Udsæt milestone-toasts til næste-spørgsmål-ankomst<br>' +
+        '5. "Nyligt viste spørgsmål" på forfatningshjem' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-block">' +
+      '<div class="cv46-block-title">Udviklingsfilosofi fremover</div>' +
+      '<div class="cv46-block-body">' +
+        'Enhver ny feature: "Bruger en træt lærer kl. 18 dette — eller ignorerer de det?"<br>' +
+        'Ethvert nyt element: "Føler en uengageret elev sig mere eller mindre velkommen?"<br>' +
+        'Næste domæne: samme 25-objektstandard (kandidat: Økosystemer og Miljøsystemer)<br>' +
+        'Forenkling er løbende: når platformen føles tung, start med at fjerne' +
+      '</div>' +
+    '</div>' +
+    '<div class="cv46-quote" style="margin-top:10px">Platformen er vellykket når en elev der brugte 40 minutter på den går derfra og tænker på noget — ikke på platformen selv.</div>',
+    'Sektion 46 lukker valideringsfasen. Fremtidens arbejde er at gøre det der eksisterer, bedre.',
     'accent'
   );
 
