@@ -1567,6 +1567,43 @@
     .ld50-constraint-body { font-size: 11px; color: #90b09a; line-height: 1.5; }
     .ld50-rule { font-size: 11px; color: #90b09a; padding: 3px 0; }
     .ld50-rule::before { content: "→ "; color: #60c090; font-weight: 700; }
+
+    /* ── Section 51 — NUZO Adaptive Learning Rhythm ── */
+    .nu51-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .nu51-card { background: #060810; border: 1px solid #a0b4d830; border-radius: 8px; padding: 18px; }
+    .nu51-card.accent { background: linear-gradient(135deg, #040610 0%, #030508 100%); border-color: #a0b4d860; }
+    .nu51-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #a0b4d8; margin-bottom: 8px; }
+    .nu51-title { font-size: 14px; font-weight: 700; color: #e8ecf8; margin-bottom: 10px; line-height: 1.3; }
+    .nu51-body { font-size: 12px; color: #9098b8; line-height: 1.6; }
+    .nu51-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #a0b4d830; font-size: 11px; color: #a0b4d8; font-style: italic; }
+    .nu51-block { background: #a0b4d812; border-left: 2px solid #a0b4d840; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .nu51-block-title { font-size: 11px; font-weight: 600; color: #a0b4d8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .nu51-block-body { font-size: 12px; color: #9098b8; line-height: 1.6; }
+    .nu51-dim { background: #06091a; border: 1px solid #a0b4d820; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .nu51-dim-name { font-size: 11px; font-weight: 700; color: #a0b4d8; margin-bottom: 2px; }
+    .nu51-dim-da { font-size: 10px; color: #7080a8; margin-bottom: 3px; font-style: italic; }
+    .nu51-dim-body { font-size: 11px; color: #8090b0; line-height: 1.4; }
+    .nu51-phase { background: #060918; border: 1px solid #a0b4d825; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .nu51-phase-name { font-size: 12px; font-weight: 700; color: #a0b4d8; margin-bottom: 2px; }
+    .nu51-phase-da { font-size: 13px; font-weight: 800; color: #c8d8f0; margin-bottom: 4px; }
+    .nu51-phase-body { font-size: 11px; color: #8090b0; line-height: 1.5; }
+    .nu51-phase-anti { font-size: 10px; color: #806880; font-style: italic; margin-top: 4px; }
+    .nu51-role { background: #060914; border: 1px solid #a0b4d820; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .nu51-role-name { font-size: 12px; font-weight: 700; color: #a0b4d8; margin-bottom: 4px; }
+    .nu51-role-ids { font-size: 10px; color: #7888b0; margin-bottom: 4px; font-family: monospace; line-height: 1.7; }
+    .nu51-role-body { font-size: 11px; color: #8090b0; line-height: 1.4; }
+    .nu51-mc { background: #060914; border: 1px solid #a0b4d822; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .nu51-mc-type { font-size: 11px; font-weight: 700; color: #a0b4d8; margin-bottom: 2px; font-family: monospace; }
+    .nu51-mc-da { font-size: 11px; color: #8898c8; margin-bottom: 3px; font-style: italic; }
+    .nu51-mc-speed { font-size: 10px; color: #7888b0; margin-bottom: 4px; }
+    .nu51-mc-body { font-size: 11px; color: #8090b0; line-height: 1.4; }
+    .nu51-code { background: #030508; border: 1px solid #a0b4d820; border-radius: 4px; padding: 8px 10px; margin: 5px 0; font-family: monospace; font-size: 10px; color: #8898c8; line-height: 1.6; }
+    .nu51-vocab { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #a0b4d815; }
+    .nu51-vocab-term { font-size: 11px; font-weight: 700; color: #a0b4d8; width: 160px; flex-shrink: 0; }
+    .nu51-vocab-def { font-size: 11px; color: #8090b0; flex: 1; line-height: 1.4; }
+    .nu51-quote { font-size: 12px; color: #a0b4d8; font-style: italic; border-left: 3px solid #a0b4d860; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .nu51-rule { font-size: 11px; color: #8090b0; padding: 3px 0; }
+    .nu51-rule::before { content: "→ "; color: #a0b4d8; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1836,6 +1873,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 50 — Live Curriculum Deployment &amp; Learning Object Operationalization</h2>
   <div class="ld50-grid" id="ld50Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 51 — NUZO Adaptive Learning Rhythm &amp; Conceptual Tension Calibration</h2>
+  <div class="nu51-grid" id="nu51Grid"></div>
 </div>
 
 <script type="module">
@@ -14953,6 +14993,334 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       '</div>' +
     '</div>' +
     '<div class="ld50-quote">Democracy &amp; Power er live. 40 spørgsmål venter på den første studerende.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 51 — NUZO Adaptive Learning Rhythm & Conceptual Tension Calibration ─
+(function () {
+  var grid = document.getElementById('nu51Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'nu51-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="nu51-label">Section 51 — NUZO Adaptive Rhythm</div>' +
+      '<div class="nu51-title">' + title + '</div>' +
+      '<div class="nu51-body">' + body + '</div>' +
+      (footer ? '<div class="nu51-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — NUZO Thesis (accent)
+  card(
+    'Adaptation er ikke skalering — det er rytme',
+    '<p style="margin:0 0 10px">DEN SEJE APP tilpasser sig ikke ved at give "sværere spørgsmål" til "dygtigere elever." Det er ikke hvad intelligent undervisning er.</p>' +
+    '<p style="margin:0 0 10px">Intelligens pædagogisk tilpasning handler om at finde ZPD — Zonen for Nærmeste Udvikling. Det er det smalle bånd mellem hvad eleven <em>kan alene</em> og hvad de <em>kan med støtte</em>. Det er der vækst sker.</p>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Tre tilstande i relation til ZPD</div>' +
+      '<div class="nu51-block-body">' +
+        '<strong style="color:#c0c8e0">Under ZPD</strong> — Kedsomhed. Eleven ved det allerede. Ingen ny kognition aktiveres.<br>' +
+        '<strong style="color:#a0b4d8">I ZPD</strong> — Vækst. Eleven mærker spænding — men har fodfæste. Det er her systemet vil operere.<br>' +
+        '<strong style="color:#c080a0">Over ZPD</strong> — Angst. Eleven mister fodfæste. Konsolidering stoppes. Emotionel exit.' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad systemet spørger — i stedet for "sværhedsgrad"</div>' +
+      '<div class="nu51-block-body">' +
+        'Hvilken slags udfordring er eleven klar til <em>nu</em>?<br>' +
+        'Er begrebsgrunden stabil nok til et abstraktionsskift?<br>' +
+        'Kræver dette misforståelsesmønster genopbygning eller blot justering?<br>' +
+        'Er der plads til refleksion inden næste spænding introduceres?' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-quote">Målet er optimal spænding. Ikke maksimal sværhed.</div>',
+    'NUZO = Zone of Proximal Development-informeret adaptiv rytme-arkitektur.',
+    'accent'
+  );
+
+  // Card 2 — Conceptual Tension Dimensions
+  card(
+    '8 dimensioner af begrebsspænding',
+    '<p style="margin:0 0 10px">Begrebsspænding er ikke ét tal. Det er et profil af otte distinkte dimensioner der tilsammen beskriver <em>hvad slags udfordring</em> et læreobjekt repræsenterer.</p>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Abstraktionsdybde</div>' +
+      '<div class="nu51-dim-da">abstraction_depth</div>' +
+      '<div class="nu51-dim-body">Afstanden fra konkret, observerbar virkelighed. Høj abstraktionsdybde kræver at eleven opererer uden sansemæssige ankre. <em>dp_016 = lav · dp_022 = høj</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Misforståelsesdestabilisering</div>' +
+      '<div class="nu51-dim-da">misconception_destabilization</div>' +
+      '<div class="nu51-dim-body">Hvor aggressivt spørgsmålet udfordrer en holdt overbevisning. Høj destabilisering kræver emotionel sikkerhed i platformen. <em>dp_034 = lav · dp_026 = høj</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Kognitiv belastning</div>' +
+      '<div class="nu51-dim-da">cognitive_load</div>' +
+      '<div class="nu51-dim-body">Antal samtidige begreber eleven skal holde. Høj belastning kræver forudgående stabilisering. <em>dp_005 = lav · dp_032 = høj</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Emotionel intensitet</div>' +
+      '<div class="nu51-dim-da">emotional_intensity</div>' +
+      '<div class="nu51-dim-body">Politisk eller personlig ladning. Høj intensitet kræver tillid til platformen. <em>dp_013 = lav · dp_024 = høj</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Refleksionskrav</div>' +
+      '<div class="nu51-dim-da">reflection_demand</div>' +
+      '<div class="nu51-dim-body">Om spørgsmålet kræver at eleven pauser og genovervejer en forudantagelse. Kan ikke forceres. <em>dp_019 = lav · dp_008 = høj</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Syntesekompleksitet</div>' +
+      '<div class="nu51-dim-da">synthesis_complexity</div>' +
+      '<div class="nu51-dim-body">Om svaret kræver at kombinere begreber til ny forståelse. <em>dp_016 = recall · dp_035 = fuld syntese</em></div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Genopbygningsbehov</div>' +
+      '<div class="nu51-dim-da">recovery_requirement</div>' +
+      '<div class="nu51-dim-body">Hvor meget stabilisering der kræves efter dette objekt, inden næste spænding. Høj for: dp_024 · dp_026 · dp_032 · dp_035 · dp_040.</div>' +
+    '</div>' +
+    '<div class="nu51-dim">' +
+      '<div class="nu51-dim-name">Personlig resonans</div>' +
+      '<div class="nu51-dim-da">personal_relevance</div>' +
+      '<div class="nu51-dim-body">Om begrebet kobler til elevens dagligliv. Høj resonans accelererer konsolidering. <em>dp_021 (feed-algoritmer) · dp_039 (politisk apati)</em></div>' +
+    '</div>',
+    'Disse dimensioner er ikke scores. De er profiler. Et "let" spørgsmål kan have høj emotionel intensitet.'
+  );
+
+  // Card 3 — Wave Phase NUZO Mapping
+  card(
+    'NUZO-fortolkning af adaptive bølgefaser',
+    '<p style="margin:0 0 10px">De 4 bølgefaser er ikke performance-brackets. De er rytme-tilstande — hvert enkelt en beskrivelse af elevens aktuelle læringsrelation til ZPD.</p>' +
+    '<div class="nu51-phase">' +
+      '<div class="nu51-phase-name">recovery</div>' +
+      '<div class="nu51-phase-da">Genopbygning</div>' +
+      '<div class="nu51-phase-body">Trigger: 2+ forkerte svar. Eleven er midlertidigt ude af ZPD. Systemet søger faktuel base — lav kognitiv belastning, gentlig begrebsanker. Formål: genindtræden i ZPD, ikke korrektionstest.</div>' +
+      '<div class="nu51-phase-anti">Anti-mønster: fortsæt med høj spænding fordi "eleven burde forstå det"</div>' +
+    '</div>' +
+    '<div class="nu51-phase">' +
+      '<div class="nu51-phase-name">reinforcement</div>' +
+      '<div class="nu51-phase-da">Stabilisering</div>' +
+      '<div class="nu51-phase-body">Trigger: 1 forkert. Eleven er i grænseomraadet. Systemet konsoliderer forståelsen — konceptuel, begribelig, lavt abstraktionsniveau. Formål: befæst begrebet inden næste spænding.</div>' +
+      '<div class="nu51-phase-anti">Anti-mønster: returner til rotation omgående efter ét fejlsvar</div>' +
+    '</div>' +
+    '<div class="nu51-phase">' +
+      '<div class="nu51-phase-name">challenge</div>' +
+      '<div class="nu51-phase-da">Tankespænding</div>' +
+      '<div class="nu51-phase-body">Trigger: neutral baseline. Eleven er i ZPD. Systemet introducerer produktiv kognitiv spænding — ny begrebsvinkel, kontrolleret destabilisering. Formål: udvid begrebsterritoriet.</div>' +
+      '<div class="nu51-phase-anti">Anti-mønster: opfatte denne fase som "let" og kunstigt eskalere</div>' +
+    '</div>' +
+    '<div class="nu51-phase">' +
+      '<div class="nu51-phase-name">deep_challenge</div>' +
+      '<div class="nu51-phase-da">Begrebsovergang</div>' +
+      '<div class="nu51-phase-body">Trigger: 3+ korrekte. Eleven er over ZPDs bund. Systemet skifter abstraktionsniveau — kræver at eleven forbinder begreber på nyt analytisk plan. Formål: åbn den øvre kant af ZPD.</div>' +
+      '<div class="nu51-phase-anti">Anti-mønster: tolke dette som "belønning" for præstation</div>' +
+    '</div>',
+    'En elev i "genopbygning" er ikke svag. De er i ZPDs genindgangszone. Det er en normal rytmetilstand.'
+  );
+
+  // Card 4 — Code Enhancement
+  card(
+    'Kode: insight_type og challenge_role aktiveret i bølge-scoring',
+    '<p style="margin:0 0 10px">getWaveScore() brugte tidligere 3 metadata-felter: difficulty_type, cognitive_skill, misconception_type. Section 51 aktiverer 2 yderligere: insight_type og challenge_role.</p>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Ny scoring-logik per bølgefase</div>' +
+      '<div class="nu51-block-body">' +
+        '<strong style="color:#a0b4d8">Genopbygning:</strong> challenge_role=reinforcement +6 · insight_type=conceptual_bridge +4<br>' +
+        '<strong style="color:#a0b4d8">Stabilisering:</strong> challenge_role=reinforcement +5 · insight_type=reframing +4<br>' +
+        '<strong style="color:#a0b4d8">Tankespænding:</strong> challenge_role=challenge +4 · insight_type=conceptual_bridge|reframing +2<br>' +
+        '<strong style="color:#a0b4d8">Begrebsovergang:</strong> challenge_role=deep_challenge +6 · insight_type=perspective_shift +5' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-code">' +
+      'insight_type-værdier i Democracy &amp; Power:<br>' +
+      '  conceptual_bridge — kobler nyt begreb til eksisterende forståelse<br>' +
+      '  reframing         — omformulerer hvad eleven troede de vidste<br>' +
+      '  perspective_shift — kræver at eleven antager et nyt analyseniveau' +
+    '</div>' +
+    '<div class="nu51-code">' +
+      'challenge_role-værdier:<br>' +
+      '  reinforcement  (6 obj)  — stabilisering og konsolidering<br>' +
+      '  challenge      (21 obj) — produktiv tankespænding<br>' +
+      '  deep_challenge (13 obj) — begrebsovergang og syntese' +
+    '</div>' +
+    '<p style="margin:8px 0 0;font-size:11px;color:#8090b0">Baglæns-kompatibel: eksisterende scores bevaret. Nye felter tilføjer kun positive signaler. Spørgsmål uden disse metadata-felter scorer som før.</p>',
+    'Fil: supabase/functions/get-next-question/index.ts'
+  );
+
+  // Card 5 — Rhythm Profiles: Democracy & Power
+  card(
+    'Rytmeprofiler: alle 40 Democracy &amp; Power objekter',
+    '<p style="margin:0 0 10px">40 læreobjekter fordelt på 3 rytmeroller. Rollerne er ikke en vanskeligheds-ranking — de beskriver hvilken funktion objektet spiller i lærerytmen.</p>' +
+    '<div class="nu51-role">' +
+      '<div class="nu51-role-name">Stabilisering — 6 objekter</div>' +
+      '<div class="nu51-role-body" style="margin-bottom:6px">Etablerer begrebsmæssige ankre. Lav kognitiv belastning. Sikker genindtræden efter genopbygning.</div>' +
+      '<div class="nu51-role-ids">dp_005 · dp_016 · dp_019 · dp_021 · dp_034 · dp_036</div>' +
+      '<div class="nu51-role-body"><em>Eksempel dp_016:</em> Legitimitet som hverdagsbegreb — forankrer Max Webers tre-elling i konkret eksempel. Ingen kausal inversion. Direkte recall.</div>' +
+    '</div>' +
+    '<div class="nu51-role">' +
+      '<div class="nu51-role-name">Tankespænding — 21 objekter</div>' +
+      '<div class="nu51-role-body" style="margin-bottom:6px">Introducerer produktiv begrebsspænding. Udfordrer forståelsen uden at overvælde. Skaber begrebsterritorie-udvidelse.</div>' +
+      '<div class="nu51-role-ids">dp_001 · dp_003 · dp_004 · dp_007 · dp_011 · dp_012 · dp_013<br>dp_014 · dp_017 · dp_018 · dp_020 · dp_023 · dp_026 · dp_028<br>dp_029 · dp_030 · dp_031 · dp_033 · dp_037 · dp_038 · dp_039</div>' +
+      '<div class="nu51-role-body"><em>Eksempel dp_007:</em> Propaganda effektivitet — destabiliserer "propaganda = løgn"-forforståelsen. Moderat abstraktionsdybde. Kræver analyse, ikke syntese.</div>' +
+    '</div>' +
+    '<div class="nu51-role">' +
+      '<div class="nu51-role-name">Begrebsovergang — 13 objekter</div>' +
+      '<div class="nu51-role-body" style="margin-bottom:6px">Skifter abstraktionsniveau. Kræver at eleven forbinder begreber fra forskellige domæner. Høj syntesekompleksitet.</div>' +
+      '<div class="nu51-role-ids">dp_002 · dp_006 · dp_008 · dp_009 · dp_010 · dp_015 · dp_022<br>dp_024 · dp_025 · dp_027 · dp_032 · dp_035 · dp_040</div>' +
+      '<div class="nu51-role-body"><em>Eksempel dp_032:</em> Domstolsprøvelse som demokratisk selvmodsigelse — kræver at eleven simultant holder demokrati, flertal, grænser, legitimitet og uvalgte aktørers magt. Maksimal syntesekompleksitet.</div>' +
+    '</div>',
+    '6 stabilisering : 21 tankespænding : 13 begrebsovergang = balanceret rytmeprofil for et fuldt domæne.'
+  );
+
+  // Card 6 — Misconception Recovery Map
+  card(
+    'Misforståelsesfamilier og genopbygningsstrategier',
+    '<p style="margin:0 0 10px">Ikke alle misforståelser genopbygges ens. Misforståelsestypen afgør genopbygningens hastighed, stepping-stones og emotionelle krav.</p>' +
+    '<div class="nu51-mc">' +
+      '<div class="nu51-mc-type">causal_inversion</div>' +
+      '<div class="nu51-mc-da">Kausal inversion — eleven har byttet om på årsag og virkning</div>' +
+      '<div class="nu51-mc-speed">Genopbygningshastighed: meget langsom · Stepping-stones: obligatoriske · Emotionel støtte: påkrævet</div>' +
+      '<div class="nu51-mc-body">Genopbyg årsagskæden fra bunden med konkrete eksempler. Aldrig korrigér direkte — led eleven til at rekonstruere rækkefølgen. Objekter: dp_007 · dp_011 · dp_022 · dp_029</div>' +
+    '</div>' +
+    '<div class="nu51-mc">' +
+      '<div class="nu51-mc-type">false_equivalence</div>' +
+      '<div class="nu51-mc-da">Falsk ækvivalens — eleven behandler to distinkte begreber som synonymer</div>' +
+      '<div class="nu51-mc-speed">Genopbygningshastighed: langsom · Stepping-stones: anbefalet</div>' +
+      '<div class="nu51-mc-body">Vis den præcise definitional forskel. Undgå "men begge er..."-argumenter. Kræver begrebspræcision frem for eksempler. Objekter: dp_003 · dp_006 · dp_015 · dp_019</div>' +
+    '</div>' +
+    '<div class="nu51-mc">' +
+      '<div class="nu51-mc-type">authority_bias</div>' +
+      '<div class="nu51-mc-da">Autoritetsbias — eleven analyserer person frem for struktur</div>' +
+      '<div class="nu51-mc-speed">Genopbygningshastighed: langsom · Stepping-stones: anbefalet</div>' +
+      '<div class="nu51-mc-body">Udskift "hvem siger det" med "hvad siger strukturen." Flyt analyseenhed fra aktør til system. Objekter: dp_008 · dp_012 · dp_025 · dp_035</div>' +
+    '</div>' +
+    '<div class="nu51-mc">' +
+      '<div class="nu51-mc-type">overgeneralization</div>' +
+      '<div class="nu51-mc-da">Overgeneralisering — eleven anvender et princip for bredt</div>' +
+      '<div class="nu51-mc-speed">Genopbygningshastighed: moderat · Stepping-stones: anbefalet</div>' +
+      '<div class="nu51-mc-body">Introducer modsætningseksempel der viser principlets grænse. Objekter: dp_002 · dp_005 · dp_009</div>' +
+    '</div>' +
+    '<div class="nu51-mc">' +
+      '<div class="nu51-mc-type">scope_confusion · surface_association</div>' +
+      '<div class="nu51-mc-da">Kontekstforvirring / Overfladekoblingsforvirring</div>' +
+      '<div class="nu51-mc-speed">Genopbygningshastighed: moderat · Direkte genindtræden mulig</div>' +
+      '<div class="nu51-mc-body">Præcisér analyseniveauet / Definer begge begreber separat. Disse misforståelsestyper kræver normalt kortere genopbygningsperioder.</div>' +
+    '</div>',
+    'causal_inversion kræver systematisk mest genopbygningsressourcer. Systemet prioriterer targeted recovery mod denne type.'
+  );
+
+  // Card 7 — Reflection Cadence
+  card(
+    'Refleksionskadence: pusterum er ikke pause — det er konsolidering',
+    '<p style="margin:0 0 10px">Et læringsøjeblik sker ikke <em>under</em> spørgsmålet. Det sker i det kognitive space <em>efter</em> review_text er læst, inden næste spørgsmål. Systemet skal beskytte dette space.</p>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Kanonisk rytmemønster</div>' +
+      '<div class="nu51-block-body">' +
+        'tankespænding → stabilisering → tankespænding → tankespænding → begrebsovergang → stabilisering<br>' +
+        '<em style="color:#7080a0">Spænding, befæstelse, spænding, spænding, abstraktion, befæstelse</em>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvornår stabilisering er obligatorisk</div>' +
+      '<div class="nu51-block-body">' +
+        'Efter begrebsovergang (dp_032, dp_035, dp_040) — altid insert stabilisering/tankespænding inden næste begrebsovergang<br>' +
+        'Efter genopbygningsfase — minimum 2 stabilisering-objekter inden tilbage til tankespænding<br>' +
+        'Når review_text er kompleks og lang — lad begrebet sætte sig' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad review_text er ansvarlig for</div>' +
+      '<div class="nu51-block-body">' +
+        'review_text er ikke "facit." Det er læringsøjeblikket — den tekst der transformerer et forkert svar til en begrebsudvidelse. Dens funktion afhænger af at eleven har kognitiv kapacitet til at modtage den. Refleksionskadencen beskytter denne kapacitet.' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-quote">Konstant kognitiv pres er ikke intensiv undervisning. Det er kognitivt forfald.</div>',
+    'Pusterum er der, hvor begreber konsolideres — ikke spildt tid.'
+  );
+
+  // Card 8 — Emotional Safety Audit
+  card(
+    'Hvad systemet beskytter imod — aktivt',
+    '<p style="margin:0 0 10px">Adaptiv læring kan utilsigtet skabe angst, ranglistepress og "jeg er dårlig til dette"-spiraler. NUZO-arkitekturen indeholder eksplicitte beskyttelsesmekanismer imod dette.</p>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Anti-mønstre systemet undgår</div>' +
+      '<div class="nu51-block-body">' +
+        '<div class="nu51-rule">Numeriske vanskeligheds-scores er aldrig synlige for eleven</div>' +
+        '<div class="nu51-rule">Escalation sker aldrig <em>kun</em> fordi eleven er på en korrekt-stribe</div>' +
+        '<div class="nu51-rule">Genopbygning returnerer aldrig direkte til det misforståelsesmønster der triggerede den</div>' +
+        '<div class="nu51-rule">Platformen rangerer aldrig elever efter "forståelsesniveau"</div>' +
+        '<div class="nu51-rule">Review_text antyder aldrig at eleven var tåbelig for at svare forkert</div>' +
+        '<div class="nu51-rule">Systemet kommunikerer aldrig til læreren i termer som "svag elev" eller "højtpræsterende"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad fejlsvar er</div>' +
+      '<div class="nu51-block-body">' +
+        'Fejlsvar er et læringsdata-punkt — ikke et personnederlæg. Systemet bruger det som information om hvilken slags begrebsspænding eleven er klar til næste. Det registreres aldrig som et personkvalitetsmål.' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad "genopbygning" kommunikerer</div>' +
+      '<div class="nu51-block-body">' +
+        'Genopbygningsfasen kommunikerer til eleven som et naturligt samtale-skift — ikke som en straf eller tilbageskridt. Eleven oplever blot at systemet hjælper med at befæste grundlaget. Det er en normal rytmetilstand, ikke en undtagelsestilstand.' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-quote">Systemet er designet til at eleven altid forlader en session med en oplevelse af begrebsudvidelse — aldrig med en oplevelse af utilstrækkelighed.</div>',
+    'Emotionel sikkerhed er en arkitekturel egenskab — ikke et pædagogisk tillæg.'
+  );
+
+  // Card 9 — Teacher Language
+  card(
+    'Lærersprog: NUZO adaptivt rytmevokabular',
+    '<p style="margin:0 0 10px">Lærere skal aldrig præsenteres for system-teknisk sprog. Adaptive mekanismer skal kommunikeres i pædagogisk vejledningssprog.</p>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Tankespænding</span><span class="nu51-vocab-def">Det øjeblik eleven mærker at de ikke helt ved det endnu — men er tæt på. Produktiv kognitiv spænding. Systemet søger dette som baseline-tilstand.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Stabilisering</span><span class="nu51-vocab-def">Systemet befæster elevens forståelse inden det introducerer ny kompleksitet. Ikke "nemme spørgsmål" — konsolidering af ustabile begreber.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Genopbygning</span><span class="nu51-vocab-def">Systemet har registreret gentagen begrebsforvirring og søger tilbage til fast grund. Støttet genindtræden i begrebsrummet.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Begrebsovergang</span><span class="nu51-vocab-def">Systemet beder eleven om at tænke på et højere abstraktionsniveau. Kræver at begrebsgrunden er stabil.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Refleksionskadence</span><span class="nu51-vocab-def">Det intentionelle pusterum der giver begrebet tid til at sætte sig. Systemet alternerer bevidst mellem spænding og konsolidering.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Rytmeprofil</span><span class="nu51-vocab-def">Hvad slags udfordring et læreobjekt repræsenterer — ikke hvor svært det er. Et spørgsmål kan have lav abstraktionsdybde og høj emotionel intensitet simultant.</span></div>' +
+    '<div class="nu51-vocab"><span class="nu51-vocab-term">Misforståelsesfamilie</span><span class="nu51-vocab-def">Den type kognitiv fejlkonstruktion der ligger under elevens forkerte svar. Systemet tracker 6 familier og tilpasser genopbygning efter familie-type.</span></div>' +
+    '<div class="nu51-block" style="margin-top:10px">' +
+      '<div class="nu51-block-title">Hvad lærere ser — hvad de ikke ser</div>' +
+      '<div class="nu51-block-body">' +
+        'Lærere ser: Hvilke begreber eleven mødte · Hvilke misforståelser systemet registrerede · Hvilken rytmefase eleven er i<br>' +
+        'Lærere ser ikke: Numeriske scores · Sværhedsgrads-rankings · Performance-percentiler' +
+      '</div>' +
+    '</div>',
+    'Systemet taler til lærere som en kollega — ikke som et dashboard.'
+  );
+
+  // Card 10 — Adaptive Philosophy Declaration (accent)
+  card(
+    'DEN SEJE APPs kanoniske adaptive filosofi',
+    '<p style="margin:0 0 10px">Section 51 fastlægger den endelige adaptive filosofi for DEN SEJE APP. Det er et standpunkt der ikke er til forhandling.</p>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad DEN SEJE APP aldrig bliver</div>' +
+      '<div class="nu51-block-body">' +
+        'Et system der giver "sværere spørgsmål" til "dygtigere elever"<br>' +
+        'En platform der tracker "niveau" og sorterer elever i præstationsklasser<br>' +
+        'Et casino-loop der belønner korrekte svar med eskalerende sværhedsgrad<br>' +
+        'En optimeringsmaskine der maksimerer kognitiv belastning' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Hvad DEN SEJE APP er</div>' +
+      '<div class="nu51-block-body">' +
+        'En platform der finder kanten af elevens aktuelle forståelse — og tilbyder det næste begrebsmæssige skridt<br>' +
+        'Et system der respekterer elevens kognitive rytme — ikke optimerer mod den<br>' +
+        'En læringspartner der ved hvornår man skal udfordre og hvornår man skal lade et begreb sætte sig<br>' +
+        'Et redskab lærere kan betro sig til at arbejde med menneskelig intellektuel udvikling — ikke måle den' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-block">' +
+      '<div class="nu51-block-title">Den adaptive intelligens DEN SEJE APP stræber mod</div>' +
+      '<div class="nu51-block-body">' +
+        'En god lærer spørger ikke: "Er dette svært nok?" En god lærer spørger: "Er du klar til dette?" Systemet stræber mod det andet spørgsmål — altid.' +
+      '</div>' +
+    '</div>' +
+    '<div class="nu51-quote">Adaptation er omsorg. Ikke optimering.</div>',
     null,
     'accent'
   );
