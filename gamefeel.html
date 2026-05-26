@@ -909,6 +909,54 @@
     .ld35-quality-cell { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
     .ld35-quality-title { font-size: 9px; font-weight: bold; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
     .ld35-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Section 36 — Knowledge Architecture & Intellectual Progression */
+    .ka36-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ka36-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .ka36-card.accent { border-color: #b8860b; background: linear-gradient(135deg, #1a1500 0%, #0d0d00 100%); }
+    .ka36-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d4a017; margin-bottom: 10px; }
+    .ka36-body { font-size: 13px; color: var(--text-primary); line-height: 1.6; }
+    .ka36-concept-block { background: rgba(212, 160, 23, 0.08); border: 1px solid rgba(212, 160, 23, 0.2); border-radius: 8px; padding: 12px; margin: 8px 0; }
+    .ka36-concept-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #d4a017; margin-bottom: 6px; }
+    .ka36-concept-body { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .ka36-level { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .ka36-level:last-child { border-bottom: none; }
+    .ka36-level-badge { min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; background: rgba(212, 160, 23, 0.15); color: #d4a017; flex-shrink: 0; }
+    .ka36-level-content { flex: 1; }
+    .ka36-level-title { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .ka36-level-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .ka36-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .ka36-compare-col { background: var(--surface-raised); border-radius: 8px; padding: 10px; }
+    .ka36-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .ka36-compare-label.bad { color: #ef5350; }
+    .ka36-compare-label.good { color: #66bb6a; }
+    .ka36-compare-item { font-size: 11px; color: var(--text-secondary); line-height: 1.5; padding: 3px 0; }
+    .ka36-dim { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .ka36-dim:last-child { border-bottom: none; }
+    .ka36-dim-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(212, 160, 23, 0.12); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .ka36-dim-text { flex: 1; }
+    .ka36-dim-name { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .ka36-dim-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .ka36-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(212, 160, 23, 0.12); color: #d4a017; margin: 2px; }
+    .ka36-graph-node { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; border: 1px solid rgba(212, 160, 23, 0.4); color: #d4a017; margin: 3px; }
+    .ka36-graph-edge { font-size: 10px; color: var(--text-muted); padding: 2px 0; display: flex; align-items: center; gap: 4px; }
+    .ka36-principle { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .ka36-principle:last-child { border-bottom: none; }
+    .ka36-principle-name { font-size: 11px; font-weight: 700; color: #d4a017; }
+    .ka36-principle-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .ka36-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #d4a017; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .ka36-miscon { padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .ka36-miscon:last-child { border-bottom: none; }
+    .ka36-miscon-type { font-size: 10px; font-weight: 700; color: #d4a017; text-transform: uppercase; letter-spacing: 0.06em; }
+    .ka36-miscon-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .ka36-miscon-ex { font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+    .ka36-identity-row { display: flex; gap: 8px; margin: 8px 0; }
+    .ka36-identity-col { flex: 1; background: var(--surface-raised); border-radius: 8px; padding: 10px; }
+    .ka36-identity-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .ka36-identity-label.avoid { color: #ef5350; }
+    .ka36-identity-label.prefer { color: #66bb6a; }
+    .ka36-identity-item { font-size: 11px; color: var(--text-secondary); line-height: 1.5; padding: 2px 0; }
+    .ka36-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1133,6 +1181,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 35 — Learning Experience &amp; Pedagogical Depth</h2>
   <div class="ld35-grid" id="ld35Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 36 — Knowledge Architecture &amp; Intellectual Progression</h2>
+  <div class="ka36-grid" id="ka36Grid"></div>
 </div>
 
 <script type="module">
@@ -10187,6 +10238,287 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     "Meningsfulde uddannelsessystemer optimerer for forståelse og nysgerrighed — ikke svar-gennemstrømning.",
     "accent"
   ));
+
+}());
+
+// ─── Section 36 — Knowledge Architecture & Intellectual Progression ───────────
+(function () {
+  var grid = document.getElementById('ka36Grid');
+  if (!grid) return;
+
+  function card(title, html, note, variant) {
+    var d = document.createElement('div');
+    d.className = 'ka36-card' + (variant === 'accent' ? ' accent' : '');
+    d.innerHTML = '<div class="ka36-title">' + title + '</div>' +
+      '<div class="ka36-body">' + html + '</div>' +
+      (note ? '<div class="ka36-quality-body" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">' + note + '</div>' : '');
+    grid.appendChild(d);
+  }
+
+  // Card 1 — The Paradigm Shift
+  card('Spørgsmål som portaler — ikke destinationer',
+    '<p style="margin:0 0 10px">Det nuværende system behandler spørgsmål som <em>atomare enheder</em>: et isoleret faktum der bekræftes eller afvises. Det intelligente system behandler spørgsmål som <em>portaler til konceptnetværk</em>.</p>' +
+    '<div class="ka36-compare">' +
+      '<div class="ka36-compare-col">' +
+        '<div class="ka36-compare-label bad">Atomart (nu)</div>' +
+        '<div class="ka36-compare-item">Spørgsmål → Rigtigt/Forkert</div>' +
+        '<div class="ka36-compare-item">Feedback = det korrekte svar</div>' +
+        '<div class="ka36-compare-item">Næste spørgsmål er tilfældigt</div>' +
+        '<div class="ka36-compare-item">Progress = antal svar</div>' +
+      '</div>' +
+      '<div class="ka36-compare-col">' +
+        '<div class="ka36-compare-label good">Konceptuelt (mål)</div>' +
+        '<div class="ka36-compare-item">Spørgsmål → Aktiverer koncepter</div>' +
+        '<div class="ka36-compare-item">Feedback = konceptuel forklaring</div>' +
+        '<div class="ka36-compare-item">Næste spørgsmål fortsætter konceptet</div>' +
+        '<div class="ka36-compare-item">Progress = konceptuel dybde</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ka36-quote">Hvert spørgsmål er et vindue ind i en større forståelse. Platformens opgave er at åbne det vindue — ikke blot bekræfte at eleven kiggede igennem det.</div>',
+    'Det centrale skift: fra spørgsmål som indhold til spørgsmål som infrastruktur for konceptuel læring.',
+    'accent'
+  );
+
+  // Card 2 — Knowledge Model Audit
+  card('Videns-model audit',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Hvad det nuværende system gør godt — og hvad der mangler strukturelt.</p>' +
+    '<div class="ka36-concept-block">' +
+      '<div class="ka36-concept-title">Nuværende styrker</div>' +
+      '<div class="ka36-concept-body">Konsistent XP/mønt-progression · Progressionsmotor er event-drevet og korrekt · Spørgsmål/svar flow er stabilt · Fejl-feedback er til stede (review-tekst)</div>' +
+    '</div>' +
+    '<div class="ka36-concept-block" style="border-color:rgba(239,83,80,0.3);background:rgba(239,83,80,0.06)">' +
+      '<div class="ka36-concept-title" style="color:#ef5350">Strukturelle mangler</div>' +
+      '<div class="ka36-concept-body">Spørgsmål er ikke tagget med koncepter · Ingen misforståelses-modellering · Sekvensering er ikke konceptuelt styret · Feedback er statisk (ét niveau) · Ingen intellektuel progressionssporing · Elevens begrebsforståelse er usynlig for systemet</div>' +
+    '</div>',
+    'Audit-verdikt: Solid mekanik, svag epistemologi. Platformen ved hvad eleven svarede — men ikke hvad eleven forstår.'
+  );
+
+  // Card 3 — Concept Graph Philosophy
+  card('Konceptgraf-filosofi',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Viden er ikke en liste af fakta. Det er et netværk af begreber forbundet af meningsfulde relationer.</p>' +
+    '<div style="margin:10px 0">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Eksempel: Historisk konceptkluster</div>' +
+      '<div style="margin-bottom:6px">' +
+        '<span class="ka36-graph-node">revolution</span>' +
+        '<span class="ka36-graph-node">magt</span>' +
+        '<span class="ka36-graph-node">demokrati</span>' +
+        '<span class="ka36-graph-node">klasse</span>' +
+        '<span class="ka36-graph-node">stat</span>' +
+      '</div>' +
+      '<div class="ka36-graph-edge"><span style="color:#d4a017">revolution</span><span>→ udfordrer →</span><span style="color:#d4a017">magt</span></div>' +
+      '<div class="ka36-graph-edge"><span style="color:#d4a017">magt</span><span>→ legitimeres af →</span><span style="color:#d4a017">stat</span></div>' +
+      '<div class="ka36-graph-edge"><span style="color:#d4a017">klasse</span><span>→ driver →</span><span style="color:#d4a017">revolution</span></div>' +
+      '<div class="ka36-graph-edge"><span style="color:#d4a017">demokrati</span><span>→ omformer →</span><span style="color:#d4a017">magt</span></div>' +
+    '</div>' +
+    '<p style="margin:10px 0 0;font-size:12px;color:var(--text-secondary)">Et spørgsmål om Den Franske Revolution aktiverer ikke blot "1789" — det aktiverer hele dette netværk. Feedback kan bruge netværket til at skabe kontekst og dybde.</p>',
+    'Noder = begreber. Kanter = konceptuelle relationer. Elevens forståelse vokser ved at mestre noder og internalisere kanter.'
+  );
+
+  // Card 4 — Question Metadata System
+  card('Spørgsmåls-metadata system',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Syv metadata-felter der transformerer et spørgsmål fra et faktum til en intelligens-ressource.</p>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">concepts <span class="ka36-tag">array</span></div>' +
+      '<div class="ka36-principle-desc">Hvilke kernebegreber aktiveres? F.eks. ["revolution", "magt", "kausalitet"]</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">cognitive_skill <span class="ka36-tag">enum</span></div>' +
+      '<div class="ka36-principle-desc">recall · comprehension · causal_reasoning · transfer · synthesis · evaluation</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">misconception_target <span class="ka36-tag">string?</span></div>' +
+      '<div class="ka36-principle-desc">Hvilken specifik misforståelse tester dette spørgsmål for?</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">insight_type <span class="ka36-tag">enum?</span></div>' +
+      '<div class="ka36-principle-desc">causal · comparative · definitional · relational · evaluative</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">transfer_potential <span class="ka36-tag">low/medium/high</span></div>' +
+      '<div class="ka36-principle-desc">Kan konceptet fra dette spørgsmål overføres til andre domæner?</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">interdisciplinary <span class="ka36-tag">string[]?</span></div>' +
+      '<div class="ka36-principle-desc">Hvilke andre fag krydser dette spørgsmål? F.eks. ["matematik", "samfundsfag"]</div>' +
+    '</div>',
+    'Etik: metadata tjener elevens læring — ikke algoritmisk optimering af engagement-metrics.'
+  );
+
+  // Card 5 — Intellectual Progression Dimensions
+  card('Intellektuelle progressionsdimensioner',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Progression er ikke én-dimensional. Fem dimensioner beskriver reel intellektuel vækst.</p>' +
+    '<div class="ka36-dim">' +
+      '<div class="ka36-dim-icon">&#x1F9E0;</div>' +
+      '<div class="ka36-dim-text"><div class="ka36-dim-name">Konceptuel dybde</div><div class="ka36-dim-desc">Fra overflade-genkendelse til mekanistisk forståelse. Eleven ved ikke blot hvad — men hvorfor og hvordan.</div></div>' +
+    '</div>' +
+    '<div class="ka36-dim">' +
+      '<div class="ka36-dim-icon">&#x1F5FA;</div>' +
+      '<div class="ka36-dim-text"><div class="ka36-dim-name">Konceptuel bredde</div><div class="ka36-dim-desc">Antal domæner og koncepter eleven kan arbejde med. Bredde muliggør transfer og tværfaglig tænkning.</div></div>' +
+    '</div>' +
+    '<div class="ka36-dim">' +
+      '<div class="ka36-dim-icon">&#x21C4;</div>' +
+      '<div class="ka36-dim-text"><div class="ka36-dim-name">Transfer-styrke</div><div class="ka36-dim-desc">Evnen til at anvende koncepter fra ét domæne i et nyt kontekst. Den stærkeste indikator for ægte forståelse.</div></div>' +
+    '</div>' +
+    '<div class="ka36-dim">' +
+      '<div class="ka36-dim-icon">&#x26A1;</div>' +
+      '<div class="ka36-dim-text"><div class="ka36-dim-name">Kognitiv flydende</div><div class="ka36-dim-desc">Hastighed og bekvemmelighed med kendte koncepter. Flydende frigør kapacitet til at tackle svære spørgsmål.</div></div>' +
+    '</div>' +
+    '<div class="ka36-dim">' +
+      '<div class="ka36-dim-icon">&#x1F50D;</div>' +
+      '<div class="ka36-dim-text"><div class="ka36-dim-name">Refleksiv kapacitet</div><div class="ka36-dim-desc">Elevens evne til at tænke over sin egen tænkning. Metacognition: at vide hvad man ved — og hvad man ikke ved.</div></div>' +
+    '</div>',
+    'XP og mønter måler spørgsmålsgennemstrømning. Disse fem dimensioner måler intellektuel vækst. Begge er nødvendige.'
+  );
+
+  // Card 6 — Misconception Taxonomy
+  card('Misforståelses-taksonomi',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Et forkert svar er ikke forkert på tilfældige måder. Misforståelser følger systematiske mønstre — hver med sin egen feedbacklogik.</p>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Recall gap</div>' +
+      '<div class="ka36-miscon-desc">Eleven har aldrig lært eller husker ikke informationen. Løsning: gentagelse med kontekst.</div>' +
+      '<div class="ka36-miscon-ex">Ex: "Jeg ved ikke hvornår Første Verdenskrig begyndte."</div>' +
+    '</div>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Konceptuel forvirring</div>' +
+      '<div class="ka36-miscon-desc">Eleven forveksler to relaterede begreber. Løsning: eksplicit sammenligning og distinktion.</div>' +
+      '<div class="ka36-miscon-ex">Ex: Forveksler "fotosyntese" og "cellerespiration".</div>' +
+    '</div>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Kausal inversion</div>' +
+      '<div class="ka36-miscon-desc">Eleven inverterer årsag og virkning. En af de hårdeste misforståelser at rette.</div>' +
+      '<div class="ka36-miscon-ex">Ex: Tror demokrati skaber velstand — ikke at velstand understøtter demokrati.</div>' +
+    '</div>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Mønster-fejlgenkendelse</div>' +
+      '<div class="ka36-miscon-desc">Eleven genkender et overflade-mønster men misser det dybere koncept. Løsning: ny kontekst for samme koncept.</div>' +
+    '</div>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Terminologi-forvirring</div>' +
+      '<div class="ka36-miscon-desc">Eleven kender konceptet men bruger forkert fagterm. Løsning: præcisering af sproget.</div>' +
+    '</div>' +
+    '<div class="ka36-miscon">' +
+      '<div class="ka36-miscon-type">Overgeneralisering</div>' +
+      '<div class="ka36-miscon-desc">Eleven anvender en korrekt regel på et forkert domæne. Løsning: afgrænsning og undtagelser.</div>' +
+    '</div>',
+    'Feedback der ikke kender misforståelsestypen kan ikke rette den. Målrettet feedback kræver diagnostisk præcision.'
+  );
+
+  // Card 7 — Adaptive Review Intelligence
+  card('Adaptiv feedback-intelligens — 4 niveauer',
+    '<p style="margin:0 0 12px;font-size:12px;color:var(--text-secondary)">Review-feedback kan operere på fire intelligens-niveauer. Hvert niveau kræver mere information — og leverer mere læringsværdi.</p>' +
+    '<div class="ka36-level">' +
+      '<div class="ka36-level-badge">0</div>' +
+      '<div class="ka36-level-content">' +
+        '<div class="ka36-level-title">Det korrekte svar</div>' +
+        '<div class="ka36-level-desc">Nuværende standard. Eleven ser det rigtige svar. Ingen kontekst, ingen forklaring. <em>Nul læringsværdi ud over korrektion.</em></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ka36-level">' +
+      '<div class="ka36-level-badge">1</div>' +
+      '<div class="ka36-level-content">' +
+        '<div class="ka36-level-title">Kontekstuelt svar</div>' +
+        '<div class="ka36-level-desc">Svaret ledsaget af historisk, videnskabelig eller narrativ kontekst. Eleven forstår <em>hvornår og hvordan</em>.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ka36-level">' +
+      '<div class="ka36-level-badge">2</div>' +
+      '<div class="ka36-level-content">' +
+        '<div class="ka36-level-title">Konceptuel forklaring</div>' +
+        '<div class="ka36-level-desc">Svaret forklaret via det underliggende koncept. Eleven forstår <em>hvorfor</em> — ikke blot hvad. Feedback aktiverer konceptnetværket.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ka36-level">' +
+      '<div class="ka36-level-badge">3</div>' +
+      '<div class="ka36-level-content">' +
+        '<div class="ka36-level-title">Misforståelses-målrettet</div>' +
+        '<div class="ka36-level-desc">Feedback adresserer den <em>specifikke misforståelse</em> eleven demonstrerede ved sit forkerte valg. Maksimal læringseffektivitet — kræver metadata.</div>' +
+      '</div>' +
+    '</div>',
+    'Det korrekte svar (niveau 0) er ikke feedback — det er en korrektion. Ægte feedback starter ved niveau 2.'
+  );
+
+  // Card 8 — Learning Sequencing
+  card('Lærings-sekventering',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Tilfældig sekventering er ikke neutral — den bryder konceptuelt momentum og forsinker forståelse.</p>' +
+    '<div class="ka36-concept-block" style="margin-bottom:12px">' +
+      '<div class="ka36-concept-title" style="color:#ef5350">Hvad tilfældig sekventering mister</div>' +
+      '<div class="ka36-concept-body">Ingen konceptuel opbygning · Ingen misforståelses-adressering · Ingen transfer-øjeblikke · Ingen konsolidering · Intet narrativt momentum · Ingen kognitiv dosering</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Konceptintroduktion</div>' +
+      '<div class="ka36-principle-desc">Bredt tilgængeligt spørgsmål der introducerer et nyt kernebegreb. Aktiverer skemaet.</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Konceptuel forstærkning</div>' +
+      '<div class="ka36-principle-desc">2–3 spørgsmål der uddyber samme koncept fra forskellige vinkler. Bygger dybde.</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Misforståelses-adressering</div>' +
+      '<div class="ka36-principle-desc">Diagnostisk spørgsmål der tester for den hyppigste fejlforståelse af konceptet.</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Transfer-øjeblik</div>' +
+      '<div class="ka36-principle-desc">Spørgsmål der anvender samme koncept i ny kontekst. Bekræfter ægte forståelse.</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Udfordrings-bølge</div>' +
+      '<div class="ka36-principle-desc">Progressiv sværhedsgradient inden for en konceptkluster. Bygger kognitiv stamina.</div>' +
+    '</div>' +
+    '<div class="ka36-principle">' +
+      '<div class="ka36-principle-name">Indsigts-bro</div>' +
+      '<div class="ka36-principle-desc">Spørgsmål der forbinder to konceptkluster. Skaber tværfaglig forståelse og "aha"-øjeblikke.</div>' +
+    '</div>',
+    'Intelligent sekventering er ikke gamification — det er respekt for, hvordan menneskelig forståelse faktisk opbygges.'
+  );
+
+  // Card 9 — Intellectual Identity Formation
+  card('Intellektuel identitetsdannelse',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Eleven bygger ikke blot viden — de bygger en selvforståelse som tænkende menneske. Platformen former dette billede aktivt eller passivt.</p>' +
+    '<div class="ka36-quote">Identitet skabes ikke ved at fortælle eleven hvem de er. Det skabes ved at give dem erfaringer der bekræfter hvem de er ved at blive.</div>' +
+    '<div class="ka36-identity-row">' +
+      '<div class="ka36-identity-col">' +
+        '<div class="ka36-identity-label avoid">Undgå</div>' +
+        '<div class="ka36-identity-item">"Du er god til dette."</div>' +
+        '<div class="ka36-identity-item">"Du er klog."</div>' +
+        '<div class="ka36-identity-item">"Du klarede det perfekt."</div>' +
+        '<div class="ka36-identity-item">Score-identitet</div>' +
+        '<div class="ka36-identity-item">Ranglisteiditet</div>' +
+      '</div>' +
+      '<div class="ka36-identity-col">' +
+        '<div class="ka36-identity-label prefer">Foretræk</div>' +
+        '<div class="ka36-identity-item">"Du arbejdede hårdt på det."</div>' +
+        '<div class="ka36-identity-item">"Du fandt ud af det."</div>' +
+        '<div class="ka36-identity-item">"Du prøvede en ny strategi."</div>' +
+        '<div class="ka36-identity-item">Proces-identitet</div>' +
+        '<div class="ka36-identity-item">Nysgerrigheds-identitet</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ka36-concept-block" style="margin-top:10px">' +
+      '<div class="ka36-concept-title">Kognitiv styrke-bevidsthed</div>' +
+      '<div class="ka36-concept-body">Over tid kan platformen hjælpe eleven med at opdage deres kognitive styrker: "Du har en naturlig sans for årsag-virkning i historiske begivenheder." Dette er ikke ros — det er specifik feedback om intellektuel karakter.</div>' +
+    '</div>',
+    'Vækst-identitet: eleven er ikke en score — eleven er en nysgerrig person der udvikler sig. Dette skift er platformens dybeste bidrag til eleven.'
+  );
+
+  // Card 10 — Future Learning Ecosystem
+  card('Fremtidens lærings-økosystem',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Den ultimative test for platformen er ikke korrekthedsrate — det er hvad eleven gør i verden ti år efter de sidst åbnede appen.</p>' +
+    '<div class="ka36-concept-block">' +
+      '<div class="ka36-concept-title">Livslang nysgerrighed som mål</div>' +
+      '<div class="ka36-concept-body">Platformens ambition er ikke at producere elever der er gode til platformens spørgsmål. Det er at producere elever der stiller deres egne spørgsmål til verden — og ved hvordan man finder svaret.</div>' +
+    '</div>' +
+    '<div class="ka36-concept-block">' +
+      '<div class="ka36-concept-title">Dyb konceptuel kultur</div>' +
+      '<div class="ka36-concept-body">Over tid kan platformen give eleven et konceptuelt vokabular der overskrider skolefagene: kausalitet, system, ligevægt, magt, repræsentation, evolution. Disse begreber er nøgler til at forstå verden.</div>' +
+    '</div>' +
+    '<div class="ka36-concept-block">' +
+      '<div class="ka36-concept-title">Anti-optimisering som princip</div>' +
+      '<div class="ka36-concept-body">En platform der optimerer for engagement skaber afhængighed. En platform der optimerer for viden skaber kompetence. En platform der optimerer for nysgerrighed skaber mennesker der ikke har brug for platformen.</div>' +
+    '</div>' +
+    '<div class="ka36-quote">Den bedste uddannelsesplatform gør sig selv overflødig. Eleven afslutter ikke blot et kursus — de afslutter med en ny måde at forholde sig til verden.</div>',
+    'Section 36s centrale bidrag: platformen er ikke en videns-leverings-maskine. Den er en intellektuel identitets-former.',
+    'accent'
+  );
 
 }());
 </script>
