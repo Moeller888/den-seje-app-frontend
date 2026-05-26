@@ -153,6 +153,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   let sessionCorrectStreak = 0;
   let bestSessionStreak    = 0;
 
+  // Challenge-wave state machine — session-scoped, drives adaptive sequencing.
+  // Resets on page load. No persistent student state — purely local pacing.
+  let sessionWavePhase = 'challenge';
+  let sessionConsecutiveCorrect = 0;
+  let sessionConsecutiveIncorrect = 0;
+  let lastMisconceptionType = null;
+
+  function updateWavePhase(wasCorrect) {
+    if (wasCorrect) {
+      sessionConsecutiveIncorrect = 0;
+      sessionConsecutiveCorrect++;
+      if (sessionWavePhase === 'recovery' && sessionConsecutiveCorrect >= 3) {
+        sessionWavePhase = 'challenge';
+        sessionConsecutiveCorrect = 0;
+      } else if (sessionWavePhase === 'reinforcement' && sessionConsecutiveCorrect >= 2) {
+        sessionWavePhase = 'challenge';
+        sessionConsecutiveCorrect = 0;
+      } else if (sessionWavePhase === 'challenge' && sessionConsecutiveCorrect >= 4) {
+        sessionWavePhase = 'deep_challenge';
+      }
+    } else {
+      sessionConsecutiveCorrect = 0;
+      sessionConsecutiveIncorrect++;
+      if (sessionConsecutiveIncorrect >= 2) {
+        sessionWavePhase = 'recovery';
+      } else if (sessionWavePhase === 'deep_challenge' || sessionWavePhase === 'challenge') {
+        sessionWavePhase = 'reinforcement';
+      }
+    }
+    logEvent('WAVE_PHASE', { phase: sessionWavePhase, cc: sessionConsecutiveCorrect, ci: sessionConsecutiveIncorrect });
+  }
+
   async function fetchProgress() {
     const { data } = await supabase
       .from("student_progress")
@@ -323,6 +355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Hidden achievement: perfect_five — track consecutive correct per session
       sessionCorrectStreak++;
+      updateWavePhase(true);
       if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
         bestSessionStreak = sessionCorrectStreak;
         supabase.rpc("update_best_session_streak", { p_count: bestSessionStreak }).catch(() => {});
@@ -349,6 +382,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         clickedBtn.addEventListener("animationend", () => clickedBtn.classList.remove("incorrect-flash"), { once: true });
       }
       sessionCorrectStreak = 0;
+      lastMisconceptionType = data.misconception_type ?? null;
+      updateWavePhase(false);
 
     } else {
       logError("UNKNOWN_STATUS", data.status);
@@ -388,9 +423,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function getNextQuestion() {
     setUIState(UI_STATES.LOADING_QUESTION);
 
+    const sessionContext = {
+      wave_phase: sessionWavePhase,
+      consecutive_incorrect: sessionConsecutiveIncorrect,
+      last_misconception_type: lastMisconceptionType,
+    };
+
     let { data, error } = await supabase.functions.invoke(
       "get-next-question",
-      { body: {} }
+      { body: { session_context: sessionContext } }
     );
 
     if (error) {

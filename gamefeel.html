@@ -994,6 +994,46 @@
     .le37-rule:last-child { border-bottom: none; }
     .le37-rule::before { content: "→ "; color: #2dbf8a; font-weight: 700; }
     .le37-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Section 38 — Adaptive Concept Intelligence */
+    .ai38-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ai38-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .ai38-card.accent { border-color: #6c3fbf; background: linear-gradient(135deg, #0e0019 0%, #07000f 100%); }
+    .ai38-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #9c6fe4; margin-bottom: 6px; }
+    .ai38-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .ai38-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .ai38-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .ai38-block { background: rgba(156, 111, 228, 0.07); border: 1px solid rgba(156, 111, 228, 0.2); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .ai38-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #9c6fe4; margin-bottom: 8px; }
+    .ai38-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .ai38-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .ai38-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .ai38-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .ai38-compare-label.before { color: #888; }
+    .ai38-compare-label.after { color: #9c6fe4; }
+    .ai38-compare-item { font-size: 10px; color: var(--text-secondary); padding: 2px 0; line-height: 1.4; }
+    .ai38-state { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .ai38-state:last-child { border-bottom: none; }
+    .ai38-state-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .ai38-state-name { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .ai38-state-desc { font-size: 10px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .ai38-state-rule { font-size: 9px; color: var(--text-muted); margin-top: 3px; font-style: italic; }
+    .ai38-arrow { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text-secondary); padding: 4px 0; }
+    .ai38-arrow-icon { color: #9c6fe4; font-weight: 700; flex-shrink: 0; }
+    .ai38-path { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+    .ai38-path-step { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text-secondary); }
+    .ai38-path-num { width: 18px; height: 18px; border-radius: 50%; background: rgba(156, 111, 228, 0.2); color: #9c6fe4; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ai38-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .ai38-rule:last-child { border-bottom: none; }
+    .ai38-rule::before { content: "→ "; color: #9c6fe4; font-weight: 700; }
+    .ai38-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #9c6fe4; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .ai38-score { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
+    .ai38-score:last-child { border-bottom: none; }
+    .ai38-score-label { color: var(--text-secondary); }
+    .ai38-score-val { font-weight: 700; color: #9c6fe4; }
+    .ai38-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(156, 111, 228, 0.12); color: #9c6fe4; margin: 2px; }
+    .ai38-phase-bar { height: 4px; border-radius: 2px; margin: 6px 0; background: rgba(156, 111, 228, 0.2); position: relative; overflow: hidden; }
+    .ai38-phase-bar-fill { height: 100%; border-radius: 2px; background: #9c6fe4; }
   </style>
 </head>
 <body>
@@ -1224,6 +1264,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 37 — Learning System Engine Implementation</h2>
   <div class="le37-grid" id="le37Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 38 — Adaptive Concept Intelligence</h2>
+  <div class="ai38-grid" id="ai38Grid"></div>
 </div>
 
 <script type="module">
@@ -10824,6 +10867,293 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '<div class="le37-rule">GDPR: alle lærings-data er scoped til elevens uddannelseskontekst — aldrig solgt eller delt</div>' +
     '<div class="le37-quote" style="margin-top:12px">Den bedste lærings-motor er gennemsigtig, forklarbar og kontrollerbar. En sort boks er ikke intelligent — det er uansvarligt.</div>',
     'Section 37s centrale bidrag: platformen begynder at forstå læring. Den næste fase er at bruge den forståelse til intelligent sekventering.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 38 — Adaptive Concept Intelligence ───────────────────────────────
+(function () {
+  var grid = document.getElementById('ai38Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, variant) {
+    var el = document.createElement('div');
+    el.className = 'ai38-card' + (variant === 'accent' ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ai38-label">Section 38 — Adaptive Intelligence</div>' +
+      '<div class="ai38-title">' + title + '</div>' +
+      '<div class="ai38-body">' + body + '</div>' +
+      (footer ? '<div class="ai38-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Static Quiz vs Adaptive Intelligence (accent)
+  card('Fra statisk quiz til adaptiv intelligens',
+    '<p style="margin:0 0 12px">Section 38 aktiverer det infrastruktur Section 37 lagde. Platformen begynder nu at tilpasse sig hver elevs konceptuelle forståelse i realtid.</p>' +
+    '<div class="ai38-compare">' +
+      '<div class="ai38-compare-col">' +
+        '<div class="ai38-compare-label before">Statisk quiz (før)</div>' +
+        '<div class="ai38-compare-item">Samme rækkefølge for alle</div>' +
+        '<div class="ai38-compare-item">Ingen hukommelse om fejltyper</div>' +
+        '<div class="ai38-compare-item">Sværhedsgrad = tilfældig</div>' +
+        '<div class="ai38-compare-item">Feedback = "korrekt svar: X"</div>' +
+        '<div class="ai38-compare-item">Bølger = ingen</div>' +
+      '</div>' +
+      '<div class="ai38-compare-col">' +
+        '<div class="ai38-compare-label after">Adaptiv intelligens (nu)</div>' +
+        '<div class="ai38-compare-item">Rækkefølge tilpasset bølge-fase</div>' +
+        '<div class="ai38-compare-item">Misconception signal i DB</div>' +
+        '<div class="ai38-compare-item">Sværhedsgrad = pædagogisk valgt</div>' +
+        '<div class="ai38-compare-item">Feedback = lærerskrevet forklaring</div>' +
+        '<div class="ai38-compare-item">Bølger = challenge → deep → recovery</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-quote">Det er ikke intelligens der imponerer — det er intelligens der respekterer elevens rytme og ikke overtager den.</div>',
+    'Platformen er ikke længere et spørgsmålskarrusel. Den er begyndt at lytte.',
+    'accent'
+  );
+
+  // Card 2 — Infrastructure Activation Audit
+  card('Infrastruktur-aktiveringsaudit: hvad strømmer hvor',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Section 38 aktiverer to lag af eksisterende infrastruktur og tilføjer wave-state-machine som det tredje lag.</p>' +
+    '<div class="ai38-block">' +
+      '<div class="ai38-block-title">Live fra Section 37 (metadata-infrastruktur)</div>' +
+      '<div class="ai38-block-body">' +
+        '<span class="ai38-tag">questions.metadata JSONB</span> — concepts, cognitive_skill, misconception_type, difficulty_type<br>' +
+        '<span class="ai38-tag">question_instances.misconception_signal</span> — optaget ved forkert svar<br>' +
+        '<span class="ai38-tag">review_text flow</span> — get-next-question → process-event → app.js feedback<br>' +
+        '<span class="ai38-tag">get_concept_states RPC</span> — JSONB map over koncepttilstande' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-block">' +
+      '<div class="ai38-block-title">Nyt fra Section 38 (adaptive lag)</div>' +
+      '<div class="ai38-block-body">' +
+        '<span class="ai38-tag">sessionWavePhase</span> — challenge | reinforcement | recovery | deep_challenge<br>' +
+        '<span class="ai38-tag">session_context</span> — sendes til get-next-question på hvert kald<br>' +
+        '<span class="ai38-tag">sortByWave()</span> — reorderer spørgsmål efter metadata.difficulty_type<br>' +
+        '<span class="ai38-tag">misconception_type</span> — returneres fra process-event, bruges i targeted recovery' +
+      '</div>' +
+    '</div>',
+    'Alle tre lag arbejder uafhængigt — systemet degraderer gracefully når metadata mangler.',
+    ''
+  );
+
+  // Card 3 — Challenge-Wave State Machine
+  card('Challenge-bølge state machine: 4 tilstande',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Session-lokal tilstandsmaskine. Nulstilles ved page load. Ingen DB-persistens. Drives af consecutive correct/incorrect tæller.</p>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#9c6fe4"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">challenge <span style="color:var(--text-muted);font-weight:400;font-size:10px">— start</span></div>' +
+        '<div class="ai38-state-desc">Blandet sværhedsgrad. Let præference for konceptuelle/applied spørgsmål.</div>' +
+        '<div class="ai38-state-rule">→ deep_challenge efter 4 consecutive correct · → reinforcement efter 1 incorrect</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#c084fc"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">deep_challenge</div>' +
+        '<div class="ai38-state-desc">Eleven er i flow. Præference for analytiske/synthese spørgsmål.</div>' +
+        '<div class="ai38-state-rule">→ reinforcement efter 1 incorrect</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#f59e0b"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">reinforcement</div>' +
+        '<div class="ai38-state-desc">Efter én fejl. Præference for konceptuelle/forståelses spørgsmål.</div>' +
+        '<div class="ai38-state-rule">→ challenge efter 2 consecutive correct · → recovery efter 2 consecutive incorrect</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#ef5350"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">recovery</div>' +
+        '<div class="ai38-state-desc">Efter 2+ fejl. Præference for faktuelle/recall spørgsmål. Targeted recovery hvis misconception_type kendes.</div>' +
+        '<div class="ai38-state-rule">→ challenge efter 3 consecutive correct</div>' +
+      '</div>' +
+    '</div>',
+    'Bølge-state er kognitiv rytmestyring — ikke evne-måling. En elev der kæmpede i går er ikke i recovery i dag.',
+    ''
+  );
+
+  // Card 4 — Wave Score Logic
+  card('Wave-scoring: additivt bias, ikke absolut filtrering',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Et højt-scoret spørgsmål foretrækkes — men kræves ikke. Ingen metadata = score 0 = original DB-rækkefølge bevaret.</p>' +
+    '<div class="ai38-block" style="margin-bottom:8px">' +
+      '<div class="ai38-block-title" style="color:#ef5350">Recovery-scores</div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">difficulty_type = factual</span><span class="ai38-score-val">+10</span></div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">cognitive_skill = recall</span><span class="ai38-score-val">+5</span></div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">misconception_type matcher lastMisconception</span><span class="ai38-score-val">+8</span></div>' +
+    '</div>' +
+    '<div class="ai38-block" style="margin-bottom:8px">' +
+      '<div class="ai38-block-title" style="color:#f59e0b">Reinforcement-scores</div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">difficulty_type = conceptual</span><span class="ai38-score-val">+8</span></div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">cognitive_skill = comprehension</span><span class="ai38-score-val">+5</span></div>' +
+    '</div>' +
+    '<div class="ai38-block">' +
+      '<div class="ai38-block-title" style="color:#c084fc">Deep challenge-scores</div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">difficulty_type = analytical</span><span class="ai38-score-val">+10</span></div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">difficulty_type = applied</span><span class="ai38-score-val">+7</span></div>' +
+      '<div class="ai38-score"><span class="ai38-score-label">cognitive_skill = synthesis/evaluation</span><span class="ai38-score-val">+5</span></div>' +
+    '</div>',
+    'Alle scoring-beslutninger korresponderer direkte til pædagogisk ræsonnering. Ingen opake vægte.',
+    ''
+  );
+
+  // Card 5 — Concept State Derivation
+  card('Koncepttilstande: 4 tilstande afledt af question_instances',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">get_concept_states(student_id) returnerer JSONB map: { "revolution": "stable", "kausalitet": "uncertain" }. Kræver questions.metadata.concepts.</p>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#ef5350"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">misconception_prone</div>' +
+        '<div class="ai38-state-desc">2+ forkerte svar med misconception_signal på dette koncept</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#4caf50"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">stable</div>' +
+        '<div class="ai38-state-desc">3+ korrekte og 0 forkerte svar på dette koncept</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#f59e0b"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">uncertain</div>' +
+        '<div class="ai38-state-desc">Blanding af korrekte og forkerte svar på dette koncept</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#888"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">emerging</div>' +
+        '<div class="ai38-state-desc">1 korrekt svar og ingen forkerte — eller første gang set</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-rule">GDPR: scoped helt til ét student_id via SECURITY DEFINER — ingen krydselev-data mulig</div>' +
+    '<div class="ai38-rule">RPC er live i produktion — ikke endnu kaldt fra frontend (Phase 2: lærerdashboard)</div>',
+    'Infrastrukturen er klar. Konceptkort aktiveres i lærerdashboard-fasen.',
+    ''
+  );
+
+  // Card 6 — Misconception-Aware Sequencing
+  card('Misconception-målrettet sekvensering: data-stien',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Når en elev svarer forkert på et spørgsmål med misconception_type, bruges den information til at vælge det næste spørgsmål i recovery.</p>' +
+    '<div class="ai38-path">' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">1</div><span>Elev svarer forkert på spørgsmål med misconception_type = "causal_inversion"</span></div>' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">2</div><span>process-event returnerer <code style="color:#9c6fe4">misconception_type: "causal_inversion"</code></span></div>' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">3</div><span>app.js gemmer <code style="color:#9c6fe4">lastMisconceptionType = "causal_inversion"</code></span></div>' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">4</div><span>Næste kald til get-next-question: session_context.last_misconception_type = "causal_inversion"</span></div>' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">5</div><span>I recovery-fase: +8 score for spørgsmål med matching misconception_type + factual difficulty</span></div>' +
+      '<div class="ai38-path-step"><div class="ai38-path-num">6</div><span>Elev modtager et simpelt kausalt spørgsmål der genopbygger kausal ræsonnering på fast grund</span></div>' +
+    '</div>' +
+    '<div class="ai38-rule">lastMisconceptionType nulstilles til null ved page load — ingen stigma på tværs af sessioner</div>' +
+    '<div class="ai38-rule">Eleven ser aldrig misconception_type eller nogen afledt etiket</div>' +
+    '<div class="ai38-rule">Hvis intet matchende recovery-spørgsmål eksisterer: system serverer ethvert faktisk spørgsmål — graceful fallback</div>',
+    'Targeted recovery hjælper eleven — den stempler dem ikke som "causal_inversion-prone".',
+    ''
+  );
+
+  // Card 7 — Recovery Flow
+  card('Recovery-flow: tillidsgendannelse, ikke straf',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Recovery aktiveres ved 2+ consecutive incorrect. Tre ting ændres i spørgsmålsvalget. Intet andet ændres.</p>' +
+    '<div class="ai38-block" style="margin-bottom:8px">' +
+      '<div class="ai38-block-title">Hvad der ændres</div>' +
+      '<div class="ai38-block-body">' +
+        '<strong>Spørgsmålsvalg:</strong> get-next-question foretrækker difficulty_type=factual, cognitive_skill=recall<br>' +
+        '<strong>Targeted:</strong> hvis lastMisconceptionType kendes → boost til matchende misconception_type<br>' +
+        '<strong>Alt andet:</strong> uændret — delay, feedback, XP, coins, UI' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-block">' +
+      '<div class="ai38-block-title">Exit: 3 consecutive correct → challenge-fase</div>' +
+    '</div>' +
+    '<div class="ai38-rule">Vis IKKE "du er i recovery mode" til eleven</div>' +
+    '<div class="ai38-rule">Forøg IKKE XP-krav i recovery</div>' +
+    '<div class="ai38-rule">Spring IKKE recovery over for "avancerede" elever — alle elever har brug for rytme</div>' +
+    '<div class="ai38-rule">Gør IKKE recovery-spørgsmål åbenlyst lettere — faktuelle spørgsmål skal stadig være interessante</div>' +
+    '<div class="ai38-quote">Recovery er ikke straftilstand. Det er en tillidsgendannelsesrytme. Eleven skal mærke at spørgsmålene bliver mere tilgængelige — ikke føle sig straffet af lettere spørgsmål.</div>',
+    'Systemet annoncerer aldrig at det er i recovery-tilstand.',
+    ''
+  );
+
+  // Card 8 — Reflective Feedback Levels
+  card('Refleksiv feedback: 4 niveauer over tid',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Feedback er ikke output. Feedback er en samtale. Hvert niveau stiller mere til elevens tænkning — men kun når fundamentet er klar.</p>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#888"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">Level 0 <span style="font-size:10px;color:var(--text-muted);font-weight:400">— live</span></div>' +
+        '<div class="ai38-state-desc">Ingen review_text i metadata → "❌ Forkert – korrekt svar: X"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#2dbf8a"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">Level 1-2 <span style="font-size:10px;color:var(--text-muted);font-weight:400">— live (Section 37)</span></div>' +
+        '<div class="ai38-state-desc">review_text i metadata → "❌ Forkert — " + lærerskrevet kontekstuel forklaring</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#9c6fe4"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">Level 3 <span style="font-size:10px;color:var(--text-muted);font-weight:400">— fremtid</span></div>' +
+        '<div class="ai38-state-desc">Misconception-targeteret feedback: valgt forkert option matcher en kendt misconception-variant</div>' +
+        '<div class="ai38-state-rule">Kræver metadata.option_misconceptions JSONB — ikke implementeret endnu</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-state">' +
+      '<div class="ai38-state-dot" style="background:#c084fc"></div>' +
+      '<div>' +
+        '<div class="ai38-state-name">Level 4 <span style="font-size:10px;color:var(--text-muted);font-weight:400">— fremtid</span></div>' +
+        '<div class="ai38-state-desc">Refleksiv prompt: "Dette forbinder til det du ved om demokrati — hvordan skifter magt i begge tilfælde?"</div>' +
+        '<div class="ai38-state-rule">Kræver concept_states integration i frontend — fremtidig fase</div>' +
+      '</div>' +
+    '</div>',
+    'Niveau 3 og 4 aktiveres kun når fundamentet er klar — ikke som standard feedback.',
+    ''
+  );
+
+  // Card 9 — Confidence Stabilization
+  card('Tillidsstabilisering: forebyggelse af kognitiv kollaps',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Elevens følelsesmæssige relation til faget er lige så vigtig som konceptuel forståelse. En elev der begynder at frygte platformen har mistet læringen.</p>' +
+    '<div class="ai38-block" style="margin-bottom:8px">' +
+      '<div class="ai38-block-title">Kollaps-forebyggelsesmekanisme</div>' +
+      '<div class="ai38-block-body">' +
+        '<strong>Trigger:</strong> 2 consecutive incorrect svar<br>' +
+        '<strong>Mekanisme:</strong> recovery-bølge-fase → faktuelle spørgsmål foretrukket<br>' +
+        '<strong>Effekt:</strong> Elev oplever lettere spørgsmål → sandsynligvis korrekt → tillid begynder at vende tilbage<br>' +
+        '<strong>Exit:</strong> 3 consecutive correct → tilbage til challenge-fase' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-rule">Ingen uafbrudt sværhedsgrad-eskalering</div>' +
+    '<div class="ai38-rule">Ingen monotont stigende udfordring (kognitiv udmattelse)</div>' +
+    '<div class="ai38-rule">Ingen straf-spiraler (forkert → sværere → forkert igen → endnu sværere)</div>' +
+    '<div class="ai38-rule">Ingen synlig feedback om performance-trajektorie</div>' +
+    '<div class="ai38-rule">Ingen konkurrencepræget framing mod andre elever</div>' +
+    '<div class="ai38-quote">Psykologisk sikkerhed beskytter relationen. Relationen beskytter læringen.</div>',
+    'Systemet er designet til at elever aldrig oplever det som fjendtligt — selv i recovery.',
+    ''
+  );
+
+  // Card 10 — Future Concept Intelligence (accent)
+  card('Fremtidens konceptintelligens: nordstjernen',
+    '<p style="margin:0 0 12px">Section 38 er begyndelsen. Infrastrukturen er lagt for et system der gradvist bliver genuint intelligent om hver elevs konceptuelle kort.</p>' +
+    '<div class="ai38-block">' +
+      '<div class="ai38-block-title">Fremtidige faser</div>' +
+      '<div class="ai38-block-body">' +
+        '<strong>Phase 3:</strong> teacher.html kalder get_concept_states() per elev → konceptsundhedskort for klassen<br><br>' +
+        '<strong>Phase 4:</strong> get-next-question bruger koncepttilstande til at prioritere misconception_prone konceptklynger<br><br>' +
+        '<strong>Phase 5:</strong> Stabile koncepter trigger Level 4 refleksive prompts der forbinder til tilgrænsende begreber<br><br>' +
+        '<strong>Phase 6:</strong> Konceptgraf definerer curriculum-stilladsering — spørgsmål ordnet efter konceptparathed<br><br>' +
+        '<strong>Phase 7:</strong> transfer_potential metadata muliggør indsigt-broer på tværs af faggrænser' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai38-quote" style="margin-top:12px">Systemet bliver genuint intelligent om hver elevs konceptuelle kort — ikke deres performance-score. Målet er en elev der tænker klarere, ikke en elev der scorer højere.</div>',
+    'Section 38 er ikke slutpunktet. Det er det øjeblik platformens intelligens begynder at akkumulere.',
     'accent'
   );
 
