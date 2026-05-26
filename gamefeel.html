@@ -1212,6 +1212,56 @@
     .tw42-signal:last-child { border-bottom: none; }
     .tw42-signal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
     .tw42-signal-text { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Section 43 — Full Learning Object Workflow Slice */
+    .lw43-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .lw43-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .lw43-card.accent { border-color: #5a4200; background: linear-gradient(135deg, #120d00 0%, #0d0900 100%); }
+    .lw43-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #c4a25a; margin-bottom: 6px; }
+    .lw43-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .lw43-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .lw43-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .lw43-block { background: rgba(196,162,90,0.06); border: 1px solid rgba(196,162,90,0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .lw43-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #c4a25a; margin-bottom: 8px; }
+    .lw43-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .lw43-stage { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .lw43-stage:last-child { border-bottom: none; }
+    .lw43-stage-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(196,162,90,0.12); color: #c4a25a; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .lw43-stage-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+    .lw43-stage-title { font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .lw43-layer { border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; border-left: 3px solid #c4a25a; background: rgba(196,162,90,0.04); }
+    .lw43-layer-num { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #c4a25a; margin-bottom: 3px; }
+    .lw43-layer-time { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; }
+    .lw43-layer-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+    .lw43-obj { background: rgba(0,0,0,0.25); border: 1px solid rgba(196,162,90,0.2); border-radius: 8px; padding: 12px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 10px; }
+    .lw43-obj-key { color: #c4a25a; }
+    .lw43-obj-val { color: var(--text-secondary); }
+    .lw43-obj-comment { color: rgba(196,162,90,0.5); font-style: italic; }
+    .lw43-qa-prompt { background: rgba(196,162,90,0.06); border: 1px solid rgba(196,162,90,0.15); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; }
+    .lw43-qa-q { font-size: 11px; font-style: italic; color: var(--text-secondary); line-height: 1.5; margin-bottom: 5px; }
+    .lw43-qa-a { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+    .lw43-qa-verdict { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: rgba(76,175,80,0.12); color: #4caf50; display: inline-block; margin-top: 4px; }
+    .lw43-moment { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; border-left: 3px solid rgba(196,162,90,0.3); }
+    .lw43-moment-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #c4a25a; margin-bottom: 5px; }
+    .lw43-moment-sees { font-size: 10px; color: var(--text-primary); line-height: 1.4; margin-bottom: 3px; }
+    .lw43-moment-sys { font-size: 9px; color: var(--text-muted); font-style: italic; line-height: 1.4; }
+    .lw43-adapt { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+    .lw43-adapt:last-child { border-bottom: none; }
+    .lw43-adapt-concept { font-size: 10px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; min-width: 110px; }
+    .lw43-adapt-arrow { color: #c4a25a; font-size: 11px; flex-shrink: 0; }
+    .lw43-adapt-state { font-size: 10px; color: var(--text-secondary); }
+    .lw43-dim { padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
+    .lw43-dim:last-child { border-bottom: none; }
+    .lw43-dim-verdict { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+    .lw43-dim-verdict.pass { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .lw43-dim-verdict.gap { background: rgba(255,152,0,0.12); color: #ff9800; }
+    .lw43-dim-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+    .lw43-dim-name { font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .lw43-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #c4a25a; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .lw43-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(196,162,90,0.1); color: #c4a25a; margin: 2px; }
+    .lw43-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .lw43-rule:last-child { border-bottom: none; }
+    .lw43-rule::before { content: "→ "; color: #c4a25a; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1457,6 +1507,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 42 — Teacher Authoring Workspace &amp; Pedagogical Tooling</h2>
   <div class="tw42-grid" id="tw42Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 43 — Full Learning Object Workflow Slice</h2>
+  <div class="lw43-grid" id="lw43Grid"></div>
 </div>
 
 <script type="module">
@@ -12507,6 +12560,274 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="tw42-quote" style="margin-top:10px">Lærere er ikke brugere af systemet. De er medforfatter af det. Arbejdsrummet bør ære det.</div>',
     'Section 42 er ikke slutpunktet for lærerværktøjer. Det er forpligtelsen til altid at bygge for menneskerne frem for systemet.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 43 — Full Learning Object Workflow Slice ──────────────────────
+(function () {
+  var grid = document.getElementById('lw43Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'lw43-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="lw43-label">Section 43 — Integration Truth</div>' +
+      '<div class="lw43-title">' + title + '</div>' +
+      '<div class="lw43-body">' + body + '</div>' +
+      (footer ? '<div class="lw43-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Integration Truth (accent)
+  card('Det fulde læringsforløb: systemer er kun bevist når rigtige brugere bevæger sig igennem dem sammenhængende',
+    '<div class="lw43-block" style="margin-bottom:10px">' +
+      '<div class="lw43-block-title">Hvad projektet nu har</div>' +
+      '<div class="lw43-block-body">' +
+        '<span class="lw43-tag">Stærk pædagogisk filosofi</span>' +
+        '<span class="lw43-tag">Adaptiv arkitektur</span>' +
+        '<span class="lw43-tag">Berigelsessystemer</span>' +
+        '<span class="lw43-tag">Lærerværktøjsfilosofi</span>' +
+        '<span class="lw43-tag">QA-system</span>' +
+        '<span class="lw43-tag">Koncepttilstandssporing</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-block">' +
+      '<div class="lw43-block-title">Hvad sektion 43 beviser</div>' +
+      '<div class="lw43-block-body">' +
+        '<strong style="color:#c4a25a">Lærerskaber spørgsmål</strong> → berigelse → misconception-tagging → review_text-forfatning → QA → student modtager spørgsmål → adaptiv sekventering reagerer → koncepttilstande opdateres → review-feedback vises → lærer kan inspicere og forbedre<br><br>' +
+        'Dette er den første fuldstændige løkke. Hvis det virker — virker arkitekturen.' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-quote">Isolerede delsystemer er løfter. Integration er beviset.</div>',
+    'Sektion 43 er ikke endnu en designkontrakt. Det er integrationssandhed.',
+    'accent'
+  );
+
+  // Card 2 — Slice Selection
+  card('Valg af slice: historisk kausalitetsspørgsmål — Bastillen som politisk handling',
+    '<div class="lw43-block" style="margin-bottom:8px">' +
+      '<div class="lw43-block-title">Det valgte spørgsmål</div>' +
+      '<div class="lw43-block-body" style="font-style:italic">"Hvorfor lykkedes stormen på Bastillen som politisk handling på trods af dens militære ubetydelighed?"</div>' +
+    '</div>' +
+    '<div class="lw43-block-title" style="margin-top:8px">Hvorfor dette spørgsmål</div>' +
+    '<div class="lw43-rule">Øver kausal ræsonnering — ikke hukommelse — gør adaptiv respons meningsfuld</div>' +
+    '<div class="lw43-rule">Klar dominerende misconception: causal_inversion (forveksler symbolsk og militær kausalitet)</div>' +
+    '<div class="lw43-rule">review_text kan nå Niveau 3 (refleksiv uddybning) — maksimalt berigelsespotentiale</div>' +
+    '<div class="lw43-rule">Koncepter: revolution, symbolisme, kollektiv_handling, politisk_legitimitet — rig tværfaglig kobling</div>' +
+    '<div class="lw43-rule">challenge_role: deep_challenge — kræver stabil konceptfundament før ankomst</div>' +
+    '<div class="lw43-rule">Læreinspektionsværdi: misconception-frekvens er diagnostisk rig for denne type</div>',
+    '"Hvis dette spørgsmål kan flyde rent igennem alle systemer — er den fulde arkitektur valideret."'
+  );
+
+  // Card 3 — Teacher Authoring Flow
+  card('Lærerforfattelsesforløbet: Lag 0→3 for Bastille-spørgsmålet',
+    '<div class="lw43-layer" style="border-color:#555">' +
+      '<div class="lw43-layer-num">Lag 0 — Spørgsmålet eksisterer</div>' +
+      '<div class="lw43-layer-time">2–4 minutter</div>' +
+      '<div class="lw43-layer-body">Rent formular: spørgsmålstekst, korrekt svar, tre svarmuligheder. Gemmes. Spørgsmålet er funktionelt men upositioneret.</div>' +
+    '</div>' +
+    '<div class="lw43-layer" style="border-color:#7a6530">' +
+      '<div class="lw43-layer-num">Lag 1 — Spørgsmålet er positioneret</div>' +
+      '<div class="lw43-layer-time">1–2 minutter</div>' +
+      '<div class="lw43-layer-body">Blid opfordring: "Tilføj koncepter." Autocomplete foreslår symbolisme, kollektiv_handling. Dropdown vælger misconception_type: causal_inversion. Bølgescore aktiveres.</div>' +
+    '</div>' +
+    '<div class="lw43-layer" style="border-color:#a0823d">' +
+      '<div class="lw43-layer-num">Lag 2 — Spørgsmålet underviser</div>' +
+      '<div class="lw43-layer-time">3–7 minutter</div>' +
+      '<div class="lw43-layer-body">Skriveoverflade: "Hvad bør en elev forstå efter at have svaret forkert?" Live forhåndsvisning. Indikator viser Niveau 2 → Niveau 3 når refleksivt krog tilføjes.</div>' +
+    '</div>' +
+    '<div class="lw43-layer" style="border-color:#c4a25a">' +
+      '<div class="lw43-layer-num">Lag 3 — Spørgsmålet ved hvor det hører til</div>' +
+      '<div class="lw43-layer-time">1–2 minutter</div>' +
+      '<div class="lw43-layer-body">Valgfri berigelse: cognitive_skill = evaluation, challenge_role = deep_challenge, insight_type = conceptual_bridge. Bølgemotoren scorer nu optimalt.</div>' +
+    '</div>',
+    'Læreren stoppes aldrig. Hvert lag er en invitation — ikke et krav.'
+  );
+
+  // Card 4 — Learning Object Enrichment
+  card('Læreobjektet: den berigede metadata-payload for Bastille-spørgsmålet',
+    '<div class="lw43-obj">' +
+      '<div style="color:rgba(196,162,90,0.5);margin-bottom:6px;font-size:9px">// Læreobjekt — fuldt beriget</div>' +
+      '<span class="lw43-obj-key">question</span><span class="lw43-obj-val">: "Hvorfor lykkedes stormen på Bastillen..."</span><br>' +
+      '<span class="lw43-obj-key">correct</span><span class="lw43-obj-val">: "Fordi det signalerede at kongens autoritet kunne udfordres"</span><br>' +
+      '<span class="lw43-obj-key">review_text</span><span class="lw43-obj-val">: "Bastillen holdt kun 7 fanger... Symboler er sommetider vigtigere end fakta."</span><br>' +
+      '<br>' +
+      '<span class="lw43-obj-comment">// metadata JSONB</span><br>' +
+      '<span class="lw43-obj-key">concepts</span><span class="lw43-obj-val">: ["revolution","symbolisme","kollektiv_handling","politisk_legitimitet"]</span><br>' +
+      '<span class="lw43-obj-key">misconception_type</span><span class="lw43-obj-val">: "causal_inversion"</span><br>' +
+      '<span class="lw43-obj-key">cognitive_skill</span><span class="lw43-obj-val">: "evaluation"</span><br>' +
+      '<span class="lw43-obj-key">difficulty_type</span><span class="lw43-obj-val">: "analytical"</span><br>' +
+      '<span class="lw43-obj-key">challenge_role</span><span class="lw43-obj-val">: "deep_challenge"</span><br>' +
+      '<span class="lw43-obj-key">insight_type</span><span class="lw43-obj-val">: "conceptual_bridge"</span><br>' +
+      '<span class="lw43-obj-key">interdisciplinary_links</span><span class="lw43-obj-val">: ["politisk videnskab","sociologi","semiotik"]</span>' +
+    '</div>',
+    'Et enkelt spørgsmål. Et fuldt beriget læreobjekt. Alle systemer har nu noget at arbejde med.'
+  );
+
+  // Card 5 — QA Flow
+  card('Pædagogisk QA: 5 prompts anvendt på Bastille-spørgsmålet',
+    '<div class="lw43-qa-prompt">' +
+      '<div class="lw43-qa-q">"Kræver dette spørgsmål ræsonnering — eller kunne en velinformeret elev svare fra hukommelse alene?"</div>' +
+      '<div class="lw43-qa-a">Ræsonnering. En elev kan kende stormen og stadig svare forkert hvis de forveksler symbolsk og militær kausalitet.</div>' +
+      '<span class="lw43-qa-verdict">Godkendt</span>' +
+    '</div>' +
+    '<div class="lw43-qa-prompt">' +
+      '<div class="lw43-qa-q">"Ville en elev der svarede forkert lære noget meningsfuldt af review_text?"</div>' +
+      '<div class="lw43-qa-a">Ja — review_text forklarer hvorfor symbolsk framing er det der tæller, med "7 fanger"-detaljen som konkret anker.</div>' +
+      '<span class="lw43-qa-verdict">Godkendt</span>' +
+    '</div>' +
+    '<div class="lw43-qa-prompt">' +
+      '<div class="lw43-qa-q">"Afslører det mest valgte forkerte svar et rigtigt tankemønster?"</div>' +
+      '<div class="lw43-qa-a">Ja — "frigjorde hundredvis af fanger" er causal_inversion: eleven tror symbolsk magt kommer fra konkret befrielse.</div>' +
+      '<span class="lw43-qa-verdict">Godkendt</span>' +
+    '</div>' +
+    '<div class="lw43-qa-prompt">' +
+      '<div class="lw43-qa-q">"Ville en tænksom lærer være stolt af at bruge dette spørgsmål i klassen?"</div>' +
+      '<div class="lw43-qa-a">Ja — kan åbne en klassediskussion om hvorfor symboler sommetider er vigtigere end materielle fakta.</div>' +
+      '<span class="lw43-qa-verdict">Godkendt</span>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:10px;font-size:11px;color:#4caf50;font-weight:700">5/5 godkendt — spørgsmålet træder ind i aktiv bank</div>',
+    'QA er en samtale mellem læreren og deres eget spørgsmål. Ikke en overensstemmelsesjekke.'
+  );
+
+  // Card 6 — Student Experience Flow
+  card('Elevoplevelsesforløbet: den første fulde løkke',
+    '<div class="lw43-moment">' +
+      '<div class="lw43-moment-label">Spørgsmål ankommer</div>' +
+      '<div class="lw43-moment-sees">Eleven ser spørgsmålsteksten. Fire svarmuligheder. Ingen synlig metadata.</div>' +
+      '<div class="lw43-moment-sys">wave_phase: deep_challenge — elevkonceptet "revolution" er stabilt</div>' +
+    '</div>' +
+    '<div class="lw43-moment">' +
+      '<div class="lw43-moment-label">Eleven vælger forkert: "frigjorde hundredvis af fanger" (causal_inversion)</div>' +
+      '<div class="lw43-moment-sees">Blid forkert-indikator. review_text vises øjeblikkeligt.</div>' +
+      '<div class="lw43-moment-sys">process-event registrerer misconception_signal: causal_inversion. Bølgescoring for forstærkningsspørgsmål stiger.</div>' +
+    '</div>' +
+    '<div class="lw43-moment">' +
+      '<div class="lw43-moment-label">review_text-øjeblikket</div>' +
+      '<div class="lw43-moment-sees">"Bastillen holdt kun 7 fanger da den blev stormet. Det der gjorde den magtfuld var ikke hvad den indeholdt — men hvad den repræsenterede..."</div>' +
+      '<div class="lw43-moment-sys">review_text leveret. question_instance.answered = true. Konceptet "symbolisme" markeret som emerging.</div>' +
+    '</div>' +
+    '<div class="lw43-moment">' +
+      '<div class="lw43-moment-label">Næste spørgsmål ankommer</div>' +
+      '<div class="lw43-moment-sees">Et forstærkningsspørgsmål om "politisk_legitimitet" — blødere udfordringsniveau.</div>' +
+      '<div class="lw43-moment-sys">wave_phase skiftet mod reinforcement. Eleven mærker ikke overgangen.</div>' +
+    '</div>',
+    'Eleven mærker ikke et system. De mærker et spørgsmål der var værd at tænke over.'
+  );
+
+  // Card 7 — Adaptive Behavior
+  card('Adaptiv adfærd: systemets svar på Bastille-misconception',
+    '<div class="lw43-block" style="margin-bottom:8px">' +
+      '<div class="lw43-block-title">Udløst af forkert svar</div>' +
+      '<div class="lw43-block-body">' +
+        'misconception_signal: causal_inversion registreret<br>' +
+        'wave_phase: deep_challenge → reinforcement<br>' +
+        'Næste spørgsmål: forstærkning på "politisk_legitimitet"<br>' +
+        'review_text Niveau 3 leveret — maksimal konceptuel dybde' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-block-title" style="margin-bottom:6px">Koncepttilstandsovergange</div>' +
+    '<div class="lw43-adapt">' +
+      '<div class="lw43-adapt-concept">"revolution"</div>' +
+      '<div class="lw43-adapt-arrow">→</div>' +
+      '<div class="lw43-adapt-state">stabil → stabil (et forkert svar på deep_challenge destabiliserer ikke)</div>' +
+    '</div>' +
+    '<div class="lw43-adapt">' +
+      '<div class="lw43-adapt-concept">"symbolisme"</div>' +
+      '<div class="lw43-adapt-arrow">→</div>' +
+      '<div class="lw43-adapt-state">null → emerging (første møde, ny konceptbue åbnes)</div>' +
+    '</div>' +
+    '<div class="lw43-adapt">' +
+      '<div class="lw43-adapt-concept">"kollektiv_handling"</div>' +
+      '<div class="lw43-adapt-arrow">→</div>' +
+      '<div class="lw43-adapt-state">null → emerging (tagget på dette spørgsmål)</div>' +
+    '</div>' +
+    '<div class="lw43-adapt">' +
+      '<div class="lw43-adapt-concept">"pol. legitimitet"</div>' +
+      '<div class="lw43-adapt-arrow">→</div>' +
+      '<div class="lw43-adapt-state">emerging → developing (≥3 møder på tværs af sessioner)</div>' +
+    '</div>',
+    'Tilpasning bør føles som en tænksom lærer der lagde mærke til noget — ikke som et system der flagede en fejl.'
+  );
+
+  // Card 8 — Teacher Inspection
+  card('Læreinspektionen: hvad læreren ser efter 20 elevsvar',
+    '<div class="lw43-block" style="margin-bottom:8px">' +
+      '<div class="lw43-block-title">Svarfordeling</div>' +
+      '<div class="lw43-block-body">' +
+        '<strong style="color:#ef5350">65%</strong> valgte "frigjorde hundredvis af fanger" <span style="color:rgba(196,162,90,0.7)">(causal_inversion)</span><br>' +
+        '<strong style="color:#4caf50">25%</strong> valgte korrekt svar<br>' +
+        '<strong style="color:var(--text-muted)">10%</strong> valgte de to øvrige distraktorer' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-block" style="margin-bottom:8px">' +
+      '<div class="lw43-block-title">System-indsigt til læreren</div>' +
+      '<div class="lw43-block-body">"65% af eleverne valgte causal_inversion — de forstod Bastillen som en fangefrigørelse, ikke et politisk signal. review_text kan med fordel adressere dette mere direkte."</div>' +
+    '</div>' +
+    '<div class="lw43-block">' +
+      '<div class="lw43-block-title">Revisionsforløb</div>' +
+      '<div class="lw43-block-body">' +
+        'Lærer åbner Lag 2-forfatningsvisning. Tilføjer én sætning forrest i review_text:<br>' +
+        '<em style="color:#c4a25a">"Elever tror ofte Bastillen betød noget på grund af hvem den indeholdt. Det der faktisk betød noget var hvad stormen beviste."</em><br><br>' +
+        'Ny review_text gemt. Alle fremtidige elever modtager den forbedrede version. Tidligere data bevaret.' +
+      '</div>' +
+    '</div>',
+    'Læreren ser nok til at forbedre deres undervisning. Ikke nok til at føle sig overvåget af deres eget platform.'
+  );
+
+  // Card 9 — End-to-End Coherence Audit
+  card('Kohærensaudit: er dette faktisk en næste-generations uddannelsesoplevelse?',
+    '<div class="lw43-dim">' +
+      '<div><span class="lw43-dim-verdict pass">Lav</span></div>' +
+      '<div class="lw43-dim-body"><div class="lw43-dim-name">Lærerfriktion</div>Lag 0 tager 2–4 minutter. Berigelse er valgfri per lag. QA føles som refleksion, ikke overensstemmelse.</div>' +
+    '</div>' +
+    '<div class="lw43-dim">' +
+      '<div><span class="lw43-dim-verdict pass">Støttet</span></div>' +
+      '<div class="lw43-dim-body"><div class="lw43-dim-name">Kognitiv rytme</div>Deep challenge efterfulgt af forstærkning — eleven efterlades ikke strandet efter misconception.</div>' +
+    '</div>' +
+    '<div class="lw43-dim">' +
+      '<div><span class="lw43-dim-verdict pass">Respektfuld</span></div>' +
+      '<div class="lw43-dim-body"><div class="lw43-dim-name">Følelsesmæssig tone</div>review_text adresserer misconception som et tankemønster, ikke en fejl. Eleven lærer noget mindeværdigt.</div>' +
+    '</div>' +
+    '<div class="lw43-dim">' +
+      '<div><span class="lw43-dim-verdict pass">Øjeblikkelig</span></div>' +
+      '<div class="lw43-dim-body"><div class="lw43-dim-name">Review-timing</div>review_text vises direkte efter forkert svar — mens den kognitive spørgsmål stadig er aktiv.</div>' +
+    '</div>' +
+    '<div class="lw43-dim">' +
+      '<div><span class="lw43-dim-verdict gap">Design</span></div>' +
+      '<div class="lw43-dim-body"><div class="lw43-dim-name">Ærlige huller</div>Teacher inspection-visning eksisterer endnu ikke som bygget UI. Koncepttilstandsvisning ikke koblet til lærervisning endnu.</div>' +
+    '</div>' +
+    '<div class="lw43-quote" style="margin-top:8px">"Ja. Når dette workflow er komplet, vil en elev modtage et velforfattet spørgsmål, tænke seriøst om det, svare forkert — og lære noget rigtigt. Det er minimumskravet. Denne slice opfylder det."</div>',
+    ''
+  );
+
+  // Card 10 — Future Vertical Slice Thinking (accent)
+  card('Fremtidens vertikale slices: denne slice som skabelon',
+    '<p style="margin:0 0 10px">Det der er bevist her gælder på tværs af fag. Kausalstruktur er universel.</p>' +
+    '<div class="lw43-block" style="margin-bottom:8px">' +
+      '<div class="lw43-block-title">Skalerbar berigelse</div>' +
+      '<div class="lw43-block-body">' +
+        '<strong style="color:#c4a25a">Historie</strong>: kausalitet, symbolisme, periodisering — samme struktur<br>' +
+        '<strong style="color:#c4a25a">Naturvidenskab</strong>: systemtænkning, feedback-løkker, skala<br>' +
+        '<strong style="color:#c4a25a">Matematik</strong>: proportionalitet, abstraktion, beviser<br>' +
+        '<strong style="color:#c4a25a">Sprog</strong>: fortolkning, indramning, argumentationsanalyse<br>' +
+        '<strong style="color:#c4a25a">Tværfagligt</strong>: "kollektiv_handling" linker historie, politik, biologi' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-block">' +
+      '<div class="lw43-block-title">Langsigtet adaptiv bue</div>' +
+      '<div class="lw43-block-body">' +
+        '<strong>År 1</strong>: Koncepter opstår — systemet præsenterer berigede spørgsmål forsigtigt<br>' +
+        '<strong>År 2</strong>: Koncepter udvikles — bølgeudfordringer øges, konceptkoblinger rigere<br>' +
+        '<strong>År 3</strong>: Koncepter stabiliseres — deep_challenge ankommer regelmæssigt, misconception-rate falder<br>' +
+        '<strong>Lærer år 3</strong>: Review-biblioteket er rigt — revision er sjælden fordi original berigelse var omhyggelig' +
+      '</div>' +
+    '</div>' +
+    '<div class="lw43-quote" style="margin-top:10px">Når en elev der studerede med denne platform møder "teori om kollektiv handling" på universitetet, genkender de det — fordi de en gang svarede forkert på et Bastille-spørgsmål og lærte hvorfor 7 fanger ændrede historien.</div>',
+    'Sektion 43 er det første bevis. Fremtiden er alle de slices der følger.',
     'accent'
   );
 
