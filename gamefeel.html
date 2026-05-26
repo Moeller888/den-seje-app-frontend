@@ -1120,6 +1120,52 @@
     .pp40-rung { border-radius: 6px; padding: 8px 10px; border-left: 3px solid; }
     .pp40-rung-level { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
     .pp40-rung-text { font-size: 10px; color: var(--text-secondary); font-style: italic; line-height: 1.4; }
+
+    /* Section 41 — Pipeline Integration & Content Operations */
+    .co41-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .co41-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .co41-card.accent { border-color: #1e3d5c; background: linear-gradient(135deg, #040d17 0%, #020810 100%); }
+    .co41-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6b9ec4; margin-bottom: 6px; }
+    .co41-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .co41-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .co41-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .co41-block { background: rgba(107, 158, 196, 0.06); border: 1px solid rgba(107, 158, 196, 0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .co41-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b9ec4; margin-bottom: 8px; }
+    .co41-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .co41-tier { border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; border-left: 3px solid; }
+    .co41-tier-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+    .co41-tier-what { font-size: 10px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 3px; }
+    .co41-tier-note { font-size: 9px; color: var(--text-muted); font-style: italic; }
+    .co41-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .co41-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .co41-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .co41-compare-label.chaotic { color: #ef5350; }
+    .co41-compare-label.sustainable { color: #6b9ec4; }
+    .co41-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .co41-compare-item:last-child { border-bottom: none; }
+    .co41-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .co41-rule:last-child { border-bottom: none; }
+    .co41-rule::before { content: "→ "; color: #6b9ec4; font-weight: 700; }
+    .co41-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #6b9ec4; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .co41-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(107,158,196,0.1); color: #6b9ec4; margin: 2px; }
+    .co41-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .co41-row:last-child { border-bottom: none; }
+    .co41-row-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(107,158,196,0.12); color: #6b9ec4; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .co41-row-label { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .co41-row-text { font-size: 10px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .co41-pass { background: rgba(76,175,80,0.07); border: 1px solid rgba(76,175,80,0.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; }
+    .co41-pass-label { font-size: 9px; font-weight: 700; color: #4caf50; text-transform: uppercase; margin-bottom: 3px; }
+    .co41-pass-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+    .co41-signal { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .co41-signal:last-child { border-bottom: none; }
+    .co41-signal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .co41-signal-text { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+    .co41-metric { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
+    .co41-metric:last-child { border-bottom: none; }
+    .co41-metric-label { color: var(--text-secondary); }
+    .co41-metric-tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
+    .co41-metric-tag.keep { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .co41-metric-tag.avoid { background: rgba(239,83,80,0.12); color: #ef5350; }
   </style>
 </head>
 <body>
@@ -1359,6 +1405,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 40 — Pedagogical Enrichment Pipeline</h2>
   <div class="pp40-grid" id="pp40Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 41 — Pipeline Integration &amp; Content Operations</h2>
+  <div class="co41-grid" id="co41Grid"></div>
 </div>
 
 <script type="module">
@@ -11825,6 +11874,301 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="pp40-quote" style="margin-top:12px">Pipelinen bliver et levende pædagogisk system hvor indhold forbedres over tid — ikke fordi en algoritme omskriver det, men fordi rigtige elevdata giver lærere bedre information til at forfine deres spørgsmål.</div>',
     'Section 40 er ikke slutpunktet for pipeline-intelligens. Det er forpligtelsen til at pipelinen altid tjener eleven.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 41 — Pipeline Integration & Content Operations ───────────────────
+(function () {
+  var grid = document.getElementById('co41Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, variant) {
+    var el = document.createElement('div');
+    el.className = 'co41-card' + (variant === 'accent' ? ' accent' : '');
+    el.innerHTML =
+      '<div class="co41-label">Section 41 — Content Operations</div>' +
+      '<div class="co41-title">' + title + '</div>' +
+      '<div class="co41-body">' + body + '</div>' +
+      (footer ? '<div class="co41-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Chaotic vs sustainable content operations (accent)
+  card('Fra arkitektur til bæredygtig drift: den operationelle kløft',
+    '<p style="margin:0 0 12px">En fremragende pædagogisk arkitektur er værdiløs hvis lærere ikke realistisk kan bruge den, berigelse er operationelt umulig, eller metadatakvaliteten kollapserer over tid.</p>' +
+    '<div class="co41-compare">' +
+      '<div class="co41-compare-col">' +
+        '<div class="co41-compare-label chaotic">Kaotiske operationer</div>' +
+        '<div class="co41-compare-item">Al berigelse på én gang — overvældende</div>' +
+        '<div class="co41-compare-item">Ingen prioriteringslogik</div>' +
+        '<div class="co41-compare-item">review_text aldrig skrevet</div>' +
+        '<div class="co41-compare-item">QA-regler ignoreret under pres</div>' +
+        '<div class="co41-compare-item">Metadatadrif over tid</div>' +
+        '<div class="co41-compare-item">Lærere udbrændte og distancerede</div>' +
+      '</div>' +
+      '<div class="co41-compare-col">' +
+        '<div class="co41-compare-label sustainable">Bæredygtige operationer</div>' +
+        '<div class="co41-compare-item">Gradvis berigelse — Tier 0 er gyldigt</div>' +
+        '<div class="co41-compare-item">Elevmøde-frekvens driver prioritet</div>' +
+        '<div class="co41-compare-item">Batches af 20 review_texts</div>' +
+        '<div class="co41-compare-item">QA er peer review, ikke overvågning</div>' +
+        '<div class="co41-compare-item">Kontrolleret vokabular forhindrer drift</div>' +
+        '<div class="co41-compare-item">Lærere er forfattere, ikke datainputters</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-quote">Arkitektur uden operation er et museum — imponerende men livløst. Section 41 gør systemet til en levende uddannelsesorganisme.</div>',
+    'Den operationelle kløft er ikke teknisk. Den er pædagogisk og kulturel.',
+    'accent'
+  );
+
+  // Card 2 — Real content operations audit
+  card('Indholds-drifts audit: hvad der faktisk går i stykker ved skala',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Seks reelle driftsfejl der opstår når pædagogisk infrastruktur skalerer uden operationel strategi.</p>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#ef5350"></div>' +
+      '<div class="co41-signal-text"><strong>Metadatafragilitet:</strong> lærere tilføjer difficulty_type inkonsistent — "analytical" vs "Analytical" vs "analytical thinking" drift</div>' +
+    '</div>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#ef5350"></div>' +
+      '<div class="co41-signal-text"><strong>review_text-huller:</strong> høj-trafik spørgsmål har ingen feedback fordi det ses som valgfrit</div>' +
+    '</div>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#f59e0b"></div>' +
+      '<div class="co41-signal-text"><strong>QA-abandon:</strong> QA-regler springes over under indholdspres — "vi har brug for spørgsmål hurtigt"</div>' +
+    '</div>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#f59e0b"></div>' +
+      '<div class="co41-signal-text"><strong>Berigelsesfrys:</strong> team overvældes af uberigede spørgsmål og stopper med at berige nye</div>' +
+    '</div>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#888"></div>' +
+      '<div class="co41-signal-text"><strong>Lærerfriktion:</strong> metadataforfatning føles som ekstraarbejde, ikke integreret del af spørgsmålsoprettelse</div>' +
+    '</div>' +
+    '<div class="co41-signal">' +
+      '<div class="co41-signal-dot" style="background:#888"></div>' +
+      '<div class="co41-signal-text"><strong>Misconception-drift:</strong> free-text felter producerer "causal inversion" vs "causal_inversion" vs "Årsag-effekt forveksling"</div>' +
+    '</div>',
+    'Alle seks fejl er forebyggelige med de rette operationelle principper.',
+    ''
+  );
+
+  // Card 3 — Gradual enrichment strategy
+  card('Gradvis berigelsestrategi: 4-tier progressiv model',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Berigelse drives af elevmøde-frekvens — ikke af et fuldstændighedsmål. Tier 0 er gyldigt. Det er ikke en fejltilstand.</p>' +
+    '<div class="co41-tier" style="background:rgba(80,80,80,0.08);border-color:#555">' +
+      '<div class="co41-tier-label" style="color:#888">Tier 0 — Funktionelt</div>' +
+      '<div class="co41-tier-what">Rå spørgsmål: question + options + correct. Ingen metadata.</div>' +
+      '<div class="co41-tier-note">Wave score 0. Original DB-rækkefølge. Alle features fungerer.</div>' +
+    '</div>' +
+    '<div class="co41-tier" style="background:rgba(107,158,196,0.06);border-color:#6b9ec4">' +
+      '<div class="co41-tier-label" style="color:#6b9ec4">Tier 1 — Bølge-bevidst</div>' +
+      '<div class="co41-tier-what">+ difficulty_type + cognitive_skill + concepts</div>' +
+      '<div class="co41-tier-note">Wave sorting aktiv. Adaptiv sekventering online. Operationelt mål for alle aktive spørgsmål.</div>' +
+    '</div>' +
+    '<div class="co41-tier" style="background:rgba(45,191,138,0.06);border-color:#2dbf8a">' +
+      '<div class="co41-tier-label" style="color:#2dbf8a">Tier 2 — Diagnostisk</div>' +
+      '<div class="co41-tier-what">+ misconception_type + review_text (Level 1–2)</div>' +
+      '<div class="co41-tier-note">Targeted recovery aktiv. Feedback-kvalitet forbedret markant. Top 25% af spørgsmål efter møde-frekvens.</div>' +
+    '</div>' +
+    '<div class="co41-tier" style="background:rgba(156,111,228,0.06);border-color:#9c6fe4">' +
+      '<div class="co41-tier-label" style="color:#9c6fe4">Tier 3 — Fuldt lærings-objekt</div>' +
+      '<div class="co41-tier-what">+ challenge_role + insight_type + review_text Level 3+ + interdisciplinary_links</div>' +
+      '<div class="co41-tier-note">Maksimal adaptiv værdi. Selektivt — 10–20% af banken, valgt for uddannelsesmæssig betydning.</div>' +
+    '</div>' +
+    '<div class="co41-rule" style="margin-top:8px">Berigelsestrigger: >10 elevmøder OG null review_text = prioriter nu</div>' +
+    '<div class="co41-rule">Berigelsestrigger: >60% forkert-svar OG null misconception_type = prioriter nu</div>',
+    'Gradvis berigelse er ikke slap standard. Det er operationel realisme.',
+    ''
+  );
+
+  // Card 4 — Metadata migration strategy
+  card('Metadata-migrationsstrategi: sikker evolution af eksisterende indhold',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Eksisterende spørgsmål brydes aldrig af berigelsestilføjelser. Hvert nyt felt er additivt.</p>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">Sikre standarder (null-safe)</div>' +
+      '<div class="co41-block-body">' +
+        '<strong>metadata er null</strong> → wave score 0, original rækkefølge, fuldt funktionel<br>' +
+        '<strong>metadata.difficulty_type er null</strong> → wave sorting ignorerer dette spørgsmål<br>' +
+        '<strong>metadata.concepts er tom array</strong> → get_concept_states returnerer {} — ingen fejl<br>' +
+        '<strong>metadata.misconception_type er null</strong> → generisk recovery, ingen targeted recovery<br>' +
+        '<strong>metadata.review_text er null</strong> → falder tilbage til content.review_text → "❌ Forkert – korrekt svar: X"' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">5 migrationsprincipper</div>' +
+      '<div class="co41-block-body">' +
+        '1. Ingen destruktive migrationer — alle ændringer er additive JSONB-opdateringer<br>' +
+        '2. Batch-opdateringer bruger jsonb_set() — overskriver aldrig eksisterende lærerforfattet indhold<br>' +
+        '3. Hver batch-migration tørkøres og verificeres FØR udførelse<br>' +
+        '4. Migrationsfremdrift spores per-spørgsmål, ikke som bulk-operation<br>' +
+        '5. Rollback altid mulig — JSONB-kolonne, gammel værdi er en simpel tilbageføring' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-rule">Kontrolleret vokabular for difficulty_type/cognitive_skill/misconception_type forhindrer fri-tekst drift</div>' +
+    '<div class="co41-rule">Valideringsrulles ved forfatning via dropdown-selektorer — ikke ved query-tid</div>',
+    'Delvis metadata er altid bedre end forkert metadata. Systemet degraderer gracefully.',
+    ''
+  );
+
+  // Card 5 — review_text rollout operations
+  card('review_text-udrullningsoperationer: prioritet over fuldstændighed',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">review_text for de top 20 spørgsmål betyder mere end delvis berigelse af 200. Kvalitet over gennemstrømning.</p>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">Prioriteringsmatrix</div>' +
+      '<div class="co41-block-body">' +
+        '<strong style="color:#ef5350">Højeste prioritet:</strong> >60% forkert-svar rate · Grundlæggende koncepter · Følelsesmæssigt svære emner<br>' +
+        '<strong style="color:#f59e0b">Middel prioritet:</strong> Mødt af >50% af aktive elever · Spørgsmål i recovery-rotation<br>' +
+        '<strong style="color:#888">Lavere prioritet:</strong> <10 elevmøder · Simpel faktuel recall · Fejlrate under 30%' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">Forfatningsvejledning</div>' +
+      '<div class="co41-block-body">' +
+        '<strong>Ideal længde:</strong> 2–4 sætninger — én indsigt per review_text<br>' +
+        '<strong>Tone:</strong> Direkte, varm, ikke nedladende. "Dette skyldes..." ikke "I virkeligheden er svaret..."<br>' +
+        '<strong>Start fra:</strong> Misconceptionen — adresser hvad eleven sandsynligvis tænkte<br>' +
+        '<strong>Undgå:</strong> "Simpelthen..." / "Faktisk..." / "Selvfølgelig..." — disse føles afvisende<br>' +
+        '<strong>Aldrig:</strong> Gentagelse af spørgsmålsstammen med det korrekte svar indsat' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-rule">Batches af 20 — batches af 200 producerer ensartet middelmådig review_text</div>' +
+    '<div class="co41-rule">6-trins udrullningsflow: forespørgsel → forfatning → review → deploy → monitor → gentag</div>',
+    'review_text er den mest direkte pædagogiske handling platformen udfører.',
+    ''
+  );
+
+  // Card 6 — Batch enrichment workflows
+  card('Batch-berigelsesworkflows: fokuserede enkelt-dimension sprints',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Berigelsespassager virker bedst som fokuserede enkelt-dimension sprints — ét felt per session. Blanding af concern reducerer kvaliteten.</p>' +
+    '<div class="co41-pass">' +
+      '<div class="co41-pass-label">Koncepttagningspas — 2–4 timer per fagområde</div>' +
+      '<div class="co41-pass-body">Tilføj concepts[] til alle spørgsmål i ét fagdomæne. Brug 2–4 koncepter per spørgsmål. Tag hvad der testes, ikke hvad der nævnes.</div>' +
+    '</div>' +
+    '<div class="co41-pass">' +
+      '<div class="co41-pass-label">Misconception-pas — 1–2 timer per 20 spørgsmål</div>' +
+      '<div class="co41-pass-body">Tilføj misconception_type til spørgsmål med høje forkert-svar rater. Brug kun navngivne typer fra taxonomien — opfind ikke nye.</div>' +
+    '</div>' +
+    '<div class="co41-pass" style="border-color:rgba(90,180,232,0.3)">' +
+      '<div class="co41-pass-label" style="color:#5ab4e8">Distraktor-forfiningspas — 30–45 min per spørgsmål</div>' +
+      '<div class="co41-pass-body">Erstat svage distraktorer med misconception-mappede alternativer. KUN for spørgsmål hvor elevdata viser distraktor-valg mønstre.</div>' +
+    '</div>' +
+    '<div class="co41-pass" style="border-color:rgba(45,191,138,0.3)">' +
+      '<div class="co41-pass-label" style="color:#2dbf8a">review_text-pas — 10–15 min per spørgsmål</div>' +
+      '<div class="co41-pass-body">Forfat review_text på Level 2–3 for højeste-prioritets spørgsmål. Brug prioriteringsmatricen — forfat ikke tilfældigt.</div>' +
+    '</div>' +
+    '<div class="co41-rule" style="margin-top:8px">Én pas-type per session — bland aldrig concern</div>' +
+    '<div class="co41-rule">Start med høj-trafik spørgsmål — impact over dækning</div>' +
+    '<div class="co41-rule">Fejr pas-fuldførelse — berigelse er kvalificeret pædagogisk arbejde</div>',
+    'Inkrementel og håndterbar. Berigelse er et marathon, ikke en sprint.',
+    ''
+  );
+
+  // Card 7 — Pedagogical QA operations
+  card('Pædagogisk QA-drift: let nok til at overleve',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">QA skal føles som peer review mellem undervisere — ikke compliance-kontrol af et system. Det skal være let nok til at være bæredygtigt.</p>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">Let 5-punkts reviewworkflow</div>' +
+      '<div class="co41-block-body">' +
+        '1. <strong>Selv-review:</strong> læs det som en elev der netop tog fejl — hjælper review_text?<br>' +
+        '2. <strong>Distraktor-check:</strong> kan jeg navngive misconceptionen hver distraktor repræsenterer?<br>' +
+        '3. <strong>Konceptcheck:</strong> ville koncepttaggene overleve et andet spørgsmål om den samme idé?<br>' +
+        '4. <strong>Værdigheds-check:</strong> ville jeg have det godt med at en elev så dette og følte sig dum?<br>' +
+        '5. <strong>Gem</strong> — spørgsmål går til peer-review kø hvis teamstørrelse tillader det' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block">' +
+      '<div class="co41-block-title">Anti-bureaukrati-regler</div>' +
+      '<div class="co41-block-body">' +
+        'QA-review per spørgsmål bør tage under 5 minutter — ellers skal spørgsmålet omskrives<br>' +
+        'QA-tjekliste har præcis 5 punkter — ingen mission creep<br>' +
+        'QA-fejl sender til berigelseskø, ikke sletning — intet arbejde går tabt<br>' +
+        'Ingen QA-scores eller procenter — disse skaber gaming-adfærd<br>' +
+        'Ingen obligatorisk QA for Tier 0 spørgsmål — de er funktionelle, ikke beriget' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-quote">QA er en kvalitetssamtale, ikke en kvalitetsgatekeeper.</div>',
+    'Et QA-system der overlever er bedre end et perfekt QA-system der abandoneres.',
+    ''
+  );
+
+  // Card 8 — Teacher editing & trust
+  card('Lærertillid-arkitekturen: augmentering, ikke autoritet',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Systemet skal føles som en betroet undervisningsassistent — ikke som en algoritmisk autoritet. Hver interaktion styrker lærerens handleevne.</p>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">5 tillidssignaler i UX</div>' +
+      '<div class="co41-block-body">' +
+        '<strong>Rediger overalt:</strong> hvert metadatafelt redigerbart in-context — ingen "unlock"-ritual<br>' +
+        '<strong>Override synlig:</strong> når lærer overrider et QA-forslag bekræfter systemet det<br>' +
+        '<strong>Historik læsbar:</strong> redigerings-historik viser lærers ændringer fremtrædende<br>' +
+        '<strong>Forklar synlig:</strong> enhver adaptiv beslutning kan forklares med ét klik for lærere<br>' +
+        '<strong>Ingen score-labels:</strong> lærere ser aldrig algoritmiske scores for eget indhold' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block">' +
+      '<div class="co41-block-title">Feedback-loops der respekterer lærere</div>' +
+      '<div class="co41-block-body">' +
+        'Elever vælger konsekvent én specifik forkert svar → lærer notificeres om hvilken distraktor<br>' +
+        'Spørgsmål har >80% forkert-svar rate → lærer modtager invitation til at gennemse<br>' +
+        'review_text mangler ved >50 møder → lærer modtager blid prompt<br>' +
+        '<em style="color:var(--text-muted)">Notifikationer er invitationer — ikke advarsler. Systemet spørger, lærere beslutter.</em>' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-rule">Enhver redigering har øjeblikkelig effekt — ingen cache-forsinkelse, ingen godkendelseskø</div>' +
+    '<div class="co41-rule">Lærerens eksplicitte null er gyldigt — systemet respekterer bevidste beslutninger</div>',
+    'Lærere skal føle sig bemyndigede, respekterede og centrale — aldrig overvågede.',
+    ''
+  );
+
+  // Card 9 — Content health & coverage tracking
+  card('Indholdssundhed og dækningssporing: kvalitet, ikke KPI-teater',
+    '<p style="margin:0 0 10px;font-size:11px;color:var(--text-secondary)">Spor hvad der hjælper uddannelseskvalitets-beslutninger — ikke hvad der ser imponerende ud i dashboards.</p>' +
+    '<div class="co41-block" style="margin-bottom:8px">' +
+      '<div class="co41-block-title">Meningsfulde metrics <span style="color:#4caf50">✓ behold</span></div>' +
+      '<div style="margin-top:4px">' +
+        '<div class="co41-metric"><span class="co41-metric-label">review_text-dækning (spørgsmål mødt af >10 elever med Level 2+)</span><span class="co41-metric-tag keep">behold</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">Misconception-dækning (>60% forkert med misconception_type)</span><span class="co41-metric-tag keep">behold</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">Tier-fordeling snapshot (ikke et mål — en retningsindikator)</span><span class="co41-metric-tag keep">behold</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">QA-kø-dybde (operationel belastningsindikator)</span><span class="co41-metric-tag keep">behold</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block">' +
+      '<div class="co41-block-title">Anti-metrics <span style="color:#ef5350">✗ undgå</span></div>' +
+      '<div style="margin-top:4px">' +
+        '<div class="co41-metric"><span class="co41-metric-label">Samlet spørgsmålsantal — kvantitet er ikke kvalitet</span><span class="co41-metric-tag avoid">undgå</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">Berigelseshastighed (spørgsmål/dag) — hastighed er ikke kvalitet</span><span class="co41-metric-tag avoid">undgå</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">Lærers QA-gennemgangsrater — dette er overvågning</span><span class="co41-metric-tag avoid">undgå</span></div>' +
+        '<div class="co41-metric"><span class="co41-metric-label">% Tier 3-dækning — Tier 3 er selektiv af design</span><span class="co41-metric-tag avoid">undgå</span></div>' +
+      '</div>' +
+    '</div>',
+    'Sundhedssporing handler om at se klart — ikke om at se godt ud.',
+    ''
+  );
+
+  // Card 10 — Future educational operations (accent)
+  card('Fremtidens uddannelsesoperationer: bæredygtig pædagogisk håndværkskultur',
+    '<p style="margin:0 0 12px">Efter år med drift er hvert høj-trafik spørgsmål udstyret med en review_text som en ny lærer ville være stolt af at have skrevet. Ikke fordi et mål tvang det — men fordi systemet understøtter håndværk.</p>' +
+    '<div class="co41-block" style="margin-bottom:10px">' +
+      '<div class="co41-block-title">Levetidsprincipper</div>' +
+      '<div class="co41-block-body">' +
+        'Spørgsmål ældes gracefully — koncepttags forbliver sande selv når pensum ændrer sig<br>' +
+        'review_text forfattet for konceptet, ikke pensum — overlever syllabus-opdateringer<br>' +
+        'Misconception-mønstre er universelle — causal_inversion i historie er causal_inversion i biologi<br>' +
+        'Berigelsesarbejde er kumulativt — ingen berigelsespas er nogensinde spildt' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-block" style="margin-bottom:10px">' +
+      '<div class="co41-block-title">Anti-degenereringssikringer</div>' +
+      '<div class="co41-block-body">' +
+        'Ingen berigelsesmål der belønner hastighed over kvalitet<br>' +
+        'Ingen indholdskvoter — nogensinde<br>' +
+        'Ingen automatisk metadatagenerering uden lærergennemgang<br>' +
+        'Regelmæssige tværlærer review-sessioner — kvalitet er et kollektivt håndværk' +
+      '</div>' +
+    '</div>' +
+    '<div class="co41-quote">De bedste uddannelsesoperationer er usynlige for eleverne. De mærker bare at platformen altid respekterer dem — at hvert forkert svar fører til en forklaring der øger forståelsen frem for at blot gentage svaret.</div>',
+    'Section 41 er ikke slutpunktet for indholds-operationer. Det er starten på en kultur af bæredygtig pædagogisk håndværk.',
     'accent'
   );
 
