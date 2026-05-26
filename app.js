@@ -334,7 +334,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
     } else if (data.status === "incorrect") {
-      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      const reviewText = data.review_text ?? null;
+      if (reviewText) {
+        feedback.textContent = "❌ Forkert — " + reviewText;
+      } else {
+        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      }
       feedback.className = "feedback-error";
       playSound("error");
       exprEngine?.onGameEvent("INCORRECT");
@@ -375,7 +380,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let delay = 1000;
     if (data.status === "correct") delay = 600;
-    if (data.status === "incorrect") delay = 2000;
+    if (data.status === "incorrect") delay = (data.review_text ? 3200 : 2000);
 
     setTimeout(() => { loadAndRenderQuestion(); }, delay);
   }

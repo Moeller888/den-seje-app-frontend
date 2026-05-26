@@ -957,6 +957,43 @@
     .ka36-identity-label.prefer { color: #66bb6a; }
     .ka36-identity-item { font-size: 11px; color: var(--text-secondary); line-height: 1.5; padding: 2px 0; }
     .ka36-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Section 37 — Learning System Engine Implementation */
+    .le37-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .le37-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .le37-card.accent { border-color: #2e7d5e; background: linear-gradient(135deg, #001a12 0%, #00100a 100%); }
+    .le37-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #2dbf8a; margin-bottom: 10px; }
+    .le37-body { font-size: 13px; color: var(--text-primary); line-height: 1.6; }
+    .le37-block { background: rgba(45, 191, 138, 0.07); border: 1px solid rgba(45, 191, 138, 0.2); border-radius: 8px; padding: 12px; margin: 8px 0; }
+    .le37-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #2dbf8a; margin-bottom: 6px; }
+    .le37-block-body { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .le37-flow { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; }
+    .le37-flow-step { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--text-secondary); padding: 4px 0; }
+    .le37-flow-num { min-width: 20px; height: 20px; border-radius: 50%; background: rgba(45, 191, 138, 0.15); color: #2dbf8a; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .le37-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .le37-compare-col { background: var(--surface-raised); border-radius: 8px; padding: 10px; }
+    .le37-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .le37-compare-label.before { color: #ef5350; }
+    .le37-compare-label.after { color: #2dbf8a; }
+    .le37-compare-item { font-size: 11px; color: var(--text-secondary); line-height: 1.5; padding: 3px 0; }
+    .le37-field { padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .le37-field:last-child { border-bottom: none; }
+    .le37-field-name { font-size: 11px; font-weight: 700; color: #2dbf8a; }
+    .le37-field-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .le37-field-ex { font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+    .le37-level { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .le37-level:last-child { border-bottom: none; }
+    .le37-level-badge { min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; background: rgba(45, 191, 138, 0.15); color: #2dbf8a; flex-shrink: 0; }
+    .le37-level-content { flex: 1; }
+    .le37-level-title { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .le37-level-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+    .le37-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #2dbf8a; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .le37-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: rgba(45, 191, 138, 0.12); color: #2dbf8a; margin: 2px; }
+    .le37-code { font-family: 'Courier New', monospace; font-size: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; color: #a8e6cf; margin: 8px 0; line-height: 1.6; white-space: pre-wrap; }
+    .le37-rule { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .le37-rule:last-child { border-bottom: none; }
+    .le37-rule::before { content: "→ "; color: #2dbf8a; font-weight: 700; }
+    .le37-quality-body { font-size: 9px; color: var(--text-muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1184,6 +1221,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 36 — Knowledge Architecture &amp; Intellectual Progression</h2>
   <div class="ka36-grid" id="ka36Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 37 — Learning System Engine Implementation</h2>
+  <div class="le37-grid" id="le37Grid"></div>
 </div>
 
 <script type="module">
@@ -10517,6 +10557,273 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="ka36-quote">Den bedste uddannelsesplatform gør sig selv overflødig. Eleven afslutter ikke blot et kursus — de afslutter med en ny måde at forholde sig til verden.</div>',
     'Section 36s centrale bidrag: platformen er ikke en videns-leverings-maskine. Den er en intellektuel identitets-former.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 37 — Learning System Engine Implementation ───────────────────────
+(function () {
+  var grid = document.getElementById('le37Grid');
+  if (!grid) return;
+
+  function card(title, html, note, variant) {
+    var d = document.createElement('div');
+    d.className = 'le37-card' + (variant === 'accent' ? ' accent' : '');
+    d.innerHTML = '<div class="le37-title">' + title + '</div>' +
+      '<div class="le37-body">' + html + '</div>' +
+      (note ? '<div class="le37-quality-body" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">' + note + '</div>' : '');
+    grid.appendChild(d);
+  }
+
+  // Card 1 — The Transition
+  card('Fra quiz-logik til lærings-logik',
+    '<p style="margin:0 0 12px">Section 37 er det øjeblik platformen begynder at forstå læring — ikke blot måle korrekthed. Tre reelle infrastrukturændringer er implementeret.</p>' +
+    '<div class="le37-block">' +
+      '<div class="le37-block-title">Hvad er ændret i production</div>' +
+      '<div class="le37-block-body">' +
+        '<strong>1. DB:</strong> questions.metadata JSONB + question_instances.misconception_signal TEXT<br>' +
+        '<strong>2. get-next-question:</strong> sender review_text + metadata til frontend<br>' +
+        '<strong>3. process-event:</strong> returnerer review_text ved forkert svar, registrerer misconception_signal<br>' +
+        '<strong>4. app.js:</strong> viser review_text i stedet for "korrekt svar: X" når det er tilgængeligt' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-compare">' +
+      '<div class="le37-compare-col">' +
+        '<div class="le37-compare-label before">Før Section 37</div>' +
+        '<div class="le37-compare-item">Spørgsmål = {question, options, correct}</div>' +
+        '<div class="le37-compare-item">Forkert svar = "korrekt svar: 1789"</div>' +
+        '<div class="le37-compare-item">Misforståelse = usynlig</div>' +
+        '<div class="le37-compare-item">Koncepter = ikke modelleret</div>' +
+      '</div>' +
+      '<div class="le37-compare-col">' +
+        '<div class="le37-compare-label after">Efter Section 37</div>' +
+        '<div class="le37-compare-item">Spørgsmål = content + metadata JSONB</div>' +
+        '<div class="le37-compare-item">Forkert svar = pædagogisk forklaring</div>' +
+        '<div class="le37-compare-item">Misforståelse = registreret signal</div>' +
+        '<div class="le37-compare-item">Koncepter = struktureret metadata</div>' +
+      '</div>' +
+    '</div>',
+    'Alle eksisterende tests passerer uændret. Null metadata = identisk adfærd som før.',
+    'accent'
+  );
+
+  // Card 2 — Architecture Audit
+  card('Arkitektur-audit: hvad er reelt i dag',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Hvad koden faktisk gør — ikke hvad vi ønsker den gør. Audit af de fire kritiske flow-punkter.</p>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">get-next-question</div>' +
+      '<div class="le37-field-desc">Henter due instances (next_review_at) → ellers nye spørgsmål i DB-rækkefølge. Nu: sender review_text + metadata med. Sekventering er stadig ikke konceptuelt styret.</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">process-event</div>' +
+      '<div class="le37-field-desc">Tre paths: long (pending), text (process_text_answer RPC), MC/number (process_question_attempt RPC). Nu: henter questions.content + metadata, returnerer review_text ved forkert, registrerer misconception_signal.</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">app.js feedback</div>' +
+      '<div class="le37-field-desc">Var: "❌ Forkert – korrekt svar: X". Nu: viser review_text når tilgængeligt, delay 3200ms vs 2000ms. Bruges textContent (ingen XSS-risiko).</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">questions table</div>' +
+      '<div class="le37-field-desc">Var: id, content JSONB, answer_format, answer_type. Nu: + metadata JSONB DEFAULT NULL. Alle eksisterende rækker har metadata = null — ingen adfærdsændring.</div>' +
+    '</div>',
+    'Audit-princip: vi ændrer kun det vi forstår fuldt ud. Intet "forbedret" kode der ikke er eksplicit bedt om.'
+  );
+
+  // Card 3 — The Metadata Schema
+  card('Metadata-schema: spørgsmålets lærings-DNA',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Otte valgfrie felter der transformerer et spørgsmål fra et faktum til en lærings-ressource. Alle nullable. Alle menneske-læsbare.</p>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">review_text <span class="le37-tag">TEXT</span></div>' +
+      '<div class="le37-field-desc">Pædagogisk forklaring vist ved forkert svar. 1-2 sætninger. Lærer-skrevet.</div>' +
+      '<div class="le37-field-ex">Ex: "Den Franske Revolution begyndte i 1789, det år Bastillen stormededes og det gamle regime begyndte at krakelere under pres fra sult og politisk krise."</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">misconception_type <span class="le37-tag">TEXT</span></div>' +
+      '<div class="le37-field-desc">Hvilken misforståelse dette spørgsmål afslører: recall_gap · conceptual_confusion · causal_inversion · pattern_misrecognition · terminology_confusion · overgeneralization</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">concepts <span class="le37-tag">TEXT[]</span></div>' +
+      '<div class="le37-field-desc">Kernebegreber dette spørgsmål aktiverer. Ex: ["revolution", "magt", "kausalitet"]</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">cognitive_skill <span class="le37-tag">TEXT</span></div>' +
+      '<div class="le37-field-desc">recall · comprehension · causal_reasoning · transfer · synthesis · evaluation</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">difficulty_type <span class="le37-tag">TEXT</span></div>' +
+      '<div class="le37-field-desc">factual · conceptual · applied · analytical — hvad der gør det svært, ikke bare niveau</div>' +
+    '</div>' +
+    '<div class="le37-field">' +
+      '<div class="le37-field-name">insight_type · transfer_potential · interdisciplinary</div>' +
+      '<div class="le37-field-desc">Fremtidige sekventering-felter: hvilken indsigt, overførsels-potentiale, og tværfaglige forbindelser.</div>' +
+    '</div>',
+    'Alle felter er valgfrie. Et spørgsmål uden metadata opfører sig identisk med et pre-Section-37 spørgsmål.'
+  );
+
+  // Card 4 — Review Text Flow
+  card('Review text: den 6-trins data-sti',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Hvordan en lærer-skrevet forklaring rejser fra databasen til elevens skærm i det øjeblik det betyder mest.</p>' +
+    '<div class="le37-flow">' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">1</div><div>Lærer tilføjer review_text til questions.content JSONB eller questions.metadata.review_text</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">2</div><div>get-next-question: normalizeContent() ekstraherer review_text, sender den med i response til frontend</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">3</div><div>app.js modtager review_text, gemmer den i data-objektet (vises ikke endnu)</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">4</div><div>Eleven svarer forkert → submitAnswer() kalder process-event</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">5</div><div>process-event: henter questions.content + metadata, ekstraherer review_text, returnerer den i response body</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">6</div><div>app.js: feedback.textContent = "❌ Forkert — " + reviewText. Delay: 3200ms (vs 2000ms uden review_text)</div></div>' +
+    '</div>' +
+    '<div class="le37-quote">Det øjeblik eleven ser review_text er det højeste-værdi lærings-øjeblik i sessionen. 800–2000ms brugt på at læse en god forklaring er mere værd end tre korrekte svar.</div>',
+    'Sikkerhed: textContent (ikke innerHTML) — ingen XSS-risiko selv om review_text kommer fra databasen.'
+  );
+
+  // Card 5 — Before/After Feedback Comparison
+  card('Feedback-opgradering: Level 0 → Level 2',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Den synligste forskel Section 37 gør for eleven. Samme tekniske fejl — radikalt forskellig læringseffekt.</p>' +
+    '<div class="le37-block" style="border-color:rgba(239,83,80,0.3);background:rgba(239,83,80,0.05);margin-bottom:8px">' +
+      '<div class="le37-block-title" style="color:#ef5350">Level 0 — Bare svar (eksisterende, ingen metadata)</div>' +
+      '<div class="le37-block-body" style="font-family:monospace;font-size:12px">❌ Forkert – korrekt svar: 1789</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">Eleven ved nu hvad svaret var. Men ikke hvorfor. Ingen kontekst. Ingen forståelse.</div>' +
+    '</div>' +
+    '<div class="le37-block" style="border-color:rgba(45,191,138,0.3);background:rgba(45,191,138,0.05)">' +
+      '<div class="le37-block-title" style="color:#2dbf8a">Level 2 — Konceptuel forklaring (med review_text)</div>' +
+      '<div class="le37-block-body" style="font-size:12px">❌ Forkert — Den Franske Revolution begyndte i 1789, det år Bastillen stormededes og det gamle regime begyndte at krakelere under pres fra sult og politisk krise.</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">Eleven modtager kontekst, kausalitet, narrativ. Det forkerte svar er nu et lærings-øjeblik.</div>' +
+    '</div>' +
+    '<div class="le37-block" style="margin-top:8px">' +
+      '<div class="le37-block-title">Level 3 — Misforståelses-målrettet (fremtid)</div>' +
+      '<div class="le37-block-body" style="font-size:12px">Feedback adresserer den specifikke misforståelse eleven demonstrerede ved sit forkerte valg — fx kausal inversion eller terminologi-forvirring.</div>' +
+    '</div>',
+    'review_text guidelines: 1-2 sætninger. Nysgerrig tone, ikke korrigerende. Kontekst og kausalitet — aldrig bare "svaret er X".'
+  );
+
+  // Card 6 — Misconception Signaling
+  card('Misforståelses-signalering',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Et forkert svar er ikke en hændelse der forsvinder. Det er et diagnostisk signal der nu registreres og kan bruges til intelligent feedback.</p>' +
+    '<div class="le37-flow" style="margin-bottom:12px">' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">1</div><div>Lærer tilsætter misconception_type til questions.metadata — ex: "causal_inversion"</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">2</div><div>Eleven svarer forkert på dette spørgsmål</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">3</div><div>process-event: fire-and-forget UPDATE question_instances SET misconception_signal = "causal_inversion"</div></div>' +
+      '<div class="le37-flow-step"><div class="le37-flow-num">4</div><div>question_instances rækken bærer nu det diagnostiske signal permanent</div></div>' +
+    '</div>' +
+    '<div class="le37-block">' +
+      '<div class="le37-block-title">De 6 misforståelses-typer</div>' +
+      '<div class="le37-block-body">' +
+        '<strong>recall_gap</strong> — har aldrig lært det · ' +
+        '<strong>conceptual_confusion</strong> — forveksler to begreber · ' +
+        '<strong>causal_inversion</strong> — vender årsag og virkning om · ' +
+        '<strong>pattern_misrecognition</strong> — overflade-mønster, mister det dybe · ' +
+        '<strong>terminology_confusion</strong> — kender konceptet, forkert term · ' +
+        '<strong>overgeneralization</strong> — anvender regel forkert domæne' +
+      '</div>' +
+    '</div>',
+    'Etisk constraint: misconception_signal vises aldrig til eleven som en label. Det er lærer-vendt diagnostik og system-infrastruktur — aldrig student-identitet.'
+  );
+
+  // Card 7 — Concept Progression Tracking
+  card('Konceptuel progression-sporing',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Fire tilstande beskriver elevens forhold til et begreb. Ikke en score — en fortrolighedssignal.</p>' +
+    '<div class="le37-level">' +
+      '<div class="le37-level-badge" style="background:rgba(45,191,138,0.2)">S</div>' +
+      '<div class="le37-level-content">' +
+        '<div class="le37-level-title">Stabil</div>' +
+        '<div class="le37-level-desc">Konsistent korrekt på tværs af cognitive_skill-typer. Begrebet er internaliseret.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-level">' +
+      '<div class="le37-level-badge" style="background:rgba(255,183,77,0.2);color:#ffb74d">E</div>' +
+      '<div class="le37-level-content">' +
+        '<div class="le37-level-title">Fremvoksende</div>' +
+        '<div class="le37-level-desc">Korrekt på recall/comprehension — endnu ikke på causal_reasoning eller transfer. Forståelsen er ved at bygge sig op.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-level">' +
+      '<div class="le37-level-badge" style="background:rgba(239,83,80,0.1);color:#ef9a9a">U</div>' +
+      '<div class="le37-level-content">' +
+        '<div class="le37-level-title">Usikker</div>' +
+        '<div class="le37-level-desc">Blandede resultater på samme spørgsmålstyper. Konsolidering er nødvendig.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-level">' +
+      '<div class="le37-level-badge" style="background:rgba(239,83,80,0.2);color:#ef5350">M</div>' +
+      '<div class="le37-level-content">' +
+        '<div class="le37-level-title">Misforståelses-tilbøjelig</div>' +
+        '<div class="le37-level-desc">Gentagne forkerte svar med identisk misconception_signal på samme begreb. Aktiv konceptuel konflikt skal løses.</div>' +
+      '</div>' +
+    '</div>',
+    'Implementering: lightweight aggregation af question_instances grupperet på metadata.concepts + was_correct + misconception_signal. Ingen separat tracking-tabel nødvendig.'
+  );
+
+  // Card 8 — Challenge-Wave Sequencing
+  card('Challenge-wave sekventering',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Hvad tilfældig sekventering mister — og hvad metadata muliggør.</p>' +
+    '<div class="le37-block" style="border-color:rgba(239,83,80,0.3);background:rgba(239,83,80,0.05);margin-bottom:10px">' +
+      '<div class="le37-block-title" style="color:#ef5350">Hvad tilfældig rækkefølge mister</div>' +
+      '<div class="le37-block-body">Intet konceptuelt momentum · Ingen misforståelses-recovery · Kognitiv whiplash (analytisk efter recall) · Ingen transfer-øjeblikke · Ingen insight-broer · Session føles hverken opbyggende eller bæredygtig</div>' +
+    '</div>' +
+    '<div class="le37-block">' +
+      '<div class="le37-block-title">Sekvens-intelligens via metadata</div>' +
+      '<div class="le37-block-body">' +
+        '<strong>Intro:</strong> factual/comprehension — nyt begreb introduceres<br>' +
+        '<strong>Uddybning:</strong> 2-3 spørgsmål fra samme concepts[] — dybde bygges<br>' +
+        '<strong>Misforståelses-adressering:</strong> spørgsmål med matching misconception_type<br>' +
+        '<strong>Bølge:</strong> factual → conceptual → applied → analytical progression<br>' +
+        '<strong>Transfer:</strong> samme begreb, ny kontekst — bekræfter ægte forståelse<br>' +
+        '<strong>Indsigts-bro:</strong> spørgsmål der forbinder to konceptklustere' +
+      '</div>' +
+    '</div>',
+    'Phase 2 implementering: get-next-question bruger metadata.concepts + difficulty_type + cognitive_skill til at sortere kandidat-spørgsmål i stedet for DB-insertion-rækkefølge.'
+  );
+
+  // Card 9 — Intellectual Progression Language
+  card('Intellektuel progression-sprog',
+    '<p style="margin:0 0 10px;font-size:12px;color:var(--text-secondary)">Sproget vi bruger om elevens fremgang former deres identitet som lærende. Score-identitet er skrøbelig. Proces-identitet er robust.</p>' +
+    '<div class="le37-compare">' +
+      '<div class="le37-compare-col">' +
+        '<div class="le37-compare-label before">Undgå</div>' +
+        '<div class="le37-compare-item">"Din præcision er 73%"</div>' +
+        '<div class="le37-compare-item">"Du er klog"</div>' +
+        '<div class="le37-compare-item">"Du er bedre end andre"</div>' +
+        '<div class="le37-compare-item">"Du svarede forkert 3 gange"</div>' +
+        '<div class="le37-compare-item">"Kun X spørgsmål tilbage"</div>' +
+      '</div>' +
+      '<div class="le37-compare-col">' +
+        '<div class="le37-compare-label after">Foretræk</div>' +
+        '<div class="le37-compare-item">"Du er ved at mestre årsag-virkning"</div>' +
+        '<div class="le37-compare-item">"Du arbejdede hårdt på det"</div>' +
+        '<div class="le37-compare-item">"Du opdagede noget svært"</div>' +
+        '<div class="le37-compare-item">"Du prøvede en ny strategi"</div>' +
+        '<div class="le37-compare-item">"Du er tættere på end sidst"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-quote">Vækst-identitet: eleven er ikke en score — de er et nysgerrigt menneske der udvikler sig. Det er platformens dybeste bidrag.</div>' +
+    '<div class="le37-block" style="margin-top:10px">' +
+      '<div class="le37-block-title">Eksempel: causal_reasoning fremgang</div>' +
+      '<div class="le37-block-body" style="font-style:italic">"Du er ved at udvikle en stærk fornemmelse for årsag og virkning i historiske begivenheder — det er en af de sværeste kognitive færdigheder at mestre."</div>' +
+    '</div>',
+    'Sprog er infrastruktur. Det former hvad eleven tror om sig selv som tænker. Vælg med samme præcision som vi vælger database-skema.'
+  );
+
+  // Card 10 — Teacher Transparency
+  card('Lærer-gennemsigtighed: anti-black-box-princippet',
+    '<p style="margin:0 0 10px">Ethvert adaptivt system der ikke kan forklares til en lærer er et system der har mistet sin pædagogiske legitimitet.</p>' +
+    '<div class="le37-block" style="margin-bottom:10px">' +
+      '<div class="le37-block-title">Hvad lærere kan se og redigere</div>' +
+      '<div class="le37-block-body">' +
+        'questions.metadata er menneskelig JSON — læsbar i admin-interfacet<br>' +
+        'review_text er lærer-skrevet — systemet viser den, genererer den ikke<br>' +
+        'misconception_signal aggregeret per begreb per elev — forklareligt dashboard<br>' +
+        'Sekventering-logik kan forklares i én sætning: "spørgsmål sorteres efter konceptkluster og sværhedsgrad-bølge"<br>' +
+        'Alle lærings-signaler kan nulstilles, overskrives eller slettes' +
+      '</div>' +
+    '</div>' +
+    '<div class="le37-rule">Systemet tilpasser sig aldrig på måder læreren ikke kan forstå</div>' +
+    '<div class="le37-rule">Metadata er menneskelig JSON — ingen kryptiske koder eller opake vægte</div>' +
+    '<div class="le37-rule">review_text er lærer-skrevet — algoritmen genererer ingen feedback automatisk</div>' +
+    '<div class="le37-rule">misconception_signal registrerer hvad der skete — tildeler ikke permanente etiketter</div>' +
+    '<div class="le37-rule">Ingen elev ser nogensinde deres misconception_signal-værdier</div>' +
+    '<div class="le37-rule">GDPR: alle lærings-data er scoped til elevens uddannelseskontekst — aldrig solgt eller delt</div>' +
+    '<div class="le37-quote" style="margin-top:12px">Den bedste lærings-motor er gennemsigtig, forklarbar og kontrollerbar. En sort boks er ikke intelligent — det er uansvarligt.</div>',
+    'Section 37s centrale bidrag: platformen begynder at forstå læring. Den næste fase er at bruge den forståelse til intelligent sekventering.',
     'accent'
   );
 
