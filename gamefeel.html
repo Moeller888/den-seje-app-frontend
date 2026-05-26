@@ -1310,6 +1310,47 @@
     .ep44-year:last-child { border-bottom: none; }
     .ep44-year-label { font-size: 9px; font-weight: 700; color: #6abea0; min-width: 52px; flex-shrink: 0; padding-top: 2px; }
     .ep44-year-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Section 45 — Applied Reality Phase & Gold-Standard Learning Object Sprint */
+    .gs45-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .gs45-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .gs45-card.accent { border-color: #4a2a15; background: linear-gradient(135deg, #100600 0%, #0a0400 100%); }
+    .gs45-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #c47a5a; margin-bottom: 6px; }
+    .gs45-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .gs45-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .gs45-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .gs45-block { background: rgba(196,122,90,0.06); border: 1px solid rgba(196,122,90,0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .gs45-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #c47a5a; margin-bottom: 8px; }
+    .gs45-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .gs45-q { background: rgba(0,0,0,0.2); border-left: 3px solid #c47a5a; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 8px 0; font-size: 12px; color: var(--text-primary); line-height: 1.5; font-style: italic; }
+    .gs45-option { display: flex; gap: 8px; align-items: flex-start; padding: 5px 8px; border-radius: 4px; margin-bottom: 3px; font-size: 10px; line-height: 1.4; }
+    .gs45-option.correct { background: rgba(76,175,80,0.08); color: var(--text-secondary); }
+    .gs45-option.wrong { background: rgba(0,0,0,0.12); color: var(--text-muted); }
+    .gs45-option-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .gs45-option-badge.correct { background: rgba(76,175,80,0.15); color: #4caf50; }
+    .gs45-option-badge.wrong { background: rgba(196,122,90,0.12); color: #c47a5a; }
+    .gs45-misconception { font-size: 9px; color: var(--text-muted); font-style: italic; margin-left: 4px; }
+    .gs45-review { background: rgba(196,122,90,0.05); border: 1px solid rgba(196,122,90,0.2); border-radius: 8px; padding: 12px 14px; margin: 10px 0; }
+    .gs45-review-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #c47a5a; margin-bottom: 7px; }
+    .gs45-review-text { font-size: 11px; color: var(--text-secondary); line-height: 1.75; }
+    .gs45-review-text strong { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+    .gs45-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+    .gs45-tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 600; background: rgba(196,122,90,0.1); color: #c47a5a; }
+    .gs45-tag.concept { background: rgba(106,190,160,0.1); color: #6abea0; }
+    .gs45-tag.skill { background: rgba(106,158,196,0.1); color: #6b9ec4; }
+    .gs45-tag.role { background: rgba(196,162,90,0.1); color: #c4a25a; }
+    .gs45-ladder { margin: 8px 0; }
+    .gs45-rung { padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid; }
+    .gs45-rung-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 3px; }
+    .gs45-rung-text { font-size: 10px; color: var(--text-secondary); line-height: 1.5; font-style: italic; }
+    .gs45-rung-note { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+    .gs45-finding { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; display: flex; gap: 8px; align-items: flex-start; }
+    .gs45-finding:last-child { border-bottom: none; }
+    .gs45-finding-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .gs45-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #c47a5a; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .gs45-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .gs45-rule:last-child { border-bottom: none; }
+    .gs45-rule::before { content: "→ "; color: #c47a5a; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1561,6 +1602,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 44 — Reference Experience Polish Sprint</h2>
   <div class="ep44-grid" id="ep44Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 45 — Applied Reality Phase &amp; Gold-Standard Learning Objects</h2>
+  <div class="gs45-grid" id="gs45Grid"></div>
 </div>
 
 <script type="module">
@@ -13140,6 +13184,233 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="ep44-quote" style="margin-top:10px">Platformen bør føles, efter år i brug, som en betroet kollega — ikke som software man skal huske at bruge.</div>',
     'Sektion 44 er ikke slutpunktet for polish. Det er forpligtelsen til altid at spørge: "Hvordan føles dette faktisk?"',
+    'accent'
+  );
+
+}());
+
+// ─── Section 45 — Applied Reality Phase & Gold-Standard Learning Objects ───
+(function () {
+  var grid = document.getElementById('gs45Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'gs45-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="gs45-label">Section 45 — Reality Validation</div>' +
+      '<div class="gs45-title">' + title + '</div>' +
+      '<div class="gs45-body">' + body + '</div>' +
+      (footer ? '<div class="gs45-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Gold Standard = Quality Density (accent)
+  card('25 guldstandard-læreobjekter er mere værd end 500 overfladiske',
+    '<p style="margin:0 0 10px">Valideringen er enkel: tag systemet der er bygget — og fyld det med indhold der fortjener det.</p>' +
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Domæne: Demokrati og Magt</div>' +
+      '<div class="gs45-block-body">' +
+        '25 læreobjekter · 10 fuldstændigt forfattede · 15 skitserede<br>' +
+        'Alle 10 core-koncepter dækket · 6 misconception-typer repræsenteret<br>' +
+        'Fuldt udnytter: adaptive sekvensering · bølgefaser · koncepttilstande<br>' +
+        'review_text: alle 10 forfattede læreobjekter på Niveau 3' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block">' +
+      '<div class="gs45-block-title">Valideringsspørgsmålet</div>' +
+      '<div class="gs45-block-body">"Ville en tænksom samfundsfagslærer være stolt af at bruge dette spørgsmålsbank i sin klasse?"<br><br>Dette er det eneste kvalitetsmål der tæller.</div>' +
+    '</div>' +
+    '<div class="gs45-quote">Arkitektur er kun bevist når indholdet fortjener den.</div>',
+    'Sektion 45 er realitetsvalideringen. Systemet møder rigtigt undervisningsindhold.',
+    'accent'
+  );
+
+  // Card 2 — Domain Selection
+  card('Domænevalg: Demokrati og Magt — et rigt pædagogisk økosystem',
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Hvorfor dette domæne</div>' +
+      '<div class="gs45-block-body">' +
+        'Konceptrigt: legitimitet, repræsentation, magtadskillelse, minoritetsrettigheder<br>' +
+        'Misconception-tæt: elever forveksler formel/reel magt, flertalsstyre med retfærdighed<br>' +
+        'Kognitiv dybdestige: fra "hvad er et parlament?" til "hvornår er civil ulydighed legitimt?"<br>' +
+        'Personligt relevant: elever lever i et demokrati — disse spørgsmål handler om dem' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block-title" style="margin-bottom:6px">Konceptøkosystem</div>' +
+    '<div style="margin-bottom:8px">' +
+      '<span class="gs45-tag concept">political_legitimacy</span>' +
+      '<span class="gs45-tag concept">separation_of_powers</span>' +
+      '<span class="gs45-tag concept">minority_rights</span>' +
+      '<span class="gs45-tag concept">collective_action</span>' +
+      '<span class="gs45-tag concept">propaganda</span>' +
+      '<span class="gs45-tag concept">checks_and_balances</span>' +
+      '<span class="gs45-tag concept">accountability</span>' +
+      '<span class="gs45-tag concept">civil_rights</span>' +
+    '</div>' +
+    '<div class="gs45-rule">Tværfaglige koblinger: historie, økonomi, etik, medier, filosofi</div>' +
+    '<div class="gs45-rule">Dansk curriculum: samfundsfag er et kernefag i dansk gymnasieuddannelse</div>',
+    ''
+  );
+
+  // Card 3 — Gold Object: dp_001
+  card('Guldstandard-læreobjekt: demokratisk leder vs. autokrat',
+    '<div class="gs45-q">"Hvad er den vigtigste forskel på en demokratisk leder og en autokrat?"</div>' +
+    '<div class="gs45-option correct"><span class="gs45-option-badge correct">✓</span><span>En demokratisk leder kan afsættes af dem de leder — en autokrat kan ikke</span></div>' +
+    '<div class="gs45-option wrong"><span class="gs45-option-badge wrong">✗</span><span>En demokratisk leder vælges<span class="gs45-misconception">surface_association</span></span></div>' +
+    '<div class="gs45-option wrong"><span class="gs45-option-badge wrong">✗</span><span>Demokratiske ledere regerer med flertallets støtte<span class="gs45-misconception">overgeneralization</span></span></div>' +
+    '<div class="gs45-review">' +
+      '<div class="gs45-review-label">review_text — Niveau 3</div>' +
+      '<div class="gs45-review-text"><strong>Valg skaber ikke demokrati — ansvarlighed gør.</strong> En leder kan blive valgt, holde fair valg én gang, og derefter afmontere mekanismerne der ville fjerne dem. Det der adskiller demokrati er ikke processen til at komme til magten, men muligheden for at blive afsat. Spørg altid: "Hvem holder denne leder ansvarlig — og hvordan?"</div>' +
+    '</div>' +
+    '<div class="gs45-meta"><span class="gs45-tag concept">political_legitimacy</span><span class="gs45-tag skill">analysis</span><span class="gs45-tag role">challenge</span></div>',
+    ''
+  );
+
+  // Card 4 — Gold Object: dp_002
+  card('Guldstandard-læreobjekt: demokrati kan vedtage uretfærdige love',
+    '<div class="gs45-q">"Hvorfor kan et demokrati lovligt gennemføre uretfærdige love?"</div>' +
+    '<div class="gs45-option correct"><span class="gs45-option-badge correct">✓</span><span>Fordi flertallet kan stemme for love der skader mindretal</span></div>' +
+    '<div class="gs45-option wrong"><span class="gs45-option-badge wrong">✗</span><span>Fordi demokratier ikke har nogen højere autoritet end parlamentet<span class="gs45-misconception">scope_confusion</span></span></div>' +
+    '<div class="gs45-option wrong"><span class="gs45-option-badge wrong">✗</span><span>Fordi demokratiske love afspejler den almene vilje<span class="gs45-misconception">overgeneralization</span></span></div>' +
+    '<div class="gs45-review">' +
+      '<div class="gs45-review-label">review_text — Niveau 3</div>' +
+      '<div class="gs45-review-text"><strong>Demokrati løser et magtproblem — hvem bestemmer? — men ikke et retfærdighedsproblem — er det rigtigt?</strong> Et flertal på 51% kan stemme for love der skader de resterende 49%. Demokrati er nødvendigt men ikke tilstrækkeligt for retfærdighed. Det er derfor borgerrettigheder kræver aktiv beskyttelse — ikke blot flertalsgodkendelse.</div>' +
+    '</div>' +
+    '<div class="gs45-meta"><span class="gs45-tag concept">minority_rights</span><span class="gs45-tag skill">evaluation</span><span class="gs45-tag role">deep_challenge</span></div>',
+    ''
+  );
+
+  // Card 5 — Gold Object: dp_007 & dp_008
+  card('Guldstandard-læreobjekter: propaganda og revolutionens paradoks',
+    '<div class="gs45-q">"Hvad gør propaganda mest effektiv?"</div>' +
+    '<div class="gs45-option correct"><span class="gs45-option-badge correct">✓</span><span>At den indeholder tilstrækkeligt mange sande elementer til at føles troværdig</span></div>' +
+    '<div class="gs45-option wrong"><span class="gs45-option-badge wrong">✗</span><span>At den er åbenlys løgn<span class="gs45-misconception">causal_inversion</span></span></div>' +
+    '<div class="gs45-review" style="margin-bottom:12px">' +
+      '<div class="gs45-review-label">review_text</div>' +
+      '<div class="gs45-review-text"><strong>Effektiv propaganda er ikke løgn — det er sand information strategisk udvalgt og indrammet.</strong> Kritisk tænkning handler ikke om at identificere løgne — det handler om at spørge: hvad udelades?</div>' +
+    '</div>' +
+    '<div class="gs45-q">"Hvorfor reproducerer revolutioner ofte de magtstrukturer de omvæltede?"</div>' +
+    '<div class="gs45-option correct"><span class="gs45-option-badge correct">✓</span><span>Fordi magtstrukturerne der overtages former dem der overtager dem</span></div>' +
+    '<div class="gs45-review">' +
+      '<div class="gs45-review-label">review_text</div>' +
+      '<div class="gs45-review-text"><strong>En revolution erstatter personerne — men arver infrastrukturen.</strong> Strukturer former aktører mindst ligeså meget som aktører former strukturer. Det er grunden til at Frankrigs revolution producerede Napoleon og Ruslands producerede Stalin.</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 6 — review_text Craftsmanship: before/after
+  card('review_text håndværk: Niveau 0 → Niveau 3 for det samme spørgsmål',
+    '<div class="gs45-block-title" style="margin-bottom:8px">Spørgsmål: Hvad er formålet med magtadskillelse?</div>' +
+    '<div class="gs45-ladder">' +
+      '<div class="gs45-rung" style="border-color:#555;background:rgba(0,0,0,0.12)">' +
+        '<div class="gs45-rung-label" style="color:#666">Niveau 0 — Rå svar</div>' +
+        '<div class="gs45-rung-text">"Det korrekte svar er: at sikre at ingen enkelt aktør kan udøve magt uhindret."</div>' +
+        '<div class="gs45-rung-note">Problem: gentager svaret. Eleven lærer intet af at have svaret forkert.</div>' +
+      '</div>' +
+      '<div class="gs45-rung" style="border-color:#7a6530;background:rgba(196,162,90,0.04)">' +
+        '<div class="gs45-rung-label" style="color:#c4a25a">Niveau 1 — Kontekst</div>' +
+        '<div class="gs45-rung-text">"Magtadskillelse sikrer at lovgivende, udøvende og dømmende magt er adskilt."</div>' +
+        '<div class="gs45-rung-note">Bedre: tilføjer struktur. Men stadig forklarende, ikke konceptuelt.</div>' +
+      '</div>' +
+      '<div class="gs45-rung" style="border-color:#a0823d;background:rgba(196,162,90,0.06)">' +
+        '<div class="gs45-rung-label" style="color:#c4a25a">Niveau 2 — Konceptuel forbindelse</div>' +
+        '<div class="gs45-rung-text">"Magtadskillelse skaber bevidst friktion. Hvert organ kan bremse de andre. Denne friktion er ikke en fejl; den er en sikkerhedsventil."</div>' +
+      '</div>' +
+      '<div class="gs45-rung" style="border-color:#c47a5a;background:rgba(196,122,90,0.06)">' +
+        '<div class="gs45-rung-label" style="color:#c47a5a">Niveau 3 — Refleksiv uddybning ✦</div>' +
+        '<div class="gs45-rung-text">"Magtadskillelse er designet til at gøre demokrati sikkert — ikke effektivt. Læg mærke til: stærke demokratier er ofte langsomme demokratier. Det er ikke tilfældigt."</div>' +
+        '<div class="gs45-rung-note">Guldstandard: eleven udfordres til at bemærke noget kontraintuitivt om verden.</div>' +
+      '</div>' +
+    '</div>',
+    '"review_text er platformen. Alt andet er infrastruktur."'
+  );
+
+  // Card 7 — Student Experience Audit
+  card('Elevoplevelsesaudit: hvad der virker og hvad der knirker',
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Aha-øjeblikker i simuleret session (12 spørgsmål)</div>' +
+      '<div class="gs45-block-body">' +
+        '✦ dp_002: "Jeg troede aldrig demokrati og retfærdighed var separate problemer"<br>' +
+        '✦ dp_008: "Napoleon og Stalin som samme fænomen — det er genuint interessant"<br>' +
+        '✦ dp_005: "Langsomt demokrati er DESIGNET til at være langsomt"<br><br>' +
+        'Frekvens: 3 aha-øjeblikke per 12 spørgsmål — ét per 4 spørgsmål er målet.' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block-title" style="margin-bottom:6px">Rytmeobservationer</div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#4caf50"></div><div>Propaganda-spørgsmålet (dp_007) skaber naturligt engagement-spike — personlig relevans holder opmærksomhed langt ind i sessionen</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#4caf50"></div><div>dp_010 (måling af demokrati) er et stærkt session-afslutningsspørgsmål — syntetiserer hvad der kom før</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ff9800"></div><div>dp_003 (formel vs. reel magt) placeret for tidligt forstyrrer flow — kræver political_legitimacy-fundament først</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ef5350"></div><div>To på hinanden følgende deep_challenge-spørgsmål (dp_008 → dp_009) skaber træthed — én forstærkning nødvendig imellem</div></div>',
+    ''
+  );
+
+  // Card 8 — Teacher Experience Audit
+  card('Læreroplevelsesaudit: komfort, friktion og hvad der stadig mangler',
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Simuleret session: 5 spørgsmål gennemgå, 2 review_texts forbedre</div>' +
+      '<div class="gs45-block-body">' +
+        'Varighed: 25 minutter · Resultat: gennemført<br>' +
+        '8 minutter brugt på navigation til de rette spørgsmål — for meget<br>' +
+        'Layer 0 forfatning: under 3 minutter — dette er godt<br>' +
+        'review_text med side-by-side forhåndsvisning: komfortabel' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block-title" style="margin-bottom:6px">Resterende friktion</div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ef5350"></div><div>Ingen domæne/fag-filter i spørgsmålslisten — alle spørgsmål fra alle fag synlige på én gang</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ef5350"></div><div>misconception_type dropdown-indstillinger mangler plain-language tooltips ved valgtidspunktet</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ff9800"></div><div>"Din revision er nu live for alle elever" — bekræftelsesbesked skal vises i mindst 3 sekunder</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#ff9800"></div><div>Lærere har brug for en "spørgsmål der mangler review_text" kø — ikke en fuld liste at scanne manuelt</div></div>' +
+    '<div class="gs45-finding"><div class="gs45-finding-dot" style="background:#4caf50"></div><div>QA én-prompt-ad-gangen flow føles som samtale, ikke bureaukrati</div></div>',
+    ''
+  );
+
+  // Card 9 — Product Identity
+  card('Produktidentitet: hvad DEN SEJE APP er ved at blive',
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Hvad platformen er ved at blive</div>' +
+      '<div class="gs45-block-body">' +
+        'Et sted hvor elever møder genuint interessante spørgsmål om verden<br>' +
+        'Et sted hvor det at svare forkert er en mulighed for at lære noget overraskende<br>' +
+        'Et sted hvor lærere skaber indhold der afspejler deres egentlige pædagogiske dom<br>' +
+        'Et sted hvor tilpasning sker usynligt — mærket som støtte, ikke oplevet som overvågning' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block-title" style="margin-bottom:6px">Hvad der aldrig må ændre sig</div>' +
+    '<div class="gs45-rule">Uddannelsesmæssig værdighed: intet spørgsmål må få en elev til at føle sig dum</div>' +
+    '<div class="gs45-rule">Lærerautoritet: lærerens pædagogiske dom overrider altid systemforslag</div>' +
+    '<div class="gs45-rule">Anti-overvågning: data bruges til at forbedre indhold — ikke til at rangere elever</div>' +
+    '<div class="gs45-rule">Konceptuel dybde: mængden af spørgsmål optimeres aldrig på bekostning af kvalitet</div>' +
+    '<div class="gs45-rule">Anti-casino: ingen eskalerende pres, ingen streakangst, ingen præstationsskam</div>' +
+    '<div class="gs45-quote" style="margin-top:10px">Den Seje App er det sted, hvor elever opdager, at tænkning er interessant — og lærere opdager, at det stadig er muligt at bygge noget de er stolte af.</div>',
+    ''
+  );
+
+  // Card 10 — Future Reality-Grounded Refinement (accent)
+  card('Fremtiden: virkelighed frem for arkitektur',
+    '<p style="margin:0 0 10px">Systemet er nu bevist. Det resterende arbejde er ikke at tilføje mere — det er at gøre det der eksisterer bedre.</p>' +
+    '<div class="gs45-block" style="margin-bottom:8px">' +
+      '<div class="gs45-block-title">Næste prioriteter</div>' +
+      '<div class="gs45-block-body">' +
+        '<strong style="color:#c47a5a">1.</strong> Forfat de resterende 15 skitserede læreobjekter til Niveau 2+ review_text<br>' +
+        '<strong style="color:#c47a5a">2.</strong> Byg domæne/fag-filter i lærerens spørgsmålsliste<br>' +
+        '<strong style="color:#c47a5a">3.</strong> Tilføj plain-language tooltips til misconception_type-dropdown<br>' +
+        '<strong style="color:#c47a5a">4.</strong> Implementer "spørgsmål der mangler review_text" kø for lærere<br>' +
+        '<strong style="color:#c47a5a">5.</strong> Udvid til ét yderligere domæne med samme kvalitetsstandard' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-block">' +
+      '<div class="gs45-block-title">Hvad der aldrig forfølges</div>' +
+      '<div class="gs45-block-body">' +
+        'AI-genereret spørgsmålsbank uden lærergennemgang<br>' +
+        'Analytics-dashboard til administratorer<br>' +
+        'Gamification-eskalering (streak-pres, leaderboards, badges)<br>' +
+        'Indholdsproduktionsmål ("vi har brug for 500 spørgsmål inden fredag")<br>' +
+        'Lærerprofilering baseret på indholdskvalitetsmetrikker' +
+      '</div>' +
+    '</div>' +
+    '<div class="gs45-quote" style="margin-top:10px">Systemet er kun så godt som det indhold der bærer det — og det indhold er kun så godt som den omsorg der forfatter det.</div>',
+    'Sektion 45 er ikke en afslutning. Det er det punkt, hvor arkitektur møder virkelighed — og virkelighed vinder.',
     'accent'
   );
 
