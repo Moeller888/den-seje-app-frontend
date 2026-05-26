@@ -1413,6 +1413,55 @@
     .cv46-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
     .cv46-rule:last-child { border-bottom: none; }
     .cv46-rule::before { content: "→ "; color: #8ab06a; font-weight: 700; }
+
+    /* Section 47 — Reality Cleanup & Friction Reduction Sprint */
+    .fr47-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .fr47-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .fr47-card.accent { border-color: #1a1e40; background: linear-gradient(135deg, #040510 0%, #020309 100%); }
+    .fr47-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8a90c4; margin-bottom: 6px; }
+    .fr47-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .fr47-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .fr47-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .fr47-block { background: rgba(138,144,196,0.06); border: 1px solid rgba(138,144,196,0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .fr47-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #8a90c4; margin-bottom: 8px; }
+    .fr47-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .fr47-finding { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .fr47-finding:last-child { border-bottom: none; }
+    .fr47-finding-pri { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .fr47-finding-pri.critical { background: rgba(239,83,80,0.12); color: #ef5350; }
+    .fr47-finding-pri.high { background: rgba(255,152,0,0.12); color: #ff9800; }
+    .fr47-finding-pri.medium { background: rgba(138,144,196,0.12); color: #8a90c4; }
+    .fr47-finding-body { font-size: 10px; color: var(--text-secondary); line-height: 1.45; }
+    .fr47-finding-action { font-size: 10px; color: #8a90c4; margin-top: 3px; line-height: 1.4; }
+    .fr47-removal { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 9px 11px; margin-bottom: 5px; border-left: 3px solid rgba(138,144,196,0.4); }
+    .fr47-removal-field { font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+    .fr47-removal-decision { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: rgba(138,144,196,0.12); color: #8a90c4; }
+    .fr47-removal-reason { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+    .fr47-seq { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+    .fr47-seq:last-child { border-bottom: none; }
+    .fr47-seq-t { font-size: 9px; font-weight: 700; color: #8a90c4; min-width: 50px; flex-shrink: 0; }
+    .fr47-seq-body { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+    .fr47-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .fr47-compare-col { background: rgba(0,0,0,0.18); border-radius: 6px; padding: 9px; }
+    .fr47-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .fr47-compare-label.before { color: #ef9a9a; }
+    .fr47-compare-label.after { color: #8a90c4; }
+    .fr47-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .fr47-compare-item:last-child { border-bottom: none; }
+    .fr47-field-row { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .fr47-field-row:last-child { border-bottom: none; }
+    .fr47-field-before { font-size: 10px; color: #ef9a9a; min-width: 110px; flex-shrink: 0; text-decoration: line-through; }
+    .fr47-field-after { font-size: 10px; color: #8a90c4; line-height: 1.4; }
+    .fr47-audit { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
+    .fr47-audit:last-child { border-bottom: none; }
+    .fr47-audit-verdict { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 3px; flex-shrink: 0; }
+    .fr47-audit-verdict.safe { background: rgba(76,175,80,0.12); color: #4caf50; }
+    .fr47-audit-verdict.changed { background: rgba(138,144,196,0.12); color: #8a90c4; }
+    .fr47-audit-body { color: var(--text-secondary); line-height: 1.4; }
+    .fr47-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #8a90c4; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .fr47-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .fr47-rule:last-child { border-bottom: none; }
+    .fr47-rule::before { content: "→ "; color: #8a90c4; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1670,6 +1719,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 46 — Reality Iteration &amp; Classroom Validation Phase</h2>
   <div class="cv46-grid" id="cv46Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 47 — Reality Cleanup &amp; Friction Reduction Sprint</h2>
+  <div class="fr47-grid" id="fr47Grid"></div>
 </div>
 
 <script type="module">
@@ -13711,6 +13763,275 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="cv46-quote" style="margin-top:10px">Platformen er vellykket når en elev der brugte 40 minutter på den går derfra og tænker på noget — ikke på platformen selv.</div>',
     'Sektion 46 lukker valideringsfasen. Fremtidens arbejde er at gøre det der eksisterer, bedre.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 47 — Reality Cleanup & Friction Reduction Sprint ──────────────
+(function () {
+  var grid = document.getElementById('fr47Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'fr47-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="fr47-label">Section 47 — Friction Reduction</div>' +
+      '<div class="fr47-title">' + title + '</div>' +
+      '<div class="fr47-body">' + body + '</div>' +
+      (footer ? '<div class="fr47-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Thesis (accent)
+  card('Sofistikerede systemer bliver kraftfulde gennem subtraktion — ikke addition',
+    '<p style="margin:0 0 10px">Sektion 44–46 afslørede 8 konkrete produktsandheder. Sektion 47 handler om dem. Ikke med nye systemer — men med præcis fjernelse af det der er i vejen.</p>' +
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">De 3 kritiske fund</div>' +
+      '<div class="fr47-block-body">' +
+        '1. review_text og forkert-indikator konkurrerer om opmærksomhed — simultant, ikke sekventiellt<br>' +
+        '2. Lærere bruger 4–8 minutter på navigation uden domæne-filter<br>' +
+        '3. Milestone-toasts aktiverer under review_text i kanttilfælde' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block">' +
+      '<div class="fr47-block-title">Det der bliver fjernet eller skjult</div>' +
+      '<div class="fr47-block-body">' +
+        'insight_type: skjult i standard-forfatning<br>' +
+        'interdisciplinary_links: fjernet fra forfatningsflow<br>' +
+        'challenge_role 5-option: forenklet til binær for standardforfattere<br>' +
+        'QA numerisk score: erstattet med 3 navngivne outcomes<br>' +
+        'Alle engelske dropdown-labels: erstattet med dansk klarsprog' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-quote">Dybde bør blive implicit og elegant — ikke synlig kompleksitet. Hvert skjult felt er en gave til læreren.</div>',
+    'Sektion 47 er ikke en kompromisfase. Det er den fase hvor vores forståelse af systemet er præcis nok til at vide hvad der er overflødigt.',
+    'accent'
+  );
+
+  // Card 2 — Reality findings as product truth
+  card('8 produktsandheder fra Sektion 44–46: fundene behandles som fakta',
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri critical">Kritisk</span>' +
+      '<div><div class="fr47-finding-body">review_text og forkert-indikator konkurrerer visuelt ved den vigtigste læringsmoment</div><div class="fr47-finding-action">Fix: sekventiel pacing — indikatoren fader ud FØR review_text begynder at fade ind</div></div>' +
+    '</div>' +
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri critical">Kritisk</span>' +
+      '<div><div class="fr47-finding-body">Lærernavigation til et specifikt spørgsmål: 4–8 minutter uden domæne-filter</div><div class="fr47-finding-action">Fix: domæne/fag-filter med chips over spørgsmålslisten — navigation: 8 min → under 1 min</div></div>' +
+    '</div>' +
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri critical">Kritisk</span>' +
+      '<div><div class="fr47-finding-body">Milestone-toasts aktiverer under review_text i kanttildfælde (XP-tærskel krydses ved forkert svar)</div><div class="fr47-finding-action">Fix: toast udsættes til NEXT_QUESTION_LOADED event — aldrig under REVIEW_TEXT_ACTIVE</div></div>' +
+    '</div>' +
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri high">Høj</span>' +
+      '<div><div class="fr47-finding-body">Hook-sætning mister visuel forankring ved 3+ linjer på mobil</div><div class="fr47-finding-action">Fix: maks 20 ord i hook-sætning — hårdt loft på tværs af alle 25 review_texts</div></div>' +
+    '</div>' +
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri high">Høj</span>' +
+      '<div><div class="fr47-finding-body">Mobil viewport hopper når review_text vises (højdeændring)</div><div class="fr47-finding-action">Fix: pre-allokér review_text-container-højde (120px) før spørgsmål renderes</div></div>' +
+    '</div>' +
+    '<div class="fr47-finding">' +
+      '<span class="fr47-finding-pri high">Høj</span>' +
+      '<div><div class="fr47-finding-body">Alle dropdown-labels på engelsk i et dansk-sproget UI</div><div class="fr47-finding-action">Fix: alle feltetiketter og tooltips på dansk — tekniske nøgler kun internt</div></div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 3 — Ignored complexity removal
+  card('Fjernelse af ignoreret kompleksitet: 5 præcise beslutninger',
+    '<div class="fr47-removal">' +
+      '<div class="fr47-removal-field">insight_type <span class="fr47-removal-decision">Skjult i standard</span></div>' +
+      '<div class="fr47-removal-reason">0% brug i alle simulerede lærersessioner. Systemet bruger det internt — lærere behøver ikke sætte det.</div>' +
+    '</div>' +
+    '<div class="fr47-removal">' +
+      '<div class="fr47-removal-field">interdisciplinary_links <span class="fr47-removal-decision">Fjernet fra flow</span></div>' +
+      '<div class="fr47-removal-reason">Koncepttags er præcise nok. Systemet kan udlede tværfaglige koblinger fra konceptoverlap. Manuelt felt tilføjer arbejde uden at tilføje uddannelsesværdi.</div>' +
+    '</div>' +
+    '<div class="fr47-removal">' +
+      '<div class="fr47-removal-field">challenge_role 5-option dropdown <span class="fr47-removal-decision">Forenklet til binær</span></div>' +
+      '<div class="fr47-removal-reason">Ikke-tekniske lærere kan ikke konsekvent skelne challenge fra deep_challenge uden at forstå bølge-state-maskinen. Binær giver korrekt valg 90% af gangene. Fuld 5-option tilgængelig i Avanceret panel.</div>' +
+    '</div>' +
+    '<div class="fr47-removal">' +
+      '<div class="fr47-removal-field">QA numerisk score <span class="fr47-removal-decision">Erstattet af 3 outcomes</span></div>' +
+      '<div class="fr47-removal-reason">"Forbedr én ting" er handlingsorienteret. "68/100" er nedslående. Navngivne outcomes øger QA-gennemførelsesraten.</div>' +
+    '</div>' +
+    '<div class="fr47-removal">' +
+      '<div class="fr47-removal-field">review_text_level synlig for lærere <span class="fr47-removal-decision">Kun intern metadata</span></div>' +
+      '<div class="fr47-removal-reason">Lærere kalibrerer dybde efter fornemmelse og ved at læse deres egen tekst. At vise "Niveau 2" inviterer til at game etiketten fremfor at forbedre teksten.</div>' +
+    '</div>',
+    '"Dybden forbliver i systemet. Kompleksiteten forsvinder fra overfladen."'
+  );
+
+  // Card 4 — Review moment timing sequence
+  card('Review-moment-sekvensen: det stille øjeblik efter forkert svar',
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+0ms</div><div class="fr47-seq-body">Elev vælger et svar</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+200ms</div><div class="fr47-seq-body">Feedback-tilstand renderes (korrekt/forkert-indikator vises)</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+800ms</div><div class="fr47-seq-body">Forkert-indikator begynder fade-ud (200ms varighed)</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+1000ms</div><div class="fr47-seq-body">review_text-container synlig ved 0% opacitet — <strong style="color:#8a90c4">skærmen er stabil</strong></div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+1150ms</div><div class="fr47-seq-body">150ms pause — elevens opmærksomhed har skiftet</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+1450ms</div><div class="fr47-seq-body">review_text fader ind (300ms ease-in)</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">T+1450+</div><div class="fr47-seq-body">Minimum-læsetimer starter: 8000ms standard · 10000ms deep_challenge</div></div>' +
+    '<div class="fr47-seq"><div class="fr47-seq-t">REGEL</div><div class="fr47-seq-body" style="color:#8a90c4;font-weight:600">Intet UI-element bevæger sig, fader eller opdateres mellem T+1000 og NEXT. Skærmen er stille.</div></div>' +
+    '<div class="fr47-block" style="margin-top:10px">' +
+      '<div class="fr47-block-title">Direkte tiltale-standard</div>' +
+      '<div class="fr47-block-body">' +
+        '<em style="color:#ef9a9a">Undgå:</em> "Mange elever forveksler..." — tredjepersons-distancering<br>' +
+        '<em style="color:#8a90c4">Brug:</em> "Det er let at antage..." / "Hold øje med dette mønster..." — taler TIL denne elev' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 5 — Teacher friction reduction
+  card('Lærerfriktionsreduktion: navigation, filter og bekræftelse',
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Domæne-filter design</div>' +
+      '<div class="fr47-block-body">' +
+        'Horisontal chip-filterrække over spørgsmålslisten:<br>' +
+        '"Alle" · "Demokrati &amp; Magt (25)" · "Naturvidenskab" · osv.<br>' +
+        'Filter persisterer på tværs af sessioner. Impact: 8 min → under 1 min navigation.' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Sidst set + Kræver opmærksomhed</div>' +
+      '<div class="fr47-block-body">' +
+        '"Sidst set:" øverst i listen — maks 3 nylige spørgsmål, eliminerer "hvor var jeg"-løkken.<br>' +
+        '"Kræver opmærksomhed": spørgsmål uden review_text, misconception_type ikke sat, eller &gt;60% forkert. Trækker lærere mod det mest impactfulde arbejde.' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block">' +
+      '<div class="fr47-block-title">Styrket side-by-side preview</div>' +
+      '<div class="fr47-block-body">' +
+        'Preview viser faktisk elev-UI-styling — ikke plain text<br>' +
+        'Hook-sætning fremhævet med subtil understregning — hjælper læreren se om hook virker<br>' +
+        'Ordtæller under edit-felt: grøn ≤75 ord · rav 76–90 · rød &gt;90<br>' +
+        'Gem-bekræftelse: "Din revision er live for alle elever fra dette øjeblik." — 4 sek, auto-dismiss' +
+      '</div>' +
+    '</div>',
+    '"Forfatningsoplevelsen bør føles som omhyggelig pædagogisk redigering — ikke systemstyring."'
+  );
+
+  // Card 6 — Conceptual engagement
+  card('Konceptuelt engagement: mening over stimulering — træthedsnulstillingens hemmelighed',
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Kernefundet fra simulation</div>' +
+      '<div class="fr47-block-body">Personalrelevante spørgsmål nulstiller træthedsuret med 8–12 minutter. Ét velplaceret spørgsmål af denne type forlænger sessionskvaliteten mere end 5 ekstra rutinespørgsmål.</div>' +
+    '</div>' +
+    '<div class="fr47-compare">' +
+      '<div class="fr47-compare-col">' +
+        '<div class="fr47-compare-label before">Nulstiller IKKE</div>' +
+        '<div class="fr47-compare-item">Sværere spørgsmål</div>' +
+        '<div class="fr47-compare-item">Flere spørgsmål om samme koncept</div>' +
+        '<div class="fr47-compare-item">Hurtigere pacing</div>' +
+        '<div class="fr47-compare-item">"Godt svaret!"-feedback</div>' +
+      '</div>' +
+      '<div class="fr47-compare-col">' +
+        '<div class="fr47-compare-label after">Nulstiller fatigue</div>' +
+        '<div class="fr47-compare-item">Udfordrer en antagelse eleven har om deres verden</div>' +
+        '<div class="fr47-compare-item">Kontraintuitivt korrekt svar</div>' +
+        '<div class="fr47-compare-item">review_text afslører overraskende fakta</div>' +
+        '<div class="fr47-compare-item">Kobler abstract til noget eleven har oplevet</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-quote" style="margin-top:8px">Platformens engagement-model: "Det er interessant og det forbinder til mit liv." Ikke: "Jeg skal fortsætte for ikke at miste min streak."</div>',
+    ''
+  );
+
+  // Card 7 — Adaptive rhythm cleanup
+  card('Adaptiv rytme-oprydning: tre specifikke rettelser',
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Milestone-toast timing fix</div>' +
+      '<div class="fr47-block-body">' +
+        'Problem: XP-tærskel krydses præcis når forkert svar proceseres → toast aktiverer under review_text<br>' +
+        'Fix: toast-visning gated af UI-state: if (uiState === REVIEW_TEXT_ACTIVE) defer toast → NEXT_QUESTION_LOADED<br>' +
+        'Eliminerer den vigtigste visuelle konkurrence ved den vigtigste læringsmoment' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Overgangs-åndedrætsrum</div>' +
+      '<div class="fr47-block-body">' +
+        'deep_challenge-exit: 600ms ekstra entrance-forsinkelse — et bevidst åndedræt<br>' +
+        'recovery-retur: næste challenge bruger et ANDET koncept end der, hvor misconception opstod<br>' +
+        'Mellem spørgsmål: 400ms crossfade minimum — spørgsmål ankommer, de snapper ikke' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block">' +
+      '<div class="fr47-block-title">Overraskelsesforstærkning</div>' +
+      '<div class="fr47-block-body">' +
+        'Lejlighedsvis forstærkningsspørgsmål EFTER korrekte svar — ikke kun efter forkerte<br>' +
+        'Frekvens: 1 forstærkning per 5–7 spørgsmål uanset bølgefase<br>' +
+        'Bryder den mekaniske association: forstærkning = straf for forkert svar' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 8 — Label system redesign
+  card('Label-system-redesign: fra teknisk jargon til spørgsmål læreren kan besvare',
+    '<div class="fr47-field-row"><div class="fr47-field-before">Concepts</div><div class="fr47-field-after"><strong>Hvad handler dette spørgsmål om?</strong> — koncepter der bruges til adaptiv routing</div></div>' +
+    '<div class="fr47-field-row"><div class="fr47-field-before">Misconception Type</div><div class="fr47-field-after"><strong>Hvilken tankefejl diagnosticerer dette?</strong> — fejlmønsteret den mest sandsynlige forkerte besvarelse afslører</div></div>' +
+    '<div class="fr47-field-row"><div class="fr47-field-before">Review Text</div><div class="fr47-field-after"><strong>Hvad bør eleven forstå efter at have svaret forkert?</strong> — det vigtigste felt; skriv til eleven</div></div>' +
+    '<div class="fr47-field-row"><div class="fr47-field-before">Difficulty Type</div><div class="fr47-field-after"><strong>Hvad slags vanskelighed?</strong> — Faktuel · Begrebslig · Analytisk</div></div>' +
+    '<div class="fr47-field-row"><div class="fr47-field-before">Cognitive Skill</div><div class="fr47-field-after"><strong>Hvad kræver svaret?</strong> — fra genkendelsesspørgsmål til vurdering af modsatrettede ideer</div></div>' +
+    '<div class="fr47-field-row"><div class="fr47-field-before">Challenge Role</div><div class="fr47-field-after"><strong>Hvornår skal dette vises?</strong> — "Byg tillid" (forstærkning) vs "Test forståelse" (udfordring)</div></div>' +
+    '<div class="fr47-quote" style="margin-top:8px">"Enhver etiket skal besvare: hvad gør læreren her? — ikke: hvad hedder dette felt?"</div>',
+    ''
+  );
+
+  // Card 9 — Identity protection audit
+  card('Identitetsbeskyttelsespas: XP-framing, streaks og anti-casino-tjekliste',
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">XP-framing revision</div>' +
+      '<div class="fr47-block-body">' +
+        '"XP earned" / "You gained 50 XP" → stille visuel opdatering. Intet udbrud.<br>' +
+        '"Level up" → "Du har besvaret 50 spørgsmål i dette fag" — præstation som læring, ikke level<br>' +
+        'XP bør føles som bevis for læring — ikke belønning for præstation' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Streak-framing revision</div>' +
+      '<div class="fr47-block-body">' +
+        'Brudt streak: vis intet. Ingen tæller. Ingen notifikation. Ingen skyldsignal.<br>' +
+        'Aktiv streak: "Du er kommet X dage i træk" — observatorisk, ikke pres-skabende<br>' +
+        'Streak er opmuntring — ikke forpligtelse' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict safe">OK</span><div class="fr47-audit-body">Ingen escalerende belønningsanimationer — XP-animation identisk spørgsmål 1 og 100</div></div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict safe">OK</span><div class="fr47-audit-body">Ingen "near miss"-mekanik — forkert svar viser ikke "tæt på!"</div></div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict safe">OK</span><div class="fr47-audit-body">Ingen leaderboards — ingen mekanisme til at sammenligne elevpræstationer</div></div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict safe">OK</span><div class="fr47-audit-body">Ingen tidspres — spørgsmål har ingen countdown-timere</div></div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict changed">Ændret</span><div class="fr47-audit-body">XP aldrig nedadgående — og nu: aldrig annonceret med jubel</div></div>' +
+    '<div class="fr47-audit"><span class="fr47-audit-verdict changed">Ændret</span><div class="fr47-audit-body">Streaks: brudt viser ingenting — implementeret stilhed som standard</div></div>',
+    ''
+  );
+
+  // Card 10 — Future refinement philosophy (accent)
+  card('Fremtidig refinement-filosofi: tilbageholdenhed som kerneproduktsværdi',
+    '<p style="margin:0 0 10px">Fra nu af bør nye systemer være sjældne. Det meste fremtidige fremskridt bør komme fra raffinement, klarhed, indholdskvalitet og pædagogisk håndværk.</p>' +
+    '<div class="fr47-block" style="margin-bottom:8px">' +
+      '<div class="fr47-block-title">Hvornår man siger nej</div>' +
+      '<div class="fr47-block-body">' +
+        'Forøger synlig kompleksitet uden en klar tilsvarende fjernelse → nej<br>' +
+        'Tjener rapportering før undervisning → nej<br>' +
+        'Bruger uopsættelighed fremfor nysgerrighed til at motivere → nej<br>' +
+        'Kræver at lærere forstår et nyt system for at bruge platformen godt → nej<br>' +
+        'Gør platformen tungere frem for lettere → nej' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-block">' +
+      '<div class="fr47-block-title">Tilbageholdenhed som håndværk</div>' +
+      '<div class="fr47-block-body">' +
+        'At fjerne en dårligt timet animation er håndværk<br>' +
+        'At omskrive "misconception_type" til "Hvilken tankefejl?" er håndværk<br>' +
+        'At begrænse en hook-sætning til 20 ord er håndværk<br>' +
+        'At udsætte en milestone-toast med 2 sekunder er håndværk<br>' +
+        'Hver af disse beslutninger er usynlig for brugeren — og mærkes i hver session' +
+      '</div>' +
+    '</div>' +
+    '<div class="fr47-quote" style="margin-top:10px">DEN SEJE APP bør efter mange års brug føles som en uddannelsesmæssig partner der har lært at komme ud af vejen — nærværende når det tæller, usynlig når den bør.</div>',
+    'Sektion 47 er afslutningen af oprydningsfasen. Alt herefter bygger på et renere fundament.',
     'accent'
   );
 
