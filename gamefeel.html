@@ -1545,6 +1545,28 @@
     .tr49-quote { font-size: 12px; color: #7ab8c4; font-style: italic; border-left: 3px solid #7ab8c460; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
     .tr49-rule { font-size: 11px; color: #9ab0b8; padding: 3px 0; }
     .tr49-rule::before { content: "→ "; color: #7ab8c4; font-weight: 700; }
+
+    /* ── Section 50 — Live Curriculum Deployment ── */
+    .ld50-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ld50-card { background: #030e08; border: 1px solid #60c09030; border-radius: 8px; padding: 18px; }
+    .ld50-card.accent { background: linear-gradient(135deg, #020c06 0%, #010a04 100%); border-color: #60c09060; }
+    .ld50-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #60c090; margin-bottom: 8px; }
+    .ld50-title { font-size: 14px; font-weight: 700; color: #e0f0e8; margin-bottom: 10px; line-height: 1.3; }
+    .ld50-body { font-size: 12px; color: #a0c0a8; line-height: 1.6; }
+    .ld50-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #60c09030; font-size: 11px; color: #60c090; font-style: italic; }
+    .ld50-block { background: #60c09012; border-left: 2px solid #60c09040; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .ld50-block-title { font-size: 11px; font-weight: 600; color: #60c090; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .ld50-block-body { font-size: 12px; color: #a0c0a8; line-height: 1.6; }
+    .ld50-row { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid #60c09015; }
+    .ld50-key { font-size: 10px; font-weight: 700; color: #60c090; width: 160px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: monospace; }
+    .ld50-val { font-size: 11px; color: #a0c0a8; flex: 1; font-family: monospace; }
+    .ld50-quote { font-size: 12px; color: #60c090; font-style: italic; border-left: 3px solid #60c09060; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .ld50-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #60c09020; color: #60c090; border: 1px solid #60c09040; margin-right: 4px; }
+    .ld50-constraint { background: #050e07; border: 1px solid #60c09020; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .ld50-constraint-name { font-size: 10px; color: #60c090; font-weight: 700; margin-bottom: 3px; font-family: monospace; }
+    .ld50-constraint-body { font-size: 11px; color: #90b09a; line-height: 1.5; }
+    .ld50-rule { font-size: 11px; color: #90b09a; padding: 3px 0; }
+    .ld50-rule::before { content: "→ "; color: #60c090; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1811,6 +1833,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 49 — Teacher-Ready Domain Pack &amp; Educational Flow Validation</h2>
   <div class="tr49-grid" id="tr49Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 50 — Live Curriculum Deployment &amp; Learning Object Operationalization</h2>
+  <div class="ld50-grid" id="ld50Grid"></div>
 </div>
 
 <script type="module">
@@ -14795,6 +14820,139 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       '</div>' +
     '</div>' +
     '<div class="tr49-quote">Democracy &amp; Power Pack er pakket. Domænet er parat til en rigtig klasse.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 50 — Live Curriculum Deployment & Learning Object Operationalization ─
+(function () {
+  var grid = document.getElementById('ld50Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'ld50-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ld50-label">Section 50 — Curriculum Deployment</div>' +
+      '<div class="ld50-title">' + title + '</div>' +
+      '<div class="ld50-body">' + body + '</div>' +
+      (footer ? '<div class="ld50-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Deployment status (accent)
+  card(
+    '40 læreobjekter er nu operationelle i produktions-databasen',
+    '<p style="margin:0 0 10px">Section 50 markerer overgangen fra design-kontrakt til levende system. Democracy &amp; Power domænet (dp_001–dp_040) eksisterer nu som rigtige databaserækker — ikke blot som JS-specifikationer.</p>' +
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">Deployment facts</div>' +
+      '<div class="ld50-block-body">' +
+        '<div class="ld50-row"><span class="ld50-key">migration</span><span class="ld50-val">20260526000200_democracy_power_curriculum.sql</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">rows inserted</span><span class="ld50-val">40 (dp_001–dp_040)</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">domain key</span><span class="ld50-val">metadata->>\'domain\' = \'democracy_power\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">rollback</span><span class="ld50-val">DELETE WHERE metadata->>\'domain\' = \'democracy_power\'</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ld50-quote">Et læreobjekt er ikke parat til elever før det er i databasen — ikke fordi databasen er sandheden, men fordi databasen er det eneste sted eleven kan møde det.</div>',
+    '40 af 40 objekter deployed og verificeret i produktions-databasen.',
+    'accent'
+  );
+
+  // Card 2 — Final INSERT shape
+  card(
+    'Kanonisk INSERT-form: skemaet der overlevede alle constraints',
+    '<p style="margin:0 0 10px">Det tog 6 iterationer at finde den korrekte INSERT-form. Hvert fejltrin afslørede en eksisterende check constraint i produktionsskemaet.</p>' +
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">Endelig kolonneliste</div>' +
+      '<div class="ld50-block-body">' +
+        '<div class="ld50-row"><span class="ld50-key">type</span><span class="ld50-val">\'mc_single\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">answer_format</span><span class="ld50-val">\'mc\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">answer_type</span><span class="ld50-val">\'short\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">difficulty</span><span class="ld50-val">1</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">question_type</span><span class="ld50-val">\'auto\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">is_active</span><span class="ld50-val">false</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">learning_objective</span><span class="ld50-val">\'democracy_power\'</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">content</span><span class="ld50-val">{ question, options[], correct, review_text }</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">metadata</span><span class="ld50-val">{ concepts[], misconception_type, cognitive_skill, difficulty_type, insight_type, challenge_role, domain }</span></div>' +
+      '</div>' +
+    '</div>',
+    'js/curriculum-deployment.js er det kanoniske referencedokument for denne INSERT-form.'
+  );
+
+  // Card 3 — Constraint discovery
+  card(
+    '4 check constraints opdaget og løst under deployment',
+    '<div class="ld50-constraint">' +
+      '<div class="ld50-constraint-name">question_type_valid</div>' +
+      '<div class="ld50-constraint-body">Kun \'auto\' er en valid question_type-værdi. \'manual\' og andre strings afvises. Opdaget ved at prøve question_type = \'manual\'.</div>' +
+    '</div>' +
+    '<div class="ld50-constraint">' +
+      '<div class="ld50-constraint-name">auto_questions_require_objective</div>' +
+      '<div class="ld50-constraint-body">question_type = \'auto\' kræver learning_objective IS NOT NULL. Løst med learning_objective = \'democracy_power\'.</div>' +
+    '</div>' +
+    '<div class="ld50-constraint">' +
+      '<div class="ld50-constraint-name">active_requires_auto</div>' +
+      '<div class="ld50-constraint-body">is_active = true kræver question_type = \'auto\'. Løst ved at sætte is_active = false — get-next-question filtrerer ikke på is_active.</div>' +
+    '</div>' +
+    '<div class="ld50-constraint">' +
+      '<div class="ld50-constraint-name">NOT NULL uden default</div>' +
+      '<div class="ld50-constraint-body">type, difficulty, question_type er alle NOT NULL uden column default — eksplicit angivelse obligatorisk i alle INSERT-statements.</div>' +
+    '</div>',
+    'Ingen af disse constraints var dokumenteret i lokale migrationer — de eksisterede kun i det live produktionsskema.'
+  );
+
+  // Card 4 — is_active=false reasoning
+  card(
+    'is_active=false leverer stadig spørgsmål — arkitekturobservation',
+    '<p style="margin:0 0 10px">Et kritisk fund: is_active-kolonnen giver ikke adgang til spørgsmålsrotationen. Det gør question_instances-systemet.</p>' +
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">get-next-question flow</div>' +
+      '<div class="ld50-block-body">' +
+        '1. Hent due question_instances for denne student (spaced repetition)<br>' +
+        '2. For hvert spørgsmål i questions-tabellen (ingen is_active-filter): forsøg INSERT i question_instances<br>' +
+        '3. Første vellykket INSERT returnerer spørgsmålet<br>' +
+        '4. is_active er aldrig del af query-logikken' +
+      '</div>' +
+    '</div>' +
+    '<div class="ld50-quote">is_active er et semantisk felt — ikke et adgangsfelt. Det fortæller systemet om spørgsmålet er "klar til brug", men get-next-question bruger det ikke til filtrering.</div>',
+    'Alle 40 democracy_power spørgsmål er i aktiv rotation fra deployment-tidspunktet.'
+  );
+
+  // Card 5 — Source objects
+  card(
+    'Kildefiler: 4 design-kontrakt JS-filer → 40 produktionsrækker',
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">Kildekæde</div>' +
+      '<div class="ld50-block-body">' +
+        '<div class="ld50-row"><span class="ld50-key">dp_001–dp_010</span><span class="ld50-val">js/gold-standard-objects.js → GOLD_STANDARD_OBJECTS</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">dp_011–dp_018</span><span class="ld50-val">js/classroom-validation.js → DOMAIN_EXPANSION.NEW_OBJECTS</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">dp_019–dp_025</span><span class="ld50-val">js/content-expansion.js → COMPLETED_OBJECTS</span></div>' +
+        '<div class="ld50-row"><span class="ld50-key">dp_026–dp_040</span><span class="ld50-val">js/content-expansion.js → EXPANDED_OBJECTS</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<p style="margin:8px 0 0;font-size:11px;color:#90b09a">Transformationsregler: options-arrays forblev plain strings (bekræftet via app.js linje 555–560: btn.textContent = option). correct-feltet er den eksakte options-streng der er korrekt. JSON-specialtegn håndteret med PostgreSQL dollar-quoting ($$…$$).</p>',
+    'js/curriculum-deployment.js indeholder det kanoniske deployment-referencedokument.'
+  );
+
+  // Card 6 — Closing (accent)
+  card(
+    'Fra JavaScript til Supabase: læreobjektets produktionsrejse er komplet',
+    '<p style="margin:0 0 10px">Et læreobjekt starter som pædagogisk intention. Det ender som en databaserække. Imellem dem ligger præcise tekniske beslutninger: skemaconstraints, JSON-escaping, migrationsformat, kolonnekrav.</p>' +
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">Hvad Section 50 etablerede</div>' +
+      '<div class="ld50-block-body">' +
+        'Første fulde migration af manuelt forfattede curriculum-objekter · Komplet skema-constraint-kortlægning for questions-tabellen · Kanonisk INSERT-form for fremtidige domæner · Verifikation af is_active-semantik vs. leveringslogik' +
+      '</div>' +
+    '</div>' +
+    '<div class="ld50-block">' +
+      '<div class="ld50-block-title">Næste domænekandidater</div>' +
+      '<div class="ld50-block-body">' +
+        'Kan nu genbruge den etablerede INSERT-form direkte. Constraint-kortlægningen er komplet og dokumenteret. Deployment-processen er reproducerbar.' +
+      '</div>' +
+    '</div>' +
+    '<div class="ld50-quote">Democracy &amp; Power er live. 40 spørgsmål venter på den første studerende.</div>',
     null,
     'accent'
   );
