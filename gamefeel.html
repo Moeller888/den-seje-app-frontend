@@ -1262,6 +1262,54 @@
     .lw43-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
     .lw43-rule:last-child { border-bottom: none; }
     .lw43-rule::before { content: "→ "; color: #c4a25a; font-weight: 700; }
+
+    /* Section 44 — Reference Experience Polish Sprint */
+    .ep44-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ep44-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .ep44-card.accent { border-color: #1a4035; background: linear-gradient(135deg, #050f0d 0%, #030a08 100%); }
+    .ep44-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6abea0; margin-bottom: 6px; }
+    .ep44-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.3; }
+    .ep44-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .ep44-footer { margin-top: 12px; font-size: 10px; color: var(--text-muted); font-style: italic; }
+    .ep44-block { background: rgba(106,190,160,0.06); border: 1px solid rgba(106,190,160,0.18); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .ep44-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6abea0; margin-bottom: 8px; }
+    .ep44-block-body { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+    .ep44-friction { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
+    .ep44-friction-problem { font-size: 10px; font-weight: 700; color: #ef9a9a; margin-bottom: 3px; display: flex; gap: 6px; align-items: flex-start; }
+    .ep44-friction-effect { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; line-height: 1.4; }
+    .ep44-friction-fix { font-size: 10px; color: #6abea0; line-height: 1.4; }
+    .ep44-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-right: 4px; flex-shrink: 0; }
+    .ep44-badge.before { background: rgba(239,83,80,0.12); color: #ef5350; }
+    .ep44-badge.after { background: rgba(106,190,160,0.12); color: #6abea0; }
+    .ep44-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .ep44-compare-col { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; }
+    .ep44-compare-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 7px; }
+    .ep44-compare-label.before { color: #ef9a9a; }
+    .ep44-compare-label.after { color: #6abea0; }
+    .ep44-compare-item { font-size: 10px; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.4; }
+    .ep44-compare-item:last-child { border-bottom: none; }
+    .ep44-timing { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .ep44-timing:last-child { border-bottom: none; }
+    .ep44-timing-label { font-size: 10px; color: var(--text-muted); min-width: 130px; flex-shrink: 0; }
+    .ep44-timing-bar { height: 6px; border-radius: 3px; background: rgba(106,190,160,0.3); flex-shrink: 0; }
+    .ep44-timing-value { font-size: 10px; color: #6abea0; font-weight: 700; min-width: 50px; }
+    .ep44-persona { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; border-left: 3px solid rgba(106,190,160,0.3); }
+    .ep44-persona-who { font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .ep44-persona-internal { font-size: 10px; font-style: italic; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; }
+    .ep44-persona-need { font-size: 10px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 3px; }
+    .ep44-persona-success { font-size: 10px; color: #6abea0; line-height: 1.4; }
+    .ep44-rule { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+    .ep44-rule:last-child { border-bottom: none; }
+    .ep44-rule::before { content: "→ "; color: #6abea0; font-weight: 700; }
+    .ep44-quote { font-size: 12px; font-style: italic; color: var(--text-secondary); border-left: 3px solid #6abea0; padding-left: 12px; margin: 10px 0; line-height: 1.5; }
+    .ep44-field { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; }
+    .ep44-field-label { font-size: 10px; font-weight: 700; color: #6abea0; margin-bottom: 2px; }
+    .ep44-field-plain { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+    .ep44-field-tip { font-size: 9px; color: var(--text-muted); font-style: italic; line-height: 1.4; margin-top: 2px; }
+    .ep44-year { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .ep44-year:last-child { border-bottom: none; }
+    .ep44-year-label { font-size: 9px; font-weight: 700; color: #6abea0; min-width: 52px; flex-shrink: 0; padding-top: 2px; }
+    .ep44-year-body { font-size: 10px; color: var(--text-secondary); line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -1510,6 +1558,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 43 — Full Learning Object Workflow Slice</h2>
   <div class="lw43-grid" id="lw43Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 44 — Reference Experience Polish Sprint</h2>
+  <div class="ep44-grid" id="ep44Grid"></div>
 </div>
 
 <script type="module">
@@ -12828,6 +12879,267 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="lw43-quote" style="margin-top:10px">Når en elev der studerede med denne platform møder "teori om kollektiv handling" på universitetet, genkender de det — fordi de en gang svarede forkert på et Bastille-spørgsmål og lærte hvorfor 7 fanger ændrede historien.</div>',
     'Sektion 43 er det første bevis. Fremtiden er alle de slices der følger.',
+    'accent'
+  );
+
+}());
+
+// ─── Section 44 — Reference Experience Polish Sprint ───────────────────────
+(function () {
+  var grid = document.getElementById('ep44Grid');
+  if (!grid) return;
+
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'ep44-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ep44-label">Section 44 — Experience Polish</div>' +
+      '<div class="ep44-title">' + title + '</div>' +
+      '<div class="ep44-body">' + body + '</div>' +
+      (footer ? '<div class="ep44-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Architecture is not enough (accent)
+  card('Arkitektur er ikke nok: systemer lykkes eller fejler på grund af den levede oplevelse',
+    '<div class="ep44-compare">' +
+      '<div class="ep44-compare-col">' +
+        '<div class="ep44-compare-label before">Arkitektonisk brilliant</div>' +
+        '<div class="ep44-compare-item">Adaptiv sekventering</div>' +
+        '<div class="ep44-compare-item">Misconception-sporing</div>' +
+        '<div class="ep44-compare-item">Koncepttilstandsmaskine</div>' +
+        '<div class="ep44-compare-item">Pædagogisk QA-system</div>' +
+        '<div class="ep44-compare-item" style="color:#ef9a9a;margin-top:6px;font-style:italic">...og alligevel trættende at bruge</div>' +
+      '</div>' +
+      '<div class="ep44-compare-col">' +
+        '<div class="ep44-compare-label after">Oplevelsesmæssigt elegant</div>' +
+        '<div class="ep44-compare-item">review_text der fader blødt ind</div>' +
+        '<div class="ep44-compare-item">Forfatningsoverflade der ånder</div>' +
+        '<div class="ep44-compare-item">Rytme der modulerer naturligt</div>' +
+        '<div class="ep44-compare-item">Feltetiketter der er menneskelige</div>' +
+        '<div class="ep44-compare-item" style="color:#6abea0;margin-top:6px;font-style:italic">...og man vil gerne vende tilbage</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-quote">Sektion 1–43 byggede fundamentet. Sektion 44 spørger: "Hvordan føles det faktisk at bruge det?"</div>',
+    'Store uddannelsessystemer lykkes eller fejler ikke på grund af funktioner. De lykkes eller fejler på grund af oplevelseskvalitet.',
+    'accent'
+  );
+
+  // Card 2 — Reference Flow Selection
+  card('Den valgte referenceflow: reviewøjeblikket + review_text-revisionen',
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Elevøjeblikket</div>' +
+      '<div class="ep44-block-body">' +
+        'Trigger: elev svarer forkert<br>' +
+        'Forløb: forkert-indikator → review_text → læsning → næste spørgsmål<br>' +
+        'Varighed: 15–45 sekunders læsning og reorientering<br>' +
+        '<strong style="color:#6abea0">Dette er det primære læringsøjeblik</strong> — ikke spørgsmålet, ikke svaret, men dette' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block">' +
+      '<div class="ep44-block-title">Lærerøjeblikket</div>' +
+      '<div class="ep44-block-body">' +
+        'Trigger: lærer ser 65% misconception-frekvens<br>' +
+        'Forløb: åbner forfatningsvisning → ser nuværende review_text → forfiner én sætning → gemmer<br>' +
+        'Varighed: 2–5 minutters håndværksopmærksomhed<br>' +
+        '<strong style="color:#6abea0">Lærerens revision læses af alle efterfølgende elever</strong>' +
+      '</div>' +
+    '</div>',
+    '"Poler disse to øjeblikke — og du polerer de højest-leverage punkter i hele platformen."'
+  );
+
+  // Card 3 — Friction Audit
+  card('Friktionsaudit: hvad ville stille og roligt udmatte nogen efter 45 minutter?',
+    '<div class="ep44-friction">' +
+      '<div class="ep44-friction-problem"><span class="ep44-badge before">FØR</span>review_text vises ved fuld opacitet øjeblikkeligt</div>' +
+      '<div class="ep44-friction-effect">Brat overgang — eleven er ikke færdig med at bearbejde forkert-svar-øjeblikket</div>' +
+      '<div class="ep44-friction-fix"><span class="ep44-badge after">EFTER</span>Fade ind over 300ms med 150ms forsinkelse</div>' +
+    '</div>' +
+    '<div class="ep44-friction">' +
+      '<div class="ep44-friction-problem"><span class="ep44-badge before">FØR</span>Forkert-indikator og review_text konkurrerer samtidigt</div>' +
+      '<div class="ep44-friction-effect">Split visuel opmærksomhed i det kritiske øjeblik</div>' +
+      '<div class="ep44-friction-fix"><span class="ep44-badge after">EFTER</span>Forkert-indikator fader ud FØR review_text fader ind</div>' +
+    '</div>' +
+    '<div class="ep44-friction">' +
+      '<div class="ep44-friction-problem"><span class="ep44-badge before">FØR</span>Alle metadatafelter synlige på én gang i forfatningsvisning</div>' +
+      '<div class="ep44-friction-effect">Kognitiv overbelastning — læreren ser misconception_type, cognitive_skill, difficulty_type, challenge_role på én gang</div>' +
+      '<div class="ep44-friction-fix"><span class="ep44-badge after">EFTER</span>Progressiv afsløring: kun Lag 0-felter som standard</div>' +
+    '</div>' +
+    '<div class="ep44-friction">' +
+      '<div class="ep44-friction-problem"><span class="ep44-badge before">FØR</span>QA-prompts vises alle på én gang som liste</div>' +
+      '<div class="ep44-friction-effect">Fem spørgsmål samtidigt skaber beslutningstræthed</div>' +
+      '<div class="ep44-friction-fix"><span class="ep44-badge after">EFTER</span>Én QA-prompt ad gangen — besvar den, næste vises</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 4 — review_text Experience Polish
+  card('review_text oplevelsespolish: typografi, rytme og følelsesmæssig tone',
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Typografi</div>' +
+      '<div class="ep44-block-body">' +
+        'Første sætning: 15px, vægt 500 — trækker øjet, sætter tonen<br>' +
+        'Brødtekst: 13px, linjehøjde 1.75 — generøs åndedrætsrum<br>' +
+        'Farve: var(--text-secondary) — blødere end primær; dette er kontekst, ikke kommando<br>' +
+        'Maks linjelængde: 65 tegn — optimal læsekomfort' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Timing-sekvens</div>' +
+      '<div class="ep44-block-body">' +
+        'Forkert-indikator: 600ms visning → 200ms fade ud<br>' +
+        'review_text forsinkelse: 150ms efter forkert-indikator forsvinder<br>' +
+        'review_text fade-ind: 300ms ease-in<br>' +
+        'Minimum læsetid: 8000ms standard · 9500ms for deep_challenge<br>' +
+        'Næste spørgsmål: eksplicit handling ELLER 8s minimum + scroll-signal' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block-title" style="margin-bottom:6px">Emotionel tone</div>' +
+    '<div class="ep44-rule">Starter aldrig med "Forkert" eller "Det rigtige svar er..."</div>' +
+    '<div class="ep44-rule">Taler direkte til eleven — ikke om dem</div>' +
+    '<div class="ep44-rule">Slutter med ekspansion, ikke lukning: "Hold øje med dette mønster..."</div>' +
+    '<div class="ep44-rule">Ingen udråbstegn. Ingen "Godt forsøg!" Ingen nedladende opmuntring.</div>',
+    '"review_text er platformen. Alt andet er infrastruktur."'
+  );
+
+  // Card 5 — Teacher Authoring Comfort
+  card('Lærerforfattelseskomfort: felter der taler menneskeligt',
+    '<div class="ep44-field">' +
+      '<div class="ep44-field-label">Hvad handler dette spørgsmål om?</div>' +
+      '<div class="ep44-field-plain">Ikke: <em>concepts [ ]</em></div>' +
+      '<div class="ep44-field-tip">Disse tags hjælper systemet med at vide hvornår dette spørgsmål vises i en elevs læringsforløb.</div>' +
+    '</div>' +
+    '<div class="ep44-field">' +
+      '<div class="ep44-field-label">Hvad bør en elev forstå efter at have svaret forkert?</div>' +
+      '<div class="ep44-field-plain">Ikke: <em>review_text</em></div>' +
+      '<div class="ep44-field-tip">Det vigtigste felt. Skriv til eleven der netop svarede forkert.</div>' +
+    '</div>' +
+    '<div class="ep44-field">' +
+      '<div class="ep44-field-label">Hvilken tankefejl diagnosticerer dette?</div>' +
+      '<div class="ep44-field-plain">Ikke: <em>misconception_type</em></div>' +
+      '<div class="ep44-field-tip">Det mest almindelige fejlmønster dette spørgsmål er designet til at fange.</div>' +
+    '</div>' +
+    '<div class="ep44-block" style="margin-top:10px">' +
+      '<div class="ep44-block-title">Visuelt åndedrætsrum</div>' +
+      '<div class="ep44-block-body">' +
+        'Lag 0: maks 3 felter synlige — hvidt rum dominerer<br>' +
+        'Lag 1–3: ét panel ad gangen med stille overgang<br>' +
+        'Lag 2 review_text: fuld-skærm skriveoverflade — ingen støj rundt om<br>' +
+        'Automatisk gem: stille grøn prik — ingen Gem-knap kræves for kladder' +
+      '</div>' +
+    '</div>',
+    '"Forfatningsoplevelsen bør føles som at sætte sig ned med et håndværk — ikke som at åbne en formular."'
+  );
+
+  // Card 6 — Adaptive Rhythm & Timing
+  card('Adaptiv rytme og timing: læringsrytmen skal føles levende og menneskelig',
+    '<div class="ep44-timing"><div class="ep44-timing-label">Spørgsmål ankommer</div><div class="ep44-timing-bar" style="width:6px"></div><div class="ep44-timing-value">0ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">Svarfeedback</div><div class="ep44-timing-bar" style="width:20px"></div><div class="ep44-timing-value">200ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">Forkert-indikator</div><div class="ep44-timing-bar" style="width:60px"></div><div class="ep44-timing-value">600ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">review_text forsinkelse</div><div class="ep44-timing-bar" style="width:15px"></div><div class="ep44-timing-value">+150ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">review_text fade-ind</div><div class="ep44-timing-bar" style="width:30px"></div><div class="ep44-timing-value">300ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">Min. læsetid (standard)</div><div class="ep44-timing-bar" style="width:80px"></div><div class="ep44-timing-value">8000ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">Min. læsetid (deep_ch.)</div><div class="ep44-timing-bar" style="width:95px"></div><div class="ep44-timing-value">9500ms</div></div>' +
+    '<div class="ep44-timing"><div class="ep44-timing-label">Overgang til næste spm.</div><div class="ep44-timing-bar" style="width:40px"></div><div class="ep44-timing-value">400ms</div></div>' +
+    '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);font-style:italic">Bølgefaseskift: stille — ingen UI-meddelelse. Ændringen mærkes i spørgsmålskarakter, ikke i interface.</div>',
+    ''
+  );
+
+  // Card 7 — Visual & Cognitive Simplicity
+  card('Visuel og kognitiv enkelhed: ét fokuspunkt per skærmtilstand',
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Densitetsreduktion</div>' +
+      '<div class="ep44-block-body">' +
+        'Ét fokuspunkt per skærmtilstand — spørgsmål, feedback, eller review_text — aldrig alle tre<br>' +
+        'Under review_text-læsning: alt andet fader til 40% — review_text er fokus<br>' +
+        'Under review_text-forfatning: alle metadatafelter foldes sammen — skriveflade udvides<br>' +
+        'Under QA: kun den aktuelle prompt synlig — alle andre skjult' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Progressiv afsløring</div>' +
+      '<div class="ep44-block-body">' +
+        'Elevsvar-visning: spørgsmål og muligheder kun — ingen metadata, ingen koncepttags<br>' +
+        'Lærer Lag 0: spørgsmål, korrekt svar, 3 muligheder — intet andet synligt<br>' +
+        'Lag 1 trigger: stille "tilføj mere kontekst" affordance — ikke en fane, ikke en formsektion' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block">' +
+      '<div class="ep44-block-title">Emotionel ro</div>' +
+      '<div class="ep44-block-body">' +
+        'Farve: afmættet under læseøjeblikke — høj mætning er til handlingsøjeblikke<br>' +
+        'Bevægelse: alle overgange ease-in-out — ingenting hopper, ingenting springer<br>' +
+        'Fejltilstande: aldrig røde advarsler — forkerte svar i blidt rav eller dæmpet farve<br>' +
+        'Succestilstande: kortvarige og afdæmpede — stille grøn, ikke fejringsanimation' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 8 — Long-Session Sustainability
+  card('Lang-sessions bæredygtighed: oplevelsen efter 45 minutter',
+    '<div class="ep44-year"><div class="ep44-year-label">0–15 min</div><div class="ep44-year-body">Frisk — rytmen føles god, spørgsmål er interessante. Systemet kan byde på fuld dybde.</div></div>' +
+    '<div class="ep44-year"><div class="ep44-year-label">15–30 min</div><div class="ep44-year-body">Engageret — begyndende træthed. review_text skal konsekvent være læselig. Bølgen modulerer naturligt.</div></div>' +
+    '<div class="ep44-year"><div class="ep44-year-label">30–45 min</div><div class="ep44-year-body">Trættende — uden variation sætter kognitiv udjævning ind. Udfordring må moduleres. Niveau 1 review_text er acceptabelt som træthedslindring.</div></div>' +
+    '<div class="ep44-year"><div class="ep44-year-label">45–60 min</div><div class="ep44-year-body">Udmattet — review_text-overbelastning er reel. Maks 8 Niveau 3-review_texts per 45-minutterssession.</div></div>' +
+    '<div class="ep44-year"><div class="ep44-year-label">+60 min</div><div class="ep44-year-body">Bør ikke designes til. Stille opfordring til pause. Ikke et hårdt stop — en venlig henstilling.</div></div>' +
+    '<div class="ep44-block" style="margin-top:10px">' +
+      '<div class="ep44-block-title">Naturlige stopøjeblikke</div>' +
+      '<div class="ep44-block-body">' +
+        'Korrekt svar på et udfordringsspørgsmål: naturligt øjeblik at pause og føle sig tilfreds<br>' +
+        'Koncept skifter emerging → developing: stille anerkendelse — "Du bygger noget her"<br>' +
+        'Sessionssammenfatning: viser kun hvad der avancerede — ikke hvad der var forkert, ikke en score' +
+      '</div>' +
+    '</div>',
+    ''
+  );
+
+  // Card 9 — Real Empathy Perspectives
+  card('Reel empati: systemet set fra 5 menneskelige perspektiver',
+    '<div class="ep44-persona">' +
+      '<div class="ep44-persona-who">Den trættede lærer — 17:00 efter en fuld undervisningsdag</div>' +
+      '<div class="ep44-persona-internal">"Jeg har 20 minutter. Jeg vil bare gøre denne review_text bedre og gå hjem."</div>' +
+      '<div class="ep44-persona-need">Går direkte til redigeringsoverfladen. Intet dashboard. Ét spørgsmål, ét felt, én gem.</div>' +
+      '<div class="ep44-persona-success">Redigerer review_text på 3 minutter. Ser "din revision er live nu." Føler sig effektiv.</div>' +
+    '</div>' +
+    '<div class="ep44-persona">' +
+      '<div class="ep44-persona-who">Den trættede elev — 16:00 efter skole, lidt modvillig</div>' +
+      '<div class="ep44-persona-internal">"Jeg klarer 10 minutter. Hvis det er kedeligt, holder jeg op."</div>' +
+      '<div class="ep44-persona-need">Spørgsmål der føles interessante — ikke som lektier. review_text der føles som en opdagelse.</div>' +
+      '<div class="ep44-persona-success">Svarer forkert. Læser: "kun 7 fanger — det vidste jeg ikke." Føler sig genuint nysgerrig.</div>' +
+    '</div>' +
+    '<div class="ep44-persona">' +
+      '<div class="ep44-persona-who">Den tøvende lærer — ikke teknologikomfortabel</div>' +
+      '<div class="ep44-persona-internal">"Jeg vil ikke ødelægge noget."</div>' +
+      '<div class="ep44-persona-need">Lag 0 er så simpelt at det ikke kan gå galt. Alle andre lag er tydeligt valgfrie.</div>' +
+      '<div class="ep44-persona-success">Opretter et spørgsmål. Ser det beskrevet som "klar til brug". Føler sig kompetent.</div>' +
+    '</div>',
+    '"Hvad ville gøre dette humant?" er det spørgsmål der driver al polishbeslutning.'
+  );
+
+  // Card 10 — Future Quality Thinking (accent)
+  card('Fremtidig oplevelseskvalitet: hvordan rolige systemer forbliver rolige over år',
+    '<p style="margin:0 0 10px">Det farligste tidspunkt for en uddannelsesplatform er år to. Funktioner akkumulerer. Dashboarder vokser. Hvert enkelt tilføjelse er begrundet — men tilsammen ødelægger de det der gjorde platformen værd at bruge.</p>' +
+    '<div class="ep44-block" style="margin-bottom:8px">' +
+      '<div class="ep44-block-title">Beskyttelse af platformens identitet</div>' +
+      '<div class="ep44-block-body">' +
+        'Enhver ny feature evalueres: "Gør dette oplevelsen roligere eller mere støjende?"<br>' +
+        'Dashboardanmodninger er altid "tilføj mere" — standardsvaret er tilbageholdenhed<br>' +
+        'Platformen bør føles lettere efter et år i brug — ikke tungere<br>' +
+        'Simpelhed i en uddannelsesplatform er ikke et kompromis — det er produktet' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-block">' +
+      '<div class="ep44-block-title">År-perspektiv</div>' +
+      '<div class="ep44-block-body">' +
+        '<strong>År 1</strong>: Platformen er ny — nyhed bærer noget friktion<br>' +
+        '<strong>År 2</strong>: Platformen er bekendt — friktion der blev tolereret bliver tydelig<br>' +
+        '<strong>År 3</strong>: Platformen skal føles rolig og usynlig — friktion forårsager opgivelse<br>' +
+        '<strong>Design-implikation</strong>: Byg år-3 oplevelseskvalitet ind i år-1 beslutninger' +
+      '</div>' +
+    '</div>' +
+    '<div class="ep44-quote" style="margin-top:10px">Platformen bør føles, efter år i brug, som en betroet kollega — ikke som software man skal huske at bruge.</div>',
+    'Sektion 44 er ikke slutpunktet for polish. Det er forpligtelsen til altid at spørge: "Hvordan føles dette faktisk?"',
     'accent'
   );
 
