@@ -23,6 +23,11 @@ function normalizeContent(raw: any, answer_format: string) {
   let options = raw.options;
   const correct = raw.correct ?? null;
 
+  // Pass review_text through if present and non-empty (teacher-authored explanation)
+  const review_text = (typeof raw.review_text === "string" && raw.review_text.trim().length > 0)
+    ? raw.review_text.trim()
+    : null;
+
   if (typeof question !== "string" || question.trim().length === 0) {
     throw new Error("Missing question text");
   }
@@ -36,12 +41,14 @@ function normalizeContent(raw: any, answer_format: string) {
       question,
       options,
       correct,
+      review_text,
     };
   }
 
   return {
     question,
     correct,
+    review_text,
   };
 }
 
@@ -82,7 +89,8 @@ serve(async (req) => {
         questions (
           content,
           answer_format,
-          answer_type
+          answer_type,
+          metadata
         )
       `)
       .eq("student_id", student_id)
@@ -107,6 +115,7 @@ serve(async (req) => {
             content: normalized,
             answer_format: format,
             answer_type: q.answer_type || "short",
+            metadata: q.metadata ?? null,
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -121,7 +130,7 @@ serve(async (req) => {
     // 🔥 2. NEW QUESTIONS
     const { data: questions, error: questionError } = await supabase
       .from("questions")
-      .select("id, content, answer_format, answer_type")
+      .select("id, content, answer_format, answer_type, metadata")
       .limit(50);
 
     if (questionError) throw questionError;
@@ -177,6 +186,7 @@ serve(async (req) => {
         content: inserted.normalized,
         answer_format: inserted.format,
         answer_type: inserted.question?.answer_type || "short",
+        metadata: inserted.question?.metadata ?? null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

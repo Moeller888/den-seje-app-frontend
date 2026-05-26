@@ -31,6 +31,25 @@ function countWords(text: string) {
     .filter(w => w.length > 0).length
 }
 
+// Extract review_text from metadata (preferred) or content (fallback)
+function extractReviewText(metadata: any, content: any): string | null {
+  if (metadata && typeof metadata.review_text === "string" && metadata.review_text.trim().length > 0) {
+    return metadata.review_text.trim()
+  }
+  if (content && typeof content.review_text === "string" && content.review_text.trim().length > 0) {
+    return content.review_text.trim()
+  }
+  return null
+}
+
+// Extract misconception_type from metadata (null-safe)
+function extractMisconceptionType(metadata: any): string | null {
+  if (metadata && typeof metadata.misconception_type === "string" && metadata.misconception_type.trim().length > 0) {
+    return metadata.misconception_type.trim()
+  }
+  return null
+}
+
 serve(async (req) => {
 
   if (req.method === "OPTIONS") {
@@ -77,7 +96,9 @@ serve(async (req) => {
         student_id,
         questions (
           answer_format,
-          answer_type
+          answer_type,
+          content,
+          metadata
         )
       `)
       .eq("id", question_instance_id)
@@ -90,12 +111,18 @@ serve(async (req) => {
       })
     }
 
-    const questionMeta   = instanceData.questions || {}
-    const correct_answer = instanceData.correct_answer
-    const format         = (questionMeta.answer_format || "").toLowerCase()
-    const answerType     = questionMeta.answer_type || "short"
+    const questionMeta    = instanceData.questions || {}
+    const correct_answer  = instanceData.correct_answer
+    const format          = (questionMeta.answer_format || "").toLowerCase()
+    const answerType      = questionMeta.answer_type || "short"
+    const questionContent = questionMeta.content ?? null
+    const metadata        = questionMeta.metadata ?? null
 
-    console.log("DEBUG META:", { format, answerType })
+    // Learning engine: extract review text and misconception type for feedback
+    const reviewText        = extractReviewText(metadata, questionContent)
+    const misconceptionType = extractMisconceptionType(metadata)
+
+    console.log("DEBUG META:", { format, answerType, hasReviewText: !!reviewText, misconceptionType })
 
     // ── PATH 1: Long answer → save for teacher, no auto-grade ───────────────
     if (answerType === "long") {
@@ -127,7 +154,7 @@ serve(async (req) => {
 
       console.log("FLOW: LONG → pending")
       return new Response(
-        JSON.stringify({ status: "pending", correct_answer: null }),
+        JSON.stringify({ status: "pending", correct_answer: null, review_text: null }),
         { status: 200, headers: corsHeaders }
       )
     }
@@ -160,12 +187,23 @@ serve(async (req) => {
 
       console.log("PROCESS TEXT ANSWER RESULT:", rpcResult)
 
+      // Fire-and-forget: record misconception signal if incorrect and available
+      if (!isCorrect && misconceptionType) {
+        supabase
+          .from("question_instances")
+          .update({ misconception_signal: misconceptionType })
+          .eq("id", question_instance_id)
+          .eq("student_id", user.id)
+          .then(() => {})
+      }
+
       // 'already_processed' means the instance was already answered — return
       // the same status without double-awarding. This handles network retries.
       return new Response(
         JSON.stringify({
           status: isCorrect ? "correct" : "incorrect",
-          correct_answer
+          correct_answer,
+          review_text: isCorrect ? null : reviewText,
         }),
         { status: 200, headers: corsHeaders }
       )
@@ -194,6 +232,16 @@ serve(async (req) => {
     const status = rpcData?.status ?? "pending"
     console.log("DEBUG MC RESULT:", { status })
 
+    // Fire-and-forget: record misconception signal if incorrect and available
+    if (status === "incorrect" && misconceptionType) {
+      supabase
+        .from("question_instances")
+        .update({ misconception_signal: misconceptionType })
+        .eq("id", question_instance_id)
+        .eq("student_id", user.id)
+        .then(() => {})
+    }
+
     // Set next_review_at for spaced repetition scheduling.
     // The RPC handles answered=true + was_correct; this adds the review time.
     if (status === "correct" || status === "incorrect") {
@@ -219,7 +267,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ status, correct_answer: rpcData?.correct_answer ?? correct_answer }),
+      JSON.stringify({
+        status,
+        correct_answer: rpcData?.correct_answer ?? correct_answer,
+        review_text: status === "incorrect" ? reviewText : null,
+      }),
       { status: 200, headers: corsHeaders }
     )
 
