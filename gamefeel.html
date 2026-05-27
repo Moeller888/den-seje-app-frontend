@@ -1642,6 +1642,39 @@
     .ra52-rule::before { content: "→ "; color: #c8b490; font-weight: 700; }
     .ra52-anti { font-size: 11px; color: #a09880; padding: 3px 0; }
     .ra52-anti::before { content: "✕ "; color: #c08888; font-weight: 700; }
+
+    /* ── Section 53 — Youth-Near Language & Cognitive Energy Rewrite ── */
+    .yn53-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .yn53-card { background: #080a06; border: 1px solid #d4a06030; border-radius: 8px; padding: 18px; }
+    .yn53-card.accent { background: linear-gradient(135deg, #100c04 0%, #080600 100%); border-color: #d4a06060; }
+    .yn53-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #d4a060; margin-bottom: 8px; }
+    .yn53-title { font-size: 14px; font-weight: 700; color: #f4ead8; margin-bottom: 10px; line-height: 1.3; }
+    .yn53-body { font-size: 12px; color: #a89870; line-height: 1.6; }
+    .yn53-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #d4a06030; font-size: 11px; color: #d4a060; font-style: italic; }
+    .yn53-block { background: #d4a06012; border-left: 2px solid #d4a06040; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .yn53-block-title { font-size: 11px; font-weight: 600; color: #d4a060; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .yn53-block-body { font-size: 12px; color: #a89870; line-height: 1.6; }
+    .yn53-compare { border: 1px solid #d4a06020; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .yn53-compare-ctx { font-size: 10px; font-weight: 700; color: #988060; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .yn53-compare-before { font-size: 11px; color: #b08888; line-height: 1.5; margin-bottom: 4px; font-style: italic; }
+    .yn53-compare-after { font-size: 11px; color: #88b088; line-height: 1.5; margin-bottom: 4px; font-style: italic; }
+    .yn53-compare-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .yn53-compare-before-label { color: #b08888; }
+    .yn53-compare-after-label { color: #88b088; }
+    .yn53-compare-reason { font-size: 10px; color: #786848; line-height: 1.4; margin-top: 4px; }
+    .yn53-audit { background: #0a0805; border: 1px solid #d4a06020; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .yn53-audit-name { font-size: 11px; font-weight: 700; color: #d4a060; margin-bottom: 2px; }
+    .yn53-audit-count { font-size: 10px; color: #988060; margin-bottom: 4px; }
+    .yn53-audit-body { font-size: 11px; color: #9a9070; line-height: 1.4; }
+    .yn53-audit-fix { font-size: 10px; color: #90a870; margin-top: 4px; font-style: italic; }
+    .yn53-quote { font-size: 12px; color: #d4a060; font-style: italic; border-left: 3px solid #d4a06060; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .yn53-rule { font-size: 11px; color: #a89870; padding: 3px 0; }
+    .yn53-rule::before { content: "→ "; color: #d4a060; font-weight: 700; }
+    .yn53-avoid { font-size: 11px; color: #a89870; padding: 3px 0; }
+    .yn53-avoid::before { content: "✕ "; color: #c08888; font-weight: 700; }
+    .yn53-std-row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid #d4a06015; }
+    .yn53-std-key { font-size: 10px; font-weight: 600; color: #a08060; width: 150px; flex-shrink: 0; }
+    .yn53-std-val { font-size: 10px; color: #9a9070; flex: 1; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1917,6 +1950,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 52 — Cognitive Accessibility &amp; Readability Calibration Pass</h2>
   <div class="ra52-grid" id="ra52Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 53 — Youth-Near Language &amp; Cognitive Energy Rewrite Pass</h2>
+  <div class="yn53-grid" id="yn53Grid"></div>
 </div>
 
 <script type="module">
@@ -15629,6 +15665,315 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       '<div class="ra52-std-row"><span class="ra52-std-key">Emotionel tone</span><span class="ra52-std-val">Respektfuld, intellektuelt spændende — aldrig nedladende</span></div>' +
     '</div>' +
     '<div class="ra52-quote">Section 52 er indholdskvalitetsporten. Ikke en retningslinje — et krav.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 53 — Youth-Near Language & Cognitive Energy Rewrite ─────────────
+(function() {
+  var grid = document.getElementById('yn53Grid');
+  if (!grid) return;
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'yn53-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="yn53-label">Section 53 — Youth-Near Language</div>' +
+      '<div class="yn53-title">' + title + '</div>' +
+      '<div class="yn53-body">' + body + '</div>' +
+      (footer ? '<div class="yn53-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Thesis (accent)
+  card(
+    'Høj refleksion. Lav sproglig friktion.',
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Kerneprincippen</div>' +
+      '<div class="yn53-block-body">Eleverne skal kæmpe med IDÉERNE — ikke med afkodning af sætninger. Sproglig kompleksitet er ikke det samme som intellektuel dybde. Section 53 adskiller dem systematisk i Democracy &amp; Power-pakken.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Det er ikke</div>' +
+      '<div class="yn53-block-body">Forenkling af idéer · Fjernelse af nuancer · Ungdomssprog-affektation · Underholdnificering · "Babying" · Sænkning af intellektuelt niveau</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Det er</div>' +
+      '<div class="yn53-block-body">Konkret før abstrakt · Menneskelig situation før institutionel beskrivelse · Klart indgangspunkt · Spørgsmål der er lette at STARTE PÅ — og svære at TÆNKE IGENNEM</div>' +
+    '</div>' +
+    '<div class="yn53-quote">Let at gå ind i. Svært at tænke igennem. Det er standarden.</div>',
+    null,
+    'accent'
+  );
+
+  // Card 2 — Audit Findings
+  card(
+    '9 sproglige problemer identificeret i dp_001–dp_040',
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">Abstrakt spørgsmålsstamme</div>' +
+      '<div class="yn53-audit-count">8 tilfælde</div>' +
+      '<div class="yn53-audit-body">Stamme starter med abstrakti institutionelt begreb i stedet for menneskelig situation</div>' +
+      '<div class="yn53-audit-fix">Fix: Start med konsekvens eller situation — begrebet ankommer som svar på en reel nysgerrighed</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">Navngivet akademisk åbner i review_text</div>' +
+      '<div class="yn53-audit-count">4 tilfælde</div>' +
+      '<div class="yn53-audit-body">"Max Weber identificerede…", "Tocqueville observerede…" — kold akademisk indgang der signalerer lærebogstekst</div>' +
+      '<div class="yn53-audit-fix">Fix: Åbn med indsigten eller spændingen — navngiv tænkeren bagefter, hvis overhovedet</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">Oppustet korrekt svaroption</div>' +
+      '<div class="yn53-audit-count">6 tilfælde</div>' +
+      '<div class="yn53-audit-body">Korrekt svaroption markant længere end distraktorer — signalerer sit svar visuelt</div>' +
+      '<div class="yn53-audit-fix">Fix: Maks 14 ord. Em-dash for todel. Samme register som distraktorer.</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">Akademisk jargon i stamme</div>' +
+      '<div class="yn53-audit-count">5 tilfælde</div>' +
+      '<div class="yn53-audit-body">"skalere dårligt", "demokratisk deliberation", "strukturelt præcise forklaring" — kræver forhåndsviden at parse</div>' +
+      '<div class="yn53-audit-fix">Fix: Erstat med det spørgsmål en nysgerrig elev ville stille</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">Skyldframing</div>' +
+      '<div class="yn53-audit-count">1 tilfælde (dp_039)</div>' +
+      '<div class="yn53-audit-body">Stamme der implicit bebrejder elevens demografiske gruppe inden spørgsmålet stilles</div>' +
+      '<div class="yn53-audit-fix">Fix: "Er det egentlig deres skyld?" — aktiverer samme reframing som svar, men med åben indgang</div>' +
+    '</div>'
+  );
+
+  // Card 3 — Before/After: Question Stems
+  card(
+    'Før/efter — spørgsmålsstamme (5 eksempler)',
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_004 — abstract_stem_framing</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Hvorfor er stemmedeltagelse et kollektivt anliggende snarere end et rent personligt valg?</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Hvad sker der med demokratiet, når mange vælger ikke at stemme?</div>' +
+      '<div class="yn53-compare-reason">Consequence framing replaces academic framing. The student has something concrete to think about from word 1.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_016 — academic_jargon_stem</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Hvad er den primære kilde til politisk legitimitet i et moderne demokrati?</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Hvad giver egentlig en politisk leder retten til at bestemme?</div>' +
+      '<div class="yn53-compare-reason">"Egentlig" adds intellectual tension without adding linguistic complexity. Same concept, human register.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_023 — jargon + abstract scale</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Hvorfor kan direkte demokrati skalere dårligt til moderne nationalstater?</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Hvorfor kan man ikke bare lade alle borgere stemme om alle beslutninger i et land som Danmark?</div>' +
+      '<div class="yn53-compare-reason">"Bare" creates productive naivety. "Danmark" anchors to a known reality. No tech jargon.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_024 — named compound stem</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Hvad er Tocquevilles "flertallets tyranni" — og er det primært et juridisk eller socialt fænomen?</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Kan et flertal undertrykke en minoritet — uden at en eneste lov forbyder noget?</div>' +
+      '<div class="yn53-compare-reason">Name stripped. Dual question stripped. Pure human yes/no. The concept arrives through reflection, not labeling.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_039 — blame framing</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Hvad er den mest strukturelt præcise forklaring på udbredt politisk apati?</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Hvorfor gider mange unge ikke engagere sig politisk — er det egentlig deres skyld?</div>' +
+      '<div class="yn53-compare-reason">The student is now inside the question. "Er det egentlig deres skyld?" is the reframe — the correct answer delivers it.</div>' +
+    '</div>'
+  );
+
+  // Card 4 — Before/After: Answer Options
+  card(
+    'Før/efter — svarmuligheder (bloat reduction)',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786848">Korrekte svaroption max 18 ord. Visuelt paritet med distraktorer.</p>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_019 — korrekt svar 28 ord → 11 ord</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR (28 ord)</div>' +
+      '<div class="yn53-compare-before">Menneskerettigheder gælder alle mennesker i kraft af at være mennesker — borgerrettigheder gives og håndhæves af specifikke stater over for deres borgere</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER (11 ord)</div>' +
+      '<div class="yn53-compare-after">Menneskerettigheder følger dig som menneske — borgerrettigheder giver din stat dig</div>' +
+      '<div class="yn53-compare-reason">Same distinction: universality vs. state-contingency. "Følger dig" is personal and concrete. "Din stat" is possessive. Scan time: 2 seconds vs. 6 seconds.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_021 — korrekt svar forkortet</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Et informationsmiljø der konstant bekræfter eksisterende overbevisninger — skabt primært af platformalgoritmer der optimerer engagement frem for indsigt</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Et informationsmiljø der bekræfter dine overbevisninger — drevet primært af algoritmer der optimerer for engagement</div>' +
+      '<div class="yn53-compare-reason">"Konstant" and "eksisterende" removed (redundant). "Platformalgoritmer" → "algoritmer" (shorter). "Frem for indsigt" removed (the contrast is implicit). No content lost.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_032 — dilemma framing kortere</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Det er en mekanisme der beskytter demokratiets grundlæg ved at begrænse demokratiets flertal — dilemmaet er at uvalgte dommere dermed fastlægger demokratiets grænser</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Det er et ægte dilemma: uvalgte dommere beskytter demokratiets grænser — men hvem valgte dem til at fastlægge dem?</div>' +
+      '<div class="yn53-compare-reason">The dilemma is now a question inside the answer — the student feels the tension rather than being told about it.</div>' +
+    '</div>'
+  );
+
+  // Card 5 — Before/After: Review_text Openings
+  card(
+    'Før/efter — review_text åbninger',
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_016 — Weber-named opener</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Max Weber identificerede tre typer legitimitet: tradition (kongen er kong fordi konger altid har regeret), karisma (lederen er leder fordi folk følger ham) og rationalitet-legalitet...</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">En leder kan have magt af tre grunde: tradition (det har altid været sådan), karisma (folk ser op til dem) eller rationelle regler (systemet udpegede dem).</div>' +
+      '<div class="yn53-compare-reason">Weber\'s name removed. Content is identical. The concept is presented as a natural observation, not an academic citation.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_024 — Tocqueville historical opener</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Tocqueville observerede i 1830\'ernes USA at det mest effektive tyranni ikke behøver love.</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Det mest effektive tyranni efterlader ingen spor. Ingen love. Ingen betjente. Bare social usynlighed for den der tænker forkert.</div>' +
+      '<div class="yn53-compare-reason">Three short sentences land the insight immediately. Tocqueville named later once the concept is established. Rhythm: long → short → short → short.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_030 — Tocqueville accolade opener</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Tocqueville beundrede amerikanske foreninger mere end nogen anden demokratisk institution.</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">En sportsklub, en fagforening, en borgerforening. Hvad har de med demokrati at gøre? Mere end man tror.</div>' +
+      '<div class="yn53-compare-reason">Three concrete recognizable institutions → a question → a tension. The student is curious before the concept arrives. Tocqueville appears later as confirmation, not as authority.</div>' +
+    '</div>' +
+    '<div class="yn53-compare">' +
+      '<div class="yn53-compare-ctx">dp_012 — cold hypothesis opener</div>' +
+      '<div class="yn53-compare-label yn53-compare-before-label">FØR</div>' +
+      '<div class="yn53-compare-before">Repræsentativt demokrati hviler på en antagelse: at valgte repræsentanter handler på vegne af dem de repræsenterer.</div>' +
+      '<div class="yn53-compare-label yn53-compare-after-label">EFTER</div>' +
+      '<div class="yn53-compare-after">Du vælger nogen til at handle på dine vegne. Men der er ingen garanti for at de faktisk gør det.</div>' +
+      '<div class="yn53-compare-reason">Direct address ("Du"). The same structural problem is stated as a personal situation. The student is inside the problem from sentence 1.</div>' +
+    '</div>'
+  );
+
+  // Card 6 — Abstraction Grounding Examples
+  card(
+    'Abstrakt → konkret: forankringseksempler',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786848">Begreber skal ankomme som svar på konkrete spørgsmål — ikke som definitioner der skal accepteres</p>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Legitimitet</div>' +
+      '<div class="yn53-block-body">Ikke: "Politisk legitimitet er folkelig accept af autoritetens ret til at regere."<br>Men: "Hvad giver egentlig en politisk leder retten til at bestemme?" — legitimitet ankommer som svar.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Oligarki</div>' +
+      '<div class="yn53-block-body">Ikke: "Oligarki er et system hvor en lille gruppe besidder uforholdsmæssig reel magt."<br>Men: "Kan en lille gruppe rige mennesker reelt bestemme — selvom alle har en stemme?" — oligarki ankommer som svar.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Civilsamfund</div>' +
+      '<div class="yn53-block-body">Ikke: "Civilsamfundets vigtigste demokratiske funktion er at skabe institutioner uafhængige af staten."<br>Men: "Hvad er sportsklubber og fagforeninger egentlig til for demokratiet?" — civilsamfund ankommer som overraskelse.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Flertallets tyranni</div>' +
+      '<div class="yn53-block-body">Ikke: "Tocquevilles flertallets tyranni er et primært socialt fænomen."<br>Men: "Kan et flertal undertrykke en minoritet — uden en eneste lov?" — begrebet ankommer som svaret på "ja, og her er hvordan."</div>' +
+    '</div>'
+  );
+
+  // Card 7 — Cognitive Energy Findings
+  card(
+    'Kognitiv energi-audit: høj-risiko zoner',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786848">Simuleret 7.–9. klasse læseflow — hvor falder energien?</p>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">dp_024 — Tocquelles dobbeltspørgsmål</div>' +
+      '<div class="yn53-audit-body">Eleven gennemlæser stammen to gange. Genkender ikke Tocqueville. Prøver at matche "juridisk/socialt" mod egne kategorier. Spørgsmålet er besvaret inden eleven ved hvad det spørger.</div>' +
+      '<div class="yn53-audit-fix">Efter: direkte ja/nej-framing — eleven er i spørgsmålet fra sætning 1</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">dp_032 — domstolsprøvelse i stamme</div>' +
+      '<div class="yn53-audit-body">Parsing-omkostning før den begrebslige tænkning begynder. Eleven bruger kognitiv energi på at afkode "domstolsprøvelse af lovgivning" — ikke på at tænke over dilemmaet.</div>' +
+      '<div class="yn53-audit-fix">Efter: "Er det demokratisk?" — eleven har straks et svar de er nødt til at gennemtænke</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">dp_019 — 28-ords korrekt svaroption</div>' +
+      '<div class="yn53-audit-body">Scanning-adfærd: eleven ser at én option er markant længere end de andre og bruger dette som signal. Distraktorer evalueres ikke. Svarprocessen bypasses.</div>' +
+      '<div class="yn53-audit-fix">Efter: 11 ord, samme visuelle register som distraktorer — distraktorer evalueres reelt</div>' +
+    '</div>' +
+    '<div class="yn53-audit">' +
+      '<div class="yn53-audit-name">dp_039 — akademisk skyldframing</div>' +
+      '<div class="yn53-audit-body">Implicit bebrejdelse aktiverer defensiv reaktion hos den elev der GER ligner målgruppen. Kognitiv energi bruges på at forholde sig til bebrejdelsen — ikke til spørgsmålet.</div>' +
+      '<div class="yn53-audit-fix">Efter: "Er det egentlig deres skyld?" giver eleven en alliance med reframen — de er med, ikke imod</div>' +
+    '</div>'
+  );
+
+  // Card 8 — Anti-Condescension Protection
+  card(
+    'Anti-nedladenhedsprotokol',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786848">Accessibility ≠ nedladenhed. De to er let at forveksle.</p>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Hvad der er sket i denne rewrite</div>' +
+      '<div class="yn53-block-body">Sproglig friktion reduceret. Begrebsdybde bevaret. Kontekstualisering forbedret. Indgangspunkt sænket. Refleksionskrav uændret eller øget.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Hvad der ikke er sket</div>' +
+      '<div class="yn53-block-body">Ingen begreber er fjernet. Ingen nuancer er slettet. Ingen spørgsmål er gjort trivielle. Intet er forklaret "for elevens skyld". Intet lyder som det er skrevet til en 10-årig.</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Testen</div>' +
+      '<div class="yn53-block-body">Læs de reviderede spørgsmål højt til en voksen intellektuel. Føles de nedladende? Nej. Føles de klarere? Ja. Det er standarden.</div>' +
+    '</div>' +
+    '<div class="yn53-avoid">Ungdomssprog-affektation: "det er faktisk ret vildt at..."</div>' +
+    '<div class="yn53-avoid">Forklarende indramning: "dette er en svær idé, men..."</div>' +
+    '<div class="yn53-avoid">Falsk entusiasme: "godt spørgsmål!"</div>' +
+    '<div class="yn53-avoid">Forenkling der behandler eleven som skrøbelig</div>' +
+    '<div class="yn53-avoid">Trivielle distraktorer der ikke repræsenterer reelle misforståelser</div>' +
+    '<div class="yn53-quote">Eleven er intelligent. Sproget er ikke testen.</div>'
+  );
+
+  // Card 9 — Questions Left Unchanged
+  card(
+    '20 spørgsmål efterladt uændret — og hvorfor',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786848">Ikke alle spørgsmål krævede revision. Disse var allerede youth-near.</p>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Modelbenchmarks — spørgsmål der ikke røres</div>' +
+      '<div class="yn53-block-body">' +
+        '<b style="color:#d4a060">dp_007</b> — "Hvad gør propaganda mest effektiv?" — model-spørgsmålsstamme: 5 ord, direkte, ingen jargon<br>' +
+        '<b style="color:#d4a060">dp_027</b> — Åbner: "Demokratier bryder sjældent ned på én dag. De eroderer." — perfekt rhythm<br>' +
+        '<b style="color:#d4a060">dp_028</b> — Åbner: "Mediefrihed er ikke kun frihed fra staten." — konkret, overraskende<br>' +
+        '<b style="color:#d4a060">dp_031</b> — Åbner: "Sovjetunionen havde en fremragende forfatning — på papiret." — excellente konkrete kontrast<br>' +
+        '<b style="color:#d4a060">dp_035</b> — Åbner: "Demokratier overlever ikke kriser fordi institutionerne er stærke nok til at modstå." — paradoks-åbner' +
+      '</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Selektionskriterier for revision</div>' +
+      '<div class="yn53-block-body">Revideret: navngivet teoriker i åbner · akademisk jargon i stamme · bloated korrekt option · institutionel framing i stedet for menneskelig situation · implicit skyldframing<br>Ikke revideret: spørgsmål allerede med direkte human framing, stærk rytme, og konkret åbner</div>' +
+    '</div>'
+  );
+
+  // Card 10 — Canonical Youth-Near Writing Standard (accent)
+  card(
+    'Den kanoniske youth-near skrivestandard',
+    '<p style="margin:0 0 10px">Den permanente indholdskvalitetsgate for DEN SEJE APP — fra Section 53.</p>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Spørgsmålsstamme</div>' +
+      '<div class="yn53-block-body">' +
+        'Konkret før abstrakt · Menneskelig situation før institutionel beskrivelse · "Hvad sker der når…?" over "Hvad er den primære årsag til…?" · Ingen navngivne teorikere i stammen · Ingen akademisk jargon der kræver forhåndsviden · Maks 20 ord' +
+      '</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Svarmuligheder</div>' +
+      '<div class="yn53-block-body">' +
+        'Maks 18 ord · Visuelt paritet — ingen option markant længere end andre · Korrekt option: samme register som distraktorer · Distraktorer: reelle misforståelsestyper, ikke åbenlyst forkerte' +
+      '</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Review_text åbning</div>' +
+      '<div class="yn53-block-body">' +
+        'Start med indsigten, overraskelsen eller den menneskelige situation · Navngiv tænkeren EFTER begrebet er landet — ikke som autoritets-åbner · Kortere sætning efter lang sætning — indsigten har brug for et landingssted · Direkte tiltale ("Du", "Vi") som anker' +
+      '</div>' +
+    '</div>' +
+    '<div class="yn53-block">' +
+      '<div class="yn53-block-title">Overordnet register</div>' +
+      '<div class="yn53-block-body">' +
+        'Intellektuelt respektfuld · Konversatorisk tankevækkende · Aldrig akademisk performativ · Aldrig nedladende · Let at gå ind i — svært at tænke igennem' +
+      '</div>' +
+    '</div>' +
+    '<div class="yn53-quote">Platformen skal føles intelligent, klar, menneskelig og mentalt energigivende. Det er standarden.</div>',
     null,
     'accent'
   );
