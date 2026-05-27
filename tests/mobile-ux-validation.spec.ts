@@ -48,6 +48,22 @@ async function loginAndWait(page: any) {
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
 }
 
+// Advances to the next ready question, handling both paths:
+// • Auto-advance (correct / incorrect without review_text): question enters ready state automatically
+// • Reflection path (incorrect + review_text): clicks "Videre →" to continue
+async function advanceToNextQuestion(page: any, timeout = 15000) {
+  await page.waitForFunction(
+    () => {
+      const q = document.getElementById('question');
+      if (q && (q as HTMLElement).dataset.state === 'ready') return true;
+      const rc = document.getElementById('reflection-continue') as HTMLElement;
+      if (rc && rc.style.display === 'block') rc.click();
+      return false;
+    },
+    { timeout, polling: 500 }
+  );
+}
+
 // ── 1. Layout integrity on iPhone 12 ────────────────────────────────────────
 test('1. iPhone 12 layout — no overflow, correct structure', async ({ browser }) => {
   const ctx = await browser.newContext(iPhone12);
@@ -184,19 +200,19 @@ test('5. Layout stability — game-card position stable across 3 answers', async
 
   // Round 1
   await page.locator('#options button').first().click();
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 8000 });
+  await advanceToNextQuestion(page);
   const top1 = await cardTop();
   await page.screenshot({ path: 'test-results/mobile-ux/05b-after-q1.png', fullPage: false });
 
   // Round 2
   await page.locator('#options button').first().click();
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 8000 });
+  await advanceToNextQuestion(page);
   const top2 = await cardTop();
   await page.screenshot({ path: 'test-results/mobile-ux/05c-after-q2.png', fullPage: false });
 
   // Round 3
   await page.locator('#options button').first().click();
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 8000 });
+  await advanceToNextQuestion(page);
   const top3 = await cardTop();
   await page.screenshot({ path: 'test-results/mobile-ux/05d-after-q3.png', fullPage: false });
 
@@ -430,7 +446,7 @@ test('16. Rapid pacing — 4 answer cycles, no stuck state', async ({ browser })
   await loginAndWait(page);
 
   for (let i = 0; i < 4; i++) {
-    await page.waitForSelector('#question[data-state="ready"]', { timeout: 10000 });
+    await advanceToNextQuestion(page);
 
     const btnCount = await page.locator('#options button').count();
     expect(btnCount, `Round ${i + 1}: options must be rendered`).toBeGreaterThan(0);
@@ -446,7 +462,7 @@ test('16. Rapid pacing — 4 answer cycles, no stuck state', async ({ browser })
   }
 
   // Must end in AWAITING_ANSWER — not stuck
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 10000 });
+  await advanceToNextQuestion(page);
   await ctx.close();
 });
 
