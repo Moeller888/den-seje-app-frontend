@@ -1604,6 +1604,44 @@
     .nu51-quote { font-size: 12px; color: #a0b4d8; font-style: italic; border-left: 3px solid #a0b4d860; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
     .nu51-rule { font-size: 11px; color: #8090b0; padding: 3px 0; }
     .nu51-rule::before { content: "→ "; color: #a0b4d8; font-weight: 700; }
+
+    /* ── Section 52 — Cognitive Accessibility & Readability Calibration ── */
+    .ra52-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .ra52-card { background: #0a0905; border: 1px solid #c8b49030; border-radius: 8px; padding: 18px; }
+    .ra52-card.accent { background: linear-gradient(135deg, #100e08 0%, #080600 100%); border-color: #c8b49060; }
+    .ra52-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #c8b490; margin-bottom: 8px; }
+    .ra52-title { font-size: 14px; font-weight: 700; color: #f0ece0; margin-bottom: 10px; line-height: 1.3; }
+    .ra52-body { font-size: 12px; color: #a09880; line-height: 1.6; }
+    .ra52-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #c8b49030; font-size: 11px; color: #c8b490; font-style: italic; }
+    .ra52-block { background: #c8b49012; border-left: 2px solid #c8b49040; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .ra52-block-title { font-size: 11px; font-weight: 600; color: #c8b490; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .ra52-block-body { font-size: 12px; color: #a09880; line-height: 1.6; }
+    .ra52-dim { background: #0c0a05; border: 1px solid #c8b49020; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .ra52-dim-name { font-size: 11px; font-weight: 700; color: #c8b490; margin-bottom: 2px; }
+    .ra52-dim-da { font-size: 10px; color: #988870; margin-bottom: 4px; font-style: italic; }
+    .ra52-dim-body { font-size: 11px; color: #9a9070; line-height: 1.4; }
+    .ra52-dim-fix { font-size: 10px; color: #90a870; margin-top: 5px; font-style: italic; }
+    .ra52-compare { background: #0c0a0500; border: 1px solid #c8b49020; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .ra52-compare-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .ra52-compare-before { color: #c08888; }
+    .ra52-compare-after { color: #90c890; }
+    .ra52-compare-text { font-size: 11px; color: #a09880; line-height: 1.5; font-style: italic; margin-bottom: 4px; }
+    .ra52-compare-reason { font-size: 10px; color: #786850; line-height: 1.4; }
+    .ra52-profile { background: #0a0905; border: 1px solid #c8b49022; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .ra52-profile-name { font-size: 11px; font-weight: 700; color: #c8b490; margin-bottom: 2px; }
+    .ra52-profile-da { font-size: 10px; color: #988870; margin-bottom: 4px; font-style: italic; }
+    .ra52-profile-body { font-size: 11px; color: #9a9070; line-height: 1.4; }
+    .ra52-profile-risk { font-size: 10px; color: #b09070; margin-top: 4px; font-style: italic; }
+    .ra52-quote { font-size: 12px; color: #c8b490; font-style: italic; border-left: 3px solid #c8b49060; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .ra52-std { background: #0c0905; border: 1px solid #c8b49022; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .ra52-std-name { font-size: 12px; font-weight: 700; color: #c8b490; margin-bottom: 6px; }
+    .ra52-std-row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid #c8b49015; }
+    .ra52-std-key { font-size: 10px; font-weight: 600; color: #a08860; width: 180px; flex-shrink: 0; }
+    .ra52-std-val { font-size: 10px; color: #9a9070; flex: 1; line-height: 1.4; }
+    .ra52-rule { font-size: 11px; color: #a09880; padding: 3px 0; }
+    .ra52-rule::before { content: "→ "; color: #c8b490; font-weight: 700; }
+    .ra52-anti { font-size: 11px; color: #a09880; padding: 3px 0; }
+    .ra52-anti::before { content: "✕ "; color: #c08888; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1876,6 +1914,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 51 — NUZO Adaptive Learning Rhythm &amp; Conceptual Tension Calibration</h2>
   <div class="nu51-grid" id="nu51Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 52 — Cognitive Accessibility &amp; Readability Calibration Pass</h2>
+  <div class="ra52-grid" id="ra52Grid"></div>
 </div>
 
 <script type="module">
@@ -15321,6 +15362,273 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       '</div>' +
     '</div>' +
     '<div class="nu51-quote">Adaptation er omsorg. Ikke optimering.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 52 — Cognitive Accessibility & Readability Calibration ─────────
+(function() {
+  var grid = document.getElementById('ra52Grid');
+  if (!grid) return;
+  function card(title, body, footer, accent) {
+    var el = document.createElement('div');
+    el.className = 'ra52-card' + (accent ? ' accent' : '');
+    el.innerHTML =
+      '<div class="ra52-label">Section 52 — Readability Calibration</div>' +
+      '<div class="ra52-title">' + title + '</div>' +
+      '<div class="ra52-body">' + body + '</div>' +
+      (footer ? '<div class="ra52-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Thesis (accent)
+  card(
+    'Høj begrebsdybde. Lav sproglig friktion.',
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Kerneprincippen</div>' +
+      '<div class="ra52-block-body">Eleverne skal udfordres af TÆNKNING — ikke af tekstafkodning. Platformen forveksler aldrig tæt prosa med dybe ideer.</div>' +
+    '</div>' +
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Den vigtige distinktion</div>' +
+      '<div class="ra52-block-body">Begrebslig vanskelighed ≠ sproglig vanskelighed. De er uafhængige dimensioner. Systemet separerer dem bevidst.</div>' +
+    '</div>' +
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Standarden</div>' +
+      '<div class="ra52-block-body">En 16-årig med gennemsnitlig læseevne skal kunne afkode enhver sætning. Ideerne skal stadig udfordre en PhD.</div>' +
+    '</div>' +
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Faren</div>' +
+      '<div class="ra52-block-body">"Falsk vanskelighed" — når sproglig kompleksitet skaber illusionen af intellektuel dybde uden at tilføje begrebslig rigdom.</div>' +
+    '</div>' +
+    '<div class="ra52-quote">Udford tænkningen — ikke læsningen.</div>',
+    null,
+    'accent'
+  );
+
+  // Card 2 — Language Load Dimensions
+  card(
+    '6 dimensioner for sproglig belastning',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786850">Uafhængige af begrebsdybde. Kan reduceres uden at reducere idérigdom.</p>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Sætningslængde</div>' +
+      '<div class="ra52-dim-da">Over 25 ord i én sætning = risikozonen</div>' +
+      '<div class="ra52-dim-body">Lange sætninger med mange led øger arbejdshukommelseskravet. Meningen løser sig for sent.</div>' +
+      '<div class="ra52-dim-fix">Fix: Brug punktum aggressivt. Korte sætninger skaber rytme.</div>' +
+    '</div>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Bisætningsdensitet</div>' +
+      '<div class="ra52-dim-da">To indlejrede bisætninger = risikozonen</div>' +
+      '<div class="ra52-dim-body">Nestede relativsætninger (der som at der) multiplicerer parsebyrden.</div>' +
+      '<div class="ra52-dim-fix">Fix: Løs hovedpåstanden først. Lad underordnet information følge separat.</div>' +
+    '</div>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Abstrakt substantiv-densitet</div>' +
+      '<div class="ra52-dim-da">3+ abstrakte substantiver uden konkret anker = risikozonen</div>' +
+      '<div class="ra52-dim-body">Kæder af abstrakte substantiver (legitimitet, repræsentation, ansvarlighed) uden konkrete ankre forårsager semantisk drift.</div>' +
+      '<div class="ra52-dim-fix">Fix: Giv én konkret menneskelig situation inden næste abstraktion.</div>' +
+    '</div>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Begrebsstabling</div>' +
+      '<div class="ra52-dim-da">Mere end 2 nye begreber i én spørgsmålsstamme = risikozonen</div>' +
+      '<div class="ra52-dim-body">At introducere flere nye begreber i én spørgsmålsstamme overbelaster inden spørgsmålet overhovedet er stillet.</div>' +
+      '<div class="ra52-dim-fix">Fix: Ét nyt begreb pr. spørgsmål. Lad distraktorer og review_text introducere de andre.</div>' +
+    '</div>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Læserytme</div>' +
+      '<div class="ra52-dim-da">Mere end 4 ensartede sætninger i træk = rytmetab</div>' +
+      '<div class="ra52-dim-body">Uniform sætningslængde dræber kognitiv engagement. Ingen rytme = scanning begynder.</div>' +
+      '<div class="ra52-dim-fix">Fix: Skift: én længere sætning (sætter kompleksiteten op) + én kort sætning (lander indsigten).</div>' +
+    '</div>' +
+    '<div class="ra52-dim">' +
+      '<div class="ra52-dim-name">Ordforrådsfrktion</div>' +
+      '<div class="ra52-dim-da">1+ uforklaret fagterm pr. sætning = friktionsrisiko</div>' +
+      '<div class="ra52-dim-body">Teknisk/akademisk ordforråd uden in-sætning forankring tvinger eleven til at forlade forståelsesmode og ind i ordbogmode.</div>' +
+      '<div class="ra52-dim-fix">Fix: Definer termen i samme sætning — eller substituer med konkret beskrivelse først, term bagefter.</div>' +
+    '</div>'
+  );
+
+  // Card 3 — Conceptual vs Linguistic Difficulty
+  card(
+    'Begrebslig vs. sproglig vanskelighed',
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Hvad accessibility IKKE betyder</div>' +
+      '<div class="ra52-block-body">Det er ikke at forenkle idéerne. Det er ikke at bruge ungdomssprog. Det er ikke at behandle eleven som skrøbelig. Eleven kan håndtere komplekse ideer — bare ikke komplekse sætninger.</div>' +
+    '</div>' +
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Hvad accessibility ER</div>' +
+      '<div class="ra52-block-body">At adskille det intellektuelle krav fra det lingvistiske krav. Begrebsdybden bevares. Sætningsstrukturen forenkles. Idéen er den samme. Afkodningsomkostningen er lavere.</div>' +
+    '</div>' +
+    '<div class="ra52-block">' +
+      '<div class="ra52-block-title">Den usynlige fare</div>' +
+      '<div class="ra52-block-body">Akademisk sprog kan føles som dybde — men det er ofte bare støj. En kortere, klarere sætning er ikke en enklere idé. Det er en respekt for elevens kognitive ressourcer.</div>' +
+    '</div>' +
+    '<div class="ra52-quote">Komplekse ideer kræver ikke komplekst sprog.</div>'
+  );
+
+  // Card 4 — Question Stem Standard + Principles
+  card(
+    'Spørgsmålsstamme-standard',
+    '<div class="ra52-std">' +
+      '<div class="ra52-std-name">Kanonisk standard — spørgsmålsstamme</div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. ord</span><span class="ra52-std-val">20</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. indlejrede bisætninger</span><span class="ra52-std-val">1</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Nye begreber pr. stamme</span><span class="ra52-std-val">1</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Tone</span><span class="ra52-std-val">Direkte spørgsmål, ingen akademisk indledning</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Test</span><span class="ra52-std-val">Læs højt. Lyder det som en fodnoter i en lærebog — skriv om.</span></div>' +
+    '</div>' +
+    '<p style="margin:10px 0 6px;font-size:11px;color:#a08860;font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Principper for spørgsmålsstamme</p>' +
+    '<div class="ra52-rule">Ét begreb, ét spørgsmål — integrer ikke underspørgsmålet i hovedspørgsmålet</div>' +
+    '<div class="ra52-rule">Prefer aktive verber over nominalisering (hvad gør → hvad karakteriserer)</div>' +
+    '<div class="ra52-rule">Forankr abstrakte spørgsmål i menneskelige situationer, ikke institutioner</div>' +
+    '<div class="ra52-rule">Spørgsmålsstammen skal føles som en samtalestarter — ikke en eksamensinstruction</div>' +
+    '<div class="ra52-rule">Undgå stamme der indeholder svaret — rammen skal være genuint åben</div>'
+  );
+
+  // Card 5 — Review_text Standard + Principles
+  card(
+    'Review_text-standard',
+    '<div class="ra52-std">' +
+      '<div class="ra52-std-name">Kanonisk standard — review_text</div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. sætninger</span><span class="ra52-std-val">6</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Åbner</span><span class="ra52-std-val">Land kernindsigten i sætning 1 eller 2. Berav aldrig lede.</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Rytme</span><span class="ra52-std-val">Mindst én kort sætning (under 10 ord) pr. review_text</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Abstrakt forankring</span><span class="ra52-std-val">Enhver abstrakt påstand skal følges af et konkret eksempel eller en menneskelig situation</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Tone</span><span class="ra52-std-val">Respektfuld, intellektuelt spændende — aldrig nedladende eller triumferende</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Test</span><span class="ra52-std-val">En træt 17-årig skal kunne læse dette på 20 sekunder og føle at noget klikkede.</span></div>' +
+    '</div>' +
+    '<p style="margin:10px 0 6px;font-size:11px;color:#a08860;font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Principper for review_text</p>' +
+    '<div class="ra52-rule">Første sætning er krogen — den skal reframe spørgsmålet, ikke gentage svaret</div>' +
+    '<div class="ra52-rule">Korte sætninger skaber punch. Brug dem efter komplekse ideer så de kan lande.</div>' +
+    '<div class="ra52-rule">Afslut aldrig med en generisk påstand. Afslut med en specifik, mindeværdig formulering.</div>' +
+    '<div class="ra52-rule">Abstrakte kæder (3+ abstrakte substantiver) skal brydes med et konkret anker</div>' +
+    '<div class="ra52-rule">Undgå review_texts der underviser det samme begreb to gange i lidt andre ord</div>' +
+    '<div class="ra52-rule">Emotionel rytme: spænding → indsigt → opløsning. Ikke: fakta → fakta → fakta</div>'
+  );
+
+  // Card 6 — Before/After: Question stem
+  card(
+    'Før/efter — spørgsmålsstamme',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786850">Begrebsstabling + ordforrådsfrktion → direkte spørgsmål</p>' +
+    '<div class="ra52-compare">' +
+      '<div class="ra52-compare-label ra52-compare-before">FØR — concept_stacking + vocabulary_friction</div>' +
+      '<div class="ra52-compare-text">Hvad karakteriserer det fundamentale epistemologiske problem med effektiv propaganda i relation til kritisk medieanalyse?</div>' +
+      '<div class="ra52-compare-label ra52-compare-after">EFTER</div>' +
+      '<div class="ra52-compare-text">Hvad gør propaganda mest effektiv?</div>' +
+      '<div class="ra52-compare-reason">Efterversionen stiller det samme begrebslige spørgsmål. Førversionen stabler tre akademiske begreber (epistemologisk, propaganda, kritisk medieanalyse) inden eleven ved hvad de bliver spurgt om. Spørgsmålets intellektuelle dybde lever i svarmuligheder og review_text — ikke i jargon.</div>' +
+    '</div>'
+  );
+
+  // Card 7 — Before/After: Review_text sentences
+  card(
+    'Før/efter — review_text sætninger',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786850">Tre dokumenterede forbedringer fra Democracy &amp; Power-domænet</p>' +
+    '<div class="ra52-compare">' +
+      '<div class="ra52-compare-label" style="color:#988870;font-size:10px;font-weight:700">dp_008 — sætningslængde + bisætningsdensitet</div>' +
+      '<div class="ra52-compare-label ra52-compare-before">FØR</div>' +
+      '<div class="ra52-compare-text">En revolutionær der skal administrere et imperium opdager hurtigt at imperiet ikke administreres på andre måder end dem der eksisterede.</div>' +
+      '<div class="ra52-compare-label ra52-compare-after">EFTER</div>' +
+      '<div class="ra52-compare-text">En revolutionær der overtager imperiet, opdager hurtigt: det kan kun administreres som det altid er blevet.</div>' +
+      '<div class="ra52-compare-reason">Tokonet skaber rytmisk pause der lader indsigten lande. Dobbelt negation fjernet.</div>' +
+    '</div>' +
+    '<div class="ra52-compare">' +
+      '<div class="ra52-compare-label" style="color:#988870;font-size:10px;font-weight:700">dp_021 — sætningslængde + concept_opener</div>' +
+      '<div class="ra52-compare-label ra52-compare-before">FØR</div>' +
+      '<div class="ra52-compare-text">Ekkokamre opstår ikke primært fordi folk er ideologisk snæversynede — de opstår fordi platforme er designet til engagement, og bekræftelse genererer mere engagement end modsigelse.</div>' +
+      '<div class="ra52-compare-label ra52-compare-after">EFTER</div>' +
+      '<div class="ra52-compare-text">Ekkokamre opstår ikke primært fordi folk er snæversynede. De opstår fordi platforme er designet til engagement — og bekræftelse genererer mere engagement end modsigelse.</div>' +
+      '<div class="ra52-compare-reason">Én lang sætning splittet til to. "Ideologisk" fjernet som redundant i kontekst. To-sætningers-rytmen giver indsigten mere plads.</div>' +
+    '</div>' +
+    '<div class="ra52-compare">' +
+      '<div class="ra52-compare-label" style="color:#988870;font-size:10px;font-weight:700">dp_029 — vocabulary_friction + abstract_noun_density</div>' +
+      '<div class="ra52-compare-label ra52-compare-before">FØR</div>' +
+      '<div class="ra52-compare-text">Resultatet er ikke et informationsproblem men et deliberationsproblem: de institutionelle incitamenter diskriminerer systematisk mod den kommunikationsform demokrati kræver.</div>' +
+      '<div class="ra52-compare-label ra52-compare-after">EFTER</div>' +
+      '<div class="ra52-compare-text">Resultatet er ikke et informationsproblem — det er et problem med samtalen selv. De institutionelle incitamenter diskriminerer mod demokratiets kommunikationsform.</div>' +
+      '<div class="ra52-compare-reason">"Deliberationsproblem" kræver forhåndsviden. "Et problem med samtalen selv" forstås øjeblikkeligt og er lige så præcis i kontekst.</div>' +
+    '</div>'
+  );
+
+  // Card 8 — 7 Learner Profiles
+  card(
+    '7 læserprofiler og deres primære udfordringer',
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Stærk læser</div>' +
+      '<div class="ra52-profile-body">Udfordres af kedsomhed på begrebsniveau hvis sproget er for simpelt. Har brug for begrebslig dybde med klar sætningsstruktur.</div>' +
+      '<div class="ra52-profile-risk">Risiko: sprogforenkling kan føles nedladende — ødelægger intellektuel tillid</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Gennemsnitlig læser</div>' +
+      '<div class="ra52-profile-body">Lange indlejrede bisætninger og abstrakte substantivkæder. Vægge af tekst i review_texts. Har brug for god sætningsrytme og konkrete eksempler.</div>' +
+      '<div class="ra52-profile-risk">Risiko: scanning begynder ved sætning 4+ af review_text hvis rytmen ikke har varieret</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Kæmpende læser</div>' +
+      '<div class="ra52-profile-body">Nestede relativsætninger, ordforrådsfrktion og dense review_texts. Første sætning afgør alt. Har brug for kort første sætning og maks. 4 sætninger.</div>' +
+      '<div class="ra52-profile-risk">Risiko: vil forlade review_text helt hvis første sætning er for lang — får aldrig indsigten</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Elev med ordblindhed</div>' +
+      '<div class="ra52-profile-body">Sætningslængde og ukendte ordformer. Dense tekstblokke er visuelt overvældende inden læsning begynder. Har brug for korte sætninger og linjeskift.</div>' +
+      '<div class="ra52-profile-risk">Risiko: lange review_texts ser overvældende ud — barrierer opstår før læsning begynder</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Træt elev</div>' +
+      '<div class="ra52-profile-body">Alt. Kognitiv belastning er allerede høj. Review_text føles som ekstra arbejde. Læser kun første og sidste sætning. Krogen skal stå i sætning 1, indsigten i sætning 6.</div>' +
+      '<div class="ra52-profile-risk">Risiko: klikker videre hvis første og sidste sætning ikke giver mening alene</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Angst elev</div>' +
+      '<div class="ra52-profile-body">Føler sig bedømt af kompleksitet. Akademisk sprog signalerer "dette er en test jeg fejler". Har brug for varm, direkte tone der inviterer frem for tester.</div>' +
+      '<div class="ra52-profile-risk">Risiko: fortolker sprogkompleksitet som bevis på at de ikke er smarte nok</div>' +
+    '</div>' +
+    '<div class="ra52-profile">' +
+      '<div class="ra52-profile-name">Reflekterende elev</div>' +
+      '<div class="ra52-profile-body">Vil have dybde. Frustreres af overforsimpling eller tomme generaliteter. Begrebslig dybde bevares — sproget kommer bare ikke i vejen.</div>' +
+      '<div class="ra52-profile-risk">Risiko: trivielt simpelt sprog vil bryde intellektuel tillid permanent</div>' +
+    '</div>'
+  );
+
+  // Card 9 — Anti-Condescension Protection
+  card(
+    'Anti-mønstre — hvad accessibility IKKE er',
+    '<p style="margin:0 0 8px;font-size:11px;color:#786850">Accessibility er ikke at forenkle idéer. Det er at fjerne sproglig frktion fra komplekse idéer.</p>' +
+    '<div class="ra52-anti">Barnlig tone eller ungdomssprog-affektation ("det er faktisk mega fedt at...")</div>' +
+    '<div class="ra52-anti">Fjerne sofistikeret ordforråd uden at erstatte dets mening</div>' +
+    '<div class="ra52-anti">Forklare hvad en elev skal føle ("dette er en svær idé, men...")</div>' +
+    '<div class="ra52-anti">Oversimplificere begreber til trivium for at undgå sproglig vanskelighed</div>' +
+    '<div class="ra52-anti">Falsk entusiasme eller motiverende ramme ("godt spørgsmål!")</div>' +
+    '<div class="ra52-anti">Behandle eleven som skrøbelig — de kan håndtere komplekse ideer, bare ikke komplekse sætninger</div>' +
+    '<div class="ra52-anti">Forenkle distraktorer så kun ét svar ser rimeligt ud ved første øjekast</div>' +
+    '<div class="ra52-anti">Bruge simpelt sprog der lyder som det er skrevet til en 10-årig</div>' +
+    '<div class="ra52-quote">Eleven er intelligent. Sproget er ikke testen.</div>'
+  );
+
+  // Card 10 — Canonical Readability Standard (accent)
+  card(
+    'Den kanoniske læsbarhedsstandard — samlet oversigt',
+    '<div class="ra52-std">' +
+      '<div class="ra52-std-name">Spørgsmålsstamme</div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. ord</span><span class="ra52-std-val">20</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. indlejrede bisætninger</span><span class="ra52-std-val">1</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Nye begreber pr. stamme</span><span class="ra52-std-val">1</span></div>' +
+    '</div>' +
+    '<div class="ra52-std">' +
+      '<div class="ra52-std-name">Svarmuligheder</div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. ord pr. mulighed</span><span class="ra52-std-val">18</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Stil</span><span class="ra52-std-val">Parallel struktur på tværs af alle 4. Ingen mulighed bør være markant længere end de andre.</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Distraktorer</span><span class="ra52-std-val">Plausible for en eftertænksom elev — ikke åbenlyst forkerte ved første blik</span></div>' +
+    '</div>' +
+    '<div class="ra52-std">' +
+      '<div class="ra52-std-name">Review_text</div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Maks. sætninger</span><span class="ra52-std-val">6</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Åbner</span><span class="ra52-std-val">Kernindsigt i sætning 1 eller 2. Berav aldrig lede.</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Rytme</span><span class="ra52-std-val">Mindst én kort sætning (under 10 ord) pr. review_text</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Abstrakt forankring</span><span class="ra52-std-val">Enhver abstrakt påstand → konkret eksempel eller menneskelig situation</span></div>' +
+      '<div class="ra52-std-row"><span class="ra52-std-key">Emotionel tone</span><span class="ra52-std-val">Respektfuld, intellektuelt spændende — aldrig nedladende</span></div>' +
+    '</div>' +
+    '<div class="ra52-quote">Section 52 er indholdskvalitetsporten. Ikke en retningslinje — et krav.</div>',
     null,
     'accent'
   );
