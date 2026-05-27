@@ -20,15 +20,33 @@ test('Login and answer question flow works', async ({ page }) => {
   await expect(firstButton).toBeVisible();
   await firstButton.click();
 
-  // Wait for feedback
-  const feedback = page.locator('#feedback');
-  await expect(feedback).toBeVisible();
+  // Wait for system response — feedback text (correct/incorrect/pending) OR reflection panel
+  // (reflection panel replaces #feedback after 400ms for incorrect+review_text answers;
+  //  using waitForFunction handles both paths without a narrow timing dependency)
+  await page.waitForFunction(
+    () => {
+      const fb = document.getElementById('feedback');
+      const rc = document.getElementById('reflection-continue');
+      const hasFeedback = (fb?.textContent ?? '').trim().length > 0;
+      const hasReflection = rc?.style.display === 'block';
+      return hasFeedback || hasReflection;
+    },
+    { timeout: 15000 }
+  );
 
-  const feedbackText = await feedback.innerText();
-  expect(feedbackText.length).toBeGreaterThan(0);
-
-  // Wait for state machine to reach AWAITING_ANSWER with the next question
-  await page.waitForSelector('#question[data-state="ready"]');
+  // Navigate to next question — handles both paths:
+  // • Auto-advance (correct / incorrect without review_text): question enters ready state automatically
+  // • Reflection path (incorrect + review_text): "Videre →" button must be clicked to continue
+  await page.waitForFunction(
+    () => {
+      const q = document.getElementById('question');
+      if (q && q.dataset.state === 'ready') return true;
+      const rc = document.getElementById('reflection-continue');
+      if (rc && rc.style.display === 'block') rc.click();
+      return false;
+    },
+    { timeout: 30000, polling: 500 }
+  );
 
   const secondQuestionText = await questionElement.innerText();
   expect(secondQuestionText).not.toBe(firstQuestionText);
