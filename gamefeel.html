@@ -1706,6 +1706,40 @@
     .rs54-phase-name { font-size: 11px; font-weight: 700; color: #90c8c0; margin-bottom: 2px; }
     .rs54-phase-timing { font-size: 10px; color: #488880; margin-bottom: 4px; }
     .rs54-phase-body { font-size: 11px; color: #6a9a94; line-height: 1.4; }
+
+    /* Section 55 — Session Rhythm & Cognitive Fatigue — steel blue #8ab4c8 */
+    .sf55-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .sf55-card { background: #060a0e; border: 1px solid #8ab4c830; border-radius: 8px; padding: 18px; }
+    .sf55-card.accent { background: linear-gradient(135deg, #04080e 0%, #060c12 100%); border-color: #8ab4c860; }
+    .sf55-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #8ab4c8; margin-bottom: 8px; }
+    .sf55-title { font-size: 14px; font-weight: 700; color: #d0e4f0; margin-bottom: 10px; line-height: 1.3; }
+    .sf55-body { font-size: 12px; color: #5a84a0; line-height: 1.6; }
+    .sf55-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #8ab4c830; font-size: 11px; color: #8ab4c8; font-style: italic; }
+    .sf55-block { background: #8ab4c812; border-left: 2px solid #8ab4c840; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .sf55-block-title { font-size: 11px; font-weight: 600; color: #8ab4c8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .sf55-block-body { font-size: 12px; color: #5a84a0; line-height: 1.6; }
+    .sf55-quote { font-size: 12px; color: #8ab4c8; font-style: italic; border-left: 3px solid #8ab4c860; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .sf55-rule { font-size: 11px; color: #5a84a0; padding: 3px 0; }
+    .sf55-rule::before { content: "→ "; color: #8ab4c8; font-weight: 700; }
+    .sf55-avoid { font-size: 11px; color: #5a84a0; padding: 3px 0; }
+    .sf55-avoid::before { content: "✕ "; color: #b08888; font-weight: 700; }
+    .sf55-curve { display: flex; align-items: flex-end; gap: 3px; height: 60px; margin: 10px 0; }
+    .sf55-curve-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 8px; }
+    .sf55-curve-label { display: flex; gap: 3px; margin-top: 4px; }
+    .sf55-curve-tick { flex: 1; font-size: 9px; color: #3a6480; text-align: center; }
+    .sf55-fatigue { background: #0a0c10; border: 1px solid #8ab4c820; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .sf55-fatigue-name { font-size: 11px; font-weight: 700; color: #8ab4c8; margin-bottom: 2px; }
+    .sf55-fatigue-onset { font-size: 10px; color: #4a7490; margin-bottom: 3px; }
+    .sf55-fatigue-body { font-size: 11px; color: #5a84a0; line-height: 1.4; }
+    .sf55-fatigue-fix { font-size: 10px; color: #6a9ab0; margin-top: 4px; font-style: italic; }
+    .sf55-energy { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+    .sf55-energy-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sf55-energy-text { font-size: 11px; color: #5a84a0; line-height: 1.4; }
+    .sf55-gate { background: #8ab4c815; border: 1px solid #8ab4c840; border-radius: 8px; padding: 12px 14px; margin: 8px 0; }
+    .sf55-gate-title { font-size: 12px; font-weight: 700; color: #8ab4c8; margin-bottom: 6px; }
+    .sf55-gate-row { display: flex; gap: 8px; padding: 3px 0; }
+    .sf55-gate-key { font-size: 10px; font-weight: 600; color: #4a7490; width: 120px; flex-shrink: 0; }
+    .sf55-gate-val { font-size: 10px; color: #5a84a0; flex: 1; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1987,6 +2021,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 54 — Reflection State &amp; Review Moment Experience Pass</h2>
   <div class="rs54-grid" id="rs54Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 55 — Session Rhythm &amp; Cognitive Fatigue Pass</h2>
+  <div class="sf55-grid" id="sf55Grid"></div>
 </div>
 
 <script type="module">
@@ -16259,6 +16296,265 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '<div class="rs54-rule">Keyboard accessibility: #reflection-continue auto-focused, focus-visible ring</div>' +
     '<div class="rs54-rule">Reduced motion: reflectIn animation disabled, opacity transition disabled</div>' +
     '<div class="rs54-quote">The platform is not a question machine. It is a learning machine that uses questions as the delivery mechanism for insight.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 55 — Session Rhythm & Cognitive Fatigue ─────────────────────────
+(function () {
+  var grid = document.getElementById('sf55Grid');
+  if (!grid) return;
+
+  function card(label, title, body, footer, variant) {
+    var d = document.createElement('div');
+    d.className = 'sf55-card' + (variant ? ' ' + variant : '');
+    d.innerHTML =
+      '<div class="sf55-label">' + label + '</div>' +
+      '<div class="sf55-title">' + title + '</div>' +
+      '<div class="sf55-body">' + body + '</div>' +
+      (footer ? '<div class="sf55-footer">' + footer + '</div>' : '');
+    grid.appendChild(d);
+  }
+
+  // Card 1 — Thesis
+  card(
+    'Section 55 — Session Rhythm',
+    'The session is the product — not the individual question',
+    '<p style="margin:0 0 10px">Sections 45–54 optimized individual learning objects: misconception-aware questions, readable language, adaptive sequencing, humane pacing, reflection states.</p>' +
+    '<p style="margin:0 0 10px">Section 55 asks: how does a sequence of 20–30 of these actually feel?</p>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">The problem</div>' +
+      '<div class="sf55-block-body">A sequence of individually excellent learning moments can still create a fatiguing session. Reflection fatigue. Same-rhythm fatigue. Abstract density accumulation. Cognitive stacking. None of these are visible at the individual question level.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">The goal</div>' +
+      '<div class="sf55-block-body">A 20-minute session should leave students intellectually energized, not mentally depleted. The experience should feel breathable, varied, alive, and calm — not like a relentless sequence of challenges.</div>' +
+    '</div>' +
+    '<div class="sf55-quote">Great educational systems are not built only from good individual questions. They are built from sustained cognitive rhythm.</div>',
+    null,
+    'accent'
+  );
+
+  // Card 2 — Session flow audit
+  card(
+    'Session Flow Audit',
+    'What a 20-question session looked like before Section 55',
+    '<p style="margin:0 0 8px">Simulated 20-question session, all Democracy &amp; Power, average student:</p>' +
+    '<div class="sf55-curve">' +
+      '<div class="sf55-curve-bar" style="height:40%;background:#5a84a0" title="Q1"></div>' +
+      '<div class="sf55-curve-bar" style="height:55%;background:#5a84a0" title="Q2"></div>' +
+      '<div class="sf55-curve-bar" style="height:70%;background:#7a9ab0" title="Q3"></div>' +
+      '<div class="sf55-curve-bar" style="height:80%;background:#8ab4c8" title="Q4"></div>' +
+      '<div class="sf55-curve-bar" style="height:85%;background:#8ab4c8" title="Q5"></div>' +
+      '<div class="sf55-curve-bar" style="height:75%;background:#7a9ab0" title="Q6-wrong"></div>' +
+      '<div class="sf55-curve-bar" style="height:55%;background:#b08888" title="Q7-wrong"></div>' +
+      '<div class="sf55-curve-bar" style="height:35%;background:#b06060" title="Q8-wrong-reflection3"></div>' +
+      '<div class="sf55-curve-bar" style="height:45%;background:#5a84a0" title="Q9"></div>' +
+      '<div class="sf55-curve-bar" style="height:60%;background:#7a9ab0" title="Q10"></div>' +
+      '<div class="sf55-curve-bar" style="height:70%;background:#8ab4c8" title="Q11"></div>' +
+      '<div class="sf55-curve-bar" style="height:65%;background:#7a9ab0" title="Q12"></div>' +
+      '<div class="sf55-curve-bar" style="height:55%;background:#5a84a0" title="Q13"></div>' +
+      '<div class="sf55-curve-bar" style="height:45%;background:#5a84a0" title="Q14"></div>' +
+      '<div class="sf55-curve-bar" style="height:35%;background:#4a7490" title="Q15"></div>' +
+      '<div class="sf55-curve-bar" style="height:40%;background:#4a7490" title="Q16"></div>' +
+      '<div class="sf55-curve-bar" style="height:30%;background:#4a6480" title="Q17"></div>' +
+      '<div class="sf55-curve-bar" style="height:25%;background:#3a5470" title="Q18"></div>' +
+      '<div class="sf55-curve-bar" style="height:20%;background:#3a5470" title="Q19"></div>' +
+      '<div class="sf55-curve-bar" style="height:15%;background:#2a4460" title="Q20"></div>' +
+    '</div>' +
+    '<div class="sf55-curve-label">' +
+      '<div class="sf55-curve-tick">Q1</div><div class="sf55-curve-tick">Q5</div>' +
+      '<div class="sf55-curve-tick" style="color:#b06060">Q8⚠</div><div class="sf55-curve-tick">Q10</div>' +
+      '<div class="sf55-curve-tick">Q15</div><div class="sf55-curve-tick">Q20</div>' +
+    '</div>' +
+    '<p style="margin:8px 0 0;font-size:11px;color:#4a7490">Q6–Q8: three consecutive incorrect answers, each with review_text → three full reflection states back-to-back. Cognitive energy collapses at Q8. Recovery is slow. Attention drift begins Q15+.</p>',
+    'The energy curve identifies Q8 (third consecutive reflection) as the critical failure point'
+  );
+
+  // Card 3 — Reflection fatigue deep dive
+  card(
+    'Reflection Fatigue',
+    'Three consecutive reflection states — what happens cognitively',
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Reflection 1 (first incorrect)</div>' +
+      '<div class="sf55-block-body">Student reads the review_text. Insight is received. Mild destabilization — their mental model has a gap. They click "Videre →" and continue. Cognitive load: elevated but manageable.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Reflection 2 (second consecutive incorrect)</div>' +
+      '<div class="sf55-block-body">Student reads the second review_text. First insight has not yet settled. Student is now holding two competing frameworks. Cognitive load: high. They click forward somewhat faster.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Reflection 3 (third consecutive incorrect) — old behavior</div>' +
+      '<div class="sf55-block-body">Student scans the third review_text rather than reading it. First insight has been displaced by second. Third is mostly noise. Reflection state has shifted from "learning moment" to "obstacle between me and the next question." Cognitive load: saturated.</div>' +
+    '</div>' +
+    '<div class="sf55-quote">The review_text is not the problem. The stacking of insights before any of them settle is the problem.</div>',
+    'Cognitive stacking is the mechanism. The density gate is the fix.'
+  );
+
+  // Card 4 — The density gate
+  card(
+    'Reflection Density Gate',
+    'Implemented in app.js — Section 55',
+    '<div class="sf55-gate">' +
+      '<div class="sf55-gate-title">The gate — live in production</div>' +
+      '<div class="sf55-gate-row"><div class="sf55-gate-key">Variable</div><div class="sf55-gate-val">sessionConsecutiveReflections — counts back-to-back reflection states</div></div>' +
+      '<div class="sf55-gate-row"><div class="sf55-gate-key">Threshold</div><div class="sf55-gate-val">2 — after 2 consecutive reflections, gate activates</div></div>' +
+      '<div class="sf55-gate-row"><div class="sf55-gate-key">Trigger</div><div class="sf55-gate-val">3rd incorrect+reviewText in a row: skip reflection panel, auto-advance 2000ms</div></div>' +
+      '<div class="sf55-gate-row"><div class="sf55-gate-key">Reset</div><div class="sf55-gate-val">Any correct or pending answer → sessionConsecutiveReflections = 0</div></div>' +
+      '<div class="sf55-gate-row"><div class="sf55-gate-key">Logging</div><div class="sf55-gate-val">logEvent("REFLECTION_DENSITY_GATE", { gated: true }) — visible in debug console</div></div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">What the student experiences</div>' +
+      '<div class="sf55-block-body">After 2 reflections in a row, the third incorrect answer shows "❌ Forkert – korrekt svar: X" and auto-advances after 2 seconds. No reflection panel. The session breathes. The student moves forward. The insight will recur in a future session when they have cognitive room for it.</div>' +
+    '</div>',
+    'The insight is not lost — it will recur. The session is preserved.'
+  );
+
+  // Card 5 — Session question count
+  card(
+    'Session Tracking',
+    'sessionQuestionCount — the session-length signal',
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">What was added</div>' +
+      '<div class="sf55-block-body">sessionQuestionCount increments on every valid answer (pending/correct/incorrect). Passed to get-next-question as session_context.session_question_count.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">What the backend receives now</div>' +
+      '<div class="sf55-block-body">wave_phase · consecutive_incorrect · last_misconception_type · session_question_count</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Future backend use</div>' +
+      '<div class="sf55-block-body">A 5-question session and a 30-question session should feel different at the sequencing level. session_question_count enables the backend to serve lighter questions later in long sessions — the architecture is now in place. Current backend does not yet use it.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Why track it now</div>' +
+      '<div class="sf55-block-body">Session length awareness is foundational. Every future rhythm feature depends on it. Adding it later would require auditing all call sites. Adding it now costs nothing.</div>' +
+    '</div>',
+    'Infrastructure for future: session_question_count is now in every get-next-question call'
+  );
+
+  // Card 6 — Question energy profiles
+  card(
+    'Question Energy Profiles',
+    'Heavy / medium / light — three session-rhythm roles',
+    '<div class="sf55-energy">' +
+      '<div class="sf55-energy-dot" style="background:#c87070"></div>' +
+      '<div class="sf55-energy-text"><b style="color:#d0a0a0">Heavy</b> — high cognitive intensity, strong destabilization, needs recovery after. Examples: tyranny of the majority (dp_024), revolutionaries reproduce power structures (dp_008), youth political apathy (dp_039), judicial review paradox (dp_032).</div>' +
+    '</div>' +
+    '<div class="sf55-energy">' +
+      '<div class="sf55-energy-dot" style="background:#c8a870"></div>' +
+      '<div class="sf55-energy-text"><b style="color:#d0c0a0">Medium</b> — moderate engagement, grounded in concrete examples, recovers naturally. Examples: echo chambers (dp_021), voter turnout as collective action (dp_004), term limits (dp_038), legitimacy vs. legality (dp_016).</div>' +
+    '</div>' +
+    '<div class="sf55-energy">' +
+      '<div class="sf55-energy-dot" style="background:#70c870"></div>' +
+      '<div class="sf55-energy-text"><b style="color:#a0d0a0">Light</b> — clear concept, fast resolution, creates breathing room. Examples: what makes propaganda effective (dp_007), civil society function (dp_030), free press and democracy (dp_026).</div>' +
+    '</div>' +
+    '<div class="sf55-block" style="margin-top:10px">' +
+      '<div class="sf55-block-title">Session rhythm principle</div>' +
+      '<div class="sf55-block-body">Two heavy questions in sequence is the maximum before a lighter moment is needed. Light questions are not easier — they are structurally different. They give the brain space to consolidate what heavy questions delivered.</div>' +
+    '</div>',
+    'Energy profiles inform future sequencing. Not difficulty — cognitive rhythm role.'
+  );
+
+  // Card 7 — Fatigue patterns
+  card(
+    'Fatigue Patterns',
+    'Four fatigue types identified in long sessions',
+    '<div class="sf55-fatigue">' +
+      '<div class="sf55-fatigue-name">Reflection fatigue</div>' +
+      '<div class="sf55-fatigue-onset">Onset: after 2–3 consecutive reflection states</div>' +
+      '<div class="sf55-fatigue-body">Third review_text is scanned, not read. Student clicks continue before finishing. Cognitive stacking: new insights arriving before prior ones settle.</div>' +
+      '<div class="sf55-fatigue-fix">Fix: Reflection density gate — Section 55 ✓</div>' +
+    '</div>' +
+    '<div class="sf55-fatigue">' +
+      '<div class="sf55-fatigue-name">Same-rhythm fatigue</div>' +
+      '<div class="sf55-fatigue-onset">Onset: after 5–8 questions at same cognitive intensity</div>' +
+      '<div class="sf55-fatigue-body">Questions feel mechanical. Student answers faster, attends less. Constant challenge intensity is not stimulating after initial engagement.</div>' +
+      '<div class="sf55-fatigue-fix">Fix: NUZO wave system — Section 51 ✓</div>' +
+    '</div>' +
+    '<div class="sf55-fatigue">' +
+      '<div class="sf55-fatigue-name">Abstract density fatigue</div>' +
+      '<div class="sf55-fatigue-onset">Onset: after 3+ consecutive high-abstraction questions</div>' +
+      '<div class="sf55-fatigue-body">Student stops connecting ideas. Answers become more random. Working memory saturation: abstract noun chains without concrete anchors exhaust parse capacity.</div>' +
+      '<div class="sf55-fatigue-fix">Fix: Readability calibration (S52) + Youth-near rewrite (S53) ✓</div>' +
+    '</div>' +
+    '<div class="sf55-fatigue">' +
+      '<div class="sf55-fatigue-name">Late-session drift</div>' +
+      '<div class="sf55-fatigue-onset">Onset: after 25+ questions in a single session</div>' +
+      '<div class="sf55-fatigue-body">Attention drifts between questions. Environmental interruptions increase. Sustained focus depletion — not conceptual fatigue, attentional resource exhaustion.</div>' +
+      '<div class="sf55-fatigue-fix">Future fix: session_question_count-aware backend sequencing (architecture laid in S55)</div>' +
+    '</div>',
+    null
+  );
+
+  // Card 8 — Recovery mechanics
+  card(
+    'Recovery Design',
+    'What genuine recovery looks like — and what it does not',
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">What creates genuine recovery</div>' +
+      '<div class="sf55-block-body">' +
+        'A correct answer on a question the student feels confident about — validation without challenge<br>' +
+        'A concrete question after several abstract ones — grounding<br>' +
+        'A question where the student reasons through the answer — active engagement without destabilization<br>' +
+        'Shorter review_text after a long one — visual relief<br>' +
+        'Auto-advance after a gated reflection — removal of the "must-read" cognitive obligation' +
+      '</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">What does NOT create genuine recovery</div>' +
+      '<div class="sf55-block-body">' +
+        'Coins, XP popups, level-up overlays — reward mechanics, not cognitive rest<br>' +
+        'Easier questions that feel condescending — breaks intellectual trust<br>' +
+        'Motivational messages ("Godt gået!") — patronizing, not restorative<br>' +
+        'Faster transitions — speed is not relief<br>' +
+        'Animations and stimulation loops — engagement hacks, not recovery' +
+      '</div>' +
+    '</div>' +
+    '<div class="sf55-quote">Recovery comes through clarity, concreteness, familiarity, and insight satisfaction. Not through stimulation gimmicks.</div>',
+    null
+  );
+
+  // Card 9 — Mobile session sustainability
+  card(
+    'Mobile Rhythm',
+    'Phone sessions have specific fatigue dynamics',
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Reading fatigue</div>' +
+      '<div class="sf55-block-body">Long review_text strings on small screens require more eye movement per sentence. Heavy questions with 4–6 sentence review_texts feel longer on mobile. Addressed by readability standard: max 6 sentences, rhythm variation, opener hook (Section 52).</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Attention drift</div>' +
+      '<div class="sf55-block-body">Phone sessions are frequently interrupted — notifications, environment, physical movement. Question stems must be immediately re-readable after a 30-second interruption. Addressed by Section 53 rewrite: short, self-contained stems.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Interaction fatigue</div>' +
+      '<div class="sf55-block-body">Tap interaction is low-friction — not a real fatigue concern for the tap itself. The reflection density gate reduces the cognitive obligation per question in losing streaks, which matters more on mobile where sessions are more fragmented.</div>' +
+    '</div>' +
+    '<div class="sf55-block">' +
+      '<div class="sf55-block-title">Physical posture</div>' +
+      '<div class="sf55-block-body">Holding phone in the same position for 15+ minutes causes physical discomfort before cognitive fatigue. Students naturally pause and reposition — the session should not penalize or interrupt these natural breaks.</div>' +
+    '</div>',
+    'Mobile sessions benefit most from the density gate — fragmented sessions cannot sustain heavy stacking'
+  );
+
+  // Card 10 — Canonical standard
+  card(
+    'Canonical Standard',
+    'Section 55 — permanent session rhythm philosophy',
+    '<p style="margin:0 0 10px">The session rhythm standard for DEN SEJE APP — established Section 55, permanent.</p>' +
+    '<div class="sf55-rule">Reflection density: maximum 2 consecutive reflection states before auto-advance fallback</div>' +
+    '<div class="sf55-rule">Wave pacing: NUZO wave handles macro-rhythm across a session (Section 51)</div>' +
+    '<div class="sf55-rule">Session context: session_question_count passed to backend on every question fetch</div>' +
+    '<div class="sf55-rule">Content quality: rhythm management never reduces conceptual depth</div>' +
+    '<div class="sf55-rule">Recovery: through clarity and grounding — never through stimulation or reward mechanics</div>' +
+    '<div class="sf55-avoid">Gamify fatigue management — no dopamine mechanics, no engagement hacks</div>' +
+    '<div class="sf55-avoid">Artificially inject excitement to maintain attention</div>' +
+    '<div class="sf55-avoid">Reduce reflection quality to maintain session pace</div>' +
+    '<div class="sf55-avoid">Treat student as fragile — they can handle density, but not accumulation without recovery</div>' +
+    '<div class="sf55-quote">The session should feel like a conversation with a thoughtful teacher — not a question machine that never pauses. The student should leave feeling intellectually energized, not mentally depleted.</div>',
     null,
     'accent'
   );

@@ -165,6 +165,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   let sessionConsecutiveIncorrect = 0;
   let lastMisconceptionType = null;
 
+  // Session rhythm tracking — Section 55.
+  // sessionQuestionCount: total answered this session, passed to get-next-question.
+  // sessionConsecutiveReflections: consecutive reflection states entered;
+  //   gate fires at >= 2 to prevent reflection fatigue in losing streaks.
+  let sessionQuestionCount = 0;
+  let sessionConsecutiveReflections = 0;
+
   function updateWavePhase(wasCorrect) {
     if (wasCorrect) {
       sessionConsecutiveIncorrect = 0;
@@ -358,11 +365,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const prevXp = lastKnownXp;
     const prevCoins = lastKnownCoins;
+    sessionQuestionCount++;
 
     if (data.status === "pending") {
       feedback.textContent = "⏳ Afventer lærerens vurdering";
       feedback.className = "feedback-pending";
       sessionCorrectStreak = 0;
+      sessionConsecutiveReflections = 0;
 
       await fetchProgress();
       setUIState(UI_STATES.TRANSITIONING);
@@ -383,6 +392,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Hidden achievement: perfect_five — track consecutive correct per session
       sessionCorrectStreak++;
+      sessionConsecutiveReflections = 0;
       updateWavePhase(true);
       if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
         bestSessionStreak = sessionCorrectStreak;
@@ -428,11 +438,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       await fetchProgress();
 
-      if (reviewText) {
+      // Reflection density gate (Section 55):
+      // Enter reflection state only for the first 2 consecutive incorrect+reviewText answers.
+      // After 2 back-to-back reflections, auto-advance — prevents reflection fatigue in losing streaks.
+      if (reviewText && sessionConsecutiveReflections < 2) {
+        sessionConsecutiveReflections++;
         feedback.textContent = "❌ Forkert";
         feedback.className = "feedback-error";
         setTimeout(() => enterReflectionState(reviewText), 400);
         return;
+      }
+
+      if (reviewText) {
+        logEvent("REFLECTION_DENSITY_GATE", { sessionConsecutiveReflections, gated: true });
       }
 
       feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
@@ -458,6 +476,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       wave_phase: sessionWavePhase,
       consecutive_incorrect: sessionConsecutiveIncorrect,
       last_misconception_type: lastMisconceptionType,
+      session_question_count: sessionQuestionCount,
     };
 
     let { data, error } = await supabase.functions.invoke(
