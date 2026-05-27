@@ -34,6 +34,7 @@ const UI_STATES = {
   LOADING_QUESTION: "LOADING_QUESTION",
   AWAITING_ANSWER: "AWAITING_ANSWER",
   SUBMITTING_ANSWER: "SUBMITTING_ANSWER",
+  REFLECTING: "REFLECTING",
   TRANSITIONING: "TRANSITIONING"
 };
 
@@ -42,7 +43,8 @@ function setState(newState) {
     IDLE: ["LOADING_QUESTION"],
     LOADING_QUESTION: ["AWAITING_ANSWER"],
     AWAITING_ANSWER: ["SUBMITTING_ANSWER"],
-    SUBMITTING_ANSWER: ["TRANSITIONING", "AWAITING_ANSWER"],
+    SUBMITTING_ANSWER: ["TRANSITIONING", "AWAITING_ANSWER", "REFLECTING"],
+    REFLECTING: ["TRANSITIONING"],
     TRANSITIONING: ["LOADING_QUESTION"]
   };
 
@@ -64,7 +66,8 @@ function setUIState(newState) {
     LOADING_QUESTION: "loading",
     AWAITING_ANSWER: "ready",
     TRANSITIONING: "loading",
-    SUBMITTING_ANSWER: "loading"
+    SUBMITTING_ANSWER: "loading",
+    REFLECTING: "reflecting"
   };
 
   const domState = map[newState];
@@ -139,6 +142,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const questionElement = document.getElementById("question");
   const optionsContainer = document.getElementById("options");
   const feedback = document.getElementById("feedback");
+  const reviewFeedback = document.getElementById("review-feedback");
+  const reflectionContinue = document.getElementById("reflection-continue");
   const levelEl = document.getElementById("level");
   const xpEl = document.getElementById("xp");
   const coinsEl = document.getElementById("coins");
@@ -289,6 +294,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 2250);
   }
 
+  function enterReflectionState(reviewText) {
+    setUIState(UI_STATES.REFLECTING);
+    feedback.textContent = "";
+    feedback.className = "";
+    reviewFeedback.textContent = reviewText;
+    reviewFeedback.classList.add("visible");
+    optionsContainer.style.display = "none";
+    reflectionContinue.style.display = "block";
+    setTimeout(() => reflectionContinue.focus(), 200);
+  }
+
+  reflectionContinue.onclick = () => {
+    if (uiState !== UI_STATES.REFLECTING) return;
+    setUIState(UI_STATES.TRANSITIONING);
+    loadAndRenderQuestion();
+  };
+
   async function submitAnswer(userAnswer, clickedBtn = null) {
 
     if (uiState !== UI_STATES.AWAITING_ANSWER) return;
@@ -342,7 +364,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.className = "feedback-pending";
       sessionCorrectStreak = 0;
 
-    } else if (data.status === "correct") {
+      await fetchProgress();
+      setUIState(UI_STATES.TRANSITIONING);
+      setTimeout(() => { loadAndRenderQuestion(); }, 1000);
+      return;
+    }
+
+    if (data.status === "correct") {
       feedback.textContent = "✅ Korrekt!";
       feedback.className = "feedback-correct";
       playSound("equip");
@@ -366,14 +394,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         supabase.rpc("set_night_correct").catch(() => {});
       }
 
-    } else if (data.status === "incorrect") {
-      const reviewText = data.review_text ?? null;
-      if (reviewText) {
-        feedback.textContent = "❌ Forkert — " + reviewText;
-      } else {
-        feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      await fetchProgress();
+
+      const coinDelta = lastKnownCoins - prevCoins;
+      if (coinDelta > 0) showCoinPopup(coinDelta);
+
+      const prevLevel = calculateLevelFromXP(prevXp);
+      const newLevel = calculateLevelFromXP(lastKnownXp);
+      if (newLevel > prevLevel) {
+        showLevelUpOverlay(newLevel);
+        exprEngine?.onGameEvent("LEVEL_UP");
+        presenceEngine?.onGameEvent("LEVEL_UP");
       }
-      feedback.className = "feedback-error";
+
+      setUIState(UI_STATES.TRANSITIONING);
+      setTimeout(() => { loadAndRenderQuestion(); }, 600);
+      return;
+    }
+
+    if (data.status === "incorrect") {
+      const reviewText = data.review_text ?? null;
+
       playSound("error");
       exprEngine?.onGameEvent("INCORRECT");
       presenceEngine?.onGameEvent("INCORRECT");
@@ -385,39 +426,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       lastMisconceptionType = data.misconception_type ?? null;
       updateWavePhase(false);
 
-    } else {
-      logError("UNKNOWN_STATUS", data.status);
+      await fetchProgress();
 
-      feedback.textContent = "⚠️ Ukendt status fra server";
+      if (reviewText) {
+        feedback.textContent = "❌ Forkert";
+        feedback.className = "feedback-error";
+        setTimeout(() => enterReflectionState(reviewText), 400);
+        return;
+      }
+
+      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
       feedback.className = "feedback-error";
-
-      buttons.forEach(btn => btn.disabled = false);
-      setUIState(UI_STATES.AWAITING_ANSWER);
+      setUIState(UI_STATES.TRANSITIONING);
+      setTimeout(() => { loadAndRenderQuestion(); }, 2000);
       return;
     }
 
-    await fetchProgress();
+    logError("UNKNOWN_STATUS", data.status);
 
-    if (data.status === "correct") {
-      const coinDelta = lastKnownCoins - prevCoins;
-      if (coinDelta > 0) showCoinPopup(coinDelta);
+    feedback.textContent = "⚠️ Ukendt status fra server";
+    feedback.className = "feedback-error";
 
-      const prevLevel = calculateLevelFromXP(prevXp);
-      const newLevel = calculateLevelFromXP(lastKnownXp);
-      if (newLevel > prevLevel) {
-        showLevelUpOverlay(newLevel);
-        exprEngine?.onGameEvent("LEVEL_UP");
-        presenceEngine?.onGameEvent("LEVEL_UP");
-      }
-    }
-
-    setUIState(UI_STATES.TRANSITIONING);
-
-    let delay = 1000;
-    if (data.status === "correct") delay = 600;
-    if (data.status === "incorrect") delay = (data.review_text ? 3200 : 2000);
-
-    setTimeout(() => { loadAndRenderQuestion(); }, delay);
+    buttons.forEach(btn => btn.disabled = false);
+    setUIState(UI_STATES.AWAITING_ANSWER);
   }
 
   async function getNextQuestion() {
@@ -561,6 +592,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadAndRenderQuestion() {
+    // Clean up reflection state if active from previous question
+    optionsContainer.style.display = "";
+    reviewFeedback.textContent = "";
+    reviewFeedback.classList.remove("visible");
+    reflectionContinue.style.display = "none";
+
     const question = await getNextQuestion();
 
     if (!question) {

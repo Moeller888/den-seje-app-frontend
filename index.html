@@ -183,11 +183,16 @@
       line-height: 1.55;
       color: var(--text-bright);
       min-height: 60px;
+      transition: opacity 300ms ease;
     }
 
     #question[data-state="loading"] {
       opacity: 0.45;
       animation: questionPulse 1.4s ease-in-out infinite;
+    }
+
+    #question[data-state="reflecting"] {
+      opacity: 0.3;
     }
 
     @keyframes avatarBreathe {
@@ -229,11 +234,58 @@
     .feedback-correct { color: var(--success-text); }
     .feedback-error   { color: var(--error-bright); }
     .feedback-pending { color: var(--coin); }
+    .feedback-reflect { color: var(--text-muted); font-weight: normal; }
 
+    /* ── Reflection panel — shown during REFLECTING state ────── */
     #review-feedback {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-muted);
+      display: none;
+      margin-top: 16px;
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--text-main);
+      padding: 16px 18px;
+      background: var(--bg-main);
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+    }
+
+    #review-feedback.visible {
+      display: block;
+      animation: reflectIn 300ms ease forwards;
+    }
+
+    @keyframes reflectIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Continue button — shown during REFLECTING state ─────── */
+    #reflection-continue {
+      display: none;
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: var(--btn-bg);
+      border: 1.5px solid var(--border-btn);
+      border-radius: 12px;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+      text-align: center;
+    }
+
+    #reflection-continue:hover {
+      background: var(--btn-bg-hover);
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+
+    #reflection-continue:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     /* ── Answer area ─────────────────────────────────────────── */
@@ -398,9 +450,11 @@
     /* ── Reduced motion ──────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       #xp-bar { transition: none; }
+      #question { transition: none; }
       .correct-flash,
       .incorrect-flash,
       #question[data-state="loading"],
+      #review-feedback.visible,
       #avatar-display { animation: none; }
     }
 
@@ -439,10 +493,11 @@
   </div>
 
   <!-- Question card: the visual and interaction focal point -->
-  <div class="game-card">
+  <div class="game-card" id="game-card">
     <div id="question">Indl&#230;ser&hellip;</div>
     <div id="feedback"></div>
     <div id="review-feedback"></div>
+    <button type="button" id="reflection-continue">Videre &#8594;</button>
   </div>
 
   <!-- Answer area: MC buttons or text/number input + submit -->

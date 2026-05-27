@@ -1675,6 +1675,37 @@
     .yn53-std-row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid #d4a06015; }
     .yn53-std-key { font-size: 10px; font-weight: 600; color: #a08060; width: 150px; flex-shrink: 0; }
     .yn53-std-val { font-size: 10px; color: #9a9070; flex: 1; line-height: 1.4; }
+
+    /* Section 54 — Reflection State — calm teal #90c8c0 */
+    .rs54-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .rs54-card { background: #040c0b; border: 1px solid #90c8c030; border-radius: 8px; padding: 18px; }
+    .rs54-card.accent { background: linear-gradient(135deg, #020e0d 0%, #040a09 100%); border-color: #90c8c060; }
+    .rs54-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #90c8c0; margin-bottom: 8px; }
+    .rs54-title { font-size: 14px; font-weight: 700; color: #d0f0ec; margin-bottom: 10px; line-height: 1.3; }
+    .rs54-body { font-size: 12px; color: #6a9a94; line-height: 1.6; }
+    .rs54-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #90c8c030; font-size: 11px; color: #90c8c0; font-style: italic; }
+    .rs54-block { background: #90c8c012; border-left: 2px solid #90c8c040; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .rs54-block-title { font-size: 11px; font-weight: 600; color: #90c8c0; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .rs54-block-body { font-size: 12px; color: #6a9a94; line-height: 1.6; }
+    .rs54-state { background: #0a1614; border: 1px solid #90c8c020; border-radius: 6px; padding: 10px 12px; margin: 5px 0; }
+    .rs54-state-name { font-size: 11px; font-weight: 700; color: #90c8c0; margin-bottom: 2px; }
+    .rs54-state-desc { font-size: 11px; color: #6a9a94; line-height: 1.4; }
+    .rs54-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .rs54-flow-step { background: #90c8c018; border: 1px solid #90c8c040; border-radius: 4px; padding: 4px 10px; font-size: 11px; color: #90c8c0; font-weight: 600; }
+    .rs54-flow-arrow { font-size: 12px; color: #488880; }
+    .rs54-compare { border: 1px solid #90c8c020; border-radius: 6px; padding: 10px 12px; margin: 6px 0; }
+    .rs54-compare-before { font-size: 11px; color: #b08888; line-height: 1.5; margin-bottom: 4px; font-style: italic; }
+    .rs54-compare-after { font-size: 11px; color: #88c0a8; line-height: 1.5; margin-bottom: 4px; font-style: italic; }
+    .rs54-compare-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .rs54-compare-before-label { color: #b08888; }
+    .rs54-compare-after-label { color: #88c0a8; }
+    .rs54-quote { font-size: 12px; color: #90c8c0; font-style: italic; border-left: 3px solid #90c8c060; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .rs54-rule { font-size: 11px; color: #6a9a94; padding: 3px 0; }
+    .rs54-rule::before { content: "→ "; color: #90c8c0; font-weight: 700; }
+    .rs54-phase { background: #090f0e; border: 1px solid #90c8c020; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .rs54-phase-name { font-size: 11px; font-weight: 700; color: #90c8c0; margin-bottom: 2px; }
+    .rs54-phase-timing { font-size: 10px; color: #488880; margin-bottom: 4px; }
+    .rs54-phase-body { font-size: 11px; color: #6a9a94; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -1953,6 +1984,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 53 — Youth-Near Language &amp; Cognitive Energy Rewrite Pass</h2>
   <div class="yn53-grid" id="yn53Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 54 — Reflection State &amp; Review Moment Experience Pass</h2>
+  <div class="rs54-grid" id="rs54Grid"></div>
 </div>
 
 <script type="module">
@@ -15974,6 +16008,257 @@ const alivenessGrid = document.getElementById("alivenessGrid");
       '</div>' +
     '</div>' +
     '<div class="yn53-quote">Platformen skal føles intelligent, klar, menneskelig og mentalt energigivende. Det er standarden.</div>',
+    null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 54 — Reflection State & Review Moment Experience ────────────────
+(function () {
+  var grid = document.getElementById('rs54Grid');
+  if (!grid) return;
+
+  function card(label, title, body, footer, variant) {
+    var d = document.createElement('div');
+    d.className = 'rs54-card' + (variant ? ' ' + variant : '');
+    d.innerHTML =
+      '<div class="rs54-label">' + label + '</div>' +
+      '<div class="rs54-title">' + title + '</div>' +
+      '<div class="rs54-body">' + body + '</div>' +
+      (footer ? '<div class="rs54-footer">' + footer + '</div>' : '');
+    grid.appendChild(d);
+  }
+
+  // Card 1 — Thesis
+  card(
+    'Section 54 — Reflection State',
+    'The review_text is the learning center of the platform',
+    '<p style="margin:0 0 10px">Every incorrect answer triggers a review_text — a designed pedagogical artifact written to deliver the insight the question was built to create.</p>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Old flow</div>' +
+      '<div class="rs54-block-body">review_text appended to "❌ Forkert — " in #feedback. Bold red 14px. Auto-dismissed after 3.2 seconds. Student had no agency. The learning moment was treated as an annotation to an error.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">New flow</div>' +
+      '<div class="rs54-block-body">REFLECTING state: question dims, review panel appears, student reads at their own pace, clicks "Videre →" to continue. The mistake creates the pause. The pause creates the space. The space is where learning happens.</div>' +
+    '</div>' +
+    '<div class="rs54-quote">Mistake → pause → insight → forward. Not: mistake → red text → auto-advance.</div>',
+    null,
+    'accent'
+  );
+
+  // Card 2 — What was wrong
+  card(
+    'Current Flow Audit',
+    'Six problems with the old incorrect-answer experience',
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 1 — Visual burial</div>' +
+      '<div class="rs54-block-body">review_text competed with red error color in #feedback. The error state dominated. The insight lost.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 2 — Font hierarchy wrong</div>' +
+      '<div class="rs54-block-body">#feedback was 14px bold. review_text needed to be larger — it is the primary content, not a footnote.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 3 — Auto-advance disrespects reading time</div>' +
+      '<div class="rs54-block-body">3200ms was the same regardless of review_text length. A 50-word review_text and a 12-word review_text both got 3.2 seconds.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 4 — No student agency</div>' +
+      '<div class="rs54-block-body">The student could not choose when to continue. The platform decided for them.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 5 — #review-feedback was unused</div>' +
+      '<div class="rs54-block-body">The DOM element existed. The CSS said color:var(--text-muted); font-size:13px. It was never touched by JS.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Problem 6 — Wrong emotional register</div>' +
+      '<div class="rs54-block-body">The whole screen stayed in error mode while delivering the insight. Wrong emotional register: punishment when the moment calls for curiosity.</div>' +
+    '</div>',
+    null
+  );
+
+  // Card 3 — The REFLECTING state
+  card(
+    'State Machine',
+    'REFLECTING — the new state machine node',
+    '<p style="margin:0 0 10px">One new state added. All existing transitions unchanged.</p>' +
+    '<div class="rs54-flow">' +
+      '<span class="rs54-flow-step">IDLE</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step">LOADING_QUESTION</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step">AWAITING_ANSWER</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step">SUBMITTING_ANSWER</span>' +
+    '</div>' +
+    '<div class="rs54-flow">' +
+      '<span class="rs54-flow-step">SUBMITTING_ANSWER</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step" style="border-color:#90c8c080;background:#90c8c025;">REFLECTING</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step">TRANSITIONING</span>' +
+      '<span class="rs54-flow-arrow">→</span>' +
+      '<span class="rs54-flow-step">LOADING_QUESTION</span>' +
+    '</div>' +
+    '<div class="rs54-state" style="margin-top:10px">' +
+      '<div class="rs54-state-name">REFLECTING</div>' +
+      '<div class="rs54-state-desc">Entered from: SUBMITTING_ANSWER (when status=incorrect &amp;&amp; review_text exists)<br>Exits to: TRANSITIONING (via student click on #reflection-continue)<br>DOM effect: #question[data-state="reflecting"] → opacity 0.3</div>' +
+    '</div>',
+    'Trigger: data.status === "incorrect" && data.review_text !== null'
+  );
+
+  // Card 4 — Visual hierarchy
+  card(
+    'Visual Hierarchy',
+    'What changes when REFLECTING state is entered',
+    '<div class="rs54-compare">' +
+      '<div class="rs54-compare-label rs54-compare-before-label">Before reflection</div>' +
+      '<div class="rs54-compare-before">Question: full opacity, prominent — the main event<br>Options: visible — 4 MC buttons<br>Feedback: "❌ Forkert — [review_text]" — red, bold, 14px<br>#review-feedback: empty and invisible</div>' +
+    '</div>' +
+    '<div class="rs54-compare">' +
+      '<div class="rs54-compare-label rs54-compare-after-label">During reflection</div>' +
+      '<div class="rs54-compare-after">Question: opacity 0.3 — background reference, not focal<br>Options: display:none — removed from view<br>Feedback: cleared — not needed<br>#review-feedback: block, 16px, 1.75 line-height, accent border-left — the focal point<br>#reflection-continue: "Videre →" — only interactive element</div>' +
+    '</div>',
+    '#question transition: opacity 300ms ease — smooth dim, not snap'
+  );
+
+  // Card 5 — Review panel typography
+  card(
+    'Review Panel',
+    '#review-feedback redesigned — from footnote to feature',
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Old CSS</div>' +
+      '<div class="rs54-block-body">margin-top:6px; font-size:13px; color:var(--text-muted) — never shown, never populated</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">New CSS (default)</div>' +
+      '<div class="rs54-block-body">display:none — invisible until .visible is added</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">New CSS (.visible)</div>' +
+      '<div class="rs54-block-body">display:block · animation: reflectIn 300ms ease · font-size:16px · line-height:1.75 · color:var(--text-main) · padding:16px 18px · background:var(--bg-main) · border-radius:10px · border-left:3px solid var(--accent)</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Animation</div>' +
+      '<div class="rs54-block-body">@keyframes reflectIn: from {opacity:0; transform:translateY(6px)} to {opacity:1; transform:translateY(0)} — 300ms ease. Signals arrival without drama.</div>' +
+    '</div>',
+    'font-size 13px → 16px. line-height 1.4 → 1.75. color muted → main. The content earned the upgrade.'
+  );
+
+  // Card 6 — Student-controlled progression
+  card(
+    'Student Agency',
+    '"Videre →" — student controls when they move forward',
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Behavior</div>' +
+      '<div class="rs54-block-body">Only visible during REFLECTING state. Full-width. Neutral styling (--btn-bg, not accent). Auto-focused after 200ms — keyboard users do not need to Tab to it.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">What it does</div>' +
+      '<div class="rs54-block-body">REFLECTING → TRANSITIONING → loadAndRenderQuestion(). One click, one transition, one new question.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Why neutral styling</div>' +
+      '<div class="rs54-block-body">Accent color would signal urgency. This button should feel like a natural continuation — ready when the student is ready, not pressuring them to rush.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Cleanup</div>' +
+      '<div class="rs54-block-body">Hidden at start of loadAndRenderQuestion() before every new question — cannot accidentally persist across questions.</div>' +
+    '</div>',
+    'Time to read is determined by the student, not a setTimeout.'
+  );
+
+  // Card 7 — Temporal rhythm
+  card(
+    'Temporal Design',
+    'The 400ms buffer — why the timing matters',
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">0ms — Answer submitted</div>' +
+      '<div class="rs54-phase-body">Buttons disabled. SUBMITTING_ANSWER.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">async — Server response</div>' +
+      '<div class="rs54-phase-body">process-event returns status=incorrect + review_text.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">+0ms — Immediate feedback</div>' +
+      '<div class="rs54-phase-body">playSound("error"). Shake animation fires on clicked button. feedback = "❌ Forkert". fetchProgress().</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">+400ms — Reflection begins</div>' +
+      '<div class="rs54-phase-timing">setTimeout(enterReflectionState, 400)</div>' +
+      '<div class="rs54-phase-body">Shake animation (250ms) has completed. Brief "❌ Forkert" has registered. Now the space opens: question dims, review panel arrives.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">+600ms — Continue button focused</div>' +
+      '<div class="rs54-phase-timing">setTimeout(focus, 200ms after enterReflectionState)</div>' +
+      '<div class="rs54-phase-body">Keyboard users can immediately press Enter or Space to continue after reading.</div>' +
+    '</div>',
+    '400ms: long enough to register the mistake, short enough to feel responsive.'
+  );
+
+  // Card 8 — Emotional sequence
+  card(
+    'Emotional Sequence',
+    'The student experience redesigned',
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">1. Mistake</div>' +
+      '<div class="rs54-phase-body">Physical: shake animation, error sound. Cognitive: "I was wrong." This is the flash — it needs to register clearly and briefly.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">2. Pause</div>' +
+      '<div class="rs54-phase-body">Question dims. Options disappear. The visual noise clears. A space opens. The student is not being rushed forward.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">3. Insight</div>' +
+      '<div class="rs54-phase-body">review_text arrives with reflectIn animation. 16px / 1.75 line-height. Accent border signals: this is signal, not noise. The student reads on their terms.</div>' +
+    '</div>' +
+    '<div class="rs54-phase">' +
+      '<div class="rs54-phase-name">4. Agency</div>' +
+      '<div class="rs54-phase-body">"Videre →" is already focused. The student decides when they are ready. One click. Forward.</div>' +
+    '</div>' +
+    '<div class="rs54-quote">The old flow: mistake → red text → timer → automatic forward. The new flow: mistake → pause → insight → choice.</div>',
+    null
+  );
+
+  // Card 9 — Fallback: no review_text
+  card(
+    'Fallback Behavior',
+    'When review_text is absent — unchanged auto-advance',
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Condition</div>' +
+      '<div class="rs54-block-body">data.status === "incorrect" &amp;&amp; data.review_text is null or undefined</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Behavior</div>' +
+      '<div class="rs54-block-body">Show "❌ Forkert – korrekt svar: X" in #feedback. setUIState(TRANSITIONING). setTimeout(loadAndRenderQuestion, 2000). Identical to old behavior.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Reality check</div>' +
+      '<div class="rs54-block-body">All 40 Democracy &amp; Power questions have review_text in content JSONB. The fallback path exists for safety — any question without review_text falls back gracefully.</div>' +
+    '</div>' +
+    '<div class="rs54-block">' +
+      '<div class="rs54-block-title">Correct answers</div>' +
+      '<div class="rs54-block-body">Unchanged: auto-advance after 600ms. Reflection state is never entered on correct.</div>' +
+    '</div>',
+    'REFLECTING is only entered when there is content worth reflecting on.'
+  );
+
+  // Card 10 — Canonical standard
+  card(
+    'Canonical Standard',
+    'Section 54 — permanent UX contract for incorrect-answer flow',
+    '<p style="margin:0 0 10px">The reflection state is the platform\'s commitment that mistakes lead to learning, not just forward motion.</p>' +
+    '<div class="rs54-rule">REFLECTING is always entered when review_text exists — no exceptions</div>' +
+    '<div class="rs54-rule">Student always controls when they proceed — no auto-advance from REFLECTING</div>' +
+    '<div class="rs54-rule">review_text is never truncated, buried, or styled as an error annotation</div>' +
+    '<div class="rs54-rule">The learning moment gets more visual real estate than the error state</div>' +
+    '<div class="rs54-rule">Cleanup is idempotent — reflection state cannot persist across questions</div>' +
+    '<div class="rs54-rule">Keyboard accessibility: #reflection-continue auto-focused, focus-visible ring</div>' +
+    '<div class="rs54-rule">Reduced motion: reflectIn animation disabled, opacity transition disabled</div>' +
+    '<div class="rs54-quote">The platform is not a question machine. It is a learning machine that uses questions as the delivery mechanism for insight.</div>',
     null,
     'accent'
   );
