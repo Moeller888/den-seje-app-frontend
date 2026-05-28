@@ -18069,5 +18069,256 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 62 — Stylization Confidence & Iconic Identity ──────────── -->
+<style>
+  .rt62-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-bottom: 32px;
+  }
+  .rt62-card {
+    background: #181420; border: 1px solid #352848;
+    border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .rt62-card.accent { border-color: #6a42a8; background: #120e1a; }
+  .rt62-label {
+    font-size: 9px; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase;
+    color: #8a52d8;
+  }
+  .rt62-title { font-size: 14px; font-weight: bold; color: #d4c4f0; line-height: 1.3; }
+  .rt62-body { font-size: 12px; color: #9a88b8; line-height: 1.6; }
+  .rt62-footer { font-size: 10px; color: #604880; font-style: italic; margin-top: 4px; }
+  .rt62-block { background: #0e0b18; border-radius: 6px; padding: 10px 12px; }
+  .rt62-block-title { font-size: 10px; font-weight: bold; color: #8a52d8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .rt62-block-body { display: flex; flex-direction: column; gap: 4px; }
+  .rt62-rule { font-size: 11px; color: #b0a0d0; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt62-rule::before { content: '—'; position: absolute; left: 0; color: #8a52d8; }
+  .rt62-avoid { font-size: 11px; color: #c06080; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt62-avoid::before { content: '✕'; position: absolute; left: 0; color: #c06080; font-size: 9px; }
+  .rt62-gain { font-size: 11px; color: #70b090; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt62-gain::before { content: '✓'; position: absolute; left: 0; color: #70b090; font-size: 9px; }
+  .rt62-quote {
+    font-size: 11px; color: #7a68a0; font-style: italic;
+    border-left: 2px solid #8a52d8; padding-left: 10px; line-height: 1.6;
+  }
+  .rt62-pair { display: flex; gap: 8px; align-items: flex-start; }
+  .rt62-pair-col { flex: 1; }
+  .rt62-pair-label { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .rt62-pair-label.bad { color: #c06080; }
+  .rt62-pair-label.good { color: #70b090; }
+  .rt62-mono { font-family: monospace; font-size: 10px; color: #9080c0; }
+  .rt62-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .rt62-table th { color: #8a52d8; font-weight: bold; padding: 4px 6px; text-align: left; border-bottom: 1px solid #352848; }
+  .rt62-table td { color: #b0a0d0; padding: 4px 6px; border-bottom: 1px solid #1a1428; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#8a52d8;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #352848;">
+  Section 62 — Stylization Confidence &amp; Iconic Identity Pass
+</h2>
+<div class="rt62-grid" id="rt62Grid"></div>
+
+<script>
+(function () {
+  function rt62Card(label, title, body, footer, variant) {
+    const d = document.getElementById('rt62Grid');
+    const card = document.createElement('div');
+    card.className = 'rt62-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt62-label">' + label + '</div>' +
+      '<div class="rt62-title">' + title + '</div>' +
+      '<div class="rt62-body">' + body + '</div>' +
+      (footer ? '<div class="rt62-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  rt62Card(
+    'Phase 1 — Stylization Audit',
+    'What makes the avatar still feel generic after Sections 60–61',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">Root causes of remaining genericness</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-avoid">Legs: rect with rx=11 — same visual language as the old pre-Sec-61 arms. Arms are tapered, legs are not. The lower body undoes the upper body\'s form confidence.</div>' +
+        '<div class="rt62-avoid">Hair side panels: perfectly symmetric. Both panels are identical mirrors. Real styled hair has a dominant side — the parted side is always more expressive.</div>' +
+        '<div class="rt62-avoid">Torso shoulder terminates flush at arm edge (x=40): shirt has no visual presence at the shoulder — the shoulder cap does all the work. The shirt itself reads as "tucked inside" the arm.</div>' +
+        '<div class="rt62-avoid">Bilateral symmetry throughout: every element mirrors perfectly. Premium stylized characters always have micro-asymmetries that read as designed, not templated.</div>' +
+      '</div>' +
+    '</div>',
+    'Generic = technically correct but emotionally flat. Iconic = technically resolved AND emotionally specific.'
+  );
+
+  rt62Card(
+    'Phase 2 — Silhouette Identity',
+    'Leg taper: unifying the proportion language',
+    '<div class="rt62-pair">' +
+      '<div class="rt62-pair-col">' +
+        '<div class="rt62-pair-label bad">Before (tube legs)</div>' +
+        '<div class="rt62-mono">rect x=48 w=26 h=56 rx=11</div>' +
+        '<div class="rt62-body" style="margin-top:6px;font-size:11px">Width constant 26px hip to ankle. Arms taper (Sec 61), legs don\'t. Proportion language is split: upper body says "designed," lower body says "default."</div>' +
+      '</div>' +
+      '<div class="rt62-pair-col">' +
+        '<div class="rt62-pair-label good">After (tapered legs)</div>' +
+        '<div class="rt62-mono">M 50 178 L 72 178 Q 74 180 74 188 L 70 232 ... 52 232 L 48 188</div>' +
+        '<div class="rt62-body" style="margin-top:6px;font-size:11px">26px hip → 18px ankle. Taper matches arm language. Bounding box x=48–74 preserved — future boot/leg equipment unaffected.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt62-quote" style="margin-top:8px">Unified taper language across arms AND legs is the single largest silhouette improvement. It reads as intentional design, not individual piece selection.</div>',
+    'Inner thigh shadows diverge to follow taper; rim lights angled to confirm the narrowing edge'
+  );
+
+  rt62Card(
+    'Phase 3 — Shape Rhythm',
+    'The proportion language now speaks one dialect',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">Before Section 62: mixed vocabulary</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-rule">Shoulders: tapered (Sec 61 shoulder cap)</div>' +
+        '<div class="rt62-rule">Arms: tapered (Sec 61 arm path)</div>' +
+        '<div class="rt62-avoid">Legs: rectangular — different visual dialect from arms</div>' +
+        '<div class="rt62-avoid">Torso shoulder: terminates at arm edge — no physical presence</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt62-block" style="margin-top:8px">' +
+      '<div class="rt62-block-title">After Section 62: unified vocabulary</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-gain">Shoulders: tapered (Sec 61)</div>' +
+        '<div class="rt62-gain">Arms: tapered (Sec 61)</div>' +
+        '<div class="rt62-gain">Legs: tapered (Sec 62)</div>' +
+        '<div class="rt62-gain">Torso shoulder: 2px wider (Sec 62) — shirt has presence at shoulder</div>' +
+        '<div class="rt62-rule">Result: every major form element speaks the same taper language — soft at joints, confident in middle</div>' +
+      '</div>' +
+    '</div>',
+    'Shape rhythm = the same design decision applied consistently throughout the form'
+  );
+
+  rt62Card(
+    'Phase 4 — Proportion Personality',
+    'Torso shoulder presence: shirt wider than arm edge',
+    '<div class="rt62-body">The shirt shoulder previously terminated at exactly x=40 — flush with the arm\'s inner edge. This made the shirt invisible at the shoulder junction: the arm sat against the shirt like a wall, not like a garment wrapping a body.</div>' +
+    '<div class="rt62-block" style="margin-top:8px">' +
+      '<div class="rt62-block-title">Change</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-avoid">Old: Q 40 92 40 102 — shoulder curve terminates at arm edge</div>' +
+        '<div class="rt62-gain">New: Q 38 92 38 104 Q 38 118 40 130 — shoulder extends 2px beyond arm, transitions smoothly back to x=40 by y=130</div>' +
+        '<div class="rt62-rule">At y=92–98 (above arm start), shirt shoulder is visible at x=38 — 2px of shirt "peaks out" from under the arm</div>' +
+        '<div class="rt62-rule">At y=98+, arm renders on top of shirt — transition is natural, shirt looks worn</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt62-quote" style="margin-top:8px">At 52px display scale: 2px = 0.65px. Sub-pixel. The change reads subconsciously — the shoulder has "more presence" without an identifiable cause.</div>',
+    'Armor plate (x=40–120) still covers the shirt at those widths — no equipment impact'
+  );
+
+  rt62Card(
+    'Phase 5 — Visual Memory Test',
+    'Hair asymmetry: the left panel sweep',
+    '<div class="rt62-body">The "3-second memory test": if a student sees the avatar for 3 seconds and tries to sketch it from memory, what do they draw? Symmetric hair reads as "hair" — no specific shape. Directional hair reads as "that character with the swept hair."</div>' +
+    '<div class="rt62-block" style="margin-top:8px">' +
+      '<div class="rt62-block-title">Left panel change</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-avoid">Old: Q 47 50 47 62 Q 48 68 54 64 — symmetric, identical to right panel in volume</div>' +
+        '<div class="rt62-gain">New: Q 45 51 45 65 Q 46 72 54 68 — 2px wider outward, 4px longer downward</div>' +
+        '<div class="rt62-rule">Right panel unchanged — asymmetry is created by the left panel being more expressive</div>' +
+        '<div class="rt62-rule">Left catch-light extended to y=65 to confirm the panel\'s light-facing direction</div>' +
+        '<div class="rt62-rule">Propagated identically to all 5 expression SVGs — no transition jump</div>' +
+      '</div>' +
+    '</div>',
+    'Asymmetry reads as "styled" — symmetry reads as "template." One panel sweeping slightly more is enough.'
+  );
+
+  rt62Card(
+    'Phase 6 — Youth Appeal Validation',
+    'What 12–16-year-olds recognize as premium',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">What actually works at this age</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-rule">Proportional confidence — not inflated, not awkward, clearly intended</div>' +
+        '<div class="rt62-rule">Consistent design language — forms that echo each other feel considered</div>' +
+        '<div class="rt62-rule">Subtle individuality — one thing slightly "off" from perfect symmetry that reads as personality</div>' +
+        '<div class="rt62-rule">Clean silhouette — identifiable in 3 seconds at thumbnail scale</div>' +
+        '<div class="rt62-avoid">Forced "cool" cues — angular faces, dramatic proportions, gaming logos, glowing everything</div>' +
+        '<div class="rt62-avoid">Mascot energy — over-expressive eyes, rounded everything, "designed by committee" warmth</div>' +
+        '<div class="rt62-avoid">Timid restraint — proportions so cautious they have no character</div>' +
+      '</div>' +
+    '</div>',
+    '"Worth customizing" = the student identifies with the base character before adding equipment'
+  );
+
+  rt62Card(
+    'Phase 7 — Confidence vs Detail Spam',
+    'Every Section 62 change is a proportion decision, not a detail add',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">Section 62 change inventory</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-rule">Leg taper: removes a rect, adds a path — same complexity, different proportion language</div>' +
+        '<div class="rt62-rule">Inner thigh shadow angle: changes two numbers — shadows diverge to follow taper</div>' +
+        '<div class="rt62-rule">Rim light angle: two number changes — light confirms the narrowing edge</div>' +
+        '<div class="rt62-rule">Torso shoulder: two Q curves added — shoulder gets physical presence</div>' +
+        '<div class="rt62-rule">Hair panel: 6 numbers changed — left panel 2px wider, 4px longer</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt62-quote" style="margin-top:8px">Total new elements added: 0. Total complexity increase: minimal. Total proportion improvements: 5. This is what confidence looks like — not addition, but refinement.</div>',
+    'The avatar doesn\'t need more — it needs better decisions applied to what it already has'
+  );
+
+  rt62Card(
+    'Phase 8 — Screenshot Validation',
+    'The silhouette before and after Sections 60–62',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">Silhouette rhythm (reading top to bottom)</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-rule">Crown: slightly elevated peak (Sec 61) — hair feels sculpted, not capped</div>' +
+        '<div class="rt62-rule">Left temple: wider sweep (Sec 62) — directional hair identity</div>' +
+        '<div class="rt62-rule">Shoulders: cap anchors to torso (Sec 61) + shirt widens 2px (Sec 62) — shoulder has physical structure</div>' +
+        '<div class="rt62-rule">Arms: taper shoulder→wrist (Sec 61) — upper body has form rhythm</div>' +
+        '<div class="rt62-rule">Waist: shadow deepened (Sec 61) — clothing wraps a body</div>' +
+        '<div class="rt62-rule">Legs: taper hip→ankle (Sec 62) — lower body matches upper body language</div>' +
+        '<div class="rt62-rule">Shoes: wider than ankle — grounded silhouette base</div>' +
+      '</div>' +
+    '</div>',
+    'At 52×78px the silhouette reads: crown, wide shoulders, taper, narrow waist, taper, grounded feet. That is a designed form.'
+  );
+
+  rt62Card(
+    'Phase 9 — Permanent Identity Standard',
+    'The 9 permanent stylization principles for Den Seje App',
+    '<div class="rt62-block">' +
+      '<div class="rt62-block-title">Permanent principles</div>' +
+      '<div class="rt62-block-body">' +
+        '<div class="rt62-rule">Identity over complexity — one confident proportion decision beats ten added details</div>' +
+        '<div class="rt62-rule">Silhouette over decoration — if it fails in black silhouette, it fails</div>' +
+        '<div class="rt62-rule">Rhythm over symmetry — consistent proportion language across all forms creates cohesion; perfect bilateral symmetry creates templates</div>' +
+        '<div class="rt62-rule">Unified taper language — if a form tapers on top, it must taper on bottom. Arms AND legs. Not arms OR legs.</div>' +
+        '<div class="rt62-rule">Confidence over safety — proportions that communicate something are better than proportions that offend no one</div>' +
+        '<div class="rt62-rule">Memorability over detail density — 3-second sketch test before shipping any major change</div>' +
+        '<div class="rt62-rule">Restrained coolness over trend-chasing — timeless stylization over seasonal "gaming aesthetic"</div>' +
+        '<div class="rt62-rule">Asymmetry as personality signal — one element that doesn\'t perfectly mirror reads as designed, not generated</div>' +
+        '<div class="rt62-rule">Premium restraint — the avatar improves by removing safe choices, not by adding new ones</div>' +
+      '</div>' +
+    '</div>',
+    'These principles govern all future character, equipment, and cosmetic design decisions',
+    'accent'
+  );
+
+  rt62Card(
+    'Phase 10 — Summary',
+    'Files changed and what each achieves',
+    '<table class="rt62-table">' +
+      '<thead><tr><th>File</th><th>Change</th><th>Why iconic</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>body.svg</td><td>Legs: rect → tapered path</td><td>Unifies proportion language with arms</td></tr>' +
+        '<tr><td>body.svg</td><td>Inner thigh shadows: diverge</td><td>Follows taper, deepens spatial read</td></tr>' +
+        '<tr><td>body.svg</td><td>Rim lights: angled</td><td>Confirms tapered edge direction</td></tr>' +
+        '<tr><td>body.svg</td><td>Torso shoulder: 2px wider</td><td>Shirt has presence, not just arm</td></tr>' +
+        '<tr><td>body.svg</td><td>Underarm crease: at new shoulder</td><td>Occlusion aligns to actual edge</td></tr>' +
+        '<tr><td>body.svg</td><td>Hair left panel: wider+longer</td><td>Directional identity, kills symmetry</td></tr>' +
+        '<tr><td>expr-*.svg × 5</td><td>Hair left panel: same</td><td>No expression-transition jump</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Section 62 — Stylization Confidence & Iconic Identity Pass — shipped 2026-05-28',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>

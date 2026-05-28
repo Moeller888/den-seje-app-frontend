@@ -30,19 +30,22 @@
 
   <!-- ── LOWER BODY ── -->
 
-  <!-- Left leg: same bounds as original (x48 y178 w26 h56) — armor compat preserved -->
-  <rect x="48" y="178" width="26" height="56" rx="11" fill="url(#b2-pa)" stroke="#172028" stroke-width="0.8"/>
-  <!-- Left leg rim light — left edge catches scene light -->
-  <line x1="49" y1="182" x2="49" y2="228" stroke="#5c7a8a" stroke-width="0.9" opacity="0.42"/>
+  <!-- Left leg: tapered path — 26px at hip, 18px at ankle, matches arm taper language.
+       Bounding box stays x=48–74 y=178–234 so future boot/leg equipment anchors unchanged. -->
+  <path d="M 50 178 L 72 178 Q 74 180 74 188 L 70 232 Q 69 234 65 234 L 57 234 Q 53 234 52 232 L 48 188 Q 48 180 50 178 Z"
+        fill="url(#b2-pa)" stroke="#172028" stroke-width="0.8"/>
+  <!-- Left leg rim light — angled to follow outer taper edge -->
+  <line x1="49" y1="182" x2="51" y2="228" stroke="#5c7a8a" stroke-width="0.9" opacity="0.42"/>
 
-  <!-- Right leg -->
-  <rect x="86" y="178" width="26" height="56" rx="11" fill="url(#b2-pa)" stroke="#172028" stroke-width="0.8"/>
-  <!-- Right leg outer rim light -->
-  <line x1="111" y1="182" x2="111" y2="228" stroke="#5c7a8a" stroke-width="0.9" opacity="0.38"/>
+  <!-- Right leg: tapered path — mirror of left -->
+  <path d="M 110 178 L 88 178 Q 86 180 86 188 L 90 232 Q 91 234 95 234 L 103 234 Q 107 234 108 232 L 112 188 Q 112 180 110 178 Z"
+        fill="url(#b2-pa)" stroke="#172028" stroke-width="0.8"/>
+  <!-- Right leg outer rim light — angled to follow outer taper edge -->
+  <line x1="111" y1="182" x2="109" y2="228" stroke="#5c7a8a" stroke-width="0.9" opacity="0.38"/>
 
-  <!-- Inner thigh shadows: mass separation between legs, creates volume and spatial depth -->
-  <path d="M 74 182 L 73 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
-  <path d="M 86 182 L 87 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
+  <!-- Inner thigh shadows: diverge outward with leg taper — gap between legs widens at ankle -->
+  <path d="M 74 182 L 71 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
+  <path d="M 86 182 L 89 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
 
   <!-- Knee implication: mid-leg slight widening hints at underlying bone structure -->
   <ellipse cx="61" cy="204" rx="10" ry="5.5" fill="#4a6574" opacity="0.16"/>
@@ -58,13 +61,14 @@
 
   <!-- ── TORSO ── -->
 
-  <!-- Shirt body — silhouette has intentional waist taper (2–3px inward at y≈150).
-       Outer bounds match armor/cape rect exactly at shoulders and belt.
-       The cubic beziers create the waist concavity through shape, not shadow tricks. -->
-  <path d="M 50 92 Q 40 92 40 102 L 40 130 C 43 140 43 160 40 170 L 40 180 L 120 180 C 117 160 117 140 120 130 L 120 102 Q 120 92 110 92 Z"
+  <!-- Shirt body — shoulder widens 2px each side (x=38/122 at y=104 vs x=40 body) to give the
+       shirt physical presence at the shoulder — no longer terminates flush with the arm edge.
+       Smooth Q curve transitions shoulder width back to x=40 by y=130 before waist bezier.
+       Body and belt (x=40–120) unchanged — armor plate alignment unaffected. -->
+  <path d="M 50 92 Q 38 92 38 104 Q 38 118 40 130 C 43 140 43 160 40 170 L 40 180 L 120 180 C 117 160 117 140 120 130 Q 122 118 122 104 Q 122 92 110 92 Z"
         fill="url(#b2-sh)" stroke="#2c404a" stroke-width="1"/>
-  <!-- Left edge catch-light: upper-left light source -->
-  <line x1="41" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
+  <!-- Left edge catch-light: starts at new shoulder width x=39 -->
+  <line x1="39" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
   <!-- Vertical center seam: subtle garment construction read -->
   <line x1="80" y1="97" x2="80" y2="178" stroke="#2c404a" stroke-width="0.8" opacity="0.3"/>
 
@@ -78,9 +82,9 @@
   <path d="M 40 148 Q 34 163 40 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
   <path d="M 120 148 Q 126 163 120 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
 
-  <!-- Underarm crease: occlusion shadow at the axis where arm mass meets torso body -->
-  <path d="M 40 100 Q 41 110 40 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
-  <path d="M 120 100 Q 119 110 120 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+  <!-- Underarm crease: occlusion at arm-torso junction — starts at widened shoulder edge -->
+  <path d="M 38 102 Q 39 112 40 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+  <path d="M 122 102 Q 121 112 120 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
 
   <!-- Shirt neckline wrap: curved edge implies collar continues behind the neck — garment has
        circumference, not just a front face. Subtle but eliminates "painted-on" collar read. -->
@@ -198,16 +202,18 @@
   <!-- Hair: off-center peak (75,16) gives directional side-part identity.
        Side panels extend to y≈64 to eliminate the scalp-gap at the temples — hair
        drawn before the cap so the cap's clean outer edge reads as the dominant silhouette. -->
-  <!-- Side hair panels: fill scalp gap, full temple coverage -->
-  <path d="M 52 44 Q 47 50 47 62 Q 48 68 54 64 Q 57 57 56 50 Z" fill="#4a3626"/>
+  <!-- Side hair panels: fill scalp gap, temple coverage.
+       Left panel is slightly wider and longer than right (Q 45 vs Q 47, y=72 vs y=68) —
+       intentional asymmetry that reads as a styled side-part, not a symmetric template. -->
+  <path d="M 52 44 Q 45 51 45 65 Q 46 72 54 68 Q 58 60 56 50 Z" fill="#4a3626"/>
   <path d="M 108 44 Q 113 50 113 62 Q 112 68 106 64 Q 103 57 104 50 Z" fill="#4a3626"/>
   <!-- Main hair cap -->
   <path d="M 52 44 Q 50 17 74 15 Q 80 13 86 15 Q 100 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z"
         fill="#4a3626"/>
   <!-- Hair specular: single highlight line, consistent upper-left light -->
   <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
-  <!-- Side hair catch-light: left panel faces scene light, right panel in shadow -->
-  <path d="M 52 44 Q 50 51 51 61" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+  <!-- Side hair catch-light: left extends further to match larger left panel -->
+  <path d="M 52 44 Q 49 52 49 65" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
   <path d="M 108 44 Q 110 51 109 61" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.38"/>
 
   <!-- ── FACE ── -->
