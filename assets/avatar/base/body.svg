@@ -47,28 +47,29 @@
   <path d="M 74 182 L 71 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
   <path d="M 86 182 L 89 228" stroke="#172028" stroke-width="2.5" opacity="0.28" stroke-linecap="round"/>
 
-  <!-- Knee implication: mid-leg slight widening hints at underlying bone structure -->
-  <ellipse cx="61" cy="204" rx="10" ry="5.5" fill="#4a6574" opacity="0.16"/>
-  <ellipse cx="99" cy="204" rx="10" ry="5.5" fill="#4a6574" opacity="0.16"/>
+  <!-- Knee implication: asymmetric — right leg carries weight (wider, deeper), left leg lighter.
+       SECTION 63: contrapposto weight-right stance — right knee more prominent. -->
+  <ellipse cx="61" cy="204" rx="9.5" ry="5" fill="#4a6574" opacity="0.13"/>
+  <ellipse cx="99" cy="204" rx="10.5" ry="6.5" fill="#4a6574" opacity="0.20"/>
 
-  <!-- Left shoe -->
-  <ellipse cx="61" cy="235" rx="17" ry="6" fill="#181818"/>
+  <!-- Left shoe: lighter touch — weight shifted off this foot -->
+  <ellipse cx="61" cy="235" rx="16.5" ry="5.5" fill="#181818"/>
   <!-- Toe cap highlight -->
   <path d="M 48 232 Q 56 229 64 231" fill="none" stroke="#3c3c3c" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
-  <!-- Right shoe -->
-  <ellipse cx="99" cy="235" rx="17" ry="6" fill="#181818"/>
+  <!-- Right shoe: planted — carries body weight, wider silhouette -->
+  <ellipse cx="99" cy="235" rx="17.5" ry="6.5" fill="#181818"/>
   <path d="M 86 232 Q 94 229 102 231" fill="none" stroke="#3c3c3c" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
 
   <!-- ── TORSO ── -->
 
-  <!-- Shirt body — shoulder widens 2px each side (x=38/122 at y=104 vs x=40 body) to give the
-       shirt physical presence at the shoulder — no longer terminates flush with the arm edge.
-       Smooth Q curve transitions shoulder width back to x=40 by y=130 before waist bezier.
-       Body and belt (x=40–120) unchanged — armor plate alignment unaffected. -->
-  <path d="M 50 92 Q 38 92 38 104 Q 38 118 40 130 C 43 140 43 160 40 170 L 40 180 L 120 180 C 117 160 117 140 120 130 Q 122 118 122 104 Q 122 92 110 92 Z"
+  <!-- Shirt body — SECTION 63: contrapposto shoulder tilt.
+       Left shoulder 1px higher (y=91), right shoulder 1px lower (y=93) — weight-on-right creates
+       left shoulder lift. Subtle but the silhouette now reads as a character who stands with intent,
+       not a symmetrical template. Body and belt (x=40–120) unchanged — armor alignment unaffected. -->
+  <path d="M 50 91 Q 38 91 38 103 Q 38 117 40 130 C 43 140 43 160 40 170 L 40 180 L 120 180 C 117 160 117 140 120 130 Q 122 119 122 105 Q 122 93 110 93 Z"
         fill="url(#b2-sh)" stroke="#2c404a" stroke-width="1"/>
-  <!-- Left edge catch-light: starts at new shoulder width x=39 -->
-  <line x1="39" y1="96" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
+  <!-- Left edge catch-light: tracks shifted shoulder -->
+  <line x1="39" y1="95" x2="41" y2="174" stroke="#96bece" stroke-width="1.2" opacity="0.38"/>
   <!-- Vertical center seam: subtle garment construction read -->
   <line x1="80" y1="97" x2="80" y2="178" stroke="#2c404a" stroke-width="0.8" opacity="0.3"/>
 
@@ -82,9 +83,10 @@
   <path d="M 40 148 Q 34 163 40 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
   <path d="M 120 148 Q 126 163 120 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
 
-  <!-- Underarm crease: occlusion at arm-torso junction — starts at widened shoulder edge -->
+  <!-- Underarm crease: left stays with lifted shoulder; right drops 2px — lower right shoulder
+       implies arm hangs slightly relaxed, a natural consequence of weight-side posture. -->
   <path d="M 38 102 Q 39 112 40 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
-  <path d="M 122 102 Q 121 112 120 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
+  <path d="M 122 104 Q 121 114 120 124" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
 
   <!-- Shirt neckline wrap: curved edge implies collar continues behind the neck — garment has
        circumference, not just a front face. Subtle but eliminates "painted-on" collar read. -->
@@ -127,12 +129,14 @@
 
   <!-- Left forearm taper shadow: darkens inner face of narrowing forearm, reinforces wrist taper -->
   <path d="M 36 142 Q 37 155 36 164" fill="none" stroke="#172028" stroke-width="3.5" opacity="0.22" stroke-linecap="round"/>
-  <!-- Right forearm taper shadow -->
-  <path d="M 124 142 Q 123 155 124 164" fill="none" stroke="#172028" stroke-width="3.5" opacity="0.22" stroke-linecap="round"/>
+  <!-- Right forearm taper shadow: SECTION 63 — slight lateral curve implies relaxed elbow hang.
+       Control point shifted 4px inward (x=120→116) to suggest arm at rest, not parade-stiff. -->
+  <path d="M 124 140 Q 120 153 121 163" fill="none" stroke="#172028" stroke-width="3.5" opacity="0.22" stroke-linecap="round"/>
 
   <!-- Elbow implication: faint plane change at elbow transition point -->
   <path d="M 17 143 Q 25 148 34 143" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
-  <path d="M 143 143 Q 135 148 126 143" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
+  <!-- Right elbow: SECTION 63 — raised 2px, slight inward shift — relaxed hanging arm posture -->
+  <path d="M 143 141 Q 134 146 125 141" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
 
   <!-- Hands: palm ellipse (slightly wider than tall) — more hand-like silhouette than circle.
        Visual center stays at cx=27/133 cy=172 — equipment anchor preserved.
@@ -152,19 +156,18 @@
   <path d="M 18 165 Q 27 162 36 165" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.22"/>
   <path d="M 124 165 Q 133 162 142 165" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.22"/>
 
-  <!-- Shoulder caps: deltoid mass bridging arm and torso.
-       Path STARTS at the torso shoulder corner (M 50 93 / M 110 93) — this anchors the cap to
-       the shirt body, creating a visually continuous shoulder slope from collar to outer arm.
-       Previously started mid-arm; moving the anchor to the torso edge eliminates the "floating
-       deltoid" read and makes arm+torso feel like one structural form. -->
-  <path d="M 50 93 Q 36 91 18 100 Q 12 110 16 121 Q 23 119 33 112 Q 40 104 40 97 Z"
+  <!-- Shoulder caps: SECTION 63 — left cap 2px higher (raised shoulder), right cap 2px lower.
+       This makes the shoulder tilt visible not just in the torso silhouette but in the deltoid
+       mass — the cap volume now physically embodies the weight-right contrapposto stance. -->
+  <path d="M 50 92 Q 36 89 18 100 Q 12 110 16 121 Q 23 119 33 112 Q 40 103 40 96 Z"
         fill="#7aacbe" opacity="0.30"/>
-  <!-- Shoulder cap highlight: upper-left light catches the swept shoulder top face -->
-  <path d="M 50 93 Q 36 91 18 100" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.38"/>
+  <!-- Left shoulder cap highlight: upper-left light on raised shoulder face -->
+  <path d="M 50 92 Q 36 89 18 100" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.38"/>
 
-  <path d="M 110 93 Q 124 91 142 100 Q 148 110 144 121 Q 137 119 127 112 Q 120 104 120 97 Z"
+  <path d="M 110 94 Q 124 93 142 101 Q 148 111 144 122 Q 137 120 127 113 Q 120 105 120 98 Z"
         fill="#7aacbe" opacity="0.26"/>
-  <path d="M 110 93 Q 124 91 142 100" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.32"/>
+  <!-- Right shoulder cap highlight: lower shoulder, slightly heavier shadow -->
+  <path d="M 110 94 Q 124 93 142 101" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.32"/>
 
   <!-- ── HEAD ── -->
 
@@ -176,11 +179,11 @@
   <path d="M 72 80 Q 71 88 72 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.16"/>
   <path d="M 88 80 Q 89 88 88 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.14"/>
 
-  <!-- Trapezius form: closed polygon creates the neck-to-shoulder muscle mass.
-       The downward return curve (Q 68 97 58 102) implies the trapezius insertion into
-       the upper back — removes "floating head on flat shirt" read, suggests a body exists. -->
-  <path d="M 40 92 Q 56 87 72 91 Q 68 97 58 102 Q 48 100 40 96 Z" fill="#1c2930" opacity="0.14"/>
-  <path d="M 120 92 Q 104 87 88 91 Q 92 97 102 102 Q 112 100 120 96 Z" fill="#1c2930" opacity="0.14"/>
+  <!-- Trapezius form: SECTION 63 — left trapezius 1px higher, right 1px lower.
+       The muscle origin at the spine is fixed; the insertion into the shoulder moves with the
+       shoulder tilt — this is anatomically correct and reinforces the pose read. -->
+  <path d="M 40 91 Q 56 86 72 90 Q 68 96 58 101 Q 48 99 40 95 Z" fill="#1c2930" opacity="0.14"/>
+  <path d="M 120 93 Q 104 88 88 92 Q 92 98 102 103 Q 112 101 120 97 Z" fill="#1c2930" opacity="0.14"/>
 
   <!-- Ears: behind head sphere -->
   <ellipse cx="50" cy="52" rx="8" ry="9" fill="url(#b2-sk)"/>

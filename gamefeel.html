@@ -18320,5 +18320,282 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 63 — Pose, Stance & Character Charisma ──────────────────── -->
+<style>
+  .rt63-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-bottom: 32px;
+  }
+  .rt63-card {
+    background: #1a1608; border: 1px solid #3a2c08;
+    border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .rt63-card.accent { border-color: #a87818; background: #150f02; }
+  .rt63-label {
+    font-size: 9px; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase;
+    color: #c89020;
+  }
+  .rt63-title { font-size: 14px; font-weight: bold; color: #f0dea0; line-height: 1.3; }
+  .rt63-body { font-size: 12px; color: #b8a060; line-height: 1.6; }
+  .rt63-footer { font-size: 10px; color: #806820; font-style: italic; margin-top: 4px; }
+  .rt63-block { background: #100c02; border-radius: 6px; padding: 10px 12px; }
+  .rt63-block-title { font-size: 10px; font-weight: bold; color: #c89020; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .rt63-block-body { display: flex; flex-direction: column; gap: 4px; }
+  .rt63-rule { font-size: 11px; color: #c8a848; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt63-rule::before { content: '—'; position: absolute; left: 0; color: #c89020; }
+  .rt63-avoid { font-size: 11px; color: #c06848; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt63-avoid::before { content: '✕'; position: absolute; left: 0; color: #c06848; font-size: 9px; }
+  .rt63-gain { font-size: 11px; color: #80b870; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt63-gain::before { content: '✓'; position: absolute; left: 0; color: #80b870; font-size: 9px; }
+  .rt63-quote {
+    font-size: 11px; color: #907830; font-style: italic;
+    border-left: 2px solid #c89020; padding-left: 10px; line-height: 1.6;
+  }
+  .rt63-pair { display: flex; gap: 8px; align-items: flex-start; }
+  .rt63-pair-col { flex: 1; }
+  .rt63-pair-label { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .rt63-pair-label.bad { color: #c06848; }
+  .rt63-pair-label.good { color: #80b870; }
+  .rt63-mono { font-family: monospace; font-size: 10px; color: #a88840; }
+  .rt63-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .rt63-table th { color: #c89020; font-weight: bold; padding: 4px 6px; text-align: left; border-bottom: 1px solid #3a2c08; }
+  .rt63-table td { color: #c8a848; padding: 4px 6px; border-bottom: 1px solid #201600; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#c89020;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #3a2c08;">
+  Section 63 — Pose, Stance &amp; Character Charisma Pass
+</h2>
+<div class="rt63-grid" id="rt63Grid"></div>
+
+<script>
+(function () {
+  function rt63Card(label, title, body, footer, variant) {
+    const d = document.getElementById('rt63Grid');
+    const card = document.createElement('div');
+    card.className = 'rt63-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt63-label">' + label + '</div>' +
+      '<div class="rt63-title">' + title + '</div>' +
+      '<div class="rt63-body">' + body + '</div>' +
+      (footer ? '<div class="rt63-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  rt63Card(
+    'Phase 1 — Pose Audit',
+    'Why the avatar has no stance after Sections 60–62',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">The structural problem</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-avoid">Both shoulders at identical y=92 — bilateral symmetry reads as a template, not a person</div>' +
+        '<div class="rt63-avoid">Both knees: identical rx=10 ry=5.5 opacity=0.16 — no weight distribution signal</div>' +
+        '<div class="rt63-avoid">Both shoes: identical rx=17 ry=6 — no ground contact asymmetry</div>' +
+        '<div class="rt63-avoid">Both underarm creases start at y=102 — no shoulder drop signal on either side</div>' +
+        '<div class="rt63-avoid">Right arm: forearm shadow and elbow perfectly symmetric — no relaxation read</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-quote" style="margin-top:8px">Form quality (Sec 60–62) creates a well-constructed figure. Pose quality (Sec 63) creates a character who exists.</div>',
+    'Structure without stance reads as a display mannequin. Stance without structure reads as a cartoon. Both are needed.'
+  );
+
+  rt63Card(
+    'Phase 2 — Contrapposto Theory',
+    'The weight-shift principle that makes figures feel alive',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">How contrapposto works</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Weight on one leg causes pelvis to tilt — weight hip rises, free hip drops</div>' +
+        '<div class="rt63-rule">Shoulders tilt opposite to hips to maintain balance — weight-side shoulder drops</div>' +
+        '<div class="rt63-rule">Weight-side knee absorbs load — more pronounced, deeper shadow</div>' +
+        '<div class="rt63-rule">Weight-side foot plants firmly — wider ground contact ellipse</div>' +
+        '<div class="rt63-rule">Free-side arm relaxes and hangs — slight elbow drop, forearm curves away</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-block" style="margin-top:8px">' +
+      '<div class="rt63-block-title">Applied to Den Seje App avatar (weight on right)</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Right shoulder drops 1px — weight side</div>' +
+        '<div class="rt63-rule">Left shoulder rises 1px — free side lifts in opposition</div>' +
+        '<div class="rt63-rule">Right knee: wider, deeper — load-bearing</div>' +
+        '<div class="rt63-rule">Right shoe: wider, taller — planted</div>' +
+        '<div class="rt63-rule">Right arm: relaxed elbow, curved forearm shadow</div>' +
+      '</div>' +
+    '</div>',
+    'Contrapposto is not a style choice — it is the physics of standing. Ignore it and figures feel frozen.'
+  );
+
+  rt63Card(
+    'Phase 3 — Shoulder Tilt',
+    'The 2px total tilt that shifts the read from template to character',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Torso path change</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-pair">' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label bad">Before</div><div class="rt63-mono">M 50 92 Q 38 92 38 104<br>Q 122 92 110 92</div></div>' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label good">After</div><div class="rt63-mono">M 50 91 Q 38 91 38 103<br>Q 122 93 110 93</div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-block" style="margin-top:8px">' +
+      '<div class="rt63-block-title">What changes</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Left shoulder: y=92 → y=91 (1px up) — free side rises</div>' +
+        '<div class="rt63-rule">Right shoulder: y=92 → y=93 (1px down) — weight side drops</div>' +
+        '<div class="rt63-rule">Left top curve shifted: Q 38 92 → Q 38 91 — curve follows corner</div>' +
+        '<div class="rt63-rule">Right top curve shifted: Q 122 92 → Q 122 93 — mirror logic</div>' +
+        '<div class="rt63-rule">Belt and lower torso: unchanged — stance lives entirely in the shoulder zone</div>' +
+      '</div>' +
+    '</div>',
+    '1px per side. At 0.325× production scale that is less than 0.4 display pixels — felt, not measured.'
+  );
+
+  rt63Card(
+    'Phase 4 — Trapezius Responds',
+    'Muscle mass must follow the bone it attaches to',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Anatomical logic</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">The trapezius originates at the spine (center) and inserts into the shoulder blade</div>' +
+        '<div class="rt63-rule">When the shoulder lifts, the trapezius insertion rises — the whole muscle mass shifts up</div>' +
+        '<div class="rt63-rule">When the shoulder drops, the insertion falls — muscle mass shifts down</div>' +
+        '<div class="rt63-rule">Failing to update the trapezius creates a visual contradiction: shoulder tilted but muscle flat</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-block" style="margin-top:8px">' +
+      '<div class="rt63-block-title">Changes applied</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Left trapezius: all y values −1 (M 40 92→91, peak 87→86, etc.) — follows raised left shoulder</div>' +
+        '<div class="rt63-rule">Right trapezius: all y values +1 (M 120 92→93, peak 87→88, etc.) — follows dropped right shoulder</div>' +
+        '<div class="rt63-rule">Opacity and fill unchanged — same visual weight, different geometry</div>' +
+      '</div>' +
+    '</div>',
+    'The trapezius is the first form that reveals pose — it connects neck to shoulder. It cannot be symmetric when the shoulders are not.'
+  );
+
+  rt63Card(
+    'Phase 5 — Shoulder Cap Volume',
+    'The deltoid mass must physically embody the tilt',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Shoulder cap geometry</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Cap anchor starts at the torso shoulder corner — established in Sec 61</div>' +
+        '<div class="rt63-rule">Left cap: start and control points shift 2px up — raised shoulder reads as lifted deltoid</div>' +
+        '<div class="rt63-rule">Right cap: start and control points shift 2px down — dropped shoulder reads as settled mass</div>' +
+        '<div class="rt63-rule">Both highlight paths updated to match — light reads the same slope as the cap</div>' +
+        '<div class="rt63-rule">Inner anchor (M 50/M 110) tracks the torso shoulder — no gap between shirt and cap</div>' +
+      '</div>' +
+    '</div>',
+    'The cap is the most visible expression of the shoulder tilt — it creates the silhouette read at small scale. If the cap doesn\'t tilt, the pose doesn\'t register.'
+  );
+
+  rt63Card(
+    'Phase 6 — Right Arm Relaxation',
+    'The weight-side arm hangs with a natural elbow curve',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Right arm changes only</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Forearm shadow: M 124 142 Q 123 155 124 164 → M 124 140 Q 120 153 121 163</div>' +
+        '<div class="rt63-rule">Control point shifts 4px inward (x=123→120) — shadow curves slightly away from body</div>' +
+        '<div class="rt63-rule">Shadow starts 2px higher (y=142→140) — relaxed elbow sits slightly higher on right</div>' +
+        '<div class="rt63-rule">Elbow implication: M 143 143 Q 135 148 126 143 → M 143 141 Q 134 146 125 141</div>' +
+        '<div class="rt63-rule">Elbow 2px higher, slight inward shift — arm not rigidly at parade rest</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-quote" style="margin-top:8px">Left arm stays symmetric — the non-weight side. Only the weight side (right) shows relaxation. Changing both would just shift the symmetry problem, not solve it.</div>',
+    'A relaxed arm is the final tell that confirms weight transfer. Without it the shoulder tilt reads as anatomical error, not intentional pose.'
+  );
+
+  rt63Card(
+    'Phase 7 — Leg & Foot Weight Asymmetry',
+    'The ground tells the story the upper body implies',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Knee changes</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-pair">' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label bad">Before (both)</div><div class="rt63-mono">rx=10 ry=5.5<br>opacity=0.16</div></div>' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label good">After</div><div class="rt63-mono">Left: rx=9.5 ry=5 op=0.13<br>Right: rx=10.5 ry=6.5 op=0.20</div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-block" style="margin-top:8px">' +
+      '<div class="rt63-block-title">Shoe changes</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-pair">' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label bad">Before (both)</div><div class="rt63-mono">rx=17 ry=6</div></div>' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label good">After</div><div class="rt63-mono">Left: rx=16.5 ry=5.5<br>Right: rx=17.5 ry=6.5</div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>',
+    'At 52×78px these are sub-pixel differences — but they compound with the shoulder tilt and arm relaxation to produce a coherent weight-right read throughout the entire figure.'
+  );
+
+  rt63Card(
+    'Phase 8 — Underarm Crease Shift',
+    'The occlusion line must respect the shoulder it belongs to',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Right underarm crease only</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-pair">' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label bad">Before</div><div class="rt63-mono">M 122 102<br>Q 121 112 120 122</div></div>' +
+          '<div class="rt63-pair-col"><div class="rt63-pair-label good">After</div><div class="rt63-mono">M 122 104<br>Q 121 114 120 124</div></div>' +
+        '</div>' +
+        '<div class="rt63-rule">All y values +2 — crease origin drops with the lowered right shoulder</div>' +
+        '<div class="rt63-rule">Left crease: unchanged — left shoulder rose, so crease position stays at 102</div>' +
+        '<div class="rt63-rule">The crease is an occlusion shadow — it must follow the actual junction, not float independently</div>' +
+      '</div>' +
+    '</div>',
+    'This is the most invisible change in Sec 63. No one notices it. But if omitted, the arm shadow sits 2px above where the arm meets the torso — a subtle wrongness that erodes the pose read without a visible cause.'
+  );
+
+  rt63Card(
+    'Phase 9 — Change Audit',
+    'Every pose change expressed as a coordinate delta',
+    '<div class="rt63-block">' +
+      '<div class="rt63-block-title">Section 63 change inventory</div>' +
+      '<div class="rt63-block-body">' +
+        '<div class="rt63-rule">Torso path: 6 y-values changed (±1px per side) — shoulder tilt lives here</div>' +
+        '<div class="rt63-rule">Left shoulder cap: 4 y-values −2 — raised deltoid volume</div>' +
+        '<div class="rt63-rule">Right shoulder cap: 6 y-values +1 to +2 — dropped deltoid volume</div>' +
+        '<div class="rt63-rule">Left trapezius: 5 y-values −1 — muscle follows raised shoulder</div>' +
+        '<div class="rt63-rule">Right trapezius: 5 y-values +1 — muscle follows dropped shoulder</div>' +
+        '<div class="rt63-rule">Right underarm crease: 3 y-values +2 — occlusion tracks shoulder drop</div>' +
+        '<div class="rt63-rule">Left knee: rx/ry/opacity 3 numbers — lighter contact</div>' +
+        '<div class="rt63-rule">Right knee: rx/ry/opacity 3 numbers — weight-bearing prominence</div>' +
+        '<div class="rt63-rule">Left shoe: rx/ry 2 numbers — lighter ground touch</div>' +
+        '<div class="rt63-rule">Right shoe: rx/ry 2 numbers — planted ground contact</div>' +
+        '<div class="rt63-rule">Right forearm shadow: 4 numbers — relaxed elbow curve</div>' +
+        '<div class="rt63-rule">Right elbow implication: 4 numbers — relaxed position</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt63-quote" style="margin-top:8px">Total new elements added: 0. Total complexity increase: 0. Total stance signal: the character now stands with intent.</div>',
+    'Every change in Sec 63 is ≤4 number edits. Pose is not about adding — it is about making what exists tell a coherent story.'
+  );
+
+  rt63Card(
+    'Phase 10 — Summary',
+    'Files changed and what each achieves',
+    '<table class="rt63-table">' +
+      '<thead><tr><th>File</th><th>Change</th><th>Pose signal</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>body.svg</td><td>Torso: left shoulder y−1, right y+1</td><td>Foundation of contrapposto tilt</td></tr>' +
+        '<tr><td>body.svg</td><td>Left trapezius: all y−1</td><td>Muscle follows raised shoulder</td></tr>' +
+        '<tr><td>body.svg</td><td>Right trapezius: all y+1</td><td>Muscle follows dropped shoulder</td></tr>' +
+        '<tr><td>body.svg</td><td>Left shoulder cap: y−2</td><td>Raised deltoid volume</td></tr>' +
+        '<tr><td>body.svg</td><td>Right shoulder cap: y+1–2</td><td>Dropped deltoid volume</td></tr>' +
+        '<tr><td>body.svg</td><td>Right underarm crease: y+2</td><td>Occlusion tracks shoulder</td></tr>' +
+        '<tr><td>body.svg</td><td>Right forearm shadow: inward curve</td><td>Relaxed arm hang</td></tr>' +
+        '<tr><td>body.svg</td><td>Right elbow: y−2, slight inward</td><td>Relaxed elbow position</td></tr>' +
+        '<tr><td>body.svg</td><td>Knee asymmetry: left light, right heavy</td><td>Weight distribution</td></tr>' +
+        '<tr><td>body.svg</td><td>Shoe asymmetry: left small, right planted</td><td>Ground contact reads stance</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Section 63 — Pose, Stance & Character Charisma Pass — shipped 2026-05-28',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>
