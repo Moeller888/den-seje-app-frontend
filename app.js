@@ -4,6 +4,7 @@ import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, BASE_SRC } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
+import { BlinkEngine } from "./js/avatar-blink-engine.js";
 
 window.__sb = supabase;
 
@@ -57,6 +58,7 @@ function setState(newState) {
   logEvent("STATE_CHANGED", { to: newState });
   exprEngine?.onStateChange(newState);
   presenceEngine?.onStateChange(newState);
+  blinkEngine?.onStateChange(newState);
 }
 
 function setUIState(newState) {
@@ -77,8 +79,9 @@ function setUIState(newState) {
   }
 }
 
-let exprEngine = null;
+let exprEngine    = null;
 let presenceEngine = null;
+let blinkEngine   = null;
 
 let studentId = null;
 let currentInstanceId = null;
@@ -649,8 +652,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchAvatar();
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
-    try { exprEngine = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
-    try { presenceEngine = new PresenceEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+    try { exprEngine    = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+    try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
+    try { blinkEngine   = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
   }
   await loadAndRenderQuestion();
 });
