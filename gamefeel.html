@@ -18597,5 +18597,293 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 64 — Iconic Character Identity Exploration ──────────────── -->
+<style>
+  .rt64-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-bottom: 32px;
+  }
+  .rt64-card {
+    background: #0e1a14; border: 1px solid #1e3828;
+    border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .rt64-card.accent { border-color: #28a060; background: #091208; }
+  .rt64-label {
+    font-size: 9px; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase;
+    color: #34c878;
+  }
+  .rt64-title { font-size: 14px; font-weight: bold; color: #a0f0c8; line-height: 1.3; }
+  .rt64-body { font-size: 12px; color: #60a880; line-height: 1.6; }
+  .rt64-footer { font-size: 10px; color: #2a6840; font-style: italic; margin-top: 4px; }
+  .rt64-block { background: #081008; border-radius: 6px; padding: 10px 12px; }
+  .rt64-block-title { font-size: 10px; font-weight: bold; color: #34c878; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .rt64-block-body { display: flex; flex-direction: column; gap: 4px; }
+  .rt64-rule { font-size: 11px; color: #80c8a0; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt64-rule::before { content: '—'; position: absolute; left: 0; color: #34c878; }
+  .rt64-avoid { font-size: 11px; color: #c07868; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt64-avoid::before { content: '✕'; position: absolute; left: 0; color: #c07868; font-size: 9px; }
+  .rt64-gain { font-size: 11px; color: #60c888; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt64-gain::before { content: '✓'; position: absolute; left: 0; color: #60c888; font-size: 9px; }
+  .rt64-quote {
+    font-size: 11px; color: #3a8858; font-style: italic;
+    border-left: 2px solid #34c878; padding-left: 10px; line-height: 1.6;
+  }
+  .rt64-pair { display: flex; gap: 8px; align-items: flex-start; }
+  .rt64-pair-col { flex: 1; }
+  .rt64-pair-label { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .rt64-pair-label.bad { color: #c07868; }
+  .rt64-pair-label.good { color: #60c888; }
+  .rt64-mono { font-family: monospace; font-size: 10px; color: #50a870; }
+  .rt64-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .rt64-table th { color: #34c878; font-weight: bold; padding: 4px 6px; text-align: left; border-bottom: 1px solid #1e3828; }
+  .rt64-table td { color: #80c8a0; padding: 4px 6px; border-bottom: 1px solid #0e1a14; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#34c878;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #1e3828;">
+  Section 64 — Iconic Character Identity Exploration Pass
+</h2>
+<div class="rt64-grid" id="rt64Grid"></div>
+
+<script>
+(function () {
+  function rt64Card(label, title, body, footer, variant) {
+    const d = document.getElementById('rt64Grid');
+    const card = document.createElement('div');
+    card.className = 'rt64-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt64-label">' + label + '</div>' +
+      '<div class="rt64-title">' + title + '</div>' +
+      '<div class="rt64-body">' + body + '</div>' +
+      (footer ? '<div class="rt64-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  rt64Card(
+    'Phase 1 — Iconicity Audit',
+    'Why the avatar still lacks memorable identity after Sections 60–63',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Root failures of iconic appeal</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-avoid">Crown peak at center (x≈80): no direction — reads as symmetric cap, not a styled personality</div>' +
+        '<div class="rt64-avoid">No forward hair element: the forehead is blank skin — the face has no style anchor above the brows</div>' +
+        '<div class="rt64-avoid">Right side panel matches left side in mass: both sides have similar volume — no visual asymmetry story</div>' +
+        '<div class="rt64-avoid">Torso waist too subtle: 3px bezier indent disappears at 52×78px — no silhouette V-shape read</div>' +
+        '<div class="rt64-avoid">Specular follows old crown position: the hair highlight reads center when the hair should read left</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-quote" style="margin-top:8px">Sections 60–63 solved structural credibility. Sec 64 solves design confidence. These are different problems.</div>',
+    'A believable figure and a memorable character are not the same thing. Sections 60–63 achieved the first. Section 64 attacks the second.'
+  );
+
+  rt64Card(
+    'Phase 2 — Silhouette Exploration',
+    'What the character\'s outline must communicate before any color is visible',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Silhouette test criteria</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Could you identify this character from a black blob at 30px height?</div>' +
+        '<div class="rt64-rule">Does the top of the silhouette have a distinctive shape — not just "round head"?</div>' +
+        '<div class="rt64-rule">Is there a clear directional read — does the outline suggest motion, confidence, identity?</div>' +
+        '<div class="rt64-rule">Does any part of the silhouette create a memorable negative space?</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">Section 64 silhouette upgrade</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-gain">Crown peak shifts from x=80 (center) to x=66 (14px left) — creates a clear diagonal top</div>' +
+        '<div class="rt64-gain">Crown height increases from y=13 to y=9 — 4px more presence above head</div>' +
+        '<div class="rt64-gain">Forward bang adds a NEW shape element to the forehead zone — asymmetric diagonal visible at any scale</div>' +
+        '<div class="rt64-gain">Left panel extends 4px further, right panel 4px shorter — strong asymmetric left-right contrast</div>' +
+      '</div>' +
+    '</div>',
+    'The new silhouette reads: swept crown left, diagonal bang, wide left temple, tight right. That is a designed character shape.'
+  );
+
+  rt64Card(
+    'Phase 3 — Hairstyle Identity',
+    'Hair as the primary character identity anchor',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Why hair is the most important identity element</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Hair is the highest element in the composition — the first thing the eye reads</div>' +
+        '<div class="rt64-rule">Hair defines the silhouette\'s top shape — a distinctive crown is instantly recognizable</div>' +
+        '<div class="rt64-rule">Hair is NOT covered by any equipment (hats layer on top but the hair shape sets the base identity)</div>' +
+        '<div class="rt64-rule">At 52×78px, hair differences are the most visible distinction between character states</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">The three hairstyle identity changes</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-gain">Left-dominant crown: the peak shifts hard left — reads as "deliberately styled" not "symmetric cap"</div>' +
+        '<div class="rt64-gain">Forward bang: a new filled shape element in the forehead zone — the style hook that survives at tiny scale</div>' +
+        '<div class="rt64-gain">Asymmetric panel contrast: left extends further, right tighter — one dramatic side, one composed side</div>' +
+      '</div>' +
+    '</div>',
+    'The forward bang is the single highest-ROI pixel investment in the character\'s history. One new filled shape adds the iconic forehead diagonal that all memorable styled characters carry.'
+  );
+
+  rt64Card(
+    'Phase 4 — The Forward Bang',
+    'Anatomy and geometry of the character\'s permanent style hook',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Bang geometry</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Shape: filled path M 58 37 Q 64 26 74 24 Q 81 23 82 29 Q 79 35 72 37 Q 65 38 58 37 Z</div>' +
+        '<div class="rt64-rule">Spans: x=58 to x=82 (24px wide), y=23 to y=37 (14px tall)</div>' +
+        '<div class="rt64-rule">At 0.325× scale: ~7.8px wide × 4.6px tall on screen — clearly visible diagonal element</div>' +
+        '<div class="rt64-rule">Z-order: drawn after hair cap, before brows — hair on top of skin, brows on top of hair</div>' +
+        '<div class="rt64-rule">Applied to: body.svg + all 5 expression SVGs — consistent across every character state</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">What it reads as</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">At 52×78px: a diagonal element crossing the upper left face — clearly asymmetric, clearly styled</div>' +
+        '<div class="rt64-rule">At 180×270px: a visible forward-swept hair sweep across the forehead</div>' +
+        '<div class="rt64-rule">At any scale: the most left-side element of the face — anchors the character\'s left visual identity</div>' +
+      '</div>' +
+    '</div>',
+    'Adding one filled path is not "adding detail." It\'s adding the single identifying element the character was missing at every scale.'
+  );
+
+  rt64Card(
+    'Phase 5 — Cape & Shoulder Integration',
+    'Why the hairstyle change improves the cape read',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Cape attachment geometry (for future reference)</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Cape collar anchors at M 46 88 Q 80 76 114 88 — shoulder zone x=46/114, y=88</div>' +
+        '<div class="rt64-rule">Cape outer edge: M 46 90 L 10 100 Q 6 168 10 237 — extends from x=10 to x=150</div>' +
+        '<div class="rt64-rule">Section 64 changes are in the hair zone (y=9–37) — cape anchors at y=88–90. Zero interaction.</div>' +
+        '<div class="rt64-rule">Deeper torso waist (Sec 64) is at y=130–170 — cape collar at y=76–96. No overlap.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">Why the new hair improves the cape context</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">A character with a distinctive hairstyle wears a cape with intent — the hair establishes that someone designed this figure</div>' +
+        '<div class="rt64-rule">The bang creates a left-dominant asymmetry in the head zone that mirrors the cape\'s left-dominant drape read</div>' +
+        '<div class="rt64-rule">When the cape clasp (cx=80, cy=86) is visible, it now anchors a figure whose hairstyle confirms the premium design register</div>' +
+      '</div>' +
+    '</div>',
+    'The character\'s equipped and unequipped states now both feel deliberate — the hairstyle establishes design confidence that equipment confirms.'
+  );
+
+  rt64Card(
+    'Phase 6 — Visual Hook Discovery',
+    'What is this character\'s one instantly memorable anchor?',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Before Section 64</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-avoid">The character had no single memorable visual element — describe the hairstyle without using the word "brown" and there is nothing to describe</div>' +
+        '<div class="rt64-avoid">The silhouette was identifiable as "person standing" but not as "this specific character"</div>' +
+        '<div class="rt64-avoid">Every styled character has one hook: Mario\'s hat, Link\'s ear-point, countless characters defined by a single forehead diagonal</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">After Section 64</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-gain">Visual hook: the forward-swept left-leaning crown with a distinctive diagonal bang element</div>' +
+        '<div class="rt64-gain">Describe it in 4 words: "swept left with bang." That\'s the hook.</div>' +
+        '<div class="rt64-gain">At any scale, in any light, with any expression — the hairstyle silhouette reads the same</div>' +
+        '<div class="rt64-gain">This hook survives equipment: hats cover the hair, but the bang and panel shape influence the shoulder/temple silhouette even under hats</div>' +
+      '</div>' +
+    '</div>',
+    'The hook is not decoration. It is the answer to "what does this character look like?" when someone asks a person who saw it once.'
+  );
+
+  rt64Card(
+    'Phase 7 — Thumbnail & Distance Test',
+    'Validating the changes at actual production display scale',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Production display reality</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Avatar renders at 52×78px in the identity strip — 0.325× of 160×240 viewBox</div>' +
+        '<div class="rt64-rule">At 52px wide, every 3.1px of SVG space = 1 display pixel</div>' +
+        '<div class="rt64-rule">The bang (24px wide in SVG) = ~7.8 display pixels — visible, distinct, readable</div>' +
+        '<div class="rt64-rule">The crown shift (14px left in SVG) = ~4.5 display pixels — clearly visible directional offset</div>' +
+        '<div class="rt64-rule">Panel asymmetry (4px difference in SVG) = ~1.3 display pixels — felt more than seen at small scale</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">At larger display contexts</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Gamefeel sandbox (120×180px): all changes clearly visible, bang reads as designed hair element</div>' +
+        '<div class="rt64-rule">Profile screens / character select (180×270px): bang fully legible, crown direction unmistakable</div>' +
+        '<div class="rt64-rule">Silhouette test: at any size, the left-crown diagonal is the most recognizable feature</div>' +
+      '</div>' +
+    '</div>',
+    'Changes designed at SVG scale must be validated at display scale. Every Section 64 change passes the 52px thumbnail test.'
+  );
+
+  rt64Card(
+    'Phase 8 — Youth Appeal Validation',
+    'Does the result feel genuinely cool to 12–16-year-olds?',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">What youth cool actually requires</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Not: trend-chasing, "gamer aesthetic," edge, or visible effort to seem cool</div>' +
+        '<div class="rt64-rule">Yes: quiet confidence, designed-not-generated feeling, a character that has an identity</div>' +
+        '<div class="rt64-rule">The forward bang reads as "someone styled this character" — not "this was generated from a template"</div>' +
+        '<div class="rt64-rule">The asymmetric crown reads as "deliberate personality" — symmetric would read as "default"</div>' +
+        '<div class="rt64-rule">The waist taper reads as "athletic, capable" — not "blocky or weak"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt64-block" style="margin-top:8px">' +
+      '<div class="rt64-block-title">The three appeal drivers</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Distinctiveness: "I can describe this character" — the bang gives them something to describe</div>' +
+        '<div class="rt64-rule">Aspirational: "I would customize this" — a character with designed identity invites ownership</div>' +
+        '<div class="rt64-rule">Calm confidence: "this feels premium" — the restraint across Secs 60–64 is the register students respond to</div>' +
+      '</div>' +
+    '</div>',
+    'Youth cool comes from feeling like the design was made specifically, not generically. One strong identity hook achieves this better than fifty details.'
+  );
+
+  rt64Card(
+    'Phase 9 — Permanent Character DNA',
+    'The non-negotiable identity principles from Section 64 forward',
+    '<div class="rt64-block">' +
+      '<div class="rt64-block-title">Permanent character identity principles</div>' +
+      '<div class="rt64-block-body">' +
+        '<div class="rt64-rule">Memorability over correctness — a design remembered by shape beats a design celebrated by experts</div>' +
+        '<div class="rt64-rule">One strong hook over many details — the bang is the hook. Protect it.</div>' +
+        '<div class="rt64-rule">Crown direction is identity — the left-dominant crown is locked character DNA from Sec 64 forward</div>' +
+        '<div class="rt64-rule">Asymmetry is personality — symmetry reads as template; designed asymmetry reads as character</div>' +
+        '<div class="rt64-rule">Silhouette survives everything — hair shape, bang shape, crown direction must survive at 52px, in silhouette, at blur</div>' +
+        '<div class="rt64-rule">Confidence over caution — Section 64 was the first pass that added a NEW element rather than refining an existing one</div>' +
+        '<div class="rt64-rule">Educational warmth stays non-negotiable — cool, approachable, aspirational. Never edgy, aggressive, or threatening.</div>' +
+        '<div class="rt64-rule">Premium restraint — every future pass should ask: "can I say MORE with fewer elements?" not "can I add more?"</div>' +
+      '</div>' +
+    '</div>',
+    'These principles govern every cosmetic, equipment, and expression design decision from Sec 64 forward',
+    'accent'
+  );
+
+  rt64Card(
+    'Phase 10 — Summary',
+    'Files changed, elements added, identity gained',
+    '<table class="rt64-table">' +
+      '<thead><tr><th>File</th><th>Change</th><th>Identity gain</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>body.svg</td><td>Hair cap: crown peak to (66,9)</td><td>Left-dominant silhouette direction</td></tr>' +
+        '<tr><td>body.svg</td><td>Left panel: wider + 4px longer</td><td>Strong left sweep volume</td></tr>' +
+        '<tr><td>body.svg</td><td>Right panel: 4px shorter</td><td>Asymmetric left-right contrast</td></tr>' +
+        '<tr><td>body.svg</td><td>Specular follows crown to (65,16)</td><td>Light confirms the new direction</td></tr>' +
+        '<tr><td>body.svg</td><td>NEW: forward bang path</td><td>The permanent iconic style hook</td></tr>' +
+        '<tr><td>body.svg</td><td>NEW: bang surface highlight</td><td>Bang reads as physical hair, not flat shape</td></tr>' +
+        '<tr><td>body.svg</td><td>Torso bezier: x=45/115 (was 43/117)</td><td>Stronger athletic waist taper</td></tr>' +
+        '<tr><td>body.svg</td><td>Waist shadows: Q 32/128 (was 34/126)</td><td>Shadows follow deeper indent</td></tr>' +
+        '<tr><td>expr-*.svg × 5</td><td>Same hair + bang changes</td><td>No expression-transition jump</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Section 64 — Iconic Character Identity Exploration Pass — shipped 2026-05-28',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>

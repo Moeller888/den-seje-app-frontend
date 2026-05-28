@@ -7,12 +7,14 @@
   </defs>
   <circle cx="80" cy="50" r="30" fill="url(#ex-sk)"/>
   <path d="M 80 20 A 30 30 0 0 1 80 80 Q 104 74 110 56 Q 114 40 106 28 Q 96 20 80 20 Z" fill="#d4956a" opacity="0.07"/>
-  <path d="M 52 44 Q 45 51 45 65 Q 46 72 54 68 Q 58 60 56 50 Z" fill="#4a3626"/>
-  <path d="M 108 44 Q 113 50 113 62 Q 112 68 106 64 Q 103 57 104 50 Z" fill="#4a3626"/>
-  <path d="M 52 44 Q 50 17 74 15 Q 80 13 86 15 Q 100 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
-  <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
-  <path d="M 52 44 Q 50 51 51 61" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
-  <path d="M 108 44 Q 110 51 109 61" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.38"/>
+  <path d="M 52 44 Q 43 51 43 67 Q 44 76 52 72 Q 57 63 57 52 Z" fill="#4a3626"/>
+  <path d="M 108 44 Q 113 49 113 59 Q 112 64 107 61 Q 104 56 105 50 Z" fill="#4a3626"/>
+  <path d="M 52 44 Q 46 11 66 9 Q 78 9 90 15 Q 100 19 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+  <path d="M 55 22 Q 65 16 82 21" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 52 44 Q 47 52 46 68" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+  <path d="M 108 44 Q 110 51 109 57" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.38"/>
+  <path d="M 58 37 Q 64 26 74 24 Q 81 23 82 29 Q 79 35 72 37 Q 65 38 58 37 Z" fill="#4a3626"/>
+  <path d="M 61 30 Q 68 24 77 26" fill="none" stroke="#7d5c44" stroke-width="1.1" stroke-linecap="round" opacity="0.4"/>
   <!-- CURIOUS: asymmetric brows — left raised noticeably, right slightly raised -->
   <!-- Left brow: peak from y=36 to y=34 (2px higher), outer end from 38.5 to 37 -->
   <path d="M 61 37 Q 67.5 34 74 38" fill="none" stroke="#4a3626" stroke-width="2.2" stroke-linecap="round"/>
