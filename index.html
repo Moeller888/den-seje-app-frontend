@@ -101,12 +101,37 @@
       width: 52px;
       height: 78px;
       border-radius: 8px;
-      background: radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
+      /* Dual-gradient background: overhead light highlight + themed atmosphere */
+      background:
+        radial-gradient(ellipse at 50% 18%, rgba(255,255,255,0.05) 0%, transparent 52%),
+        radial-gradient(ellipse at 50% 35%, var(--avatar-inner) 0%, var(--avatar-outer) 100%);
       border: 1.5px solid var(--border);
-      box-shadow: var(--avatar-ambient);
+      /* Multi-layer shadow: ambient glow + inner vignette depth + contact grounding */
+      box-shadow:
+        var(--avatar-ambient),
+        inset 0 0 9px rgba(0,0,0,0.26),
+        0 3px 7px rgba(0,0,0,0.40),
+        0 1px 2px rgba(0,0,0,0.30);
       overflow: visible;
       flex-shrink: 0;
       animation: avatarBreathe 3.5s linear infinite;
+    }
+
+    /* Rim light overlay — subtle directional lighting from upper-left */
+    #avatar-display::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      background: linear-gradient(
+        148deg,
+        rgba(255,255,255,0.06) 0%,
+        rgba(255,255,255,0.015) 28%,
+        transparent 52%,
+        rgba(0,0,0,0.05) 100%
+      );
+      z-index: 9;
+      pointer-events: none;
     }
 
     .quiz-avatar-layer {
@@ -115,6 +140,18 @@
       width: 100%; height: 100%;
       object-fit: contain;
       pointer-events: none;
+    }
+
+    /* Secondary motion — back items (capes) drift with cloth inertia */
+    .avatar-slot-back {
+      transform-origin: 50% 0%;
+      animation: avatarCapeDrift 5.3s ease-in-out infinite;
+    }
+
+    /* Aura independent breath — out of phase with character breathing */
+    .avatar-slot-aura {
+      transform-origin: 50% 38%;
+      animation: avatarAuraBreath 4.7s ease-in-out infinite;
     }
 
     /* Level + XP section */
@@ -199,6 +236,21 @@
       0%   { transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
       38%  { transform: translateY(var(--breathe-shift, -1px)) scale(var(--breathe-scale, 1.006)); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
       100% { transform: translateY(0) scale(1); }
+    }
+
+    /* Section 58 — Cape cloth inertia: asymmetric drift with settle */
+    @keyframes avatarCapeDrift {
+      0%   { transform: rotate(0deg)     skewY(0deg);     animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1); }
+      40%  { transform: rotate(0.35deg)  skewY(0.12deg);  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1); }
+      75%  { transform: rotate(-0.22deg) skewY(-0.07deg); animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1); }
+      100% { transform: rotate(0deg)     skewY(0deg); }
+    }
+
+    /* Section 58 — Aura secondary breath: independent of character cycle */
+    @keyframes avatarAuraBreath {
+      0%   { opacity: 0.78; transform: scale(0.99);  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      55%  { opacity: 1.0;  transform: scale(1.035); animation-timing-function: cubic-bezier(0.25, 0, 0.35, 1); }
+      100% { opacity: 0.78; transform: scale(0.99); }
     }
 
     @keyframes questionPulse {
@@ -455,7 +507,9 @@
       .incorrect-flash,
       #question[data-state="loading"],
       #review-feedback.visible,
-      #avatar-display { animation: none; }
+      #avatar-display,
+      .avatar-slot-back,
+      .avatar-slot-aura { animation: none; }
     }
 
     /* ── Desktop: slightly more breathing room ───────────────── */

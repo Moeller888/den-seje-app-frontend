@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Base body always visible — render immediately (no network wait)
     const base = document.createElement("img");
-    base.className = "quiz-avatar-layer";
+    base.className = "quiz-avatar-layer avatar-slot-base";
     base.src = BASE_SRC;
     base.style.zIndex = "0";
     base.alt = "";
@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const z = SLOT_Z[slot] ?? 1;
       const img = document.createElement("img");
-      img.className = "quiz-avatar-layer";
+      img.className = `quiz-avatar-layer avatar-slot-${slot}`;
       img.src = item.image_url;
       img.style.zIndex = String(z);
       img.alt = "";

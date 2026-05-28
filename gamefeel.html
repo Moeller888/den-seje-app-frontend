@@ -1785,6 +1785,32 @@
     .rt57-count { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-right: 4px; }
     .rt57-count--before { background: #b0484820; color: #b04848; }
     .rt57-count--after  { background: #48b04820; color: #48a848; }
+
+    /* Section 58 — Premium Avatar Presence & Rendering Quality — slate-indigo #5872c8 */
+    .rt58-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .rt58-card { background: #05060f; border: 1px solid #5872c830; border-radius: 8px; padding: 18px; }
+    .rt58-card.accent { background: linear-gradient(135deg, #05060f 0%, #080a18 100%); border-color: #5872c860; }
+    .rt58-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #5872c8; margin-bottom: 8px; }
+    .rt58-title { font-size: 14px; font-weight: 700; color: #d0d8f8; margin-bottom: 10px; line-height: 1.3; }
+    .rt58-body { font-size: 12px; color: #4a5888; line-height: 1.6; }
+    .rt58-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #5872c830; font-size: 11px; color: #5872c8; font-style: italic; }
+    .rt58-block { background: #5872c812; border-left: 2px solid #5872c840; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .rt58-block-title { font-size: 11px; font-weight: 600; color: #5872c8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .rt58-block-body { font-size: 12px; color: #4a5888; line-height: 1.6; }
+    .rt58-quote { font-size: 12px; color: #5872c8; font-style: italic; border-left: 3px solid #5872c860; padding: 8px 14px; margin: 10px 0; line-height: 1.6; }
+    .rt58-rule { font-size: 11px; color: #4a5888; padding: 3px 0; }
+    .rt58-rule::before { content: "→ "; color: #5872c8; font-weight: 700; }
+    .rt58-avoid { font-size: 11px; color: #4a5888; padding: 3px 0; }
+    .rt58-avoid::before { content: "✕ "; color: #885870; font-weight: 700; }
+    .rt58-pair { background: #05060f; border: 1px solid #5872c820; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .rt58-pair-label { font-size: 10px; font-weight: 700; color: #5872c8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .rt58-pair-text { font-size: 11px; color: #4a5888; line-height: 1.5; }
+    .rt58-pair-sub { font-size: 10px; color: #384068; margin-top: 3px; font-style: italic; }
+    .rt58-table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 8px 0; }
+    .rt58-table th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #5872c8; padding: 4px 8px; border-bottom: 1px solid #5872c830; }
+    .rt58-table td { padding: 5px 8px; color: #4a5888; border-bottom: 1px solid #5872c815; vertical-align: top; line-height: 1.4; }
+    .rt58-table tr:last-child td { border-bottom: none; }
+    .rt58-z { display: inline-block; font-size: 10px; font-weight: 700; font-family: monospace; background: #5872c820; color: #8892d8; padding: 1px 5px; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -2075,6 +2101,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 57 — One-Idea Reflection Standard</h2>
   <div class="rt57-grid" id="rt57Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 58 — Premium Avatar Presence &amp; Rendering Quality</h2>
+  <div class="rt58-grid" id="rt58Grid"></div>
 </div>
 
 <script type="module">
@@ -16885,6 +16914,259 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '<div class="rt57-avoid">Summary sentences after the insight already landed ("Det er ikke markedets fejl — det er dets logik.")</div>' +
     '<div class="rt57-quote">A student who walks away with one thing they will remember tomorrow learned more than a student who read eight sentences and retained none. That is the standard.</div>',
     null,
+    'accent'
+  );
+
+}());
+
+// ─── Section 58 — Premium Avatar Presence & Rendering Quality ─────────────
+(function(){
+  var grid = document.getElementById('rt58Grid');
+  if (!grid) return;
+
+  function card(title, subtitle, body, footer, mod) {
+    var el = document.createElement('div');
+    el.className = 'rt58-card' + (mod ? ' ' + mod : '');
+    el.innerHTML =
+      '<div class="rt58-label">Section 58 — Rendering Quality</div>' +
+      '<div class="rt58-title">' + title + '</div>' +
+      '<div class="rt58-body">' + (subtitle ? '<p style="margin:0 0 10px;font-style:italic;color:#5872c8">' + subtitle + '</p>' : '') + body + '</div>' +
+      (footer ? '<div class="rt58-footer">' + footer + '</div>' : '');
+    grid.appendChild(el);
+  }
+
+  // Card 1 — Why this pass
+  card(
+    'Premium Avatar Standard',
+    'Section 58: from philosophically coherent to visually premium.',
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">The gap before Section 58</div>' +
+      '<div class="rt58-block-body">The avatar was structurally correct — layered depth, semantic slots, expression engine, breathing profiles. But it was visually flat. Every layer lived in the same visual plane. No directional light. No atmospheric depth. One animation cycle for everything. No ground contact. A well-built SVG stack, not a premium character presence.</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">What Section 58 adds</div>' +
+      '<div class="rt58-block-body">Dual-gradient background with overhead light source. Multi-layer box-shadow with inner vignette + contact shadow. Rim light via ::before pseudo-element (z=9). Two independent secondary motion cycles (cape 5.3s, aura 4.7s). All calibrated for the 52×78px production canvas.</div>' +
+    '</div>' +
+    '<div class="rt58-quote">View the avatar for 10 seconds. Does it feel alive? Does it feel calm? Does it feel premium? If yes to all three: the standard is met.</div>',
+    'Established Section 58 — the permanent quality gate for avatar rendering',
+    'accent'
+  );
+
+  // Card 2 — Benchmark audit
+  card(
+    'Benchmark Audit — Industry Reference',
+    'Five benchmarks. Five applicable lessons.',
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Duolingo</div>' +
+      '<div class="rt58-pair-text">Face-forward posture. Eyes large relative to face. Emotion is immediately readable from thumbnail.</div>' +
+      '<div class="rt58-pair-sub">Gap: Den Seje App canvas is 52×78px — face readability sufficient but not dominant. Face at z=6 ensures it is always the focal layer.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Riot UI</div>' +
+      '<div class="rt58-pair-text">Rim light from upper-left. Inner vignette for depth. Contact shadow to ground the character.</div>' +
+      '<div class="rt58-pair-sub">Gap: current avatar had flat atmospheric gradient, no directional light, no material hierarchy. Fixed by ::before rim light + multi-layer box-shadow.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Supercell</div>' +
+      '<div class="rt58-pair-text">Equipment silhouettes (capes, crowns) break the symmetric read. Accessories are the silhouette differentiators.</div>' +
+      '<div class="rt58-pair-sub">Gap: base avatar silhouette is a symmetric humanoid — readable but generic. Asymmetric equipment is the visual hook.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Sky: Children of the Light</div>' +
+      '<div class="rt58-pair-text">Dual-gradient background with overhead highlight. Inner vignette for atmospheric depth.</div>' +
+      '<div class="rt58-pair-sub">Applied directly: radial-gradient at 50% 18% (overhead light) + themed atmosphere at 50% 35%.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Premium Mobile RPG</div>' +
+      '<div class="rt58-pair-text">Semantic slot classes enable layer-specific animation. Cape drift, aura breath — independent of container breathing.</div>' +
+      '<div class="rt58-pair-sub">Applied: .avatar-slot-back and .avatar-slot-aura have independent CSS animations. avatarCapeDrift 5.3s, avatarAuraBreath 4.7s.</div>' +
+    '</div>',
+    '5 benchmarks → 5 direct implementation decisions'
+  );
+
+  // Card 3 — Flatness diagnosis
+  card(
+    'Flatness Diagnosis — Root Causes',
+    'Five specific reasons the avatar felt flat before Section 58.',
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Single gradient background</div>' +
+      '<div class="rt58-pair-text">One-stop radial — no light direction, no depth. Every layer in the same visual space.</div>' +
+      '<div class="rt58-pair-sub">Fix: dual gradient — overhead highlight (50% 18%, 5% white) + themed atmosphere (50% 35%). Creates a light source direction.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Single ambient box-shadow</div>' +
+      '<div class="rt58-pair-text">var(--avatar-ambient) alone — soft glow, no depth information, no ground contact.</div>' +
+      '<div class="rt58-pair-sub">Fix: ambient glow + inset vignette (0 0 9px rgba(0,0,0,0.26)) + contact shadow (0 3px 7px rgba(0,0,0,0.40)) + near shadow.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">No directional light</div>' +
+      '<div class="rt58-pair-text">All surfaces identical rendering weight. Face, body, accessories read at the same visual level.</div>' +
+      '<div class="rt58-pair-sub">Fix: ::before rim light overlay at z=9 — 6% white at upper-left → transparent at center → 5% dark at lower-right. 148° gradient.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Single animation for all layers</div>' +
+      '<div class="rt58-pair-text">avatarBreathe on the container moves ALL layers together. One rhythm, no secondary motion, no physical mass.</div>' +
+      '<div class="rt58-pair-sub">Fix: .avatar-slot-back gets avatarCapeDrift 5.3s. .avatar-slot-aura gets avatarAuraBreath 4.7s. Both independent from the 3.5s container breathing.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">No ground contact</div>' +
+      '<div class="rt58-pair-text">Character appears to float. No visual connection to the world.</div>' +
+      '<div class="rt58-pair-sub">Fix: box-shadow: 0 3px 7px rgba(0,0,0,0.40) — downward contact shadow. Character feels grounded.</div>' +
+    '</div>',
+    '5 root causes, 5 targeted fixes — no cosmetic patches'
+  );
+
+  // Card 4 — Depth & layer system
+  card(
+    'Depth & Layered Rendering System',
+    'z=-2 to z=9 within isolation:isolate. Each layer has a distinct depth role.',
+    '<table class="rt58-table">' +
+      '<tr><th>Slot</th><th>z</th><th>Depth role</th><th>Motion</th></tr>' +
+      '<tr><td>aura</td><td><span class="rt58-z">-2</span></td><td>Deepest background — furthest from viewer</td><td>avatarAuraBreath 4.7s</td></tr>' +
+      '<tr><td>back</td><td><span class="rt58-z">-1</span></td><td>Behind character — mid background</td><td>avatarCapeDrift 5.3s</td></tr>' +
+      '<tr><td>base</td><td><span class="rt58-z">0</span></td><td>Character body — primary focal plane</td><td>rides container 3.5s</td></tr>' +
+      '<tr><td>torso</td><td><span class="rt58-z">2</span></td><td>Armor/clothing — character surface</td><td>rides container</td></tr>' +
+      '<tr><td>headwear</td><td><span class="rt58-z">5</span></td><td>Hat/crown — uppermost character element</td><td>rides container</td></tr>' +
+      '<tr><td>face</td><td><span class="rt58-z">6</span></td><td>Expression — the emotional read layer</td><td>ExpressionEngine cross-fade</td></tr>' +
+      '<tr><td>eyes</td><td><span class="rt58-z">7</span></td><td>Glasses — topmost detail</td><td>rides container</td></tr>' +
+      '<tr><td>rimlight</td><td><span class="rt58-z">9</span></td><td>::before overlay — directional light simulation</td><td>static (constant)</td></tr>' +
+    '</table>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Atmosphere layers</div>' +
+      '<div class="rt58-block-body"><strong>Overhead highlight:</strong> radial-gradient at 50% 18% — simulates overhead light striking top of canvas<br><strong>Chest atmosphere:</strong> radial-gradient at 50% 35% — themed ambient, character-specific<br><strong>Inner vignette:</strong> inset 0 0 9px — edges darker, center brighter = depth illusion<br><strong>Contact shadow:</strong> 0 3px 7px — grounding shadow below the character<br><strong>Rim light:</strong> linear-gradient 148° — directional warm highlight from upper-left</div>' +
+    '</div>',
+    'isolation: isolate on #avatar-display creates a clean compositing boundary. All effects contained.'
+  );
+
+  // Card 5 — Secondary motion
+  card(
+    'Secondary Motion — Physical Mass',
+    'When cloth drifts after the character settles, the viewer\'s brain infers weight. No additional art assets required.',
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Cape drift (avatarCapeDrift)</div>' +
+      '<div class="rt58-block-body">Duration: 5.3s · Rotation: ±0.35° · Skew: ±0.12° · transform-origin: 50% 0% (rotates from shoulder)<br>At 52px canvas: bottom of cape drifts ~0.47px horizontally at peak. Imperceptible as rotation, perceptible as cloth movement.<br>Easing: cubic-bezier(0.37, 0, 0.63, 1) — symmetric ease, natural settling not mechanical oscillation.</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Aura breath (avatarAuraBreath)</div>' +
+      '<div class="rt58-block-body">Duration: 4.7s · Opacity: 0.78→1.0 (22% range) · Scale: 0.99→1.035 (4.5% range) · transform-origin: 50% 38% (from chest level)<br>At 52px canvas: scale 1.035 = 0.91px radius change — clearly visible as pulsation.<br>Purpose: aura breathes with its own rhythm, not with the character — reinforces its non-physical nature.</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Cycle relationship — why irrational ratios</div>' +
+      '<div class="rt58-block-body">Cape 5.3s ÷ breathing 3.5s = 1.514. Aura 4.7s ÷ breathing 3.5s = 1.343. These are irrational ratios — the cycles never lock in phase. The viewer never perceives synchronization. Each animation appears independent. If the ratios were round numbers (e.g., 4s, 7s), the cycles would occasionally align and the illusion of independent life would collapse.</div>' +
+    '</div>' +
+    '<div class="rt58-rule">prefers-reduced-motion: reduce suppresses both .avatar-slot-back and .avatar-slot-aura animations</div>',
+    'Secondary motion creates the illusion of physical mass — that inference elevates perceived realism without additional art assets'
+  );
+
+  // Card 6 — Lighting model
+  card(
+    'Lighting & Material Quality',
+    'Upper-left light source (148°) — the common "reading light" position. Feels natural for a screen character.',
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Rim light</div>' +
+      '<div class="rt58-pair-text">#avatar-display::before — z-index: 9, pointer-events: none</div>' +
+      '<div class="rt58-pair-sub">Gradient: rgba(255,255,255,0.06) → rgba(255,255,255,0.015) at 28% → transparent at 52% → rgba(0,0,0,0.05) at 100%. Intensity: 6% white max. Visible as sheen, not an overlay.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Inner vignette</div>' +
+      '<div class="rt58-pair-text">box-shadow: inset 0 0 9px rgba(0,0,0,0.26)</div>' +
+      '<div class="rt58-pair-sub">Edges of canvas slightly darker. Center relatively brighter. Transforms a flat square into a slightly curved, 3D-feeling space. The highest-impact change at 52×78px.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Overhead highlight</div>' +
+      '<div class="rt58-pair-text">radial-gradient(ellipse at 50% 18%, rgba(255,255,255,0.05) 0%, transparent 52%)</div>' +
+      '<div class="rt58-pair-sub">Simulates ambient overhead light striking the top of the canvas. Separates sky from ground in the character\'s environment.</div>' +
+    '</div>' +
+    '<div class="rt58-pair">' +
+      '<div class="rt58-pair-label">Contact shadow</div>' +
+      '<div class="rt58-pair-text">box-shadow: 0 3px 7px rgba(0,0,0,0.40)</div>' +
+      '<div class="rt58-pair-sub">overflow: visible allows shadow to extend outside the canvas bounds. Character appears to rest on a surface rather than floating above it.</div>' +
+    '</div>' +
+    '<div class="rt58-rule">Rim light (z=9) sits above expression (z=6) — face is lit from the same direction as the body. Unified lighting model, not a pasted-on head.</div>',
+    'Lighting unifies the render — all elements lit from the same direction'
+  );
+
+  // Card 7 — Atmospheric VFX restraint
+  card(
+    'Atmospheric VFX Restraint',
+    'Atmosphere should be felt before it is seen. If a student notices the atmosphere, it is too loud.',
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Implemented (calibrated to 52×78px)</div>' +
+      '<div class="rt58-block-body">' +
+        '<div class="rt58-rule">Aura breath: opacity + scale variation — meditative, not flashy</div>' +
+        '<div class="rt58-rule">Dual-gradient background — overhead light + themed ambient</div>' +
+        '<div class="rt58-rule">Inner vignette: edge darkening — atmospheric depth without visible effect</div>' +
+        '<div class="rt58-rule">Contact shadow: grounding — environmental embedding, not decoration</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Not implemented (and why)</div>' +
+      '<div class="rt58-block-body">' +
+        '<div class="rt58-avoid">Particle systems — too small to be meaningful at 52×78px, too loud for calm educational context</div>' +
+        '<div class="rt58-avoid">Glow pulses on container — avatarAuraBreath already provides this without container-level brightness change</div>' +
+        '<div class="rt58-avoid">Motion trails — character is stationary, trails would look disconnected from the physics</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Scale constraint</div>' +
+      '<div class="rt58-block-body">At 52×78px, an effect that reads as "subtle" at 400px reads as "invisible" or "noise" here. Every atmospheric effect must be calibrated to the actual canvas size. The inner vignette is the single highest-impact effect — transforms flat background into perceived depth at any scale.</div>' +
+    '</div>',
+    'Educational trust first — any visual upgrade that creates anxiety fails the standard'
+  );
+
+  // Card 8 — Face readability & future work
+  card(
+    'Face Readability & Emotional Read',
+    'Five expression SVGs. ExpressionEngine cross-fades with asymmetric timing.',
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Current state</div>' +
+      '<div class="rt58-block-body">5 expressions: neutral, curious, focused, determined, proud. All override the face region of the base body at z=6. ExpressionEngine cross-fades: 35% fade-out, 65% fade-in. Old expression releases before new one fully arrives — emotional inertia. Relational delay 35–80ms before expression changes — face receives the moment before responding.</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Section 58 improvement</div>' +
+      '<div class="rt58-block-body">Rim light overlay (z=9) sits above the expression layer (z=6), applying unified lighting over the entire character including the face. This means the face is lit from the same direction as the body. Unified lighting model — not a pasted-on head.</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Future work (not in Section 58 scope)</div>' +
+      '<div class="rt58-block-body">Blink animation requires inline SVG — CSS cannot access SVG internals through &lt;img src&gt;. Phase 2: inline SVG for expression layer with addressable pupil coordinates. Would require ExpressionEngine rewrite. Explicitly deferred.</div>' +
+    '</div>' +
+    '<div class="rt58-rule">Expression layer at z=6, above all equipment except glasses (z=7). Face is always the focal layer.</div>' +
+    '<div class="rt58-rule">Preload of all 5 expression SVGs eliminates first-use network delay</div>' +
+    '<div class="rt58-rule">Reduced motion: instant swaps (no fade) rather than animation suppression</div>',
+    'Face reads at 52px — that is the constraint. Everything else is secondary.'
+  );
+
+  // Card 9 — Premium character standard
+  card(
+    'Premium Character Standard — Permanent',
+    'Den Seje App Avatar Quality Standard, established Section 58.',
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">The 10 permanent principles</div>' +
+      '<div class="rt58-block-body">' +
+        '<div class="rt58-rule">Calm presence over stimulation — premium is slow, not fast</div>' +
+        '<div class="rt58-rule">Layered depth over flatness — no element in the same visual plane as everything else</div>' +
+        '<div class="rt58-rule">Emotional readability over detail — face reads at 52px, that is the constraint</div>' +
+        '<div class="rt58-rule">Silhouette clarity over decorative noise — equipment should break the symmetric humanoid read</div>' +
+        '<div class="rt58-rule">Secondary motion creates mass — if cloth doesn\'t drift, the character has no weight</div>' +
+        '<div class="rt58-rule">Atmosphere is felt before seen — if the effect is visible as an effect, reduce it</div>' +
+        '<div class="rt58-rule">Lighting unifies the render — all elements lit from the same direction</div>' +
+        '<div class="rt58-rule">Ground the character — a contact shadow turns a floating SVG into a presence</div>' +
+        '<div class="rt58-rule">Independent rhythm creates life — aura, cape, and breathing must never synchronize</div>' +
+        '<div class="rt58-rule">Educational trust first — any visual upgrade that creates anxiety fails the standard</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt58-block">' +
+      '<div class="rt58-block-title">Failure modes to guard against</div>' +
+      '<div class="rt58-block-body">' +
+        '<div class="rt58-avoid">Animation feels mechanical (synchronized cycles — irrational period ratios prevent this)</div>' +
+        '<div class="rt58-avoid">Character feels pasted onto the UI (no grounding, no compositing — contact shadow + vignette prevent this)</div>' +
+        '<div class="rt58-avoid">Effects compete with educational content (overstimulation — restraint philosophy prevents this)</div>' +
+        '<div class="rt58-avoid">Flatness survives (all layers at same visual depth — z-range -2 to 9 prevents this)</div>' +
+        '<div class="rt58-avoid">Face unreadable at canvas size (z=6 focal priority prevents this)</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt58-quote">View the avatar for 10 seconds. Does it feel alive? Does it feel calm? Does it feel premium? If yes to all three: the standard is met.</div>',
+    'Section 58 quality gate — permanent standard for all future avatar rendering decisions',
     'accent'
   );
 
