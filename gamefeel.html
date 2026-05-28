@@ -18885,5 +18885,362 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 65 — Character Validation Sprint ──────────────────────────── -->
+<style>
+  .rt65-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; margin-bottom:32px; }
+  .rt65-card { background:#110d1a; border:1px solid #2a1a40; border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .rt65-card.accent { border-color:#7c3aed; background:#0a0714; }
+  .rt65-card.warn { border-color:#c07830; background:#100a02; }
+  .rt65-label { font-size:9px; font-weight:bold; letter-spacing:1.6px; text-transform:uppercase; color:#a855f7; }
+  .rt65-title { font-size:14px; font-weight:bold; color:#d8a0ff; line-height:1.3; }
+  .rt65-body { font-size:12px; color:#8060a8; line-height:1.6; }
+  .rt65-footer { font-size:10px; color:#4a2870; font-style:italic; margin-top:4px; }
+  .rt65-block { background:#0a0712; border-radius:6px; padding:10px 12px; }
+  .rt65-block-title { font-size:10px; font-weight:bold; color:#a855f7; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .rt65-block-body { display:flex; flex-direction:column; gap:4px; }
+  .rt65-rule { font-size:11px; color:#c090e0; padding-left:10px; position:relative; line-height:1.5; }
+  .rt65-rule::before { content:'—'; position:absolute; left:0; color:#a855f7; }
+  .rt65-pass { font-size:11px; color:#60c888; padding-left:10px; position:relative; line-height:1.5; }
+  .rt65-pass::before { content:'✓'; position:absolute; left:0; color:#60c888; font-size:9px; }
+  .rt65-fail { font-size:11px; color:#d07060; padding-left:10px; position:relative; line-height:1.5; }
+  .rt65-fail::before { content:'✕'; position:absolute; left:0; color:#d07060; font-size:9px; }
+  .rt65-warn { font-size:11px; color:#d0a050; padding-left:10px; position:relative; line-height:1.5; }
+  .rt65-warn::before { content:'⚠'; position:absolute; left:0; color:#d0a050; font-size:9px; }
+  .rt65-lock { font-size:11px; color:#a855f7; padding-left:14px; position:relative; line-height:1.5; }
+  .rt65-lock::before { content:'■'; position:absolute; left:0; color:#7c3aed; font-size:8px; top:2px; }
+  .rt65-table { width:100%; border-collapse:collapse; font-size:10px; }
+  .rt65-table th { color:#a855f7; font-weight:bold; padding:4px 6px; text-align:left; border-bottom:1px solid #2a1a40; }
+  .rt65-table td { color:#c090e0; padding:4px 6px; border-bottom:1px solid #110d1a; }
+  .rt65-render-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:4px; }
+  .rt65-render-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .rt65-render-label { font-size:9px; color:#6040a0; letter-spacing:0.5px; text-align:center; line-height:1.3; }
+  .rt65-avatar { position:relative; display:inline-block; flex-shrink:0; }
+  .rt65-avatar img { position:absolute; top:0; left:0; width:100%; height:100%; }
+  .rt65-verdict { font-size:13px; font-weight:bold; padding:10px 14px; border-radius:6px; line-height:1.5; }
+  .rt65-verdict.b { background:#1a0a02; border:1px solid #c07830; color:#f0a060; }
+  .rt65-verdict.a { background:#020f08; border:1px solid #2a8040; color:#60e890; }
+  .rt65-score { display:flex; gap:4px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .rt65-score-item { font-size:10px; padding:2px 8px; border-radius:12px; }
+  .rt65-score-item.pass { background:#1a3020; color:#60c888; }
+  .rt65-score-item.warn { background:#201408; color:#d0a050; }
+  .rt65-score-item.fail { background:#200808; color:#d07060; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#a855f7;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #2a1a40;">
+  Section 65 — Character Validation Sprint
+</h2>
+<div class="rt65-grid" id="rt65Grid"></div>
+
+<script>
+(function () {
+  function rt65Card(label, title, body, footer, variant) {
+    var d = document.getElementById('rt65Grid');
+    var card = document.createElement('div');
+    card.className = 'rt65-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt65-label">' + label + '</div>' +
+      '<div class="rt65-title">' + title + '</div>' +
+      '<div class="rt65-body">' + body + '</div>' +
+      (footer ? '<div class="rt65-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  function av(expr, w, filter, bg) {
+    var h = Math.round(w * 1.5);
+    var fs = filter ? 'filter:' + filter + ';' : '';
+    var bs = bg ? 'background:' + bg + ';border-radius:4px;padding:2px;' : '';
+    return '<div class="rt65-avatar" style="width:' + w + 'px;height:' + h + 'px;' + bs + '">' +
+      '<img src="assets/avatar/base/body.svg" style="' + fs + '">' +
+      '<img src="assets/avatar/expressions/' + expr + '.svg" style="' + fs + '">' +
+      '</div>';
+  }
+
+  function avCape(expr, w, filter, bg) {
+    var h = Math.round(w * 1.5);
+    var fs = filter ? 'filter:' + filter + ';' : '';
+    var bs = bg ? 'background:' + bg + ';border-radius:4px;padding:2px;' : '';
+    return '<div class="rt65-avatar" style="width:' + w + 'px;height:' + h + 'px;' + bs + '">' +
+      '<img src="assets/avatar/base/body.svg" style="' + fs + '">' +
+      '<img src="assets/avatar/shirt/cape-red.svg" style="' + fs + '">' +
+      '<img src="assets/avatar/expressions/' + expr + '.svg" style="' + fs + '">' +
+      '</div>';
+  }
+
+  function row(cells) {
+    return '<div class="rt65-render-row">' +
+      cells.map(function(c) {
+        return '<div class="rt65-render-cell">' + c.r + '<div class="rt65-render-label">' + c.l + '</div></div>';
+      }).join('') +
+    '</div>';
+  }
+
+  rt65Card(
+    'Phase 1 — Visual Harvest',
+    'All contexts at once — dark, light, 2×, 4×, expressions',
+    row([
+      { r: av('expr-neutral', 52, null, '#1a1a2a'), l: '52px dark' },
+      { r: av('expr-neutral', 52, null, '#f0ece4'), l: '52px light' },
+      { r: av('expr-neutral', 104, null, '#1a1a2a'), l: 'neutral 2×' },
+      { r: av('expr-proud', 104, null, '#1a1a2a'), l: 'proud 2×' },
+      { r: av('expr-determined', 104, null, '#1a1a2a'), l: 'determined 2×' },
+    ]) +
+    row([
+      { r: av('expr-focused', 104, null, '#1a1a2a'), l: 'focused 2×' },
+      { r: av('expr-curious', 104, null, '#1a1a2a'), l: 'curious 2×' },
+      { r: avCape('expr-neutral', 104, null, '#1a1a2a'), l: 'cape equipped' },
+      { r: av('expr-neutral', 208, null, '#1a1a2a'), l: 'neutral 4×' },
+    ]),
+    'Production is 52px. Everything else is context. Observe quality at 4× vs. what survives at 52px.'
+  );
+
+  rt65Card(
+    'Phase 2 — First Impression Audit',
+    'What does the character communicate in 2 seconds?',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Signal analysis — honest read</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">Warmth — skin tone gradient and blush ellipses signal approachability clearly</div>' +
+        '<div class="rt65-pass">Calm — contrapposto + composed neutral expression reads as settled, non-threatening</div>' +
+        '<div class="rt65-pass">Crafted — hair layering and catch-lights signal designed-not-generated to attentive viewers</div>' +
+        '<div class="rt65-warn">Premium — rendering quality is premium at 4× but collapses at 52px production scale</div>' +
+        '<div class="rt65-warn">Memorability — bang+crown gives a shape hook, but it only reads clearly at 2×+</div>' +
+        '<div class="rt65-fail">Coolness — reads as "pleasant educational mascot," not "aspirational character I want to be"</div>' +
+        '<div class="rt65-fail">Personality — no strong archetype signal (hero, scholar, trickster) is visible in 2 seconds</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">The honest 2-second sentence</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-rule">"This looks like a friendly character in a well-made educational app"</div>' +
+        '<div class="rt65-rule">Not: "This is a character I want to be" — the aspirational gap remains open</div>' +
+        '<div class="rt65-rule">Not: "I recognize this character" — no brand-level instant recognition yet</div>' +
+      '</div>' +
+    '</div>',
+    'Warm and safe land first. Cool and aspirational do not yet arrive.',
+    'warn'
+  );
+
+  rt65Card(
+    'Phase 3 — Silhouette Memory Test',
+    'Can someone recognize or redraw this shape after a brief look?',
+    row([
+      { r: av('expr-neutral', 104, 'brightness(0)', '#ffffff'), l: 'silhouette 2×' },
+      { r: av('expr-neutral', 52, 'brightness(0)', '#ffffff'), l: 'silhouette 52px' },
+      { r: avCape('expr-neutral', 104, 'brightness(0)', '#ffffff'), l: '+ cape' },
+      { r: av('expr-neutral', 104, 'grayscale(1)', '#1a1a2a'), l: 'grayscale' },
+    ]) +
+    '<div class="rt65-block" style="margin-top:10px">' +
+      '<div class="rt65-block-title">Silhouette verdict by zone</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">Hair crown — left-dominant peak creates a recognizable asymmetric shape hook</div>' +
+        '<div class="rt65-pass">Bang — adds a forward-sweep "notch" to the forehead silhouette at 2×</div>' +
+        '<div class="rt65-pass">Cape (equipped) — immediately iconic; the cape is the strongest single silhouette element</div>' +
+        '<div class="rt65-warn">Body (unequipped) — a gentle hourglass, not a strongly memorable shape on its own</div>' +
+        '<div class="rt65-fail">Bang at 52px silhouette — merges with hair mass; hook collapses at production scale</div>' +
+        '<div class="rt65-fail">Knee/shoe asymmetry — completely invisible in any silhouette read</div>' +
+      '</div>' +
+    '</div>',
+    'Hair silhouette: conditionally strong (2× only). Cape silhouette: unconditionally strong.'
+  );
+
+  rt65Card(
+    'Phase 4 — Mobile Thumbnail Validation',
+    '52px is the real interaction scale — everything else is optimism',
+    row([
+      { r: av('expr-neutral', 26, null, '#1a1a2a'), l: '26px 0.5×' },
+      { r: av('expr-neutral', 52, null, '#1a1a2a'), l: 'neutral' },
+      { r: av('expr-proud', 52, null, '#1a1a2a'), l: 'proud' },
+      { r: av('expr-curious', 52, null, '#1a1a2a'), l: 'curious' },
+      { r: av('expr-determined', 52, null, '#1a1a2a'), l: 'determined' },
+      { r: av('expr-focused', 52, null, '#1a1a2a'), l: 'focused' },
+    ]) +
+    '<div class="rt65-block" style="margin-top:10px">' +
+      '<div class="rt65-block-title">Scale reality (52px display = 160px SVG × 0.325)</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">Face reads — eyes, skin tone, expression communicate at 52px</div>' +
+        '<div class="rt65-pass">Hair direction reads — asymmetric crown creates shape interest even small</div>' +
+        '<div class="rt65-warn">Expression differences subtle — determined vs. focused need close attention to distinguish</div>' +
+        '<div class="rt65-warn">Bang — visible as a shape change, but the detail collapses (≈5px display height)</div>' +
+        '<div class="rt65-fail">Waist taper (Secs 62–64) — invisible at 52px; 2px SVG = 0.65px display = sub-threshold</div>' +
+        '<div class="rt65-fail">Knee/shoe asymmetry (Sec 63) — invisible at any production scale</div>' +
+        '<div class="rt65-rule">At 26px (icon contexts): hair shape is the only reliably readable element</div>' +
+      '</div>' +
+    '</div>',
+    'Critical finding: multiple recent sections invested in detail that production scale cannot display.',
+    'warn'
+  );
+
+  rt65Card(
+    'Phase 5 — Character Hook Discovery',
+    'What is the avatar\'s strongest identity hook right now?',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Hook strength ranking</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">1st — Bang + left-dominant crown: readable at 2×, asymmetric forehead shape, permanent DNA</div>' +
+        '<div class="rt65-pass">2nd — Cape silhouette (equipped): enormous — immediately iconic, competitive with industry benchmarks</div>' +
+        '<div class="rt65-warn">3rd — Shoulder contrapposto rhythm: requires 2× or above to perceive clearly</div>' +
+        '<div class="rt65-warn">4th — Warm skin tone: signals approachability, not memorability or coolness</div>' +
+        '<div class="rt65-fail">5th — Waist taper: below production threshold, invisible</div>' +
+        '<div class="rt65-fail">6th — Knee/shoe asymmetry: invisible at any display scale</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">Hook gap</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-rule">One reliable unequipped hook (hair) + one excellent equipped hook (cape)</div>' +
+        '<div class="rt65-rule">No personality archetype hook: no readable "this character is a [type]" signal</div>' +
+        '<div class="rt65-rule">The face itself is generic-warm — well-executed warmth, but not character-specific</div>' +
+        '<div class="rt65-rule">The hair carries all unequipped identity weight — it currently does this adequately, not strongly</div>' +
+      '</div>' +
+    '</div>',
+    'Hair + cape are the two hooks. Everything else is below threshold or too subtle.'
+  );
+
+  rt65Card(
+    'Phase 6 — Comparative Benchmarking',
+    'Honest calibration against industry-level character design',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Industry gap analysis</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-rule">Duolingo (Duo): 2-color, one giant shape, reads perfectly at 16px. We need 3 layers at 52px.</div>' +
+        '<div class="rt65-rule">Supercell: 3-4 flat colors at small scale, massive silhouettes, zero detail noise. We have 15+ colors.</div>' +
+        '<div class="rt65-rule">Riot (stylized): strong personality archetype in silhouette — "mage" or "bruiser" readable in outline. We have "friendly person."</div>' +
+        '<div class="rt65-rule">Nintendo (Mario): hat + mustache = full identity. 2 shapes. We have 8 hair-related paths.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">Where we are ahead</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">Rendering depth: at 4× our avatar is genuinely premium — outclasses flat Supercell style</div>' +
+        '<div class="rt65-pass">Expression system: 5 emotionally nuanced states vs. the 2-state average in mobile games</div>' +
+        '<div class="rt65-pass">Equipment impact: cape silhouette is competitive with any benchmark at small scale</div>' +
+        '<div class="rt65-warn">The gap: premium rendering craft is invisible at the scales students actually perceive daily</div>' +
+      '</div>' +
+    '</div>',
+    'Industry gold standard = readable at 16px. We\'re readable at 52px. Calibration gap is scale, not craft.'
+  );
+
+  rt65Card(
+    'Phase 7 — Overdesign Risk Audit',
+    'Is the avatar over-tweaked? What must be locked now?',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Risk assessment</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-fail">HIGH — Sub-pixel adjustments (±0.5–1px) dominated Secs 61–64. Diminishing returns zone.</div>' +
+        '<div class="rt65-fail">HIGH — Each recent section required detailed justification. Strong designs need less explaining.</div>' +
+        '<div class="rt65-warn">MODERATE — 8 hair-related paths in body.svg approaching visual noise threshold</div>' +
+        '<div class="rt65-warn">MODERATE — Waist/body tweaks accumulated across 4 sections with sub-threshold display payoff</div>' +
+        '<div class="rt65-pass">LOW — Hair+bang geometry: each element has clear distinct visual purpose</div>' +
+        '<div class="rt65-pass">LOW — Expression system: 5 variants with meaningful differentiation</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">Geometry lock list — no further changes</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-lock">Head: cx=80/cy=50/r=30</div>' +
+        '<div class="rt65-lock">Eyes: cx=68/92, cy=47</div>' +
+        '<div class="rt65-lock">Hair crown direction: left-dominant peak at x=66/y=9</div>' +
+        '<div class="rt65-lock">Bang shape and sweep direction</div>' +
+        '<div class="rt65-lock">Torso bezier values (x=45/115)</div>' +
+        '<div class="rt65-lock">Shoulder geometry and contrapposto angles</div>' +
+      '</div>' +
+    '</div>',
+    'Stop tweaking geometry. Future value comes from personality, equipment, and cosmetics — not coordinates.',
+    'warn'
+  );
+
+  rt65Card(
+    'Phase 8 — Youth Appeal Reality Check',
+    'Would a 14-year-old voluntarily choose and invest in this character?',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Brutal honest assessment</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-warn">Current verdict: "probably yes, but wouldn\'t brag about it to friends"</div>' +
+        '<div class="rt65-fail">Would they think it\'s cool? No — reads as a well-designed app character, not as "cool"</div>' +
+        '<div class="rt65-fail">Would they want cosmetics? Unlikely without a stronger personality to invest in first</div>' +
+        '<div class="rt65-fail">Would they choose it over a Roblox avatar? No — Roblox characters have expressive personality</div>' +
+        '<div class="rt65-warn">Would they recognize it as theirs? Yes — the hair hook is enough for ownership</div>' +
+        '<div class="rt65-pass">Would it feel safe, non-threatening? Yes — this is a genuine, important strength</div>' +
+        '<div class="rt65-pass">Does it beat Kahoot/Quizlet avatars? Yes — significantly more premium</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">The missing ingredient — honest</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-rule">Youth "cool" in 2025-26 = effortless, has a clear vibe, feels like a real character</div>' +
+        '<div class="rt65-rule">Our avatar has: carefully crafted, technically competent — the opposite of "effortless cool"</div>' +
+        '<div class="rt65-rule">The fix is NOT more geometry. The fix is a personality archetype that makes cosmetics feel meaningful</div>' +
+        '<div class="rt65-rule">The character needs an implied identity — right now it is a pleasant person with no context</div>' +
+      '</div>' +
+    '</div>',
+    'Technically strong. Emotionally safe. Aspirationally incomplete. Gap is personality, not craft.',
+    'warn'
+  );
+
+  rt65Card(
+    'Phase 9 — Character DNA Lock',
+    'What is now permanently frozen — protected from all future iteration',
+    '<div class="rt65-block">' +
+      '<div class="rt65-block-title">Permanent DNA — non-negotiable from Sec 65 forward</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-lock">Head geometry — cx=80/cy=50/r=30. Never changes.</div>' +
+        '<div class="rt65-lock">Eye positions — cx=68/92, cy=47. Never changes.</div>' +
+        '<div class="rt65-lock">Hair direction — left-dominant crown. Right-to-left sweep. Permanent.</div>' +
+        '<div class="rt65-lock">Forward bang — the character\'s identity hook. Must survive every future pass.</div>' +
+        '<div class="rt65-lock">Contrapposto stance — weight-right, left shoulder up. Locked.</div>' +
+        '<div class="rt65-lock">Warm skin tone — F5C49A→E8A87C gradient. Warmth is brand.</div>' +
+        '<div class="rt65-lock">Asymmetric panel rhythm — left panel longer+wider than right. Locked visual rhythm.</div>' +
+        '<div class="rt65-lock">5-expression system — neutral, curious, focused, determined, proud. No additions without explicit request.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:8px">' +
+      '<div class="rt65-block-title">What future passes may change</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-rule">Expression micro-nuance — brow/mouth within current system</div>' +
+        '<div class="rt65-rule">Equipment designs — enormous visual impact, zero locked geometry impact</div>' +
+        '<div class="rt65-rule">Color variants — skin tone variants, hair color cosmetics</div>' +
+        '<div class="rt65-rule">Personality signal — any element that signals archetype without touching locked geometry</div>' +
+      '</div>' +
+    '</div>',
+    'The geometry is done. Future value lives in personality, equipment, and cosmetics.',
+    'accent'
+  );
+
+  rt65Card(
+    'Phase 10 — Decision Gate',
+    'A: polish-only, or B: targeted redesign still needed?',
+    '<div class="rt65-verdict b">' +
+      'Verdict: B-Modified — Geometry Done, Personality Injection Required' +
+      '<br><span style="font-size:11px;font-weight:normal;opacity:0.85">The avatar is geometrically complete and all coordinates are now locked. But it has not yet achieved genuine aspirational appeal for the target user. A targeted Character Personality Sprint is required — not a geometry redesign, but a deliberate archetype signal pass that gives the character an implied identity.</span>' +
+    '</div>' +
+    '<div class="rt65-block" style="margin-top:10px">' +
+      '<div class="rt65-block-title">Scorecard</div>' +
+      '<div class="rt65-block-body">' +
+        '<div class="rt65-pass">Geometry — DONE. All coordinates locked. No further changes.</div>' +
+        '<div class="rt65-pass">Expression system — DONE. 5 states, differentiated, emotionally nuanced.</div>' +
+        '<div class="rt65-pass">Equipment foundation — DONE. Cape silhouette is competitive.</div>' +
+        '<div class="rt65-warn">Scale legibility — ADEQUATE. Hair hook is readable. Body detail below threshold.</div>' +
+        '<div class="rt65-fail">Personality archetype — MISSING. No clear implied identity or world.</div>' +
+        '<div class="rt65-fail">Youth aspirational appeal — INCOMPLETE. Reads educational, not aspirational.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt65-score">' +
+      '<span class="rt65-score-item pass">Warmth ✓</span>' +
+      '<span class="rt65-score-item pass">Craft ✓</span>' +
+      '<span class="rt65-score-item pass">Equipment ✓</span>' +
+      '<span class="rt65-score-item pass">Expressions ✓</span>' +
+      '<span class="rt65-score-item warn">Memorability ~</span>' +
+      '<span class="rt65-score-item warn">Scale legibility ~</span>' +
+      '<span class="rt65-score-item fail">Aspiration ✕</span>' +
+      '<span class="rt65-score-item fail">Personality ✕</span>' +
+      '<span class="rt65-score-item fail">Youth cool ✕</span>' +
+    '</div>',
+    'Recommended next sprint: Character Personality Injection — define and implement one strong archetype signal',
+    'warn'
+  );
+
+}());
+</script>
 </body>
 </html>
