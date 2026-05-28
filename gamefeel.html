@@ -1837,6 +1837,34 @@
     .rt59-table td { padding: 5px 8px; color: #2e6458; border-bottom: 1px solid #3d8c7a15; vertical-align: top; line-height: 1.4; }
     .rt59-table tr:last-child td { border-bottom: none; }
     .rt59-mono { font-family: monospace; font-size: 10px; background: #3d8c7a18; color: #6bbea8; padding: 1px 5px; border-radius: 3px; }
+
+    /* Section 60 — Avatar Rebuild Initiative: Core Character Redesign — amber-gold #c87a22 */
+    .rt60-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+    .rt60-card { background: #100a02; border: 1px solid #c87a2230; border-radius: 8px; padding: 18px; }
+    .rt60-card.accent { background: linear-gradient(135deg, #100a02 0%, #160d04 100%); border-color: #c87a2260; }
+    .rt60-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #c87a22; margin-bottom: 8px; }
+    .rt60-title { font-size: 14px; font-weight: 700; color: #f0d4a0; margin-bottom: 10px; line-height: 1.3; }
+    .rt60-body { font-size: 12px; color: #6b4a22; line-height: 1.6; }
+    .rt60-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #c87a2230; font-size: 11px; color: #c87a22; font-style: italic; }
+    .rt60-block { background: #c87a2210; border-left: 2px solid #c87a2240; padding: 10px 14px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .rt60-block-title { font-size: 11px; font-weight: 600; color: #c87a22; margin-bottom: 4px; }
+    .rt60-block-body { font-size: 12px; color: #6b4a22; line-height: 1.6; }
+    .rt60-quote { font-size: 12px; color: #c87a22; font-style: italic; border-left: 3px solid #c87a2260; padding: 8px 12px; margin: 8px 0; background: #c87a2208; border-radius: 0 4px 4px 0; }
+    .rt60-rule { font-size: 11px; color: #6b4a22; padding: 3px 0; }
+    .rt60-rule::before { content: "→ "; color: #c87a22; font-weight: 700; }
+    .rt60-avoid { font-size: 11px; color: #6b4a22; padding: 3px 0; }
+    .rt60-avoid::before { content: "✕ "; color: #8c4a22; font-weight: 700; }
+    .rt60-deferred { font-size: 11px; color: #6b4a22; padding: 3px 0; }
+    .rt60-deferred::before { content: "⟳ "; color: #7a6622; font-weight: 700; }
+    .rt60-pair { background: #100a02; border: 1px solid #c87a2220; border-radius: 6px; padding: 9px 12px; margin: 5px 0; }
+    .rt60-pair-label { font-size: 10px; font-weight: 700; color: #c87a22; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+    .rt60-pair-text { font-size: 11px; color: #6b4a22; line-height: 1.5; }
+    .rt60-pair-sub { font-size: 10px; color: #4a3015; margin-top: 3px; font-style: italic; }
+    .rt60-table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 8px 0; }
+    .rt60-table th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #c87a22; padding: 5px 8px; border-bottom: 1px solid #c87a2230; }
+    .rt60-table td { padding: 5px 8px; color: #6b4a22; border-bottom: 1px solid rgba(200,122,34,0.06); vertical-align: top; }
+    .rt60-table tr:last-child td { border-bottom: none; }
+    .rt60-mono { font-family: monospace; font-size: 10px; background: #c87a2218; color: #e0a060; padding: 1px 5px; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -2133,6 +2161,9 @@
 
   <h2 class="section-heading" style="margin-top:40px">Section 59 — Facial Presence &amp; Micro-Performance</h2>
   <div class="rt59-grid" id="rt59Grid"></div>
+
+  <h2 class="section-heading" style="margin-top:40px">Section 60 — Avatar Rebuild Initiative: Core Character Redesign</h2>
+  <div class="rt60-grid" id="rt60Grid"></div>
 </div>
 
 <script type="module">
@@ -17482,6 +17513,293 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     '</div>' +
     '<div class="rt59-quote">Watch the avatar for 30 seconds. Do you forget it is animated? Does it feel like someone is there? If yes to both: the standard is met.</div>',
     'Section 59 quality gate — permanent standard for all future avatar facial performance decisions',
+    'accent'
+  );
+
+}());
+</script>
+
+<script>
+// ─── Section 60 — Avatar Rebuild Initiative: Core Character Redesign ─────────
+(function () {
+  var grid = document.getElementById('rt60Grid');
+  if (!grid) return;
+
+  function card(title, subtitle, body, footer, mod) {
+    var d = document.createElement('div');
+    d.className = 'rt60-card' + (mod ? ' ' + mod : '');
+    d.innerHTML =
+      '<div class="rt60-label">Section 60 — Character Redesign</div>' +
+      '<div class="rt60-title">' + title + '</div>' +
+      (subtitle ? '<div class="rt60-body" style="margin-bottom:10px;color:#c87a22;">' + subtitle + '</div>' : '') +
+      body +
+      (footer ? '<div class="rt60-footer">' + footer + '</div>' : '');
+    grid.appendChild(d);
+  }
+
+  // Card 1 — Character Appeal Audit
+  card(
+    'Character Appeal Audit — Why the Avatar Still Felt Assembled',
+    'A visually premium render object is not the same as a designed character. This is the gap Section 60 addresses.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The hair scalp gap</div>' +
+      '<div class="rt60-block-body">The hair cap terminated at y=44 on both sides. The head sphere (skin color) was fully exposed from y=44 downward at the temples. The 2.8px temple strands covered approximately 3px of a 20px gap. At 52px display, the skin-colored sphere showed through from under each hair edge. The hair read as a cap placed ON the head, not as hair growing FROM it.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The iris problem</div>' +
+      '<div class="rt60-block-body">Iris r=4.5 in rx=7 sclera = 64% fill ratio. At 52px display the iris appeared as a small dot in a large white surround. The character read as "empty-eyed" — present in body but absent in gaze. r=4.8 = 69% fill. A 5% change that produces a noticeable shift in perceived presence.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The brow and crease problem</div>' +
+      '<div class="rt60-block-body">Brow stroke 1.9px = 0.62px at display — sub-pixel on many mobile screens. The eyelid crease at 1.4px was the same. Both elements were present in the SVG but absent in the rendering. Expression variation (the entire emotional system) depends on brow and eyelid definition reading clearly. If these elements are invisible, expressions collapse into the same neutral face.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The collar surface problem</div>' +
+      '<div class="rt60-block-body">The V-collar was a flat triangle. No depth edge, no fold shadow, no neckline wrap suggesting the shirt has back circumference. The clothing read as a texture applied to a mannequin surface rather than a garment worn by a body. A person cannot wear a shirt that only has a front face — but that\'s what the design communicated.</div>' +
+    '</div>',
+    'Character appeal is primarily a face problem and a hair problem — Section 60 addresses both'
+  );
+
+  // Card 2 — Silhouette Analysis
+  card(
+    'Silhouette Analysis — What Reads, What Doesn\'t',
+    'A character should read its emotional state in black silhouette at any scale.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What works in the current silhouette</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Hair crown peak at x=75 (5px off-center) — breaks perfect symmetry, implies a style direction</div>' +
+        '<div class="rt60-rule">Shoulder cap paths add rounded mass at the arm-torso junction</div>' +
+        '<div class="rt60-rule">Belt creates a strong horizontal landmark — waist reads even without a taper</div>' +
+        '<div class="rt60-rule">Equipment items (capes, crowns) dramatically reshape the silhouette — the base serves as a clean canvas for cosmetics</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What fails in the current silhouette</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-avoid">Arms at x=14/146 on a 160px canvas = T-pose width = 82% of canvas. Character reads as arms-always-extended.</div>' +
+        '<div class="rt60-avoid">Leg rects identical width top-to-bottom. No taper = no mass, no gravity, no grounding.</div>' +
+        '<div class="rt60-avoid">Hair silhouette is a smooth dome — zero texture, zero direction, zero style identity.</div>' +
+        '<div class="rt60-avoid">Torso barely narrows at waist — shoulder and waist read as the same visual width.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Why silhouette changes are deferred</div>' +
+      '<div class="rt60-block-body">Arms: rect bounds x=14/120, w=26 are hardcoded for armor-plate alignment. Moving or angling them orphans all armor equipment SVGs. Legs: rect bounds x=48/86, w=26, h=56 reserved for future boot/leg equipment. Torso: waist taper creates gap between shirt body and arm rects. All silhouette changes require coordinated equipment reauthoring — a Phase 2 initiative.</div>' +
+    '</div>',
+    'The test: silhouette in solid black on white. If it reads as "generic standing figure" the design has not yet succeeded.'
+  );
+
+  // Card 3 — Hair Architecture
+  card(
+    'Hair Architecture — Eliminating the Scalp Gap',
+    'Hair that sits ON a head vs. hair that grows FROM a head are visually distinct. The difference is side coverage.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The geometry problem</div>' +
+      '<div class="rt60-block-body">The hair cap path ends at (52, 44) on the left and (108, 44) on the right. Below y=44, the head sphere (skin color) is fully visible at the sphere edges. The sphere at y=53 extends from x=50.2 to x=109.8. The old temple strands at x=51/109, width 2.8px covered x=49.6 to 52.4 — a 2.8px strip over a 20px uncovered sphere edge. At 52px display: the gap was ~5px uncovered skin-colored scalp visible on each side.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The fix: side hair panels</div>' +
+      '<div class="rt60-block-body">Two filled bezier shapes extending from y=44 to y≈64 on each side. Left panel: M 52 44 Q 47 50 47 62 Q 48 68 54 64 Q 57 57 56 50 Z. At mid-height (y≈53): covers x=47 to x=56, straddling the sphere edge at x=50.2. The inner half of the panel fills the scalp gap; the outer half establishes the natural hair profile visible outside the head sphere.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Rendering order</div>' +
+      '<div class="rt60-block-body">Side panels → main cap → specular highlight → side catch-lights. Panels drawn FIRST so the main cap\'s clean outer edge reads as the dominant silhouette. The side panels are the fill; the catch-light strokes give them 3D curvature. The visual result: hair with side volume, not a flat cap with strands attached.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Cross-file consistency requirement</div>' +
+      '<div class="rt60-block-body">The identical change must be applied to body.svg AND all 5 expression SVGs. Expressions redraw the head sphere (erasing the face area) then redraw hair on top. If body.svg and any expression have different hair geometry, the hair "jumps" at expression transitions — visible artifact at any scale.</div>' +
+    '</div>',
+    'Hair consistency across 6 files is the single most critical implementation constraint'
+  );
+
+  // Card 4 — Face Appeal Improvements
+  card(
+    'Face Appeal — Iris Scale, Brow Weight, Eyelid Definition',
+    'The face is the primary attachment surface. At 52px, three elements carry everything: brow, eye, mouth.',
+    '<table class="rt60-table">' +
+      '<thead><tr><th>Element</th><th>Before</th><th>After</th><th>Perceptual effect</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Iris radius</td><td><span class="rt60-mono">r=4.5</span></td><td><span class="rt60-mono">r=4.8</span></td><td>64% → 69% fill ratio. Gaze feels present, not hollow.</td></tr>' +
+        '<tr><td>Brow weight</td><td><span class="rt60-mono">sw=1.9px</span></td><td><span class="rt60-mono">sw=2.2px</span></td><td>0.62px → 0.72px display. Expression now reliably reads on low-PPI screens.</td></tr>' +
+        '<tr><td>Brow arch (neutral)</td><td><span class="rt60-mono">peak y=36</span></td><td><span class="rt60-mono">peak y=35.5</span></td><td>Marginally more arch. Still warm, not intense.</td></tr>' +
+        '<tr><td>Eyelid crease (neutral)</td><td><span class="rt60-mono">sw=1.4, tail y=41.5</span></td><td><span class="rt60-mono">sw=1.6, tail y=41</span></td><td>Crease reads as a design decision, not a faint line.</td></tr>' +
+        '<tr><td>Eyelid crease (focused)</td><td><span class="rt60-mono">sw=1.5</span></td><td><span class="rt60-mono">sw=1.7</span></td><td>Heavy lid reads heavier — concentration more legible.</td></tr>' +
+        '<tr><td>Eyelid crease (determined)</td><td><span class="rt60-mono">sw=1.6</span></td><td><span class="rt60-mono">sw=1.8</span></td><td>Resolve gaze now clearly distinct from neutral.</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt60-quote">At 52px, every 0.1px of stroke-width is a 16% change in visual weight. These are not micro-adjustments — they are the difference between visible and invisible at mobile scale.</div>',
+    'Face appeal compounds with expression — a better base face amplifies every expression transition'
+  );
+
+  // Card 5 — Clothing Integration
+  card(
+    'Clothing Integration — From Surface Texture to Physical Garment',
+    'Clothing that is painted onto a body surface reads as decoration. Clothing that has depth reads as real.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The collar problem</div>' +
+      '<div class="rt60-block-body">The V-collar before Section 60: a single filled triangle (M 62 92 L 80 110 L 98 92) with one catch-light stroke. No fold edge, no underside shadow, no indication that the collar has physical depth. A viewer\'s visual system flags this as "painted surface" rather than "worn garment" — below conscious awareness but above the "feels real" threshold.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The fixes</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Collar fold underside: M 65 93 L 80 112 L 95 93 — a dark inner edge 1–2px inside the collar outer face. Creates the shadow of a collar folding over its own edge. Physical depth from a single path.</div>' +
+        '<div class="rt60-rule">Neckline wrap: M 65 91 Q 72 86 80 85 Q 88 86 95 91 — curved line at the neckline rim. Implies the collar continues around behind the neck. The shirt now has circumference, not just a front face.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What remains deferred</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-deferred">Sleeve-to-torso junction: arm rect positioning is hardcoded for armor alignment — rebuilding requires equipment reauthoring</div>' +
+        '<div class="rt60-deferred">Cape attachment anchor: capes wrap the entire figure — a front attachment anchor requires cape SVG reauthoring</div>' +
+        '<div class="rt60-deferred">Body-aware armor fitting: armor plates are flat overlays — fitting them to body curvature requires per-item geometry updates</div>' +
+      '</div>' +
+    '</div>',
+    'Every garment needs a fold edge. Without it, clothing reads as a sticker.'
+  );
+
+  // Card 6 — Compatibility Constraints
+  card(
+    'Compatibility Constraints — What Cannot Move',
+    'Phase 1 redesign operates within a geometry constraint system defined by 23+ equipment SVGs.',
+    '<table class="rt60-table">' +
+      '<thead><tr><th>Anchor</th><th>Value</th><th>Why locked</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Head sphere</td><td><span class="rt60-mono">cx=80 cy=50 r=30</span></td><td>All 5 expressions + all hat/crown/mask SVGs authored here</td></tr>' +
+        '<tr><td>Eye centers</td><td><span class="rt60-mono">cx=68/92 cy=47</span></td><td>Hero-mask lens ellipses + glasses-round anchored here</td></tr>' +
+        '<tr><td>Eye dimensions</td><td><span class="rt60-mono">rx=7 ry=6</span></td><td>Mask lens geometry references sclera dimensions</td></tr>' +
+        '<tr><td>Hand centers</td><td><span class="rt60-mono">cx=27/133 cy=172</span></td><td>Future hand-equipment slot anchor</td></tr>' +
+        '<tr><td>Arm rect</td><td><span class="rt60-mono">x=14/120 w=26 h=68</span></td><td>Armor arm-plate items overlay these exact rect bounds</td></tr>' +
+        '<tr><td>Leg rect</td><td><span class="rt60-mono">x=48/86 w=26 h=56</span></td><td>Future boot/leg equipment anchor</td></tr>' +
+        '<tr><td>Belt position</td><td><span class="rt60-mono">y=174 h=9</span></td><td>Armor waist-plate positioning reference</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What IS freely changeable</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Hair geometry — with the constraint that body.svg and all 5 expressions must match exactly</div>' +
+        '<div class="rt60-rule">Face features — iris size, brow weight, crease definition, mouth shape (within eye anchor bounds)</div>' +
+        '<div class="rt60-rule">Collar and neckline details — no equipment items reference collar geometry</div>' +
+        '<div class="rt60-rule">Torso bezier control points — waist taper adjustable within arm-rect boundary constraint</div>' +
+        '<div class="rt60-rule">All cosmetic rendering details — shadows, rim lights, specular, AO passes</div>' +
+      '</div>' +
+    '</div>',
+    'Every locked anchor represents a deliberate design choice made when the equipment system was built'
+  );
+
+  // Card 7 — Youth Appeal Validation
+  card(
+    'Youth Appeal — The 13-Year-Old Test',
+    'Not "what do we think looks cool" — "what reads as cool to the actual audience."',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The test</div>' +
+      '<div class="rt60-block-body">Show the avatar to an 11–16-year-old with no context. The character should pass: "That looks like someone I\'d want to be" — without them feeling like the character was designed by a committee trying to appeal to teens. The difference is: genuine aspirational stylization vs. corporate youth-appeal engineering. The former is quiet and confident. The latter is loud and obvious.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What reads as premium to this age group</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Eyes that feel present and aware — large irises, defined lids, a gaze that makes contact</div>' +
+        '<div class="rt60-rule">Hair that looks like a style choice, not a default fallback</div>' +
+        '<div class="rt60-rule">Clothing with visible structure — seams, depth, physical reality</div>' +
+        '<div class="rt60-rule">Emotional accessibility — warm without being baby-cute, confident without being intense</div>' +
+        '<div class="rt60-rule">Clean design — few unnecessary details. "Less is more" reads as confident to this age group.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What Section 60 achieved on this metric</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Eyes present and aware: larger iris, stronger eyelid crease — the character now has a gaze</div>' +
+        '<div class="rt60-rule">Hair as style choice: side panels eliminate the "swimming cap" read</div>' +
+        '<div class="rt60-rule">Clothing structure: collar fold underside makes the shirt feel worn, not drawn</div>' +
+        '<div class="rt60-rule">Emotional accessibility: stronger brow definition — expressions read faster, trust builds earlier</div>' +
+      '</div>' +
+    '</div>',
+    'The hardest part of youth appeal: not trying too hard. Restraint IS the premium signal.'
+  );
+
+  // Card 8 — Material & Form Language
+  card(
+    'Material & Form — Volume Over Flatness',
+    'The character should feel constructed from forms, not assembled from shapes.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What was already working</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Directional lighting: all gradients at consistent 148° angle — unified light source</div>' +
+        '<div class="rt60-rule">Spherical form on head: right-face shadow path implies curved surface</div>' +
+        '<div class="rt60-rule">Shoulder cap paths: deltoid mass at arm-torso junction — most critical junction for avoiding "paper-cutout"</div>' +
+        '<div class="rt60-rule">Rim lights on arms and legs: lateral edges catch scene light — form reads in depth</div>' +
+        '<div class="rt60-rule">Belt buckle with highlight: single small mechanical detail implies all other hardware quality</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">What Section 60 added</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Collar fold edge: shirt material has physical thickness — cloth not paint</div>' +
+        '<div class="rt60-rule">Neckline wrap: shirt has cylindrical form — cloth continues behind the visible plane</div>' +
+        '<div class="rt60-rule">Hair side catch-lights: panels are curved surfaces with a lit inner edge — not flat strips</div>' +
+        '<div class="rt60-rule">Larger iris implies deeper eye socket: the eye reads as a cavity, not a disc</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Deferred material improvements</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-deferred">Material differentiation: skin, fabric, and hair currently feel similar in visual weight</div>' +
+        '<div class="rt60-deferred">Cloth vs. armor distinction: armor plates need stronger specular vs. cloth diffuse response</div>' +
+        '<div class="rt60-deferred">Leg taper: without ankle-narrowing, legs read as cylinders not tapering limbs</div>' +
+      '</div>' +
+    '</div>',
+    'Form hierarchy: head is the primary form, torso is secondary, limbs are tertiary. This ordering is correct.'
+  );
+
+  // Card 9 — What Phase 2 Requires
+  card(
+    'Phase 2 — What a Full Rebuild Requires',
+    'Phase 1 is incremental. Phase 2 is a coordinated equipment reauthoring initiative.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Why Phase 2 cannot be incremental</div>' +
+      '<div class="rt60-block-body">Any change to arm geometry, leg geometry, or torso proportions requires updating every equipment SVG that references those dimensions. There are currently 23 equipment SVGs authored to the existing body geometry. A silhouette rebuild orphans all of them simultaneously. Phase 2 must be treated as a coordinated feature branch — body.svg + all equipment SVGs updated together — not as a series of small fixes.</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Phase 2 targets</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Arm angle: 3–4° inward from shoulder to hand — natural rest position vs. T-pose</div>' +
+        '<div class="rt60-rule">Leg taper: ankle ~16px wide vs. current 26px — mass and gravitational grounding</div>' +
+        '<div class="rt60-rule">Torso taper: visible waist-to-shoulder ratio without shirt-to-arm gap</div>' +
+        '<div class="rt60-rule">Hair volume bump: slight crown protrusion above the smooth dome — breaks "cap" read</div>' +
+        '<div class="rt60-rule">Equipment anchors: defined body-space coordinates in avatar-layers.js for all attachment points</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">Phase 3 targets</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Inline SVG expressions: enables gaze, enables hair-as-slot, enables skin tone variants</div>' +
+        '<div class="rt60-rule">Hair equipment slot: multiple hairstyles as unlockable items — strongest identity driver</div>' +
+        '<div class="rt60-rule">Body-aware equipment positioning: capes, armor, accessories fit the character\'s form</div>' +
+      '</div>' +
+    '</div>',
+    'Phase 1 makes the character livable. Phase 2 makes the character iconic.'
+  );
+
+  // Card 10 — Future Character DNA Standard
+  card(
+    'Future Character DNA Standard — Section 60',
+    'Den Seje App Avatar Character DNA Standard — permanent design principles for all future work.',
+    '<div class="rt60-block">' +
+      '<div class="rt60-block-title">The 10 permanent principles</div>' +
+      '<div class="rt60-block-body">' +
+        '<div class="rt60-rule">Silhouette first — if it fails in black silhouette, the design fails</div>' +
+        '<div class="rt60-rule">Hair grows from the head — side coverage is non-negotiable; any gap reads as synthetic</div>' +
+        '<div class="rt60-rule">Eyes carry the character — iris fill &gt;68% of opening; eyelid definition at every scale</div>' +
+        '<div class="rt60-rule">Brows are emotional infrastructure — minimum 2.0px at 160×240 SVG for display readability</div>' +
+        '<div class="rt60-rule">Clothing has thickness — every garment edge needs a fold shadow</div>' +
+        '<div class="rt60-rule">Garments have circumference — necklines wrap around, not just face forward</div>' +
+        '<div class="rt60-rule">Body integration over slot logic — equipment should attach TO the character, not overlay it</div>' +
+        '<div class="rt60-rule">Asymmetry signals life — no perfect left/right symmetry in hair, brow, or gaze</div>' +
+        '<div class="rt60-rule">Scale-first design — every decision evaluated at 52×78px, not 400px preview</div>' +
+        '<div class="rt60-rule">Restraint over richness — one well-executed detail outperforms ten decorative ones</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt60-quote">View the character at 52×78px on mobile. Without squinting: Can you read the hair as hair? Can you see the eyes clearly? Does the clothing look worn rather than painted? If yes to all three: the minimum standard is met.</div>',
+    'Section 60 quality gate — permanent standard for all future character design decisions',
     'accent'
   );
 
