@@ -17805,5 +17805,269 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 61 — Anatomical Cohesion & Form Integration ──────────── -->
+<style>
+  .rt61-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-bottom: 32px;
+  }
+  .rt61-card {
+    background: #151c24; border: 1px solid #2a3a4a;
+    border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .rt61-card.accent { border-color: #3a6a9a; background: #111820; }
+  .rt61-label {
+    font-size: 9px; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase;
+    color: #3a6a9a;
+  }
+  .rt61-title { font-size: 14px; font-weight: bold; color: #c8dae8; line-height: 1.3; }
+  .rt61-body { font-size: 12px; color: #8aabbc; line-height: 1.6; }
+  .rt61-footer { font-size: 10px; color: #556878; font-style: italic; margin-top: 4px; }
+  .rt61-block { background: #0e1520; border-radius: 6px; padding: 10px 12px; }
+  .rt61-block-title { font-size: 10px; font-weight: bold; color: #3a6a9a; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .rt61-block-body { display: flex; flex-direction: column; gap: 4px; }
+  .rt61-rule { font-size: 11px; color: #9ab8c8; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt61-rule::before { content: '—'; position: absolute; left: 0; color: #3a6a9a; }
+  .rt61-avoid { font-size: 11px; color: #c06060; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt61-avoid::before { content: '✕'; position: absolute; left: 0; color: #c06060; font-size: 9px; }
+  .rt61-gain { font-size: 11px; color: #60a878; padding-left: 10px; position: relative; line-height: 1.5; }
+  .rt61-gain::before { content: '✓'; position: absolute; left: 0; color: #60a878; font-size: 9px; }
+  .rt61-quote {
+    font-size: 11px; color: #6a8898; font-style: italic;
+    border-left: 2px solid #3a6a9a; padding-left: 10px; line-height: 1.6;
+  }
+  .rt61-pair { display: flex; gap: 8px; align-items: flex-start; }
+  .rt61-pair-col { flex: 1; }
+  .rt61-pair-label { font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .rt61-pair-label.bad { color: #c06060; }
+  .rt61-pair-label.good { color: #60a878; }
+  .rt61-mono { font-family: monospace; font-size: 10px; color: #7a9aaa; }
+  .rt61-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .rt61-table th { color: #3a6a9a; font-weight: bold; padding: 4px 6px; text-align: left; border-bottom: 1px solid #2a3a4a; }
+  .rt61-table td { color: #8aabbc; padding: 4px 6px; border-bottom: 1px solid #1a2a38; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#3a6a9a;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #2a3a4a;">
+  Section 61 — Anatomical Cohesion &amp; Form Integration Pass
+</h2>
+<div class="rt61-grid" id="rt61Grid"></div>
+
+<script>
+(function () {
+  function rt61Card(label, title, body, footer, variant) {
+    const d = document.getElementById('rt61Grid');
+    const card = document.createElement('div');
+    card.className = 'rt61-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt61-label">' + label + '</div>' +
+      '<div class="rt61-title">' + title + '</div>' +
+      '<div class="rt61-body">' + body + '</div>' +
+      (footer ? '<div class="rt61-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  rt61Card(
+    'Phase 1 — Anatomical Audit',
+    'Why the body still reads as assembled',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">Root causes of disconnection</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-avoid">Arms: rect with rx=12 reads as inflated tubes — identical width from shoulder to wrist, no mass differentiation</div>' +
+        '<div class="rt61-avoid">Hands: perfect circles — no thumb, no palm silhouette, no wrist transition — pure placeholder geometry</div>' +
+        '<div class="rt61-avoid">Shoulder caps: deltoid overlays anchored mid-arm — not connected to the shirt body, float separately</div>' +
+        '<div class="rt61-avoid">Trapezius hints: opacity=0.11 fill triangles — too faint to register, neck reads as inserted into a flat surface</div>' +
+        '<div class="rt61-avoid">Waist shadows: Q 37 control point gives 3px indent — sub-pixel at display scale, invisible</div>' +
+        '<div class="rt61-avoid">Hair crown: flat arc at y=16, no peak — hair reads as a cap laid on the skull, not grown from it</div>' +
+      '</div>' +
+    '</div>',
+    'Every item above is a legibility failure at the 52×78px production scale'
+  );
+
+  rt61Card(
+    'Phase 2 — Arm Redesign',
+    'Rect → tapered path: shoulder 26px, wrist 20px',
+    '<div class="rt61-pair">' +
+      '<div class="rt61-pair-col">' +
+        '<div class="rt61-pair-label bad">Before (tube)</div>' +
+        '<div class="rt61-mono">&lt;rect x="14" y="98" w="26" h="68" rx="12"/&gt;</div>' +
+        '<div class="rt61-body" style="margin-top:6px;font-size:11px">Width is constant from y=98 to y=166. The arm looks inflated. No forearm taper. No mass differentiation between shoulder and wrist.</div>' +
+      '</div>' +
+      '<div class="rt61-pair-col">' +
+        '<div class="rt61-pair-label good">After (tapered)</div>' +
+        '<div class="rt61-mono">M 16 98 L 38 98 Q 40 110 L 39 142 L 36 164 Q 35 166 32 166...</div>' +
+        '<div class="rt61-body" style="margin-top:6px;font-size:11px">Shoulder full-width (26px), wrist narrows to 20px. Armor arm-plate alignment preserved — bounding box x=14–40 unchanged.</div>' +
+      '</div>' +
+    '</div>',
+    'Taper from elbow (y=142) to wrist (y=164): right edge moves from x=40 to x=36'
+  );
+
+  rt61Card(
+    'Phase 3 — Hand Redesign',
+    'Circle → palm ellipse + thumb knob',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">Why hands matter disproportionately</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-rule">Hands are the body part humans read most carefully — we evolved to read hand shape instantly</div>' +
+        '<div class="rt61-rule">A circle hand reads as a "placeholder" — the brain processes it as unfinished</div>' +
+        '<div class="rt61-rule">Even at 3px display radius, a thumb indication changes the read from "ball" to "hand"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt61-block" style="margin-top:8px">' +
+      '<div class="rt61-block-title">Changes made</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-gain">Palm: circle → ellipse rx=10 ry=9 (slightly wider than tall — palm proportions)</div>' +
+        '<div class="rt61-gain">Thumb: small teardrop path extending toward torso center — directional asymmetry</div>' +
+        '<div class="rt61-gain">Wrist crease: subtle arc at y=165 marking the sleeve-to-skin boundary</div>' +
+        '<div class="rt61-gain">Knuckle plane: arc raised from cy=170 to cy=168 — tighter to the new ellipse shape</div>' +
+        '<div class="rt61-rule">Visual center cx=27/133 cy=172 preserved — equipment anchor unchanged</div>' +
+      '</div>' +
+    '</div>',
+    'Thumb renders after arm, appears at wrist — not covered by sleeve'
+  );
+
+  rt61Card(
+    'Phase 4 — Shoulder Integration',
+    'Deltoid cap anchors at torso shoulder corner',
+    '<div class="rt61-pair">' +
+      '<div class="rt61-pair-col">' +
+        '<div class="rt61-pair-label bad">Before (floating)</div>' +
+        '<div class="rt61-body" style="font-size:11px">M 20 99 — path starts mid-arm. Shoulder cap is a floating deltoid shape with no connection to the shirt body. Reads as a separate sticker on the arm.</div>' +
+      '</div>' +
+      '<div class="rt61-pair-col">' +
+        '<div class="rt61-pair-label good">After (anchored)</div>' +
+        '<div class="rt61-body" style="font-size:11px">M 50 93 — path starts at the torso shoulder corner. The cap sweeps from shirt body across the shoulder to outer arm in one continuous form. Shirt + arm read as one structure.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt61-quote" style="margin-top:8px">The most critical junction for avoiding paper-doll feel: the shoulder cap must visually bridge the shirt and the arm, not float between them.</div>',
+    'Opacity increased from 0.26 to 0.30 — enough to read, not enough to compete with face'
+  );
+
+  rt61Card(
+    'Phase 5 — Form Hierarchy',
+    'Waist depth + trapezius form: body suggests a body',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">Waist shadow improvement</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-avoid">Old: Q 37 control = 3px indent, opacity=0.20, stroke-width=4.5 — sub-pixel at display scale</div>' +
+        '<div class="rt61-gain">New: Q 34 control = 6px indent, opacity=0.26, stroke-width=5 — visible waist concavity</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt61-block" style="margin-top:8px">' +
+      '<div class="rt61-block-title">Trapezius redesign</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-avoid">Old: open triangle fill (M 40 93 Q 56 88 72 92), opacity=0.11 — too faint, misshapen</div>' +
+        '<div class="rt61-gain">New: closed polygon with return curve (Q 68 97 58 102 Q 48 100 40 96 Z) — muscle insertion implied, neck-to-shoulder transition reads as structure not gap</div>' +
+      '</div>' +
+    '</div>',
+    'Form hierarchy = face reads first, body reads second, limbs are support — not equal detail everywhere'
+  );
+
+  rt61Card(
+    'Phase 6 — Hair/Skull Flow',
+    'Crown peak raised: y=16 → y=13, sculpted dome',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">The problem with a flat hair arc</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-avoid">Original cap: M 52 44 Q 50 18 75 16 Q 90 17 108 44 — single control point at y=16, produces flat dome</div>' +
+        '<div class="rt61-avoid">Flat crown at y=16 reads as a baseball cap — no cranial volume, hair feels surface-applied</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt61-block" style="margin-top:8px">' +
+      '<div class="rt61-block-title">Crown volume solution</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-gain">New: Q 50 17 74 15 Q 80 13 86 15 Q 100 17 108 44 — explicit crown peak at (80,13)</div>' +
+        '<div class="rt61-gain">Crown peak at y=13 vs sphere top at y=20 = 7px SVG hair above skull = 2.3px at display scale</div>' +
+        '<div class="rt61-gain">Inner fill path (Q 98 28 80 28) unchanged — hair band thickness increases by ~2px at crown, suggesting volume not flatness</div>' +
+        '<div class="rt61-rule">Propagated identically to all 5 expression SVGs — no expression-transition jump</div>' +
+      '</div>' +
+    '</div>',
+    'Hair specular line at y=22 falls naturally in the middle of the hair band — no update needed'
+  );
+
+  rt61Card(
+    'Phase 7 — Mass & Volume Language',
+    'Depth cues that turn shapes into structure',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">The paper-cutout problem</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-rule">SVG characters default to flat because every shape has the same visual weight</div>' +
+        '<div class="rt61-rule">Depth is created by: overlap layering, form shadows, rim lights, and edge differentiation</div>' +
+        '<div class="rt61-rule">A tapered arm already reads as more volumetric because the taper implies perspective foreshortening</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt61-block" style="margin-top:8px">' +
+      '<div class="rt61-block-title">Depth cues added this section</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-gain">Arm taper: narrowing toward wrist implies the arm recedes slightly in space</div>' +
+        '<div class="rt61-gain">Forearm shadow: moved to x=36/124, tighter to the narrow wrist area — emphasizes the taper</div>' +
+        '<div class="rt61-gain">Wrist crease: dark arc marks where sleeve ends — implies two separate material planes</div>' +
+        '<div class="rt61-gain">Shoulder cap sweep: single form bridging torso-to-arm suggests continuous shoulder mass</div>' +
+        '<div class="rt61-gain">Trapezius polygon: neck insertion form implies the body continues behind the collar</div>' +
+      '</div>' +
+    '</div>',
+    'Every depth cue works at 52×78px — none are sub-pixel at production scale'
+  );
+
+  rt61Card(
+    'Phase 8 — Youth Appeal',
+    'Cohesive form → aspirational read',
+    '<div class="rt61-body">The "cool older sibling" test: a 13-year-old should think "I want to look like that" without consciously registering why. This requires:</div>' +
+    '<div class="rt61-block" style="margin-top:8px">' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-rule">Proportional confidence — not cartoonishly inflated, not anatomically awkward</div>' +
+        '<div class="rt61-rule">Deliberate details — thumb indication says "someone designed this," not "someone templated this"</div>' +
+        '<div class="rt61-rule">Clothing that reads as worn — shoulder cap sweep implies a body underneath the shirt</div>' +
+        '<div class="rt61-rule">Hair with volume — a crown peak reads as styled, not helmeted</div>' +
+        '<div class="rt61-avoid">Not edgy — no aggressive silhouettes, no dramatic proportions, no "gaming logo" energy</div>' +
+        '<div class="rt61-avoid">Not corporate — not the Duolingo owl, not a bank mascot, not a rounded-happy blob</div>' +
+        '<div class="rt61-rule">Premium restraint — fewer details, each one executed at high quality</div>' +
+      '</div>' +
+    '</div>',
+    'Cohesion is the primary youth appeal signal — assembled feels cheap, unified feels premium'
+  );
+
+  rt61Card(
+    'Phase 9 — Permanent Form Standard',
+    'Character-form philosophy for Den Seje App',
+    '<div class="rt61-block">' +
+      '<div class="rt61-block-title">The 8 permanent form principles</div>' +
+      '<div class="rt61-block-body">' +
+        '<div class="rt61-rule">Cohesion over modularity — every form decision must increase the "one being" read</div>' +
+        '<div class="rt61-rule">Anatomy flow over slot logic — joints, shoulders, and wrists must suggest connective tissue, not hardware slots</div>' +
+        '<div class="rt61-rule">Form hierarchy over equal detail — face &gt; torso &gt; limbs &gt; accessories, in refinement weight</div>' +
+        '<div class="rt61-rule">Mass over flatness — taper, overlap, and shadow create the illusion of volume even in 2D</div>' +
+        '<div class="rt61-rule">Silhouette rhythm over geometric assembly — outline should flow, not step</div>' +
+        '<div class="rt61-rule">Scale-first evaluation — no change ships without checking the 52×78px render</div>' +
+        '<div class="rt61-rule">Arm/hand unity — the sleeve→wrist→hand must read as one connected form, not three separate objects</div>' +
+        '<div class="rt61-rule">Premium restraint — the character improves with fewer details, not more</div>' +
+      '</div>' +
+    '</div>',
+    'These principles supersede any individual aesthetic preference'
+  );
+
+  rt61Card(
+    'Phase 10 — Summary',
+    'Files changed & what each change achieves',
+    '<table class="rt61-table">' +
+      '<thead><tr><th>File</th><th>Change</th><th>Impact</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>body.svg</td><td>Arms: rect → tapered path</td><td>Eliminates tube-arm read</td></tr>' +
+        '<tr><td>body.svg</td><td>Hands: circle → palm ellipse + thumb</td><td>Reads as hand, not placeholder</td></tr>' +
+        '<tr><td>body.svg</td><td>Wrist crease line</td><td>Sleeve-to-skin boundary visible</td></tr>' +
+        '<tr><td>body.svg</td><td>Shoulder caps: torso-anchored</td><td>Arm+torso read as one form</td></tr>' +
+        '<tr><td>body.svg</td><td>Trapezius: closed polygon</td><td>Neck-to-shoulder structure implied</td></tr>' +
+        '<tr><td>body.svg</td><td>Waist shadow: Q 34, opacity 0.26</td><td>Visible waist concavity</td></tr>' +
+        '<tr><td>body.svg</td><td>Hair crown: peak y=13</td><td>Sculpted dome vs. flat cap</td></tr>' +
+        '<tr><td>expr-*.svg × 5</td><td>Hair crown: same peak</td><td>No expression-transition jump</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Section 61 — Anatomical Cohesion & Form Integration Pass — shipped 2026-05-28',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>

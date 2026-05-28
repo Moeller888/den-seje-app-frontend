@@ -74,9 +74,9 @@
   <path d="M 67 100 Q 72 110 74 120" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.18"/>
   <path d="M 93 100 Q 88 110 86 120" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.18"/>
 
-  <!-- Waist side shadows: torso concaves at waist — the most critical volume hint in cloth form -->
-  <path d="M 40 148 Q 37 163 40 178" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
-  <path d="M 120 148 Q 123 163 120 178" fill="none" stroke="#1c2930" stroke-width="4.5" opacity="0.20" stroke-linecap="round"/>
+  <!-- Waist side shadows: shadow deepens at the indented waist zone — cloth wraps a body, not a box -->
+  <path d="M 40 148 Q 34 163 40 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
+  <path d="M 120 148 Q 126 163 120 178" fill="none" stroke="#1c2930" stroke-width="5" opacity="0.26" stroke-linecap="round"/>
 
   <!-- Underarm crease: occlusion shadow at the axis where arm mass meets torso body -->
   <path d="M 40 100 Q 41 110 40 122" fill="none" stroke="#1c2930" stroke-width="2.2" opacity="0.24"/>
@@ -102,48 +102,65 @@
 
   <!-- ── ARMS — same rect bounds for armor arm-plate compatibility ── -->
 
-  <!-- Left arm -->
-  <rect x="14" y="98" width="26" height="68" rx="12" fill="url(#b2-aL)" stroke="#2c404a" stroke-width="1"/>
-  <!-- Left arm rim light: left face catches scene light -->
-  <line x1="15" y1="102" x2="15" y2="162" stroke="#96bece" stroke-width="1" opacity="0.38"/>
-  <!-- Left deltoid form: rounded bulge at shoulder insertion — more organic than flat rect -->
-  <path d="M 14 99 Q 16 97 24 100 Q 30 103 28 114 Q 24 122 16 120 Q 14 112 14 99 Z"
+  <!-- Left arm: tapered path — 26px at shoulder, ~20px at wrist, natural forearm narrowing.
+       Bounding box stays x=14–40 y=98–166 so armor arm-plate alignment is unchanged. -->
+  <path d="M 16 98 L 38 98 Q 40 100 40 110 L 39 142 L 36 164 Q 35 166 32 166 L 22 166 Q 19 166 18 164 L 15 142 L 14 110 Q 14 100 16 98 Z"
+        fill="url(#b2-aL)" stroke="#2c404a" stroke-width="1"/>
+  <!-- Left arm rim light -->
+  <line x1="15" y1="102" x2="15" y2="160" stroke="#96bece" stroke-width="1" opacity="0.38"/>
+  <!-- Left deltoid form: shoulder insertion bulge -->
+  <path d="M 14 100 Q 16 97 24 100 Q 30 103 28 114 Q 24 122 16 120 Q 14 112 14 100 Z"
         fill="#9cc4d8" opacity="0.32"/>
 
-  <!-- Right arm -->
-  <rect x="120" y="98" width="26" height="68" rx="12" fill="url(#b2-aR)" stroke="#2c404a" stroke-width="1"/>
-  <!-- Right arm rim light: right face catches scene light -->
-  <line x1="145" y1="102" x2="145" y2="162" stroke="#96bece" stroke-width="1" opacity="0.35"/>
+  <!-- Right arm: tapered path — mirror of left -->
+  <path d="M 144 98 L 122 98 Q 120 100 120 110 L 121 142 L 124 164 Q 125 166 128 166 L 138 166 Q 141 166 142 164 L 145 142 L 146 110 Q 146 100 144 98 Z"
+        fill="url(#b2-aR)" stroke="#2c404a" stroke-width="1"/>
+  <!-- Right arm rim light -->
+  <line x1="145" y1="102" x2="145" y2="160" stroke="#96bece" stroke-width="1" opacity="0.35"/>
   <!-- Right deltoid form: mirror -->
-  <path d="M 146 99 Q 144 97 136 100 Q 130 103 132 114 Q 136 122 144 120 Q 146 112 146 99 Z"
+  <path d="M 146 100 Q 144 97 136 100 Q 130 103 132 114 Q 136 122 144 120 Q 146 112 146 100 Z"
         fill="#9cc4d8" opacity="0.28"/>
 
-  <!-- Left forearm inner shadow: darker inner-lower arm creates visual taper toward wrist -->
-  <path d="M 37 142 Q 39 155 38 165" fill="none" stroke="#172028" stroke-width="4" opacity="0.18" stroke-linecap="round"/>
-  <!-- Right forearm inner shadow -->
-  <path d="M 123 142 Q 121 155 122 165" fill="none" stroke="#172028" stroke-width="4" opacity="0.18" stroke-linecap="round"/>
+  <!-- Left forearm taper shadow: darkens inner face of narrowing forearm, reinforces wrist taper -->
+  <path d="M 36 142 Q 37 155 36 164" fill="none" stroke="#172028" stroke-width="3.5" opacity="0.22" stroke-linecap="round"/>
+  <!-- Right forearm taper shadow -->
+  <path d="M 124 142 Q 123 155 124 164" fill="none" stroke="#172028" stroke-width="3.5" opacity="0.22" stroke-linecap="round"/>
 
   <!-- Elbow implication: faint plane change at elbow transition point -->
   <path d="M 17 143 Q 25 148 34 143" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
   <path d="M 143 143 Q 135 148 126 143" fill="none" stroke="#2c404a" stroke-width="1" opacity="0.14"/>
 
-  <!-- Hands: same center position (cx=27/133 cy=172) as original — full compat -->
-  <circle cx="27" cy="172" r="10" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
-  <circle cx="133" cy="172" r="10" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
-  <!-- Hand knuckle plane: faint arc implying underlying bone ridge — solid mass, not floating sphere -->
-  <path d="M 18 170 Q 27 167 36 170" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.16"/>
-  <path d="M 124 170 Q 133 167 142 170" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.16"/>
+  <!-- Hands: palm ellipse (slightly wider than tall) — more hand-like silhouette than circle.
+       Visual center stays at cx=27/133 cy=172 — equipment anchor preserved.
+       Thumb knobs extend toward torso center, rendered after arm so they appear at wrist level. -->
+  <!-- Left thumb: extends toward center (character left = thumb points right) -->
+  <path d="M 35 165 Q 41 162 42 166 Q 42 171 38 173 Q 34 171 35 165 Z"
+        fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.7" stroke-linejoin="round"/>
+  <ellipse cx="27" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
+  <!-- Right thumb: mirror — extends toward center -->
+  <path d="M 125 165 Q 119 162 118 166 Q 118 171 122 173 Q 126 171 125 165 Z"
+        fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.7" stroke-linejoin="round"/>
+  <ellipse cx="133" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
+  <!-- Knuckle plane: dorsal hand bone ridge -->
+  <path d="M 18 171 Q 27 168 36 171" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.20"/>
+  <path d="M 124 171 Q 133 168 142 171" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.20"/>
+  <!-- Wrist crease: cuff-to-skin boundary, confirms sleeve ends and hand begins -->
+  <path d="M 18 165 Q 27 162 36 165" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.22"/>
+  <path d="M 124 165 Q 133 162 142 165" fill="none" stroke="#2c404a" stroke-width="0.9" opacity="0.22"/>
 
-  <!-- Shoulder caps: deltoid mass bridging arm and torso — the most critical junction for
-       avoiding "paper-cutout" feel. Rendered on top of arm to show outer shoulder roundness. -->
-  <path d="M 20 99 Q 13 108 16 121 Q 23 119 33 112 Q 40 105 38 99 Q 29 94 20 99 Z"
+  <!-- Shoulder caps: deltoid mass bridging arm and torso.
+       Path STARTS at the torso shoulder corner (M 50 93 / M 110 93) — this anchors the cap to
+       the shirt body, creating a visually continuous shoulder slope from collar to outer arm.
+       Previously started mid-arm; moving the anchor to the torso edge eliminates the "floating
+       deltoid" read and makes arm+torso feel like one structural form. -->
+  <path d="M 50 93 Q 36 91 18 100 Q 12 110 16 121 Q 23 119 33 112 Q 40 104 40 97 Z"
+        fill="#7aacbe" opacity="0.30"/>
+  <!-- Shoulder cap highlight: upper-left light catches the swept shoulder top face -->
+  <path d="M 50 93 Q 36 91 18 100" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.38"/>
+
+  <path d="M 110 93 Q 124 91 142 100 Q 148 110 144 121 Q 137 119 127 112 Q 120 104 120 97 Z"
         fill="#7aacbe" opacity="0.26"/>
-  <!-- Shoulder cap highlight: top face of deltoid mass catches upper-left light -->
-  <path d="M 20 99 Q 29 94 38 99" fill="none" stroke="#a8d4e6" stroke-width="0.8" opacity="0.32"/>
-
-  <path d="M 140 99 Q 147 108 144 121 Q 137 119 127 112 Q 120 105 122 99 Q 131 94 140 99 Z"
-        fill="#7aacbe" opacity="0.22"/>
-  <path d="M 140 99 Q 131 94 122 99" fill="none" stroke="#a8d4e6" stroke-width="0.8" opacity="0.28"/>
+  <path d="M 110 93 Q 124 91 142 100" fill="none" stroke="#a8d4e6" stroke-width="0.9" opacity="0.32"/>
 
   <!-- ── HEAD ── -->
 
@@ -155,9 +172,11 @@
   <path d="M 72 80 Q 71 88 72 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.16"/>
   <path d="M 88 80 Q 89 88 88 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.14"/>
 
-  <!-- Trapezius hints: shoulder-muscle mass flanking the neck — suggests structure, not floating head -->
-  <path d="M 40 93 Q 56 88 72 92" fill="#1c2930" opacity="0.11"/>
-  <path d="M 120 93 Q 104 88 88 92" fill="#1c2930" opacity="0.11"/>
+  <!-- Trapezius form: closed polygon creates the neck-to-shoulder muscle mass.
+       The downward return curve (Q 68 97 58 102) implies the trapezius insertion into
+       the upper back — removes "floating head on flat shirt" read, suggests a body exists. -->
+  <path d="M 40 92 Q 56 87 72 91 Q 68 97 58 102 Q 48 100 40 96 Z" fill="#1c2930" opacity="0.14"/>
+  <path d="M 120 92 Q 104 87 88 91 Q 92 97 102 102 Q 112 100 120 96 Z" fill="#1c2930" opacity="0.14"/>
 
   <!-- Ears: behind head sphere -->
   <ellipse cx="50" cy="52" rx="8" ry="9" fill="url(#b2-sk)"/>
@@ -183,7 +202,7 @@
   <path d="M 52 44 Q 47 50 47 62 Q 48 68 54 64 Q 57 57 56 50 Z" fill="#4a3626"/>
   <path d="M 108 44 Q 113 50 113 62 Q 112 68 106 64 Q 103 57 104 50 Z" fill="#4a3626"/>
   <!-- Main hair cap -->
-  <path d="M 52 44 Q 50 18 75 16 Q 90 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z"
+  <path d="M 52 44 Q 50 17 74 15 Q 80 13 86 15 Q 100 17 108 44 Q 98 28 80 28 Q 62 28 52 44 Z"
         fill="#4a3626"/>
   <!-- Hair specular: single highlight line, consistent upper-left light -->
   <path d="M 60 27 Q 74 22 90 25" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
