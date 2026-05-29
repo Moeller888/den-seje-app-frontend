@@ -1,0 +1,1641 @@
+Legacy questions: 72
+[
+  {
+    "id": "06963c9f-903a-4381-806a-1d8e5635129d",
+    "content": {
+      "correct": "1940",
+      "question": "Hvilket år blev Danmark besat af Tyskland?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1940"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 2,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_denmark_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "06e02cbf-b27f-4a00-bdc7-9c67e27e0f09",
+    "content": {
+      "correct": "Aksemagterne",
+      "options": [
+        "NATO",
+        "Aksemagterne",
+        "Ententen"
+      ],
+      "question": "Hvad hed alliancen mellem Tyskland, Italien og Japan?",
+      "accepted_answers": [
+        "Aksemagterne"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_axis_alliance_name",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "08d34ac9-8f1d-4233-8a04-4ec0ceeb482f",
+    "content": {
+      "facit": "I 1943 voksede den danske modstandsbevægelse betydeligt som en direkte konsekvens af den øgede tyske undertrykkelse og de danske myndigheders samarbejde med besættelsesmagten. Dette år markerer en vigtig vending i Danmarks kamp mod besættelsen.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven skal kunne angive året 1943 som tidspunktet for modstandsbevægelsens vækst.",
+        "Eleven skal forstå sammenhængen mellem tysk besættelse og modstandsbevægelsens udvikling.",
+        "Eleven skal kunne forklare, at modstandsbevægelsens vækst var en konsekvens af besættelsens udvikling."
+      ],
+      "question": "I hvilket år begyndte den danske modstandsbevægelse at vokse markant som en konsekvens af den tyske besættelse under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": false,
+    "learning_objective": "_consequence",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "09d85bd8-f8db-4a3e-a203-54fde2c46e1b",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år blev Berlin indtaget af de allierede?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 4,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_berlin_fall_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "09e77a30-98d4-4039-98ff-1a513972af89",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år kapitulerede Tyskland officielt?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 6,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_germany_capitulation_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "0d0720c2-96a8-4cf2-bf3f-5e9d663c4551",
+    "content": {
+      "correct": "1945",
+      "question": "I hvilket år overgav Tyskland sig i Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_germany_surrender_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "0eda5de4-fc7b-48ec-b8a4-b9aacf3a2cd3",
+    "content": {
+      "facit": null,
+      "correct": "1945",
+      "criteria": null,
+      "question": "I hvilket år begyndte Sovjetunionens erobring af Berlin under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_soviet_berlin_capture_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "11dbdaaa-51db-4041-b8dd-f8d3e1ec7da0",
+    "content": {
+      "facit": null,
+      "correct": "1944",
+      "criteria": null,
+      "question": "I hvilket år begyndte D-dag, invasionen i Normandiet under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_normandy_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "13d91b14-6dad-4825-8905-04a3b1ae9a16",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år blev FN oprettet?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 4,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_un_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "158862bf-6d6b-4db3-8f9f-5b12a6e2e8e2",
+    "content": {
+      "facit": "Danmark blev besat af Tyskland den 9. april 1940, hvilket markerede starten på landets alliance- og besættelsesstatus under Anden Verdenskrig.",
+      "correct": "1940",
+      "criteria": [
+        "Eleven angiver korrekt årstal for den tyske besættelse af Danmark.",
+        "Eleven forstår betydningen af besættelsen i forhold til Danmarks alliance- og neutralitetsstatus.",
+        "Eleven kan sætte begivenheden i kontekst med Anden Verdenskrigs forløb."
+      ],
+      "question": "I hvilket år blev Danmark officielt besat af Tyskland under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "_alliance_status",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "1c193e44-bfd7-4c91-94e4-9b70e0cb1008",
+    "content": {
+      "correct": "Britisk sejr",
+      "options": [
+        "Tysk sejr",
+        "Britisk sejr",
+        "Uafgjort",
+        "Sovjetisk intervention"
+      ],
+      "question": "Hvad var udfaldet af Slaget om England i 1940?",
+      "accepted_answers": [
+        "Britisk sejr"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_battle_of_britain_outcome",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "2009619a-353d-42bd-9260-b70edd968df4",
+    "content": {
+      "correct": "Sovjetunionen",
+      "options": [
+        "Sovjetunionen",
+        "Italien",
+        "Spanien",
+        "Sverige"
+      ],
+      "question": "Hvilket land kæmpede mod Tyskland på Østfronten?",
+      "accepted_answers": [
+        "Sovjetunionen"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_eastern_front_main_enemy",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "234d1158-5f26-4861-80e9-fe726402334e",
+    "content": {
+      "correct": "1940",
+      "question": "Hvad år startede Slaget om Storbritannien?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1940"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_of_britain_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "28b1ac82-92f6-4baf-b14d-d97180736eb5",
+    "content": {
+      "facit": null,
+      "correct": "1942",
+      "criteria": null,
+      "question": "I hvilket år begyndte slaget om Stalingrad under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1942"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_stalingrad_battle_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "29c72e16-c4da-4a8b-9532-1af08ce764d8",
+    "content": {
+      "correct": "1940",
+      "question": "Hvilket år begyndte invasionen af Danmark under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1940"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_denmark_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "2e018356-68f6-412b-8f7c-055044c4bfca",
+    "content": {
+      "correct": "USA",
+      "options": [
+        "Storbritannien",
+        "USA",
+        "Frankrig"
+      ],
+      "question": "Hvilket land blev angrebet ved Pearl Harbor?",
+      "accepted_answers": [
+        "USA"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_pearl_harbor_target_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "30d3a9b1-bbea-4b1c-b62c-8b94ebb5b9bd",
+    "content": {
+      "facit": "I 1943 intensiveredes den danske modstandsbevægelses aktiviteter markant, især efter den tyske besættelsesmagt forsøgte at indføre hårdere kontrol og arrestationer, hvilket førte til øget modstand og sabotage mod besættelsesmagten.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven skal kunne angive året 1943 som det tidspunkt, hvor modstandsbevægelsen blev mere aktiv.",
+        "Eleven skal forstå, at modstandsbevægelsen spillede en vigtig rolle i kampen mod den tyske besættelse.",
+        "Eleven skal kunne sætte modstandsbevægelsens øgede aktivitet i forbindelse med ændringer i den tyske besættelsespolitik."
+      ],
+      "question": "I hvilket år begyndte den danske modstandsbevægelse for alvor at spille en betydningsfuld rolle under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": false,
+    "learning_objective": "_role",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "3a52faca-2bc1-48b7-bb93-f26da0d361ba",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år begyndte faldet af Berlin under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_berlin_fall_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "3dd9d299-1a3d-4771-b9a8-ce27e8e994c9",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år sluttede Anden Verdenskrig i Europa?",
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_europe_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "3e6be961-13fe-4d9e-bc36-73cd6c480683",
+    "content": {
+      "facit": "Slaget ved Kursk begyndte i 1943 og var et af de største panserslag i historien, hvor de tyske og sovjetiske styrker kæmpede om kontrollen over en strategisk vigtig region.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven angiver korrekt årstal: 1943.",
+        "Eleven viser forståelse for slagets betydning i Anden Verdenskrig.",
+        "Eleven kan placere slaget i den rette historiske kontekst."
+      ],
+      "question": "I hvilket år begyndte slaget ved Kursk under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1943"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_kursk_battle_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "42527058-d5c7-46ec-aa97-ba85a5ff421d",
+    "content": {
+      "facit": "Besættelsen af Danmark under Anden Verdenskrig sluttede i 1945, da de tyske styrker kapitulerede og Danmark blev befriet.",
+      "correct": "1945",
+      "criteria": [
+        "Eleven angiver korrekt årstal for afslutningen af besættelsen.",
+        "Eleven viser forståelse for sammenhængen mellem besættelsens afslutning og krigens slutning.",
+        "Eleven kan placere begivenheden korrekt i historisk kontekst."
+      ],
+      "question": "I hvilket år sluttede besættelsen af Danmark under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": false,
+    "learning_objective": "_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "45663f43-fd77-47a6-bc44-53a4f6f9584f",
+    "content": {
+      "correct": "Sovjetunionen",
+      "options": [
+        "Polen",
+        "Frankrig",
+        "Sovjetunionen",
+        "Italien"
+      ],
+      "question": "Hvilket land blev invaderet under Operation Barbarossa?",
+      "accepted_answers": [
+        "Sovjetunionen"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 6,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_barbarossa_target_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "5877db83-08ce-4743-8e1e-32003d120ec7",
+    "content": {
+      "correct": "1945",
+      "question": "Hvilket år sluttede 2. verdenskrig i Europa?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_europe_war_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "5a1bd120-5df7-4042-8878-7d32b27c3240",
+    "content": {
+      "correct": "1942",
+      "question": "I hvilket år begyndte Slaget ved Midway under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1942"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_midway_battle_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "5b4357b9-9e87-4a3e-8dc7-ac4203b8c582",
+    "content": {
+      "facit": "Besættelsen af Danmark begyndte i 1940, da Tyskland invaderede landet den 9. april 1940 under Anden Verdenskrig.",
+      "correct": "1940",
+      "criteria": [
+        "Eleven angiver korrekt årstal for besættelsens start (1940).",
+        "Eleven viser forståelse for sammenhængen mellem årstal og historisk begivenhed.",
+        "Svar er formuleret klart og præcist som et firecifret årstal."
+      ],
+      "question": "I hvilket år begyndte besættelsen af Danmark under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "5bbc17ae-00ac-4ed2-b773-1f7bc5538095",
+    "content": {
+      "facit": "Året 1943 markerer et vendepunkt i den danske modstandsbevægelse, hvor modstanden mod den tyske besættelse intensiveredes betydeligt, blandt andet efter regeringens afgang og begyndelsen på mere organiserede sabotageaktioner.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven angiver korrekt året 1943 som vendepunktet.",
+        "Eleven viser forståelse for, at 1943 var året, hvor modstandsbevægelsen blev mere aktiv.",
+        "Eleven kan forklare, at regeringens afgang og øget sabotage var centrale elementer i dette vendepunkt."
+      ],
+      "question": "I hvilket år fandt det danske modstandsbevægelses store vendepunkt sted under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "_turning_point",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "5f1e275c-2a32-40a9-877d-2d12a14c4753",
+    "content": {
+      "correct": "1943",
+      "question": "Hvilket år skiftede Italien alliance under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1943"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_italy_switch_alliance_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "6049a11f-63fd-4e94-afd0-d7239e2e7411",
+    "content": {
+      "correct": "1945",
+      "question": "Hvorn�r fandt Jaltakonferencen sted under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_yalta_conference_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "71b38cd8-2bfd-4e0a-ae87-d84b1308fdaf",
+    "content": {
+      "correct": "1944",
+      "question": "Hvornår begyndte Operation Overlord?",
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_overlord_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "794857e7-2835-4703-a2ec-c38f118fafe1",
+    "content": {
+      "facit": "Den tyske besættelse af Danmark begyndte i 1940 og havde stor indflydelse på det danske samfund, herunder begrænsninger i frihed, økonomiske ændringer og modstandsbevægelsens opståen.",
+      "correct": "1940",
+      "criteria": [
+        "Eleven angiver korrekt årstal for besættelsens start (1940).",
+        "Eleven forklarer kort, hvordan besættelsen påvirkede det danske samfund.",
+        "Eleven viser forståelse for besættelsens betydning for Danmark under Anden Verdenskrig."
+      ],
+      "question": "I hvilket år begyndte den tyske besættelse af Danmark under Anden Verdenskrig, og hvordan påvirkede det det danske samfund?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "_impact",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "7c082449-f6a7-45f5-9917-2dbfb00ae26f",
+    "content": {
+      "correct": "1941",
+      "question": "Hvilket år startede angrebet på Pearl Harbor?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1941"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_pearl_harbor_attack_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "83cb5400-83d3-4d84-8512-3bda09ce1d97",
+    "content": {
+      "correct": "Molotov-Ribbentrop-pagten",
+      "options": [
+        "Molotov-Ribbentrop-pagten",
+        "München-aftalen",
+        "Versaillestraktaten",
+        "Atlantpagten"
+      ],
+      "question": "Hvad hed aftalen mellem Tyskland og Sovjetunionen i 1939?",
+      "accepted_answers": [
+        "Molotov-Ribbentrop-pagten"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 5,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_treaty_molotov_ribbentrop_pact_name",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "869ca2d3-f21e-451e-9566-aebbf66ef846",
+    "content": {
+      "correct": "Dwight D. Eisenhower var den øverste allierede kommandør under Anden Verdenskrig, og hans lederskab var vigtigt, fordi han koordinerede invasionen af Normandiet, hvilket var afgørende for at besejre Nazityskland.",
+      "question": "Forklar hvilken rolle Dwight D. Eisenhower spillede under Anden Verdenskrig, og hvorfor hans lederskab var vigtigt for de allieredes succes i Europa.",
+      "accepted_answers": [
+        "Dwight D. Eisenhower var den øverste allierede kommandør under Anden Verdenskrig, og hans lederskab var vigtigt, fordi han koordinerede invasionen af Normandiet, hvilket var afgørende for at besejre Nazityskland"
+      ]
+    },
+    "answer_format": "text",
+    "answer_type": "long",
+    "metadata": null,
+    "type": "text_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_eisenhower_role",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "89396d88-2bd0-4484-b51c-1eeda36672c2",
+    "content": {
+      "correct": "1944",
+      "question": "I hvilket år begyndte D-dag under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_d_day_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "907ec855-e29e-4d0b-ae14-c6e2f4787d82",
+    "content": {
+      "correct": "1936",
+      "question": "I hvilket år blev Rom–Berlin-aksen politisk erklæret?",
+      "accepted_answers": [
+        "1936"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_treaty_rome_berlin_axis_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "9196283c-313f-4b52-ba11-303400d53576",
+    "content": {
+      "correct": "1939",
+      "question": "Hvornår begyndte Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1939"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_global_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "9298bf4e-6f00-41bd-993b-90b0c013250d",
+    "content": {
+      "correct": "1944",
+      "question": "Hvilket år fandt D-dag landingen sted?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_d_day_landing_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "9b79c22a-3a09-4911-819b-18f4d23385c6",
+    "content": {
+      "facit": "I 1943 intensiverede den danske modstandsbevægelse sine sabotageaktioner som en strategisk reaktion på den tyske besættelse, hvilket markerede en vigtig fase i Danmarks aktive modstand under krigen.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven skal kunne identificere 1943 som året for intensiveringen af sabotageaktionerne.",
+        "Eleven skal forstå, at denne intensivering var en strategisk beslutning i modstandskampen.",
+        "Eleven skal kunne forklare betydningen af modstandsbevægelsens handlinger i forhold til den tyske besættelse."
+      ],
+      "question": "I hvilket år begyndte den danske modstandsbevægelse at intensivere sine sabotageaktioner mod de tyske besættelsesstyrker under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": false,
+    "learning_objective": "_strategy",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "a0a6058e-b07c-46f9-9881-35ac5a87d0a0",
+    "content": {
+      "correct": "Frankrig",
+      "options": [
+        "Belgien",
+        "Frankrig",
+        "Italien",
+        "Holland"
+      ],
+      "question": "Hvilket land invaderede de allierede gennem Operation Overlord?",
+      "accepted_answers": [
+        "Frankrig"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_overlord_target_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "a0f8b848-2ab7-43db-a4b0-71e3045a7806",
+    "content": {
+      "correct": "Italien",
+      "options": [
+        "Spanien",
+        "Italien",
+        "Tyskland",
+        "Østrig"
+      ],
+      "question": "Hvilket land ledede Benito Mussolini under 2. verdenskrig?",
+      "accepted_answers": [
+        "Italien"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_mussolini_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "a4fed64b-3ba2-4d1a-aacb-78deca047ff0",
+    "content": {
+      "correct": "USA",
+      "question": "Hvilket land erklærede krig mod Japan efter angrebet på Pearl Harbor?",
+      "accepted_answers": [
+        "USA"
+      ]
+    },
+    "answer_format": "text",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 6,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_usa_declaration_of_war_on_japan_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "a5d54f61-cf01-497a-b74c-eae41b997916",
+    "content": {
+      "correct": "Slaget om Normandiet",
+      "options": [
+        "Slaget om Normandiet",
+        "Slaget om Berlin",
+        "Slaget ved El Alamein",
+        "Slaget ved Kursk"
+      ],
+      "question": "Hvilket slag fandt sted i 1944 og førte til de allieredes landgang i Frankrig?",
+      "accepted_answers": [
+        "Slaget om Normandiet"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 4,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_normandy_name",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "a7af99d8-bb50-4234-8ecc-9651d1df8019",
+    "content": {
+      "correct": "Frankrig",
+      "options": [
+        "Frankrig",
+        "Spanien",
+        "Italien",
+        "Holland"
+      ],
+      "question": "Hvilket land kæmpede sammen med Storbritannien i begyndelsen af krigen mod Tyskland?",
+      "accepted_answers": [
+        "Frankrig"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 4,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_france_alliance_status",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "ae576bbe-9c7f-465e-929f-5455bef90688",
+    "content": {
+      "correct": "1941",
+      "question": "Hvilket år begyndte Operation Barbarossa?",
+      "accepted_answers": [
+        "1941"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 6,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_barbarossa_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "ae60bbea-789c-435f-9d3a-a798a9fcc86a",
+    "content": {
+      "correct": "1939",
+      "question": "Hvornår startede Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1939"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 11,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_world_war_2_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "b2176d68-dfb7-44e9-9e76-5f7aa20a50fa",
+    "content": {
+      "correct": "Italien",
+      "options": [
+        "Italien",
+        "Spanien",
+        "Portugal",
+        "Schweiz"
+      ],
+      "question": "Hvilket land skiftede side og kæmpede mod Tyskland fra 1943?",
+      "accepted_answers": [
+        "Italien"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_italy_switch_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "b27ebef9-6d47-4118-afd7-de4f00369770",
+    "content": {
+      "correct": "Hitler",
+      "options": [
+        "Hitler",
+        "Stalin",
+        "Churchill"
+      ],
+      "question": "Hvem var Tysklands leder under krigen?",
+      "accepted_answers": [
+        "Hitler"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_hitler_role",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "b39678e2-c659-49ab-bf58-fe94aff5f80e",
+    "content": {
+      "correct": "Norge",
+      "options": [
+        "Norge",
+        "Sverige",
+        "Finland",
+        "Belgien"
+      ],
+      "question": "Hvilket land blev invaderet af Tyskland i april 1940 sammen med Danmark?",
+      "accepted_answers": [
+        "Norge"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 4,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_norway_invasion_target_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "b46a54e2-221a-49e8-b0c7-23857ac3deb3",
+    "content": {
+      "facit": null,
+      "correct": "1941",
+      "criteria": null,
+      "question": "I hvilket år fandt angrebet på Pearl Harbor sted, som markerede USA's indtræden i Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1941"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_pearl_harbor_attack_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "b88f169a-f959-4d8b-bc9b-846fb36017fb",
+    "content": {
+      "correct": "Polen",
+      "question": "Hvilket land invaderede Tyskland 1. september 1939?",
+      "accepted_answers": [
+        "Polen"
+      ]
+    },
+    "answer_format": "text",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_poland_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "bf38ffac-730f-4d06-99ad-3de0bcf4fe4e",
+    "content": {
+      "correct": "Slaget ved Stalingrad var et afgørende vendepunkt i Anden Verdenskrig, da det resulterede i et stort nederlag for de tyske styrker. Dette slag førte til en markant ændring i krigens dynamik, hvor Sovjetunionen begyndte at presse tyskerne tilbage mod vest. Betydningen af slaget var, at det svækkede Tysklands militære kapacitet og morale, hvilket havde stor konsekvens for krigens udfald.",
+      "question": "Analyser hvordan slaget ved Stalingrad under Anden Verdenskrig blev et vendepunkt, og hvilken betydning dette slag havde for krigens videre forløb.",
+      "accepted_answers": [
+        "Slaget ved Stalingrad var et afgørende vendepunkt i Anden Verdenskrig, da det resulterede i et stort nederlag for de tyske styrker. Dette slag førte til en markant ændring i krigens dynamik, hvor Sovjetunionen begyndte at presse tyskerne tilbage mod vest. Betydningen af slaget var, at det svækkede Tysklands militære kapacitet og morale, hvilket havde stor konsekvens for krigens udfald"
+      ]
+    },
+    "answer_format": "text",
+    "answer_type": "long",
+    "metadata": null,
+    "type": "text_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_stalingrad_turning_point",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "bfd4e13c-2d0f-4c2a-9e64-a93b2caf27b5",
+    "content": {
+      "correct": "6",
+      "question": "Hvor mange år varede Anden Verdenskrig i Europa?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "6"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 7,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_timeline_europe_duration_years",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "c037d436-bea4-40f5-8f10-ee758c126c6d",
+    "content": {
+      "correct": "Slaget om Stalingrad",
+      "options": [
+        "Slaget ved Kursk",
+        "Slaget om Stalingrad",
+        "Slaget ved El Alamein",
+        "Slaget om Berlin"
+      ],
+      "question": "Hvilket slag i 1942–43 regnes som et afgørende vendepunkt på Østfronten?",
+      "accepted_answers": [
+        "Slaget om Stalingrad"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 7,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_stalingrad_turning_point",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "c36937c7-56e2-486d-a93b-917aace5a0f3",
+    "content": {
+      "correct": "1942",
+      "question": "Hvornår begyndte Operation Torch?",
+      "accepted_answers": [
+        "1942"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_military_operation_torch_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "c370d20d-fdf3-453d-92d3-dafa10aa8fa9",
+    "content": {
+      "facit": null,
+      "correct": "1944",
+      "criteria": null,
+      "question": "I hvilket år begyndte Slaget ved Ardennerne (Battle of the Bulge) under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_battle_bulge_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "c5165a86-8bc0-471c-baee-ac60dcb59286",
+    "content": {
+      "facit": "Anden Verdenskrig i Europa sluttede i 1945, da Tyskland overgav sig betingelsesløst i maj måned. Dette markerede afslutningen på konflikten i Europa.",
+      "correct": "1945",
+      "criteria": [
+        "Eleven angiver korrekt året 1945 som afslutningen på krigen i Europa.",
+        "Eleven viser forståelse for, at krigen sluttede med Tysklands overgivelse.",
+        "Eleven kan placere afslutningen af Anden Verdenskrig i en historisk kontekst."
+      ],
+      "question": "I hvilket år sluttede Anden Verdenskrig i Europa?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_europe_conflict_1_end_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "c5ecf0d2-1ea1-4b9d-8ea6-917f65fedf80",
+    "content": {
+      "correct": "1940",
+      "question": "Hvilket år begyndte Anden Verdenskrig med Tysklands invasion af Frankrig, der førte til Frankrigs fald?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1940"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 2,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_france_fall_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "d02db9bf-6e42-44e4-ae35-39966b6a4f96",
+    "content": {
+      "correct": "Belgien",
+      "question": "Hvilket land blev invaderet af Tyskland i maj 1940 som en del af Vestoffensiven?",
+      "accepted_answers": [
+        "Belgien"
+      ]
+    },
+    "answer_format": "text",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 6,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_belgium_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "d0a6a400-d786-4ac2-8c8c-f1a7851629a7",
+    "content": {
+      "correct": "Slaget ved El Alamein",
+      "options": [
+        "Slaget ved El Alamein",
+        "Slaget ved Kursk",
+        "Slaget om Stalingrad",
+        "Slaget om Berlin"
+      ],
+      "question": "Hvilket slag i Nordafrika blev et vendepunkt mod Tyskland i 1942?",
+      "accepted_answers": [
+        "Slaget ved El Alamein"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 5,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_el_alamein_turning_point",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "d1fd9060-4d26-425a-a6b4-90f393be146c",
+    "content": {
+      "correct": "Tyskland",
+      "options": [
+        "Tyskland",
+        "Østrig",
+        "Italien",
+        "Ungarn"
+      ],
+      "question": "Hvilket land var Adolf Hitler leder af?",
+      "accepted_answers": [
+        "Tyskland"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 2,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_hitler_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "d6fe6b4a-3512-4582-aa2f-e4d59027070b",
+    "content": {
+      "correct": "1943",
+      "question": "Hvornår begyndte slaget ved Kursk?",
+      "accepted_answers": [
+        "1943"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_kursk_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "dac73291-c73c-47a0-8514-b0469d34ddd8",
+    "content": {
+      "correct": "1943",
+      "question": "Hvilket år fandt Teherankonferencen sted under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1943"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_tehran_conference_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e027b23a-538b-463b-90df-0eb7481b2f9c",
+    "content": {
+      "correct": "Øverstkommanderende for de allierede invasionsstyrker i Europa",
+      "options": [
+        "Leder af RAF",
+        "Øverstkommanderende for de allierede invasionsstyrker i Europa",
+        "USA’s præsident",
+        "Chef for den sovjetiske hær"
+      ],
+      "question": "Hvilken rolle havde Dwight D. Eisenhower under Operation Overlord?",
+      "accepted_answers": [
+        "Øverstkommanderende for de allierede invasionsstyrker i Europa"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_eisenhower_role",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e1441657-8e58-4d7a-be24-0362164a7f58",
+    "content": {
+      "correct": "1945",
+      "question": "I hvilket år fandt Potsdam-konferencen sted under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1945"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_potsdam_conference_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e1cb522f-aa3e-47ea-9f17-aeb16a435184",
+    "content": {
+      "correct": "1939",
+      "question": "Hvilket år startede invasionen af Polen under Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1939"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_poland_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e32947cd-9993-401d-906b-208abfbc527d",
+    "content": {
+      "correct": "1943",
+      "question": "Hvornår begyndte Teheran-konferencen?",
+      "accepted_answers": [
+        "1943"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_conference_tehran_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e7085189-6821-482e-8695-999706f1814c",
+    "content": {
+      "facit": "I 1943 intensiveredes den danske modstandsbevægelses aktiviteter markant, især efter august, hvor sabotageaktioner og strejker blev mere udbredte som reaktion på den tyske besættelse.",
+      "correct": "1943",
+      "criteria": [
+        "Eleven angiver korrekt årstal: 1943.",
+        "Eleven viser forståelse for modstandsbevægelsens øgede aktivitet i 1943.",
+        "Eleven kan sætte årstallet i kontekst med besættelsens udvikling."
+      ],
+      "question": "I hvilket år blev den danske modstandsbevægelse særligt aktiv under Anden Verdenskrig?",
+      "tolerance": 0
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "_outcome",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "e97ac377-884e-41d3-a868-f8ebda5cc6ad",
+    "content": {
+      "correct": "Frankrig",
+      "options": [
+        "Frankrig",
+        "Belgien",
+        "Holland",
+        "Norge"
+      ],
+      "question": "Hvilket land blev befriet ved D-dag i 1944?",
+      "accepted_answers": [
+        "Frankrig"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 3,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_event_d_day_target_country",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "ed8ee772-2235-40f4-9457-a40736ba25b3",
+    "content": {
+      "correct": "1944",
+      "question": "Hvilket år ledede Dwight D. Eisenhower de allierede styrker under invasionen af Normandiet i Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1944"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_person_eisenhower_role",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "fcc28274-8a83-4ec1-a4fe-555b73415f37",
+    "content": {
+      "correct": "1939",
+      "question": "Hvilket år begyndte Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1939"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_pearl_harbor_attack_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "fdd94868-dfe5-4dfa-85e8-c23326351e04",
+    "content": {
+      "correct": "Sovjetunionen",
+      "options": [
+        "Polen",
+        "Tyskland",
+        "Sovjetunionen",
+        "Ukraine"
+      ],
+      "question": "I hvilket land lå slaget ved Kursk under 2. verdenskrig?",
+      "accepted_answers": [
+        "Sovjetunionen"
+      ]
+    },
+    "answer_format": "mc",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "mc_single",
+    "difficulty": 10,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_battle_kursk_location",
+    "target_grade": null,
+    "difficulty_band": null
+  },
+  {
+    "id": "ff04f29a-69b0-4fe7-9af8-d94f31997d67",
+    "content": {
+      "correct": "1939",
+      "question": "Hvilket år invaderede Tyskland Polen og startede dermed Anden Verdenskrig?",
+      "tolerance": 0,
+      "accepted_answers": [
+        "1939"
+      ]
+    },
+    "answer_format": "number",
+    "answer_type": "short",
+    "metadata": null,
+    "type": "number_input",
+    "difficulty": 1,
+    "question_type": "auto",
+    "is_active": true,
+    "learning_objective": "ww2_poland_invasion_start_year",
+    "target_grade": null,
+    "difficulty_band": null
+  }
+]
