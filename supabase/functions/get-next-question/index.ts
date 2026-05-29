@@ -186,7 +186,8 @@ serve(async (req) => {
           content,
           answer_format,
           answer_type,
-          metadata
+          metadata,
+          is_active
         )
       `)
       .eq("student_id", student_id)
@@ -200,8 +201,9 @@ serve(async (req) => {
     // For due instances, apply wave ordering — spaced repetition still wins over new questions
     // but within the due pool we prefer wave-appropriate questions first.
     // No band filter for due instances (already committed, grade filter does not apply).
+    // is_active=false questions are excluded — inactive questions must not be delivered.
     const sortedDue = sortByWave(
-      (dueInstances || []).filter(i => i.questions),
+      (dueInstances || []).filter(i => i.questions && i.questions.is_active !== false),
       wavePhase,
       lastMisconceptionType
     );
@@ -236,7 +238,8 @@ serve(async (req) => {
     // 🔥 2. NEW QUESTIONS — grade-filtered, wave+difficulty-band aware sorting
     let newQuestionsQuery = supabase
       .from("questions")
-      .select("id, content, answer_format, answer_type, metadata, difficulty_band");
+      .select("id, content, answer_format, answer_type, metadata, difficulty_band")
+      .eq("is_active", true);
 
     // Apply grade filter: serve questions with target_grade <= selectedGrade, or NULL (unclassified)
     if (selectedGrade !== null) {
