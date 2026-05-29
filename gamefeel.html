@@ -20387,5 +20387,377 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 69 — Discovery Systems & Explorer Equipment Pass ──────────── -->
+<style>
+  .rt69-wrap { background: #0a0a1a; min-height: 100vh; padding: 48px 24px 80px; font-family: system-ui, sans-serif; color: #e8e8f8; }
+  .rt69-header { text-align: center; margin-bottom: 48px; }
+  .rt69-section-tag { display: inline-block; background: #4f46e5; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; text-transform: uppercase; }
+  .rt69-title { font-size: clamp(22px, 5vw, 36px); font-weight: 800; color: #a5b4fc; line-height: 1.2; margin-bottom: 8px; }
+  .rt69-sub { color: #7c7ca8; font-size: 15px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
+  .rt69-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 24px; max-width: 1120px; margin: 0 auto; }
+  .rt69-card { background: #10102a; border: 1px solid #252545; border-radius: 16px; overflow: hidden; }
+  .rt69-card-head { background: #4f46e5; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  .rt69-card-num { background: rgba(0,0,0,0.3); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .rt69-card-title { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.3; }
+  .rt69-card-body { padding: 20px; }
+  .rt69-card-verdict { padding: 12px 20px; background: #0a0a1a; border-top: 1px solid #252545; font-size: 12px; color: #7c7ca8; font-style: italic; }
+  .rt69-card-verdict.accent { color: #a5b4fc; }
+  .rt69-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rt69-table th { background: #1e1e40; color: #a5b4fc; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px; text-align: left; }
+  .rt69-table td { padding: 8px 10px; border-bottom: 1px solid #252545; color: #c7d2fe; vertical-align: top; line-height: 1.5; }
+  .rt69-table tr:last-child td { border-bottom: none; }
+  .rt69-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .rt69-pill.has { background: #1e3a2e; color: #86efac; }
+  .rt69-pill.gap { background: #3a1e1e; color: #fca5a5; }
+  .rt69-pill.partial { background: #2e2a1e; color: #fcd34d; }
+  .rt69-pill.high { background: #1e1e3a; color: #a5b4fc; }
+  .rt69-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6366f1; margin: 14px 0 8px; }
+  .rt69-desc { font-size: 13px; color: #8080a8; line-height: 1.65; margin-bottom: 10px; }
+  .rt69-rule { background: #1a1a38; border-left: 3px solid #4f46e5; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #c7d2fe; margin-bottom: 8px; line-height: 1.55; }
+  .rt69-rule strong { color: #a5b4fc; }
+  .rt69-rule:last-child { margin-bottom: 0; }
+  .rt69-equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 8px; }
+  .rt69-equip-card { background: #1a1a38; border: 1px solid #252560; border-radius: 10px; padding: 12px 14px; }
+  .rt69-equip-name { font-size: 13px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+  .rt69-equip-role { font-size: 12px; color: #7c7ca8; line-height: 1.5; }
+  .rt69-equip-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px; margin-top: 6px; background: #252560; color: #818cf8; }
+  .rt69-tier { margin-bottom: 16px; }
+  .rt69-tier-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6366f1; background: #1a1a38; display: inline-block; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+  .rt69-moment { background: #1a1a38; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .rt69-moment:last-child { margin-bottom: 0; }
+  .rt69-moment-num { background: #4f46e5; color: #fff; font-size: 11px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rt69-moment-body { flex: 1; }
+  .rt69-moment-title { font-size: 13px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+  .rt69-moment-desc { font-size: 12px; color: #8080a8; line-height: 1.55; }
+  .rt69-moment-strength { font-size: 11px; font-weight: 700; margin-top: 6px; color: #6366f1; }
+  .rt69-bible-section { margin-bottom: 16px; }
+  .rt69-bible-title { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6366f1; margin-bottom: 8px; }
+  .rt69-bible-rule { font-size: 13px; color: #c7d2fe; padding: 6px 0; border-bottom: 1px solid #1e1e40; line-height: 1.55; }
+  .rt69-bible-rule:last-child { border-bottom: none; }
+  .rt69-gate { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .rt69-gate-item { background: #1a1a38; border: 1px solid #252560; border-radius: 10px; padding: 14px 16px; }
+  .rt69-gate-rank { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6366f1; margin-bottom: 6px; }
+  .rt69-gate-title { font-size: 14px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+  .rt69-gate-why { font-size: 12px; color: #8080a8; line-height: 1.55; }
+  .rt69-bar-wrap { background: #1e1e40; border-radius: 4px; height: 8px; overflow: hidden; margin-top: 4px; }
+  .rt69-bar { height: 100%; border-radius: 4px; background: #4f46e5; }
+  .rt69-score { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .rt69-score-item { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .rt69-score-item.pass { background: #1e3a2e; color: #86efac; }
+  .rt69-score-item.warn { background: #2e2a1e; color: #fcd34d; }
+  .rt69-score-item.fail { background: #3a1e1e; color: #fca5a5; }
+</style>
+
+<script>
+(function () {
+  const wrap = document.createElement('div');
+  wrap.className = 'rt69-wrap';
+  wrap.innerHTML =
+    '<div class="rt69-header">' +
+      '<div class="rt69-section-tag">Section 69</div>' +
+      '<div class="rt69-title">Discovery Systems &amp;<br>Explorer Equipment Pass</div>' +
+      '<div class="rt69-sub">The avatar says "I am an explorer." The platform must now provide things worth exploring. Audit every progression surface for genuine discovery. Design the canonical equipment philosophy. Determine what the student is actually finding.</div>' +
+    '</div>' +
+    '<div class="rt69-grid" id="rt69-grid"></div>';
+  document.body.appendChild(wrap);
+
+  function rt69Card(phase, title, body, verdict, verdictClass) {
+    const card = document.createElement('div');
+    card.className = 'rt69-card';
+    card.innerHTML =
+      '<div class="rt69-card-head">' +
+        '<span class="rt69-card-num">' + phase + '</span>' +
+        '<span class="rt69-card-title">' + title + '</span>' +
+      '</div>' +
+      '<div class="rt69-card-body">' + body + '</div>' +
+      '<div class="rt69-card-verdict ' + (verdictClass || '') + '">' + verdict + '</div>';
+    document.getElementById('rt69-grid').appendChild(card);
+  }
+
+  // ── PHASE 1 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 1',
+    'Discovery Audit — What Is the Student Actually Finding?',
+    '<p class="rt69-desc">Every surface in the progression loop evaluated: does it produce a genuine discovery moment — something felt, not just counted?</p>' +
+    '<table class="rt69-table">' +
+      '<thead><tr><th>System</th><th>Discovery present?</th><th>Notes</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td><strong>Reflection state</strong></td><td><span class="rt69-pill has">Genuine</span></td><td>Wrong answer + teacher review text = the explorer reads why. The only true knowledge discovery in the current flow.</td></tr>' +
+        '<tr><td><strong>Next question load</strong></td><td><span class="rt69-pill partial">Weak</span></td><td>Brief anticipation: "what will I encounter?" Discovery potential exists but is unreinforced — question appears with no framing of what territory it belongs to.</td></tr>' +
+        '<tr><td><strong>Correct answer</strong></td><td><span class="rt69-pill partial">Weak</span></td><td>"Ja! 🎯" confirms the explorer\'s map was accurate. Good frame. But no depth — no "you knew this because X." Just confirmation.</td></tr>' +
+        '<tr><td><strong>XP gain</strong></td><td><span class="rt69-pill gap">None</span></td><td>Pure accumulation. Number goes up. No discovery, no territory, no meaning beyond the number itself.</td></tr>' +
+        '<tr><td><strong>Level up</strong></td><td><span class="rt69-pill partial">Weak</span></td><td>"NY DYBDE — nyt territorium åbner sig" is the right language. But there is no new territory. The overlay fires and nothing changes. Promise without delivery.</td></tr>' +
+        '<tr><td><strong>Coins</strong></td><td><span class="rt69-pill gap">None</span></td><td>Pure collection currency. No discovery framing possible without shop redesign.</td></tr>' +
+        '<tr><td><strong>Shop / equipment</strong></td><td><span class="rt69-pill gap">None</span></td><td>Purchase frame. The explorer buys items. No discovery — the items are known before the transaction. Cosmetic only.</td></tr>' +
+        '<tr><td><strong>Achievements</strong></td><td><span class="rt69-pill partial">Weak</span></td><td>Performance-named ("perfect_five", "night_owl"). Fired as toasts. Not framed as discoveries — framed as rewards for behavior.</td></tr>' +
+        '<tr><td><strong>Content mastery</strong></td><td><span class="rt69-pill gap">None</span></td><td>Not visible to student. Questions repeat; there is no sense of a topic being "known" or "charted." No mastery map.</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Audit result: 1 genuine discovery moment (reflection). 3 weak/partial. 5 gaps. The system is 85% accumulation, 15% discovery.',
+    'accent'
+  );
+
+  // ── PHASE 2 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 2',
+    'Explorer Equipment Framework — Canonical Philosophy',
+    '<p class="rt69-desc">Equipment for the Apprentice Explorer must represent capability, not conquest. An explorer carries tools. They do not wear trophies. Every item must answer: "what does this help the explorer DO?"</p>' +
+    '<div class="rt69-section-label">Equipment philosophy — 3 axioms</div>' +
+    '<div class="rt69-rule"><strong>Axiom 1 — Tools, not trophies:</strong> Each item represents a field capability. The field satchel carries notes. The lantern illuminates dark terrain. The compass navigates. No item should signal rank or victory.</div>' +
+    '<div class="rt69-rule"><strong>Axiom 2 — Readable at 52×78px:</strong> The avatar renders at 52px wide, 78px tall. Equipment must be bold, high-contrast shapes. No fine detail. Silhouette-legible at production scale.</div>' +
+    '<div class="rt69-rule"><strong>Axiom 3 — Explorer vocabulary only:</strong> No swords, shields, armour, crowns, trophies, medals. The explorer carries: bags, journals, compasses, lanterns, maps, cloaks, lenses, quills, scrolls.</div>' +
+    '<div class="rt69-section-label">Equipment categories — canonical list</div>' +
+    '<div class="rt69-equip-grid">' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Field Satchel</div><div class="rt69-equip-role">Carries discoveries. Worn over shoulder. First unlock beyond starter cloak.</div><div class="rt69-equip-tag">Bag family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Field Journal</div><div class="rt69-equip-role">Records what the explorer has learned. Held under arm or at belt.</div><div class="rt69-equip-tag">Record family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Iron Compass</div><div class="rt69-equip-role">Navigation. Sense of direction in unknown territory. Belt or pocket.</div><div class="rt69-equip-tag">Navigation family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Field Lantern</div><div class="rt69-equip-role">Illuminates dark terrain. Carried or clipped. Dark → light = understanding.</div><div class="rt69-equip-tag">Light family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Territory Scroll</div><div class="rt69-equip-role">Map of charted knowledge. Worn as back-rolled scroll. Signals mastery.</div><div class="rt69-equip-tag">Map family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Explorer\'s Cloak</div><div class="rt69-equip-role">Current cape, reframed. Not "knight\'s cape" — the explorer\'s field cloak.</div><div class="rt69-equip-tag">Cloak family (existing)</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Monocle / Lens</div><div class="rt69-equip-role">Detail perception. The explorer looks closer. Worn at collar or forehead.</div><div class="rt69-equip-tag">Lens family</div></div>' +
+      '<div class="rt69-equip-card"><div class="rt69-equip-name">Understanding Badge</div><div class="rt69-equip-role">Domain-earned marker. Not a rank badge — a territory badge. On cloak collar.</div><div class="rt69-equip-tag">Badge family</div></div>' +
+    '</div>',
+    'Equipment vocabulary is locked. No swords. No armour. No trophies. Tools and field gear only.',
+    'accent'
+  );
+
+  // ── PHASE 3 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 3',
+    'Knowledge Artifacts — Achievements as Discoveries',
+    '<p class="rt69-desc">Can achievements become things the student FINDS rather than things they EARN? The framing shift is small but the attachment mechanism changes entirely. A discovery is personal. A reward is transactional.</p>' +
+    '<div class="rt69-section-label">Current achievements vs. explorer reframes</div>' +
+    '<table class="rt69-table">' +
+      '<thead><tr><th>Current name</th><th>Explorer reframe</th><th>Frame shift</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>first_answer</td><td>"First Step Into the Field"</td><td>Action → journey entry</td></tr>' +
+        '<tr><td>perfect_five</td><td>"Five Truths Confirmed"</td><td>Performance → knowledge verification</td></tr>' +
+        '<tr><td>night_owl</td><td>"Night Expedition"</td><td>Behavior → expedition type</td></tr>' +
+        '<tr><td>fast_learner</td><td>"Quick Read of the Territory"</td><td>Speed → terrain perception</td></tr>' +
+        '<tr><td>comeback</td><td>"Found the Path Again"</td><td>Resilience → navigation recovery</td></tr>' +
+        '<tr><td>reflection_reader</td><td>"Field Note Reader"</td><td>Behavior → explorer habit</td></tr>' +
+        '<tr><td>knowledge_seeker</td><td>"Horizon Seeker"</td><td>Generic → spatial frontier</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt69-section-label" style="margin-top:16px">The discovery toast redesign — concept</div>' +
+    '<div class="rt69-rule"><strong>Current:</strong> Achievement toast fires. "Ny præstation! [name]." Reward frame — the system gives you something.</div>' +
+    '<div class="rt69-rule"><strong>Explorer alternative:</strong> "Opdagelse: [name]" — the explorer found something. Small copy change, fundamental attachment shift. The student FOUND the achievement; it wasn\'t handed to them.</div>' +
+    '<div class="rt69-rule"><strong>Evaluation:</strong> High-leverage, zero database cost, minimal UI change. Requires updating achievement toast copy only. No schema change. Recommended for Section 70 implementation batch.</div>',
+    'Knowledge artifacts are viable. The database key stays the same. Only the presentation copy changes. Zero-cost identity shift.',
+    'accent'
+  );
+
+  // ── PHASE 4 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 4',
+    'Territory Model — Can Levels Become Regions?',
+    '<p class="rt69-desc">The current level system is a hierarchy: Niveau 1, 2, 3… higher = better. The territory model is spatial: each level is a place the explorer inhabits, not a rung they climbed. The proposition: add a frontend-only level → territory name mapping. Zero database cost.</p>' +
+    '<div class="rt69-section-label">Proposed territory map — levels 1–10</div>' +
+    '<table class="rt69-table">' +
+      '<thead><tr><th>Level</th><th>Territory name</th><th>Spatial meaning</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>1</td><td>Lysningen</td><td>The clearing — first open ground, familiar and safe</td></tr>' +
+        '<tr><td>2</td><td>Skovbrynet</td><td>The forest edge — first step into the unknown</td></tr>' +
+        '<tr><td>3</td><td>Den Dybe Skov</td><td>Deep wood — sustained exploration, no clear path</td></tr>' +
+        '<tr><td>4</td><td>Flodbrinken</td><td>The riverbank — following a current of knowledge</td></tr>' +
+        '<tr><td>5</td><td>Bjergpasset</td><td>The mountain pass — elevation, wider view opens</td></tr>' +
+        '<tr><td>6</td><td>Toppen</td><td>The summit — full panoramic view, connections visible</td></tr>' +
+        '<tr><td>7</td><td>Den Anden Side</td><td>The other side — new terrain after the mountain</td></tr>' +
+        '<tr><td>8</td><td>Havkysten</td><td>The coast — edge of the known, ocean beyond</td></tr>' +
+        '<tr><td>9</td><td>Det Åbne Hav</td><td>Open sea — beyond the map, deep water territory</td></tr>' +
+        '<tr><td>10+</td><td>Horisonten</td><td>The horizon — always further, always moving</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt69-rule" style="margin-top:12px"><strong>Implementation cost:</strong> One JS object in app.js — <code>const TERRITORIES = { 1: "Lysningen", 2: "Skovbrynet", ... }</code>. Update level-up overlay to show territory name alongside niveau number. Update identity strip to optionally show territory. Zero backend.</div>' +
+    '<div class="rt69-rule"><strong>Critical condition:</strong> The number must remain visible. "Niveau 4 — Flodbrinken" not just "Flodbrinken." The territory name is flavor; the number is the system anchor.</div>',
+    'Territory model is viable, zero-cost, and transforms the level-up moment from status announcement to geographic event.',
+    'accent'
+  );
+
+  // ── PHASE 5 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 5',
+    'Moments of Discovery — The 5 Strongest',
+    '<p class="rt69-desc">The 5 moments in the current flow where a student is closest to feeling "I understand something now." Ranked by genuine discovery intensity.</p>' +
+    '<div class="rt69-moment">' +
+      '<div class="rt69-moment-num">1</div>' +
+      '<div class="rt69-moment-body"><div class="rt69-moment-title">The Reflection Reveal</div><div class="rt69-moment-desc">Wrong answer → reflection panel opens → teacher\'s review text explains WHY. The explorer reads an explanation written specifically for them. This is the only moment of genuine new knowledge transfer in the flow.</div><div class="rt69-moment-strength">Discovery intensity: Highest. Already present. Reinforce, never reduce.</div></div>' +
+    '</div>' +
+    '<div class="rt69-moment">' +
+      '<div class="rt69-moment-num">2</div>' +
+      '<div class="rt69-moment-body"><div class="rt69-moment-title">Territory Entry (Level Up)</div><div class="rt69-moment-desc">Currently: "NY DYBDE 🌟 / Niveau X — nyt territorium åbner sig." The language is right. The substance is missing — no territory is named, nothing actually changes. With territory naming, this becomes a genuine geographic event.</div><div class="rt69-moment-strength">Discovery intensity: Medium now. High after territory naming.</div></div>' +
+    '</div>' +
+    '<div class="rt69-moment">' +
+      '<div class="rt69-moment-num">3</div>' +
+      '<div class="rt69-moment-body"><div class="rt69-moment-title">Correct Confirmation</div><div class="rt69-moment-desc">"Ja! 🎯" — the explorer\'s internal map matched the territory. The knowledge they carried was accurate. Could be deepened: "Ja! — du vidste det." But even the current form has genuine identity resonance.</div><div class="rt69-moment-strength">Discovery intensity: Medium. The moment exists; depth is the gap.</div></div>' +
+    '</div>' +
+    '<div class="rt69-moment">' +
+      '<div class="rt69-moment-num">4</div>' +
+      '<div class="rt69-moment-body"><div class="rt69-moment-title">The Question Appears</div><div class="rt69-moment-desc">Each new question is a new encounter. The explorer doesn\'t know what they\'ll face. Brief anticipation before reading the question. Currently unreinforced — no framing, no territory label, no "entering" language. Potential: show which territory this question belongs to.</div><div class="rt69-moment-strength">Discovery intensity: Weak but improvable without backend cost.</div></div>' +
+    '</div>' +
+    '<div class="rt69-moment">' +
+      '<div class="rt69-moment-num">5</div>' +
+      '<div class="rt69-moment-body"><div class="rt69-moment-title">Discovery Filed (Post-Reflection)</div><div class="rt69-moment-body"><div class="rt69-moment-desc">After the student presses "Videre →" to leave the reflection state. They\'ve just read an explanation. That knowledge is now filed. A brief "Noteret." or "Filed." indicator before the next question would close the loop: discovery → understanding → filed → forward.</div><div class="rt69-moment-strength">Discovery intensity: Potential only. Does not exist yet. One UI touchpoint.</div></div></div>' +
+    '</div>',
+    'The reflection reveal is the crown jewel. Everything else is infrastructure for the discoveries that follow from it.',
+    'accent'
+  );
+
+  // ── PHASE 6 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 6',
+    'Equipment Roadmap — First Realistic Tier Plan',
+    '<p class="rt69-desc">Four tiers. Each tier tied to progression depth. Equipment must be visually distinct at 52×78px. Each item has a field narrative — not a reward rationale.</p>' +
+    '<div class="rt69-tier">' +
+      '<div class="rt69-tier-label">Tier 1 — The Starter Kit (Lysningen, Level 1)</div>' +
+      '<table class="rt69-table"><thead><tr><th>Item</th><th>Visual</th><th>Field narrative</th></tr></thead><tbody>' +
+        '<tr><td>Explorer\'s Cloak</td><td>Current cape — reframed</td><td>Every explorer sets out with a field cloak. Default. Always worn.</td></tr>' +
+      '</tbody></table>' +
+    '</div>' +
+    '<div class="rt69-tier">' +
+      '<div class="rt69-tier-label">Tier 2 — Field Explorer (Skovbrynet–Den Dybe Skov, Levels 2–3)</div>' +
+      '<table class="rt69-table"><thead><tr><th>Item</th><th>Visual</th><th>Field narrative</th></tr></thead><tbody>' +
+        '<tr><td>Field Satchel</td><td>Canvas bag, diagonal strap across chest</td><td>The explorer needs a place to carry what they find. First major unlock.</td></tr>' +
+        '<tr><td>Iron Compass</td><td>Round disc at belt, visible needle line</td><td>Navigation. The explorer knows which way is forward.</td></tr>' +
+      '</tbody></table>' +
+    '</div>' +
+    '<div class="rt69-tier">' +
+      '<div class="rt69-tier-label">Tier 3 — Deep Explorer (Flodbrinken–Toppen, Levels 4–6)</div>' +
+      '<table class="rt69-table"><thead><tr><th>Item</th><th>Visual</th><th>Field narrative</th></tr></thead><tbody>' +
+        '<tr><td>Field Journal</td><td>Small book, spine visible at hip</td><td>The explorer records what they learn. Knowledge becomes permanent.</td></tr>' +
+        '<tr><td>Field Lantern</td><td>Clipped lantern, warm glow dot</td><td>Illuminates dark terrain. Understanding as light source.</td></tr>' +
+      '</tbody></table>' +
+    '</div>' +
+    '<div class="rt69-tier">' +
+      '<div class="rt69-tier-label">Tier 4 — Veteran Explorer (Den Anden Side–Horisonten, Levels 7+)</div>' +
+      '<table class="rt69-table"><thead><tr><th>Item</th><th>Visual</th><th>Field narrative</th></tr></thead><tbody>' +
+        '<tr><td>Territory Scroll</td><td>Rolled scroll on back, between shoulder blades</td><td>Maps of charted territory. The explorer carries their knowledge.</td></tr>' +
+        '<tr><td>Understanding Badge</td><td>Small emblem at cloak collar</td><td>Domain-earned territory marker. Not rank — proof of having been there.</td></tr>' +
+      '</tbody></table>' +
+    '</div>',
+    '8 total items across 4 tiers. All drawable as SVG additions. All narratively coherent with Apprentice Explorer identity.',
+    'accent'
+  );
+
+  // ── PHASE 7 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 7',
+    'Attachment Through Exploration — The Mechanism',
+    '<p class="rt69-desc">Why do explorers form different attachments than collectors? The mechanism is specific and teachable.</p>' +
+    '<div class="rt69-rule"><strong>Collection attachment loop:</strong> "I have X. I want X+1. I get X+1. I want X+2." Desire is externally set by the reward structure. Attachment to the number, not the identity. When rewards stop, attachment collapses.</div>' +
+    '<div class="rt69-rule"><strong>Exploration attachment loop:</strong> "I went somewhere. I found something. I understand something I didn\'t before. That understanding is mine permanently." Attachment is to the knowledge acquired — internally anchored. Nothing can take the understanding away.</div>' +
+    '<div class="rt69-rule"><strong>The key difference:</strong> Discoveries are non-rivalrous and permanent. The explorer\'s understanding doesn\'t decrease when another student also understands the same thing. Rewards are rivalrous and depletable. The exploration frame scales better psychologically.</div>' +
+    '<div class="rt69-rule"><strong>What builds exploration attachment specifically:</strong><br>1. Remembering a specific discovery ("oh, the question about fotosyntese")<br>2. Sensing that one\'s path was unique — the questions encountered were their questions<br>3. The avatar\'s equipment reflecting the explorer\'s depth — not their rank<br>4. Level-up moments feeling like geographic entry, not status upgrades</div>' +
+    '<div class="rt69-rule"><strong>The attachment risk:</strong> If the system says "you are an explorer" but provides nothing worth exploring, the identity claim creates a promise the platform cannot keep. That discrepancy produces disillusionment, not attachment. The discovery infrastructure must be real.</div>',
+    'Exploration attachment is slower to build but more durable. It survives the loss of streak or rank because it is anchored to knowledge, not metrics.',
+    'accent'
+  );
+
+  // ── PHASE 8 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 8',
+    'Product Identity Audit — Exploration vs. Accumulation',
+    '<p class="rt69-desc">Brutal honest assessment. What does the current system actually ask the student to do?</p>' +
+    '<div class="rt69-section-label">Accumulation signals (current)</div>' +
+    '<div class="rt69-rule"><strong>XP number grows:</strong> No discovery framing. Pure counter.</div>' +
+    '<div class="rt69-rule"><strong>Coin balance grows:</strong> Currency accumulation. Shop = purchase + acquire.</div>' +
+    '<div class="rt69-rule"><strong>Achievement toasts:</strong> "You did X behavior, here is a reward." Transaction, not discovery.</div>' +
+    '<div class="rt69-rule"><strong>Level number increases:</strong> Hierarchy, not geography (partially fixed by Section 68 language — but without territory names, the delivery is incomplete).</div>' +
+    '<div class="rt69-section-label" style="margin-top:14px">Discovery signals (current)</div>' +
+    '<div class="rt69-rule"><strong>Reflection state:</strong> Genuine. The only surface that delivers real new understanding.</div>' +
+    '<div class="rt69-rule"><strong>Section 68 copy:</strong> Language is now explorer-aligned. The promise is made. Infrastructure delivery is still needed.</div>' +
+    '<div class="rt69-rule"><strong>Avatar identity:</strong> The visual communicates "explorer." But an explorer with nothing to explore is just a costume.</div>' +
+    '<div class="rt69-section-label" style="margin-top:14px">Current ratio estimate</div>' +
+    '<div style="margin: 8px 0 4px"><span style="font-size:12px; color:#8080a8">Accumulation weight:</span></div><div class="rt69-bar-wrap"><div class="rt69-bar" style="width:78%; background:#7f1d1d"></div></div>' +
+    '<div style="margin: 8px 0 4px"><span style="font-size:12px; color:#8080a8">Discovery weight:</span></div><div class="rt69-bar-wrap"><div class="rt69-bar" style="width:22%; background:#14532d"></div></div>' +
+    '<div class="rt69-rule" style="margin-top:12px"><strong>Verdict:</strong> The system is functionally an accumulation game wearing an explorer costume. The costume is excellent. The game underneath has not yet changed. Sections 69–72 must change that.</div>',
+    'Honest ratio: 78% accumulation, 22% discovery. Target after Section 70–72: 50/50. Exact parity is not required — a strong minority of genuine discovery moments can reframe the whole system.',
+    'accent'
+  );
+
+  // ── PHASE 9 ─────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 9',
+    'Explorer Progression Bible — Permanent Reference',
+    '<p class="rt69-desc">Five philosophy pillars. Permanent canonical reference for all future progression system decisions.</p>' +
+    '<div class="rt69-bible-section">' +
+      '<div class="rt69-bible-title">Discovery Philosophy</div>' +
+      '<div class="rt69-bible-rule">Learning events are discoveries, not grades. The student finds something; nothing is handed to them as a reward for correct behavior.</div>' +
+      '<div class="rt69-bible-rule">The reflection state is sacred. It is the primary discovery mechanism. Never reduce it. Always deepen it.</div>' +
+      '<div class="rt69-bible-rule">Achievement toasts are discovery announcements: "Opdagelse: X" — not reward grants.</div>' +
+    '</div>' +
+    '<div class="rt69-bible-section">' +
+      '<div class="rt69-bible-title">Equipment Philosophy</div>' +
+      '<div class="rt69-bible-rule">Equipment = field capability, not achievement trophy. Each item answers: what does this help the explorer DO?</div>' +
+      '<div class="rt69-bible-rule">Vocabulary: satchels, journals, compasses, lanterns, maps, cloaks, scrolls, lenses. Never: swords, armour, crowns, medals.</div>' +
+      '<div class="rt69-bible-rule">All equipment must read at 52×78px. Bold silhouette shapes only. No fine detail.</div>' +
+    '</div>' +
+    '<div class="rt69-bible-section">' +
+      '<div class="rt69-bible-title">Territory Philosophy</div>' +
+      '<div class="rt69-bible-rule">Progress = depth of understanding, not height of rank. Levels are territories entered, not rungs climbed.</div>' +
+      '<div class="rt69-bible-rule">Territory names are spatial, not hierarchical: Lysningen → Skovbrynet → Den Dybe Skov → Flodbrinken → Bjergpasset → Toppen → Den Anden Side → Havkysten → Det Åbne Hav → Horisonten.</div>' +
+      '<div class="rt69-bible-rule">The niveau number always remains visible. Territory name is flavor; the number is the system anchor.</div>' +
+    '</div>' +
+    '<div class="rt69-bible-section">' +
+      '<div class="rt69-bible-title">Progression Philosophy</div>' +
+      '<div class="rt69-bible-rule">The loop is: explore → encounter → discover → file → move deeper. Not: answer → grade → reward → repeat.</div>' +
+      '<div class="rt69-bible-rule">XP represents knowledge density, not performance points. The explorer accumulates understanding; the XP number is the weight of that understanding.</div>' +
+      '<div class="rt69-bible-rule">Level-up is geographic entry, not status upgrade. The territory opens; the explorer did not conquer it — they arrived.</div>' +
+    '</div>' +
+    '<div class="rt69-bible-section">' +
+      '<div class="rt69-bible-title">Attachment Philosophy</div>' +
+      '<div class="rt69-bible-rule">Exploration attachment is internally anchored — to knowledge permanently held, not metrics externally assigned.</div>' +
+      '<div class="rt69-bible-rule">The avatar\'s equipment must reflect depth, not rank. The veteran explorer carries more tools than the novice — not more medals.</div>' +
+      '<div class="rt69-bible-rule">Identity claim requires delivery: "You are an explorer" must be followed by things worth exploring. The promise and the platform must match.</div>' +
+    '</div>',
+    'Explorer Progression Bible — 5 pillars, 15 canonical rules. All future progression decisions are checked against this.',
+    'accent'
+  );
+
+  // ── PHASE 10 ────────────────────────────────────────────────────────────────
+  rt69Card(
+    'Phase 10 — Decision Gate',
+    'Highest-Impact Opportunities & Recommended Next Sprint',
+    '<div class="rt69-gate">' +
+      '<div class="rt69-gate-item">' +
+        '<div class="rt69-gate-rank">Discovery opportunity — Highest impact</div>' +
+        '<div class="rt69-gate-title">Territory Naming Pass (Section 70)</div>' +
+        '<div class="rt69-gate-why">Add a JS constant mapping level → territory name (Lysningen, Skovbrynet…). Update level-up overlay to show territory name alongside niveau number. Update identity strip to show territory sub-label. Zero database cost. One JS object + two DOM touchpoints. Transforms the level-up moment from a number increment into a geographic event. The level-up promise ("nyt territorium åbner sig") finally delivers a territory.</div>' +
+      '</div>' +
+      '<div class="rt69-gate-item">' +
+        '<div class="rt69-gate-rank">Equipment opportunity — Highest impact</div>' +
+        '<div class="rt69-gate-title">Cape → Explorer\'s Cloak Rename + Field Satchel Design</div>' +
+        '<div class="rt69-gate-why">Rename the existing cape item from "knight\'s cape" / "veteran field gear" to "Explorer\'s Cloak" across all copy. Design the Field Satchel SVG as the first Tier 2 unlock — diagonal canvas strap visible at 52×78px. The satchel is the single highest-identity-leverage equipment item: it is what explorers carry. It says "I collect discoveries" without any text.</div>' +
+      '</div>' +
+      '<div class="rt69-gate-item">' +
+        '<div class="rt69-gate-rank">Progression opportunity — Highest impact</div>' +
+        '<div class="rt69-gate-title">Discovery Toast + "Opdagelse" Achievement Frame</div>' +
+        '<div class="rt69-gate-why">Change achievement toast header from "Ny præstation!" to "Opdagelse:". Change achievement display names in hub.html to the explorer-reframed versions (First Step Into the Field, Five Truths Confirmed, etc.). Zero database changes — the keys stay identical. Only the presentation copy changes. This transforms the achievement system from a reward loop into a discovery log. The student is finding things, not being given things.</div>' +
+      '</div>' +
+      '<div class="rt69-gate-item">' +
+        '<div class="rt69-gate-rank">Recommended next sprint</div>' +
+        '<div class="rt69-gate-title">Section 70 — Territory Naming Pass</div>' +
+        '<div class="rt69-gate-why">Implement territory naming: JS constant in app.js, level-up overlay updated to show territory name, identity strip updated with territory sub-label. Then: achievement toast copy change to "Opdagelse:" frame, achievement display names reframed. Both are pure frontend copy changes. Together they shift the discovery/accumulation ratio from 22/78 to approximately 40/60 — the tipping point where the explorer identity starts to feel internally consistent.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt69-score">' +
+      '<span class="rt69-score-item pass">Discovery audit ✓</span>' +
+      '<span class="rt69-score-item pass">Equipment framework ✓</span>' +
+      '<span class="rt69-score-item pass">Territory model designed ✓</span>' +
+      '<span class="rt69-score-item pass">5 discovery moments mapped ✓</span>' +
+      '<span class="rt69-score-item pass">Equipment roadmap ✓</span>' +
+      '<span class="rt69-score-item pass">Attachment mechanism defined ✓</span>' +
+      '<span class="rt69-score-item pass">Product audit complete ✓</span>' +
+      '<span class="rt69-score-item pass">Progression Bible ✓</span>' +
+      '<span class="rt69-score-item warn">Territory naming: Section 70</span>' +
+      '<span class="rt69-score-item warn">Field Satchel SVG: future</span>' +
+    '</div>',
+    'Section 69 — Discovery Systems & Explorer Equipment — shipped 2026-05-29. The system now knows what it needs to provide. Section 70 delivers the first piece.',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>
