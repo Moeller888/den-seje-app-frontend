@@ -19242,5 +19242,399 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 66 — Character Archetype Discovery ────────────────────────── -->
+<style>
+  .rt66-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; margin-bottom:32px; }
+  .rt66-card { background:#120c02; border:1px solid #3a2200; border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .rt66-card.accent { border-color:#b45309; background:#0c0800; }
+  .rt66-card.win { border-color:#d97706; background:#0f0902; }
+  .rt66-card.dna { border-color:#f59e0b; background:#0a0600; }
+  .rt66-label { font-size:9px; font-weight:bold; letter-spacing:1.6px; text-transform:uppercase; color:#f59e0b; }
+  .rt66-title { font-size:14px; font-weight:bold; color:#fcd34d; line-height:1.3; }
+  .rt66-body { font-size:12px; color:#a07830; line-height:1.6; }
+  .rt66-footer { font-size:10px; color:#5a3800; font-style:italic; margin-top:4px; }
+  .rt66-block { background:#0a0600; border-radius:6px; padding:10px 12px; }
+  .rt66-block-title { font-size:10px; font-weight:bold; color:#f59e0b; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .rt66-block-body { display:flex; flex-direction:column; gap:4px; }
+  .rt66-rule { font-size:11px; color:#e0b060; padding-left:10px; position:relative; line-height:1.5; }
+  .rt66-rule::before { content:'—'; position:absolute; left:0; color:#f59e0b; }
+  .rt66-pass { font-size:11px; color:#60c888; padding-left:10px; position:relative; line-height:1.5; }
+  .rt66-pass::before { content:'✓'; position:absolute; left:0; color:#60c888; font-size:9px; }
+  .rt66-fail { font-size:11px; color:#d07060; padding-left:10px; position:relative; line-height:1.5; }
+  .rt66-fail::before { content:'✕'; position:absolute; left:0; color:#d07060; font-size:9px; }
+  .rt66-warn { font-size:11px; color:#d0a050; padding-left:10px; position:relative; line-height:1.5; }
+  .rt66-warn::before { content:'⚠'; position:absolute; left:0; color:#d0a050; font-size:9px; }
+  .rt66-table { width:100%; border-collapse:collapse; font-size:10px; margin-top:4px; }
+  .rt66-table th { color:#f59e0b; font-weight:bold; padding:5px 7px; text-align:left; border-bottom:1px solid #3a2200; white-space:nowrap; }
+  .rt66-table td { color:#d0a060; padding:5px 7px; border-bottom:1px solid #1a1000; vertical-align:top; line-height:1.4; }
+  .rt66-table tr.winner td { color:#fcd34d; background:#140e02; }
+  .rt66-table tr.winner td:first-child { border-left:2px solid #f59e0b; }
+  .rt66-score-bar { display:flex; gap:2px; align-items:center; }
+  .rt66-dot { width:8px; height:8px; border-radius:50%; background:#3a2200; }
+  .rt66-dot.on { background:#f59e0b; }
+  .rt66-dot.half { background:#8a5800; }
+  .rt66-matrix { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  .rt66-matrix-cell { background:#0a0600; border-radius:6px; padding:8px 10px; }
+  .rt66-matrix-label { font-size:9px; font-weight:bold; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+  .rt66-matrix-label.high { color:#60c888; }
+  .rt66-matrix-label.low { color:#d07060; }
+  .rt66-matrix-body { font-size:10px; color:#a07030; line-height:1.5; }
+  .rt66-quote { font-size:12px; color:#8a5800; font-style:italic; border-left:2px solid #f59e0b; padding-left:10px; line-height:1.6; margin:6px 0; }
+  .rt66-dna-sentence { font-size:15px; font-weight:bold; color:#fcd34d; line-height:1.4; padding:12px 14px; background:#0a0600; border:1px solid #b45309; border-radius:8px; }
+  .rt66-not { font-size:11px; color:#d07060; padding-left:10px; position:relative; line-height:1.5; }
+  .rt66-not::before { content:'NOT'; position:absolute; left:0; color:#d07060; font-size:7px; font-weight:bold; top:2px; }
+  .rt66-verdict { font-size:13px; font-weight:bold; padding:12px 14px; border-radius:8px; line-height:1.6; background:#140900; border:1px solid #d97706; color:#fcd34d; }
+  .rt66-arch-chip { display:inline-block; font-size:9px; font-weight:bold; padding:2px 8px; border-radius:10px; background:#1a1000; border:1px solid #3a2200; color:#a07030; letter-spacing:0.5px; }
+  .rt66-arch-chip.winner { background:#1c1200; border-color:#f59e0b; color:#fcd34d; }
+  .rt66-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .rt66-avatar { position:relative; display:inline-block; }
+  .rt66-avatar img { position:absolute; top:0; left:0; width:100%; height:100%; }
+  .rt66-render-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:6px; }
+  .rt66-render-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .rt66-render-label { font-size:9px; color:#5a3800; text-align:center; line-height:1.3; }
+  .rt66-consequence { display:flex; flex-direction:column; gap:6px; }
+  .rt66-consequence-item { display:flex; gap:8px; align-items:flex-start; }
+  .rt66-consequence-key { font-size:9px; font-weight:bold; color:#f59e0b; text-transform:uppercase; letter-spacing:0.8px; min-width:80px; padding-top:2px; }
+  .rt66-consequence-val { font-size:11px; color:#d0a060; line-height:1.4; }
+  .rt66-consequence-val.locked { color:#60c888; }
+  .rt66-consequence-val.future { color:#a07030; font-style:italic; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#f59e0b;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #3a2200;">
+  Section 66 — Character Archetype Discovery &amp; Aspirational Identity Pass
+</h2>
+<div class="rt66-grid" id="rt66Grid"></div>
+
+<script>
+(function () {
+  function rt66Card(label, title, body, footer, variant) {
+    var d = document.getElementById('rt66Grid');
+    var card = document.createElement('div');
+    card.className = 'rt66-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt66-label">' + label + '</div>' +
+      '<div class="rt66-title">' + title + '</div>' +
+      '<div class="rt66-body">' + body + '</div>' +
+      (footer ? '<div class="rt66-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  function av(expr, w, bg) {
+    var h = Math.round(w * 1.5);
+    var bs = bg ? 'background:' + bg + ';border-radius:4px;padding:2px;' : '';
+    return '<div class="rt66-avatar" style="width:' + w + 'px;height:' + h + 'px;' + bs + '">' +
+      '<img src="assets/avatar/base/body.svg">' +
+      '<img src="assets/avatar/expressions/' + expr + '.svg">' +
+      '</div>';
+  }
+
+  function dots(score, max) {
+    max = max || 5;
+    var s = '';
+    for (var i = 0; i < max; i++) {
+      s += '<div class="rt66-dot' + (i < score ? ' on' : '') + '"></div>';
+    }
+    return '<div class="rt66-score-bar">' + s + '</div>';
+  }
+
+  // Phase 1 — Brutal Identity Audit
+  rt66Card(
+    'Phase 1 — Identity Audit',
+    'What does this avatar actually communicate today?',
+    '<div class="rt66-render-row">' +
+      '<div class="rt66-render-cell">' + av('expr-neutral', 104, '#1a1400') + '<div class="rt66-render-label">neutral<br>2×</div></div>' +
+      '<div class="rt66-render-cell">' + av('expr-curious', 104, '#1a1400') + '<div class="rt66-render-label">curious<br>2×</div></div>' +
+      '<div class="rt66-render-cell">' + av('expr-determined', 104, '#1a1400') + '<div class="rt66-render-label">determined<br>2×</div></div>' +
+      '<div class="rt66-render-cell">' + av('expr-proud', 104, '#1a1400') + '<div class="rt66-render-label">proud<br>2×</div></div>' +
+    '</div>' +
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">Honest current read — not aspirational</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">Communicates: warm, approachable, pleasant</div>' +
+        '<div class="rt66-pass">Communicates: calm confidence, emotionally safe</div>' +
+        '<div class="rt66-pass">Communicates: "this character is on a journey" (contrapposto, forward bang)</div>' +
+        '<div class="rt66-warn">Communicates: "educational app helper" — readable as mascot energy</div>' +
+        '<div class="rt66-fail">Does NOT communicate: a specific identity, world, or story</div>' +
+        '<div class="rt66-fail">Does NOT communicate: what the character WANTS or WHERE they are going</div>' +
+        '<div class="rt66-fail">Does NOT communicate: an archetype a student could identify with</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-quote" style="margin-top:8px">"This is a well-made friendly character in an educational app" — the sentence no designer wants to hear.</div>',
+    'Current identity: Educational Helper. Target identity: TBD in Phases 2–9.',
+    ''
+  );
+
+  // Phase 2 — Archetype Exploration
+  rt66Card(
+    'Phase 2 — Archetype Exploration',
+    'Five competing archetypes evaluated across five dimensions',
+    '<table class="rt66-table">' +
+      '<thead><tr>' +
+        '<th>Archetype</th>' +
+        '<th>Student<br>Appeal</th>' +
+        '<th>Edu<br>Fit</th>' +
+        '<th>Cosmetic<br>Potential</th>' +
+        '<th>12–16<br>ID</th>' +
+        '<th>Long-term</th>' +
+      '</tr></thead>' +
+      '<tbody>' +
+        '<tr class="winner"><td><strong>Young Explorer</strong><br><span style="font-size:9px;color:#a07030">curious, discovers, moves</span></td><td>' + dots(5) + '</td><td>' + dots(5) + '</td><td>' + dots(5) + '</td><td>' + dots(4) + '</td><td>' + dots(5) + '</td></tr>' +
+        '<tr class="winner"><td><strong>Apprentice Hero</strong><br><span style="font-size:9px;color:#a07030">still learning, becoming</span></td><td>' + dots(5) + '</td><td>' + dots(5) + '</td><td>' + dots(4) + '</td><td>' + dots(5) + '</td><td>' + dots(5) + '</td></tr>' +
+        '<tr><td><strong>Strategic Thinker</strong><br><span style="font-size:9px;color:#a07030">calm, analytical, smart</span></td><td>' + dots(3) + '</td><td>' + dots(4) + '</td><td>' + dots(3) + '</td><td>' + dots(2) + '</td><td>' + dots(3) + '</td></tr>' +
+        '<tr><td><strong>Knowledge Pathfinder</strong><br><span style="font-size:9px;color:#a07030">connects ideas, patterns</span></td><td>' + dots(3) + '</td><td>' + dots(4) + '</td><td>' + dots(4) + '</td><td>' + dots(3) + '</td><td>' + dots(4) + '</td></tr>' +
+        '<tr><td><strong>Supportive Mentor</strong><br><span style="font-size:9px;color:#a07030">guides, safe, trustworthy</span></td><td>' + dots(2) + '</td><td>' + dots(3) + '</td><td>' + dots(1) + '</td><td>' + dots(1) + '</td><td>' + dots(2) + '</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt66-block" style="margin-top:10px">' +
+      '<div class="rt66-block-title">Why the top two are clear</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">Young Explorer + Apprentice Hero both score highest on 12–16 identification</div>' +
+        '<div class="rt66-pass">Both map naturally to the XP/leveling loop — "you are getting better at this"</div>' +
+        '<div class="rt66-pass">Both have enormous cosmetic potential — gear, discovery equipment, skill unlocks</div>' +
+        '<div class="rt66-fail">Supportive Mentor fails because students identify UP — they want to BE the character, not guide others</div>' +
+        '<div class="rt66-warn">Strategic Thinker fails for 12-year-olds — "analytical" reads as alienating, not aspirational</div>' +
+      '</div>' +
+    '</div>',
+    'Two archetypes dominate. The question is whether they merge or one wins.',
+    ''
+  );
+
+  // Phase 3 — Age 12-16 Reality Test
+  rt66Card(
+    'Phase 3 — Age 12–16 Reality Test',
+    'Which archetype do actual students most want to identify with?',
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">How 12–16-year-olds actually attach to characters</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule">They identify with characters who are slightly ahead — "someone I could become," not "someone I am"</div>' +
+        '<div class="rt66-rule">They reject obvious "chosen one" energy — it reads as arrogant, makes less confident students feel excluded</div>' +
+        '<div class="rt66-rule">They respond to the apprentice frame — "still learning" is safe for self-projection; "already arrived" is alienating</div>' +
+        '<div class="rt66-rule">They need an implied journey — characters without a destination have no attachment gravity</div>' +
+        '<div class="rt66-rule">The word "Explorer" has universal youth appeal — discovery is inherently ego-safe</div>' +
+        '<div class="rt66-rule">"Apprentice" is humble enough to not intimidate, specific enough to not be generic</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">The verdict from student psychology</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">Winner: a HYBRID of Young Explorer + Apprentice Hero</div>' +
+        '<div class="rt66-pass">The combination solves both problems: aspiration (explorer) + safety (apprentice)</div>' +
+        '<div class="rt66-pass">Neither word alone is as strong as both together</div>' +
+        '<div class="rt66-pass">Working name: "The Apprentice Explorer" — on a real journey, still early, going somewhere</div>' +
+      '</div>' +
+    '</div>',
+    'Students do not attach to perfection. They attach to potential — specifically, their own potential reflected back.',
+    ''
+  );
+
+  // Phase 4 — Aspiration vs Safety
+  rt66Card(
+    'Phase 4 — Aspiration vs Safety Matrix',
+    'Finding the correct register for a Danish 12–16 educational app',
+    '<div class="rt66-matrix">' +
+      '<div class="rt66-matrix-cell"><div class="rt66-matrix-label high">Required: Safety</div><div class="rt66-matrix-body">Warm, non-threatening, emotionally available. School context demands this. Cannot be compromised.</div></div>' +
+      '<div class="rt66-matrix-cell"><div class="rt66-matrix-label high">Required: Aspiration</div><div class="rt66-matrix-body">Slightly ahead. Going somewhere. A character worth following. Without this: mascot territory.</div></div>' +
+      '<div class="rt66-matrix-cell"><div class="rt66-matrix-label low">Must NOT: Edge</div><div class="rt66-matrix-body">No aggression, coolness-as-attitude, rebellion aesthetic. Educational context and trust requirements reject this.</div></div>' +
+      '<div class="rt66-matrix-cell"><div class="rt66-matrix-label low">Must NOT: Perfection</div><div class="rt66-matrix-body">A character that has already arrived creates distance, not identification. The "apprentice" frame is essential.</div></div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:10px">' +
+      '<div class="rt66-block-title">The correct balance for Den Seje App</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule">60% warmth + safety: non-threatening, approachable, the character is fundamentally kind</div>' +
+        '<div class="rt66-rule">30% aspiration: visibly going somewhere, capable, has a direction</div>' +
+        '<div class="rt66-rule">10% edge: enough personality to not feel generic — the asymmetric hair, the forward bang, the calm confidence</div>' +
+        '<div class="rt66-rule">0% superiority: the apprentice frame handles this — the character is always in progress</div>' +
+      '</div>' +
+    '</div>',
+    'The register: quiet aspiration. Not a hero — not a mascot. A character becoming something.'
+  );
+
+  // Phase 5 — Role in the Learning World
+  rt66Card(
+    'Phase 5 — Role in the Learning World',
+    'What does this character DO inside Den Seje App?',
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">Role evaluation</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-fail">Guide/Mentor: rejected — students identify with the avatar, not look up to it. Mentor = hierarchy, reduces identification.</div>' +
+        '<div class="rt66-fail">Fellow learner (same level): rejected — offers no aspirational lift. "Same as me" does not inspire growth.</div>' +
+        '<div class="rt66-warn">Expert: rejected — too far ahead. Creates admiration but not identification or safety.</div>' +
+        '<div class="rt66-pass">Experienced Apprentice: correct — further along the same journey, still visibly on it. Students see themselves ahead.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">Defining the role precisely</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule">The avatar has been on this journey longer — but the journey has no end, only further</div>' +
+        '<div class="rt66-rule">The avatar is not teaching the student — it is traveling alongside them, slightly ahead</div>' +
+        '<div class="rt66-rule">As the student gains XP, the avatar gains equipment — this mirrors the student\'s own progression</div>' +
+        '<div class="rt66-rule">The avatar\'s expressions respond to what the student is actually doing — honest emotional mirroring</div>' +
+        '<div class="rt66-rule">The avatar does not celebrate incorrect answers — this is what separates it from mascot energy</div>' +
+      '</div>' +
+    '</div>',
+    'Role: Experienced Apprentice Explorer — visible traveler on the same path, slightly further along.'
+  );
+
+  // Phase 6 — Character Motivation
+  rt66Card(
+    'Phase 6 — Character Motivation',
+    'What drives this character? The force that makes the identity coherent.',
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">Motivation candidates</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-warn">Curiosity alone: too passive. Curiosity without direction becomes wandering, not exploration.</div>' +
+        '<div class="rt66-warn">Mastery alone: too ambitious. "I want to be the best" creates performance anxiety, not joy.</div>' +
+        '<div class="rt66-warn">Helping others: wrong direction — this is the mentor frame again.</div>' +
+        '<div class="rt66-pass">Understanding: the right motivation. Not collecting answers. Not being the best. Genuinely comprehending.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">Why "Understanding" is the correct core motivation</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule">It maps exactly to the learning loop: question → attempt → feedback → comprehension</div>' +
+        '<div class="rt66-rule">It is ego-safe: "I want to understand" does not imply "I already know"</div>' +
+        '<div class="rt66-rule">It scales infinitely: there is always more to understand — no destination, no end of journey</div>' +
+        '<div class="rt66-rule">It explains the expressions: curious (seeking), focused (processing), determined (persisting), proud (understood)</div>' +
+        '<div class="rt66-rule">It explains the learning behavior: wrong answers are part of understanding, not failures</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-quote">One word motivation: UNDERSTANDING. The drive to genuinely comprehend — not perform, not win, not impress.</div>',
+    'The motivation unlocks the expression system: every expression maps directly to a state of understanding in progress.',
+    'win'
+  );
+
+  // Phase 7 — Visual Consequence Analysis
+  rt66Card(
+    'Phase 7 — Visual Consequence Analysis',
+    'What visual decisions naturally follow from "Apprentice Explorer / Understanding"?',
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">Geometry (all LOCKED — no changes needed)</div>' +
+      '<div class="rt66-consequence">' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Posture</div><div class="rt66-consequence-val locked">✓ Locked — contrapposto says "ready to move but not anxious." Perfect explorer energy.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Hair</div><div class="rt66-consequence-val locked">✓ Locked — forward-swept bang says "in motion." Left-dominant crown says "decisive direction." Explorer signals confirmed.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Expression</div><div class="rt66-consequence-val locked">✓ Locked — all 5 states map perfectly: curious=seeking, focused=processing, determined=persisting, proud=understood, neutral=at rest.</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">Equipment (future — not yet implemented)</div>' +
+      '<div class="rt66-consequence">' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Cape</div><div class="rt66-consequence-val future">Already correct — the explorer\'s travel gear. Tier 1 equipment validates the archetype.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Future gear</div><div class="rt66-consequence-val future">Satchel/bag, compass, lantern, map fragment, telescope — explorer tools, not weapons or armor trophies.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Armor tier</div><div class="rt66-consequence-val future">Knight armor already shipped — reframe as "veteran explorer gear," not warrior armor. Language only.</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">Cosmetic themes (future — define direction)</div>' +
+      '<div class="rt66-consequence">' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Themes</div><div class="rt66-consequence-val future">Star charts, ancient maps, lantern light, deep caves, high peaks, night sky, compass rose.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Palette</div><div class="rt66-consequence-val future">Warm amber, deep navy, forest green, copper — explorer palette, not warrior palette.</div></div>' +
+        '<div class="rt66-consequence-item"><div class="rt66-consequence-key">Progression</div><div class="rt66-consequence-val future">"Territory revealed" metaphor — each level is new ground explored, not enemy defeated.</div></div>' +
+      '</div>' +
+    '</div>',
+    'All geometry decisions already align. Future work is equipment, cosmetics, and language — not SVG coordinates.',
+    ''
+  );
+
+  // Phase 8 — Character Attachment Model
+  rt66Card(
+    'Phase 8 — Character Attachment Model',
+    'Why would a student care about this character long-term?',
+    '<div class="rt66-block">' +
+      '<div class="rt66-block-title">The four attachment mechanisms</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule"><strong>Identification:</strong> "That\'s someone like me — but on a journey I want to be on." The apprentice frame makes this safe for every confidence level.</div>' +
+        '<div class="rt66-rule"><strong>Projection:</strong> The character is slightly ahead. "I can get there" — the gap is motivating, not demoralizing.</div>' +
+        '<div class="rt66-rule"><strong>Investment:</strong> Equipment grows as the student grows. The character becomes literally theirs — shaped by their progress choices.</div>' +
+        '<div class="rt66-rule"><strong>Ownership:</strong> Cosmetics allow personal expression within the shared archetype. The archetype provides the identity; cosmetics make it personal.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">What prevents mascot-energy and cringe</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">The avatar does not celebrate wrong answers — emotional honesty prevents manipulation signals</div>' +
+        '<div class="rt66-pass">The expressions respond to real learning states — curious, focused, determined are internal, not performative</div>' +
+        '<div class="rt66-pass">The archetype has humility built in — "apprentice" disarms both arrogance and condescension</div>' +
+        '<div class="rt66-fail">Avoid: jumping animations, party effects on correct answers, sad face on wrong — these are mascot behaviors</div>' +
+        '<div class="rt66-fail">Avoid: the avatar "reacting" to the student with exaggerated approval — students read this as manipulative</div>' +
+      '</div>' +
+    '</div>',
+    'Attachment comes from identification + projection + investment — not from the character performing emotion at the student.',
+    ''
+  );
+
+  // Phase 9 — Character DNA Lock
+  rt66Card(
+    'Phase 9 — Character DNA Lock',
+    'The permanent identity — one sentence, and its inverse',
+    '<div class="rt66-dna-sentence">' +
+      '"A young apprentice explorer driven by the desire to understand — curious, calm, always moving further."' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:10px">' +
+      '<div class="rt66-block-title">Who this character is NOT</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-not" style="padding-left:34px">A mascot — the avatar does not exist to make students feel good; it exists to travel with them</div>' +
+        '<div class="rt66-not" style="padding-left:34px">A superhero — defined by power; our character is defined by direction and understanding</div>' +
+        '<div class="rt66-not" style="padding-left:34px">A guide or mentor — does not lead, does not instruct; travels alongside</div>' +
+        '<div class="rt66-not" style="padding-left:34px">A scholar — defined by accumulated knowledge; our character is defined by ongoing curiosity</div>' +
+        '<div class="rt66-not" style="padding-left:34px">A generic placeholder — this character has an implied world, a journey in progress, a direction</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">The permanent identity principles from Sec 66 forward</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-rule">Every visual decision asks: "does this serve an explorer on a journey of understanding?"</div>' +
+        '<div class="rt66-rule">Every equipment design asks: "is this something an apprentice explorer would actually carry?"</div>' +
+        '<div class="rt66-rule">Every expression decision asks: "is this a genuine state of someone pursuing understanding?"</div>' +
+        '<div class="rt66-rule">Every cosmetic theme asks: "does this evoke discovery, curiosity, and genuine intellectual adventure?"</div>' +
+      '</div>' +
+    '</div>',
+    'The identity is now locked. Every subsequent decision is tested against this definition.',
+    'dna'
+  );
+
+  // Phase 10 — Decision Gate
+  rt66Card(
+    'Phase 10 — Decision Gate',
+    'Which archetype should become Den Seje App\'s permanent avatar identity?',
+    '<div class="rt66-verdict">' +
+      'Decision: The Apprentice Explorer<br>' +
+      '<span style="font-size:11px;font-weight:normal;opacity:0.85">A deliberate hybrid of Young Explorer (curiosity, adventure, discovery) and Apprentice Hero (still learning, humble, becoming capable). Neither archetype alone is as strong. Together they solve the core tension: aspiration without alienation.</span>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:10px">' +
+      '<div class="rt66-block-title">Why this wins over the alternatives</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">Young Explorer alone: aspirational but lacks the "becoming capable" progression hook the XP system needs</div>' +
+        '<div class="rt66-pass">Apprentice Hero alone: strong progression but lacks the wonder/discovery energy that makes learning feel like adventure</div>' +
+        '<div class="rt66-pass">The hybrid: provides both — discovery is the journey, understanding is the destination, apprenticeship is the honest self-description</div>' +
+        '<div class="rt66-pass">Maps to the full expression system without modification — every expression is a state of exploration</div>' +
+        '<div class="rt66-pass">The existing visual DNA (bang, crown direction, contrapposto) already communicates "in motion, going somewhere"</div>' +
+        '<div class="rt66-pass">Cosmetic potential is enormous — explorer gear has the broadest theme range of any archetype</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-block" style="margin-top:8px">' +
+      '<div class="rt66-block-title">What changes now — and what does not</div>' +
+      '<div class="rt66-block-body">' +
+        '<div class="rt66-pass">Nothing in the SVG changes — all geometry already communicates this archetype correctly</div>' +
+        '<div class="rt66-pass">The identity is now named — this is the most important change; decisions have a reference point</div>' +
+        '<div class="rt66-rule">Next: visual cosmetics and equipment should be designed against this archetype explicitly</div>' +
+        '<div class="rt66-rule">Next: progression language and XP copy should use explorer framing (territory, discovery, mapping)</div>' +
+        '<div class="rt66-rule">Next: any new expression additions are tested against "is this a state an apprentice explorer would feel?"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt66-chips" style="margin-top:8px">' +
+      '<span class="rt66-arch-chip winner">Apprentice Explorer ✓</span>' +
+      '<span class="rt66-arch-chip">Young Explorer</span>' +
+      '<span class="rt66-arch-chip">Apprentice Hero</span>' +
+      '<span class="rt66-arch-chip">Knowledge Pathfinder</span>' +
+      '<span class="rt66-arch-chip">Strategic Thinker</span>' +
+      '<span class="rt66-arch-chip">Supportive Mentor</span>' +
+    '</div>',
+    'Section 66 — Character Archetype Discovery — shipped 2026-05-29. The avatar now has a name for who it is.',
+    'win'
+  );
+
+}());
+</script>
 </body>
 </html>
