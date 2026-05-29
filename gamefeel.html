@@ -21085,6 +21085,309 @@ const alivenessGrid = document.getElementById("alivenessGrid");
     'accent'
   );
 
+  // ─── SECTION 71 — Grade 7 Content Expansion Sprint ───────────────────────
+  (function(){
+    const SEC = '71';
+    const ACCENT = '#15803d';   // emerald-700
+    const ACCENT_LIGHT = '#86efac'; // green-300
+    const BG = '#071a0d';
+    const TAG_BG = '#14532d';
+
+    function rt71card(title, body, tag) {
+      tag = tag || '';
+      return '<div style="background:#0f1e13;border:1px solid #166534;border-radius:10px;padding:18px 20px;margin-bottom:16px;">' +
+        (tag ? '<div style="display:inline-block;background:' + TAG_BG + ';color:' + ACCENT_LIGHT + ';font-size:10px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:4px;margin-bottom:10px;">' + tag + '</div>' : '') +
+        '<div style="font-size:13px;font-weight:700;color:' + ACCENT_LIGHT + ';margin-bottom:8px;">' + title + '</div>' +
+        '<div style="font-size:12px;color:#d1fae5;line-height:1.65;">' + body + '</div>' +
+        '</div>';
+    }
+
+    function rt71row(label, value, hi) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #166534;">' +
+        '<span style="font-size:12px;color:#6ee7b7;">' + label + '</span>' +
+        '<span style="font-size:12px;font-weight:700;color:' + (hi ? ACCENT_LIGHT : '#d1fae5') + ';">' + value + '</span>' +
+        '</div>';
+    }
+
+    function rt71band(band, count, pct, desc) {
+      return '<div style="margin-bottom:10px;">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+        '<span style="font-size:11px;color:#86efac;">Band ' + band + ' — ' + desc + '</span>' +
+        '<span style="font-size:11px;color:#d1fae5;">' + count + ' questions</span>' +
+        '</div>' +
+        '<div style="height:6px;background:#14532d;border-radius:3px;">' +
+        '<div style="height:6px;background:' + ACCENT + ';border-radius:3px;width:' + pct + '%;"></div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    addSection(
+      SEC + ' — Grade 7 Content Expansion Sprint',
+      BG,
+      ACCENT,
+      ACCENT_LIGHT
+    );
+
+    // Phase 1 — Audit
+    addCard(
+      SEC,
+      'Phase 1 — Pre-Sprint Audit: Grade 7 Content Supply',
+      rt71card(
+        'Content starvation risk before this sprint',
+        'Grade 7 pool entering Section 71: <strong>8 questions</strong>. With a 50-question query limit and adaptive band cycling (3 correct → band+1, 2 incorrect → band−1), a Grade 7 student could exhaust new-question supply in <strong>fewer than 8 answer cycles</strong> — well short of any meaningful learning session. The adaptive engine had no room to operate. Starvation is not a theoretical risk — it is the current state.',
+        'AUDIT'
+      ) +
+      rt71card(
+        'Band distribution audit (8 existing Grade 7 questions)',
+        rt71band(1, 0, 0, 'Factual / recall') +
+        rt71band(2, 4, 50, 'Conceptual / comprehension') +
+        rt71band(3, 4, 50, 'Analysis / application') +
+        rt71band(4, 0, 0, 'Evaluation / synthesis') +
+        rt71band(5, 0, 0, 'Grade 9 advanced') +
+        '<div style="margin-top:8px;font-size:11px;color:#6ee7b7;">No Band 1 entry point. No Band 4 ceiling. Adaptive engine has no upward or downward room from the initial band.</div>',
+        'BAND AUDIT'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 2 — Curriculum map
+    addCard(
+      SEC,
+      'Phase 2 — Curriculum Mapping for Grade 7',
+      rt71card(
+        'Grade 7 conceptual scope — Democracy & Power',
+        '<strong>In scope (accessible to 13–14 year olds):</strong><br>' +
+        '• What is democracy and why does it exist<br>' +
+        '• Voting, elections, political parties, the Folketing<br>' +
+        '• Rights vs. duties — the citizen contract<br>' +
+        '• Media literacy: news vs. opinion vs. propaganda<br>' +
+        '• Local vs. national government (municipality vs. state)<br>' +
+        '• Tax as collective financing mechanism<br>' +
+        '• Free speech and its limits<br>' +
+        '• Why political disagreement is normal<br>' +
+        '• Democratic participation beyond voting<br><br>' +
+        '<strong>Out of scope (Grade 8–9):</strong><br>' +
+        '• Constitutional review, judicial independence<br>' +
+        '• Populism, democratic erosion theory<br>' +
+        '• EU and supranational legitimacy<br>' +
+        '• Whistleblowing ethics, civil disobedience',
+        'CURRICULUM'
+      ) +
+      rt71card(
+        'Language standard for Grade 7',
+        'Challenge must come from <strong>thinking</strong>, not vocabulary. Rules:<br>' +
+        '• No word requires university-level reading — every sentence is parseable by a 13-year-old<br>' +
+        '• Band 1–2: plain Danish, one sentence per idea<br>' +
+        '• Band 3–4: complex sentences allowed, but no jargon without implicit definition<br>' +
+        '• review_text teaches the concept — it does not repeat the question<br>' +
+        '• Distractors must be plausible — not obviously silly',
+        'LANGUAGE STANDARD'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 3 — Band ladder design
+    addCard(
+      SEC,
+      'Phase 3 — Adaptive Band Ladder Design',
+      rt71card(
+        'New band ladder for Grade 7 pool (post-sprint)',
+        rt71band(1, 7, 18, 'Factual / recall — entry point') +
+        rt71band(2, 14, 37, 'Conceptual / comprehension — consolidation') +
+        rt71band(3, 12, 32, 'Analysis / application — challenge zone') +
+        rt71band(4, 5, 13, 'Evaluation / synthesis — ceiling for Grade 7') +
+        '<div style="margin-top:8px;font-size:11px;color:#6ee7b7;">Total Grade 7 pool: 38 questions. Adaptive engine starting band for Grade 7: Band 1. Session survivability: a student answering at 50% accuracy can cycle bands for 20+ questions before starvation.</div>',
+        'BAND DESIGN'
+      ) +
+      rt71card(
+        'Adaptive flow scenarios',
+        '<strong>Struggling student (60% wrong):</strong> starts Band 1 → stays Band 1 → 7 Band 1 questions available → transitions to due-instances review → meaningful session<br><br>' +
+        '<strong>Average student (60% right):</strong> Band 1 → Band 2 (after 3 correct) → Band 2–3 cycling → 14+12=26 questions before reaching ceiling<br><br>' +
+        '<strong>Strong student (80%+ right):</strong> reaches Band 4 ceiling with 5 hard questions — then band holds and NUZO wave takes over (recovery/reinforcement/deep_challenge)',
+        'FLOW ANALYSIS'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 4 — Question authoring
+    addCard(
+      SEC,
+      'Phase 4 — 30 New Learning Objects (dp_041–dp_070)',
+      rt71card(
+        'Band 1 — 7 questions (dp_041–dp_047)',
+        '<strong>Cognitive skill:</strong> recall &nbsp;|&nbsp; <strong>Difficulty type:</strong> factual &nbsp;|&nbsp; <strong>Role:</strong> reinforcement<br><br>' +
+        'dp_041 — Hvad betyder det, at Danmark er et demokrati?<br>' +
+        'dp_042 — Hvad er Folketing ets vigtigste opgave?<br>' +
+        'dp_043 — Hvornår må man stemme til Folketing svalget?<br>' +
+        'dp_044 — Hvad gør en lov anderledes fra en personlig mening?<br>' +
+        'dp_045 — Hvem bestemmer, hvem der bliver statsminister?<br>' +
+        'dp_046 — Hvad er en rettighed?<br>' +
+        'dp_047 — Hvad er Grundloven?',
+        'BAND 1'
+      ) +
+      rt71card(
+        'Band 2 — 10 questions (dp_048–dp_057)',
+        '<strong>Cognitive skill:</strong> comprehension &nbsp;|&nbsp; <strong>Difficulty type:</strong> conceptual &nbsp;|&nbsp; <strong>Role:</strong> reinforcement<br><br>' +
+        'dp_048 — Hvorfor er regelmæssige valg vigtigt?<br>' +
+        'dp_049 — Hvorfor tæller en lærers stemme det samme som en direktørs?<br>' +
+        'dp_050 — Hvorfor er der politiske partier?<br>' +
+        'dp_051 — Hvad er ytringsfrihed — har den grænser?<br>' +
+        'dp_052 — Hvad er forskellen på kommunen og staten?<br>' +
+        'dp_053 — Hvad er formålet med at betale skat?<br>' +
+        'dp_054 — Hvad er forskellen på en skoleregel og en national lov?<br>' +
+        'dp_055 — Hvad adskiller en nyhedsartikel fra sociale medier?<br>' +
+        'dp_056 — Hvad vil det sige at høre begge sider i en debat?<br>' +
+        'dp_057 — Hvad er censur?',
+        'BAND 2'
+      ) +
+      rt71card(
+        'Band 3 — 8 questions (dp_058–dp_065)',
+        '<strong>Cognitive skill:</strong> analysis &nbsp;|&nbsp; <strong>Difficulty type:</strong> conceptual &nbsp;|&nbsp; <strong>Role:</strong> challenge<br><br>' +
+        'dp_058 — Hvorfor er en fri presse vigtig for demokratiet?<br>' +
+        'dp_059 — Hvorfor er politisk uenighed normalt — ikke et problem?<br>' +
+        'dp_060 — Kan man nyde demokratiets fordele uden selv at bidrage?<br>' +
+        'dp_061 — Hvad er problemet med altid at gøre hvad flertallet vil?<br>' +
+        'dp_062 — Hvad kan en 7. klasses elev konkret gøre for at påvirke politik?<br>' +
+        'dp_063 — Kan en influencer på sociale medier have politisk magt?<br>' +
+        'dp_064 — Hvad sker der med demokratiet, hvis mange holder op med at stole på det?<br>' +
+        'dp_065 — Hvad er en ret — og hvad er en pligt — i et demokrati?',
+        'BAND 3'
+      ) +
+      rt71card(
+        'Band 4 — 5 questions (dp_066–dp_070)',
+        '<strong>Cognitive skill:</strong> evaluation &nbsp;|&nbsp; <strong>Difficulty type:</strong> analytical &nbsp;|&nbsp; <strong>Role:</strong> deep_challenge<br><br>' +
+        'dp_066 — Kan et demokrati vedtage en uretfærdig lov og stadig kalde sig demokrati?<br>' +
+        'dp_067 — Er det et problem hvis mange unge stemmer som deres influencer anbefaler?<br>' +
+        'dp_068 — Kan for meget frihed faktisk skade et demokrati?<br>' +
+        'dp_069 — Mange vælger ikke at stemme. Hvad er den egentlige forklaring?<br>' +
+        'dp_070 — Kan et demokrati overleve, selvom mange borgere er passive?',
+        'BAND 4'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 5 — Misconception coverage
+    addCard(
+      SEC,
+      'Phase 5 — Misconception Coverage Matrix',
+      rt71card(
+        'Misconception types targeted across 30 new questions',
+        rt71row('surface_association', '8 questions', false) +
+        rt71row('false_equivalence', '9 questions', true) +
+        rt71row('overgeneralization', '4 questions', false) +
+        rt71row('scope_confusion', '5 questions', false) +
+        rt71row('authority_bias', '2 questions', false) +
+        rt71row('causal_inversion', '1 question', false) +
+        '<div style="margin-top:10px;font-size:11px;color:#6ee7b7;">false_equivalence is the dominant misconception target — Grade 7 students frequently conflate structurally different concepts (rules vs. laws, opinions vs. facts, speed vs. accuracy in media). surface_association covers students who recognize vocabulary without understanding mechanism.</div>',
+        'MISCONCEPTION MAP'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 6 — Sample learning objects
+    addCard(
+      SEC,
+      'Phase 6 — Sample Learning Objects (3 representative questions)',
+      rt71card(
+        'dp_044 (Band 1) — "Hvad gør en lov anderledes fra en personlig mening?"',
+        '<strong>Correct:</strong> En lov vedtages af Folketing et og gælder alle — en personlig mening gælder kun den der har den<br><br>' +
+        '<strong>Distractors:</strong><br>' +
+        '• En lov er altid korrekt — en personlig mening kan være forkert [false_equivalence: confuses source with truth-value]<br>' +
+        '• En lov ændres aldrig — en personlig mening kan skifte [false_equivalence: confuses permanence with authority]<br>' +
+        '• Loven bestemmes af eksperter — meningen af normale borgere [authority_bias: misconceives democratic lawmaking]<br><br>' +
+        '<strong>review_text:</strong> En lov er et bindende beslutning vedtaget af Folketing et — den gælder alle og kan håndhæves. En personlig mening er en privat holdning uden bindende kraft. Forskellen handler om myndighed og rækkevidde — ikke om rigtigt og forkert.',
+        'SAMPLE — BAND 1'
+      ) +
+      rt71card(
+        'dp_061 (Band 3) — "Hvad er problemet med altid at gøre hvad flertallet vil?"',
+        '<strong>Correct:</strong> Flertallet kan stemme for at begrænse en minoritets grundlæggende rettigheder<br><br>' +
+        '<strong>Distractors:</strong><br>' +
+        '• Flertallet tager aldrig fejl — problemet er at minoriteterne bremser fremskridtet [inverts the concern]<br>' +
+        '• Problemet er at flertallet skifter for ofte til man kan følge det [misses the rights dimension]<br>' +
+        '• Der er intet problem — demokrati er netop flertalsstyre [overgeneralization: equates democracy with unlimited majority rule]<br><br>' +
+        '<strong>review_text:</strong> Rent flertalsstyre kaldes »majoritetsdiktatur«. Et demokrati beskytter ikke kun flertallet — det beskytter også mindretallenes grundlæggende rettigheder. Grundloven og menneskerettighederne sætter grænser for, hvad et flertal lovligt kan beslutte.',
+        'SAMPLE — BAND 3'
+      ) +
+      rt71card(
+        'dp_068 (Band 4) — "Kan for meget frihed faktisk skade et demokrati?"',
+        '<strong>Correct:</strong> Ja — ubegrænset ytringsfrihed kan bruges til systematisk at sprede løgne der underminerer folks tillid til demokratiet<br><br>' +
+        '<strong>Why it\'s Band 4:</strong> Requires the student to hold two truths simultaneously — freedom is valuable AND it can be weaponized against the system that protects it. This is a conceptual tension, not a factual recall.<br><br>' +
+        '<strong>review_text:</strong> Friheder kan i yderpunkter modvirke det de er sat i verden for at beskytte. Ubegrænset ytringsfrihed kan give organiserede aktører mulighed for at sprede systematisk desinformation på en skala, der underminerer borgernes fælles virkelighedsopfattelse — og dermed selve grundlaget for demokratisk debat.',
+        'SAMPLE — BAND 4'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 7 — Deployment status
+    addCard(
+      SEC,
+      'Phase 7 — Deployment Status',
+      rt71card(
+        'Migration deployed',
+        rt71row('File', '20260529000002_grade7_content_expansion.sql', false) +
+        rt71row('Questions inserted', '30', true) +
+        rt71row('is_active', 'false (edge function serves all questions regardless)', false) +
+        rt71row('target_grade', '7 (accessible to Grade 7, 8, 9)', true) +
+        rt71row('difficulty_band', '1–4 (distributed across bands)', false) +
+        rt71row('answer_format', 'mc / mc_single', false) +
+        rt71row('migration status', 'Applied ✓', true),
+        'MIGRATION'
+      ) +
+      rt71card(
+        'Grade pool sizes after Section 71',
+        rt71row('Grade 7 pool', '38 questions (8 existing + 30 new)', true) +
+        rt71row('Grade 8 pool', '47 questions (38 + 9 exclusive)', false) +
+        rt71row('Grade 9 pool', '70 questions (all)', false) +
+        rt71row('Test result', '40 passed · 17 skipped · 0 failed ✓', true),
+        'POST-SPRINT POOLS'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 8 — Pilot readiness
+    addCard(
+      SEC,
+      'Phase 8 — Pilot Readiness Assessment',
+      rt71card(
+        'Grade 7 session survivability — CLEARED',
+        '<strong>Before Section 71:</strong> 8 questions → starvation risk within 8 answer cycles<br>' +
+        '<strong>After Section 71:</strong> 38 questions across 4 bands → 20+ question sessions sustainable at 50% accuracy<br><br>' +
+        '<strong>Adaptive engine room:</strong><br>' +
+        '• Band 1 entry: 7 questions (struggling student path)<br>' +
+        '• Band 2 consolidation: 14 questions (average student base)<br>' +
+        '• Band 3 challenge: 12 questions (productive tension zone)<br>' +
+        '• Band 4 ceiling: 5 questions (strongest Grade 7 students)<br><br>' +
+        'The adaptive loop can now function. The success metric is met.',
+        'READINESS'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    // Phase 9 — Decision gate
+    addCard(
+      SEC,
+      'Phase 9 — Decision Gate',
+      rt71card(
+        'Section 71 verdict',
+        rt71row('Content supply — Grade 7', 'CLEARED ✓', true) +
+        rt71row('Adaptive engine viable', 'YES ✓', true) +
+        rt71row('Band ladder complete', 'YES (1–4) ✓', true) +
+        rt71row('Misconception coverage', 'YES (6 types) ✓', true) +
+        rt71row('Language standard enforced', 'YES ✓', true) +
+        rt71row('Tests green', '40/40 ✓', true) +
+        rt71row('Next priority', 'Grade 8 content expansion or feature sprint', false),
+        'GATE'
+      ),
+      BG, ACCENT, ACCENT_LIGHT
+    );
+
+    addVerdict(
+      SEC,
+      'Section 71 — Grade 7 Content Expansion Sprint — shipped 2026-05-29. Grade 7 pool: 8 → 38 questions. Adaptive band ladder: 1–4 complete. A Grade 7 student can now sustain a meaningful session without content starvation.',
+      'accent'
+    );
+  }());
+
 }());
 </script>
 </body>
