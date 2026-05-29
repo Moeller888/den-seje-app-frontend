@@ -499,6 +499,55 @@
       color: var(--text-bright);
     }
 
+    /* ── Grade selector overlay ─────────────────────────────── */
+    #grade-selector-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 14, 23, 0.97);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px;
+    }
+    #grade-selector-overlay h2 {
+      color: var(--text-primary, #f0edf8);
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+    }
+    #grade-selector-overlay p {
+      color: var(--text-secondary, #8e8aa8);
+      font-size: 0.95rem;
+      text-align: center;
+      margin: 0 0 8px;
+      max-width: 280px;
+    }
+    .grade-btn {
+      width: 200px;
+      padding: 14px 0;
+      border: 2px solid var(--accent-primary, #7c3aed);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-primary, #f0edf8);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .grade-btn:hover,
+    .grade-btn:focus {
+      background: var(--accent-primary, #7c3aed);
+      outline: none;
+    }
+    .grade-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     /* ── Reduced motion ──────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       #xp-bar { transition: none; }
@@ -571,6 +620,15 @@
 
 <!-- Logout button — hidden visually, wired by app.js -->
 <button id="logout-btn" style="display:none" aria-hidden="true"></button>
+
+<!-- Grade selector overlay — shown once on first visit if selected_grade is null -->
+<div id="grade-selector-overlay">
+  <h2>Vælg dit klassetrin</h2>
+  <p>Du f&#229;r sp&#248;rgsm&#229;l, der passer til dit niveau</p>
+  <button class="grade-btn" data-grade="7">7. klasse</button>
+  <button class="grade-btn" data-grade="8">8. klasse</button>
+  <button class="grade-btn" data-grade="9">9. klasse</button>
+</div>
 
 <script type="module">
   document.getElementById("menu-btn").onclick = () => {

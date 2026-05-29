@@ -20759,5 +20759,333 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 70 — Grade-Level Architecture & Adaptive Difficulty ──────────── -->
+<style>
+  .rt70-wrap { background: #070d1a; min-height: 100vh; padding: 48px 24px 80px; font-family: system-ui, sans-serif; color: #e2e8f0; }
+  .rt70-header { text-align: center; margin-bottom: 48px; }
+  .rt70-section-tag { display: inline-block; background: #1d4ed8; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; text-transform: uppercase; }
+  .rt70-title { font-size: clamp(22px, 5vw, 36px); font-weight: 800; color: #93c5fd; line-height: 1.2; margin-bottom: 8px; }
+  .rt70-sub { color: #6b7fa8; font-size: 15px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
+  .rt70-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 24px; max-width: 1120px; margin: 0 auto; }
+  .rt70-card { background: #0d1526; border: 1px solid #1e2d4a; border-radius: 16px; overflow: hidden; }
+  .rt70-card-head { background: #1d4ed8; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  .rt70-card-num { background: rgba(0,0,0,0.3); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .rt70-card-title { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.3; }
+  .rt70-card-body { padding: 20px; }
+  .rt70-card-verdict { padding: 12px 20px; background: #070d1a; border-top: 1px solid #1e2d4a; font-size: 12px; color: #6b7fa8; font-style: italic; }
+  .rt70-card-verdict.accent { color: #93c5fd; }
+  .rt70-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rt70-table th { background: #1a2540; color: #93c5fd; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 10px; text-align: left; }
+  .rt70-table td { padding: 6px 10px; border-bottom: 1px solid #1e2d4a; color: #bfdbfe; vertical-align: top; line-height: 1.45; }
+  .rt70-table tr:last-child td { border-bottom: none; }
+  .rt70-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .rt70-pill.g7 { background: #1e3a5e; color: #7dd3fc; }
+  .rt70-pill.g8 { background: #1e3a2e; color: #86efac; }
+  .rt70-pill.g9 { background: #2e1e3a; color: #d8b4fe; }
+  .rt70-pill.b1 { background: #1a2540; color: #93c5fd; }
+  .rt70-pill.b2 { background: #1a2540; color: #93c5fd; }
+  .rt70-pill.b3 { background: #1e2a40; color: #60a5fa; }
+  .rt70-pill.b4 { background: #1e2040; color: #818cf8; }
+  .rt70-pill.b5 { background: #2a1e40; color: #c084fc; }
+  .rt70-pill.ship { background: #1e3a2e; color: #86efac; }
+  .rt70-pill.warn { background: #2e2a1e; color: #fcd34d; }
+  .rt70-rule { background: #131f35; border-left: 3px solid #1d4ed8; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #bfdbfe; margin-bottom: 8px; line-height: 1.55; }
+  .rt70-rule strong { color: #93c5fd; }
+  .rt70-rule:last-child { margin-bottom: 0; }
+  .rt70-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #3b82f6; margin: 14px 0 8px; }
+  .rt70-desc { font-size: 13px; color: #6b7fa8; line-height: 1.65; margin-bottom: 10px; }
+  .rt70-score { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .rt70-score-item { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .rt70-score-item.pass { background: #1e3a2e; color: #86efac; }
+  .rt70-score-item.warn { background: #2e2a1e; color: #fcd34d; }
+  .rt70-score-item.fail { background: #3a1e1e; color: #fca5a5; }
+  .rt70-band-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rt70-band-label { font-size: 12px; font-weight: 700; color: #93c5fd; width: 60px; flex-shrink: 0; }
+  .rt70-band-bar-wrap { flex: 1; background: #1a2540; border-radius: 4px; height: 8px; overflow: hidden; }
+  .rt70-band-bar { height: 100%; border-radius: 4px; background: #2563eb; }
+  .rt70-band-count { font-size: 12px; color: #6b7fa8; width: 40px; text-align: right; flex-shrink: 0; }
+  .rt70-engine-step { background: #131f35; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+  .rt70-engine-step:last-child { margin-bottom: 0; }
+  .rt70-engine-num { background: #1d4ed8; color: #fff; font-size: 11px; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; }
+  .rt70-engine-body { flex: 1; }
+  .rt70-engine-title { font-size: 13px; font-weight: 700; color: #93c5fd; margin-bottom: 3px; }
+  .rt70-engine-desc { font-size: 12px; color: #6b7fa8; line-height: 1.5; }
+  .rt70-code { background: #0d1526; border: 1px solid #1e2d4a; border-radius: 8px; padding: 12px 14px; font-family: monospace; font-size: 12px; color: #bfdbfe; line-height: 1.6; margin-top: 8px; white-space: pre; overflow-x: auto; }
+</style>
+
+<script>
+(function () {
+  const wrap = document.createElement('div');
+  wrap.className = 'rt70-wrap';
+  wrap.innerHTML =
+    '<div class="rt70-header">' +
+      '<div class="rt70-section-tag">Section 70</div>' +
+      '<div class="rt70-title">Grade-Level Architecture &amp;<br>Adaptive Difficulty Implementation</div>' +
+      '<div class="rt70-sub">The highest-risk educational gap in the product. Grade 7, 8, and 9 students must receive appropriately challenging questions. This section delivers: database schema, question classification, selection UI, session model, and adaptive difficulty engine.</div>' +
+    '</div>' +
+    '<div class="rt70-grid" id="rt70-grid"></div>';
+  document.body.appendChild(wrap);
+
+  function rt70Card(phase, title, body, verdict, verdictClass) {
+    const card = document.createElement('div');
+    card.className = 'rt70-card';
+    card.innerHTML =
+      '<div class="rt70-card-head">' +
+        '<span class="rt70-card-num">' + phase + '</span>' +
+        '<span class="rt70-card-title">' + title + '</span>' +
+      '</div>' +
+      '<div class="rt70-card-body">' + body + '</div>' +
+      '<div class="rt70-card-verdict ' + (verdictClass || '') + '">' + verdict + '</div>';
+    document.getElementById('rt70-grid').appendChild(card);
+  }
+
+  // ── PHASE 1 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 1',
+    'Database Audit — Pre-Section State',
+    '<div class="rt70-desc">Audit of existing schema before any changes. The questions table had no grade or difficulty metadata. The profiles table had no grade field. All 40 questions were served to all students regardless of level.</div>' +
+    '<table class="rt70-table">' +
+      '<tr><th>Table</th><th>Missing Column</th><th>Impact</th></tr>' +
+      '<tr><td>questions</td><td>target_grade</td><td>No grade filtering possible</td></tr>' +
+      '<tr><td>questions</td><td>difficulty_band</td><td>Adaptive engine has no signal</td></tr>' +
+      '<tr><td>profiles</td><td>selected_grade</td><td>Student grade unknown</td></tr>' +
+    '</table>' +
+    '<div class="rt70-label" style="margin-top:14px">Consequence</div>' +
+    '<div class="rt70-rule">A Grade 7 student could receive dp_032 ("Uvalgte dommere kan ophæve love...") — a Grade 9, band-5 question requiring advanced constitutional theory. No mechanism existed to prevent this.</div>' +
+    '<div class="rt70-rule">The adaptive wave engine (NUZO) already adjusted COGNITIVE TYPE of questions. But CONCEPTUAL COMPLEXITY was untouched. A student on a recovery wave still received band-5 questions.</div>',
+    'Gap confirmed: zero grade metadata, zero difficulty metadata, zero student grade state. Migration required.',
+    'accent'
+  );
+
+  // ── PHASE 2 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 2',
+    'All 40 Questions Classified',
+    '<div class="rt70-desc">Every question in the Democracy &amp; Power domain classified with target_grade (minimum grade) and difficulty_band (1–5). Classification criteria: target_grade = minimum conceptual prerequisite; difficulty_band = depth of abstract reasoning required.</div>' +
+    '<table class="rt70-table">' +
+      '<tr><th>ID</th><th>Grade</th><th>Band</th><th>Topic (abbreviated)</th></tr>' +
+      '<tr><td>dp_001</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Demokratisk leder vs autokrat</td></tr>' +
+      '<tr><td>dp_002</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Demokrati og uretfærdige love</td></tr>' +
+      '<tr><td>dp_003</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Formel vs reel magt</td></tr>' +
+      '<tr><td>dp_004</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Lav valgdeltagelse</td></tr>' +
+      '<tr><td>dp_005</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b3">3</span></td><td>Magtadskillelsens formål</td></tr>' +
+      '<tr><td>dp_006</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Ytringsfrihed + hadetale</td></tr>' +
+      '<tr><td>dp_007</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b3">3</span></td><td>Propaganda effektivitet</td></tr>' +
+      '<tr><td>dp_008</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Revolutioner reproducerer strukturer</td></tr>' +
+      '<tr><td>dp_009</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Civil ulydighed legitimitet</td></tr>' +
+      '<tr><td>dp_010</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b4">4</span></td><td>Demokratis styrke målt</td></tr>' +
+      '<tr><td>dp_011</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Domstoles uafhængighed truet</td></tr>' +
+      '<tr><td>dp_012</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Repræsentativt demokratis svaghed</td></tr>' +
+      '<tr><td>dp_013</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b3">3</span></td><td>Gratis-rider-problemet</td></tr>' +
+      '<tr><td>dp_014</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b2">2</span></td><td>Journalistik vs propaganda</td></tr>' +
+      '<tr><td>dp_015</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Oligarki i demokrati</td></tr>' +
+      '<tr><td>dp_016</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b2">2</span></td><td>Politisk legitimitet</td></tr>' +
+      '<tr><td>dp_017</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Politi + anklagemyndighed</td></tr>' +
+      '<tr><td>dp_018</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Parlamentarisk kontrol</td></tr>' +
+      '<tr><td>dp_019</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b2">2</span></td><td>Borgerrettigheder vs menneskerettigheder</td></tr>' +
+      '<tr><td>dp_020</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Kollektive goder og marked</td></tr>' +
+      '<tr><td>dp_021</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b3">3</span></td><td>Ekkokammer mekanisme</td></tr>' +
+      '<tr><td>dp_022</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Ulovlig magtovertagelse + legitimitet</td></tr>' +
+      '<tr><td>dp_023</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Direkte demokrati skalering</td></tr>' +
+      '<tr><td>dp_024</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Flertalstyranni uden lov</td></tr>' +
+      '<tr><td>dp_025</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Whistleblowing moralsk forpligtelse</td></tr>' +
+      '<tr><td>dp_026</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Populisme vs kritik</td></tr>' +
+      '<tr><td>dp_027</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Demokrati-erosion advarselstegn</td></tr>' +
+      '<tr><td>dp_028</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Medieejerskab koncentration</td></tr>' +
+      '<tr><td>dp_029</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Sociale medier demokratisk problem</td></tr>' +
+      '<tr><td>dp_030</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Fagforeninger og civilsamfund</td></tr>' +
+      '<tr><td>dp_031</td><td><span class="rt70-pill g8">8</span></td><td><span class="rt70-pill b3">3</span></td><td>Forfatning mere end papir</td></tr>' +
+      '<tr><td>dp_032</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>Domstolsprøvelse dilemma</td></tr>' +
+      '<tr><td>dp_033</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Partier afgørende vs trussel</td></tr>' +
+      '<tr><td>dp_034</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b2">2</span></td><td>Desinformation vs misinformation</td></tr>' +
+      '<tr><td>dp_035</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Demokrati overlever krise</td></tr>' +
+      '<tr><td>dp_036</td><td><span class="rt70-pill g7">7</span></td><td><span class="rt70-pill b2">2</span></td><td>Statsborgerskab vs aktiv deltager</td></tr>' +
+      '<tr><td>dp_037</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Lobbyisme skadelig?</td></tr>' +
+      '<tr><td>dp_038</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Tidsbegrænsning af embeder</td></tr>' +
+      '<tr><td>dp_039</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b4">4</span></td><td>Politisk apati unge</td></tr>' +
+      '<tr><td>dp_040</td><td><span class="rt70-pill g9">9</span></td><td><span class="rt70-pill b5">5</span></td><td>EU og nationalt demokrati</td></tr>' +
+    '</table>',
+    'All 40 questions classified. Grade 7: 8 questions. Grade 8: 9 exclusive (17 total). Grade 9: 23 exclusive (40 total).',
+    'accent'
+  );
+
+  // ── PHASE 3 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 3',
+    'Grade Metadata Model',
+    '<div class="rt70-label">target_grade — Minimum Grade</div>' +
+    '<div class="rt70-rule"><strong>7</strong> = Shown to all grades (7, 8, 9). Foundational concepts accessible at grade 7.</div>' +
+    '<div class="rt70-rule"><strong>8</strong> = Shown to grades 8 and 9 only. Requires more abstract reasoning than grade 7 baseline.</div>' +
+    '<div class="rt70-rule"><strong>9</strong> = Shown to grade 9 only. Requires synthesis-level thinking and multi-concept integration.</div>' +
+    '<div class="rt70-rule"><strong>NULL</strong> = No filter. Treated as grade 7 (backwards compatible with pre-Section-70 questions).</div>' +
+    '<div class="rt70-label">difficulty_band — Conceptual Depth</div>' +
+    '<div class="rt70-band-row"><span class="rt70-band-label">Band 1</span><div class="rt70-band-bar-wrap"><div class="rt70-band-bar" style="width:0%"></div></div><span class="rt70-band-count">0</span></div>' +
+    '<div class="rt70-band-row"><span class="rt70-band-label">Band 2</span><div class="rt70-band-bar-wrap"><div class="rt70-band-bar" style="width:13%"></div></div><span class="rt70-band-count">5</span></div>' +
+    '<div class="rt70-band-row"><span class="rt70-band-label">Band 3</span><div class="rt70-band-bar-wrap"><div class="rt70-band-bar" style="width:28%"></div></div><span class="rt70-band-count">11</span></div>' +
+    '<div class="rt70-band-row"><span class="rt70-band-label">Band 4</span><div class="rt70-band-bar-wrap"><div class="rt70-band-bar" style="width:40%"></div></div><span class="rt70-band-count">16</span></div>' +
+    '<div class="rt70-band-row"><span class="rt70-band-label">Band 5</span><div class="rt70-band-bar-wrap"><div class="rt70-band-bar" style="width:20%"></div></div><span class="rt70-band-count">8</span></div>' +
+    '<div class="rt70-label">Grade Starting Band</div>' +
+    '<div class="rt70-rule"><strong>Grade 7 → Band 1.</strong> Entry point. Student meets foundational questions. Band rises on 3 consecutive correct.</div>' +
+    '<div class="rt70-rule"><strong>Grade 8 → Band 2.</strong> Some prior context assumed. Starts with accessible but non-trivial questions.</div>' +
+    '<div class="rt70-rule"><strong>Grade 9 → Band 3.</strong> Curriculum baseline. Starts at mid-difficulty; can reach band 5 quickly.</div>',
+    'Model is explicit about semantics: target_grade = prerequisite, difficulty_band = depth. Both columns constrained at DB level.',
+    ''
+  );
+
+  // ── PHASE 4 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 4',
+    'Migration Implementation',
+    '<div class="rt70-label">File 1: 20260529000000_grade_difficulty_schema.sql</div>' +
+    '<div class="rt70-rule">ALTER TABLE questions ADD COLUMN target_grade SMALLINT DEFAULT NULL</div>' +
+    '<div class="rt70-rule">ALTER TABLE questions ADD COLUMN difficulty_band SMALLINT DEFAULT NULL</div>' +
+    '<div class="rt70-rule">ALTER TABLE profiles ADD COLUMN selected_grade SMALLINT DEFAULT NULL</div>' +
+    '<div class="rt70-rule">CREATE INDEX idx_questions_grade_band ON questions(target_grade, difficulty_band)</div>' +
+    '<div class="rt70-rule">CHECK constraints: target_grade IN (7,8,9) or NULL; difficulty_band BETWEEN 1 AND 5 or NULL; selected_grade IN (7,8,9) or NULL</div>' +
+    '<div class="rt70-rule">SECURITY DEFINER RPC: set_student_grade(p_grade SMALLINT) — profiles has no direct UPDATE policy; all mutations go through RPCs.</div>' +
+    '<div class="rt70-label">File 2: 20260529000001_grade_difficulty_data.sql</div>' +
+    '<div class="rt70-rule">40 UPDATE statements — one per question. WHERE clause: metadata->>\'domain\' = \'democracy_power\' AND content->>\'question\' = \'[current text]\'. Sets target_grade and difficulty_band for all 40 questions.</div>' +
+    '<div class="rt70-label">Deployment</div>' +
+    '<div class="rt70-rule">npx supabase db push — both migrations applied in sequence. Confirmed: "Finished supabase db push."</div>',
+    'Both migrations shipped. All 40 questions now have grade and band metadata in production.',
+    'accent'
+  );
+
+  // ── PHASE 5 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 5',
+    'Grade Selection UI',
+    '<div class="rt70-desc">The grade selector is a full-screen overlay added to index.html. It appears on first visit when selected_grade is null. It cannot be dismissed without selecting a grade — the flow does not proceed to question loading until a grade is chosen.</div>' +
+    '<div class="rt70-label">HTML: #grade-selector-overlay</div>' +
+    '<div class="rt70-rule">Fixed-position overlay, z-index 1000, rgba(15,14,23,0.97) background. Title: "Vælg dit klassetrin". Sub: "Du får spørgsmål, der passer til dit niveau".</div>' +
+    '<div class="rt70-rule">Three buttons with data-grade="7/8/9". Styled with accent border, hover fill. Disabled after click while RPC fires.</div>' +
+    '<div class="rt70-label">app.js: showGradeSelector()</div>' +
+    '<div class="rt70-rule">Returns a Promise. Wires onclick to each grade button. On click: calls supabase.rpc("set_student_grade", { p_grade: grade }), sets selectedGrade and currentDifficultyBand locally, hides overlay, resolves Promise.</div>' +
+    '<div class="rt70-rule">RPC failure is caught and logged but non-fatal — grade is still set locally. This prevents the UI from getting stuck if the RPC fails on a slow connection.</div>' +
+    '<div class="rt70-label">Blocking behavior</div>' +
+    '<div class="rt70-rule">DOMContentLoaded flow: fetchProgress → fetchAvatar → loadGrade → if (selectedGrade === null) await showGradeSelector() → loadAndRenderQuestion. The quiz never starts until a grade is selected.</div>',
+    'Grade selection modal shipped in index.html and wired in app.js. Appears once per account lifetime.',
+    ''
+  );
+
+  // ── PHASE 6 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 6',
+    'Session Model Extension',
+    '<div class="rt70-label">New session variables (inside DOMContentLoaded closure)</div>' +
+    '<div class="rt70-code">' +
+    'let selectedGrade = null;           // 7, 8, or 9 after loadGrade/showGradeSelector\n' +
+    'let currentDifficultyBand = 2;      // 1-5, starts at GRADE_START_BAND[grade]\n' +
+    'let diffConsecutiveCorrect = 0;     // resets on incorrect or band change\n' +
+    'let diffConsecutiveIncorrect = 0;   // resets on correct or band change' +
+    '</div>' +
+    '<div class="rt70-label">Module-level constant</div>' +
+    '<div class="rt70-code">' +
+    'const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };' +
+    '</div>' +
+    '<div class="rt70-label">loadGrade()</div>' +
+    '<div class="rt70-rule">Reads profiles.selected_grade for the current student. If set, initializes selectedGrade and currentDifficultyBand = GRADE_START_BAND[grade]. Called before showGradeSelector check.</div>' +
+    '<div class="rt70-label">getNextQuestion() — extended body</div>' +
+    '<div class="rt70-rule">Passes selected_grade and current_difficulty_band as top-level body fields to the get-next-question edge function, alongside session_context.</div>',
+    'Session model is pure local state — no new Supabase columns for band tracking. Grade persists in profiles; band is session-scoped and resets on page load.',
+    ''
+  );
+
+  // ── PHASE 7 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 7',
+    'Adaptive Difficulty Engine',
+    '<div class="rt70-label">adjustDifficultyBand(wasCorrect) — app.js</div>' +
+    '<div class="rt70-code">' +
+    'Correct: diffConsecutiveIncorrect=0, diffConsecutiveCorrect++\n' +
+    '  → if >= 3 AND band < 5: band++, reset counter\n\n' +
+    'Incorrect: diffConsecutiveCorrect=0, diffConsecutiveIncorrect++\n' +
+    '  → if >= 2 AND band > 1: band--, reset counter' +
+    '</div>' +
+    '<div class="rt70-label">Called from submitAnswer()</div>' +
+    '<div class="rt70-rule">adjustDifficultyBand(true) after updateWavePhase(true) in correct branch.</div>' +
+    '<div class="rt70-rule">adjustDifficultyBand(false) after updateWavePhase(false) in incorrect branch.</div>' +
+    '<div class="rt70-label">get-next-question edge function — getWaveScore() extended</div>' +
+    '<div class="rt70-rule">New parameters: questionBand (number|null), targetBand (number|null). If both non-null: +6 for exact match, +3 for adjacent band (|diff|=1). Added at end of existing wave scoring — purely additive, never reduces existing scores.</div>' +
+    '<div class="rt70-rule">sortByWave() extended: optional targetBand parameter. Early-return guard updated: only bypass when wavePhase==="challenge" AND targetBand===null. With a band target, sorting always runs.</div>' +
+    '<div class="rt70-label">Independence from NUZO wave</div>' +
+    '<div class="rt70-rule">Wave phase handles COGNITIVE TYPE (recovery/reinforcement/challenge/deep_challenge). Difficulty band handles CONCEPTUAL DEPTH (1-5). They combine additively in getWaveScore. A recovery-phase student can still receive band-appropriate questions.</div>',
+    'Adaptive difficulty engine shipped. Band adjusts independently of wave phase. Grade filter and band preference both active per request.',
+    'accent'
+  );
+
+  // ── PHASE 8 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 8',
+    'Content Supply Audit',
+    '<div class="rt70-label">Pool sizes after classification</div>' +
+    '<table class="rt70-table">' +
+      '<tr><th>Grade</th><th>Questions</th><th>Min viable</th><th>Status</th></tr>' +
+      '<tr><td><span class="rt70-pill g7">7</span></td><td>8</td><td>12+</td><td><span class="rt70-pill warn">Thin — pilot only</span></td></tr>' +
+      '<tr><td><span class="rt70-pill g8">8</span></td><td>17</td><td>15</td><td><span class="rt70-pill ship">Adequate</span></td></tr>' +
+      '<tr><td><span class="rt70-pill g9">9</span></td><td>40</td><td>20</td><td><span class="rt70-pill ship">Full supply</span></td></tr>' +
+    '</table>' +
+    '<div class="rt70-label">Grade 7 — Pool breakdown</div>' +
+    '<div class="rt70-rule">8 questions: dp_005, dp_007, dp_013, dp_014, dp_019, dp_021, dp_034, dp_036. Bands: 3×band-2, 5×band-3. No band-1 questions. Student starting at band-1 immediately hits band-2/3 questions.</div>' +
+    '<div class="rt70-rule">With 8 questions, spaced repetition cycles back quickly. A Grade 7 student will see repeated questions after their first full cycle — noticeable at pilot scale (~10-20 students).</div>' +
+    '<div class="rt70-label">Grade 8 — Pool breakdown</div>' +
+    '<div class="rt70-rule">17 questions (8 from grade-7 pool + 9 exclusive). Mix of bands 2-4. Starting band 2 gives a natural entry point. Adequate for pilot.</div>' +
+    '<div class="rt70-label">Grade 9 — Pool breakdown</div>' +
+    '<div class="rt70-rule">40 questions across all domains. 16×band-4, 8×band-5, 11×band-3. Starting band 3. Rich enough for full spaced-repetition cycle without noticeable repetition.</div>',
+    'Grade 7 is the critical gap. 8 questions is enough for proof-of-concept but requires content expansion before broader rollout.',
+    ''
+  );
+
+  // ── PHASE 9 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 9',
+    'Next Content Plan',
+    '<div class="rt70-label">Priority 1 — 4 Grade-7 Questions (Democracy &amp; Power, bands 1-2)</div>' +
+    '<div class="rt70-rule"><strong>Why bands 1-2:</strong> Grade 7 currently has no band-1 questions. The adaptive engine starts at band-1 for grade-7 students. Adding band-1 questions creates a genuine on-ramp before the student reaches band-2/3 difficulty.</div>' +
+    '<div class="rt70-rule"><strong>Suggested topics:</strong> What is democracy (simple definition), How do we choose our leaders, What is a law (basic), Why do people pay taxes. Pure factual/recall. Cognitive skill: comprehension. Challenge role: reinforcement.</div>' +
+    '<div class="rt70-label">Priority 2 — 3 Grade-8 Questions (Democracy &amp; Power, bands 2-3)</div>' +
+    '<div class="rt70-rule"><strong>Why:</strong> Grade 8 has no band-2 questions that are grade-8 exclusive (all band-2 questions are grade-7). Adding band-2 grade-8 questions creates a smoother start for grade-8 students who find the jump to band-3 steep.</div>' +
+    '<div class="rt70-label">Priority 3 — Multi-domain expansion</div>' +
+    '<div class="rt70-rule">The current platform has only one populated domain: democracy_power. Adding a second domain (e.g., climate_environment or economics_basics) should classify all questions with grade and band from the start. Do not repeat the Section 50 mistake of deploying 40 questions without metadata.</div>' +
+    '<div class="rt70-label">The rule going forward</div>' +
+    '<div class="rt70-rule">Every new INSERT must include target_grade and difficulty_band. The migration pattern is established. Add to the INSERT template. No question goes live without both fields.</div>',
+    'Minimum viable next step: 4 grade-7 band-1 questions. After that: every new domain ships with grade/band metadata from day one.',
+    ''
+  );
+
+  // ── PHASE 10 ────────────────────────────────────────────────────────────────
+  rt70Card(
+    'Phase 10',
+    'Implementation Verdict',
+    '<div class="rt70-label">Delivered in this section</div>' +
+    '<table class="rt70-table">' +
+      '<tr><th>Component</th><th>Status</th><th>Note</th></tr>' +
+      '<tr><td>DB schema</td><td><span class="rt70-pill ship">Shipped</span></td><td>target_grade, difficulty_band, selected_grade + constraints + index</td></tr>' +
+      '<tr><td>set_student_grade RPC</td><td><span class="rt70-pill ship">Shipped</span></td><td>SECURITY DEFINER, validates 7/8/9</td></tr>' +
+      '<tr><td>40 questions classified</td><td><span class="rt70-pill ship">Shipped</span></td><td>All target_grade + difficulty_band set in production</td></tr>' +
+      '<tr><td>Grade selection UI</td><td><span class="rt70-pill ship">Shipped</span></td><td>Overlay in index.html, wired in app.js</td></tr>' +
+      '<tr><td>Session model</td><td><span class="rt70-pill ship">Shipped</span></td><td>selectedGrade, currentDifficultyBand, adaptive counters</td></tr>' +
+      '<tr><td>Adaptive difficulty</td><td><span class="rt70-pill ship">Shipped</span></td><td>adjustDifficultyBand() — 3 correct → up, 2 incorrect → down</td></tr>' +
+      '<tr><td>Edge function</td><td><span class="rt70-pill ship">Shipped</span></td><td>Grade filter, band scoring, difficulty_band in SELECT</td></tr>' +
+      '<tr><td>Test guard</td><td><span class="rt70-pill ship">Shipped</span></td><td>global-setup.ts pre-sets grade=9 for test user</td></tr>' +
+      '<tr><td>Grade 7 content depth</td><td><span class="rt70-pill warn">Thin</span></td><td>8 questions — functional for pilot, needs 4 more</td></tr>' +
+    '</table>' +
+    '<div class="rt70-score">' +
+      '<span class="rt70-score-item pass">Database shipped ✓</span>' +
+      '<span class="rt70-score-item pass">Grade selection UI ✓</span>' +
+      '<span class="rt70-score-item pass">Session model ✓</span>' +
+      '<span class="rt70-score-item pass">Adaptive engine ✓</span>' +
+      '<span class="rt70-score-item pass">Edge function ✓</span>' +
+      '<span class="rt70-score-item pass">Test guard ✓</span>' +
+      '<span class="rt70-score-item warn">Grade 7 pool: 8 questions (thin)</span>' +
+      '<span class="rt70-score-item warn">Band 1 content: 0 questions</span>' +
+    '</div>',
+    'Section 70 — Grade-Level Architecture & Adaptive Difficulty — shipped 2026-05-29. The pilot can now serve Grade 7, 8, and 9 appropriately. Grade 7 content depth is the remaining gap.',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>

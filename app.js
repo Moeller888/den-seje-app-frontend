@@ -9,6 +9,7 @@ import { BlinkEngine } from "./js/avatar-blink-engine.js";
 window.__sb = supabase;
 
 const DEBUG = true;
+const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };
 let uiState = "IDLE";
 
 function logEvent(event, payload = {}) {
@@ -175,6 +176,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   let sessionQuestionCount = 0;
   let sessionConsecutiveReflections = 0;
 
+  // Grade + adaptive difficulty state — Section 70.
+  let selectedGrade = null;
+  let currentDifficultyBand = 2;
+  let diffConsecutiveCorrect = 0;
+  let diffConsecutiveIncorrect = 0;
+
   function updateWavePhase(wasCorrect) {
     if (wasCorrect) {
       sessionConsecutiveIncorrect = 0;
@@ -198,6 +205,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
     logEvent('WAVE_PHASE', { phase: sessionWavePhase, cc: sessionConsecutiveCorrect, ci: sessionConsecutiveIncorrect });
+  }
+
+  function adjustDifficultyBand(wasCorrect) {
+    if (wasCorrect) {
+      diffConsecutiveIncorrect = 0;
+      diffConsecutiveCorrect++;
+      if (diffConsecutiveCorrect >= 3 && currentDifficultyBand < 5) {
+        currentDifficultyBand++;
+        diffConsecutiveCorrect = 0;
+        logEvent("DIFFICULTY_BAND_UP", { band: currentDifficultyBand });
+      }
+    } else {
+      diffConsecutiveCorrect = 0;
+      diffConsecutiveIncorrect++;
+      if (diffConsecutiveIncorrect >= 2 && currentDifficultyBand > 1) {
+        currentDifficultyBand--;
+        diffConsecutiveIncorrect = 0;
+        logEvent("DIFFICULTY_BAND_DOWN", { band: currentDifficultyBand });
+      }
+    }
   }
 
   async function fetchProgress() {
@@ -276,6 +303,44 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         avatarDisplay.appendChild(img);
       }
+    });
+  }
+
+  async function loadGrade() {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("selected_grade")
+      .eq("id", studentId)
+      .maybeSingle();
+    const grade = profile?.selected_grade ?? null;
+    if (grade !== null) {
+      selectedGrade = grade;
+      currentDifficultyBand = GRADE_START_BAND[grade] ?? 2;
+    }
+  }
+
+  async function showGradeSelector() {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById("grade-selector-overlay");
+      if (!overlay) { resolve(); return; }
+      overlay.style.display = "flex";
+      const buttons = overlay.querySelectorAll(".grade-btn");
+      buttons.forEach(btn => {
+        btn.onclick = async () => {
+          const grade = parseInt(btn.dataset.grade, 10);
+          if (!grade) return;
+          buttons.forEach(b => b.disabled = true);
+          try {
+            await supabase.rpc("set_student_grade", { p_grade: grade });
+          } catch (e) {
+            logError("SET_GRADE_ERROR", e);
+          }
+          selectedGrade = grade;
+          currentDifficultyBand = GRADE_START_BAND[grade] ?? 2;
+          overlay.style.display = "none";
+          resolve();
+        };
+      });
     });
   }
 
@@ -397,6 +462,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       sessionCorrectStreak++;
       sessionConsecutiveReflections = 0;
       updateWavePhase(true);
+      adjustDifficultyBand(true);
       if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
         bestSessionStreak = sessionCorrectStreak;
         supabase.rpc("update_best_session_streak", { p_count: bestSessionStreak }).catch(() => {});
@@ -438,6 +504,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       sessionCorrectStreak = 0;
       lastMisconceptionType = data.misconception_type ?? null;
       updateWavePhase(false);
+      adjustDifficultyBand(false);
 
       await fetchProgress();
 
@@ -484,7 +551,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let { data, error } = await supabase.functions.invoke(
       "get-next-question",
-      { body: { session_context: sessionContext } }
+      { body: { session_context: sessionContext, selected_grade: selectedGrade, current_difficulty_band: currentDifficultyBand } }
     );
 
     if (error) {
@@ -650,6 +717,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await fetchProgress();
   await fetchAvatar();
+  await loadGrade();
+  if (selectedGrade === null) await showGradeSelector();
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
     try { exprEngine    = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
