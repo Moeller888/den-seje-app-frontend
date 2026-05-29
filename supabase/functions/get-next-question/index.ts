@@ -48,8 +48,15 @@ function normalizeContent(raw: any, answer_format: string) {
 // Uses: difficulty_type, cognitive_skill, misconception_type (recovery targeting),
 //       insight_type (perspective_shift / reframing / conceptual_bridge),
 //       challenge_role (reinforcement / challenge / deep_challenge).
+// Optional: questionBand + targetBand give difficulty-band preference bonus (+6 exact, +3 adjacent).
 // Questions without metadata score 0 — no preference, existing order preserved.
-function getWaveScore(metadata: any, wavePhase: string, lastMisconceptionType: string | null): number {
+function getWaveScore(
+  metadata: any,
+  wavePhase: string,
+  lastMisconceptionType: string | null,
+  questionBand: number | null = null,
+  targetBand: number | null = null
+): number {
   if (!metadata || typeof metadata !== "object") return 0;
 
   const difficultyType    = metadata.difficulty_type    ?? null;
@@ -104,14 +111,30 @@ function getWaveScore(metadata: any, wavePhase: string, lastMisconceptionType: s
       break;
   }
 
+  // Difficulty-band preference: +6 for exact match, +3 for adjacent band
+  if (questionBand !== null && targetBand !== null) {
+    const diff = Math.abs(questionBand - targetBand);
+    if (diff === 0) score += 6;
+    else if (diff === 1) score += 3;
+  }
+
   return score;
 }
 
-function sortByWave(questions: any[], wavePhase: string, lastMisconceptionType: string | null): any[] {
-  if (wavePhase === "challenge") return questions; // No reordering in neutral phase
+// targetBand: optional difficulty band target from adaptive difficulty engine.
+// When provided, band-matching bonus is included in wave scores.
+function sortByWave(
+  questions: any[],
+  wavePhase: string,
+  lastMisconceptionType: string | null,
+  targetBand: number | null = null
+): any[] {
+  if (wavePhase === "challenge" && targetBand === null) return questions; // No reordering needed
   return [...questions].sort((a, b) => {
-    const aScore = getWaveScore(a.metadata, wavePhase, lastMisconceptionType);
-    const bScore = getWaveScore(b.metadata, wavePhase, lastMisconceptionType);
+    const aBand = (a.difficulty_band as number | null) ?? null;
+    const bBand = (b.difficulty_band as number | null) ?? null;
+    const aScore = getWaveScore(a.metadata, wavePhase, lastMisconceptionType, aBand, targetBand);
+    const bScore = getWaveScore(b.metadata, wavePhase, lastMisconceptionType, bBand, targetBand);
     return bScore - aScore; // Descending: highest score = first
   });
 }
@@ -142,14 +165,18 @@ serve(async (req) => {
     const student_id = user.id;
 
     const body = await req.json().catch(() => ({}));
-    const lastQuestionId      = body?.last_question_id ?? null;
-    const sessionContext      = body?.session_context ?? null;
-    const wavePhase           = (sessionContext?.wave_phase as string) ?? "challenge";
+    const lastQuestionId        = body?.last_question_id ?? null;
+    const sessionContext        = body?.session_context ?? null;
+    const wavePhase             = (sessionContext?.wave_phase as string) ?? "challenge";
     const lastMisconceptionType = (sessionContext?.last_misconception_type as string | null) ?? null;
+    const selectedGrade         = (body?.selected_grade as number | null) ?? null;
+    const currentDifficultyBand = (body?.current_difficulty_band as number | null) ?? null;
 
     console.log("WAVE:", { wavePhase, lastMisconceptionType });
+    console.log("GRADE:", { selectedGrade, currentDifficultyBand });
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
+    // Due instances are served regardless of grade filter (backwards compatible).
     const { data: dueInstances, error: dueError } = await supabase
       .from("question_instances")
       .select(`
@@ -172,6 +199,7 @@ serve(async (req) => {
 
     // For due instances, apply wave ordering — spaced repetition still wins over new questions
     // but within the due pool we prefer wave-appropriate questions first.
+    // No band filter for due instances (already committed, grade filter does not apply).
     const sortedDue = sortByWave(
       (dueInstances || []).filter(i => i.questions),
       wavePhase,
@@ -205,17 +233,27 @@ serve(async (req) => {
       }
     }
 
-    // 🔥 2. NEW QUESTIONS — wave-aware sorting determines which new question to introduce
-    const { data: questions, error: questionError } = await supabase
+    // 🔥 2. NEW QUESTIONS — grade-filtered, wave+difficulty-band aware sorting
+    let newQuestionsQuery = supabase
       .from("questions")
-      .select("id, content, answer_format, answer_type, metadata")
-      .limit(50);
+      .select("id, content, answer_format, answer_type, metadata, difficulty_band");
+
+    // Apply grade filter: serve questions with target_grade <= selectedGrade, or NULL (unclassified)
+    if (selectedGrade !== null) {
+      newQuestionsQuery = newQuestionsQuery.or(`target_grade.lte.${selectedGrade},target_grade.is.null`);
+    }
+
+    const { data: questions, error: questionError } = await newQuestionsQuery.limit(50);
 
     if (questionError) throw questionError;
 
-    // Sort candidate questions by wave preference before attempting insertion.
-    // Questions without metadata score 0 and preserve their original order.
-    const sortedQuestions = sortByWave(questions || [], wavePhase, lastMisconceptionType);
+    // Sort candidate questions by wave + difficulty-band preference before attempting insertion.
+    const sortedQuestions = sortByWave(
+      questions || [],
+      wavePhase,
+      lastMisconceptionType,
+      currentDifficultyBand
+    );
 
     let inserted = null;
 
