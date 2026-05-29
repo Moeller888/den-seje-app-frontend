@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const overlay = document.getElementById("level-up-overlay");
     const text = document.getElementById("level-up-text");
     if (!overlay || !text) return;
-    text.textContent = `Du er nu level ${newLevel}!`;
+    text.textContent = `Niveau ${newLevel} — nyt territorium åbner sig.`;
     overlay.style.display = "flex";
     overlay.style.opacity = "0";
     void overlay.offsetWidth;
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (data.status === "correct") {
-      feedback.textContent = "✅ Korrekt!";
+      feedback.textContent = "Ja! 🎯";
       feedback.className = "feedback-correct";
       playSound("equip");
       exprEngine?.onGameEvent("CORRECT");
@@ -446,7 +446,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // After 2 back-to-back reflections, auto-advance — prevents reflection fatigue in losing streaks.
       if (reviewText && sessionConsecutiveReflections < 2) {
         sessionConsecutiveReflections++;
-        feedback.textContent = "❌ Forkert";
+        feedback.textContent = "Ikke helt —";
         feedback.className = "feedback-error";
         setTimeout(() => enterReflectionState(reviewText), 400);
         return;
@@ -456,7 +456,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         logEvent("REFLECTION_DENSITY_GATE", { sessionConsecutiveReflections, gated: true });
       }
 
-      feedback.textContent = "❌ Forkert – korrekt svar: " + (data.correct_answer ?? "ukendt");
+      feedback.textContent = "Svaret er " + (data.correct_answer ?? "ukendt") + " — husk det nu.";
       feedback.className = "feedback-error";
       setUIState(UI_STATES.TRANSITIONING);
       setTimeout(() => { loadAndRenderQuestion(); }, 2000);
