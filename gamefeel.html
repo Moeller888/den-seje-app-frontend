@@ -21845,5 +21845,142 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 }());
 </script>
 
+<style>
+  .rt74-wrap { background: #060f0a; font-family: 'Segoe UI', sans-serif; padding: 32px 20px 60px; }
+  .rt74-header { max-width: 860px; margin: 0 auto 32px; padding: 28px 32px; background: linear-gradient(135deg, #030f06, #071a0d); border: 1px solid #166534; border-radius: 12px; }
+  .rt74-header h2 { font-size: 22px; color: #4ade80; margin: 0 0 6px; letter-spacing: 0.5px; }
+  .rt74-header p { color: #16a34a; font-size: 13px; margin: 0; opacity: 0.85; }
+  .rt74-grid { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .rt74-card { background: #070f09; border: 1px solid #0f2010; border-radius: 10px; padding: 24px 28px; }
+  .rt74-card-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .rt74-phase { font-size: 11px; color: #166534; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .rt74-title { font-size: 16px; font-weight: 700; color: #4ade80; }
+  .rt74-desc { font-size: 13px; color: #86efac; line-height: 1.6; margin: 0 0 12px; }
+  .rt74-verdict { font-size: 12px; padding: 8px 14px; border-radius: 6px; margin-top: 14px; font-weight: 500; }
+  .rt74-verdict.ok { background: #051208; color: #4ade80; border: 1px solid #166534; }
+  .rt74-verdict.accent { background: #060f0a; color: #86efac; border: 1px solid #14532d; }
+  .rt74-verdict.info { background: #060e14; color: #93c5fd; border: 1px solid #1e3a5f; }
+  .rt74-verdict.warn { background: #0f0800; color: #fbbf24; border: 1px solid #92400e; }
+  .rt74-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .rt74-table th { text-align: left; padding: 6px 10px; color: #166534; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #0f2010; }
+  .rt74-table td { padding: 7px 10px; color: #86efac; border-bottom: 1px solid #0a180c; vertical-align: top; }
+  .rt74-table tr:last-child td { border-bottom: none; }
+  .rt74-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .rt74-pill.ok { background: #051208; color: #4ade80; }
+  .rt74-pill.gap { background: #1a0a00; color: #fb923c; }
+  .rt74-pill.thin { background: #14080a; color: #f87171; }
+  .rt74-stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+  .rt74-stat { background: #0a180c; border-radius: 8px; padding: 12px 18px; flex: 1; min-width: 110px; }
+  .rt74-stat-num { font-size: 26px; font-weight: 800; color: #4ade80; line-height: 1; }
+  .rt74-stat-label { font-size: 11px; color: #166534; margin-top: 4px; }
+  .rt74-rule { font-size: 12px; color: #86efac; line-height: 1.6; padding: 6px 0; border-bottom: 1px solid #0a180c; }
+  .rt74-rule:last-child { border-bottom: none; }
+  .rt74-rule strong { color: #4ade80; }
+</style>
+<script>
+(function () {
+  var wrap = document.createElement('div');
+  wrap.className = 'rt74-wrap';
+  wrap.innerHTML = '<div class="rt74-header"><h2>Section 74 — Grade 8 WW2 Content Expansion Sprint</h2><p>Band coverage completion: filled Grade 8 Band 1 gap (0→10) and Band 3 gap (2→10). Grade 8 now fully covered across all three active bands.</p></div><div class="rt74-grid" id="rt74-grid"></div>';
+  document.body.appendChild(wrap);
+
+  function rt74Card(phase, title, body, verdict, verdictClass) {
+    var grid = document.getElementById('rt74-grid');
+    var card = document.createElement('div');
+    card.className = 'rt74-card';
+    card.innerHTML =
+      '<div class="rt74-card-header"><span class="rt74-phase">' + phase + '</span><span class="rt74-title">' + title + '</span></div>' +
+      body +
+      '<div class="rt74-verdict ' + verdictClass + '">' + verdict + '</div>';
+    grid.appendChild(card);
+  }
+
+  rt74Card(
+    'Phase 1',
+    'Sprint Context — Why WW2 Band 1, Not D&P',
+    '<p class="rt74-desc">Section 73 gamefeel projected Section 74 as a democracy_power (D&P) Grade 8 expansion. The actual execution deviated deliberately: the WW2 domain is the only <em>active</em> domain. D&P questions (70+) are all is_active=false and do not reach students. The urgent gap was in the live, student-facing pool.</p>' +
+    '<div class="rt74-rule"><strong>Active pool reality check:</strong> Before this sprint, Grade 8 WW2 had Band 1 = 0 questions. Students at band 1 difficulty in Grade 8 had zero eligible questions in the active domain.</div>' +
+    '<div class="rt74-rule"><strong>Decision:</strong> Fill the Band 1 gap in the live domain first. D&P activation is a separate unlock decision — content-first is the right order.</div>',
+    'Correct prioritization: active domain gaps before inactive domain expansion.',
+    'ok'
+  );
+
+  rt74Card(
+    'Phase 2',
+    'Gap Analysis — Grade 8 Before Sprint',
+    '<p class="rt74-desc">State of world_war_2 domain for Grade 8 immediately before migration 20260529000004 was applied:</p>' +
+    '<table class="rt74-table">' +
+      '<thead><tr><th>Band</th><th>Count</th><th>Status</th><th>Risk</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Band 1 (recall)</td><td>0</td><td><span class="rt74-pill gap">MISSING</span></td><td>Students at low difficulty never get Grade 8 WW2</td></tr>' +
+        '<tr><td>Band 2 (comprehension)</td><td>18</td><td><span class="rt74-pill ok">Healthy</span></td><td>None — primary pool is saturated</td></tr>' +
+        '<tr><td>Band 3 (analysis)</td><td>2</td><td><span class="rt74-pill thin">Very thin</span></td><td>Engine exhausts Band 3 in 2 questions for advanced students</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<p class="rt74-desc" style="margin-top:10px">Band 2 was healthy (18 questions). Band 1 was a hard zero — the adaptive engine could not serve Grade 8 students at band 1 difficulty at all. Band 3 at 2 questions caused rapid exhaustion for high-achieving students.</p>',
+    'Two critical gaps: Band 1 = 0 (hard failure), Band 3 = 2 (rapid exhaustion).',
+    'warn'
+  );
+
+  rt74Card(
+    'Phase 3',
+    'Content Design — Band 1 (10 questions)',
+    '<p class="rt74-desc">Band 1 at Grade 8 is factual recall but at a slightly higher specificity than Grade 7 Band 1. Grade 7 Band 1 covers: "Hvornår startede krigen?", "Hvem var Tysklands leder?". Grade 8 Band 1 steps up to named actors, institutions, and concepts with clear identification.</p>' +
+    '<div class="rt74-rule"><strong>Topics covered:</strong> Churchill as PM, Blitzkrieg definition, Holocaust definition, US entry date (Pearl Harbor), Axis alliance members, concentration camps, Nürnberg-lovene, De Store Tre, Gestapo, Danish occupation model.</div>' +
+    '<div class="rt74-rule"><strong>Format:</strong> MC with 4 options + review_text. All is_active=true (WW2 active domain).</div>' +
+    '<div class="rt74-rule"><strong>Metadata:</strong> cognitive_skill=recall, difficulty_type=factual, insight_type=conceptual_bridge, challenge_role=reinforcement.</div>',
+    '10 Band 1 questions covering named actors, institutions, and defining events at Grade 8 specificity.',
+    'ok'
+  );
+
+  rt74Card(
+    'Phase 4',
+    'Content Design — Band 3 (8 questions)',
+    '<p class="rt74-desc">Band 3 at Grade 8 requires causal analysis and strategic reasoning — not just what happened, but why it mattered and what changed as a result. Questions are designed to distinguish students who have surface knowledge from those with structural understanding.</p>' +
+    '<div class="rt74-rule"><strong>Topics covered:</strong> Operation Overlord (strategic purpose of D-dag), Stalingrad consequence (offensive→defensive shift), Pearl Harbor long-term consequence (industrial asymmetry), Lend-Lease Act mechanism, Marshallplanen purpose, French collapse in 1940 (Ardennes breakthrough), FN&apos;s founding purpose, atomic bombs&apos; strategic function.</div>' +
+    '<div class="rt74-rule"><strong>Design principle:</strong> Each question has a plausible wrong answer that sounds correct to a student who remembers facts but misunderstands causation (misconception_type=causal_inversion or surface_association).</div>' +
+    '<div class="rt74-rule"><strong>Metadata:</strong> cognitive_skill=analysis, difficulty_type=analytical, insight_type=perspective_shift, challenge_role=challenge.</div>',
+    '8 Band 3 questions targeting causal reasoning and strategic analysis. Wrong answers exploit common misconceptions.',
+    'ok'
+  );
+
+  rt74Card(
+    'Phase 5',
+    'Migration Outcomes — DB State After Sprint',
+    '<p class="rt74-desc">Production database after 20260529000004_grade8_content_expansion.sql applied:</p>' +
+    '<div class="rt74-stat-row">' +
+      '<div class="rt74-stat"><div class="rt74-stat-num">61</div><div class="rt74-stat-label">Active questions</div></div>' +
+      '<div class="rt74-stat"><div class="rt74-stat-num">18</div><div class="rt74-stat-label">New this sprint</div></div>' +
+      '<div class="rt74-stat"><div class="rt74-stat-num">3</div><div class="rt74-stat-label">Bands covered G8</div></div>' +
+    '</div>' +
+    '<table class="rt74-table" style="margin-top:16px">' +
+      '<thead><tr><th>Grade</th><th>Band 1</th><th>Band 2</th><th>Band 3</th><th>Total active</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Grade 7</td><td>11</td><td>8</td><td>—</td><td>19</td></tr>' +
+        '<tr><td>Grade 8</td><td><strong>10 ✓</strong></td><td>18</td><td><strong>10 ✓</strong></td><td>38</td></tr>' +
+        '<tr><td>Grade 9</td><td>—</td><td>—</td><td>3</td><td>3</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<p class="rt74-desc" style="margin-top:10px">Grade 8 went from partial coverage (0/18/2) to full three-band coverage (10/18/10). The adaptive engine can now serve Grade 8 students across all difficulty levels without exhaustion.</p>',
+    'Grade 8 fully covered. Band 1 gap closed. Band 3 expanded from 2 to 10.',
+    'ok'
+  );
+
+  rt74Card(
+    'Phase 6',
+    'Remaining Gaps — Priority Queue',
+    '<p class="rt74-desc">After this sprint, the remaining gaps in the active world_war_2 pool:</p>' +
+    '<div class="rt74-rule"><strong>Grade 7, Band 3:</strong> 0 questions. Students who progress past Band 2 in Grade 7 hit a wall. Priority: medium.</div>' +
+    '<div class="rt74-rule"><strong>Grade 7, Band 4:</strong> 0 questions. Synthesis-level questions for Grade 7 not yet written.</div>' +
+    '<div class="rt74-rule"><strong>Grade 9, Band 1:</strong> 0 questions. Grade 9 has only Band 3 (3 questions). Major gap for lower-performing Grade 9 students.</div>' +
+    '<div class="rt74-rule"><strong>Grade 9, Band 2:</strong> 0 questions. Same issue — Grade 9 students at mid-difficulty have nothing.</div>' +
+    '<div class="rt74-rule"><strong>D&P domain activation:</strong> 70+ democracy_power questions are is_active=false. Activation decision is a product call, not a content call. Requires review of question quality before enabling.</div>',
+    'Section 75 mandate: Grade 9 Band 1 + Band 2 expansion (0→8 each). Most critical remaining gap.',
+    'info'
+  );
+
+}());
+</script>
+
 </body>
 </html>
