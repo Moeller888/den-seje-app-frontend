@@ -19636,5 +19636,448 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 
 }());
 </script>
+
+<!-- ── SECTION 67 — Apprentice Explorer Expression & Presence ────────────── -->
+<style>
+  .rt67-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; margin-bottom:32px; }
+  .rt67-card { background:#01121a; border:1px solid #0a3040; border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .rt67-card.accent { border-color:#0891b2; background:#000d14; }
+  .rt67-card.bible { border-color:#06b6d4; background:#000a10; border-width:2px; }
+  .rt67-card.warn { border-color:#c07830; background:#100a02; }
+  .rt67-label { font-size:9px; font-weight:bold; letter-spacing:1.6px; text-transform:uppercase; color:#06b6d4; }
+  .rt67-title { font-size:14px; font-weight:bold; color:#a5f3fc; line-height:1.3; }
+  .rt67-body { font-size:12px; color:#2a6070; line-height:1.6; }
+  .rt67-footer { font-size:10px; color:#0a3040; font-style:italic; margin-top:4px; }
+  .rt67-block { background:#001018; border-radius:6px; padding:10px 12px; }
+  .rt67-block-title { font-size:10px; font-weight:bold; color:#06b6d4; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .rt67-block-body { display:flex; flex-direction:column; gap:4px; }
+  .rt67-rule { font-size:11px; color:#7ecfdf; padding-left:10px; position:relative; line-height:1.5; }
+  .rt67-rule::before { content:'—'; position:absolute; left:0; color:#06b6d4; }
+  .rt67-pass { font-size:11px; color:#60c888; padding-left:10px; position:relative; line-height:1.5; }
+  .rt67-pass::before { content:'✓'; position:absolute; left:0; color:#60c888; font-size:9px; }
+  .rt67-fail { font-size:11px; color:#d07060; padding-left:10px; position:relative; line-height:1.5; }
+  .rt67-fail::before { content:'✕'; position:absolute; left:0; color:#d07060; font-size:9px; }
+  .rt67-warn { font-size:11px; color:#d0a050; padding-left:10px; position:relative; line-height:1.5; }
+  .rt67-warn::before { content:'⚠'; position:absolute; left:0; color:#d0a050; font-size:9px; }
+  .rt67-law { font-size:11px; color:#a5f3fc; padding-left:14px; position:relative; line-height:1.5; font-weight:500; }
+  .rt67-law::before { content:'◆'; position:absolute; left:0; color:#06b6d4; font-size:7px; top:3px; }
+  .rt67-table { width:100%; border-collapse:collapse; font-size:10px; }
+  .rt67-table th { color:#06b6d4; font-weight:bold; padding:5px 7px; text-align:left; border-bottom:1px solid #0a3040; }
+  .rt67-table td { color:#6abccc; padding:5px 7px; border-bottom:1px solid #01121a; vertical-align:top; line-height:1.4; }
+  .rt67-table td.pass { color:#60c888; }
+  .rt67-table td.fail { color:#d07060; }
+  .rt67-table td.warn { color:#d0a050; }
+  .rt67-compare { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .rt67-compare-col { background:#001018; border-radius:6px; padding:8px 10px; }
+  .rt67-compare-label { font-size:9px; font-weight:bold; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+  .rt67-compare-label.bad { color:#d07060; }
+  .rt67-compare-label.good { color:#60c888; }
+  .rt67-compare-body { font-size:10px; color:#4a9aaa; line-height:1.5; }
+  .rt67-quote { font-size:12px; color:#0a5060; font-style:italic; border-left:2px solid #06b6d4; padding-left:10px; line-height:1.6; margin:6px 0; }
+  .rt67-bible-section { background:#001820; border:1px solid #0a3040; border-radius:8px; padding:12px 14px; margin-top:8px; }
+  .rt67-bible-section-title { font-size:10px; font-weight:bold; color:#06b6d4; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:8px; border-bottom:1px solid #0a3040; padding-bottom:4px; }
+  .rt67-bible-rules { display:flex; flex-direction:column; gap:3px; }
+  .rt67-verdict { font-size:13px; font-weight:bold; padding:12px 14px; border-radius:8px; line-height:1.6; background:#00141e; border:1px solid #0891b2; color:#a5f3fc; }
+  .rt67-avatar { position:relative; display:inline-block; }
+  .rt67-avatar img { position:absolute; top:0; left:0; width:100%; height:100%; }
+  .rt67-render-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:6px; }
+  .rt67-render-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .rt67-render-label { font-size:9px; color:#0a3040; text-align:center; line-height:1.3; }
+  .rt67-state-map { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .rt67-state-row { display:flex; gap:8px; align-items:flex-start; background:#001018; border-radius:6px; padding:6px 10px; }
+  .rt67-state-expr { font-size:10px; font-weight:bold; color:#06b6d4; min-width:90px; }
+  .rt67-state-arch { font-size:10px; color:#60c888; flex:1; }
+  .rt67-state-signal { font-size:10px; color:#4a9aaa; min-width:80px; text-align:right; font-style:italic; }
+  .rt67-copy-row { display:flex; flex-direction:column; gap:6px; }
+  .rt67-copy-item { background:#001018; border-radius:6px; padding:8px 10px; }
+  .rt67-copy-now { font-size:10px; color:#d07060; margin-bottom:3px; }
+  .rt67-copy-now::before { content:'NOW '; font-weight:bold; font-size:8px; }
+  .rt67-copy-exp { font-size:10px; color:#60c888; }
+  .rt67-copy-exp::before { content:'EXPLORER '; font-weight:bold; font-size:8px; }
+  .rt67-score { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
+  .rt67-score-item { font-size:10px; padding:2px 8px; border-radius:12px; }
+  .rt67-score-item.pass { background:#102018; color:#60c888; }
+  .rt67-score-item.warn { background:#181008; color:#d0a050; }
+  .rt67-score-item.fail { background:#180808; color:#d07060; }
+</style>
+
+<h2 style="font-size:13px;font-weight:bold;color:#06b6d4;letter-spacing:1.5px;text-transform:uppercase;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #0a3040;">
+  Section 67 — Apprentice Explorer Expression &amp; Presence Pass
+</h2>
+<div class="rt67-grid" id="rt67Grid"></div>
+
+<script>
+(function () {
+  function rt67Card(label, title, body, footer, variant) {
+    var d = document.getElementById('rt67Grid');
+    var card = document.createElement('div');
+    card.className = 'rt67-card' + (variant ? ' ' + variant : '');
+    card.innerHTML =
+      '<div class="rt67-label">' + label + '</div>' +
+      '<div class="rt67-title">' + title + '</div>' +
+      '<div class="rt67-body">' + body + '</div>' +
+      (footer ? '<div class="rt67-footer">' + footer + '</div>' : '');
+    d.appendChild(card);
+  }
+
+  function av(expr, w, bg) {
+    var h = Math.round(w * 1.5);
+    var bs = bg ? 'background:' + bg + ';border-radius:4px;padding:2px;' : '';
+    return '<div class="rt67-avatar" style="width:' + w + 'px;height:' + h + 'px;' + bs + '">' +
+      '<img src="assets/avatar/base/body.svg">' +
+      '<img src="assets/avatar/expressions/' + expr + '.svg">' +
+      '</div>';
+  }
+
+  function avCape(expr, w, bg) {
+    var h = Math.round(w * 1.5);
+    var bs = bg ? 'background:' + bg + ';border-radius:4px;padding:2px;' : '';
+    return '<div class="rt67-avatar" style="width:' + w + 'px;height:' + h + 'px;' + bs + '">' +
+      '<img src="assets/avatar/base/body.svg">' +
+      '<img src="assets/avatar/shirt/cape-red.svg">' +
+      '<img src="assets/avatar/expressions/' + expr + '.svg">' +
+      '</div>';
+  }
+
+  // Phase 1 — Expression Audit
+  rt67Card(
+    'Phase 1 — Expression Audit',
+    'Does each system communicate "Apprentice Explorer" or "generic helper"?',
+    '<table class="rt67-table">' +
+      '<thead><tr><th>System</th><th>Current state</th><th>Explorer alignment</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>expr-neutral (idle)</td><td class="pass">Calm, warm, present</td><td class="pass">✓ Strong — attentive observer at rest</td></tr>' +
+        '<tr><td>expr-curious</td><td class="pass">Brows up, eyes open</td><td class="pass">✓ Perfect — discovery seeking mode</td></tr>' +
+        '<tr><td>expr-focused</td><td class="pass">Heavy lid, firm mouth</td><td class="pass">✓ Strong — deep understanding in progress</td></tr>' +
+        '<tr><td>expr-determined</td><td class="pass">Brow furrow, set jaw</td><td class="pass">✓ Strong — persisting through difficulty</td></tr>' +
+        '<tr><td>expr-proud</td><td class="pass">Wide smile, lifted brow</td><td class="warn">~ Correct but subtle — discovery joy, not performance pride</td></tr>' +
+        '<tr><td>Posture (body.svg)</td><td class="pass">Contrapposto, forward bang</td><td class="pass">✓ Excellent — "in motion, has direction"</td></tr>' +
+        '<tr><td>Cape (red)</td><td class="pass">Traveller cloak silhouette</td><td class="pass">✓ Perfect explorer equipment</td></tr>' +
+        '<tr><td>Knight armor</td><td class="warn">Warrior aesthetic</td><td class="fail">✕ Warrior frame — misaligns with explorer identity</td></tr>' +
+        '<tr><td>XP copy</td><td class="warn">"Du har tjent X XP"</td><td class="fail">✕ Collection frame — not exploration frame</td></tr>' +
+        '<tr><td>Correct answer copy</td><td class="warn">"Rigtigt svar!" / celebration</td><td class="warn">~ Performance frame — should be understanding frame</td></tr>' +
+        '<tr><td>Incorrect / reflection</td><td class="warn">"Svaret er..." — neutral</td><td class="pass">✓ Mostly OK — not punitive, but not curiosity-framed</td></tr>' +
+        '<tr><td>Level up</td><td class="warn">Generic milestone</td><td class="fail">✕ Missing discovery/exploration language</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Expression system: strong. Equipment: partially misaligned. Copy/language: main gap.',
+    ''
+  );
+
+  // Phase 2 — Expression Language
+  rt67Card(
+    'Phase 2 — Expression Language',
+    'How does the Apprentice Explorer express each internal state?',
+    '<div class="rt67-state-map">' +
+      '<div class="rt67-state-row"><div class="rt67-state-expr">Curiosity</div><div class="rt67-state-arch">expr-curious — "what is this?" — brows rise, eyes open, no tension. The default response to the unknown.</div><div class="rt67-state-signal">✓ Mapped</div></div>' +
+      '<div class="rt67-state-row"><div class="rt67-state-expr">Processing</div><div class="rt67-state-arch">expr-focused — "I\'m working through this" — eyelid lower, mind engaged. Comfortable with complexity.</div><div class="rt67-state-signal">✓ Mapped</div></div>' +
+      '<div class="rt67-state-row"><div class="rt67-state-expr">Persisting</div><div class="rt67-state-arch">expr-determined — "this is difficult, I continue anyway" — inner brow resolve, firm mouth. Not distress.</div><div class="rt67-state-signal">✓ Mapped</div></div>' +
+      '<div class="rt67-state-row"><div class="rt67-state-expr">Understanding</div><div class="rt67-state-arch">expr-proud — "I understand now" — warm wide smile, relaxed brow. Discovery joy, not winner\'s pride.</div><div class="rt67-state-signal">✓ Mapped</div></div>' +
+      '<div class="rt67-state-row"><div class="rt67-state-expr">Observing</div><div class="rt67-state-arch">expr-neutral — "attentive at rest, ready for what comes" — calm gaze, settled posture.</div><div class="rt67-state-signal">✓ Mapped</div></div>' +
+      '<div class="rt67-state-row" style="border:1px solid #0a3040;"><div class="rt67-state-expr" style="color:#d0a050">Uncertainty</div><div class="rt67-state-arch" style="color:#d0a050">No dedicated expression — currently maps to expr-curious. Uncertainty IS curiosity for an explorer.</div><div class="rt67-state-signal" style="color:#60c888">~ Adequate</div></div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:10px">' +
+      '<div class="rt67-block-title">Permanent expression rules</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-law">No exaggerated reactions — the explorer is internally driven, never performing for an audience</div>' +
+        '<div class="rt67-law">Uncertainty maps to curiosity — "I don\'t know yet" is a discovery opportunity, not a failure state</div>' +
+        '<div class="rt67-law">Understanding is warm, not explosive — a quiet "ah" not a celebration party</div>' +
+        '<div class="rt67-law">Difficulty maps to determination, not distress — the explorer expects challenge</div>' +
+        '<div class="rt67-law">Stillness is presence — idle is not empty, it is attentive readiness</div>' +
+      '</div>' +
+    '</div>',
+    'All 5 expressions are correctly mapped. The rules above govern any future expression additions.',
+    ''
+  );
+
+  // Phase 3 — Idle Presence
+  rt67Card(
+    'Phase 3 — Idle Presence',
+    'When the avatar does nothing — does it feel like an explorer or a standing character?',
+    '<div class="rt67-render-row">' +
+      '<div class="rt67-render-cell">' + av('expr-neutral', 104, '#01121a') + '<div class="rt67-render-label">idle<br>neutral</div></div>' +
+      '<div class="rt67-render-cell">' + avCape('expr-neutral', 104, '#01121a') + '<div class="rt67-render-label">idle<br>+ cape</div></div>' +
+      '<div class="rt67-render-cell">' + av('expr-curious', 104, '#01121a') + '<div class="rt67-render-label">between<br>questions</div></div>' +
+    '</div>' +
+    '<div class="rt67-block">' +
+      '<div class="rt67-block-title">Idle presence audit</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-pass">Contrapposto stance — "ready to move but not anxious." This is the core idle signal and it works.</div>' +
+        '<div class="rt67-pass">Forward-swept bang — communicates direction even at rest. Structural forward motion.</div>' +
+        '<div class="rt67-pass">Warm neutral expression — calm, present, not blank. Attentive observer quality.</div>' +
+        '<div class="rt67-pass">Left-dominant crown — asymmetry reads as personality, not just "standing."</div>' +
+        '<div class="rt67-warn">Eyes forward — a genuine explorer might gaze slightly outward/upward, "scanning the horizon." Current gaze is self-contained rather than world-directed.</div>' +
+        '<div class="rt67-warn">No implied movement — stillness is correct for idle, but "readiness" could be stronger.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-quote">The idle state is adequate. The posture carries the explorer signal. The face is warm-neutral rather than attentive-to-world. This is the one area where expression language could deepen without geometry changes.</div>',
+    'Idle presence: B+. The body communicates explorer; the face communicates warmth. Both are correct.',
+    ''
+  );
+
+  // Phase 4 — Reflection Moment Alignment
+  rt67Card(
+    'Phase 4 — Reflection Moment Alignment',
+    'Does the avatar communicate "let\'s understand this" or "you got it wrong"?',
+    '<div class="rt67-render-row">' +
+      '<div class="rt67-render-cell">' + av('expr-focused', 104, '#01121a') + '<div class="rt67-render-label">reflection<br>expression</div></div>' +
+      '<div class="rt67-render-cell">' + av('expr-curious', 104, '#01121a') + '<div class="rt67-render-label">uncertainty<br>expression</div></div>' +
+    '</div>' +
+    '<div class="rt67-block">' +
+      '<div class="rt67-block-title">Reflection state — current vs. explorer ideal</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-pass">Expression used: expr-focused — correct. "Processing, understanding in progress" is exactly right for reflection.</div>' +
+        '<div class="rt67-pass">No sad/disappointed face — this is critical. The explorer does not experience wrong answers as failure.</div>' +
+        '<div class="rt67-pass">Static display during reflection — non-performative. Correct register.</div>' +
+        '<div class="rt67-warn">Language: "Svaret er [X]" — neutral, not punitive, but also not framed as discovery.</div>' +
+        '<div class="rt67-fail">Missing: the framing of wrong answers as "the piece I was missing" rather than "the wrong answer."</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-compare" style="margin-top:8px">' +
+      '<div class="rt67-compare-col"><div class="rt67-compare-label bad">Performance frame</div><div class="rt67-compare-body">"Du svarede forkert."<br>"Prøv igen."<br>"Forkert! Svaret er..."</div></div>' +
+      '<div class="rt67-compare-col"><div class="rt67-compare-label good">Explorer frame</div><div class="rt67-compare-body">"Svaret er [X] — det husker du nu."<br>"Godt kigget. Svaret var [X]."<br>"Der er det! [X] er svaret."</div></div>' +
+    '</div>',
+    'The expression is right. The language is the gap. Reflection should feel like discovery, not correction.',
+    'accent'
+  );
+
+  // Phase 5 — Progression Language
+  rt67Card(
+    'Phase 5 — Progression Language Audit',
+    'Does the progression system reinforce understanding or collection?',
+    '<div class="rt67-block">' +
+      '<div class="rt67-block-title">Current progression signals</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-fail">XP system: "Du har tjent X XP" — pure collection frame. XP is a number accumulated, not territory explored.</div>' +
+        '<div class="rt67-fail">Coins: shopping currency — entirely in collection/reward frame, no exploration resonance.</div>' +
+        '<div class="rt67-warn">Levels: numbered tiers ("Level 5") — neutral, could be framed as exploration depth.</div>' +
+        '<div class="rt67-warn">Milestones: not yet developed — clean slate for explorer language.</div>' +
+        '<div class="rt67-pass">XP popup visual: appears, rises, fades — the motion itself is fine (brief, non-performative).</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:8px">' +
+      '<div class="rt67-block-title">Explorer progression framing (future copy direction)</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-rule">XP → "Ny viden kortlagt" (New knowledge mapped) or simply retain "XP" with explorer copy context</div>' +
+        '<div class="rt67-rule">Level up → "Du har nået [X] — nyt territorium åbner sig" (New territory opens)</div>' +
+        '<div class="rt67-rule">Milestones → "Opdagelse: [X] spørgsmål besvaret" (Discovery: X questions answered)</div>' +
+        '<div class="rt67-rule">Correct streak → "Tre på stribe — du er på sporet" (Three in a row — you\'re on the trail)</div>' +
+        '<div class="rt67-rule">Session end → "Fortsæt rejsen i morgen" (Continue the journey tomorrow)</div>' +
+      '</div>' +
+    '</div>',
+    'The numbers are neutral. The language around them is where the explorer identity is currently absent.'
+  );
+
+  // Phase 6 — Cosmetic Philosophy
+  rt67Card(
+    'Phase 6 — Cosmetic Philosophy',
+    'What belongs in an Apprentice Explorer\'s wardrobe?',
+    '<div class="rt67-block">' +
+      '<div class="rt67-block-title">Equipment — aligned vs. misaligned</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-pass">Cape (red) — traveller\'s cloak: perfect. Defines the explorer aesthetic. Permanent tier-1 gear.</div>' +
+        '<div class="rt67-warn">Armor (knight) — warrior frame. Reframeable as "veteran explorer\'s field gear" in copy, but the visual still reads "knight."</div>' +
+        '<div class="rt67-fail">No satchel, no compass, no lantern — the most obviously explorer-aligned equipment is absent.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:8px">' +
+      '<div class="rt67-block-title">The explorer equipment canon (future items)</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-law">Satchel / Explorer bag — carries discoveries, notes, maps. Strongest identity signal after the cape.</div>' +
+        '<div class="rt67-law">Lantern — illuminates the unknown. "Light in the dark" is the core discovery metaphor.</div>' +
+        '<div class="rt67-law">Compass — direction, navigation. "I know where I\'m going."</div>' +
+        '<div class="rt67-law">Star chart / Map fragment — knowledge made visual. Understanding as territory.</div>' +
+        '<div class="rt67-law">Telescope — "looking further than today." Aspiration made tangible.</div>' +
+        '<div class="rt67-law">Worn journal — records of discoveries. Every session adds a page.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:8px">' +
+      '<div class="rt67-block-title">What to reject — permanently</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-fail">Swords, shields, weapons — aggression/conquest frame</div>' +
+        '<div class="rt67-fail">Trophies, medals — external validation / performance frame</div>' +
+        '<div class="rt67-fail">Crowns, thrones — superiority / hierarchy frame</div>' +
+        '<div class="rt67-fail">Wings, power capes — power fantasy — above the journey, not on it</div>' +
+      '</div>' +
+    '</div>',
+    'Cape: correct. Knight armor: acceptable but identity-adjacent. Next equipment should be lantern or satchel.',
+    ''
+  );
+
+  // Phase 7 — Student Attachment Model
+  rt67Card(
+    'Phase 7 — Student Attachment Model',
+    'Why would a student genuinely care about this character long-term?',
+    '<div class="rt67-block">' +
+      '<div class="rt67-block-title">The four-stage attachment journey</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-rule"><strong>Stage 1 — Recognition</strong> (first session): "This character is kind of like me." The apprentice frame makes this accessible to every confidence level. Happens immediately.</div>' +
+        '<div class="rt67-rule"><strong>Stage 2 — Identification</strong> (sessions 2–5): "I can see myself where that character is going." The slightly-ahead position creates motivating direction without alienation.</div>' +
+        '<div class="rt67-rule"><strong>Stage 3 — Investment</strong> (sessions 6–20): "This is MY explorer — I chose these cosmetics." Equipment choices make the identity personal. The archetype becomes theirs.</div>' +
+        '<div class="rt67-rule"><strong>Stage 4 — Pride</strong> (long-term): "I\'ve been on a real journey with this character." Progress milestones feel like shared achievement, not just numbers.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:8px">' +
+      '<div class="rt67-block-title">What prevents mascot dependency and manipulation</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-pass">Avatar does not need the student — the explorer is on their own journey; the student joins, not serves</div>' +
+        '<div class="rt67-pass">Wrong answers do not make the avatar sad — emotional honesty prevents guilt mechanics</div>' +
+        '<div class="rt67-pass">Expressions respond to understanding states, not performance states — internal not external</div>' +
+        '<div class="rt67-fail">Risk: if XP rewards become the attachment driver instead of the character, we get Duolingo-style streak anxiety — avoid</div>' +
+        '<div class="rt67-fail">Risk: "the avatar is happy/sad based on your performance" — this creates approval-seeking, not learning</div>' +
+      '</div>' +
+    '</div>',
+    'Attachment through identification and ownership — not through emotional manipulation or reward dependency.'
+  );
+
+  // Phase 8 — Copy & Language Audit
+  rt67Card(
+    'Phase 8 — Copy & Language Audit',
+    'Does avatar-adjacent language sound like a learner or a reward machine?',
+    '<div class="rt67-copy-row">' +
+      '<div class="rt67-copy-item"><div class="rt67-copy-now">"Rigtigt svar!" / "Fejl!"</div><div class="rt67-copy-exp">"Ja!" / "Svaret er [X] — husk det nu."</div></div>' +
+      '<div class="rt67-copy-item"><div class="rt67-copy-now">"Du har tjent 15 XP"</div><div class="rt67-copy-exp">"15 XP — ny viden kortlagt."</div></div>' +
+      '<div class="rt67-copy-item"><div class="rt67-copy-now">"Du er nu Level 5!"</div><div class="rt67-copy-exp">"Level 5 — nyt territorium åbnet."</div></div>' +
+      '<div class="rt67-copy-item"><div class="rt67-copy-now">"Tillykke! Du har klaret..."</div><div class="rt67-copy-exp">"Godt gået. Du har kortlagt [X] spørgsmål."</div></div>' +
+      '<div class="rt67-copy-item"><div class="rt67-copy-now">"Prøv igen"</div><div class="rt67-copy-exp">"Videre →" (already used — keep)</div></div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:10px">' +
+      '<div class="rt67-block-title">Permanent language standard</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-law">Never use "forkert" (wrong) — use "svaret er [X]" (the answer is X)</div>' +
+        '<div class="rt67-law">Never use "prøv igen" (try again) — the explorer continues forward, not backward</div>' +
+        '<div class="rt67-law">Correct answers: short, warm, non-performative — "Ja!", "Præcis!", "Klart!" — not "AMAZING! CORRECT!"</div>' +
+        '<div class="rt67-law">XP copy: frame as mapping/discovery, not earning/collecting</div>' +
+        '<div class="rt67-law">Level copy: frame as territory/depth, not ladder/score</div>' +
+        '<div class="rt67-law">Reflection copy: frame as revelation, not correction</div>' +
+        '<div class="rt67-law">"Videre →" is correct and should stay — forward motion is the explorer\'s natural impulse</div>' +
+      '</div>' +
+    '</div>',
+    'Language is the fastest and highest-impact lever for expressing the archetype. No SVG edits required.',
+    'accent'
+  );
+
+  // Phase 9 — The Apprentice Explorer Bible
+  rt67Card(
+    'Phase 9 — The Apprentice Explorer Bible',
+    'Permanent canonical reference — every future decision tested against this',
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Identity</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Who: "A young apprentice explorer driven by the desire to understand — curious, calm, always moving further."</div>' +
+        '<div class="rt67-law">Motivation: Understanding — not winning, not collecting, not impressing. Genuine comprehension.</div>' +
+        '<div class="rt67-law">Role: Experienced Apprentice — further along the same journey as the student. Still on it.</div>' +
+        '<div class="rt67-law">Archetype: Hybrid of Young Explorer (curiosity, discovery) + Apprentice Hero (humble, becoming)</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Expression Rules</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Curiosity is the default response to the unknown — never distress, never confusion-as-stupidity</div>' +
+        '<div class="rt67-law">Understanding is warm and quiet — not explosive or performative</div>' +
+        '<div class="rt67-law">Difficulty maps to determination, not distress — the explorer expects and welcomes challenge</div>' +
+        '<div class="rt67-law">Stillness is presence — idle means attentive readiness, not vacancy</div>' +
+        '<div class="rt67-law">No exaggerated reactions — the explorer is internally driven, not audience-facing</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Geometry Lock (permanent, non-negotiable)</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Head: cx=80/cy=50/r=30 — never changes</div>' +
+        '<div class="rt67-law">Eyes: cx=68/92, cy=47 — never changes</div>' +
+        '<div class="rt67-law">Hair: left-dominant crown (x=66/y=9), forward bang, asymmetric panels — locked</div>' +
+        '<div class="rt67-law">Stance: contrapposto, weight-right, left shoulder up — locked</div>' +
+        '<div class="rt67-law">Skin tone: F5C49A→E8A87C — warmth is non-negotiable brand signal</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Equipment Rules</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Yes: traveller gear (capes, satchels, lanterns, compasses, charts, telescopes, journals)</div>' +
+        '<div class="rt67-law">Yes: knowledge artifacts (ancient books, maps, star charts, crystal lenses)</div>' +
+        '<div class="rt67-law">No: conquest gear (swords, shields, trophies, crowns, medals)</div>' +
+        '<div class="rt67-law">No: power fantasy gear (wings, energy weapons, dominance symbols)</div>' +
+        '<div class="rt67-law">Borderline: armor — only if framed as "field protection for long journeys," not "warrior status"</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Language Rules</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Never "forkert" — always "svaret er [X]"</div>' +
+        '<div class="rt67-law">Never "prøv igen" — always "videre →"</div>' +
+        '<div class="rt67-law">Correct: short, warm, non-performative ("Ja!" "Præcis!" "Klart!")</div>' +
+        '<div class="rt67-law">XP: discovery frame ("kortlagt", "opdaget") not collection frame ("tjent", "samlet")</div>' +
+        '<div class="rt67-law">Levels: territory frame ("nyt territorium", "ny dybde") not ladder frame ("Level X")</div>' +
+        '<div class="rt67-law">Reflection: revelation frame ("der er det!", "husk det nu") not correction frame</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Attachment Rules</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">Never make the avatar sad — the explorer does not guilt the student</div>' +
+        '<div class="rt67-law">Never make the avatar approve — validation is internal to the student, not given by the avatar</div>' +
+        '<div class="rt67-law">Attachment through identification and ownership — not through emotional manipulation</div>' +
+        '<div class="rt67-law">The avatar travels alongside — never above, never waiting to judge</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-bible-section">' +
+      '<div class="rt67-bible-section-title">Progression Rules</div>' +
+      '<div class="rt67-bible-rules">' +
+        '<div class="rt67-law">XP = territory mapped, not score accumulated</div>' +
+        '<div class="rt67-law">Levels = depth of exploration reached, not rank achieved</div>' +
+        '<div class="rt67-law">Milestones = discoveries made, not challenges completed</div>' +
+        '<div class="rt67-law">Streaks = "on the trail" energy — not anxiety-inducing loss of progress</div>' +
+      '</div>' +
+    '</div>',
+    'This document is the canonical reference for all future avatar, cosmetic, copy, and progression decisions.',
+    'bible'
+  );
+
+  // Phase 10 — Decision Gate
+  rt67Card(
+    'Phase 10 — Decision Gate',
+    'Does the live ecosystem express "The Apprentice Explorer" — or not yet?',
+    '<div class="rt67-verdict">' +
+      'Verdict: Partially — Expression system correct, language system misaligned' +
+      '<br><span style="font-size:11px;font-weight:normal;opacity:0.85">The visual avatar fully expresses the Apprentice Explorer. All 5 expressions are correctly mapped. The posture and hair communicate the archetype. The cape equipment aligns. The gap is entirely in language, copy, and progression framing — systems that require no SVG changes, only copy changes.</span>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:10px">' +
+      '<div class="rt67-block-title">What already expresses the archetype</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-pass">All 5 expressions — mapped correctly to explorer journey states</div>' +
+        '<div class="rt67-pass">Posture — contrapposto + forward bang = "in motion, has direction"</div>' +
+        '<div class="rt67-pass">Cape equipment — perfectly aligned traveller aesthetics</div>' +
+        '<div class="rt67-pass">Reflection state expression — focused (processing) is correct</div>' +
+        '<div class="rt67-pass">Forward motion UI ("Videre →") — already explorer language</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-block" style="margin-top:8px">' +
+      '<div class="rt67-block-title">Highest-impact future improvements (ranked)</div>' +
+      '<div class="rt67-block-body">' +
+        '<div class="rt67-rule">1st — Copy pass: change "forkert/rigtigt" to explorer language — highest impact, zero SVG work</div>' +
+        '<div class="rt67-rule">2nd — New equipment: satchel or lantern — would dramatically reinforce archetype visually</div>' +
+        '<div class="rt67-rule">3rd — XP/level copy: add exploration framing to progression language</div>' +
+        '<div class="rt67-rule">4th — Level-up moment: "new territory" language + short pause for the explorer to feel it</div>' +
+        '<div class="rt67-rule">5th — Knight armor reframe: copy rename to "veteran field gear" — keeps the SVG, changes the story</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rt67-score">' +
+      '<span class="rt67-score-item pass">Expression system ✓</span>' +
+      '<span class="rt67-score-item pass">Posture ✓</span>' +
+      '<span class="rt67-score-item pass">Cape equipment ✓</span>' +
+      '<span class="rt67-score-item pass">Reflection expression ✓</span>' +
+      '<span class="rt67-score-item warn">Idle presence ~</span>' +
+      '<span class="rt67-score-item warn">Knight armor ~</span>' +
+      '<span class="rt67-score-item fail">XP language ✕</span>' +
+      '<span class="rt67-score-item fail">Level copy ✕</span>' +
+      '<span class="rt67-score-item fail">Correct/wrong copy ✕</span>' +
+      '<span class="rt67-score-item fail">Explorer equipment ✕</span>' +
+    '</div>',
+    'Section 67 — Apprentice Explorer Expression & Presence — shipped 2026-05-29.',
+    'accent'
+  );
+
+}());
+</script>
 </body>
 </html>
