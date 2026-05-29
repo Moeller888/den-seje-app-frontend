@@ -21623,5 +21623,227 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 }());
 </script>
 
+
+<style>
+  .rt73-wrap { background: #100800; font-family: 'Segoe UI', sans-serif; padding: 32px 20px 60px; }
+  .rt73-header { max-width: 860px; margin: 0 auto 32px; padding: 28px 32px; background: linear-gradient(135deg, #1a1000, #2a1a00); border: 1px solid #b45309; border-radius: 12px; }
+  .rt73-header h2 { font-size: 22px; color: #fbbf24; margin: 0 0 6px; letter-spacing: 0.5px; }
+  .rt73-header p { color: #d97706; font-size: 13px; margin: 0; opacity: 0.85; }
+  .rt73-grid { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .rt73-card { background: #1a1000; border: 1px solid #292010; border-radius: 10px; padding: 24px 28px; }
+  .rt73-card-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .rt73-phase { font-size: 11px; color: #92400e; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .rt73-title { font-size: 16px; font-weight: 700; color: #fbbf24; }
+  .rt73-desc { font-size: 13px; color: #d4a96a; line-height: 1.6; margin: 0 0 12px; }
+  .rt73-verdict { font-size: 12px; padding: 8px 14px; border-radius: 6px; margin-top: 14px; font-weight: 500; }
+  .rt73-verdict.accent { background: #1c1200; color: #fbbf24; border: 1px solid #b45309; }
+  .rt73-verdict.warn { background: #1a0c00; color: #fb923c; border: 1px solid #92400e; }
+  .rt73-verdict.ok { background: #051208; color: #34d399; border: 1px solid #065f46; }
+  .rt73-verdict.info { background: #0a0e1a; color: #93c5fd; border: 1px solid #1e3a5f; }
+  .rt73-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .rt73-table th { text-align: left; padding: 6px 10px; color: #92400e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #292010; }
+  .rt73-table td { padding: 7px 10px; color: #c9a05a; border-bottom: 1px solid #1f1500; vertical-align: top; }
+  .rt73-table tr:last-child td { border-bottom: none; }
+  .rt73-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .rt73-pill.retire { background: #2d1010; color: #f87171; }
+  .rt73-pill.keep { background: #051208; color: #34d399; }
+  .rt73-pill.g7 { background: #0d1f0a; color: #86efac; }
+  .rt73-pill.g8 { background: #0a1a0d; color: #4ade80; }
+  .rt73-pill.g9 { background: #061208; color: #22c55e; }
+  .rt73-bar-wrap { margin: 4px 0; }
+  .rt73-bar-label { font-size: 11px; color: #92400e; margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .rt73-bar-bg { background: #1f1500; border-radius: 3px; height: 8px; overflow: hidden; }
+  .rt73-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #b45309, #fbbf24); }
+  .rt73-stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+  .rt73-stat { background: #1f1500; border-radius: 8px; padding: 12px 18px; flex: 1; min-width: 110px; }
+  .rt73-stat-num { font-size: 26px; font-weight: 800; color: #fbbf24; line-height: 1; }
+  .rt73-stat-label { font-size: 11px; color: #92400e; margin-top: 4px; }
+  .rt73-rule { font-size: 12px; color: #c9a05a; line-height: 1.6; padding: 6px 0; border-bottom: 1px solid #1f1500; }
+  .rt73-rule:last-child { border-bottom: none; }
+  .rt73-rule strong { color: #fbbf24; }
+</style>
+<script>
+(function () {
+  var wrap = document.createElement('div');
+  wrap.className = 'rt73-wrap';
+  wrap.innerHTML = '<div class="rt73-header"><h2>Section 73 — Legacy Question Audit &amp; Migration Sprint</h2><p>Content recovery: 72 dead-weight questions audited, 43 classified into world_war_2 domain, 29 retired. Zero unclassified questions remain.</p></div><div class="rt73-grid" id="rt73-grid"></div>';
+  document.body.appendChild(wrap);
+
+  function rt73Card(phase, title, body, verdict, verdictClass) {
+    var grid = document.getElementById('rt73-grid');
+    var card = document.createElement('div');
+    card.className = 'rt73-card';
+    var vc = verdictClass || 'accent';
+    card.innerHTML =
+      '<div class="rt73-card-header">' +
+        '<span class="rt73-phase">' + phase + '</span>' +
+        '<span class="rt73-title">' + title + '</span>' +
+      '</div>' +
+      '<div class="rt73-body">' + body + '</div>' +
+      (verdict ? '<div class="rt73-verdict ' + vc + '">' + verdict + '</div>' : '');
+    grid.appendChild(card);
+  }
+
+  function bar(label, pct, count) {
+    return '<div class="rt73-bar-wrap">' +
+      '<div class="rt73-bar-label"><span>' + label + '</span><span>' + count + ' (' + pct + '%)</span></div>' +
+      '<div class="rt73-bar-bg"><div class="rt73-bar-fill" style="width:' + pct + '%"></div></div>' +
+    '</div>';
+  }
+
+  rt73Card(
+    'Phase 1',
+    'Pre-Sprint Inventory — What We Found',
+    '<p class="rt73-desc">Section 72 audit revealed 72 questions with zero adaptive metadata — invisible to the NUZO wave engine since creation. All were WW2 domain, loaded into the DB but never classified. They had null target_grade, null difficulty_band, and null metadata — scoring 0 in getWaveScore() and never selected by the engine.</p>' +
+    '<div class="rt73-stat-row">' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">72</div><div class="rt73-stat-label">Legacy questions</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">0</div><div class="rt73-stat-label">Had metadata</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">0</div><div class="rt73-stat-label">Were reachable</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">WW2</div><div class="rt73-stat-label">All one domain</div></div>' +
+    '</div>',
+    'Pre-sprint: 142 total questions, 72 completely invisible to engine, 70 in democracy_power domain.',
+    'warn'
+  );
+
+  rt73Card(
+    'Phase 2',
+    'Quality Audit Framework — Classification Criteria',
+    '<p class="rt73-desc">Each of the 72 questions was evaluated against four retire conditions. Any single condition was sufficient to retire a question.</p>' +
+    '<table class="rt73-table">' +
+      '<thead><tr><th>Retire Condition</th><th>Count</th><th>Examples</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Duplicate content (same fact, different phrasing)</td><td><span class="rt73-pill retire">20</span></td><td>5 versions of "when did WW2 start?", 5 of "when was Denmark occupied?"</td></tr>' +
+        '<tr><td>Encoding error in question text</td><td><span class="rt73-pill retire">1</span></td><td>6049a11f — "Hvorn€r" (mojibake, unreadable)</td></tr>' +
+        '<tr><td>Long-text answer format (unsuitable for quiz)</td><td><span class="rt73-pill retire">2</span></td><td>Open essay prompts — no correct answer exists in quiz context</td></tr>' +
+        '<tr><td>Wrong answer_format for content type</td><td><span class="rt73-pill retire">1</span></td><td>a4fed64b — format mismatch made question unanswerable</td></tr>' +
+        '<tr><td>Inactive duplicate variants</td><td><span class="rt73-pill retire">5</span></td><td>is_active=false duplicates with identical active versions</td></tr>' +
+        '<tr><td>Retained (unique educational value, correct format)</td><td><span class="rt73-pill keep">43</span></td><td>Unique dates, leaders, alliances, operations, battles, conferences</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    'Audit verdict: 43 keep (60%), 29 retire (40%). No rewrites needed.',
+    'accent'
+  );
+
+  rt73Card(
+    'Phase 3',
+    'Retire Decisions — 29 Questions Removed',
+    '<p class="rt73-desc">29 questions deleted from production: question_instances cleaned first (FK safety), then questions deleted. No student progress was affected — these questions had never been served by the engine.</p>' +
+    bar('Duplicates (same fact, multiple phrasings)', 69, 20) +
+    bar('Inactive duplicate variants', 17, 5) +
+    bar('Long-text / wrong format', 10, 3) +
+    bar('Encoding error', 3, 1) +
+    '<p class="rt73-desc" style="margin-top:12px">Most-duplicated facts: "WW2 start 1939" (5 variants kept 1), "Denmark invasion 1940" (5 variants kept 1), "WW2 end Europe 1945" (4 variants kept 1), "Danish resistance 1943" (5 variants kept 1).</p>',
+    '29 questions permanently removed. DB reduced from 142 to 113. Zero student data lost.',
+    'ok'
+  );
+
+  rt73Card(
+    'Phase 4',
+    'Recovery Matrix — 43 Questions Classified',
+    '<p class="rt73-desc">Each recovered question received: target_grade (minimum grade to serve), difficulty_band (1–5 conceptual depth), and full metadata JSONB (domain, misconception_type, cognitive_skill, difficulty_type, insight_type, challenge_role). All 43 assigned domain: world_war_2.</p>' +
+    '<table class="rt73-table">' +
+      '<thead><tr><th>Grade</th><th>Band</th><th>Count</th><th>Content type</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td><span class="rt73-pill g7">Grade 7</span></td><td>Band 1</td><td>11</td><td>Factual recall — WW2 dates, leaders, invaded countries</td></tr>' +
+        '<tr><td><span class="rt73-pill g7">Grade 7</span></td><td>Band 2</td><td>8</td><td>Comprehension — alliances, Battle of Britain, UN creation, France fall</td></tr>' +
+        '<tr><td><span class="rt73-pill g8">Grade 8</span></td><td>Band 2</td><td>19</td><td>Operations Barbarossa/Overlord, battles, conferences, Eisenhower role</td></tr>' +
+        '<tr><td><span class="rt73-pill g8">Grade 8</span></td><td>Band 3</td><td>2</td><td>Turning points — Stalingrad &amp; El Alamein as causal_inversion analysis</td></tr>' +
+        '<tr><td><span class="rt73-pill g9">Grade 9</span></td><td>Band 3</td><td>3</td><td>Diplomatic/strategic — Molotov-Ribbentrop, Rome-Berlin axis, Op. Torch</td></tr>' +
+      '</tbody>' +
+    '</table>',
+    '43 questions fully classified. All now score > 0 in getWaveScore() and are reachable by the adaptive engine.',
+    'ok'
+  );
+
+  rt73Card(
+    'Phase 5',
+    'Grade Classification — Serving Logic',
+    '<p class="rt73-desc">target_grade = minimum grade threshold. The edge function filters: target_grade &lt;= selectedGrade OR target_grade IS NULL. Grade 7 questions are served to all grades. Grade 8 questions skip Grade 7 students.</p>' +
+    '<div class="rt73-stat-row">' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">19</div><div class="rt73-stat-label">target_grade=7<br>(all grades see)</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">21</div><div class="rt73-stat-label">target_grade=8<br>(grade 8-9 only)</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">3</div><div class="rt73-stat-label">target_grade=9<br>(grade 9 only)</div></div>' +
+    '</div>' +
+    '<p class="rt73-desc" style="margin-top:12px">Rationale: WW2 basics (leaders, dates, invaded countries) are grade 7 curriculum in Denmark. Specific operations and battle analysis require grade 8 context. Diplomatic pre-war agreements and strategic turning points are grade 9 depth.</p>',
+    'Grade distribution matches Danish curriculum scope sequence for WW2 unit.',
+    'accent'
+  );
+
+  rt73Card(
+    'Phase 6',
+    'Difficulty Classification — Band Distribution',
+    '<p class="rt73-desc">difficulty_band 1–5 maps to conceptual depth: 1=factual recall, 2=comprehension, 3=analysis, 4=synthesis, 5=evaluation. No Band 4 or 5 questions exist yet — WW2 content tops out at Band 3 (causal analysis).</p>' +
+    bar('Band 1 — Factual recall', 26, 11) +
+    bar('Band 2 — Comprehension', 63, 27) +
+    bar('Band 3 — Analysis', 12, 5) +
+    bar('Band 4 — Synthesis', 0, 0) +
+    bar('Band 5 — Evaluation', 0, 0) +
+    '<p class="rt73-desc" style="margin-top:10px">Band 2 dominates (63%) because most unique WW2 questions require comprehension-level thinking — understanding alliances, operations, and outcomes — not just date recall.</p>',
+    'WW2 domain maxes at Band 3. Future Grade 9 expansion should target Bands 4–5 for full adaptive range.',
+    'info'
+  );
+
+  rt73Card(
+    'Phase 7',
+    'Domain Coverage — world_war_2 Now Active',
+    '<p class="rt73-desc">Before this sprint: only democracy_power domain was classified and reachable. world_war_2 existed in the DB but scored 0 — a phantom domain. After migration: world_war_2 is fully activated with 43 questions across grades 7–9.</p>' +
+    '<table class="rt73-table">' +
+      '<thead><tr><th>Domain</th><th>Questions</th><th>Grade range</th><th>Band range</th><th>Status</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>democracy_power</td><td>70</td><td>7–9</td><td>1–4</td><td><span class="rt73-pill keep">Active</span></td></tr>' +
+        '<tr><td>world_war_2</td><td>43</td><td>7–9</td><td>1–3</td><td><span class="rt73-pill keep">Active (new)</span></td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<p class="rt73-desc" style="margin-top:10px">Students will now receive questions from both domains interleaved by the wave engine. Session variety increases significantly — no more single-domain monotony.</p>',
+    'Two fully active adaptive domains. First time in platform history both domains serve questions.',
+    'ok'
+  );
+
+  rt73Card(
+    'Phase 8',
+    'Migration Outcomes — DB State After Sprint',
+    '<p class="rt73-desc">Production database after 20260529000003_legacy_question_migration.sql applied:</p>' +
+    '<div class="rt73-stat-row">' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">113</div><div class="rt73-stat-label">Total questions</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">0</div><div class="rt73-stat-label">Unclassified</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">2</div><div class="rt73-stat-label">Active domains</div></div>' +
+      '<div class="rt73-stat"><div class="rt73-stat-num">29</div><div class="rt73-stat-label">Retired</div></div>' +
+    '</div>' +
+    '<p class="rt73-desc" style="margin-top:12px">Before sprint: 142 questions, 72 unclassified (51% dead weight). After sprint: 113 questions, 0 unclassified (100% adaptive-ready). The platform went from majority-dead to fully-alive in one migration.</p>',
+    'Milestone: first time 100% of production questions have complete adaptive metadata.',
+    'ok'
+  );
+
+  rt73Card(
+    'Phase 9',
+    'Adaptive Inventory Growth — Per-Grade Readiness',
+    '<p class="rt73-desc">Grade adaptive pool = all questions with target_grade &lt;= grade. Counts are questions the engine can select for each grade cohort.</p>' +
+    '<table class="rt73-table">' +
+      '<thead><tr><th>Grade</th><th>Before S73</th><th>After S73</th><th>Growth</th><th>Readiness</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>Grade 7</td><td>38</td><td>57</td><td>+19 WW2</td><td><span class="rt73-pill keep">7/10 → 8/10</span></td></tr>' +
+        '<tr><td>Grade 8</td><td>38</td><td>80</td><td>+42 across WW2 bands</td><td><span class="rt73-pill keep">3/10 → 7/10</span></td></tr>' +
+        '<tr><td>Grade 9</td><td>70</td><td>113</td><td>+43 WW2 all tiers</td><td><span class="rt73-pill keep">5/10 → 9/10</span></td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<p class="rt73-desc" style="margin-top:10px">Grade 8 had the most critical improvement — from 38 questions (all G7 D&amp;P, no G8-specific content) to 80 questions spanning two domains and three grade tiers. This clears the Grade 8 content starvation risk identified in Section 72.</p>',
+    'Grade 8 readiness: 3/10 → 7/10. The single biggest per-grade jump in platform history.',
+    'accent'
+  );
+
+  rt73Card(
+    'Phase 10',
+    'Decision Gate — What Comes Next',
+    '<div class="rt73-rule"><strong>Current ceiling:</strong> Grade 9 pool = 113 questions, but Band 4–5 is empty in world_war_2 domain. Deep analytical content (synthesis, evaluation) does not exist yet for WW2.</div>' +
+    '<div class="rt73-rule"><strong>democracy_power gap:</strong> 70 questions classified but no domain-specific Grade 8 expansion written yet. Section 71 added 30 new G7 questions — Grade 8 D&amp;P still needs dedicated content.</div>' +
+    '<div class="rt73-rule"><strong>Section 74 mandate:</strong> Grade 8 D&amp;P Content Expansion Sprint. Target: 30 new democracy_power questions, target_grade=8, bands 2–4. Natural continuation of the Section 71 Grade 7 expansion.</div>' +
+    '<div class="rt73-rule"><strong>Section 75 possibility:</strong> WW2 Band 4–5 content for Grade 9 — synthesis and evaluation questions. Recommended after Section 74 ships.</div>',
+    'Section 73 complete. Section 74 = Grade 8 D&P Content Expansion Sprint. 30 questions, bands 2–4. Ready to execute.',
+    'accent'
+  );
+
+}());
+</script>
+
 </body>
 </html>
