@@ -21982,5 +21982,358 @@ const alivenessGrid = document.getElementById("alivenessGrid");
 }());
 </script>
 
+<style>
+  .rt76-wrap { background: #06080f; font-family: 'Segoe UI', sans-serif; padding: 32px 20px 60px; }
+  .rt76-header { max-width: 900px; margin: 0 auto 32px; padding: 28px 32px; background: linear-gradient(135deg, #06080f, #0d1030); border: 1px solid #3730a3; border-radius: 12px; }
+  .rt76-header h2 { font-size: 22px; color: #a5b4fc; margin: 0 0 6px; letter-spacing: 0.5px; }
+  .rt76-header p { color: #6366f1; font-size: 13px; margin: 0; opacity: 0.85; }
+  .rt76-grid { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .rt76-card { background: #070a12; border: 1px solid #1e1b4b; border-radius: 10px; padding: 24px 28px; }
+  .rt76-card-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .rt76-phase { font-size: 11px; color: #3730a3; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .rt76-title { font-size: 16px; font-weight: 700; color: #a5b4fc; }
+  .rt76-desc { font-size: 13px; color: #c7d2fe; line-height: 1.6; margin: 0 0 12px; }
+  .rt76-verdict { font-size: 12px; padding: 8px 14px; border-radius: 6px; margin-top: 14px; font-weight: 500; }
+  .rt76-verdict.ok { background: #051208; color: #4ade80; border: 1px solid #166534; }
+  .rt76-verdict.accent { background: #06080f; color: #a5b4fc; border: 1px solid #3730a3; }
+  .rt76-verdict.warn { background: #0f0800; color: #fbbf24; border: 1px solid #92400e; }
+  .rt76-verdict.info { background: #060e14; color: #93c5fd; border: 1px solid #1e3a5f; }
+  .rt76-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .rt76-table th { text-align: left; padding: 6px 10px; color: #3730a3; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e1b4b; }
+  .rt76-table td { padding: 7px 10px; color: #c7d2fe; border-bottom: 1px solid #0e1022; vertical-align: top; }
+  .rt76-table tr:last-child td { border-bottom: none; }
+  .rt76-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .rt76-pill.existing { background: #1a0c2d; color: #c084fc; }
+  .rt76-pill.new { background: #06080f; color: #6366f1; border: 1px solid #3730a3; }
+  .rt76-pill.priority { background: #1a0a00; color: #fb923c; }
+  .rt76-pill.ok { background: #051208; color: #4ade80; }
+  .rt76-pill.gap { background: #120a08; color: #f87171; }
+  .rt76-stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+  .rt76-stat { background: #0d1030; border-radius: 8px; padding: 12px 18px; flex: 1; min-width: 110px; }
+  .rt76-stat-num { font-size: 26px; font-weight: 800; color: #a5b4fc; line-height: 1; }
+  .rt76-stat-label { font-size: 11px; color: #3730a3; margin-top: 4px; }
+  .rt76-rule { font-size: 12px; color: #c7d2fe; line-height: 1.6; padding: 6px 0; border-bottom: 1px solid #0e1022; }
+  .rt76-rule:last-child { border-bottom: none; }
+  .rt76-rule strong { color: #a5b4fc; }
+  .rt76-section-label { font-size: 11px; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin: 16px 0 6px; }
+  .rt76-domain-block { background: #0d1030; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; }
+  .rt76-domain-name { font-size: 13px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+  .rt76-domain-meta { font-size: 11px; color: #6366f1; }
+  .rt76-band-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .rt76-band { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: #1e1b4b; color: #a5b4fc; }
+  .rt76-misconception { font-size: 12px; color: #f87171; padding: 4px 0; border-bottom: 1px solid #0e1022; }
+  .rt76-misconception:last-child { border-bottom: none; }
+  .rt76-correction { font-size: 12px; color: #c7d2fe; padding-left: 12px; margin-top: 2px; margin-bottom: 6px; opacity: 0.8; }
+  .rt76-milestone { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #0e1022; }
+  .rt76-milestone:last-child { border-bottom: none; }
+  .rt76-milestone-dot { width: 10px; height: 10px; border-radius: 50%; background: #3730a3; flex-shrink: 0; margin-top: 3px; }
+  .rt76-milestone-dot.done { background: #4ade80; }
+  .rt76-milestone-dot.next { background: #fb923c; }
+  .rt76-milestone-content { flex: 1; font-size: 12px; color: #c7d2fe; line-height: 1.5; }
+  .rt76-milestone-content strong { color: #a5b4fc; }
+</style>
+<script>
+(function () {
+  var wrap = document.createElement('div');
+  wrap.className = 'rt76-wrap';
+  wrap.innerHTML = '<div class="rt76-header"><h2>Section 76 — History Curriculum Architecture (Grades 3–9)</h2><p>Blueprint for all future history content. 10 domains · 7 grade levels · 500+ question roadmap. No content produced this sprint — design only.</p></div><div class="rt76-grid" id="rt76-grid"></div>';
+  document.body.appendChild(wrap);
+
+  function rt76Card(phase, title, body, verdict, verdictClass) {
+    var grid = document.getElementById('rt76-grid');
+    var card = document.createElement('div');
+    card.className = 'rt76-card';
+    card.innerHTML =
+      '<div class="rt76-card-header"><span class="rt76-phase">' + phase + '</span><span class="rt76-title">' + title + '</span></div>' +
+      body +
+      '<div class="rt76-verdict ' + verdictClass + '">' + verdict + '</div>';
+    grid.appendChild(card);
+  }
+
+  // ─── PHASE 1 — AUDIT ─────────────────────────────────────────────────────────
+  rt76Card(
+    'Phase 1',
+    'Current State Audit — Strengths & Gaps',
+    '<div class="rt76-stat-row">' +
+      '<div class="rt76-stat"><div class="rt76-stat-num">131</div><div class="rt76-stat-label">Active questions</div></div>' +
+      '<div class="rt76-stat"><div class="rt76-stat-num">2</div><div class="rt76-stat-label">Active domains</div></div>' +
+      '<div class="rt76-stat"><div class="rt76-stat-num">3</div><div class="rt76-stat-label">Grades covered (7–9)</div></div>' +
+      '<div class="rt76-stat"><div class="rt76-stat-num">0</div><div class="rt76-stat-label">Grade 3–6 questions</div></div>' +
+    '</div>' +
+    '<div class="rt76-section-label" style="margin-top:16px">Strengths</div>' +
+    '<div class="rt76-rule"><strong>democracy_power:</strong> 70 questions, 100% review_text, Bands 1–5, Grades 7–9. Best-quality domain on the platform. Full metadata coverage.</div>' +
+    '<div class="rt76-rule"><strong>world_war_2:</strong> 60 questions. Grade 8 fully covered (10/18/10 across Bands 1/2/3). S74 Band 1 questions (10) have review_text and modern metadata.</div>' +
+    '<div class="rt76-rule"><strong>Adaptive engine:</strong> NUZO wave scoring, difficulty-band tracking, grade filter, spaced repetition, is_active enforcement. Ready for scale.</div>' +
+    '<div class="rt76-section-label">Critical Gaps</div>' +
+    '<div class="rt76-rule"><strong>Grade desert:</strong> Grades 3–6 = zero questions. Students below Grade 7 cannot use the platform.</div>' +
+    '<div class="rt76-rule"><strong>WW2 legacy quality:</strong> 37 of 60 WW2 questions have no review_text. Legacy content works but lacks the reflection quality of D&P.</div>' +
+    '<div class="rt76-rule"><strong>Single-era bias:</strong> Both domains cover late modern history (1939–now). No ancient, medieval, or early modern content exists.</div>' +
+    '<div class="rt76-rule"><strong>Grade 9 thinness:</strong> 26 questions total. WW2 Grade 9 is 3 questions (Band 3 only). Cold War entirely absent.</div>' +
+    '<div class="rt76-rule"><strong>No domain for Grade 3–6:</strong> Vikings, Middle Ages, Prehistoric Denmark — foundational Danish history — not represented.</div>',
+    'Platform is production-ready but serves only the top 3 grade levels. Content is the bottleneck.',
+    'warn'
+  );
+
+  // ─── PHASE 2 — DOMAIN STRUCTURE ──────────────────────────────────────────────
+  rt76Card(
+    'Phase 2',
+    'Canonical Domain Structure — 10 Domains',
+    '<p class="rt76-desc">Final domain architecture for the history curriculum. Keys match existing database convention (snake_case). Two domains already exist.</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>#</th><th>Domain key</th><th>Danish name</th><th>Era</th><th>Primary grades</th><th>Status</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>1</td><td>prehistoric_denmark</td><td>Forhistorisk Danmark</td><td>12000 BCE – 793</td><td>3–4</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>2</td><td>vikings</td><td>Vikingetid</td><td>793–1066</td><td>4–5</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>3</td><td>middle_ages</td><td>Middelalder</td><td>1066–1536</td><td>5–6</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>4</td><td>reformation_monarchy</td><td>Reformation &amp; Enevælde</td><td>1536–1800</td><td>6–7</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>5</td><td>industrialisation</td><td>Industrialisering</td><td>1800–1914</td><td>7–8</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>6</td><td>world_war_1</td><td>Første Verdenskrig</td><td>1914–1918</td><td>7–8</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>7</td><td>world_war_2</td><td>Anden Verdenskrig</td><td>1939–1945</td><td>8–9</td><td><span class="rt76-pill existing">Exists (60 q)</span></td></tr>' +
+        '<tr><td>8</td><td>cold_war</td><td>Den Kolde Krig</td><td>1945–1991</td><td>8–9</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+        '<tr><td>9</td><td>democracy_power</td><td>Demokrati &amp; Magt</td><td>Tværgående</td><td>7–9</td><td><span class="rt76-pill existing">Exists (70 q)</span></td></tr>' +
+        '<tr><td>10</td><td>modern_denmark</td><td>Moderne Danmark</td><td>1991–nu</td><td>9</td><td><span class="rt76-pill new">Planned</span></td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-section-label" style="margin-top:16px">Design Decisions</div>' +
+    '<div class="rt76-rule"><strong>No "Kings &amp; Queens" domain:</strong> Royal history is subsumed into reformation_monarchy and middle_ages. A standalone royal domain fragments the narrative without adding pedagogical value.</div>' +
+    '<div class="rt76-rule"><strong>No "Globalisation" domain:</strong> Globalisation is woven into modern_denmark and democracy_power. A standalone domain at Grade 9 is too abstract without prior economic history anchoring.</div>' +
+    '<div class="rt76-rule"><strong>democracy_power is cross-cutting:</strong> Not tied to one era. Concepts (rights, parliament, elections) are introduced at Grade 7 and deepened through Band 5 at Grade 9. It is the civic literacy backbone of the curriculum.</div>' +
+    '<div class="rt76-rule"><strong>WWI distinct from WWII:</strong> Separate domains. They are different types of conflict (alliance-system collapse vs. ideological totalitarianism) with different causal structures and different misconception profiles.</div>',
+    '10 domains. 2 existing. 8 to build. Covers full Grade 3–9 Danish history curriculum.',
+    'accent'
+  );
+
+  // ─── PHASE 3 — GRADE MAPPING ─────────────────────────────────────────────────
+  rt76Card(
+    'Phase 3',
+    'Grade → Domain Mapping (Full Progression)',
+    '<p class="rt76-desc">Each grade has 1–3 primary domains. Domains overlap between grades to provide continuity. The engine selects from all domains active at or below the student\'s grade (target_grade &lt;= selectedGrade).</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>Grade</th><th>Primary domains</th><th>Bands active</th><th>Questions (target)</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td><strong>Grade 3</strong></td><td>prehistoric_denmark</td><td>1–3</td><td>30</td></tr>' +
+        '<tr><td><strong>Grade 4</strong></td><td>prehistoric_denmark, vikings</td><td>1–3</td><td>+50 = 80</td></tr>' +
+        '<tr><td><strong>Grade 5</strong></td><td>vikings, middle_ages</td><td>1–4</td><td>+50 = 130</td></tr>' +
+        '<tr><td><strong>Grade 6</strong></td><td>middle_ages, reformation_monarchy</td><td>1–4</td><td>+50 = 180</td></tr>' +
+        '<tr><td><strong>Grade 7</strong></td><td>reformation_monarchy, industrialisation, world_war_1, democracy_power</td><td>1–4</td><td>+90 = 270</td></tr>' +
+        '<tr><td><strong>Grade 8</strong></td><td>world_war_1, world_war_2, cold_war, democracy_power</td><td>1–4</td><td>+90 = 360</td></tr>' +
+        '<tr><td><strong>Grade 9</strong></td><td>world_war_2, cold_war, democracy_power, modern_denmark</td><td>1–5</td><td>+80 = 440</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-section-label" style="margin-top:16px">Progression Logic</div>' +
+    '<div class="rt76-rule"><strong>Grades 3–4:</strong> Concrete and local. Time is felt through objects and daily life. Abstract causation not yet expected. Stories and recognition dominate.</div>' +
+    '<div class="rt76-rule"><strong>Grades 5–6:</strong> Civilisations as systems. Students begin to understand that history is about power, conflict, and change — not just stories.</div>' +
+    '<div class="rt76-rule"><strong>Grades 7–8:</strong> Ideological history. Students engage with political systems, economic structures, and the difference between causes and pretexts.</div>' +
+    '<div class="rt76-rule"><strong>Grade 9:</strong> Synthesis and evaluation. Students are expected to reason across periods, evaluate source perspectives, and connect history to the present.</div>',
+    'Grade 3 = 0 questions today. Grade 9 = 440 questions at full build. 7 grade levels fully served.',
+    'info'
+  );
+
+  // ─── PHASE 4 — CONCEPT PROGRESSION ──────────────────────────────────────────
+  rt76Card(
+    'Phase 4',
+    'Concept Progression — Abstraction by Grade',
+    '<p class="rt76-desc">How cognitive complexity and vocabulary expectations scale across grades. This defines what Band 1 vs Band 5 means at each level.</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>Grade</th><th>Reasoning level</th><th>Key concepts</th><th>Key vocabulary</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>3</td><td>Recognition &amp; sequencing</td><td>Before/after, old/new, tools, food, shelter</td><td>Stenalder, boplads, jæger, samler, fund</td></tr>' +
+        '<tr><td>4</td><td>Narrative &amp; cause</td><td>Why people moved, trade, exploration, religion</td><td>Viking, langskib, raid, handel, Odin, runer</td></tr>' +
+        '<tr><td>5</td><td>Systems &amp; roles</td><td>Feudal hierarchy, Church power, guilds, plague impact</td><td>Feudalisme, lensherre, kirke, kloster, bylav</td></tr>' +
+        '<tr><td>6</td><td>Power &amp; change</td><td>Reformation causes, absolutism mechanics, Enlightenment ideas</td><td>Reformation, Luther, enevælde, oplysningstid, kontrakt</td></tr>' +
+        '<tr><td>7</td><td>Structural causation</td><td>Industrialisation drivers, class conflict, democracy emergence</td><td>Industrialisering, proletariat, strejke, grundlov, nationalisme</td></tr>' +
+        '<tr><td>8</td><td>Ideological analysis</td><td>Fascism/communism/democracy compared, genocide mechanisms, alliance systems</td><td>Totalitarisme, ideologi, propaganda, genocide, front</td></tr>' +
+        '<tr><td>9</td><td>Historical synthesis</td><td>Post-war order, Cold War proxies, Danish identity, globalisation tensions</td><td>Supermagter, proxy-krig, velfærdsstat, integration, globalisering</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-rule" style="margin-top:12px"><strong>Abstraction rule:</strong> A Band 3 question at Grade 4 requires the same cognitive operation (cause-effect) as Band 3 at Grade 9 — but the content domain and vocabulary complexity differ by 5 grade levels. Band = reasoning type, not difficulty absolute.</div>',
+    'Vocabulary and abstraction expectations defined for all 7 grades. Guides question writing at every level.',
+    'accent'
+  );
+
+  // ─── PHASE 5 — MISCONCEPTION MAP ─────────────────────────────────────────────
+  rt76Card(
+    'Phase 5a',
+    'Misconception Map — Grades 3–6 Domains',
+    '<div class="rt76-section-label">prehistoric_denmark</div>' +
+    '<div class="rt76-misconception">✗ "Stenalder-mennesker var primitive og ikke særlig kloge"</div>' +
+    '<div class="rt76-correction">→ De udviklede komplekse redskaber, landbrug, handel og religiøs praksis over tusindvis af år.</div>' +
+    '<div class="rt76-misconception">✗ "Overgang fra jæger-samler til bonde var en simpel \'opgradering\'"</div>' +
+    '<div class="rt76-correction">→ Landbrug krævede mere arbejde, gav sygdom og ujævn fordeling — det var en kompleks overgang, ikke en forbedring.</div>' +
+    '<div class="rt76-misconception">✗ "Vikinger og stenalder-folk er det samme"</div>' +
+    '<div class="rt76-correction">→ Der er 4.000+ år mellem bronzealder og vikingetid. Kronologi er fundamentalt.</div>' +
+
+    '<div class="rt76-section-label">vikings</div>' +
+    '<div class="rt76-misconception">✗ "Alle vikinger var krigere der plyndrede og dræbte"</div>' +
+    '<div class="rt76-correction">→ Flertallet var bønder, håndværkere og handelsfolk. Plyndring var én aktivitet, ikke identiteten.</div>' +
+    '<div class="rt76-misconception">✗ "Vikinger bar hornede hjelme"</div>' +
+    '<div class="rt76-correction">→ Ingen historiske fund viser hornet viking-hjelm i kamp. Myten stammer fra en romantisk illustration fra 1800-tallet.</div>' +
+    '<div class="rt76-misconception">✗ "Viking = dansker" (national identitetsfejl)</div>' +
+    '<div class="rt76-correction">→ Vikinger kom fra hele Skandinavien. "Dansk" som national identitet fandtes ikke i vikingetiden.</div>' +
+    '<div class="rt76-misconception">✗ "Vikingetid var mørk og brutal uden kultur"</div>' +
+    '<div class="rt76-correction">→ Vikinger havde sofistikeret poesi (skjaldekunst), retssamfund (ting), avanceret navigation og verdensomspændende handelsruter.</div>' +
+
+    '<div class="rt76-section-label">middle_ages</div>' +
+    '<div class="rt76-misconception">✗ "Middelalderen var \'de mørke tider\' — uvidenhed og stagnation"</div>' +
+    '<div class="rt76-correction">→ Universiteter opstod, gotisk arkitektur, filosofi og handel blomstrede. "Mørke tider" er en Renaissance-myte.</div>' +
+    '<div class="rt76-misconception">✗ "Kirken var kun korrupt og ond"</div>' +
+    '<div class="rt76-correction">→ Kirken drev hospitaler, skoler, arkiver og fattigpleje. Den var samfundets primære sociale institution — ikke kun magtapparat.</div>' +
+    '<div class="rt76-misconception">✗ "Alle i middelalderen var fattige og uvidende"</div>' +
+    '<div class="rt76-correction">→ Middelklassen, borgerskabet og handelsstanden voksede markant i senmiddelalderen. Social differentiering er afgørende.</div>',
+    'Misconceptions kortlagt for alle Grad 3–6 domæner. Danner grundlag for question-design med misconception_type metadata.',
+    'accent'
+  );
+
+  rt76Card(
+    'Phase 5b',
+    'Misconception Map — Grades 7–9 Domains',
+    '<div class="rt76-section-label">reformation_monarchy</div>' +
+    '<div class="rt76-misconception">✗ "Reformationen handlede kun om religion"</div>' +
+    '<div class="rt76-correction">→ Den handlede om politisk magt, rigdom (kirkejord), national identitet og kongernes uafhængighed fra paven.</div>' +
+    '<div class="rt76-misconception">✗ "Enevælde betød kongen bestemte absolutt alt"</div>' +
+    '<div class="rt76-correction">→ Praktisk enevælde var medieret af bureaucrati, adel og kirke. Ingen kongé regerede i et vakuum.</div>' +
+
+    '<div class="rt76-section-label">industrialisation</div>' +
+    '<div class="rt76-misconception">✗ "Industrialisering var udelukkende positiv fremgang"</div>' +
+    '<div class="rt76-correction">→ Børnearbejde, sygdomme, slumforhold og social opbrud var direkte konsekvenser. Fremgang var ujævnt fordelt.</div>' +
+    '<div class="rt76-misconception">✗ "Teknologisk fremgang gavner alle lige meget"</div>' +
+    '<div class="rt76-correction">→ Fabriksejere og arbejdere oplevede industrialisering fundamentalt forskelligt. Teknologi ændrer magtforhold.</div>' +
+    '<div class="rt76-misconception">✗ "Danmarks industrialisering var som Englands"</div>' +
+    '<div class="rt76-correction">→ Danmark industrialiserede 50 år senere, via landbrug snarere end tekstil/kul, og med stærkere statslig koordinering.</div>' +
+
+    '<div class="rt76-section-label">world_war_1</div>' +
+    '<div class="rt76-misconception">✗ "WWI startede fordi Franz Ferdinand blev skudt"</div>' +
+    '<div class="rt76-correction">→ Attentatet var pretekst. Årsagerne var alliancessystemet, rustningskapløbet, imperialisme og nationalisme over årtier.</div>' +
+    '<div class="rt76-misconception">✗ "WWI var en ærefuld, kort krig — det var bare naivt"</div>' +
+    '<div class="rt76-correction">→ 20 millioner dræbt. Industriel masseudslettelse ændrede forståelsen af krig permanent.</div>' +
+
+    '<div class="rt76-section-label">cold_war</div>' +
+    '<div class="rt76-misconception">✗ "Den Kolde Krig var en \'ikke-krig\' — ingen døde"</div>' +
+    '<div class="rt76-correction">→ Korea, Vietnam, Angola, Afghanistan — millioner dræbt i proxy-krige. Kaldt "kold" fordi supermargterne ikke skød direkte på hinanden.</div>' +
+    '<div class="rt76-misconception">✗ "Kommunisme = Sovjet" (ideologi-stat-fejl)</div>' +
+    '<div class="rt76-correction">→ Kommunisme er en ideologi. Sovjet var ét forsøg på at implementere den — og et særdeles kontroversielt et.</div>' +
+    '<div class="rt76-misconception">✗ "Muren faldt fordi Reagan sagde \'tear down this wall\'"</div>' +
+    '<div class="rt76-correction">→ Muren faldt pga. østeuropæisk folkeopstand, Gorbatjovs reformer og østtysk regerings sammenbrud — ikke én amerikansk tale.</div>' +
+
+    '<div class="rt76-section-label">modern_denmark</div>' +
+    '<div class="rt76-misconception">✗ "Danmark er altid et stabilt og perfekt demokrati"</div>' +
+    '<div class="rt76-correction">→ Dansk demokrati er konstant under pres: flygtningepolitik, pressefrihed, EU-skepsis og social ulighed er aktive spændinger.</div>',
+    'Komplet misconception-bibliotek for alle 8 planlagte domæner. Direkte input til misconception_type metadata i spørgsmål.',
+    'accent'
+  );
+
+  // ─── PHASE 6 — VOLUME PLAN ───────────────────────────────────────────────────
+  rt76Card(
+    'Phase 6',
+    'Question Volume Plan — Per Domain',
+    '<p class="rt76-desc">Three production tiers for each domain. "Minimum viable" = engine can serve a student 2-3 sessions without exhaustion. "Recommended" = full adaptive coverage across 4+ bands. "Long-term" = deep domain mastery possible.</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>Domain</th><th>Min viable</th><th>Recommended</th><th>Long-term</th><th>Current</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td>prehistoric_denmark</td><td>25</td><td>40</td><td>70</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>vikings</td><td>30</td><td>50</td><td>90</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>middle_ages</td><td>30</td><td>50</td><td>90</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>reformation_monarchy</td><td>25</td><td>45</td><td>80</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>industrialisation</td><td>30</td><td>50</td><td>90</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>world_war_1</td><td>25</td><td>45</td><td>80</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>world_war_2</td><td>30</td><td>60</td><td>100</td><td><span class="rt76-pill ok">60 ✓</span></td></tr>' +
+        '<tr><td>cold_war</td><td>25</td><td>45</td><td>80</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td>democracy_power</td><td>30</td><td>70</td><td>120</td><td><span class="rt76-pill ok">70 ✓</span></td></tr>' +
+        '<tr><td>modern_denmark</td><td>20</td><td>35</td><td>60</td><td><span class="rt76-pill gap">0</span></td></tr>' +
+        '<tr><td><strong>TOTAL</strong></td><td><strong>270</strong></td><td><strong>490</strong></td><td><strong>860</strong></td><td><strong>131</strong></td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-rule" style="margin-top:12px"><strong>Band distribution per domain (recommended):</strong> Band 1: 10–12 · Band 2: 12–15 · Band 3: 12–15 · Band 4: 8–10 · Band 5: 5–8. Higher bands are selective by design.</div>',
+    'Minimum viable pool = 270 questions. Recommended full coverage = 490. Long-term = 860. Target is 500+ as sprint goal.',
+    'info'
+  );
+
+  // ─── PHASE 7 — ADAPTIVE LADDER ───────────────────────────────────────────────
+  rt76Card(
+    'Phase 7',
+    'Adaptive Ladder — Bands 1–5 in History',
+    '<p class="rt76-desc">How the 5 difficulty bands map to historical reasoning for all domains. Applies to Grade 4 as much as Grade 9 — the content changes, the cognitive operation does not.</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>Band</th><th>Name</th><th>Operation</th><th>History example (Vikings)</th><th>History example (WW2)</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td><strong>1</strong></td><td>Recognition</td><td>Identify, name, recall a fact</td><td>"Hvad hed vikingens skib?" → Langskib</td><td>"Hvornår startede 2. Verdenskrig?" → 1939</td></tr>' +
+        '<tr><td><strong>2</strong></td><td>Connection</td><td>Sequence, define, apply vocabulary in context</td><td>"Hvad var et ting i vikingernes samfund?" → Demokratisk forsamling</td><td>"Hvad hed alliancen England, Frankrig, Sovjet, USA?" → De allierede</td></tr>' +
+        '<tr><td><strong>3</strong></td><td>Cause &amp; Effect</td><td>Single causal chain, mechanism</td><td>"Hvorfor angreb vikinger klostre?" → Rigdom + svagt forsvar + adgang fra havet</td><td>"Hvad var Stalingrads vigtigste strategiske konsekvens?" → Ty byttede offensiv mod defensiv permanent</td></tr>' +
+        '<tr><td><strong>4</strong></td><td>Multiple Perspectives</td><td>Two+ viewpoints, context-dependency</td><td>"Hvad betød vikingehandel for Øst-Europa?" → Rigdom og slaveri simultant</td><td>"Hvad var den delte oplevelse af besættelsen for danskere og jøder?"</td></tr>' +
+        '<tr><td><strong>5</strong></td><td>Historical Synthesis</td><td>Cross-period, evaluate, connect to now</td><td>"Hvad fortæller vikingernes handelsruter om europæisk integration?"</td><td>"Hvordan påvirker holocaust-erindringen moderne europæisk menneskeret?"</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-section-label" style="margin-top:16px">Existing NUZO Wave Mapping</div>' +
+    '<div class="rt76-rule"><strong>Band 1–2 → wave: recovery/reinforcement:</strong> Factual recall, conceptual bridge questions. cognitive_skill=recall/comprehension.</div>' +
+    '<div class="rt76-rule"><strong>Band 3 → wave: challenge:</strong> Cause-effect, analytical. cognitive_skill=analysis, difficulty_type=analytical.</div>' +
+    '<div class="rt76-rule"><strong>Band 4 → wave: challenge/deep_challenge:</strong> Multiple perspectives, applied. cognitive_skill=evaluation, difficulty_type=applied.</div>' +
+    '<div class="rt76-rule"><strong>Band 5 → wave: deep_challenge:</strong> Synthesis, evaluation. cognitive_skill=synthesis/evaluation, insight_type=perspective_shift.</div>',
+    'Band 1–5 ladder is universal across all domains. Same engine, same wave logic, different content.',
+    'ok'
+  );
+
+  // ─── PHASE 8 — PILOT PRIORITY ────────────────────────────────────────────────
+  rt76Card(
+    'Phase 8',
+    'Pilot Content Priority — First 5 Domains to Build',
+    '<p class="rt76-desc">Ranked by educational impact × production efficiency × strategic coverage. Priority 1 fills the biggest gap. Priority 5 completes the most critical pairing.</p>' +
+    '<table class="rt76-table">' +
+      '<thead><tr><th>#</th><th>Domain</th><th>Grades</th><th>Rationale</th></tr></thead>' +
+      '<tbody>' +
+        '<tr><td><span class="rt76-pill priority">1</span></td><td><strong>vikings</strong></td><td>4–5</td><td>Highest engagement potential. Rich misconceptions (horned helmets etc). Narrative-friendly. Fills Grade 4–5 desert. Denmark-specific resonance.</td></tr>' +
+        '<tr><td><span class="rt76-pill priority">2</span></td><td><strong>cold_war</strong></td><td>8–9</td><td>Direct sequel to WW2. Same student cohort already using the platform. Grade 9 is critically thin. Misconceptions are pedagogically rich.</td></tr>' +
+        '<tr><td><span class="rt76-pill priority">3</span></td><td><strong>industrialisation</strong></td><td>7–8</td><td>Bridges D&P perfectly — class, rights, democracy emerge directly from industrialisation. Grade 7 already served by D&P; this deepens it.</td></tr>' +
+        '<tr><td><span class="rt76-pill priority">4</span></td><td><strong>middle_ages</strong></td><td>5–6</td><td>Opens Grades 5–6 coverage. Strong narratives (plague, crusades, knights). Denmark-centric angle possible.</td></tr>' +
+        '<tr><td><span class="rt76-pill priority">5</span></td><td><strong>world_war_1</strong></td><td>7–8</td><td>Completes the World Wars context. WW1 misconceptions (Franz Ferdinand as singular cause) are important to address. Pairs with WW2 naturally.</td></tr>' +
+      '</tbody>' +
+    '</table>' +
+    '<div class="rt76-rule" style="margin-top:12px"><strong>Not in first wave:</strong> prehistoric_denmark (Grade 3 abstract content is harder to write well), reformation_monarchy (complex political theology requires domain expertise), modern_denmark (needs strong opinions about contemporary Denmark — politically sensitive).</div>',
+    'Priority 1 = Vikings. The domain with the best ROI: engagement, misconceptions, grade coverage, and Danish cultural identity.',
+    'ok'
+  );
+
+  // ─── PHASE 9 — CONTENT ROADMAP ───────────────────────────────────────────────
+  rt76Card(
+    'Phase 9',
+    'Content Roadmap — Current → 500+ Questions',
+    '<p class="rt76-desc">Each "Section" = one content sprint. Target: 500+ active questions, 7 grade levels served, 8 of 10 domains live.</p>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot done"></div><div class="rt76-milestone-content"><strong>CURRENT (Sections 71–75):</strong> 131 questions. world_war_2 (60) + democracy_power (70) + 1 unclassified. Grades 7–9 only. is_active enforcement live.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot next"></div><div class="rt76-milestone-content"><strong>Section 77–79 — Vikings Sprint:</strong> +50 questions. target_grade=4–5, Bands 1–4. Grade 4 and 5 served for the first time. Total: ~181.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 80–82 — Cold War Sprint:</strong> +50 questions. target_grade=8–9, Bands 1–4. Grade 9 depth dramatically improved. Total: ~231.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 83–85 — Industrialisation Sprint:</strong> +50 questions. target_grade=7–8, Bands 1–4. D&P synergy. Total: ~281.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 86–88 — Middle Ages Sprint:</strong> +50 questions. target_grade=5–6, Bands 1–4. Opens Grade 5–6. Total: ~331.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 89–91 — World War 1 Sprint:</strong> +45 questions. target_grade=7–8, Bands 1–4. Completes World Wars pair. Total: ~376.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 92–94 — Prehistoric Denmark Sprint:</strong> +40 questions. target_grade=3–4, Bands 1–3. Opens Grade 3. Total: ~416.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 95–97 — Reformation &amp; Monarchy Sprint:</strong> +50 questions. target_grade=6–7, Bands 1–5. Grade 6 fully served. Total: ~466.</div></div>' +
+    '<div class="rt76-milestone"><div class="rt76-milestone-dot"></div><div class="rt76-milestone-content"><strong>Section 98–100 — Modern Denmark Sprint:</strong> +45 questions. target_grade=9, Bands 2–5. Grade 9 complete. Total: ~511. ✓ 500+ milestone hit.</div></div>',
+    '500+ questions across 7 grade levels and 8 domains achievable by Section 100. ~25 sprints from current state.',
+    'info'
+  );
+
+  // ─── PHASE 10 — DECISION GATE ────────────────────────────────────────────────
+  rt76Card(
+    'Phase 10',
+    'Decision Gate — Final Architecture Summary',
+    '<div class="rt76-section-label">1. Final Domain Structure</div>' +
+    '<div class="rt76-rule">10 domains confirmed. 2 existing (world_war_2, democracy_power). 8 to build. Full Grades 3–9 coverage when complete. Domain keys are canonical and immutable — used in metadata.domain field.</div>' +
+
+    '<div class="rt76-section-label">2. Grade Progression Map</div>' +
+    '<div class="rt76-rule">Grade 3: prehistoric_denmark · Grade 4: prehistoric_denmark + vikings · Grade 5: vikings + middle_ages · Grade 6: middle_ages + reformation_monarchy · Grade 7: reformation_monarchy + industrialisation + ww1 + democracy_power · Grade 8: ww1 + ww2 + cold_war + democracy_power · Grade 9: ww2 + cold_war + democracy_power + modern_denmark</div>' +
+
+    '<div class="rt76-section-label">3. Question Volume Targets</div>' +
+    '<div class="rt76-rule">Minimum viable: 270 questions total (platform functional for all grades). Recommended: 490 (full adaptive coverage). Sprint goal: 500+ by Section 100.</div>' +
+
+    '<div class="rt76-section-label">4. First Content Sprint Recommendation</div>' +
+    '<div class="rt76-rule"><strong>Section 77 = Vikings Sprint.</strong> 50 questions. target_grade=4 (Band 1–3) and target_grade=5 (Band 2–4). 100% review_text. All misconception_type metadata. Opens first grade coverage below Grade 7.</div>' +
+
+    '<div class="rt76-section-label">5. Recommended Section 77</div>' +
+    '<div class="rt76-rule"><strong>Section 77 — Vikings Content Expansion (Grade 4–5).</strong> Target: 25 questions for Grade 4 (Bands 1–3) + 25 questions for Grade 5 (Bands 2–4). Domain key: vikings. Full metadata. All is_active=true. Focus: misconceptions about warrior culture, horned helmets, Norse society as system.</div>',
+    'Architecture complete. Section 77 = Vikings Sprint. Blueprint is live and guides all future production.',
+    'ok'
+  );
+
+}());
+</script>
+
 </body>
 </html>
