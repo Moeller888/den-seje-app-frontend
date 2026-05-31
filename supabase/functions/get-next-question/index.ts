@@ -172,8 +172,21 @@ serve(async (req) => {
     const selectedGrade         = (body?.selected_grade as number | null) ?? null;
     const currentDifficultyBand = (body?.current_difficulty_band as number | null) ?? null;
 
+    // Fetch teacher-assigned domain filter (null = free exploration, all domains available)
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("active_domains")
+      .eq("id", student_id)
+      .maybeSingle();
+
+    const activeDomains: string[] | null =
+      Array.isArray(profileData?.active_domains) && (profileData.active_domains as string[]).length > 0
+        ? (profileData.active_domains as string[])
+        : null;
+
     console.log("WAVE:", { wavePhase, lastMisconceptionType });
     console.log("GRADE:", { selectedGrade, currentDifficultyBand });
+    console.log("DOMAINS:", { activeDomains });
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
@@ -235,15 +248,20 @@ serve(async (req) => {
       }
     }
 
-    // 🔥 2. NEW QUESTIONS — grade-filtered, wave+difficulty-band aware sorting
+    // 🔥 2. NEW QUESTIONS — grade-filtered, domain-filtered, wave+band aware sorting
     let newQuestionsQuery = supabase
       .from("questions")
       .select("id, content, answer_format, answer_type, metadata, difficulty_band")
       .eq("is_active", true);
 
-    // Apply grade filter: serve questions with target_grade <= selectedGrade, or NULL (unclassified)
+    // Apply grade filter: target_grade <= selectedGrade, or NULL (unclassified)
     if (selectedGrade !== null) {
       newQuestionsQuery = newQuestionsQuery.or(`target_grade.lte.${selectedGrade},target_grade.is.null`);
+    }
+
+    // Apply domain filter: if teacher assigned specific domains, restrict to those only
+    if (activeDomains !== null) {
+      newQuestionsQuery = newQuestionsQuery.in("learning_objective", activeDomains);
     }
 
     const { data: questions, error: questionError } = await newQuestionsQuery.limit(50);
