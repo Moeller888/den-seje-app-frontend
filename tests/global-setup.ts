@@ -50,11 +50,11 @@ export default async function globalSetup() {
     `[global-setup] Deleted all question_instances for ${TEST_STUDENT_EMAIL} (${user.id})`
   );
 
-  // Ensure grade is set so the grade-selector overlay does not block tests.
+  // Ensure grade and placement_band are set so overlays do not block tests.
   // Service role bypasses RLS — direct update is safe here.
   const { error: gradeError } = await supabase
     .from("profiles")
-    .update({ selected_grade: 9 })
+    .update({ selected_grade: 9, placement_band: 2 })
     .eq("id", user.id);
 
   if (gradeError) {
@@ -62,6 +62,6 @@ export default async function globalSetup() {
   }
 
   console.log(
-    `[global-setup] Set selected_grade=9 for ${TEST_STUDENT_EMAIL}`
+    `[global-setup] Set selected_grade=9, placement_band=2 for ${TEST_STUDENT_EMAIL}`
   );
 }
