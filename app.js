@@ -179,7 +179,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Grade + adaptive difficulty state — Section 70.
   let selectedGrade = null;
   let currentDifficultyBand = 2;
-  let placementBand = null;
+  let placementBand = null;  // one-time assessment result, never overwritten
+  let persistedBand = null;  // earned level, updated every 10 questions
   let diffConsecutiveCorrect = 0;
   let diffConsecutiveIncorrect = 0;
 
@@ -233,13 +234,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // across bands 1-4 directly (no XP, no question_instances created).
   // Saves result as profiles.placement_band to seed starting difficulty.
 
-  async function loadPlacementBand() {
+  async function loadAdaptiveBands() {
     const { data } = await supabase
       .from("profiles")
-      .select("placement_band")
+      .select("placement_band, current_band")
       .eq("id", studentId)
       .maybeSingle();
     placementBand = data?.placement_band ?? null;
+    persistedBand = data?.current_band ?? null;
   }
 
   async function fetchPlacementQuestions(grade) {
@@ -289,6 +291,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (e) {
       logError("PLACEMENT_SAVE_ERROR", e);
     }
+  }
+
+  // Persist the adaptive engine's current band to profiles.current_band.
+  // Called every 10 answered questions (fire-and-forget — non-blocking).
+  // On next login, current_band takes priority over placement_band so the
+  // student resumes at their earned level rather than their initial placement.
+  function persistCurrentBand() {
+    supabase
+      .from("profiles")
+      .update({ current_band: currentDifficultyBand })
+      .eq("id", studentId)
+      .then(({ error }) => {
+        if (error) logError("PERSIST_BAND_ERROR", error);
+        else logEvent("BAND_PERSISTED", { band: currentDifficultyBand, after_q: sessionQuestionCount });
+      });
   }
 
   async function runPlacementFlow() {
@@ -580,6 +597,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const prevXp = lastKnownXp;
     const prevCoins = lastKnownCoins;
     sessionQuestionCount++;
+    // Persist earned band every 10 questions — fire-and-forget, never blocks the quiz.
+    if (sessionQuestionCount % 10 === 0) {
+      persistCurrentBand();
+    }
 
     if (data.status === "pending") {
       feedback.textContent = "⏳ Afventer lærerens vurdering";
@@ -866,15 +887,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadGrade();
   if (selectedGrade === null) await showGradeSelector();
 
-  // Run placement assessment on first login (placement_band is null).
-  // Returning students skip this entirely. Band overrides grade default.
-  await loadPlacementBand();
+  // Load both bands, then resolve starting difficulty.
+  // Priority: persistedBand (earned) > placementBand (assessed) > GRADE_START_BAND (default).
+  await loadAdaptiveBands();
   if (placementBand === null && selectedGrade !== null) {
-    await runPlacementFlow();
+    await runPlacementFlow(); // first-time only — sets placementBand
   }
-  if (placementBand !== null) {
-    currentDifficultyBand = placementBand;
+  if (persistedBand !== null) {
+    currentDifficultyBand = persistedBand;          // returning student — resume at earned level
+  } else if (placementBand !== null) {
+    currentDifficultyBand = placementBand;           // post-placement first session
   }
+  // else: currentDifficultyBand stays at GRADE_START_BAND[grade] set by loadGrade()
 
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
