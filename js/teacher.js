@@ -125,6 +125,88 @@ createStudentBtn.addEventListener("click", async () => {
 });
 
 /* ========================
+   CLASS OVERVIEW (VISIBILITY)
+======================== */
+
+async function loadClassOverview() {
+  const container = document.getElementById("classOverview");
+  if (!container) return;
+
+  const { data, error } = await supabase.rpc("get_teacher_visibility", {
+    p_teacher_id: teacherId
+  });
+
+  if (error) {
+    container.innerHTML = "<p class=\"overview-empty\">Fejl ved indlæsning af klasseoversigt.</p>";
+    return;
+  }
+
+  const students = data ?? [];
+
+  if (students.length === 0) {
+    container.innerHTML = "<p class=\"overview-empty\">Ingen elever tilknyttet endnu.</p>";
+    return;
+  }
+
+  const TREND_ICON  = { improving: "↑", stable: "→", struggling: "↓" };
+  const TREND_CLASS = { improving: "trend-up", stable: "trend-stable", struggling: "trend-down" };
+
+  const rows = students.map(s => {
+    const grade   = s.selected_grade  != null ? s.selected_grade  : "—";
+    const placed  = s.placement_band  != null ? s.placement_band  : "—";
+    const current = s.current_band    != null ? s.current_band    : "—";
+
+    let growthHtml = "";
+    if (s.placement_band != null && s.current_band != null) {
+      const delta = s.current_band - s.placement_band;
+      if (delta > 0)      growthHtml = ` <span class="band-growth-pos">(+${delta})</span>`;
+      else if (delta < 0) growthHtml = ` <span class="band-growth-neg">(${delta})</span>`;
+    }
+
+    const pct      = s.recent_correct_pct ?? 0;
+    const pctClass = pct >= 70 ? "pct-good" : pct >= 50 ? "pct-ok" : "pct-poor";
+    const trend    = s.trend ?? "stable";
+
+    return `<tr>
+      <td>${s.display_name ?? "Elev"}</td>
+      <td>${grade !== "—" ? `<span class="grade-chip">${grade}</span>` : "—"}</td>
+      <td><span class="band-num">${placed}</span></td>
+      <td><span class="band-num">${current}</span>${growthHtml}</td>
+      <td>${s.total_attempts ?? 0}</td>
+      <td class="${pctClass}">${pct}%</td>
+      <td class="${TREND_CLASS[trend] ?? "trend-stable"}">${TREND_ICON[trend] ?? "→"}</td>
+      <td><button class="go-student-btn" data-id="${s.student_id}">Vis →</button></td>
+    </tr>`;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="overview-scroll">
+      <table class="overview-table">
+        <thead>
+          <tr>
+            <th>Elev</th>
+            <th>Kl.</th>
+            <th>Start</th>
+            <th>Nu</th>
+            <th>Spm.</th>
+            <th>Korrekt</th>
+            <th>Trend</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  container.querySelectorAll(".go-student-btn").forEach(btn => {
+    btn.onclick = () => {
+      window.location.href = `student-detail.html?id=${btn.dataset.id}`;
+    };
+  });
+}
+
+/* ========================
    STUDENT OVERVIEW (PENDING)
 ======================== */
 
@@ -377,5 +459,6 @@ if (spotlightRemoveBtn) {
    INIT
 ======================== */
 
+await loadClassOverview();
 await loadStudentOverview();
 await loadSpotlightPanel();

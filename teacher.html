@@ -212,6 +212,85 @@
       min-height: 20px;
     }
 
+    /* ── Class overview ─────────────────────────────────────────── */
+
+    .overview-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .overview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 520px;
+    }
+
+    .overview-table th,
+    .overview-table td {
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .overview-table th {
+      background: var(--btn-bg);
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .overview-table td { color: var(--text-main); }
+
+    .overview-table tr:hover td { background: var(--btn-bg); }
+
+    .trend-up       { color: #22c55e; font-weight: 700; font-size: 16px; }
+    .trend-down     { color: #ef4444; font-weight: 700; font-size: 16px; }
+    .trend-stable   { color: var(--text-dim); font-size: 16px; }
+    .pct-good       { color: #22c55e; font-weight: 600; }
+    .pct-ok         { color: #f59e0b; font-weight: 600; }
+    .pct-poor       { color: #ef4444; font-weight: 600; }
+    .grade-chip {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--accent, #7c3aed);
+      color: #fff;
+    }
+    .band-num {
+      display: inline-block;
+      min-width: 20px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .band-growth-pos { color: #22c55e; font-size: 11px; }
+    .band-growth-neg { color: #ef4444; font-size: 11px; }
+    .go-student-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+    }
+    .overview-empty {
+      color: var(--text-dim);
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    .overview-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+
     @media (min-width: 600px) {
       .page { padding: 0; }
       body { padding: 24px; }
@@ -225,6 +304,19 @@
   <div class="topbar">
     <span class="topbar-title">Lærerpanel</span>
     <button id="logoutBtn" class="logout-btn">Log ud</button>
+  </div>
+
+  <div class="box">
+    <h3>Klasseoversigt</h3>
+    <div id="classOverview">Indl&#230;ser...</div>
+    <div class="overview-legend">
+      <span class="legend-item"><span class="trend-up">&#8593;</span> Fremgang</span>
+      <span class="legend-item"><span class="trend-stable">&#8594;</span> Stabil</span>
+      <span class="legend-item"><span class="trend-down">&#8595;</span> Brug for hj&#230;lp</span>
+      <span class="legend-item"><span class="pct-good">&#9679;</span> &#8805;70% korrekt</span>
+      <span class="legend-item"><span class="pct-ok">&#9679;</span> 50&#8211;69%</span>
+      <span class="legend-item"><span class="pct-poor">&#9679;</span> &lt;50%</span>
+    </div>
   </div>
 
   <div class="box">

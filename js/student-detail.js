@@ -78,12 +78,18 @@ async function fetchStudent() {
     .eq("student_id", studentId)
     .single();
 
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("selected_grade, placement_band")
+    .eq("id", studentId)
+    .maybeSingle();
+
   if (!overview || !mastery) {
     document.getElementById("studentInfo").textContent = "Elev ikke fundet.";
     return;
   }
 
-  renderStudent(overview, mastery);
+  renderStudent(overview, mastery, profileData ?? {});
 
   await fetchQuestionInstances();
 }
@@ -176,21 +182,25 @@ async function fetchQuestionInstances() {
 // RENDER STUDENT
 // ========================
 
-function renderStudent(student, mastery) {
+function renderStudent(student, mastery, profileData) {
 
   const container = document.getElementById("studentInfo");
 
+  const grade         = profileData?.selected_grade  != null ? profileData.selected_grade + ". klasse" : "Ikke valgt";
+  const placementBand = profileData?.placement_band  != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
+
   container.innerHTML = `
-    <p><strong>Email:</strong> ${student.email}</p>
-    <p><strong>XP:</strong> ${student.xp}</p>
-    <p><strong>Level:</strong> ${student.level}</p>
+    <p><strong>Email:</strong> ${student.email ?? "—"}</p>
+    <p><strong>Klassetrin:</strong> ${grade}</p>
+    <p><strong>Startband (placeringstest):</strong> ${placementBand}</p>
+    <p><strong>XP:</strong> ${student.xp ?? 0}</p>
+    <p><strong>Level:</strong> ${student.level ?? 1}</p>
 
     <hr>
 
-    <p><strong>Mastery level:</strong> ${mastery.mastery_level}</p>
-    <p><strong>Korrekt svarprocent:</strong> ${mastery.correct_ratio}%</p>
-    <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers}</p>
-    <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts}</p>
+    <p><strong>Korrekt svarprocent (seneste):</strong> ${mastery.correct_ratio ?? 0}%</p>
+    <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers ?? 0}</p>
+    <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts ?? 0}</p>
   `;
 }
 
