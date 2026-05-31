@@ -181,6 +181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentDifficultyBand = 2;
   let placementBand = null;  // one-time assessment result, never overwritten
   let persistedBand = null;  // earned level, updated every 10 questions
+  let activeDomains = null;  // teacher-assigned domain filter (null = all domains)
   let diffConsecutiveCorrect = 0;
   let diffConsecutiveIncorrect = 0;
 
@@ -389,6 +390,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ── End placement system ───────────────────────────────────────────────
+
+  // Load teacher-assigned domain filter and update the domain focus indicator.
+  const DOMAIN_LABEL = {
+    prehistoric_denmark:   "Forhistorisk Danmark",
+    vikings:               "Vikingerne",
+    middle_ages:           "Middelalderen",
+    reformation_monarchy:  "Reformation & Monarki",
+    enlightenment:         "Oplysningstiden",
+    revolutions_democracy: "Revolutioner & Demokrati",
+    industrialisation:     "Industrialisering",
+    world_war_1:           "1. Verdenskrig",
+    world_war_2:           "2. Verdenskrig",
+    cold_war:              "Den Kolde Krig",
+    democracy_power:       "Demokrati & Magt",
+  };
+
+  async function loadActiveDomains() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("active_domains")
+      .eq("id", studentId)
+      .maybeSingle();
+
+    const raw = data?.active_domains ?? null;
+    activeDomains = Array.isArray(raw) && raw.length > 0 ? raw : null;
+
+    const bar  = document.getElementById("domain-focus-bar");
+    const text = document.getElementById("domain-focus-text");
+    if (!bar || !text) return;
+
+    if (activeDomains !== null) {
+      const names = activeDomains.map(d => DOMAIN_LABEL[d] ?? d).join("  ·  ");
+      text.textContent = "Læringsrejse: " + names;
+      bar.style.display = "block";
+    } else {
+      bar.style.display = "none";
+    }
+  }
 
   async function fetchProgress() {
     const { data } = await supabase
@@ -899,6 +938,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentDifficultyBand = placementBand;           // post-placement first session
   }
   // else: currentDifficultyBand stays at GRADE_START_BAND[grade] set by loadGrade()
+
+  await loadActiveDomains(); // show domain focus indicator if teacher has assigned domains
 
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {

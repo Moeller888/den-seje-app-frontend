@@ -125,6 +125,167 @@ createStudentBtn.addEventListener("click", async () => {
 });
 
 /* ========================
+   DOMAIN MANAGEMENT
+======================== */
+
+const ALL_DOMAINS = [
+  { key: "prehistoric_denmark",  label: "Forhistorisk Danmark" },
+  { key: "vikings",              label: "Vikingerne" },
+  { key: "middle_ages",          label: "Middelalderen" },
+  { key: "reformation_monarchy", label: "Reformation & Monarki" },
+  { key: "enlightenment",        label: "Oplysningstiden" },
+  { key: "revolutions_democracy",label: "Revolutioner & Demokrati" },
+  { key: "industrialisation",    label: "Industrialisering" },
+  { key: "world_war_1",          label: "1. Verdenskrig" },
+  { key: "world_war_2",          label: "2. Verdenskrig" },
+  { key: "cold_war",             label: "Den Kolde Krig" },
+  { key: "democracy_power",      label: "Demokrati & Magt" },
+];
+
+const DOMAIN_SHORT = {
+  prehistoric_denmark:  "Forhistorie",
+  vikings:              "Vikingerne",
+  middle_ages:          "Middelalder",
+  reformation_monarchy: "Reformation",
+  enlightenment:        "Oplysning",
+  revolutions_democracy:"Revolutioner",
+  industrialisation:    "Industriel",
+  world_war_1:          "1. Vkrig",
+  world_war_2:          "2. Vkrig",
+  cold_war:             "Kold Krig",
+  democracy_power:      "Demokrati",
+};
+
+const domainStudentSelect = document.getElementById("domainStudentSelect");
+const domainCheckboxes    = document.getElementById("domainCheckboxes");
+const domainSaveBtn       = document.getElementById("domainSaveBtn");
+const domainResetBtn      = document.getElementById("domainResetBtn");
+const domainMessage       = document.getElementById("domainMessage");
+
+// Build checkbox list once
+if (domainCheckboxes) {
+  ALL_DOMAINS.forEach(({ key, label }) => {
+    const lbl = document.createElement("label");
+    lbl.className = "domain-checkbox-label";
+    lbl.innerHTML = `<input type="checkbox" value="${key}"> ${label}`;
+    domainCheckboxes.appendChild(lbl);
+  });
+}
+
+// Track currently selected student's domains
+let currentStudentDomains = null;
+
+async function loadDomainPanel() {
+  if (!domainStudentSelect) return;
+
+  const { data, error } = await supabase.rpc("get_my_students");
+  if (error || !data) return;
+
+  const students = data ?? [];
+  domainStudentSelect.innerHTML = '<option value="">&#8212; Vælg elev &#8212;</option>';
+  students.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value       = s.student_id;
+    opt.textContent = s.display_name;
+    domainStudentSelect.appendChild(opt);
+  });
+}
+
+domainStudentSelect?.addEventListener("change", async () => {
+  const sid = domainStudentSelect.value;
+  if (!sid) {
+    currentStudentDomains = null;
+    syncCheckboxes([]);
+    return;
+  }
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("active_domains")
+    .eq("id", sid)
+    .maybeSingle();
+
+  currentStudentDomains = data?.active_domains ?? null;
+  syncCheckboxes(currentStudentDomains ?? []);
+});
+
+function syncCheckboxes(selectedKeys) {
+  if (!domainCheckboxes) return;
+  domainCheckboxes.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.checked = selectedKeys.includes(cb.value);
+  });
+}
+
+function getCheckedDomains() {
+  if (!domainCheckboxes) return [];
+  return Array.from(domainCheckboxes.querySelectorAll("input[type=checkbox]:checked"))
+    .map(cb => cb.value);
+}
+
+domainSaveBtn?.addEventListener("click", async () => {
+  const sid = domainStudentSelect?.value ?? "";
+  if (!sid) {
+    domainMessage.style.color = "red";
+    domainMessage.textContent = "Vælg en elev først.";
+    return;
+  }
+
+  const chosen = getCheckedDomains();
+  if (chosen.length === 0) {
+    domainMessage.style.color = "red";
+    domainMessage.textContent = "Vælg mindst ét domæne, eller brug 'Alle domæner' for at fjerne filtrering.";
+    return;
+  }
+
+  domainMessage.textContent = "";
+
+  const { error } = await supabase.rpc("set_student_domains", {
+    p_student_id: sid,
+    p_domains:    chosen,
+  });
+
+  if (error) {
+    domainMessage.style.color = "red";
+    domainMessage.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+    return;
+  }
+
+  domainMessage.style.color = "green";
+  domainMessage.textContent = "Domæner gemt. Eleven modtager nu kun spørgsmål fra de valgte emner.";
+
+  await loadClassOverview();
+});
+
+domainResetBtn?.addEventListener("click", async () => {
+  const sid = domainStudentSelect?.value ?? "";
+  if (!sid) {
+    domainMessage.style.color = "red";
+    domainMessage.textContent = "Vælg en elev først.";
+    return;
+  }
+
+  domainMessage.textContent = "";
+
+  const { error } = await supabase.rpc("set_student_domains", {
+    p_student_id: sid,
+    p_domains:    null,
+  });
+
+  if (error) {
+    domainMessage.style.color = "red";
+    domainMessage.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+    return;
+  }
+
+  domainMessage.style.color = "green";
+  domainMessage.textContent = "Nulstillet. Eleven modtager nu spørgsmål fra alle domæner.";
+  syncCheckboxes([]);
+  currentStudentDomains = null;
+
+  await loadClassOverview();
+});
+
+/* ========================
    CLASS OVERVIEW (VISIBILITY)
 ======================== */
 
@@ -167,37 +328,35 @@ async function loadClassOverview() {
     const pctClass = pct >= 70 ? "pct-good" : pct >= 50 ? "pct-ok" : "pct-poor";
     const trend    = s.trend ?? "stable";
 
-    return `<tr>
-      <td>${s.display_name ?? "Elev"}</td>
-      <td>${grade !== "—" ? `<span class="grade-chip">${grade}</span>` : "—"}</td>
-      <td><span class="band-num">${placed}</span></td>
-      <td><span class="band-num">${current}</span>${growthHtml}</td>
-      <td>${s.total_attempts ?? 0}</td>
-      <td class="${pctClass}">${pct}%</td>
-      <td class="${TREND_CLASS[trend] ?? "trend-stable"}">${TREND_ICON[trend] ?? "→"}</td>
-      <td><button class="go-student-btn" data-id="${s.student_id}">Vis →</button></td>
-    </tr>`;
+    // Domain focus cell
+    const domains = s.active_domains;
+    let domainCell = "";
+    if (!Array.isArray(domains) || domains.length === 0) {
+      domainCell = '<span class="domain-focus-free">Alle</span>';
+    } else {
+      domainCell = domains
+        .map(function(d) { return '<span class="domain-focus-chip">' + (DOMAIN_SHORT[d] ?? d) + "</span>"; })
+        .join(" ");
+    }
+
+    return "<tr>" +
+      "<td>" + (s.display_name ?? "Elev") + "</td>" +
+      "<td>" + (grade !== "—" ? '<span class="grade-chip">' + grade + "</span>" : "—") + "</td>" +
+      "<td><span class=\"band-num\">" + placed + "</span></td>" +
+      "<td><span class=\"band-num\">" + current + "</span>" + growthHtml + "</td>" +
+      "<td>" + (s.total_attempts ?? 0) + "</td>" +
+      "<td class=\"" + pctClass + "\">" + pct + "%</td>" +
+      "<td class=\"" + (TREND_CLASS[trend] ?? "trend-stable") + "\">" + (TREND_ICON[trend] ?? "→") + "</td>" +
+      "<td style=\"max-width:140px;white-space:normal\">" + domainCell + "</td>" +
+      "<td><button class=\"go-student-btn\" data-id=\"" + s.student_id + "\">Vis →</button></td>" +
+      "</tr>";
   }).join("");
 
-  container.innerHTML = `
-    <div class="overview-scroll">
-      <table class="overview-table">
-        <thead>
-          <tr>
-            <th>Elev</th>
-            <th>Kl.</th>
-            <th>Start</th>
-            <th>Nu</th>
-            <th>Spm.</th>
-            <th>Korrekt</th>
-            <th>Trend</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
+  container.innerHTML =
+    '<div class="overview-scroll"><table class="overview-table"><thead><tr>' +
+    "<th>Elev</th><th>Kl.</th><th>Start</th><th>Nu</th>" +
+    "<th>Spm.</th><th>Korrekt</th><th>Trend</th><th>Emner</th><th></th>" +
+    "</tr></thead><tbody>" + rows + "</tbody></table></div>";
 
   container.querySelectorAll(".go-student-btn").forEach(btn => {
     btn.onclick = () => {
@@ -460,5 +619,6 @@ if (spotlightRemoveBtn) {
 ======================== */
 
 await loadClassOverview();
+await loadDomainPanel();
 await loadStudentOverview();
 await loadSpotlightPanel();

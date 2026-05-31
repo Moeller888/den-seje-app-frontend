@@ -80,7 +80,7 @@ async function fetchStudent() {
 
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("selected_grade, placement_band")
+    .select("selected_grade, placement_band, active_domains")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -186,13 +186,32 @@ function renderStudent(student, mastery, profileData) {
 
   const container = document.getElementById("studentInfo");
 
+  const DOMAIN_LABEL_SD = {
+    prehistoric_denmark:   "Forhistorisk Danmark",
+    vikings:               "Vikingerne",
+    middle_ages:           "Middelalderen",
+    reformation_monarchy:  "Reformation & Monarki",
+    enlightenment:         "Oplysningstiden",
+    revolutions_democracy: "Revolutioner & Demokrati",
+    industrialisation:     "Industrialisering",
+    world_war_1:           "1. Verdenskrig",
+    world_war_2:           "2. Verdenskrig",
+    cold_war:              "Den Kolde Krig",
+    democracy_power:       "Demokrati & Magt",
+  };
+
   const grade         = profileData?.selected_grade  != null ? profileData.selected_grade + ". klasse" : "Ikke valgt";
   const placementBand = profileData?.placement_band  != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
+  const rawDomains    = profileData?.active_domains;
+  const domainText    = Array.isArray(rawDomains) && rawDomains.length > 0
+    ? rawDomains.map(d => DOMAIN_LABEL_SD[d] ?? d).join(", ")
+    : "Alle domæner (fri udforskning)";
 
   container.innerHTML = `
     <p><strong>Email:</strong> ${student.email ?? "—"}</p>
     <p><strong>Klassetrin:</strong> ${grade}</p>
     <p><strong>Startband (placeringstest):</strong> ${placementBand}</p>
+    <p><strong>Dom&#230;ne-fokus:</strong> ${domainText}</p>
     <p><strong>XP:</strong> ${student.xp ?? 0}</p>
     <p><strong>Level:</strong> ${student.level ?? 1}</p>
 
