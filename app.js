@@ -179,6 +179,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Grade + adaptive difficulty state — Section 70.
   let selectedGrade = null;
   let currentDifficultyBand = 2;
+  let placementBand = null;
   let diffConsecutiveCorrect = 0;
   let diffConsecutiveIncorrect = 0;
 
@@ -226,6 +227,151 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   }
+
+  // ── Placement assessment system ────────────────────────────────────────
+  // Runs once on first login after grade selection. Fetches 10 questions
+  // across bands 1-4 directly (no XP, no question_instances created).
+  // Saves result as profiles.placement_band to seed starting difficulty.
+
+  async function loadPlacementBand() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("placement_band")
+      .eq("id", studentId)
+      .maybeSingle();
+    placementBand = data?.placement_band ?? null;
+  }
+
+  async function fetchPlacementQuestions(grade) {
+    const collected = [];
+    // 3 band-1, 3 band-2, 2 band-3, 2 band-4 = 10 total
+    const bandTargets = [[1, 3], [2, 3], [3, 2], [4, 2]];
+
+    for (const [band, count] of bandTargets) {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("id, content, difficulty_band")
+        .eq("is_active", true)
+        .eq("answer_format", "mc")
+        .eq("difficulty_band", band)
+        .or(`target_grade.lte.${grade},target_grade.is.null`)
+        .limit(count * 5);
+
+      if (error || !data || data.length === 0) continue;
+
+      const shuffled = [...data].sort(() => Math.random() - 0.5);
+      collected.push(...shuffled.slice(0, Math.min(count, shuffled.length)));
+    }
+
+    return collected.sort(() => Math.random() - 0.5);
+  }
+
+  // Scoring: correct answer on band N scores N points. Wrong scores 0.
+  // Hard correct answers strongly reward; hard wrong answers do not punish.
+  // Max = 3×1 + 3×2 + 2×3 + 2×4 = 23
+  function calculatePlacementBand(responses) {
+    let score = 0;
+    for (const r of responses) {
+      if (r.correct) score += r.band;
+    }
+    if (score >= 18) return 4;
+    if (score >= 12) return 3;
+    if (score >= 6)  return 2;
+    return 1;
+  }
+
+  async function savePlacementBand(band) {
+    try {
+      await supabase
+        .from("profiles")
+        .update({ placement_band: band })
+        .eq("id", studentId);
+    } catch (e) {
+      logError("PLACEMENT_SAVE_ERROR", e);
+    }
+  }
+
+  async function runPlacementFlow() {
+    return new Promise(async (resolve) => {
+      const overlay    = document.getElementById("placement-overlay");
+      const questionEl = document.getElementById("placement-question");
+      const optionsEl  = document.getElementById("placement-options");
+      const progressBar = document.getElementById("placement-progress-bar");
+      const countEl    = document.getElementById("placement-count");
+
+      if (!overlay || !questionEl || !optionsEl || !progressBar || !countEl) {
+        resolve();
+        return;
+      }
+
+      const questions = await fetchPlacementQuestions(selectedGrade ?? 7);
+
+      if (!questions || questions.length < 5) {
+        logEvent("PLACEMENT_SKIPPED", { reason: "insufficient_questions", count: questions?.length ?? 0 });
+        resolve();
+        return;
+      }
+
+      overlay.style.display = "flex";
+
+      const responses = [];
+      const total = questions.length;
+
+      for (let i = 0; i < total; i++) {
+        const q = questions[i];
+
+        const questionText = q?.content?.question ?? null;
+        if (!questionText) continue;
+
+        progressBar.style.width = ((i / total) * 100) + "%";
+        countEl.textContent = (i + 1) + " / " + total;
+        questionEl.textContent = questionText;
+
+        let options = q?.content?.options ?? [];
+        if (!Array.isArray(options) || options.length < 2) continue;
+
+        const correct = q?.content?.correct ?? "";
+        options = [...options].sort(() => Math.random() - 0.5);
+
+        optionsEl.innerHTML = "";
+
+        const wasCorrect = await new Promise((resolveAnswer) => {
+          options.forEach((opt) => {
+            const btn = document.createElement("button");
+            btn.className = "placement-option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => {
+              optionsEl.querySelectorAll(".placement-option-btn").forEach((b) => { b.disabled = true; });
+              const isCorrect = opt === correct;
+              btn.classList.add(isCorrect ? "placement-correct" : "placement-incorrect");
+              setTimeout(() => resolveAnswer(isCorrect), 500);
+            };
+            optionsEl.appendChild(btn);
+          });
+        });
+
+        responses.push({ correct: wasCorrect, band: q.difficulty_band ?? 1 });
+      }
+
+      progressBar.style.width = "100%";
+
+      const band = calculatePlacementBand(responses);
+      await savePlacementBand(band);
+      placementBand = band;
+
+      logEvent("PLACEMENT_COMPLETE", { score: responses.filter(r => r.correct).reduce((s, r) => s + r.band, 0), band });
+
+      questionEl.textContent = "Klar! Vi starter dig det rigtige sted.";
+      optionsEl.innerHTML = "";
+      countEl.textContent = "";
+
+      await new Promise((r) => setTimeout(r, 1100));
+      overlay.style.display = "none";
+      resolve();
+    });
+  }
+
+  // ── End placement system ───────────────────────────────────────────────
 
   async function fetchProgress() {
     const { data } = await supabase
@@ -719,6 +865,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchAvatar();
   await loadGrade();
   if (selectedGrade === null) await showGradeSelector();
+
+  // Run placement assessment on first login (placement_band is null).
+  // Returning students skip this entirely. Band overrides grade default.
+  await loadPlacementBand();
+  if (placementBand === null && selectedGrade !== null) {
+    await runPlacementFlow();
+  }
+  if (placementBand !== null) {
+    currentDifficultyBand = placementBand;
+  }
+
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
     try { exprEngine    = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
