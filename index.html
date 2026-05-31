@@ -548,6 +548,100 @@
       cursor: not-allowed;
     }
 
+    /* ── Placement assessment overlay ────────────────────────── */
+    #placement-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 14, 23, 0.99);
+      z-index: 1001;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .placement-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .placement-header {
+      text-align: center;
+    }
+    .placement-title {
+      color: var(--text-primary, #f0edf8);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .placement-sub {
+      color: var(--text-secondary, #8e8aa8);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    .placement-progress-wrap {
+      width: 100%;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    #placement-progress-bar {
+      height: 100%;
+      background: var(--accent-primary, #7c3aed);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    #placement-count {
+      color: var(--text-secondary, #8e8aa8);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    #placement-question {
+      color: var(--text-primary, #f0edf8);
+      font-size: 1.05rem;
+      line-height: 1.55;
+      text-align: center;
+      min-height: 64px;
+    }
+    #placement-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .placement-option-btn {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary, #f0edf8);
+      font-size: 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .placement-option-btn:hover:not(:disabled),
+    .placement-option-btn:focus:not(:disabled) {
+      background: rgba(124,58,237,0.18);
+      border-color: var(--accent-primary, #7c3aed);
+      outline: none;
+    }
+    .placement-option-btn:disabled {
+      cursor: default;
+    }
+    .placement-option-btn.placement-correct {
+      border-color: #22c55e;
+      background: rgba(34,197,94,0.14);
+    }
+    .placement-option-btn.placement-incorrect {
+      border-color: #ef4444;
+      background: rgba(239,68,68,0.10);
+    }
+
     /* ── Reduced motion ──────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       #xp-bar { transition: none; }
@@ -628,6 +722,22 @@
   <button class="grade-btn" data-grade="7">7. klasse</button>
   <button class="grade-btn" data-grade="8">8. klasse</button>
   <button class="grade-btn" data-grade="9">9. klasse</button>
+</div>
+
+<!-- Placement assessment overlay — shown once after grade selection -->
+<div id="placement-overlay">
+  <div class="placement-container">
+    <div class="placement-header">
+      <p class="placement-title">Hj&#230;lp opdageren med at finde vejen</p>
+      <p class="placement-sub">10 korte sp&#248;rgsm&#229;l &#8212; vi finder dit rette udgangspunkt</p>
+    </div>
+    <div class="placement-progress-wrap">
+      <div id="placement-progress-bar"></div>
+    </div>
+    <div id="placement-count"></div>
+    <div id="placement-question"></div>
+    <div id="placement-options"></div>
+  </div>
 </div>
 
 <script type="module">
