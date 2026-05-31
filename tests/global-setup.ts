@@ -54,7 +54,7 @@ export default async function globalSetup() {
   // Service role bypasses RLS — direct update is safe here.
   const { error: gradeError } = await supabase
     .from("profiles")
-    .update({ selected_grade: 9, placement_band: 2, current_band: null })
+    .update({ selected_grade: 9, placement_band: 2, current_band: null, active_domains: null })
     .eq("id", user.id);
 
   if (gradeError) {
@@ -62,6 +62,6 @@ export default async function globalSetup() {
   }
 
   console.log(
-    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null for ${TEST_STUDENT_EMAIL}`
+    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null for ${TEST_STUDENT_EMAIL}`
   );
 }
