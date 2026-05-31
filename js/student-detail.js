@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabase.js";
+import { supabase } from "./supabase.js";
 
 // ========================
 // AUTH CHECK
@@ -60,6 +60,32 @@ if (!studentId) {
 }
 
 // ========================
+// DOMAIN MAPPING (Section 91)
+// ========================
+
+const DOMAIN_LABELS = {
+  prehistoric_denmark:   "Forhistorisk Danmark",
+  vikings:               "Vikingerne",
+  middle_ages:           "Middelalderen",
+  reformation_monarchy:  "Reformation & Monarki",
+  enlightenment:         "Oplysningstiden",
+  revolutions_democracy: "Revolutioner & Demokrati",
+  industrialisation:     "Industrialisering",
+  world_war_1:           "1. Verdenskrig",
+  world_war_2:           "2. Verdenskrig",
+  cold_war:              "Den Kolde Krig",
+  democracy_power:       "Demokrati & Magt",
+};
+
+function objectiveToDomain(lo) {
+  if (!lo || typeof lo !== "string") return null;
+  if (DOMAIN_LABELS[lo]) return lo;
+  if (lo.startsWith("ww2_")) return "world_war_2";
+  if (lo.startsWith("ww1_")) return "world_war_1";
+  return null;
+}
+
+// ========================
 // FETCH STUDENT
 // ========================
 
@@ -91,7 +117,99 @@ async function fetchStudent() {
 
   renderStudent(overview, mastery, profileData ?? {});
 
+  await fetchDomainProgress();
   await fetchQuestionInstances();
+}
+
+// ========================
+// FETCH DOMAIN PROGRESS (Section 91)
+// ========================
+
+async function fetchDomainProgress() {
+  const { data, error } = await supabase
+    .from("question_instances")
+    .select("is_correct, was_correct, questions(learning_objective)")
+    .eq("student_id", studentId)
+    .eq("answered", true)
+    .limit(1000);
+
+  if (error) {
+    console.error("Domain progress fetch error:", error);
+    document.getElementById("domainProgressPanel").textContent = "Fejl ved indlæsning af domænedata.";
+    return;
+  }
+
+  const instances = data ?? [];
+  const stats = {};
+
+  for (const inst of instances) {
+    const lo = inst.questions?.learning_objective ?? null;
+    const domain = objectiveToDomain(lo);
+    if (!domain) continue;
+    if (!stats[domain]) stats[domain] = { total: 0, correct: 0 };
+    stats[domain].total++;
+    if (inst.is_correct === true || inst.was_correct === true) {
+      stats[domain].correct++;
+    }
+  }
+
+  const rows = Object.entries(stats)
+    .map(([domain, s]) => ({ domain, total: s.total, correct: s.correct }))
+    .sort((a, b) => b.total - a.total);
+
+  renderDomainProgress(rows);
+}
+
+// ========================
+// RENDER DOMAIN PROGRESS (Section 91)
+// ========================
+
+function renderDomainProgress(rows) {
+  const container = document.getElementById("domainProgressPanel");
+
+  if (rows.length === 0) {
+    container.textContent = "Eleven har ikke besvaret nogen spørgsmål endnu.";
+    return;
+  }
+
+  const table = document.createElement("table");
+
+  const thead = document.createElement("thead");
+  thead.innerHTML = `<tr>
+    <th>Dom&#230;ne</th>
+    <th>Besvaret</th>
+    <th>Korrekte</th>
+    <th>Pr&#230;cision</th>
+  </tr>`;
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  for (const row of rows) {
+    const pct = row.total > 0 ? Math.round((row.correct / row.total) * 100) : 0;
+    const label = DOMAIN_LABELS[row.domain] ?? row.domain;
+    const color = pct >= 80 ? "#4caf50" : pct >= 50 ? "#ff9800" : "#f44336";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${label}</td>
+      <td>${row.total}</td>
+      <td>${row.correct}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;">
+            <div style="width:${pct}%;background:${color};height:100%;"></div>
+          </div>
+          <span style="min-width:36px;font-size:12px;color:${color};font-weight:bold;">${pct}%</span>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  table.appendChild(tbody);
+  container.innerHTML = "";
+  container.appendChild(table);
 }
 
 // ========================
