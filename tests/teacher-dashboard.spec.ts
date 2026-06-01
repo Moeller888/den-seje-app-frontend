@@ -190,3 +190,37 @@ test("7. Reset to all domains clears checkboxes and sets DB to null", async ({ p
 
   expect(data?.active_domains).toBeNull();
 });
+
+// ── 8. Backend rejects domain inaccessible for student's grade ────────────────
+
+test("8. Saving world_war_2 for a grade-7 student shows backend error", async ({ page }) => {
+  // Set student2 to grade 7 — world_war_2 has no questions for grade ≤ 7
+  await adminSupabase
+    .from("profiles")
+    .update({ selected_grade: 7, active_domains: null })
+    .eq("id", student2Id);
+
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  await page.locator('#sd-domain-grid input[value="world_war_2"]').check();
+  await page.locator("#sd-domain-save").click();
+
+  const msg = page.locator("#sd-domain-msg");
+  await expect(msg).toBeVisible({ timeout: 10000 });
+  await expect(msg).toContainText("world_war_2");
+
+  // DB must be unchanged — still null
+  const { data } = await adminSupabase
+    .from("profiles")
+    .select("active_domains")
+    .eq("id", student2Id)
+    .maybeSingle();
+  expect(data?.active_domains).toBeNull();
+
+  // Restore grade to 9 so subsequent tests are unaffected
+  await adminSupabase
+    .from("profiles")
+    .update({ selected_grade: 9 })
+    .eq("id", student2Id);
+});
