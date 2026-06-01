@@ -86,6 +86,138 @@ function objectiveToDomain(lo) {
 }
 
 // ========================
+// DOMAIN EDITOR (Section 96)
+// Canonical order from audit — must match teacher.js ALL_DOMAINS exactly.
+// ========================
+
+const SD_DOMAINS = [
+  { key: "prehistoric_denmark",   label: "Forhistorisk Danmark"     },
+  { key: "vikings",               label: "Vikingerne"               },
+  { key: "middle_ages",           label: "Middelalderen"            },
+  { key: "reformation_monarchy",  label: "Reformation & Monarki"    },
+  { key: "enlightenment",         label: "Oplysningstiden"          },
+  { key: "revolutions_democracy", label: "Revolutioner & Demokrati" },
+  { key: "industrialisation",     label: "Industrialisering"        },
+  { key: "world_war_1",           label: "1. Verdenskrig"           },
+  { key: "world_war_2",           label: "2. Verdenskrig"           },
+  { key: "cold_war",              label: "Den Kolde Krig"           },
+  { key: "democracy_power",       label: "Demokrati & Magt"         },
+];
+
+function setupDomainEditor(activeDomains) {
+  const container = document.getElementById("domain-editor");
+  if (!container) return;
+
+  const checked = Array.isArray(activeDomains) && activeDomains.length > 0
+    ? activeDomains
+    : [];
+
+  // Checkbox grid
+  const grid = document.createElement("div");
+  grid.className = "sd-domain-grid";
+  grid.id = "sd-domain-grid";
+
+  SD_DOMAINS.forEach(({ key, label }) => {
+    const lbl = document.createElement("label");
+    lbl.className = "sd-domain-label";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = key;
+    cb.checked = checked.includes(key);
+
+    lbl.appendChild(cb);
+    lbl.append(` ${label}`);
+    grid.appendChild(lbl);
+  });
+
+  // Action buttons
+  const actions = document.createElement("div");
+  actions.className = "sd-domain-actions";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.id = "sd-domain-save";
+  saveBtn.textContent = "Gem domæner";
+
+  const resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.id = "sd-domain-reset";
+  resetBtn.className = "sd-domain-reset";
+  resetBtn.textContent = "Alle domæner";
+
+  actions.appendChild(saveBtn);
+  actions.appendChild(resetBtn);
+
+  // Status message
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "sd-domain-msg";
+  msgDiv.id = "sd-domain-msg";
+
+  // Wire save
+  saveBtn.onclick = async () => {
+    const chosen = Array.from(
+      grid.querySelectorAll("input[type=checkbox]:checked")
+    ).map(cb => cb.value);
+
+    if (chosen.length === 0) {
+      msgDiv.style.color = "red";
+      msgDiv.textContent = "Vælg mindst ét domæne, eller brug ‘Alle domæner’ for at fjerne filtrering.";
+      return;
+    }
+
+    msgDiv.textContent = "";
+    saveBtn.disabled = true;
+
+    const { error } = await supabase.rpc("set_student_domains", {
+      p_student_id: studentId,
+      p_domains:    chosen,
+    });
+
+    saveBtn.disabled = false;
+
+    if (error) {
+      msgDiv.style.color = "red";
+      msgDiv.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+      return;
+    }
+
+    msgDiv.style.color = "green";
+    msgDiv.textContent = "Domæner gemt. Eleven modtager nu kun spørgsmål fra de valgte emner.";
+  };
+
+  // Wire reset
+  resetBtn.onclick = async () => {
+    msgDiv.textContent = "";
+    resetBtn.disabled = true;
+
+    const { error } = await supabase.rpc("set_student_domains", {
+      p_student_id: studentId,
+      p_domains:    null,
+    });
+
+    resetBtn.disabled = false;
+
+    if (error) {
+      msgDiv.style.color = "red";
+      msgDiv.textContent = "Fejl: " + (error.message ?? "Prøv igen.");
+      return;
+    }
+
+    grid.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      cb.checked = false;
+    });
+    msgDiv.style.color = "green";
+    msgDiv.textContent = "Nulstillet. Eleven modtager spørgsmål fra alle domæner.";
+  };
+
+  container.innerHTML = "";
+  container.appendChild(grid);
+  container.appendChild(actions);
+  container.appendChild(msgDiv);
+}
+
+// ========================
 // FETCH STUDENT
 // ========================
 
@@ -116,6 +248,7 @@ async function fetchStudent() {
   }
 
   renderStudent(overview, mastery, profileData ?? {});
+  setupDomainEditor(profileData?.active_domains ?? null);
 
   await fetchDomainProgress();
   await fetchQuestionInstances();
@@ -304,33 +437,16 @@ function renderStudent(student, mastery, profileData) {
 
   const container = document.getElementById("studentInfo");
 
-  const DOMAIN_LABEL_SD = {
-    prehistoric_denmark:   "Forhistorisk Danmark",
-    vikings:               "Vikingerne",
-    middle_ages:           "Middelalderen",
-    reformation_monarchy:  "Reformation & Monarki",
-    enlightenment:         "Oplysningstiden",
-    revolutions_democracy: "Revolutioner & Demokrati",
-    industrialisation:     "Industrialisering",
-    world_war_1:           "1. Verdenskrig",
-    world_war_2:           "2. Verdenskrig",
-    cold_war:              "Den Kolde Krig",
-    democracy_power:       "Demokrati & Magt",
-  };
-
-  const grade         = profileData?.selected_grade  != null ? profileData.selected_grade + ". klasse" : "Ikke valgt";
-  const placementBand = profileData?.placement_band  != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
-  const rawDomains    = profileData?.active_domains;
-  const domainText    = Array.isArray(rawDomains) && rawDomains.length > 0
-    ? rawDomains.map(d => DOMAIN_LABEL_SD[d] ?? d).join(", ")
-    : "Alle domæner (fri udforskning)";
+  const grade         = profileData?.selected_grade != null ? profileData.selected_grade + ". klasse" : "Ikke valgt";
+  const placementBand = profileData?.placement_band != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
 
   container.innerHTML = `
     <p><strong>Email:</strong> ${student.email ?? "—"}</p>
     <p><strong>Klassetrin:</strong> ${grade}</p>
     <p><strong>Startband (placeringstest):</strong> ${placementBand}</p>
-    <p><strong>Dom&#230;ne-fokus:</strong> ${domainText}</p>
-    <p><strong>XP:</strong> ${student.xp ?? 0}</p>
+    <p style="margin-bottom:6px;"><strong>Dom&#230;ne-fokus</strong></p>
+    <div id="domain-editor"></div>
+    <p style="margin-top:12px;"><strong>XP:</strong> ${student.xp ?? 0}</p>
     <p><strong>Level:</strong> ${student.level ?? 1}</p>
 
     <hr>
