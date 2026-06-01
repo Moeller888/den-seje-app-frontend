@@ -11,6 +11,13 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const TEST_STUDENT_EMAIL = "christnmoeller@hotmail.com";
 
+// ── Section 97: Teacher test account constants ────────────────────────────────
+// Can be overridden via .env: TEST_TEACHER_EMAIL, TEST_TEACHER_PASSWORD,
+// TEST_STUDENT2_EMAIL. Defaults are used if not set.
+const TEST_TEACHER_EMAIL   = process.env.TEST_TEACHER_EMAIL   ?? "teacher-test@hotmail.com";
+const TEST_TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";
+const TEST_STUDENT2_EMAIL  = process.env.TEST_STUDENT2_EMAIL  ?? "student-teacher-test@hotmail.com";
+
 // ── Section 95: Question Pool Health Check ───────────────────────────────────
 //
 // Thresholds set at ~50% of inventory audited 2026-05-31:
@@ -184,6 +191,108 @@ async function checkQuestionPoolHealth(supabase: any): Promise<void> {
   );
 }
 
+// ── Section 97: Teacher test account provisioning ────────────────────────────
+// Creates dedicated isolated teacher + student accounts for teacher-dashboard
+// tests. Does NOT touch the existing test student or their teacher relationship.
+// Idempotent: safe to run on every test suite invocation.
+
+async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
+  const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
+  if (listError) {
+    throw new Error(`teacher-setup: listUsers failed — ${listError.message}`);
+  }
+  const allUsers: any[] = usersData?.users ?? [];
+
+  // ── Test teacher ─────────────────────────────────────────────────────────
+
+  let teacherUser = allUsers.find((u: any) => u.email === TEST_TEACHER_EMAIL);
+  let teacherId: string;
+
+  if (!teacherUser) {
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email: TEST_TEACHER_EMAIL,
+      password: TEST_TEACHER_PASSWORD,
+      email_confirm: true,
+    });
+    if (createErr) {
+      throw new Error(`teacher-setup: createUser (teacher) failed — ${createErr.message}`);
+    }
+    teacherId = created.user.id;
+    console.log(`[global-setup] Created test teacher ${TEST_TEACHER_EMAIL} (${teacherId})`);
+  } else {
+    teacherId = teacherUser.id;
+    // Ensure password matches the constant so tests can always log in.
+    await supabase.auth.admin.updateUserById(teacherId, { password: TEST_TEACHER_PASSWORD });
+  }
+
+  // Upsert teacher profile (equipped_slots and active_theme have DB defaults
+  // but we supply them explicitly to avoid NOT NULL violations).
+  const { error: teacherProfileErr } = await supabase.from("profiles").upsert(
+    {
+      id: teacherId,
+      role: "teacher",
+      full_name: "Test Lærer Auto",
+      equipped_slots: {},
+      active_theme: "default",
+    },
+    { onConflict: "id" }
+  );
+  if (teacherProfileErr) {
+    throw new Error(`teacher-setup: teacher profile upsert failed — ${teacherProfileErr.message}`);
+  }
+
+  // ── Test student for teacher ─────────────────────────────────────────────
+
+  let student2User = allUsers.find((u: any) => u.email === TEST_STUDENT2_EMAIL);
+  let student2Id: string;
+
+  if (!student2User) {
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email: TEST_STUDENT2_EMAIL,
+      password: "TestStudent2026!",
+      email_confirm: true,
+    });
+    if (createErr) {
+      throw new Error(`teacher-setup: createUser (student2) failed — ${createErr.message}`);
+    }
+    student2Id = created.user.id;
+    console.log(`[global-setup] Created test student2 ${TEST_STUDENT2_EMAIL} (${student2Id})`);
+  } else {
+    student2Id = student2User.id;
+  }
+
+  // Upsert student2 profile — grade 9 is valid per profiles_selected_grade_check
+  const { error: s2ProfileErr } = await supabase.from("profiles").upsert(
+    {
+      id: student2Id,
+      role: "student",
+      teacher_id: teacherId,
+      full_name: "Test Elev Auto",
+      selected_grade: 9,
+      placement_band: 2,
+      current_band: null,
+      active_domains: null,
+      equipped_slots: {},
+      active_theme: "default",
+    },
+    { onConflict: "id" }
+  );
+  if (s2ProfileErr) {
+    throw new Error(`teacher-setup: student2 profile upsert failed — ${s2ProfileErr.message}`);
+  }
+
+  // Reset student2 question instances and active_domains on every run
+  await supabase.from("question_instances").delete().eq("student_id", student2Id);
+  await supabase.from("profiles")
+    .update({ active_domains: null, current_band: null })
+    .eq("id", student2Id);
+
+  console.log(
+    `[global-setup] Teacher test accounts ready — ` +
+    `teacher: ${teacherId}, student2: ${student2Id}`
+  );
+}
+
 // ── Main setup ────────────────────────────────────────────────────────────────
 
 export default async function globalSetup() {
@@ -199,6 +308,9 @@ export default async function globalSetup() {
 
   // Health check runs first — fail before touching any test state
   await checkQuestionPoolHealth(supabase);
+
+  // Provision teacher test accounts (idempotent)
+  await ensureTeacherTestAccounts(supabase);
 
   const { data: users, error: listError } =
     await supabase.auth.admin.listUsers();
