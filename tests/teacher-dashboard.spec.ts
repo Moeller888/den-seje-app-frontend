@@ -193,8 +193,9 @@ test("7. Reset to all domains clears checkboxes and sets DB to null", async ({ p
 
 // ── 8. Backend rejects domain inaccessible for student's grade ────────────────
 
-test("8. Saving cold_war for a grade-7 student shows backend error", async ({ page }) => {
-  // Set student2 to grade 7 — cold_war has no questions for grade ≤ 7 (starts at grade 8)
+test("8. Grade-7 student can be assigned cold_war after Section 101 content sprint", async ({ page }) => {
+  // Before Section 101, cold_war had 0 questions for grade 7 — assignment was blocked.
+  // After Section 101, 25 questions exist for grade 7 — assignment must succeed.
   await adminSupabase
     .from("profiles")
     .update({ selected_grade: 7, active_domains: null })
@@ -207,20 +208,20 @@ test("8. Saving cold_war for a grade-7 student shows backend error", async ({ pa
   await page.locator("#sd-domain-save").click();
 
   const msg = page.locator("#sd-domain-msg");
-  await expect(msg).toBeVisible({ timeout: 10000 });
-  await expect(msg).toContainText("cold_war");
+  await expect(msg).toContainText("gemt", { timeout: 10000 });
 
-  // DB must be unchanged — still null
+  // DB must reflect the assignment
   const { data } = await adminSupabase
     .from("profiles")
     .select("active_domains")
     .eq("id", student2Id)
     .maybeSingle();
-  expect(data?.active_domains).toBeNull();
+  expect(Array.isArray(data?.active_domains)).toBe(true);
+  expect(data?.active_domains).toContain("cold_war");
 
-  // Restore grade to 9 so subsequent tests are unaffected
+  // Restore
   await adminSupabase
     .from("profiles")
-    .update({ selected_grade: 9 })
+    .update({ selected_grade: 9, active_domains: null })
     .eq("id", student2Id);
 });
