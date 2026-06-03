@@ -251,6 +251,7 @@ async function fetchStudent() {
   renderBandPanel(profileData ?? {});
   setupDomainEditor(profileData?.active_domains ?? null);
 
+  await fetchBandHistory();
   await fetchDomainProgress();
   await fetchQuestionInstances();
 }
@@ -484,6 +485,106 @@ function renderBandPanel(profileData) {
   }
 
   container.innerHTML = html;
+}
+
+// ========================
+// FETCH BAND HISTORY (Section 129)
+// ========================
+
+async function fetchBandHistory() {
+  const container = document.getElementById("sd-band-history");
+
+  const { data, error } = await supabase
+    .from("question_instances")
+    .select("answered_at, questions(difficulty_band)")
+    .eq("student_id", studentId)
+    .eq("answered", true)
+    .not("answered_at", "is", null)
+    .order("answered_at", { ascending: true })
+    .limit(500);
+
+  if (error) {
+    if (container) container.textContent = "Fejl ved indlæsning af bandhistorik.";
+    return;
+  }
+
+  // Group by calendar date → highest band on that day
+  const dayMap = {};
+  for (const row of data ?? []) {
+    const band = row.questions?.difficulty_band;
+    if (!band || !row.answered_at) continue;
+    const day = row.answered_at.slice(0, 10);
+    if (!dayMap[day] || dayMap[day] < band) dayMap[day] = band;
+  }
+
+  const days = Object.entries(dayMap)
+    .map(([day, maxBand]) => ({ day, maxBand }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+
+  renderBandHistory(days);
+}
+
+// ========================
+// RENDER BAND HISTORY (Section 129)
+// ========================
+
+const BAND_COLORS = { 1: "#888", 2: "#4caf50", 3: "#2196f3", 4: "#ff9800", 5: "#e91e63" };
+
+function renderBandHistory(days) {
+  const container = document.getElementById("sd-band-history");
+  if (!container) return;
+
+  if (days.length === 0) {
+    container.textContent = "Ingen bandhistorik endnu.";
+    return;
+  }
+
+  const highestBand = Math.max(...days.map(d => d.maxBand));
+  const daysActive  = days.length;
+  const firstDay    = days[0].day;
+  const accentColor = BAND_COLORS[highestBand] ?? "var(--accent)";
+
+  let html = `
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:14px;" id="sd-band-summary">
+      <div>
+        <strong>Højeste band</strong>
+        <div style="font-size:20px;font-weight:bold;color:${accentColor};" id="sd-band-highest">Band ${highestBand}</div>
+      </div>
+      <div>
+        <strong>Aktive dage</strong>
+        <div style="font-size:20px;font-weight:bold;color:var(--text-bright);">${daysActive}</div>
+      </div>
+      <div>
+        <strong>Aktiv siden</strong>
+        <div style="font-size:14px;color:var(--text-main);">${formatHistoryDate(firstDay)}</div>
+      </div>
+    </div>
+    <hr>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;" id="sd-band-timeline">
+  `;
+
+  const recent = [...days].reverse().slice(0, 20);
+  for (const { day, maxBand } of recent) {
+    const color = BAND_COLORS[maxBand] ?? "var(--text-dim)";
+    html += `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:12px;color:var(--text-dim);min-width:90px;">${formatHistoryDate(day)}</span>
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+        <span style="font-size:13px;font-weight:bold;color:${color};">Band ${maxBand}</span>
+      </div>
+    `;
+  }
+
+  html += "</div>";
+  container.innerHTML = html;
+}
+
+function formatHistoryDate(iso) {
+  if (!iso || typeof iso !== "string") return iso ?? "";
+  const [y, m, d] = iso.split("-");
+  const months = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+  const month = months[parseInt(m, 10) - 1] ?? m;
+  return `${parseInt(d, 10)}. ${month} ${y}`;
 }
 
 // ========================
