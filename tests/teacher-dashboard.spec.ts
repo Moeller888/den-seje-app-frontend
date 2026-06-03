@@ -369,24 +369,51 @@ test("15. Class overview shows 'Band 2' for placement_band=2", async ({ page }) 
   await expect(row).toContainText("Band 2", { timeout: 10000 });
 });
 
-// ── 16. Class overview shows graceful text for null current_band ─────────────
+// ── 16. Class overview: no history → RPC defaults computed band to 1 ─────────
+//
+// get_teacher_visibility computes current_band as AVG(difficulty_band) of last
+// 10 answered questions, COALESCE-ing to 1 when no history exists.
+// "Ingen aktiv session" only appears on student-detail (profiles.current_band).
 
-test("16. Class overview shows 'Ingen aktiv session' when current_band is null", async ({ page }) => {
-  // student2 has current_band=null from global-setup
+test("16. Class overview shows Band 1 and negative delta when student has no question history", async ({ page }) => {
+  // student2 has no answered instances → RPC: current_band = COALESCE(null, 1) = 1
+  // placement_band = 2 → delta = 1 - 2 = -1
   await loginAsTeacher(page);
   await page.waitForSelector("#classOverview table", { timeout: 15000 });
 
   const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
-  await expect(row).toContainText("Ingen aktiv session", { timeout: 10000 });
+  await expect(row).toContainText("Band 1", { timeout: 10000 });
+  await expect(row).toContainText("(-1)");
 });
 
-// ── 17. Positive progression renders correctly in class overview ─────────────
+// ── 17. Positive progression: computed band driven by question history ────────
 
-test("17. Class overview shows '+2' growth when current_band advances from 2 to 4", async ({ page }) => {
-  await adminSupabase
-    .from("profiles")
-    .update({ placement_band: 2, current_band: 4 })
-    .eq("id", student2Id);
+test("17. Class overview shows '+2' growth when student has answered Band 4 questions", async ({ page }) => {
+  // get_teacher_visibility computes current_band from question history, not profiles.current_band.
+  // Insert Band 4 answered instances to drive the average to 4.
+  const { data: b4qs } = await adminSupabase
+    .from("questions")
+    .select("id")
+    .eq("is_active", true)
+    .eq("difficulty_band", 4)
+    .limit(5);
+
+  if (!b4qs || b4qs.length < 5) throw new Error("test-setup: need at least 5 Band 4 questions");
+
+  const now = new Date();
+  await adminSupabase.from("question_instances").insert(
+    b4qs.map((q, i) => ({
+      student_id:        student2Id,
+      question_id:       q.id,
+      answered:          true,
+      correct_answer:    "",
+      difficulty_at_time: 1,
+      mastery_snapshot:  1,
+      next_review_at:    new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      answered_at:       new Date(now.getTime() - i * 1000).toISOString(),
+      is_correct:        true,
+    }))
+  );
 
   await loginAsTeacher(page);
   await page.waitForSelector("#classOverview table", { timeout: 15000 });
@@ -396,31 +423,29 @@ test("17. Class overview shows '+2' growth when current_band advances from 2 to 
   await expect(row).toContainText("+2");
 
   // Restore
-  await adminSupabase
-    .from("profiles")
-    .update({ current_band: null })
-    .eq("id", student2Id);
+  await adminSupabase.from("question_instances").delete().eq("student_id", student2Id);
 });
 
-// ── 18. Negative progression renders correctly in class overview ─────────────
+// ── 18. Negative progression: high placement, no history ─────────────────────
 
-test("18. Class overview shows negative growth when current_band drops below placement", async ({ page }) => {
+test("18. Class overview shows negative growth when placement exceeds computed band", async ({ page }) => {
+  // Set placement_band=4, no answered instances → RPC: current_band=1, delta=1-4=-3
   await adminSupabase
     .from("profiles")
-    .update({ placement_band: 3, current_band: 1 })
+    .update({ placement_band: 4 })
     .eq("id", student2Id);
 
   await loginAsTeacher(page);
   await page.waitForSelector("#classOverview table", { timeout: 15000 });
 
   const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
-  await expect(row).toContainText("Band 1", { timeout: 10000 });
-  await expect(row).toContainText("-2");
+  await expect(row).toContainText("Band 4", { timeout: 10000 }); // placement column
+  await expect(row).toContainText("(-3)");
 
   // Restore
   await adminSupabase
     .from("profiles")
-    .update({ placement_band: 2, current_band: null })
+    .update({ placement_band: 2 })
     .eq("id", student2Id);
 });
 
