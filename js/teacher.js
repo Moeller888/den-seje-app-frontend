@@ -313,9 +313,15 @@ async function loadClassOverview() {
   const TREND_CLASS = { improving: "trend-up", stable: "trend-stable", struggling: "trend-down" };
 
   const rows = students.map(s => {
-    const grade   = s.selected_grade  != null ? s.selected_grade  : "—";
-    const placed  = s.placement_band  != null ? s.placement_band  : "—";
-    const current = s.current_band    != null ? s.current_band    : "—";
+    const grade = s.selected_grade != null ? s.selected_grade : "—";
+
+    const placedHtml = s.placement_band != null
+      ? '<span class="band-num">Band ' + s.placement_band + "</span>"
+      : '<span style="color:var(--text-dim);font-size:11px;font-style:italic">Ikke placeret</span>';
+
+    const currentLabel = s.current_band != null
+      ? "Band " + s.current_band
+      : null;
 
     let growthHtml = "";
     if (s.placement_band != null && s.current_band != null) {
@@ -323,6 +329,10 @@ async function loadClassOverview() {
       if (delta > 0)      growthHtml = ` <span class="band-growth-pos">(+${delta})</span>`;
       else if (delta < 0) growthHtml = ` <span class="band-growth-neg">(${delta})</span>`;
     }
+
+    const currentHtml = currentLabel != null
+      ? '<span class="band-num">' + currentLabel + "</span>" + growthHtml
+      : '<span style="color:var(--text-dim);font-size:11px;font-style:italic">Ingen aktiv session</span>';
 
     const pct      = s.recent_correct_pct ?? 0;
     const pctClass = pct >= 70 ? "pct-good" : pct >= 50 ? "pct-ok" : "pct-poor";
@@ -342,8 +352,8 @@ async function loadClassOverview() {
     return "<tr>" +
       "<td>" + (s.display_name ?? "Elev") + "</td>" +
       "<td>" + (grade !== "—" ? '<span class="grade-chip">' + grade + "</span>" : "—") + "</td>" +
-      "<td><span class=\"band-num\">" + placed + "</span></td>" +
-      "<td><span class=\"band-num\">" + current + "</span>" + growthHtml + "</td>" +
+      "<td>" + placedHtml + "</td>" +
+      "<td>" + currentHtml + "</td>" +
       "<td>" + (s.total_attempts ?? 0) + "</td>" +
       "<td class=\"" + pctClass + "\">" + pct + "%</td>" +
       "<td class=\"" + (TREND_CLASS[trend] ?? "trend-stable") + "\">" + (TREND_ICON[trend] ?? "→") + "</td>" +
@@ -354,7 +364,7 @@ async function loadClassOverview() {
 
   container.innerHTML =
     '<div class="overview-scroll"><table class="overview-table"><thead><tr>' +
-    "<th>Elev</th><th>Kl.</th><th>Start</th><th>Nu</th>" +
+    "<th>Elev</th><th>Kl.</th><th>Start</th><th>Niveau</th>" +
     "<th>Spm.</th><th>Korrekt</th><th>Trend</th><th>Emner</th><th></th>" +
     "</tr></thead><tbody>" + rows + "</tbody></table></div>";
 
