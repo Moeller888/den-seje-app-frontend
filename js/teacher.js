@@ -376,6 +376,210 @@ async function loadClassOverview() {
 }
 
 /* ========================
+   ENGAGEMENT PANEL (Section 138)
+   Live classroom activity view.
+   Two queries total — no N+1:
+     1. get_teacher_visibility  → student names + bands
+     2. question_instances      → last-7-day activity for all students
+======================== */
+
+function formatRelativeTime(date, now) {
+  const diffMs   = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs  = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1)   return "Lige nu";
+  if (diffMins < 60)  return diffMins + " min siden";
+  if (diffHrs  < 24)  return diffHrs  + " time" + (diffHrs  === 1 ? "" : "r") + " siden";
+  if (diffDays === 1) return "I går";
+  if (diffDays < 7)   return diffDays + " dage siden";
+  return date.toLocaleDateString("da-DK", { day: "numeric", month: "short" });
+}
+
+function getActivityDotClass(lastActive, todayStart, now) {
+  if (!lastActive) return "gray";
+  if (lastActive >= todayStart) return "green";
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  if (lastActive >= sevenDaysAgo) return "yellow";
+  return "red";
+}
+
+async function loadEngagementPanel() {
+  const summaryEl  = document.getElementById("engagement-summary");
+  const tableEl    = document.getElementById("engagement-table");
+  const insightsEl = document.getElementById("engagement-insights");
+  if (!summaryEl) return;
+
+  // Query 1: students with names + current bands
+  const { data: students, error: studErr } = await supabase.rpc("get_teacher_visibility", {
+    p_teacher_id: teacherId,
+  });
+
+  if (studErr || !students || students.length === 0) {
+    summaryEl.innerHTML = "<p class='overview-empty'>Ingen elever tilknyttet endnu.</p>";
+    if (tableEl)    tableEl.innerHTML = "";
+    if (insightsEl) insightsEl.innerHTML = "";
+    return;
+  }
+
+  const studentIds    = students.map(s => s.student_id);
+  const totalStudents = students.length;
+
+  // Query 2: all answered activity in the last 7 days for this teacher's students
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const { data: activityRows } = await supabase
+    .from("question_instances")
+    .select("student_id, answered_at")
+    .in("student_id", studentIds)
+    .eq("answered", true)
+    .not("answered_at", "is", null)
+    .gte("answered_at", weekAgo.toISOString())
+    .limit(5000);
+
+  const rows = activityRows ?? [];
+
+  // Aggregate per student in JS
+  const now        = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+
+  const actMap = {};
+  for (const row of rows) {
+    const sid = row.student_id;
+    if (!actMap[sid]) actMap[sid] = { today: 0, week: 0, lastActive: null };
+    const ts = new Date(row.answered_at);
+    actMap[sid].week++;
+    if (ts >= todayStart) actMap[sid].today++;
+    if (!actMap[sid].lastActive || ts > actMap[sid].lastActive) {
+      actMap[sid].lastActive = ts;
+    }
+  }
+
+  // Summary metrics
+  let activeToday = 0;
+  let activeWeek  = 0;
+  let totalToday  = 0;
+  for (const sid of studentIds) {
+    const a = actMap[sid];
+    if (a && a.today > 0) activeToday++;
+    if (a && a.week  > 0) activeWeek++;
+    totalToday += a?.today ?? 0;
+  }
+  const avgWeek = activeWeek > 0
+    ? (rows.length / activeWeek).toFixed(1)
+    : "0";
+
+  summaryEl.innerHTML = `
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-value" id="eng-active-today">${activeToday}</div>
+        <div class="stat-label">Aktive i dag</div>
+        <div class="stat-sub">af ${totalStudents} elever</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="eng-active-week">${activeWeek}</div>
+        <div class="stat-label">Aktive denne uge</div>
+        <div class="stat-sub">af ${totalStudents} elever</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="eng-today-total">${totalToday}</div>
+        <div class="stat-label">Spm. i dag</div>
+        <div class="stat-sub">besvaret</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="eng-avg-week">${avgWeek}</div>
+        <div class="stat-label">Ugentlig gns.</div>
+        <div class="stat-sub">pr. aktiv elev</div>
+      </div>
+    </div>
+  `;
+
+  // Per-student table — most active today first, then by week
+  if (tableEl) {
+    const sorted = [...students].sort((a, b) => {
+      const aToday = actMap[a.student_id]?.today ?? 0;
+      const bToday = actMap[b.student_id]?.today ?? 0;
+      if (bToday !== aToday) return bToday - aToday;
+      return (actMap[b.student_id]?.week ?? 0) - (actMap[a.student_id]?.week ?? 0);
+    });
+
+    const tableRows = sorted.map(s => {
+      const a      = actMap[s.student_id] ?? { today: 0, week: 0, lastActive: null };
+      const band   = s.current_band != null ? "Band " + s.current_band : "—";
+      const last   = a.lastActive ? formatRelativeTime(a.lastActive, now) : "Aldrig";
+      const dotCls = getActivityDotClass(a.lastActive, todayStart, now);
+      return `<tr>
+        <td>${s.display_name ?? "Elev"}</td>
+        <td><span class="band-num">${band}</span></td>
+        <td>${a.today}</td>
+        <td>${a.week}</td>
+        <td style="font-size:13px;color:var(--text-dim)">${last}</td>
+        <td><span class="activity-dot ${dotCls}" title="${last}"></span></td>
+      </tr>`;
+    }).join("");
+
+    tableEl.innerHTML = `
+      <div class="overview-scroll">
+        <table class="overview-table">
+          <thead>
+            <tr>
+              <th>Elev</th><th>Band</th><th>I dag</th>
+              <th>Denne uge</th><th>Sidst aktiv</th><th></th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Quick insights
+  if (!insightsEl) return;
+
+  const mostActive = students
+    .filter(s => (actMap[s.student_id]?.today ?? 0) > 0)
+    .sort((a, b) => (actMap[b.student_id]?.today ?? 0) - (actMap[a.student_id]?.today ?? 0))[0];
+
+  const inactive7 = students.filter(s => !(actMap[s.student_id]?.week > 0));
+
+  const band5 = students.filter(s => s.current_band != null && s.current_band >= 5);
+
+  let html = '<div class="engagement-insights">';
+
+  if (mostActive) {
+    html += `<div class="insight-item insight-green">
+      &#11088; Mest aktiv i dag: <strong>${mostActive.display_name}</strong>
+      &mdash; ${actMap[mostActive.student_id]?.today ?? 0} sp&oslash;rgsm&aring;l
+    </div>`;
+  }
+
+  if (inactive7.length > 0) {
+    const names = inactive7.map(s => s.display_name ?? "Elev").join(", ");
+    html += `<div class="insight-item insight-yellow">
+      &#9888; Inaktiv &gt;7 dage: <strong>${names}</strong>
+    </div>`;
+  } else if (totalStudents > 0) {
+    html += `<div class="insight-item insight-green">
+      &#10003; Alle elever har v&aelig;ret aktive inden for 7 dage
+    </div>`;
+  }
+
+  if (band5.length > 0) {
+    const names = band5.map(s => s.display_name ?? "Elev").join(", ");
+    html += `<div class="insight-item insight-purple">
+      &#127942; Band 5: <strong>${names}</strong>
+    </div>`;
+  }
+
+  html += "</div>";
+  insightsEl.innerHTML = html;
+}
+
+/* ========================
    STUDENT OVERVIEW (PENDING)
 ======================== */
 
@@ -628,6 +832,7 @@ if (spotlightRemoveBtn) {
    INIT
 ======================== */
 
+await loadEngagementPanel();
 await loadClassOverview();
 await loadDomainPanel();
 await loadStudentOverview();
