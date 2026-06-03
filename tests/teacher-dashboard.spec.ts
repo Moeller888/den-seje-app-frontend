@@ -357,3 +357,79 @@ test("14. Band history shows timeline and highest band when student has answered
     .delete()
     .eq("student_id", student2Id);
 });
+
+// ── 15. Class overview shows placement band in "Band N" format ───────────────
+
+test("15. Class overview shows 'Band 2' for placement_band=2", async ({ page }) => {
+  // global-setup guarantees student2 has placement_band=2, current_band=null
+  await loginAsTeacher(page);
+  await page.waitForSelector("#classOverview table", { timeout: 15000 });
+
+  const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
+  await expect(row).toContainText("Band 2", { timeout: 10000 });
+});
+
+// ── 16. Class overview shows graceful text for null current_band ─────────────
+
+test("16. Class overview shows 'Ingen aktiv session' when current_band is null", async ({ page }) => {
+  // student2 has current_band=null from global-setup
+  await loginAsTeacher(page);
+  await page.waitForSelector("#classOverview table", { timeout: 15000 });
+
+  const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
+  await expect(row).toContainText("Ingen aktiv session", { timeout: 10000 });
+});
+
+// ── 17. Positive progression renders correctly in class overview ─────────────
+
+test("17. Class overview shows '+2' growth when current_band advances from 2 to 4", async ({ page }) => {
+  await adminSupabase
+    .from("profiles")
+    .update({ placement_band: 2, current_band: 4 })
+    .eq("id", student2Id);
+
+  await loginAsTeacher(page);
+  await page.waitForSelector("#classOverview table", { timeout: 15000 });
+
+  const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
+  await expect(row).toContainText("Band 4", { timeout: 10000 });
+  await expect(row).toContainText("+2");
+
+  // Restore
+  await adminSupabase
+    .from("profiles")
+    .update({ current_band: null })
+    .eq("id", student2Id);
+});
+
+// ── 18. Negative progression renders correctly in class overview ─────────────
+
+test("18. Class overview shows negative growth when current_band drops below placement", async ({ page }) => {
+  await adminSupabase
+    .from("profiles")
+    .update({ placement_band: 3, current_band: 1 })
+    .eq("id", student2Id);
+
+  await loginAsTeacher(page);
+  await page.waitForSelector("#classOverview table", { timeout: 15000 });
+
+  const row = page.locator(`tr:has(button.go-student-btn[data-id="${student2Id}"])`);
+  await expect(row).toContainText("Band 1", { timeout: 10000 });
+  await expect(row).toContainText("-2");
+
+  // Restore
+  await adminSupabase
+    .from("profiles")
+    .update({ placement_band: 2, current_band: null })
+    .eq("id", student2Id);
+});
+
+// ── 19. Teacher dashboard does not crash ──────────────────────────────────────
+
+test("19. Teacher dashboard loads and classOverview renders without crash", async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.waitForSelector("#classOverview table", { timeout: 15000 });
+  await expect(page.locator("#classOverview")).toBeVisible();
+  // Verify the Niveau column header is present
+  await expect(page.locator("#classOverview")).toContainText("Niveau");
+});
