@@ -75,7 +75,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   const { data: profile, error: roleError, status } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, must_reset_password")
     .eq("id", userId)
     .maybeSingle();
 
@@ -92,6 +92,10 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   }
 
   if (profile.role === "student") {
+    if (profile.must_reset_password) {
+      window.location.href = "reset-password.html?forced=1";
+      return;
+    }
     window.location.href = "index.html";
     return;
   }

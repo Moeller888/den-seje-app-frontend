@@ -162,7 +162,7 @@ function setupDomainEditor(activeDomains) {
 
     if (chosen.length === 0) {
       msgDiv.style.color = "red";
-      msgDiv.textContent = "Vælg mindst ét domæne, eller brug ‘Alle domæner’ for at fjerne filtrering.";
+      msgDiv.textContent = "Vælg mindst ét domæne, eller brug 'Alle domæner' for at fjerne filtrering.";
       return;
     }
 
@@ -218,6 +218,44 @@ function setupDomainEditor(activeDomains) {
 }
 
 // ========================
+// PASSWORD RESET PANEL (Section 137)
+// ========================
+
+function setupPasswordResetPanel() {
+  const btn    = document.getElementById("resetPasswordBtn");
+  const result = document.getElementById("resetPasswordResult");
+  if (!btn || !result) return;
+
+  btn.onclick = async () => {
+    btn.disabled = true;
+    result.innerHTML = "";
+
+    const { data, error } = await supabase.functions.invoke(
+      "reset-student-password",
+      { body: { student_id: studentId } }
+    );
+
+    btn.disabled = false;
+
+    if (error || !data?.temporary_password) {
+      result.style.color = "red";
+      result.textContent = "Fejl: " + (data?.error ?? error?.message ?? "Prøv igen.");
+      return;
+    }
+
+    result.innerHTML = `
+      <p style="color:var(--accent);font-weight:bold;">Adgangskode nulstillet!</p>
+      <p style="margin-top:6px;">Midlertidig adgangskode — giv denne til eleven:</p>
+      <div class="temp-password-display">${data.temporary_password}</div>
+      <p class="temp-password-note">
+        Eleven skal vælge en ny adgangskode ved næste login.
+        Koden vises kun én gang.
+      </p>
+    `;
+  };
+}
+
+// ========================
 // FETCH STUDENT
 // ========================
 
@@ -250,6 +288,7 @@ async function fetchStudent() {
   renderStudent(overview, mastery, profileData ?? {});
   renderBandPanel(profileData ?? {});
   setupDomainEditor(profileData?.active_domains ?? null);
+  setupPasswordResetPanel();
 
   await fetchBandHistory();
   await fetchDomainProgress();
