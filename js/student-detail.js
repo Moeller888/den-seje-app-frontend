@@ -238,7 +238,7 @@ async function fetchStudent() {
 
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("selected_grade, placement_band, active_domains")
+    .select("selected_grade, placement_band, current_band, active_domains")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -248,6 +248,7 @@ async function fetchStudent() {
   }
 
   renderStudent(overview, mastery, profileData ?? {});
+  renderBandPanel(profileData ?? {});
   setupDomainEditor(profileData?.active_domains ?? null);
 
   await fetchDomainProgress();
@@ -455,6 +456,34 @@ function renderStudent(student, mastery, profileData) {
     <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers ?? 0}</p>
     <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts ?? 0}</p>
   `;
+}
+
+// ========================
+// RENDER BAND PANEL (Section 128)
+// ========================
+
+function renderBandPanel(profileData) {
+  const container = document.getElementById("sd-band-panel");
+  if (!container) return;
+
+  const placement = profileData?.placement_band ?? null;
+  const current   = profileData?.current_band   ?? null;
+
+  const placementText = placement != null ? "Band " + placement : "Ikke afsluttet";
+  const currentText   = current   != null ? "Band " + current   : "Ingen aktiv session";
+
+  let html = `<p><strong>Placering:</strong> ${placementText}</p>`;
+  html    += `<p><strong>Nuværende:</strong> <span id="sd-band-current">${currentText}</span></p>`;
+
+  if (placement != null && current != null) {
+    const delta = current - placement;
+    const sign  = delta > 0 ? "+" : "";
+    const color = delta > 0 ? "#4caf50" : delta < 0 ? "#f44336" : "var(--text-dim)";
+    const label = delta === 0 ? "Ingen ændring" : sign + delta + " band";
+    html += `<p><strong>Fremgang:</strong> <span id="sd-band-delta" style="color:${color};font-weight:bold;">${label}</span></p>`;
+  }
+
+  container.innerHTML = html;
 }
 
 // ========================
