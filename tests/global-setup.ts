@@ -18,31 +18,33 @@ const TEST_TEACHER_EMAIL   = process.env.TEST_TEACHER_EMAIL   ?? "teacher-test@h
 const TEST_TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";
 const TEST_STUDENT2_EMAIL  = process.env.TEST_STUDENT2_EMAIL  ?? "student-teacher-test@hotmail.com";
 
-// ── Section 95: Question Pool Health Check ───────────────────────────────────
+// ── Section 133: Question Pool Health Check ──────────────────────────────────
 //
-// Thresholds set at ~50% of inventory audited 2026-05-31:
-//   Total active: 656  → minimum 300
-//   Grade 3:       25  → minimum  15  (tightest grade)
-//   Grade 4–6:     50  → minimum  25
-//   Grade 7–8:   182+  → minimum  50
-//   Grade 9:       76  → minimum  25
-//   Per domain:    50+ → minimum  20
+// Thresholds recalibrated at ~50% of inventory audited 2026-06-03 (Section 133):
+//   Total active:  913  → minimum 450
+//   Grade 3:        31  → minimum  15  (tightest grade, already near 50%)
+//   Grade 4:        58  → minimum  28
+//   Grade 5–6:      50  → minimum  25
+//   Grade 7:       221  → minimum 110
+//   Grade 8:       208  → minimum 100
+//   Grade 9:       295  → minimum 145
+//   Per domain:     70+ → minimum  35  (smallest canonical domain: 70)
 //   Adaptive: each grade needs ≥ 2 bands with ≥ 3 questions each
 //
 // Per-run consumption: ~45 instances created, all deleted before the next run.
 // Pool depletion within a single run is not possible at current scale.
 // Thresholds guard against bulk deactivation or accidental content removal.
 
-const TOTAL_MIN = 300;
+const TOTAL_MIN = 450;
 
 const GRADE_MIN: Record<number, number> = {
-  3: 15,
-  4: 25,
-  5: 25,
-  6: 25,
-  7: 50,
-  8: 50,
-  9: 25,
+  3:  15,
+  4:  28,
+  5:  25,
+  6:  25,
+  7: 110,
+  8: 100,
+  9: 145,
 };
 
 const DOMAINS = [
@@ -59,7 +61,7 @@ const DOMAINS = [
   "democracy_power",
 ] as const;
 
-const DOMAIN_MIN = 20;
+const DOMAIN_MIN = 35;
 
 // Adaptive viability: a grade needs at least this many distinct bands,
 // each containing at least this many questions.
