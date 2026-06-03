@@ -270,3 +270,90 @@ test("11. Progression indicator shows +2 bands when current_band advances from 2
     .update({ current_band: null })
     .eq("id", student2Id);
 });
+
+// ── 12. Band history panel renders ────────────────────────────────────────────
+
+test("12. Band history panel is visible on student-detail page", async ({ page }) => {
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const panel = page.locator("#sd-band-history");
+  await expect(panel).toBeVisible({ timeout: 10000 });
+});
+
+// ── 13. Empty history shows graceful state ────────────────────────────────────
+
+test("13. Empty band history shows graceful message (no crash)", async ({ page }) => {
+  // global-setup guarantees student2 has no answered question_instances
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const panel = page.locator("#sd-band-history");
+  await expect(panel).toContainText(/ingen/i, { timeout: 10000 });
+});
+
+// ── 14. Band history renders data and highest band ────────────────────────────
+
+test("14. Band history shows timeline and highest band when student has answered", async ({ page }) => {
+  // Fetch two real question IDs with known difficulty bands
+  const { data: q2 } = await adminSupabase
+    .from("questions")
+    .select("id")
+    .eq("is_active", true)
+    .eq("difficulty_band", 2)
+    .limit(1);
+  const { data: q4 } = await adminSupabase
+    .from("questions")
+    .select("id")
+    .eq("is_active", true)
+    .eq("difficulty_band", 4)
+    .limit(1);
+
+  if (!q2 || q2.length === 0 || !q4 || q4.length === 0) {
+    throw new Error("test-setup: could not find Band 2 and Band 4 questions");
+  }
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  await adminSupabase.from("question_instances").insert([
+    {
+      student_id:        student2Id,
+      question_id:       q2[0].id,
+      answered:          true,
+      correct_answer:    "",
+      difficulty_at_time: 1,
+      mastery_snapshot:  1,
+      next_review_at:    new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      answered_at:       weekAgo.toISOString(),
+      is_correct:        true,
+    },
+    {
+      student_id:        student2Id,
+      question_id:       q4[0].id,
+      answered:          true,
+      correct_answer:    "",
+      difficulty_at_time: 1,
+      mastery_snapshot:  1,
+      next_review_at:    new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      answered_at:       now.toISOString(),
+      is_correct:        true,
+    },
+  ]);
+
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const highest = page.locator("#sd-band-highest");
+  await expect(highest).toContainText("Band 4", { timeout: 10000 });
+
+  const timeline = page.locator("#sd-band-timeline");
+  await expect(timeline).toContainText("Band 4");
+  await expect(timeline).toContainText("Band 2");
+
+  // Restore
+  await adminSupabase
+    .from("question_instances")
+    .delete()
+    .eq("student_id", student2Id);
+});
