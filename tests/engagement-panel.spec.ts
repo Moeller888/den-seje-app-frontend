@@ -23,7 +23,8 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 let adminClient: ReturnType<typeof createClient>;
 let student2Id: string;
-let questionId: string;
+// Three question slots for tests that insert multiple instances
+let questions: Array<{ id: string; correct_answer: string; difficulty_at_time: number }>;
 
 test.beforeAll(async () => {
   adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -35,14 +36,23 @@ test.beforeAll(async () => {
   if (!s2) throw new Error(`student2 not found: ${STUDENT2_EMAIL}`);
   student2Id = s2.id;
 
-  // Get a valid question ID for inserting test instances.
+  // Fetch 3 distinct question IDs — unique constraint (student_id, question_id)
+  // means we can only insert one instance per question per student.
+  // correct_answer, difficulty_at_time, mastery_snapshot are NOT NULL.
   const { data: qs } = await adminClient
     .from("questions")
-    .select("id")
+    .select("id, difficulty_band, content")
     .eq("is_active", true)
-    .limit(1);
-  if (!qs || qs.length === 0) throw new Error("No active questions found");
-  questionId = qs[0].id;
+    .limit(3);
+  if (!qs || qs.length < 3) throw new Error("Need at least 3 active questions");
+  questions = qs.map((q) => {
+    const raw = q.content;
+    return {
+      id: q.id,
+      correct_answer: typeof raw === "string" ? raw : JSON.stringify(raw ?? ""),
+      difficulty_at_time: q.difficulty_band ?? 1,
+    };
+  });
 
   // Ensure student2 starts with zero activity.
   await adminClient.from("question_instances").delete().eq("student_id", student2Id);
@@ -85,13 +95,21 @@ test("2. Today count matches DB count for active student", async ({
   // Ensure clean state before inserting
   await adminClient.from("question_instances").delete().eq("student_id", student2Id);
 
-  // Insert 3 answered instances timestamped now
+  // Insert 3 answered instances (one per question — unique constraint requires it).
   const now = new Date().toISOString();
-  await adminClient.from("question_instances").insert([
-    { student_id: student2Id, question_id: questionId, answered: true, answered_at: now, is_correct: true  },
-    { student_id: student2Id, question_id: questionId, answered: true, answered_at: now, is_correct: true  },
-    { student_id: student2Id, question_id: questionId, answered: true, answered_at: now, is_correct: false },
-  ]);
+  const { error: insertErr } = await adminClient.from("question_instances").insert(
+    questions.map((q, i) => ({
+      student_id:        student2Id,
+      question_id:       q.id,
+      answered:          true,
+      answered_at:       now,
+      is_correct:        i < 2,
+      correct_answer:    q.correct_answer,
+      difficulty_at_time: q.difficulty_at_time,
+      mastery_snapshot:  q.difficulty_at_time,
+    }))
+  );
+  if (insertErr) throw new Error(`test 2 insert failed: ${insertErr.message}`);
 
   await loginAsTeacher(page);
   await page.waitForSelector("#engagement-table tbody tr", { timeout: 15000 });
@@ -147,11 +165,15 @@ test("4. Last-active shows recent time for just-active student", async ({
 
   await adminClient.from("question_instances").delete().eq("student_id", student2Id);
 
-  // Insert 1 instance answered right now
+  // Insert 1 instance answered right now using the first available question.
+  const q   = questions[0];
   const now = new Date().toISOString();
-  await adminClient.from("question_instances").insert([
-    { student_id: student2Id, question_id: questionId, answered: true, answered_at: now, is_correct: true },
+  const { error: insertErr } = await adminClient.from("question_instances").insert([
+    { student_id: student2Id, question_id: q.id, answered: true, answered_at: now,
+      is_correct: true, correct_answer: q.correct_answer,
+      difficulty_at_time: q.difficulty_at_time, mastery_snapshot: q.difficulty_at_time },
   ]);
+  if (insertErr) throw new Error(`test 4 insert failed: ${insertErr.message}`);
 
   await loginAsTeacher(page);
   await page.waitForSelector("#engagement-table tbody tr", { timeout: 15000 });
