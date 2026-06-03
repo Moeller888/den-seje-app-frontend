@@ -156,6 +156,9 @@ test('3. Second login skips placement (placement_band already set)', async ({ pa
 });
 
 test('4. 10 answered questions triggers current_band persistence', async ({ page }) => {
+  // 10 question cycles take ~40-80s depending on browser/network — extend timeout.
+  test.setTimeout(120_000);
+
   // Clean slate for this session: keep placement_band, reset current_band + instances
   await adminClient.from('question_instances').delete().eq('student_id', studentId);
   await adminClient.from('profiles').update({ current_band: null }).eq('id', studentId);
@@ -183,20 +186,20 @@ test('4. 10 answered questions triggers current_band persistence', async ({ page
 });
 
 test('5. Third login uses current_band and skips placement', async ({ page }) => {
-  // Both placement_band and current_band are now set
-  const { data: profile } = await adminClient
+  // Primary assertion: quiz loads directly — no placement overlay.
+  // This holds whether the startup band comes from current_band or placement_band,
+  // as long as at least one is set (placement_band was set by test 2).
+  await loginStudent(page);
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
+  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+
+  // DB check: verify both bands persisted by this point
+  const { data } = await adminClient
     .from('profiles')
     .select('placement_band, current_band')
     .eq('id', studentId)
     .maybeSingle();
 
-  // Precondition: both bands written
-  expect(profile?.placement_band).not.toBeNull();
-  expect(profile?.current_band).not.toBeNull();
-
-  await loginStudent(page);
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
-
-  // No placement overlay
-  await expect(page.locator('#placement-overlay')).not.toBeVisible();
+  expect(data?.placement_band, 'placement_band must be set from test 2').not.toBeNull();
+  expect(data?.current_band, 'current_band must be set from test 4').not.toBeNull();
 });
