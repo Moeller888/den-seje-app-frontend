@@ -225,3 +225,48 @@ test("8. Grade-7 student can be assigned cold_war after Section 101 content spri
     .update({ selected_grade: 9, active_domains: null })
     .eq("id", student2Id);
 });
+
+// ── 9. Band panel renders on student-detail ───────────────────────────────────
+
+test("9. Band panel is visible on student-detail page", async ({ page }) => {
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const panel = page.locator("#sd-band-panel");
+  await expect(panel).toBeVisible({ timeout: 10000 });
+});
+
+// ── 10. Placement band renders correctly ──────────────────────────────────────
+
+test("10. Placement band 'Band 2' is displayed for student2", async ({ page }) => {
+  // global-setup guarantees student2 has placement_band=2
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const panel = page.locator("#sd-band-panel");
+  await expect(panel).toContainText("Band 2", { timeout: 10000 });
+});
+
+// ── 11. Current band + progression indicator appear when current_band is set ──
+
+test("11. Progression indicator shows +2 bands when current_band advances from 2 to 4", async ({ page }) => {
+  await adminSupabase
+    .from("profiles")
+    .update({ placement_band: 2, current_band: 4 })
+    .eq("id", student2Id);
+
+  await loginAsTeacher(page);
+  await openStudentDetail(page, student2Id);
+
+  const current = page.locator("#sd-band-current");
+  await expect(current).toContainText("Band 4", { timeout: 10000 });
+
+  const delta = page.locator("#sd-band-delta");
+  await expect(delta).toContainText("+2 band");
+
+  // Restore
+  await adminSupabase
+    .from("profiles")
+    .update({ current_band: null })
+    .eq("id", student2Id);
+});
