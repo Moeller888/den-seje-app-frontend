@@ -1,8 +1,51 @@
 import { supabase } from "./supabase.js";
 
-const emailInput = document.getElementById("email");
+const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");
-const message = document.getElementById("message");
+const message       = document.getElementById("message");
+
+// ── Forgot password ──────────────────────────────────────────────────────────
+
+const forgotBtn      = document.getElementById("forgotBtn");
+const forgotPanel    = document.getElementById("forgot-panel");
+const resetEmailInput = document.getElementById("reset-email");
+const resetRequestBtn = document.getElementById("resetRequestBtn");
+const resetMessage    = document.getElementById("reset-message");
+
+forgotBtn.addEventListener("click", () => {
+  forgotPanel.style.display = forgotPanel.style.display === "none" ? "block" : "none";
+  resetMessage.textContent = "";
+});
+
+resetRequestBtn.addEventListener("click", async () => {
+  const email = resetEmailInput.value.trim();
+  resetMessage.textContent = "";
+
+  if (!email) {
+    resetMessage.style.color = "red";
+    resetMessage.textContent = "Skriv din email-adresse.";
+    return;
+  }
+
+  resetRequestBtn.disabled = true;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + "/reset-password.html",
+  });
+
+  resetRequestBtn.disabled = false;
+
+  if (error) {
+    resetMessage.style.color = "red";
+    resetMessage.textContent = "Fejl: " + error.message;
+    return;
+  }
+
+  resetMessage.style.color = "green";
+  resetMessage.textContent =
+    "Link sendt! Tjek din email og klik på linket for at oprette en ny adgangskode.";
+  resetEmailInput.value = "";
+});
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
