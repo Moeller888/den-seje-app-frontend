@@ -896,9 +896,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const question = await getNextQuestion();
 
     if (!question) {
-      questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål – genindlæs siden";
+      // The state machine is stuck at LOADING_QUESTION with no valid exit.
+      // Direct reset to IDLE is the only way to allow a legal retry transition.
+      uiState = "IDLE";
+      questionElement.textContent = "⚠️ Kunne ikke hente spørgsmål";
       questionElement.dataset.state = "error";
       optionsContainer.innerHTML = "";
+      const retryBtn = document.createElement("button");
+      retryBtn.id = "retry-question-btn";
+      retryBtn.textContent = "Prøv igen";
+      retryBtn.className = "submit-btn";
+      retryBtn.onclick = () => { loadAndRenderQuestion(); };
+      optionsContainer.appendChild(retryBtn);
       return;
     }
 
