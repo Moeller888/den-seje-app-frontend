@@ -940,11 +940,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (question.step === "no_questions") {
-      questionElement.textContent = "🎉 Du har ingen flere spørgsmål lige nu";
+      uiState = "IDLE"; // unblock state machine so retry button can re-enter LOADING_QUESTION
       questionElement.dataset.state = "empty";
-      optionsContainer.innerHTML = "";
       feedback.textContent = "";
       feedback.className = "";
+      optionsContainer.innerHTML = "";
+
+      if (activeDomains !== null) {
+        const domainNames = activeDomains.map(d => DOMAIN_LABEL[d] ?? d).join(", ");
+        questionElement.textContent = "Du har ingen flere spørgsmål i det tildelte emne.";
+        const sub = document.createElement("p");
+        sub.id = "no-questions-sub";
+        sub.textContent = "Spørg din lærer om at tildele flere emner.  ·  Tildelt: " + domainNames;
+        optionsContainer.appendChild(sub);
+      } else {
+        questionElement.textContent = "🎉 Du har ingen flere spørgsmål lige nu";
+      }
+
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
+
+      const retryBtn = document.createElement("button");
+      retryBtn.id = "retry-question-btn";
+      retryBtn.textContent = "Prøv igen";
+      retryBtn.className = "submit-btn";
+      retryBtn.onclick = () => { loadAndRenderQuestion(); };
+      optionsContainer.appendChild(retryBtn);
+
       return;
     }
 
