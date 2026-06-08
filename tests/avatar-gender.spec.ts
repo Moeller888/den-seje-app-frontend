@@ -1,5 +1,6 @@
-// Section 143: Avatar gender selection tests.
+// Sections 143 + 144: Avatar gender selection and rendering tests.
 // Verifies the gender panel on avatar.html — render, select, persist.
+// Section 144 adds data-gender assertions on #avatarWrap (drives CSS background tint).
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -90,6 +91,9 @@ test("2. Student can select Dreng", async ({ page, browserName }) => {
   // Others must not be active.
   await expect(page.locator(".gender-btn[data-gender='girl']")).not.toHaveClass(/active/);
   await expect(page.locator(".gender-btn[data-gender='neutral']")).not.toHaveClass(/active/);
+
+  // Rendering: avatarWrap must carry data-gender="boy" (drives blue CSS tint).
+  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "boy");
 });
 
 test("3. Student can select Pige", async ({ page, browserName }) => {
@@ -107,6 +111,9 @@ test("3. Student can select Pige", async ({ page, browserName }) => {
   await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveClass(/active/);
   await expect(page.locator(".gender-btn[data-gender='boy']")).not.toHaveClass(/active/);
   await expect(page.locator(".gender-btn[data-gender='neutral']")).not.toHaveClass(/active/);
+
+  // Rendering: avatarWrap must carry data-gender="girl" (drives rose CSS tint).
+  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "girl");
 });
 
 test("4. Student can select Neutral", async ({ page, browserName }) => {
@@ -129,6 +136,9 @@ test("4. Student can select Neutral", async ({ page, browserName }) => {
   );
   await expect(page.locator(".gender-btn[data-gender='neutral']")).toHaveClass(/active/);
   await expect(page.locator(".gender-btn[data-gender='boy']")).not.toHaveClass(/active/);
+
+  // Rendering: avatarWrap must carry data-gender="neutral" (no tint override).
+  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "neutral");
 });
 
 test("5. Selection persists after page refresh", async ({ page, browserName }) => {
@@ -151,6 +161,9 @@ test("5. Selection persists after page refresh", async ({ page, browserName }) =
     "aria-pressed",
     "true"
   );
+
+  // Rendering: data-gender persists on avatarWrap after reload.
+  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "girl");
 });
 
 test("6. Existing avatar menu still works after gender panel added", async ({
