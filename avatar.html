@@ -559,6 +559,52 @@
       font-style: italic;
       padding: 4px 0;
     }
+
+    /* ── Gender panel ────────────────────────────────── */
+
+    .gender-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 18px;
+    }
+
+    .gender-panel .panel-title {
+      margin-bottom: 12px;
+    }
+
+    .gender-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .gender-btn {
+      padding: 6px 18px;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--border-btn);
+      background: var(--btn-bg);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: opacity 0.1s, box-shadow 0.12s;
+      font-family: inherit;
+    }
+
+    .gender-btn:hover:not(:disabled) { opacity: 0.82; }
+    .gender-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .gender-btn.active {
+      box-shadow: inset 0 0 0 2px var(--success-text);
+      color: var(--success-text);
+    }
+
+    .gender-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body>
@@ -602,6 +648,12 @@
   <div class="panel-title">Titler</div>
   <div class="titles-grid" id="titlesGrid"></div>
   <p class="titles-empty" id="titlesEmpty" style="display:none">Ingen titler optjent endnu.</p>
+</div>
+
+<!-- Gender panel -->
+<div class="gender-panel" id="genderPanel">
+  <div class="panel-title">Køn</div>
+  <div class="gender-buttons" id="genderButtons"></div>
 </div>
 
 <script type="module">
@@ -663,6 +715,7 @@ let ownedItems    = [];  // shop_item rows for all owned items
 let activeTitleId  = null;
 let ownedTitleIds  = new Set();
 let allTitles      = [];
+let avatarGender   = 'neutral';
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -679,12 +732,13 @@ async function loadAll() {
   // Equipped slots + active title from profiles
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("equipped_slots, active_title")
+    .select("equipped_slots, active_title, avatar_gender")
     .eq("id", userId)
     .maybeSingle();
 
   equippedSlots = profileData?.equipped_slots ?? {};
   activeTitleId = profileData?.active_title ?? null;
+  avatarGender  = profileData?.avatar_gender ?? 'neutral';
 
   // Titles catalog + ownership in parallel
   const [titlesResult, userTitlesResult] = await Promise.all([
@@ -766,6 +820,7 @@ function renderAll(animate = false) {
   renderSlotList();
   renderInventory();
   renderTitles();
+  renderGender();
 }
 
 function renderAvatar(animate = false) {
@@ -941,6 +996,24 @@ function renderTitles() {
   });
 }
 
+function renderGender() {
+  const container = document.getElementById("genderButtons");
+  if (!container) return;
+
+  const options = [
+    { value: "boy",     label: "Dreng" },
+    { value: "girl",    label: "Pige" },
+    { value: "neutral", label: "Neutral" },
+  ];
+
+  container.innerHTML = options.map(opt => {
+    const isActive = avatarGender === opt.value;
+    return `<button class="gender-btn${isActive ? ' active' : ''}"
+                    data-gender="${opt.value}"
+                    aria-pressed="${isActive}">${opt.label}</button>`;
+  }).join("");
+}
+
 // ── Equip / Unequip ───────────────────────────────────────────────────────────
 
 document.getElementById("inventoryGrid").addEventListener("click", async (e) => {
@@ -959,6 +1032,14 @@ document.getElementById("inventoryGrid").addEventListener("click", async (e) => 
     unequipBtn.textContent = "...";
     await handleUnequip(unequipBtn.dataset.slot);
   }
+});
+
+document.getElementById("genderButtons").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".gender-btn[data-gender]");
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  await handleSetGender(btn.dataset.gender);
+  btn.disabled = false;
 });
 
 document.getElementById("titlesGrid").addEventListener("click", async (e) => {
@@ -1011,6 +1092,22 @@ async function handleUnequip(slot) {
   playSound("unequip");
   emit("item:unequipped", { slot });
   renderAll(true);
+}
+
+async function handleSetGender(gender) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_gender: gender })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("SET GENDER ERROR:", error);
+    showToast("Kunne ikke gemme køn – prøv igen", "error");
+    return;
+  }
+
+  avatarGender = gender;
+  renderGender();
 }
 
 async function handleEquipTitle(titleId) {
