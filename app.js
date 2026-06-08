@@ -523,20 +523,48 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function showGradeSelector() {
     return new Promise((resolve) => {
-      const overlay = document.getElementById("grade-selector-overlay");
+      const overlay  = document.getElementById("grade-selector-overlay");
+      const statusEl = document.getElementById("grade-status");
       if (!overlay) { resolve(); return; }
       overlay.style.display = "flex";
       const buttons = overlay.querySelectorAll(".grade-btn");
+
       buttons.forEach(btn => {
         btn.onclick = async () => {
           const grade = parseInt(btn.dataset.grade, 10);
           if (!grade) return;
+
           buttons.forEach(b => b.disabled = true);
+          if (statusEl) { statusEl.textContent = "Gemmer…"; statusEl.style.color = ""; }
+
+          // Race the RPC against an 8-second timeout so a hung network
+          // never leaves the buttons disabled indefinitely.
+          const rpcCall     = supabase.rpc("set_student_grade", { p_grade: grade });
+          const timeoutCall = new Promise(res =>
+            setTimeout(() => res({ error: new Error("timeout") }), 8000)
+          );
+
+          let rpcError = null;
           try {
-            await supabase.rpc("set_student_grade", { p_grade: grade });
+            const { error } = await Promise.race([rpcCall, timeoutCall]);
+            rpcError = error ?? null;
           } catch (e) {
-            logError("SET_GRADE_ERROR", e);
+            rpcError = e;
           }
+
+          if (rpcError) {
+            logError("SET_GRADE_ERROR", rpcError);
+            buttons.forEach(b => b.disabled = false);
+            if (statusEl) {
+              statusEl.style.color = "#ef4444";
+              statusEl.textContent = rpcError.message === "timeout"
+                ? "Netværket svarer ikke — prøv igen"
+                : "Kunne ikke gemme klassetrin — prøv igen";
+            }
+            return; // stay on overlay so student can retry
+          }
+
+          if (statusEl) statusEl.textContent = "";
           selectedGrade = grade;
           currentDifficultyBand = GRADE_START_BAND[grade] ?? 2;
           overlay.style.display = "none";
