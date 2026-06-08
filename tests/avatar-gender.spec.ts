@@ -190,7 +190,8 @@ test("6. Existing avatar menu still works after gender panel added", async ({
 
 async function openHubPage(page: any) {
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#avatarShowcase", { timeout: 15000 });
+  // Wait for at least one avatar image layer — signals renderProfileAvatar() ran.
+  await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
 
 test("7. hub.html loads avatar_gender and sets data-gender on avatarShowcase", async ({
