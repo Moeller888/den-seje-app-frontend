@@ -605,6 +605,12 @@
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
+
+    /* ── Gender-aware avatar background tints ───────── */
+    /* Overrides --avatar-inner/outer only within avatarWrap, so theme
+       globals are unaffected. neutral uses the theme default (no rule). */
+    #avatarWrap[data-gender="boy"]  { --avatar-inner: #b8d4f8; --avatar-outer: #0d2a5a; }
+    #avatarWrap[data-gender="girl"] { --avatar-inner: #f8b8d4; --avatar-outer: #5a0d2a; }
   </style>
 </head>
 <body>
@@ -997,6 +1003,9 @@ function renderTitles() {
 }
 
 function renderGender() {
+  const wrap = document.getElementById("avatarWrap");
+  if (wrap) wrap.dataset.gender = avatarGender;
+
   const container = document.getElementById("genderButtons");
   if (!container) return;
 
