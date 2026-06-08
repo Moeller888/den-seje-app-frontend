@@ -185,3 +185,86 @@ test("6. Existing avatar menu still works after gender panel added", async ({
   const imgCount = await page.locator("#avatar-preview img").count();
   expect(imgCount).toBeGreaterThanOrEqual(1);
 });
+
+// ── Section 145: hub.html gender rendering ────────────────────────────────────
+
+async function openHubPage(page: any) {
+  await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#avatarShowcase", { timeout: 15000 });
+}
+
+test("7. hub.html loads avatar_gender and sets data-gender on avatarShowcase", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  // Preset to 'boy' via admin so the load path is exercised.
+  await adminClient.from("profiles").update({ avatar_gender: "boy" }).eq("id", studentId);
+
+  await loginAsStudent(page);
+  await openHubPage(page);
+
+  await expect(page.locator("#avatarShowcase")).toHaveAttribute("data-gender", "boy");
+});
+
+test("8. boy gender applies data-gender='boy' on hub avatarShowcase", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  await adminClient.from("profiles").update({ avatar_gender: "boy" }).eq("id", studentId);
+
+  await loginAsStudent(page);
+  await openHubPage(page);
+
+  await expect(page.locator("#avatarShowcase")).toHaveAttribute("data-gender", "boy");
+});
+
+test("9. girl gender applies data-gender='girl' on hub avatarShowcase", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  await adminClient.from("profiles").update({ avatar_gender: "girl" }).eq("id", studentId);
+
+  await loginAsStudent(page);
+  await openHubPage(page);
+
+  await expect(page.locator("#avatarShowcase")).toHaveAttribute("data-gender", "girl");
+});
+
+test("10. neutral gender applies data-gender='neutral' on hub avatarShowcase", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  await adminClient.from("profiles").update({ avatar_gender: "neutral" }).eq("id", studentId);
+
+  await loginAsStudent(page);
+  await openHubPage(page);
+
+  await expect(page.locator("#avatarShowcase")).toHaveAttribute("data-gender", "neutral");
+});
+
+test("11. hub page renders avatar and profile card normally", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  await loginAsStudent(page);
+  await openHubPage(page);
+
+  // Avatar showcase present and has at least one image layer.
+  await expect(page.locator("#avatarShowcase")).toBeAttached();
+  const imgCount = await page.locator("#profileAvatar img").count();
+  expect(imgCount).toBeGreaterThanOrEqual(1);
+
+  // avatarShowcase carries some data-gender value (not empty/missing).
+  const gender = await page.locator("#avatarShowcase").getAttribute("data-gender");
+  expect(["boy", "girl", "neutral"]).toContain(gender);
+});
