@@ -116,7 +116,7 @@ test("2. Today count matches DB count for active student", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "Test Elev Auto" });
+    .filter({ hasText: "student-teacher-test" });
   await expect(row).toBeVisible({ timeout: 5000 });
 
   // Column 2 (index 2) = "I dag" count
@@ -145,7 +145,7 @@ test("3. Student with no activity shows zero counts and 'Aldrig'", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "Test Elev Auto" });
+    .filter({ hasText: "student-teacher-test" });
   await expect(row).toBeVisible({ timeout: 5000 });
 
   const todayText  = await row.locator("td").nth(2).textContent();
@@ -180,7 +180,7 @@ test("4. Last-active shows recent time for just-active student", async ({
 
   const row = page
     .locator("#engagement-table tbody tr")
-    .filter({ hasText: "Test Elev Auto" });
+    .filter({ hasText: "student-teacher-test" });
   const lastActiveText = await row.locator("td").nth(4).textContent();
 
   // Must show something meaning "very recently" — not "Aldrig" or a date in the past
