@@ -92,6 +92,10 @@
       box-shadow: 0 0 0 2px rgba(25,118,210,0.45), 0 0 10px rgba(25,118,210,0.12);
     }
 
+    /* ── Gender-aware avatar background tints (mirrors avatar.html) ── */
+    .avatar-showcase[data-gender="boy"]  { --avatar-inner: #b8d4f8; --avatar-outer: #0d2a5a; }
+    .avatar-showcase[data-gender="girl"] { --avatar-inner: #f8b8d4; --avatar-outer: #5a0d2a; }
+
     .profile-avatar-layer {
       position: absolute;
       top: 0; left: 0;
@@ -1306,7 +1310,7 @@
     weeklyQuestsResult,
     weeklyQuestProgressResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("equipped_slots, active_theme, active_title").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("equipped_slots, active_theme, active_title, avatar_gender").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
@@ -1328,6 +1332,7 @@
 
   const equippedSlots = profileResult.data?.equipped_slots ?? {};
   const activeThemeId = profileResult.data?.active_theme ?? "default";
+  const avatarGender  = profileResult.data?.avatar_gender ?? 'neutral';
 
   // ── Parse progression ─────────────────────────────────────────────────────────
 
@@ -1493,6 +1498,8 @@
 
     // Rarity aura + border on showcase wrapper
     showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";
+    // Gender-aware background tint (mirrors avatar.html)
+    showcaseEl.dataset.gender = avatarGender;
   }
 
   // ── Identity rendering ────────────────────────────────────────────────────────
