@@ -248,23 +248,17 @@ serve(async (req) => {
       }
     }
 
-    // 🔥 2. NEW QUESTIONS — grade-filtered, domain-filtered, wave+band aware sorting
-    let newQuestionsQuery = supabase
-      .from("questions")
-      .select("id, content, answer_format, answer_type, metadata, difficulty_band")
-      .eq("is_active", true);
-
-    // Apply grade filter: target_grade <= selectedGrade, or NULL (unclassified)
-    if (selectedGrade !== null) {
-      newQuestionsQuery = newQuestionsQuery.or(`target_grade.lte.${selectedGrade},target_grade.is.null`);
-    }
-
-    // Apply domain filter: if teacher assigned specific domains, restrict to those only
-    if (activeDomains !== null) {
-      newQuestionsQuery = newQuestionsQuery.in("learning_objective", activeDomains);
-    }
-
-    const { data: questions, error: questionError } = await newQuestionsQuery.limit(50);
+    // 🔥 2. NEW QUESTIONS — unserved only, grade-filtered, domain-filtered
+    // get_unserved_questions excludes questions already instanced for the student
+    // via a server-side NOT EXISTS subquery, eliminating the silent insert-failure
+    // loop that caused no_questions when the limit(50) batch was exhausted.
+    const { data: questions, error: questionError } = await supabase.rpc(
+      "get_unserved_questions",
+      {
+        p_grade:   selectedGrade,
+        p_domains: activeDomains,
+      }
+    );
 
     if (questionError) throw questionError;
 
