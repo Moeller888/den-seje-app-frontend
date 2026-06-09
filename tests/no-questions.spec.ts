@@ -32,11 +32,27 @@ test.beforeAll(async () => {
 
   studentId = user.id;
 
-  const { data: questions, error: qError } = await supabase
-    .from('questions')
-    .select('id');
+  // PostgREST enforces a server-side max_rows cap that client .limit() cannot exceed.
+  // Paginate in 1000-row pages so every question gets an instance regardless of total count.
+  const allIds: { id: string }[] = [];
+  let pageStart = 0;
+  const PAGE_SIZE = 1000;
 
-  if (qError || !questions || questions.length === 0) {
+  while (true) {
+    const { data: page, error: pageErr } = await supabase
+      .from('questions')
+      .select('id')
+      .range(pageStart, pageStart + PAGE_SIZE - 1);
+
+    if (pageErr) throw new Error(`no-questions setup: questions fetch failed — ${pageErr.message}`);
+    if (!page || page.length === 0) break;
+
+    allIds.push(...page);
+    if (page.length < PAGE_SIZE) break;
+    pageStart += PAGE_SIZE;
+  }
+
+  if (allIds.length === 0) {
     throw new Error('No questions in DB');
   }
 
@@ -45,7 +61,7 @@ test.beforeAll(async () => {
     .delete()
     .eq('student_id', studentId);
 
-  const instances = questions.map(q => ({
+  const instances = allIds.map(q => ({
     student_id: studentId,
     question_id: q.id,
     answered: true,
