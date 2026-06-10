@@ -17,6 +17,10 @@ const PROD           = 'https://den-seje-app-frontend.vercel.app';
 const STUDENT_EMAIL  = 'christnmoeller@hotmail.com';
 const STUDENT_PASS   = 'Cmiciquru5';
 
+// Edge Function cold starts can take up to ~18s; Firefox adds ~20-50% overhead.
+// 30s gives adequate margin without masking genuine hangs.
+const QUESTION_READY_TIMEOUT = 30_000;
+
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;
 
@@ -50,7 +54,7 @@ async function completePlacementFlow(page: any): Promise<void> {
   }
   // Overlay hides after savePlacementBand + 1100ms delay.
   await page.waitForSelector('#placement-overlay', { state: 'hidden', timeout: 15000 });
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 }
 
 // Answer one quiz question and wait for the NEXT question to be ready.
@@ -125,6 +129,9 @@ test('1. Placement overlay appears for unplaced grade-7 student', async ({ page 
 });
 
 test('2. Placement completes and saves placement_band to DB', async ({ page }) => {
+  // placement flow + question load in Firefox requires more than the 30s default.
+  test.setTimeout(60_000);
+
   // placement_band is still null (test 1 did not complete the flow)
   await loginStudent(page);
   await page.waitForSelector('#placement-overlay', { state: 'visible', timeout: 15000 });
@@ -146,9 +153,12 @@ test('2. Placement completes and saves placement_band to DB', async ({ page }) =
 });
 
 test('3. Second login skips placement (placement_band already set)', async ({ page }) => {
+  // login + question load in Firefox requires more than the 30s default.
+  test.setTimeout(60_000);
+
   // placement_band was saved by test 2 — placement must NOT retrigger
   await loginStudent(page);
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
   const overlay = page.locator('#placement-overlay');
   // Overlay should never become visible when placement_band is already set
@@ -164,7 +174,7 @@ test('4. 10 answered questions triggers current_band persistence', async ({ page
   await adminClient.from('profiles').update({ current_band: null }).eq('id', studentId);
 
   await loginStudent(page);
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
   // Answer 10 questions — persistCurrentBand() fires after the 10th.
   for (let i = 0; i < 10; i++) {
@@ -186,11 +196,14 @@ test('4. 10 answered questions triggers current_band persistence', async ({ page
 });
 
 test('5. Third login uses current_band and skips placement', async ({ page }) => {
+  // login + question load in Firefox requires more than the 30s default.
+  test.setTimeout(60_000);
+
   // Primary assertion: quiz loads directly — no placement overlay.
   // This holds whether the startup band comes from current_band or placement_band,
   // as long as at least one is set (placement_band was set by test 2).
   await loginStudent(page);
-  await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });
+  await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
   await expect(page.locator('#placement-overlay')).not.toBeVisible();
 
   // DB check: verify both bands persisted by this point
