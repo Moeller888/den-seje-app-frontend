@@ -37,6 +37,8 @@ let studentClient: ReturnType<typeof createClient>;
 let adminClient:   ReturnType<typeof createClient>;
 
 test.beforeAll(async () => {
+  // Pristine anon client — must NEVER sign in (a signIn would store the
+  // session in-memory and silently authenticate later anon assertions).
   anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -45,7 +47,11 @@ test.beforeAll(async () => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: session, error } = await anonClient.auth.signInWithPassword({
+  // Separate throwaway client for the student sign-in.
+  const loginClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: session, error } = await loginClient.auth.signInWithPassword({
     email: STUDENT_EMAIL,
     password: STUDENT_PASSWORD,
   });

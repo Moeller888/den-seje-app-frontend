@@ -697,7 +697,7 @@ import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
-  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC,
+  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC, baseSrcFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
 } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -752,6 +752,7 @@ let activeTitleId  = null;
 let ownedTitleIds  = new Set();
 let allTitles      = [];
 let avatarGender   = 'neutral';
+let avatarIdentity = null;   // Section 152A — profiles.avatar_identity (v1 shape or '{}')
 
 // Avatar life engines (Section 151A) — same engines as the quiz page
 let exprEngine     = null;
@@ -774,13 +775,14 @@ async function loadAll() {
   // Equipped slots + active title from profiles
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("equipped_slots, active_title, avatar_gender")
+    .select("equipped_slots, active_title, avatar_gender, avatar_identity")
     .eq("id", userId)
     .maybeSingle();
 
-  equippedSlots = profileData?.equipped_slots ?? {};
-  activeTitleId = profileData?.active_title ?? null;
-  avatarGender  = profileData?.avatar_gender ?? 'neutral';
+  equippedSlots  = profileData?.equipped_slots ?? {};
+  activeTitleId  = profileData?.active_title ?? null;
+  avatarGender   = profileData?.avatar_gender ?? 'neutral';
+  avatarIdentity = profileData?.avatar_identity ?? null;
 
   // Titles catalog + ownership in parallel
   const [titlesResult, userTitlesResult] = await Promise.all([
@@ -879,7 +881,9 @@ function renderAvatar(animate = false) {
 
   // Collect all layers, sort by z ascending, insert in that order so DOM
   // paint order matches z-order (back items before body before front items)
-  const layers = [{ src: BASE_SRC, z: 0, alt: "", anim: false, isBase: true }];
+  // Section 152A: base resolved per identity (resolves to the shared base
+  // until 152C ships body variants — no visual change today)
+  const layers = [{ src: baseSrcFor(avatarIdentity), z: 0, alt: "", anim: false, isBase: true }];
 
   ALL_SLOTS.forEach(slot => {
     const itemId = equippedSlots[slot];

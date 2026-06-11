@@ -59,3 +59,21 @@ export const RARITY_SORT_ORDER = { legendary: 0, rare: 1, uncommon: 2, common: 3
 
 // Base body SVG — always rendered at z=0, never replaced by equipment
 export const BASE_SRC = "/assets/avatar/base/body.svg";
+
+// ── Avatar identity (Section 152A) ────────────────────────────────────────────
+// profiles.avatar_identity shape v1:
+//   { v: 1, body_type: 'male'|'female'|'neutral', chosen_at: timestamptz|null }
+// Written only via the set_avatar_identity RPC; shape enforced by DB trigger.
+
+export const BODY_TYPES = ["male", "female", "neutral"];
+
+// Resolves the base body SVG for an identity. Defensive: null, '{}', garbage,
+// or unknown body_type all resolve to the neutral base — a broken identity can
+// never produce a broken avatar.
+// Section 152A: every body type resolves to the shared base (no visual change).
+// Section 152C swaps per-body-type files HERE — the single switch point.
+export function baseSrcFor(identity) {
+  const bodyType = (identity && typeof identity === "object") ? identity.body_type : null;
+  if (!BODY_TYPES.includes(bodyType)) return BASE_SRC;
+  return BASE_SRC;
+}

@@ -1232,7 +1232,7 @@
   import { getXPProgressInLevel } from "./js/progression.js";
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
-  import { ALL_SLOTS, SLOT_Z, BASE_SRC, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
+  import { ALL_SLOTS, SLOT_Z, BASE_SRC, baseSrcFor, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
   import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -1338,7 +1338,7 @@
     weeklyQuestsResult,
     weeklyQuestProgressResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("equipped_slots, active_theme, active_title, avatar_gender").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("equipped_slots, active_theme, active_title, avatar_gender, avatar_identity").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
@@ -1358,9 +1358,10 @@
 
   // ── Parse profile ─────────────────────────────────────────────────────────────
 
-  const equippedSlots = profileResult.data?.equipped_slots ?? {};
-  const activeThemeId = profileResult.data?.active_theme ?? "default";
-  const avatarGender  = profileResult.data?.avatar_gender ?? 'neutral';
+  const equippedSlots  = profileResult.data?.equipped_slots ?? {};
+  const activeThemeId  = profileResult.data?.active_theme ?? "default";
+  const avatarGender   = profileResult.data?.avatar_gender ?? 'neutral';
+  const avatarIdentity = profileResult.data?.avatar_identity ?? null;   // Section 152A
 
   // ── Parse progression ─────────────────────────────────────────────────────────
 
@@ -1547,7 +1548,8 @@
 
     // Collect all layers, sort by z ascending, insert in that order so DOM
     // paint order matches z-order (back items before body before front items)
-    const layers = [{ src: BASE_SRC, z: 0 }];
+    // Section 152A: base resolved per identity (same file until 152C)
+    const layers = [{ src: baseSrcFor(avatarIdentity), z: 0 }];
 
     ALL_SLOTS.forEach(slot => {
       const itemId = equippedSlots[slot];

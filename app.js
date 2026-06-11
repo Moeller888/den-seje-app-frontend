@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, BASE_SRC } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, BASE_SRC, baseSrcFor } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -467,12 +467,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     base.alt = "";
     avatarDisplay.appendChild(base);
 
-    // Load equipped slots from profiles
+    // Load equipped slots + identity from profiles
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("equipped_slots")
+      .select("equipped_slots, avatar_identity")
       .eq("id", studentId)
       .maybeSingle();
+
+    // Section 152A: resolve the base per identity once the profile is loaded.
+    // baseSrcFor() resolves to the shared base until 152C — no-op today, so the
+    // instant render above stays correct.
+    base.src = baseSrcFor(profileData?.avatar_identity ?? null);
 
     const equippedSlots = profileData?.equipped_slots ?? {};
     const equippedIds = Object.values(equippedSlots).filter(Boolean);
