@@ -25,6 +25,8 @@ const RELATIONAL_DELAY_MS = {
   EQUIP_RARE:         55,
   EQUIP_LEGENDARY:    80,  // legendary gets the level-up beat — let the moment land
   UNEQUIP:            35,  // quick curious turn — exploration, not loss
+  REWARD_CLAIMED:     60,  // Section 151B — reward moments share the CORRECT beat
+  WELCOME_BACK:       40,  // quick curious turn — noticing the student's return
 };
 
 // ── Priority Levels ────────────────────────────────────────────────────────────
@@ -60,6 +62,14 @@ const EQUIP_EVENTS = {
   EQUIP_UNCOMMON: { expr: "proud",   hold_ms: 1800 },
   EQUIP_RARE:     { expr: "proud",   hold_ms: 2400 },
   UNEQUIP:        { expr: "curious", hold_ms: 1200 },
+};
+
+// ── Moment Events (Section 151B) ───────────────────────────────────────────────
+// Hub reward moments: quest/daily-reward claims and the student returning to
+// the tab. Achievement unlocks use the existing ACHIEVEMENT_UNLOCK critical.
+const MOMENT_EVENTS = {
+  REWARD_CLAIMED: { expr: "proud",   hold_ms: 2200 },
+  WELCOME_BACK:   { expr: "curious", hold_ms: 1600 },
 };
 
 // ── UI State → Expression Mapping ─────────────────────────────────────────────
@@ -126,6 +136,11 @@ export class ExpressionEngine {
     }
     if (EQUIP_EVENTS[eventName]) {
       const cfg = EQUIP_EVENTS[eventName];
+      this._triggerEvent(cfg.expr, cfg.hold_ms, PRIORITY.EVENT);
+      return;
+    }
+    if (MOMENT_EVENTS[eventName]) {
+      const cfg = MOMENT_EVENTS[eventName];
       this._triggerEvent(cfg.expr, cfg.hold_ms, PRIORITY.EVENT);
       return;
     }

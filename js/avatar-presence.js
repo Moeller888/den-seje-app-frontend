@@ -133,6 +133,8 @@ export const RELATIONAL_TIMING = {
     EQUIP_RARE:         60,
     EQUIP_LEGENDARY:    90,   // legendary gets the level-up beat
     UNEQUIP:            40,   // quick curious turn
+    REWARD_CLAIMED:     60,   // Section 151B — reward moments share the CORRECT beat
+    WELCOME_BACK:       40,   // quick curious turn on return
   },
   anticipation: {
     amplitude_y:     0.35,  // near-still — held breath (vs focused 0.7px)

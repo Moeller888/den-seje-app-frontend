@@ -41,6 +41,9 @@ const EVENT_BREATHING = {
   EQUIP_RARE:         { profile: 'proud',      hold_ms: 2400 },
   EQUIP_LEGENDARY:    { profile: 'proud',      hold_ms: 3000 },
   UNEQUIP:            { profile: 'curious',    hold_ms: 1200 },
+  // Section 151B — hub reward moments: holds match expression engine MOMENT_EVENTS
+  REWARD_CLAIMED:     { profile: 'proud',      hold_ms: 2200 },
+  WELCOME_BACK:       { profile: 'curious',    hold_ms: 1600 },
 };
 
 // ── PresenceEngine ────────────────────────────────────────────────────────────

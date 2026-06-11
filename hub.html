@@ -82,6 +82,31 @@
       overflow: visible;
       box-shadow: var(--avatar-ambient);
       transition: box-shadow 0.3s;
+      /* Section 151B: idle breathing — amplitude/rate driven by PresenceEngine
+         CSS custom properties (same contract as quiz page and avatar.html) */
+      animation: avatarBreathe 3.5s linear infinite;
+    }
+
+    @keyframes avatarBreathe {
+      0%   { transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      38%  { transform: translateY(var(--breathe-shift, -1px)) scale(var(--breathe-scale, 1.006)); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* Engine-injected layers (Section 151B) — the ExpressionEngine inserts its
+       overlay with this class. Same geometry as .profile-avatar-layer so the
+       expression aligns 1:1 with the base body SVG. */
+    .quiz-avatar-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .profile-avatar { animation: none; }
+      #avatar-blink-layer { display: none; }
     }
 
     .avatar-showcase[data-rarity="legendary"] .profile-avatar {
@@ -1208,6 +1233,9 @@
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
   import { ALL_SLOTS, SLOT_Z, BASE_SRC, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
+  import { ExpressionEngine } from "./js/avatar-expression-engine.js";
+  import { PresenceEngine }   from "./js/avatar-presence-engine.js";
+  import { BlinkEngine }      from "./js/avatar-blink-engine.js";
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -1464,6 +1492,50 @@
     return null;
   }
 
+  // ── Avatar life engines (Section 151B) ────────────────────────────────────────
+  // Same engines as the quiz page and avatar.html — expression, breathing, blink.
+  // Non-fatal: any engine failure leaves the hub fully functional.
+
+  let exprEngine     = null;
+  let presenceEngine = null;
+  let blinkEngine    = null;
+  let reactionTimer  = null;
+
+  function initAvatarLifeEngines() {
+    const avatarEl = document.getElementById("profileAvatar");
+    if (!avatarEl) return;
+    // Only init once the base body layer is rendered — if the avatar never
+    // rendered, the hub stays static (no floating expression overlay).
+    if (!avatarEl.querySelector("img.profile-avatar-layer")) return;
+
+    try { exprEngine     = new ExpressionEngine(avatarEl); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
+    try { presenceEngine = new PresenceEngine(avatarEl);   } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
+    try { blinkEngine    = new BlinkEngine(avatarEl);      } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+  }
+
+  // How long the reaction state stays observable on #avatarShowcase (matches the
+  // expression engine hold durations for each event).
+  const REACTION_HOLD_MS = {
+    "achievement":  3200,
+    "reward":       2200,
+    "welcome-back": 1600,
+  };
+
+  function triggerAvatarReaction(reaction, engineEvent) {
+    exprEngine?.onGameEvent(engineEvent);
+    presenceEngine?.onGameEvent(engineEvent);
+
+    // Reaction state on the showcase — observable for tests and future CSS hooks.
+    const showcase = document.getElementById("avatarShowcase");
+    if (!showcase) return;
+    if (reactionTimer) { clearTimeout(reactionTimer); reactionTimer = null; }
+    showcase.dataset.avatarReaction = reaction;
+    reactionTimer = setTimeout(() => {
+      reactionTimer = null;
+      delete showcase.dataset.avatarReaction;
+    }, REACTION_HOLD_MS[reaction] ?? 2200);
+  }
+
   // ── Profile avatar rendering ──────────────────────────────────────────────────
 
   function renderProfileAvatar() {
@@ -1676,6 +1748,12 @@
     }
   }
 
+  // Section 151B: reaction queued by a successful daily claim, fired when the
+  // reward modal is dismissed — the avatar is occluded while the modal is open.
+  // Streak milestones (3/7/14/30 days) upgrade the reaction to achievement weight.
+  const STREAK_MILESTONES = [3, 7, 14, 30];
+  let pendingDailyRewardReaction = null;
+
   // Auto-claim daily reward (idempotent — safe to call on every page load)
   async function claimDailyReward() {
     const { data, error } = await supabase.rpc("claim_daily_reward");
@@ -1684,6 +1762,10 @@
 
     const claimedCoins  = data.coins  ?? 0;
     const claimedStreak = data.streak ?? 0;
+
+    pendingDailyRewardReaction = STREAK_MILESTONES.includes(claimedStreak)
+      ? "achievement"
+      : "reward";
 
     // Show modal
     const overlay = document.getElementById("dailyRewardOverlay");
@@ -1840,6 +1922,9 @@
 
       btnEl.textContent = "✓ Hentet";
       btnEl.disabled = true;
+
+      // Section 151B: avatar reacts after the claim has fully completed
+      triggerAvatarReaction("reward", "REWARD_CLAIMED");
     } else {
       showToast("Målet er ikke fuldført endnu", "info");
       btnEl.disabled = false;
@@ -1935,6 +2020,9 @@
 
       btnEl.textContent = "✓ Hentet";
       btnEl.disabled = true;
+
+      // Section 151B: avatar reacts after the claim has fully completed
+      triggerAvatarReaction("reward", "REWARD_CLAIMED");
     } else {
       showToast("Målet er ikke fuldført endnu", "info");
       btnEl.disabled = false;
@@ -2072,6 +2160,10 @@
           : "Præstation opnået: " + def.label + " " + def.icon;
         showToast(toastMsg, toastTypeForRarity(rarity), toastDurationForRarity(rarity));
         playSoundForRarity(rarity);
+
+        // Section 151B: the avatar shares the moment — critical proud hold.
+        // Re-triggering per staggered toast extends pride across the sequence.
+        triggerAvatarReaction("achievement", "ACHIEVEMENT_UNLOCK");
 
         // Update local earned set and re-render the affected badge live.
         earnedAchievementIds.add(id);
@@ -2254,6 +2346,7 @@
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   renderProfileAvatar();
+  initAvatarLifeEngines();
   renderIdentity();
   renderCollection();
   renderDailyRewardCard(alreadyClaimedToday);
@@ -2276,8 +2369,33 @@
         overlay.classList.remove("visible");
         overlay.setAttribute("aria-hidden", "true");
       }
+
+      // Section 151B: fire the queued daily-reward reaction now that the
+      // avatar is visible again. Milestone streaks carry achievement weight.
+      if (pendingDailyRewardReaction !== null) {
+        const reaction = pendingDailyRewardReaction;
+        pendingDailyRewardReaction = null;
+        triggerAvatarReaction(
+          reaction,
+          reaction === "achievement" ? "ACHIEVEMENT_UNLOCK" : "REWARD_CLAIMED"
+        );
+      }
     });
   }
+
+  // Section 151B: welcome-back — the avatar notices the student returning to
+  // the tab after a real absence (>= 30s hidden). Curious, never demanding.
+  let hiddenSince = null;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      hiddenSince = Date.now();
+      return;
+    }
+    if (hiddenSince !== null && Date.now() - hiddenSince >= 30000) {
+      triggerAvatarReaction("welcome-back", "WELCOME_BACK");
+    }
+    hiddenSince = null;
+  });
 
   // Achievement panel: keyboard navigation (Enter / Space → open page)
   const achPanel = document.querySelector(".achievement-panel");
