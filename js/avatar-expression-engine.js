@@ -20,6 +20,11 @@ const RELATIONAL_DELAY_MS = {
   INCORRECT:          35,  // shorter — resilience arrives quickly, never withheld
   LEVEL_UP:           80,  // significant beat for a significant moment
   ACHIEVEMENT_UNLOCK: 80,  // same weight as level-up
+  EQUIP_COMMON:       55,  // Section 151A — equip reactions share the CORRECT beat
+  EQUIP_UNCOMMON:     55,
+  EQUIP_RARE:         55,
+  EQUIP_LEGENDARY:    80,  // legendary gets the level-up beat — let the moment land
+  UNEQUIP:            35,  // quick curious turn — exploration, not loss
 };
 
 // ── Priority Levels ────────────────────────────────────────────────────────────
@@ -44,6 +49,17 @@ const CONFIGS = {
 const CRITICAL_EVENTS = {
   LEVEL_UP:           { expr: "proud", hold_ms: 3000, fade_ms: 280 },
   ACHIEVEMENT_UNLOCK: { expr: "proud", hold_ms: 3200, fade_ms: 280 },
+  EQUIP_LEGENDARY:    { expr: "proud", hold_ms: 3000, fade_ms: 280 },  // Section 151A — proud-critical
+};
+
+// ── Equip Events (Section 151A) ────────────────────────────────────────────────
+// Graded by item rarity: better item → longer proud hold.
+// UNEQUIP is curious, never negative — removing an item is exploration, not loss.
+const EQUIP_EVENTS = {
+  EQUIP_COMMON:   { expr: "proud",   hold_ms: 1200 },
+  EQUIP_UNCOMMON: { expr: "proud",   hold_ms: 1800 },
+  EQUIP_RARE:     { expr: "proud",   hold_ms: 2400 },
+  UNEQUIP:        { expr: "curious", hold_ms: 1200 },
 };
 
 // ── UI State → Expression Mapping ─────────────────────────────────────────────
@@ -87,6 +103,7 @@ export class ExpressionEngine {
   }
 
   // Called for game events: "CORRECT" | "INCORRECT" | "LEVEL_UP" | "ACHIEVEMENT_UNLOCK"
+  // | "EQUIP_COMMON" | "EQUIP_UNCOMMON" | "EQUIP_RARE" | "EQUIP_LEGENDARY" | "UNEQUIP"
   onGameEvent(eventName) {
     // Relational delay — expression absorbs the moment before the emotion settles in.
     // The face and breathing body respond together with matching beat durations.
@@ -105,6 +122,11 @@ export class ExpressionEngine {
   _dispatchEvent(eventName) {
     if (CRITICAL_EVENTS[eventName]) {
       this._triggerCritical(eventName);
+      return;
+    }
+    if (EQUIP_EVENTS[eventName]) {
+      const cfg = EQUIP_EVENTS[eventName];
+      this._triggerEvent(cfg.expr, cfg.hold_ms, PRIORITY.EVENT);
       return;
     }
     if (eventName === "CORRECT") {

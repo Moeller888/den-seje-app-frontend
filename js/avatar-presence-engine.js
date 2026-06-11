@@ -35,6 +35,12 @@ const EVENT_BREATHING = {
   INCORRECT:          { profile: 'determined', hold_ms: INERTIA_DWELL_MS.determined },
   LEVEL_UP:           { profile: 'proud',      hold_ms: 3000 },
   ACHIEVEMENT_UNLOCK: { profile: 'proud',      hold_ms: 3200 },
+  // Section 151A — equip reactions: holds match expression engine equip configs
+  EQUIP_COMMON:       { profile: 'proud',      hold_ms: 1200 },
+  EQUIP_UNCOMMON:     { profile: 'proud',      hold_ms: 1800 },
+  EQUIP_RARE:         { profile: 'proud',      hold_ms: 2400 },
+  EQUIP_LEGENDARY:    { profile: 'proud',      hold_ms: 3000 },
+  UNEQUIP:            { profile: 'curious',    hold_ms: 1200 },
 };
 
 // ── PresenceEngine ────────────────────────────────────────────────────────────
@@ -82,6 +88,7 @@ export class PresenceEngine {
   }
 
   // Called for game events: "CORRECT" | "INCORRECT" | "LEVEL_UP" | "ACHIEVEMENT_UNLOCK"
+  // | "EQUIP_COMMON" | "EQUIP_UNCOMMON" | "EQUIP_RARE" | "EQUIP_LEGENDARY" | "UNEQUIP"
   onGameEvent(eventName) {
     const override = EVENT_BREATHING[eventName];
     if (!override) return;

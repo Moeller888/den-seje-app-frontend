@@ -128,6 +128,11 @@ export const RELATIONAL_TIMING = {
     INCORRECT:          40,   // shorter — steadying arrives fast, no delay on failure
     LEVEL_UP:           90,   // significant beat — let the moment land
     ACHIEVEMENT_UNLOCK: 90,   // same weight as level-up
+    EQUIP_COMMON:       60,   // Section 151A — equip shares the CORRECT beat
+    EQUIP_UNCOMMON:     60,
+    EQUIP_RARE:         60,
+    EQUIP_LEGENDARY:    90,   // legendary gets the level-up beat
+    UNEQUIP:            40,   // quick curious turn
   },
   anticipation: {
     amplitude_y:     0.35,  // near-still — held breath (vs focused 0.7px)

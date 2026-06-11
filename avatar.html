@@ -158,6 +158,19 @@
       pointer-events: none;
     }
 
+    /* Engine-injected layers (Section 151A) — the ExpressionEngine inserts its
+       overlay with this class (shared with the quiz page). Same geometry as
+       .avatar-layer so the expression aligns 1:1 with the base body SVG. */
+    .quiz-avatar-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
     /* Synergy active badge (shown under slot list) */
     .synergy-active-badge {
       width: 100%;
@@ -445,15 +458,21 @@
 
     .empty-state a { color: var(--info-text); }
 
-    /* ── Idle breathing — ultra-subtle, never demands attention ──── */
+    /* ── Idle breathing — ultra-subtle, never demands attention ────
+       Section 151A: amplitude/scale come from CSS custom properties so the
+       PresenceEngine can shift breathing with emotional state (same contract
+       as the quiz page). Fallbacks preserve the original -2px / 1.008 values. */
     @keyframes avatarBreathe {
-      0%   { transform: translateY(0)    scale(1);     animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-      38%  { transform: translateY(-2px) scale(1.008); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
-      100% { transform: translateY(0)    scale(1);     }
+      0%   { transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+      38%  { transform: translateY(var(--breathe-shift, -2px)) scale(var(--breathe-scale, 1.008)); animation-timing-function: cubic-bezier(0.15, 0, 0.25, 1); }
+      100% { transform: translateY(0) scale(1); }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .avatar-wrap { animation: none; }
+      #avatar-blink-layer { display: none; }
+      .legendary-pulse #avatar-preview,
+      .rare-pulse #avatar-preview { animation: none; }
     }
 
     /* ── Equip layer fade-in (animate=true path only) ─────── */
@@ -470,6 +489,14 @@
       100% { box-shadow: none; }
     }
     .legendary-pulse #avatar-preview { animation: legendaryPulse 600ms ease both; }
+
+    /* ── Rare equip — subtle aura response (Section 151A) ──── */
+    @keyframes rarePulse {
+      0%   { box-shadow: none; }
+      35%  { box-shadow: 0 0 0 6px rgba(25,118,210,0.28), 0 0 18px rgba(25,118,210,0.14); }
+      100% { box-shadow: none; }
+    }
+    .rare-pulse #avatar-preview { animation: rarePulse 500ms ease both; }
 
     /* ── Equipped item hover polish ───────────────────────── */
     .item-card.equipped:hover {
@@ -673,6 +700,9 @@ import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
 } from "./js/avatar-layers.js";
+import { ExpressionEngine } from "./js/avatar-expression-engine.js";
+import { PresenceEngine }   from "./js/avatar-presence-engine.js";
+import { BlinkEngine }      from "./js/avatar-blink-engine.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -722,6 +752,12 @@ let activeTitleId  = null;
 let ownedTitleIds  = new Set();
 let allTitles      = [];
 let avatarGender   = 'neutral';
+
+// Avatar life engines (Section 151A) — same engines as the quiz page
+let exprEngine     = null;
+let presenceEngine = null;
+let blinkEngine    = null;
+let reactionTimer  = null;
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -832,30 +868,48 @@ function renderAll(animate = false) {
 function renderAvatar(animate = false) {
   const preview = document.getElementById("avatar-preview");
   const wrap    = document.getElementById("avatarWrap");
+
+  // Section 151A: preserve engine-owned layers across re-renders.
+  // innerHTML reset detaches them; re-inserting the same elements keeps the
+  // engines' references valid — no engine re-init needed on equip changes.
+  const exprOverlay = preview.querySelector(".avatar-expr-overlay");
+  const blinkLayer  = preview.querySelector("#avatar-blink-layer");
+
   preview.innerHTML = "";
 
   // Collect all layers, sort by z ascending, insert in that order so DOM
   // paint order matches z-order (back items before body before front items)
-  const layers = [{ src: BASE_SRC, z: 0, alt: "", anim: false }];
+  const layers = [{ src: BASE_SRC, z: 0, alt: "", anim: false, isBase: true }];
 
   ALL_SLOTS.forEach(slot => {
     const itemId = equippedSlots[slot];
     if (!itemId) return;
     const item = ownedItems.find(i => i.id === itemId);
     if (!item || !item.image_url) return;
-    layers.push({ src: item.image_url, z: SLOT_Z[slot] ?? 1, alt: item.name ?? "", anim: animate });
+    layers.push({ src: item.image_url, z: SLOT_Z[slot] ?? 1, alt: item.name ?? "", anim: animate, isBase: false });
   });
 
   layers.sort((a, b) => a.z - b.z);
 
-  layers.forEach(({ src, z, alt, anim }) => {
+  let baseEl = null;
+  layers.forEach(({ src, z, alt, anim, isBase }) => {
     const img = document.createElement("img");
     img.className = anim ? "avatar-layer layer-fade-in" : "avatar-layer";
     img.src = src;
     img.style.zIndex = String(z);
     img.alt = alt;
     preview.appendChild(img);
+    if (isBase) baseEl = img;
   });
+
+  // Re-insert the expression overlay directly after the base body layer:
+  // equal z=0, later in DOM → paints above base, below cosmetics at z>=1.
+  if (exprOverlay) {
+    if (baseEl) baseEl.insertAdjacentElement("afterend", exprOverlay);
+    else preview.appendChild(exprOverlay);
+  }
+  // Blink layer carries inline z-index 5 — append last.
+  if (blinkLayer) preview.appendChild(blinkLayer);
 
   // Set highest rarity on wrap for CSS aura + border (P5)
   const highest = getHighestRarity() ?? "";
@@ -1023,6 +1077,67 @@ function renderGender() {
   }).join("");
 }
 
+// ── Avatar life engines (Section 151A) ────────────────────────────────────────
+// Same engines as the quiz page — expression, breathing, blink.
+// Non-fatal: any engine failure leaves the page fully functional.
+
+function initAvatarLifeEngines() {
+  const preview = document.getElementById("avatar-preview");
+  const wrap    = document.getElementById("avatarWrap");
+  if (!preview || !wrap) return;
+  // Only init once the base body layer is rendered — if loadAll() failed
+  // before renderAll(), the page stays static (no floating expression overlay).
+  if (!preview.querySelector("img.avatar-layer")) return;
+
+  try { exprEngine     = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
+  try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
+  try { blinkEngine    = new BlinkEngine(preview);      } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+}
+
+// Rarity → engine event mapping. Unknown/missing rarity falls back to common.
+const EQUIP_REACTION_EVENTS = {
+  common:    "EQUIP_COMMON",
+  uncommon:  "EQUIP_UNCOMMON",
+  rare:      "EQUIP_RARE",
+  legendary: "EQUIP_LEGENDARY",
+};
+
+// How long the reaction state stays observable on #avatarWrap (matches the
+// expression engine hold durations for each event).
+const REACTION_HOLD_MS = {
+  "equip-common":    1200,
+  "equip-uncommon":  1800,
+  "equip-rare":      2400,
+  "equip-legendary": 3000,
+  "unequip":         1200,
+};
+
+function triggerAvatarReaction(reaction, engineEvent) {
+  exprEngine?.onGameEvent(engineEvent);
+  presenceEngine?.onGameEvent(engineEvent);
+
+  // Reaction state on the wrap — drives nothing visually, but makes the
+  // reaction observable for tests and future CSS hooks.
+  const wrap = document.getElementById("avatarWrap");
+  if (!wrap) return;
+  if (reactionTimer) { clearTimeout(reactionTimer); reactionTimer = null; }
+  wrap.dataset.avatarReaction = reaction;
+  reactionTimer = setTimeout(() => {
+    reactionTimer = null;
+    delete wrap.dataset.avatarReaction;
+  }, REACTION_HOLD_MS[reaction] ?? 1200);
+}
+
+// Subtle blue aura pulse for rare equips (mirrors the legendary pulse pattern)
+function pulseRare() {
+  const wrap = document.getElementById("avatarWrap");
+  if (!wrap) return;
+  wrap.classList.remove("rare-pulse");
+  void wrap.offsetWidth;
+  wrap.classList.add("rare-pulse");
+  setTimeout(() => wrap.classList.remove("rare-pulse"), 550);
+}
+
 // ── Equip / Unequip ───────────────────────────────────────────────────────────
 
 document.getElementById("inventoryGrid").addEventListener("click", async (e) => {
@@ -1081,6 +1196,11 @@ async function handleEquip(itemId) {
   emit("item:equipped", { itemId, slot, rarity: item?.rarity ?? null });
 
   renderAll(true);
+
+  // Section 151A: the avatar reacts to receiving the upgrade — graded by rarity
+  const rarity = EQUIP_REACTION_EVENTS[item?.rarity] ? item.rarity : "common";
+  triggerAvatarReaction("equip-" + rarity, EQUIP_REACTION_EVENTS[rarity]);
+  if (rarity === "rare") pulseRare();
 }
 
 async function handleUnequip(slot) {
@@ -1101,6 +1221,9 @@ async function handleUnequip(slot) {
   playSound("unequip");
   emit("item:unequipped", { slot });
   renderAll(true);
+
+  // Section 151A: brief curious reaction — exploration, not loss
+  triggerAvatarReaction("unequip", "UNEQUIP");
 }
 
 async function handleSetGender(gender) {
@@ -1148,6 +1271,7 @@ async function handleEquipTitle(titleId) {
 
 initBadges("avatar");
 await loadAll();
+initAvatarLifeEngines();
 </script>
 
 </body>
