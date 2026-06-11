@@ -213,16 +213,18 @@ test("5. Legendary equip triggers the critical reaction path", async ({
 });
 
 // ── Reduced motion ────────────────────────────────────────────────────────────
+// Note: test.use({ reducedMotion: "reduce" }) is not honored in this harness
+// (verified: matchMedia stays false on every page). page.emulateMedia() works
+// and is applied before any navigation, so the avatar page scripts see it.
 
 test.describe("reduced motion", () => {
-  test.use({ reducedMotion: "reduce" });
-
   test("6. Reduced motion disables animation but preserves avatar state", async ({
     page,
     browserName,
   }) => {
     test.skip(browserName !== "chromium", "UI dedup");
 
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await loginAsStudent(page);
     await openAvatarPage(page);
 
