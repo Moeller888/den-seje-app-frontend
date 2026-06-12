@@ -244,13 +244,14 @@ test("8. Quiz page renders the female body when identity is female", async ({
   await studentClient.rpc("set_avatar_identity", { p_body_type: "female" });
 
   await loginAsStudent(page);
-  // Login lands on index.html — wait for the identity-strip avatar.
+  // Login lands on index.html. The quiz page renders in two phases by design:
+  // instant neutral base, then identity resolution after the profile fetch —
+  // so the assertion must retry (toBeAttached) rather than count() instantly.
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });
 
-  const baseCount = await page
-    .locator(`#avatar-display img[src*="${BODY_FILE_FOR.female}"]`)
-    .count();
-  expect(baseCount).toBeGreaterThanOrEqual(1);
+  await expect(
+    page.locator(`#avatar-display img[src*="${BODY_FILE_FOR.female}"]`)
+  ).toBeAttached({ timeout: 15000 });
 });
 
 test("9. avatar_gender flow still works alongside avatar_identity", async ({
