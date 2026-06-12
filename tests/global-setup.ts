@@ -263,7 +263,9 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
     student2Id = student2User.id;
   }
 
-  // Upsert student2 profile — grade 9 is valid per profiles_selected_grade_check
+  // Upsert student2 profile — grade 9 is valid per profiles_selected_grade_check.
+  // avatar_identity chosen_at SET so the Section 152C identity prompt never
+  // blocks teacher-flow specs that log in as student2.
   const { error: s2ProfileErr } = await supabase.from("profiles").upsert(
     {
       id: student2Id,
@@ -276,6 +278,11 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
       active_domains: null,
       equipped_slots: {},
       active_theme: "default",
+      avatar_identity: {
+        v: 1,
+        body_type: "neutral",
+        chosen_at: new Date().toISOString(),
+      },
     },
     { onConflict: "id" }
   );
@@ -343,10 +350,23 @@ export default async function globalSetup() {
   );
 
   // Reset grade, placement_band (prevents overlays), current_band (fresh session),
-  // and active_domains (prevents domain-focus-bar layout shift in test 5).
+  // active_domains (prevents domain-focus-bar layout shift in test 5), and
+  // avatar_identity with chosen_at SET (Section 152C: prevents the identity
+  // prompt overlay from blocking quiz-flow specs — same pattern as grade).
+  // Identity-prompt specs explicitly null chosen_at in their own fixtures.
   const { error: gradeError } = await supabase
     .from("profiles")
-    .update({ selected_grade: 9, placement_band: 2, current_band: null, active_domains: null })
+    .update({
+      selected_grade: 9,
+      placement_band: 2,
+      current_band: null,
+      active_domains: null,
+      avatar_identity: {
+        v: 1,
+        body_type: "neutral",
+        chosen_at: new Date().toISOString(),
+      },
+    })
     .eq("id", user.id);
 
   if (gradeError) {
@@ -354,6 +374,6 @@ export default async function globalSetup() {
   }
 
   console.log(
-    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null for ${TEST_STUDENT_EMAIL}`
+    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for ${TEST_STUDENT_EMAIL}`
   );
 }

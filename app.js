@@ -524,6 +524,114 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // ── Identity prompt (Section 152C) ──────────────────────────────────────────
+  // Soft prompt: shown to STUDENTS who have never explicitly chosen an avatar
+  // identity (chosen_at null/absent). "Vælg senere" dismisses without writing —
+  // re-prompts at next login. Choosing calls set_avatar_identity (stamps
+  // chosen_at) and never shows again. Teachers/admins never see it.
+
+  async function maybeShowIdentityPrompt() {
+    const overlay = document.getElementById("identity-overlay");
+    if (!overlay) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, avatar_identity")
+      .eq("id", studentId)
+      .maybeSingle();
+
+    if (!profile || profile.role !== "student") return;
+
+    const identity = profile.avatar_identity;
+    const hasChosen =
+      identity && typeof identity === "object" && !!identity.chosen_at;
+    if (hasChosen) return;
+
+    await showIdentityPrompt(identity ?? null);
+  }
+
+  function showIdentityPrompt(currentIdentity) {
+    return new Promise((resolve) => {
+      const overlay  = document.getElementById("identity-overlay");
+      const statusEl = document.getElementById("identity-status");
+      const laterBtn = document.getElementById("identity-later-btn");
+      if (!overlay) { resolve(); return; }
+
+      const validBodies = ["male", "female", "neutral"];
+      const currentBody =
+        (currentIdentity && typeof currentIdentity === "object"
+          && validBodies.includes(currentIdentity.body_type))
+          ? currentIdentity.body_type
+          : "neutral";
+
+      // Mark the student's current body — "Behold" is one tap.
+      overlay.querySelectorAll(".identity-card").forEach(card => {
+        const isCurrent = card.dataset.bodyType === currentBody;
+        card.classList.toggle("identity-card--current", isCurrent);
+        const badge = card.querySelector(".identity-card-current-badge");
+        if (badge) badge.textContent = isCurrent ? "Nuværende" : "";
+      });
+
+      overlay.style.display = "flex";
+
+      const cards = overlay.querySelectorAll(".identity-card");
+
+      const close = () => {
+        overlay.style.display = "none";
+        resolve();
+      };
+
+      // "Vælg senere": no write — chosen_at stays null, re-prompt next login.
+      if (laterBtn) {
+        laterBtn.disabled = false;
+        laterBtn.onclick = close;
+      }
+
+      cards.forEach(card => {
+        card.disabled = false;
+        card.onclick = async () => {
+          const bodyType = card.dataset.bodyType;
+          if (!bodyType || !validBodies.includes(bodyType)) return;
+
+          cards.forEach(c => c.disabled = true);
+          if (laterBtn) laterBtn.disabled = true;
+          if (statusEl) { statusEl.textContent = "Gemmer…"; statusEl.style.color = ""; }
+
+          // Race the RPC against an 8-second timeout so a hung network never
+          // leaves the student stuck (same pattern as the grade selector).
+          const rpcCall     = supabase.rpc("set_avatar_identity", { p_body_type: bodyType });
+          const timeoutCall = new Promise(res =>
+            setTimeout(() => res({ error: new Error("timeout") }), 8000)
+          );
+
+          let rpcError = null;
+          try {
+            const { error } = await Promise.race([rpcCall, timeoutCall]);
+            rpcError = error ?? null;
+          } catch (e) {
+            rpcError = e;
+          }
+
+          if (rpcError) {
+            logEvent("IDENTITY_SAVE_FAILED", { bodyType, error: String(rpcError?.message ?? rpcError) });
+            if (statusEl) {
+              statusEl.textContent = "Kunne ikke gemme – prøv igen";
+              statusEl.style.color = "#ef5350";
+            }
+            cards.forEach(c => c.disabled = false);
+            if (laterBtn) laterBtn.disabled = false;
+            return;
+          }
+
+          logEvent("IDENTITY_CHOSEN", { bodyType });
+          // Re-render the identity-strip avatar with the chosen body.
+          await fetchAvatar();
+          close();
+        };
+      });
+    });
+  }
+
   async function loadGrade() {
     const { data: profile } = await supabase
       .from("profiles")
@@ -1002,6 +1110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await fetchProgress();
   await fetchAvatar();
+  await maybeShowIdentityPrompt();   // Section 152C — soft prompt, before grade
   await loadGrade();
   if (selectedGrade === null) await showGradeSelector();
 

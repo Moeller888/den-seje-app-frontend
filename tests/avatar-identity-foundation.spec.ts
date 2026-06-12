@@ -76,9 +76,14 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  // Deterministic suite-safe end state: neutral body, chosen_at SET (so the
+  // Section 152C identity prompt never blocks later specs).
   await adminClient
     .from("profiles")
-    .update({ avatar_identity: originalIdentity, avatar_gender: originalGender })
+    .update({
+      avatar_identity: { v: 1, body_type: "neutral", chosen_at: new Date().toISOString() },
+      avatar_gender: originalGender,
+    })
     .eq("id", studentId);
 });
 
@@ -178,7 +183,16 @@ test("5. anon cannot execute set_avatar_identity", async ({ browserName }) => {
   expect(error, "anon execute must be rejected").not.toBeNull();
 });
 
-test("6. Zero visual change: avatar page base layer is unchanged for every body_type", async ({
+// Section 152C: body variants are live — the base layer resolves per body_type.
+// (The original 152A "zero visual change" freeze was deliberately lifted by the
+// approved 152C scope.)
+const BODY_FILE_FOR: Record<string, string> = {
+  neutral: "/assets/avatar/base/body.svg",
+  male:    "/assets/avatar/base/body-male.svg",
+  female:  "/assets/avatar/base/body-female.svg",
+};
+
+test("6. Avatar page base layer resolves per body_type", async ({
   page,
   browserName,
 }) => {
@@ -193,17 +207,17 @@ test("6. Zero visual change: avatar page base layer is unchanged for every body_
     expect(error, `RPC failed for ${bodyType}: ${error?.message}`).toBeNull();
 
     await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 
-    // The base layer (z=0 .avatar-layer) still resolves to the shared base.
+    const expected = BODY_FILE_FOR[bodyType];
     const baseSrc = await page
-      .locator(`#avatar-preview img.avatar-layer[src*="${NEUTRAL_BASE}"]`)
+      .locator(`#avatar-preview img.avatar-layer[src*="${expected}"]`)
       .count();
-    expect(baseSrc, `base layer must be ${NEUTRAL_BASE} for ${bodyType}`).toBeGreaterThanOrEqual(1);
+    expect(baseSrc, `base layer must be ${expected} for ${bodyType}`).toBeGreaterThanOrEqual(1);
   }
 });
 
-test("7. Hub avatar renders normally with an identity set", async ({
+test("7. Hub avatar renders the male body when identity is male", async ({
   page,
   browserName,
 }) => {
@@ -216,12 +230,12 @@ test("7. Hub avatar renders normally with an identity set", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 
   const baseCount = await page
-    .locator(`#profileAvatar img[src*="${NEUTRAL_BASE}"]`)
+    .locator(`#profileAvatar img[src*="${BODY_FILE_FOR.male}"]`)
     .count();
   expect(baseCount).toBeGreaterThanOrEqual(1);
 });
 
-test("8. Quiz page (student dashboard) renders normally with an identity set", async ({
+test("8. Quiz page renders the female body when identity is female", async ({
   page,
   browserName,
 }) => {
@@ -234,7 +248,7 @@ test("8. Quiz page (student dashboard) renders normally with an identity set", a
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });
 
   const baseCount = await page
-    .locator(`#avatar-display img[src*="${NEUTRAL_BASE}"]`)
+    .locator(`#avatar-display img[src*="${BODY_FILE_FOR.female}"]`)
     .count();
   expect(baseCount).toBeGreaterThanOrEqual(1);
 });

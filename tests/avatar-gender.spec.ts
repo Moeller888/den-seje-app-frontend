@@ -1,6 +1,9 @@
-// Sections 143 + 144: Avatar gender selection and rendering tests.
-// Verifies the gender panel on avatar.html — render, select, persist.
-// Section 144 adds data-gender assertions on #avatarWrap (drives CSS background tint).
+// Sections 143-145 + 152C.
+// Tests 1-6 (rewritten in Section 152C): the identity panel on avatar.html
+// replaced the gender panel — body choice now writes avatar_identity via the
+// set_avatar_identity RPC and re-renders the body immediately.
+// Tests 7-11 (unchanged): the gender TINT system (avatar_gender → data-gender
+// on the hub showcase) is explicitly untouched by 152C and still verified.
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -17,6 +20,12 @@ const STUDENT_PASS          = "Cmiciquru5";
 const SUPABASE_URL          = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+const BODY_FILE_FOR: Record<string, string> = {
+  neutral: "/assets/avatar/base/body.svg",
+  male:    "/assets/avatar/base/body-male.svg",
+  female:  "/assets/avatar/base/body-female.svg",
+};
+
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;
 
@@ -30,13 +39,25 @@ test.beforeAll(async () => {
   if (!student) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = student.id;
 
-  // Reset to neutral so tests start from a known state.
-  await adminClient.from("profiles").update({ avatar_gender: "neutral" }).eq("id", studentId);
+  // Known starting state: neutral tint + neutral identity with chosen_at SET
+  // (suppresses the 152C identity prompt on index.html during login).
+  await adminClient
+    .from("profiles")
+    .update({
+      avatar_gender: "neutral",
+      avatar_identity: { v: 1, body_type: "neutral", chosen_at: new Date().toISOString() },
+    })
+    .eq("id", studentId);
 });
 
 test.afterAll(async () => {
-  // Restore neutral after tests.
-  await adminClient.from("profiles").update({ avatar_gender: "neutral" }).eq("id", studentId);
+  await adminClient
+    .from("profiles")
+    .update({
+      avatar_gender: "neutral",
+      avatar_identity: { v: 1, body_type: "neutral", chosen_at: new Date().toISOString() },
+    })
+    .eq("id", studentId);
 });
 
 async function loginAsStudent(page: any) {
@@ -49,13 +70,13 @@ async function loginAsStudent(page: any) {
 
 async function openAvatarPage(page: any) {
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  // Wait for gender panel to be visible — signals loadAll() completed.
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  // Identity buttons render at the end of loadAll() — signals load complete.
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── Tests 1-6: identity panel (Section 152C) ──────────────────────────────────
 
-test("1. Avatar menu shows all three gender options", async ({
+test("1. Identity panel shows all three body options", async ({
   page,
   browserName,
 }) => {
@@ -64,109 +85,108 @@ test("1. Avatar menu shows all three gender options", async ({
   await loginAsStudent(page);
   await openAvatarPage(page);
 
-  await expect(page.locator(".gender-btn[data-gender='boy']")).toBeVisible();
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toBeVisible();
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).toBeVisible();
+  await expect(page.locator(".identity-btn[data-body-type='male']")).toBeVisible();
+  await expect(page.locator(".identity-btn[data-body-type='female']")).toBeVisible();
+  await expect(page.locator(".identity-btn[data-body-type='neutral']")).toBeVisible();
 
-  await expect(page.locator(".gender-btn[data-gender='boy']")).toHaveText("Dreng");
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveText("Pige");
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).toHaveText("Neutral");
+  await expect(page.locator(".identity-btn[data-body-type='male']")).toHaveText("Dreng");
+  await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveText("Pige");
+  await expect(page.locator(".identity-btn[data-body-type='neutral']")).toHaveText("Neutral");
 });
 
-test("2. Student can select Dreng", async ({ page, browserName }) => {
+test("2. Student can select Dreng — body re-renders immediately", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "UI dedup");
 
   await loginAsStudent(page);
   await openAvatarPage(page);
 
-  await page.locator(".gender-btn[data-gender='boy']").click();
+  await page.locator(".identity-btn[data-body-type='male']").click();
 
-  // Button must become active (aria-pressed = true).
-  await expect(page.locator(".gender-btn[data-gender='boy']")).toHaveAttribute(
+  await expect(page.locator(".identity-btn[data-body-type='male']")).toHaveClass(/active/);
+  await expect(page.locator(".identity-btn[data-body-type='male']")).toHaveAttribute(
     "aria-pressed",
     "true"
   );
-  await expect(page.locator(".gender-btn[data-gender='boy']")).toHaveClass(/active/);
+  await expect(page.locator(".identity-btn[data-body-type='female']")).not.toHaveClass(/active/);
 
-  // Others must not be active.
-  await expect(page.locator(".gender-btn[data-gender='girl']")).not.toHaveClass(/active/);
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).not.toHaveClass(/active/);
+  // Body re-rendered with the male base.
+  await expect(
+    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.male}"]`)
+  ).toBeAttached();
 
-  // Rendering: avatarWrap must carry data-gender="boy" (drives blue CSS tint).
-  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "boy");
+  // Persisted via RPC.
+  const { data: row } = await adminClient
+    .from("profiles")
+    .select("avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect((row as any)?.avatar_identity?.body_type).toBe("male");
+  expect((row as any)?.avatar_identity?.chosen_at).toBeTruthy();
 });
 
-test("3. Student can select Pige", async ({ page, browserName }) => {
+test("3. Student can select Pige — body re-renders immediately", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "UI dedup");
 
   await loginAsStudent(page);
   await openAvatarPage(page);
 
-  await page.locator(".gender-btn[data-gender='girl']").click();
+  await page.locator(".identity-btn[data-body-type='female']").click();
 
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveClass(/active/);
-  await expect(page.locator(".gender-btn[data-gender='boy']")).not.toHaveClass(/active/);
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).not.toHaveClass(/active/);
-
-  // Rendering: avatarWrap must carry data-gender="girl" (drives rose CSS tint).
-  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "girl");
+  await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveClass(/active/);
+  await expect(
+    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.female}"]`)
+  ).toBeAttached();
 });
 
-test("4. Student can select Neutral", async ({ page, browserName }) => {
-  test.skip(browserName !== "chromium", "UI dedup");
-
-  // Start from 'girl' (set by previous test run via beforeAll reset → test 3 sets girl).
-  // We reset in beforeAll so we start neutral; just click neutral explicitly.
-  await loginAsStudent(page);
-  await openAvatarPage(page);
-
-  // First set something else so the switch is visible.
-  await page.locator(".gender-btn[data-gender='boy']").click();
-  await expect(page.locator(".gender-btn[data-gender='boy']")).toHaveClass(/active/);
-
-  await page.locator(".gender-btn[data-gender='neutral']").click();
-
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
-  await expect(page.locator(".gender-btn[data-gender='neutral']")).toHaveClass(/active/);
-  await expect(page.locator(".gender-btn[data-gender='boy']")).not.toHaveClass(/active/);
-
-  // Rendering: avatarWrap must carry data-gender="neutral" (no tint override).
-  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "neutral");
-});
-
-test("5. Selection persists after page refresh", async ({ page, browserName }) => {
+test("4. Student can select Neutral — body returns to the neutral base", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "UI dedup");
 
   await loginAsStudent(page);
   await openAvatarPage(page);
 
-  // Select 'girl'.
-  await page.locator(".gender-btn[data-gender='girl']").click();
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveClass(/active/);
+  // Switch away first so the change is observable.
+  await page.locator(".identity-btn[data-body-type='male']").click();
+  await expect(page.locator(".identity-btn[data-body-type='male']")).toHaveClass(/active/);
 
-  // Reload the page.
+  await page.locator(".identity-btn[data-body-type='neutral']").click();
+
+  await expect(page.locator(".identity-btn[data-body-type='neutral']")).toHaveClass(/active/);
+  await expect(
+    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.neutral}"]`)
+  ).toBeAttached();
+});
+
+test("5. Identity selection persists after page refresh", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "UI dedup");
+
+  await loginAsStudent(page);
+  await openAvatarPage(page);
+
+  await page.locator(".identity-btn[data-body-type='female']").click();
+  await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveClass(/active/);
+
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 
-  // 'girl' must still be selected.
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveClass(/active/);
-  await expect(page.locator(".gender-btn[data-gender='girl']")).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
-
-  // Rendering: data-gender persists on avatarWrap after reload.
-  await expect(page.locator("#avatarWrap")).toHaveAttribute("data-gender", "girl");
+  await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveClass(/active/);
+  await expect(
+    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.female}"]`)
+  ).toBeAttached();
 });
 
-test("6. Existing avatar menu still works after gender panel added", async ({
+test("6. Existing avatar menu still works with the identity panel", async ({
   page,
   browserName,
 }) => {
@@ -175,22 +195,19 @@ test("6. Existing avatar menu still works after gender panel added", async ({
   await loginAsStudent(page);
   await openAvatarPage(page);
 
-  // Inventory panel, slot list, titles panel, and gender panel all present.
   await expect(page.locator("#inventoryGrid")).toBeAttached();
   await expect(page.locator("#slotList")).toBeAttached();
   await expect(page.locator("#titlesPanel")).toBeAttached();
-  await expect(page.locator("#genderPanel")).toBeAttached();
+  await expect(page.locator("#identityPanel")).toBeAttached();
 
-  // Avatar preview renders at least the base layer.
   const imgCount = await page.locator("#avatar-preview img").count();
   expect(imgCount).toBeGreaterThanOrEqual(1);
 });
 
-// ── Section 145: hub.html gender rendering ────────────────────────────────────
+// ── Tests 7-11: hub gender tint (Sections 144-145 — UNTOUCHED by 152C) ───────
 
 async function openHubPage(page: any) {
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
-  // Wait for at least one avatar image layer — signals renderProfileAvatar() ran.
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
 
@@ -200,7 +217,6 @@ test("7. hub.html loads avatar_gender and sets data-gender on avatarShowcase", a
 }) => {
   test.skip(browserName !== "chromium", "UI dedup");
 
-  // Preset to 'boy' via admin so the load path is exercised.
   await adminClient.from("profiles").update({ avatar_gender: "boy" }).eq("id", studentId);
 
   await loginAsStudent(page);
@@ -260,12 +276,10 @@ test("11. hub page renders avatar and profile card normally", async ({
   await loginAsStudent(page);
   await openHubPage(page);
 
-  // Avatar showcase present and has at least one image layer.
   await expect(page.locator("#avatarShowcase")).toBeAttached();
   const imgCount = await page.locator("#profileAvatar img").count();
   expect(imgCount).toBeGreaterThanOrEqual(1);
 
-  // avatarShowcase carries some data-gender value (not empty/missing).
   const gender = await page.locator("#avatarShowcase").getAttribute("data-gender");
   expect(["boy", "girl", "neutral"]).toContain(gender);
 });

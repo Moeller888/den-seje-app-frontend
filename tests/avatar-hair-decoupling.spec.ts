@@ -94,8 +94,17 @@ test.beforeAll(async () => {
 });
 
 test.beforeEach(async () => {
-  // Every test starts bare — individual tests equip via admin when needed.
-  await adminClient.from("profiles").update({ equipped_slots: {} }).eq("id", studentId);
+  // Every test starts bare with a pinned NEUTRAL identity (goldens were
+  // captured with the neutral body) and chosen_at SET (suppresses the
+  // Section 152C identity prompt on index.html). Individual tests equip
+  // via admin when needed.
+  await adminClient
+    .from("profiles")
+    .update({
+      equipped_slots: {},
+      avatar_identity: { v: 1, body_type: "neutral", chosen_at: new Date().toISOString() },
+    })
+    .eq("id", studentId);
 });
 
 test.afterAll(async () => {
@@ -142,7 +151,7 @@ test("golden: avatar page bare avatar matches baseline", async ({
   await gotoLoginReduced(page);
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   const shot = await page.locator("#avatar-preview").screenshot();
@@ -163,7 +172,7 @@ test("golden: avatar page with headwear matches baseline", async ({
   await gotoLoginReduced(page);
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
   const shot = await page.locator("#avatar-preview").screenshot();
@@ -234,7 +243,7 @@ test("structure: hair layer renders on all four surfaces", async ({
 
   // Avatar page
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await expect(
     page.locator('#avatar-preview img[src*="hair-default.svg"]')
   ).toBeAttached();
@@ -316,7 +325,7 @@ test("structure: headwear stacks above the hair layer", async ({
   await gotoLoginReduced(page);
   await loginAsStudent(page);
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 
   const hairZ = await page
     .locator('#avatar-preview img[src*="hair-default.svg"]')

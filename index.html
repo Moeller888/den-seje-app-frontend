@@ -548,6 +548,105 @@
       cursor: not-allowed;
     }
 
+    /* ── Identity selection overlay (Section 152C) ──────────── */
+    #identity-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 14, 23, 0.97);
+      z-index: 1002;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px;
+    }
+    #identity-overlay h2 {
+      color: var(--text-primary, #f0edf8);
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+    }
+    #identity-overlay p {
+      color: var(--text-secondary, #8e8aa8);
+      font-size: 0.95rem;
+      text-align: center;
+      margin: 0 0 8px;
+      max-width: 300px;
+    }
+    .identity-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+    .identity-card {
+      width: 104px;
+      padding: 12px 8px 10px;
+      border: 2px solid var(--accent-primary, #7c3aed);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-primary, #f0edf8);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .identity-card:hover,
+    .identity-card:focus {
+      background: rgba(124, 58, 237, 0.25);
+      outline: none;
+    }
+    .identity-card:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .identity-card--current {
+      border-color: #4caf50;
+    }
+    .identity-card-preview {
+      position: relative;
+      width: 64px;
+      height: 96px;
+      pointer-events: none;
+    }
+    .identity-card-preview img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+    }
+    .identity-card-current-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #4caf50;
+      min-height: 1em;
+      letter-spacing: 0.5px;
+    }
+    #identity-later-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary, #8e8aa8);
+      font-size: 0.9rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 8px 16px;
+    }
+    #identity-later-btn:hover,
+    #identity-later-btn:focus {
+      color: var(--text-primary, #f0edf8);
+      outline: none;
+    }
+    #identity-later-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     /* ── Placement assessment overlay ────────────────────────── */
     #placement-overlay {
       position: fixed;
@@ -719,6 +818,42 @@
 
 <!-- Logout button — hidden visually, wired by app.js -->
 <button id="logout-btn" style="display:none" aria-hidden="true"></button>
+
+<!-- Identity selection overlay (Section 152C) — soft prompt for students
+     who have never explicitly chosen an avatar identity (chosen_at null).
+     "Vælg senere" dismisses without writing; re-prompts at next login. -->
+<div id="identity-overlay">
+  <h2>V&#230;lg din avatar</h2>
+  <p>Du kan altid &#230;ndre det senere p&#229; din avatar-side</p>
+  <div class="identity-cards">
+    <button class="identity-card" data-body-type="male">
+      <span class="identity-card-preview">
+        <img src="/assets/avatar/base/body-male.svg" alt="">
+        <img src="/assets/avatar/hair/hair-default.svg" alt="">
+      </span>
+      <span>Dreng</span>
+      <span class="identity-card-current-badge"></span>
+    </button>
+    <button class="identity-card" data-body-type="female">
+      <span class="identity-card-preview">
+        <img src="/assets/avatar/base/body-female.svg" alt="">
+        <img src="/assets/avatar/hair/hair-default.svg" alt="">
+      </span>
+      <span>Pige</span>
+      <span class="identity-card-current-badge"></span>
+    </button>
+    <button class="identity-card" data-body-type="neutral">
+      <span class="identity-card-preview">
+        <img src="/assets/avatar/base/body.svg" alt="">
+        <img src="/assets/avatar/hair/hair-default.svg" alt="">
+      </span>
+      <span>Neutral</span>
+      <span class="identity-card-current-badge"></span>
+    </button>
+  </div>
+  <button id="identity-later-btn">V&#230;lg senere</button>
+  <p id="identity-status" style="min-height:1.4em;font-size:0.9rem;margin:0;"></p>
+</div>
 
 <!-- Grade selector overlay — shown once on first visit if selected_grade is null -->
 <div id="grade-selector-overlay">

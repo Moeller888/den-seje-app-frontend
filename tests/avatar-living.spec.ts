@@ -100,8 +100,8 @@ async function loginAsStudent(page: any) {
 
 async function openAvatarPage(page: any) {
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  // Gender buttons render at the end of loadAll() — signals data + render complete.
-  await page.waitForSelector("#genderButtons .gender-btn", { timeout: 15000 });
+  // Identity buttons render at the end of loadAll() — signals data + render complete.
+  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

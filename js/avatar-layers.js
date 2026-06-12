@@ -67,15 +67,22 @@ export const BASE_SRC = "/assets/avatar/base/body.svg";
 
 export const BODY_TYPES = ["male", "female", "neutral"];
 
+// Section 152C: per-body-type base files. All variants honor the locked
+// geometry contract (head cx=80 cy=50 r=30, eyes cx=68/92 cy=47, arm rects,
+// equipment anchors, skin gradient) and share the expressions + hair layer.
+const BODY_SRCS = {
+  neutral: BASE_SRC,
+  male:    "/assets/avatar/base/body-male.svg",
+  female:  "/assets/avatar/base/body-female.svg",
+};
+
 // Resolves the base body SVG for an identity. Defensive: null, '{}', garbage,
 // or unknown body_type all resolve to the neutral base — a broken identity can
 // never produce a broken avatar.
-// Section 152A: every body type resolves to the shared base (no visual change).
-// Section 152C swaps per-body-type files HERE — the single switch point.
 export function baseSrcFor(identity) {
   const bodyType = (identity && typeof identity === "object") ? identity.body_type : null;
   if (!BODY_TYPES.includes(bodyType)) return BASE_SRC;
-  return BASE_SRC;
+  return BODY_SRCS[bodyType] ?? BASE_SRC;
 }
 
 // ── Identity hair layer (Section 152B) ────────────────────────────────────────
