@@ -1109,7 +1109,7 @@ function renderHairstyle() {
   const container = document.getElementById("hairstyleButtons");
   if (!container) return;
 
-  const validHairstyles = ["default", "braid", "short"];
+  const validHairstyles = ["default", "braid", "short", "curly", "long", "sidecut", "buzzcut"];
   const currentHairstyle =
     (avatarIdentity && typeof avatarIdentity === "object"
       && validHairstyles.includes(avatarIdentity.hairstyle))
@@ -1117,9 +1117,13 @@ function renderHairstyle() {
       : "default";
 
   const options = [
-    { value: "default", label: "Standard" },
-    { value: "braid",   label: "Fletninger" },
-    { value: "short",   label: "Kort" },
+    { value: "default",  label: "Standard" },
+    { value: "braid",    label: "Fletninger" },
+    { value: "short",    label: "Kort" },
+    { value: "curly",    label: "Krøllet" },
+    { value: "long",     label: "Langt" },
+    { value: "sidecut",  label: "Sidecut" },
+    { value: "buzzcut",  label: "Kort klip" },
   ];
 
   container.innerHTML = options.map(opt => {

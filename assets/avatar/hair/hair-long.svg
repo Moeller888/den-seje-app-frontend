@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Section 153A: long hairstyle — straight hair extending to chest level.
+       Same cap and bang as default (hair-default.svg); both side panels
+       extend symmetrically down to y≈139. Hair slot z=4. Head anchor LOCKED. -->
+
+  <!-- Left long panel — tapers gently at the end -->
+  <path d="M 52 44 Q 42 51 42 68 Q 42 90 43 112
+           Q 43 126 46 136 Q 48 141 51 139 Q 54 137 53 125
+           Q 52 110 52 90 Q 52 70 56 52 Z" fill="#4a3626"/>
+  <!-- Right long panel — symmetric to left -->
+  <path d="M 108 44 Q 118 51 118 68 Q 118 90 117 112
+           Q 117 126 114 136 Q 112 141 109 139 Q 106 137 107 125
+           Q 108 110 108 90 Q 108 70 104 52 Z" fill="#4a3626"/>
+  <!-- Cap — identical to default -->
+  <path d="M 52 44 Q 46 11 66 9 Q 78 9 90 15 Q 100 19 108 44 Q 98 28 80 28 Q 62 28 52 44 Z" fill="#4a3626"/>
+  <!-- Specular — identical to default -->
+  <path d="M 55 22 Q 65 16 82 21" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.50"/>
+  <!-- Left catch-light — extended down the long panel -->
+  <path d="M 52 44 Q 45 56 43 78" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+  <!-- Right catch-light — extended down the long panel -->
+  <path d="M 108 44 Q 116 56 116 78" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.38"/>
+  <!-- Bang — identical to default -->
+  <path d="M 58 37 Q 64 26 74 24 Q 81 23 82 29 Q 79 35 72 37 Q 65 38 58 37 Z" fill="#4a3626"/>
+  <path d="M 61 30 Q 68 24 77 26" fill="none" stroke="#7d5c44" stroke-width="1.1" stroke-linecap="round" opacity="0.40"/>
+</svg>

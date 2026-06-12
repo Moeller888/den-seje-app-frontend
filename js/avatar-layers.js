@@ -94,11 +94,15 @@ export function baseSrcFor(identity) {
 // Model B: absent hairstyle key → runtime fallback to "default" — no DB backfill.
 export const HAIR_SRC = "/assets/avatar/hair/hair-default.svg";
 
-const VALID_HAIRSTYLES = ["default", "braid", "short"];
+const VALID_HAIRSTYLES = ["default", "braid", "short", "curly", "long", "sidecut", "buzzcut"];
 const HAIR_SRCS = {
-  "default": HAIR_SRC,
-  "braid":   "/assets/avatar/hair/hair-braid.svg",
-  "short":   "/assets/avatar/hair/hair-short.svg",
+  "default":  HAIR_SRC,
+  "braid":    "/assets/avatar/hair/hair-braid.svg",
+  "short":    "/assets/avatar/hair/hair-short.svg",
+  "curly":    "/assets/avatar/hair/hair-curly.svg",
+  "long":     "/assets/avatar/hair/hair-long.svg",
+  "sidecut":  "/assets/avatar/hair/hair-sidecut.svg",
+  "buzzcut":  "/assets/avatar/hair/hair-buzzcut.svg",
 };
 
 export function hairSrcFor(identity) {

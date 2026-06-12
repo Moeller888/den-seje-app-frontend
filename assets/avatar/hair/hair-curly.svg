@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- Section 153A: curly hairstyle — voluminous curly hair.
+       Fuller cap (crown at y≈6) and wider bumpy side panels than default,
+       suggesting curl clusters. No swept bang — curls form the silhouette.
+       Hair slot z=4. Head anchor LOCKED. -->
+
+  <!-- Left curly side panel — wider, bumpy bottom edge for curl texture -->
+  <path d="M 48 44
+           Q 38 50 38 64 Q 38 72 40 76 Q 42 79 44 77
+           Q 43 74 44 71 Q 47 73 49 71 Q 51 69 50 66
+           Q 52 68 54 66 Q 56 63 54 60 Q 57 62 59 60
+           Q 60 57 59 54 Q 60 50 58 46 Z" fill="#4a3626"/>
+  <!-- Right curly side panel — matching volume, slightly shorter -->
+  <path d="M 112 44
+           Q 120 50 120 61 Q 120 68 118 71 Q 116 74 113 72
+           Q 115 69 115 66 Q 117 63 116 60 Q 114 56 115 53
+           Q 113 49 112 46 Z" fill="#4a3626"/>
+  <!-- Curly cap — fuller than default: higher peak (y≈6), wider base -->
+  <path d="M 48 44 Q 43 8 64 6 Q 78 6 92 12 Q 104 17 112 44 Q 100 26 80 26 Q 60 26 48 44 Z" fill="#4a3626"/>
+  <!-- Main specular across cap -->
+  <path d="M 52 20 Q 65 13 83 18" fill="none" stroke="#7d5c44" stroke-width="1.6" stroke-linecap="round" opacity="0.50"/>
+  <!-- Curl texture strokes — left cluster -->
+  <path d="M 52 18 Q 57 12 64 15" fill="none" stroke="#7d5c44" stroke-width="1.1" stroke-linecap="round" opacity="0.42"/>
+  <!-- Curl texture strokes — centre cluster -->
+  <path d="M 70 9  Q 79 6  86 10" fill="none" stroke="#7d5c44" stroke-width="1.1" stroke-linecap="round" opacity="0.42"/>
+  <!-- Curl texture strokes — right cluster -->
+  <path d="M 88 12 Q 95 10 101 14" fill="none" stroke="#7d5c44" stroke-width="1.0" stroke-linecap="round" opacity="0.38"/>
+  <!-- Left catch-light on side panel -->
+  <path d="M 48 44 Q 42 53 41 68" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.42"/>
+  <!-- Right catch-light on side panel -->
+  <path d="M 112 44 Q 117 52 117 63" fill="none" stroke="#6b4a33" stroke-width="1.4" stroke-linecap="round" opacity="0.35"/>
+</svg>
