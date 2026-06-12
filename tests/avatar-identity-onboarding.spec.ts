@@ -181,13 +181,22 @@ test("5. Teachers never see the identity prompt", async ({ page, browserName }) 
   await page.locator("#loginBtn").click();
   await page.waitForURL(`${PROD}/teacher.html`, { timeout: 20000 });
 
-  // Teacher navigates to the student page directly: role-gate must hold
-  // (the teacher's own profile has chosen_at null from the 152A backfill).
-  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
-  // The grade overlay is the teacher's first gate (no selected_grade) —
-  // by then the identity decision has already run and must have declined.
-  await expect(page.locator("#grade-selector-overlay")).toBeVisible({ timeout: 20000 });
-  await expect(page.locator("#identity-overlay")).toBeHidden();
+  // Teacher navigates to the student page directly: the prompt must never
+  // appear (role gate in maybeShowIdentityPrompt; the teacher's own profile
+  // has chosen_at null from the 152A backfill, so without the gate it WOULD
+  // show). index.html is not a supported teacher page and its init has no
+  // guaranteed milestones for teachers — so the assertion is a bounded watch
+  // with no milestone dependency: the overlay must not become visible.
+  await page.goto(`${PROD}/index.html`, { waitUntil: "load" });
+
+  let appeared = false;
+  try {
+    await page.locator("#identity-overlay").waitFor({ state: "visible", timeout: 8000 });
+    appeared = true;
+  } catch {
+    // never became visible — the requirement holds
+  }
+  expect(appeared, "identity overlay must never appear for teachers").toBe(false);
 });
 
 // ── Rendering across surfaces ─────────────────────────────────────────────────
