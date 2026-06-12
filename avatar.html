@@ -633,6 +633,16 @@
       outline-offset: 2px;
     }
 
+    .identity-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
     /* ── Gender-aware avatar background tints ───────── */
     /* Overrides --avatar-inner/outer only within avatarWrap, so theme
        globals are unaffected. neutral uses the theme default (no rule). */
@@ -683,10 +693,13 @@
   <p class="titles-empty" id="titlesEmpty" style="display:none">Ingen titler optjent endnu.</p>
 </div>
 
-<!-- Identity panel (Section 152C) — body choice via avatar_identity -->
+<!-- Identity panel (Section 152C/152D) — body + hairstyle via avatar_identity -->
 <div class="identity-panel" id="identityPanel">
   <div class="panel-title">Avatar</div>
+  <div class="identity-section-label">Krop</div>
   <div class="identity-buttons" id="identityButtons"></div>
+  <div class="identity-section-label">Frisure</div>
+  <div class="identity-buttons" id="hairstyleButtons"></div>
 </div>
 
 <script type="module">
@@ -1088,6 +1101,33 @@ function renderIdentity() {
                     data-body-type="${opt.value}"
                     aria-pressed="${isActive}">${opt.label}</button>`;
   }).join("");
+
+  renderHairstyle();
+}
+
+function renderHairstyle() {
+  const container = document.getElementById("hairstyleButtons");
+  if (!container) return;
+
+  const validHairstyles = ["default", "braid", "short"];
+  const currentHairstyle =
+    (avatarIdentity && typeof avatarIdentity === "object"
+      && validHairstyles.includes(avatarIdentity.hairstyle))
+      ? avatarIdentity.hairstyle
+      : "default";
+
+  const options = [
+    { value: "default", label: "Standard" },
+    { value: "braid",   label: "Fletninger" },
+    { value: "short",   label: "Kort" },
+  ];
+
+  container.innerHTML = options.map(opt => {
+    const isActive = currentHairstyle === opt.value;
+    return `<button class="identity-btn${isActive ? ' active' : ''}"
+                    data-hairstyle="${opt.value}"
+                    aria-pressed="${isActive}">${opt.label}</button>`;
+  }).join("");
 }
 
 // ── Avatar life engines (Section 151A) ────────────────────────────────────────
@@ -1179,6 +1219,14 @@ document.getElementById("identityButtons").addEventListener("click", async (e) =
   btn.disabled = false;
 });
 
+document.getElementById("hairstyleButtons").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".identity-btn[data-hairstyle]");
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  await handleSetHairstyle(btn.dataset.hairstyle);
+  btn.disabled = false;
+});
+
 document.getElementById("titlesGrid").addEventListener("click", async (e) => {
   const chip = e.target.closest(".title-equip-chip[data-title-id]");
   if (!chip || chip.disabled) return;
@@ -1255,6 +1303,23 @@ async function handleSetIdentity(bodyType) {
   showToast("✓ Avatar opdateret", "success");
   // Immediate re-render with the new body; engine layers are preserved by
   // renderAvatar (151A) and equipped_slots is untouched by identity changes.
+  renderAll(true);
+}
+
+async function handleSetHairstyle(hairstyle) {
+  const { data, error } = await supabase.rpc("set_avatar_identity", {
+    p_hairstyle: hairstyle,
+  });
+
+  if (error) {
+    console.error("SET HAIRSTYLE ERROR:", error);
+    showToast("Kunne ikke gemme – prøv igen", "error");
+    playSound("error");
+    return;
+  }
+
+  avatarIdentity = data ?? avatarIdentity;
+  showToast("✓ Frisure opdateret", "success");
   renderAll(true);
 }
 

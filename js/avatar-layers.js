@@ -85,17 +85,26 @@ export function baseSrcFor(identity) {
   return BODY_SRCS[bodyType] ?? BASE_SRC;
 }
 
-// ── Identity hair layer (Section 152B) ────────────────────────────────────────
+// ── Identity hair layer (Section 152B/152D) ───────────────────────────────────
 // Hair is decoupled from body.svg and the expression SVGs. It renders as an
 // identity layer on the reserved hair slot z-level (z=4): above the expression
 // overlay (z=0), below headwear (z=5). The hair slot has no shop items — it is
-// reserved for identity. Future hairstyles resolve per identity HERE.
+// reserved for identity.
+// Section 152D: hairstyle variants. hairSrcFor() resolves per identity.hairstyle.
+// Model B: absent hairstyle key → runtime fallback to "default" — no DB backfill.
 export const HAIR_SRC = "/assets/avatar/hair/hair-default.svg";
 
+const VALID_HAIRSTYLES = ["default", "braid", "short"];
+const HAIR_SRCS = {
+  "default": HAIR_SRC,
+  "braid":   "/assets/avatar/hair/hair-braid.svg",
+  "short":   "/assets/avatar/hair/hair-short.svg",
+};
+
 export function hairSrcFor(identity) {
-  // Section 152B: one hairstyle for every identity. Defensive by construction —
-  // any identity value (null, '{}', garbage) gets the default hair.
-  return HAIR_SRC;
+  const hairstyle = (identity && typeof identity === "object") ? identity.hairstyle : null;
+  if (!VALID_HAIRSTYLES.includes(hairstyle)) return HAIR_SRC;
+  return HAIR_SRCS[hairstyle] ?? HAIR_SRC;
 }
 
 // The identity base of every avatar render: body + hair, z-ascending.
