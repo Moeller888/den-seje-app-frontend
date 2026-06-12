@@ -697,7 +697,7 @@ import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
-  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, BASE_SRC, baseSrcFor,
+  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
 } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -881,9 +881,9 @@ function renderAvatar(animate = false) {
 
   // Collect all layers, sort by z ascending, insert in that order so DOM
   // paint order matches z-order (back items before body before front items)
-  // Section 152A: base resolved per identity (resolves to the shared base
-  // until 152C ships body variants — no visual change today)
-  const layers = [{ src: baseSrcFor(avatarIdentity), z: 0, alt: "", anim: false, isBase: true }];
+  // Section 152A/152B: identity base = body + hair layers from the shared
+  // helper (all surfaces build from baseLayersFor so they can never diverge)
+  const layers = baseLayersFor(avatarIdentity).map(l => ({ ...l, alt: "", anim: false }));
 
   ALL_SLOTS.forEach(slot => {
     const itemId = equippedSlots[slot];

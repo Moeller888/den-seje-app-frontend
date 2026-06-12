@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, BASE_SRC, baseSrcFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -459,13 +459,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     avatarDisplay.innerHTML = "";
 
-    // Base body always visible — render immediately (no network wait)
-    const base = document.createElement("img");
-    base.className = "quiz-avatar-layer avatar-slot-base";
-    base.src = BASE_SRC;
-    base.style.zIndex = "0";
-    base.alt = "";
-    avatarDisplay.appendChild(base);
+    // Identity base (body + hair) always visible — render immediately
+    // (no network wait). Section 152B: hair is a separate identity layer.
+    let base = null;
+    let hairImg = null;
+    baseLayersFor(null).forEach(layer => {
+      const img = document.createElement("img");
+      img.className = layer.isBase
+        ? "quiz-avatar-layer avatar-slot-base"
+        : "quiz-avatar-layer avatar-slot-hair";
+      img.src = layer.src;
+      img.style.zIndex = String(layer.z);
+      img.alt = "";
+      avatarDisplay.appendChild(img);
+      if (layer.isBase) base = img;
+      else hairImg = img;
+    });
+    if (!base) return;
 
     // Load equipped slots + identity from profiles
     const { data: profileData } = await supabase
@@ -474,10 +484,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       .eq("id", studentId)
       .maybeSingle();
 
-    // Section 152A: resolve the base per identity once the profile is loaded.
-    // baseSrcFor() resolves to the shared base until 152C — no-op today, so the
-    // instant render above stays correct.
+    // Section 152A/152B: resolve base + hair per identity once the profile is
+    // loaded. Both resolve to the shared files until 152C — no-op today, so
+    // the instant render above stays correct.
     base.src = baseSrcFor(profileData?.avatar_identity ?? null);
+    if (hairImg) hairImg.src = hairSrcFor(profileData?.avatar_identity ?? null);
 
     const equippedSlots = profileData?.equipped_slots ?? {};
     const equippedIds = Object.values(equippedSlots).filter(Boolean);

@@ -77,3 +77,26 @@ export function baseSrcFor(identity) {
   if (!BODY_TYPES.includes(bodyType)) return BASE_SRC;
   return BASE_SRC;
 }
+
+// ── Identity hair layer (Section 152B) ────────────────────────────────────────
+// Hair is decoupled from body.svg and the expression SVGs. It renders as an
+// identity layer on the reserved hair slot z-level (z=4): above the expression
+// overlay (z=0), below headwear (z=5). The hair slot has no shop items — it is
+// reserved for identity. Future hairstyles resolve per identity HERE.
+export const HAIR_SRC = "/assets/avatar/hair/hair-default.svg";
+
+export function hairSrcFor(identity) {
+  // Section 152B: one hairstyle for every identity. Defensive by construction —
+  // any identity value (null, '{}', garbage) gets the default hair.
+  return HAIR_SRC;
+}
+
+// The identity base of every avatar render: body + hair, z-ascending.
+// ALL render surfaces (avatar.html, hub.html, app.js, shop.html) must build
+// their layer stack from this helper so the surfaces can never diverge.
+export function baseLayersFor(identity) {
+  return [
+    { src: baseSrcFor(identity), z: 0,            isBase: true  },
+    { src: hairSrcFor(identity), z: SLOT_Z.hair,  isBase: false },
+  ];
+}

@@ -423,7 +423,7 @@ import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
 import {
-  BASE_SRC, baseSrcFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES,
+  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES,
 } from "./js/avatar-layers.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -460,10 +460,10 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
   // back (z=-1) appended before body (z=0) → body paints on top → correct occlusion.
   // The old approach elevated back items to z=2 which put capes/wings IN FRONT of the body.
   if (slotType) {
-    // Section 152A: shop previews are deliberately identity-independent —
-    // items are shown on the neutral base (baseSrcFor(null)). Whether previews
-    // should use the student's own body is a 152C decision.
-    const layers = [{ src: baseSrcFor(null), z: 0 }];
+    // Section 152A/152B: shop previews are deliberately identity-independent —
+    // items are shown on the neutral base + default hair (baseLayersFor(null)).
+    // Whether previews should use the student's own body is a 152C decision.
+    const layers = [...baseLayersFor(null)];
     if (imageUrl) {
       layers.push({ src: imageUrl, z: SLOT_Z[slotType] ?? 1 });
     }
