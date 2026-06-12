@@ -281,6 +281,7 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
       avatar_identity: {
         v: 1,
         body_type: "neutral",
+        hairstyle: "default",
         chosen_at: new Date().toISOString(),
       },
     },
@@ -353,6 +354,8 @@ export default async function globalSetup() {
   // active_domains (prevents domain-focus-bar layout shift in test 5), and
   // avatar_identity with chosen_at SET (Section 152C: prevents the identity
   // prompt overlay from blocking quiz-flow specs — same pattern as grade).
+  // hairstyle: "default" pinned explicitly (Section 152D) so hair-decoupling
+  // goldens always see hair-default.svg regardless of what prior tests wrote.
   // Identity-prompt specs explicitly null chosen_at in their own fixtures.
   const { error: gradeError } = await supabase
     .from("profiles")
@@ -364,6 +367,7 @@ export default async function globalSetup() {
       avatar_identity: {
         v: 1,
         body_type: "neutral",
+        hairstyle: "default",
         chosen_at: new Date().toISOString(),
       },
     })
