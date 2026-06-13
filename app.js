@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -489,6 +489,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // the instant render above stays correct.
     base.src = baseSrcFor(profileData?.avatar_identity ?? null);
     if (hairImg) hairImg.src = hairSrcFor(profileData?.avatar_identity ?? null);
+    // Section 152E: align the blink eyelid fill with the resolved skin tone.
+    if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(profileData?.avatar_identity ?? null));
 
     const equippedSlots = profileData?.equipped_slots ?? {};
     const equippedIds = Object.values(equippedSlots).filter(Boolean);

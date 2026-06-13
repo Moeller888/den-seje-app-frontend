@@ -12,8 +12,8 @@
   <defs>
     <!-- Skin: identical to neutral (expressions + blink eyelid depend on it) -->
     <linearGradient id="b2-sk" x1="0.3" y1="0" x2="0.7" y2="1">
-      <stop offset="0%"   stop-color="#F5C49A"/>
-      <stop offset="100%" stop-color="#E8A87C"/>
+      <stop offset="0%"   stop-color="#9C6B43"/>
+      <stop offset="100%" stop-color="#6B4423"/>
     </linearGradient>
     <!-- Tunic: sage-teal, upper-left light source -->
     <linearGradient id="b2-sh" x1="0" y1="0" x2="1" y2="1">
@@ -118,11 +118,11 @@
 
   <!-- Hands (identical to neutral — skin) -->
   <path d="M 35 165 Q 41 162 42 166 Q 42 171 38 173 Q 34 171 35 165 Z"
-        fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.7" stroke-linejoin="round"/>
-  <ellipse cx="27" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
+        fill="url(#b2-sk)" stroke="#553318" stroke-width="0.7" stroke-linejoin="round"/>
+  <ellipse cx="27" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#553318" stroke-width="0.8"/>
   <path d="M 125 165 Q 119 162 118 166 Q 118 171 122 173 Q 126 171 125 165 Z"
-        fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.7" stroke-linejoin="round"/>
-  <ellipse cx="133" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#d4956a" stroke-width="0.8"/>
+        fill="url(#b2-sk)" stroke="#553318" stroke-width="0.7" stroke-linejoin="round"/>
+  <ellipse cx="133" cy="173" rx="10" ry="9" fill="url(#b2-sk)" stroke="#553318" stroke-width="0.8"/>
   <path d="M 18 171 Q 27 168 36 171" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.20"/>
   <path d="M 124 171 Q 133 168 142 171" fill="none" stroke="#c07850" stroke-width="0.9" opacity="0.20"/>
   <path d="M 18 165 Q 27 162 36 165" fill="none" stroke="#2e463f" stroke-width="0.9" opacity="0.22"/>
@@ -140,24 +140,24 @@
   <!-- ── HEAD (identical to neutral) ── -->
 
   <rect x="72" y="78" width="16" height="18" rx="7" fill="url(#b2-sk)"/>
-  <line x1="80" y1="79" x2="80" y2="95" stroke="#d4956a" stroke-width="1.5" opacity="0.18"/>
-  <path d="M 72 80 Q 71 88 72 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.16"/>
-  <path d="M 88 80 Q 89 88 88 94" fill="none" stroke="#d4956a" stroke-width="1.5" opacity="0.14"/>
+  <line x1="80" y1="79" x2="80" y2="95" stroke="#553318" stroke-width="1.5" opacity="0.18"/>
+  <path d="M 72 80 Q 71 88 72 94" fill="none" stroke="#553318" stroke-width="1.5" opacity="0.16"/>
+  <path d="M 88 80 Q 89 88 88 94" fill="none" stroke="#553318" stroke-width="1.5" opacity="0.14"/>
 
   <path d="M 40 91 Q 56 86 72 90 Q 68 96 58 101 Q 48 99 40 95 Z" fill="#1c2930" opacity="0.14"/>
   <path d="M 120 93 Q 104 88 88 92 Q 92 98 102 103 Q 112 101 120 97 Z" fill="#1c2930" opacity="0.14"/>
 
   <ellipse cx="50" cy="52" rx="8" ry="9" fill="url(#b2-sk)"/>
   <ellipse cx="110" cy="52" rx="8" ry="9" fill="url(#b2-sk)"/>
-  <ellipse cx="50" cy="53" rx="4.5" ry="5.5" fill="#d4956a" opacity="0.28"/>
-  <ellipse cx="110" cy="53" rx="4.5" ry="5.5" fill="#d4956a" opacity="0.28"/>
+  <ellipse cx="50" cy="53" rx="4.5" ry="5.5" fill="#553318" opacity="0.28"/>
+  <ellipse cx="110" cy="53" rx="4.5" ry="5.5" fill="#553318" opacity="0.28"/>
 
   <!-- Head sphere — POSITION LOCKED: cx=80 cy=50 r=30 -->
   <circle cx="80" cy="50" r="30" fill="url(#b2-sk)"/>
   <!-- Section 152E: highlight opacity 0.10→0.07 to match the expression layer
        (visual transparency parity once the expression skin layer is removed). -->
   <path d="M 80 20 A 30 30 0 0 1 80 80 Q 104 74 110 56 Q 114 40 106 28 Q 96 20 80 20 Z"
-        fill="#d4956a" opacity="0.07"/>
+        fill="#553318" opacity="0.07"/>
 
   <path d="M 68 77 Q 80 82 92 77" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.27"/>
 

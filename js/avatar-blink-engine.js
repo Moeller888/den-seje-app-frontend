@@ -37,10 +37,14 @@ const EYES = {
   R: { cx: 92, cy: 47, rx: 7.6, ry: 6.6 },
 };
 
-// Eyelid skin color at y≈47 in the 160×240 viewBox.
-// Derived: face gradient #F5C49A→#E8A87C over head sphere y=20→80.
-// At y=47: (47-20)/(80-20) = 45% → #EDB888 (warm mid-skin tone).
-const EYELID_FILL = '#EDB888';
+// Eyelid skin color at y≈47 in the 160×240 viewBox — skin-tone aware (Section 152E).
+// Derived per tone as the 45% mix of that tone's gradient stops over the head
+// sphere (y=20→80; at y=47 → (47-20)/(80-20) = 45%):
+//   medium: #F5C49A→#E8A87C  → #EDB888 (warm mid-skin tone)
+//   dark:   #9C6B43→#6B4423  → #865935 (warm mid-brown tone)
+// The eyelid must blend into the underlying body skin so the blink reads as a
+// lid, not a coloured shape. Unknown tones fall back to medium.
+const EYELID_FILL = { medium: '#EDB888', dark: '#865935' };
 
 // Blink animation timing (ms) — calibrated to natural human blink physiology
 const CLOSE_MS   = 88;   // eyelid close: ~80–100ms natural range
@@ -62,12 +66,13 @@ const INTERVALS = {
 };
 
 export class BlinkEngine {
-  constructor(container) {
+  constructor(container, skinTone) {
     this._container = container;
     this._lidL      = null;
     this._lidR      = null;
     this._timer     = null;
     this._profile   = 'neutral';
+    this._skinTone  = EYELID_FILL[skinTone] ? skinTone : 'medium';
     this._destroyed = false;
     this._prefersRM = this._detectRM();
 
@@ -82,6 +87,17 @@ export class BlinkEngine {
     const profile = STATE_PROFILE[uiStateName] || 'neutral';
     this._profile = INTERVALS[profile] ? profile : 'neutral';
     // No immediate reschedule — profile takes effect on the next scheduled blink
+  }
+
+  // Section 152E: update the eyelid fill when the avatar's skin tone changes.
+  // Defensive: unknown tones fall back to medium. Updates live lids in place so
+  // an in-flight engine reflects the new tone without a rebuild.
+  setSkinTone(skinTone) {
+    const tone = EYELID_FILL[skinTone] ? skinTone : 'medium';
+    if (tone === this._skinTone) return;
+    this._skinTone = tone;
+    if (this._lidL) this._lidL.setAttribute('fill', EYELID_FILL[tone]);
+    if (this._lidR) this._lidR.setAttribute('fill', EYELID_FILL[tone]);
   }
 
   destroy() {
@@ -120,7 +136,7 @@ export class BlinkEngine {
     el.setAttribute('cy',   eye.cy);
     el.setAttribute('rx',   eye.rx);
     el.setAttribute('ry',   eye.ry);
-    el.setAttribute('fill', EYELID_FILL);
+    el.setAttribute('fill', EYELID_FILL[this._skinTone] || EYELID_FILL.medium);
     // transform-box:fill-box → transform-origin relative to element bounding box
     // transform-origin:50% 0% → pivot at top-center of the ellipse
     // scaleY(0) → collapses to a line at the top — eyelid invisible (open state)

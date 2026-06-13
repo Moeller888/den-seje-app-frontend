@@ -67,22 +67,38 @@ export const BASE_SRC = "/assets/avatar/base/body.svg";
 
 export const BODY_TYPES = ["male", "female", "neutral"];
 
-// Section 152C: per-body-type base files. All variants honor the locked
-// geometry contract (head cx=80 cy=50 r=30, eyes cx=68/92 cy=47, arm rects,
-// equipment anchors, skin gradient) and share the expressions + hair layer.
+// Section 152E: skin tones. Asset-based — each (body_type × skin_tone) pair maps
+// to a concrete SVG. 'medium' is the original tone (existing files, default);
+// 'dark' adds the *-dark.svg variants. No runtime color manipulation.
+export const SKIN_TONES = ["medium", "dark"];
+
+// Section 152C/152E: per-body-type, per-skin-tone base files. All variants honor
+// the locked geometry contract (head cx=80 cy=50 r=30, eyes cx=68/92 cy=47, arm
+// rects, equipment anchors) and share the expressions + hair layer. Only the
+// skin gradient + skin-shadow color differ between medium and dark.
 const BODY_SRCS = {
-  neutral: BASE_SRC,
-  male:    "/assets/avatar/base/body-male.svg",
-  female:  "/assets/avatar/base/body-female.svg",
+  neutral: { medium: BASE_SRC,                              dark: "/assets/avatar/base/body-neutral-dark.svg" },
+  male:    { medium: "/assets/avatar/base/body-male.svg",   dark: "/assets/avatar/base/body-male-dark.svg"   },
+  female:  { medium: "/assets/avatar/base/body-female.svg", dark: "/assets/avatar/base/body-female-dark.svg" },
 };
 
+// Resolves the skin tone for an identity. Defensive: null, '{}', garbage, or an
+// unknown skin_tone all resolve to 'medium' (the default) — Model B runtime
+// fallback, no DB backfill required for existing profiles.
+export function skinToneFor(identity) {
+  const tone = (identity && typeof identity === "object") ? identity.skin_tone : null;
+  if (!SKIN_TONES.includes(tone)) return "medium";
+  return tone;
+}
+
 // Resolves the base body SVG for an identity. Defensive: null, '{}', garbage,
-// or unknown body_type all resolve to the neutral base — a broken identity can
-// never produce a broken avatar.
+// or unknown body_type/skin_tone all resolve to the neutral-medium base — a
+// broken identity can never produce a broken avatar.
 export function baseSrcFor(identity) {
   const bodyType = (identity && typeof identity === "object") ? identity.body_type : null;
-  if (!BODY_TYPES.includes(bodyType)) return BASE_SRC;
-  return BODY_SRCS[bodyType] ?? BASE_SRC;
+  const tone     = skinToneFor(identity);
+  const byType   = BODY_TYPES.includes(bodyType) ? BODY_SRCS[bodyType] : BODY_SRCS.neutral;
+  return byType?.[tone] ?? BASE_SRC;
 }
 
 // ── Identity hair layer (Section 152B/152D) ───────────────────────────────────

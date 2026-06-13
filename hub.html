@@ -1232,7 +1232,7 @@
   import { getXPProgressInLevel } from "./js/progression.js";
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
-  import { ALL_SLOTS, SLOT_Z, baseLayersFor, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
+  import { ALL_SLOTS, SLOT_Z, baseLayersFor, skinToneFor, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
   import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -1511,7 +1511,7 @@
 
     try { exprEngine     = new ExpressionEngine(avatarEl); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
     try { presenceEngine = new PresenceEngine(avatarEl);   } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-    try { blinkEngine    = new BlinkEngine(avatarEl);      } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+    try { blinkEngine    = new BlinkEngine(avatarEl, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
   }
 
   // How long the reaction state stays observable on #avatarShowcase (matches the

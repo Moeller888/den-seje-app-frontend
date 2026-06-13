@@ -149,8 +149,10 @@
 
   <!-- Head sphere — POSITION LOCKED: cx=80 cy=50 r=30 -->
   <circle cx="80" cy="50" r="30" fill="url(#b2-sk)"/>
+  <!-- Section 152E: highlight opacity 0.10→0.07 to match the expression layer
+       (visual transparency parity once the expression skin layer is removed). -->
   <path d="M 80 20 A 30 30 0 0 1 80 80 Q 104 74 110 56 Q 114 40 106 28 Q 96 20 80 20 Z"
-        fill="#d4956a" opacity="0.10"/>
+        fill="#d4956a" opacity="0.07"/>
 
   <path d="M 68 77 Q 80 82 92 77" fill="none" stroke="#c07850" stroke-width="2.5" opacity="0.27"/>
 

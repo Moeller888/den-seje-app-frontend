@@ -700,6 +700,8 @@
   <div class="identity-buttons" id="identityButtons"></div>
   <div class="identity-section-label">Frisure</div>
   <div class="identity-buttons" id="hairstyleButtons"></div>
+  <div class="identity-section-label">Hudtone</div>
+  <div class="identity-buttons" id="skinToneButtons"></div>
 </div>
 
 <script type="module">
@@ -710,7 +712,7 @@ import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
-  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
+  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor, skinToneFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
 } from "./js/avatar-layers.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -928,6 +930,10 @@ function renderAvatar(animate = false) {
   // Blink layer carries inline z-index 5 — append last.
   if (blinkLayer) preview.appendChild(blinkLayer);
 
+  // Section 152E: keep the blink engine's eyelid fill in sync with the current
+  // skin tone across identity changes (no-op until the engine is initialised).
+  if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(avatarIdentity));
+
   // Set highest rarity on wrap for CSS aura + border (P5)
   const highest = getHighestRarity() ?? "";
   if (wrap) {
@@ -1103,6 +1109,7 @@ function renderIdentity() {
   }).join("");
 
   renderHairstyle();
+  renderSkinTone();
 }
 
 function renderHairstyle() {
@@ -1134,6 +1141,30 @@ function renderHairstyle() {
   }).join("");
 }
 
+function renderSkinTone() {
+  const container = document.getElementById("skinToneButtons");
+  if (!container) return;
+
+  const validTones = ["medium", "dark"];
+  const currentTone =
+    (avatarIdentity && typeof avatarIdentity === "object"
+      && validTones.includes(avatarIdentity.skin_tone))
+      ? avatarIdentity.skin_tone
+      : "medium";
+
+  const options = [
+    { value: "medium", label: "Medium" },
+    { value: "dark",   label: "Mørk" },
+  ];
+
+  container.innerHTML = options.map(opt => {
+    const isActive = currentTone === opt.value;
+    return `<button class="identity-btn${isActive ? ' active' : ''}"
+                    data-skin-tone="${opt.value}"
+                    aria-pressed="${isActive}">${opt.label}</button>`;
+  }).join("");
+}
+
 // ── Avatar life engines (Section 151A) ────────────────────────────────────────
 // Same engines as the quiz page — expression, breathing, blink.
 // Non-fatal: any engine failure leaves the page fully functional.
@@ -1148,7 +1179,7 @@ function initAvatarLifeEngines() {
 
   try { exprEngine     = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
   try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-  try { blinkEngine    = new BlinkEngine(preview);      } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+  try { blinkEngine    = new BlinkEngine(preview, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
 }
 
 // Rarity → engine event mapping. Unknown/missing rarity falls back to common.
@@ -1228,6 +1259,14 @@ document.getElementById("hairstyleButtons").addEventListener("click", async (e) 
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   await handleSetHairstyle(btn.dataset.hairstyle);
+  btn.disabled = false;
+});
+
+document.getElementById("skinToneButtons").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".identity-btn[data-skin-tone]");
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  await handleSetSkinTone(btn.dataset.skinTone);
   btn.disabled = false;
 });
 
@@ -1324,6 +1363,25 @@ async function handleSetHairstyle(hairstyle) {
 
   avatarIdentity = data ?? avatarIdentity;
   showToast("✓ Frisure opdateret", "success");
+  renderAll(true);
+}
+
+async function handleSetSkinTone(skinTone) {
+  const { data, error } = await supabase.rpc("set_avatar_identity", {
+    p_skin_tone: skinTone,
+  });
+
+  if (error) {
+    console.error("SET SKIN TONE ERROR:", error);
+    showToast("Kunne ikke gemme – prøv igen", "error");
+    playSound("error");
+    return;
+  }
+
+  avatarIdentity = data ?? avatarIdentity;
+  showToast("✓ Hudtone opdateret", "success");
+  // Immediate re-render with the new skin tone; renderAvatar keeps the blink
+  // engine's eyelid fill in sync and preserves body_type + hairstyle.
   renderAll(true);
 }
 
