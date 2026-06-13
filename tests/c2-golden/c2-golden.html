@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf8"><style>
+  body{margin:0;font-family:Arial;background:#fff}
+  #wrap{display:flex;flex-direction:column;gap:16px;padding:16px;align-items:flex-start}
+  .sheet{display:inline-block;padding:12px;background:#f4f1ec;border-radius:8px}
+  .row{display:flex;gap:12px;align-items:flex-end}
+  .cell{display:flex;flex-direction:column;align-items:center}
+  .ava{position:relative;width:96px;height:144px}
+  .lyr{position:absolute;inset:0;width:100%;height:100%}
+  .lbl{font-size:10px;color:#555;margin-top:4px}
+</style></head><body>
+<!-- C2 GOLDEN BASELINE FIXTURE (Section 155H). Renders the permanent C2 golden
+     matrix via the real shared module (mountC2Avatar). Regenerate the PNG
+     baselines with: node tests/c2-golden/c2-golden.run.mjs -->
+<div id="wrap">
+  <div class="sheet" id="sheetMedium"></div>
+  <div class="sheet" id="sheetDark"></div>
+  <div class="sheet" id="sheetColors"></div>
+</div>
+<script type="module">
+  import { mountC2Avatar } from '/js/avatar-render-c2.js';
+  const styles = ['short','tousled','curly','long','ponytail','buzz','afro'];
+  const colors = ['black','dark_brown','brown','light_brown','blonde','red','auburn','fantasy_blue'];
+  function cell(p,label){const c=document.createElement('div');c.className='cell';const a=document.createElement('div');a.className='ava';c.appendChild(a);const l=document.createElement('div');l.className='lbl';l.textContent=label;c.appendChild(l);p.appendChild(c);return a;}
+  function row(p){const r=document.createElement('div');r.className='row';p.appendChild(r);return r;}
+  (async()=>{
+    let r = row(document.getElementById('sheetMedium'));
+    for (const st of styles) await mountC2Avatar(cell(r,st),{skin_tone:'medium',hairstyle:st,hair_color:'brown'},{layerClass:'lyr'});
+    r = row(document.getElementById('sheetDark'));
+    for (const st of styles) await mountC2Avatar(cell(r,st),{skin_tone:'dark',hairstyle:st,hair_color:'brown'},{layerClass:'lyr'});
+    r = row(document.getElementById('sheetColors'));
+    for (const c of colors) await mountC2Avatar(cell(r,c),{skin_tone:'medium',hairstyle:'curly',hair_color:c},{layerClass:'lyr'});
+    window.__done = true;
+  })();
+</script></body></html>

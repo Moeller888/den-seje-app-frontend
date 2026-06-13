@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- C2 HAIR — "long" (Section 155D, rev.155D-R1). Token-recolor per Hair Color
+       Decision v1.0: fill="var(--hair-base)" / "var(--hair-shadow)". NO hardcoded
+       hair colours. Anchors: head cx=80 cy=50 r=30. Crown hairline above eye
+       anchor (cy=47), lowest central ~y31.
+       Rev R1: fuller, wider side locks (bellied out to x40/120) framing a natural
+       face opening (~x62–98), flowing to ~y146 — fixes the prior thin "rabbit-ear"
+       silhouette. Distinct crown → compressible later. Full state only. -->
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- left side lock (full, behind crown) -->
+    <path d="M 52 42 Q 40 60 41 100 Q 41 132 50 146 Q 60 138 60 105 Q 60 72 62 50 Q 57 44 52 42 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- right side lock (full, behind crown) -->
+    <path d="M 108 42 Q 120 60 119 100 Q 119 132 110 146 Q 100 138 100 105 Q 100 72 98 50 Q 103 44 108 42 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- crown cap -->
+    <path d="M 50 56 Q 46 26 70 20 Q 80 17 90 20 Q 114 26 110 56 Q 107 43 98 38 Q 90 32 80 31 Q 70 32 62 38 Q 53 43 50 56 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- single flat shadow: right lock + right crown -->
+    <path d="M 100 52 Q 103 90 102 110 Q 103 132 110 146 Q 100 138 100 105 Q 100 75 99 52 Z"
+          fill="var(--hair-shadow)"/>
+    <path d="M 90 20 Q 114 26 110 56 Q 107 43 98 38 Q 93 35 89 33 Q 91 26 90 20 Z"
+          fill="var(--hair-shadow)"/>
+  </g>
+</svg>

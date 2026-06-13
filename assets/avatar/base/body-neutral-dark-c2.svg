@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- ════════════════════════════════════════════════════════════════════════
+       C2 BASE AVATAR PREMIUM — blank-canvas base body (neutral / DARK skin)
+       Section 155C. Dark skin-tone variant of body-neutral-medium-c2.svg.
+
+       GEOMETRY IS 100% IDENTICAL to the medium variant. Only the skin colour
+       tokens differ (body owns skin per the layer contract). The neutral
+       underlayer garment (tee/shorts) is NOT skin and is unchanged.
+
+       FLAT ONLY (R1–R5): no gradients, no blur/filter/mask, ONE flat shadow
+       tone per region (hard edge), uniform outline, light source upper-left.
+
+       LOCKED ANCHORS (identical to medium variant):
+         head  cx=80 cy=50 r=30
+         eyes  cx=68 / cx=92  cy=47  ← drawn by the Expression layer (z=30).
+
+       BLANK CANVAS: no styled Top/Bottom/Shoes baked in. Arms, lower legs and
+       feet are bare skin so Top (z=20), Bottom (z=10) and Shoes (z=15) cover
+       them later.
+
+       BASE UNDERLAYER SEAM RULE (LOCKED — Section 155B):
+       The base underlayer garment seam (tee hem / shorts waist) sits ~6px ABOVE
+       the waist anchor, at y≈166–168 — it MUST NOT sit on the anchor line. This
+       guarantees any Top hem / Bottom waist aligned to the waist anchor fully
+       covers the underlayer seam (underlayer inset principle).
+       The waist anchor (y≈174–183) remains the Top/Bottom meeting line and is
+       honored by the base BODY: continuous coverage + consistent waist width
+       through y174–183. The anchor is NOT the underlayer seam position.
+
+       PALETTE (flat tokens) — DARK skin:
+         skin        #8A5A3A   skin-shadow  #6E4528   skin-line   #5E3A20
+         skin-hi     #A87049
+         under       #D8D0C6   under-shadow #BDB3A6   under-line  #9E9384  (unchanged)
+       ════════════════════════════════════════════════════════════════════════ -->
+
+  <g stroke-linejoin="round" stroke-linecap="round" fill="none">
+
+    <!-- ═══ LEFT ARM (skin) — top tucks under the sleeve for a connected joint ═══ -->
+    <path d="M 18 98 Q 14 99 14 110 L 16 158 Q 16 167 25 168 L 33 168 Q 40 167 40 157 L 39 110 Q 39 98 32 97 Q 25 96 18 98 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 36 102 L 39 110 L 38 156 Q 38 164 33 166 L 33 104 Q 34 102 36 102 Z"
+          fill="#6E4528"/>
+
+    <!-- ═══ RIGHT ARM (skin) — mirror of left ═══ -->
+    <path d="M 142 98 Q 146 99 146 110 L 144 158 Q 144 167 135 168 L 127 168 Q 120 167 120 157 L 121 110 Q 121 98 128 97 Q 135 96 142 98 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 144 102 L 146 110 L 145 156 Q 145 164 140 166 L 140 104 Q 142 102 144 102 Z"
+          fill="#6E4528"/>
+
+    <!-- ═══ HANDS (skin) — anchor cx=27 / cx=133, cy=174 ═══ -->
+    <circle cx="27" cy="174" r="9" fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 28 176 Q 34 176 34 182 Q 30 184 26 181 Q 25 178 28 176 Z" fill="#6E4528"/>
+    <circle cx="133" cy="174" r="9" fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 132 176 Q 126 176 126 182 Q 130 184 134 181 Q 135 178 132 176 Z" fill="#6E4528"/>
+
+    <!-- ═══ LEFT LEG (skin) — bare below the shorts; Bottom/Shoes cover later ═══ -->
+    <path d="M 52 192 L 72 192 L 70 230 Q 69 233 64 233 L 56 233 Q 51 233 51 230 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 66 194 L 70 194 L 68 230 Q 67 232 64 232 L 64 196 Z" fill="#6E4528"/>
+
+    <!-- ═══ RIGHT LEG (skin) — mirror ═══ -->
+    <path d="M 88 192 L 108 192 L 109 230 Q 109 233 104 233 L 96 233 Q 91 233 90 230 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 104 194 L 108 194 L 109 230 Q 109 232 106 232 L 106 196 Z" fill="#6E4528"/>
+
+    <!-- ═══ FEET (bare skin) — foot anchor cx=61 / cx=99, baseline y≈235 ═══ -->
+    <path d="M 49 228 Q 46 235 54 237 L 70 237 Q 73 236 72 231 L 70 228 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 111 228 Q 114 235 106 237 L 90 237 Q 87 236 88 231 L 90 228 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+
+    <!-- ═══ SHORTS (neutral base underlayer) — waist y≈168, inseam notch at x=80 ═══ -->
+    <path d="M 44 166 L 116 166 L 114 196 Q 108 199 100 197 L 92 178 Q 80 174 68 178 L 60 197 Q 52 199 46 196 Z"
+          fill="#D8D0C6" stroke="#9E9384" stroke-width="2.2"/>
+    <path d="M 100 168 L 114 168 L 114 196 Q 108 199 100 197 L 100 168 Z" fill="#BDB3A6"/>
+
+    <!-- ═══ TORSO TEE (neutral base underlayer) — shoulders y≈92 to waist hem y≈168 ═══ -->
+    <path d="M 46 92 Q 40 92 40 104 L 40 168 L 120 168 L 120 104 Q 120 92 114 92 L 96 92 Q 88 96 80 96 Q 72 96 64 92 Z"
+          fill="#D8D0C6" stroke="#9E9384" stroke-width="2.2"/>
+    <!-- short sleeves: overlap the arm tops → connected shoulders (no paper-doll) -->
+    <path d="M 42 95 Q 30 97 28 110 Q 36 113 43 106 L 44 97 Z"
+          fill="#D8D0C6" stroke="#9E9384" stroke-width="2.2"/>
+    <path d="M 118 95 Q 130 97 132 110 Q 124 113 117 106 L 116 97 Z"
+          fill="#D8D0C6" stroke="#9E9384" stroke-width="2.2"/>
+    <!-- single flat shadow: right side + lower hem -->
+    <path d="M 110 104 L 120 104 L 120 168 L 110 168 Z" fill="#BDB3A6"/>
+    <path d="M 40 162 L 120 162 L 120 168 L 40 168 Z" fill="#BDB3A6"/>
+
+    <!-- ═══ EARS (skin) — painted before head so the head overlaps the inner edge ═══ -->
+    <ellipse cx="50" cy="52" rx="6" ry="8" fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 50 48 Q 53 50 52 56 Q 49 56 48 51 Z" fill="#6E4528"/>
+    <ellipse cx="110" cy="52" rx="6" ry="8" fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 110 48 Q 107 50 108 56 Q 111 56 112 51 Z" fill="#6E4528"/>
+
+    <!-- ═══ NECK (skin) — anchor x[72,88] y[76,95] ═══ -->
+    <path d="M 72 74 Q 72 72 75 72 L 85 72 Q 88 72 88 74 L 88 92 Q 88 95 84 95 L 76 95 Q 72 95 72 92 Z"
+          fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <path d="M 72 76 Q 80 82 88 76 L 88 80 Q 80 86 72 80 Z" fill="#6E4528"/>
+
+    <!-- ═══ HEAD SPHERE (skin) — LOCKED: cx=80 cy=50 r=30. No face features. ═══ -->
+    <circle cx="80" cy="50" r="30" fill="#8A5A3A" stroke="#5E3A20" stroke-width="2.2"/>
+    <!-- single flat skin-shadow: right crescent (light from upper-left) -->
+    <path d="M 80 20 A 30 30 0 0 1 80 80 Q 96 72 102 54 Q 106 38 96 26 Q 89 21 80 20 Z"
+          fill="#6E4528"/>
+    <!-- single flat skin-highlight: upper-left -->
+    <path d="M 62 31 Q 70 24 80 24 Q 70 28 64 39 Q 60 46 60 40 Z" fill="#A87049"/>
+
+  </g>
+</svg>

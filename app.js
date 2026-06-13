@@ -1,7 +1,8 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2 } from "./js/avatar-layers.js";
+import { mountC2Avatar } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -458,6 +459,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!avatarDisplay) return;
 
     avatarDisplay.innerHTML = "";
+
+    // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
+    // via the shared module; cosmetics are deferred to a later C2 section. This
+    // function is awaited before the blink engine is created, so the C2 base is
+    // present when blink initialises.
+    if (isAvatarV2()) {
+      const { data: pd } = await supabase
+        .from("profiles")
+        .select("avatar_identity")
+        .eq("id", studentId)
+        .maybeSingle();
+      await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer" });
+      if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(pd?.avatar_identity ?? null));
+      return;
+    }
 
     // Identity base (body + hair) always visible — render immediately
     // (no network wait). Section 152B: hair is a separate identity layer.

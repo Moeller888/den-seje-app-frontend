@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- C2 HAIR — "short" (Section 155D). Token-recolor per Hair Color Decision v1.0:
+       fill="var(--hair-base)" / "var(--hair-shadow)". NO hardcoded hair colours.
+       Anchors: head cx=80 cy=50 r=30. Hairline stays above the eye anchor (cy=47);
+       lowest central hairline ~y33. Zone y[8,72] x[40,120]; eyes never covered.
+       Designed with a distinct crown so a later compressed-state can flatten the
+       top under headwear. 155D delivers the full state only. -->
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- base silhouette: neat short cap -->
+    <path d="M 52 56 Q 47 30 70 22 Q 80 19 90 22 Q 113 30 108 56 Q 105 45 97 39 Q 90 34 80 33 Q 70 34 63 39 Q 55 45 52 56 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- single flat shadow: right side (light upper-left) -->
+    <path d="M 90 22 Q 113 30 108 56 Q 105 45 97 39 Q 92 36 87 34 Q 91 28 90 22 Z"
+          fill="var(--hair-shadow)"/>
+  </g>
+</svg>

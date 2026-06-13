@@ -1,0 +1,81 @@
+// ── C2 Avatar Render Pipeline (Section 155G) ──────────────────────────────────
+// The SINGLE shared C2 render path. Every surface (avatar.html, hub.html,
+// app.js, shop.html) MUST mount the C2 avatar through mountC2Avatar() so the
+// surfaces can never diverge. Gated by isAvatarV2() at each call site — when the
+// flag is OFF, none of this runs and the legacy render is unchanged.
+//
+// Implements Hair Color Technical Decision v1.0: the hair layer is the only
+// INLINE-rendered layer. Its SVG uses fill="var(--hair-base)"/"var(--hair-shadow)";
+// this module inlines the SVG and sets those two CSS variables from the identity's
+// resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
+
+import { baseLayersForC2, hairColorTokensFor } from "./avatar-layers.js";
+
+// In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
+// local assets — safe to cache for the session.
+const _hairTextCache = new Map();
+
+async function fetchSvgText(src) {
+  if (_hairTextCache.has(src)) return _hairTextCache.get(src);
+  const res = await fetch(src);
+  if (!res.ok) throw new Error(`C2 hair fetch failed: ${src} (${res.status})`);
+  const txt = await res.text();
+  _hairTextCache.set(src, txt);
+  return txt;
+}
+
+// Pure composition: ordered C2 layer descriptors for an identity.
+// [{ src, z, isBase, inline }] — hair carries inline:true.
+export function composeC2Layers(identity) {
+  return baseLayersForC2(identity);
+}
+
+// The single C2 render path. Mounts base (<img>) + hair (inline <svg>, token-
+// recolored) into rootEl. Removes only prior C2 layers ([data-c2-layer]); the
+// caller manages the expression overlay and blink layer (same eye anchors as the
+// C2 base, so they remain compatible). Async because the inline hair SVG is
+// fetched. Defensive: any failure leaves the base rendered (hair simply absent).
+//
+// layerClass: each surface passes its own layer CSS class (avatar.html
+// "avatar-layer", hub "profile-avatar-layer", app.js "quiz-avatar-layer", shop
+// "preview-layer") so positioning matches that surface. The data-c2-layer markers
+// are used for cleanup/detection regardless of class.
+export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer" } = {}) {
+  if (!rootEl) return rootEl;
+
+  const layers = composeC2Layers(identity);
+  const tokens = hairColorTokensFor(identity);
+  const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
+
+  // Remove previously mounted C2 layers (idempotent re-render).
+  rootEl.querySelectorAll("[data-c2-layer]").forEach((n) => n.remove());
+
+  for (const layer of layers) {
+    if (layer.inline) {
+      const wrap = document.createElement("div");
+      wrap.setAttribute("data-c2-layer", "hair");
+      wrap.className = cls("hair");
+      wrap.style.zIndex = String(layer.z);
+      // Token flow: identity.hair_color → {base, shadow} → CSS vars on the wrapper,
+      // inherited by the inline hair SVG's fill="var(--hair-base|shadow)".
+      wrap.style.setProperty("--hair-base", tokens.base);
+      wrap.style.setProperty("--hair-shadow", tokens.shadow);
+      try {
+        wrap.innerHTML = await fetchSvgText(layer.src);
+        rootEl.appendChild(wrap);
+      } catch (_e) {
+        // Fail-soft: skip hair, keep the base. Never throw out of render.
+      }
+    } else {
+      const img = document.createElement("img");
+      img.setAttribute("data-c2-layer", layer.isBase ? "base" : "cosmetic");
+      img.className = cls("base");
+      img.src = layer.src;
+      img.alt = "";
+      img.style.zIndex = String(layer.z);
+      rootEl.appendChild(img);
+    }
+  }
+
+  return rootEl;
+}

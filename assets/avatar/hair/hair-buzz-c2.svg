@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- C2 HAIR — "buzz" (Section 155D, rev.155D-R1). Token-recolor per Hair Color
+       Decision v1.0: fill="var(--hair-base)" / "var(--hair-shadow)". NO hardcoded
+       hair colours. Anchors: head cx=80 cy=50 r=30.
+       Rev R1: hugs the skull EXACTLY (outer edge on the head circle x50/110,
+       top y~20), with a low flat hairline ~y34 — reads as shaved/very short and
+       is clearly tighter/smaller than "short" (which bulges past the skull).
+       Hairline above eye anchor (cy=47). Already low-profile; no compressed-state
+       needed. Full state only. -->
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- base silhouette: tight skull-hugging shaved cap, low flat hairline -->
+    <path d="M 53 47 Q 51 28 64 23 Q 80 20 96 23 Q 109 28 107 47 Q 102 40 96 37 Q 88 34 80 34 Q 72 34 64 37 Q 58 40 53 47 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- single flat shadow: right side -->
+    <path d="M 96 23 Q 109 28 107 47 Q 102 40 96 37 Q 92 35 88 35 Q 91 29 96 23 Z"
+          fill="var(--hair-shadow)"/>
+  </g>
+</svg>

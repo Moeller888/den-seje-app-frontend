@@ -423,8 +423,9 @@ import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
 import {
-  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES,
+  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2,
 } from "./js/avatar-layers.js";
+import { mountC2Avatar } from "./js/avatar-render-c2.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -460,22 +461,38 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
   // back (z=-1) appended before body (z=0) → body paints on top → correct occlusion.
   // The old approach elevated back items to z=2 which put capes/wings IN FRONT of the body.
   if (slotType) {
-    // Section 152A/152B: shop previews are deliberately identity-independent —
-    // items are shown on the neutral base + default hair (baseLayersFor(null)).
-    // Whether previews should use the student's own body is a 152C decision.
-    const layers = [...baseLayersFor(null)];
-    if (imageUrl) {
-      layers.push({ src: imageUrl, z: SLOT_Z[slotType] ?? 1 });
+    // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
+    // via the shared module; the previewed item layer is appended on top (z-index
+    // governs compositing regardless of append order).
+    if (isAvatarV2()) {
+      mountC2Avatar(wrap, null, { layerClass: "preview-layer" }).then(() => {
+        if (imageUrl) {
+          const img = document.createElement("img");
+          img.className = "preview-layer";
+          img.src = imageUrl;
+          img.style.zIndex = String(SLOT_Z[slotType] ?? 1);
+          img.alt = "";
+          wrap.appendChild(img);
+        }
+      });
+    } else {
+      // Section 152A/152B: shop previews are deliberately identity-independent —
+      // items are shown on the neutral base + default hair (baseLayersFor(null)).
+      // Whether previews should use the student's own body is a 152C decision.
+      const layers = [...baseLayersFor(null)];
+      if (imageUrl) {
+        layers.push({ src: imageUrl, z: SLOT_Z[slotType] ?? 1 });
+      }
+      layers.sort((a, b) => a.z - b.z);
+      layers.forEach(({ src, z }) => {
+        const img = document.createElement("img");
+        img.className = "preview-layer";
+        img.src = src;
+        img.style.zIndex = String(z);
+        img.alt = "";
+        wrap.appendChild(img);
+      });
     }
-    layers.sort((a, b) => a.z - b.z);
-    layers.forEach(({ src, z }) => {
-      const img = document.createElement("img");
-      img.className = "preview-layer";
-      img.src = src;
-      img.style.zIndex = String(z);
-      img.alt = "";
-      wrap.appendChild(img);
-    });
   }
 
   // "Ny!" corner badge — inside preview, top-left SVG corner is sparsely populated

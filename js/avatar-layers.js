@@ -127,6 +127,93 @@ export function hairSrcFor(identity) {
   return HAIR_SRCS[hairstyle] ?? HAIR_SRC;
 }
 
+// ── Identity hair color (Section 155E) ────────────────────────────────────────
+// Hair color is IDENTITY — NOT a shop item, NOT inventory. Stored in
+// profiles.avatar_identity.hair_color, written only via the set_avatar_identity
+// RPC. Per Hair Color Technical Decision v1.0, hair is the only INLINE-rendered
+// layer: its SVG fills reference fill="var(--hair-base)" / "var(--hair-shadow)",
+// and the render surface sets those two CSS variables from the token pair
+// resolved here. (Render wiring is a later section; 155E ships the data contract
+// only.)
+export const HAIR_COLORS = [
+  "black", "dark_brown", "brown", "light_brown",
+  "blonde", "red", "auburn", "fantasy_blue",
+];
+
+// First palette (Section 155E). Each color = a {base, shadow} token pair.
+// 'shadow' doubles as the hair outline stroke (see the Section 155D hair assets,
+// whose strokes use var(--hair-shadow)). Values are locked, flat hex (R1–R5).
+export const HAIR_COLOR_TOKENS = {
+  black:        { base: "#2B2622", shadow: "#141110" },
+  dark_brown:   { base: "#3F2A1B", shadow: "#271A10" },
+  brown:        { base: "#5A3D28", shadow: "#3C2818" },
+  light_brown:  { base: "#8A5E3B", shadow: "#5F3F26" },
+  blonde:       { base: "#C99A5B", shadow: "#9C7038" },
+  red:          { base: "#A8442A", shadow: "#732A19" },
+  auburn:       { base: "#803A24", shadow: "#561F13" },
+  fantasy_blue: { base: "#4A78C8", shadow: "#2F5090" },
+};
+
+// Model B default: existing profiles with no hair_color key render 'brown'.
+// No DB backfill required.
+export const DEFAULT_HAIR_COLOR = "brown";
+
+// Resolves the hair color KEY for an identity. Defensive: null, '{}', garbage,
+// or an unknown hair_color all resolve to DEFAULT_HAIR_COLOR — a broken identity
+// can never produce a broken render. Mirrors skinToneFor / hairSrcFor.
+export function hairColorFor(identity) {
+  const c = (identity && typeof identity === "object") ? identity.hair_color : null;
+  if (!HAIR_COLORS.includes(c)) return DEFAULT_HAIR_COLOR;
+  return c;
+}
+
+// Resolves the {base, shadow} token PAIR for an identity. The render surface
+// sets --hair-base / --hair-shadow from this. Always returns a valid pair.
+export function hairColorTokensFor(identity) {
+  return HAIR_COLOR_TOKENS[hairColorFor(identity)] ?? HAIR_COLOR_TOKENS[DEFAULT_HAIR_COLOR];
+}
+
+// ── C2 hairstyle alignment (Section 155F) ─────────────────────────────────────
+// The C2 render path uses the NEW C2 hairstyle assets (Section 155D). To stay
+// backward-compatible, EVERY stored hairstyle value — legacy or C2 — maps to a
+// valid C2 asset here; legacy-only keys are aliased to the nearest C2 style.
+// No DB backfill: existing profiles keep their legacy value and render via these
+// aliases once the C2 render path is wired (a later section).
+//
+// IMPORTANT: the legacy resolver hairSrcFor() above is UNCHANGED and still drives
+// the current live render against the legacy assets. hairSrcForC2() is additive
+// and used ONLY by the future C2 render path.
+export const C2_HAIRSTYLES = ["short", "tousled", "curly", "long", "ponytail", "buzz", "afro"];
+export const DEFAULT_HAIRSTYLE_C2 = "short";
+
+// Union (legacy ∪ C2) → C2 asset path. Legacy keys aliased to the nearest C2 style:
+//   default → short · braid → ponytail · sidecut → buzz · buzzcut → buzz
+const HAIR_SRCS_C2 = {
+  // C2-native
+  "short":    "/assets/avatar/hair/hair-short-c2.svg",
+  "tousled":  "/assets/avatar/hair/hair-tousled-c2.svg",
+  "curly":    "/assets/avatar/hair/hair-curly-c2.svg",
+  "long":     "/assets/avatar/hair/hair-long-c2.svg",
+  "ponytail": "/assets/avatar/hair/hair-ponytail-c2.svg",
+  "buzz":     "/assets/avatar/hair/hair-buzz-c2.svg",
+  "afro":     "/assets/avatar/hair/hair-afro-c2.svg",
+  // legacy aliases → nearest C2 style
+  "default":  "/assets/avatar/hair/hair-short-c2.svg",
+  "braid":    "/assets/avatar/hair/hair-ponytail-c2.svg",
+  "sidecut":  "/assets/avatar/hair/hair-buzz-c2.svg",
+  "buzzcut":  "/assets/avatar/hair/hair-buzz-c2.svg",
+};
+
+export const HAIR_SRC_C2_DEFAULT = HAIR_SRCS_C2[DEFAULT_HAIRSTYLE_C2];
+
+// Resolves the C2 hair asset for an identity. Defensive: null, '{}', garbage,
+// unknown, or any legacy key all resolve to a valid C2 asset (alias or default).
+// Never returns undefined. Mirrors hairSrcFor (legacy) but for the C2 asset set.
+export function hairSrcForC2(identity) {
+  const hairstyle = (identity && typeof identity === "object") ? identity.hairstyle : null;
+  return HAIR_SRCS_C2[hairstyle] ?? HAIR_SRC_C2_DEFAULT;
+}
+
 // The identity base of every avatar render: body + hair, z-ascending.
 // ALL render surfaces (avatar.html, hub.html, app.js, shop.html) must build
 // their layer stack from this helper so the surfaces can never diverge.
@@ -134,5 +221,48 @@ export function baseLayersFor(identity) {
   return [
     { src: baseSrcFor(identity), z: 0,            isBase: true  },
     { src: hairSrcFor(identity), z: SLOT_Z.hair,  isBase: false },
+  ];
+}
+
+// ── Avatar V2 feature flag + C2 render resolvers (Section 155G) ────────────────
+// AVATAR_V2 is the master switch for the C2 render pipeline. DEFAULT OFF — the
+// legacy render path is the runtime default and is never touched while OFF.
+export const AVATAR_V2 = false;
+
+// Runtime check with an optional per-session localStorage override for testing /
+// staged rollout WITHOUT a code change: localStorage.setItem('avatar_v2','1').
+// Production default stays OFF. Returns false on any error (no localStorage etc.).
+export function isAvatarV2() {
+  if (AVATAR_V2) return true;
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_v2") === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+
+// C2 base bodies. 155B/155C delivered the NEUTRAL base in medium + dark only.
+// male/female C2 bases are a later section → all body types use the neutral C2
+// base for now (the C2 base is body-type-neutral by design).
+const BODY_SRCS_C2 = {
+  medium: "/assets/avatar/base/body-neutral-medium-c2.svg",
+  dark:   "/assets/avatar/base/body-neutral-dark-c2.svg",
+};
+
+// Resolves the C2 base body SVG for an identity. Defensive: unknown/missing skin
+// tone → medium (via skinToneFor). Never returns undefined.
+export function baseSrcForC2(identity) {
+  const tone = skinToneFor(identity);
+  return BODY_SRCS_C2[tone] ?? BODY_SRCS_C2.medium;
+}
+
+// The C2 identity base: body (img) + hair (INLINE, token-recolored). Hair stays
+// at SLOT_Z.hair for parity with the existing expression (z=0) and blink (z=5)
+// layers, so blink/expression remain compatible without change. The full z-model
+// reform (hair=40 etc.) is deferred to the cosmetics section.
+export function baseLayersForC2(identity) {
+  return [
+    { src: baseSrcForC2(identity), z: 0,           isBase: true,  inline: false },
+    { src: hairSrcForC2(identity), z: SLOT_Z.hair, isBase: false, inline: true  },
   ];
 }

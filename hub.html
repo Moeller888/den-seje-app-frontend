@@ -1232,7 +1232,8 @@
   import { getXPProgressInLevel } from "./js/progression.js";
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
-  import { ALL_SLOTS, SLOT_Z, baseLayersFor, skinToneFor, RARITY_ORDER, RARITY_ICONS } from "./js/avatar-layers.js";
+  import { ALL_SLOTS, SLOT_Z, baseLayersFor, skinToneFor, RARITY_ORDER, RARITY_ICONS, isAvatarV2 } from "./js/avatar-layers.js";
+  import { mountC2Avatar } from "./js/avatar-render-c2.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
   import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -1539,12 +1540,25 @@
 
   // ── Profile avatar rendering ──────────────────────────────────────────────────
 
-  function renderProfileAvatar() {
+  async function renderProfileAvatar() {
     const avatarEl   = document.getElementById("profileAvatar");
     const showcaseEl = document.getElementById("avatarShowcase");
     if (!avatarEl || !showcaseEl) return;
 
     avatarEl.innerHTML = "";
+
+    // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
+    // via the shared module; cosmetics deferred to a later C2 section. After the
+    // async mount we (re-)init the life engines once — the external
+    // initAvatarLifeEngines() call runs while this mount is still pending and
+    // no-ops on the missing base, so the (!blinkEngine) guard prevents a double init.
+    if (isAvatarV2()) {
+      await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer" });
+      showcaseEl.dataset.rarity = "";
+      showcaseEl.dataset.gender = avatarGender;
+      if (!blinkEngine) initAvatarLifeEngines();
+      return;
+    }
 
     // Collect all layers, sort by z ascending, insert in that order so DOM
     // paint order matches z-order (back items before body before front items)

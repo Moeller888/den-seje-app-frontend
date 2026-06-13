@@ -713,8 +713,9 @@ import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor, skinToneFor,
-  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER,
+  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2,
 } from "./js/avatar-layers.js";
+import { mountC2Avatar } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine }   from "./js/avatar-presence-engine.js";
 import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -883,6 +884,10 @@ function renderAll(animate = false) {
 }
 
 function renderAvatar(animate = false) {
+  // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). When OFF,
+  // the legacy path below runs unchanged.
+  if (isAvatarV2()) { renderAvatarC2(animate); return; }
+
   const preview = document.getElementById("avatar-preview");
   const wrap    = document.getElementById("avatarWrap");
 
@@ -945,6 +950,37 @@ function renderAvatar(animate = false) {
       setTimeout(() => wrap.classList.remove("legendary-pulse"), 650);
     }
   }
+}
+
+// Section 155G: C2 render path — base (img) + hair (inline, token-recolored) via
+// the shared mountC2Avatar module, then re-attach the existing expression overlay
+// and blink layer exactly as the legacy path does. The C2 base preserves the eye
+// anchors (cx=68/92 cy=47), so blink/expression need no change. No cosmetics in
+// the C2 pipeline yet (155G) → no rarity aura.
+async function renderAvatarC2(animate = false) {
+  const preview = document.getElementById("avatar-preview");
+  const wrap    = document.getElementById("avatarWrap");
+  if (!preview) return;
+
+  const exprOverlay = preview.querySelector(".avatar-expr-overlay");
+  const blinkLayer  = preview.querySelector("#avatar-blink-layer");
+
+  // Remove only non-engine layers (legacy imgs + prior C2 layers); keep engines.
+  preview.querySelectorAll("img.avatar-layer, [data-c2-layer]").forEach(n => {
+    if (n !== exprOverlay && n !== blinkLayer) n.remove();
+  });
+
+  await mountC2Avatar(preview, avatarIdentity, { animate });
+
+  const baseEl = preview.querySelector('[data-c2-layer="base"]');
+  if (exprOverlay) {
+    if (baseEl) baseEl.insertAdjacentElement("afterend", exprOverlay);
+    else preview.appendChild(exprOverlay);
+  }
+  if (blinkLayer) preview.appendChild(blinkLayer);
+  if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(avatarIdentity));
+
+  if (wrap) wrap.dataset.highestRarity = "";
 }
 
 function renderSlotList() {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- C2 HAIR — "afro" (Section 155D). Token-recolor per Hair Color Decision v1.0:
+       fill="var(--hair-base)" / "var(--hair-shadow)". NO hardcoded hair colours.
+       Anchors: head cx=80 cy=50 r=30. Large rounded halo, wider+taller than head
+       (x≈42–125, y≈9–61); inner hairline above eye anchor (cy=47), lowest central
+       ~y34. Strong distinct round silhouette. Eyes never covered. Crown
+       compressible later. Full state only. -->
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- base silhouette: voluminous rounded afro halo -->
+    <path d="M 42 60 Q 29 45 37 30 Q 35 15 52 14 Q 58 3 74 9 Q 80 3 88 9 Q 104 3 110 15 Q 127 17 125 34 Q 131 49 118 61 Q 109 46 96 38 Q 80 34 64 38 Q 51 46 42 60 Z"
+          fill="var(--hair-base)" stroke="var(--hair-shadow)" stroke-width="2.2"/>
+    <!-- single flat shadow: right half of the halo -->
+    <path d="M 88 9 Q 104 3 110 15 Q 127 17 125 34 Q 131 49 118 61 Q 109 46 96 38 Q 100 26 88 9 Z"
+          fill="var(--hair-shadow)"/>
+  </g>
+</svg>
