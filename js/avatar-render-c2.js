@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z } from "./avatar-layers.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
 // local assets — safe to cache for the session.
@@ -24,10 +24,36 @@ async function fetchSvgText(src) {
   return txt;
 }
 
-// Pure composition: ordered C2 layer descriptors for an identity.
-// [{ src, z, isBase, inline }] — hair carries inline:true.
-export function composeC2Layers(identity) {
-  return baseLayersForC2(identity);
+// Resolve equipped cosmetics into C2 layer descriptors (Section 159B). Legacy
+// slot_type names map straight onto C2_LAYER_Z. `resolveSrc(itemId)` returns the
+// asset src, or null/undefined if unknown. Defensive PARITY FALLBACK: a missing /
+// invalid item, or a slot not in the C2 z-model, is SKIPPED — that slot simply
+// does not render; never throws. Mirrors the legacy "if (!item) return" behaviour.
+export function c2CosmeticLayers(equippedSlots, resolveSrc) {
+  const out = [];
+  const slots = (equippedSlots && typeof equippedSlots === "object") ? Object.keys(equippedSlots) : [];
+  for (const slot of slots) {
+    const z = C2_LAYER_Z[slot];
+    if (z == null) continue;                          // unknown slot → skip
+    const itemId = equippedSlots[slot];
+    if (!itemId) continue;
+    const src = (typeof resolveSrc === "function") ? resolveSrc(itemId) : null;
+    if (!src) continue;                               // missing/invalid item → skip
+    out.push({ slot, src, z });
+  }
+  return out;
+}
+
+// Pure composition: ordered C2 layer descriptors for an identity + its equipped
+// cosmetics. [{ src, z, isBase, inline }] — hair carries inline:true. z-index
+// governs paint order, so array order is irrelevant to compositing.
+// cosmetics: [{ slot, src, z }] (resolved by the surface via c2CosmeticLayers).
+export function composeC2Layers(identity, cosmetics = []) {
+  const [base, hair] = baseLayersForC2(identity);
+  const cos = (Array.isArray(cosmetics) ? cosmetics : [])
+    .filter((c) => c && c.src && typeof c.z === "number")
+    .map((c) => ({ src: c.src, z: c.z, isBase: false, inline: false }));
+  return [base, ...cos, hair];
 }
 
 // The single C2 render path. Mounts base (<img>) + hair (inline <svg>, token-
@@ -40,10 +66,10 @@ export function composeC2Layers(identity) {
 // "avatar-layer", hub "profile-avatar-layer", app.js "quiz-avatar-layer", shop
 // "preview-layer") so positioning matches that surface. The data-c2-layer markers
 // are used for cleanup/detection regardless of class.
-export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer" } = {}) {
+export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [] } = {}) {
   if (!rootEl) return rootEl;
 
-  const layers = composeC2Layers(identity);
+  const layers = composeC2Layers(identity, cosmetics);
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 

@@ -715,7 +715,7 @@ import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor, skinToneFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2,
 } from "./js/avatar-layers.js";
-import { mountC2Avatar } from "./js/avatar-render-c2.js";
+import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine }   from "./js/avatar-presence-engine.js";
 import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -970,17 +970,20 @@ async function renderAvatarC2(animate = false) {
     if (n !== exprOverlay && n !== blinkLayer) n.remove();
   });
 
-  await mountC2Avatar(preview, avatarIdentity, { animate });
+  // Section 159B: resolve equipped cosmetics (legacy assets) for C2 render parity.
+  const cosmetics = c2CosmeticLayers(equippedSlots, id => ownedItems.find(i => i.id === id)?.image_url);
+  await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics });
 
   const baseEl = preview.querySelector('[data-c2-layer="base"]');
   if (exprOverlay) {
+    exprOverlay.style.zIndex = "3"; // C2 z-model: expression below hair, above base
     if (baseEl) baseEl.insertAdjacentElement("afterend", exprOverlay);
     else preview.appendChild(exprOverlay);
   }
   if (blinkLayer) preview.appendChild(blinkLayer);
   if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(avatarIdentity));
 
-  if (wrap) wrap.dataset.highestRarity = "";
+  if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
 }
 
 function renderSlotList() {

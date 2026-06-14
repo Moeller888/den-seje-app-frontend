@@ -256,13 +256,34 @@ export function baseSrcForC2(identity) {
   return BODY_SRCS_C2[tone] ?? BODY_SRCS_C2.medium;
 }
 
-// The C2 identity base: body (img) + hair (INLINE, token-recolored). Hair stays
-// at SLOT_Z.hair for parity with the existing expression (z=0) and blink (z=5)
-// layers, so blink/expression remain compatible without change. The full z-model
-// reform (hair=40 etc.) is deferred to the cosmetics section.
+// ── C2 layer z-model (Section 159B) ───────────────────────────────────────────
+// Deterministic, collision-free z for the full C2 render stack. Legacy cosmetic
+// slots keep their RELATIVE order (aura<back<base<body<torso<neck<hair<headwear<
+// face<eyes) but are spread out so they never collide with the C2 base /
+// expression / hair / blink layers. Expression is set to z=3 by the surfaces; the
+// blink engine keeps its own z=5 (unchanged). Both sit on the head only, below
+// hair and above the base — so cosmetics on the torso never interact with them.
+//   Collisions resolved vs the legacy SLOT_Z (where headwear==blink==5,
+//   body==1==near expr): here headwear=45, blink=5, body=10, expr=3 — all unique.
+export const C2_BASE_Z = 0;
+export const C2_HAIR_Z = 40;
+export const C2_LAYER_Z = {
+  aura:     -30,
+  back:     -20,
+  body:      10,
+  torso:     20,
+  neck:      30,
+  hair:      40,
+  headwear:  45,
+  face:      50,
+  eyes:      55,
+};
+
+// The C2 identity base: body (img) + hair (INLINE, token-recolored), positioned
+// per the C2 z-model. Blink (engine z=5) and expression (surface z=3) sit between.
 export function baseLayersForC2(identity) {
   return [
-    { src: baseSrcForC2(identity), z: 0,           isBase: true,  inline: false },
-    { src: hairSrcForC2(identity), z: SLOT_Z.hair, isBase: false, inline: true  },
+    { src: baseSrcForC2(identity), z: C2_BASE_Z, isBase: true,  inline: false },
+    { src: hairSrcForC2(identity), z: C2_HAIR_Z, isBase: false, inline: true  },
   ];
 }

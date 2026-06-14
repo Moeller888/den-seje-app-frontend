@@ -425,7 +425,7 @@ import { loadTheme }  from "./js/themeManager.js";
 import {
   baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2,
 } from "./js/avatar-layers.js";
-import { mountC2Avatar } from "./js/avatar-render-c2.js";
+import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -465,15 +465,18 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
     // via the shared module; the previewed item layer is appended on top (z-index
     // governs compositing regardless of append order).
     if (isAvatarV2()) {
-      mountC2Avatar(wrap, null, { layerClass: "preview-layer" }).then(() => {
-        if (imageUrl) {
-          const img = document.createElement("img");
-          img.className = "preview-layer";
-          img.src = imageUrl;
-          img.style.zIndex = String(SLOT_Z[slotType] ?? 1);
-          img.alt = "";
-          wrap.appendChild(img);
-        }
+      // Section 159B: previewed item rendered via the shared C2 cosmetic pipeline.
+      // Section 159D: the C2 base is faceless (the Expression layer owns the face)
+      // and the shop preview has no expression engine, so add a STATIC neutral
+      // expression (z=3, below hair/cosmetics) to restore face parity with legacy.
+      const cosmetics = c2CosmeticLayers({ [slotType]: imageUrl }, (id) => id);
+      mountC2Avatar(wrap, null, { layerClass: "preview-layer", cosmetics }).then(() => {
+        const expr = document.createElement("img");
+        expr.className = "preview-layer";
+        expr.src = "/assets/avatar/expressions/expr-neutral.svg";
+        expr.style.zIndex = "3";
+        expr.alt = "";
+        wrap.appendChild(expr);
       });
     } else {
       // Section 152A/152B: shop previews are deliberately identity-independent —

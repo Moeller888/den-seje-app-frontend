@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf8"><style>
+  body{margin:0;font-family:Arial;background:#fff}
+  #wrap{display:flex;flex-direction:column;gap:16px;padding:16px;align-items:flex-start}
+  .sheet{display:inline-block;padding:12px;background:#f4f1ec;border-radius:8px}
+  .row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .cell{display:flex;flex-direction:column;align-items:center}
+  .ava{position:relative;width:96px;height:144px}
+  .lyr{position:absolute;inset:0;width:100%;height:100%}
+  .lbl{font-size:9px;color:#555;margin-top:4px;text-align:center;max-width:96px}
+</style></head><body>
+<!-- C2 COSMETIC GOLDEN BASELINE (Section 159E). Renders the cosmetic parity,
+     z-model combination, and shop-preview suites via the REAL shared module
+     (mountC2Avatar + c2CosmeticLayers). Regenerate with:
+     node tests/c2-golden/c2-cosmetics.run.mjs -->
+<div id="wrap">
+  <div class="sheet" id="sheetParity"></div>
+  <div class="sheet" id="sheetCombos"></div>
+  <div class="sheet" id="sheetShop"></div>
+</div>
+<script type="module">
+  import { mountC2Avatar, c2CosmeticLayers } from '/js/avatar-render-c2.js';
+  const SRC = {
+    'hat-blue':'/assets/avatar/hat/hat-blue.svg',
+    'glasses-round':'/assets/avatar/glasses/glasses-round.svg',
+    'ninja-mask':'/assets/avatar/mask/ninja-mask.svg',
+    'aura-gold':'/assets/avatar/aura/aura-gold.svg',
+    'cape-red':'/assets/avatar/shirt/cape-red.svg',
+    'wings-dragon':'/assets/avatar/body/wings-dragon.svg',
+    'armor-knight':'/assets/avatar/shirt/armor-knight.svg',
+  };
+  const resolve = id => SRC[id] ?? null;
+  const SLOT = { 'hat-blue':'headwear','glasses-round':'eyes','ninja-mask':'face','aura-gold':'aura','cape-red':'back','wings-dragon':'back','armor-knight':'torso' };
+  const ID = { skin_tone:'medium', hairstyle:'short', hair_color:'brown' };
+  function equip(...ids){ const o={}; for (const id of ids) o[SLOT[id]] = id; return o; }
+  function cellEl(sheet, label){const c=document.createElement('div');c.className='cell';const a=document.createElement('div');a.className='ava';c.appendChild(a);const l=document.createElement('div');l.className='lbl';l.textContent=label;c.appendChild(l);sheet.appendChild(c);return a;}
+  function row(sheet){const r=document.createElement('div');r.className='row';sheet.appendChild(r);return r;}
+  // Avatar render cell: C2 base + cosmetics + static neutral expression (z=3),
+  // mirroring avatar.html renderAvatarC2 and the 159D shop preview.
+  async function render(el, identity, equipped){
+    const cosmetics = c2CosmeticLayers(equipped, resolve);
+    await mountC2Avatar(el, identity, { layerClass:'lyr', cosmetics });
+    const e=document.createElement('img'); e.className='lyr'; e.style.zIndex='3'; e.src='/assets/avatar/expressions/expr-neutral.svg'; el.appendChild(e);
+  }
+  (async()=>{
+    // Sheet 1 — minimum parity suite (one item per slot)
+    let r = row(document.getElementById('sheetParity'));
+    await render(cellEl(r,'base'), ID, equip());
+    for (const [lbl,id] of [['hat','hat-blue'],['glasses','glasses-round'],['mask','ninja-mask'],['aura','aura-gold'],['cape','cape-red'],['wings','wings-dragon'],['armor','armor-knight']])
+      await render(cellEl(r,lbl), ID, equip(id));
+
+    // Sheet 2 — z-model combination suite
+    r = row(document.getElementById('sheetCombos'));
+    await render(cellEl(r,'hat+glasses'), ID, equip('hat-blue','glasses-round'));
+    await render(cellEl(r,'hat+mask'), ID, equip('hat-blue','ninja-mask'));
+    await render(cellEl(r,'aura+cape'), ID, equip('aura-gold','cape-red'));
+    await render(cellEl(r,'armor+cape'), ID, equip('armor-knight','cape-red'));
+    await render(cellEl(r,'armor+glasses'), ID, equip('armor-knight','glasses-round'));
+    await render(cellEl(r,'full stack'), ID, equip('aura-gold','cape-red','armor-knight','hat-blue','glasses-round'));
+
+    // Sheet 3 — shop preview suite (identity=null + static expression, protects 159D)
+    r = row(document.getElementById('sheetShop'));
+    await render(cellEl(r,'preview base'), null, equip());
+    await render(cellEl(r,'preview glasses'), null, equip('glasses-round'));
+    await render(cellEl(r,'preview mask'), null, equip('ninja-mask'));
+    await render(cellEl(r,'preview hat'), null, equip('hat-blue'));
+
+    window.__done = true;
+  })();
+</script></body></html>

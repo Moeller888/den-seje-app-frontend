@@ -2,7 +2,7 @@ import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2 } from "./js/avatar-layers.js";
-import { mountC2Avatar } from "./js/avatar-render-c2.js";
+import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -467,10 +467,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isAvatarV2()) {
       const { data: pd } = await supabase
         .from("profiles")
-        .select("avatar_identity")
+        .select("avatar_identity, equipped_slots")
         .eq("id", studentId)
         .maybeSingle();
-      await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer" });
+      const eqSlots = pd?.equipped_slots ?? {};
+      const eqIds = Object.values(eqSlots).filter(Boolean);
+      const srcById = {};
+      if (eqIds.length > 0) {
+        const { data: items } = await supabase
+          .from("shop_items")
+          .select("id, image_url")
+          .in("id", eqIds);
+        (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
+      }
+      const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
+      await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
       if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(pd?.avatar_identity ?? null));
       return;
     }
