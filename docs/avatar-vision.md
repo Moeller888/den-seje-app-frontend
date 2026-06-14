@@ -79,6 +79,31 @@ avatar art is measured against. Locked 2026-06-14._
    resolution/atlas/lazy-load strategy to be defined in the pipeline assessment.
 6. **Gate everything behind `AVATAR_V2`** until the raster/hybrid avatar passes a
    visual QA + golden baseline against these success criteria.
+7. **Eyes are a first-class, separate layer** (ADR-163B / D-012). The eyes are the
+   signature feature AND a customizable dimension: the eye layer is its own render
+   layer with a **tintable iris** (eye color = a token, free), designed to support
+   future eye cosmetics, eye rarity, magic/rare eyes, glasses, masks, blink and the
+   emotion system. Eyes are NOT baked into the Face/Expression layer (that would
+   force an expression × color × variant asset explosion). Cut the eye layer from
+   the same North Star so it still matches the painted face; tint only the iris base
+   and keep the glossy highlight fixed.
+8. **WebP asset pipeline** (D-013). Canonical 2:3 raster master (1024×1536) → served
+   WebP (512×768); anchors mapped proportionally from the 160×240 geometry. PNG only
+   as a capability fallback.
+9. **Hair color = luminance-map tint** (D-014). Paint each hairstyle once as a neutral
+   luminance map; tint via canvas multiply (8 colors free); hand-paint overrides for
+   problem colors. No per-color asset explosion.
+10. **Skin tone = separate base assets** (D-016). Cel-shaded skin is not reliably
+    runtime-tintable; render a base per body_type × skin_tone (body owns skin).
+11. **Immutable, versioned assets + manifest** (D-018). Never mutate a shipped asset;
+    new version = new filename; the manifest publishes atomically; long-lived cache.
+12. **Mobile-first performance budget** (D-019). First-paint < 100ms, full composite
+    < 250ms, total avatar < ~350KB, decoded memory < ~15MB; hybrid loading (eager own
+    avatar, lazy catalog).
+
+> All principles above are consistent with D-011 (SVG rejected), D-011b (Hybrid
+> Raster), D-012 (separate eye layer), and North Star Avatar v1.0 as the permanent
+> visual target. Full pipeline rationale: `docs/adr/ADR-163D-hybrid-raster-pipeline.md`.
 
 ## Missing reference material (obtain before raster production)
 - A measurable proportion spec extracted from the reference (target eye width/

@@ -41,7 +41,25 @@ _Last updated: 2026-06-14_
 ## Art Direction Decision (NEW)
 - **SVG-only is REJECTED as the final art strategy.** Flat SVG cannot deliver the
   desired avatar art quality (large expressive eyes + premium anime-inspired finish).
-- **Next direction:** hybrid / raster asset-pipeline assessment (no implementation yet).
+- **Direction:** **Hybrid Raster** — produce the North Star character as WebP layers
+  in the existing format-agnostic pipeline; reuse DB / identity / slot / z-model /
+  AVATAR_V2 (Section 163A). North Star Avatar v1.0 is the permanent visual target.
+- **Pipeline LOCKED (ADR-163D / D-013…D-019):** WebP assets · hair color = hybrid
+  luminance-map tint · eye color = iris-base tint (fixed highlight) · skin tone =
+  separate base assets · hybrid loading · immutable versioned cache · mobile perf
+  budget. Architecture (DB/identity/slots/z-model/AVATAR_V2) unchanged.
+
+## Avatar Layer Model (Hybrid Raster — current)
+Ordered render layers (reuse the existing z-model):
+1. **Base body** (skin + neutral underlayer + head, NO face) — per skin tone
+2. **Face/Expression** (skin detail, brows, nose, mouth, blush — NO eyes)
+3. **Eyes** (separate, tintable iris + fixed highlight — see D-012)
+4. **Blink** (eyelid, engine)
+5. **Hair** (luminance map + tint)
+6. **Cosmetics** (equipped_slots at C2_LAYER_Z)
+
+> This model **supersedes Section 163A's "eyes embedded in Face/Expression"** —
+> eyes are now their own layer (D-012 / ADR-163B).
 
 ## Major Decisions (register)
 | ID | Decision |
@@ -57,25 +75,43 @@ _Last updated: 2026-06-14_
 | D-009 | Cosmetics parity-first (render legacy assets in C2); flat redesign progressive. |
 | D-010 | 159D: static neutral expression in C2 shop preview (face parity). |
 | **D-011** | **SVG-only rejected as final art direction; move to hybrid/raster pipeline.** |
+| D-011b | Hybrid Raster architecture: North Star as WebP layers in the existing pipeline; reuse DB/identity/slots/z-model/AVATAR_V2 (163A). North Star v1.0 = permanent visual target. |
+| **D-012** | **Eye system = a SEPARATE, tintable, cosmetic-capable layer** (ADR-163B, Option C). Iris is tint-controlled (eye color = token, free); the eye layer supports future eye cosmetics, eye rarity, magic/rare eyes, glasses, masks, blink and the emotion system. **Supersedes 163A's "eyes embedded in Face/Expression".** Rationale: multiple eye colors + eye cosmetics + rarity would otherwise force a combinatorial asset explosion (expression × color × variant) and a future rewrite; a separate tintable layer is the robust, future-proof choice. |
+| D-013 | Asset format = **WebP** (PNG fallback only if needed). Canonical 2:3 raster master 1024×1536 → served WebP 512×768; anchors mapped proportionally from the 160×240 geometry. (ADR-163D) |
+| D-014 | Hair color = **hybrid**: canvas multiply-tint of a neutral luminance map (8 colors free as tokens) + hand-painted variant override for problem colors. (ADR-163D) |
+| D-015 | Eye color = **tint the iris-base only**; sclera/pupil/glossy highlight stay fixed; rare/magic eyes = iris-swap or eye-effect overlay in the eye slot. (ADR-163D) |
+| D-016 | Skin tone = **separate base assets** per `body_type × skin_tone` (cel-shaded skin is not reliably runtime-tintable; body owns skin). (ADR-163D) |
+| D-017 | Asset loading = **hybrid**: eager preload of the user's own avatar; lazy-load shop catalog + other avatars. (ADR-163D) |
+| D-018 | Cache = **immutable, versioned assets + manifest**; invalidation via filename version (never mutate a shipped asset). (ADR-163D) |
+| D-019 | **Mobile-first performance budget**: first-paint < 100ms, full composite < 250ms, total avatar < ~350KB, decoded memory < ~15MB. (ADR-163D) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
-159A–159G · [ROOT sync] · 160 · 161A.
+159A–159G · [ROOT sync] · 160 · 161A · 161B · 161B.5 (docs baseline committed) ·
+161C–161E · 162A–162B (North Star spec + prompt package) ·
+163A (Hybrid Raster arch) · 163B (Eye System ADR) · 163C (eye docs) · 163D (pipeline ADR).
 
 ## Open Questions
-- OQ-1: Hybrid vs Full-raster pipeline — exact strategy (resolved at the level of
-  "not SVG-only"; sub-strategy TBD).
-- OQ-2: Does the C2 base need a redesign to match the reference, or a raster
-  re-asset? (Feeds the pipeline assessment.)
+- OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
+- OQ-2: ~~Base redesign vs re-asset~~ **RESOLVED** — raster re-asset from North Star v1.0.
 - OQ-3: Onboarding does not expose C2 vocabulary (hair_color picker, C2 hairstyles).
 - OQ-4: No cohort / % activation mechanism.
+- OQ-5: Neutral, symmetric base POSE must be derived from North Star (hero pose is
+  asymmetric — not layer-friendly).
+- OQ-6: "Sad / negative" expression conflicts with the 151A "never-negative" design —
+  product decision required before adding it.
 
 ## Current Risks
-- R-1 (Medium): Art-direction drift — implemented flat base ≠ reference (eyes/finish).
+- R-1 (Medium): Art-direction drift — flat SVG base ≠ North Star (eyes/finish). Being
+  resolved by the Hybrid Raster re-asset.
 - R-2 (Medium): Onboarding mismatch — users cannot pick C2 vocabulary.
 - R-3 (Low): Visual/cosmetics regression — mitigated by goldens + flag OFF.
 - R-4 (Low-op): Migration-history drift (ledger) — `db push` blocked; MCP apply only.
 - R-5 (Low-op): Two-clone sync discipline (ff-pull after each push).
+- R-6 (High, art): AI style drift + decomposition seams across raster assets — mitigate
+  by producing all layers from one North Star + style-lock + gatekeeper + golden QA.
+- R-7 (Medium, tech): Hair/iris tint quality (canvas multiply + fixed highlight) —
+  mitigate via hybrid tint + hand-painted overrides; prototype early.
 
 ## Technical Debt
 - TD-1: Legacy cosmetic assets are pseudo-3D (clash with flat C2); flat redesign
@@ -84,9 +120,11 @@ _Last updated: 2026-06-14_
 - TD-3: Migration-history drift; repo migration files ≠ DB version ledger.
 - TD-4: Gitlink anomaly in ROOT clone (vestigial, not on deploy path).
 - TD-5: Local prod-data snapshot `backups/…` kept out of repo (no `.gitignore` yet).
-- TD-6: Whole flat-SVG C2 asset set may be superseded by the raster/hybrid pipeline.
+- TD-6: Flat-SVG C2 asset set is **superseded** by the Hybrid Raster pipeline (kept
+  for rollback during transition; remove once raster ships).
 
 ## Next Recommended Section
-**161C — Hybrid / Raster Pipeline Assessment** (no implementation): compare
-hybrid (raster assets + existing slot/identity system) vs full-raster; cost,
-maintenance, performance, tooling, and impact on the existing C2 architecture.
+**163F — North Star Decomposition & Raster Asset Spec** (production/spec, no code):
+derive the neutral symmetric base pose from North Star v1.0; decompose into the
+locked layers (base / face / eyes / hair); extract pixel-precise anchors, eye
+measurements, palette; write the WebP asset-production spec per ADR-163D.
