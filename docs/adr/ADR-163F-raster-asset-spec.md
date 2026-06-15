@@ -96,16 +96,23 @@ The defining rule that ties D-016, D-022 and D-023 together:
 **Shared layers** (one set across all skin tones): **face**, **eyes**, **hair**.
 
 ## Asset inventory (MVP — Neutral North Star)
-Naming and folders follow ADR-163D:
-`assets/avatar-r2/{slot}/{slot}-{theme}[-{variant}]-v{n}.webp`, manifest in
-`avatar-layers`. MVP = neutral body type, neutral skin tone (D-020).
+Folders follow ADR-163D (`assets/avatar-r2/{slot}/`); the manifest lives in
+`avatar-layers`. **MVP = neutral body type, `medium` skin tone (D-020 / D-016).**
+
+**Filename convention** (canonical — supersedes the earlier illustrative naming):
+- **Skin-bearing layers** encode the skin tone:
+  base = `body-{body_type}-{skin_tone}-v{n}.webp`;
+  blink = `eyelid-{skin_tone}-v{n}.webp` (body-type-agnostic head overlay in MVP).
+- **Shared layers** use a theme token:
+  face = `face-{expression}-v{n}.webp`;
+  eyes = `eyes-{set}-{iris|fixed}-v{n}.webp` (MVP set = `neutral`).
 
 | Slot | Files (MVP) | Count | Notes |
 |---|---|---|---|
-| `base` | `base-neutral-v1.webp` | 1 | per skin tone; MVP = neutral only (D-016/D-020) |
+| `base` | `body-neutral-medium-v1.webp` | 1 | per skin tone; MVP = medium only (D-016/D-020) |
 | `face` | `face-{neutral,happy,curious,focused,determined,surprised,proud}-v1.webp` | 7 | shared, tone-agnostic, multiply blush (D-022/D-024) |
-| `eyes` | `eyes-iris-v1.webp`, `eyes-fixed-v1.webp` | 2 | shared; iris tintable, fixed has highlight (D-021/D-015) |
-| `blink` | `blink-neutral-v1.webp` | 1 | per skin tone; MVP = neutral only (D-023) |
+| `eyes` | `eyes-neutral-iris-v1.webp`, `eyes-neutral-fixed-v1.webp` | 2 | shared; iris tintable, fixed has highlight (D-021/D-015) |
+| `blink` | `eyelid-medium-v1.webp` | 1 | per skin tone; MVP = medium only (D-023) |
 | `hair` | (existing North Star hairstyle set, luminance maps) | — | shared; `hair_state=full` only in MVP (D-014/D-025) |
 | cosmetics | (existing equipped slots, parity first) | — | baked assets, no tint in MVP (D-026/D-009) |
 
@@ -115,9 +122,68 @@ Naming and folders follow ADR-163D:
 > is full-canvas (D-027).
 
 ### Adding a second skin tone later (no rewrite)
-Produce a new `base-{tone}-v1.webp` and `blink-{tone}-v1.webp` (the two skin-bearing
-layers). `face`, `eyes` and `hair` are unchanged (shared). This is the additive path
-guaranteed by D-016 / D-022 / D-023.
+Produce a new `body-neutral-{tone}-v1.webp` and `eyelid-{tone}-v1.webp` (the two
+skin-bearing layers). `face`, `eyes` and `hair` are unchanged (shared). This is the
+additive path guaranteed by D-016 / D-022 / D-023.
+
+## Export resolution rationale (512×768 — expands D-013 / ADR-163D)
+D-013 locked the served resolution at **512×768 WebP** from a **1024×1536** master.
+The rationale (recorded here because asset production is governed by this ADR):
+
+### Why 512×768 was selected
+- **Clean geometry:** 512×768 is 2:3, identical to the 160×240 anchor geometry
+  (×3.2) and exactly **½ of the 1024×1536 master**. Integer ÷2 downscale keeps anchors
+  (head/eye centres) on sub-pixel-stable positions — no resample drift in the
+  layer-alignment contract (D-027).
+- **Matches actual display sizes (mobile-first, D-019):** the avatar is shown at
+  ~32–64px (hub/quiz/shop chips) up to a few-hundred-px hero view (avatar.html) on a
+  phone. 512×768 gives **≥2× linear headroom** over the largest realistic on-screen
+  size for HiDPI screens (devicePixelRatio 2–3) without paying for pixels no device
+  will ever show.
+- **Fits the budgets with margin:** see below — both the **weight** (<~350 KB total,
+  D-019) and the **decoded-memory** (<~15 MB, D-019) budgets are met at 512×768 and
+  **broken** at any larger served size. Decoded memory is the hard constraint.
+
+### Why larger served resolutions were rejected
+Decoded memory = `W × H × 4` bytes per layer (RGBA), independent of file compression.
+A full stack is ~6 layers (base, face, eyes×2, blink/hair, cosmetics).
+
+| Served res | Decoded / layer | ~6-layer stack | Weight vs 512 | Verdict |
+|---|---|---|---|---|
+| **512×768** | 1.5 MB | **~9 MB** | 1× | ✅ within 15 MB / 350 KB |
+| 768×1152 | 3.4 MB | ~20 MB | ~2.25× | ❌ exceeds 15 MB memory budget |
+| 1024×1536 (serve master) | 6.0 MB | ~36 MB | ~4× | ❌ ~2.4× over memory budget; no visual gain at display sizes; also violates D-018 (master is archived/immutable, served is derived) |
+
+Larger res spends ~2–4× weight and memory for pixels that are downsampled away at the
+actual 32–256px display sizes — a pure cost with no perceptible benefit. Rejected.
+
+### Expected file-size budget impact (512×768 WebP, q≈85–90 — to verify in QA)
+| Layer | Est. size |
+|---|---|
+| `body-neutral-medium` (full colour) | ~40–60 KB |
+| `face-neutral` (sparse alpha) | ~10–20 KB |
+| `eyes-neutral-iris` | ~5–10 KB |
+| `eyes-neutral-fixed` | ~10–15 KB |
+| `eyelid-medium` | ~10–15 KB |
+| **164A 5-layer neutral stack** | **~75–120 KB** |
+
+This leaves headroom under the **~350 KB total-avatar** budget for hair + cosmetics.
+Estimates are validated against D-019 in the 164A QA gate (a real measurement, not an
+assumption).
+
+### Expected visual quality at 32 / 48 / 64px
+The served 512×768 source is far larger than every display size, so the browser
+**downsamples** (high-quality area averaging), which is artefact-free:
+- **32px:** ~16:1 downscale — crisp; eyes stay **legible** (success criterion #2). Risk:
+  single-pixel lash lines / catchlight can alias at 16:1 → mitigated by heavier line
+  weight in the master + the 32px legibility check in the 164A QA gate (not a
+  resolution problem; a line-art design concern).
+- **48px:** ~10.7:1 — eyes read **large and expressive** (criterion #2), full finish.
+- **64px:** ~8:1 — excellent. Even at a large hero view (~300–400px) 512–768 still
+  provides ≥1.3–2× for HiDPI, so no visible softening.
+
+Upscaling never occurs at the target sizes, so there is no blur risk; the only
+resolution-linked risk is fine-line aliasing at 32px, already covered by QA #2.
 
 ## Consistency note on emotion (scopes ADR-163B)
 ADR-163B / D-012 said the eye layer "carries per-expression eye-shape variants so

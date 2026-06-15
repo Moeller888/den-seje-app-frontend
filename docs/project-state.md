@@ -139,7 +139,9 @@ Ordered render layers (reuse the existing z-model):
 
 ## Next Recommended Section
 **164A — Produce Neutral North Star Base Assets** (asset production): produce the first
-real raster layers for the Neutral North Star character against the locked spec
-(ADR-163F): base body (neutral skin tone), the 7 positive face/expression WebPs, the
-eye `iris`+`fixed` pair, and the neutral blink eyelid — all full-canvas (D-027),
-gated behind `AVATAR_V2` (still OFF). Hair + cosmetics follow parity-first (D-009).
+real raster stack for the Neutral North Star character (**`medium` skin tone**) against
+the locked spec (ADR-163F) — `body-neutral-medium`, `face-neutral`, `eyes-neutral-iris`
++ `eyes-neutral-fixed`, `eyelid-medium` — full-canvas 1024×1536 master → 512×768 WebP
+(D-013 / D-027), gated behind `AVATAR_V2` (still OFF). 164A proves **one** neutral
+full-canvas stack; the remaining 6 expressions, hair and cosmetics follow
+(parity-first, D-009).

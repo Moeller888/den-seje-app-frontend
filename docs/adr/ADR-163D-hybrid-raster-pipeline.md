@@ -30,6 +30,7 @@ the asset format/style + the hair/iris tint step + the blink re-tune.
 ## Chosen architecture (decisions)
 - **D-013 — Format:** WebP (PNG fallback only if needed). Canonical 2:3 master
   1024×1536 → served WebP 512×768; anchors mapped from the 160×240 geometry.
+  (Resolution rationale — why 512×768, why larger rejected: ADR-163F.)
 - **D-014 — Hair color:** hybrid — canvas multiply-tint of a neutral luminance map
   (8 colors free as tokens) + hand-painted override for problem colors.
 - **D-015 — Eye color:** tint the **iris-base only**; sclera / pupil / glossy
