@@ -88,6 +88,20 @@ decision and **not** a blocker for the layer architecture. The sweater/jeans/sne
 are treated as the visual North Star reference (a future cosmetic set), never baked into
 the `base` layer.
 
+**Clarification (164B.1 feasibility review, 2026-06-15):** "derived" here is
+**reconstruction-grade, not a literal cut.** Against the actual Master (no layered
+source), the only real skin is the face, ears, a small neck triangle and the hands; the
+torso, arms (forearms fully hidden by the long sleeves), legs and feet are occluded, and
+the neutral default outfit does not exist in the master at all. The base body + neutral
+outfit must therefore be **largely hand-reconstructed in the master's cel-shade style
+over Master geometry (D-032)** — it is the **single highest-risk MVP asset** (highest
+reconstruction volume + highest style-drift exposure + foundational: every other layer
+and cosmetic registers to it). This changes **no architecture** (layer model,
+who-owns-skin and the pipeline are unchanged); it scopes effort/QA correctly and **gates
+the base behind a base-coherence check** before any finished layer is produced (see the
+164B.1 Asset Production Plan, Phase 1 sub-gate D). Regeneration is **not** an acceptable
+substitute for reconstruction (four companion regenerations drifted — D-032).
+
 ### D-030 — Eye layer z-index = 4 (render stack locked)
 The eye layer takes **z = 4** (above Face/Expression, below Blink). The render stack is
 **locked** (see "Render stack" below). This fills the gap left by the 159B z-model
