@@ -1,11 +1,11 @@
 # ADR-163F — Raster Asset Specification
 
-- **Status:** Accepted (2026-06-15)
-- **Decision IDs:** D-020 … D-027
+- **Status:** Accepted (2026-06-15; updated 2026-06-15 with 164A decomposition locks D-028…D-031)
+- **Decision IDs:** D-020 … D-031
 - **Builds on:** D-011 (SVG rejected), D-011b (Hybrid Raster), D-012 / ADR-163B (eye layer), D-013…D-019 / ADR-163D (pipeline)
-- **Visual target:** North Star Avatar v1.0 ("C2 Base Avatar Premium")
+- **Visual target:** North Star Avatar v1.0 ("C2 Base Avatar Premium") — Master v1.0 approved & frozen 2026-06-15
 - **Context docs:** `docs/project-state.md`, `docs/avatar-vision.md`
-- **Sections:** 163F (decomposition & spec) + 163G (MVP scope decisions)
+- **Sections:** 163F (decomposition & spec) + 163G (MVP scope decisions) + 164A (North Star decomposition — COMPLETE)
 
 ## Context
 ADR-163D locked the *pipeline* (WebP, hybrid hair/iris tint, per-skin-tone base,
@@ -71,13 +71,42 @@ cosmetics) is produced at the same full dimensions with transparent padding — 
 cropped / per-layer-trimmed assets**. This keeps every layer in one shared coordinate
 space so composition is a pure z-ordered overlay with no per-asset offset math.
 
-## Layer model (render order — unchanged from ADR-163D)
-1. **Base body** (skin + neutral underlayer + head, **no face**) — per skin tone
-2. **Face / Expression** (brows, nose, mouth, multiply blush, **no eyes, no skin**) — shared
-3. **Eyes** (tintable `iris` + `fixed`) — shared
-4. **Blink** (eyelid) — per skin tone
-5. **Hair** (luminance map + tint) — shared
-6. **Cosmetics** (equipped_slots at `C2_LAYER_Z`)
+## Decisions (D-028 … D-031) — 164A North Star decomposition locks
+These resolve the four 164A decomposition questions against the **frozen Master v1.0**.
+
+### D-028 — Skin-tone token of Master v1.0
+North Star Master v1.0 **represents the `medium` skin-tone token.** `medium` is an
+**internal token, not a subjective reading** of the reference image's skin colour. No
+new tone tokens are introduced and no rename is performed now. → base = `body-neutral-medium`,
+blink = `eyelid-medium`.
+
+### D-029 — Neutral body-underlayer is a derived production asset
+The Master v1.0 render (green star sweater + navy cargo jeans + sneakers) is
+**reference art**. The **neutral body-underlayer (blank-canvas base) is produced as a
+derived production asset** by decomposing the master — it is **not** a separate product
+decision and **not** a blocker for the layer architecture. The sweater/jeans/sneakers
+are treated as the visual North Star reference (a future cosmetic set), never baked into
+the `base` layer.
+
+### D-030 — Eye layer z-index = 4 (render stack locked)
+The eye layer takes **z = 4** (above Face/Expression, below Blink). The render stack is
+**locked** (see "Render stack" below). This fills the gap left by the 159B z-model
+(D-008), which predated the separate eye layer (D-012).
+
+### D-031 — North Star hairstyle token = `hair-northstar-v1`
+There is **one approved North Star hairstyle**; its token/filename is locked to
+`hair-northstar-v1`. The asset is produced as a **neutral luminance map** (the master's
+dark brown = the default `hair_color` tint via multiply, D-014 — not baked).
+
+## Render stack (locked — D-030)
+| z | Layer | Source / asset | Per skin tone? |
+|---|---|---|---|
+| 0–2 | **Base body** (skin + neutral underlayer + head, **no face**; D-029) | `body-neutral-medium` | yes |
+| 3 | **Face / Expression** (brows, nose, mouth, multiply blush, **no eyes, no skin**) | `face-{expression}` | no (shared) |
+| **4** | **Eyes** (tintable `iris` + `fixed`) | `eyes-neutral-iris`, `eyes-neutral-fixed` | no (shared) |
+| 5 | **Blink** (eyelid) | `eyelid-medium` | yes |
+| 40 | **Hair** (luminance map + tint; D-031) | `hair-northstar-v1` | no (shared) |
+| `C2_LAYER_Z` | **Cosmetics** (equipped_slots) | per-slot WebP | no |
 
 ## Layer responsibilities (who owns skin)
 The defining rule that ties D-016, D-022 and D-023 together:
@@ -113,7 +142,7 @@ Folders follow ADR-163D (`assets/avatar-r2/{slot}/`); the manifest lives in
 | `face` | `face-{neutral,happy,curious,focused,determined,surprised,proud}-v1.webp` | 7 | shared, tone-agnostic, multiply blush (D-022/D-024) |
 | `eyes` | `eyes-neutral-iris-v1.webp`, `eyes-neutral-fixed-v1.webp` | 2 | shared; iris tintable, fixed has highlight (D-021/D-015) |
 | `blink` | `eyelid-medium-v1.webp` | 1 | per skin tone; MVP = medium only (D-023) |
-| `hair` | (existing North Star hairstyle set, luminance maps) | — | shared; `hair_state=full` only in MVP (D-014/D-025) |
+| `hair` | `hair-northstar-v1.webp` | 1 | shared; neutral luminance map, `hair_state=full` only (D-014/D-025/D-031) |
 | cosmetics | (existing equipped slots, parity first) | — | baked assets, no tint in MVP (D-026/D-009) |
 
 > MVP-core newly-produced raster layers = **11 files** (1 base + 7 face + 2 eyes +
@@ -212,7 +241,21 @@ This is a **scoping** of ADR-163B for MVP, not a reversal. D-012's architectural
   static); richer eye-driven emotion is deferred.
 - **−** Per-skin-tone duplication is required for base + blink (accepted; D-016/D-023).
 
-## Status of the wider system
+## Decomposition prerequisites (production, 164B)
+- **Background → alpha:** Master v1.0 is delivered as **1024×1536, RGB, opaque white
+  background**. Every cut layer must be exported with a **clean alpha channel** (white
+  matted to transparent, no white halo/fringe at hair and limb edges). Mandatory.
+- **Eye composite:** within the eye, order is base-skin → `iris` (tinted) → `fixed`
+  (sclera/outline + fixed catchlight); the catchlight must never tint (D-015). Prove
+  sclera ownership (no double-white / iris seam gap) in the prototype.
+- **Anchor revision:** North Star eyes are enlarged vs the legacy 160×240 eye box →
+  documented anchor-contract revision; blink + future cosmetics register to the revised
+  eye box.
+
+## Status of 164A & the wider system
+164A (North Star decomposition) is **COMPLETE** — D-028…D-031 lock the four
+decomposition questions; the asset inventory, layer responsibilities, eye/face/blink/
+hair decomposition, canvas spec and render stack above are production-grade.
 `AVATAR_V2` remains **OFF**. No code, assets, migrations or implementation result from
-this ADR — documentation only. Next section: **164A — Produce Neutral North Star Base
-Assets**.
+this ADR — documentation only. Next section: **164B — Cut & Export the Neutral Stack**
+(produce assets 1–5 + `hair-northstar-v1` against this spec; run the QA gate).

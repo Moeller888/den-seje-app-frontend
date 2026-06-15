@@ -51,15 +51,16 @@ _Last updated: 2026-06-15_
 
 ## Avatar Layer Model (Hybrid Raster — current)
 Ordered render layers (reuse the existing z-model):
-1. **Base body** (skin + neutral underlayer + head, NO face) — per skin tone
-2. **Face/Expression** (skin detail, brows, nose, mouth, blush — NO eyes)
-3. **Eyes** (separate, tintable iris + fixed highlight — see D-012)
-4. **Blink** (eyelid, engine)
-5. **Hair** (luminance map + tint)
+1. **Base body** (skin + neutral underlayer + head, NO face) — per skin tone — z 0–2
+2. **Face/Expression** (brows, nose, mouth, multiply blush — NO eyes, NO skin) — z 3
+3. **Eyes** (separate, tintable iris + fixed highlight — see D-012) — **z 4 (D-030)**
+4. **Blink** (eyelid, engine) — z 5
+5. **Hair** (luminance map + tint; `hair-northstar-v1`, D-031) — z 40
 6. **Cosmetics** (equipped_slots at C2_LAYER_Z)
 
 > This model **supersedes Section 163A's "eyes embedded in Face/Expression"** —
-> eyes are now their own layer (D-012 / ADR-163B).
+> eyes are now their own layer (D-012 / ADR-163B). Render stack locked by D-030;
+> full decomposition spec in `docs/adr/ADR-163F-raster-asset-spec.md`.
 
 ## Major Decisions (register)
 | ID | Decision |
@@ -92,6 +93,10 @@ Ordered render layers (reuse the existing z-model):
 | D-025 | **Hair compression ignored in MVP**; contract hook reserved: `hair_state = full \| compressed` (MVP produces `full`). (ADR-163F) |
 | D-026 | **Cosmetic recolor = hybrid**: MVP = baked assets; tint = future opt-in (no cosmetic tint pipeline in MVP). (ADR-163F) |
 | D-027 | **Asset canvas = full canvas, all layers**, transparent padding; no cropped/trimmed per-layer assets (one shared coordinate space). (ADR-163F) |
+| D-028 | **North Star Master v1.0 = `medium` skin-tone token** (internal token, not a subjective colour reading; no new tone tokens / no rename now). (ADR-163F, 164A) |
+| D-029 | **Neutral body-underlayer = a derived production asset** cut from the master; the master's sweater/jeans/sneakers are reference art (future cosmetic set), never baked into `base`. (ADR-163F, 164A) |
+| D-030 | **Eye layer z-index = 4**; render stack locked: base z0–2 · face z3 · **eyes z4** · blink z5 · hair z40 · cosmetics `C2_LAYER_Z`. Fills the eyes gap left by D-008. (ADR-163F, 164A) |
+| D-031 | **North Star hairstyle token = `hair-northstar-v1`** (one approved hairstyle; produced as a neutral luminance map, brown = default tint). (ADR-163F, 164A) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
@@ -99,15 +104,17 @@ Ordered render layers (reuse the existing z-model):
 161C–161E · 162A–162B (North Star spec + prompt package) ·
 163A (Hybrid Raster arch) · 163B (Eye System ADR) · 163C (eye docs) · 163D (pipeline ADR) ·
 163F (decomposition & raster asset spec) · 163G (MVP scope decisions D-020…D-027) ·
-163H (raster asset spec documentation: ADR-163F + state/vision update + consistency check).
+163H (raster asset spec documentation: ADR-163F + state/vision update + consistency check) ·
+164A (North Star Master v1.0 decomposition spec — **COMPLETE**; decomposition locks D-028…D-031).
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
 - OQ-2: ~~Base redesign vs re-asset~~ **RESOLVED** — raster re-asset from North Star v1.0.
 - OQ-3: Onboarding does not expose C2 vocabulary (hair_color picker, C2 hairstyles).
 - OQ-4: No cohort / % activation mechanism.
-- OQ-5: Neutral, symmetric base POSE must be derived from North Star (hero pose is
-  asymmetric — not layer-friendly).
+- OQ-5: ~~Neutral, symmetric base POSE must be derived from North Star~~ **RESOLVED**
+  (2026-06-15) — Master v1.0 is a near-symmetric front pose; D-029 authorises the
+  neutral body-underlayer as a derived production asset (cut in 164B). (164A)
 - OQ-6: ~~"Sad / negative" expression vs 151A "never-negative"~~ **RESOLVED** — D-024
   locks a permanent never-negative policy; `sad`/`angry` excluded from MVP (ADR-163F).
 - OQ-7: ~~Confirm MVP eye scoping (2 files, face-driven emotion)~~ **RESOLVED**
@@ -138,10 +145,12 @@ Ordered render layers (reuse the existing z-model):
   for rollback during transition; remove once raster ships).
 
 ## Next Recommended Section
-**164A — Produce Neutral North Star Base Assets** (asset production): produce the first
-real raster stack for the Neutral North Star character (**`medium` skin tone**) against
-the locked spec (ADR-163F) — `body-neutral-medium`, `face-neutral`, `eyes-neutral-iris`
-+ `eyes-neutral-fixed`, `eyelid-medium` — full-canvas 1024×1536 master → 512×768 WebP
-(D-013 / D-027), gated behind `AVATAR_V2` (still OFF). 164A proves **one** neutral
-full-canvas stack; the remaining 6 expressions, hair and cosmetics follow
-(parity-first, D-009).
+**164B — Cut & Export the Neutral Stack** (asset production): decompose frozen Master
+v1.0 against the locked 164A spec (ADR-163F) and export the neutral stack as full-canvas
+1024×1536 → 512×768 WebP (D-013/D-027) — `body-neutral-medium` (neutral underlayer,
+D-029), `face-neutral`, `eyes-neutral-iris` + `eyes-neutral-fixed`, `eyelid-medium`,
+`hair-northstar-v1` (luminance map, D-031) — at the locked z-stack (D-030), with clean
+background→alpha. Run the QA gate (eyes legible@32px/expressive@48px, face paints no
+skin, iris tints with fixed highlight, blink seam, D-019 weight). `AVATAR_V2` stays OFF;
+no runtime wiring yet. 164B proves **one** neutral stack; the 6 other expressions +
+cosmetics follow (parity-first, D-009).
