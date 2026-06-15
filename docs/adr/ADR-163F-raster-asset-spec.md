@@ -242,6 +242,14 @@ This is a **scoping** of ADR-163B for MVP, not a reversal. D-012's architectural
 - **−** Per-skin-tone duplication is required for base + blink (accepted; D-016/D-023).
 
 ## Decomposition prerequisites (production, 164B)
+- **Geometric source of truth (D-032):** `assets/avatar/reference/Northstar Master.png`
+  is the **SOLE** geometric source for the cut — proportions, head/body ratio, pose, hair
+  silhouette, face, eyes, rendering style and character identity all derive from it.
+  `Northstar Master - reference.png` is an **outfit-direction reference only** (neutral
+  tee / plain trousers / plain sneakers) and **must not** drive proportions, body height,
+  hair shape, eye size, facial structure or pose. On any conflict, `Northstar Master.png`
+  always wins. (Companion regeneration drifted on proportions/hair across four attempts;
+  geometry is therefore taken directly from the frozen Master — see project-state D-032.)
 - **Background → alpha:** Master v1.0 is delivered as **1024×1536, RGB, opaque white
   background**. Every cut layer must be exported with a **clean alpha channel** (white
   matted to transparent, no white halo/fringe at hair and limb edges). Mandatory.

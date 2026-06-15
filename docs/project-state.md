@@ -97,6 +97,7 @@ Ordered render layers (reuse the existing z-model):
 | D-029 | **Neutral body-underlayer = a derived production asset** cut from the master; the master's sweater/jeans/sneakers are reference art (future cosmetic set), never baked into `base`. (ADR-163F, 164A) |
 | D-030 | **Eye layer z-index = 4**; render stack locked: base z0–2 · face z3 · **eyes z4** · blink z5 · hair z40 · cosmetics `C2_LAYER_Z`. Fills the eyes gap left by D-008. (ADR-163F, 164A) |
 | D-031 | **North Star hairstyle token = `hair-northstar-v1`** (one approved hairstyle; produced as a neutral luminance map, brown = default tint). (ADR-163F, 164A) |
+| **D-032** | **North Star source-of-truth split (164B-prep).** `assets/avatar/reference/Northstar Master.png` is the **SOLE authoritative geometric source** for 164B decomposition — proportions, head/body ratio, pose, hair silhouette, face, eyes, rendering style and character identity all derive from it. `Northstar Master - reference.png` is **downgraded to an outfit-style reference ONLY** (neutral clothing direction: plain t-shirt / plain trousers / plain sneakers). It **MUST NOT** be used as a source of truth for proportions, body height, hair shape, eye size, facial structure or pose. **On any conflict between the two images, `Northstar Master.png` always wins.** Rationale: four regeneration attempts of the companion all drifted taller/leaner with an altered hair silhouette — proportions cannot be locked via regeneration, so geometry is taken directly from the frozen Master. (164B-prep, 2026-06-15) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
@@ -154,3 +155,6 @@ background→alpha. Run the QA gate (eyes legible@32px/expressive@48px, face pai
 skin, iris tints with fixed highlight, blink seam, D-019 weight). `AVATAR_V2` stays OFF;
 no runtime wiring yet. 164B proves **one** neutral stack; the 6 other expressions +
 cosmetics follow (parity-first, D-009).
+> **Geometric source = `assets/avatar/reference/Northstar Master.png` ONLY** (D-032).
+> `Northstar Master - reference.png` is an outfit-direction reference only and must not
+> drive proportions, height, hair shape, eye size, facial structure or pose.
