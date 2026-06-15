@@ -1,7 +1,7 @@
 # Project State — Den Seje App (Avatar / C2)
 
 _Authoritative project-state snapshot. Update at the end of each major section._
-_Last updated: 2026-06-14_
+_Last updated: 2026-06-15_
 
 ---
 
@@ -12,8 +12,8 @@ _Last updated: 2026-06-14_
 - **Avatar shown to users:** **LEGACY** render. C2 is built but **NOT active**.
 
 ## Current Commit
-- `origin/main` = **`89b8ea3`** ("feat: add C2 cosmetics rendering parity").
-- Frontend clone and ROOT clone both at `89b8ea3` (in sync).
+- `origin/main` = **`4029594`** ("docs: eye system ADR + hybrid raster pipeline ADR (D-012..D-019)").
+- Frontend clone and ROOT clone both at `4029594` (in sync).
 - One GitHub repo: `Moeller888/den-seje-app-frontend`. The ROOT clone embeds the
   frontend as a vestigial gitlink that is **not** on the Vercel deploy path.
 
@@ -84,12 +84,22 @@ Ordered render layers (reuse the existing z-model):
 | D-017 | Asset loading = **hybrid**: eager preload of the user's own avatar; lazy-load shop catalog + other avatars. (ADR-163D) |
 | D-018 | Cache = **immutable, versioned assets + manifest**; invalidation via filename version (never mutate a shipped asset). (ADR-163D) |
 | D-019 | **Mobile-first performance budget**: first-paint < 100ms, full composite < 250ms, total avatar < ~350KB, decoded memory < ~15MB. (ADR-163D) |
+| D-020 | **MVP = one Neutral North Star character**; body-type system preserved architecturally (additive later, no rewrite). (ADR-163F) |
+| D-021 | **Eye granularity = 2 files**: `iris` (tintable) + `fixed` (sclera/lash/shape + fixed highlight). MVP scope; cosmetic/rarity capability (D-012) preserved. (ADR-163F) |
+| D-022 | **Face/Expression layer = tone-agnostic**: no opaque skin shading (base owns skin), blush = `multiply`, carries brows/nose/mouth; one face set shared across skin tones. (ADR-163F) |
+| D-023 | **Blink = WebP eyelid assets per skin tone** (eyelid shows skin → skin-bearing layer). (ADR-163F) |
+| D-024 | **Expression MVP = positive only**: neutral, happy, curious, focused, determined, surprised, proud (7). `sad`/`angry` excluded — permanent **never-negative policy** (resolves OQ-6). (ADR-163F) |
+| D-025 | **Hair compression ignored in MVP**; contract hook reserved: `hair_state = full \| compressed` (MVP produces `full`). (ADR-163F) |
+| D-026 | **Cosmetic recolor = hybrid**: MVP = baked assets; tint = future opt-in (no cosmetic tint pipeline in MVP). (ADR-163F) |
+| D-027 | **Asset canvas = full canvas, all layers**, transparent padding; no cropped/trimmed per-layer assets (one shared coordinate space). (ADR-163F) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
 159A–159G · [ROOT sync] · 160 · 161A · 161B · 161B.5 (docs baseline committed) ·
 161C–161E · 162A–162B (North Star spec + prompt package) ·
-163A (Hybrid Raster arch) · 163B (Eye System ADR) · 163C (eye docs) · 163D (pipeline ADR).
+163A (Hybrid Raster arch) · 163B (Eye System ADR) · 163C (eye docs) · 163D (pipeline ADR) ·
+163F (decomposition & raster asset spec) · 163G (MVP scope decisions D-020…D-027) ·
+163H (raster asset spec documentation: ADR-163F + state/vision update + consistency check).
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
@@ -98,8 +108,12 @@ Ordered render layers (reuse the existing z-model):
 - OQ-4: No cohort / % activation mechanism.
 - OQ-5: Neutral, symmetric base POSE must be derived from North Star (hero pose is
   asymmetric — not layer-friendly).
-- OQ-6: "Sad / negative" expression conflicts with the 151A "never-negative" design —
-  product decision required before adding it.
+- OQ-6: ~~"Sad / negative" expression vs 151A "never-negative"~~ **RESOLVED** — D-024
+  locks a permanent never-negative policy; `sad`/`angry` excluded from MVP (ADR-163F).
+- OQ-7: ~~Confirm MVP eye scoping (2 files, face-driven emotion)~~ **RESOLVED**
+  (2026-06-15) — D-021 stays locked: MVP eyes = 2 files (`iris.webp` + `fixed.webp`),
+  MVP emotion is face-driven. Per-expression eye-shape variants are a **future additive
+  capability**, not part of MVP (does not change D-012).
 
 ## Current Risks
 - R-1 (Medium): Art-direction drift — flat SVG base ≠ North Star (eyes/finish). Being
@@ -124,7 +138,8 @@ Ordered render layers (reuse the existing z-model):
   for rollback during transition; remove once raster ships).
 
 ## Next Recommended Section
-**163F — North Star Decomposition & Raster Asset Spec** (production/spec, no code):
-derive the neutral symmetric base pose from North Star v1.0; decompose into the
-locked layers (base / face / eyes / hair); extract pixel-precise anchors, eye
-measurements, palette; write the WebP asset-production spec per ADR-163D.
+**164A — Produce Neutral North Star Base Assets** (asset production): produce the first
+real raster layers for the Neutral North Star character against the locked spec
+(ADR-163F): base body (neutral skin tone), the 7 positive face/expression WebPs, the
+eye `iris`+`fixed` pair, and the neutral blink eyelid — all full-canvas (D-027),
+gated behind `AVATAR_V2` (still OFF). Hair + cosmetics follow parity-first (D-009).

@@ -2,6 +2,8 @@
 
 _Authoritative design intent for the player avatar. This is the design GOAL all
 avatar art is measured against. Locked 2026-06-14._
+_Spec addenda 2026-06-15: principles 13–17 added for the raster asset spec (D-020…D-027,
+ADR-163F). The design goal itself is unchanged._
 
 ---
 
@@ -100,10 +102,25 @@ avatar art is measured against. Locked 2026-06-14._
 12. **Mobile-first performance budget** (D-019). First-paint < 100ms, full composite
     < 250ms, total avatar < ~350KB, decoded memory < ~15MB; hybrid loading (eager own
     avatar, lazy catalog).
+13. **MVP = one Neutral North Star character** (D-020). Produce the neutral body type
+    first; the body-type and skin-tone systems stay architecturally intact and additive.
+14. **Skin-bearing vs shared layers** (D-016 / D-022 / D-023). Only the **base body**
+    and **blink** are produced per skin tone; **face, eyes, hair** are one shared set.
+    The face paints no skin (tone-agnostic, blush = `multiply`) so the base owns skin.
+15. **Eyes = 2 MVP files** (D-021): tintable `iris` + `fixed` (sclera/lash/shape +
+    fixed highlight). Emotion in MVP is **face-driven**; per-expression eye-shape stays
+    a reserved future capability of the separate eye layer (does not change D-012).
+16. **Never-negative expression set** (D-024). MVP ships only positive expressions
+    (neutral, happy, curious, focused, determined, surprised, proud); `sad`/`angry` are
+    permanently excluded — consistent with the 151A personality design.
+17. **Full-canvas assets** (D-027). Every layer is produced at full dimensions with
+    transparent padding (no cropped/trimmed assets) so composition is a pure z-overlay.
 
 > All principles above are consistent with D-011 (SVG rejected), D-011b (Hybrid
-> Raster), D-012 (separate eye layer), and North Star Avatar v1.0 as the permanent
-> visual target. Full pipeline rationale: `docs/adr/ADR-163D-hybrid-raster-pipeline.md`.
+> Raster), D-012 (separate eye layer), the locked pipeline (D-013…D-019) and the
+> raster asset spec (D-020…D-027), with North Star Avatar v1.0 as the permanent visual
+> target. Full rationale: `docs/adr/ADR-163D-hybrid-raster-pipeline.md` (pipeline) and
+> `docs/adr/ADR-163F-raster-asset-spec.md` (asset spec / MVP scope).
 
 ## Missing reference material (obtain before raster production)
 - A measurable proportion spec extracted from the reference (target eye width/
