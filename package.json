@@ -6,7 +6,9 @@
     "packages/*",
     "tools/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "avatar:extract-masks": "node tools/avatar/extract-anchor-masks.mjs"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
     "dotenv": "^17.4.1"

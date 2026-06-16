@@ -1,0 +1,10 @@
+{
+  "name": "@den-seje/avatar-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic, non-AI avatar build tooling (164L): anchor + MVP mask extraction from the Tier-0 Master. QA/build artifacts only — not runtime assets.",
+  "scripts": {
+    "extract-masks": "node ./extract-anchor-masks.mjs"
+  }
+}

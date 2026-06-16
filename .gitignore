@@ -14,3 +14,6 @@ KUN TIL MIG.txt
 
 # Debug/temp files
 debug.html
+
+# Avatar build/QA artifacts (164L) — regenerable, NOT runtime assets; never commit
+tools/avatar/build/
