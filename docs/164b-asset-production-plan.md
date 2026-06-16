@@ -15,6 +15,10 @@ _Governs: ADR-163F (asset spec), D-030 (z-stack), D-032 (geometry source), D-013
   identity derive from it.
 - **`Northstar Master - reference.png` = outfit-direction reference ONLY** (plain tee /
   plain trousers / plain sneakers). It must NOT drive geometry. Master wins on conflict.
+- **Base production method (D-033):** the base is produced by **manual layered paint-over
+  over Master**. **AI generation/inpainting is rejected as a base production method** (it
+  repeatedly drifts proportions/identity); AI outputs may be used **only as outfit
+  references**, never as the base asset.
 
 ### 0.2 Canvas, resolution, format (D-013 / D-027 / D-018)
 - **Working master canvas:** 1024×1536, RGB → RGBA. (Confirm Master.png is exactly
@@ -52,9 +56,10 @@ No finished asset below is produced until **every** Phase 1 sub-gate passes:
 - **A — eye composite + iris tint**, **B — blink seam**, **C — hair luminance tint**
   (`tools/164b-prototype/prototype-gate.html`).
 - **D — base coherence (added 164B.1; highest-risk asset, D-029 clarification).**
-  Produce a **base prototype** — body + neutral default outfit painted **over Master
-  geometry** in the master's cel-shade style (D-032; **reconstruct, do not regenerate**)
-  — and approve it before any finished layer:
+  Produce a **base prototype** — body + neutral default outfit **manually painted over
+  Master geometry** in the master's cel-shade style (D-032; **manual paint-over only — AI
+  generation/inpaint is rejected as a base method, D-033**) — and approve it before any
+  finished layer:
   - **PASS:** (1) proportions/pose/silhouette match Master (verify by onion-skin/overlay
     against `Northstar Master.png` — no drift); (2) shading language, line weight and
     palette read as the **same character/finish** as Master; (3) reads as the **same
@@ -68,6 +73,9 @@ No finished asset below is produced until **every** Phase 1 sub-gate passes:
 ## 1. `body-neutral-medium-v1.webp` — Base body (z 0–2, per skin tone)
 **Role:** skin + neutral default outfit + head, **NO face, NO eyes**. Foundational layer
 everything registers to. Skin-bearing (D-016).
+**Production method (D-033):** **manual layered source / manual paint-over over Master** —
+AI generation/inpaint is **not** an allowed base method (it drifts); AI outputs are outfit
+references only.
 
 - **Source (extract directly):** head skin (forehead, cheeks, jaw, ears), neck, hands;
   the full silhouette, pose and proportions; the body geometry under the clothing

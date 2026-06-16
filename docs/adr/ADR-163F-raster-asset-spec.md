@@ -102,6 +102,14 @@ the base behind a base-coherence check** before any finished layer is produced (
 164B.1 Asset Production Plan, Phase 1 sub-gate D). Regeneration is **not** an acceptable
 substitute for reconstruction (four companion regenerations drifted — D-032).
 
+**Production-method lock (D-033, 164C):** AI generation/inpainting is **rejected as a base
+production method** — it repeatedly drifts the base's proportions and identity (confirmed
+across four regenerations and an explicit edit/inpaint attempt). `body-neutral-medium-v1`
+**must be produced by a manually controlled layered source / manual paint-over over the
+Master** (geometry = Master, D-032). AI outputs may be used **only as visual outfit
+references**, never as the base asset. This refines the *method* of D-029; it changes no
+architecture.
+
 ### D-030 — Eye layer z-index = 4 (render stack locked)
 The eye layer takes **z = 4** (above Face/Expression, below Blink). The render stack is
 **locked** (see "Render stack" below). This fills the gap left by the 159B z-model

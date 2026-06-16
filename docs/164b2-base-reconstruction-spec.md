@@ -4,8 +4,9 @@ _Exactly how the base body layer must be reconstructed from `Northstar Master.pn
 Specification only — no assets, no tooling, no commits, no runtime/AVATAR_V2 changes._
 _Governs / builds on: ADR-163F **D-029 clarification** (base is reconstruction-grade, the
 single highest-risk MVP asset), **D-032** (Master = sole geometry; reference = outfit
-direction only; **never regenerate**), `docs/164b-asset-production-plan.md` (§0 fundamentals,
-§1 base, Phase 1 sub-gate D)._
+direction only; **never regenerate**), **D-033** (base = **manual paint-over only**; AI
+generation/inpaint rejected as a base method — AI outputs are outfit references only),
+`docs/164b-asset-production-plan.md` (§0 fundamentals, §1 base, Phase 1 sub-gate D)._
 
 > **The base is RECONSTRUCTED, not cut.** Against the real Master the only true skin is
 > face / ears / a small neck triangle / hands; everything else is occluded by clothing and
@@ -62,8 +63,10 @@ face features + eyes (they belong to the face/eye layers, §7).
 - **Onion-skin / difference-overlay** the reconstruction against the Master continuously.
   The reconstructed body silhouette (minus outfit drape bulk) must register to the Master
   silhouette within a tight tolerance (target: anchor centres within a few px at 1024×1536).
-- **Do NOT regenerate and do NOT freehand proportions** (D-032 — four regenerations drifted
-  taller/leaner). Reconstruct strictly over the traced geometry.
+- **Manual paint-over only; do NOT AI-generate, AI-inpaint, or freehand proportions**
+  (D-032/D-033 — four regenerations *and* an edit/inpaint attempt all drifted taller/leaner).
+  Reconstruct strictly **by hand** over the traced geometry; AI outputs are outfit
+  references only.
 
 ---
 
@@ -165,7 +168,8 @@ All must pass before the base is finalized:
 **GO — produce the base _prototype_**, conditioned on:
 - Phase 0 prerequisites complete (confirm 1024×1536; trace the geometry guide + anchors §3;
   sample the `medium` ramp §6),
-- **reconstruction-only** method over locked Master geometry (no regeneration, D-032),
+- **manual paint-over** over locked Master geometry — **AI generation/inpaint rejected as
+  a base method** (D-032/D-033); AI outputs are outfit references only,
 - the prototype is then subject to **Base-Coherence Gate (§8)** before any finished layer.
 
 **NO-GO for the _finished_ base** until sub-gate D (§8) is signed off. Producing finished
