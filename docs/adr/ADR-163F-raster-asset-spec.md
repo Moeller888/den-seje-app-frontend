@@ -136,6 +136,12 @@ dark brown = the default `hair_color` tint via multiply, D-014 — not baked).
 | 40 | **Hair** (luminance map + tint; D-031) | `hair-northstar-v1` | no (shared) |
 | `C2_LAYER_Z` | **Cosmetics** (equipped_slots) | per-slot WebP | no |
 
+> **Cosmetics z-model is canonical `C2_LAYER_Z` (D-035, 164E)** — legacy `SLOT_Z` is
+> frozen/deprecated and must not be extended. The cosmetic `face` (mask) and `eyes`
+> (glasses) slots are **distinct** from the raster Face/Expression (z3) and Eyes (z4)
+> layers above; `blink` (z5) is engine/surface, not a shop slot. Slot/z spec:
+> `docs/164d-shop-pipeline.md`.
+
 ## Layer responsibilities (who owns skin)
 The defining rule that ties D-016, D-022 and D-023 together:
 

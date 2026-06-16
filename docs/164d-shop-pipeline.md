@@ -1,7 +1,8 @@
 # 164D — Scalable Shop Item Pipeline & Slot Template Architecture
 
 _Production model for a 1000+ item shop. **Production model LOCKED by D-034.**
-**Slot z-values are NOT locked** — new slots are PROPOSED and pending reconciliation._
+**Canonical slot/z model LOCKED by D-035** (`C2_LAYER_Z`); new-slot z-values **RESERVED**
+(8/15/25/100) with **activation DEFERRED** — the slots are not yet built._
 _Builds on: D-032 (Master = sole geometry), D-033 (manual base, scoped here), the existing
 slot/z model (`js/avatar-layers.js`: `SLOTS`/`SLOT_Z` legacy + `C2_LAYER_Z` 159B), `RARITY_COLORS`,
 `equipped_slots`/`shop_items`, the immutable versioned manifest (D-018), full-canvas rule (D-027)._
@@ -30,6 +31,37 @@ overlays only, never for avatar geometry.**
 
 ---
 
+## D-035 (locked canonical slot/z model)
+**`C2_LAYER_Z` is the canonical slot/z model for all scalable shop/cosmetic overlays.**
+- `C2_LAYER_Z` + `C2_BASE_Z=0` + `C2_HAIR_Z=40` (159B/D-008) is canonical for shop overlays.
+- **Legacy `SLOT_Z`/`SLOTS` is frozen/deprecated** — retained only for the current live
+  legacy render path until the AVATAR_V2 cutover, and **MUST NOT be extended**. New slots
+  are C2-only.
+- **Slot *names* are the shared contract** across both render z-maps and the DB
+  (`shop_items.slot_type`, `equipped_slots` keys, equip/unequip RPCs).
+- Cosmetic **`face` slot = masks**, NOT the raster face/expression layer (z3).
+- Cosmetic **`eyes` slot = glasses**, NOT the raster eyes layer (z4).
+- **`blink` z=5 is an engine/surface layer**, not a shop slot.
+- **`hair` is identity/geometry**, not a purchasable shop slot.
+- Proposed slots **`shoes`/`bottom`/`hands`/`front_fx` receive RESERVED C2 z-values only**
+  (shoes 8 · bottom 15 · hands 25 · front_fx 100) — **their ACTIVATION is DEFERRED**.
+
+**Deferred activation requirements** (ALL must be resolved before activating any new slot):
+1. **Product-taxonomy decision** — are `shoes`/`bottom`/`hands`/`front_fx` standalone shop
+   products, or folded into existing `body`/`torso` sets?
+2. **`shop_items.layer_order` semantics** — the column exists but render z comes from the
+   slot map, not `layer_order`; decide whether it is authoritative, vestigial, or future.
+3. **DB/RPC slot-validation check** — confirm whether the equip/unequip RPCs whitelist
+   `slot_type`; if so, a migration/RPC change is required (out of current scope).
+4. **Per-slot mask authoring** (Tier 1, manual) — required before any item batch.
+5. **AVATAR_V2 cutover plan** — legacy `SLOT_Z` is still live; "deprecated" only takes
+   effect at cutover (no cohort/% mechanism exists, OQ-4).
+
+> D-035 locks the **model + reservations only**. It makes **no code/DB/asset change**
+> (`js/avatar-layers.js` is untouched) and **activates no new slot**.
+
+---
+
 ## 1. Two-tier production model
 **Tier 1 — Geometry-locked RIG (one-time, manual, D-032/D-033):** base (per skin tone),
 face/expression, eyes (iris+fixed), blink, hair luminance, anchor template, per-slot masks,
@@ -53,22 +85,24 @@ headwear 45 · face(mask) 50 · eyes(glasses) 55`.
 
 > ⚠️ The cosmetic slots `face`/`eyes` (mask z50 / glasses z55) are **distinct** from the
 > raster *layers* face/expression (z3) and eyes (z4). The repo also still contains a legacy
-> small-z map (`SLOTS`/`SLOT_Z`). **Which map governs C2 cosmetics must be confirmed.**
+> small-z map (`SLOTS`/`SLOT_Z`). **D-035: `C2_LAYER_Z` is canonical; legacy `SLOT_Z` is
+> frozen/deprecated and must not be extended.**
 
-### 2b. PROPOSED new slots — **z-values PENDING RECONCILIATION (NOT LOCKED)**
-These are **proposals only**. The z-values below are **illustrative**, not decisions.
+### 2b. New slots — **z RESERVED (D-035); ACTIVATION DEFERRED**
+z-values are now **reserved** in the canonical `C2_LAYER_Z` gaps (forward-collision-safe).
+**Reservation ≠ activation** — none of these slots is built, registered, or rendered yet.
 
-| PROPOSED slot | Proposed z (pending) | Intended position | Status |
+| Slot | Reserved C2 z | Intended position | Status |
 |---|---|---|---|
-| `shoes` | (pending) | above base, below `body` | **PROPOSED** |
-| `bottom` | (pending) | above `body`, below `torso` | **PROPOSED** |
-| `hands` (gloves/wrist) | (pending) | above `torso` | **PROPOSED** |
-| `front_fx` | (pending) | top of stack | **PROPOSED** |
+| `shoes` | **8** | above base(0)/blink(5), below `body`(10) | **RESERVED — not activated** |
+| `bottom` | **15** | above `body`(10), below `torso`(20) | **RESERVED — not activated** |
+| `hands` (gloves/wrist) | **25** | above `torso`(20), below `neck`(30) | **RESERVED — not activated** |
+| `front_fx` | **100** | top of stack (above `eyes` 55) | **RESERVED — not activated** |
 
-> **RECONCILIATION REQUIRED BEFORE IMPLEMENTATION.** New slots and their z-values must be
-> reconciled against the **live `C2_LAYER_Z`** and the **legacy `SLOT_Z`/`SLOTS`** maps,
-> and which map governs C2 cosmetics confirmed, before any slot is added. No slot z-value is
-> locked by this document or by D-034.
+> **ACTIVATION DEFERRED** pending the five requirements in the D-035 block above
+> (product taxonomy · `layer_order` semantics · DB/RPC slot validation · per-slot masks ·
+> AVATAR_V2 cutover). Reserving z does **not** add the slot to `SLOTS`/`ALL_SLOTS`/
+> `C2_LAYER_Z` in code, nor to the DB/shop — that is the (deferred) activation step.
 
 ## 3. Full-canvas transparent overlay rules (D-027)
 Every item: **1024×1536 master → 512×768 WebP**, transparent padding, opaque only inside its
@@ -164,9 +198,10 @@ impossible. Throughput is bounded by item generation + automated QA, not avatar 
 ~1000 items/week is realistic.
 
 ## 14. Open decisions — REQUIRED before implementation
-1. **Slot/z reconciliation (§2b):** lock new slots (`shoes`/`bottom`/`hands`/`front_fx`) and
-   their z-values against the live `C2_LAYER_Z` **and** legacy `SLOT_Z`/`SLOTS`; confirm which
-   map governs C2 cosmetics. **Nothing is locked until this is done.**
+1. **Slot/z model — RESOLVED by D-035:** `C2_LAYER_Z` is canonical; legacy `SLOT_Z` frozen;
+   new-slot z-values reserved (§2b). **Remaining = new-slot ACTIVATION**, deferred pending the
+   five requirements in the D-035 block (product taxonomy · `layer_order` semantics · DB/RPC
+   slot validation · per-slot masks · AVATAR_V2 cutover).
 2. **Style-conformance QA** for AI items (R-6 applied to the catalog): human spot-check rate
    vs. an automated style classifier.
 3. **`tintable`-by-default policy (§8)** — confirm.
