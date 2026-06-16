@@ -153,7 +153,8 @@ base/rig (164B)**; **no code/tooling/mask/assets are produced here**. Detailed g
   164B.3 apply **only** to that upgrade.
 - **Tier 1 — One-time setup (automated/semi-automated, from Master):** anchor template +
   MVP accessory-slot masks **derived from Master** (the base exists → masks are unblocked).
-  Next blocking step = **164K**.
+  Method locked by **D-041** (`docs/164k-anchor-mask-extraction-plan.md`); extraction tooling
+  = **164L**.
 - **Tier 2 — Scalable catalog (automated):** AI slot-constrained transparent overlays →
   automated QA gates (D-037) → manifest/catalog → batch publish.
 - **MVP slots = accessory overlays only** (aura, back, headwear, face/masks, eyes/glasses).

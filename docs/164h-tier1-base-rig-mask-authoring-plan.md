@@ -7,6 +7,8 @@
 > (step 1 below) is a deferred upgrade**, not an MVP prerequisite. The Tier-1 mask/anchor/
 > style-kit/composite/QA work below now governs (a) the Master-derived MVP masks and (b) the
 > future neutral-base upgrade. See project-state D-040 and `docs/164d-shop-pipeline.md`.
+> The MVP anchor + mask extraction method (from Master) is locked by **D-041** —
+> `docs/164k-anchor-mask-extraction-plan.md`; the extraction tooling is **164L**.
 
 _The practical Tier-1 plan that must be completed before any scalable MVP shop-item
 generation. **D-038 locks the plan, deliverables, formats, naming, gates and production
