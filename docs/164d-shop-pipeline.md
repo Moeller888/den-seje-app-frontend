@@ -7,6 +7,9 @@ _Builds on: D-032 (Master = sole geometry), D-033 (manual base, scoped here), th
 slot/z model (`js/avatar-layers.js`: `SLOTS`/`SLOT_Z` legacy + `C2_LAYER_Z` 159B), `RARITY_COLORS`,
 `equipped_slots`/`shop_items`, the immutable versioned manifest (D-018), full-canvas rule (D-027)._
 _No code, assets, migrations, AVATAR_V2 change, or runtime change results from this document._
+_**Tier-1 prerequisites (base rig, anchor template, masks, style kit, reference composites,
+QA thresholds) are planned in `docs/164h-tier1-base-rig-mask-authoring-plan.md` (D-038)** —
+the base rig is the blocking first step; no shop-item batch starts until all six exist._
 
 ---
 
