@@ -102,6 +102,46 @@ identity tokens, not shop overlays.
 
 ---
 
+## D-037 (locked MVP QA gate framework + mask rules)
+Locks **rules only**. Exact pixel mask **assets are Tier-1 work pending the produced
+base/rig (164B)**; **no code/tooling/mask/assets are produced here**. Detailed gate list in
+§10, rejection criteria in §11, mask-gate rationale in §4.
+
+**Every shop item is a full-canvas transparent overlay** — master **1024×1536** → served
+**512×768**; **no crop/trim, no per-item offset math** (pure z-overlay, D-027).
+
+**Automated-first gate (HARD fail → reject queue):**
+- transparent background · clean alpha / **no halo**
+- **slot-mask compliance — 0 opaque px outside the slot mask**
+- **no avatar geometry / skin / face / eyes / hair**
+- anchor / registration compliance
+- canonical **`C2_LAYER_Z`** slot (no rogue z)
+- manifest completeness (unique id, checksum, dims)
+- per-item performance budget (≤ ~50 KB served, within the D-019 stack)
+- composite smoke test — **eye legibility preserved** (non-eyes/non-mask slots)
+
+**Human review:** style conformance + **content safety** (kids platform — see §6 policy).
+
+**MVP slot mask rules:**
+| Slot | z | Mask | Allowed region | Eyes | Notes |
+|---|---|---|---|---|---|
+| `aura` | −30 | **generous** | full canvas, behind avatar | n/a (behind) | soft-edge glow allowed; fit canvas; weight |
+| `back` | −20 | **generous, shoulder-anchored** | back + outward spread | n/a (behind) | wings/capes; no canvas overflow |
+| `headwear` | 45 | **moderate, head-anchored** | crown/head region | **must stay legible** | over hair; no body/skin px |
+| `face/masks` | 50 | **tight, face-anchored** | face oval | **must stay legible** | masks leave eye-holes / lower-face |
+| `eyes/glasses` | 55 | **tight, eye-anchored** | eye band + temples | **approved eye-overlap exception** | the only slot allowed to cover eyes |
+
+**Conditional / optional:**
+- **`torso` mask = CONDITIONAL** — only once the base body + a `torso` occlusion mask exist
+  and pass QA (clothing-replacement; must fully occlude the base tee, leave forearms/hands to
+  base). Stays conditional until then.
+- **`neck` = optional / low priority** — small neck/upper-chest band; low risk.
+
+> D-037 locks the **gate framework + mask rules only**. No mask assets, no code, no tooling,
+> no DB/RPC, no AVATAR_V2 change, no new slots activated.
+
+---
+
 ## 1. Two-tier production model
 **Tier 1 — Geometry-locked RIG (one-time, manual, D-032/D-033):** base (per skin tone),
 face/expression, eyes (iris+fixed), blink, hair luminance, anchor template, per-slot masks,
