@@ -62,6 +62,46 @@ overlays only, never for avatar geometry.**
 
 ---
 
+## D-036 (locked shop product taxonomy — MVP + post-MVP)
+Curates which **existing** slots are MVP shop categories (accessory-first). **No slots are
+added or activated; product-architecture decision only.**
+
+**MVP purchasable categories** (generous masks, no base-outfit occlusion):
+| Category | Slot | Meaning |
+|---|---|---|
+| Aura | `aura` | effects behind the avatar |
+| Back | `back` | wings / capes (behind) |
+| Headwear | `headwear` | hats |
+| Masks | `face` | cosmetic **masks only** |
+| Glasses | `eyes` | cosmetic **glasses only** |
+
+**Conditional MVP:** `torso` (tops) — activate **only** once the base body + a `torso`
+occlusion mask are produced and pass QA (clothing-replacement; medium registration cost).
+**Optional / low priority:** `neck` (necklaces).
+
+**Identity / rig only (NOT purchasable overlays):** `hair` — hairstyle + `hair_color` are
+identity tokens, not shop overlays.
+
+**Deferred post-MVP:**
+| Slot | Why deferred | On activation |
+|---|---|---|
+| `body` (full-body costume) | highest occlusion/registration risk | event/seasonal pieces |
+| `shoes` | clothing-replacement; not core MVP variety | **separate** slot (mix-and-match) |
+| `bottom` | clothing system not mature | **separate** slot (mix-and-match) |
+| `hands` | low ROI (small, often occluded) | last |
+| `front_fx` | front-of-face/eye occlusion risk | once effects catalog justifies it |
+
+**Semantics (must not be conflated):**
+- `face` = cosmetic **masks**, **not** the raster Face/Expression layer (z3).
+- `eyes` = cosmetic **glasses**, **not** eye-color / rare-eyes (those live in the eye rig
+  layer, D-012/D-015).
+- `hair` = identity/geometry, **not** a shop overlay.
+
+> D-036 resolves D-035 deferred-activation requirement (1) — product taxonomy. The deferred
+> slots still stay deferred for requirements (2)–(5). No code/DB/asset/slot change.
+
+---
+
 ## 1. Two-tier production model
 **Tier 1 — Geometry-locked RIG (one-time, manual, D-032/D-033):** base (per skin tone),
 face/expression, eyes (iris+fixed), blink, hair luminance, anchor template, per-slot masks,
