@@ -7,6 +7,8 @@ single highest-risk MVP asset), **D-032** (Master = sole geometry; reference = o
 direction only; **never regenerate**), **D-033** (base = **manual paint-over only**; AI
 generation/inpaint rejected as a base method — AI outputs are outfit references only),
 `docs/164b-asset-production-plan.md` (§0 fundamentals, §1 base, Phase 1 sub-gate D)._
+_Production method (who produces it, how): **D-039 / `docs/164i-base-rig-production-execution-plan.md`**
+— primary = outsource to a professional illustrator; in-house paint-over = budget fallback._
 
 > **The base is RECONSTRUCTED, not cut.** Against the real Master the only true skin is
 > face / ears / a small neck triangle / hands; everything else is occluded by clothing and

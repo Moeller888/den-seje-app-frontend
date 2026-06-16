@@ -28,6 +28,9 @@ _`AVATAR_V2` stays OFF. No runtime/DB/RPC/asset change results from this documen
 - **Gate:** **PASS the 164B.3 base-coherence worksheet** (proportions §2 + D-032/geometry §5
   are non-negotiable).
 - **Mode:** manual-only. Produced in 164B per the 164B.2 spec; it is the blocking datum.
+- **Production method (D-039, 164I):** primary = outsource to a professional illustrator
+  against a locked brief; in-house manual paint-over = budget fallback; vector = geometry
+  scaffold only. See `docs/164i-base-rig-production-execution-plan.md`.
 
 ### 2. Anchor template
 - **Purpose:** the single geometry source all masks derive from.
