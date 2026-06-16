@@ -145,7 +145,32 @@ base/rig (164B)**; **no code/tooling/mask/assets are produced here**. Detailed g
 
 ---
 
+## D-040 (locked production model — automation-first; MVP unblocked)
+**MVP avatar production is automation-first with no illustrator/manual dependency.**
+- **Tier 0 — Base:** **`Northstar Master.png` is the default base avatar/datum** (fixed,
+  approved geometry, D-032). The reconstructed neutral base (`body-neutral-medium-v1`) is a
+  **deferred quality upgrade — NOT an MVP blocker**. D-039's illustrator method + D-033 +
+  164B.3 apply **only** to that upgrade.
+- **Tier 1 — One-time setup (automated/semi-automated, from Master):** anchor template +
+  MVP accessory-slot masks **derived from Master** (the base exists → masks are unblocked).
+  Next blocking step = **164K**.
+- **Tier 2 — Scalable catalog (automated):** AI slot-constrained transparent overlays →
+  automated QA gates (D-037) → manifest/catalog → batch publish.
+- **MVP slots = accessory overlays only** (aura, back, headwear, face/masks, eyes/glasses).
+  torso/bottom/shoes clothing are additive later (need stronger occlusion masks).
+- **Hard safety (D-034, reinforced):** AI must **never** regenerate the full avatar or define
+  body/face/hair/eyes/proportions/anchors/masks; AI = isolated slot overlays only.
+- **Accepted tradeoff:** MVP = one fixed avatar (Master) + accessories; per-user skin tone /
+  hairstyle / hair-color variation **defers** with the neutral-base upgrade.
+
+> D-040 supersedes the *blocking* status of D-038 and the *primary* status of D-039;
+> preserves D-032/D-034/D-035/D-036/D-037. No code/DB/asset/mask/AVATAR_V2 change.
+
+---
+
 ## 1. Two-tier production model
+*(Tier 0 added by D-040 above: `Northstar Master.png` is the MVP base; the reconstructed
+rig below is the deferred upgrade. Tiers 1–2 are the scalable path.)*
 **Tier 1 — Geometry-locked RIG (one-time, manual, D-032/D-033):** base (per skin tone),
 face/expression, eyes (iris+fixed), blink, hair luminance, anchor template, per-slot masks,
 style kit. AI forbidden as producer; AI = references only. Produced once and frozen.

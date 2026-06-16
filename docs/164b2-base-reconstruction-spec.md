@@ -9,6 +9,9 @@ generation/inpaint rejected as a base method — AI outputs are outfit reference
 `docs/164b-asset-production-plan.md` (§0 fundamentals, §1 base, Phase 1 sub-gate D)._
 _Production method (who produces it, how): **D-039 / `docs/164i-base-rig-production-execution-plan.md`**
 — primary = outsource to a professional illustrator; in-house paint-over = budget fallback._
+_**Status (D-040, 164J):** this reconstructed neutral base is a **deferred quality upgrade,
+NOT an MVP blocker**. MVP uses `Northstar Master.png` directly as the Tier-0 base + accessory
+overlays. This spec stands for **if/when** the upgrade is produced (then D-033 + 164B.3 apply)._
 
 > **The base is RECONSTRUCTED, not cut.** Against the real Master the only true skin is
 > face / ears / a small neck triangle / hands; everything else is occluded by clothing and

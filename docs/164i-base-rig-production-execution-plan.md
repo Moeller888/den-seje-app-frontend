@@ -1,5 +1,12 @@
 # 164I — Base Rig Production Execution Plan (D-039)
 
+> **⚠️ RE-SCOPED by D-040 (164J, automation-first pivot).** This illustrator/manual
+> production method is **no longer the MVP path and no longer a blocker**. MVP uses
+> `Northstar Master.png` directly as the **Tier-0 base** + accessory overlays only. This
+> plan now applies **only to the future, optional neutral-base quality upgrade** (`body-
+> neutral-medium-v1`). The 164B.3 gate, D-033 and this brief apply **if/when** that upgrade
+> is produced — not to MVP. See `docs/164d-shop-pipeline.md` (Tier-0) and project-state D-040.
+
 _Concrete execution plan for producing the base rig `body-neutral-medium-v1`.
 **D-039 locks the production method, brief, deliverables, gates, NO-GO and handoff.**
 No asset/image/mask/code/tooling is produced by this document._

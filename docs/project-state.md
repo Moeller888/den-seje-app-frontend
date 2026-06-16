@@ -61,6 +61,11 @@ Ordered render layers (reuse the existing z-model):
 > This model **supersedes Section 163A's "eyes embedded in Face/Expression"** —
 > eyes are now their own layer (D-012 / ADR-163B). Render stack locked by D-030;
 > full decomposition spec in `docs/adr/ADR-163F-raster-asset-spec.md`.
+>
+> **MVP base (D-040):** the layer model above is the **full raster target**, but for MVP
+> the **Tier-0 base is `Northstar Master.png` as-is** (fixed default avatar) + accessory
+> overlays only. The decomposed neutral base + per-skin-tone/face/eyes/hair layers are a
+> **deferred upgrade**, not an MVP blocker.
 
 ## Major Decisions (register)
 | ID | Decision |
@@ -103,8 +108,9 @@ Ordered render layers (reuse the existing z-model):
 | **D-035** | **Canonical slot/z model for scalable shop overlays = `C2_LAYER_Z` (164E).** The C2 z-model (`C2_LAYER_Z` + `C2_BASE_Z=0` + `C2_HAIR_Z=40`, 159B/D-008) is the **canonical** slot/z model for all scalable shop/cosmetic overlays (D-034). **Legacy `SLOT_Z`/`SLOTS` is frozen/deprecated** — retained only for the live legacy render path until the AVATAR_V2 cutover, and **MUST NOT be extended** (new slots are C2-only). **Slot *names* are the shared contract** across both z-maps and the DB (`shop_items.slot_type`, `equipped_slots` keys, equip/unequip RPCs). Cosmetic **`face` = masks** (NOT the raster face/expression layer z3); cosmetic **`eyes` = glasses** (NOT the raster eyes layer z4); **blink z5 = engine/surface** (not a shop slot); **`hair` = identity/geometry** (not a purchasable slot). Proposed slots **`shoes`/`bottom`/`hands`/`front_fx` receive RESERVED C2 z-values only (8 / 15 / 25 / 100)** — **activation DEFERRED** pending: (1) product-taxonomy decision, (2) `shop_items.layer_order` semantics, (3) DB/RPC slot-validation check, (4) per-slot mask authoring, (5) AVATAR_V2 cutover plan. Locks the **model + reservations only — no code/DB/asset change** (js/avatar-layers.js untouched). Spec: `docs/164d-shop-pipeline.md`. (164E, 2026-06-16) |
 | **D-036** | **Shop product taxonomy — MVP + post-MVP (164F).** **MVP purchasable categories = `aura`, `back`, `headwear`, `face` (masks only), `eyes` (glasses only)** — accessory-first (generous masks, no base-outfit occlusion). **`torso` (tops) = CONDITIONAL MVP** — activate only once the base body + `torso` mask are produced and pass QA. **`neck` = optional / low priority.** **`hair` = identity/rig only** (hairstyle + `hair_color` tokens; **not** a purchasable overlay). **DEFERRED post-MVP:** `body` (full-body costumes — high occlusion/registration risk), `shoes`, `bottom`, `hands`, `front_fx` (front-of-face/eye occlusion risk). When activated, **`bottom` + `shoes` stay SEPARATE** (mix-and-match); `hands` waits (low ROI); `front_fx` waits. **Semantics:** `face` = cosmetic masks (≠ raster face/expression layer z3); `eyes` = cosmetic glasses (≠ eye-color/rare-eyes in the eye rig layer, D-012/D-015). Resolves D-035 deferred-activation requirement (1). **Product-architecture decision only — adds no slots, no code, no DB/RPC, no assets**; curates which *existing* slots are MVP shop categories. Spec: `docs/164d-shop-pipeline.md`. (164F, 2026-06-16) |
 | **D-037** | **MVP shop item QA gates & mask spec (164G).** Every shop item is a **full-canvas transparent overlay** (master **1024×1536** → served **512×768**; no crop/trim, no per-item offset math, pure z-overlay). **Automated-first gate (HARD):** transparent bg · clean alpha/no-halo · **slot-mask compliance (0 opaque px outside mask)** · **no avatar geometry/skin/face/eyes/hair** · anchor/registration · canonical **`C2_LAYER_Z`** slot · manifest completeness · per-item performance budget (≤~50 KB, within D-019 stack) · composite smoke test (eye legibility preserved). **Human review:** style conformance + **content safety** (kids platform). **MVP slot mask rules:** `aura` = generous behind-avatar; `back` = generous shoulder-anchored; `headwear` = moderate head-anchored (**eyes legible**); `face/masks` = tight face-anchored (**eyes legible**); `eyes/glasses` = tight eye-anchored (**approved eye-overlap exception**). **`torso` mask conditional** (needs base body + occlusion mask, QA-passed); **`neck` optional/low priority**. **Locks the gate framework + mask RULES only** — **exact pixel mask assets are Tier-1 work pending the produced base/rig (164B)**; **no code/tooling/mask/assets** produced. Spec: `docs/164d-shop-pipeline.md`. (164G, 2026-06-16) |
-| **D-038** | **Tier-1 base rig & mask authoring plan (164H).** Locks the Tier-1 sequence required before any scalable MVP shop-item generation: **(1) base rig `body-neutral-medium-v1`** (manual paint-over from Master, D-032/D-033; PASS 164B.3 — **blocking first step**) → **(2) anchor template** (JSON + overlay: head 512,320 r192, **revised eye box**, shoulder/back, face oval, crown region) → **(3) style kit** (palette/line/cel/light/detail/forbidden-drift; ≥2–3 exemplars/slot) → **(4) MVP slot masks** (aura/back/headwear/face/eyes; **1024×1536 QA/build artifacts, NOT runtime assets**; derived from anchors per D-037) → **(5) reference composites** (≥2/slot; style + composite goldens + eye-legibility calibration set) → **(6) QA threshold config** (eye-legibility, feather, per-item weight, decoded-memory/concurrent-layer cap, mask-overflow). **`torso` mask conditional; `neck` optional.** **No AI may define the base geometry; exact mask pixels wait for the produced base; no shop-item batch starts before all six exist.** Locks **plan/formats/naming/gates/order only — no base, masks, assets, code, or tooling produced.** Spec: `docs/164h-tier1-base-rig-mask-authoring-plan.md`. (164H, 2026-06-16) |
-| **D-039** | **Base rig production execution method (164I).** **Primary = Option B — outsource `body-neutral-medium-v1` to a professional illustrator** against a locked brief (the base is the single highest-risk foundational asset and must pass 164B.3). **Fallback = Option A** (in-house manual paint-over, budget only); **Option C** (semi-automated vector/paint-over) is a **geometry scaffold only, never the final finish**. Base rig is **manually controlled, geometry-locked to `Northstar Master.png`**; **AI must not define production geometry** (D-032/D-033). **No anchor template or masks may start until the base passes 164B.3** (D-038 order). **Handoff:** layered source + flattened review PNG + served WebP candidate + change notes + optional onion-skin/overlay vs Master. **Acceptance gate: 164B.3 PASS before becoming the datum.** **NO-GO:** taller/slimmer body, altered head size, altered face/eyes/hair, pose drift, style drift, AI-looking regeneration, cropped canvas, baked background, any unreviewed geometry change. **Planning decision only — no base/image/mask/asset/code/tooling produced.** Spec: `docs/164i-base-rig-production-execution-plan.md`. (164I, 2026-06-16) |
+| **D-038** | **Tier-1 base rig & mask authoring plan (164H).** Locks the Tier-1 sequence required before any scalable MVP shop-item generation: **(1) base rig `body-neutral-medium-v1`** (manual paint-over from Master, D-032/D-033; PASS 164B.3 — **blocking first step**) → **(2) anchor template** (JSON + overlay: head 512,320 r192, **revised eye box**, shoulder/back, face oval, crown region) → **(3) style kit** (palette/line/cel/light/detail/forbidden-drift; ≥2–3 exemplars/slot) → **(4) MVP slot masks** (aura/back/headwear/face/eyes; **1024×1536 QA/build artifacts, NOT runtime assets**; derived from anchors per D-037) → **(5) reference composites** (≥2/slot; style + composite goldens + eye-legibility calibration set) → **(6) QA threshold config** (eye-legibility, feather, per-item weight, decoded-memory/concurrent-layer cap, mask-overflow). **`torso` mask conditional; `neck` optional.** **No AI may define the base geometry; exact mask pixels wait for the produced base; no shop-item batch starts before all six exist.** Locks **plan/formats/naming/gates/order only — no base, masks, assets, code, or tooling produced.** Spec: `docs/164h-tier1-base-rig-mask-authoring-plan.md`. (164H, 2026-06-16) **[RE-SCOPED by D-040: base rig is no longer the MVP blocking first step — Tier-0 = Master; the next blocking step is automated/semi-automated anchor + mask extraction from Master. This Tier-1 sequence governs the future neutral-base upgrade and the Master-derived masks.]** |
+| **D-039** | **Base rig production execution method (164I).** **Primary = Option B — outsource `body-neutral-medium-v1` to a professional illustrator** against a locked brief (the base is the single highest-risk foundational asset and must pass 164B.3). **Fallback = Option A** (in-house manual paint-over, budget only); **Option C** (semi-automated vector/paint-over) is a **geometry scaffold only, never the final finish**. Base rig is **manually controlled, geometry-locked to `Northstar Master.png`**; **AI must not define production geometry** (D-032/D-033). **No anchor template or masks may start until the base passes 164B.3** (D-038 order). **Handoff:** layered source + flattened review PNG + served WebP candidate + change notes + optional onion-skin/overlay vs Master. **Acceptance gate: 164B.3 PASS before becoming the datum.** **NO-GO:** taller/slimmer body, altered head size, altered face/eyes/hair, pose drift, style drift, AI-looking regeneration, cropped canvas, baked background, any unreviewed geometry change. **Planning decision only — no base/image/mask/asset/code/tooling produced.** Spec: `docs/164i-base-rig-production-execution-plan.md`. (164I, 2026-06-16) **[RE-SCOPED by D-040: this illustrator method applies ONLY to the future optional neutral-base upgrade — it is no longer the MVP path or a blocker.]** |
+| **D-040** | **Automation-first avatar production (164J).** The avatar shop must be **automatable end-to-end — no illustrator dependency for MVP, no manual per-item avatar editing**. **`Northstar Master.png` is the Tier-0 default base avatar/datum** (already exists, approved geometry, D-032) → **`body-neutral-medium-v1` is NOT an MVP blocker**. **MVP proceeds with accessory overlays only:** `aura`, `back`, `headwear`, `face/masks`, `eyes/glasses` (D-036). The neutral reconstructed base becomes a **future optional quality upgrade**; **D-039's illustrator method is re-scoped to that upgrade only**, and **D-038 is re-scoped** (base rig no longer the blocking step — **automated/semi-automated anchor + mask extraction from Master is now the next blocking step**). **D-033 / 164B.3 still apply if/when the neutral-base upgrade is produced.** **Safety unchanged (D-034 reinforced):** AI must **never** regenerate the full avatar or define body/face/hair/eyes/proportions/anchors/masks; AI may generate **only isolated slot-constrained transparent overlays** for approved slots, each passing the slot-mask + QA gates (D-037). **Accepted tradeoff:** MVP = one fixed avatar (the Master) + accessories; **per-user skin tone / hairstyle / hair-color variation defers** with the neutral-base upgrade. Supersedes the *blocking* status of D-038 and the *primary* status of D-039; preserves D-032/D-034/D-035/D-036/D-037. Production model recorded in `docs/164d-shop-pipeline.md` (Tier-0/Tier-1/Tier-2). (164J, 2026-06-16) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
@@ -128,7 +134,16 @@ mask assets are Tier-1 work pending base/rig from 164B) ·
 164H (Tier-1 base rig & mask authoring plan — **D-038**: locks the 6-step Tier-1 sequence
 + formats/gates/order; base rig is the blocking first step; spec `docs/164h-tier1-base-rig-mask-authoring-plan.md`) ·
 164I (Base rig production execution method — **D-039**: Option B (outsource to illustrator)
-primary, A fallback, C scaffold-only; 164B.3 PASS gate; spec `docs/164i-base-rig-production-execution-plan.md`).
+primary, A fallback, C scaffold-only; 164B.3 PASS gate; spec `docs/164i-base-rig-production-execution-plan.md`) ·
+164J (Automation-first avatar production — **D-040**: Master = Tier-0 base; MVP = accessory
+overlays only; neutral base/illustrator method re-scoped to a deferred upgrade; D-038/D-039 re-scoped).
+
+## Current Production State (avatar MVP path — D-040)
+- **Tier-0 base = `Northstar Master.png`** (fixed default avatar; no reconstruction needed for MVP).
+- **MVP shop = accessory overlays only** (aura, back, headwear, face/masks, eyes/glasses).
+- **Blocking next step = 164K** (automated anchor + mask extraction from Master).
+- **Deferred upgrades (not MVP blockers):** neutral reconstructed base (164B/164I/D-039),
+  per-user skin tone / hairstyle / hair-color, torso/bottom/shoes clothing slots.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
@@ -162,6 +177,10 @@ primary, A fallback, C scaffold-only; 164B.3 PASS gate; spec `docs/164i-base-rig
 - R-8 (Medium, art/process): Style coherence across a 1000+ AI-generated item catalog
   (R-6 applied to Tier 2) — mitigate via the locked style kit + per-slot masks + the
   slot-mask/QA gates + style-conformance scoring (D-034 / `docs/164d-shop-pipeline.md`).
+- R-9 (Medium, product): MVP identity deferral (D-040) — Tier-0 = Master as a **single
+  fixed avatar** + accessories; per-user skin tone / hairstyle / hair-color variation is
+  **deferred** with the neutral-base upgrade. Accepted for the pilot MVP; revisit if
+  per-user identity at launch becomes a hard requirement.
 
 ## Technical Debt
 - TD-1: Legacy cosmetic assets are pseudo-3D (clash with flat C2); flat redesign
@@ -174,20 +193,18 @@ primary, A fallback, C scaffold-only; 164B.3 PASS gate; spec `docs/164i-base-rig
   for rollback during transition; remove once raster ships).
 
 ## Next Recommended Section
-**164B — Cut & Export the Neutral Stack** (asset production): decompose frozen Master
-v1.0 against the locked 164A spec (ADR-163F) and export the neutral stack as full-canvas
-1024×1536 → 512×768 WebP (D-013/D-027) — `body-neutral-medium` (neutral underlayer,
-D-029), `face-neutral`, `eyes-neutral-iris` + `eyes-neutral-fixed`, `eyelid-medium`,
-`hair-northstar-v1` (luminance map, D-031) — at the locked z-stack (D-030), with clean
-background→alpha. Run the QA gate (eyes legible@32px/expressive@48px, face paints no
-skin, iris tints with fixed highlight, blink seam, D-019 weight). `AVATAR_V2` stays OFF;
-no runtime wiring yet. 164B proves **one** neutral stack; the 6 other expressions +
-cosmetics follow (parity-first, D-009).
-> **Geometric source = `assets/avatar/reference/Northstar Master.png` ONLY** (D-032).
-> `Northstar Master - reference.png` is an outfit-direction reference only and must not
-> drive proportions, height, hair shape, eye size, facial structure or pose.
-> **Base production method (D-033):** `body-neutral-medium` is produced by **manual
-> layered paint-over over Master**, NOT AI generation/inpaint (which drifts proportions/
-> identity). AI outputs may serve only as outfit references. The base prototype must pass
-> the 164B.3 base-coherence gate (`docs/164b3-base-review-worksheet.md`) before any
-> downstream layer is produced.
+**164K — Automated anchor template + MVP mask extraction from `Northstar Master.png`**
+(D-040). Now unblocked (the Tier-0 base exists — it is Master). One-time, automated/
+semi-automated, single-image setup: place/detect the anchor template on Master (head/eye/
+shoulder/face/crown), then derive the QA/build masks for the 5 MVP accessory slots (`aura`,
+`back`, `headwear`, `face/masks`, `eyes/glasses`) per the D-037 rules. Then proceed to the
+Tier-2 AI item-overlay conveyor. **No illustrator, no manual per-item editing; `AVATAR_V2`
+stays OFF.** This replaces the produced-neutral-base as the blocking first step.
+
+> **Deferred upgrade (was the old "Next Section", now NOT an MVP blocker — D-040):**
+> **164B — Cut & Export the Neutral Stack** — decompose Master into `body-neutral-medium`
+> (D-029), `face-neutral`, `eyes-neutral-iris`/`-fixed`, `eyelid-medium`, `hair-northstar-v1`
+> at the locked z-stack (D-030), produced manually (D-033) and passing the 164B.3 gate. This
+> is the **future quality upgrade** that enables a neutral default outfit + per-user skin
+> tone / hairstyle. Geometry source = `Northstar Master.png` ONLY (D-032); the outfit
+> reference never drives geometry. Pursue **after** the MVP accessory shop ships.

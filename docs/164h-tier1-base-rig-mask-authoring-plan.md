@@ -1,5 +1,13 @@
 # 164H — Tier-1 Base Rig & Mask Authoring Plan (D-038)
 
+> **⚠️ RE-SCOPED by D-040 (164J, automation-first pivot).** The **base rig is no longer the
+> MVP blocking first step**. MVP **Tier-0 base = `Northstar Master.png` as-is**; the new
+> blocking step is **automated/semi-automated anchor + mask extraction from Master (164K)** —
+> the base already exists, so masks/anchors are unblocked. The produced **neutral base rig
+> (step 1 below) is a deferred upgrade**, not an MVP prerequisite. The Tier-1 mask/anchor/
+> style-kit/composite/QA work below now governs (a) the Master-derived MVP masks and (b) the
+> future neutral-base upgrade. See project-state D-040 and `docs/164d-shop-pipeline.md`.
+
 _The practical Tier-1 plan that must be completed before any scalable MVP shop-item
 generation. **D-038 locks the plan, deliverables, formats, naming, gates and production
 order** — it produces no base, no masks, no assets, no code, no tooling._
