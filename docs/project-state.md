@@ -98,7 +98,8 @@ Ordered render layers (reuse the existing z-model):
 | D-030 | **Eye layer z-index = 4**; render stack locked: base z0–2 · face z3 · **eyes z4** · blink z5 · hair z40 · cosmetics `C2_LAYER_Z`. Fills the eyes gap left by D-008. (ADR-163F, 164A) |
 | D-031 | **North Star hairstyle token = `hair-northstar-v1`** (one approved hairstyle; produced as a neutral luminance map, brown = default tint). (ADR-163F, 164A) |
 | **D-032** | **North Star source-of-truth split (164B-prep).** `assets/avatar/reference/Northstar Master.png` is the **SOLE authoritative geometric source** for 164B decomposition — proportions, head/body ratio, pose, hair silhouette, face, eyes, rendering style and character identity all derive from it. `Northstar Master - reference.png` is **downgraded to an outfit-style reference ONLY** (neutral clothing direction: plain t-shirt / plain trousers / plain sneakers). It **MUST NOT** be used as a source of truth for proportions, body height, hair shape, eye size, facial structure or pose. **On any conflict between the two images, `Northstar Master.png` always wins.** Rationale: four regeneration attempts of the companion all drifted taller/leaner with an altered hair silhouette — proportions cannot be locked via regeneration, so geometry is taken directly from the frozen Master. (164B-prep, 2026-06-15) |
-| **D-033** | **Base production method = manual paint-over, NOT AI (164C — Base Production Method Pivot).** AI generation/inpainting **cannot reliably** produce `body-neutral-medium-v1`: it repeatedly introduces **proportion + identity drift** (confirmed across four companion regenerations **and** an explicit edit/inpaint-mode attempt — all drifted taller/leaner with altered hair and face, D-032). **Decision:** AI-generated / AI-inpainted images **MUST NOT** be used as production base assets; they may be used **only as visual outfit references**. `body-neutral-medium-v1` must be produced from a **manually controlled layered source / manual paint-over over `Northstar Master.png`** (Master = geometry, D-032), validated by the 164B.3 base-coherence gate. Sharpens R-6; refines the *method* of D-029 (the base is reconstructed by hand, never AI-derived). (164C, 2026-06-15) |
+| **D-033** | **Base production method = manual paint-over, NOT AI (164C — Base Production Method Pivot).** AI generation/inpainting **cannot reliably** produce `body-neutral-medium-v1`: it repeatedly introduces **proportion + identity drift** (confirmed across four companion regenerations **and** an explicit edit/inpaint-mode attempt — all drifted taller/leaner with altered hair and face, D-032). **Decision:** AI-generated / AI-inpainted images **MUST NOT** be used as production base assets; they may be used **only as visual outfit references**. `body-neutral-medium-v1` must be produced from a **manually controlled layered source / manual paint-over over `Northstar Master.png`** (Master = geometry, D-032), validated by the 164B.3 base-coherence gate. Sharpens R-6; refines the *method* of D-029 (the base is reconstructed by hand, never AI-derived). **Scope (see D-034):** D-033 applies to **geometry-defining rig layers only** — it does NOT ban AI for shop/cosmetic overlays. (164C, 2026-06-15) |
+| **D-034** | **Scalable item production = slot-constrained transparent overlays; AI allowed for item overlays only, never for avatar geometry (164D).** Scopes D-033 to **geometry-defining rig layers** (base, face, eyes, blink, hair, anchor template, per-slot masks — manual, AI-forbidden as producer). **Shop/cosmetic items are full-canvas transparent overlays** bound to a slot + slot-mask + z; they contain **no** avatar geometry/skin. **AI is permitted for item overlays only** and must NEVER define body/face/hair/eyes/proportions/anchors/masks; every AI item must pass the **slot-mask + automated QA gates** before entering the catalog. Reuses the existing slot model, `equipped_slots`, `shop_items`, `RARITY_COLORS` and the immutable versioned manifest (D-018) — **additive, no rewrite**. **NOT locked here:** new slots (`shoes`/`bottom`/`hands`/`front_fx`) and their z-values remain **PROPOSED / pending reconciliation** against the live `C2_LAYER_Z` and legacy `SLOT_Z`/`SLOTS` (required before implementation). Full spec: `docs/164d-shop-pipeline.md`. (164D, 2026-06-16) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
@@ -110,7 +111,9 @@ Ordered render layers (reuse the existing z-model):
 164A (North Star Master v1.0 decomposition spec — **COMPLETE**; decomposition locks D-028…D-031) ·
 164B-prep (D-032 source-of-truth split + reference assets) · 164B.1 (asset production plan) ·
 164B.2 (base reconstruction spec) · 164B.3 (base review gate + worksheet) · 164B.4 (base prototype input brief) ·
-164C (Base Production Method Pivot — **D-033**: manual paint-over base, AI rejected).
+164C (Base Production Method Pivot — **D-033**: manual paint-over base, AI rejected) ·
+164D (Scalable Shop Item Pipeline & Slot Template Architecture — **D-034**: slot-constrained
+overlays, AI for items only; slot z-values **pending reconciliation**; spec `docs/164d-shop-pipeline.md`).
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
@@ -141,6 +144,9 @@ Ordered render layers (reuse the existing z-model):
   (D-033); AI outputs are permitted as **outfit references only**.
 - R-7 (Medium, tech): Hair/iris tint quality (canvas multiply + fixed highlight) —
   mitigate via hybrid tint + hand-painted overrides; prototype early.
+- R-8 (Medium, art/process): Style coherence across a 1000+ AI-generated item catalog
+  (R-6 applied to Tier 2) — mitigate via the locked style kit + per-slot masks + the
+  slot-mask/QA gates + style-conformance scoring (D-034 / `docs/164d-shop-pipeline.md`).
 
 ## Technical Debt
 - TD-1: Legacy cosmetic assets are pseudo-3D (clash with flat C2); flat redesign

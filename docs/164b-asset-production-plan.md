@@ -18,7 +18,9 @@ _Governs: ADR-163F (asset spec), D-030 (z-stack), D-032 (geometry source), D-013
 - **Base production method (D-033):** the base is produced by **manual layered paint-over
   over Master**. **AI generation/inpainting is rejected as a base production method** (it
   repeatedly drifts proportions/identity); AI outputs may be used **only as outfit
-  references**, never as the base asset.
+  references**, never as the base asset. *Scope:* D-033 covers **geometry-defining rig
+  layers only** — shop/cosmetic item overlays follow **D-034** (`docs/164d-shop-pipeline.md`),
+  where AI is permitted under slot-mask + QA gates.
 
 ### 0.2 Canvas, resolution, format (D-013 / D-027 / D-018)
 - **Working master canvas:** 1024×1536, RGB → RGBA. (Confirm Master.png is exactly

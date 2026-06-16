@@ -110,6 +110,12 @@ Master** (geometry = Master, D-032). AI outputs may be used **only as visual out
 references**, never as the base asset. This refines the *method* of D-029; it changes no
 architecture.
 
+**Scope (D-034, 164D):** D-033 applies to **geometry-defining rig layers only** (base, face,
+eyes, blink, hair, anchor template, per-slot masks). It does **not** ban AI for
+shop/cosmetic items: those are slot-constrained transparent overlays that define no geometry,
+and **AI is permitted for item overlays** subject to the slot-mask + QA gates (full spec:
+`docs/164d-shop-pipeline.md`).
+
 ### D-030 — Eye layer z-index = 4 (render stack locked)
 The eye layer takes **z = 4** (above Face/Expression, below Blink). The render stack is
 **locked** (see "Render stack" below). This fills the gap left by the 159B z-model

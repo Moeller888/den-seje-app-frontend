@@ -1,0 +1,176 @@
+# 164D — Scalable Shop Item Pipeline & Slot Template Architecture
+
+_Production model for a 1000+ item shop. **Production model LOCKED by D-034.**
+**Slot z-values are NOT locked** — new slots are PROPOSED and pending reconciliation._
+_Builds on: D-032 (Master = sole geometry), D-033 (manual base, scoped here), the existing
+slot/z model (`js/avatar-layers.js`: `SLOTS`/`SLOT_Z` legacy + `C2_LAYER_Z` 159B), `RARITY_COLORS`,
+`equipped_slots`/`shop_items`, the immutable versioned manifest (D-018), full-canvas rule (D-027)._
+_No code, assets, migrations, AVATAR_V2 change, or runtime change results from this document._
+
+---
+
+## D-034 (locked production model)
+**Scalable item production = slot-constrained transparent overlays; AI allowed for item
+overlays only, never for avatar geometry.**
+
+- **Geometry-defining rig layers are manually controlled and AI-FORBIDDEN as production
+  geometry:** base body, face/expression, eyes (iris + fixed), blink eyelid, hair luminance
+  map, **and** the anchor template, per-slot masks and registration grid. (Scopes D-033.)
+- **Shop/cosmetic items are full-canvas, slot-constrained transparent overlays.**
+- **AI is allowed for item overlays only.**
+- **AI must NEVER define** the avatar body, face, hair, eyes, proportions, anchors or masks.
+- **Every AI item must pass the slot-mask + automated QA gates** (below) before entering
+  the catalog.
+- **Additive only** — reuses the existing slot model, `equipped_slots`, `shop_items`,
+  `RARITY_COLORS` and the immutable versioned manifest (D-018). No architecture rewrite.
+
+> D-034 resolves the over-broad reading of D-033: the drift risk that justifies "manual,
+> no AI" exists **only** for geometry-defining layers. Slot-constrained overlays cannot
+> drift the avatar, so AI is permitted there under gates.
+
+---
+
+## 1. Two-tier production model
+**Tier 1 — Geometry-locked RIG (one-time, manual, D-032/D-033):** base (per skin tone),
+face/expression, eyes (iris+fixed), blink, hair luminance, anchor template, per-slot masks,
+style kit. AI forbidden as producer; AI = references only. Produced once and frozen.
+
+**Tier 2 — Slot-constrained item OVERLAYS (scalable, automatable, D-034):** headwear, masks,
+glasses, tops, bottoms, shoes, back/wings, neck, aura, etc. Full-canvas transparent overlays
+that draw only inside their slot mask and contain **no** avatar geometry/skin. AI allowed,
+gated by mask + QA. This is the layer that scales to 1000+.
+
+**Safety contract:** an item is valid only if it has zero opaque pixels outside its slot
+mask, registers to the rig anchors, and passes style/weight/alpha QA. The rig is the fixed
+datum; items can never alter it.
+
+## 2. Slot model & z-index
+
+### 2a. Existing (authoritative — DO NOT change here)
+From `js/avatar-layers.js` `C2_LAYER_Z` (Section 159B / D-008):
+`aura −30 · back −20 · base 0 · [expr 3 · blink 5] · body 10 · torso 20 · neck 30 · hair 40 ·
+headwear 45 · face(mask) 50 · eyes(glasses) 55`.
+
+> ⚠️ The cosmetic slots `face`/`eyes` (mask z50 / glasses z55) are **distinct** from the
+> raster *layers* face/expression (z3) and eyes (z4). The repo also still contains a legacy
+> small-z map (`SLOTS`/`SLOT_Z`). **Which map governs C2 cosmetics must be confirmed.**
+
+### 2b. PROPOSED new slots — **z-values PENDING RECONCILIATION (NOT LOCKED)**
+These are **proposals only**. The z-values below are **illustrative**, not decisions.
+
+| PROPOSED slot | Proposed z (pending) | Intended position | Status |
+|---|---|---|---|
+| `shoes` | (pending) | above base, below `body` | **PROPOSED** |
+| `bottom` | (pending) | above `body`, below `torso` | **PROPOSED** |
+| `hands` (gloves/wrist) | (pending) | above `torso` | **PROPOSED** |
+| `front_fx` | (pending) | top of stack | **PROPOSED** |
+
+> **RECONCILIATION REQUIRED BEFORE IMPLEMENTATION.** New slots and their z-values must be
+> reconciled against the **live `C2_LAYER_Z`** and the **legacy `SLOT_Z`/`SLOTS`** maps,
+> and which map governs C2 cosmetics confirmed, before any slot is added. No slot z-value is
+> locked by this document or by D-034.
+
+## 3. Full-canvas transparent overlay rules (D-027)
+Every item: **1024×1536 master → 512×768 WebP**, transparent padding, opaque only inside its
+slot region, **pure z-overlay** (no per-asset offset math). Composite = rig, then each
+equipped item at its slot z.
+
+## 4. Masks / allowed draw regions (the safety gate)
+One canonical **mask per slot**, authored once from the rig anchors (e.g. `mask-headwear`,
+`mask-torso`, `mask-shoes`). **Rule: 0 opaque pixels outside the slot mask** (small feather
+tolerance). This single gate prevents AI items from altering geometry, colliding with other
+slots, or painting skin/body. Masks are **Tier 1 (manual, AI-forbidden)**.
+
+## 5. Naming conventions (extend ADR-163D)
+`{slot}-{item}[-{variant}]-v{n}.webp` — e.g. `headwear-wizard-hat-v1.webp`,
+`torso-knight-armor-gold-v1.webp`. Rarity/price/tint live in the **manifest, not the
+filename**. Immutable versioning (D-018): a change = new `-v{n}`.
+
+## 6. Item manifest schema (additive to `avatar-layers` manifest + DB `shop_items`/`equipped_slots`)
+```json
+{
+  "id": "headwear-wizard-hat",
+  "slot": "headwear",
+  "z": 45,                      // inherited from the slot map; explicit override allowed
+  "mask_id": "mask-headwear-v1",
+  "file": "headwear/headwear-wizard-hat-v1.webp",
+  "res": { "master": "1024x1536", "served": "512x768" },
+  "rarity": "rare",             // common | uncommon | rare | legendary (RARITY_COLORS)
+  "tintable": false,            // true → luminance-map multiply (D-014 path)
+  "palette_tokens": null,       // e.g. ["red","blue",…] when tintable
+  "variant_of": null,           // baked color-variant lineage
+  "shop": { "price": 250, "currency": "coins", "tags": ["magic"], "available": true },
+  "checksum": "sha256:…",
+  "version": 1
+}
+```
+Manifest publishes **atomically** (D-018). DB unchanged (reuse `equipped_slots`/`shop_items`).
+
+## 7. Rarity metadata
+Reuse `RARITY_COLORS` (common `#757575` · uncommon `#388e3c` · rare `#1565c0` · legendary
+`#f57f17`). `rarity` drives the shop frame colour + price tier. No gacha/drop-rate model.
+
+## 8. Color variants (D-026 hybrid)
+- **Tintable** (`tintable:true`): one neutral luminance map → N colours free via canvas
+  multiply (hair path, D-014). **Preferred** — collapses a colour family into one asset.
+- **Baked** (`tintable:false`): a distinct WebP per colour where tint would degrade.
+- For 1000+ items, **default to tintable** wherever quality allows (largest asset-count
+  reducer) — *policy to confirm*.
+
+## 9. Batch generation workflow (conveyor)
+1. **(Tier 1, once)** author slot masks + style kit + pipeline/QA tooling.
+2. **(per item)** generate the overlay — AI **or** hand — constrained to the slot mask, in
+   the locked style, transparent bg, master canvas.
+3. **auto-process:** bg→alpha → full-canvas check → downscale 1024→512 + WebP → clip to slot
+   mask (flag overflow) → weight check.
+4. **auto-QA gate** (§10).
+5. **pass →** write manifest entry + checksum; **fail →** reject queue with reason.
+6. **batch publish** assets + manifest (immutable). Humans handle only the reject queue +
+   curation/pricing.
+
+## 10. Automated QA checks (per item)
+- Canvas 1024×1536 / served 512×768; full-canvas, no crop.
+- Alpha: transparent bg, **no white halo**, clean edges.
+- **Mask compliance (HARD):** 0 opaque px outside the slot mask.
+- **No geometry pixels:** no skin/body/face/eye/hair (mask + skin-region check).
+- Anchor registration (hat on head anchor, shoes on foot footprint).
+- Slot/z/rarity declared & valid; manifest complete; **unique id**; checksum matches.
+- Weight: per-item < budget; equipped stack respects **D-019** (< ~350 KB, decoded < ~15 MB).
+- Style conformance: palette within kit; line-weight/finish within tolerance (heuristic /
+  classifier + spot human review).
+- Composite smoke test: renders over the rig at z; no collision; eyes stay legible.
+
+## 11. Rejection criteria
+Any one fails the item: mask overflow · contains avatar geometry/skin · dirty alpha/halo ·
+wrong canvas/crop · style drift beyond tolerance · over weight · missing/invalid/duplicate
+manifest fields · composite collision / occlusion of the eyes.
+
+## 12. One-time manual vs scalable automation
+| One-time manual (Tier 1, D-032/D-033) | Scalable automation (Tier 2, D-034) |
+|---|---|
+| Base per skin tone; face; eyes; blink; hair | Item overlay generation (AI or hand) |
+| Anchor template + per-slot masks | bg→alpha, downscale + WebP encode |
+| Style kit / palette / line-weight spec | Mask-clip + overflow detection |
+| Pipeline + QA tooling build | Automated QA gate + reject routing |
+| Slot/z reconciliation (§2b) | Manifest write + atomic batch publish; tint expansion |
+
+Humans in Tier 2 do **curation, pricing, reject triage** only — never per-item avatar work.
+
+## 13. How this reaches 1000+ items without editing the avatar each time
+The rig is produced once and frozen; items are independent overlays that compose by pure
+z-order (D-027) against the fixed rig. Adding an item = drop one overlay + one manifest row;
+the base/face/eyes/hair are never touched, and the mask gate makes altering the rig
+impossible. Throughput is bounded by item generation + automated QA, not avatar editing →
+~1000 items/week is realistic.
+
+## 14. Open decisions — REQUIRED before implementation
+1. **Slot/z reconciliation (§2b):** lock new slots (`shoes`/`bottom`/`hands`/`front_fx`) and
+   their z-values against the live `C2_LAYER_Z` **and** legacy `SLOT_Z`/`SLOTS`; confirm which
+   map governs C2 cosmetics. **Nothing is locked until this is done.**
+2. **Style-conformance QA** for AI items (R-6 applied to the catalog): human spot-check rate
+   vs. an automated style classifier.
+3. **`tintable`-by-default policy (§8)** — confirm.
+4. **Mask authoring scope** — produce the per-slot mask set (Tier 1) before any item batch.
+
+> Status: production model (D-034) locked; slot z-values and the items above remain
+> **PROPOSED / pending reconciliation**. `AVATAR_V2` stays OFF; no code/assets/migrations.
