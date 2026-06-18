@@ -18,7 +18,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { inflateSync, deflateSync } from "node:zlib";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -412,4 +412,11 @@ function main() {
   console.log(JSON.stringify(report, null, 2));
 }
 
-main();
+// Reusable primitives for sibling tools (e.g. 164M test-item pilot). Importing this
+// module has NO side effects; main() runs only when invoked directly.
+export {
+  decodePNG, encodePNG, setPx, fillRectBuf, fillEllipseBuf, fillRoundRect,
+  strokeRect, strokeEllipse, strokeLine, MANUAL_ANCHOR_OVERRIDES_164L2,
+};
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

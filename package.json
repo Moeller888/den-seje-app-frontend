@@ -7,7 +7,8 @@
     "tools/*"
   ],
   "scripts": {
-    "avatar:extract-masks": "node tools/avatar/extract-anchor-masks.mjs"
+    "avatar:extract-masks": "node tools/avatar/extract-anchor-masks.mjs",
+    "avatar:test-items": "node tools/avatar/test-items.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
