@@ -32,6 +32,42 @@ const OUT = {
 const EXPECT_W = 1024;
 const EXPECT_H = 1536;
 
+// ── MANUAL_ANCHOR_OVERRIDES_164L2 (primitive model, 164L.3) ───────────────────
+// Manual VISUAL calibration for `Northstar Master.png` (1024×1536), measured by a
+// human against high-zoom coordinate grids. PRIMITIVE model (164L.3): tight per-eye
+// boxes, a narrow glasses band, a tight face rounded-rect, an upper-head headwear
+// region, a DIAGNOSTIC head+hair box, and explicit shoulder POINTS + a back box —
+// replacing the earlier broad ellipses (rejected as imprecise).
+//   * These are the authoritative anchor geometry for the Master.
+//   * silhouette bbox / skin-like / headHairRegion are DIAGNOSTIC ONLY.
+//   * FUTURE RECALIBRATION: edit ONLY this block.
+//   * All anchors remain humanReviewRequired until a human signs the worksheet.
+const MANUAL_ANCHOR_OVERRIDES_164L2 = {
+  // A. per-eye boxes — 164L.4: widened + slightly taller to cover the FULL visible eye
+  //    (sclera + iris + outline), not just the iris. Iris centre stays ≈ (405/605, 393).
+  eyeLeftBox:  { x: 347, y: 351, width: 116, height: 84 },   // x347–463, y351–435
+  eyeRightBox: { x: 547, y: 351, width: 116, height: 84 },   // x547–663, y351–435
+  // B. glasses band — 164L.4: top raised, taller, slightly wider (room for frame/bridge/
+  //    temples); still narrower than a broad band — stays off cheek/nose.
+  glassesBand: { x: 338, y: 352, width: 340, height: 74, templeW: 44, templeInsetY: 18 }, // y352–426
+  // C. face mask region — 164L.4: narrower + shorter (lower edge raised); excl hair/ears/neck.
+  faceMaskRegion: { x: 402, y: 308, width: 220, height: 192, radius: 64 }, // x402–622, y308–500
+  // D. headwear region — 164L.4: lower boundary raised to stop clearly above brows.
+  headwearRegion: { x: 344, y: 120, width: 336, height: 200, radius: 70 }, // x344–680, y120–320
+  // E. head+hair region — DIAGNOSTIC broad box only (NOT the headwear mask) — unchanged
+  headHairRegion: { minX: 270, minY: 40, maxX: 758, maxY: 470 },
+  // F. shoulder/back ANCHOR METADATA — points + a small attach/reference box (NOT the mask)
+  shoulderBackAnchors: {
+    leftShoulderPoint:  { x: 340, y: 568 },
+    rightShoulderPoint: { x: 684, y: 568 },
+    backAttachBox: { x: 330, y: 540, width: 364, height: 320 }, // attach/reference only (overlay metadata)
+  },
+  // G. backMaskRegion — 164L.5: GENEROUS behind-avatar region for the back-slot mask
+  //    (wings / capes / backpacks). Wider than the torso, starts at the upper back,
+  //    extends outward + down. This — NOT backAttachBox — drives mask-back-v1.png.
+  backMaskRegion: { x: 210, y: 430, width: 600, height: 500, radius: 80 }, // x210–810, y430–930
+};
+
 // ---- CRC32 (PNG chunk checksums) -----------------------------------------
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -153,6 +189,17 @@ function fillEllipseBuf(buf, w, h, cx, cy, rx, ry, col, pred) {
       if (dx * dx + dy * dy <= 1 && (!pred || pred(x, y))) setPx(buf, w, h, x, y, col);
     }
 }
+function fillRoundRect(buf, w, h, x0, y0, x1, y1, r, col) {
+  const ix0 = x0 + r, ix1 = x1 - r, iy0 = y0 + r, iy1 = y1 - r;
+  for (let y = Math.max(0, y0 | 0); y <= Math.min(h - 1, y1 | 0); y++)
+    for (let x = Math.max(0, x0 | 0); x <= Math.min(w - 1, x1 | 0); x++) {
+      let inside;
+      if (x >= ix0 && x <= ix1) inside = true;            // middle vertical band
+      else if (y >= iy0 && y <= iy1) inside = true;       // middle horizontal band
+      else { const cx = x < ix0 ? ix0 : ix1, cy = y < iy0 ? iy0 : iy1; inside = (x - cx) ** 2 + (y - cy) ** 2 <= r * r; }
+      if (inside) setPx(buf, w, h, x, y, col);
+    }
+}
 function strokeRect(buf, w, h, x0, y0, x1, y1, col, t = 2) {
   for (let k = 0; k < t; k++) {
     fillRectBuf(buf, w, h, x0 - k, y0 - k, x1 + k, y0 - k, col);
@@ -213,14 +260,12 @@ function main() {
   const silhouetteBBox = { minX, minY, maxX, maxY };
   const headTopY = minY;
 
-  // derived shoulder line (widest figure row in the upper-body band)
-  let shoulderY = 470, shoulderLeftX = minX, shoulderRightX = maxX, bestW = -1;
-  const yA = Math.round(height * 0.25), yB = Math.round(height * 0.45);
-  for (let y = yA; y <= yB; y++) {
-    let lo = -1, hi = -1;
-    for (let x = 0; x < width; x++) if (isFigure(x, y)) { if (lo < 0) lo = x; hi = x; }
-    if (lo >= 0 && hi - lo > bestW) { bestW = hi - lo; shoulderY = y; shoulderLeftX = lo; shoulderRightX = hi; }
-  }
+  // Shoulder/back = MANUAL calibrated POINTS + back box (164L.3). The old "widest
+  // figure row" heuristic (and the single shoulder line) are REMOVED. The silhouette
+  // bbox is DIAGNOSTIC ONLY and is NOT the shoulder authority.
+  const shoulderTopY = Math.min(
+    MANUAL_ANCHOR_OVERRIDES_164L2.shoulderBackAnchors.leftShoulderPoint.y,
+    MANUAL_ANCHOR_OVERRIDES_164L2.shoulderBackAnchors.rightShoulderPoint.y);
 
   // skin-like approx (heuristic warm-hue range within silhouette) — APPROXIMATE
   let sMinX=width,sMinY=height,sMaxX=-1,sMaxY=-1,skinCount=0;
@@ -237,17 +282,20 @@ function main() {
     ? { detected: true, count: skinCount, bbox: { minX:sMinX,minY:sMinY,maxX:sMaxX,maxY:sMaxY }, note: "coarse heuristic — REVIEW", humanReviewRequired: true }
     : { detected: false, note: "no skin-like region detected (heuristic) — REVIEW", humanReviewRequired: true };
 
-  // ---- first-pass anchors (from 164K ×6.4 mapping; review-required noted) --
-  const eyeBandTop = 356;
+  // ---- anchors = MANUAL_ANCHOR_OVERRIDES_164L2 primitive model (164L.3) ------
+  const O = MANUAL_ANCHOR_OVERRIDES_164L2;
+  const eyeLeftCenter  = { x: O.eyeLeftBox.x  + O.eyeLeftBox.width  / 2, y: O.eyeLeftBox.y  + O.eyeLeftBox.height  / 2 };
+  const eyeRightCenter = { x: O.eyeRightBox.x + O.eyeRightBox.width / 2, y: O.eyeRightBox.y + O.eyeRightBox.height / 2 };
   const anchors = {
-    head: { centerX: 512, centerY: 320, radius: 192, source: "164K ×6.4 first-pass (head not re-measured in 164L.1)" },
-    eyeLeft: { x: 452, y: 385, source: "164L.1 measured (calibration grid)" },
-    eyeRight: { x: 572, y: 385, source: "164L.1 measured (calibration grid)" },
-    eyeBand: { x: 400, y: eyeBandTop, width: 224, height: 62, humanReviewRequired: true },
-    faceOval: { centerX: 512, centerY: 388, radiusX: 158, radiusY: 152, humanReviewRequired: true },
-    crown: { centerX: 512, centerY: 300, radius: 260, clipBelowY: eyeBandTop, humanReviewRequired: true },
-    shoulderLine: { y: shoulderY, leftX: shoulderLeftX, rightX: shoulderRightX, derived: true, humanReviewRequired: true },
-    silhouetteBBox,
+    eyeLeftBox:  { ...O.eyeLeftBox,  irisCenter: eyeLeftCenter,  source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    eyeRightBox: { ...O.eyeRightBox, irisCenter: eyeRightCenter, source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    glassesBand: { ...O.glassesBand, source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    faceMaskRegion: { ...O.faceMaskRegion, shape: "rounded-rect", source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    headwearRegion: { ...O.headwearRegion, shape: "rounded-rect", source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    headHairRegion: { ...O.headHairRegion, note: "DIAGNOSTIC broad region only — NOT the headwear mask", diagnostic: true },
+    shoulderBackAnchors: { ...O.shoulderBackAnchors, note: "anchor metadata (points + attach/reference box) — NOT the back mask", source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    backMaskRegion: { ...O.backMaskRegion, shape: "rounded-rect", note: "generous back-slot mask region (164L.5)", source: "164L.5 manual visual calibration", humanReviewRequired: true },
+    silhouetteBBox: { ...silhouetteBBox, note: "DIAGNOSTIC ONLY — not an anchor authority" },
     headTopY,
   };
 
@@ -257,21 +305,24 @@ function main() {
     source: { file: "assets/avatar/reference/Northstar Master.png", sha256, colorType, background },
     anchors,
     protectedZones: {
-      face: anchors.faceOval,
-      eyes: anchors.eyeBand,
-      hairApprox: { minX, minY: headTopY, maxX, maxY: anchors.faceOval.centerY, note: "above face within head — REVIEW", humanReviewRequired: true },
-      bodyApprox: { minX, minY: shoulderY, maxX, maxY, note: "below shoulder line — REVIEW", humanReviewRequired: true },
+      face: anchors.faceMaskRegion,
+      eyes: { eyeLeftBox: O.eyeLeftBox, eyeRightBox: O.eyeRightBox, glassesBand: O.glassesBand },
+      hairApprox: { minX, minY: headTopY, maxX, maxY: O.faceMaskRegion.y, note: "above face within head — DIAGNOSTIC", diagnostic: true },
+      bodyApprox: { minX, minY: shoulderTopY, maxX, maxY, note: "below shoulders — DIAGNOSTIC", diagnostic: true },
       handsApprox: { detected: false, note: "placeholder — refine in review", humanReviewRequired: true },
       skinLikeApprox,
     },
     review: {
       humanReviewRequired: true,
-      fieldsRequiringReview: ["eyeBand", "faceOval", "crown/headwear region", "shoulderLine", "mask usefulness"],
+      calibration: "164L.3 primitive anchor model (MANUAL_ANCHOR_OVERRIDES_164L2)",
+      fieldsRequiringReview: ["eyeLeftBox", "eyeRightBox", "glassesBand", "faceMaskRegion", "headwearRegion", "shoulderBackAnchors", "mask usefulness"],
     },
     notes: [
-      "First-pass deterministic extraction (164L / D-041). NON-AI.",
-      "Anchors are starting values — eye band & face oval MUST be measured/confirmed on the Master.",
+      "Deterministic, NON-AI extraction (164L.3 / D-041).",
+      "Anchor geometry = MANUAL_ANCHOR_OVERRIDES_164L2 PRIMITIVE model: tight eye boxes, narrow glasses band, face rounded-rect, upper-head headwear region, shoulder points + back box.",
+      "silhouetteBBox / skinLikeApprox / headHairRegion are DIAGNOSTIC ONLY, not anchor authorities.",
       "Masks are QA/build artifacts only, NOT runtime assets; never used to alter geometry.",
+      "All anchors remain humanReviewRequired until a human signs the 164L worksheet.",
     ],
   };
 
@@ -284,35 +335,60 @@ function main() {
 
   // aura: generous full canvas (behind avatar)
   { const m = blank(); fillRectBuf(m, width, height, 0, 0, width - 1, height - 1, W); masks.aura = m; }
-  // back: generous behind shoulder/back (large ellipse around upper body)
-  { const m = blank(); fillEllipseBuf(m, width, height, 512, Math.min(720, shoulderY + 220), 470, 540, W); masks.back = m; }
-  // headwear: moderate crown/upper-head, EXCLUDE eye band (clip below eyeBandTop)
-  { const m = blank(); fillEllipseBuf(m, width, height, 512, 300, 260, 260, W, (x, y) => y < eyeBandTop); masks.headwear = m; }
-  // face/masks: tight face oval (calibrated 164L.1)
-  { const m = blank(); fillEllipseBuf(m, width, height, 512, 388, 158, 152, W); masks.face = m; }
-  // eyes/glasses: tight eye band + temple arms (approved eye-overlap exception; calibrated 164L.1)
-  { const m = blank();
-    fillRectBuf(m, width, height, 400, 356, 623, 417, W);            // eye band
-    fillRectBuf(m, width, height, 360, 374, 400, 406, W);            // left temple
-    fillRectBuf(m, width, height, 624, 374, 664, 406, W);            // right temple
+  // back: GENEROUS behind-avatar region (164L.5 backMaskRegion) — for wings/capes/backpacks
+  { const m = blank(); const br = O.backMaskRegion;
+    fillRoundRect(m, width, height, br.x, br.y, br.x + br.width, br.y + br.height, br.radius, W); masks.back = m; }
+  // headwear: upper-head region (rounded-rect; stops above eyebrows)
+  { const m = blank(); const hr = O.headwearRegion;
+    fillRoundRect(m, width, height, hr.x, hr.y, hr.x + hr.width, hr.y + hr.height, hr.radius, W); masks.headwear = m; }
+  // face/masks: tight face region (rounded-rect; excl hair/ears, not to neck)
+  { const m = blank(); const fr = O.faceMaskRegion;
+    fillRoundRect(m, width, height, fr.x, fr.y, fr.x + fr.width, fr.y + fr.height, fr.radius, W); masks.face = m; }
+  // eyes/glasses: narrow glasses band + temple arms (approved eye-overlap)
+  { const m = blank(); const gb = O.glassesBand; const ty0 = gb.y + gb.templeInsetY, ty1 = gb.y + gb.height - gb.templeInsetY;
+    fillRectBuf(m, width, height, gb.x, gb.y, gb.x + gb.width, gb.y + gb.height, W);                       // band
+    fillRectBuf(m, width, height, gb.x - gb.templeW, ty0, gb.x, ty1, W);                                  // left temple
+    fillRectBuf(m, width, height, gb.x + gb.width, ty0, gb.x + gb.width + gb.templeW, ty1, W);            // right temple
     masks.eyes = m; }
 
   // ---- anchor overlay (guides drawn over a COPY of the Master) ------------
   const overlay = Uint8Array.from(rgba);
   const CYAN=[0,200,255,255], RED=[255,40,40,255], YEL=[255,220,0,255],
-        MAG=[255,0,200,255], GRN=[0,220,80,255], ORG=[255,140,0,255], WHT=[255,255,255,255];
-  strokeRect(overlay, width, height, minX, minY, maxX, maxY, WHT, 2);                 // silhouette bbox
-  strokeEllipse(overlay, width, height, 512, 320, 192, 192, CYAN, 2);                 // head circle
-  strokeEllipse(overlay, width, height, 512, 388, 158, 152, MAG, 2);                  // face oval (calibrated 164L.1)
-  strokeEllipse(overlay, width, height, 512, 300, 260, 260, GRN, 1);                  // crown region
-  strokeRect(overlay, width, height, 400, 356, 623, 417, YEL, 2);                     // eye band (calibrated 164L.1)
-  for (const e of [[452,385],[572,385]]) fillEllipseBuf(overlay, width, height, e[0], e[1], 6, 6, RED); // eye centres
-  strokeLine(overlay, width, height, shoulderLeftX, shoulderY, shoulderRightX, shoulderY, ORG, 3);      // shoulder line
+        MAG=[255,0,200,255], GRN=[0,220,80,255], ORG=[255,140,0,255], WHT=[255,255,255,255], BLU=[40,120,255,255];
+  strokeRect(overlay, width, height, minX, minY, maxX, maxY, WHT, 1);                                       // silhouette bbox (diagnostic)
+  const HHR = O.headHairRegion;
+  strokeRect(overlay, width, height, HHR.minX, HHR.minY, HHR.maxX, HHR.maxY, CYAN, 1);                       // headHairRegion (DIAGNOSTIC)
+  const HW = O.headwearRegion;
+  strokeRect(overlay, width, height, HW.x, HW.y, HW.x + HW.width, HW.y + HW.height, GRN, 2);                 // headwearRegion
+  const FR = O.faceMaskRegion;
+  strokeRect(overlay, width, height, FR.x, FR.y, FR.x + FR.width, FR.y + FR.height, MAG, 2);                 // faceMaskRegion
+  const GB = O.glassesBand;
+  strokeRect(overlay, width, height, GB.x, GB.y, GB.x + GB.width, GB.y + GB.height, YEL, 2);                 // glassesBand
+  strokeRect(overlay, width, height, O.eyeLeftBox.x, O.eyeLeftBox.y, O.eyeLeftBox.x + O.eyeLeftBox.width, O.eyeLeftBox.y + O.eyeLeftBox.height, RED, 2);   // eyeLeftBox
+  strokeRect(overlay, width, height, O.eyeRightBox.x, O.eyeRightBox.y, O.eyeRightBox.x + O.eyeRightBox.width, O.eyeRightBox.y + O.eyeRightBox.height, RED, 2); // eyeRightBox
+  fillEllipseBuf(overlay, width, height, eyeLeftCenter.x, eyeLeftCenter.y, 5, 5, WHT);                       // iris centres
+  fillEllipseBuf(overlay, width, height, eyeRightCenter.x, eyeRightCenter.y, 5, 5, WHT);
+  const SBA = O.shoulderBackAnchors, BMR = O.backMaskRegion;
+  strokeRect(overlay, width, height, BMR.x, BMR.y, BMR.x + BMR.width, BMR.y + BMR.height, BLU, 3);            // backMaskRegion (ACTUAL back mask)
+  strokeRect(overlay, width, height, SBA.backAttachBox.x, SBA.backAttachBox.y, SBA.backAttachBox.x + SBA.backAttachBox.width, SBA.backAttachBox.y + SBA.backAttachBox.height, ORG, 2); // backAttachBox (reference)
+  fillEllipseBuf(overlay, width, height, SBA.leftShoulderPoint.x, SBA.leftShoulderPoint.y, 9, 9, ORG);       // shoulder points
+  fillEllipseBuf(overlay, width, height, SBA.rightShoulderPoint.x, SBA.rightShoulderPoint.y, 9, 9, ORG);
 
   // ---- write artifacts -----------------------------------------------------
   for (const d of Object.values(OUT)) mkdirSync(d, { recursive: true });
   writeFileSync(join(OUT.anchors, "avatar-anchor-template-v1.json"), JSON.stringify(template, null, 2));
   writeFileSync(join(OUT.previews, "anchor-overlay-v1.png"), encodePNG(width, height, overlay));
+  // head-preview-v1.png — permanent zoomed (2×) head crop of the anchor overlay,
+  // for precise human review of eye boxes / glasses band / face & headwear regions. QA artifact only.
+  {
+    const cx0 = 240, cy0 = 40, cw = 540, ch = 560, S = 2;
+    const o = new Uint8Array(cw * S * ch * S * 4);
+    for (let y = 0; y < ch * S; y++) for (let x = 0; x < cw * S; x++) {
+      const sx = cx0 + ((x / S) | 0), sy = cy0 + ((y / S) | 0), sd = (sy * width + sx) * 4, dd = (y * (cw * S) + x) * 4;
+      o[dd] = overlay[sd]; o[dd + 1] = overlay[sd + 1]; o[dd + 2] = overlay[sd + 2]; o[dd + 3] = 255;
+    }
+    writeFileSync(join(OUT.previews, "head-preview-v1.png"), encodePNG(cw * S, ch * S, o));
+  }
   for (const [slot, m] of Object.entries(masks))
     writeFileSync(join(OUT.masks, `mask-${slot}-v1.png`), encodePNG(width, height, m));
 
@@ -321,13 +397,15 @@ function main() {
     masterDimensions: `${width}x${height}`,
     background, colorType, sha256,
     silhouetteBBox, headTopY,
-    shoulderLine: anchors.shoulderLine,
+    eyeLeftBox: O.eyeLeftBox, eyeRightBox: O.eyeRightBox,
+    shoulderBackAnchors: O.shoulderBackAnchors,
     skinLike: skinLikeApprox.detected ? { count: skinCount } : "none",
     warnings,
     humanReviewRequired: true,
     generated: [
       "tools/avatar/build/anchors/avatar-anchor-template-v1.json",
       "tools/avatar/build/previews/anchor-overlay-v1.png",
+      "tools/avatar/build/previews/head-preview-v1.png",
       ...Object.keys(masks).map(s => `tools/avatar/build/masks/mask-${s}-v1.png`),
     ],
   };
