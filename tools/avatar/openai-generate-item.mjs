@@ -26,12 +26,14 @@ const RAW = join(IN_DIR, "glasses-test-raw.png");
 const MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SIZE = "1024x1536";   // matches the 164N full-canvas; 164N uses it as-is
 
+// 164Q.2: FRONT-ONLY frame for a front-facing avatar — no long side arms / ear hooks.
 const PROMPT = [
-  "A single pair of simple round eyeglasses as an ISOLATED accessory overlay.",
+  "A FRONT-FACING children's round eyeglasses accessory, front view only.",
+  "Two soft round lenses connected by a small bridge, with a thin clean charcoal frame and",
+  "clear EMPTY lens interiors. NO long side arms, NO temples, NO ear hooks (front view shows none).",
   "Transparent background. ONLY the glasses — no face, no eyes, no skin, no hair, no head,",
   "no body, no character, no scene, no text, no logo, no drop shadow.",
-  "Style: premium anime mobile-game accessory, clean cel-shaded, round lenses,",
-  "dark charcoal frame, subtle single highlight. Centered. Usable as a transparent overlay.",
+  "Style: premium anime mobile-game accessory, clean cel-shaded. Centered accessory only.",
 ].join(" ");
 
 function instructAndExit() {
