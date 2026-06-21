@@ -68,6 +68,64 @@ const MANUAL_ANCHOR_OVERRIDES_164L2 = {
   backMaskRegion: { x: 210, y: 430, width: 600, height: 500, radius: 80 }, // x210–810, y430–930
 };
 
+// ── MANUAL_EYE_SEMANTIC_ANCHORS_164S (strict eye semantics — human-review correction) ─────
+// 164S CORRECTION. The first 164S attempt measured a broad dark eye-mass / the eye-box
+// geometric centre and mislabeled it `pupilCenter`; those markers landed BESIDE the black
+// pupil (human review = FAIL). These are STRICT, mutually distinct, MANUAL semantic anchors,
+// measured by high-zoom (6×) visual review of `Northstar Master.png` (1024×1536). They are
+// NOT centroids of dark pixel mass and they are NOT derived from the eye boxes.
+//   * pupilCenter             = centre of the BLACK pupil oval ONLY. Excludes eyelash/outline,
+//                               the white catch-light, and the brown iris. The two pupils are
+//                               converged nasally and sit slightly low (spacing ≈ 131px).
+//   * irisCenter              = centre of the BROWN iris disk. Distinct from the pupil — the
+//                               pupil is offset nasally + downward within the iris
+//                               (iris spacing ≈ 145px).
+//   * glassesLensVisualCenter = centre of the whole EYE OPENING (iris + sclera crescents),
+//                               chosen so a round lens drawn here is CONCENTRIC with the eye
+//                               and SURROUNDS it naturally. Deliberately NOT the pupil centre
+//                               (a pupil-centred lens would sit nasal + low and clip the eye).
+//                               Visual-centre spacing ≈ 153px; bridge midpoint ≈ (504, 386).
+// REVIEW FLAG (raised by 164S, ADDRESSED by 164T below): the OLD 164L eye BOXES (centres
+// 405,393 / 605,393) were ~22–25px TEMPORAL of the real eyes — boxes/glassesBand/eyes-mask
+// were mis-centred. 164T (MANUAL_ANCHOR_OVERRIDES_164T) recalibrates them to these semantic
+// centres. The semantic anchor VALUES in this block are unchanged.
+// FUTURE RECALIBRATION of eye semantics: edit ONLY this block.
+const MANUAL_EYE_SEMANTIC_ANCHORS_164S = {
+  left:  { pupilCenter: { x: 439, y: 394 }, irisCenter: { x: 432, y: 387 }, glassesLensVisualCenter: { x: 427, y: 386 } },
+  right: { pupilCenter: { x: 570, y: 393 }, irisCenter: { x: 577, y: 387 }, glassesLensVisualCenter: { x: 580, y: 386 } },
+  derived: {
+    pupilSpacingPx: 131, irisSpacingPx: 145, lensVisualSpacingPx: 153,
+    glassesBridgePoint: { x: 504, y: 386 },
+  },
+  source: "164S manual high-zoom (6×) visual calibration of Northstar Master.png",
+  humanReviewRequired: true,
+};
+
+// ── MANUAL_ANCHOR_OVERRIDES_164T (eye box + glasses front-slot recalibration) ──────────────
+// 164T. 164S corrected the eye SEMANTICS but flagged that the 164L eye BOXES / glassesBand /
+// eyes-mask were still ~22–25px TEMPORAL of the real eyes, and the band (y352–426) was too
+// SHORT — it clipped a lens that properly surrounds the eye (preClipOverflowPx = 1324).
+// This layer OVERRIDES ONLY eyeLeftBox / eyeRightBox / glassesBand so they align with the
+// 164S glassesLensVisualCenter (eye-opening centres 427,386 / 580,386). Everything else stays
+// from 164L2; the OLD 164L values are kept above (documented) for comparison.
+//   * eye boxes   : centred on the eye-opening (visualCenter), sized to contain the FULL eye
+//                   (sclera+iris+pupil+outline) + room for a front lens frame. NOT the box centre,
+//                   and avoiding brow/ear/hair. These doubly serve as the two LENS zones.
+//   * glasses slot: FRONT-ONLY — two lens zones (= the eye boxes) + a SMALL bridge zone + TINY
+//                   side tabs. NO long temples / ear hooks / broad side arms. `glassesBand` (the
+//                   bounding rect) is kept for the overlay + the raw-centring fallback; the eyes
+//                   MASK is the union(eyeLeftBox, eyeRightBox, bridge, two tiny tabs).
+// FUTURE RECALIBRATION of eye boxes / glasses slot: edit ONLY this block.
+const MANUAL_ANCHOR_OVERRIDES_164T = {
+  eyeLeftBox:  { x: 378, y: 336, width: 98, height: 100 }, // x378–476 y336–436, centre (427,386)  [was x347–463 y351–435, centre (405,393)]
+  eyeRightBox: { x: 531, y: 336, width: 98, height: 100 }, // x531–629 y336–436, centre (580,386)  [was x547–663 y351–435, centre (605,393)]
+  glassesBand: {
+    x: 378, y: 335, width: 251, height: 102,               // bounding band (overlay + raw-centring) x378–629 y335–437  [was x338–678 y352–426]
+    templeW: 16, templeInsetY: 44,                          // TINY side-tab allowance ONLY  [was templeW 44 (long arms)]
+    bridge: { x: 473, y: 368, width: 62, height: 34 },      // SMALL bridge zone x473–535 y368–402
+  },
+};
+
 // ---- CRC32 (PNG chunk checksums) -----------------------------------------
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -283,12 +341,28 @@ function main() {
     : { detected: false, note: "no skin-like region detected (heuristic) — REVIEW", humanReviewRequired: true };
 
   // ---- anchors = MANUAL_ANCHOR_OVERRIDES_164L2 primitive model (164L.3) ------
-  const O = MANUAL_ANCHOR_OVERRIDES_164L2;
-  const eyeLeftCenter  = { x: O.eyeLeftBox.x  + O.eyeLeftBox.width  / 2, y: O.eyeLeftBox.y  + O.eyeLeftBox.height  / 2 };
-  const eyeRightCenter = { x: O.eyeRightBox.x + O.eyeRightBox.width / 2, y: O.eyeRightBox.y + O.eyeRightBox.height / 2 };
+  // 164T: eye boxes + glassesBand are overridden by MANUAL_ANCHOR_OVERRIDES_164T; all other
+  // anchors remain from 164L2. Old 164L values stay documented in their block for comparison.
+  const O = { ...MANUAL_ANCHOR_OVERRIDES_164L2, ...MANUAL_ANCHOR_OVERRIDES_164T };
+  const ES = MANUAL_EYE_SEMANTIC_ANCHORS_164S;
+  // eyeLeftBoxCenter / eyeRightBoxCenter = box GEOMETRIC centres. 164S: these are NO LONGER
+  // labeled `irisCenter` (that was the wrong, "beside-the-pupil" value). They are kept as
+  // `boxCenter` for diagnostic comparison only; the true eye semantics come from ES.
+  const eyeLeftBoxCenter  = { x: O.eyeLeftBox.x  + O.eyeLeftBox.width  / 2, y: O.eyeLeftBox.y  + O.eyeLeftBox.height  / 2 };
+  const eyeRightBoxCenter = { x: O.eyeRightBox.x + O.eyeRightBox.width / 2, y: O.eyeRightBox.y + O.eyeRightBox.height / 2 };
   const anchors = {
-    eyeLeftBox:  { ...O.eyeLeftBox,  irisCenter: eyeLeftCenter,  source: "164L.3 manual visual calibration", humanReviewRequired: true },
-    eyeRightBox: { ...O.eyeRightBox, irisCenter: eyeRightCenter, source: "164L.3 manual visual calibration", humanReviewRequired: true },
+    eyeLeftBox:  { ...O.eyeLeftBox,  boxCenter: eyeLeftBoxCenter,  pupilCenter: ES.left.pupilCenter,  irisCenter: ES.left.irisCenter,  glassesLensVisualCenter: ES.left.glassesLensVisualCenter,  source: "164L.3 box geom + 164S eye semantics", humanReviewRequired: true },
+    eyeRightBox: { ...O.eyeRightBox, boxCenter: eyeRightBoxCenter, pupilCenter: ES.right.pupilCenter, irisCenter: ES.right.irisCenter, glassesLensVisualCenter: ES.right.glassesLensVisualCenter, source: "164L.3 box geom + 164S eye semantics", humanReviewRequired: true },
+    eyeSemanticAnchors: { ...ES, note: "164S strict eye semantics — pupil ≠ iris ≠ glasses lens visual centre" },
+    equipmentTypeAnchors: {
+      glasses: {
+        leftLens:  { visualCenter: ES.left.glassesLensVisualCenter,  note: "lens centres on eye-opening (surrounds eye), NOT the pupil" },
+        rightLens: { visualCenter: ES.right.glassesLensVisualCenter, note: "lens centres on eye-opening (surrounds eye), NOT the pupil" },
+        bridge: { targetPoint: ES.derived.glassesBridgePoint },
+        source: "164S",
+        humanReviewRequired: true,
+      },
+    },
     glassesBand: { ...O.glassesBand, source: "164L.3 manual visual calibration", humanReviewRequired: true },
     faceMaskRegion: { ...O.faceMaskRegion, shape: "rounded-rect", source: "164L.3 manual visual calibration", humanReviewRequired: true },
     headwearRegion: { ...O.headwearRegion, shape: "rounded-rect", source: "164L.3 manual visual calibration", humanReviewRequired: true },
@@ -314,12 +388,14 @@ function main() {
     },
     review: {
       humanReviewRequired: true,
-      calibration: "164L.3 primitive anchor model (MANUAL_ANCHOR_OVERRIDES_164L2)",
-      fieldsRequiringReview: ["eyeLeftBox", "eyeRightBox", "glassesBand", "faceMaskRegion", "headwearRegion", "shoulderBackAnchors", "mask usefulness"],
+      calibration: "164L.3 primitive anchor model (MANUAL_ANCHOR_OVERRIDES_164L2) + 164S eye semantics (MANUAL_EYE_SEMANTIC_ANCHORS_164S)",
+      fieldsRequiringReview: ["eyeLeftBox", "eyeRightBox", "glassesBand", "faceMaskRegion", "headwearRegion", "shoulderBackAnchors", "mask usefulness", "eyeSemanticAnchors (pupil/iris/glasses lens centres)"],
     },
     notes: [
       "Deterministic, NON-AI extraction (164L.3 / D-041).",
       "Anchor geometry = MANUAL_ANCHOR_OVERRIDES_164L2 PRIMITIVE model: tight eye boxes, narrow glasses band, face rounded-rect, upper-head headwear region, shoulder points + back box.",
+      "164S: eyeSemanticAnchors add STRICT, distinct pupil / iris / glasses-lens-visual centres (pupilCenter = black pupil oval; irisCenter = brown disk; glassesLensVisualCenter = eye-opening centre). The box centre is NO LONGER labeled irisCenter.",
+      "164T: eyeLeftBox/eyeRightBox/glassesBand RECALIBRATED (MANUAL_ANCHOR_OVERRIDES_164T) — boxes re-centred on the eye openings (visualCenter); eyes-mask is now a FRONT-ONLY union(lens zones, small bridge, tiny tabs) that no longer clips a lens which surrounds the eye. Old 164L box/band values kept for comparison.",
       "silhouetteBBox / skinLikeApprox / headHairRegion are DIAGNOSTIC ONLY, not anchor authorities.",
       "Masks are QA/build artifacts only, NOT runtime assets; never used to alter geometry.",
       "All anchors remain humanReviewRequired until a human signs the 164L worksheet.",
@@ -344,11 +420,16 @@ function main() {
   // face/masks: tight face region (rounded-rect; excl hair/ears, not to neck)
   { const m = blank(); const fr = O.faceMaskRegion;
     fillRoundRect(m, width, height, fr.x, fr.y, fr.x + fr.width, fr.y + fr.height, fr.radius, W); masks.face = m; }
-  // eyes/glasses: narrow glasses band + temple arms (approved eye-overlap)
-  { const m = blank(); const gb = O.glassesBand; const ty0 = gb.y + gb.templeInsetY, ty1 = gb.y + gb.height - gb.templeInsetY;
-    fillRectBuf(m, width, height, gb.x, gb.y, gb.x + gb.width, gb.y + gb.height, W);                       // band
-    fillRectBuf(m, width, height, gb.x - gb.templeW, ty0, gb.x, ty1, W);                                  // left temple
-    fillRectBuf(m, width, height, gb.x + gb.width, ty0, gb.x + gb.width + gb.templeW, ty1, W);            // right temple
+  // eyes/glasses (164T): FRONT-ONLY slot = union(left lens zone, right lens zone, small bridge,
+  // two TINY side tabs). NO long temples/ear hooks — so it contains a lens that surrounds the eye
+  // without clipping, while still rejecting long side arms.
+  { const m = blank(); const gb = O.glassesBand, lb = O.eyeLeftBox, rb = O.eyeRightBox;
+    const ty0 = gb.y + gb.templeInsetY, ty1 = gb.y + gb.height - gb.templeInsetY;
+    fillRectBuf(m, width, height, lb.x, lb.y, lb.x + lb.width, lb.y + lb.height, W);                       // left lens zone (= eye box)
+    fillRectBuf(m, width, height, rb.x, rb.y, rb.x + rb.width, rb.y + rb.height, W);                       // right lens zone (= eye box)
+    fillRectBuf(m, width, height, gb.bridge.x, gb.bridge.y, gb.bridge.x + gb.bridge.width, gb.bridge.y + gb.bridge.height, W); // small bridge zone
+    fillRectBuf(m, width, height, lb.x - gb.templeW, ty0, lb.x, ty1, W);                                   // left tiny side tab
+    fillRectBuf(m, width, height, rb.x + rb.width, ty0, rb.x + rb.width + gb.templeW, ty1, W);             // right tiny side tab
     masks.eyes = m; }
 
   // ---- anchor overlay (guides drawn over a COPY of the Master) ------------
@@ -363,11 +444,26 @@ function main() {
   const FR = O.faceMaskRegion;
   strokeRect(overlay, width, height, FR.x, FR.y, FR.x + FR.width, FR.y + FR.height, MAG, 2);                 // faceMaskRegion
   const GB = O.glassesBand;
-  strokeRect(overlay, width, height, GB.x, GB.y, GB.x + GB.width, GB.y + GB.height, YEL, 2);                 // glassesBand
+  strokeRect(overlay, width, height, GB.x, GB.y, GB.x + GB.width, GB.y + GB.height, YEL, 1);                 // glassesBand bounding (diagnostic)
+  // 164T front-slot SHAPE = eye boxes (lens zones) + small bridge + tiny tabs (the actual eyes mask)
+  strokeRect(overlay, width, height, GB.bridge.x, GB.bridge.y, GB.bridge.x + GB.bridge.width, GB.bridge.y + GB.bridge.height, YEL, 2); // small bridge zone
+  { const ty0 = GB.y + GB.templeInsetY, ty1 = GB.y + GB.height - GB.templeInsetY;
+    strokeRect(overlay, width, height, O.eyeLeftBox.x - GB.templeW, ty0, O.eyeLeftBox.x, ty1, ORG, 1);        // left tiny tab
+    strokeRect(overlay, width, height, O.eyeRightBox.x + O.eyeRightBox.width, ty0, O.eyeRightBox.x + O.eyeRightBox.width + GB.templeW, ty1, ORG, 1); } // right tiny tab
   strokeRect(overlay, width, height, O.eyeLeftBox.x, O.eyeLeftBox.y, O.eyeLeftBox.x + O.eyeLeftBox.width, O.eyeLeftBox.y + O.eyeLeftBox.height, RED, 2);   // eyeLeftBox
   strokeRect(overlay, width, height, O.eyeRightBox.x, O.eyeRightBox.y, O.eyeRightBox.x + O.eyeRightBox.width, O.eyeRightBox.y + O.eyeRightBox.height, RED, 2); // eyeRightBox
-  fillEllipseBuf(overlay, width, height, eyeLeftCenter.x, eyeLeftCenter.y, 5, 5, WHT);                       // iris centres
-  fillEllipseBuf(overlay, width, height, eyeRightCenter.x, eyeRightCenter.y, 5, 5, WHT);
+  // 164S distinct eye-centre markers (per eye):
+  //   WHITE hollow ring = OLD box centre (the previously-WRONG "irisCenter", diagnostic only)
+  //   GREEN dot         = irisCenter (brown disk)
+  //   RED  dot          = pupilCenter (black pupil oval — the corrected target)
+  //   YELLOW dot+ring   = glasses lens visualCenter (ring shows the lens that surrounds the eye)
+  for (const [sem, boxC] of [[ES.left, eyeLeftBoxCenter], [ES.right, eyeRightBoxCenter]]) {
+    strokeEllipse(overlay, width, height, boxC.x, boxC.y, 6, 6, WHT, 1);                                     // old box centre (diagnostic)
+    strokeEllipse(overlay, width, height, sem.glassesLensVisualCenter.x, sem.glassesLensVisualCenter.y, 46, 48, YEL, 1); // glasses lens (surrounds eye)
+    fillEllipseBuf(overlay, width, height, sem.glassesLensVisualCenter.x, sem.glassesLensVisualCenter.y, 3, 3, YEL);     // glasses lens visualCenter
+    fillEllipseBuf(overlay, width, height, sem.irisCenter.x, sem.irisCenter.y, 3, 3, GRN);                   // irisCenter
+    fillEllipseBuf(overlay, width, height, sem.pupilCenter.x, sem.pupilCenter.y, 3, 3, RED);                 // pupilCenter
+  }
   const SBA = O.shoulderBackAnchors, BMR = O.backMaskRegion;
   strokeRect(overlay, width, height, BMR.x, BMR.y, BMR.x + BMR.width, BMR.y + BMR.height, BLU, 3);            // backMaskRegion (ACTUAL back mask)
   strokeRect(overlay, width, height, SBA.backAttachBox.x, SBA.backAttachBox.y, SBA.backAttachBox.x + SBA.backAttachBox.width, SBA.backAttachBox.y + SBA.backAttachBox.height, ORG, 2); // backAttachBox (reference)
@@ -389,6 +485,18 @@ function main() {
     }
     writeFileSync(join(OUT.previews, "head-preview-v1.png"), encodePNG(cw * S, ch * S, o));
   }
+  // eyes-preview-v1.png — 164S/164T high-zoom (6×) crop of BOTH eyes from the anchor overlay, so
+  // the pupil/iris/glasses-lens markers AND the recalibrated eye boxes / front-slot can be verified
+  // against the actual eyes. QA artifact only.
+  {
+    const cx0 = 330, cy0 = 325, cw = 350, ch = 135, S = 6;
+    const o = new Uint8Array(cw * S * ch * S * 4);
+    for (let y = 0; y < ch * S; y++) for (let x = 0; x < cw * S; x++) {
+      const sx = cx0 + ((x / S) | 0), sy = cy0 + ((y / S) | 0), sd = (sy * width + sx) * 4, dd = (y * (cw * S) + x) * 4;
+      o[dd] = overlay[sd]; o[dd + 1] = overlay[sd + 1]; o[dd + 2] = overlay[sd + 2]; o[dd + 3] = 255;
+    }
+    writeFileSync(join(OUT.previews, "eyes-preview-v1.png"), encodePNG(cw * S, ch * S, o));
+  }
   for (const [slot, m] of Object.entries(masks))
     writeFileSync(join(OUT.masks, `mask-${slot}-v1.png`), encodePNG(width, height, m));
 
@@ -398,6 +506,13 @@ function main() {
     background, colorType, sha256,
     silhouetteBBox, headTopY,
     eyeLeftBox: O.eyeLeftBox, eyeRightBox: O.eyeRightBox,
+    glassesBand: O.glassesBand,
+    recalibration164T: {
+      old: { eyeLeftBox: MANUAL_ANCHOR_OVERRIDES_164L2.eyeLeftBox, eyeRightBox: MANUAL_ANCHOR_OVERRIDES_164L2.eyeRightBox, glassesBand: MANUAL_ANCHOR_OVERRIDES_164L2.glassesBand },
+      new: { eyeLeftBox: MANUAL_ANCHOR_OVERRIDES_164T.eyeLeftBox, eyeRightBox: MANUAL_ANCHOR_OVERRIDES_164T.eyeRightBox, glassesBand: MANUAL_ANCHOR_OVERRIDES_164T.glassesBand },
+      note: "eye boxes re-centred on the 164S eye-opening/visualCenter; eyes-mask = union(lens zones, small bridge, tiny tabs); front-only (no long temples).",
+    },
+    eyeSemanticAnchors164S: ES,
     shoulderBackAnchors: O.shoulderBackAnchors,
     skinLike: skinLikeApprox.detected ? { count: skinCount } : "none",
     warnings,
@@ -406,6 +521,7 @@ function main() {
       "tools/avatar/build/anchors/avatar-anchor-template-v1.json",
       "tools/avatar/build/previews/anchor-overlay-v1.png",
       "tools/avatar/build/previews/head-preview-v1.png",
+      "tools/avatar/build/previews/eyes-preview-v1.png",
       ...Object.keys(masks).map(s => `tools/avatar/build/masks/mask-${s}-v1.png`),
     ],
   };
@@ -417,6 +533,7 @@ function main() {
 export {
   decodePNG, encodePNG, setPx, fillRectBuf, fillEllipseBuf, fillRoundRect,
   strokeRect, strokeEllipse, strokeLine, MANUAL_ANCHOR_OVERRIDES_164L2,
+  MANUAL_ANCHOR_OVERRIDES_164T, MANUAL_EYE_SEMANTIC_ANCHORS_164S,
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

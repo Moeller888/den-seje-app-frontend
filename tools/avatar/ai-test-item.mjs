@@ -16,7 +16,7 @@
 //   tools/avatar/build/ai-test/reports/glasses-test-qa.json
 // ---------------------------------------------------------------------------
 
-import { decodePNG, encodePNG, MANUAL_ANCHOR_OVERRIDES_164L2 } from "./extract-anchor-masks.mjs";
+import { decodePNG, encodePNG, MANUAL_ANCHOR_OVERRIDES_164L2, MANUAL_ANCHOR_OVERRIDES_164T, MANUAL_EYE_SEMANTIC_ANCHORS_164S } from "./extract-anchor-masks.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -63,7 +63,7 @@ function main() {
     item.set(raw.rgba);                                // already full-canvas → use as-is (no reposition)
     placement = "as-is (raw already 1024x1536)";
   } else {
-    const gb = MANUAL_ANCHOR_OVERRIDES_164L2.glassesBand; // centre on glassesBand
+    const gb = MANUAL_ANCHOR_OVERRIDES_164T.glassesBand; // centre on the 164T (recalibrated) glassesBand
     const cx = gb.x + gb.width / 2, cy = gb.y + gb.height / 2;
     const ox = Math.round(cx - raw.width / 2), oy = Math.round(cy - raw.height / 2);
     for (let y = 0; y < raw.height; y++) for (let x = 0; x < raw.width; x++) {
@@ -82,6 +82,51 @@ function main() {
   }
   let opaque = 0, outside = 0;
   for (let i = 3; i < item.length; i += 4) { if (item[i] > 0) { opaque++; if (mask[i] === 0) outside++; } }
+
+  // --- 164S type-aware QA against the corrected eye semantics ---
+  // pupilFrameIntrusion: opaque (clipped) item pixels within PUPIL_FRAME_R of each ACTUAL
+  // pupilCenter — a glasses frame must NOT cross the black pupil. (Uses pupilCenter, not box.)
+  const ES = MANUAL_EYE_SEMANTIC_ANCHORS_164S;
+  const PUPIL_FRAME_R = 12;
+  function pupilIntrusion(pc) {
+    let n = 0;
+    for (let y = pc.y - PUPIL_FRAME_R; y <= pc.y + PUPIL_FRAME_R; y++)
+      for (let x = pc.x - PUPIL_FRAME_R; x <= pc.x + PUPIL_FRAME_R; x++) {
+        if (x < 0 || y < 0 || x >= W || y >= H) continue;
+        if ((x - pc.x) ** 2 + (y - pc.y) ** 2 > PUPIL_FRAME_R * PUPIL_FRAME_R) continue;
+        if (item[(y * W + x) * 4 + 3] > 0) n++;
+      }
+    return n;
+  }
+  const pupilFrameIntrusion = {
+    radiusPx: PUPIL_FRAME_R,
+    left: pupilIntrusion(ES.left.pupilCenter),
+    right: pupilIntrusion(ES.right.pupilCenter),
+  };
+  pupilFrameIntrusion.total = pupilFrameIntrusion.left + pupilFrameIntrusion.right;
+
+  // lensError: split opaque item pixels by the bridge midline into left/right halves, take each
+  // half's centroid, and report distance to the corresponding glasses lens visualCenter. This is
+  // a COARSE proxy (the 164P typed lens-centre fitter is not yet built); it is reported, not gated.
+  const midX = ES.derived.glassesBridgePoint.x;
+  function halfCentroid(xMin, xMax) {
+    let sx = 0, sy = 0, n = 0;
+    for (let y = 0; y < H; y++) for (let x = xMin; x < xMax; x++) {
+      if (item[(y * W + x) * 4 + 3] > 0) { sx += x; sy += y; n++; }
+    }
+    return n > 0 ? { x: sx / n, y: sy / n, n } : null;
+  }
+  function lensErr(side, centroid) {
+    const target = ES[side].glassesLensVisualCenter;
+    if (!centroid) return { centroid: null, target, errorPx: null, note: "no opaque pixels on this side" };
+    return { centroid: { x: Math.round(centroid.x), y: Math.round(centroid.y), n: centroid.n }, target,
+             errorPx: Math.round(Math.hypot(centroid.x - target.x, centroid.y - target.y)) };
+  }
+  const lensError = {
+    method: "coarse: opaque half-centroid vs glasses lens visualCenter (164P typed fitter not yet built)",
+    left: lensErr("left", halfCentroid(0, midX)),
+    right: lensErr("right", halfCentroid(midX, W)),
+  };
 
   // --- composite over Master (placement/extent visualization, not runtime z-order) ---
   const comp = Uint8Array.from(master.rgba);
@@ -103,9 +148,11 @@ function main() {
     placement,
     canvas: `${W}x${H}`,
     opaquePx: opaque, preClipOverflowPx: preClipOverflow, outsideMaskPx: outside,
+    pupilFrameIntrusion, lensError,
+    glassesVisualCenter: { left: ES.left.glassesLensVisualCenter, right: ES.right.glassesLensVisualCenter },
     pass, warnings,
     humanReviewRequired: true,
-    humanReviewMustConfirm: ["no avatar geometry/skin/hair/eyes copied", "reads as a glasses item", "style fits", "content safe (kids platform)"],
+    humanReviewMustConfirm: ["no avatar geometry/skin/hair/eyes copied", "reads as a glasses item", "style fits", "content safe (kids platform)", "pupilFrameIntrusion.total ≈ 0 (frame clears the pupils)", "lensError small (lenses centred on the eye openings)"],
     outputs: {
       clipped: "tools/avatar/build/ai-test/items/glasses-test-clipped.png",
       composite: "tools/avatar/build/ai-test/previews/glasses-test-composite.png",

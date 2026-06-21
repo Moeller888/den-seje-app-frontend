@@ -56,6 +56,23 @@ All anchors carry `humanReviewRequired: true` until signed off.
 | `ear.left.attachApprox` | (345, 400) | outer head at eye level — REVIEW |
 | `ear.right.attachApprox` | (679, 400) | outer head at eye level — REVIEW |
 
+### 2.1 STRICT eye-centre semantics (164S correction)
+The eye has **three distinct centres** — they must never be conflated (164S human-review FAIL was
+caused by labeling a dark-mass / box centroid as the pupil). Measured manually on the current Master
+(see `docs/164s-iris-pupil-anchor-correction.md` and `MANUAL_EYE_SEMANTIC_ANCHORS_164S`):
+
+| Anchor | Definition | Left | Right |
+|---|---|---|---|
+| `eye.*.pupil.center` | centre of the **black pupil oval** only | (439, 394) | (570, 393) |
+| `eye.*.iris.center` | centre of the **brown iris disk** | (432, 387) | (577, 387) |
+| `glasses.*Lens.visualCenter` | centre of the **eye opening** — lens surrounds the eye, **not** the pupil | (427, 386) | (580, 386) |
+
+Rules: (a) pupils converge nasally + sit slightly low → pupil ≠ iris; (b) the **glasses lens centres
+on `visualCenter` (eye opening), never on the pupil**; (c) the QA `frame-crosses-pupil` check below
+uses the **actual `pupil.center`**, and `lensError` is measured against **`glasses.*Lens.visualCenter`**.
+Note: the §2 eye-box centres (405/605) are ~22–25px temporal of the real eyes and are **diagnostic
+only** — do not use a box centre as an eye/iris/pupil anchor.
+
 ## 3. C. glasses equipmentTypeAnchors (proposed)
 | Anchor | Proposed value | Derivation |
 |---|---|---|
@@ -71,6 +88,11 @@ All anchors carry `humanReviewRequired: true` until signed off.
 
 > The **glasses slot mask** (B) should become the **union of the two lens target boxes + two
 > thin temple bands** (toward the ears) — replacing the single broad `glassesBand` rectangle.
+>
+> **164T update (implemented):** the eyes-mask is now `union(left lens zone, right lens zone, small
+> bridge zone, two TINY side tabs)` — front-only, no long temple bands. The lens zones are the
+> recalibrated eye boxes, centred on `glasses.*Lens.visualCenter`. This dropped `preClipOverflowPx`
+> from 1324 → 0 for a procedural lens that surrounds the eye. See `docs/164t-eye-box-mask-recalibration.md`.
 
 ## 4. The glasses FITTER (the core fix — design)
 Instead of centering the whole image bbox, fit by the **two lens centres** (2-point transform):

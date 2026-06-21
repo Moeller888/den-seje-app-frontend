@@ -8,6 +8,7 @@
     "extract-masks": "node ./extract-anchor-masks.mjs",
     "test-items": "node ./test-items.mjs",
     "ai-test-item": "node ./ai-test-item.mjs",
+    "generate-procedural-glasses": "node ./generate-procedural-glasses.mjs",
     "generate-openai-item": "node ./openai-generate-item.mjs"
   }
 }
