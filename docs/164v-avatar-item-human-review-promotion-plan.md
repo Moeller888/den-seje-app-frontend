@@ -112,11 +112,14 @@ Any FAIL → fix the generator/mask/anchors (not the gate), regenerate, re-revie
 - Activate the item in any way.
 
 ## J. Decision record
-- **Human review status:** pending
+- **Human review status:** pending (blank template — fill per review)
 - **Reviewer:** _______________________
 - **Date:** _______________________
 - **Decision:** ☐ PASS ☐ Conditional PASS (notes) ☐ FAIL
 - **Notes:** _______________________
+
+> **First concrete decision:** the initial human review of `glasses.round.basic` was recorded as
+> **CONDITIONAL PASS** in [`164w-glasses-round-basic-human-review-decision.md`](164w-glasses-round-basic-human-review-decision.md).
 
 ---
 
