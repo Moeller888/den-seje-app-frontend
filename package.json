@@ -11,7 +11,8 @@
     "avatar:test-items": "node tools/avatar/test-items.mjs",
     "avatar:ai-test-item": "node tools/avatar/ai-test-item.mjs",
     "avatar:generate-openai-item": "node tools/avatar/openai-generate-item.mjs",
-    "avatar:generate-procedural-glasses": "node tools/avatar/generate-procedural-glasses.mjs"
+    "avatar:generate-procedural-glasses": "node tools/avatar/generate-procedural-glasses.mjs",
+    "avatar:create-item-candidate-manifest": "node tools/avatar/create-item-candidate-manifest.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",

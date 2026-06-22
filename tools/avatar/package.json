@@ -9,6 +9,7 @@
     "test-items": "node ./test-items.mjs",
     "ai-test-item": "node ./ai-test-item.mjs",
     "generate-procedural-glasses": "node ./generate-procedural-glasses.mjs",
+    "create-item-candidate-manifest": "node ./create-item-candidate-manifest.mjs",
     "generate-openai-item": "node ./openai-generate-item.mjs"
   }
 }
