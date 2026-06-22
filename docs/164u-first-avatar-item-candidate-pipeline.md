@@ -79,6 +79,10 @@ Master + anchors at any time.
    and registers the item — **with** the corresponding shop/DB/RPC and `AVATAR_V2` decisions made
    explicitly. None of that is in 164U.
 
+> **Review gate + promotion path:** the formal human review checklist (PASS / conditional PASS /
+> FAIL criteria) and the step-by-step promotion plan live in
+> [`164v-avatar-item-human-review-promotion-plan.md`](164v-avatar-item-human-review-promotion-plan.md).
+
 ## Run order
 ```
 npm run avatar:extract-masks
