@@ -60,6 +60,13 @@ marked **RESOLVED** need no further decision; items marked **DECISION REQUIRED**
    preview only. Final format choice is still confirmed by the executing section.
 
 2. **Naming collision — `glasses-round.svg` already exists → RESOLVED (no real collision).**
+   > **⚠ CORRECTED by [`164y-asset-promotion-decision-svg-readiness.md`](164y-asset-promotion-decision-svg-readiness.md):**
+   > the "not bound / `image_url = NULL`" claim below is **wrong**. A later migration
+   > (`20260521000000_avatar_slot_system.sql`, lines 41–42) binds the row to
+   > `image_url = '/assets/avatar/glasses/glasses-round.svg'`, slot `eyes`, z=7 — so the SVG is the
+   > **live, DB-bound, rendered** shop asset (an off-spec temple-armed one). The no-collision and
+   > do-not-reuse conclusions still hold; the "legacy/demo-only, NULL" classification does not. See 164Y.
+
    Investigation classification: the existing `glasses-round.svg` is a **legacy/demo + test asset**,
    **not bound to the live shop render**. The live shop row `glasses-round`
    (`20260511000300_shop_inventory.sql`) has **`image_url = NULL`**, and both runtime render paths
