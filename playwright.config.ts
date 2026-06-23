@@ -1,4 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+
+// Load .env into process.env for the config process AND every worker (Playwright
+// re-evaluates this config file in each worker), so specs and global-setup can read
+// test credentials (TEST_STUDENT_EMAIL/PASSWORD) and Supabase keys from a gitignored
+// .env. Secrets are never hardcoded in test files — see .env.example.
+dotenv.config();
 
 export default defineConfig({
   globalSetup: './tests/global-setup.ts',

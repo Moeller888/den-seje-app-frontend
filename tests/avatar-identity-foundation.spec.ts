@@ -16,8 +16,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const PROD          = "https://den-seje-app-frontend.vercel.app";
-const STUDENT_EMAIL = "christnmoeller@hotmail.com";
-const STUDENT_PASS  = "Cmiciquru5";
+const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
+const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 

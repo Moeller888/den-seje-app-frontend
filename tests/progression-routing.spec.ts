@@ -19,8 +19,8 @@ const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc';
 
 const EDGE_BASE        = `${SUPABASE_URL}/functions/v1`;
-const STUDENT_EMAIL    = 'christnmoeller@hotmail.com';
-const STUDENT_PASSWORD = 'Cmiciquru5';
+const STUDENT_EMAIL    = process.env.TEST_STUDENT_EMAIL!;
+const STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;

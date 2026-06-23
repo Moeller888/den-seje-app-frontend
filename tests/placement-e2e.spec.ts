@@ -14,8 +14,8 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const PROD           = 'https://den-seje-app-frontend.vercel.app';
-const STUDENT_EMAIL  = 'christnmoeller@hotmail.com';
-const STUDENT_PASS   = 'Cmiciquru5';
+const STUDENT_EMAIL  = process.env.TEST_STUDENT_EMAIL!;
+const STUDENT_PASS   = process.env.TEST_STUDENT_PASSWORD!;
 
 // Edge Function cold starts can take up to ~18s; Firefox adds ~20-50% overhead.
 // 30s gives adequate margin without masking genuine hangs.

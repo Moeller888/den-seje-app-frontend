@@ -1,6 +1,6 @@
 // Section 137: Teacher-initiated password reset tests.
 // Tests run against production. The teacher-test account owns student2;
-// the main test student (christnmoeller@hotmail.com) is NOT owned by that
+// the main test student (see TEST_STUDENT_EMAIL) is NOT owned by that
 // teacher and is used to verify cross-class access is blocked.
 
 import { test, expect } from "@playwright/test";
@@ -25,8 +25,8 @@ const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
 // Main test student — NOT owned by teacher-test@hotmail.com
-const MAIN_STUDENT_EMAIL = "christnmoeller@hotmail.com";
-const MAIN_STUDENT_PASS  = "Cmiciquru5";
+const MAIN_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
+const MAIN_STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 
 // student2's original password (set by global-setup)
 const STUDENT2_ORIGINAL_PASS = "TestStudent2026!";

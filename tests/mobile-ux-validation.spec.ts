@@ -14,8 +14,8 @@ test.beforeEach(async ({}, testInfo) => {
 });
 
 const PROD = 'https://den-seje-app-frontend.vercel.app';
-const EMAIL    = 'christnmoeller@hotmail.com';
-const PASSWORD = 'Cmiciquru5';
+const EMAIL    = process.env.TEST_STUDENT_EMAIL!;
+const PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
 // iPhone 12 profile
 const iPhone12 = {

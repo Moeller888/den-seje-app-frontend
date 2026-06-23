@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const TEST_STUDENT_EMAIL = 'christnmoeller@hotmail.com';
+const TEST_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 
 let studentId: string;
 
@@ -97,7 +97,7 @@ test('Shows empty state when no questions are available', async ({ page }) => {
   await page.goto('https://den-seje-app-frontend.vercel.app/login.html');
 
   await page.fill('input[type="email"]', TEST_STUDENT_EMAIL);
-  await page.fill('input[type="password"]', 'Cmiciquru5');
+  await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
   await page.click('button');
 
   // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly

@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const TEST_STUDENT_EMAIL = "christnmoeller@hotmail.com";
+const TEST_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 
 // ── Section 97: Teacher test account constants ────────────────────────────────
 // Can be overridden via .env: TEST_TEACHER_EMAIL, TEST_TEACHER_PASSWORD,
@@ -309,6 +309,14 @@ export default async function globalSetup() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
       "global-setup: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in .env"
+    );
+  }
+
+  // Fail loud once, before any worker/test runs, if the test student credentials
+  // are not provided via the gitignored .env (no secrets are hardcoded in specs).
+  if (!process.env.TEST_STUDENT_EMAIL || !process.env.TEST_STUDENT_PASSWORD) {
+    throw new Error(
+      "global-setup: TEST_STUDENT_EMAIL or TEST_STUDENT_PASSWORD missing in .env (see .env.example)"
     );
   }
 

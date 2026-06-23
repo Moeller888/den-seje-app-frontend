@@ -8,8 +8,8 @@
 import { test, expect } from '@playwright/test';
 
 const PROD = 'https://den-seje-app-frontend.vercel.app';
-const STUDENT_EMAIL    = 'christnmoeller@hotmail.com';
-const STUDENT_PASSWORD = 'Cmiciquru5';
+const STUDENT_EMAIL    = process.env.TEST_STUDENT_EMAIL!;
+const STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
 test.describe('student-detail.html — auth guards', () => {
 
