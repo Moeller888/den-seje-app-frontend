@@ -12,6 +12,12 @@ and the format question), [`164w-glasses-round-basic-human-review-decision.md`](
 
 ---
 
+> **Executed by [`164z-svg-reemit-glasses-round-basic.md`](164z-svg-reemit-glasses-round-basic.md):**
+> the SVG re-emit (D1) and the asset promotion (D3 manual static add) were carried out — the
+> reviewed front-only SVG now lives at `assets/avatar/glasses/glasses-round-basic-v1.svg` (inert; no
+> DB/runtime/shop binding). The D2 Option A `image_url` binding remains a future, separately-approved
+> step (proposed 165A).
+
 ## A. Section status
 - **Decision/spec only** — records the three owner decisions; executes nothing.
 - No asset promotion (nothing written/copied into `assets/*`).

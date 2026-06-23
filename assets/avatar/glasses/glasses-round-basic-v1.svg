@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <!-- 164Z front-only round glasses (glasses.round.basic). Authored on LOCKED eyes cx=68/92 cy=47, 160x240. No temples. -->
+  <!-- Left lens -->
+  <circle cx="68" cy="47" r="8.7" fill="rgba(100,181,246,0.26)"/>
+  <circle cx="68" cy="47" r="10" fill="none" stroke="#262834" stroke-width="2.6"/>
+  <!-- Right lens -->
+  <circle cx="92" cy="47" r="8.7" fill="rgba(100,181,246,0.26)"/>
+  <circle cx="92" cy="47" r="10" fill="none" stroke="#262834" stroke-width="2.6"/>
+  <!-- Bridge (between inner edges, slightly raised) -->
+  <path d="M 79.3 46 Q 80 43 80.7 46" fill="none" stroke="#262834" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- Tiny FRONT-ONLY side tabs (3px stubs — NOT temples) -->
+  <path d="M 56.7 47 L 53.7 47" fill="none" stroke="#262834" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 103.3 47 L 106.3 47" fill="none" stroke="#262834" stroke-width="2" stroke-linecap="round"/>
+  <!-- Subtle catch-light shine -->
+  <path d="M 62 41 Q 65 38.5 68 40.5" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+  <path d="M 86 41 Q 89 38.5 92 40.5" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+</svg>
