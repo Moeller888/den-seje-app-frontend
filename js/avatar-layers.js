@@ -241,19 +241,25 @@ export function isAvatarV2() {
   }
 }
 
-// C2 base bodies. 155B/155C delivered the NEUTRAL base in medium + dark only.
-// male/female C2 bases are a later section → all body types use the neutral C2
-// base for now (the C2 base is body-type-neutral by design).
+// C2 base bodies — full body_type × skin_tone matrix. Each pair maps to a concrete
+// flat C2 SVG honoring the locked C2 geometry contract (head cx=80 cy=50 r=30, eyes
+// cx=68/92 cy=47, ears, neck, arm rects, hand anchors). Only the torso/shirt/shorts
+// silhouette differs by body type; only the skin tokens differ by skin tone. Mirrors
+// the legacy BODY_SRCS shape so the two render paths resolve identity the same way.
 const BODY_SRCS_C2 = {
-  medium: "/assets/avatar/base/body-neutral-medium-c2.svg",
-  dark:   "/assets/avatar/base/body-neutral-dark-c2.svg",
+  neutral: { medium: "/assets/avatar/base/body-neutral-medium-c2.svg", dark: "/assets/avatar/base/body-neutral-dark-c2.svg" },
+  male:    { medium: "/assets/avatar/base/body-male-medium-c2.svg",    dark: "/assets/avatar/base/body-male-dark-c2.svg"    },
+  female:  { medium: "/assets/avatar/base/body-female-medium-c2.svg",  dark: "/assets/avatar/base/body-female-dark-c2.svg"  },
 };
 
-// Resolves the C2 base body SVG for an identity. Defensive: unknown/missing skin
-// tone → medium (via skinToneFor). Never returns undefined.
+// Resolves the C2 base body SVG for an identity. Defensive (mirrors baseSrcFor):
+// unknown/missing body_type → neutral, unknown/missing skin_tone → medium (via
+// skinToneFor), missing identity → neutral medium. Never returns undefined.
 export function baseSrcForC2(identity) {
-  const tone = skinToneFor(identity);
-  return BODY_SRCS_C2[tone] ?? BODY_SRCS_C2.medium;
+  const bodyType = (identity && typeof identity === "object") ? identity.body_type : null;
+  const tone     = skinToneFor(identity);
+  const byType   = BODY_TYPES.includes(bodyType) ? BODY_SRCS_C2[bodyType] : BODY_SRCS_C2.neutral;
+  return byType?.[tone] ?? BODY_SRCS_C2.neutral.medium;
 }
 
 // ── C2 layer z-model (Section 159B) ───────────────────────────────────────────
