@@ -200,6 +200,12 @@
       transform: scale(1.02);
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .shop-preview {
+        transition: none;
+      }
+    }
+
     /* Legendary: proportionally wider stage */
     .shop-card[data-rarity="legendary"] .shop-preview {
       max-width: 146px;
