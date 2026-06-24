@@ -220,8 +220,10 @@ test("golden: shop first item preview matches baseline", async ({
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
   await waitForImages(page, ".shop-preview");
 
-  const shot = await page.locator(".shop-preview").first().screenshot();
-  expect(shot).toMatchSnapshot("shop-preview-first.png", { maxDiffPixels: 80 });
+  await expect(page.locator(".shop-preview").first()).toHaveScreenshot("shop-preview-first.png", {
+    maxDiffPixels: 80,
+    animations: "disabled",
+  });
 });
 
 // ── Structural tests (post-decoupling state) ──────────────────────────────────
