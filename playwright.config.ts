@@ -18,7 +18,11 @@ export default defineConfig({
   workers: 1,
 
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Local retries = 1 to absorb known transient flakes against the live production
+  // target: production-network variance (e.g. ERR_NETWORK_CHANGED) and cold Edge
+  // Function latency (get-next-question / login timeouts). One retry clears these;
+  // a real assertion/pixel/render failure still fails after the retry. CI keeps 2.
+  retries: process.env.CI ? 2 : 1,
 
   reporter: 'html',
 
