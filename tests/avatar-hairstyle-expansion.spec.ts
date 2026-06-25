@@ -24,14 +24,19 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
+// C2 hair assets (AVATAR_V2/C2 render path). Hair renders as an INLINE <svg> with
+// NO src — hairstyle is verified via the fetched C2 hair asset + inline hair layer.
+// Legacy names ALIAS to C2 styles (HAIR_SRCS_C2 in js/avatar-layers.js):
+//   default→short · braid→ponytail · short→short · curly→curly · long→long
+//   sidecut→buzz · buzzcut→buzz  (sidecut and buzzcut render the SAME C2 asset)
 const HAIR_FILE: Record<string, string> = {
-  default:  "/assets/avatar/hair/hair-default.svg",
-  braid:    "/assets/avatar/hair/hair-braid.svg",
-  short:    "/assets/avatar/hair/hair-short.svg",
-  curly:    "/assets/avatar/hair/hair-curly.svg",
-  long:     "/assets/avatar/hair/hair-long.svg",
-  sidecut:  "/assets/avatar/hair/hair-sidecut.svg",
-  buzzcut:  "/assets/avatar/hair/hair-buzzcut.svg",
+  default:  "hair-short-c2.svg",
+  braid:    "hair-ponytail-c2.svg",
+  short:    "hair-short-c2.svg",
+  curly:    "hair-curly-c2.svg",
+  long:     "hair-long-c2.svg",
+  sidecut:  "hair-buzz-c2.svg",
+  buzzcut:  "hair-buzz-c2.svg",
 };
 
 const todayUTC = new Date().toISOString().slice(0, 10);
@@ -102,6 +107,11 @@ test.beforeEach(async () => {
   }).eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override; global AVATAR_V2 stays false.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   // Suite-safe end state: neutral body, default hairstyle.
   await adminClient.from("profiles").update({
@@ -116,6 +126,23 @@ async function setIdentity(identity: object) {
   const { error } = await adminClient
     .from("profiles").update({ avatar_identity: identity }).eq("id", studentId);
   if (error) throw new Error(`identity fixture failed: ${error.message}`);
+}
+
+// C2 hair check: run `navigate` (triggers a C2 render), assert the expected aliased
+// C2 hair asset was fetched and the inline hair layer is present. Replaces the
+// legacy `img[src*=hair-*.svg]` assertion (C2 hair is inline <svg>, no src).
+async function expectC2Hair(
+  page: any, navigate: () => Promise<void>, hairFile: string, container: string
+) {
+  const resp = page.waitForResponse(
+    (r: any) => r.url().includes(hairFile) && r.status() === 200,
+    { timeout: 20000 }
+  );
+  await navigate();
+  await resp;
+  await expect(
+    page.locator(`${container} [data-c2-layer="hair"] svg`)
+  ).toBeAttached({ timeout: 15000 });
 }
 
 async function loginAsStudent(page: any) {
@@ -171,12 +198,10 @@ test("2. curly hairstyle renders hair-curly.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "curly", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.curly}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.curly, "#avatar-preview");
 });
 
 test("3. long hairstyle renders hair-long.svg on avatar page", async ({
@@ -187,12 +212,10 @@ test("3. long hairstyle renders hair-long.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "long", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.long}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.long, "#avatar-preview");
 });
 
 test("4. sidecut hairstyle renders hair-sidecut.svg on avatar page", async ({
@@ -203,12 +226,10 @@ test("4. sidecut hairstyle renders hair-sidecut.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "sidecut", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.sidecut}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.sidecut, "#avatar-preview");
 });
 
 test("5. buzzcut hairstyle renders hair-buzzcut.svg on avatar page", async ({
@@ -219,12 +240,10 @@ test("5. buzzcut hairstyle renders hair-buzzcut.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "buzzcut", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.buzzcut}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.buzzcut, "#avatar-preview");
 });
 
 test("6. curly button click updates avatar preview and DB", async ({
@@ -236,11 +255,9 @@ test("6. curly button click updates avatar preview and DB", async ({
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#hairstyleButtons .identity-btn", { timeout: 15000 });
 
-  await page.locator("#hairstyleButtons .identity-btn[data-hairstyle='curly']").click();
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.curly}"]`)
-  ).toBeAttached({ timeout: 10000 });
+  await expectC2Hair(page, async () => {
+    await page.locator("#hairstyleButtons .identity-btn[data-hairstyle='curly']").click();
+  }, HAIR_FILE.curly, "#avatar-preview");
 
   const { data: row } = await adminClient
     .from("profiles").select("avatar_identity").eq("id", studentId).maybeSingle();
@@ -316,8 +333,7 @@ test("golden: avatar page curly hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-curly.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-curly.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page long hairstyle matches baseline", async ({
@@ -337,8 +353,7 @@ test("golden: avatar page long hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-long.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-long.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page sidecut hairstyle matches baseline", async ({
@@ -358,8 +373,7 @@ test("golden: avatar page sidecut hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-sidecut.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-sidecut.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page buzzcut hairstyle matches baseline", async ({
@@ -379,8 +393,7 @@ test("golden: avatar page buzzcut hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-buzzcut.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-buzzcut.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page headwear over curly matches baseline", async ({
@@ -402,8 +415,7 @@ test("golden: avatar page headwear over curly matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-headwear-hair-curly.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-headwear-hair-curly.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: hub avatar long hairstyle matches baseline", async ({
@@ -423,6 +435,5 @@ test("golden: hub avatar long hairstyle matches baseline", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-hair-long.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-hair-long.png", { maxDiffPixels: 120, animations: "disabled" });
 });

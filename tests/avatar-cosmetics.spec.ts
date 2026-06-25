@@ -89,6 +89,14 @@ test.beforeEach(async () => {
   }).eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override; the global
+  // AVATAR_V2 flag stays false. Cosmetics still render as <img> layers under C2
+  // (data-c2-layer="cosmetic"), so the functional item-src assertions are unchanged;
+  // only the body underneath changes, which the goldens capture.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   await adminClient.from("profiles").update({
     equipped_slots: {},
@@ -310,8 +318,7 @@ test("golden: avatar page pirate-hat matches baseline", async ({
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-pirate-hat.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-pirate-hat.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: hub avatar pirate-hat matches baseline", async ({
@@ -331,8 +338,7 @@ test("golden: hub avatar pirate-hat matches baseline", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-pirate-hat.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-pirate-hat.png", { maxDiffPixels: 120, animations: "disabled" });
 });
 
 test("golden: avatar page ninja-mask matches baseline", async ({
@@ -352,8 +358,7 @@ test("golden: avatar page ninja-mask matches baseline", async ({
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-ninja-mask.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-ninja-mask.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page hero-mask matches baseline", async ({
@@ -373,8 +378,7 @@ test("golden: avatar page hero-mask matches baseline", async ({
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hero-mask.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hero-mask.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page panda-mask matches baseline", async ({
@@ -394,6 +398,5 @@ test("golden: avatar page panda-mask matches baseline", async ({
   await page.waitForSelector("#inventoryGrid .item-card", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-panda-mask.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-panda-mask.png", { maxDiffPixels: 200, animations: "disabled" });
 });

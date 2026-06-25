@@ -107,6 +107,13 @@ test.beforeEach(async () => {
     .eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override; global AVATAR_V2
+  // stays false. Under C2 hair renders as an inline <svg> (data-c2-layer="hair"),
+  // the base is a *-c2.svg img, and cosmetics use the C2 z-model.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   await adminClient.from("profiles").update({ equipped_slots: {} }).eq("id", studentId);
 });
@@ -154,8 +161,7 @@ test("golden: avatar page bare avatar matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-bare.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-bare.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page with headwear matches baseline", async ({
@@ -175,8 +181,7 @@ test("golden: avatar page with headwear matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-headwear.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-headwear.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: hub avatar matches baseline", async ({ page, browserName }) => {
@@ -188,8 +193,7 @@ test("golden: hub avatar matches baseline", async ({ page, browserName }) => {
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-bare.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-bare.png", { maxDiffPixels: 120, animations: "disabled" });
 });
 
 test("golden: quiz identity-strip avatar matches baseline", async ({
@@ -204,8 +208,7 @@ test("golden: quiz identity-strip avatar matches baseline", async ({
   await page.waitForSelector("#options button", { timeout: 30000 });
   await waitForImages(page, "#avatar-display");
 
-  const shot = await page.locator("#avatar-display").screenshot();
-  expect(shot).toMatchSnapshot("quiz-avatar-bare.png", { maxDiffPixels: 60 });
+  await expect(page.locator("#avatar-display")).toHaveScreenshot("quiz-avatar-bare.png", { maxDiffPixels: 60, animations: "disabled" });
 });
 
 test("golden: shop first item preview matches baseline", async ({
@@ -237,32 +240,35 @@ test("structure: hair layer renders on all four surfaces", async ({
   await gotoLoginReduced(page);
   await loginAsStudent(page);
 
+  // C2: the decoupled hair layer is an INLINE <svg> (data-c2-layer="hair"), present
+  // on all four render surfaces.
+
   // Quiz (login lands here)
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });
   await expect(
-    page.locator('#avatar-display img[src*="hair-default.svg"]')
-  ).toBeAttached();
+    page.locator('#avatar-display [data-c2-layer="hair"] svg')
+  ).toBeAttached({ timeout: 15000 });
 
   // Avatar page
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await expect(
-    page.locator('#avatar-preview img[src*="hair-default.svg"]')
-  ).toBeAttached();
+    page.locator('#avatar-preview [data-c2-layer="hair"] svg')
+  ).toBeAttached({ timeout: 15000 });
 
   // Hub
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await expect(
-    page.locator('#profileAvatar img[src*="hair-default.svg"]')
-  ).toBeAttached();
+    page.locator('#profileAvatar [data-c2-layer="hair"] svg')
+  ).toBeAttached({ timeout: 15000 });
 
   // Shop (mini paper-doll previews)
   await page.goto(`${PROD}/shop.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
   await expect(
-    page.locator('.shop-preview img[src*="hair-default.svg"]').first()
-  ).toBeAttached();
+    page.locator('.shop-preview [data-c2-layer="hair"] svg').first()
+  ).toBeAttached({ timeout: 15000 });
 });
 
 test("structure: body.svg is hairless but keeps body and face", async ({
@@ -329,14 +335,16 @@ test("structure: headwear stacks above the hair layer", async ({
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 
+  // C2 z-model: inline hair wrapper (data-c2-layer="hair") at C2_HAIR_Z=40;
+  // headwear cosmetic (data-c2-layer="cosmetic") at C2_LAYER_Z.headwear=45.
   const hairZ = await page
-    .locator('#avatar-preview img[src*="hair-default.svg"]')
+    .locator('#avatar-preview [data-c2-layer="hair"]')
     .evaluate((el: Element) => parseInt(getComputedStyle(el).zIndex, 10));
   const hatZ = await page
-    .locator(`#avatar-preview img.avatar-layer:not([src*="hair-default"]):not([src*="body.svg"])`)
+    .locator('#avatar-preview [data-c2-layer="cosmetic"]')
     .first()
     .evaluate((el: Element) => parseInt(getComputedStyle(el).zIndex, 10));
 
-  expect(hairZ, "hair must render on the hair slot z-level").toBe(4);
+  expect(hairZ, "hair must render on the C2 hair z-level").toBe(40);
   expect(hatZ, "headwear must stack above hair").toBeGreaterThan(hairZ);
 });

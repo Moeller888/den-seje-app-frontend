@@ -27,10 +27,12 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
-// Base body file per skin tone (neutral body_type).
+// C2 base body file per skin tone (neutral body_type) — AVATAR_V2/C2 render path.
+// Tests run with the C2 preview enabled via a localStorage override (see beforeEach);
+// the global AVATAR_V2 flag stays false.
 const BASE_FILE: Record<string, string> = {
-  medium: "/assets/avatar/base/body.svg",
-  dark:   "/assets/avatar/base/body-neutral-dark.svg",
+  medium: "body-neutral-medium-c2.svg",
+  dark:   "body-neutral-dark-c2.svg",
 };
 
 const todayUTC = new Date().toISOString().slice(0, 10);
@@ -84,6 +86,13 @@ test.beforeEach(async () => {
   }).eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render is exercised in TEST ONLY via a localStorage override; the global
+  // AVATAR_V2 flag in js/avatar-layers.js stays false. addInitScript runs before
+  // any page script on every navigation, so isAvatarV2() returns true in-test.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   await adminClient.from("profiles").update({
     equipped_slots: {},
@@ -135,7 +144,7 @@ test("1. medium skin tone renders the neutral medium body on avatar page", async
   await page.waitForSelector("#skinToneButtons .identity-btn", { timeout: 15000 });
 
   await expect(
-    page.locator(`#avatar-preview img[src*="${BASE_FILE.medium}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BASE_FILE.medium}"]`)
   ).toBeAttached();
 });
 
@@ -151,7 +160,7 @@ test("2. dark skin tone renders the neutral dark body on avatar page", async ({
   await page.waitForSelector("#skinToneButtons .identity-btn", { timeout: 15000 });
 
   await expect(
-    page.locator(`#avatar-preview img[src*="${BASE_FILE.dark}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BASE_FILE.dark}"]`)
   ).toBeAttached();
 });
 
@@ -221,7 +230,7 @@ test("6. hub renders the dark body", async ({ page, browserName }) => {
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 
   await expect(
-    page.locator(`#profileAvatar img[src*="${BASE_FILE.dark}"]`)
+    page.locator(`#profileAvatar img[data-c2-layer="base"][src*="${BASE_FILE.dark}"]`)
   ).toBeAttached();
 });
 
@@ -239,7 +248,7 @@ test("7. skin-tone panel button click updates avatar preview immediately", async
 
   // Preview must update to the dark neutral body
   await expect(
-    page.locator(`#avatar-preview img[src*="${BASE_FILE.dark}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BASE_FILE.dark}"]`)
   ).toBeAttached({ timeout: 10000 });
 
   // DB must be updated
@@ -267,8 +276,7 @@ test("golden: avatar page medium skin tone matches baseline", async ({
   await page.waitForSelector("#skinToneButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-skin-medium.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-skin-medium.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page dark skin tone matches baseline", async ({
@@ -288,8 +296,7 @@ test("golden: avatar page dark skin tone matches baseline", async ({
   await page.waitForSelector("#skinToneButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-skin-dark.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-skin-dark.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: hub avatar medium skin tone matches baseline", async ({
@@ -309,8 +316,7 @@ test("golden: hub avatar medium skin tone matches baseline", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-skin-medium.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-skin-medium.png", { maxDiffPixels: 120, animations: "disabled" });
 });
 
 test("golden: hub avatar dark skin tone matches baseline", async ({
@@ -330,6 +336,5 @@ test("golden: hub avatar dark skin tone matches baseline", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-skin-dark.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-skin-dark.png", { maxDiffPixels: 120, animations: "disabled" });
 });

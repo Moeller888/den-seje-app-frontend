@@ -25,10 +25,14 @@ const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!"
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// C2 base body file per body_type (medium skin — these identities carry no
+// skin_tone, so baseSrcForC2 resolves to the medium variant). AVATAR_V2/C2 render
+// path; tests enable C2 via a localStorage override (see beforeEach), global flag
+// stays false.
 const BODY_FILE_FOR: Record<string, string> = {
-  neutral: "/assets/avatar/base/body.svg",
-  male:    "/assets/avatar/base/body-male.svg",
-  female:  "/assets/avatar/base/body-female.svg",
+  neutral: "body-neutral-medium-c2.svg",
+  male:    "body-male-medium-c2.svg",
+  female:  "body-female-medium-c2.svg",
 };
 
 let adminClient: ReturnType<typeof createClient>;
@@ -56,6 +60,12 @@ test.afterAll(async () => {
     .from("profiles")
     .update({ avatar_identity: CHOSEN_NEUTRAL() })
     .eq("id", studentId);
+});
+
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override; the global
+  // AVATAR_V2 flag stays false. Runs before any page script on every navigation.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
 });
 
 async function setIdentity(identity: any) {
@@ -117,7 +127,7 @@ test("2. Choosing Pige sets chosen_at and renders the female body", async ({
 
   // Identity-strip avatar re-rendered with the female body.
   await expect(
-    page.locator(`#avatar-display img[src*="${BODY_FILE_FOR.female}"]`)
+    page.locator(`#avatar-display img[data-c2-layer="base"][src*="${BODY_FILE_FOR.female}"]`)
   ).toBeAttached();
 
   // Persisted with chosen_at stamped.
@@ -216,13 +226,13 @@ test("6. All three bodies render on avatar page and hub", async ({
     await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
     await expect(
-      page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR[bodyType]}"]`)
+      page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR[bodyType]}"]`)
     ).toBeAttached();
 
     await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
     await expect(
-      page.locator(`#profileAvatar img[src*="${BODY_FILE_FOR[bodyType]}"]`)
+      page.locator(`#profileAvatar img[data-c2-layer="base"][src*="${BODY_FILE_FOR[bodyType]}"]`)
     ).toBeAttached();
   }
 });
@@ -240,7 +250,7 @@ test("7. Shop previews stay identity-independent (neutral base)", async ({
   await page.waitForSelector(".shop-preview img", { timeout: 15000 });
 
   await expect(
-    page.locator(`.shop-preview img[src*="${BODY_FILE_FOR.neutral}"]`).first()
+    page.locator(`.shop-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR.neutral}"]`).first()
   ).toBeAttached();
   await expect(
     page.locator(`.shop-preview img[src*="body-female"]`)
@@ -276,7 +286,6 @@ for (const bodyType of ["male", "female"] as const) {
     await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
     await waitForImages(page, "#avatar-preview");
 
-    const shot = await page.locator("#avatar-preview").screenshot();
-    expect(shot).toMatchSnapshot(`avatar-page-${bodyType}.png`, { maxDiffPixels: 200 });
+    await expect(page.locator("#avatar-preview")).toHaveScreenshot(`avatar-page-${bodyType}.png`, { maxDiffPixels: 200, animations: "disabled" });
   });
 }

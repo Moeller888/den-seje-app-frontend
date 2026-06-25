@@ -26,10 +26,15 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
 
+// C2 hair assets (AVATAR_V2/C2 render path). Under C2 hair renders as an INLINE
+// <svg> with NO src, so hairstyle is verified via the fetched C2 hair asset
+// (network) + presence of the inline hair layer. Legacy hairstyle names ALIAS to
+// C2 styles (see HAIR_SRCS_C2 in js/avatar-layers.js):
+//   default → short · braid → ponytail · short → short
 const HAIR_FILE: Record<string, string> = {
-  default: "/assets/avatar/hair/hair-default.svg",
-  braid:   "/assets/avatar/hair/hair-braid.svg",
-  short:   "/assets/avatar/hair/hair-short.svg",
+  default: "hair-short-c2.svg",
+  braid:   "hair-ponytail-c2.svg",
+  short:   "hair-short-c2.svg",
 };
 
 const todayUTC = new Date().toISOString().slice(0, 10);
@@ -101,6 +106,12 @@ test.beforeEach(async () => {
   }).eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override; the global
+  // AVATAR_V2 flag stays false. Runs before any page script on every navigation.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   // Suite-safe end state: neutral body, default hairstyle, chosen_at SET.
   await adminClient.from("profiles").update({
@@ -115,6 +126,24 @@ async function setIdentity(identity: object) {
   const { error } = await adminClient
     .from("profiles").update({ avatar_identity: identity }).eq("id", studentId);
   if (error) throw new Error(`identity fixture failed: ${error.message}`);
+}
+
+// C2 hair check: run `navigate` (triggers a C2 render), assert the page fetched the
+// expected aliased C2 hair asset, and the inline hair layer is present in
+// `container`. Replaces the legacy `img[src*=hair-*.svg]` assertion (C2 hair has no
+// src). The waitForResponse is armed BEFORE navigate so the render's fetch is caught.
+async function expectC2Hair(
+  page: any, navigate: () => Promise<void>, hairFile: string, container: string
+) {
+  const resp = page.waitForResponse(
+    (r: any) => r.url().includes(hairFile) && r.status() === 200,
+    { timeout: 20000 }
+  );
+  await navigate();
+  await resp;
+  await expect(
+    page.locator(`${container} [data-c2-layer="hair"] svg`)
+  ).toBeAttached({ timeout: 15000 });
 }
 
 async function loginAsStudent(page: any) {
@@ -149,12 +178,10 @@ test("1. default hairstyle renders hair-default.svg on avatar page", async ({
   test.skip(browserName !== "chromium", "UI dedup");
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.default}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.default, "#avatar-preview");
 });
 
 test("2. braid hairstyle renders hair-braid.svg on avatar page", async ({
@@ -165,12 +192,10 @@ test("2. braid hairstyle renders hair-braid.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "braid", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.braid}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.braid, "#avatar-preview");
 });
 
 test("3. short hairstyle renders hair-short.svg on avatar page", async ({
@@ -181,12 +206,10 @@ test("3. short hairstyle renders hair-short.svg on avatar page", async ({
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "short", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.short}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
+  }, HAIR_FILE.short, "#avatar-preview");
 });
 
 test("4. hairstyle persists after RPC — body_type preserved in merged result", async ({
@@ -249,12 +272,10 @@ test("7. hub renders the correct hairstyle", async ({ page, browserName }) => {
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "braid", chosen_at: new Date().toISOString() });
 
   await loginAsStudent(page);
-  await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
-
-  await expect(
-    page.locator(`#profileAvatar img[src*="${HAIR_FILE.braid}"]`)
-  ).toBeAttached();
+  await expectC2Hair(page, async () => {
+    await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
+  }, HAIR_FILE.braid, "#profileAvatar");
 });
 
 test("8. quiz page renders the correct hairstyle (two-phase render)", async ({
@@ -264,13 +285,12 @@ test("8. quiz page renders the correct hairstyle (two-phase render)", async ({
 
   await setIdentity({ v: 1, body_type: "neutral", hairstyle: "short", chosen_at: new Date().toISOString() });
 
-  await loginAsStudent(page);
   // Quiz renders two-phase: instant neutral base → identity swap after profile fetch.
-  // toBeAttached retries until the identity-resolved img is in DOM.
-  await page.waitForSelector("#avatar-display img", { timeout: 15000 });
-  await expect(
-    page.locator(`#avatar-display img[src*="${HAIR_FILE.short}"]`)
-  ).toBeAttached({ timeout: 15000 });
+  // Arm the C2 hair-fetch wait before login so the post-redirect render is caught.
+  await expectC2Hair(page, async () => {
+    await loginAsStudent(page);
+    await page.waitForSelector("#avatar-display img", { timeout: 15000 });
+  }, HAIR_FILE.short, "#avatar-display");
 });
 
 test("9. hairstyle panel button click updates avatar preview immediately", async ({
@@ -282,13 +302,10 @@ test("9. hairstyle panel button click updates avatar preview immediately", async
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#hairstyleButtons .identity-btn", { timeout: 15000 });
 
-  // Click "Fletninger" button
-  await page.locator("#hairstyleButtons .identity-btn[data-hairstyle='braid']").click();
-
-  // Preview must update to braid hair
-  await expect(
-    page.locator(`#avatar-preview img[src*="${HAIR_FILE.braid}"]`)
-  ).toBeAttached({ timeout: 10000 });
+  // Click "Fletninger" → C2 re-render fetches the ponytail (braid alias) hair
+  await expectC2Hair(page, async () => {
+    await page.locator("#hairstyleButtons .identity-btn[data-hairstyle='braid']").click();
+  }, HAIR_FILE.braid, "#avatar-preview");
 
   // DB must be updated
   const { data: row } = await adminClient
@@ -315,8 +332,7 @@ test("golden: avatar page braid hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-braid.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-braid.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page short hairstyle matches baseline", async ({
@@ -336,8 +352,7 @@ test("golden: avatar page short hairstyle matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-hair-short.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-hair-short.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: avatar page headwear over braid matches baseline", async ({
@@ -359,8 +374,7 @@ test("golden: avatar page headwear over braid matches baseline", async ({
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
   await waitForImages(page, "#avatar-preview");
 
-  const shot = await page.locator("#avatar-preview").screenshot();
-  expect(shot).toMatchSnapshot("avatar-page-headwear-hair-braid.png", { maxDiffPixels: 200 });
+  await expect(page.locator("#avatar-preview")).toHaveScreenshot("avatar-page-headwear-hair-braid.png", { maxDiffPixels: 200, animations: "disabled" });
 });
 
 test("golden: hub avatar braid hairstyle matches baseline", async ({
@@ -380,8 +394,7 @@ test("golden: hub avatar braid hairstyle matches baseline", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
   await waitForImages(page, "#profileAvatar");
 
-  const shot = await page.locator("#profileAvatar").screenshot();
-  expect(shot).toMatchSnapshot("hub-avatar-hair-braid.png", { maxDiffPixels: 120 });
+  await expect(page.locator("#profileAvatar")).toHaveScreenshot("hub-avatar-hair-braid.png", { maxDiffPixels: 120, animations: "disabled" });
 });
 
 test("golden: quiz avatar braid hairstyle matches baseline", async ({
@@ -400,6 +413,5 @@ test("golden: quiz avatar braid hairstyle matches baseline", async ({
   await page.waitForSelector("#options button", { timeout: 30000 });
   await waitForImages(page, "#avatar-display");
 
-  const shot = await page.locator("#avatar-display").screenshot();
-  expect(shot).toMatchSnapshot("quiz-avatar-hair-braid.png", { maxDiffPixels: 60 });
+  await expect(page.locator("#avatar-display")).toHaveScreenshot("quiz-avatar-hair-braid.png", { maxDiffPixels: 60, animations: "disabled" });
 });
