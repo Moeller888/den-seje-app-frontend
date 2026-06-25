@@ -190,6 +190,12 @@ async function openHubPage(page: any) {
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override (decoupled from the
+  // global AVATAR_V2 flag). The hub life engines must still mount on the C2 path.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test("1. Hub avatar mounts all life engines", async ({ page, browserName }) => {

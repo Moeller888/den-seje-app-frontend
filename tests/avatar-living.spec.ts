@@ -85,6 +85,13 @@ test.beforeEach(async () => {
   await adminClient.from("profiles").update({ equipped_slots: {} }).eq("id", studentId);
 });
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override (decoupled from the
+  // global AVATAR_V2 flag). The expression/blink/reaction engines must still mount
+  // on the C2 render path — this is exactly what these tests verify.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 test.afterAll(async () => {
   // Leave the test account in a clean unequipped state.
   await adminClient.from("profiles").update({ equipped_slots: {} }).eq("id", studentId);

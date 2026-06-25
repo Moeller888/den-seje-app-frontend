@@ -20,10 +20,12 @@ const STUDENT_PASS          = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL          = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// C2 base body file per body_type (medium skin — these identities carry no
+// skin_tone). AVATAR_V2/C2 render path; C2 forced in-test via localStorage override.
 const BODY_FILE_FOR: Record<string, string> = {
-  neutral: "/assets/avatar/base/body.svg",
-  male:    "/assets/avatar/base/body-male.svg",
-  female:  "/assets/avatar/base/body-female.svg",
+  neutral: "body-neutral-medium-c2.svg",
+  male:    "body-male-medium-c2.svg",
+  female:  "body-female-medium-c2.svg",
 };
 
 let adminClient: ReturnType<typeof createClient>;
@@ -58,6 +60,12 @@ test.afterAll(async () => {
       avatar_identity: { v: 1, body_type: "neutral", chosen_at: new Date().toISOString() },
     })
     .eq("id", studentId);
+});
+
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override (decoupled from the
+  // global AVATAR_V2 flag, so these stay green on either flag state).
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
 });
 
 async function loginAsStudent(page: any) {
@@ -114,7 +122,7 @@ test("2. Student can select Dreng — body re-renders immediately", async ({
 
   // Body re-rendered with the male base.
   await expect(
-    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.male}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR.male}"]`)
   ).toBeAttached();
 
   // Persisted via RPC.
@@ -140,7 +148,7 @@ test("3. Student can select Pige — body re-renders immediately", async ({
 
   await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveClass(/active/);
   await expect(
-    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.female}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR.female}"]`)
   ).toBeAttached();
 });
 
@@ -161,7 +169,7 @@ test("4. Student can select Neutral — body returns to the neutral base", async
 
   await expect(page.locator(".identity-btn[data-body-type='neutral']")).toHaveClass(/active/);
   await expect(
-    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.neutral}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR.neutral}"]`)
   ).toBeAttached();
 });
 
@@ -182,7 +190,7 @@ test("5. Identity selection persists after page refresh", async ({
 
   await expect(page.locator(".identity-btn[data-body-type='female']")).toHaveClass(/active/);
   await expect(
-    page.locator(`#avatar-preview img.avatar-layer[src*="${BODY_FILE_FOR.female}"]`)
+    page.locator(`#avatar-preview img[data-c2-layer="base"][src*="${BODY_FILE_FOR.female}"]`)
   ).toBeAttached();
 });
 

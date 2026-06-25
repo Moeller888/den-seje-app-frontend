@@ -95,6 +95,12 @@ async function loginAsStudent(page: any) {
   await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
 }
 
+test.beforeEach(async ({ page }) => {
+  // C2 render exercised in TEST ONLY via a localStorage override (decoupled from the
+  // global AVATAR_V2 flag). RPC/trigger tests are unaffected.
+  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+});
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test("1. Backfill produced a valid v1 identity for the test student", async ({
@@ -186,10 +192,12 @@ test("5. anon cannot execute set_avatar_identity", async ({ browserName }) => {
 // Section 152C: body variants are live — the base layer resolves per body_type.
 // (The original 152A "zero visual change" freeze was deliberately lifted by the
 // approved 152C scope.)
+// C2 base body file per body_type (medium skin — these identities carry no
+// skin_tone). AVATAR_V2/C2 render path; C2 forced in-test via localStorage override.
 const BODY_FILE_FOR: Record<string, string> = {
-  neutral: "/assets/avatar/base/body.svg",
-  male:    "/assets/avatar/base/body-male.svg",
-  female:  "/assets/avatar/base/body-female.svg",
+  neutral: "body-neutral-medium-c2.svg",
+  male:    "body-male-medium-c2.svg",
+  female:  "body-female-medium-c2.svg",
 };
 
 test("6. Avatar page base layer resolves per body_type", async ({
@@ -211,7 +219,7 @@ test("6. Avatar page base layer resolves per body_type", async ({
 
     const expected = BODY_FILE_FOR[bodyType];
     const baseSrc = await page
-      .locator(`#avatar-preview img.avatar-layer[src*="${expected}"]`)
+      .locator(`#avatar-preview img[data-c2-layer="base"][src*="${expected}"]`)
       .count();
     expect(baseSrc, `base layer must be ${expected} for ${bodyType}`).toBeGreaterThanOrEqual(1);
   }
@@ -230,7 +238,7 @@ test("7. Hub avatar renders the male body when identity is male", async ({
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 
   const baseCount = await page
-    .locator(`#profileAvatar img[src*="${BODY_FILE_FOR.male}"]`)
+    .locator(`#profileAvatar img[data-c2-layer="base"][src*="${BODY_FILE_FOR.male}"]`)
     .count();
   expect(baseCount).toBeGreaterThanOrEqual(1);
 });
@@ -250,7 +258,7 @@ test("8. Quiz page renders the female body when identity is female", async ({
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });
 
   await expect(
-    page.locator(`#avatar-display img[src*="${BODY_FILE_FOR.female}"]`)
+    page.locator(`#avatar-display img[data-c2-layer="base"][src*="${BODY_FILE_FOR.female}"]`)
   ).toBeAttached({ timeout: 15000 });
 });
 

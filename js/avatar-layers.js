@@ -227,7 +227,7 @@ export function baseLayersFor(identity) {
 // ── Avatar V2 feature flag + C2 render resolvers (Section 155G) ────────────────
 // AVATAR_V2 is the master switch for the C2 render pipeline. DEFAULT OFF — the
 // legacy render path is the runtime default and is never touched while OFF.
-export const AVATAR_V2 = false;
+export const AVATAR_V2 = true;
 
 // Runtime check with an optional per-session localStorage override for testing /
 // staged rollout WITHOUT a code change: localStorage.setItem('avatar_v2','1').
