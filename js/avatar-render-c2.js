@@ -10,6 +10,7 @@
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
 import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z } from "./avatar-layers.js";
+import { cdnUrl } from "./cloudinary.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
 // local assets — safe to cache for the session.
@@ -96,7 +97,9 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       const img = document.createElement("img");
       img.setAttribute("data-c2-layer", layer.isBase ? "base" : "cosmetic");
       img.className = cls("base");
-      img.src = layer.src;
+      // 157G: optional Cloudinary delivery for RASTER layers. Default-off + raster-only
+      // → returns layer.src unchanged today (all current layers are SVG). Fail-soft.
+      img.src = cdnUrl(layer.src);
       img.alt = "";
       img.style.zIndex = String(layer.z);
       rootEl.appendChild(img);

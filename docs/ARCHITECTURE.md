@@ -247,6 +247,11 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   the browser-only document-recognition service. Default-off = zero impact (no engine download, no
   UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
   engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
+- **`ENABLE_CLOUDINARY`** (`js/cloudinary.js` constant, currently `false` — Section 157G). Master
+  switch for the optional Cloudinary **fetch/delivery** layer (public cloud name, **no secret**).
+  Default-off / empty cloud name → `cdnUrl()` returns the origin URL unchanged. **Raster-only** (SVG
+  passes through), so inert today (all avatar `<img>` layers are SVG). Source of truth stays Supabase
+  Storage / repo `assets/`; fail-soft to origin. See §8.
 - **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
   all-or-nothing via the constant, plus the localStorage override for individual testing.
 - **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
@@ -301,7 +306,7 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 | **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
 | **Speech-to-text (Whisper.cpp)** | **Deferred** | Heavy wasm or unreachable self-host. |
 | **Text-to-speech (Piper)** | **Deferred** | Best as pre-generated Storage audio played via `js/audio.js`, not a live service. |
-| **Image hosting (Cloudinary)** | **Edge (signed)** or frontend **unsigned preset** | Optional delivery/optimisation layer; Supabase Storage stays source of truth. |
+| **Image hosting (Cloudinary)** | **Fetch/delivery (no secret)** — decided 157F | **Implemented foundation (157G), default-off** — `js/cloudinary.js` `cdnUrl()`, wired into the single avatar `<img>` seam (`mountC2Avatar`); raster-only; Supabase Storage/repo stays source of truth; activate after 167a raster. |
 
 **Two hard constraints govern all of the above:** (1) **no frontend build step** → secrets must
 live in Edge Functions; only public client tokens (Sentry DSN, PostHog key) may be frontend-only.
