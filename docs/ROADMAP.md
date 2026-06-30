@@ -122,7 +122,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157H** ✅ | OCR spec — **generic reusable browser-only document-recognition service** ([157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md)) | spec | **UNGATED** (done) |
 | **157I** ✅ | `js/ocr/` service (strict provider abstraction, structured `OCRResult`, Tesseract first impl) + answer-capture adapter — **done, default-off, browser-only, no upload** | frontend-only | **SOFT** (done) |
 | 157J | Ollama reachability decision (tunnel vs endpoint vs defer) | decision | **UNGATED** |
-| 157K | `grade-answer` contract + AI **abstraction layer** (`_shared/ai/`) | Edge | **SOFT** |
+| **157K** ✅ | AI **abstraction layer** (`_shared/ai/`) + `grade-answer` advisory endpoint — **done, default-off, no reward-path wiring** | Edge | **SOFT** (done) |
 | 157L | Ollama advisory AI-grade in `process-event` PATH 1 | Edge | **FUTURE INFRA** |
 | 157M | AI-grade surfaced in teacher review (`review-answer`) | Edge + frontend | **FUTURE INFRA** |
 | 157N | Piper TTS strategy (pre-generated Storage audio vs live) | decision | **UNGATED** |
@@ -187,12 +187,12 @@ production**; activation waits for a staging target (free local stack at first; 
    no image upload; see [157i-ocr-validation-checklist.md](./157i-ocr-validation-checklist.md).
 4. ~~**157G — Cloudinary integration**~~ ✅ done — fetch-mode `cdnUrl()` wired into `mountC2Avatar`,
    default-off/raster-only; see [157g-cloudinary-validation-checklist.md](./157g-cloudinary-validation-checklist.md).
-5. **157K — AI abstraction layer + `grade-answer` contract** (SOFT scaffolding, `_shared/ai/`,
-   advisory-only, default-off) — unblocks future AI without touching the reward path yet. ← **next**
+5. ~~**157K — AI abstraction layer + `grade-answer` contract**~~ ✅ done — `_shared/ai/` + advisory
+   `grade-answer`, default-off, no reward-path wiring; see [157k-ai-grading-contract.md](./157k-ai-grading-contract.md).
 6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
-   only on the human art deliverable, D-033).
+   only on the human art deliverable, D-033 — see [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)).
 7. **157D/157E — PostHog module + events** (SOFT, default-off; build behind the consent gate; do not
-   send events until staging).
+   send events until staging). ← **next actionable service item**
 8. **157O — Piper pre-generated read-aloud assets** (SOFT, static assets) · **157N/157P** TTS/STT
    decisions (UNGATED).
 9. **157Q/157R/157S** — consent consolidation, flag hardening, fail-soft test coverage (SOFT).
@@ -220,7 +220,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Staging environment (157CB) | 🗓️ Future infra | Reclassified (157CC): long-term plan, **not** an immediate blocker. Free local stack interim; paid branch at launch. |
 | Analytics (PostHog) | 🟡 SOFT — buildable now | 157D module + consent gate build default-off; activation later. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
-| AI abstraction / grading (Ollama) | 🟡 SOFT (layer) / FUTURE (activation) | 157K layer buildable now; 157L process-event wiring needs staging + reachability. |
+| AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
 | TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 

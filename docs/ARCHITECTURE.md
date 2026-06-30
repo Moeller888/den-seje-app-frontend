@@ -178,6 +178,7 @@ lives in `_shared/monitoring.ts` — the single boundary every function inherits
 | `equip-avatar` | user JWT | Equip/unequip a cosmetic slot. |
 | `review-answer` | teacher JWT → service role | Teacher scores an open answer; awards XP by score. |
 | `get-reviewed-answers` | JWT | Returns reviewed answers for display. |
+| `grade-answer` | JWT | **Advisory-only** AI grade suggestion (157K). Default-off; never writes DB/awards; not called by `process-event`. See §13.4. |
 | `avatar-asset-onboarding` / `avatar-asset-validator` / `avatar-ingestion` / `avatar-generation` | privileged | Avatar asset pipeline (§9). |
 
 ### `process-event` answer routing (the grading boundary)
@@ -247,6 +248,9 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   the browser-only document-recognition service. Default-off = zero impact (no engine download, no
   UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
   engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
+- **`ENABLE_AI_GRADING`** (env var, default unset → off — Section 157K). Master switch for the AI
+  abstraction layer (`_shared/ai/`) + `grade-answer`. Off → `available:false`, no provider call, no
+  data sent. Advisory-only; needs a self-hosted endpoint (`OLLAMA_BASE_URL`) + staging to activate.
 - **`ENABLE_CLOUDINARY`** (`js/cloudinary.js` constant, currently `false` — Section 157G). Master
   switch for the optional Cloudinary **fetch/delivery** layer (public cloud name, **no secret**).
   Default-off / empty cloud name → `cdnUrl()` returns the origin URL unchanged. **Raster-only** (SVG
@@ -415,12 +419,23 @@ Spec: `docs/157h-ocr-document-recognition-spec.md`.
   inert when `ENABLE_OCR` is off (no DOM, no engine, no behavioural change). Validation:
   `docs/157i-ocr-validation-checklist.md`.
 
-### AI service abstraction (planned shape)
+### 13.4 AI abstraction layer + `grade-answer` (Section 157K — implemented, default-off)
 
-When AI is implemented, model/provider access goes through a **single abstraction layer** (an Edge
-module, e.g. `_shared/ai/`) exposing a narrow interface (`grade()`, `transcribe()`, `draftFeedback()`)
-so the underlying model can change without touching feature code. AI output is **advisory only** and
-must fail soft to current behaviour. Binding rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md).
+Model/provider access goes through the **single abstraction layer `supabase/functions/_shared/ai/`**
+(facade `createAiService()` → `isAvailable()`/`grade()`/`draftFeedback()`), so the underlying model
+changes without touching feature code. Feature code depends only on the facade + structured
+`AdvisoryResult` — **never on a provider**; `assertAiProvider()` guards a strict `AIProvider` contract.
+Ollama is the **first** provider (inert unless `OLLAMA_BASE_URL` is set). The layer owns versioned
+prompts, timeout, structured-output validation, input minimisation (PII scrub), and fail-soft.
+
+- **`grade-answer` Edge Function** exposes `grade()` as an **advisory** endpoint (`advisory:true`,
+  suggestion non-binding). **Default-off** (env `ENABLE_AI_GRADING`): returns `{available:false}` and
+  calls nothing. **Never writes the DB, never awards, never auto-submits, not called by `process-event`**.
+  Auth-required; observability-wrapped (157C); always returns a Response.
+- **Activation** (set the flag + a self-hosted endpoint, deploy) needs **staging (157CB)** + the
+  reachability decision (**157J**). Wiring into `process-event` is **157L** (FUTURE INFRASTRUCTURE);
+  teacher UI is **157M**. Contract + validation: `docs/157k-ai-grading-contract.md`. Rules:
+  [AI_GUIDELINES.md](./AI_GUIDELINES.md).
 
 ## 14. Source-of-truth definitions
 
