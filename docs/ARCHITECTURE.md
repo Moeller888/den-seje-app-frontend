@@ -309,7 +309,7 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 | Service | Boundary | Rationale |
 |---|---|---|
 | **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | **Implemented as foundation (157B), default-off** — see §13.1. Edge side is 157C. |
-| **Analytics (PostHog)** | **Frontend-only** (public project key) | **Module + consent gate done (157D), default-off** — `js/analytics.js`; GDPR consent-gated, data-minimised, EU host, no PII. Events wired in 157E. See `docs/157d-posthog-analytics.md`. |
+| **Analytics (PostHog)** | **Frontend-only** (public project key) | **Module + events done (157D/157E), default-off** — `js/analytics.js` + `js/analytics-consent.js`; GDPR consent-gated + banner, data-minimised, EU host, no PII. Core events wired (login/question/purchase). See `docs/157d-posthog-analytics.md`. |
 | **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | **Implemented foundation (157I), default-off** — `js/ocr/` reusable service; see §13.3. Photo→text before `process-event`; no secret, no server, no upload. |
 | **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
 | **Speech-to-text (Whisper.cpp)** | **Deferred** | Heavy wasm or unreachable self-host. |

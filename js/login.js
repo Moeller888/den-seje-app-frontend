@@ -1,4 +1,10 @@
 import { supabase } from "./supabase.js";
+import { initAnalytics, track } from "./analytics.js";
+import { maybeShowConsentBanner } from "./analytics-consent.js";
+
+// Analytics (157D/157E). No-op unless enabled + consented; banner only when configured. Fail-soft.
+initAnalytics();
+maybeShowConsentBanner();
 
 const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");
@@ -90,6 +96,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     message.textContent = "Login fejl.";
     return;
   }
+
+  // 157E: analytics — login (role only, no PII). No-op unless active.
+  track("login", { role: profile.role });
 
   if (profile.role === "student") {
     if (profile.must_reset_password) {

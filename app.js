@@ -8,11 +8,17 @@ import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
 import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
+import { initAnalytics, track } from "./js/analytics.js";
+import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 
 window.__sb = supabase;
 
 // Error monitoring (157B). No-op unless ENABLE_SENTRY + a DSN are configured; fail-soft.
 initMonitoring({ tags: { avatar_v2: isAvatarV2() } });
+
+// Analytics (157D/157E). No-op unless enabled + consented; banner only when configured. Fail-soft.
+initAnalytics();
+maybeShowConsentBanner();
 
 const DEBUG = true;
 const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };
@@ -824,6 +830,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const prevXp = lastKnownXp;
     const prevCoins = lastKnownCoins;
     sessionQuestionCount++;
+    // 157E: analytics — answer result (status only, no answer text). No-op unless active.
+    track("question_answered", { status: data.status });
     // Persist earned band every 10 questions — fire-and-forget, never blocks the quiz.
     if (sessionQuestionCount % 10 === 0) {
       persistCurrentBand();
@@ -987,6 +995,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const format = (question.answer_format || "").toLowerCase();
     const content = question.content;
+
+    // 157E: analytics — question shown (format only, no content). No-op unless active.
+    track("question_shown", { format });
 
     let options = content.options;
 

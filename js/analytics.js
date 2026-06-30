@@ -86,6 +86,15 @@ export function isAnalyticsActive() {
   try { return flagEnabled() && capable() && hasConsent(); } catch (_e) { return false; }
 }
 
+/**
+ * Whether analytics is configured to run at all (enabled + keyed), regardless of
+ * consent. Used by the consent banner: show it ONLY when analytics is configured but
+ * the user has not yet decided. Default-off → false → no banner. Never throws.
+ */
+export function isAnalyticsConfigured() {
+  try { return flagEnabled() && capable(); } catch (_e) { return false; }
+}
+
 // ── PII scrubbing for event properties ───────────────────────────────────────
 
 function scrubString(v) {

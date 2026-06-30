@@ -69,3 +69,18 @@ Set `ENABLE_ANALYTICS=true` + `POSTHOG_KEY=<public key>`, wire a consent banner 
   **157E/157Q** (consent consolidation across all third-party flows).
 - **No activation** here: sending events needs a key + consent UI + **staging (157CB)** per the
   staging-first policy. Until then the module is inert.
+
+## 6. 157E — events + consent banner (done)
+
+157E wired the module into live surfaces, all **additive and double-gated** (`track()` no-ops unless
+active; the banner renders only when configured + consent unknown → nothing today with the flag off):
+
+- **Consent banner:** `js/analytics-consent.js` `maybeShowConsentBanner()` — minimal Danish opt-in bar
+  ("Ja tak"/"Nej tak" → `setConsent`); shown on login, quiz (`index`) and shop only when analytics is
+  configured and consent is `"unknown"`. Fail-soft; never blocks a page.
+- **Core events** (`track()`, properties PII-free): `login` `{role}` (`js/login.js`); `question_shown`
+  `{format}` and `question_answered` `{status}` (`app.js`); `item_purchased` `{item_id}` (`shop.html`).
+- **Init:** `initAnalytics()` + `maybeShowConsentBanner()` called at load on login/quiz/shop —
+  no-ops until enabled + consented.
+- **Verified:** `node --check` on all changed JS + shop's module script; production smoke green
+  (login/quiz/shop paths unchanged with the flag off). New export: `isAnalyticsConfigured()`.

@@ -425,6 +425,8 @@
 import { supabase }   from "./supabaseClient.js";
 import { showToast }  from "./js/toast.js";
 import { playSound }  from "./js/audio.js";
+import { initAnalytics, track } from "./js/analytics.js";
+import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
@@ -432,6 +434,10 @@ import {
   baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
+
+// Analytics (157D/157E). No-op unless enabled + consented; banner only when configured. Fail-soft.
+initAnalytics();
+maybeShowConsentBanner();
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -694,6 +700,9 @@ document.getElementById("shopGrid").addEventListener("click", async (e) => {
     btn.textContent = "Køb";
     return;
   }
+
+  // 157E: analytics — purchase success (item id only, no PII). No-op unless active.
+  track("item_purchased", { item_id: itemId });
 
   // Coin flash — triggers as the number updates
   const coinsEl = document.getElementById("coinsDisplay");
