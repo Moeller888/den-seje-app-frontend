@@ -57,6 +57,7 @@ Four layers, from durable to point-in-time:
 | [157d-posthog-analytics.md](./157d-posthog-analytics.md) | PostHog analytics module (`js/analytics.js`) + GDPR consent gate, design & validation (157D/157E). | Authoritative (contract) |
 | [157o-read-aloud.md](./157o-read-aloud.md) | Read-aloud (TTS) strategy + service (`js/read-aloud/`): Piper clips + Web Speech fallback (157N/157O). | Authoritative (contract) |
 | [157q-consent-gdpr.md](./157q-consent-gdpr.md) | **Canonical privacy/consent map** — consolidated consent SoT (`js/consent.js`) + per-flow legal basis (157Q). | Authoritative (privacy) |
+| [157r-feature-flags.md](./157r-feature-flags.md) | **Canonical feature-flag & rollback runbook** — flag inventory, kill-switches, `js/flags.js` diagnostics (157R). | Authoritative (ops) |
 | [157b-sentry-validation-checklist.md](./157b-sentry-validation-checklist.md) | Validation checklist for the 157B Sentry frontend foundation (`js/sentry.js`). | Authoritative (validation) |
 | [157c-edge-validation-checklist.md](./157c-edge-validation-checklist.md) | Validation checklist for the 157C Edge observability foundation (`_shared/monitoring.ts`). | Authoritative (validation) |
 | [operator-runbook.md](./operator-runbook.md) | Production operator runbook for the avatar asset pipeline. | Authoritative (ops) |

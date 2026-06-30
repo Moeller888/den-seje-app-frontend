@@ -11,8 +11,12 @@ import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl } from "./js/read-aloud/adapters/quiz.js";
+import { installFlagDiagnostics } from "./js/flags.js";
 
 window.__sb = supabase;
+
+// Feature-flag diagnostics (157R). Read-only; exposes window.__flags() for ops. Fail-soft.
+installFlagDiagnostics();
 
 // Error monitoring (157B). No-op unless ENABLE_SENTRY + a DSN are configured; fail-soft.
 initMonitoring({ tags: { avatar_v2: isAvatarV2() } });

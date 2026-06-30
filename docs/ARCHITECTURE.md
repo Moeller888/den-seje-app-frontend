@@ -271,6 +271,8 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
 - **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
   all-or-nothing via the constant, plus the localStorage override for individual testing.
 - **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
+- **Flag governance (157R):** the full inventory, kill-switches, rollback runbook and the read-only
+  `js/flags.js` diagnostics (`window.__flags()`) are canonical in `docs/157r-feature-flags.md`.
 - **Convention for future flags:** a boolean constant with an `isX()` accessor that also honours a
   localStorage override, mirroring `AVATAR_V2`. All future AI capabilities must ship behind such a
   flag, default-off, fail-soft (see [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
