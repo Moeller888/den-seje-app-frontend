@@ -1,25 +1,35 @@
-// ── Analytics consent banner (157E) ──────────────────────────────────────────
-// Minimal GDPR opt-in banner for the analytics module (157D). It renders ONLY when
-// analytics is configured (enabled + keyed) AND the user has not yet decided. With
-// analytics default-off this is a complete no-op — nothing renders, nothing changes.
-//
-// Separation of concerns: js/analytics.js is the data layer (no DOM); this is the UI.
-// Fail-soft: it can never break a page.
+// ── Consolidated consent banner (157E → consolidated in 157Q) ────────────────
+// One GDPR opt-in banner covering ALL optional third-party flows (analytics +
+// error monitoring; AI when activated). It renders ONLY when at least one such flow is
+// configured AND its consent is still "unknown". With everything default-off this is a
+// complete no-op. Consent is written to the single source of truth (js/consent.js);
+// granting re-initialises the consented flows. Fail-soft: never breaks a page.
 
-import { isAnalyticsConfigured, getConsent, setConsent } from "./analytics.js";
+import { isUndecided, setOptionalConsent } from "./consent.js";
+import { isAnalyticsConfigured, initAnalytics } from "./analytics.js";
+import { isSentryConfigured, initMonitoring } from "./sentry.js";
 
 const BANNER_ID = "analytics-consent-banner";
 
+function needsDecision() {
+  try {
+    if (isAnalyticsConfigured() && isUndecided("analytics")) return true;
+    if (isSentryConfigured() && isUndecided("error_monitoring")) return true;
+    return false;
+  } catch (_e) {
+    return false;
+  }
+}
+
 /**
- * Show the consent banner if (and only if) analytics is configured and consent is
- * still "unknown". No-op otherwise (incl. default-off). Never throws.
+ * Show the consolidated consent banner if any optional third-party flow is configured
+ * and still undecided. No-op otherwise (incl. default-off). Never throws.
  */
 export function maybeShowConsentBanner() {
   try {
     if (typeof document === "undefined") return;
-    if (!isAnalyticsConfigured()) return;        // default-off → no banner
-    if (getConsent() !== "unknown") return;       // already decided
-    if (document.getElementById(BANNER_ID)) return; // already shown
+    if (!needsDecision()) return;
+    if (document.getElementById(BANNER_ID)) return;
 
     const bar = document.createElement("div");
     bar.id = BANNER_ID;
@@ -35,8 +45,8 @@ export function maybeShowConsentBanner() {
     const text = document.createElement("span");
     text.style.cssText = "max-width:640px;line-height:1.4";
     text.textContent =
-      "Vi vil gerne bruge anonym statistik for at forbedre appen. Ingen navne, " +
-      "e-mails eller svar gemmes. Må vi det?";
+      "Vi vil gerne bruge anonym statistik og fejlrapportering for at forbedre appen. " +
+      "Ingen navne, e-mails eller svar gemmes. Må vi det?";
 
     const accept = document.createElement("button");
     accept.type = "button";
@@ -49,8 +59,18 @@ export function maybeShowConsentBanner() {
     deny.style.cssText = "background:#3a3f4d;color:#fff;border:0;border-radius:8px;padding:8px 16px;cursor:pointer";
 
     function close() { try { bar.remove(); } catch (_e) { /* ignore */ } }
-    accept.addEventListener("click", () => { try { setConsent(true); } catch (_e) {} close(); });
-    deny.addEventListener("click", () => { try { setConsent(false); } catch (_e) {} close(); });
+
+    accept.addEventListener("click", () => {
+      try { setOptionalConsent(true); } catch (_e) { /* ignore */ }
+      // Activate the now-consented flows immediately (both are idempotent + fail-soft).
+      try { initAnalytics(); } catch (_e) { /* ignore */ }
+      try { initMonitoring(); } catch (_e) { /* ignore */ }
+      close();
+    });
+    deny.addEventListener("click", () => {
+      try { setOptionalConsent(false); } catch (_e) { /* ignore */ }
+      close();
+    });
 
     bar.appendChild(text);
     bar.appendChild(accept);

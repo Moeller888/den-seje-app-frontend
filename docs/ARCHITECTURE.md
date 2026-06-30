@@ -248,6 +248,10 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   the browser-only document-recognition service. Default-off = zero impact (no engine download, no
   UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
   engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
+- **Consent SoT** (`js/consent.js`, Section 157Q): not a flag but the single GDPR consent store
+  (categories `analytics` / `error_monitoring` / `ai_features`). Every optional third-party flow
+  consults it; `js/analytics.js` and `js/sentry.js` are gated on their category. Default state =
+  undecided → flows stay off. Canonical map: `docs/157q-consent-gdpr.md`.
 - **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `false` — Section 157O).
   Master switch for the read-aloud (TTS) service. Default-off → no control, no audio. When on, a
   "🔊 Læs op" button reads the question via a pre-recorded Piper clip (if present) or on-device Web

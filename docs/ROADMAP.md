@@ -128,7 +128,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157N** ✅ | Piper TTS strategy — **decided: pre-gen clips primary + on-device Web Speech fallback, no live service** | decision | **UNGATED** (done) |
 | **157O** ✅ | Read-aloud service `js/read-aloud/` (provider-abstracted, default-off) + quiz control — **done**; Piper clips are an offline deliverable | frontend | **SOFT** (done) |
 | 157P | Whisper STT feasibility (wasm vs server) — likely defer | decision | **UNGATED** |
-| 157Q | GDPR / consent consolidation across third-party flows | cross-cutting | **SOFT** |
+| **157Q** ✅ | GDPR consent consolidation — single SoT (`js/consent.js`) + consolidated banner + canonical privacy map — **done, default-off** | cross-cutting | **SOFT** (done) |
 | 157R | Rollback & feature-flag hardening | cross-cutting | **SOFT** |
 | 157S | Playwright coverage for new flows + fail-soft paths | tests | **SOFT** |
 | 157T | Production-readiness review + secret-rotation checklist | ops | **FUTURE INFRA** |
@@ -196,7 +196,9 @@ production**; activation waits for a staging target (free local stack at first; 
    default-off, double-gated, no sending until activated** ([157d-posthog-analytics.md](./157d-posthog-analytics.md)).
 8. **157N ✅ / 157O ✅ — read-aloud** decided + built (`js/read-aloud/`, default-off; Piper clips =
    offline deliverable; [157o-read-aloud.md](./157o-read-aloud.md)). **157P** STT feasibility = UNGATED decision.
-9. **157Q/157R/157S** — consent consolidation, flag hardening, fail-soft test coverage (SOFT). ← **next**
+9. **157Q ✅ / 157R / 157S** — consent consolidation **done** (`js/consent.js` SoT + banner +
+   [157q-consent-gdpr.md](./157q-consent-gdpr.md)); **157R** flag hardening + **157S** fail-soft test
+   coverage remain (SOFT). ← **next: 157R/157S**
 10. **FUTURE INFRASTRUCTURE (deferred until staging exists):** 157CB itself, live observability
     validation (HARD GATE), 157L/157M AI-grade activation, 157T production-readiness sign-off.
 

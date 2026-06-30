@@ -21,6 +21,8 @@
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
+import { hasConsent } from "./consent.js";
+
 // Master switch for Section 157B. Flip to `true` (and set SENTRY_DSN) to enable.
 export const ENABLE_SENTRY = false;
 
@@ -58,8 +60,15 @@ let _listenerBound = false;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function isEnabled() {
+// Configured = flag on + DSN set (ignores consent). Used by the consent banner.
+export function isSentryConfigured() {
   return ENABLE_SENTRY === true && typeof SENTRY_DSN === "string" && SENTRY_DSN.length > 0;
+}
+
+// 157Q: error monitoring is an optional third-party flow → gated on consent too.
+// Default-off, so no behavioural change today; when activated it requires opt-in.
+function isEnabled() {
+  return isSentryConfigured() && hasConsent("error_monitoring");
 }
 
 function detectEnvironment() {

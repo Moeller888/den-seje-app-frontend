@@ -18,6 +18,8 @@
 // No secret is used — the PostHog project key is public (like the anon key). Events
 // are NOT wired here (that is 157E); this section ships the module + consent gate only.
 
+import { getConsent as _getCategoryConsent, setConsent as _setCategoryConsent } from "./consent.js";
+
 // Master switch (157D). Flip to true AND set the key to enable (then consent still gates).
 export const ENABLE_ANALYTICS = false;
 
@@ -28,7 +30,6 @@ const POSTHOG_KEY = "";
 const POSTHOG_HOST = "https://eu.i.posthog.com";
 
 const SDK_URL = "https://cdn.jsdelivr.net/npm/posthog-js@1/+esm";
-const CONSENT_KEY = "analytics_consent"; // "granted" | "denied" | (absent → unknown)
 
 // Keys whose values are dropped from event properties, and string scrub patterns.
 const SENSITIVE_KEYS = [
@@ -49,19 +50,16 @@ function capable() {
   try { return typeof window !== "undefined"; } catch (_e) { return false; }
 }
 
-// ── Consent (GDPR) ────────────────────────────────────────────────────────────
+// ── Consent (GDPR) — delegated to the consolidated SoT js/consent.js (157Q) ───
+// Consent lives in one store (category "analytics") so every third-party flow shares
+// it. These wrappers preserve the 157D/157E public API.
 
-/** "granted" | "denied" | "unknown". Never throws. */
+/** "granted" | "denied" | "unknown" for analytics. Never throws. */
 export function getConsent() {
-  try {
-    const v = localStorage.getItem(CONSENT_KEY);
-    return v === "granted" || v === "denied" ? v : "unknown";
-  } catch (_e) {
-    return "unknown";
-  }
+  return _getCategoryConsent("analytics");
 }
 
-/** True only when the user has explicitly opted in. */
+/** True only when the user has explicitly opted in to analytics. */
 export function hasConsent() {
   return getConsent() === "granted";
 }
@@ -72,7 +70,7 @@ export function hasConsent() {
  * @param {boolean} granted
  */
 export function setConsent(granted) {
-  try { localStorage.setItem(CONSENT_KEY, granted ? "granted" : "denied"); } catch (_e) { /* ignore */ }
+  try { _setCategoryConsent("analytics", !!granted); } catch (_e) { /* ignore */ }
   if (granted) {
     try { initAnalytics(); } catch (_e) { /* fail-soft */ }
   } else {
