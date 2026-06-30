@@ -118,7 +118,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only | **SOFT** |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only | **SOFT** |
 | **157F** ✅ | Cloudinary decision spec — **decided: fetch/delivery mode (no secret)** ([157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md)) | spec | **UNGATED** (done) |
-| 157G | Cloudinary **fetch-mode** delivery for **raster** avatar assets, default-off; activate after 167a raster + free Cloudinary account | frontend | **SOFT** |
+| **157G** ✅ | Cloudinary **fetch-mode** delivery (`js/cloudinary.js` `cdnUrl`), wired into `mountC2Avatar` — **done, default-off, raster-only**; activate after 167a + free account | frontend | **SOFT** (done) |
 | **157H** ✅ | OCR spec — **generic reusable browser-only document-recognition service** ([157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md)) | spec | **UNGATED** (done) |
 | **157I** ✅ | `js/ocr/` service (strict provider abstraction, structured `OCRResult`, Tesseract first impl) + answer-capture adapter — **done, default-off, browser-only, no upload** | frontend-only | **SOFT** (done) |
 | 157J | Ollama reachability decision (tunnel vs endpoint vs defer) | decision | **UNGATED** |
@@ -134,6 +134,13 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | 157T | Production-readiness review + secret-rotation checklist | ops | **FUTURE INFRA** |
 
 ### Avatar / art track (from 167A)
+
+> **Guardrail (binding):** **167A replaces artwork assets only — it is NOT an avatar rewrite.** The
+> stable architecture (identity, render pipeline, layer/z-model, cosmetics, presence/blink/expression
+> engines, ownership, storage source-of-truth, entry points, public interfaces) **must remain
+> unchanged**; any change to those during 167A is a defect. See
+> **[167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)** (pre-167A
+> preservation report) before starting.
 
 1. Master asset inventory/spec finalize — choose **D-040 "Master-as-is"** vs full 163F
    decomposition; scaffold `assets/avatar-r2/` + manifest; lock eye-box anchor revision.
@@ -178,9 +185,10 @@ production**; activation waits for a staging target (free local stack at first; 
 3. ~~**157I — OCR implementation**~~ ✅ done — `js/ocr/` browser-only service (strict provider
    abstraction, structured `OCRResult`, Tesseract first impl) + answer-capture adapter, default-off,
    no image upload; see [157i-ocr-validation-checklist.md](./157i-ocr-validation-checklist.md).
-4. **157G — Cloudinary integration** (SOFT, free-tier; flag-off; Vercel-preview testable, no Pro branch). ← **next**
+4. ~~**157G — Cloudinary integration**~~ ✅ done — fetch-mode `cdnUrl()` wired into `mountC2Avatar`,
+   default-off/raster-only; see [157g-cloudinary-validation-checklist.md](./157g-cloudinary-validation-checklist.md).
 5. **157K — AI abstraction layer + `grade-answer` contract** (SOFT scaffolding, `_shared/ai/`,
-   advisory-only, default-off) — unblocks future AI without touching the reward path yet.
+   advisory-only, default-off) — unblocks future AI without touching the reward path yet. ← **next**
 6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
    only on the human art deliverable, D-033).
 7. **157D/157E — PostHog module + events** (SOFT, default-off; build behind the consent gate; do not
@@ -214,6 +222,6 @@ production**; activation waits for a staging target (free local stack at first; 
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | 🟡 SOFT (layer) / FUTURE (activation) | 157K layer buildable now; 157L process-event wiring needs staging + reachability. |
 | TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |
-| Image CDN (Cloudinary) | 🟡 157F decided → 157G SOFT | **Fetch/delivery mode (no secret)**, raster only, after 167a; free-tier; Storage stays source of truth. |
+| Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 
 Legend: ✅ live · 🟡 planned/audited · ⏸ deferred · ❌ not present.

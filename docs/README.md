@@ -46,9 +46,11 @@ Four layers, from durable to point-in-time:
 | [164d-shop-pipeline.md](./164d-shop-pipeline.md) | Scalable shop item pipeline & **canonical slot/z model** (LOCKED D-034/D-035). | Authoritative (spec) |
 | [164k-anchor-mask-extraction-plan.md](./164k-anchor-mask-extraction-plan.md) | Locked method (D-041) for the next code step (164L). | Authoritative (plan) |
 | [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-wiring-plan.md) | **Plan of record** for producing + wiring the Northstar Master raster. | Authoritative (plan) |
+| [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md) | **Pre-167A guardrail:** confirms 167A is an asset migration, not an avatar rewrite; lists guaranteed-unchanged components + risks. | Authoritative (guardrail) |
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | **Canonical** monitoring ops doc: activation, deployment, release, correlation, troubleshooting, runbook. | Authoritative (ops) |
 | [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md) | Plan of record for the dedicated staging environment (future infra milestone). | Authoritative (plan) |
 | [157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md) | Cloudinary decision spec — fetch/delivery mode for raster avatar assets (gate for 157G). | Authoritative (spec) |
+| [157g-cloudinary-validation-checklist.md](./157g-cloudinary-validation-checklist.md) | Validation checklist for the 157G Cloudinary fetch-mode delivery (`js/cloudinary.js`). | Authoritative (validation) |
 | [157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md) | Generic browser-only document-recognition (OCR) service spec; reusable beyond answer capture (gate for 157I). | Authoritative (spec) |
 | [157i-ocr-validation-checklist.md](./157i-ocr-validation-checklist.md) | Validation checklist for the 157I OCR service implementation (`js/ocr/`). | Authoritative (validation) |
 | [157b-sentry-validation-checklist.md](./157b-sentry-validation-checklist.md) | Validation checklist for the 157B Sentry frontend foundation (`js/sentry.js`). | Authoritative (validation) |
