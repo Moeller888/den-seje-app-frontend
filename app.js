@@ -7,6 +7,7 @@ import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
 import { initMonitoring, captureError } from "./js/sentry.js";
+import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 
 window.__sb = supabase;
 
@@ -1011,6 +1012,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
+      // 157I: optional OCR "scan text" control — no-op when ENABLE_OCR is off; fail-soft.
+      attachOcrControl(textarea, optionsContainer);
       return;
     }
 
@@ -1062,6 +1065,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       optionsContainer.appendChild(textarea);
       optionsContainer.appendChild(btn);
+      // 157I: optional OCR "scan text" control — no-op when ENABLE_OCR is off; fail-soft.
+      attachOcrControl(textarea, optionsContainer);
       return;
     }
 

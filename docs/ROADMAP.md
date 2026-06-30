@@ -120,7 +120,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157F** ✅ | Cloudinary decision spec — **decided: fetch/delivery mode (no secret)** ([157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md)) | spec | **UNGATED** (done) |
 | 157G | Cloudinary **fetch-mode** delivery for **raster** avatar assets, default-off; activate after 167a raster + free Cloudinary account | frontend | **SOFT** |
 | **157H** ✅ | OCR spec — **generic reusable browser-only document-recognition service** ([157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md)) | spec | **UNGATED** (done) |
-| 157I | Implement `js/ocr/` service + answer-capture adapter, default-off, file-upload first; no image upload | frontend-only | **SOFT** (zero-cost) |
+| **157I** ✅ | `js/ocr/` service (strict provider abstraction, structured `OCRResult`, Tesseract first impl) + answer-capture adapter — **done, default-off, browser-only, no upload** | frontend-only | **SOFT** (done) |
 | 157J | Ollama reachability decision (tunnel vs endpoint vs defer) | decision | **UNGATED** |
 | 157K | `grade-answer` contract + AI **abstraction layer** (`_shared/ai/`) | Edge | **SOFT** |
 | 157L | Ollama advisory AI-grade in `process-event` PATH 1 | Edge | **FUTURE INFRA** |
@@ -175,10 +175,10 @@ production**; activation waits for a staging target (free local stack at first; 
    raster only, after 167a; see [157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md).
 2. ~~**157H — OCR client spec**~~ ✅ done — generic browser-only **document-recognition service**
    (reusable beyond answers); see [157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md).
-3. **157I — OCR implementation** (SOFT, **zero-cost** in-browser wasm, default-off, no backend) —
-   build `js/ocr/` service + answer-capture adapter, file-upload first; **strongest "value today"
-   candidate**, no account/infra. ← **next**
-4. **157G — Cloudinary integration** (SOFT, free-tier; flag-off; Vercel-preview testable, no Pro branch).
+3. ~~**157I — OCR implementation**~~ ✅ done — `js/ocr/` browser-only service (strict provider
+   abstraction, structured `OCRResult`, Tesseract first impl) + answer-capture adapter, default-off,
+   no image upload; see [157i-ocr-validation-checklist.md](./157i-ocr-validation-checklist.md).
+4. **157G — Cloudinary integration** (SOFT, free-tier; flag-off; Vercel-preview testable, no Pro branch). ← **next**
 5. **157K — AI abstraction layer + `grade-answer` contract** (SOFT scaffolding, `_shared/ai/`,
    advisory-only, default-off) — unblocks future AI without touching the reward path yet.
 6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
@@ -211,7 +211,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Observability — live validation | 🟡 HARD GATE (staging) | Static-validated; live (Part B) needs a non-prod target. Foundations production-safe meanwhile. |
 | Staging environment (157CB) | 🗓️ Future infra | Reclassified (157CC): long-term plan, **not** an immediate blocker. Free local stack interim; paid branch at launch. |
 | Analytics (PostHog) | 🟡 SOFT — buildable now | 157D module + consent gate build default-off; activation later. |
-| OCR / document recognition | 🟡 157H spec'd → 157I SOFT | Generic browser-only service (answers + future worksheets/sources/teacher material); in-browser wasm, **no image upload**, zero-cost. |
+| OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | 🟡 SOFT (layer) / FUTURE (activation) | 157K layer buildable now; 157L process-event wiring needs staging + reachability. |
 | TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |
 | Image CDN (Cloudinary) | 🟡 157F decided → 157G SOFT | **Fetch/delivery mode (no secret)**, raster only, after 167a; free-tier; Storage stays source of truth. |

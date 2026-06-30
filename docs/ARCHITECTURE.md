@@ -243,6 +243,10 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   Function monitoring (`_shared/monitoring.ts`); enabled only when `ENABLE_SENTRY_EDGE === "true"`
   **and** a DSN (`SENTRY_DSN_EDGE`) is set. Default-off = zero behavioural impact (no SDK import,
   identical responses and latency). Env-driven per the Edge config convention.
+- **`ENABLE_OCR`** (`js/ocr/index.js` constant, currently `false` — Section 157I). Master switch for
+  the browser-only document-recognition service. Default-off = zero impact (no engine download, no
+  UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
+  engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
 - **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
   all-or-nothing via the constant, plus the localStorage override for individual testing.
 - **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
@@ -293,7 +297,7 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 |---|---|---|
 | **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | **Implemented as foundation (157B), default-off** — see §13.1. Edge side is 157C. |
 | **Analytics (PostHog)** | **Frontend-only** (public project key) | New `js/analytics.js`; needs GDPR/consent gate (serves minors). |
-| **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | Photo→text before `process-event`; no secret, no server. |
+| **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | **Implemented foundation (157I), default-off** — `js/ocr/` reusable service; see §13.3. Photo→text before `process-event`; no secret, no server, no upload. |
 | **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
 | **Speech-to-text (Whisper.cpp)** | **Deferred** | Heavy wasm or unreachable self-host. |
 | **Text-to-speech (Piper)** | **Deferred** | Best as pre-generated Storage audio played via `js/audio.js`, not a live service. |
@@ -381,6 +385,30 @@ Edge Function  →  _shared/monitoring.ts  →  Sentry
 > **default-off and production-safe indefinitely** (OBSERVABILITY.md §0). Live activation/validation
 > needs a non-production target; per **157CC** that staging environment (157CB) is a **future
 > infrastructure milestone, not a blocker** — see OBSERVABILITY.md §10 and [ROADMAP.md](./ROADMAP.md).
+
+### 13.3 Document-recognition (OCR) foundation (Section 157I — implemented)
+
+A generic, reusable, **browser-only** OCR service under **`js/ocr/`**, default-off (`ENABLE_OCR=false`).
+Spec: `docs/157h-ocr-document-recognition-spec.md`.
+
+- **Strict provider abstraction:** the app depends only on the `OCRProvider` contract
+  (`js/ocr/provider.js`) and a structured `OCRResult` (`js/ocr/ocr-result.js`) — **never on Tesseract
+  directly**. `assertProvider()` enforces an `isLocalOnly === true` contract (machine-checked privacy
+  guarantee). Tesseract.js (`js/ocr/provider-tesseract.js`) is the **first** implementation only.
+- **Facade:** `createDocumentRecognizer()` (`js/ocr/index.js`) → `isAvailable()` / `recognize()` /
+  `warmup()` / `dispose()`; returns a structured `OCRResult` (v1 uses `.text`).
+- **Consumer adapters:** `js/ocr/adapters/answer-capture.js` is the first consumer — a "scan" control
+  that fills the answer `<textarea>` with extracted text for the student to **review/edit** before the
+  unchanged `submitAnswer()` runs. Future consumers (worksheets, sources, teacher material) reuse the
+  same service.
+- **Privacy invariant:** **no student image is ever uploaded.** Acquisition/preprocess/recognition run
+  locally (wasm + Web Worker); only confirmed text enters the app. The engine/model load lazily from
+  CDN on first scan (code/model only, never image data); self-hosting is a follow-up.
+- **Advisory + fail-soft:** OCR never auto-submits or grades (determinism preserved); on disable /
+  unsupported / error it is a no-op and the textarea works exactly as before.
+- **Wiring:** `app.js` calls `attachOcrControl(textarea, container)` at the two answer-textarea sites;
+  inert when `ENABLE_OCR` is off (no DOM, no engine, no behavioural change). Validation:
+  `docs/157i-ocr-validation-checklist.md`.
 
 ### AI service abstraction (planned shape)
 
