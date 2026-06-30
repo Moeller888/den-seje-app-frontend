@@ -44,14 +44,25 @@ _Last reviewed: 2026-06-30._
 
 ## Current section
 
-- **157C — Edge observability foundation** ✅ implemented (default-off). New
-  `supabase/functions/_shared/monitoring.ts`; single `withObservability(name, handler)` boundary +
-  `captureEdgeException` (also wired into shared `handleError`); request_id correlation, timing,
-  metadata, centralised PII scrubbing, fail-soft; `ENABLE_SENTRY_EDGE` unset → zero impact. Reference
-  wiring on `get-reviewed-answers`; migration path documented for the other 15 functions.
-  **Next: 157D (PostHog analytics) — do not start without approval.**
+- **157CA — Observability activation & validation** ✅ docs + static-validation complete; **live
+  validation deferred to after 157CB**. Canonical **[OBSERVABILITY.md](./OBSERVABILITY.md)** created.
+  Static validation green; platform default-off and production-safe.
+  - **Decisions (owner, 2026-06-30):** (1) **Two Sentry projects** — `den-seje-app-frontend`
+    (browser) + `den-seje-app-edge` (deno). (2) **No external service may be activated or validated
+    against production** — a dedicated **staging environment (Section 157CB)** is the prerequisite for
+    all remaining external integrations and for the live 157B/157C checklists.
 
-_Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (Sentry frontend) — complete.
+## Next section (gating prerequisite)
+
+- **157CB — Dedicated staging environment** 🔜 **prerequisite for 157D and all external-integration
+  activation/validation.** Stand up a non-production target: **Supabase Pro branch** (per D-006) +
+  **Vercel preview** deployment, with its own config/secrets, so monitoring/analytics/AI flags can be
+  turned **on** and validated **without touching production**. On completion: run the live 157B/157C
+  Part B checklists in staging, then unblock 157D.
+
+_Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (Sentry frontend) ·
+**157C** (Edge observability foundation) · **157CA** (observability docs + static validation) —
+complete (foundations; default-off).
 
 ## Future sections
 
@@ -63,7 +74,9 @@ Recommended order (each is one controlled section; all AI behind a default-off f
 |---|---|---|
 | **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`, routes `logError`) — **done, default-off** | frontend-only |
 | **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`, `withObservability`) — **done, default-off** | Edge |
-| 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only |
+| **157CA** ✅ | Observability docs (`OBSERVABILITY.md`) + static validation; 2 Sentry projects decided | docs |
+| **157CB** 🔜 | **Dedicated staging environment (Supabase branch + Vercel preview)** — **GATE: prerequisite for 157D→157T and all live activation/validation** | infra |
+| 157D | PostHog `js/analytics.js` module + consent/GDPR gate — _requires 157CB_ | frontend-only |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only |
 | 157F | Cloudinary decision spec (signed-Edge vs unsigned-preset) | spec |
 | 157G | Cloudinary delivery/optimisation for avatar assets (read path) | Edge/frontend |
@@ -115,12 +128,16 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 
 ## Priority order (next actions)
 
-1. ~~**157B — Sentry frontend**~~ ✅ done (default-off; awaits DSN + flag to activate in prod).
-2. **Avatar M1** — produce + wire the Master raster (167A) — the biggest perceived-quality win;
-   gated on a **human art deliverable**.
-3. 157D/157E — PostHog analytics (needs GDPR/consent gate first).
-4. 157H/157I — OCR photo answers.
-5. 157J+ — AI grading only after the reachability gate and the abstraction layer are in place.
+1. **157CB — Dedicated staging environment** (Supabase branch + Vercel preview). **Hard gate:**
+   prerequisite for 157D→157T and for live activation/validation of 157B/157C. No external service is
+   activated or validated against production.
+2. **157CA live validation** — run the 157B/157C Part B checklists in the new staging env; confirm
+   PII-against-real-events (the gate to 157D).
+3. **Avatar M1** — produce + wire the Master raster (167A); gated on a **human art deliverable**
+   (parallel track, not blocked by 157CB).
+4. 157D/157E — PostHog analytics (needs 157CB + GDPR/consent gate first).
+5. 157H/157I — OCR photo answers (needs 157CB).
+6. 157J+ — AI grading only after 157CB + the reachability gate + the abstraction layer.
 
 ## Status table
 
@@ -135,7 +152,9 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 | Cohort / % rollout | ❌ None | OQ-4; only constant + localStorage override. |
 | Error reporting (Sentry) — frontend | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. |
 | Error reporting (Sentry) — Edge | ✅ Foundation (157C), default-off | `_shared/monitoring.ts` `withObservability`; set `ENABLE_SENTRY_EDGE=true` + `SENTRY_DSN_EDGE`. 1 reference fn wired, 15 to migrate. |
-| Analytics (PostHog) | 🟡 Audited | 157A → 157D. Needs consent gate. Not implemented. |
+| Observability — live validation | 🟡 Pending 157CB | Static-validated; live (157B/157C Part B) deferred to staging. 2 Sentry projects decided. |
+| Staging environment | ❌ None → 🔜 157CB | **Gate** for all external integrations. Supabase branch + Vercel preview. |
+| Analytics (PostHog) | 🟡 Audited — _needs 157CB_ | 157A → 157D. Needs staging + consent gate. Not implemented. |
 | OCR (Tesseract) | 🟡 Audited | 157A → 157H/157I. Not implemented. |
 | AI grading (Ollama) | 🟡 Audited, gated | 157A → 157J reachability gate first. Not implemented. |
 | TTS (Piper) / STT (Whisper) | ⏸ Deferred | 157N–157P. |

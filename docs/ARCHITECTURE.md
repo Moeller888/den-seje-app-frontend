@@ -375,6 +375,12 @@ Edge Function  →  _shared/monitoring.ts  →  Sentry
   `ctx.captureException(err)` in their catch). Tracked in [ROADMAP.md](./ROADMAP.md). Validation:
   `docs/157c-edge-validation-checklist.md`.
 
+> **Activation & operations:** the end-to-end activation procedure, deployment, release strategy,
+> request-correlation design, troubleshooting and the operator runbook live in the canonical
+> **[OBSERVABILITY.md](./OBSERVABILITY.md)**. As of 2026-06-30 both foundations are implemented and
+> **default-off**; live activation/validation (Section 157CA) is **pending a Sentry account + a
+> staging environment** — see OBSERVABILITY.md §10.
+
 ### AI service abstraction (planned shape)
 
 When AI is implemented, model/provider access goes through a **single abstraction layer** (an Edge
