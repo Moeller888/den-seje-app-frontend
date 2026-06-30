@@ -44,11 +44,14 @@ _Last reviewed: 2026-06-30._
 
 ## Current section
 
-- **157B — Sentry frontend foundation** ✅ implemented (default-off). New `js/sentry.js`; routes the
-  existing `logError()` boundary; captures uncaught/rejection/resource errors; PII-scrubbed;
-  fail-soft; `ENABLE_SENTRY=false` until a DSN is configured. **Next: 157C (Edge-side reporting).**
+- **157C — Edge observability foundation** ✅ implemented (default-off). New
+  `supabase/functions/_shared/monitoring.ts`; single `withObservability(name, handler)` boundary +
+  `captureEdgeException` (also wired into shared `handleError`); request_id correlation, timing,
+  metadata, centralised PII scrubbing, fail-soft; `ENABLE_SENTRY_EDGE` unset → zero impact. Reference
+  wiring on `get-reviewed-answers`; migration path documented for the other 15 functions.
+  **Next: 157D (PostHog analytics) — do not start without approval.**
 
-_Prior:_ **157AA** (documentation foundation) + **157AB** (consolidation) — complete.
+_Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (Sentry frontend) — complete.
 
 ## Future sections
 
@@ -59,7 +62,7 @@ Recommended order (each is one controlled section; all AI behind a default-off f
 | Section | Work | Boundary |
 |---|---|---|
 | **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`, routes `logError`) — **done, default-off** | frontend-only |
-| 157C | Sentry — Edge Function wiring | Edge |
+| **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`, `withObservability`) — **done, default-off** | Edge |
 | 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only |
 | 157F | Cloudinary decision spec (signed-Edge vs unsigned-preset) | spec |
@@ -130,7 +133,8 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 | Avatar pipeline + engines | ✅ Live | `AVATAR_V2=true`. |
 | Avatar art = Northstar Master | 🟡 Planned | 167A; flat placeholder live; needs human art. |
 | Cohort / % rollout | ❌ None | OQ-4; only constant + localStorage override. |
-| Error reporting (Sentry) | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. Edge side = 157C. |
+| Error reporting (Sentry) — frontend | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. |
+| Error reporting (Sentry) — Edge | ✅ Foundation (157C), default-off | `_shared/monitoring.ts` `withObservability`; set `ENABLE_SENTRY_EDGE=true` + `SENTRY_DSN_EDGE`. 1 reference fn wired, 15 to migrate. |
 | Analytics (PostHog) | 🟡 Audited | 157A → 157D. Needs consent gate. Not implemented. |
 | OCR (Tesseract) | 🟡 Audited | 157A → 157H/157I. Not implemented. |
 | AI grading (Ollama) | 🟡 Audited, gated | 157A → 157J reachability gate first. Not implemented. |

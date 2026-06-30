@@ -1,4 +1,6 @@
-﻿export function getOne<T>(rows: T[] | null): T | null {
+﻿import { captureEdgeException } from "./monitoring.ts"
+
+export function getOne<T>(rows: T[] | null): T | null {
   if (!rows || rows.length === 0) return null
   return rows[0]
 }
@@ -62,6 +64,10 @@ export function buildQuestionResponse({
 
 export function handleError(err: any) {
   console.error("EDGE FUNCTION ERROR:", err)
+
+  // 157C: additively report handled errors to the shared monitoring layer.
+  // No-op when ENABLE_SENTRY_EDGE is off; fail-soft; response shape unchanged.
+  try { captureEdgeException(err, { functionName: "handleError" }) } catch (_e) { /* fail-soft */ }
 
   return new Response(
     JSON.stringify({

@@ -163,7 +163,9 @@ cannot double-award.
 Runtime: Deno, deployed independently of the frontend (`supabase functions deploy <name>`).
 **Every function must always return a Response** (success or explicit error) and handle `OPTIONS`
 for CORS. Shared helpers live in `_shared/foundation.ts` (`getOne`, `assertExists`, `assertArray`,
-`assertQuestion`, `assertProgress`, `buildQuestionResponse`, `handleError`).
+`assertQuestion`, `assertProgress`, `buildQuestionResponse`, `handleError`). Shared **observability**
+lives in `_shared/monitoring.ts` — the single boundary every function inherits via
+`withObservability(name, handler)` (Section 157C; see §13.2), default-off and behaviour-preserving.
 
 | Function | Auth | Purpose |
 |---|---|---|
@@ -237,6 +239,10 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
 - **`ENABLE_SENTRY`** (`js/sentry.js`, currently `false` — Section 157B). Master switch for frontend
   error monitoring; **default-off with zero runtime impact** (no SDK download, no listeners, no
   network) until set to `true` **and** a public DSN is configured. Fail-soft by construction.
+- **`ENABLE_SENTRY_EDGE`** (env var, default unset → off — Section 157C). Master switch for Edge
+  Function monitoring (`_shared/monitoring.ts`); enabled only when `ENABLE_SENTRY_EDGE === "true"`
+  **and** a DSN (`SENTRY_DSN_EDGE`) is set. Default-off = zero behavioural impact (no SDK import,
+  identical responses and latency). Env-driven per the Edge config convention.
 - **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
   all-or-nothing via the constant, plus the localStorage override for individual testing.
 - **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
@@ -322,7 +328,52 @@ identically; errors merely become observable when enabled.
   transport failure never reaches the UI and never stops console logging.
 - **Scope:** wired into the two `logError` boundaries (`app.js` = student quiz, `js/admin.js`).
   Extending the same one-line import to other pages (hub/shop/teacher/login) is incremental follow-up.
-- **Next:** Edge-side reporting via `handleError()` is **Section 157C**.
+- **Next:** Edge-side reporting → **§13.2** (Section 157C, implemented).
+
+### 13.2 Edge observability foundation (Section 157C — implemented)
+
+The permanent monitoring architecture every Supabase Edge Function inherits. One shared module,
+**`supabase/functions/_shared/monitoring.ts`**, is the only place that knows Sentry:
+
+```
+Edge Function  →  _shared/monitoring.ts  →  Sentry
+```
+
+- **Single integration boundary:** `withObservability(functionName, handler)` — a serve-agnostic
+  higher-order wrapper that works with both `serve(...)` and `Deno.serve(...)`. A function migrates
+  with one line: `serve(withObservability("name", async (req, ctx) => { ... }))`. The shared
+  `handleError()` (`_shared/foundation.ts`) also routes through `captureEdgeException()` additively.
+  **No duplicated monitoring code; no function knows Sentry internals.**
+- **Default-off:** enabled only when env `ENABLE_SENTRY_EDGE === "true"` **and** `SENTRY_DSN_EDGE` is
+  set. Otherwise the wrapper is behaviourally inert — same responses, same latency.
+- **Request lifecycle (per request):**
+  ```
+  inbound request
+    → withObservability: read/derive request_id, mark start time
+      → run the function handler (unchanged)
+         ├ returns 2xx/4xx → record status + duration (5xx also captured by status)
+         └ throws (uncaught) → capture exception, then RE-THROW unchanged (contract preserved)
+    → fire-and-forget flush via EdgeRuntime.waitUntil (after response → no added latency)
+  ```
+- **Metadata model (auto-attached, never fails if unavailable):** `function_name`, `request_id`,
+  `environment`, `release`, `deployment` (`DENO_DEPLOYMENT_ID`/`SB_EXECUTION_ID`), `region`
+  (`SB_REGION`/`SUPABASE_REGION`/…), `runtime` (`deno@<v>`), `duration_ms` (execution time),
+  `response_status`. Missing values are simply omitted.
+- **Request correlation strategy:** reuse an inbound `x-request-id` / `x-correlation-id` header when a
+  caller supplies one, else generate `crypto.randomUUID()`. This id is the join key across
+  **frontend → edge → database → future AI**. The frontend may later send `x-request-id`; the id is
+  internal (not exposed in responses — no API-contract change).
+- **PII safety (fail-closed):** centralised scrubbing identical in spirit to §13.1 — `beforeSend`
+  strips request headers/cookies/body/query and user context, deep-scrubs JWT/Bearer/Supabase keys,
+  emails and sensitive-named keys; `beforeBreadcrumb` drops console breadcrumbs (functions log
+  answer-bearing payloads via `console.*`). Scrub failure → event **dropped**. No perf/replay.
+- **Fail-soft:** SDK (`@sentry/deno`) is lazy-loaded from CDN only when enabled; init/capture/flush
+  are wrapped and fire-and-forget; monitoring never throws into a function, never changes a response,
+  never meaningfully changes latency.
+- **Reference wiring:** `get-reviewed-answers` is wrapped as the canonical example. **Migration path
+  for the other 15 functions:** wrap their handler with `withObservability(name, …)` (and optionally
+  `ctx.captureException(err)` in their catch). Tracked in [ROADMAP.md](./ROADMAP.md). Validation:
+  `docs/157c-edge-validation-checklist.md`.
 
 ### AI service abstraction (planned shape)
 
