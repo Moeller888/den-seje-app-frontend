@@ -115,7 +115,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157CA** ✅ | Observability docs + static validation; 2 Sentry projects decided | docs | done |
 | **157CB** 🗓️ | Dedicated staging environment (Supabase branch + Vercel preview) | infra | **FUTURE INFRA** (not a blocker) |
 | **Live obs. validation** | 157B/157C/157CA Part B checklists incl. PII-against-real-events | staging | **HARD GATE** |
-| 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only | **SOFT** |
+| **157D** ✅ | PostHog `js/analytics.js` module + GDPR consent gate — **done, default-off, consent-gated, unwired** | frontend-only | **SOFT** (done) |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only | **SOFT** |
 | **157F** ✅ | Cloudinary decision spec — **decided: fetch/delivery mode (no secret)** ([157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md)) | spec | **UNGATED** (done) |
 | **157G** ✅ | Cloudinary **fetch-mode** delivery (`js/cloudinary.js` `cdnUrl`), wired into `mountC2Avatar` — **done, default-off, raster-only**; activate after 167a + free account | frontend | **SOFT** (done) |
@@ -191,8 +191,9 @@ production**; activation waits for a staging target (free local stack at first; 
    `grade-answer`, default-off, no reward-path wiring; see [157k-ai-grading-contract.md](./157k-ai-grading-contract.md).
 6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
    only on the human art deliverable, D-033 — see [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)).
-7. **157D/157E — PostHog module + events** (SOFT, default-off; build behind the consent gate; do not
-   send events until staging). ← **next actionable service item**
+7. **157D ✅ / 157E — PostHog**: 157D (module + GDPR consent gate) **done, default-off, unwired**
+   ([157d-posthog-analytics.md](./157d-posthog-analytics.md)). **157E** = wire core events + consent
+   banner (SOFT, no sending until staging). ← **next actionable service item: 157E**
 8. **157O — Piper pre-generated read-aloud assets** (SOFT, static assets) · **157N/157P** TTS/STT
    decisions (UNGATED).
 9. **157Q/157R/157S** — consent consolidation, flag hardening, fail-soft test coverage (SOFT).
@@ -218,7 +219,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Error reporting (Sentry) — Edge | ✅ Foundation (157C), default-off | `_shared/monitoring.ts` `withObservability`; set `ENABLE_SENTRY_EDGE=true` + `SENTRY_DSN_EDGE`. 1 reference fn wired, 15 to migrate. |
 | Observability — live validation | 🟡 HARD GATE (staging) | Static-validated; live (Part B) needs a non-prod target. Foundations production-safe meanwhile. |
 | Staging environment (157CB) | 🗓️ Future infra | Reclassified (157CC): long-term plan, **not** an immediate blocker. Free local stack interim; paid branch at launch. |
-| Analytics (PostHog) | 🟡 SOFT — buildable now | 157D module + consent gate build default-off; activation later. |
+| Analytics (PostHog) | ✅ Module (157D), default-off | `js/analytics.js` + GDPR consent gate, data-minimised, EU host, unwired. 157E wires events; activation needs key + consent UI + staging. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
 | TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |

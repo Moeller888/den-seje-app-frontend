@@ -248,6 +248,10 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   the browser-only document-recognition service. Default-off = zero impact (no engine download, no
   UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
   engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
+- **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
+  for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
+  keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.
+  Data-minimised (autocapture off, no PII identify, EU host); events wired in 157E.
 - **`ENABLE_AI_GRADING`** (env var, default unset → off — Section 157K). Master switch for the AI
   abstraction layer (`_shared/ai/`) + `grade-answer`. Off → `available:false`, no provider call, no
   data sent. Advisory-only; needs a self-hosted endpoint (`OLLAMA_BASE_URL`) + staging to activate.
@@ -305,7 +309,7 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 | Service | Boundary | Rationale |
 |---|---|---|
 | **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | **Implemented as foundation (157B), default-off** — see §13.1. Edge side is 157C. |
-| **Analytics (PostHog)** | **Frontend-only** (public project key) | New `js/analytics.js`; needs GDPR/consent gate (serves minors). |
+| **Analytics (PostHog)** | **Frontend-only** (public project key) | **Module + consent gate done (157D), default-off** — `js/analytics.js`; GDPR consent-gated, data-minimised, EU host, no PII. Events wired in 157E. See `docs/157d-posthog-analytics.md`. |
 | **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | **Implemented foundation (157I), default-off** — `js/ocr/` reusable service; see §13.3. Photo→text before `process-event`; no secret, no server, no upload. |
 | **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
 | **Speech-to-text (Whisper.cpp)** | **Deferred** | Heavy wasm or unreachable self-host. |
