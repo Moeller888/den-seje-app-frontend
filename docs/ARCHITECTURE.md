@@ -248,6 +248,10 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   the browser-only document-recognition service. Default-off = zero impact (no engine download, no
   UI, manual text entry unchanged). When on, an OCR "scan" control assists answer text entry; the
   engine (Tesseract.js wasm) loads lazily only on first scan. See §13.3.
+- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `false` — Section 157O).
+  Master switch for the read-aloud (TTS) service. Default-off → no control, no audio. When on, a
+  "🔊 Læs op" button reads the question via a pre-recorded Piper clip (if present) or on-device Web
+  Speech. No upload, no live service. See `docs/157o-read-aloud.md`.
 - **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
   for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
   keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.

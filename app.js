@@ -10,6 +10,7 @@ import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
+import { attachReadAloudControl } from "./js/read-aloud/adapters/quiz.js";
 
 window.__sb = supabase;
 
@@ -1150,6 +1151,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     questionElement.textContent = question.content.question;
+    // 157O: optional read-aloud control — no-op when ENABLE_READ_ALOUD is off; fail-soft.
+    attachReadAloudControl(questionElement, question.content.question);
     feedback.textContent = "";
     feedback.className = "";
     questionShownAt = Date.now();

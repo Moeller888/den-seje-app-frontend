@@ -54,7 +54,8 @@ Four layers, from durable to point-in-time:
 | [157h-ocr-document-recognition-spec.md](./157h-ocr-document-recognition-spec.md) | Generic browser-only document-recognition (OCR) service spec; reusable beyond answer capture (gate for 157I). | Authoritative (spec) |
 | [157i-ocr-validation-checklist.md](./157i-ocr-validation-checklist.md) | Validation checklist for the 157I OCR service implementation (`js/ocr/`). | Authoritative (validation) |
 | [157k-ai-grading-contract.md](./157k-ai-grading-contract.md) | AI abstraction layer (`_shared/ai/`) + advisory `grade-answer` contract & validation (157K). | Authoritative (contract) |
-| [157d-posthog-analytics.md](./157d-posthog-analytics.md) | PostHog analytics module (`js/analytics.js`) + GDPR consent gate, design & validation (157D). | Authoritative (contract) |
+| [157d-posthog-analytics.md](./157d-posthog-analytics.md) | PostHog analytics module (`js/analytics.js`) + GDPR consent gate, design & validation (157D/157E). | Authoritative (contract) |
+| [157o-read-aloud.md](./157o-read-aloud.md) | Read-aloud (TTS) strategy + service (`js/read-aloud/`): Piper clips + Web Speech fallback (157N/157O). | Authoritative (contract) |
 | [157b-sentry-validation-checklist.md](./157b-sentry-validation-checklist.md) | Validation checklist for the 157B Sentry frontend foundation (`js/sentry.js`). | Authoritative (validation) |
 | [157c-edge-validation-checklist.md](./157c-edge-validation-checklist.md) | Validation checklist for the 157C Edge observability foundation (`_shared/monitoring.ts`). | Authoritative (validation) |
 | [operator-runbook.md](./operator-runbook.md) | Production operator runbook for the avatar asset pipeline. | Authoritative (ops) |
