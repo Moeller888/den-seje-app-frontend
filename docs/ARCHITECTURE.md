@@ -231,9 +231,12 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
 
 ## 10. Feature flags
 
-- **The only runtime feature flag today is `AVATAR_V2`** (`js/avatar-layers.js:230`,
-  currently `true`). `isAvatarV2()` returns `true` if the constant is on, else honours a
-  per-browser override `localStorage.avatar_v2 === "1"` — used for staged manual testing.
+- **`AVATAR_V2`** (`js/avatar-layers.js:230`, currently `true`). `isAvatarV2()` returns `true` if the
+  constant is on, else honours a per-browser override `localStorage.avatar_v2 === "1"` — used for
+  staged manual testing.
+- **`ENABLE_SENTRY`** (`js/sentry.js`, currently `false` — Section 157B). Master switch for frontend
+  error monitoring; **default-off with zero runtime impact** (no SDK download, no listeners, no
+  network) until set to `true` **and** a public DSN is configured. Fail-soft by construction.
 - **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
   all-or-nothing via the constant, plus the localStorage override for individual testing.
 - **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
@@ -282,7 +285,7 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 
 | Service | Boundary | Rationale |
 |---|---|---|
-| **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | Wraps `logError()` / `handleError()`; additive; lowest risk. **Recommended first.** |
+| **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | **Implemented as foundation (157B), default-off** — see §13.1. Edge side is 157C. |
 | **Analytics (PostHog)** | **Frontend-only** (public project key) | New `js/analytics.js`; needs GDPR/consent gate (serves minors). |
 | **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | Photo→text before `process-event`; no secret, no server. |
 | **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
@@ -294,6 +297,32 @@ Section 157A audited seven zero-cost / self-hostable services. **None are implem
 live in Edge Functions; only public client tokens (Sentry DSN, PostHog key) may be frontend-only.
 (2) **Supabase Edge runs in the cloud** → it cannot reach a `localhost` self-hosted server, which
 gates Ollama/Whisper/Piper.
+
+### 13.1 Error monitoring foundation (Sentry — implemented, Section 157B)
+
+Frontend error observability is implemented as a single module, **`js/sentry.js`**, and is
+**default-off** (`ENABLE_SENTRY = false`, empty DSN) — with **zero runtime impact** until both the
+flag is `true` and a public DSN is set. It is **additive and fail-soft**: the application behaves
+identically; errors merely become observable when enabled.
+
+- **Integration boundary:** the existing `logError()` functions (`app.js`, `js/admin.js`) call
+  `captureError(event, error, context)` after their `console.error` — no existing behaviour changes.
+  `initMonitoring({ tags })` is called once per page that imports the module.
+- **Captured:** uncaught exceptions and unhandled promise rejections (SDK global handlers) plus
+  **resource load failures** (a capture-phase `window` `error` listener for `img`/`script`/`link`/…).
+- **PII safety (fail-closed):** `sendDefaultPii:false`; `beforeSend` strips request headers/cookies/
+  body and user context, then deep-scrubs the event (redacts JWT/Bearer tokens — incl. Supabase
+  keys — and emails, and any sensitive-named key); `beforeBreadcrumb` **drops console breadcrumbs**
+  (the app logs answer-bearing payloads via `console.*`) and scrubs the rest. If scrubbing throws,
+  the event is **dropped**. No performance/replay (avoids DOM PII).
+- **Tags:** `environment` (host-derived), `release` (`<meta name="app-release">` or a constant — no
+  build step), `page` (pathname only), `browser`, and feature flags (`flag_enable_sentry`,
+  `flag_avatar_v2`).
+- **Fail-soft:** SDK is lazy-loaded from CDN ESM only when enabled; every path is wrapped so init or
+  transport failure never reaches the UI and never stops console logging.
+- **Scope:** wired into the two `logError` boundaries (`app.js` = student quiz, `js/admin.js`).
+  Extending the same one-line import to other pages (hub/shop/teacher/login) is incremental follow-up.
+- **Next:** Edge-side reporting via `handleError()` is **Section 157C**.
 
 ### AI service abstraction (planned shape)
 

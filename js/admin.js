@@ -1,10 +1,14 @@
 import { supabase } from "./supabase.js";
+import { initMonitoring, captureError } from "./sentry.js";
 
 /* ========================
    DEBUG
 ======================== */
 
 const DEBUG = true;
+
+// Error monitoring (157B). No-op unless ENABLE_SENTRY + a DSN are configured; fail-soft.
+initMonitoring();
 
 function logEvent(event, payload = {}) {
   if (!DEBUG) return;
@@ -21,6 +25,8 @@ function logError(event, error) {
     event,
     error
   });
+  // 157B: additively forward to error monitoring. No-op when disabled; never throws.
+  captureError(event, error);
 }
 
 /* ========================

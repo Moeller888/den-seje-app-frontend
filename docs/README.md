@@ -46,6 +46,7 @@ Four layers, from durable to point-in-time:
 | [164d-shop-pipeline.md](./164d-shop-pipeline.md) | Scalable shop item pipeline & **canonical slot/z model** (LOCKED D-034/D-035). | Authoritative (spec) |
 | [164k-anchor-mask-extraction-plan.md](./164k-anchor-mask-extraction-plan.md) | Locked method (D-041) for the next code step (164L). | Authoritative (plan) |
 | [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-wiring-plan.md) | **Plan of record** for producing + wiring the Northstar Master raster. | Authoritative (plan) |
+| [157b-sentry-validation-checklist.md](./157b-sentry-validation-checklist.md) | Validation checklist for the 157B Sentry frontend foundation (`js/sentry.js`). | Authoritative (validation) |
 | [operator-runbook.md](./operator-runbook.md) | Production operator runbook for the avatar asset pipeline. | Authoritative (ops) |
 | [backend_validation_rules.md](./backend_validation_rules.md) | Avatar asset metadata validation rules. | Authoritative (pipeline ref) |
 | [pipeline-batch-test-plan.md](./pipeline-batch-test-plan.md) | Avatar generation pipeline batch test plan (valid slots limited). | Authoritative (pipeline ref) |

@@ -44,8 +44,11 @@ _Last reviewed: 2026-06-30._
 
 ## Current section
 
-- **157AA — Project Documentation Foundation** (this set: PROJECT_VISION, ARCHITECTURE, ROADMAP,
-  AI_GUIDELINES, AVATAR_SYSTEM, CLAUDE_WORKFLOW). Documentation only.
+- **157B — Sentry frontend foundation** ✅ implemented (default-off). New `js/sentry.js`; routes the
+  existing `logError()` boundary; captures uncaught/rejection/resource errors; PII-scrubbed;
+  fail-soft; `ENABLE_SENTRY=false` until a DSN is configured. **Next: 157C (Edge-side reporting).**
+
+_Prior:_ **157AA** (documentation foundation) + **157AB** (consolidation) — complete.
 
 ## Future sections
 
@@ -55,7 +58,7 @@ Recommended order (each is one controlled section; all AI behind a default-off f
 
 | Section | Work | Boundary |
 |---|---|---|
-| **157B** | Sentry error reporting — frontend wiring (upgrade `logError`/`handleError`) | frontend-only |
+| **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`, routes `logError`) — **done, default-off** | frontend-only |
 | 157C | Sentry — Edge Function wiring | Edge |
 | 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only |
@@ -109,7 +112,7 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 
 ## Priority order (next actions)
 
-1. **157B — Sentry frontend** (lowest risk, highest immediate value: real error visibility).
+1. ~~**157B — Sentry frontend**~~ ✅ done (default-off; awaits DSN + flag to activate in prod).
 2. **Avatar M1** — produce + wire the Master raster (167A) — the biggest perceived-quality win;
    gated on a **human art deliverable**.
 3. 157D/157E — PostHog analytics (needs GDPR/consent gate first).
@@ -127,7 +130,7 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 | Avatar pipeline + engines | ✅ Live | `AVATAR_V2=true`. |
 | Avatar art = Northstar Master | 🟡 Planned | 167A; flat placeholder live; needs human art. |
 | Cohort / % rollout | ❌ None | OQ-4; only constant + localStorage override. |
-| Error reporting (Sentry) | 🟡 Audited | 157A → 157B next. Not implemented. |
+| Error reporting (Sentry) | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. Edge side = 157C. |
 | Analytics (PostHog) | 🟡 Audited | 157A → 157D. Needs consent gate. Not implemented. |
 | OCR (Tesseract) | 🟡 Audited | 157A → 157H/157I. Not implemented. |
 | AI grading (Ollama) | 🟡 Audited, gated | 157A → 157J reachability gate first. Not implemented. |

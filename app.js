@@ -6,8 +6,12 @@ import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
+import { initMonitoring, captureError } from "./js/sentry.js";
 
 window.__sb = supabase;
+
+// Error monitoring (157B). No-op unless ENABLE_SENTRY + a DSN are configured; fail-soft.
+initMonitoring({ tags: { avatar_v2: isAvatarV2() } });
 
 const DEBUG = true;
 const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };
@@ -30,6 +34,8 @@ function logError(event, error) {
     event,
     error
   });
+  // 157B: additively forward to error monitoring. No-op when disabled; never throws.
+  captureError(event, error, { state: uiState });
 }
 
 const UI_STATES = {
