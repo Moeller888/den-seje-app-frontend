@@ -47,7 +47,8 @@ Four layers, from durable to point-in-time:
 | [164k-anchor-mask-extraction-plan.md](./164k-anchor-mask-extraction-plan.md) | Locked method (D-041) for the next code step (164L). | Authoritative (plan) |
 | [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-wiring-plan.md) | **Plan of record** for producing + wiring the Northstar Master raster. | Authoritative (plan) |
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | **Canonical** monitoring ops doc: activation, deployment, release, correlation, troubleshooting, runbook. | Authoritative (ops) |
-| [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md) | Plan of record for the dedicated staging environment (gate for all external integrations). | Authoritative (plan) |
+| [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md) | Plan of record for the dedicated staging environment (future infra milestone). | Authoritative (plan) |
+| [157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md) | Cloudinary decision spec — fetch/delivery mode for raster avatar assets (gate for 157G). | Authoritative (spec) |
 | [157b-sentry-validation-checklist.md](./157b-sentry-validation-checklist.md) | Validation checklist for the 157B Sentry frontend foundation (`js/sentry.js`). | Authoritative (validation) |
 | [157c-edge-validation-checklist.md](./157c-edge-validation-checklist.md) | Validation checklist for the 157C Edge observability foundation (`_shared/monitoring.ts`). | Authoritative (validation) |
 | [operator-runbook.md](./operator-runbook.md) | Production operator runbook for the avatar asset pipeline. | Authoritative (ops) |

@@ -117,8 +117,8 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **Live obs. validation** | 157B/157C/157CA Part B checklists incl. PII-against-real-events | staging | **HARD GATE** |
 | 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only | **SOFT** |
 | 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only | **SOFT** |
-| 157F | Cloudinary decision spec (signed-Edge vs unsigned-preset) | spec | **UNGATED** |
-| 157G | Cloudinary delivery/optimisation for avatar assets (read path) | Edge/frontend | **SOFT** |
+| **157F** ✅ | Cloudinary decision spec — **decided: fetch/delivery mode (no secret)** ([157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md)) | spec | **UNGATED** (done) |
+| 157G | Cloudinary **fetch-mode** delivery for **raster** avatar assets, default-off; activate after 167a raster + free Cloudinary account | frontend | **SOFT** |
 | 157H | Tesseract OCR client spec (photo→text UX, bundle budget) | spec | **UNGATED** |
 | 157I | Tesseract OCR implementation behind flag, pre-`process-event` | frontend-only | **SOFT** (zero-cost) |
 | 157J | Ollama reachability decision (tunnel vs endpoint vs defer) | decision | **UNGATED** |
@@ -171,8 +171,9 @@ Goal: keep delivering value with **no recurring subscription cost**. Do all UNGA
 (default-off); delay only what truly needs staging. **No external service is activated against
 production**; activation waits for a staging target (free local stack at first; paid branch at launch).
 
-1. **157F — Cloudinary decision spec** (UNGATED, pure docs). Decide signed-Edge vs unsigned-preset.
-2. **157H — OCR client spec** (UNGATED, pure docs). Photo→text UX + bundle budget.
+1. ~~**157F — Cloudinary decision spec**~~ ✅ done — decided **fetch/delivery mode (no secret)**, for
+   raster only, after 167a; see [157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md).
+2. **157H — OCR client spec** (UNGATED, pure docs). Photo→text UX + bundle budget. ← **next**
 3. **157I — OCR implementation** (SOFT, **zero-cost** in-browser wasm, default-off, no backend) —
    strongest "value today" candidate; no account, no infra.
 4. **157G — Cloudinary integration** (SOFT, free-tier; flag-off; Vercel-preview testable, no Pro branch).
@@ -211,6 +212,6 @@ production**; activation waits for a staging target (free local stack at first; 
 | OCR (Tesseract) | 🟡 SOFT — zero-cost, buildable now | 157H spec → 157I in-browser wasm, no backend. |
 | AI abstraction / grading (Ollama) | 🟡 SOFT (layer) / FUTURE (activation) | 157K layer buildable now; 157L process-event wiring needs staging + reachability. |
 | TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |
-| Image CDN (Cloudinary) | 🟡 SOFT — buildable now | 157F spec (UNGATED) → 157G free-tier, flag-off. Storage stays source of truth. |
+| Image CDN (Cloudinary) | 🟡 157F decided → 157G SOFT | **Fetch/delivery mode (no secret)**, raster only, after 167a; free-tier; Storage stays source of truth. |
 
 Legend: ✅ live · 🟡 planned/audited · ⏸ deferred · ❌ not present.
