@@ -4,6 +4,13 @@ Status: **PLAN ONLY — not executed.** AVATAR_V2 remains `false`.
 Date: 2026-06-24
 Owner: solo founder (pre-launch, pilot scale)
 
+> **STATUS UPDATE — 2026-06-30 (Section 157AB): EXECUTED / HISTORICAL.** This plan **was carried
+> out** — `AVATAR_V2 = true` shipped to production on 2026-06-25 (commit `52f8365`). The
+> "not executed / remains `false`" status line above is the **pre-activation** record, retained for
+> history. This document is now a **historical activation plan**; current avatar/activation state is
+> owned by [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md) §2, and the next avatar work is the Master raster
+> wiring in [`167a-master-asset-raster-wiring-plan.md`](./167a-master-asset-raster-wiring-plan.md).
+
 This document is the controlled go-live plan for switching the C2 avatar render
 pipeline from preview-gated to the live default. It records verified state, blast
 radius, the chosen rollout, and the decision gates that must pass before a future

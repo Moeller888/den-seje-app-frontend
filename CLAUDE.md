@@ -16,6 +16,31 @@ CODEBASE OVERVIEW
 **Roles:** `student`, `teacher`, `super_admin` — stored in `profiles.role`, checked on every page load.
 
 ----------------------------------------
+CANONICAL PROJECT DOCUMENTATION
+----------------------------------------
+
+Before making architectural, workflow, infrastructure, AI, avatar or roadmap decisions, always
+consult the canonical documentation set under `docs/`:
+
+- `docs/PROJECT_VISION.md` — product vision, principles, what the project is and is NOT, AI vision
+- `docs/ARCHITECTURE.md` — technical source of truth (frontend, Supabase, DB, Edge Functions, data flow, integration boundaries)
+- `docs/ROADMAP.md` — status, sections, version roadmap, priority order
+- `docs/AI_GUIDELINES.md` — binding rules for every AI feature (advisory-only, no DB writes, fail-soft, privacy)
+- `docs/AVATAR_SYSTEM.md` — avatar philosophy, pipeline, rendering, z-model, current state, roadmap
+- `docs/CLAUDE_WORKFLOW.md` — section workflow, audit-first, testing, rollback, Definition of Done
+
+Rules:
+- These documents are the **canonical documentation**. Treat them as the source of truth for their domain.
+- If conflicting information is discovered elsewhere (older notes, code comments, stale specs),
+  **report it before making changes** — do not act on the conflict silently.
+- **Never silently replace architectural or product decisions.** Record decision changes (avatar:
+  the D-xxx register in `docs/project-state.md`; cross-track status: `docs/ROADMAP.md`).
+- **Prefer updating canonical documentation over creating duplicate documents.** One source of truth
+  per domain; other docs link to it rather than restating it.
+- `docs/project-state.md` remains the authoritative avatar **decision register** (D-001…D-041) and
+  risk/debt log; `docs/AVATAR_SYSTEM.md` owns the **current** avatar/activation state.
+
+----------------------------------------
 COMMANDS
 ----------------------------------------
 

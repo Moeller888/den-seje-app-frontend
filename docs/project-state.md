@@ -2,6 +2,11 @@
 
 _Authoritative project-state snapshot. Update at the end of each major section._
 _Last updated: 2026-06-15_
+_Status sections corrected 2026-06-30 (Section 157AB): `AVATAR_V2` is now **active** in
+production — the 2026-06-15 "C2 not active / flag OFF" statements below are annotated as
+**superseded**, not deleted. The **decision register (D-001…D-041), timestamps, risks, debt and
+open questions remain historically unchanged.** Canonical current avatar/activation state lives in
+[`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md); cross-track status in [`ROADMAP.md`](./ROADMAP.md)._
 
 ---
 
@@ -9,7 +14,12 @@ _Last updated: 2026-06-15_
 - **Supabase:** project `den-seje-app` (ref `tjzbehwfagiwpwodsgwg`), region eu-west-1, plan **Pro**.
 - **Data:** 31 profiles; 5 with equipped cosmetics; 2 with an explicit legacy hairstyle.
 - **Frontend:** Vercel (`den-seje-app-frontend.vercel.app`), auto-deploys from GitHub `main`.
-- **Avatar shown to users:** **LEGACY** render. C2 is built but **NOT active**.
+- **Avatar shown to users (as of 2026-06-15):** **LEGACY** render. C2 built but not active.
+  > **STATUS UPDATE — 2026-06-30 (Section 157AB): SUPERSEDED.** `AVATAR_V2 = true` is now **live in
+  > production** (commit `52f8365`, 2026-06-25). The **C2 render path is the default** for users.
+  > However it still renders **flat placeholder SVGs**, **not** the Northstar Master raster — Master
+  > asset production + wiring remain **future work** (`docs/167a-master-asset-raster-wiring-plan.md`).
+  > Canonical: [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md) §2.
 
 ## Current Commit
 - `origin/main` = **`4029594`** ("docs: eye system ADR + hybrid raster pipeline ADR (D-012..D-019)").
@@ -18,9 +28,12 @@ _Last updated: 2026-06-15_
   frontend as a vestigial gitlink that is **not** on the Vercel deploy path.
 
 ## Feature Flags
-- **`AVATAR_V2 = false` (OFF)** — `js/avatar-layers.js:230`.
+- **`AVATAR_V2` (as of 2026-06-15): `false` (OFF)** — `js/avatar-layers.js:230`.
+  > **STATUS UPDATE — 2026-06-30 (Section 157AB): SUPERSEDED.** `AVATAR_V2` is now **`true` (ON)**
+  > (`js/avatar-layers.js:230`; live since commit `52f8365`, 2026-06-25). `isAvatarV2()` returns
+  > `true` from the constant, else honours the `localStorage.avatar_v2='1'` override.
 - Per-browser test override: `localStorage.avatar_v2='1'`.
-- **No cohort / percentage rollout mechanism exists.**
+- **No cohort / percentage rollout mechanism exists.** (Still true — open question OQ-4.)
 
 ## Current Avatar System
 - **Legacy (LIVE):** `body.svg` + hair + equipped cosmetics; pseudo-3D/gradient style.
@@ -30,7 +43,12 @@ _Last updated: 2026-06-15_
   avatar.html, hub.html, app.js, shop.html — all gated by `isAvatarV2()`.
 
 ## C2 Status
-- **C2 is technically implemented but NOT activated** (`AVATAR_V2 = OFF`).
+> **STATUS UPDATE — 2026-06-30 (Section 157AB): C2 IS NOW ACTIVATED.** `AVATAR_V2 = true` shipped to
+> production on 2026-06-25 (commit `52f8365`). The bullet below described the **pre-activation**
+> (2026-06-15) state and is retained for history. Current state: C2 render is **live and default**,
+> but on **flat placeholder SVGs** — the Northstar Master raster is unbuilt/unwired (future work,
+> `docs/167a-master-asset-raster-wiring-plan.md`). Canonical: [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md) §2.
+- **C2 is technically implemented but NOT activated** (`AVATAR_V2 = OFF`). _(historical — 2026-06-15)_
 - Sections 155B–160 complete. DB migrations 155E (hair_color) + 155F (hairstyle
   alignment) applied to production. Render pipeline + cosmetics parity committed
   and pushed. Goldens in `tests/c2-golden/`.

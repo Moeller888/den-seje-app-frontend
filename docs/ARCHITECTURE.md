@@ -1,0 +1,325 @@
+# ARCHITECTURE.md — Den Seje App
+
+_Technical source of truth. Reflects the **actual repository** as of 2026-06-30._
+_Why the project exists: [PROJECT_VISION.md](./PROJECT_VISION.md). What is planned: [ROADMAP.md](./ROADMAP.md)._
+_Avatar internals: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md). AI rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md)._
+
+---
+
+## 1. System overview
+
+```
+                          ┌──────────────────────────────────────────┐
+   Browser (student/      │            FRONTEND (Vercel)             │
+   teacher/admin)         │  Static HTML + vanilla JS, NO build step │
+        │                 │  den-seje-app-frontend/ = Vercel root    │
+        │  HTTPS          │  Supabase URL + ANON key hardcoded in JS │
+        ▼                 └──────────────────────────────────────────┘
+        │                                   │
+        │   supabase-js (anon key, user JWT after login)
+        ▼                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                      SUPABASE (hosted, Pro plan)                        │
+│  project ref tjzbehwfagiwpwodsgwg · region eu-west-1                    │
+│                                                                         │
+│  ┌──────────────┐   ┌───────────────────────┐   ┌────────────────────┐ │
+│  │ Auth (GoTrue)│   │ Postgres + RLS        │   │ Storage (buckets)  │ │
+│  │ email/pass   │   │ tables · RPCs · checks│   │ avatar assets, etc.│ │
+│  └──────────────┘   └───────────────────────┘   └────────────────────┘ │
+│                              ▲                                          │
+│             user JWT forwarded │ (RLS enforced as the calling user)     │
+│  ┌────────────────────────────┴─────────────────────────────────────┐  │
+│  │ Edge Functions (Deno)  supabase/functions/<name>/index.ts        │  │
+│  │ read secrets via Deno.env (SUPABASE_URL/ANON/SERVICE_ROLE)        │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────┘
+        ▲
+        │  Playwright E2E (tests/) run against the LIVE Vercel URL
+   CI / local
+```
+
+**Stack summary**
+- **Frontend:** vanilla JS + static HTML, **no build step**, deployed to Vercel.
+  `den-seje-app-frontend/` is the Vercel root.
+- **Backend:** hosted Supabase — Postgres (with RLS), Auth, Storage, and Deno **Edge Functions**.
+- **Tests:** Playwright E2E against the production URL (`https://den-seje-app-frontend.vercel.app`),
+  3 browsers (Chromium/Firefox/WebKit), 1 worker, no parallelism.
+
+## 2. Repository layout & the two-clone model
+
+The working tree exists as **two clones of the same GitHub repo** (`Moeller888/den-seje-app-frontend`):
+- **Root** clone (`C:\...\DEN SEJE APP\DEN SEJE APP\`) — full project incl. `supabase/`, `docs/`, `tests/`.
+- **`den-seje-app-frontend/`** sub-clone — the directory Vercel actually deploys.
+
+The root embeds the frontend as a **vestigial gitlink** that is _not_ on the Vercel deploy path
+(technical debt TD-4 in `project-state.md`). **Discipline:** push from one clone, fast-forward-pull
+the other, so both stay in sync. (See agent memory `project_repo_sync_model`.) Frontend source
+files (`app.js`, `*.html`, `js/`, `assets/`) are duplicated across both clones and must be edited
+consistently.
+
+### Folder responsibilities (root)
+
+| Path | Responsibility |
+|---|---|
+| `*.html` (root + frontend clone) | Page entry points (see §3). Served statically. |
+| `app.js` | Student quiz app logic + UI state machine (the main feature). |
+| `js/` | Per-page modules and engines (auth, teacher, admin, avatar engines, progression, etc.). |
+| `js/supabase.js` | Shared Supabase client for `js/` modules (sets `window.supabase`). |
+| `supabaseClient.js` (root) | Supabase client for ESM `import` in `app.js`. |
+| `assets/` | Static runtime assets: `assets/audio/`, `assets/avatar/`. |
+| `css/`, `style.css` | Styles. |
+| `data/` | Static seed/question data (`data/questions.js`). |
+| `supabase/functions/` | Deno Edge Functions (§6). |
+| `supabase/migrations/` | Versioned SQL schema + content (§4). |
+| `docs/` | Documentation, ADRs (`docs/adr/`), section plans, this foundation set. |
+| `tests/` | Playwright specs + `c2-golden/` avatar screenshot baselines. |
+| `tools/` | Avatar build/QA tooling (build artifacts gitignored). |
+| `packages/question-contract/` | Question contract package (has its own `node_modules`). |
+
+## 3. Frontend
+
+No bundler, no framework, no transpile step. Each HTML page pulls in its module(s) directly; the
+Supabase client is loaded from a CDN ESM URL.
+
+| Page | Script | Role | Audience |
+|---|---|---|---|
+| `login.html` | `js/login.js` | Email/password login; redirects by `profiles.role`. | all |
+| `index.html` | `app.js` (+ `supabaseClient.js`) | Student quiz app — the core loop. | student |
+| `hub.html` | inline + `js/` engines | Navigation hub; retention/achievements/avatar surfaces. | student |
+| `shop.html` | inline | Coin shop; calls `buy-item`. | student |
+| `avatar.html` | `js/` avatar engines | Avatar viewer / customisation surface. | student |
+| `collection.html`, `themes.html`, `achievements.html`, `leaderboard.html` | inline + `js/` | Progression/cosmetic surfaces. | student |
+| `teacher.html` | `js/teacher.js` | Teacher dashboard, student management. | teacher |
+| `student-detail.html` | `js/student-detail.js` | Per-student detail + open-answer review. | teacher |
+| `admin.html` | `js/admin.js` | Super-admin: account creation, ops. | super_admin |
+| `reset-password.html` | `js/reset-password.js` | Password reset flow. | all |
+
+**Client config is hardcoded** (`js/supabase.js`, `supabaseClient.js`): the Supabase URL and the
+**anon** key are literals in source. This is acceptable for the anon key (it is public by design and
+RLS is the real boundary) and is forced by the no-build-step constraint — there is no mechanism to
+inject build-time secrets into the frontend. **Implication:** any future capability needing a
+_secret_ must live in an Edge Function, never in frontend JS (see §13–14).
+
+### Student quiz state machine (`app.js`)
+
+```
+IDLE → LOADING_QUESTION → AWAITING_ANSWER → SUBMITTING_ANSWER → REFLECTING → TRANSITIONING → LOADING_QUESTION
+```
+Transitions are validated; invalid transitions are blocked and logged via `logError()`
+(`app.js:26`). The machine guarantees there is **no dead UI state**: every error path re-enables
+input and returns to a valid state. Never bypass this machine.
+
+## 4. Database (Postgres + RLS)
+
+Schema and most content are managed as **versioned SQL migrations** in `supabase/migrations/`
+(60+ files; timestamped). Highlights of what the migrations establish:
+
+- **Identity / roles:** `profiles` (holds `role`: `student` | `teacher` | `super_admin`).
+- **Learning core:** `questions`, `question_instances` (per-student instance with
+  `correct_answer`, `user_answer`, `answered`, `was_correct`, `next_review_at`,
+  `misconception_signal`), `student_progress` (xp, coins, mastery, counters).
+- **Learning engine metadata / concept state:** `learning_engine_metadata`, concept-state RPC,
+  grade/difficulty schema, plus topic "content sprint" migrations (Vikings, Cold War, etc.).
+- **Economy / shop:** `shop_items`, shop inventory/purchases, atomic purchase + RLS hardening.
+- **Progression & retention:** themes system, streak system, retention loops, weekly quests,
+  achievements (+ hidden/wave2/progress/rewards), titles, leaderboard, social.
+- **Avatar:** avatar slot system (`equipped_slots`), slot/wings/aura items, and the avatar asset
+  **onboarding / ingestion / generation** pipeline tables (§9).
+
+**Database safety conventions (enforced in code):**
+- Use `.maybeSingle()` (not `.single()`) unless a row is guaranteed.
+- Prefer `.limit(1)` + `[0]` with an explicit null check.
+- RLS is the authorization boundary; never assume data exists; validate joined relations before
+  access (helpers in `supabase/functions/_shared/foundation.ts`).
+
+**Key RPCs** (called from Edge Functions, run under the user's JWT or service role):
+`process_question_attempt`, `process_text_answer`, `award_correct_answer`, `review_answer`,
+`claim_generation_job`, `set_generated_files_atomic`, `recover_stuck_job_atomic`,
+`evaluate_achievements`, concept-state RPC, `get_teacher_visibility`. Reward-granting RPCs use
+**CAS guards** (e.g. `process_text_answer` only awards when `answered=false`) so network retries
+cannot double-award.
+
+> **Migration-history note (TD-3):** the repo migration files can drift from the live DB version
+> ledger; `supabase db push` may be blocked. Apply schema changes via the Supabase MCP /
+> `apply_migration` against the remote project, carefully. See [CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md).
+
+## 5. Authentication & Authorization
+
+- **Authentication:** Supabase Auth (email/password). The browser holds a session
+  (`persistSession`, `autoRefreshToken`). `login.js` redirects by `profiles.role`.
+- **Authorization (two layers):**
+  1. **RLS** in Postgres is the real boundary. Every page also re-checks `profiles.role` on load.
+  2. **Edge Functions forward the caller's `Authorization` header** and create a user-scoped
+     client, so RLS applies server-side too (`process-event/index.ts:61-65`).
+- **Privilege escalation is explicit and gated:** functions that need the **service role**
+  (`SUPABASE_SERVICE_ROLE_KEY`) first authenticate the caller and check their role, _then_ create a
+  service-role client (`review-answer/index.ts:25-69`). The service-role key never reaches the
+  frontend.
+- Some functions are intentionally **no-JWT** (e.g. `get-next-question`, `create-student`,
+  `create-teacher`) per their documented contract; these must still validate input defensively.
+
+## 6. Edge Functions (`supabase/functions/`)
+
+Runtime: Deno, deployed independently of the frontend (`supabase functions deploy <name>`).
+**Every function must always return a Response** (success or explicit error) and handle `OPTIONS`
+for CORS. Shared helpers live in `_shared/foundation.ts` (`getOne`, `assertExists`, `assertArray`,
+`assertQuestion`, `assertProgress`, `buildQuestionResponse`, `handleError`).
+
+| Function | Auth | Purpose |
+|---|---|---|
+| `get-next-question` | no JWT | Returns the next question instance for a student. |
+| `process-event` | user JWT | Submits an answer; routes MC/number/text/long; awards XP/coins via RPC; sets `next_review_at`; records misconception signal. **Central answer boundary.** |
+| `buy-item` | user JWT | Shop purchase; coins verified via RLS/atomic RPC. |
+| `create-student` / `create-teacher` | no JWT | Admin account creation. |
+| `reset-student` / `reset-pending` / `reset-student-password` | privileged | Reset progress / pending / password. |
+| `question-context` | JWT | Fetches question context. |
+| `equip-avatar` | user JWT | Equip/unequip a cosmetic slot. |
+| `review-answer` | teacher JWT → service role | Teacher scores an open answer; awards XP by score. |
+| `get-reviewed-answers` | JWT | Returns reviewed answers for display. |
+| `avatar-asset-onboarding` / `avatar-asset-validator` / `avatar-ingestion` / `avatar-generation` | privileged | Avatar asset pipeline (§9). |
+
+### `process-event` answer routing (the grading boundary)
+
+```
+submitAnswer() [app.js]
+   └─ supabase.functions.invoke("process-event", { question_instance_id, answer, ... })
+        └─ auth (user JWT) → fetch instance + question meta (.maybeSingle)
+             ├─ answer_type == "long"      → PATH 1: validate ≥20 words, save user_answer,
+             │                                 return {status:"pending"}   (→ TEACHER REVIEW)
+             ├─ answer_format includes text → PATH 2: process_text_answer RPC (CAS-guarded)
+             └─ else (MC / number)         → PATH 3: process_question_attempt RPC
+        → response: { status, correct_answer, review_text?, misconception_type? }
+```
+This is the single most important integration boundary in the system: **AI grading, OCR, and
+speech-to-text all attach here** (PATH 1 / pre-submit), and must preserve this response shape
+(see §13 and [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
+
+## 7. Adaptive learning engine
+
+- **Event-driven progression** (`js/progression.js`): no direct coin/XP mutation — state is a pure
+  aggregate of events (`MC_CORRECT`, `TEXT_APPROVED`, `XP_BOOST`, `REFUND`). No side effects in the
+  engine itself; awards are applied by deterministic RPCs server-side.
+- **Spaced repetition:** `process-event` sets `next_review_at` (+1 day on correct, +10 min on
+  incorrect for MC; text path schedules via RPC).
+- **Misconception signals:** wrong answers can carry a `misconception_type` (from question
+  metadata) recorded fire-and-forget on `question_instances.misconception_signal`, and a
+  `review_text` is returned to teach on the miss.
+- **Content/curriculum modules:** a large family of `js/` modules support content intelligence,
+  pedagogical pipeline, readability, reflection and curriculum deployment (advisory/authoring-side;
+  not in the reward path).
+
+## 8. Storage
+
+Supabase Storage buckets hold avatar assets and pipeline artifacts. Edge Functions read/write via
+`supabase.storage.from(bucket)` with explicit error handling
+(`avatar-generation/storage.ts`: `downloadFileBytes` / `uploadFileBytes`, both throw on
+empty/error — no silent failure). Storage is the current home of avatar art; an optional
+Cloudinary delivery/optimisation layer is **audited but not implemented** (§13).
+
+## 9. Avatar pipeline (summary — full detail in AVATAR_SYSTEM.md)
+
+- **Render:** `js/avatar-render-c2.js` (`mountC2Avatar`) composes layered avatar art behind the
+  `AVATAR_V2` flag; living **expression / presence / blink** engines animate it.
+- **Identity model:** body_type / hairstyle / skin_tone / hair_color + `equipped_slots`, ordered by
+  a deterministic z-model (`C2_LAYER_Z`).
+- **Asset pipeline (Edge):** `avatar-asset-onboarding` → `avatar-asset-validator` →
+  `avatar-ingestion` → `avatar-generation`, with atomic claim/recover RPCs for job safety.
+- **Current reality:** `AVATAR_V2 = true` is **live** (commit `52f8365`, 2026-06-25) but renders
+  **flat placeholder SVGs**, not the approved Northstar Master raster. The locked plan to produce
+  and wire the Master raster is `docs/167a-master-asset-raster-wiring-plan.md`. Details, decisions
+  (D-001…D-041), and the layer model are in [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md).
+
+## 10. Feature flags
+
+- **The only runtime feature flag today is `AVATAR_V2`** (`js/avatar-layers.js:230`,
+  currently `true`). `isAvatarV2()` returns `true` if the constant is on, else honours a
+  per-browser override `localStorage.avatar_v2 === "1"` — used for staged manual testing.
+- **There is no cohort / percentage-rollout mechanism** (open question OQ-4). Rollout is
+  all-or-nothing via the constant, plus the localStorage override for individual testing.
+- **Edge-side config flags:** `SKIP_ONBOARDING` (env-driven) exists in the avatar pipeline.
+- **Convention for future flags:** a boolean constant with an `isX()` accessor that also honours a
+  localStorage override, mirroring `AVATAR_V2`. All future AI capabilities must ship behind such a
+  flag, default-off, fail-soft (see [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
+
+## 11. Deployment
+
+- **Frontend:** edit files under `den-seje-app-frontend/`, commit, push `main` → **Vercel
+  auto-deploys**. (Keep the root clone in sync — §2.)
+- **Edge Functions:** `supabase functions deploy <name>` (or deploy all). Independent of frontend.
+- **Database:** migrations applied via Supabase MCP / `apply_migration` against the remote project
+  (note TD-3: `db push` may be blocked by ledger drift).
+- **Gate:** no deploy without green Playwright tests (see [CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md)).
+
+## 12. Data flow diagrams (ASCII)
+
+**Answer submission (student):**
+```
+student clicks answer
+  → app.js submitAnswer() : state AWAITING_ANSWER → SUBMITTING_ANSWER
+    → process-event (user JWT)
+        ├ long  → save user_answer, status "pending" ─────────────► teacher queue
+        ├ text  → process_text_answer (CAS) → correct/incorrect + XP/coins
+        └ MC/#  → process_question_attempt → correct/incorrect + XP/coins, next_review_at
+    → response {status, correct_answer, review_text?, misconception_type?}
+  → app.js renders feedback : state REFLECTING → TRANSITIONING → LOADING_QUESTION
+```
+
+**Open-answer review (teacher):**
+```
+teacher opens student-detail.html
+  → get-reviewed-answers / queue of pending long answers (user_answer set, answered=false)
+  → teacher scores
+    → review-answer (teacher JWT → role check → SERVICE ROLE)
+        → review_answer RPC (store score+feedback) → award XP by scoreToXP(score)
+  → student later sees reviewed feedback + XP
+```
+
+## 13. Future service integration boundaries (Section 157A — audited, NOT implemented)
+
+Section 157A audited seven zero-cost / self-hostable services. **None are implemented as of
+2026-06-30.** Summary of the decided boundaries (full rationale: the 157A audit; rules:
+[AI_GUIDELINES.md](./AI_GUIDELINES.md); schedule: [ROADMAP.md](./ROADMAP.md)):
+
+| Service | Boundary | Rationale |
+|---|---|---|
+| **Error reporting (Sentry)** | **Frontend-first** (public DSN), optional Edge later | Wraps `logError()` / `handleError()`; additive; lowest risk. **Recommended first.** |
+| **Analytics (PostHog)** | **Frontend-only** (public project key) | New `js/analytics.js`; needs GDPR/consent gate (serves minors). |
+| **OCR (Tesseract)** | **Frontend-only** (wasm, in-browser) | Photo→text before `process-event`; no secret, no server. |
+| **AI service (Ollama)** | **Edge Function only**, gated | Needs a secret + a publicly-reachable endpoint; self-hosted localhost is unreachable from Supabase cloud. Attaches at `process-event` PATH 1 as **advisory** grading. |
+| **Speech-to-text (Whisper.cpp)** | **Deferred** | Heavy wasm or unreachable self-host. |
+| **Text-to-speech (Piper)** | **Deferred** | Best as pre-generated Storage audio played via `js/audio.js`, not a live service. |
+| **Image hosting (Cloudinary)** | **Edge (signed)** or frontend **unsigned preset** | Optional delivery/optimisation layer; Supabase Storage stays source of truth. |
+
+**Two hard constraints govern all of the above:** (1) **no frontend build step** → secrets must
+live in Edge Functions; only public client tokens (Sentry DSN, PostHog key) may be frontend-only.
+(2) **Supabase Edge runs in the cloud** → it cannot reach a `localhost` self-hosted server, which
+gates Ollama/Whisper/Piper.
+
+### AI service abstraction (planned shape)
+
+When AI is implemented, model/provider access goes through a **single abstraction layer** (an Edge
+module, e.g. `_shared/ai/`) exposing a narrow interface (`grade()`, `transcribe()`, `draftFeedback()`)
+so the underlying model can change without touching feature code. AI output is **advisory only** and
+must fail soft to current behaviour. Binding rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md).
+
+## 14. Source-of-truth definitions
+
+| Domain | Single source of truth |
+|---|---|
+| Why / product direction | [PROJECT_VISION.md](./PROJECT_VISION.md) |
+| Technical architecture (this doc) | `docs/ARCHITECTURE.md` |
+| Schedule / status / sections | [ROADMAP.md](./ROADMAP.md) |
+| AI rules & abstraction | [AI_GUIDELINES.md](./AI_GUIDELINES.md) |
+| Avatar system & art | [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md) (design goal: `docs/avatar-vision.md`) |
+| Dev workflow / DoD | [CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md) |
+| Repo-level rules (authoritative, overrides) | `CLAUDE.md` (root) |
+| Avatar decisions register (D-001…D-041) | `docs/project-state.md` + `docs/adr/` |
+| DB schema & content | `supabase/migrations/` |
+| Avatar render contract | `js/avatar-render-c2.js`, `js/avatar-layers.js` |
+| Answer/grading contract | `supabase/functions/process-event/index.ts` |
+
+> **Note on `docs/project-state.md`:** it remains the authoritative **avatar decision register**
+> (D-001…D-041) and risk/debt log. Its 2026-06-15 "C2 NOT active / flag OFF" status lines were
+> **corrected in Section 157AB (2026-06-30)** — annotated as superseded in place (not deleted), since
+> `AVATAR_V2` went live 2026-06-25 (commit `52f8365`). For current activation state trust this file
+> and [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md); for the decision history trust `project-state.md`.
