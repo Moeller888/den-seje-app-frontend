@@ -9,8 +9,27 @@ _Owner: project owner (solo). Last reviewed: 2026-06-30._
 
 > **Status (2026-06-30):** the monitoring platform is **implemented and statically validated**, and
 > ships **default-off** (zero impact). It is **NOT yet activated/live-validated** — that requires a
-> Sentry account (DSNs) and a staging environment, neither of which exists yet. This document is the
-> procedure to activate and validate it safely. See §10 for the precise prerequisites.
+> Sentry account (DSNs) and a staging environment. This document is the procedure to activate and
+> validate it safely. See §10 for the precise prerequisites.
+>
+> **157CC reclassification (2026-06-30):** the staging environment (157CB) is now a **future
+> infrastructure milestone**, not an immediate blocker. The foundations (157B/157C/157CA) **remain
+> valid and production-safe while Sentry is disabled** — see §0.
+
+## 0. Production safety while disabled (157CC confirmation)
+
+The three observability sections are **valid and production-safe with Sentry off**, indefinitely:
+
+- **157B (frontend, `js/sentry.js`):** `ENABLE_SENTRY = false` + empty DSN → no SDK download, no
+  listeners, no network, no behavioural change. `logError()` still logs to console exactly as before.
+  The committed code is **inert** in production.
+- **157C (edge, `_shared/monitoring.ts`):** `ENABLE_SENTRY_EDGE` unset → no SDK import, identical
+  responses and latency. `withObservability` re-throws unchanged; `handleError` keeps its shape. The
+  reference wiring (`get-reviewed-answers`) is inert when disabled (and is not yet even deployed).
+- **157CA:** documentation + static validation only — no runtime footprint.
+
+**Conclusion:** keeping Sentry disabled has **no cost, no risk, and no behavioural impact**. The
+foundations can sit dormant until a staging target exists; nothing degrades by waiting.
 
 ---
 
@@ -168,12 +187,14 @@ Frontend (generates id)  →  Edge (reuses inbound x-request-id)  →  DB / logs
 - **Never** await Sentry flush on the request path; **never** let monitoring change a response or
   throw into a function/page (both are guaranteed by construction — keep it that way in migrations).
 
-## 10. Activation prerequisites — delivered by Section 157CB (staging environment)
+## 10. Activation prerequisites — delivered by Section 157CB (future infrastructure)
 
 > **Policy (owner, 2026-06-30): no external service is activated or validated against production.**
-> A dedicated **staging environment (Section 157CB)** is the prerequisite for live observability
-> validation **and** for every remaining external integration (PostHog, Cloudinary, AI, OCR). See
-> [ROADMAP.md](./ROADMAP.md).
+> Live validation needs a non-production target. Per **157CC**, that target (157CB) is a **future
+> infrastructure milestone, not an immediate blocker** — and a **free local Supabase stack**
+> (`supabase start`, Docker — no Pro) + a **free Vercel preview** can serve as the zero-cost interim
+> validation target, deferring the **paid hosted branch** to pre-launch. See [ROADMAP.md](./ROADMAP.md)
+> and [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md).
 
 Full live validation (157CA Tasks 5–8, 10) is **blocked** until 157CB provides:
 1. **A Sentry account + the two projects** (§2) → real DSN(s). (Owner creates these.)

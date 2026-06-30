@@ -44,57 +44,94 @@ _Last reviewed: 2026-06-30._
 
 ## Current section
 
-- **157CA — Observability activation & validation** ✅ docs + static-validation complete; **live
-  validation deferred to after 157CB**. Canonical **[OBSERVABILITY.md](./OBSERVABILITY.md)** created.
-  Static validation green; platform default-off and production-safe.
-  - **Decisions (owner, 2026-06-30):** (1) **Two Sentry projects** — `den-seje-app-frontend`
-    (browser) + `den-seje-app-edge` (deno). (2) **No external service may be activated or validated
-    against production** — a dedicated **staging environment (Section 157CB)** is the prerequisite for
-    all remaining external integrations and for the live 157B/157C checklists.
+- **157CC — Roadmap rebase after staging review** ✅ (this update). **Decision (owner, 2026-06-30):**
+  a dedicated staging environment is the correct long-term architecture, but **recurring paid
+  infrastructure (Supabase Pro branch) is deferred**. Therefore **157CB is not cancelled** — it is
+  **reclassified from an immediate blocker to a FUTURE INFRASTRUCTURE milestone**. Implementation of
+  most remaining sections may proceed now (default-off, static-validated); only **live
+  activation/validation against a third party** waits for a non-production target. See the
+  reclassification table below.
 
-## Next section (gating prerequisite)
+## Staging (future infrastructure milestone — no longer an immediate blocker)
 
-- **157CB — Dedicated staging environment** 🟡 **in progress (plan).** Plan of record:
-  **[157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md)** — Supabase Pro branch +
-  Vercel preview + 2 Sentry projects; core enabler = a **runtime env resolver** (`js/env-config.js`)
-  because the frontend Supabase target is hardcoded with no build step. **Prerequisite for 157D→157T
-  and live 157B/157C validation.** Privileged infra steps are owner-only (Sentry projects/DSNs,
-  Supabase branch + keys, Vercel staging hostname, staging secrets); the resolver code lands once
-  those values exist (prod stays byte-identical). Then run the Part B checklists in staging → unblock 157D.
+- **157CB — Dedicated staging environment** 🗓️ **future infrastructure.** Plan of record stays valid:
+  **[157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md)**. It is needed **only
+  for live activation/validation** (turning flags on, sending real data), not to *build* the
+  remaining sections. Privileged/paid steps are owner-only.
+  - **Zero-cost interim (recommended, not required now):** much live validation can later run on a
+    **free local Supabase stack** (`supabase start`, Docker — no Pro) + a **free Vercel preview**,
+    deferring the **paid hosted branch** to pre-production rollout. This keeps staging on the roadmap
+    without recurring cost until launch.
+
+## Staging dependency reclassification (157CC — Task 1/2)
+
+Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **HARD GATE** = cannot be
+*implemented* without staging · **SOFT GATE** = implement now (default-off), activate later ·
+**FUTURE INFRASTRUCTURE** = only the *production rollout / live activation* needs staging ·
+**UNGATED** = pure spec/decision, no dependency.
+
+| Item | Old dependency | Real dependency | Category | Justification |
+|---|---|---|---|---|
+| 157B/157C/157CA **foundations** | — | none | **UNGATED** (done) | Default-off code; production-safe and inert without staging (§ Status). |
+| **Live** observability validation (157B/157C/157CA Part B) | requires 157CB | needs a running non-prod backend with flags ON + real-ish data | **HARD GATE** | PII-against-real-events + edge deploy + flags-on cannot be done on production; needs a non-prod target. |
+| 157D PostHog **module** (+ consent gate) | requires 157CB | none to build | **SOFT GATE** | Same pattern as 157B — a flagged `js/analytics.js` builds + static-validates with no infra. |
+| 157E analytics **events** | requires 157CB | 157D module | **SOFT GATE** | Code instrumentation, default-off. |
+| 157F Cloudinary **spec** | — | none | **UNGATED** | Pure specification. |
+| 157G Cloudinary **integration** | — | a (free) Cloudinary account for go-live | **SOFT GATE** | Build read-path/transform behind a flag; needs no Supabase Pro branch (frontend/Vercel-preview testable). |
+| 157H OCR **spec** | — | none | **UNGATED** | Pure specification. |
+| 157I OCR **implementation** | requires 157CB (implied) | none | **SOFT GATE** | In-browser Tesseract wasm; no secret/server/backend — even activation is zero-cost client-side. |
+| 157J Ollama reachability **decision** | gate | none | **UNGATED** | A decision/spec. |
+| 157K `grade-answer` **contract** + AI **abstraction layer** | — | none | **SOFT GATE** | `_shared/ai/` scaffolding + contract build without infra; advisory-only, default-off. |
+| 157L Ollama AI-grade **wiring** into `process-event` | requires 157CB | non-prod env (reward path) + reachable model | **FUTURE INFRASTRUCTURE** | Touches the reward path → must validate in non-prod before any rollout. |
+| 157M AI-grade in teacher review | requires 157CB | 157L | **FUTURE INFRASTRUCTURE** | Activation follows 157L. |
+| 157N Piper TTS **strategy** | — | none | **UNGATED** | Decision/spec. |
+| 157O Piper pre-generated audio | — | none | **SOFT GATE** | Static Storage assets + `js/audio.js`; no live service. |
+| 157P Whisper STT feasibility | — | none | **UNGATED** | Decision (likely defer). |
+| 157Q GDPR/consent consolidation | — | none | **SOFT GATE** | Consent mechanism is buildable code/docs. |
+| 157R Rollback / flag hardening | — | none | **SOFT GATE** | Cross-cutting code; no infra. |
+| 157S Playwright coverage (fail-soft paths) | — | none | **SOFT GATE** | Tests for default-off behaviour run against prod today. |
+| 157T Production-readiness review | requires 157CB | the above + staging for sign-off | **FUTURE INFRASTRUCTURE** | Final go-live gate. |
+| Avatar track (167A, 164L) | never | none | **UNGATED** | Independent; only gated on human art (D-033). |
+
+**Net:** the **only HARD GATE is live monitoring validation.** Everything else is SOFT GATE (build
+now, default-off), UNGATED (spec/decision/avatar — do today), or FUTURE INFRASTRUCTURE (activation only).
 
 _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (Sentry frontend) ·
-**157C** (Edge observability foundation) · **157CA** (observability docs + static validation) —
-complete (foundations; default-off).
+**157C** (Edge observability foundation) · **157CA** (observability docs + static validation) ·
+**157CC** (this rebase) — complete (foundations; default-off; production-safe).
 
 ## Future sections
 
 ### Platform / services track (from the 157A audit)
 
-Recommended order (each is one controlled section; all AI behind a default-off flag, fail-soft):
+Each is one controlled section; all integrations behind a default-off flag, fail-soft. The **Gate**
+column is the 157CC reclassification (UNGATED = do today · SOFT = build now/activate later · HARD =
+needs staging to implement · FUTURE = activation/rollout only needs staging).
 
-| Section | Work | Boundary |
-|---|---|---|
-| **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`, routes `logError`) — **done, default-off** | frontend-only |
-| **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`, `withObservability`) — **done, default-off** | Edge |
-| **157CA** ✅ | Observability docs (`OBSERVABILITY.md`) + static validation; 2 Sentry projects decided | docs |
-| **157CB** 🔜 | **Dedicated staging environment (Supabase branch + Vercel preview)** — **GATE: prerequisite for 157D→157T and all live activation/validation** | infra |
-| 157D | PostHog `js/analytics.js` module + consent/GDPR gate — _requires 157CB_ | frontend-only |
-| 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only |
-| 157F | Cloudinary decision spec (signed-Edge vs unsigned-preset) | spec |
-| 157G | Cloudinary delivery/optimisation for avatar assets (read path) | Edge/frontend |
-| 157H | Tesseract OCR client spec (photo→text UX, bundle budget) | spec |
-| 157I | Tesseract OCR implementation behind flag, pre-`process-event` | frontend-only |
-| 157J | Ollama reachability decision (tunnel vs endpoint vs defer) — **gate** | decision |
-| 157K | `grade-answer` Edge Function contract (advisory, fail-soft) | Edge |
-| 157L | Ollama advisory AI-grade in `process-event` PATH 1 | Edge |
-| 157M | AI-grade surfaced in teacher review (`review-answer`) | Edge + frontend |
-| 157N | Piper TTS strategy (pre-generated Storage audio vs live) | decision |
-| 157O | Piper pre-generated read-aloud assets via `js/audio.js` | frontend assets |
-| 157P | Whisper STT feasibility (wasm vs server) — likely defer | decision |
-| 157Q | GDPR / consent consolidation across third-party flows | cross-cutting |
-| 157R | Rollback & feature-flag hardening | cross-cutting |
-| 157S | Playwright coverage for new flows + fail-soft paths | tests |
-| 157T | Production-readiness review + secret-rotation checklist | ops |
+| Section | Work | Boundary | Gate |
+|---|---|---|---|
+| **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`) — **done, default-off** | frontend-only | done |
+| **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`) — **done, default-off** | Edge | done |
+| **157CA** ✅ | Observability docs + static validation; 2 Sentry projects decided | docs | done |
+| **157CB** 🗓️ | Dedicated staging environment (Supabase branch + Vercel preview) | infra | **FUTURE INFRA** (not a blocker) |
+| **Live obs. validation** | 157B/157C/157CA Part B checklists incl. PII-against-real-events | staging | **HARD GATE** |
+| 157D | PostHog `js/analytics.js` module + consent/GDPR gate | frontend-only | **SOFT** |
+| 157E | Core analytics events (login, question shown/answered, purchase) | frontend-only | **SOFT** |
+| 157F | Cloudinary decision spec (signed-Edge vs unsigned-preset) | spec | **UNGATED** |
+| 157G | Cloudinary delivery/optimisation for avatar assets (read path) | Edge/frontend | **SOFT** |
+| 157H | Tesseract OCR client spec (photo→text UX, bundle budget) | spec | **UNGATED** |
+| 157I | Tesseract OCR implementation behind flag, pre-`process-event` | frontend-only | **SOFT** (zero-cost) |
+| 157J | Ollama reachability decision (tunnel vs endpoint vs defer) | decision | **UNGATED** |
+| 157K | `grade-answer` contract + AI **abstraction layer** (`_shared/ai/`) | Edge | **SOFT** |
+| 157L | Ollama advisory AI-grade in `process-event` PATH 1 | Edge | **FUTURE INFRA** |
+| 157M | AI-grade surfaced in teacher review (`review-answer`) | Edge + frontend | **FUTURE INFRA** |
+| 157N | Piper TTS strategy (pre-generated Storage audio vs live) | decision | **UNGATED** |
+| 157O | Piper pre-generated read-aloud assets via `js/audio.js` | frontend assets | **SOFT** |
+| 157P | Whisper STT feasibility (wasm vs server) — likely defer | decision | **UNGATED** |
+| 157Q | GDPR / consent consolidation across third-party flows | cross-cutting | **SOFT** |
+| 157R | Rollback & feature-flag hardening | cross-cutting | **SOFT** |
+| 157S | Playwright coverage for new flows + fail-soft paths | tests | **SOFT** |
+| 157T | Production-readiness review + secret-rotation checklist | ops | **FUTURE INFRA** |
 
 ### Avatar / art track (from 167A)
 
@@ -128,18 +165,32 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 | v1.1 | Living avatar + advisory AI | 163F decomposed avatar, advisory AI grading/feedback (teacher-confirmed). |
 | v1.2 | Scale & accessibility | Automatable cosmetics shop, TTS/STT where viable, cohort/% rollout mechanism (OQ-4). |
 
-## Priority order (next actions)
+## Revised implementation order (157CC — zero-cost-first, no paid infra)
 
-1. **157CB — Dedicated staging environment** (Supabase branch + Vercel preview). **Hard gate:**
-   prerequisite for 157D→157T and for live activation/validation of 157B/157C. No external service is
-   activated or validated against production.
-2. **157CA live validation** — run the 157B/157C Part B checklists in the new staging env; confirm
-   PII-against-real-events (the gate to 157D).
-3. **Avatar M1** — produce + wire the Master raster (167A); gated on a **human art deliverable**
-   (parallel track, not blocked by 157CB).
-4. 157D/157E — PostHog analytics (needs 157CB + GDPR/consent gate first).
-5. 157H/157I — OCR photo answers (needs 157CB).
-6. 157J+ — AI grading only after 157CB + the reachability gate + the abstraction layer.
+Goal: keep delivering value with **no recurring subscription cost**. Do all UNGATED + SOFT work now
+(default-off); delay only what truly needs staging. **No external service is activated against
+production**; activation waits for a staging target (free local stack at first; paid branch at launch).
+
+1. **157F — Cloudinary decision spec** (UNGATED, pure docs). Decide signed-Edge vs unsigned-preset.
+2. **157H — OCR client spec** (UNGATED, pure docs). Photo→text UX + bundle budget.
+3. **157I — OCR implementation** (SOFT, **zero-cost** in-browser wasm, default-off, no backend) —
+   strongest "value today" candidate; no account, no infra.
+4. **157G — Cloudinary integration** (SOFT, free-tier; flag-off; Vercel-preview testable, no Pro branch).
+5. **157K — AI abstraction layer + `grade-answer` contract** (SOFT scaffolding, `_shared/ai/`,
+   advisory-only, default-off) — unblocks future AI without touching the reward path yet.
+6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
+   only on the human art deliverable, D-033).
+7. **157D/157E — PostHog module + events** (SOFT, default-off; build behind the consent gate; do not
+   send events until staging).
+8. **157O — Piper pre-generated read-aloud assets** (SOFT, static assets) · **157N/157P** TTS/STT
+   decisions (UNGATED).
+9. **157Q/157R/157S** — consent consolidation, flag hardening, fail-soft test coverage (SOFT).
+10. **FUTURE INFRASTRUCTURE (deferred until staging exists):** 157CB itself, live observability
+    validation (HARD GATE), 157L/157M AI-grade activation, 157T production-readiness sign-off.
+
+> Activation of anything built above happens **after** a staging target exists — first the free local
+> Supabase stack + Vercel preview, then a paid hosted branch only at pre-launch. Building now does not
+> incur cost; only running a hosted non-prod backend does.
 
 ## Status table
 
@@ -154,12 +205,12 @@ tooling from Master (method locked by D-041); then the Tier-2 AI item-overlay co
 | Cohort / % rollout | ❌ None | OQ-4; only constant + localStorage override. |
 | Error reporting (Sentry) — frontend | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. |
 | Error reporting (Sentry) — Edge | ✅ Foundation (157C), default-off | `_shared/monitoring.ts` `withObservability`; set `ENABLE_SENTRY_EDGE=true` + `SENTRY_DSN_EDGE`. 1 reference fn wired, 15 to migrate. |
-| Observability — live validation | 🟡 Pending 157CB | Static-validated; live (157B/157C Part B) deferred to staging. 2 Sentry projects decided. |
-| Staging environment | ❌ None → 🔜 157CB | **Gate** for all external integrations. Supabase branch + Vercel preview. |
-| Analytics (PostHog) | 🟡 Audited — _needs 157CB_ | 157A → 157D. Needs staging + consent gate. Not implemented. |
-| OCR (Tesseract) | 🟡 Audited | 157A → 157H/157I. Not implemented. |
-| AI grading (Ollama) | 🟡 Audited, gated | 157A → 157J reachability gate first. Not implemented. |
-| TTS (Piper) / STT (Whisper) | ⏸ Deferred | 157N–157P. |
-| Image CDN (Cloudinary) | 🟡 Audited | 157F/157G. Storage stays source of truth. |
+| Observability — live validation | 🟡 HARD GATE (staging) | Static-validated; live (Part B) needs a non-prod target. Foundations production-safe meanwhile. |
+| Staging environment (157CB) | 🗓️ Future infra | Reclassified (157CC): long-term plan, **not** an immediate blocker. Free local stack interim; paid branch at launch. |
+| Analytics (PostHog) | 🟡 SOFT — buildable now | 157D module + consent gate build default-off; activation later. |
+| OCR (Tesseract) | 🟡 SOFT — zero-cost, buildable now | 157H spec → 157I in-browser wasm, no backend. |
+| AI abstraction / grading (Ollama) | 🟡 SOFT (layer) / FUTURE (activation) | 157K layer buildable now; 157L process-event wiring needs staging + reachability. |
+| TTS (Piper) / STT (Whisper) | 🟡 SOFT (Piper assets) / ⏸ (STT) | 157O assets buildable; decisions UNGATED. |
+| Image CDN (Cloudinary) | 🟡 SOFT — buildable now | 157F spec (UNGATED) → 157G free-tier, flag-off. Storage stays source of truth. |
 
 Legend: ✅ live · 🟡 planned/audited · ⏸ deferred · ❌ not present.

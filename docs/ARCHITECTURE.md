@@ -377,9 +377,10 @@ Edge Function  →  _shared/monitoring.ts  →  Sentry
 
 > **Activation & operations:** the end-to-end activation procedure, deployment, release strategy,
 > request-correlation design, troubleshooting and the operator runbook live in the canonical
-> **[OBSERVABILITY.md](./OBSERVABILITY.md)**. As of 2026-06-30 both foundations are implemented and
-> **default-off**; live activation/validation (Section 157CA) is **pending a Sentry account + a
-> staging environment** — see OBSERVABILITY.md §10.
+> **[OBSERVABILITY.md](./OBSERVABILITY.md)**. As of 2026-06-30 both foundations are implemented,
+> **default-off and production-safe indefinitely** (OBSERVABILITY.md §0). Live activation/validation
+> needs a non-production target; per **157CC** that staging environment (157CB) is a **future
+> infrastructure milestone, not a blocker** — see OBSERVABILITY.md §10 and [ROADMAP.md](./ROADMAP.md).
 
 ### AI service abstraction (planned shape)
 
