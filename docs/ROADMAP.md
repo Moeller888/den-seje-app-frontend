@@ -54,11 +54,13 @@ _Last reviewed: 2026-06-30._
 
 ## Next section (gating prerequisite)
 
-- **157CB — Dedicated staging environment** 🔜 **prerequisite for 157D and all external-integration
-  activation/validation.** Stand up a non-production target: **Supabase Pro branch** (per D-006) +
-  **Vercel preview** deployment, with its own config/secrets, so monitoring/analytics/AI flags can be
-  turned **on** and validated **without touching production**. On completion: run the live 157B/157C
-  Part B checklists in staging, then unblock 157D.
+- **157CB — Dedicated staging environment** 🟡 **in progress (plan).** Plan of record:
+  **[157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md)** — Supabase Pro branch +
+  Vercel preview + 2 Sentry projects; core enabler = a **runtime env resolver** (`js/env-config.js`)
+  because the frontend Supabase target is hardcoded with no build step. **Prerequisite for 157D→157T
+  and live 157B/157C validation.** Privileged infra steps are owner-only (Sentry projects/DSNs,
+  Supabase branch + keys, Vercel staging hostname, staging secrets); the resolver code lands once
+  those values exist (prod stays byte-identical). Then run the Part B checklists in staging → unblock 157D.
 
 _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (Sentry frontend) ·
 **157C** (Edge observability foundation) · **157CA** (observability docs + static validation) —
