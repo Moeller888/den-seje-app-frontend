@@ -142,10 +142,14 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 > **[167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)** (pre-167A
 > preservation report) before starting.
 
-1. Master asset inventory/spec finalize — choose **D-040 "Master-as-is"** vs full 163F
-   decomposition; scaffold `assets/avatar-r2/` + manifest; lock eye-box anchor revision.
-2. **Master MVP raster base production** — _human art deliverable_ (manual paint-over over
-   `Northstar Master.png`). **Cannot be AI-generated (D-033). Gates everything.**
+1. **🟡 In progress (167A-START, 2026-07-01):** scaffold done — `assets/avatar-r2/` created + empty
+   `R2_MANIFEST` + inert raster resolvers (`baseSrcForR2`/`faceSrcForR2`/`eyesSrcForR2`/`eyelidSrcForR2`/
+   `hairSrcForR2`, `AVATAR_R2=false`) added **alongside** the C2/SVG resolvers in `js/avatar-layers.js`.
+   Additive + inert (all resolvers return `null` → C2/SVG fallback; render untouched). Readiness =
+   **PARTIAL**: Master `.png` (1024×1536) + anchors/masks (build artifacts) present; **WebP art absent**.
+   Still to finalize: D-040 vs 163F decomposition choice; wire the revised eye-box at render time (step 3).
+2. **⛔ Master MVP raster base production** — _human art deliverable_ (manual paint-over over
+   `Northstar Master.png`). **Cannot be AI-generated (D-033). Gates the visual result** (no WebP yet).
 3. Renderer raster wiring (behind `AVATAR_V2`).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off).
 5. Test/golden re-baseline from the Master render.

@@ -293,3 +293,86 @@ export function baseLayersForC2(identity) {
     { src: hairSrcForC2(identity), z: C2_HAIR_Z, isBase: false, inline: true  },
   ];
 }
+
+// ── North Star Master raster (167A) — SCAFFOLD (additive, inert) ──────────────
+// Execution step 1 of docs/167a-master-asset-raster-wiring-plan.md (§I.1): the r2
+// manifest + resolvers, ALONGSIDE the existing C2/SVG resolvers (which are unchanged).
+// This changes NOTHING at runtime: the manifest is empty (the Master raster is a human
+// paint-over deliverable — D-033 — not yet produced), so every resolver returns null and
+// callers fall back to the C2/SVG path. The render pipeline does NOT consult these yet
+// (that is 167A step 3 / Phase-2, gated on the produced WebP art). Raster is OFF.
+//
+// Guardrail (docs/167a-architecture-preservation-report.md): 167A is an ASSET migration.
+// This block adds resolvers + a manifest only; identity model, z-model, engines, render
+// entry point and existing public interfaces are untouched.
+
+// Master raster render switch — OFF. When the WebP layers exist and are wired (step 3),
+// this (or an AVATAR_V2 sub-switch) gates the raster path. Do not flip until art ships.
+export const AVATAR_R2 = false;
+export function isAvatarR2() { return AVATAR_R2 === true; }
+
+// Served raster root + canonical served dimensions (ADR-163D: 1024×1536 master → 512×768).
+export const R2_BASE_PATH = "/assets/avatar-r2";
+export const R2_SERVED = { width: 512, height: 768 };
+
+// Manifest STUB — logical layer key → produced WebP version. EMPTY until the Master
+// raster is produced (`version: 0` = "not produced"). Populating an entry (and bumping
+// `version`) makes the matching resolver return a real path — ready for step-3 wiring.
+// Naming per §C: body-{body_type}-{skin_tone}-vN · face-{expression}-vN ·
+// eyes-{set}-{iris|fixed}-vN · eyelid-{skin_tone}-vN · hair-northstar-vN.
+export const R2_MANIFEST = {
+  version:  0,   // 0 → Master raster not yet produced; render stays on C2/SVG
+  base:     {},  // e.g. { "neutral-medium": 1 }
+  face:     {},  // e.g. { "neutral": 1 }
+  eyesIris: {},  // e.g. { "neutral": 1 }
+  eyesFixed:{},  // e.g. { "neutral": 1 }
+  eyelid:   {},  // e.g. { "medium": 1 }
+  hair:     {},  // e.g. { "northstar": 1 }
+};
+
+function r2Path(slot, name, v) {
+  return R2_BASE_PATH + "/" + slot + "/" + name + "-v" + v + ".webp";
+}
+
+// Resolvers — mirror the C2 resolvers for the raster set. Each returns an r2 WebP path
+// ONLY when the manifest registers a produced version, else null (→ C2/SVG fallback).
+// Never throw. All return null today (empty manifest).
+export function baseSrcForR2(identity) {
+  const bodyType = BODY_TYPES.includes(identity && identity.body_type) ? identity.body_type : "neutral";
+  const tone = skinToneFor(identity);
+  const key = bodyType + "-" + tone;
+  const v = R2_MANIFEST.base[key];
+  return v ? r2Path("base", "body-" + key, v) : null;
+}
+
+export function faceSrcForR2(expression) {
+  const key = (typeof expression === "string" && expression.length > 0) ? expression : "neutral";
+  const v = R2_MANIFEST.face[key];
+  return v ? r2Path("face", "face-" + key, v) : null;
+}
+
+export function eyesSrcForR2(set) {
+  const key = (typeof set === "string" && set.length > 0) ? set : "neutral";
+  const iv = R2_MANIFEST.eyesIris[key];
+  const fv = R2_MANIFEST.eyesFixed[key];
+  const iris  = iv ? r2Path("eyes", "eyes-" + key + "-iris", iv) : null;
+  const fixed = fv ? r2Path("eyes", "eyes-" + key + "-fixed", fv) : null;
+  return (iris || fixed) ? { iris, fixed } : null;
+}
+
+export function eyelidSrcForR2(identity) {
+  const tone = skinToneFor(identity);
+  const v = R2_MANIFEST.eyelid[tone];
+  return v ? r2Path("eyelid", "eyelid-" + tone, v) : null;
+}
+
+export function hairSrcForR2(identity) {
+  const v = R2_MANIFEST.hair["northstar"];
+  return v ? r2Path("hair", "hair-northstar", v) : null;
+}
+
+// Whether a minimal raster stack (base + hair) is available for an identity. False today.
+// Lets step-3 wiring choose raster-vs-C2 per identity without changing this module again.
+export function hasR2StackFor(identity) {
+  return !!(baseSrcForR2(identity) && hairSrcForR2(identity));
+}
