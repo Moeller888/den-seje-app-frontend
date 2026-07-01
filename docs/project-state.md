@@ -262,11 +262,23 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   altering; no `assets/avatar-r2/` write, no `R2_MANIFEST` change, `AVATAR_R2` untouched.** Verified:
   eye-opening centres L (66.7, 60.3) / R (90.6, 60.3) in 160-space (≈13 units below the legacy `cy47`
   blink box); output PNGs valid; visual QA of the overlay = regions land correctly on the figure.
-- **Phase-2 implementation gates (unchanged, all OPEN):** (1) Phase-2-scoped anchor/eye-box sign-off
-  for the runtime rig (beyond the 164L Tier-2 conditional pass; JSON fields stay `humanReviewRequired`),
-  (2) human paint-over of the decomposed v2 base passing 164B.3, (3) the face/eyes/eyelid/hair layers,
-  (4) a **WebP encoder** (still absent). Until met: no Phase-2 runtime code; `AVATAR_R2` stays `false`;
-  the Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact.
+- **P2-0 cut-guide review worksheet RUN + PASS (2026-07-01, PR #6 `7fa7560`; countersign PR #7
+  `2159d3e`).** [`167a-phase2-cut-guides-review-worksheet.md`](./167a-phase2-cut-guides-review-worksheet.md)
+  reviewed the overlay + crops (all 10 checklist rows PASS) and approved the **Phase-2 raster
+  eye-box**. **Owner countersign = APPROVED 2026-07-01.** → **Plan §13 GATE 1 (Phase-2-scoped
+  anchor/eye-box sign-off) is SATISFIED.** Approval is **raster-path only** — the eye-box drives the
+  raster blink/eye rig; the **legacy C2 anchors (`cx68/92 cy47`, `js/avatar-blink-engine.js`) stay
+  frozen** (two eye-box sets coexist, selected by the render branch). Docs only; no runtime/manifest/
+  flag change.
+- **Phase-2 implementation gates — GATE 1 SATISFIED (2026-07-01); GATES 2–5 OPEN.**
+  (1) ✅ Phase-2-scoped anchor/eye-box sign-off — **SATISFIED** (owner-countersigned, PR #7 `2159d3e`).
+  (2) ⛔ human paint-over of the decomposed v2 base passing **164B.3** — open.
+  (3) ⛔ the remaining **face / eyes / eyelid / hair** layers — open.
+  (4) ⛔ a **WebP encoder** (still absent) — open.
+  (5) ⛔ human **visual sign-off** on the composed raster stack — open.
+  **Phase-2 runtime code may pass GATE 1 ONLY.** Until gates 2–5 are met: **Phase-2 implementation is
+  still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays `false`**; the Phase-1 PNG baked
+  base + pilot opt-in + C2/SVG fallback remain intact.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
