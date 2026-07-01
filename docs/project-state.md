@@ -7,6 +7,41 @@ production — the 2026-06-15 "C2 not active / flag OFF" statements below are an
 **superseded**, not deleted. The **decision register (D-001…D-041), timestamps, risks, debt and
 open questions remain historically unchanged.** Canonical current avatar/activation state lives in
 [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md); cross-track status in [`ROADMAP.md`](./ROADMAP.md)._
+_Platform / Services track completion added 2026-07-01 (Section 157S) — see the section immediately below._
+
+---
+
+## Platform / Services Track (157x) — COMPLETE (zero-cost, default-off)
+
+_Added 2026-07-01. This is the newer **Platform / Services track** (parallel to the Avatar/C2 track
+below). Full detail in [`ROADMAP.md`](./ROADMAP.md); ops/privacy specifics in
+[`OBSERVABILITY.md`](./OBSERVABILITY.md) and [`157q-consent-gdpr.md`](./157q-consent-gdpr.md)._
+
+**Status: every buildable zero-cost service is DONE — all default-off, fail-soft, PII-safe,
+unit-tested. Nothing is activated; production behaviour is unchanged.**
+
+Completed sections (from the 157A audit):
+- **Docs foundation:** 157A (audit) · 157AA (PROJECT_VISION/ARCHITECTURE/ROADMAP/AI_GUIDELINES/AVATAR_SYSTEM/CLAUDE_WORKFLOW) · 157AB (consolidation).
+- **Observability:** 157B (Sentry frontend) · 157C (Edge `_shared/monitoring.ts`) · 157CA (activation plan + static validation) — **default-off**.
+- **Cloudinary:** 157F (decision: fetch-mode, no secret) · 157G (`js/cloudinary.js`, raster-only, inert until 167A) — **default-off**.
+- **OCR:** 157H (spec) · 157I (`js/ocr/` browser-only document-recognition service, no image upload) — **default-off**.
+- **AI:** 157K (`_shared/ai/` abstraction + advisory `grade-answer`; not wired to the reward path) — **default-off**.
+- **Analytics:** 157D (`js/analytics.js` + GDPR consent gate) · 157E (core events + consent banner) — **default-off**.
+- **Read-aloud (TTS):** 157N (decision) · 157O (`js/read-aloud/` Piper-clip + on-device Web Speech; clips = offline deliverable) — **default-off**.
+- **Cross-cutting:** 157Q (consolidated consent SoT `js/consent.js` + canonical privacy map) · 157R (flag hardening `js/flags.js` + rollback runbook) · 157S (21 default-off/fail-soft unit tests via built-in `node --test` + `deno test`, no new framework).
+
+New feature flags (all **default-off** except where noted; see [`157r-feature-flags.md`](./157r-feature-flags.md)):
+- Frontend: `ENABLE_SENTRY`, `ENABLE_OCR`, `ENABLE_CLOUDINARY`, `ENABLE_ANALYTICS`, `ENABLE_READ_ALOUD` — plus the consent SoT (`js/consent.js`).
+- Edge (env): `ENABLE_SENTRY_EDGE`, `ENABLE_AI_GRADING`.
+- Diagnostics: `window.__flags()` reports live state (all services off; `AVATAR_V2` on).
+
+**Gates on remaining services work (not buildable now):**
+- **157CB — dedicated staging environment** (Supabase branch + Vercel preview) is the prerequisite
+  for **activating/validating** any external service (Sentry/PostHog/AI). Policy: no external service
+  is activated or validated against production. Free interim = local Supabase stack + Vercel preview.
+- **Deferred/future infra:** 157L/157M (AI grade wired into `process-event` + teacher UI), 157P
+  (Whisper STT), 157T (production-readiness). Piper audio clips + the 167A avatar art are **offline
+  deliverables**.
 
 ---
 
