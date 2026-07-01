@@ -160,8 +160,13 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    shipped as a **temporary PNG preview** (`body-neutral-medium-v1.png`; **WebP = production target**).
    **Phase-1 engine guard done (2026-07-01):** expression + blink overlays skipped when the raster base
    is active (`isAvatarR2ActiveFor`); presence/breathing stays; engine logic + C2 path untouched.
-   **Steps 3b/3c (Phase-2 decomposition) not started.**
-4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off).
+   **Phase-1 cosmetic slot-gate done (2026-07-01):** only aura/back render on the baked base.
+   **✅ Phase-1 visual sign-off = PASS (2026-07-01)** —
+   [167a-phase1-visual-signoff-checklist.md](./167a-phase1-visual-signoff-checklist.md) (clean alpha,
+   exact Master likeness, suppression + slot-gate verified, clean C2 rollback). Authorises a **flagged
+   preview only** — production stays `AVATAR_R2=false`, **not** Phase-2. **Steps 3b/3c (Phase-2
+   decomposition) not started.**
+4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
 
