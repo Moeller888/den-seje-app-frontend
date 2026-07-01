@@ -4,7 +4,7 @@ _Consolidated overview of the avatar system: philosophy, pipeline, rendering, st
 _Binding design goal: `docs/avatar-vision.md`. Decision register (D-001…D-041) + risks/debt:
 `docs/project-state.md`. Locked specs: `docs/adr/`. Master wiring plan: `docs/167a-master-asset-raster-wiring-plan.md`._
 _This file is the **map**; it does not restate the decision register or the ADRs — it points to them._
-_Last reviewed: 2026-06-30._
+_Last reviewed: 2026-07-01._
 
 ---
 
@@ -118,6 +118,13 @@ image-processing step derives anchors + the 5 MVP accessory-slot QA/build masks 
 Master. Outputs are **QA/build artifacts only** (gitignored under `tools/avatar/build/`), never
 runtime assets, never used to alter geometry.
 
+**Phase-2 cut-guide tooling (P2-0, shipped 2026-07-01):** `tools/avatar/extract-phase2-cut-guides.mjs`
+(same deterministic, non-AI, read-only-Master pattern) draws the anchor regions + eye
+opening/iris/pupil centres over Master and crops each Phase-2 layer zone, into the gitignored
+`tools/avatar/build/phase2/`, as guides for the **human paint-over** of the Tier-1 rig layers.
+**Review artifacts only** — no runtime asset, no `assets/avatar-r2/` write, no `R2_MANIFEST` change,
+`AVATAR_R2` untouched. Spec: [167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md) §11.
+
 ## 7. Storage
 
 Avatar assets and pipeline artifacts live in **Supabase Storage buckets** (read/written by the Edge
@@ -147,6 +154,11 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
   Phase-1 of the Master wiring (D-040 "Master-as-is") temporarily makes face/eyes/blink **static**
   (baked base) while keeping breathing; Phase-2 (163F decomposition) **restores the living engines**
   on the Master art. This sequencing (look-fix first, living-system second) is the 167A recommendation.
+  - **Phase-2 status (2026-07-01): PLANNED, not started.** Audit + implementation plan
+    ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief
+    ([167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md)) are written; the P2-0 cut-guide tool
+    (§6) is shipped (review artifacts only). Gated on human paint-over of the layers + a scoped
+    anchor/eye-box sign-off + a WebP encoder; `AVATAR_R2` stays `false`. Register: `project-state.md`.
 
 ## 10. Performance considerations
 
