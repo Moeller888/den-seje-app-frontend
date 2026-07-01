@@ -164,8 +164,11 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    **✅ Phase-1 visual sign-off = PASS (2026-07-01)** —
    [167a-phase1-visual-signoff-checklist.md](./167a-phase1-visual-signoff-checklist.md) (clean alpha,
    exact Master likeness, suppression + slot-gate verified, clean C2 rollback). Authorises a **flagged
-   preview only** — production stays `AVATAR_R2=false`, **not** Phase-2. **Steps 3b/3c (Phase-2
-   decomposition) not started.**
+   preview only** — production stays `AVATAR_R2=false`, **not** Phase-2.
+   **✅ Phase-1 pilot opt-in live (2026-07-01):** `isAvatarR2()` honours a per-browser
+   `localStorage.avatar_r2='1'` override (no cohort/DB, no global flip). Onboard carefully-chosen
+   neutral-medium, low-cosmetic users — [167a-phase1-pilot-rollout.md](./167a-phase1-pilot-rollout.md).
+   **Steps 3b/3c (Phase-2 decomposition) not started.**
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.

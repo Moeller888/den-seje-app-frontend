@@ -305,10 +305,20 @@ export function baseLayersForC2(identity) {
 // This block adds resolvers + a manifest; identity model, z-model, engines, render entry
 // point and existing public interfaces are untouched.
 
-// Master raster render switch — DEFAULT OFF. Flip to true (locally) to preview the Phase-1
-// raster base; the C2/SVG path is the untouched fallback whenever this is false.
+// Master raster render switch — DEFAULT OFF. `AVATAR_R2` stays false in production; the C2/SVG path
+// is the untouched fallback. `isAvatarR2()` also honours a per-browser OPT-IN override
+// (`localStorage.avatar_r2 = "1"`) — the mechanism for the small Phase-1 PILOT (167A), mirroring
+// `AVATAR_V2`. No cohort/DB targeting; enabled per browser only. Pilot selection criteria +
+// enable/disable steps: docs/167a-phase1-pilot-rollout.md.
 export const AVATAR_R2 = false;
-export function isAvatarR2() { return AVATAR_R2 === true; }
+export function isAvatarR2() {
+  if (AVATAR_R2) return true;
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_r2") === "1";
+  } catch (_e) {
+    return false;
+  }
+}
 
 // Served raster root + canonical served dimensions (ADR-163D: 1024×1536 master → 512×768).
 export const R2_BASE_PATH = "/assets/avatar-r2";
