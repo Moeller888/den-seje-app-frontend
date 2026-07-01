@@ -42,9 +42,16 @@ A user meeting all three gets a clean Phase-1 experience (the Master avatar + an
 ## 4. Onboarding steps
 
 1. Confirm the candidate is neutral-medium and low/no gated-cosmetics (§2).
-2. In that user's browser console: `localStorage.setItem("avatar_r2","1")`, reload. (Or provide a
-   one-line bookmarklet; do not ship a UI toggle for Phase-1.)
+2. In that user's browser (on their device, while signed in) run **one** of:
+   - Console: `localStorage.setItem("avatar_r2","1")` then reload.
+   - Enable bookmarklet: `javascript:(function(){localStorage.setItem('avatar_r2','1');location.reload();})();`
+   - Opt-out bookmarklet: `javascript:(function(){localStorage.removeItem('avatar_r2');location.reload();})();`
+   - (Do **not** ship a UI toggle for Phase-1.)
 3. Verify: the avatar on hub/quiz/avatar pages shows the Master raster; equipped aura/back still show.
+
+> **Boundary:** the key lives in `localStorage`, which is **per-browser/per-device** — it cannot be
+> set remotely. Onboarding is the pilot user running the one-liner in their own browser. There is no
+> server-side pilot state.
 
 ## 5. Rollback
 
@@ -59,3 +66,13 @@ A user meeting all three gets a clean Phase-1 experience (the Master avatar + an
 - **No DB cohorting / no percentage rollout** in Phase-1.
 - Production behaviour for non-pilot users is **unchanged**.
 - This is a **preview**, not production activation of the raster avatar, and **not** Phase-2.
+
+## 7. Pilot log
+
+| # | User | Identity | Cosmetics | Eligibility | Onboarding | Status |
+|---|---|---|---|---|---|---|
+| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium` (default) | none equipped | ✅ qualifies (neutral-medium, no gated cosmetics) | run the enable one-liner (§4) in that account's browser | **Ready** — flow verified end-to-end (no key → C2 `.svg`; `avatar_r2=1` → raster `.png`; cleared → C2). Enable on the device to activate. |
+
+_Verified 2026-07-01: profile `avatar_identity` = neutral / medium (default), `equipped_slots` empty →
+raster resolves and no cosmetics disappear. Add a row per additional pilot user; keep the group small
+and to the §2 criteria._
