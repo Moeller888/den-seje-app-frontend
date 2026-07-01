@@ -49,6 +49,7 @@ Four layers, from durable to point-in-time:
 | [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md) | **Pre-167A guardrail:** confirms 167A is an asset migration, not an avatar rewrite; lists guaranteed-unchanged components + risks. | Authoritative (guardrail) |
 | [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md) | 167A step-3 render-wiring plan: raster-vs-C2 switch, Phase-1/Phase-2 stack, hair technique, eye-box, fallback (gated on WebP art). | Authoritative (plan) |
 | [167a-master-base-extractor.md](./167a-master-base-extractor.md) | Deterministic Master base extractor (`tools/avatar/extract-master-base.mjs`) — alpha-cut + ÷2 → Phase-1 base PNG; promote→WebP pipeline. | Authoritative (tool) |
+| [167a-phase1-visual-signoff-checklist.md](./167a-phase1-visual-signoff-checklist.md) | Human visual sign-off checklist for the Phase-1 raster avatar (`AVATAR_R2`) — pass/fail gate before any wider preview. | Authoritative (QA) |
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | **Canonical** monitoring ops doc: activation, deployment, release, correlation, troubleshooting, runbook. | Authoritative (ops) |
 | [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md) | Plan of record for the dedicated staging environment (future infra milestone). | Authoritative (plan) |
 | [157f-cloudinary-decision-spec.md](./157f-cloudinary-decision-spec.md) | Cloudinary decision spec — fetch/delivery mode for raster avatar assets (gate for 157G). | Authoritative (spec) |
