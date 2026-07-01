@@ -71,8 +71,11 @@ A user meeting all three gets a clean Phase-1 experience (the Master avatar + an
 
 | # | User | Identity | Cosmetics | Eligibility | Onboarding | Status |
 |---|---|---|---|---|---|---|
-| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium` (default) | none equipped | ✅ qualifies (neutral-medium, no gated cosmetics) | run the enable one-liner (§4) in that account's browser | **Ready** — flow verified end-to-end (no key → C2 `.svg`; `avatar_r2=1` → raster `.png`; cleared → C2). Enable on the device to activate. |
+| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium` (default) | none equipped | ✅ qualifies (neutral-medium, no gated cosmetics) | `localStorage.avatar_r2='1'` (§4) in that account's browser | **✅ Verified (2026-07-01)** — enabled in a signed-in browser session; raster renders on avatar/hub/quiz (base = `…-r2/…png`); no cosmetic loss, no C2 fallback. |
 
 _Verified 2026-07-01: profile `avatar_identity` = neutral / medium (default), `equipped_slots` empty →
-raster resolves and no cosmetics disappear. Add a row per additional pilot user; keep the group small
-and to the §2 criteria._
+raster resolves and no cosmetics disappear. Onboarding flow verified end-to-end (no key → C2 `.svg`;
+`avatar_r2=1` → raster `.png`; cleared → C2) and the rendered pilot experience captured on all three
+surfaces. **Note:** the opt-in is per-browser `localStorage` (no server-side state) — persistent
+activation still requires setting the key in the account's actual browser/device. Add a row per
+additional pilot user; keep the group small and to the §2 criteria._
