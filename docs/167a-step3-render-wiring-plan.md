@@ -10,6 +10,11 @@ Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-
 
 ---
 
+> **LOCKED PATH (2026-07-01): D-040 Phase-1 "Master-as-is" first.** The next implementation step is
+> **3a** (§4 + §12) — wire the single **baked base** WebP behind `AVATAR_R2`, engines static, C2/SVG
+> fallback intact. **Do not start 163F Phase-2 decomposition (§5 / steps 3b/3c) yet.** Required first
+> asset: see §12/§15.
+
 ## 1. Scope & guardrail
 
 Step 3 = **wire the render path to consume the r2 raster resolvers, behind a flag, with C2/SVG
@@ -135,11 +140,12 @@ blink/expression — a behavioural regression). Two anchor sets coexist: legacy 
 3. **3c — Phase-2 face/eyes/blink** (needs face×7 + eyes iris/fixed + eyelid): wire engines to raster
    assets + revised eye-box; restore living face.
 
-## 13. Open decision (blocks which assets to produce first)
+## 13. Decision — LOCKED (2026-07-01): D-040 Phase-1 first, then 163F Phase-2
 
-**D-040 Phase-1 "Master-as-is"** (one baked base; fast; living face temporarily static) **vs 163F
-Phase-2 full decomposition** (living face preserved; heavy art). 167a §A recommends **Phase-1 → Phase-2**.
-This choice determines whether step 3a needs one baked WebP or the full 11-file stack.
+**The execution path is D-040 "Master-as-is" (Phase-1) first; 163F full decomposition (Phase-2) is
+deferred and NOT started yet.** So the **next implementation step is 3a** (switch + Phase-1 baked
+base), which needs **one** baked WebP — not the full 11-file stack. Phase-2 (steps 3b/3c) follows
+later. Sequencing therefore collapses to: **3a now (Phase-1)** → 3b/3c (Phase-2) deferred.
 
 ## 14. Definition of Done (step 3)
 
@@ -149,3 +155,28 @@ This choice determines whether step 3a needs one baked WebP or the full 11-file 
 - `node --check` + unit + Playwright smoke green; goldens re-baselined with human sign-off; onion-skin
   vs `Northstar Master.png` passes.
 - Rollback verified (flag flip → C2). Then step 4 (visual QA) / step 6 (production sign-off) proceed.
+
+## 15. Required first asset (Phase-1 / step 3a)
+
+**Exactly one WebP is required to start implementation:**
+
+| Field | Value |
+|---|---|
+| **File** | `assets/avatar-r2/base/body-neutral-medium-v1.webp` |
+| **Manifest entry** | `R2_MANIFEST.base = { "neutral-medium": 1 }`, `R2_MANIFEST.version = 1` |
+| **Resolver it activates** | `baseSrcForR2({ body_type:"neutral", skin_tone:"medium" })` |
+| **Content** | The **full Master avatar baked** — skin + body + face + eyes + hair + outfit (Phase-1 = Master-as-is; no decomposition) |
+| **Source** | `assets/avatar/reference/Northstar Master.png` (1024×1536, frozen — D-032), **alpha-cut** (white matte → transparent) → resized to **512×768** (÷2, anchor-stable) → WebP |
+| **Background** | Transparent (no white halo) |
+| **Budget** | Within ADR-163D: total avatar < ~350 KB, first-paint < 100 ms |
+
+**Nature of the deliverable (important):** this is a **mechanical, geometry-preserving alpha-cut of the
+existing frozen Master** — not an AI regeneration and **not** the deferred manual paint-over that D-033
+governs (that applies to the Phase-2 *decomposed* neutral base). It can plausibly be produced by a
+**deterministic script** (white-matte threshold, like the 164K extractor) with optional human alpha-edge
+cleanup. Low effort; no new avatar art.
+
+**Naming/versioning note (D-018, avoids collision with Phase-2):** `…-v1.webp` = the Phase-1 **baked**
+base (full avatar). Phase-2's *decomposed* neutral base (skin+underlayer+head, **no** face) will ship
+later as a **new version** (e.g. `body-neutral-medium-v2.webp`) alongside the face/eyes/eyelid/hair
+layers — never by mutating v1.

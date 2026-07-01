@@ -201,6 +201,19 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
 - **Deferred upgrades (not MVP blockers):** neutral reconstructed base (164B/164I/D-039),
   per-user skin tone / hairstyle / hair-color, torso/bottom/shoes clothing slots.
 
+### 167A raster migration — execution path LOCKED (2026-07-01)
+- **Step 1 scaffold shipped** (commit `8e089af`): `assets/avatar-r2/` + empty `R2_MANIFEST` + inert
+  raster resolvers in `js/avatar-layers.js` (`AVATAR_R2=false`; render on C2/SVG). Additive; no
+  render/engine/z/identity change.
+- **Path LOCKED = D-040 Phase-1 "Master-as-is" FIRST**, then 163F Phase-2 decomposition later
+  (**Phase-2 not started**). Step-3 wiring plan: [`167a-step3-render-wiring-plan.md`](./167a-step3-render-wiring-plan.md).
+- **The one blocker = the first WebP:** `assets/avatar-r2/base/body-neutral-medium-v1.webp` —
+  an **alpha-cut of `Northstar Master.png`** (white matte → transparent, 512×768, WebP; full avatar
+  baked). **Mechanical / geometry-preserving** (potentially scriptable via the 164K white-matte
+  approach) — **not** AI regeneration and **not** the D-033 manual paint-over (that governs the
+  deferred Phase-2 decomposed base). On delivery: register in `R2_MANIFEST` (`base:{ "neutral-medium":1 }`,
+  `version:1`) → step 3a wires it behind `AVATAR_R2` (default-off, C2 fallback).
+
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
 - OQ-2: ~~Base redesign vs re-asset~~ **RESOLVED** — raster re-asset from North Star v1.0.

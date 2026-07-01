@@ -142,14 +142,18 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 > **[167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)** (pre-167A
 > preservation report) before starting.
 
-1. **🟡 In progress (167A-START, 2026-07-01):** scaffold done — `assets/avatar-r2/` created + empty
-   `R2_MANIFEST` + inert raster resolvers (`baseSrcForR2`/`faceSrcForR2`/`eyesSrcForR2`/`eyelidSrcForR2`/
-   `hairSrcForR2`, `AVATAR_R2=false`) added **alongside** the C2/SVG resolvers in `js/avatar-layers.js`.
-   Additive + inert (all resolvers return `null` → C2/SVG fallback; render untouched). Readiness =
-   **PARTIAL**: Master `.png` (1024×1536) + anchors/masks (build artifacts) present; **WebP art absent**.
-   Still to finalize: D-040 vs 163F decomposition choice; wire the revised eye-box at render time (step 3).
-2. **⛔ Master MVP raster base production** — _human art deliverable_ (manual paint-over over
-   `Northstar Master.png`). **Cannot be AI-generated (D-033). Gates the visual result** (no WebP yet).
+1. **✅ Scaffold done (167A-START, 2026-07-01)** + **path LOCKED (2026-07-01): D-040 Phase-1
+   "Master-as-is" first, then 163F Phase-2 later.** `assets/avatar-r2/` + empty `R2_MANIFEST` + inert
+   raster resolvers (`baseSrcForR2`/…/`hairSrcForR2`, `AVATAR_R2=false`) added **alongside** the C2/SVG
+   resolvers in `js/avatar-layers.js` (additive; all resolvers return `null` → C2/SVG fallback; render
+   untouched). Readiness = **PARTIAL** (Master `.png` 1024×1536 + anchors/masks present; **WebP absent**).
+2. **⛔ Phase-1 base production (D-040) — the one blocker.** Required first asset:
+   `assets/avatar-r2/base/body-neutral-medium-v1.webp` = **alpha-cut of `Northstar Master.png`** (white
+   matte → transparent, resized 512×768, WebP; full avatar baked). This is a **mechanical,
+   geometry-preserving** op on the frozen Master — **not** an AI regeneration and **not** the D-033
+   manual paint-over (that governs the deferred Phase-2 decomposed base). Then step 3a wires it (§15 of
+   [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md)). **163F Phase-2 decomposition
+   is deferred — do not start yet.**
 3. Renderer raster wiring (behind `AVATAR_R2`) — **plan drafted:**
    [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md) (switch + Phase-1/Phase-2
    stack + hair-technique + eye-box; additive, fallback, default-off). Gated on the produced WebP art.

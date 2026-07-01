@@ -123,7 +123,10 @@ Onion-skin/overlay rendered avatar vs `Northstar Master.png`:
 5. Test/golden re-baseline — regenerate from the Master render; add fidelity assertions. *(code)*
 6. Production verification — deploy, full suite vs deployed, manual smoke, sign-off. *(ops)*
 
-## Open decision for the execution phase
-- **MVP path:** D-040 "Master-as-is" (fast look, loses living face temporarily) vs 163F
-  full decomposition (preserves living system, heavy human art). Recommendation: D-040
-  Phase-1 → 163F Phase-2.
+## Execution-phase decision — LOCKED (2026-07-01)
+- **MVP path = D-040 "Master-as-is" (Phase-1) FIRST**, then 163F full decomposition (Phase-2) later.
+  Owner decision 2026-07-01: proceed with Phase-1; **do not start Phase-2 decomposition yet.**
+- Next implementation step = **3a** — wire the single **baked base** WebP
+  (`assets/avatar-r2/base/body-neutral-medium-v1.webp`) behind `AVATAR_R2`, engines static, C2/SVG
+  fallback. Full wiring detail: [`167a-step3-render-wiring-plan.md`](./167a-step3-render-wiring-plan.md)
+  (§4 Phase-1, §15 required asset).
