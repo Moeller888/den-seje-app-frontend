@@ -168,7 +168,10 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    **✅ Phase-1 pilot opt-in live (2026-07-01):** `isAvatarR2()` honours a per-browser
    `localStorage.avatar_r2='1'` override (no cohort/DB, no global flip). Onboard carefully-chosen
    neutral-medium, low-cosmetic users — [167a-phase1-pilot-rollout.md](./167a-phase1-pilot-rollout.md).
-   **Steps 3b/3c (Phase-2 decomposition) not started.**
+   **Steps 3b/3c (Phase-2 decomposition) not started** — audit + implementation plan now written:
+   [167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md) + asset brief P2-0
+   [167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md) (gated on human art + a WebP encoder;
+   `AVATAR_R2` stays `false`).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
