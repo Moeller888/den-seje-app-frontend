@@ -2,7 +2,7 @@
 
 _Schedule, status and section ordering. Single source of truth for "where are we / what's next."_
 _Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md). Avatar specifics: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md)._
-_Last reviewed: 2026-06-30._
+_Last reviewed: 2026-07-01._
 
 > **Two parallel tracks.** The project runs an **Avatar / art track** (numeric sections 155–167+,
 > decisions D-001…D-041) and a newer **Platform / services track** (Section 157A audit → 157B+).
@@ -171,7 +171,10 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    **Steps 3b/3c (Phase-2 decomposition) not started** — audit + implementation plan now written:
    [167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md) + asset brief P2-0
    [167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md) (gated on human art + a WebP encoder;
-   `AVATAR_R2` stays `false`).
+   `AVATAR_R2` stays `false`). **P2-0 cut-guide tool shipped (2026-07-01):**
+   `tools/avatar/extract-phase2-cut-guides.mjs` (deterministic, non-AI) emits anchor-overlay +
+   per-zone crops to the gitignored `tools/avatar/build/phase2/` as painter guides — **review
+   artifacts only** (no runtime asset, no `R2_MANIFEST` change, `AVATAR_R2` untouched).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
