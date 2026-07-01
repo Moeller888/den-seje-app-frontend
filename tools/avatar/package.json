@@ -6,6 +6,7 @@
   "description": "Deterministic, non-AI avatar build tooling (164L): anchor + MVP mask extraction from the Tier-0 Master. QA/build artifacts only — not runtime assets.",
   "scripts": {
     "extract-masks": "node ./extract-anchor-masks.mjs",
+    "extract-master-base": "node ./extract-master-base.mjs",
     "test-items": "node ./test-items.mjs",
     "ai-test-item": "node ./ai-test-item.mjs",
     "generate-procedural-glasses": "node ./generate-procedural-glasses.mjs",
