@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, C2_BASE_Z, isAvatarR2, baseSrcForR2, hasR2BaseFor } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, C2_BASE_Z, isAvatarR2, baseSrcForR2, hasR2BaseFor, isR2Phase1SafeSlot } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
@@ -63,8 +63,11 @@ export function composeC2Layers(identity, cosmetics = []) {
 // existing loop renders it unchanged (base + cosmetics as <img>).
 export function composeR2Layers(identity, cosmetics = []) {
   const base = { src: baseSrcForR2(identity), z: C2_BASE_Z, isBase: true, inline: false };
+  // 167A Phase-1 slot-gate: only anchor-independent, behind-figure cosmetics (aura/back)
+  // render on the baked base. Head/face/eye + clothing items misalign on the legacy
+  // anchors / clash with the baked outfit → gated until Phase-2. Raster path only.
   const cos = (Array.isArray(cosmetics) ? cosmetics : [])
-    .filter((c) => c && c.src && typeof c.z === "number")
+    .filter((c) => c && c.src && typeof c.z === "number" && isR2Phase1SafeSlot(c.slot))
     .map((c) => ({ src: c.src, z: c.z, isBase: false, inline: false }));
   return [base, ...cos];
 }

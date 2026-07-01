@@ -221,8 +221,13 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   on**. Engine logic unchanged (caller-side skip only, an already-supported "engine absent" state);
   C2/SVG path untouched. Verified by DOM probe (raster → 0 expr overlays, no blink layer, breathing
   active) + smoke.
+- **Phase-1 cosmetic slot-gate DONE (2026-07-01):** on the raster base, `composeR2Layers` renders only
+  `R2_PHASE1_SAFE_SLOTS = ["aura","back"]` (behind-figure, anchor-independent). Head/face/eye
+  (headwear/face/eyes) + clothing (torso/body/neck) are gated — QA showed they float on the legacy
+  anchors / clash with the baked outfit. Raster path only; C2/SVG renders all slots unchanged. No
+  z-model/anchor/mask/shop/ownership/identity change. Cosmetic re-anchoring = Phase-2.
 - **Remaining (deferred): Phase-2 163F decomposition** (steps 3b/3c — living face/eyes/blink, hair
-  raster + eye-box) — **not started**; per-layer WebP art required.
+  raster + eye-box; cosmetic anchor revision) — **not started**; per-layer WebP art required.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).

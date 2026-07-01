@@ -24,6 +24,14 @@ Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-
 > caller skips construction — an already-supported "engine absent" state); C2/SVG path unmodified.
 > Verified by DOM probe: raster → 0 expression overlays, no blink layer, breathing still active. Full
 > engine re-alignment to a decomposed raster face is Phase-2 (steps 3b/3c), **not started**.
+>
+> **✅ Phase-1 cosmetic slot-gate DONE (2026-07-01):** `composeR2Layers` renders **only the safe slot
+> set `R2_PHASE1_SAFE_SLOTS = ["aura","back"]`** (behind-figure, anchor-independent). Head/face/eye
+> items (headwear/face/eyes) and clothing (torso/body/neck) are **gated** on the raster base — QA
+> showed they float on the legacy anchors / clash with the baked outfit. **Raster path only**; the
+> C2/SVG cosmetic path renders all slots unchanged. Slot names/z, anchors, masks, shop, ownership,
+> identity unchanged. Cosmetic re-anchoring to North Star proportions is Phase-2. Verified: raster
+> keeps only aura/back (functional + visual); C2 keeps all; unit + smoke green.
 
 ## 1. Scope & guardrail
 

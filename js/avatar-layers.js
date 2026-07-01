@@ -398,6 +398,17 @@ export function isAvatarR2ActiveFor(identity) {
   return isAvatarR2() && hasR2BaseFor(identity);
 }
 
+// 167A Phase-1 cosmetic slot-gate. On the raster baked base, only cosmetics that render
+// BEHIND the figure and are anchor-independent are shown. Head/face/eye items
+// (headwear/face/eyes) float on the legacy anchors, and clothing (torso/body/neck) clashes
+// with the baked outfit — both are GATED until the Phase-2 anchor revision. This filters
+// the RASTER render only (composeR2Layers); the C2/SVG cosmetic path is unchanged. Slot
+// names + z are unchanged (no z-model/anchor/shop/ownership change).
+export const R2_PHASE1_SAFE_SLOTS = ["aura", "back"];
+export function isR2Phase1SafeSlot(slot) {
+  return R2_PHASE1_SAFE_SLOTS.indexOf(slot) !== -1;
+}
+
 // Whether a full Phase-2 raster stack (base + hair) is available. False in Phase-1.
 export function hasR2StackFor(identity) {
   return !!(baseSrcForR2(identity) && hairSrcForR2(identity));
