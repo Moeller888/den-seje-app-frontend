@@ -11,8 +11,15 @@ C2/SVG path. Flip `AVATAR_R2` locally to preview.
 
 **⚠️ The PNG is a TEMPORARY preview/fallback. WebP is the production target** (D-013). The PNG is the
 deterministic alpha-cut of the Master (`tools/avatar/extract-master-base.mjs`) — no image dependency
-needed to ship it. To switch to WebP later: encode `…-v1.webp`, drop it here, and change the manifest
+needed to ship it. To switch to WebP later: encode `…-v2.webp`, drop it here, and change the manifest
 entry to `{ v: 2, ext: "webp" }` (new version — never mutate a shipped asset, D-018).
+
+**WebP swap DEFERRED (2026-07-01).** No WebP encoder is available in the environment (no
+cwebp / ffmpeg / ImageMagick / sharp), and adding a dependency (or hand-rolling an encoder) was
+declined to avoid new deps. Decision:
+- **The PNG (`…-v1.png`, ~244 KB — within the <350 KB budget) is the current Phase-1 runtime asset.**
+- **WebP remains the future production target** (D-013).
+- **The WebP swap is deferred until a proper encoder is available.**
 
 **Execution path LOCKED (2026-07-01): D-040 Phase-1 "Master-as-is"** (163F Phase-2 decomposition
 deferred). The base is the **full Master avatar baked** (skin+body+face+eyes+hair+outfit) — mechanical /

@@ -214,7 +214,10 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   when `AVATAR_R2` is true (default false → untouched C2/SVG render)**. Engines/cosmetics/identity
   unchanged; C2 fallback intact. Validated (node --check, unit, smoke).
 - **PNG is temporary; WebP is the production target (D-013)** — no image dependency was added (no
-  sharp/cwebp). Swap to WebP later via a new version (`{ v:2, ext:"webp" }`).
+  sharp/cwebp). **WebP swap DEFERRED (2026-07-01):** no encoder is available in the environment
+  (cwebp/ffmpeg/ImageMagick/sharp all absent) and adding a dep / hand-rolling an encoder was declined
+  to avoid new deps. The **PNG (~244 KB, within the <350 KB budget) is the current Phase-1 runtime
+  asset**; WebP swap (`{ v:2, ext:"webp" }`) waits until a proper encoder is available.
 - **Phase-1 engine guard DONE (2026-07-01):** when the raster base is active
   (`isAvatarR2ActiveFor(identity)`), expression + blink overlays are **skipped** at the mount sites
   (app.js, avatar.html, hub.html) so they never render over the baked face; **presence/breathing stays
