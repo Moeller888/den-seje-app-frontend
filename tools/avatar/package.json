@@ -7,6 +7,7 @@
   "scripts": {
     "extract-masks": "node ./extract-anchor-masks.mjs",
     "extract-master-base": "node ./extract-master-base.mjs",
+    "extract-phase2-cut-guides": "node ./extract-phase2-cut-guides.mjs",
     "test-items": "node ./test-items.mjs",
     "ai-test-item": "node ./ai-test-item.mjs",
     "generate-procedural-glasses": "node ./generate-procedural-glasses.mjs",
