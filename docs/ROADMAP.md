@@ -150,7 +150,9 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    Still to finalize: D-040 vs 163F decomposition choice; wire the revised eye-box at render time (step 3).
 2. **⛔ Master MVP raster base production** — _human art deliverable_ (manual paint-over over
    `Northstar Master.png`). **Cannot be AI-generated (D-033). Gates the visual result** (no WebP yet).
-3. Renderer raster wiring (behind `AVATAR_V2`).
+3. Renderer raster wiring (behind `AVATAR_R2`) — **plan drafted:**
+   [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md) (switch + Phase-1/Phase-2
+   stack + hair-technique + eye-box; additive, fallback, default-off). Gated on the produced WebP art.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off).
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
