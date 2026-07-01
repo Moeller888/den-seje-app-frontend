@@ -3,6 +3,10 @@
 Purpose: a repeatable human visual QA to sign off the **Phase-1 "Master-as-is" raster avatar**
 before any wider preview/rollout. Local-only; **default stays `AVATAR_R2=false`** (production unaffected).
 Owner: project owner. Date: 2026-07-01.
+
+> **STATUS: ✅ PASS — recorded 2026-07-01.** Run against avatar.html / hub.html / index.html (raster)
+> + a no-DB cosmetics harness; see §13 for the recorded result. Authorises a **flagged** preview only
+> (`AVATAR_R2` stays `false` by default) — not production activation, not Phase-2.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [167a-master-base-extractor.md](./167a-master-base-extractor.md),
 [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md).
@@ -127,8 +131,16 @@ Side-by-side of `-r2` vs `-c2` on the same surface:
 - Doesn't read as the Master, or looks worse than C2.
 - Rollback doesn't cleanly restore C2.
 
-**Notes / defects found:** ____________________________________________
-**Reviewer / date:** ____________________   **Result: PASS / FAIL**
+**Notes / defects found:** None failing. Clean alpha edge / no white halo at 32/48/64 px; centered &
+correctly scaled on avatar/hub/quiz (eyes legible at 32 px); **exact likeness** to `Northstar Master.png`
+(render is a pixel-faithful alpha-cut); **suppression verified by DOM probe** (0 expression overlays, no
+`#avatar-blink-layer` on all raster surfaces) with breathing still active (`--breathe-scale` ≈1.006);
+**slot-gate verified** (headwear/face/eyes/clothing gated — only aura/back render); **clean rollback** to
+C2 at `AVATAR_R2=false` (base → `…-c2.svg`, expression overlay = 1, blink present). Known Phase-1
+limitations are **by design, not failures:** PNG (not WebP) runtime asset; head/face/eye + clothing
+cosmetics gated; single fixed neutral-medium base.
+
+**Reviewer / date:** QA run 2026-07-01 (recorded on owner instruction)   **Result: ✅ PASS**
 
 > A PASS here authorises only a **flagged** preview (still `AVATAR_R2=false` by default; enabled
 > deliberately per audience). It is **not** production activation and **not** Phase-2. Known Phase-1
