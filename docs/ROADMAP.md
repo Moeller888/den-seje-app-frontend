@@ -175,6 +175,13 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    `tools/avatar/extract-phase2-cut-guides.mjs` (deterministic, non-AI) emits anchor-overlay +
    per-zone crops to the gitignored `tools/avatar/build/phase2/` as painter guides — **review
    artifacts only** (no runtime asset, no `R2_MANIFEST` change, `AVATAR_R2` untouched).
+   **✅ Phase-2 GATE 1 SATISFIED (2026-07-01, PR #7 `2159d3e`):** the cut-guide review worksheet
+   ([167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md)) is
+   PASS and the **Phase-2 raster eye-box is owner-countersigned APPROVED** — the plan §13 gate 1
+   (Phase-2-scoped anchor/eye-box sign-off) is cleared. Approval is **raster-path only**; the **legacy
+   C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — gates
+   2–5 remain OPEN (human v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, WebP encoder,
+   visual sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
