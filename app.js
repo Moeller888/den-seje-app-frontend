@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2 } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2, isAvatarR2ActiveFor } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -1189,9 +1189,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const avatarDisplay = document.getElementById("avatar-display");
   if (avatarDisplay) {
-    try { exprEngine    = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+    // 167A Phase-1 guard: when the raster baked base is active for this student, SKIP the
+    // expression + blink overlays (the face is baked into the base). Presence/breathing
+    // stays. C2/SVG path unchanged (r2 off/absent → engines mount as before). Engines are
+    // already optional (try/catch → null) and every consumer null-guards, so skipping is a
+    // supported state. Identity fetched here since it isn't known until the avatar renders.
+    let quizIdentity = null;
+    try {
+      const { data } = await supabase.from("profiles").select("avatar_identity").eq("id", studentId).maybeSingle();
+      quizIdentity = data?.avatar_identity ?? null;
+    } catch (e) { /* non-fatal */ }
+    const r2Active = isAvatarR2ActiveFor(quizIdentity);
     try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
-    try { blinkEngine   = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
+    if (!r2Active) {
+      try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+      try { blinkEngine = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
+    }
   }
   await loadAndRenderQuestion();
 });

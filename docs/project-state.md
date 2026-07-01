@@ -215,6 +215,12 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   unchanged; C2 fallback intact. Validated (node --check, unit, smoke).
 - **PNG is temporary; WebP is the production target (D-013)** — no image dependency was added (no
   sharp/cwebp). Swap to WebP later via a new version (`{ v:2, ext:"webp" }`).
+- **Phase-1 engine guard DONE (2026-07-01):** when the raster base is active
+  (`isAvatarR2ActiveFor(identity)`), expression + blink overlays are **skipped** at the mount sites
+  (app.js, avatar.html, hub.html) so they never render over the baked face; **presence/breathing stays
+  on**. Engine logic unchanged (caller-side skip only, an already-supported "engine absent" state);
+  C2/SVG path untouched. Verified by DOM probe (raster → 0 expr overlays, no blink layer, breathing
+  active) + smoke.
 - **Remaining (deferred): Phase-2 163F decomposition** (steps 3b/3c — living face/eyes/blink, hair
   raster + eye-box) — **not started**; per-layer WebP art required.
 

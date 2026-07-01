@@ -389,6 +389,15 @@ export function hasR2BaseFor(identity) {
   return !!baseSrcForR2(identity);
 }
 
+// Whether the raster Phase-1 baked base is the ACTIVE render for this identity
+// (AVATAR_R2 on AND a raster base exists). Phase-1 guard: expression + blink overlays
+// are SKIPPED when this is true (the face is baked into the base), so they never render
+// on top of the baked face. Presence/breathing stays on; the C2/SVG path (this = false)
+// is unchanged. Default AVATAR_R2 false → always false in production.
+export function isAvatarR2ActiveFor(identity) {
+  return isAvatarR2() && hasR2BaseFor(identity);
+}
+
 // Whether a full Phase-2 raster stack (base + hair) is available. False in Phase-1.
 export function hasR2StackFor(identity) {
   return !!(baseSrcForR2(identity) && hairSrcForR2(identity));

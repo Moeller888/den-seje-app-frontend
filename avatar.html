@@ -713,7 +713,7 @@ import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor, skinToneFor,
-  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2,
+  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, isAvatarR2ActiveFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -1216,9 +1216,16 @@ function initAvatarLifeEngines() {
   // before renderAll(), the page stays static (no floating expression overlay).
   if (!preview.querySelector("img.avatar-layer")) return;
 
-  try { exprEngine     = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
+  // 167A Phase-1 guard: skip expression + blink when the raster baked base is active
+  // (face is baked). Presence/breathing stays. C2/SVG path unchanged.
+  const r2Active = isAvatarR2ActiveFor(avatarIdentity);
+  if (!r2Active) {
+    try { exprEngine   = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
+  }
   try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-  try { blinkEngine    = new BlinkEngine(preview, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+  if (!r2Active) {
+    try { blinkEngine  = new BlinkEngine(preview, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+  }
 }
 
 // Rarity → engine event mapping. Unknown/missing rarity falls back to common.

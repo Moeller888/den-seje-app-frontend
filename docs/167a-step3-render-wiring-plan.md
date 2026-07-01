@@ -16,9 +16,14 @@ Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-
 > C2/SVG). Shipped as a **temporary transparent PNG preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`,
 > registered `{ v:1, ext:"png" }`) — **WebP remains the production target** (§6/§15). `mountC2Avatar`
 > branches to `composeR2Layers` (base + cosmetics, no hair — face/hair baked) only when `AVATAR_R2` is
-> on. **Engines were NOT changed** (per constraint): with the flag flipped for local preview the
-> expression/blink overlays are not yet suppressed/re-aligned to the raster face — that is Phase-2
-> (steps 3b/3c), **not started**. Production (default-off) is unaffected.
+> on.
+>
+> **✅ Phase-1 engine guard DONE (2026-07-01):** expression + blink overlays are **skipped at the mount
+> sites** (app.js, avatar.html, hub.html) when `isAvatarR2ActiveFor(identity)` is true — so they never
+> render over the baked face. **Presence/breathing stays on.** Engine LOGIC is unchanged (only the
+> caller skips construction — an already-supported "engine absent" state); C2/SVG path unmodified.
+> Verified by DOM probe: raster → 0 expression overlays, no blink layer, breathing still active. Full
+> engine re-alignment to a decomposed raster face is Phase-2 (steps 3b/3c), **not started**.
 
 ## 1. Scope & guardrail
 

@@ -158,7 +158,9 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md). **✅ Step 3a done
    (2026-07-01):** Phase-1 baked base wired behind `AVATAR_R2` (default-off, C2/SVG fallback intact),
    shipped as a **temporary PNG preview** (`body-neutral-medium-v1.png`; **WebP = production target**).
-   Engines unchanged; C2 path untouched. **Steps 3b/3c (Phase-2 decomposition) not started.**
+   **Phase-1 engine guard done (2026-07-01):** expression + blink overlays skipped when the raster base
+   is active (`isAvatarR2ActiveFor`); presence/breathing stays; engine logic + C2 path untouched.
+   **Steps 3b/3c (Phase-2 decomposition) not started.**
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off).
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
