@@ -229,6 +229,18 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   (headwear/face/eyes) + clothing (torso/body/neck) are gated — QA showed they float on the legacy
   anchors / clash with the baked outfit. Raster path only; C2/SVG renders all slots unchanged. No
   z-model/anchor/mask/shop/ownership/identity change. Cosmetic re-anchoring = Phase-2.
+- **Phase-1 visual sign-off = PASS (2026-07-01)** — see
+  [`167a-phase1-visual-signoff-checklist.md`](./167a-phase1-visual-signoff-checklist.md).
+- **Phase-1 pilot opt-in LIVE (2026-07-01, commit `78a8e6d`).** `isAvatarR2()` now honours a
+  per-browser override `localStorage.avatar_r2 === "1"` (mirrors `AVATAR_V2`). **`AVATAR_R2` remains
+  `false` by default** → non-pilot users still render the untouched **C2/SVG** avatar; only browsers
+  that set the key see the raster. **No DB cohorting, no percentage rollout, no global enable.**
+  - **Pilot selection:** neutral-medium identity + low/no cosmetics (only aura/back render on the
+    baked base; head/face/eye/clothing are slot-gated). Criteria + onboarding:
+    [`167a-phase1-pilot-rollout.md`](./167a-phase1-pilot-rollout.md).
+  - **Opt-out:** `localStorage.removeItem("avatar_r2")` (reload) → back to C2 instantly.
+  - **Still deferred:** WebP swap (no encoder; PNG is the current runtime asset). **Phase-2 163F
+    decomposition NOT started.**
 - **Remaining (deferred): Phase-2 163F decomposition** (steps 3b/3c — living face/eyes/blink, hair
   raster + eye-box; cosmetic anchor revision) — **not started**; per-layer WebP art required.
 
