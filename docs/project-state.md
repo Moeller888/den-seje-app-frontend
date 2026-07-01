@@ -207,12 +207,16 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   render/engine/z/identity change.
 - **Path LOCKED = D-040 Phase-1 "Master-as-is" FIRST**, then 163F Phase-2 decomposition later
   (**Phase-2 not started**). Step-3 wiring plan: [`167a-step3-render-wiring-plan.md`](./167a-step3-render-wiring-plan.md).
-- **The one blocker = the first WebP:** `assets/avatar-r2/base/body-neutral-medium-v1.webp` —
-  an **alpha-cut of `Northstar Master.png`** (white matte → transparent, 512×768, WebP; full avatar
-  baked). **Mechanical / geometry-preserving** (potentially scriptable via the 164K white-matte
-  approach) — **not** AI regeneration and **not** the D-033 manual paint-over (that governs the
-  deferred Phase-2 decomposed base). On delivery: register in `R2_MANIFEST` (`base:{ "neutral-medium":1 }`,
-  `version:1`) → step 3a wires it behind `AVATAR_R2` (default-off, C2 fallback).
+- **Step 3a DONE (2026-07-01):** the Phase-1 baked base is produced + wired. A deterministic extractor
+  (`tools/avatar/extract-master-base.mjs`) alpha-cuts + downscales the Master → a **temporary transparent
+  PNG preview** `assets/avatar-r2/base/body-neutral-medium-v1.png`, registered in `R2_MANIFEST`
+  (`base:{ "neutral-medium":{ v:1, ext:"png" } }`, `version:1`) and consumed by `mountC2Avatar` **only
+  when `AVATAR_R2` is true (default false → untouched C2/SVG render)**. Engines/cosmetics/identity
+  unchanged; C2 fallback intact. Validated (node --check, unit, smoke).
+- **PNG is temporary; WebP is the production target (D-013)** — no image dependency was added (no
+  sharp/cwebp). Swap to WebP later via a new version (`{ v:2, ext:"webp" }`).
+- **Remaining (deferred): Phase-2 163F decomposition** (steps 3b/3c — living face/eyes/blink, hair
+  raster + eye-box) — **not started**; per-layer WebP art required.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).

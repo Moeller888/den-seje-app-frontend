@@ -10,10 +10,15 @@ Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-
 
 ---
 
-> **LOCKED PATH (2026-07-01): D-040 Phase-1 "Master-as-is" first.** The next implementation step is
-> **3a** (§4 + §12) — wire the single **baked base** WebP behind `AVATAR_R2`, engines static, C2/SVG
-> fallback intact. **Do not start 163F Phase-2 decomposition (§5 / steps 3b/3c) yet.** Required first
-> asset: see §12/§15.
+> **LOCKED PATH (2026-07-01): D-040 Phase-1 "Master-as-is" first.**
+>
+> **✅ Step 3a DONE (2026-07-01):** the baked base is wired behind `AVATAR_R2` (default **false** →
+> C2/SVG). Shipped as a **temporary transparent PNG preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`,
+> registered `{ v:1, ext:"png" }`) — **WebP remains the production target** (§6/§15). `mountC2Avatar`
+> branches to `composeR2Layers` (base + cosmetics, no hair — face/hair baked) only when `AVATAR_R2` is
+> on. **Engines were NOT changed** (per constraint): with the flag flipped for local preview the
+> expression/blink overlays are not yet suppressed/re-aligned to the raster face — that is Phase-2
+> (steps 3b/3c), **not started**. Production (default-off) is unaffected.
 
 ## 1. Scope & guardrail
 

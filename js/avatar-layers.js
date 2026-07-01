@@ -294,20 +294,19 @@ export function baseLayersForC2(identity) {
   ];
 }
 
-// ── North Star Master raster (167A) — SCAFFOLD (additive, inert) ──────────────
-// Execution step 1 of docs/167a-master-asset-raster-wiring-plan.md (§I.1): the r2
-// manifest + resolvers, ALONGSIDE the existing C2/SVG resolvers (which are unchanged).
-// This changes NOTHING at runtime: the manifest is empty (the Master raster is a human
-// paint-over deliverable — D-033 — not yet produced), so every resolver returns null and
-// callers fall back to the C2/SVG path. The render pipeline does NOT consult these yet
-// (that is 167A step 3 / Phase-2, gated on the produced WebP art). Raster is OFF.
+// ── North Star Master raster (167A) — r2 resolvers + manifest ─────────────────
+// Step 1 scaffold (docs/167a-master-asset-raster-wiring-plan.md §I.1) + step 3a wiring:
+// the r2 manifest + resolvers live ALONGSIDE the existing C2/SVG resolvers (unchanged).
+// Phase-1 (D-040 "Master-as-is") is active: `R2_MANIFEST.base` holds the baked base as a
+// **temporary PNG preview** (WebP = production target). The render (mountC2Avatar) consults
+// these ONLY when `AVATAR_R2` is true (default false → C2/SVG path, byte-for-byte).
 //
 // Guardrail (docs/167a-architecture-preservation-report.md): 167A is an ASSET migration.
-// This block adds resolvers + a manifest only; identity model, z-model, engines, render
-// entry point and existing public interfaces are untouched.
+// This block adds resolvers + a manifest; identity model, z-model, engines, render entry
+// point and existing public interfaces are untouched.
 
-// Master raster render switch — OFF. When the WebP layers exist and are wired (step 3),
-// this (or an AVATAR_V2 sub-switch) gates the raster path. Do not flip until art ships.
+// Master raster render switch — DEFAULT OFF. Flip to true (locally) to preview the Phase-1
+// raster base; the C2/SVG path is the untouched fallback whenever this is false.
 export const AVATAR_R2 = false;
 export function isAvatarR2() { return AVATAR_R2 === true; }
 
@@ -315,64 +314,82 @@ export function isAvatarR2() { return AVATAR_R2 === true; }
 export const R2_BASE_PATH = "/assets/avatar-r2";
 export const R2_SERVED = { width: 512, height: 768 };
 
-// Manifest STUB — logical layer key → produced WebP version. EMPTY until the Master
-// raster is produced (`version: 0` = "not produced"). Populating an entry (and bumping
-// `version`) makes the matching resolver return a real path — ready for step-3 wiring.
+// Manifest — logical layer key → produced asset `{ v: version, ext: "webp"|"png" }`
+// (a bare number is shorthand for `{ v, ext:"webp" }`). Populating an entry makes the
+// matching resolver return a path — consumed by the render ONLY when `AVATAR_R2` is on.
 // Naming per §C: body-{body_type}-{skin_tone}-vN · face-{expression}-vN ·
 // eyes-{set}-{iris|fixed}-vN · eyelid-{skin_tone}-vN · hair-northstar-vN.
+//
+// PHASE-1 (D-040) PREVIEW: the base is a **temporary transparent PNG** (`ext:"png"`) —
+// the deterministic alpha-cut of the Master (tools/avatar/extract-master-base.mjs). WebP
+// is the production target (D-013); swap to `ext:"webp"` (new version) once encoded.
 export const R2_MANIFEST = {
-  version:  0,   // 0 → Master raster not yet produced; render stays on C2/SVG
-  base:     {},  // e.g. { "neutral-medium": 1 }
-  face:     {},  // e.g. { "neutral": 1 }
-  eyesIris: {},  // e.g. { "neutral": 1 }
-  eyesFixed:{},  // e.g. { "neutral": 1 }
-  eyelid:   {},  // e.g. { "medium": 1 }
-  hair:     {},  // e.g. { "northstar": 1 }
+  version:  1,
+  base:     { "neutral-medium": { v: 1, ext: "png" } }, // Phase-1 preview PNG (WebP = future)
+  face:     {},   // e.g. { "neutral": 1 }
+  eyesIris: {},   // e.g. { "neutral": 1 }
+  eyesFixed:{},   // e.g. { "neutral": 1 }
+  eyelid:   {},   // e.g. { "medium": 1 }
+  hair:     {},   // e.g. { "northstar": 1 }
 };
 
-function r2Path(slot, name, v) {
-  return R2_BASE_PATH + "/" + slot + "/" + name + "-v" + v + ".webp";
+// Normalise a manifest entry → { v, ext } or null. WebP is the default/production
+// format; "png" is a temporary Phase-1 preview fallback (no image dep needed to ship it).
+function r2Entry(e) {
+  if (typeof e === "number" && e > 0) return { v: e, ext: "webp" };
+  if (e && typeof e === "object" && typeof e.v === "number" && e.v > 0) {
+    return { v: e.v, ext: e.ext === "png" ? "png" : "webp" };
+  }
+  return null;
 }
 
-// Resolvers — mirror the C2 resolvers for the raster set. Each returns an r2 WebP path
-// ONLY when the manifest registers a produced version, else null (→ C2/SVG fallback).
-// Never throw. All return null today (empty manifest).
+function r2Path(slot, name, entry) {
+  return R2_BASE_PATH + "/" + slot + "/" + name + "-v" + entry.v + "." + entry.ext;
+}
+
+// Resolvers — mirror the C2 resolvers for the raster set. Each returns an r2 path ONLY
+// when the manifest registers a produced asset, else null (→ C2/SVG fallback). Never throw.
 export function baseSrcForR2(identity) {
   const bodyType = BODY_TYPES.includes(identity && identity.body_type) ? identity.body_type : "neutral";
   const tone = skinToneFor(identity);
   const key = bodyType + "-" + tone;
-  const v = R2_MANIFEST.base[key];
-  return v ? r2Path("base", "body-" + key, v) : null;
+  const e = r2Entry(R2_MANIFEST.base[key]);
+  return e ? r2Path("base", "body-" + key, e) : null;
 }
 
 export function faceSrcForR2(expression) {
   const key = (typeof expression === "string" && expression.length > 0) ? expression : "neutral";
-  const v = R2_MANIFEST.face[key];
-  return v ? r2Path("face", "face-" + key, v) : null;
+  const e = r2Entry(R2_MANIFEST.face[key]);
+  return e ? r2Path("face", "face-" + key, e) : null;
 }
 
 export function eyesSrcForR2(set) {
   const key = (typeof set === "string" && set.length > 0) ? set : "neutral";
-  const iv = R2_MANIFEST.eyesIris[key];
-  const fv = R2_MANIFEST.eyesFixed[key];
-  const iris  = iv ? r2Path("eyes", "eyes-" + key + "-iris", iv) : null;
-  const fixed = fv ? r2Path("eyes", "eyes-" + key + "-fixed", fv) : null;
+  const ie = r2Entry(R2_MANIFEST.eyesIris[key]);
+  const fe = r2Entry(R2_MANIFEST.eyesFixed[key]);
+  const iris  = ie ? r2Path("eyes", "eyes-" + key + "-iris", ie) : null;
+  const fixed = fe ? r2Path("eyes", "eyes-" + key + "-fixed", fe) : null;
   return (iris || fixed) ? { iris, fixed } : null;
 }
 
 export function eyelidSrcForR2(identity) {
   const tone = skinToneFor(identity);
-  const v = R2_MANIFEST.eyelid[tone];
-  return v ? r2Path("eyelid", "eyelid-" + tone, v) : null;
+  const e = r2Entry(R2_MANIFEST.eyelid[tone]);
+  return e ? r2Path("eyelid", "eyelid-" + tone, e) : null;
 }
 
 export function hairSrcForR2(identity) {
-  const v = R2_MANIFEST.hair["northstar"];
-  return v ? r2Path("hair", "hair-northstar", v) : null;
+  const e = r2Entry(R2_MANIFEST.hair["northstar"]);
+  return e ? r2Path("hair", "hair-northstar", e) : null;
 }
 
-// Whether a minimal raster stack (base + hair) is available for an identity. False today.
-// Lets step-3 wiring choose raster-vs-C2 per identity without changing this module again.
+// Whether a Phase-1 raster BASE is available (base alone; face/eyes/hair are baked into
+// the Master-as-is base). Used by the step-3a render branch.
+export function hasR2BaseFor(identity) {
+  return !!baseSrcForR2(identity);
+}
+
+// Whether a full Phase-2 raster stack (base + hair) is available. False in Phase-1.
 export function hasR2StackFor(identity) {
   return !!(baseSrcForR2(identity) && hairSrcForR2(identity));
 }

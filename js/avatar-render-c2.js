@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, C2_BASE_Z, isAvatarR2, baseSrcForR2, hasR2BaseFor } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
@@ -57,6 +57,18 @@ export function composeC2Layers(identity, cosmetics = []) {
   return [base, ...cos, hair];
 }
 
+// 167A step 3a (Phase-1, D-040 "Master-as-is"): raster layer descriptors — the baked
+// base <img> (z0) + equipped cosmetics. NO hair layer: face/eyes/hair/outfit are baked
+// into the Phase-1 base. Same descriptor shape as composeC2Layers, so mountC2Avatar's
+// existing loop renders it unchanged (base + cosmetics as <img>).
+export function composeR2Layers(identity, cosmetics = []) {
+  const base = { src: baseSrcForR2(identity), z: C2_BASE_Z, isBase: true, inline: false };
+  const cos = (Array.isArray(cosmetics) ? cosmetics : [])
+    .filter((c) => c && c.src && typeof c.z === "number")
+    .map((c) => ({ src: c.src, z: c.z, isBase: false, inline: false }));
+  return [base, ...cos];
+}
+
 // The single C2 render path. Mounts base (<img>) + hair (inline <svg>, token-
 // recolored) into rootEl. Removes only prior C2 layers ([data-c2-layer]); the
 // caller manages the expression overlay and blink layer (same eye anchors as the
@@ -70,7 +82,10 @@ export function composeC2Layers(identity, cosmetics = []) {
 export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [] } = {}) {
   if (!rootEl) return rootEl;
 
-  const layers = composeC2Layers(identity, cosmetics);
+  // 167A step 3a: use the raster base ONLY when AVATAR_R2 is on AND a Phase-1 base exists
+  // for this identity; otherwise the existing C2/SVG path (byte-for-byte). Default off → C2.
+  const useR2 = isAvatarR2() && hasR2BaseFor(identity);
+  const layers = useR2 ? composeR2Layers(identity, cosmetics) : composeC2Layers(identity, cosmetics);
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 
