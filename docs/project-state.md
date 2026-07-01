@@ -243,6 +243,30 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
     decomposition NOT started.**
 - **Remaining (deferred): Phase-2 163F decomposition** (steps 3b/3c — living face/eyes/blink, hair
   raster + eye-box; cosmetic anchor revision) — **not started**; per-layer WebP art required.
+- **Phase-2 PLANNING DONE (2026-07-01, PR #1 `5e2e80b`) — implementation NOT started.** Two docs
+  merged: the decomposition audit + implementation plan
+  [`167a-phase2-decomposition-plan.md`](./167a-phase2-decomposition-plan.md) (target stack, generated-
+  vs-human-art split, revised **raster-only** eye-box, blink/expression reactivation, staged cosmetic
+  un-gating, manifest/versioning, gates, rollback) and the P2-0 asset production brief
+  [`167a-phase2-asset-brief.md`](./167a-phase2-asset-brief.md) (exact per-layer cut-list, dims/z/bg/
+  producer/acceptance, North Star eye-box numbers, WebP + sign-off gates). Docs only — no runtime/
+  manifest/flag change.
+- **P2-0 cut-guide extractor SHIPPED (2026-07-01, PR #2 `bab6a8a`) — review artifacts only.**
+  `tools/avatar/extract-phase2-cut-guides.mjs` (deterministic, non-AI, zero-dep; same PNG codec +
+  sha256 guard + coordinate conventions as `extract-master-base.mjs`) reads the frozen Master (read-
+  only) + the 164L anchor template and emits, to the **gitignored** `tools/avatar/build/phase2/`:
+  `cut-guides-overlay-v1.png` (anchor regions + eye opening/iris/pupil crosshairs on the Master),
+  `crop-{face,eye-left,eye-right,headwear,back}-region-v1.png` (per-zone crops), and
+  `cut-guides-v1.report.json` (regions + eye centres in master / served ÷2 / engine-160 ÷6.4). It is
+  the painter's guide for the human-authored Phase-2 layers — **NOT runtime assets, NOT geometry-
+  altering; no `assets/avatar-r2/` write, no `R2_MANIFEST` change, `AVATAR_R2` untouched.** Verified:
+  eye-opening centres L (66.7, 60.3) / R (90.6, 60.3) in 160-space (≈13 units below the legacy `cy47`
+  blink box); output PNGs valid; visual QA of the overlay = regions land correctly on the figure.
+- **Phase-2 implementation gates (unchanged, all OPEN):** (1) Phase-2-scoped anchor/eye-box sign-off
+  for the runtime rig (beyond the 164L Tier-2 conditional pass; JSON fields stay `humanReviewRequired`),
+  (2) human paint-over of the decomposed v2 base passing 164B.3, (3) the face/eyes/eyelid/hair layers,
+  (4) a **WebP encoder** (still absent). Until met: no Phase-2 runtime code; `AVATAR_R2` stays `false`;
+  the Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
