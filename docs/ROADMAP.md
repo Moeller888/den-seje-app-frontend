@@ -130,7 +130,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | 157P | Whisper STT feasibility (wasm vs server) — likely defer | decision | **UNGATED** |
 | **157Q** ✅ | GDPR consent consolidation — single SoT (`js/consent.js`) + consolidated banner + canonical privacy map — **done, default-off** | cross-cutting | **SOFT** (done) |
 | **157R** ✅ | Feature-flag hardening — registry `js/flags.js` (`window.__flags()`) + canonical rollback runbook — **done** | cross-cutting | **SOFT** (done) |
-| 157S | Playwright coverage for new flows + fail-soft paths | tests | **SOFT** |
+| **157S** ✅ | Default-off/fail-soft unit tests via built-in `node --test` + `deno test` (21 tests, no new framework) — **done** | tests | **SOFT** (done) |
 | 157T | Production-readiness review + secret-rotation checklist | ops | **FUTURE INFRA** |
 
 ### Avatar / art track (from 167A)
@@ -196,10 +196,10 @@ production**; activation waits for a staging target (free local stack at first; 
    default-off, double-gated, no sending until activated** ([157d-posthog-analytics.md](./157d-posthog-analytics.md)).
 8. **157N ✅ / 157O ✅ — read-aloud** decided + built (`js/read-aloud/`, default-off; Piper clips =
    offline deliverable; [157o-read-aloud.md](./157o-read-aloud.md)). **157P** STT feasibility = UNGATED decision.
-9. **157Q ✅ / 157R ✅ / 157S** — consent consolidation (`js/consent.js` +
-   [157q-consent-gdpr.md](./157q-consent-gdpr.md)) and flag hardening (`js/flags.js` +
-   [157r-feature-flags.md](./157r-feature-flags.md)) **done**; **157S** fail-soft/default-off test
-   coverage remains (SOFT). ← **next: 157S**
+9. **157Q ✅ / 157R ✅ / 157S ✅** — consent consolidation (`js/consent.js`), flag hardening
+   (`js/flags.js`), and default-off/fail-soft unit tests (`node --test` + `deno test`, 21 tests,
+   [157s-test-coverage.md](./157s-test-coverage.md)) — **all done**. **Zero-cost services track
+   complete**; remaining work is gated on staging (157CB) or the avatar art deliverable (167A).
 10. **FUTURE INFRASTRUCTURE (deferred until staging exists):** 157CB itself, live observability
     validation (HARD GATE), 157L/157M AI-grade activation, 157T production-readiness sign-off.
 
