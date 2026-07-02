@@ -162,9 +162,11 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     ([167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md));
     approval is **raster-path only** (legacy C2 anchors `cx68/92 cy47` stay frozen). The **human-art
     handoff** for gates 2–3 is written
-    ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). Gates 2–5 remain open (human
-    v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, WebP encoder, visual sign-off); Phase-2
-    runtime code may pass gate 1 only; `AVATAR_R2` stays `false`. Register: `project-state.md`.
+    ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). **Gate 4 (WebP encoder) is
+    also SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` + `encode-webp.mjs`/`fetch-cwebp.mjs`
+    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open (human v2 base + 164B.3,
+    remaining face/eyes/eyelid/hair layers, visual sign-off) — the remaining blocker is the human art.
+    Phase-2 runtime code may pass gates 1 + 4 only; `AVATAR_R2` stays `false`. Register: `project-state.md`.
 
 ## 10. Performance considerations
 

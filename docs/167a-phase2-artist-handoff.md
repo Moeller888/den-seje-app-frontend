@@ -167,8 +167,10 @@ For each layer deliver:
 ## 12. WebP note (separate, not the painter's job)
 
 Review + delivery is **PNG at 1024×1536**. Converting to the runtime **WebP** (downscale ÷2 → 512×768,
-encode) is a **separate step (plan §13 gate 4)** handled by the runtime team once a WebP encoder is
-available — it is **not required for painter review** and must not block delivery.
+encode) is a **separate step (plan §13 gate 4)** handled by the runtime team — it is **not required for
+painter review** and must not block delivery. The encoder now exists (vendored libwebp
+`cwebp.exe` + `tools/avatar/encode-webp.mjs`, e.g. `node encode-webp.mjs <in.png> <out.webp> --half`),
+so once a layer PNG is delivered the runtime team can encode it directly — still **not the painter's job**.
 
 ## 13. Rejection criteria (any one → reject / re-do)
 

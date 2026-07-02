@@ -180,8 +180,12 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    PASS and the **Phase-2 raster eye-box is owner-countersigned APPROVED** — the plan §13 gate 1
    (Phase-2-scoped anchor/eye-box sign-off) is cleared. Approval is **raster-path only**; the **legacy
    C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — gates
-   2–5 remain OPEN (human v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, WebP encoder,
-   visual sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
+   2, 3, 5 remain OPEN (human v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, visual
+   sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
+   **✅ Gate 4 (WebP encoder) SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
+   (`tools/avatar/vendor/`, gitignored; reproducible via `fetch-cwebp.mjs`) + wrapper `encode-webp.mjs`;
+   proven Phase-1 base 242 KB PNG → 37.7 KB WebP (alpha preserved, within budget); zero npm deps; build
+   tooling only (no `assets/avatar-r2/`/manifest/`AVATAR_R2` change). Remaining blocker = human art.
    **Human-art handoff written (2026-07-02) for gates 2–3:**
    [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical painter brief
    (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; AI forbidden).
