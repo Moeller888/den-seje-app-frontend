@@ -39,7 +39,8 @@ Verified in code (`js/avatar-layers.js`, `js/avatar-render-c2.js`) and docs:
   the untouched C2/SVG avatar.
 - **Locked decisions in force:** D-040 (Master-as-is Tier-0), D-013 (WebP target; PNG interim),
   D-018 (immutable versioned assets), D-030 (z-stack), D-021/D-022/D-023/D-024 (eyes/face/blink/
-  expression MVP scope), D-033/D-034 (AI forbidden for geometry; AI only for cosmetic overlays).
+  expression MVP scope), D-033/D-034 (rig-geometry method) as **amended by D-042 (AI-assisted masked
+  decomposition allowed; AI regeneration/redesign forbidden)**.
 
 **Phase-1 is complete and pilot-ready. Nothing in §1 is re-opened by Phase-2.**
 
@@ -52,7 +53,9 @@ Verified in code (`js/avatar-layers.js`, `js/avatar-render-c2.js`) and docs:
 - ❌ Remove or mutate the Phase-1 PNG baked base (`…-v1.png`) — it stays as rollback + interim.
 - ❌ Touch the C2/SVG fallback path, legacy `SLOT_Z`/`SLOTS`, ownership/shop/inventory (DB), or the
   Tier-2 AI item conveyor.
-- ❌ Use AI to generate ANY geometry-defining rig layer (base/face/eyes/eyelid/hair) — D-033/D-034.
+- ❌ **Full AI regeneration / redesign** of the avatar, "make a new avatar," or **any unmasked/broad
+  prompt** that reinterprets it. (AI-assisted **masked** decomposition on the frozen Master **is
+  allowed** for the rig layers — D-042, amending D-033.)
 - ❌ Enable globally, add cohort/% rollout, or flip the flag.
 - ❌ Move the **legacy/C2 eye anchors** (`cx68/92 cy47`) — that would move the current live avatar's
   blink/expression (a regression). The revised eye box is **raster-path only**; two anchor sets coexist.
@@ -81,7 +84,7 @@ production format (D-013); see §9 for the PNG-vs-WebP gate.
 
 | # | Asset | Content | Producer |
 |---|---|---|---|
-| 1 | `base/body-neutral-medium-v2.webp` | skin + **neutral underlayer** + head, **NO face/eyes/hair/outfit** | **HUMAN paint-over (D-033)** — highest risk; must pass 164B.3 |
+| 1 | `base/body-neutral-medium-v2.webp` | skin + **neutral underlayer** + head, **NO face/eyes/hair/outfit** | **AI-assisted masked decomposition (D-042)** — highest risk; must pass 164B.3 |
 | 2 | `face/face-{neutral,curious,focused,determined,proud}-v1.webp` (+ `happy`,`surprised` for the D-024 set of 7) | brows/nose/mouth + `multiply` blush; tone-agnostic; **no skin/eyes** (D-022) | HUMAN |
 | 3 | `eyes/eyes-neutral-iris-v1.webp` | tintable iris disk (neutral luminance) (D-015/D-021) | HUMAN |
 | 4 | `eyes/eyes-neutral-fixed-v1.webp` | sclera + lash + eye shape + fixed catch-light (D-021) | HUMAN |
@@ -93,26 +96,28 @@ production format (D-013); see §9 for the PNG-vs-WebP gate.
 > (adds `happy`, `surprised`). MVP-minimum = the 5 in use + neutral; producing all 7 future-proofs the
 > map with no code change (the map already falls back to `neutral`).
 
-## 5. Generated-vs-human-art split (audit Q1–Q3)
+## 5. Production-method split (audit Q1–Q3) — AI-assisted masked decomposition (D-042)
 
 **Deterministic / mechanical (non-AI) — may be produced now as REVIEW/BUILD artifacts only**
 (gitignored `tools/avatar/build/`, never runtime, never geometry-altering):
 - The Phase-1 baked base (already done — `extract-master-base.mjs`).
 - Anchor template + 5 MVP masks (already done — `extract-anchor-masks.mjs`, §6).
-- **Candidate cut guides**: region crops of the Master (face-region, eye-boxes, hair silhouette,
-  head-oval) using the existing anchor rectangles — as *onion-skin guides for the human painter*, not
-  as final layers. A tiny extension of the existing extractors can emit these (review-only).
+- **Candidate cut guides / masks**: region crops of the Master (face-region, eye-boxes, hair silhouette,
+  head-oval) using the existing anchor rectangles — as *guides/masks for the AI-assisted edits*, not as
+  final layers. A tiny extension of the existing extractors can emit these (review-only).
 - Alpha-cut, ÷2 downscale, protected-zone diagnostics, budget/legibility measurement, PNG→WebP encode.
 
-**Human art (AI FORBIDDEN — D-033/D-034; all are geometry-defining rig layers):**
-- **All six assets in §4.** The base (#1) is the single highest-risk asset: it requires *reconstructing
-  skin + a neutral underlayer behind the baked face/hair/outfit* — that is paint work, not a threshold
-  op, and four AI regenerations already drifted proportions/identity (R-6, confirmed by D-033). Face,
-  eyes, eyelid and the hair luminance map are likewise hand-authored against the Master + the anchor
-  template.
+**AI-assisted masked decomposition (D-042 — amends the "AI forbidden for rig geometry" of D-033/D-034):**
+- **All six assets in §4** are produced by **masked inpainting/outpainting ON the frozen Master**: mask
+  a region, lift the baked feature, let the model reconstruct the skin/clothing it hid, or mask-isolate
+  a feature as its own layer. The base (#1) is the highest-risk asset (reconstructing skin + a neutral
+  underlayer behind the baked face/hair/outfit). Every layer must **preserve the signed-off Master
+  identity** and pass its gate (base → 164B.3).
+- **Forbidden:** full AI regeneration, redesign, and any **unmasked/broad prompt** — four *unmasked*
+  regenerations already drifted proportions/identity (R-6). Masking + the 164B.3 gate is the mitigation
+  (not "no AI"). No human painter is available (D-042 rationale).
 
-**AI:** **not used anywhere in Phase-2.** AI stays scoped to Tier-2 cosmetic overlays (D-034),
-which are **out of scope** for the decomposition and are not required to ship Phase-2.
+**Tier-2 AI cosmetic overlays** (D-034) remain a separate, out-of-scope pipeline — not required to ship Phase-2.
 
 ## 6. Anchor / eye-box plan (audit Q4–Q5)
 
@@ -263,9 +268,9 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 **Preparatory step that is safe NOW (doc/tool only — the one permitted prep step):**
 - **P2-0 — Phase-2 asset production brief** ([167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md),
   **written**; doc only) + a
-  decision-register note in `project-state.md`: the per-layer cut-list (§4), the human paint-over
-  brief for the v2 base (D-033 / 164B.3 acceptance), and the North Star eye-box numbers (§6) the
-  painter/anchor-signer work against. Optionally a **review-only** extension of the existing
+  decision-register note in `project-state.md`: the per-layer cut-list (§4), the art-production brief
+  for the v2 base (AI-assisted masked decomposition, D-042 / 164B.3 acceptance), and the North Star
+  eye-box numbers (§6) the producer/anchor-signer work against. Optionally a **review-only** extension of the existing
   extractors that emits onion-skin *cut guides* into `tools/avatar/build/` (gitignored, non-runtime).
   **No runtime code, no `AVATAR_R2` change, no runtime assets.** *(Not executed by this document.)*
 
@@ -274,8 +279,8 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 | Step | Work | GATE — do not start until… |
 |---|---|---|
 | 1 | **Phase-2-scoped anchor/eye-box sign-off** (beyond the existing 164L Tier-2 conditional pass) | the eye-box is signed to drive the runtime rig (`humanReviewRequired` cleared for that use — §6) |
-| 2 | **Human art**: v2 decomposed base | passes the **164B.3** base-coherence gate |
-| 3 | Human art: face×(5–7), eyes iris/fixed, eyelid, hair map | v2 base signed (shared geometry datum) |
+| 2 | **AI-assisted masked decomposition (D-042)**: v2 base | passes the **164B.3** base-coherence gate |
+| 3 | AI-assisted masked decomposition: face×(5–7), eyes iris/fixed, eyelid, hair map | v2 base signed (shared geometry datum) |
 | 4 | ✅ **WebP encoder available** (SATISFIED 2026-07-02) + encode all layers | encoder exists: vendored libwebp `cwebp.exe` + `tools/avatar/encode-webp.mjs` (`fetch-cwebp.mjs` to re-fetch). Was the HARD infra gate (§9); now cleared — encoding the layers waits on the art (gates 2–3) |
 | 5 | Code **3b**: raster hair (blend-mode multiply + fallback) | `hair-northstar-v1.webp` exists in manifest |
 | 6 | Code **3c**: wire face/eyes + revised eye-box; reactivate engines behind `hasR2LivingStackFor`; base→v2 (atomic) | the **full** living stack (steps 2–4) exists |
@@ -287,7 +292,7 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 - **No engine reactivation / base v2 cutover** until the whole living stack + WebP encode exist (steps 3–4).
 - **No cosmetic un-gate** for a slot until its mask + revised anchor are signed.
 - **`AVATAR_R2` stays `false`** and the `localStorage.avatar_r2` pilot path stays intact throughout.
-- **AI never produces a rig layer** (D-033/D-034).
+- **AI produces rig layers only via masked decomposition on the Master** (D-042); **no unmasked/broad-prompt regeneration or redesign.**
 
 ## 14. Preservation checklist (must all hold across Phase-2)
 
@@ -305,7 +310,7 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 
 1. **Layers required** — §3 (base z0-2, face z3, eyes z4, blink z5, hair z40; cosmetics).
 2. **Mechanically generable** — §5: baked base + anchors + masks (done); onion-skin cut guides; encode/downscale. Not the final rig layers.
-3. **Human art required** — §5: all six §4 assets (base highest risk, D-033); AI forbidden.
+3. **Art production method** — §5: all six §4 assets via **AI-assisted masked decomposition (D-042)**; full AI regeneration/redesign forbidden.
 4. **Anchor artifacts good enough** — §6: the 164L/164S/164T template + 5 masks (North Star proportions). 164L is CONDITIONAL PASS (signed 2026-06-18) for the **Tier-2 cosmetic tooling baseline only**; a **Phase-2-scoped eye-box sign-off** is still required for the runtime rig (fields stay `humanReviewRequired`).
 5. **Anchors to revise** — §6: legacy/C2 engine geometry (blink `cy47`, C2 head/eyes) → raster-only revised eye box from the template.
 6. **Blink/expression re-enable** — §7: un-skip behind a living-stack predicate; face map → raster + fallback; blink → revised eye box; breathing already on.
@@ -317,4 +322,4 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 ---
 
 _This document changes no runtime code, no assets, no manifest, and does not alter `AVATAR_R2`.
-Phase-2 remains an asset migration gated on human art + the §13 gates._
+Phase-2 remains an asset migration gated on the AI-assisted masked-decomposition art (D-042) + the §13 gates._

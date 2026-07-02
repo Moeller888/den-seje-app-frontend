@@ -17,9 +17,9 @@ Reads with: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.m
 
 The [Phase-2 decomposition plan](./167a-phase2-decomposition-plan.md) establishes *what* Phase-2 is and
 *how* it sequences. It stops at a hard gate: **Phase-2 runtime code cannot start until a specific
-package of hand-authored raster layers exists.** This brief **specifies that package exactly** — every
-file, its dimensions, z-layer, background rule, producer (generated vs human art), and acceptance
-criteria — so the art can be produced (offline) and reviewed against one checklist. It is the concrete
+package of decomposed raster layers exists.** This brief **specifies that package exactly** — every
+file, its dimensions, z-layer, background rule, producer (AI-assisted masked decomposition — D-042),
+and acceptance criteria — so the art can be produced (offline) and reviewed against one checklist. It is the concrete
 input to plan steps 1–4 (§13 of the plan).
 
 This document does **not** authorise producing runtime assets. It authorises, at most, one optional
@@ -63,14 +63,21 @@ Shared rules (ADR-163D / D-027): **served 512×768** (integer ÷2 from the 1024�
 anchor-stable), **full-canvas** (no crop/trim — pure z-overlay), **transparent background, no white
 halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-018).
 
+> **Producer for every layer below (D-042): AI-assisted masked decomposition** — masked
+> inpainting/outpainting **on the frozen `Northstar Master.png` only**, preserving the signed-off
+> identity. **Full AI regeneration, redesign and unmasked/broad prompts are FORBIDDEN.** (There is no
+> human painter; the D-033 paint-over requirement is amended by D-042.)
+
 ### 4.1 Base body — `base/body-neutral-medium-v2.webp`
 - **Dimensions / bg:** 512×768, transparent, full-canvas.
 - **z-layer:** 0–2 (`C2_BASE_Z = 0`).
 - **Content:** skin + **neutral underlayer** (plain t-shirt/trousers/sneakers direction, D-029) + head.
   **NO face, NO eyes, NO hair, NO outfit-cosmetic detail.** The baked face/hair/outfit of v1 are
   removed and the skin/underlayer *reconstructed behind them*.
-- **Producer:** **HUMAN paint-over over `Northstar Master.png`** (D-033). **AI forbidden** (four AI
-  regenerations drifted proportions/identity — R-6). Master geometry is the sole datum (D-032).
+- **Producer:** **AI-assisted masked decomposition on `Northstar Master.png`** (D-042) — mask the baked
+  face/hair/outfit and inpaint the skin + neutral underlayer behind them. **Full AI regeneration/
+  redesign forbidden** (four *unmasked* regenerations drifted proportions/identity — R-6); Master
+  geometry is the sole datum (D-032).
 - **Acceptance:** passes the **164B.3 base-coherence gate** (no head-size/ratio/pose/face/eye/hair
   drift; childlike + premium anime finish; reads as the same character); onion-skin vs Master aligns.
 - **Version:** ships as **`-v2`** — the v1 baked PNG is never overwritten (§2, D-018).
@@ -83,7 +90,7 @@ halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-01
 - **z-layer:** 3.
 - **Content:** brows, nose, mouth + `mix-blend-mode:multiply` blush. **Tone-agnostic — no skin, no
   eyes** (the base owns skin; eyes are z4) (D-022).
-- **Producer:** HUMAN. AI forbidden (geometry-defining rig layer).
+- **Producer:** AI-assisted masked decomposition (D-042) — mask-isolate the face features off the Master; no unmasked regeneration.
 - **Acceptance:** each expression registers exactly on the Master face position; positive-only reading;
   legible at 32px; consistent line/cel language with the base; one set works across skin tones.
 
@@ -91,7 +98,7 @@ halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-01
 - **Dimensions / bg:** 512×768, transparent, full-canvas. **z-layer:** 4.
 - **Content:** sclera + eyelash + eye outline/shape + the **fixed** catch-light/highlight (D-021).
   Not tintable.
-- **Producer:** HUMAN. **Acceptance:** aligns to the North Star **eye box** (§6); large expressive eyes
+- **Producer:** AI-assisted masked decomposition (D-042). **Acceptance:** aligns to the North Star **eye box** (§6); large expressive eyes
   legible at 32px; no lash/catchlight aliasing at small sizes.
 
 ### 4.4 Eyes — iris / pupil — `eyes/eyes-neutral-iris-v1.webp`
@@ -99,13 +106,13 @@ halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-01
 - **Content:** the **tintable iris disk** only (neutral luminance so the eye-color token tints it);
   pupil rendered as part of the iris art. Separate file so eye-color is a free token, not an asset
   explosion (D-012/D-015). *(“if needed”: it is needed for MVP eye-color — keep it a distinct file.)*
-- **Producer:** HUMAN. **Acceptance:** iris centre matches the anchor template's `irisCenter` (§6);
+- **Producer:** AI-assisted masked decomposition (D-042). **Acceptance:** iris centre matches the anchor template's `irisCenter` (§6);
   tints cleanly across the eye-color set; pupil stays legible after tint.
 
 ### 4.5 Eyelid / blink — `eyelid/eyelid-medium-v1.webp` *(interim optional)*
 - **Dimensions / bg:** 512×768, transparent, full-canvas. **z-layer:** 5.
 - **Content:** eyelid that shows skin (skin-bearing → per skin tone, D-023).
-- **Producer:** HUMAN. **Interim allowance:** Phase-2 MAY keep the existing **CSS-ellipse blink**
+- **Producer:** AI-assisted masked decomposition (D-042). **Interim allowance:** Phase-2 MAY keep the existing **CSS-ellipse blink**
   (already skin-tone-aware) re-positioned to the North Star eye box (§6) — lowest risk; the raster
   eyelid is a refinement, **not** an MVP blocker.
 - **Acceptance:** the lid closes over the North Star eye opening (no off-eye flash); tone blends with
@@ -116,7 +123,7 @@ halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-01
 - **Content:** **neutral grayscale luminance map** of `hair-northstar-v1` (D-031), designed to be
   tinted at runtime via a wrapper background = `--hair-base` + `mix-blend-mode:multiply` (step-3 §6).
   Replaces the inline-SVG token-fill technique; the `HAIR_COLOR_TOKENS` identity model is preserved.
-- **Producer:** HUMAN. **Acceptance:** silhouette matches Master; all 8 hair-color tokens tint
+- **Producer:** AI-assisted masked decomposition (D-042). **Acceptance:** silhouette matches Master; all 8 hair-color tokens tint
   acceptably (R-7) at 32/48/64px; a `mix-blend-mode`-unsupported fallback renders the untinted map
   (never fails the render).
 
@@ -128,17 +135,21 @@ halo**. Runtime format = **WebP** (§8). Immutable + versioned by filename (D-01
 - **Phase-2 need:** the head/face/eye masks must be **re-validated against the revised eye-box** (§6)
   before the matching cosmetic slot is un-gated (§7). No new masks are required to render the rig.
 
-## 5. Human-art brief (binding on the producer)
+## 5. Art-production brief (binding on the producer) — AI-assisted masked decomposition (D-042)
 
 - **Preserve the North Star likeness exactly.** `assets/avatar/reference/Northstar Master.png`
-  (1024×1536, sha `2ca10ef8…`, D-032) is the sole geometric datum. Head size, head:body ratio, pose,
-  hair silhouette, face structure, eye size/shape, cel-shade language, line weight and palette all
-  derive from it.
+  (1024×1536, sha `2ca10ef8…`, D-032) is the sole geometric datum and the **only** image every AI edit
+  runs on. Head size, head:body ratio, pose, hair silhouette, face structure, eye size/shape,
+  cel-shade language, line weight and palette all derive from it.
 - **No redesign.** This is decomposition of the *existing* character, not a new design. No proportion
   changes, no "improvements," no style drift.
-- **No AI regeneration / inpainting for any rig layer** (base/face/eyes/eyelid/hair) — D-033/D-034.
-  AI outputs may be used **only** as outfit-style reference, never as production geometry. (AI remains
-  allowed for Tier-2 *cosmetic overlays*, which are out of Phase-2 scope.)
+- **Method (D-042): AI-assisted masked inpainting/outpainting on the Master only.** Mask a region, lift
+  the baked feature, and let the model reconstruct the skin/clothing it hid (or mask-isolate a feature
+  as its own layer). **Full AI regeneration, redesign, "make a new avatar," and any unmasked/broad
+  prompt that reinterprets the avatar are FORBIDDEN.** Any result that no longer matches the signed-off
+  Master is rejected. Identity-lock is enforced by masking + the 164B.3 gate (§9). (Amends the
+  human-paint-over-only rule of D-033/D-039; AI also remains allowed for Tier-2 *cosmetic overlays*,
+  out of Phase-2 scope, D-034.)
 - **v2 base must pass the coherence gate** (164B.3) before it becomes the datum for the other layers.
   Produce it **first**; the face/eyes/eyelid/hair are authored against the signed v2 base so all layers
   share one coordinate space.
@@ -246,7 +257,7 @@ cosmetic un-gate. `AVATAR_R2` stays `false`; the pilot opt-in and C2/SVG fallbac
 (`extract-master-base.mjs` / `extract-anchor-masks.mjs`) that emits **cut guides + onion-skin previews**
 (the Master with anchor rectangles + per-region crops) into `tools/avatar/build/` — **gitignored output
 only, non-AI, Master read-only, no runtime wiring, no `assets/avatar-r2/` write, no manifest change.**
-Its sole purpose is to hand the human painter precise cut guides for §4. This is a build-tool step, not
+Its sole purpose is to hand the art producer precise cut guides / masks for the §4 masked edits. This is a build-tool step, not
 Phase-2 implementation, and remains optional — the art can also be produced directly against the
 numbers in §4/§6.
 

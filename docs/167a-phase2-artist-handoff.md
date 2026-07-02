@@ -1,11 +1,16 @@
-# 167A Phase-2 — Artist Handoff (Human-Art Deliverable)
+# 167A Phase-2 — Art-Production Handoff (AI-Assisted Masked Decomposition)
 
-Status: **HANDOFF BRIEF — for the human painter. Documentation only.** No runtime code, no runtime
+Status: **HANDOFF BRIEF — for the art producer. Documentation only.** No runtime code, no runtime
 assets, no manifest, no `AVATAR_R2` change is made by this doc, and producing these layers does **not**
 start Phase-2 implementation (that is a later, separately-gated code step).
 Date: 2026-07-02. Owner: project owner (solo).
 
-Source of the requirements (do not restate — this doc operationalises them for the painter):
+> **Art policy (D-042, 2026-07-02): AI-assisted masked decomposition allowed; AI regeneration/redesign
+> forbidden.** There is **no human painter/illustrator** available, so these layers are produced by
+> **AI-assisted masked inpainting/outpainting ON the approved North Star Master** — not by hand-painting,
+> and **not** by free/broad-prompt regeneration. See §2 for the exact allowed / not-allowed rules.
+
+Source of the requirements (do not restate — this doc operationalises them for the art producer):
 [167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md) (§4 cut-list, §6 eye-box, §8 WebP) ·
 [167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md) (§3 target stack) ·
 [167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md) (eye-box
@@ -17,16 +22,24 @@ sign-off) · [164b3-base-review-worksheet.md](./164b3-base-review-worksheet.md) 
 
 Produce the **decomposed North Star raster layers** — the same character, taken apart into stacked
 layers so the living engines (expression / blink) can animate it. This is **decomposition, not
-redesign**: every layer is hand-painted **from the frozen Master** and must read as the *same* kid.
-No new design, no "improvements," no proportion changes, no style drift.
+redesign**: every layer is derived **from the frozen Master** (by AI-assisted masked editing, §2) and
+must read as the *same* kid. No new design, no "improvements," no proportion changes, no style drift.
 
-## 2. Source image (the only geometric truth)
+## 2. Method & source — AI-assisted masked decomposition (D-042)
 
 - **`assets/avatar/reference/Northstar Master.png`** — 1024×1536, sha
-  `2ca10ef868b9564164f28afc8bb03baec99cc10fd03f7200ed2dc58edd607a21` (D-032).
-- **AI regeneration / inpainting is FORBIDDEN** for every layer here (D-033/D-034). Four AI
-  regenerations already drifted the proportions/identity. AI images may be used **only** as loose
-  outfit-colour reference, **never** as geometry. Everything is hand-painted over Master geometry.
+  `2ca10ef868b9564164f28afc8bb03baec99cc10fd03f7200ed2dc58edd607a21` (D-032) — is the **only** source
+  and the sole geometric truth. Every AI edit runs **on this image**.
+- **ALLOWED (D-042):** AI-assisted **masked inpainting / outpainting on the Master only** — mask a
+  region, lift the baked feature there (e.g. hair, or a facial feature), and let the model reconstruct
+  the skin/clothing it hid; or mask-isolate a feature to export it as its own layer. The output must
+  **preserve the signed-off Master identity**.
+- **FORBIDDEN:** full AI **regeneration**, **redesign**, "make a new avatar," and **any unmasked or
+  broad prompt** that lets the model reinterpret the avatar. **No change** to head size, eye shape,
+  hair silhouette, pose, outfit style, skin tone, line art, lighting, palette or proportions (D-032).
+  Any result that no longer matches the signed-off Master is rejected (§13).
+- **Why masked, not free-gen:** four *unmasked* AI regenerations already drifted proportions/identity
+  (R-6). Masking + the **164B.3 gate** (§9) is what keeps AI edits identity-locked.
 - `Northstar Master - reference.png` is **outfit appearance only** — never a geometry source (D-032).
 
 ## 3. Cut-guide artifacts to work from
@@ -57,7 +70,7 @@ review (see §11). MVP identity = **neutral-medium** first.
 | 5 | **Eyelid / blink** *(optional interim)* | 5 | `eyelid-medium-v1` | eyelid that shows skin (per skin tone). *Interim: the CSS-ellipse blink can bridge — deliver only if producing the full raster set.* |
 | 6 | **Hair — luminance map** | 40 | `hair-northstar-v1` | neutral **grayscale luminance map** of the Master hair silhouette (runtime tints it via multiply) |
 
-Runtime folders these map to later (informational — **not** where the painter delivers):
+Runtime folders these map to later (informational — **not** where the producer delivers):
 `assets/avatar-r2/{base,face,eyes,eyelid,hair}/…`.
 
 ## 5. Filename patterns, dimensions, background
@@ -67,7 +80,7 @@ Runtime folders these map to later (informational — **not** where the painter 
   hair `hair-northstar-v{n}`. For this handoff: body **v2** (v1 = the baked Phase-1 base, never
   overwritten); face/eyes/eyelid/hair **v1**.
 - **Authoring size:** 1024×1536 (Master canvas). **Served size later:** 512×768 (integer ÷2 — done by
-  the runtime team, not the painter).
+  the runtime team, not the producer).
 - **Background:** fully **transparent**, **no white halo / fringe**, clean alpha at the edges (check at
   32 / 48 / 64 px too — the avatar renders small).
 - **Full-canvas:** each layer is the whole 1024×1536 frame with only its own content painted and the
@@ -87,7 +100,8 @@ The decomposition must not move or restyle anything:
 ## 7. What must be REMOVED from the v2 base (so the layers can animate)
 
 The v2 base is the *static underlayer*; everything that moves or is a separate layer comes **off** it,
-and the skin/clothing **behind** those removed parts is reconstructed by hand:
+and the skin/clothing **behind** those removed parts is reconstructed by the **masked AI edit** (D-042 —
+mask the feature, inpaint the skin/clothing it hid):
 - **Face features** — brows, nose, mouth, and any **baked blush** (these become the z3 face layer).
 - **Eyes** — sclera, iris, pupil, catch-light (these become the z4 eyes layers).
 - **Eyelid** shading (becomes z5 blink).
@@ -140,9 +154,10 @@ layers are authored. Summary of what PASS requires:
 - **Non-negotiable:** a fail in proportions (§2) or D-032/geometry (§5) forces overall **FAIL**
   regardless of style scores.
 
-## 10. Painter checklist (per layer, before delivery)
+## 10. Producer checklist (per layer, before delivery)
 
-- [ ] Painted **over Master geometry** — no regeneration, no AI, no reference-outfit geometry.
+- [ ] Produced by **masked edits on the frozen Master** (D-042) — **no** unmasked/broad-prompt
+      regeneration, **no** new-character generation, **no** reference-outfit geometry.
 - [ ] **Full-canvas 1024×1536**, transparent background, **no white halo**; clean alpha at 32/48/64px.
 - [ ] Nothing moved vs Master (§6): head/body ratio, eye size/shape/position, hair silhouette, pose.
 - [ ] Correct **content only** for this layer (§4) — e.g. face layer carries **no skin, no eyes**;
@@ -164,17 +179,21 @@ For each layer deliver:
 - **Deliver PNG only** — see §12. Do **not** deliver WebP; do not write into `assets/avatar-r2/` or
   touch any code/manifest (that is the runtime team's separate step).
 
-## 12. WebP note (separate, not the painter's job)
+## 12. WebP note (separate, not the producer's job)
 
 Review + delivery is **PNG at 1024×1536**. Converting to the runtime **WebP** (downscale ÷2 → 512×768,
 encode) is a **separate step (plan §13 gate 4)** handled by the runtime team — it is **not required for
-painter review** and must not block delivery. The encoder now exists (vendored libwebp
+producer review** and must not block delivery. The encoder now exists (vendored libwebp
 `cwebp.exe` + `tools/avatar/encode-webp.mjs`, e.g. `node encode-webp.mjs <in.png> <out.webp> --half`),
-so once a layer PNG is delivered the runtime team can encode it directly — still **not the painter's job**.
+so once a layer PNG is delivered the runtime team can encode it directly — still **not the producer's job**.
 
 ## 13. Rejection criteria (any one → reject / re-do)
 
-- AI-generated / regenerated / inpainted geometry, or geometry taken from the reference outfit image.
+- **Unmasked / broad-prompt AI regeneration**, new-character generation, or any output that reinterprets
+  the avatar (masked inpainting/outpainting on the Master is allowed — D-042); geometry taken from the
+  reference outfit image.
+- Any result that **no longer matches the signed-off North Star Master** (identity, line art, lighting,
+  palette, skin tone).
 - Any proportion / head:body / eye size / pose drift vs Master; silhouette IoU < 0.95; vertical stretch.
 - Style drift (a style field ≤ 2 / "Frankenstein" reconstruction); illegible eyes at 32px.
 - Wrong layer content (e.g. skin or eyes baked into the face layer; face/eyes/hair/signature-outfit

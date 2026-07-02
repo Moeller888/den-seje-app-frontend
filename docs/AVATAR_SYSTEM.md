@@ -100,10 +100,13 @@ emotion. Baking eyes into the face would force an expression × color × variant
 **Tier model (D-040 production model — `docs/164d-shop-pipeline.md`):**
 - **Tier-0 (base/datum):** `assets/avatar/reference/Northstar Master.png` (1024×1536, frozen) is the
   **sole geometric source of truth** (D-032). MVP uses it as the fixed default base.
-- **Tier-1 (rig — deferred upgrade):** decompose Master into the neutral layer stack
-  (base / face / eyes / blink / hair) by **manual paint-over** — **AI is rejected for base/rig
-  geometry** (D-033; four AI regenerations drifted proportions/identity). Gated by the 164B.3 base
-  coherence review.
+- **Tier-1 (rig — Phase-2):** decompose Master into the neutral layer stack
+  (base / face / eyes / blink / hair) by **AI-assisted masked decomposition** (D-042, 2026-07-02) —
+  masked inpainting/outpainting **on the frozen Master only**, preserving the signed-off identity.
+  **Full AI regeneration/redesign is forbidden** (four *unmasked* regenerations drifted
+  proportions/identity — the D-033 concern; mitigated by masking + the 164B.3 gate). Amends the
+  earlier *manual-paint-over-only* rule (D-033/D-039) — no human painter is available. Gated by the
+  164B.3 base-coherence review.
 - **Tier-2 (cosmetic items):** scalable shop overlays. **AI is permitted for item overlays only**
   (D-034), never for geometry; every item is a full-canvas transparent overlay bound to a
   slot + slot-mask + z, and must pass the slot-mask + automated QA gates (D-037).
@@ -121,7 +124,7 @@ runtime assets, never used to alter geometry.
 **Phase-2 cut-guide tooling (P2-0, shipped 2026-07-01):** `tools/avatar/extract-phase2-cut-guides.mjs`
 (same deterministic, non-AI, read-only-Master pattern) draws the anchor regions + eye
 opening/iris/pupil centres over Master and crops each Phase-2 layer zone, into the gitignored
-`tools/avatar/build/phase2/`, as guides for the **human paint-over** of the Tier-1 rig layers.
+`tools/avatar/build/phase2/`, as guides/masks for the **AI-assisted masked decomposition** (D-042) of the Tier-1 rig layers.
 **Review artifacts only** — no runtime asset, no `assets/avatar-r2/` write, no `R2_MANIFEST` change,
 `AVATAR_R2` untouched. Spec: [167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md) §11.
 
@@ -164,8 +167,9 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     handoff** for gates 2–3 is written
     ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). **Gate 4 (WebP encoder) is
     also SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` + `encode-webp.mjs`/`fetch-cwebp.mjs`
-    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open (human v2 base + 164B.3,
-    remaining face/eyes/eyelid/hair layers, visual sign-off) — the remaining blocker is the human art.
+    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open (AI-assisted masked v2
+    base + 164B.3, remaining face/eyes/eyelid/hair layers, visual sign-off) — the remaining blocker is
+    the **AI-assisted masked-decomposition art** (D-042: masked edits on the Master; no regeneration).
     Phase-2 runtime code may pass gates 1 + 4 only; `AVATAR_R2` stays `false`. Register: `project-state.md`.
 
 ## 10. Performance considerations
