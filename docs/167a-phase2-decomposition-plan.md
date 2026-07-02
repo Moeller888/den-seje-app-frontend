@@ -276,7 +276,7 @@ Until the cutover, the manifest keeps base `v1` and the raster path stays Phase-
 | 1 | **Phase-2-scoped anchor/eye-box sign-off** (beyond the existing 164L Tier-2 conditional pass) | the eye-box is signed to drive the runtime rig (`humanReviewRequired` cleared for that use — §6) |
 | 2 | **Human art**: v2 decomposed base | passes the **164B.3** base-coherence gate |
 | 3 | Human art: face×(5–7), eyes iris/fixed, eyelid, hair map | v2 base signed (shared geometry datum) |
-| 4 | **WebP encoder available** + encode all layers | an encoder exists (cwebp/sharp) — HARD infra gate (§9) |
+| 4 | ✅ **WebP encoder available** (SATISFIED 2026-07-02) + encode all layers | encoder exists: vendored libwebp `cwebp.exe` + `tools/avatar/encode-webp.mjs` (`fetch-cwebp.mjs` to re-fetch). Was the HARD infra gate (§9); now cleared — encoding the layers waits on the art (gates 2–3) |
 | 5 | Code **3b**: raster hair (blend-mode multiply + fallback) | `hair-northstar-v1.webp` exists in manifest |
 | 6 | Code **3c**: wire face/eyes + revised eye-box; reactivate engines behind `hasR2LivingStackFor`; base→v2 (atomic) | the **full** living stack (steps 2–4) exists |
 | 7 | Staged cosmetic un-gate (P2-b→P2-d, §8) | each stage's mask + anchor signed |

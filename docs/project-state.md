@@ -218,6 +218,10 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   (cwebp/ffmpeg/ImageMagick/sharp all absent) and adding a dep / hand-rolling an encoder was declined
   to avoid new deps. The **PNG (~244 KB, within the <350 KB budget) is the current Phase-1 runtime
   asset**; WebP swap (`{ v:2, ext:"webp" }`) waits until a proper encoder is available.
+  > **UPDATE 2026-07-02:** an encoder is now available (vendored libwebp `cwebp.exe`, gate 4 — see
+  > the Phase-2 gate list below). The Phase-1 WebP swap is therefore **unblocked**, but remains a
+  > separate, deliberate action (encode `body-neutral-medium-v2.webp`, register `{ v:2, ext:"webp" }`);
+  > not done here.
 - **Phase-1 engine guard DONE (2026-07-01):** when the raster base is active
   (`isAvatarR2ActiveFor(identity)`), expression + blink overlays are **skipped** at the mount sites
   (app.js, avatar.html, hub.html) so they never render over the baked face; **presence/breathing stays
@@ -270,15 +274,20 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   raster blink/eye rig; the **legacy C2 anchors (`cx68/92 cy47`, `js/avatar-blink-engine.js`) stay
   frozen** (two eye-box sets coexist, selected by the render branch). Docs only; no runtime/manifest/
   flag change.
-- **Phase-2 implementation gates — GATE 1 SATISFIED (2026-07-01); GATES 2–5 OPEN.**
+- **Phase-2 implementation gates — GATES 1 + 4 SATISFIED (2026-07-02); GATES 2, 3, 5 OPEN.**
   (1) ✅ Phase-2-scoped anchor/eye-box sign-off — **SATISFIED** (owner-countersigned, PR #7 `2159d3e`).
   (2) ⛔ human paint-over of the decomposed v2 base passing **164B.3** — open.
   (3) ⛔ the remaining **face / eyes / eyelid / hair** layers — open.
-  (4) ⛔ a **WebP encoder** (still absent) — open.
+  (4) ✅ a **WebP encoder** — **SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
+  (`tools/avatar/vendor/`, gitignored; reproducible via `tools/avatar/fetch-cwebp.mjs`) + wrapper
+  `tools/avatar/encode-webp.mjs`. Proven: Phase-1 base 242 KB PNG → 37.7 KB WebP (512×768, alpha
+  preserved, within the <350 KB budget). Zero npm deps. Build tooling only — no `assets/avatar-r2/`
+  write, no `R2_MANIFEST` change, `AVATAR_R2` untouched.
   (5) ⛔ human **visual sign-off** on the composed raster stack — open.
-  **Phase-2 runtime code may pass GATE 1 ONLY.** Until gates 2–5 are met: **Phase-2 implementation is
-  still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays `false`**; the Phase-1 PNG baked
-  base + pilot opt-in + C2/SVG fallback remain intact.
+  **Phase-2 runtime code may pass GATES 1 + 4 ONLY.** Until gates 2, 3, 5 are met: **Phase-2
+  implementation is still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays `false`**; the
+  Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact. **The remaining blocker is now
+  purely the human art** (gates 2–3, then the visual sign-off gate 5).
 - **Human-art handoff written (2026-07-02) — for gates 2–3.**
   [`167a-phase2-artist-handoff.md`](./167a-phase2-artist-handoff.md) is the practical painter brief for
   the decomposed layers (v2 base + face/eyes/eyelid/hair): filenames/dims/transparent-bg, what stays

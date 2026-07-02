@@ -205,10 +205,11 @@ Phase-2 plan's rounded ≈(63,61)/(95,61); use the table above.)*
 - **WebP is REQUIRED for the runtime Phase-2 asset stack.** Six decomposed layers as PNG would exceed
   the D-019 budget (<~350 KB total avatar); WebP-with-alpha is mandatory here (not optional as it was
   for the single Phase-1 base).
-- **No encoder is currently available** in the environment (no cwebp / ffmpeg / ImageMagick / sharp) —
-  the same blocker that deferred the Phase-1 WebP swap. `tools/avatar/extract-master-base.mjs` already
-  prints the exact `cwebp` command; Phase-2 reuses that encode path. **Encoder availability is a hard
-  Phase-2 gate** (§10).
+- **✅ Encoder now available (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0 (`tools/avatar/vendor/`,
+  gitignored; reproducible via `tools/avatar/fetch-cwebp.mjs`) + wrapper `tools/avatar/encode-webp.mjs`
+  (`node encode-webp.mjs <in.png> <out.webp> [--half]`). Zero npm deps. Proven: Phase-1 base 242 KB PNG
+  → 37.7 KB WebP (512×768, alpha preserved, within budget). This clears the former hard encoder gate
+  (§10 gate 4) — encoding the Phase-2 layers now waits only on the human art.
 
 ## 9. Review artifacts (all gitignored, non-runtime)
 
@@ -228,10 +229,11 @@ These are QA/build artifacts only; they must never be promoted to runtime nor us
 
 1. **Human art delivered** — the full package (§4.1–§4.6) exists and each layer's acceptance criteria pass.
 2. **v2 base passes 164B.3** coherence gate (the datum for every other layer).
-3. **Anchor/mask worksheet signed for the Phase-2 rig** — a Phase-2-scoped sign-off that the revised
-   **eye-box** (§6) may drive the runtime blink/eye rig (beyond the existing Tier-2 cosmetic-tooling
-   conditional pass), clearing `humanReviewRequired` for that use.
-4. **WebP encoder available** and all runtime layers encoded to WebP (§8).
+3. ✅ **Anchor/mask worksheet signed for the Phase-2 rig** — **SATISFIED (owner-countersigned
+   2026-07-01):** the revised **eye-box** (§6) is approved to drive the runtime blink/eye rig
+   (raster-path only). See [167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md).
+4. ✅ **WebP encoder available** — **SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` +
+   `encode-webp.mjs` (§8). _Encoding all runtime layers still waits on the art (gate 1)._
 5. **Visual review passed** — human onion-skin-vs-Master sign-off (167a §E) on the composed raster
    stack; eyes legible at 32/48/64px; hair tint fidelity across all colors.
 

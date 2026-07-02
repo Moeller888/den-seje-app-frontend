@@ -19,6 +19,9 @@ debug.html
 # Avatar build/QA artifacts (164L) — regenerable, NOT runtime assets; never commit
 tools/avatar/build/
 
+# Vendored WebP encoder (libwebp cwebp.exe, gate 4) — binary, re-fetch via tools/avatar/fetch-cwebp; never commit
+tools/avatar/vendor/
+
 # Local-only artifacts — never commit (workspace hygiene)
 # backups/: local prod snapshot(s); tools/164b-prototype/: obsolete prototype/scratch
 backups/
