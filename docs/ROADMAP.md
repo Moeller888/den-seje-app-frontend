@@ -182,6 +182,10 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — gates
    2–5 remain OPEN (human v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, WebP encoder,
    visual sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
+   **Human-art handoff written (2026-07-02) for gates 2–3:**
+   [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical painter brief
+   (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; AI forbidden).
+   Offline art deliverable; doc only.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
