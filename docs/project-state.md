@@ -279,6 +279,12 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   **Phase-2 runtime code may pass GATE 1 ONLY.** Until gates 2–5 are met: **Phase-2 implementation is
   still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays `false`**; the Phase-1 PNG baked
   base + pilot opt-in + C2/SVG fallback remain intact.
+- **Human-art handoff written (2026-07-02) — for gates 2–3.**
+  [`167a-phase2-artist-handoff.md`](./167a-phase2-artist-handoff.md) is the practical painter brief for
+  the decomposed layers (v2 base + face/eyes/eyelid/hair): filenames/dims/transparent-bg, what stays
+  identical to Master vs what is removed from the v2 base, the approved eye-box (§8), the 164B.3
+  acceptance gate, and painter/delivery/rejection checklists. **AI regeneration forbidden** (D-033/
+  D-034). Doc only — offline art deliverable; no runtime/manifest/flag change; Phase-2 not started.
 
 ## Open Questions
 - OQ-1: ~~Hybrid vs Full-raster~~ **RESOLVED** — Hybrid Raster + WebP (163A/163D).
