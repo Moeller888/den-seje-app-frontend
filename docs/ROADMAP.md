@@ -91,7 +91,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157R Rollback / flag hardening | — | none | **SOFT GATE** | Cross-cutting code; no infra. |
 | 157S Playwright coverage (fail-soft paths) | — | none | **SOFT GATE** | Tests for default-off behaviour run against prod today. |
 | 157T Production-readiness review | requires 157CB | the above + staging for sign-off | **FUTURE INFRASTRUCTURE** | Final go-live gate. |
-| Avatar track (167A, 164L) | never | none | **UNGATED** | Independent; only gated on human art (D-033). |
+| Avatar track (167A, 164L) | never | none | **UNGATED** | Independent; only gated on the AI-assisted masked-decomposition art (D-042, amends D-033). |
 
 **Net:** the **only HARD GATE is live monitoring validation.** Everything else is SOFT GATE (build
 now, default-off), UNGATED (spec/decision/avatar — do today), or FUTURE INFRASTRUCTURE (activation only).
@@ -180,16 +180,18 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    PASS and the **Phase-2 raster eye-box is owner-countersigned APPROVED** — the plan §13 gate 1
    (Phase-2-scoped anchor/eye-box sign-off) is cleared. Approval is **raster-path only**; the **legacy
    C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — gates
-   2, 3, 5 remain OPEN (human v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, visual
-   sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
+   2, 3, 5 remain OPEN (AI-assisted masked v2 base + 164B.3, remaining face/eyes/eyelid/hair layers,
+   visual sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
    **✅ Gate 4 (WebP encoder) SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
    (`tools/avatar/vendor/`, gitignored; reproducible via `fetch-cwebp.mjs`) + wrapper `encode-webp.mjs`;
    proven Phase-1 base 242 KB PNG → 37.7 KB WebP (alpha preserved, within budget); zero npm deps; build
-   tooling only (no `assets/avatar-r2/`/manifest/`AVATAR_R2` change). Remaining blocker = human art.
-   **Human-art handoff written (2026-07-02) for gates 2–3:**
-   [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical painter brief
-   (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; AI forbidden).
-   Offline art deliverable; doc only.
+   tooling only (no `assets/avatar-r2/`/manifest/`AVATAR_R2` change). Remaining blocker = the
+   AI-assisted masked-decomposition art. **Art policy revised (D-042, 2026-07-02): AI-assisted masked
+   decomposition allowed; AI regeneration/redesign forbidden** (no human painter available).
+   **Art-production handoff written (2026-07-02) for gates 2–3:**
+   [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical producer brief
+   (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; masked AI on the
+   Master, no regeneration). Offline art deliverable; doc only.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
@@ -233,7 +235,7 @@ production**; activation waits for a staging target (free local stack at first; 
 5. ~~**157K — AI abstraction layer + `grade-answer` contract**~~ ✅ done — `_shared/ai/` + advisory
    `grade-answer`, default-off, no reward-path wiring; see [157k-ai-grading-contract.md](./157k-ai-grading-contract.md).
 6. **Avatar M1 / 164L** — Master raster wiring + non-AI mask tooling (UNGATED; parallel track; gated
-   only on the human art deliverable, D-033 — see [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)).
+   only on the AI-assisted masked-decomposition art deliverable, D-042 (amends D-033) — see [167a-architecture-preservation-report.md](./167a-architecture-preservation-report.md)).
 7. **157D ✅ / 157E ✅ — PostHog**: module + GDPR consent gate (157D) and core events
    (login/question_shown/question_answered/item_purchased) + consent banner (157E) — **done,
    default-off, double-gated, no sending until activated** ([157d-posthog-analytics.md](./157d-posthog-analytics.md)).
@@ -259,7 +261,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Shop / economy | ✅ Live | atomic purchase + RLS. |
 | Retention / achievements / quests | ✅ Live | shipped via migrations + `js/`. |
 | Avatar pipeline + engines | ✅ Live | `AVATAR_V2=true`. |
-| Avatar art = Northstar Master | 🟡 Planned | 167A; flat placeholder live; needs human art. |
+| Avatar art = Northstar Master | 🟡 Planned | 167A; flat placeholder live; needs AI-assisted masked-decomposition art (D-042). |
 | Cohort / % rollout | ❌ None | OQ-4; only constant + localStorage override. |
 | Error reporting (Sentry) — frontend | ✅ Foundation (157B), default-off | `js/sentry.js`; routes `logError`; set `ENABLE_SENTRY=true` + DSN to activate. |
 | Error reporting (Sentry) — Edge | ✅ Foundation (157C), default-off | `_shared/monitoring.ts` `withObservability`; set `ENABLE_SENTRY_EDGE=true` + `SENTRY_DSN_EDGE`. 1 reference fn wired, 15 to migrate. |
