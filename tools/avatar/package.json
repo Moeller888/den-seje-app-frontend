@@ -8,6 +8,7 @@
     "extract-masks": "node ./extract-anchor-masks.mjs",
     "extract-master-base": "node ./extract-master-base.mjs",
     "extract-phase2-cut-guides": "node ./extract-phase2-cut-guides.mjs",
+    "build-inpaint-v2-base": "node ./build-inpaint-v2-base.mjs",
     "fetch-cwebp": "node ./fetch-cwebp.mjs",
     "encode-webp": "node ./encode-webp.mjs",
     "test-items": "node ./test-items.mjs",
