@@ -4,7 +4,7 @@ _Consolidated overview of the avatar system: philosophy, pipeline, rendering, st
 _Binding design goal: `docs/avatar-vision.md`. Decision register (D-001…D-041) + risks/debt:
 `docs/project-state.md`. Locked specs: `docs/adr/`. Master wiring plan: `docs/167a-master-asset-raster-wiring-plan.md`._
 _This file is the **map**; it does not restate the decision register or the ADRs — it points to them._
-_Last reviewed: 2026-07-01._
+_Last reviewed: 2026-07-02._
 
 ---
 
@@ -154,11 +154,17 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
   Phase-1 of the Master wiring (D-040 "Master-as-is") temporarily makes face/eyes/blink **static**
   (baked base) while keeping breathing; Phase-2 (163F decomposition) **restores the living engines**
   on the Master art. This sequencing (look-fix first, living-system second) is the 167A recommendation.
-  - **Phase-2 status (2026-07-01): PLANNED, not started.** Audit + implementation plan
+  - **Phase-2 status (updated 2026-07-02): PLANNED, not started.** Audit + implementation plan
     ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief
     ([167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md)) are written; the P2-0 cut-guide tool
-    (§6) is shipped (review artifacts only). Gated on human paint-over of the layers + a scoped
-    anchor/eye-box sign-off + a WebP encoder; `AVATAR_R2` stays `false`. Register: `project-state.md`.
+    (§6) is shipped (review artifacts only). **Gate 1** (Phase-2-scoped anchor/eye-box sign-off) is
+    **SATISFIED** — owner-countersigned APPROVED 2026-07-01
+    ([167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md));
+    approval is **raster-path only** (legacy C2 anchors `cx68/92 cy47` stay frozen). The **human-art
+    handoff** for gates 2–3 is written
+    ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). Gates 2–5 remain open (human
+    v2 base + 164B.3, remaining face/eyes/eyelid/hair layers, WebP encoder, visual sign-off); Phase-2
+    runtime code may pass gate 1 only; `AVATAR_R2` stays `false`. Register: `project-state.md`.
 
 ## 10. Performance considerations
 
