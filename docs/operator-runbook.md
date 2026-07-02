@@ -37,6 +37,7 @@
 14. [Post-Deploy Verification Checklist](#14-post-deploy-verification-checklist)
 15. [Rollback Checklist](#15-rollback-checklist)
 16. [Weekly Health-Check Checklist](#16-weekly-health-check-checklist)
+17. [Appendix A — Raster (167A) Avatar Build Tooling](#appendix-a--raster-167a-avatar-build-tooling)
 
 ---
 
@@ -1708,4 +1709,60 @@ Run every week, ideally Monday morning.
 
 ---
 
+## Appendix A — Raster (167A) Avatar Build Tooling
+
+> **Scope note — different subsystem.** Sections 1–16 cover the **GLB / 3D avatar Edge-Function
+> pipeline** (ingestion · onboarding · validator · DB · storage buckets · promotion). This appendix
+> covers the **167A raster (2D WebP) avatar** build tooling, which is **offline / local dev tooling**
+> — it has **no Edge Function, no DB table, no storage bucket, and no production promotion path**. It
+> does **not** touch `production_enabled`, `avatar_assets`, or anything in Sections 1–16. Canonical
+> docs for this subsystem: [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md), the 167A Phase-2 plan/brief/handoff,
+> and the avatar decision register [`project-state.md`](./project-state.md).
+
+### A.1 WebP encoder (Phase-2 gate 4)
+
+The raster avatar layers ship as **WebP** (ADR-163D). A **vendored libwebp `cwebp.exe`** provides the
+PNG→WebP encode, with **zero npm dependencies**. Two Node scripts wrap it:
+
+| Tool | Purpose |
+|---|---|
+| `tools/avatar/fetch-cwebp.mjs` | Reproducibly fetch Google's official libwebp `cwebp.exe` (currently 1.5.0) → `tools/avatar/vendor/cwebp.exe`. Pure Node (`fetch` + built-in ZIP reader), no deps. |
+| `tools/avatar/encode-webp.mjs` | Encode a PNG → WebP via the vendored `cwebp` (spawns it). |
+
+The vendored binary lives in `tools/avatar/vendor/` and is **gitignored** (a binary — never committed).
+On a fresh clone or if it is missing, re-fetch it.
+
+### A.2 Commands
+
+```bash
+# One-time (or when vendor/cwebp.exe is absent): fetch the encoder
+node tools/avatar/fetch-cwebp.mjs
+# or:  npm --prefix tools/avatar run fetch-cwebp
+
+# Verify the binary
+tools/avatar/vendor/cwebp.exe -version        # -> 1.5.0
+
+# Encode a layer PNG -> WebP (defaults: -q 90 -alpha_q 100 -m 6, metadata stripped)
+node tools/avatar/encode-webp.mjs <in.png> <out.webp> [--q 90] [--alpha-q 100] [--half]
+#   --half : downscale to 512 wide first (1024x1536 authoring PNG -> 512x768 served)
+```
+
+Reference result (Phase-1 base): `body-neutral-medium-v1.png` 242 KB → **37.7 KB WebP**, 512×768,
+alpha preserved (VP8X alpha flag), within the <350 KB per-avatar budget (ADR-163D / D-019).
+
+### A.3 Boundaries (read before use)
+
+- **Build tooling only.** Encoding a file does **not** write into `assets/avatar-r2/`, does **not**
+  register or change `R2_MANIFEST`, and does **not** touch the `AVATAR_R2` flag (stays `false`).
+- **Promotion is a separate, deliberate step:** drop the encoded WebP into `assets/avatar-r2/{slot}/`
+  and register a **new** version in `R2_MANIFEST` (immutable — never overwrite a shipped asset, D-018).
+  That is a code/asset change, not part of running the encoder.
+- **No AI**; the encoder is a mechanical PNG→WebP transform. Layer *art* is a separate human deliverable
+  (the Phase-2 artist handoff); Phase-2 wiring is gated and **not started**.
+- If `encode-webp.mjs` reports the vendored encoder is missing, run `fetch-cwebp.mjs` (A.2) — do not
+  add an npm dependency or hand-roll an encoder.
+
+---
+
 *End of runbook. Classification: A- — Production-safe with accepted defect M-2.*
+*(Appendix A: raster/167A build tooling — separate subsystem, no production pipeline.)*
