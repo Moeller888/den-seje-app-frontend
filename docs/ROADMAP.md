@@ -274,7 +274,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Analytics (PostHog) | ✅ Module + events (157D/157E), default-off | `js/analytics.js` + consent gate + banner; core events wired (login/question/purchase), double-gated. Activation needs key + consent + staging. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
-| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`) | `js/read-aloud/` on-device Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable); quiz "🔊 Læs op". `ENABLE_READ_ALOUD=true`. |
+| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`; per-option 🔊 `eb6d5fc`) | `js/read-aloud/` on-device Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable); quiz "🔊 Læs op" **+ per-MC-option 🔊** (reads one option, never submits). `ENABLE_READ_ALOUD=true`. |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 

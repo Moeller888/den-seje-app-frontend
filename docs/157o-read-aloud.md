@@ -1,6 +1,6 @@
 # 157N/157O — Read-Aloud (TTS): Decision + Implementation
 
-Status: **157N decided · 157O LIVE in production** (Web Speech path activated, commit `52e7a04`, 2026-07-03). Audio clips remain an offline deliverable.
+Status: **157N decided · 157O LIVE in production** (Web Speech activated, commit `52e7a04`; per-MC-option 🔊 added, commit `eb6d5fc`; both 2026-07-03). Audio clips remain an offline deliverable.
 Date: 2026-06-30 (built) · 2026-07-03 (activated). Owner: project owner (solo). Gate: **SOFT** (built, now live).
 Service: `js/read-aloud/`. Wiring: `app.js`. Builds on the `js/audio.js` graceful-playback pattern.
 Rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md) (privacy), [PROJECT_VISION.md](./PROJECT_VISION.md) (accessibility).
@@ -27,10 +27,14 @@ A provider-abstracted read-aloud service (consistent with the OCR/AI layers), **
 | `provider-prerecorded.js` | **Primary** — plays a Piper clip (via `Audio`) when one exists; else returns false. |
 | `provider-webspeech.js` | **Fallback** — on-device `speechSynthesis` (`da-DK`); no files, no network. |
 | `index.js` | `createReadAloud()` facade → `isAvailable()`/`speak()`/`stop()`. Order: prerecorded → web speech. |
-| `adapters/quiz.js` | `attachReadAloudControl(container, text)` — "🔊 Læs op" button; no-op when disabled. |
+| `adapters/quiz.js` | `attachReadAloudControl(container, text)` — question "🔊 Læs op" button. Plus `attachOptionReadAloudControl(row, text)` — per-MC-option "🔊" button (reads one option). Both no-op when disabled. |
 
 **Wiring:** `app.js` calls `attachReadAloudControl(questionElement, question.content.question)` right
-after the question text is set — inert when `ENABLE_READ_ALOUD` is off (no button, no audio, no change).
+after the question text is set. For **MC** questions each option renders as a row `[answer button][🔊]`
+and `app.js` calls `attachOptionReadAloudControl(row, option)` — the 🔊 is a **separate sibling** of the
+answer button (never nested; `stopPropagation`/`preventDefault`), so it reads only that option and can
+never submit the answer (commit `eb6d5fc`, 2026-07-03). Only MC gets per-option 🔊; text/number/open
+formats do not. All of it is inert when `ENABLE_READ_ALOUD` is off (no button, no audio, no change).
 
 ## 3. The Piper clips (offline deliverable)
 
