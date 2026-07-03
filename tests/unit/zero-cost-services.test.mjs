@@ -96,13 +96,13 @@ test("cloudinary: fail-soft on bad input", () => {
 });
 
 // ── Flags registry (js/flags.js) ───────────────────────────────────────────────
-test("flags: snapshot reports all services off by default, avatar_v2 on", () => {
+test("flags: snapshot reports external services off; read-aloud + avatar_v2 on", () => {
   const s = flagSnapshot();
   assert.equal(s.sentry.active, false);
   assert.equal(s.ocr.active, false);
   assert.equal(s.cloudinary.active, false);
   assert.equal(s.analytics.active, false);
-  assert.equal(s.read_aloud.active, false);
+  assert.equal(s.read_aloud.active, true); // 157O activated (on-device, no consent)
   assert.equal(s.avatar_v2.default_on, true);
 });
 
@@ -141,9 +141,11 @@ test("ocr: structured result factory fills defaults", () => {
 });
 
 // ── Read-aloud (js/read-aloud) ─────────────────────────────────────────────────
-test("read-aloud: unavailable by default; speak is a safe no-op", async () => {
-  assert.equal(isReadAloudEnabled(), false);
+test("read-aloud: flag on (157O), but fail-soft where unsupported; speak is a safe no-op", async () => {
+  assert.equal(isReadAloudEnabled(), true); // 157O activated
   const ra = createReadAloud();
+  // No browser globals (Audio / speechSynthesis) in Node → no provider is supported,
+  // so the service stays unavailable and speak() is a safe no-op even with the flag on.
   assert.equal(ra.isAvailable(), false);
   assert.equal(await ra.speak("Læs dette"), false);
 });

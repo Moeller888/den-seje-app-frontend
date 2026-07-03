@@ -12,8 +12,9 @@ import { createPrerecordedProvider } from "./provider-prerecorded.js";
 import { createWebSpeechProvider } from "./provider-webspeech.js";
 import { hashKey } from "./manifest.js";
 
-// Master switch (157O). Default OFF — no control rendered, no audio, zero impact.
-export const ENABLE_READ_ALOUD = false;
+// Master switch (157O). ACTIVATED (Web Speech only; Piper manifest stays empty).
+// On-device, no consent, fail-soft — see docs/157o-read-aloud.md §activation.
+export const ENABLE_READ_ALOUD = true;
 
 /** Whether the read-aloud flag is on (no capability check). No side effects. */
 export function isReadAloudEnabled() {
