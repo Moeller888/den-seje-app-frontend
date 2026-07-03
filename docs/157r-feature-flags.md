@@ -11,7 +11,9 @@ Registry: `js/flags.js` (read-only diagnostics). Rules: [CLAUDE_WORKFLOW.md](./C
 
 - **Every external-integration flag is DEFAULT-OFF and FAIL-SOFT.** With defaults, the app behaves as
   if the integration did not exist (no SDK/network/UI), and any failure degrades silently.
-- **`AVATAR_V2` is the one intentional DEFAULT-ON** flag, with a documented one-commit rollback.
+- **`AVATAR_V2` and `ENABLE_READ_ALOUD` are the intentional DEFAULT-ON flags**, each with a documented
+  one-commit rollback. Read-aloud (157O, live `52e7a04`) is **on-device — no egress** — so it is not an
+  "external-integration" flag and needs no consent.
 - **Optional third-party egress also requires consent** (157Q) — flag-on alone never sends data.
 - New flags follow the convention: a boolean constant (or env var on the edge) + an `isX()` accessor;
   default-off; fail-soft; documented here.
@@ -26,7 +28,7 @@ Registry: `js/flags.js` (read-only diagnostics). Rules: [CLAUDE_WORKFLOW.md](./C
 | `ENABLE_OCR` | `js/ocr/index.js` | `false` | — | `isOcrEnabled()` | no control; manual text entry |
 | `ENABLE_CLOUDINARY` | `js/cloudinary.js` (+ cloud name) | `false` | — | `isCloudinaryEnabled()` | returns origin URL |
 | `ENABLE_ANALYTICS` | `js/analytics.js` (+ key, + `analytics` consent) | `false` | — | `isAnalyticsConfigured()` / `isAnalyticsActive()` | no SDK/events |
-| `ENABLE_READ_ALOUD` | `js/read-aloud/index.js` | `false` | — | `isReadAloudEnabled()` | no control; no audio |
+| `ENABLE_READ_ALOUD` | `js/read-aloud/index.js` | **`true`** (live, `52e7a04`) | — | `isReadAloudEnabled()` | no control; no audio |
 
 Consent categories (`js/consent.js`, 157Q): `analytics`, `error_monitoring`, `ai_features` — default
 `unknown` → flow off until opt-in.
@@ -48,7 +50,7 @@ in `app.js`) exposes **`window.__flags()`** in the browser console:
 window.__flags()
 // { avatar_v2:{default_on:true,active:true}, sentry:{configured:false,active:false},
 //   ocr:{active:false}, cloudinary:{active:false}, analytics:{configured:false,active:false},
-//   read_aloud:{active:false}, consent:{analytics:"unknown",...} }
+//   read_aloud:{active:true}, consent:{analytics:"unknown",...} }
 ```
 It never mutates anything; it only reports.
 

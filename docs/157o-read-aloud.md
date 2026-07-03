@@ -1,7 +1,7 @@
 # 157N/157O — Read-Aloud (TTS): Decision + Implementation
 
-Status: **157N decided · 157O implemented (service, default-off).** Audio clips are an offline deliverable.
-Date: 2026-06-30. Owner: project owner (solo). Gate: **SOFT** (build now, activate later).
+Status: **157N decided · 157O LIVE in production** (Web Speech path activated, commit `52e7a04`, 2026-07-03). Audio clips remain an offline deliverable.
+Date: 2026-06-30 (built) · 2026-07-03 (activated). Owner: project owner (solo). Gate: **SOFT** (built, now live).
 Service: `js/read-aloud/`. Wiring: `app.js`. Builds on the `js/audio.js` graceful-playback pattern.
 Rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md) (privacy), [PROJECT_VISION.md](./PROJECT_VISION.md) (accessibility).
 
@@ -17,8 +17,8 @@ feature works **before** clips exist. **No audio is uploaded anywhere; no third-
 
 ## 2. 157O — What was built (`js/read-aloud/`)
 
-A provider-abstracted read-aloud service (consistent with the OCR/AI layers), **default-off**
-(`ENABLE_READ_ALOUD=false`), fail-soft, zero-cost:
+A provider-abstracted read-aloud service (consistent with the OCR/AI layers), **live in prod**
+(`ENABLE_READ_ALOUD=true`, `52e7a04`), fail-soft, zero-cost:
 
 | File | Role |
 |---|---|
@@ -66,6 +66,7 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
 
 - **No Piper clips produced here** (offline content task).
 - **No live TTS service** (decided against).
-- **Default-off**; activation needs only flipping the flag (Web Speech works immediately; clips are a
-  quality upgrade). Candidate to default-on once Danish Web Speech quality + clip coverage are validated.
+- **Activated (Web Speech)** — the flag is `true` in prod (`52e7a04`, 2026-07-03); Web Speech works
+  immediately and a Danish (`da-DK`) voice is preferred when available (fail-soft to the default voice).
+  Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.

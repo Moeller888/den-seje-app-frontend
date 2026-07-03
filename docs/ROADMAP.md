@@ -20,6 +20,9 @@ _Last reviewed: 2026-07-01._
   (`docs/167a-master-asset-raster-wiring-plan.md`), not executed.
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
+- **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
+  "🔊 Læs op", on-device, no consent, fail-soft; Danish voice preferred. First platform service
+  activated for students; Piper clips remain an offline deliverable.
 - **Docs:** this foundation set (Section 157AA) being established.
 
 ## Completed sections
@@ -85,7 +88,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157L Ollama AI-grade **wiring** into `process-event` | requires 157CB | non-prod env (reward path) + reachable model | **FUTURE INFRASTRUCTURE** | Touches the reward path → must validate in non-prod before any rollout. |
 | 157M AI-grade in teacher review | requires 157CB | 157L | **FUTURE INFRASTRUCTURE** | Activation follows 157L. |
 | 157N Piper TTS **strategy** | — | none | **UNGATED** | Decision/spec. |
-| 157O Piper pre-generated audio | — | none | **SOFT GATE** | Static Storage assets + `js/audio.js`; no live service. |
+| 157O Read-aloud (Web Speech + Piper) | — | none | **LIVE** | Web Speech path **activated in prod** (`52e7a04`, 2026-07-03); Piper clips still an offline deliverable. |
 | 157P Whisper STT feasibility | — | none | **UNGATED** | Decision (likely defer). |
 | 157Q GDPR/consent consolidation | — | none | **SOFT GATE** | Consent mechanism is buildable code/docs. |
 | 157R Rollback / flag hardening | — | none | **SOFT GATE** | Cross-cutting code; no infra. |
@@ -126,7 +129,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | 157L | Ollama advisory AI-grade in `process-event` PATH 1 | Edge | **FUTURE INFRA** |
 | 157M | AI-grade surfaced in teacher review (`review-answer`) | Edge + frontend | **FUTURE INFRA** |
 | **157N** ✅ | Piper TTS strategy — **decided: pre-gen clips primary + on-device Web Speech fallback, no live service** | decision | **UNGATED** (done) |
-| **157O** ✅ | Read-aloud service `js/read-aloud/` (provider-abstracted, default-off) + quiz control — **done**; Piper clips are an offline deliverable | frontend | **SOFT** (done) |
+| **157O** ✅ | Read-aloud service `js/read-aloud/` (provider-abstracted) + quiz control — **LIVE in prod** (Web Speech, `52e7a04`, 2026-07-03); Piper clips remain an offline deliverable | frontend | **SOFT** (live) |
 | 157P | Whisper STT feasibility (wasm vs server) — likely defer | decision | **UNGATED** |
 | **157Q** ✅ | GDPR consent consolidation — single SoT (`js/consent.js`) + consolidated banner + canonical privacy map — **done, default-off** | cross-cutting | **SOFT** (done) |
 | **157R** ✅ | Feature-flag hardening — registry `js/flags.js` (`window.__flags()`) + canonical rollback runbook — **done** | cross-cutting | **SOFT** (done) |
@@ -239,8 +242,9 @@ production**; activation waits for a staging target (free local stack at first; 
 7. **157D ✅ / 157E ✅ — PostHog**: module + GDPR consent gate (157D) and core events
    (login/question_shown/question_answered/item_purchased) + consent banner (157E) — **done,
    default-off, double-gated, no sending until activated** ([157d-posthog-analytics.md](./157d-posthog-analytics.md)).
-8. **157N ✅ / 157O ✅ — read-aloud** decided + built (`js/read-aloud/`, default-off; Piper clips =
-   offline deliverable; [157o-read-aloud.md](./157o-read-aloud.md)). **157P** STT feasibility = UNGATED decision.
+8. **157N ✅ / 157O ✅ — read-aloud** decided + built + **LIVE in prod** (Web Speech, `52e7a04`,
+   2026-07-03; Piper clips = offline deliverable; [157o-read-aloud.md](./157o-read-aloud.md)).
+   **157P** STT feasibility = UNGATED decision.
 9. **157Q ✅ / 157R ✅ / 157S ✅** — consent consolidation (`js/consent.js`), flag hardening
    (`js/flags.js`), and default-off/fail-soft unit tests (`node --test` + `deno test`, 21 tests,
    [157s-test-coverage.md](./157s-test-coverage.md)) — **all done**. **Zero-cost services track
@@ -270,7 +274,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Analytics (PostHog) | ✅ Module + events (157D/157E), default-off | `js/analytics.js` + consent gate + banner; core events wired (login/question/purchase), double-gated. Activation needs key + consent + staging. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
-| TTS (read-aloud) | ✅ Service (157N/157O), default-off | `js/read-aloud/` pre-gen Piper + on-device Web Speech fallback; quiz "🔊 Læs op". Clips = offline deliverable. Set `ENABLE_READ_ALOUD=true`. |
+| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`) | `js/read-aloud/` on-device Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable); quiz "🔊 Læs op". `ENABLE_READ_ALOUD=true`. |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 
