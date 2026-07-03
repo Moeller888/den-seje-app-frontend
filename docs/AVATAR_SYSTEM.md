@@ -4,7 +4,9 @@ _Consolidated overview of the avatar system: philosophy, pipeline, rendering, st
 _Binding design goal: `docs/avatar-vision.md`. Decision register (D-001…D-041) + risks/debt:
 `docs/project-state.md`. Locked specs: `docs/adr/`. Master wiring plan: `docs/167a-master-asset-raster-wiring-plan.md`._
 _This file is the **map**; it does not restate the decision register or the ADRs — it points to them._
-_Last reviewed: 2026-07-02._
+_Accessibility (read-aloud / TTS) is a separate platform-track feature, not avatar-domain — see
+[ROADMAP.md](./ROADMAP.md) and [157o-read-aloud.md](./157o-read-aloud.md)._
+_Last reviewed: 2026-07-03._
 
 ---
 
