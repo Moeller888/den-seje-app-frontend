@@ -37,12 +37,13 @@ const W = 1024, H = 1536;
 
 // White-matte flood-fill threshold (border-connected background → transparent/figure=0).
 const WHITE_HI = 250;
-// Outfit mask starts just below the neck/collar (signature sweater/star/cargo/wristbands/sneakers).
-const OUTFIT_TOP_Y = 545;
+// Outfit mask starts at the collar (raised in v2 to catch the green sweater collar remnant).
+const OUTFIT_TOP_Y = 505;
 // Hair color-detection box (head+hair region; keeps brown detection off the body).
-const HAIR_BOX = { x0: 260, y0: 40, x1: 770, y1: 480 };
-const HAIR_DILATE = 6;   // px, closes hair-stroke gaps + covers outline
-const EYE_GROW = 10;     // px, grow the eye boxes a touch
+const HAIR_BOX = { x0: 260, y0: 40, x1: 770, y1: 490 };
+const HAIR_DILATE = 12;  // px, closes hair-stroke gaps + temple smudges + covers outline
+const EYE_GROW = 16;     // px, grow the eye boxes (covers eye-corner/temple smudges)
+const FEATHER = 9;       // px, soft edge on the combined mask for seamless inpaint blends
 
 // ── CRC32 + PNG codec (colour type 2 in, colour type 6 out) — from extract-master-base ──
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -91,7 +92,7 @@ function figureAlpha(rgb) {
 
 // ── colour classifiers ────────────────────────────────────────────────────────
 function isSkin(r, g, b) { return r > 175 && g > 135 && r >= g && g >= b && (r - b) >= 25 && (r - b) <= 145; }
-function isHair(r, g, b) { return r >= 55 && r < 200 && g < r * 0.92 && b < g * 0.96 && (r - b) >= 22 && r > g && g >= b; }
+function isHair(r, g, b) { return r >= 48 && r < 205 && g < r * 0.93 && b < g * 0.97 && (r - b) >= 18 && r > g && g >= b; }
 
 // ── mask primitives (Uint8 0/255) ────────────────────────────────────────────
 function blank() { return new Uint8Array(W * H); }
@@ -119,6 +120,14 @@ function unionInto(dst, src) { for (let i = 0; i < W * H; i++) if (src[i]) dst[i
 function count(m) { let c = 0; for (let i = 0; i < W * H; i++) if (m[i]) c++; return c; }
 function grayToRGBA(m) { const rgba = Buffer.alloc(W * H * 4); for (let i = 0; i < W * H; i++) { const v = m[i] ? 255 : 0; rgba[i * 4] = v; rgba[i * 4 + 1] = v; rgba[i * 4 + 2] = v; rgba[i * 4 + 3] = 255; } return rgba; }
 function writeMask(name, m) { writeFileSync(join(OUT_DIR, name), encodePngRGBA(W, H, grayToRGBA(m))); return count(m); }
+// separable box-blur (feather) on a 0/255 mask → soft 0-255 gradient (sliding window)
+function boxBlur(m, r) {
+  const win = 2 * r + 1; const tmp = new Float32Array(W * H); const out = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) { let s = 0; for (let x = -r; x <= r; x++) s += m[y * W + Math.max(0, Math.min(W - 1, x))]; for (let x = 0; x < W; x++) { tmp[y * W + x] = s / win; s += m[y * W + Math.min(W - 1, x + r + 1)] - m[y * W + Math.max(0, x - r)]; } }
+  for (let x = 0; x < W; x++) { let s = 0; for (let y = -r; y <= r; y++) s += tmp[Math.max(0, Math.min(H - 1, y)) * W + x]; for (let y = 0; y < H; y++) { out[y * W + x] = Math.round(s / win); s += tmp[Math.min(H - 1, y + r + 1) * W + x] - tmp[Math.max(0, y - r) * W + x]; } }
+  return out;
+}
+function grayValToRGBA(m) { const rgba = Buffer.alloc(W * H * 4); for (let i = 0; i < W * H; i++) { const v = m[i]; rgba[i * 4] = v; rgba[i * 4 + 1] = v; rgba[i * 4 + 2] = v; rgba[i * 4 + 3] = 255; } return rgba; }
 
 function main() {
   const buf = readFileSync(MASTER);
@@ -167,7 +176,11 @@ function main() {
   const cEyes = writeMask("mask-eyes.png", eyes);
   const cHair = writeMask("mask-hair.png", hair);
   const cOutfit = writeMask("mask-signature-outfit.png", outfit);
-  const cComb = writeMask("mask-v2-base-combined.png", combined);
+  // combined is written FEATHERED (soft grayscale edge) for seamless inpaint blends;
+  // the per-region masks above stay crisp binary for review.
+  const cComb = count(combined);
+  const feathered = boxBlur(dilate(combined, 4), FEATHER);
+  writeFileSync(join(OUT_DIR, "mask-v2-base-combined.png"), encodePngRGBA(W, H, grayValToRGBA(feathered)));
 
   // preview overlay: Master tinted per region
   const rgba = Buffer.alloc(W * H * 4);
