@@ -10,7 +10,7 @@ import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
-import { attachReadAloudControl } from "./js/read-aloud/adapters/quiz.js";
+import { attachReadAloudControl, attachOptionReadAloudControl } from "./js/read-aloud/adapters/quiz.js";
 import { installFlagDiagnostics } from "./js/flags.js";
 
 window.__sb = supabase;
@@ -1086,11 +1086,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    const isMc = format.includes("mc");
     options.forEach((option) => {
       const btn = document.createElement("button");
       btn.textContent = option;
       btn.onclick = () => submitAnswer(option, btn);
-      optionsContainer.appendChild(btn);
+
+      if (isMc) {
+        // 157O: MC options render as a row [answer button][🔊] so the read-aloud
+        // control is a SEPARATE sibling — clicking 🔊 never submits the answer.
+        // No-op / fail-soft when read-aloud is unavailable (no 🔊 rendered).
+        const row = document.createElement("div");
+        row.className = "option-row";
+        row.appendChild(btn);
+        attachOptionReadAloudControl(row, option);
+        optionsContainer.appendChild(row);
+      } else {
+        optionsContainer.appendChild(btn);
+      }
     });
   }
 

@@ -383,6 +383,33 @@
       cursor: not-allowed;
     }
 
+    /* 157O: per-option read-aloud — answer button + 🔊 side by side */
+    .option-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .option-row > button {
+      width: auto;           /* override #options button width:100% inside the row */
+      margin: 0;
+    }
+
+    .option-row > button:not(.read-aloud-option-btn) {
+      flex: 1 1 auto;        /* answer button grows to fill the row */
+      min-width: 0;          /* allow long option text to wrap, never overflow */
+    }
+
+    .read-aloud-option-btn {
+      flex: 0 0 auto;
+      width: 52px;           /* square, ≥44px touch target on mobile */
+      min-height: 52px;
+      padding: 0;
+      justify-content: center;
+      font-size: 20px;
+    }
+
     /* Primary submit button (text / number answer types) */
     #options button.submit-btn {
       justify-content: center;

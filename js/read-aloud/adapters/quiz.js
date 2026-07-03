@@ -48,3 +48,47 @@ export function attachReadAloudControl(container, text) {
     // Fail-soft: never break the question UI over a read-aloud button.
   }
 }
+
+/**
+ * Attach a per-option read-aloud control (small "🔊" button) beside a single MC
+ * answer option. The button is a SEPARATE sibling of the answer button (never nested),
+ * so clicking it does not submit; stopPropagation/preventDefault are applied defensively.
+ * It reads only `text` (the one option). No-op when read-aloud is unavailable → nothing
+ * renders, the option UI is unchanged. Fail-soft: can never break the option UI.
+ * @param {HTMLElement} container  the option row (sibling wrapper of the answer button)
+ * @param {string} text            the single option's text
+ */
+export function attachOptionReadAloudControl(container, text) {
+  try {
+    if (!container || typeof text !== "string" || text.trim().length === 0) return;
+    const ra = readAloud();
+    if (!ra.isAvailable()) return; // default-off / unsupported → render nothing, change nothing
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "read-aloud-option-btn";
+    btn.textContent = "🔊";
+    btn.setAttribute("aria-label", "Læs svarmulighed op: " + text);
+
+    let speaking = false;
+    function reset() { speaking = false; }
+
+    btn.addEventListener("click", async (e) => {
+      try {
+        // Never let a read-aloud click reach/act as the answer button.
+        if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+        if (e && typeof e.preventDefault === "function") e.preventDefault();
+        if (speaking) { ra.stop(); reset(); return; }
+        speaking = true;
+        await ra.speak(text);
+        reset();
+      } catch (_e) {
+        reset();
+      }
+    });
+
+    container.appendChild(btn);
+  } catch (_e) {
+    // Fail-soft: never break the option UI over a read-aloud button.
+  }
+}

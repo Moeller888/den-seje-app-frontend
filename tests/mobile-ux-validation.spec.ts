@@ -121,7 +121,9 @@ test('3. Touch targets — MC buttons ≥ 44px height', async ({ browser }) => {
   const page = await ctx.newPage();
   await loginAndWait(page);
 
-  const buttons = page.locator('#options button:not(.submit-btn)');
+  // Exclude the 157O per-option read-aloud buttons (small square 🔊) — this test
+  // asserts answer-button tap targets (≥44px height, ≥300px width), not the 🔊 controls.
+  const buttons = page.locator('#options button:not(.submit-btn):not(.read-aloud-option-btn)');
   const count = await buttons.count();
 
   if (count > 0) {

@@ -22,6 +22,7 @@ import { createDocumentRecognizer, isOcrEnabled } from "../../js/ocr/index.js";
 import { createOCRResult } from "../../js/ocr/ocr-result.js";
 import { createReadAloud, isReadAloudEnabled } from "../../js/read-aloud/index.js";
 import { clipPathFor, hashKey } from "../../js/read-aloud/manifest.js";
+import { attachOptionReadAloudControl } from "../../js/read-aloud/adapters/quiz.js";
 
 // ── localStorage stub ─────────────────────────────────────────────────────────
 function installLocalStorage() {
@@ -156,4 +157,18 @@ test("read-aloud: manifest empty; hashKey stable", () => {
   const k = hashKey("Hvad er hovedstaden?");
   assert.ok(typeof k === "string" && k.startsWith("ra_"));
   assert.equal(k, hashKey("Hvad er hovedstaden?")); // deterministic
+});
+
+test("read-aloud: per-option control is fail-soft / no-op when unsupported", () => {
+  // No browser globals (Audio / speechSynthesis) in Node → read-aloud is unavailable,
+  // so the per-option control renders nothing and never throws (quiz unaffected).
+  let appended = 0;
+  const fakeRow = { appendChild: () => { appended++; } };
+  assert.doesNotThrow(() => attachOptionReadAloudControl(fakeRow, "København"));
+  assert.equal(appended, 0); // unavailable → no 🔊 button rendered
+  // Guards: bad container / empty text never throw.
+  assert.doesNotThrow(() => attachOptionReadAloudControl(null, "København"));
+  assert.doesNotThrow(() => attachOptionReadAloudControl(fakeRow, ""));
+  assert.doesNotThrow(() => attachOptionReadAloudControl(fakeRow, undefined));
+  assert.equal(appended, 0);
 });
