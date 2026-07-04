@@ -1108,6 +1108,7 @@
       <button id="themesBtn">🎨 Temaer</button>
       <button id="collectionBtn">📖 Samling</button>
       <button id="leaderboardBtn">🏆 Rangliste</button>
+      <button id="docsBtn" style="display:none">📚 Docs</button>
       <button id="logoutBtn">🚪 Log ud</button>
     </nav>
 
@@ -1263,6 +1264,7 @@
   document.getElementById("shopBtn").onclick        = () => { window.location.href = "shop.html"; };
   document.getElementById("avatarBtn").onclick      = () => { window.location.href = "avatar.html"; };
   document.getElementById("themesBtn").onclick      = () => { window.location.href = "themes.html"; };
+  document.getElementById("docsBtn").onclick        = () => { window.location.href = "docs.html"; };
   document.getElementById("collectionBtn").onclick  = () => { window.location.href = "collection.html"; };
   document.getElementById("leaderboardBtn").onclick = () => { window.location.href = "leaderboard.html"; };
   document.getElementById("logoutBtn").onclick = async () => {
@@ -1339,7 +1341,7 @@
     weeklyQuestsResult,
     weeklyQuestProgressResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("equipped_slots, active_theme, active_title, avatar_gender, avatar_identity").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("equipped_slots, active_theme, active_title, avatar_gender, avatar_identity, role").eq("id", userId).maybeSingle(),
     supabase.from("student_progress").select("xp, coins, current_streak, longest_streak, correct_answers").eq("student_id", userId),
     supabase.from("user_items").select("item_id").eq("user_id", userId),
     supabase.from("shop_items").select("id, rarity, slot_type, image_url"),
@@ -1363,6 +1365,13 @@
   const activeThemeId  = profileResult.data?.active_theme ?? "default";
   const avatarGender   = profileResult.data?.avatar_gender ?? 'neutral';
   const avatarIdentity = profileResult.data?.avatar_identity ?? null;   // Section 152A
+
+  // Internal docs link — super_admin only. Default hidden (students/teachers never see it);
+  // fail-soft: any missing/errored role keeps it hidden.
+  if ((profileResult.data?.role ?? null) === "super_admin") {
+    const docsBtn = document.getElementById("docsBtn");
+    if (docsBtn) docsBtn.style.display = "";
+  }
 
   // ── Parse progression ─────────────────────────────────────────────────────────
 
