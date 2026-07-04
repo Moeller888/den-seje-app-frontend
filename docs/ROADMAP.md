@@ -195,6 +195,13 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical producer brief
    (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; masked AI on the
    Master, no regeneration). Offline art deliverable; doc only.
+   **🟡 Gate 2 (v2 base 164B.3) CONDITIONALLY SATISFIED (2026-07-04):** the **iter7** base candidate
+   (D-042: masked AI inpaint → deterministic lower-head carve → deterministic warm cel-shade) is
+   **owner-countersigned CONDITIONAL PASS** — [164b3-iter7-base-review.md](./164b3-iter7-base-review.md)
+   (§2 proportions PASS · §5 outfit/D-032/D-042 PASS · §3 cel-shading = 3, not full PASS). **Base NOT
+   promoted** — gitignored review artifact; no `assets/avatar-r2/`, no `R2_MANIFEST`, `AVATAR_R2`
+   `false`. **Gates 3 (clean hair + eyes/face/eyelid layers) and 5 (composed visual sign-off) remain
+   OPEN**; Phase-2 implementation still not started.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
