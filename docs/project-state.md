@@ -275,20 +275,31 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   raster blink/eye rig; the **legacy C2 anchors (`cx68/92 cy47`, `js/avatar-blink-engine.js`) stay
   frozen** (two eye-box sets coexist, selected by the render branch). Docs only; no runtime/manifest/
   flag change.
-- **Phase-2 implementation gates — GATES 1 + 4 SATISFIED (2026-07-02); GATES 2, 3, 5 OPEN.**
+- **Phase-2 implementation gates — GATES 1 + 4 SATISFIED; GATE 2 CONDITIONALLY SATISFIED (2026-07-04);
+  GATES 3, 5 OPEN.**
   (1) ✅ Phase-2-scoped anchor/eye-box sign-off — **SATISFIED** (owner-countersigned, PR #7 `2159d3e`).
-  (2) ⛔ **AI-assisted masked decomposition** of the v2 base (D-042) passing **164B.3** — open.
-  (3) ⛔ the remaining **face / eyes / eyelid / hair** layers (AI-assisted masked, D-042) passing review — open.
+  (2) 🟡 **v2 base 164B.3 — CONDITIONALLY SATISFIED (2026-07-04):** the **iter7** base candidate
+  (`…-iter7-shaded.png`, D-042: masked AI inpaint → deterministic lower-head carve → deterministic warm
+  cel-shade) is **owner-countersigned CONDITIONAL PASS** —
+  [`164b3-iter7-base-review.md`](./164b3-iter7-base-review.md) (supersedes
+  [`164b3-iter6-base-review.md`](./164b3-iter6-base-review.md)). §2 proportions PASS · §5 outfit/D-032/
+  D-042 PASS · §3 cel-shading = 3 (CONDITIONAL, not full PASS — finish still simpler than the Master).
+  **The candidate is NOT promoted:** it stays a gitignored review artifact; no `assets/avatar-r2/`
+  write, no `R2_MANIFEST` change, `AVATAR_R2` still `false`. Runtime promotion is a later step.
+  (3) ⛔ the remaining **face / eyes / eyelid / hair** layers (AI-assisted masked, D-042) passing review
+  — **open** (a clean dedicated hair layer + eyes/face/eyelid are still needed).
   (4) ✅ a **WebP encoder** — **SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
   (`tools/avatar/vendor/`, gitignored; reproducible via `tools/avatar/fetch-cwebp.mjs`) + wrapper
   `tools/avatar/encode-webp.mjs`. Proven: Phase-1 base 242 KB PNG → 37.7 KB WebP (512×768, alpha
   preserved, within the <350 KB budget). Zero npm deps. Build tooling only — no `assets/avatar-r2/`
   write, no `R2_MANIFEST` change, `AVATAR_R2` untouched.
   (5) ⛔ human **visual sign-off** on the composed raster stack — open.
-  **Phase-2 runtime code may pass GATES 1 + 4 ONLY.** Until gates 2, 3, 5 are met: **Phase-2
-  implementation is still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays `false`**; the
-  Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact. **The remaining blocker is now
-  purely the human art** (gates 2–3, then the visual sign-off gate 5).
+  **Gate 2's review is conditionally cleared, but the base is NOT promoted** — so Phase-2 runtime code
+  still may not start. Until gates 3 + 5 are met (and the iter7 base is promoted to WebP + registered):
+  **Phase-2 implementation is still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays
+  `false`**; the Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact. **The remaining
+  blocker is the remaining art layers** (gate 3: clean hair + eyes/face/eyelid) then the composed visual
+  sign-off (gate 5).
 - **Art-production handoff written (2026-07-02, art policy revised D-042) — for gates 2–3.**
   [`167a-phase2-artist-handoff.md`](./167a-phase2-artist-handoff.md) is the practical art-production brief for
   the decomposed layers (v2 base + face/eyes/eyelid/hair): filenames/dims/transparent-bg, what stays

@@ -1,7 +1,12 @@
 # 164B.3 — Base Prototype Review (FILLED) · iter6 v2-base candidate
 `body-neutral-medium-v2-candidate-iter6-lowerhead.png` · Base-Coherence Gate (Phase-2 Gate 2)
 
-**Status: FILLED REVIEW — assistant assessment, pending owner countersign.**
+> **⚠ SUPERSEDED (2026-07-04):** iter6 is superseded as the Gate-2 base review candidate by
+> **[164b3-iter7-base-review.md](./164b3-iter7-base-review.md)** — iter7 adds a deterministic warm
+> cel-shade ramp (fixes this review's §3 punch-list item, cel-shading 2 → 3) and is
+> **owner-countersigned CONDITIONAL PASS**. This iter6 review is retained for history.
+
+**Status: FILLED REVIEW — assistant assessment, pending owner countersign. SUPERSEDED by iter7 (see above).**
 _Filled copy of the reusable [164b3-base-review-worksheet.md](./164b3-base-review-worksheet.md) template
 (template NOT overwritten). Reviews a **review-only, gitignored, NOT-promoted** candidate._
 _Compare against `Northstar Master.png` ONLY (D-032). Candidate produced under **D-042**
