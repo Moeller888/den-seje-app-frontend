@@ -34,7 +34,10 @@ after the question text is set. For **MC** questions each option renders as a ro
 and `app.js` calls `attachOptionReadAloudControl(row, option)` — the 🔊 is a **separate sibling** of the
 answer button (never nested; `stopPropagation`/`preventDefault`), so it reads only that option and can
 never submit the answer (commit `eb6d5fc`, 2026-07-03). Only MC gets per-option 🔊; text/number/open
-formats do not. All of it is inert when `ENABLE_READ_ALOUD` is off (no button, no audio, no change).
+formats do not. **Layout** (`index.html`, `#options .option-row` flex row): the answer button fills the
+row and wraps long text; the 🔊 is a fixed **52×52** square (≥44px tap target), `align-items: center` so
+it stays a compact square vertically centered beside the answer regardless of its height (commit
+`89b4cec`, 2026-07-04). All of it is inert when `ENABLE_READ_ALOUD` is off (no button, no audio, no change).
 
 ## 3. The Piper clips (offline deliverable)
 
