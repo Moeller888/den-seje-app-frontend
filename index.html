@@ -383,27 +383,31 @@
       cursor: not-allowed;
     }
 
-    /* 157O: per-option read-aloud — answer button + 🔊 side by side */
-    .option-row {
+    /* 157O: per-option read-aloud — answer button + 🔊 side by side.
+       Selectors are prefixed with #options so they outrank `#options button`
+       (id-specificity), which would otherwise force width:100% on BOTH buttons
+       and collapse the answer text into a narrow column. */
+    #options .option-row {
       display: flex;
       align-items: stretch;
       gap: 8px;
       width: 100%;
     }
 
-    .option-row > button {
-      width: auto;           /* override #options button width:100% inside the row */
+    #options .option-row > button {
       margin: 0;
     }
 
-    .option-row > button:not(.read-aloud-option-btn) {
+    #options .option-row > button:not(.read-aloud-option-btn) {
       flex: 1 1 auto;        /* answer button grows to fill the row */
+      width: auto;
       min-width: 0;          /* allow long option text to wrap, never overflow */
     }
 
-    .read-aloud-option-btn {
-      flex: 0 0 auto;
+    #options .read-aloud-option-btn {
+      flex: 0 0 52px;        /* fixed 52px column — no grow, no shrink */
       width: 52px;           /* square, ≥44px touch target on mobile */
+      min-width: 52px;
       min-height: 52px;
       padding: 0;
       justify-content: center;
