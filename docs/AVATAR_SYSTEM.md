@@ -182,7 +182,11 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     164B.3). **Gate 3 is PAUSED**; the hair/eyes/face **tooling** stays useful but its outputs are **not
     approved layers** against the corrected base-layer path. Phase-2 runtime code may pass gates 1 + 4 only; **`AVATAR_R2` stays `false`**;
     nothing promoted. Decision: [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md);
-    register: `project-state.md` (D-043).
+    register: `project-state.md` (D-043). **Next step = Gate 2A DEFINED / PLANNED (2026-07-06):** narrow
+    deterministic registration (translate **(−25, −285)** into the Master frame) + feet-completion audit +
+    review-only composites + validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/promotion;
+    **does NOT satisfy Gate 2 by itself.** Plan:
+    [167a-phase2-gate2a-registration-plan.md](./167a-phase2-gate2a-registration-plan.md).
 
 ## 10. Performance considerations
 

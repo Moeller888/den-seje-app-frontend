@@ -98,6 +98,12 @@ and the pale-on-white composites **camouflaged** the plate.
 
 ## 6. Recovery sequence (not started here — future, gated)
 
+> **Gate 2A** ([`167a-phase2-gate2a-registration-plan.md`](./167a-phase2-gate2a-registration-plan.md))
+> formalizes steps 1–2 below (deterministic registration by the known **(−25, −285)** translate into the
+> Master frame + feet-completion audit + review-only composites + a deterministic validation report) as a
+> narrow, review-first phase. **Gate 2A alone does NOT satisfy Gate 2**; steps 3–5 (neutral outfit, fresh
+> 164B.3, composed sign-off) remain required. Gate 3 stays PAUSED; `AVATAR_R2` stays `false`.
+
 1. **Deterministic registration:** apply the known **(+25 x, +285 y)** translation to place recovery-base
    in the frozen-Master anchor space (no re-datum, no scale change; existing anchors/eye-box/masks carry
    over by the same constant offset).
