@@ -148,6 +148,16 @@ Build a **registration-only** deterministic script (its own separately-approved 
 review-only artifacts and the §6 validation report into `tools/avatar/build/phase2/gate2a/` — **no runtime,
 no promotion, no `assets/avatar-r2/`, no `R2_MANIFEST`, `AVATAR_R2` stays `false`, Gate 3 stays paused.**
 
+> **Implemented (2026-07-06):** `tools/avatar/build-gate2a-registration.mjs` (npm:
+> `avatar:gate2a-registration`). Deterministic, non-AI, pure Node built-ins; reads the frozen Master
+> (D-032 sha-guard) + `recovery-base-v1-blankface.png` (read-only), applies the pinned **(−25, −285)**
+> translate, and writes the five §4 review-only artifacts + the §6 validation report into the gitignored
+> `tools/avatar/build/phase2/gate2a/`. It re-derives the offset from ≥3 landmarks, computes body-band IoU
+> and a Master-pixel-preservation band (not 100 % byte identity), audits the feet crop, and asserts the
+> guardrails (path-guard to the gate2a dir; no `assets/avatar-r2/` / `R2_MANIFEST` / runtime write;
+> `AVATAR_R2` read-only). **Running it does not satisfy Gate 2** (neutral outfit → fresh 164B.3 →
+> composed sign-off still required); Gate 3 stays PAUSED.
+
 **Boundaries:** documentation only. This plan changes no runtime code, no `assets/avatar-r2/`, no
 `R2_MANIFEST`; `AVATAR_R2` stays `false`; no ComfyUI; no image generation; no build artifacts; Gate 3
 remains PAUSED; `wip/save-build-face-clean` is not used.
