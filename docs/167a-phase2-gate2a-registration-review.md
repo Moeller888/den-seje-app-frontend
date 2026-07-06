@@ -72,9 +72,16 @@ No Gate 2A FAIL criteria are present.
 
 ## 6. Next step after Gate 2A (NOT started here)
 
+> **Next decision recorded (2026-07-06):** the lower-leg/feet completion decision below is now resolved —
+> **Option B (defer into neutral-outfit/base-assembly), guided by Option D (Master body/feet + recovery
+> head)**. No completed base is produced. See
+> [`167a-phase2-feet-completion-decision.md`](./167a-phase2-feet-completion-decision.md). Gate 2 remains
+> REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED.
+
 1. **Lower-leg/feet completion decision** — decide whether the full-figure base completes the cropped
    lower legs/feet from the Master via the same (−25, −285) translation (feet region y1251–1508), or the
-   base is scoped without them. (Deterministic, review-first; separate task.)
+   base is scoped without them. (Deterministic, review-first; separate task.) — **RESOLVED: deferred
+   (Option B + D), see the pointer above.**
 2. **Then** a **neutral outfit reconstruction plan** (masked, identity-preserving; D-029/D-022/D-042).
 3. **Then** a fresh **164B.3 review** + composed visual sign-off — the steps that would let Gate 2 pass.
 

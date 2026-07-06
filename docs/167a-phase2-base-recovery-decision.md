@@ -107,8 +107,11 @@ and the pale-on-white composites **camouflaged** the plate.
 1. **Deterministic registration:** apply the known **(+25 x, +285 y)** translation to place recovery-base
    in the frozen-Master anchor space (no re-datum, no scale change; existing anchors/eye-box/masks carry
    over by the same constant offset).
-2. **Complete the cropped lower legs/feet** from the frozen Master via the same translation, if a
-   full-figure base is required.
+2. **Lower-leg/feet completion is DEFERRED into step 3** (neutral outfit / base assembly), not a separate
+   pre-step — decided 2026-07-06 (Option B + D), see
+   [`167a-phase2-feet-completion-decision.md`](./167a-phase2-feet-completion-decision.md). The frozen
+   Master is the authoritative body/lower-leg/feet source (preferred assembly = Master body/feet +
+   recovery head, then one masked neutralization pass). **No completed base is produced separately.**
 3. **Neutralize the outfit** (grey tee/trousers/shoes), identity-preserving (masked; D-042).
 4. **Fresh 164B.3 review** of the corrected base-layer source + composited visual sign-off.
 5. Only then re-derive/validate the Gate-3 layers (hair/eyes/face/eyelid) **against the corrected

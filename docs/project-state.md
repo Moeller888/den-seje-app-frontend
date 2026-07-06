@@ -292,9 +292,10 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   falsification-tested: **same figure, same scale**, registers to the Master by a deterministic
   translation **(+25 x, +285 y)** (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical). **NOT passed yet:** it
   needs **registration by the (+25,+285) offset** (anchors/eye-box/masks carry over; no re-datum),
-  **completion of the cropped lower legs/feet** from the Master if needed, **outfit neutralization** (still
-  green sweater+star/cargo/green shoes → plain grey, D-029/D-022), and a **fresh 164B.3 review +
-  composited sign-off**.
+  **outfit neutralization** (still green sweater+star/cargo/green shoes → plain grey, D-029/D-022) — with
+  the cropped lower legs/feet **folded into that same masked pass** (Master = authoritative body/feet
+  source; **not a separate pre-step**, decision 2026-07-06) — and a **fresh 164B.3 review + composited
+  sign-off**.
   **NOT promoted; not a runtime asset; no `assets/avatar-r2/` write, no `R2_MANIFEST` change, `AVATAR_R2`
   `false`.** Decision: [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md).
   **Gate 2A DEFINED / PLANNED (2026-07-06):** a narrow, deterministic, review-first phase — registration of
@@ -302,6 +303,13 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   composites, and a deterministic validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/
   promotion. **Gate 2A alone does NOT satisfy Gate 2.** Plan:
   [`167a-phase2-gate2a-registration-plan.md`](./167a-phase2-gate2a-registration-plan.md).
+  **Gate 2A EXECUTED — PASS / owner-review-ready (2026-07-06):** registration validated (body IoU ≈ 0.9949;
+  offset (−25,−285); Master-pixel preservation ≈ 83.9 %; missing feet region y1251–1508 ≈ 59,801 px).
+  Review: [`167a-phase2-gate2a-registration-review.md`](./167a-phase2-gate2a-registration-review.md).
+  **Feet/lower-leg completion DECISION (2026-07-06):** deferred into the neutral-outfit/base-assembly step
+  (Option B, guided by Option D = Master body/feet + recovery head); **no completed base produced.**
+  Decision: [`167a-phase2-feet-completion-decision.md`](./167a-phase2-feet-completion-decision.md).
+  **Gate 2A does NOT satisfy Gate 2 — Gate 2 stays REOPENED / UNDER RECOVERY.**
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
   `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new
