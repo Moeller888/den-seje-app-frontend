@@ -208,6 +208,10 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    its **outputs are not approved layers** against the corrected base-layer path); Gate 5 open. **NOT promoted; no
    `assets/avatar-r2/`; no `R2_MANIFEST`; `AVATAR_R2` `false`;** Phase-2 not started. Decision:
    [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md).
+   **Next step = Gate 2A DEFINED / PLANNED (2026-07-06):** narrow deterministic registration
+   (translate **(−25, −285)** into the Master frame) + feet-completion audit + review-only composites +
+   validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/promotion; **does NOT satisfy Gate 2
+   by itself.** Plan: [167a-phase2-gate2a-registration-plan.md](./167a-phase2-gate2a-registration-plan.md).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.

@@ -297,6 +297,11 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   composited sign-off**.
   **NOT promoted; not a runtime asset; no `assets/avatar-r2/` write, no `R2_MANIFEST` change, `AVATAR_R2`
   `false`.** Decision: [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md).
+  **Gate 2A DEFINED / PLANNED (2026-07-06):** a narrow, deterministic, review-first phase — registration of
+  recovery-base into the Master frame (translate **(−25, −285)**), feet-completion audit, review-only
+  composites, and a deterministic validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/
+  promotion. **Gate 2A alone does NOT satisfy Gate 2.** Plan:
+  [`167a-phase2-gate2a-registration-plan.md`](./167a-phase2-gate2a-registration-plan.md).
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
   `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new
