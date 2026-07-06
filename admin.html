@@ -28,6 +28,20 @@
       border: none;
     }
 
+    .topbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .docs-btn {
+      padding: 8px 14px;
+      background: #1565c0;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+    }
+
     h1 {
       margin: 0;
     }
@@ -102,7 +116,10 @@
 
   <div class="topbar">
     <h1>Super Admin Dashboard</h1>
-    <button id="logoutBtn" class="logout-btn">Logout</button>
+    <div class="topbar-actions">
+      <a class="docs-btn" href="docs.html">📚 Docs</a>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
   </div>
 
   <!-- ========================
