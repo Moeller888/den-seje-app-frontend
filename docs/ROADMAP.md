@@ -195,13 +195,19 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical producer brief
    (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; masked AI on the
    Master, no regeneration). Offline art deliverable; doc only.
-   **🟡 Gate 2 (v2 base 164B.3) CONDITIONALLY SATISFIED (2026-07-04):** the **iter7** base candidate
-   (D-042: masked AI inpaint → deterministic lower-head carve → deterministic warm cel-shade) is
-   **owner-countersigned CONDITIONAL PASS** — [164b3-iter7-base-review.md](./164b3-iter7-base-review.md)
-   (§2 proportions PASS · §5 outfit/D-032/D-042 PASS · §3 cel-shading = 3, not full PASS). **Base NOT
-   promoted** — gitignored review artifact; no `assets/avatar-r2/`, no `R2_MANIFEST`, `AVATAR_R2`
-   `false`. **Gates 3 (clean hair + eyes/face/eyelid layers) and 5 (composed visual sign-off) remain
-   OPEN**; Phase-2 implementation still not started.
+   **🔴 Gate 2 REOPENED / UNDER RECOVERY (2026-07-05) — iter7 INVALIDATED (D-043):** the iter7 base was
+   found to have a structural **bust/chest-plate artifact**, so its owner-countersigned 164B.3
+   CONDITIONAL PASS is **WITHDRAWN/SUPERSEDED** and the iter4→iter7 line is invalidated. A **candidate
+   registered base-layer source is adopted** (REVISED 2026-07-06; **not a new Master** — the frozen Master
+   remains the canonical identity/style/coordinate datum, **D-032 preserved**) —
+   `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which fixes the anatomy (correct bald
+   scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a deterministic
+   translation **(+25 x, +285 y)** (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical). It is **NOT passed:**
+   needs (+25,+285) registration, feet-completion from the Master if needed, outfit neutralization (still
+   non-neutral), and a fresh 164B.3 review. **Gate 3 PAUSED** (hair/eyes/face **tooling** stays useful, but
+   its **outputs are not approved layers** against the corrected base-layer path); Gate 5 open. **NOT promoted; no
+   `assets/avatar-r2/`; no `R2_MANIFEST`; `AVATAR_R2` `false`;** Phase-2 not started. Decision:
+   [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.

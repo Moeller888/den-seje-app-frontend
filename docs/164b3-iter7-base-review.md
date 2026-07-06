@@ -1,7 +1,17 @@
 # 164B.3 — Base Prototype Review (FILLED) · iter7 v2-base candidate
 `body-neutral-medium-v2-candidate-iter7-shaded.png` · Base-Coherence Gate (Phase-2 Gate 2)
 
-**Status: CONDITIONAL PASS — OWNER COUNTERSIGNED 2026-07-04.**
+> **🔴 INVALIDATED / SUPERSEDED (2026-07-05, D-043).** This CONDITIONAL PASS is **WITHDRAWN.** A
+> corrective visual audit found a structural **skin-colored bust/chest-plate artifact** in the iter7
+> base (a wide flat skin oval on the shirt, no real chin→neck→collar) — the earlier §2 "proportions
+> PASS" relied on per-row width metrics that missed the shape, and pale-on-white composites camouflaged
+> it. iter7 (and the whole iter4→iter7 carve line) is **invalidated as a Phase-2 base**. **Gate 2 is
+> reopened**; a candidate **registered base-layer source** (`recovery-base-v1-blankface.png`) is adopted
+> (registered to the frozen Master by a +25/+285 translation; **NOT a Master replacement** — D-032 preserved). See
+> [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). This review is
+> retained for history only — **do NOT treat it as a Gate-2 pass.**
+
+**Status: ~~CONDITIONAL PASS — OWNER COUNTERSIGNED 2026-07-04~~ → WITHDRAWN / INVALIDATED (2026-07-05, D-043; see above).**
 _Filled copy of the reusable [164b3-base-review-worksheet.md](./164b3-base-review-worksheet.md) template
 (template NOT overwritten). **iter7 SUPERSEDES [iter6](./164b3-iter6-base-review.md) as the Gate-2 base
 review candidate.** Compare against `Northstar Master.png` ONLY (D-032)._
@@ -93,7 +103,10 @@ dimension (§3 cel-shading = 3) is **non-structural and improved from iter6**; a
 (§9). Downstream layers stay blocked until Gate 3/5.
 
 ## 8. Final verdict
-☐ PASS   ☑ **CONDITIONAL PASS**   ☐ FAIL
+> **🔴 WITHDRAWN / INVALIDATED (2026-07-05, D-043)** — bust/chest-plate structural failure; not a Gate-2
+> pass. The verdict recorded below is historical only.
+
+☐ PASS   ☑ ~~**CONDITIONAL PASS**~~ (WITHDRAWN)   ☐ FAIL
 
 **Mandatory rationale:**
 ```

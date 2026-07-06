@@ -166,6 +166,7 @@ Ordered render layers (reuse the existing z-model):
 | **D-040** | **Automation-first avatar production (164J).** The avatar shop must be **automatable end-to-end — no illustrator dependency for MVP, no manual per-item avatar editing**. **`Northstar Master.png` is the Tier-0 default base avatar/datum** (already exists, approved geometry, D-032) → **`body-neutral-medium-v1` is NOT an MVP blocker**. **MVP proceeds with accessory overlays only:** `aura`, `back`, `headwear`, `face/masks`, `eyes/glasses` (D-036). The neutral reconstructed base becomes a **future optional quality upgrade**; **D-039's illustrator method is re-scoped to that upgrade only**, and **D-038 is re-scoped** (base rig no longer the blocking step — **automated/semi-automated anchor + mask extraction from Master is now the next blocking step**). **D-033 / 164B.3 still apply if/when the neutral-base upgrade is produced.** **Safety unchanged (D-034 reinforced):** AI must **never** regenerate the full avatar or define body/face/hair/eyes/proportions/anchors/masks; AI may generate **only isolated slot-constrained transparent overlays** for approved slots, each passing the slot-mask + QA gates (D-037). **Accepted tradeoff:** MVP = one fixed avatar (the Master) + accessories; **per-user skin tone / hairstyle / hair-color variation defers** with the neutral-base upgrade. Supersedes the *blocking* status of D-038 and the *primary* status of D-039; preserves D-032/D-034/D-035/D-036/D-037. Production model recorded in `docs/164d-shop-pipeline.md` (Tier-0/Tier-1/Tier-2). (164J, 2026-06-16) |
 | **D-041** | **Automated anchor template + MVP mask extraction from Master (164K).** Anchors + the 5 MVP accessory-slot QA/build masks are derived **directly from `Northstar Master.png` (verified 1024×1536)** by a **deterministic, non-AI image-processing step**: silhouette via white-matte threshold; anchors (head/eye-band/shoulder/face-oval/crown) from the ×6.4 mapping **with mandatory human confirmation of the eye band + face oval**; masks per D-037 (aura generous-behind · back generous shoulder-anchored · headwear moderate head-anchored, eyes clear · face tight face-anchored · eyes tight eye-anchored). **Protected zones** (face/eyes/hair/body/hands/skin-like) feed the no-geometry/no-skin gate. **Outputs = QA/build artifacts only** (`avatar-anchor-template-v1.json` + anchor-overlay + mask PNGs), **never runtime assets, never used to alter geometry**; **Master unchanged; no AI defines geometry/anchors/masks** (D-034); **no shop items generated**. **Acceptance before any item batch:** dimensions validated, anchors + mask previews human-approved, mask-overflow checks defined, D-037 compatibility confirmed, no runtime/AVATAR_V2 change. Locks **method/schema/artifacts/gates only — no tooling/masks/assets produced**. Next = **164L** (the non-AI extraction tooling). Spec: `docs/164k-anchor-mask-extraction-plan.md`. (164K, 2026-06-16) |
 | **D-042** | **Phase-2 art policy AMENDED — AI-assisted MASKED decomposition allowed (2026-07-02).** The project owner has **no human painter/illustrator**, so the *human-paint-over-only* requirement of **D-033** (and the illustrator method of **D-039**) is **impractical** and is **amended for Phase-2 art production**. **Allowed:** AI-assisted **masked inpainting/outpainting ON the approved `Northstar Master.png` only** — lifting baked features to build the decomposed layers (v2 base, face, eyes, eyelid, hair) and reconstructing the skin/clothing they hid, **provided the output preserves the signed-off Master identity**. **Still FORBIDDEN:** full AI regeneration, redesign, "make a new avatar," and **any unmasked/broad prompt** that lets the model reinterpret the avatar; **no change** to head size, eye shape, hair silhouette, pose, outfit style, skin tone, line art, lighting, palette or proportions (D-032); any result that no longer matches the signed-off Master. **Identity-lock is preserved via masking + the 164B.3 base-coherence gate (unchanged)** — the D-033/R-6 concern (AI *regeneration* drifts identity) is mitigated by constraining AI to *masked edits on the frozen Master*, not free generation. **Gates unchanged:** gate 2 (v2 base) open until the AI-assisted base passes 164B.3; gate 3 (face/eyes/eyelid/hair) open until those pass review; gate 5 (composed visual sign-off) open; gates 1 + 4 satisfied. **No runtime/manifest/`AVATAR_R2` change; Phase-2 implementation NOT started.** Amends D-033 (method) + D-039 (producer); preserves D-032/D-034/D-040. (2026-07-02) |
+| **D-043** | **Phase-2 base RECOVERY — iter7 invalidated; `recovery-base-v1-blankface.png` adopted as a registered base-layer source (2026-07-05; REVISED 2026-07-06).** The **iter7** base candidate is **visually INVALIDATED** by a corrective audit: a **skin-colored bust/chest-plate artifact** (a wide flat skin oval on the shirt, no real chin→neck→collar) — a **structural anatomy failure**, not the "minor finish" issue the earlier review recorded (the §2 "proportions PASS" relied on per-row width metrics that missed the shape; pale-on-white composites camouflaged it). The whole deterministic-carve line (iter4→iter7) is invalidated for the same reason, and the **owner-countersigned iter7 164B.3 CONDITIONAL PASS is WITHDRAWN/SUPERSEDED**. **Decision:** adopt **`source-master(3).png`** (preserved in-repo as `assets/avatar/reference/recovery-base-v1-blankface.png`, 1024×1536 RGBA) as a **candidate registered base-layer source** (registered to the frozen Master; **NOT a new Master/datum**) for the **deferred** Phase-2 base path — it fixes the failure (correct bald scalp, intact ears, proper head→neck→collar, no bust-plate, cleanly blank face, clean alpha). **`Northstar Master.png` remains the canonical identity/style/coordinate datum; D-032 is PRESERVED, not superseded.** Verified 2026-07-06 (falsification-tested): recovery-base is the **same figure at the same scale**, registering to the Master by a **deterministic translation (+25 x, +285 y)** — body silhouette **IoU ≈ 0.9921**; **≈ 84.3 %** of overlapping body pixels essentially identical to the Master. **[REVISED 2026-07-06: the earlier "separate re-rendering / different scale / non-registrable / supersedes D-032" wording was an analysis error and is withdrawn; recovery-base is a base-layer source, not a master replacement.]** **The base-layer source is NOT a runtime asset, NOT promoted, and NOT yet passed:** its outfit is **not neutral** (original green sweater+star/cargo/green shoes → must be neutralized, D-029/D-022), it must be **registered** by the known (+25,+285) translation (no re-datum, no scale change; anchors/eye-box/masks carry over by that constant offset), its **cropped lower legs/feet** completed from the Master if a full figure is needed, and it needs a **fresh 164B.3 review + composited sign-off** before Gate 2 can be satisfied. **Gate 2 REOPENED / under recovery; Gate 3 PAUSED; hair/eyes/face tooling still useful but their outputs are NOT approved layers against the new basis. `AVATAR_R2` stays `false`; no runtime/manifest/promotion change.** Full note: [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). (2026-07-05) |
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
@@ -275,31 +276,43 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   raster blink/eye rig; the **legacy C2 anchors (`cx68/92 cy47`, `js/avatar-blink-engine.js`) stay
   frozen** (two eye-box sets coexist, selected by the render branch). Docs only; no runtime/manifest/
   flag change.
-- **Phase-2 implementation gates — GATES 1 + 4 SATISFIED; GATE 2 CONDITIONALLY SATISFIED (2026-07-04);
-  GATES 3, 5 OPEN.**
+- **Phase-2 implementation gates — GATES 1 + 4 SATISFIED; GATE 2 REOPENED / UNDER RECOVERY (2026-07-05);
+  GATES 3 (PAUSED), 5 OPEN.**
   (1) ✅ Phase-2-scoped anchor/eye-box sign-off — **SATISFIED** (owner-countersigned, PR #7 `2159d3e`).
-  (2) 🟡 **v2 base 164B.3 — CONDITIONALLY SATISFIED (2026-07-04):** the **iter7** base candidate
-  (`…-iter7-shaded.png`, D-042: masked AI inpaint → deterministic lower-head carve → deterministic warm
-  cel-shade) is **owner-countersigned CONDITIONAL PASS** —
-  [`164b3-iter7-base-review.md`](./164b3-iter7-base-review.md) (supersedes
-  [`164b3-iter6-base-review.md`](./164b3-iter6-base-review.md)). §2 proportions PASS · §5 outfit/D-032/
-  D-042 PASS · §3 cel-shading = 3 (CONDITIONAL, not full PASS — finish still simpler than the Master).
-  **The candidate is NOT promoted:** it stays a gitignored review artifact; no `assets/avatar-r2/`
-  write, no `R2_MANIFEST` change, `AVATAR_R2` still `false`. Runtime promotion is a later step.
-  (3) ⛔ the remaining **face / eyes / eyelid / hair** layers (AI-assisted masked, D-042) passing review
-  — **open** (a clean dedicated hair layer + eyes/face/eyelid are still needed).
+  (Re-check registration — offset (+25,+285) — once the base-layer source is aligned.)
+  (2) 🔴 **v2 base 164B.3 — REOPENED / UNDER RECOVERY (2026-07-05).** The **iter7** base is
+  **VISUALLY INVALIDATED** (skin-colored **bust/chest-plate** artifact = structural anatomy failure);
+  the whole iter4→iter7 carve line is invalidated and the **owner-countersigned iter7 164B.3 CONDITIONAL
+  PASS is WITHDRAWN/SUPERSEDED** (see [`164b3-iter7-base-review.md`](./164b3-iter7-base-review.md), now
+  marked invalidated). **Registered base-layer source adopted (D-043, REVISED 2026-07-06):**
+  `recovery-base-v1-blankface.png` (`source-master(3).png`, preserved at `assets/avatar/reference/`) —
+  fixes the anatomy (correct bald scalp, ears, head→neck→collar, no bust-plate, blank face). It is a
+  **candidate base-layer source registered to the frozen Master, NOT a new Master/datum** (Master remains
+  the canonical identity/style/coordinate datum; **D-032 preserved, not superseded**). Verified
+  falsification-tested: **same figure, same scale**, registers to the Master by a deterministic
+  translation **(+25 x, +285 y)** (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical). **NOT passed yet:** it
+  needs **registration by the (+25,+285) offset** (anchors/eye-box/masks carry over; no re-datum),
+  **completion of the cropped lower legs/feet** from the Master if needed, **outfit neutralization** (still
+  green sweater+star/cargo/green shoes → plain grey, D-029/D-022), and a **fresh 164B.3 review +
+  composited sign-off**.
+  **NOT promoted; not a runtime asset; no `assets/avatar-r2/` write, no `R2_MANIFEST` change, `AVATAR_R2`
+  `false`.** Decision: [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md).
+  (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
+  recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
+  `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new
+  basis (they were Master-derived + iter7-composited → must be re-derived/validated after registration).
   (4) ✅ a **WebP encoder** — **SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
   (`tools/avatar/vendor/`, gitignored; reproducible via `tools/avatar/fetch-cwebp.mjs`) + wrapper
   `tools/avatar/encode-webp.mjs`. Proven: Phase-1 base 242 KB PNG → 37.7 KB WebP (512×768, alpha
   preserved, within the <350 KB budget). Zero npm deps. Build tooling only — no `assets/avatar-r2/`
   write, no `R2_MANIFEST` change, `AVATAR_R2` untouched.
   (5) ⛔ human **visual sign-off** on the composed raster stack — open.
-  **Gate 2's review is conditionally cleared, but the base is NOT promoted** — so Phase-2 runtime code
-  still may not start. Until gates 3 + 5 are met (and the iter7 base is promoted to WebP + registered):
-  **Phase-2 implementation is still NOT started**; no Phase-2 runtime code; **`AVATAR_R2` stays
-  `false`**; the Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain intact. **The remaining
-  blocker is the remaining art layers** (gate 3: clean hair + eyes/face/eyelid) then the composed visual
-  sign-off (gate 5).
+  **Gate 2 is REOPENED (iter7 invalidated) — NOT satisfied.** Phase-2 runtime code may not start. The
+  immediate blocker is the **base recovery** (D-043): re-register + neutralize + re-review the adopted
+  `recovery-base-v1-blankface.png`; then the remaining art layers (gate 3) and the composed visual
+  sign-off (gate 5). Throughout: **Phase-2 implementation is still NOT started**; no Phase-2 runtime
+  code; **`AVATAR_R2` stays `false`**; the Phase-1 PNG baked base + pilot opt-in + C2/SVG fallback remain
+  intact.
 - **Art-production handoff written (2026-07-02, art policy revised D-042) — for gates 2–3.**
   [`167a-phase2-artist-handoff.md`](./167a-phase2-artist-handoff.md) is the practical art-production brief for
   the decomposed layers (v2 base + face/eyes/eyelid/hair): filenames/dims/transparent-bg, what stays

@@ -1,10 +1,15 @@
 # 164B.3 — Base Prototype Review (FILLED) · iter6 v2-base candidate
 `body-neutral-medium-v2-candidate-iter6-lowerhead.png` · Base-Coherence Gate (Phase-2 Gate 2)
 
-> **⚠ SUPERSEDED (2026-07-04):** iter6 is superseded as the Gate-2 base review candidate by
-> **[164b3-iter7-base-review.md](./164b3-iter7-base-review.md)** — iter7 adds a deterministic warm
-> cel-shade ramp (fixes this review's §3 punch-list item, cel-shading 2 → 3) and is
-> **owner-countersigned CONDITIONAL PASS**. This iter6 review is retained for history.
+> **⚠ SUPERSEDED (2026-07-04):** iter6 was superseded as the Gate-2 base review candidate by
+> **[164b3-iter7-base-review.md](./164b3-iter7-base-review.md)** (deterministic warm cel-shade ramp).
+> **🔴 UPDATE (2026-07-05, D-043):** iter7 has since been **INVALIDATED** (structural bust/chest-plate
+> artifact), and the **whole iter4→iter7 deterministic-carve line — including this iter6 — is invalidated
+> as a Phase-2 base.** Gate 2 is reopened; a candidate **registered base-layer source**
+> (`recovery-base-v1-blankface.png`) is adopted (registered to the frozen Master by a +25/+285 translation;
+> **NOT a Master replacement** — D-032 preserved). See
+> [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). Both
+> reviews are retained for history only — **not Gate-2 passes.**
 
 **Status: FILLED REVIEW — assistant assessment, pending owner countersign. SUPERSEDED by iter7 (see above).**
 _Filled copy of the reusable [164b3-base-review-worksheet.md](./164b3-base-review-worksheet.md) template

@@ -169,10 +169,20 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     handoff** for gates 2–3 is written
     ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). **Gate 4 (WebP encoder) is
     also SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` + `encode-webp.mjs`/`fetch-cwebp.mjs`
-    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open (AI-assisted masked v2
-    base + 164B.3, remaining face/eyes/eyelid/hair layers, visual sign-off) — the remaining blocker is
-    the **AI-assisted masked-decomposition art** (D-042: masked edits on the Master; no regeneration).
-    Phase-2 runtime code may pass gates 1 + 4 only; `AVATAR_R2` stays `false`. Register: `project-state.md`.
+    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open.
+  - **Base RECOVERY (updated 2026-07-05, D-043):** an interim iter7 base briefly held a Gate-2 CONDITIONAL
+    PASS but was **visually INVALIDATED** (structural **bust/chest-plate** artifact); that pass is
+    **withdrawn** and the iter4→iter7 line is invalidated. **Gate 2 is REOPENED / under recovery** with a
+    **candidate registered base-layer source** (REVISED 2026-07-06; **not a new Master** — the frozen
+    `Northstar Master.png` remains the canonical identity/style/coordinate datum, **D-032 preserved, not
+    superseded**) — `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which fixes the anatomy
+    (bald scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a
+    deterministic **(+25 x, +285 y)** translation (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical) but is
+    **not passed** (needs (+25,+285) registration + feet-completion + outfit neutralization + a fresh
+    164B.3). **Gate 3 is PAUSED**; the hair/eyes/face **tooling** stays useful but its outputs are **not
+    approved layers** against the corrected base-layer path. Phase-2 runtime code may pass gates 1 + 4 only; **`AVATAR_R2` stays `false`**;
+    nothing promoted. Decision: [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md);
+    register: `project-state.md` (D-043).
 
 ## 10. Performance considerations
 
