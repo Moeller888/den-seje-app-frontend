@@ -197,12 +197,15 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    Master, no regeneration). Offline art deliverable; doc only.
    **🔴 Gate 2 REOPENED / UNDER RECOVERY (2026-07-05) — iter7 INVALIDATED (D-043):** the iter7 base was
    found to have a structural **bust/chest-plate artifact**, so its owner-countersigned 164B.3
-   CONDITIONAL PASS is **WITHDRAWN/SUPERSEDED** and the iter4→iter7 line is invalidated. A **new recovery
-   base geometry basis is adopted** — `recovery-base-v1-blankface.png` (`assets/avatar/reference/`),
-   which fixes the anatomy (correct bald scalp, ears, head→neck→collar, no bust-plate, blank face). It is
-   **NOT passed:** needs re-registration to the Master anchors, outfit neutralization (still non-neutral),
-   and a fresh 164B.3 review. **Gate 3 PAUSED** (hair/eyes/face **tooling** stays useful, but its
-   **outputs are not approved layers** against the new basis); Gate 5 open. **NOT promoted; no
+   CONDITIONAL PASS is **WITHDRAWN/SUPERSEDED** and the iter4→iter7 line is invalidated. A **candidate
+   registered base-layer source is adopted** (REVISED 2026-07-06; **not a new Master** — the frozen Master
+   remains the canonical identity/style/coordinate datum, **D-032 preserved**) —
+   `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which fixes the anatomy (correct bald
+   scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a deterministic
+   translation **(+25 x, +285 y)** (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical). It is **NOT passed:**
+   needs (+25,+285) registration, feet-completion from the Master if needed, outfit neutralization (still
+   non-neutral), and a fresh 164B.3 review. **Gate 3 PAUSED** (hair/eyes/face **tooling** stays useful, but
+   its **outputs are not approved layers** against the corrected base-layer path); Gate 5 open. **NOT promoted; no
    `assets/avatar-r2/`; no `R2_MANIFEST`; `AVATAR_R2` `false`;** Phase-2 not started. Decision:
    [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**

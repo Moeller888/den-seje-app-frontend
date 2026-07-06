@@ -173,11 +173,14 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
   - **Base RECOVERY (updated 2026-07-05, D-043):** an interim iter7 base briefly held a Gate-2 CONDITIONAL
     PASS but was **visually INVALIDATED** (structural **bust/chest-plate** artifact); that pass is
     **withdrawn** and the iter4→iter7 line is invalidated. **Gate 2 is REOPENED / under recovery** with a
-    **new base geometry basis** — `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which
-    fixes the anatomy (bald scalp, ears, head→neck→collar, no bust-plate, blank face) but is **not passed**
-    (needs re-registration to the Master anchors + outfit neutralization + a fresh 164B.3). **Gate 3 is
-    PAUSED**; the hair/eyes/face **tooling** stays useful but its outputs are **not approved layers**
-    against the new basis. Phase-2 runtime code may pass gates 1 + 4 only; **`AVATAR_R2` stays `false`**;
+    **candidate registered base-layer source** (REVISED 2026-07-06; **not a new Master** — the frozen
+    `Northstar Master.png` remains the canonical identity/style/coordinate datum, **D-032 preserved, not
+    superseded**) — `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which fixes the anatomy
+    (bald scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a
+    deterministic **(+25 x, +285 y)** translation (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical) but is
+    **not passed** (needs (+25,+285) registration + feet-completion + outfit neutralization + a fresh
+    164B.3). **Gate 3 is PAUSED**; the hair/eyes/face **tooling** stays useful but its outputs are **not
+    approved layers** against the corrected base-layer path. Phase-2 runtime code may pass gates 1 + 4 only; **`AVATAR_R2` stays `false`**;
     nothing promoted. Decision: [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md);
     register: `project-state.md` (D-043).
 

@@ -5,8 +5,10 @@
 > **[164b3-iter7-base-review.md](./164b3-iter7-base-review.md)** (deterministic warm cel-shade ramp).
 > **🔴 UPDATE (2026-07-05, D-043):** iter7 has since been **INVALIDATED** (structural bust/chest-plate
 > artifact), and the **whole iter4→iter7 deterministic-carve line — including this iter6 — is invalidated
-> as a Phase-2 base.** Gate 2 is reopened; a new recovery basis (`recovery-base-v1-blankface.png`) is
-> adopted. See [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). Both
+> as a Phase-2 base.** Gate 2 is reopened; a candidate **registered base-layer source**
+> (`recovery-base-v1-blankface.png`) is adopted (registered to the frozen Master by a +25/+285 translation;
+> **NOT a Master replacement** — D-032 preserved). See
+> [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). Both
 > reviews are retained for history only — **not Gate-2 passes.**
 
 **Status: FILLED REVIEW — assistant assessment, pending owner countersign. SUPERSEDED by iter7 (see above).**

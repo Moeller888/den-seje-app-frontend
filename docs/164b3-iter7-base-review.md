@@ -6,7 +6,8 @@
 > base (a wide flat skin oval on the shirt, no real chin→neck→collar) — the earlier §2 "proportions
 > PASS" relied on per-row width metrics that missed the shape, and pale-on-white composites camouflaged
 > it. iter7 (and the whole iter4→iter7 carve line) is **invalidated as a Phase-2 base**. **Gate 2 is
-> reopened**; a new recovery basis (`recovery-base-v1-blankface.png`) is adopted. See
+> reopened**; a candidate **registered base-layer source** (`recovery-base-v1-blankface.png`) is adopted
+> (registered to the frozen Master by a +25/+285 translation; **NOT a Master replacement** — D-032 preserved). See
 > [`167a-phase2-base-recovery-decision.md`](./167a-phase2-base-recovery-decision.md). This review is
 > retained for history only — **do NOT treat it as a Gate-2 pass.**
 
