@@ -1,6 +1,12 @@
 # 167A Phase-2 — Base-Assembly + Mask-Proposal Tooling Review / Sign-off
 
-**Status: TOOLING REVIEW — PASS (assistant review; owner-review-ready). 2026-07-07.**
+**Status: TOOLING REVIEW — PASS. ✅ OWNER ACCEPTED / COUNTERSIGNED 2026-07-07.** _(assistant review 2026-07-07)_
+
+> **✅ Owner acceptance / countersign (2026-07-07):** the base-assembly + mask-tooling review is
+> **accepted**. Tooling artifacts remain **review-only** (gitignored); the mask proposals are **NOT final
+> masks** (human refinement required before any masked edit). **No neutral outfit was executed; no
+> completed/final base exists.** This acceptance does **NOT** satisfy Gate 2 — **Gate 2 remains REOPENED /
+> UNDER RECOVERY**; **Gate 3 remains PAUSED**; `AVATAR_R2` = `false`.
 _Review of the merged Strategy-B tool (`tools/avatar/build-base-assembly-masks.mjs`, PR #26), run fresh on
 `main` via `npm run avatar:base-assembly-masks` (exit 0). Documentation only._
 _Plan: [`167a-phase2-neutral-outfit-base-assembly-plan.md`](./167a-phase2-neutral-outfit-base-assembly-plan.md).

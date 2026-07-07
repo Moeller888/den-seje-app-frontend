@@ -1,6 +1,10 @@
 # 167A Phase-2 — Gate 2A Registration Review / Sign-off
 
-**Status: GATE 2A — PASS (assistant review; owner-review-ready). 2026-07-06.**
+**Status: GATE 2A — PASS. ✅ OWNER ACCEPTED / COUNTERSIGNED 2026-07-07.** _(assistant review 2026-07-06)_
+
+> **✅ Owner acceptance / countersign (2026-07-07):** the Gate 2A registration review is **accepted**.
+> This acceptance does **NOT** satisfy Gate 2 — **Gate 2 remains REOPENED / UNDER RECOVERY**; **Gate 3
+> remains PAUSED**; `AVATAR_R2` = `false`.
 _Review of the merged Gate 2A registration tool (`tools/avatar/build-gate2a-registration.mjs`, PR #22).
 Documentation only. No runtime change, no promotion, no `assets/avatar-r2/` write, no `R2_MANIFEST`
 change, `AVATAR_R2` stays `false`._
