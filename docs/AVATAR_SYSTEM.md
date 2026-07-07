@@ -187,6 +187,12 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     review-only composites + validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/promotion;
     **does NOT satisfy Gate 2 by itself.** Plan:
     [167a-phase2-gate2a-registration-plan.md](./167a-phase2-gate2a-registration-plan.md).
+    **Progression (2026-07-07):** Gate 2A **EXECUTED = PASS / owner-review-ready**; feet-completion
+    **DEFERRED** into neutral-outfit/base-assembly; **neutral-outfit/base-assembly PLAN recorded** (strategy
+    B: Master body/feet + recovery head + one masked neutralization pass; short-sleeve tee ⇒ underarm
+    reconstruction, highest-risk sub-area). Plan:
+    [167a-phase2-neutral-outfit-base-assembly-plan.md](./167a-phase2-neutral-outfit-base-assembly-plan.md).
+    **Gate 2 still REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED; `AVATAR_R2` false.**
 
 ## 10. Performance considerations
 

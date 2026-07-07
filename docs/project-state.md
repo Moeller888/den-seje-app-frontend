@@ -309,6 +309,12 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   **Feet/lower-leg completion DECISION (2026-07-06):** deferred into the neutral-outfit/base-assembly step
   (Option B, guided by Option D = Master body/feet + recovery head); **no completed base produced.**
   Decision: [`167a-phase2-feet-completion-decision.md`](./167a-phase2-feet-completion-decision.md).
+  **Neutral-outfit / base-assembly PLAN DEFINED (2026-07-07):** strategy B (Master body/lower-legs/feet +
+  recovery head/bald-scalp/blank-face → one masked neutral-outfit reconstruction pass); neutral target =
+  light-grey short-sleeve tee / charcoal straight trousers / light-grey low sneakers; **short sleeves ⇒
+  underarm reconstruction = highest-risk sub-area (own sub-gate).** Docs-only plan; next = deterministic
+  base-assembly/mask tooling (review-first). Plan:
+  [`167a-phase2-neutral-outfit-base-assembly-plan.md`](./167a-phase2-neutral-outfit-base-assembly-plan.md).
   **Gate 2A does NOT satisfy Gate 2 — Gate 2 stays REOPENED / UNDER RECOVERY.**
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
