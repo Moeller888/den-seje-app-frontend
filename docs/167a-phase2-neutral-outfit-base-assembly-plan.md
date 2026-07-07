@@ -177,3 +177,12 @@ A separate, review-first task: **deterministic base-assembly + mask tooling** (a
 mask + region masks + validation report as review-only artifacts) — **no AI, no promotion, no runtime,
 Gate 3 stays paused**. AI-assisted neutralization and the underarm sub-gate follow after that, each
 review-first, before the fresh 164B.3 + composed sign-off that could let Gate 2 pass.
+
+> **Implemented (2026-07-07):** `tools/avatar/build-base-assembly-masks.mjs` (npm:
+> `avatar:base-assembly-masks`). Deterministic, non-AI; produces the Strategy-B assembly **preview**
+> (Master body/lower-legs/feet alpha-cut + registered recovery head — bald + blank, no Master hair/face
+> leakage) plus **approximate review-only mask PROPOSALS** (head contribution, neck/collar seam,
+> tee/underarm/trousers/shoes regions), a geometry overlay vs the Master, and
+> `base-assembly-report.json` — all gitignored under `tools/avatar/build/phase2/base-assembly/`.
+> **NOT a final base, NOT neutral-outfit execution, NOT a Gate-2 pass**; Gate 3 stays PAUSED;
+> `AVATAR_R2` false.
