@@ -316,6 +316,12 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   base-assembly/mask tooling (review-first). Plan:
   [`167a-phase2-neutral-outfit-base-assembly-plan.md`](./167a-phase2-neutral-outfit-base-assembly-plan.md).
   **Gate 2A does NOT satisfy Gate 2 — Gate 2 stays REOPENED / UNDER RECOVERY.**
+  **Base-assembly tooling BUILT + REVIEWED (2026-07-07):** `tools/avatar/build-base-assembly-masks.mjs`
+  (deterministic Strategy-B assembly preview + approximate review-only mask proposals; head contribution
+  localized; body-below-seam IoU 1.0000; artifacts gitignored) — tooling review **PASS /
+  owner-review-ready**: [`167a-phase2-base-assembly-masks-review.md`](./167a-phase2-base-assembly-masks-review.md).
+  **Still NOT a Gate-2 pass; no neutral outfit executed; no completed base; next = AI-assisted masked
+  neutral-outfit candidate (after owner accepts), incl. the underarm sub-gate.**
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
   `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new

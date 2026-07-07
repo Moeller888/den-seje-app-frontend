@@ -186,3 +186,5 @@ review-first, before the fresh 164B.3 + composed sign-off that could let Gate 2 
 > `base-assembly-report.json` — all gitignored under `tools/avatar/build/phase2/base-assembly/`.
 > **NOT a final base, NOT neutral-outfit execution, NOT a Gate-2 pass**; Gate 3 stays PAUSED;
 > `AVATAR_R2` false.
+> **Tooling reviewed (2026-07-07): PASS / owner-review-ready** —
+> [`167a-phase2-base-assembly-masks-review.md`](./167a-phase2-base-assembly-masks-review.md).
