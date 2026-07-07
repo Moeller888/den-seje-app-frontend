@@ -322,6 +322,13 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   owner-review-ready**: [`167a-phase2-base-assembly-masks-review.md`](./167a-phase2-base-assembly-masks-review.md).
   **Still NOT a Gate-2 pass; no neutral outfit executed; no completed base; next = AI-assisted masked
   neutral-outfit candidate (after owner accepts), incl. the underarm sub-gate.**
+  **✅ OWNER ACCEPTED / COUNTERSIGNED (2026-07-07):** the **Gate 2A registration review** and the
+  **base-assembly tooling review** are both owner-accepted
+  ([`167a-phase2-gate2a-registration-review.md`](./167a-phase2-gate2a-registration-review.md) ·
+  [`167a-phase2-base-assembly-masks-review.md`](./167a-phase2-base-assembly-masks-review.md)).
+  **Next step = AI-assisted masked neutral-outfit candidate planning/execution (D-042), incl. the underarm
+  sub-gate. Gate 2 is still NOT satisfied (REOPENED / UNDER RECOVERY); Gate 3 still PAUSED; `AVATAR_R2`
+  `false`.**
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
   `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new
