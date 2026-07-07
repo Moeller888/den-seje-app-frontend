@@ -122,5 +122,10 @@ assembly (Master body/feet + recovery head, then one masked neutralization pass)
 target (the existing `Northstar Master - reference.png` — appearance target only, not geometry, D-032), and
 the acceptance path toward Gate 2 (fresh 164B.3 + composed visual sign-off).
 
+> **Recorded (2026-07-07):** this plan now exists —
+> [`167a-phase2-neutral-outfit-base-assembly-plan.md`](./167a-phase2-neutral-outfit-base-assembly-plan.md)
+> (strategy B; short-sleeve tee ⇒ underarm reconstruction is the highest-risk sub-area). Gate 2 stays
+> REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED.
+
 **Explicitly NOT next:** face / eyes / eyelid / hair (Gate 3 stays PAUSED); no completed base; no runtime;
 no promotion.

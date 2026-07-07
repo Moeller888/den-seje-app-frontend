@@ -212,6 +212,11 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    (translate **(−25, −285)** into the Master frame) + feet-completion audit + review-only composites +
    validation report; **excludes** outfit/face/eyes/eyelid/hair/runtime/promotion; **does NOT satisfy Gate 2
    by itself.** Plan: [167a-phase2-gate2a-registration-plan.md](./167a-phase2-gate2a-registration-plan.md).
+   **Progression (2026-07-07):** Gate 2A **EXECUTED = PASS / owner-review-ready**; feet-completion
+   **DEFERRED** into neutral-outfit/base-assembly; **neutral-outfit/base-assembly PLAN recorded** (strategy
+   B: Master body/feet + recovery head, then one masked neutralization pass; short-sleeve tee ⇒ underarm
+   reconstruction). Plan: [167a-phase2-neutral-outfit-base-assembly-plan.md](./167a-phase2-neutral-outfit-base-assembly-plan.md).
+   **Gate 2 still REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED; `AVATAR_R2` false.**
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
