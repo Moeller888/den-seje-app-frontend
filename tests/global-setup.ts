@@ -10,6 +10,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const TEST_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
+const TEST_STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
 // ── Section 97: Teacher test account constants ────────────────────────────────
 // Can be overridden via .env: TEST_TEACHER_EMAIL, TEST_TEACHER_PASSWORD,
@@ -337,12 +338,45 @@ export default async function globalSetup() {
     throw new Error(`global-setup: listUsers failed — ${listError.message}`);
   }
 
-  const user = users.users.find((u) => u.email === TEST_STUDENT_EMAIL);
+  // Primary test student — provision idempotently (same Section 97 pattern as the
+  // teacher/student2 accounts) so CI does not depend on a pre-existing account.
+  // global-setup fully resets this student's state below, so no historical data is
+  // required. Secret values are never logged (only the resulting user id).
+  let user = users.users.find((u) => u.email === TEST_STUDENT_EMAIL);
 
   if (!user) {
-    throw new Error(
-      `global-setup: test student ${TEST_STUDENT_EMAIL} not found`
-    );
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email: TEST_STUDENT_EMAIL,
+      password: TEST_STUDENT_PASSWORD,
+      email_confirm: true,
+    });
+    if (createErr) {
+      throw new Error(`global-setup: createUser (test student) failed — ${createErr.message}`);
+    }
+    user = created.user;
+    console.log(`[global-setup] Created primary test student (${user.id})`);
+  } else {
+    // Ensure the password matches the secret so login always works.
+    await supabase.auth.admin.updateUserById(user.id, { password: TEST_STUDENT_PASSWORD });
+  }
+
+  // Guarantee a student profile row exists WITHOUT modifying an existing one:
+  // ignoreDuplicates → INSERT ... ON CONFLICT DO NOTHING. A fresh account gets a
+  // valid row (role + the columns that have NOT NULL/defaults); an existing account
+  // keeps all its data (equipped_slots, teacher_id, name, cosmetics). The reset
+  // block below then sets the deterministic test fields on either path.
+  const { error: ensureProfileErr } = await supabase.from("profiles").upsert(
+    {
+      id: user.id,
+      role: "student",
+      full_name: "Test Elev Primary",
+      equipped_slots: {},
+      active_theme: "default",
+    },
+    { onConflict: "id", ignoreDuplicates: true }
+  );
+  if (ensureProfileErr) {
+    throw new Error(`global-setup: student profile ensure failed — ${ensureProfileErr.message}`);
   }
 
   const { error } = await supabase
