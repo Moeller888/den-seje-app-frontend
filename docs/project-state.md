@@ -329,6 +329,16 @@ from Master; method/schema/gates locked; spec `docs/164k-anchor-mask-extraction-
   **Next step = AI-assisted masked neutral-outfit candidate planning/execution (D-042), incl. the underarm
   sub-gate. Gate 2 is still NOT satisfied (REOPENED / UNDER RECOVERY); Gate 3 still PAUSED; `AVATAR_R2`
   `false`.**
+  **Mask-refinement tooling BUILT + REVIEWED + ✅ OWNER ACCEPTED / COUNTERSIGNED (2026-07-08):**
+  `tools/avatar/build-neutral-outfit-mask-refinement.mjs` (deterministic, non-AI) refines the approximate
+  base-assembly proposals into **edit-ready** masks + an explicit **protect mask** (identity-lock, outfit-edit
+  ∩ head = 0 px asserted) + a per-region **prompt pack** — all gitignored/review-only. Tooling review **PASS /
+  owner-review-ready** and now **owner-accepted / countersigned**:
+  [`167a-phase2-mask-refinement-review.md`](./167a-phase2-mask-refinement-review.md). **Masks are NOT final
+  production masks; no AI generation happened; no neutral outfit executed; no completed/final base exists.**
+  **Next step = actual AI-assisted masked neutral-outfit candidate EXECUTION (D-042), incl. the underarm
+  sub-gate → then fresh 164B.3 + composed Gate-5 sign-off. Gate 2 still NOT satisfied (REOPENED / UNDER
+  RECOVERY); Gate 3 still PAUSED; `AVATAR_R2` `false`.**
   (3) ⏸️ **PAUSED — the remaining face / eyes / eyelid / hair layers.** Gate-3 work is halted pending the
   recovered base. The hair/eyes/face **tooling** (`build-hair-clean.mjs`, `build-eyes-clean.mjs`,
   `build-face-clean.mjs`) remains useful, but its **outputs are NOT approved layers** against the new

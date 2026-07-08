@@ -1,6 +1,13 @@
 # 167A Phase-2 — D-042 Neutral-Outfit Mask-Refinement Tooling Review / Sign-off
 
-**Status: TOOLING REVIEW — PASS / owner-review-ready.** _(assistant review 2026-07-08)_
+**Status: TOOLING REVIEW — PASS. ✅ OWNER ACCEPTED / COUNTERSIGNED 2026-07-08.** _(assistant review 2026-07-08)_
+
+> **✅ Owner acceptance / countersign (2026-07-08):** the **D-042 mask-refinement tooling review** is
+> **accepted**. The refined masks + protect mask + prompt pack remain **review-only** (gitignored); they are
+> **NOT final production masks** (human confirmation still required before any masked edit). **No AI / ComfyUI
+> was run; no neutral outfit was executed; no completed/final base exists.** This acceptance does **NOT**
+> satisfy Gate 2 — **Gate 2 remains REOPENED / UNDER RECOVERY**; **Gate 3 remains PAUSED**; `AVATAR_R2` =
+> `false`.
 
 > **This is a TOOLING review only. It is NOT a Gate-2 pass.** Gate 2 remains **REOPENED / UNDER
 > RECOVERY** and is **NOT satisfied**. Gate 3 remains **PAUSED**. **No AI / ComfyUI was run. No neutral
