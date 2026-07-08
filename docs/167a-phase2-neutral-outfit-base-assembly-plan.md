@@ -188,3 +188,12 @@ review-first, before the fresh 164B.3 + composed sign-off that could let Gate 2 
 > `AVATAR_R2` false.
 > **Tooling reviewed (2026-07-07): PASS / owner-review-ready** —
 > [`167a-phase2-base-assembly-masks-review.md`](./167a-phase2-base-assembly-masks-review.md).
+>
+> **Mask-refinement implemented (2026-07-08):** `tools/avatar/build-neutral-outfit-mask-refinement.mjs`
+> (npm: `avatar:mask-refinement`). Deterministic, non-AI; refines the approximate base-assembly proposals
+> into **edit-ready** masks (morphological close + hole-fill swallow the star/cuff/pocket/line-art gaps;
+> connected-components drop speckles; feather band) plus an explicit **protect mask** (identity-lock, 0-px
+> head intrusion asserted) and a per-region **`d042-neutral-outfit-prompt-pack.md`** — all gitignored under
+> `tools/avatar/build/phase2/mask-refinement/`. **NOT AI execution, NOT a neutral outfit, NOT a Gate-2 pass;**
+> Gate 3 stays PAUSED; `AVATAR_R2` false. **Tooling reviewed (2026-07-08): PASS / owner-review-ready** —
+> [`167a-phase2-mask-refinement-review.md`](./167a-phase2-mask-refinement-review.md).
