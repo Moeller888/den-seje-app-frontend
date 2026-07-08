@@ -8,6 +8,18 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
+    # process.env. Provide them via repository Actions secrets (Settings → Secrets and
+    # variables → Actions). Values live ONLY in GitHub Secrets — never in this file.
+    # If a secret is unset the reference resolves to empty and CI stays red at global-setup
+    # (no regression); it goes green once the secrets are provisioned. GitHub does not expose
+    # these to pull_request runs from forks — only same-repo branches.
+    env:
+      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
+      TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
