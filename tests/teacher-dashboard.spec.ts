@@ -19,6 +19,7 @@ import {
   STUDENT2_EMAIL,
   loginAsTeacher,
   openStudentDetail,
+  findAuthUserByEmail,
 } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,11 +39,8 @@ test.beforeAll(async () => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: users, error } = await adminSupabase.auth.admin.listUsers();
-  if (error) throw new Error(`teacher-spec beforeAll: listUsers — ${error.message}`);
-
-  const teacher = users.users.find((u) => u.email === TEACHER_EMAIL);
-  const student2 = users.users.find((u) => u.email === STUDENT2_EMAIL);
+  const teacher = await findAuthUserByEmail(adminSupabase, TEACHER_EMAIL);
+  const student2 = await findAuthUserByEmail(adminSupabase, STUDENT2_EMAIL);
 
   if (!teacher) throw new Error(`teacher-spec: test teacher ${TEACHER_EMAIL} not found — run global-setup first`);
   if (!student2) throw new Error(`teacher-spec: test student2 ${STUDENT2_EMAIL} not found — run global-setup first`);

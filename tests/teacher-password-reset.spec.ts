@@ -13,6 +13,7 @@ import {
   TEACHER_EMAIL,
   TEACHER_PASSWORD,
   STUDENT2_EMAIL,
+  findAuthUserByEmail,
 } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,14 +43,11 @@ test.beforeAll(async () => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: usersData } = await adminClient.auth.admin.listUsers();
-  const allUsers = usersData?.users ?? [];
-
-  const student2 = allUsers.find((u) => u.email === STUDENT2_EMAIL);
+  const student2 = await findAuthUserByEmail(adminClient, STUDENT2_EMAIL);
   if (!student2) throw new Error(`student2 not found: ${STUDENT2_EMAIL}`);
   student2Id = student2.id;
 
-  const mainStudent = allUsers.find((u) => u.email === MAIN_STUDENT_EMAIL);
+  const mainStudent = await findAuthUserByEmail(adminClient, MAIN_STUDENT_EMAIL);
   if (!mainStudent) throw new Error(`main student not found: ${MAIN_STUDENT_EMAIL}`);
   mainStudentId = mainStudent.id;
 

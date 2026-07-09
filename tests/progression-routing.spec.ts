@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
+import { findAuthUserByEmail } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -31,10 +32,7 @@ test.beforeAll(async () => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: users, error: listErr } = await adminClient.auth.admin.listUsers();
-  if (listErr) throw new Error(`listUsers failed: ${listErr.message}`);
-
-  const user = users.users.find((u: any) => u.email === STUDENT_EMAIL);
+  const user = await findAuthUserByEmail(adminClient, STUDENT_EMAIL);
   if (!user) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = user.id;
 
