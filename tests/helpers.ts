@@ -45,3 +45,24 @@ export async function openStudentDetail(page: any, studentId: string): Promise<v
   );
   await page.waitForSelector("#sd-domain-grid", { timeout: 20000 });
 }
+
+/**
+ * Resolve a Supabase auth user by email — robust to pagination (auth.admin.listUsers
+ * is paginated, default 50/page) and to GoTrue's lowercased email normalization
+ * (case-insensitive, trimmed match). Returns the user, or null if not found.
+ * Capped at 100 pages to avoid an infinite loop if the API ignored the page param.
+ */
+export async function findAuthUserByEmail(adminClient: any, email: string): Promise<any | null> {
+  const wanted = email.trim().toLowerCase();
+  for (let page = 1; page <= 100; page++) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) {
+      throw new Error(`findAuthUserByEmail: listUsers failed — ${error.message}`);
+    }
+    const users: any[] = data?.users ?? [];
+    const match = users.find((u: any) => (u.email ?? "").trim().toLowerCase() === wanted);
+    if (match) return match;
+    if (users.length === 0) break;
+  }
+  return null;
+}
