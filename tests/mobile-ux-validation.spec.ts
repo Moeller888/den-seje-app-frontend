@@ -121,16 +121,32 @@ test('3. Touch targets — MC buttons ≥ 44px height', async ({ browser }) => {
   const page = await ctx.newPage();
   await loginAndWait(page);
 
-  // Exclude the 157O per-option read-aloud buttons (small square 🔊) — this test
-  // asserts answer-button tap targets (≥44px height, ≥300px width), not the 🔊 controls.
+  // Each answer button lives in a 157O `.option-row` and shares it with an optional
+  // fixed 52px 🔊 read-aloud control (+8px gap) when read-aloud is available. "Full
+  // width" therefore belongs to the ROW, not the individual answer button (which is
+  // ~row−60px whenever the 🔊 renders). Assert: (a) tap-target height ≥ 44px, (b) the
+  // row spans the screen (≥ 300px), (c) the answer button fills its row apart from the
+  // 🔊 column — so a genuine collapse still fails while the read-aloud layout passes.
   const buttons = page.locator('#options button:not(.submit-btn):not(.read-aloud-option-btn)');
   const count = await buttons.count();
 
   if (count > 0) {
     for (let i = 0; i < count; i++) {
-      const box = await buttons.nth(i).boundingBox();
+      const btn = buttons.nth(i);
+      const box = await btn.boundingBox();
       expect(box!.height, `MC button ${i} height ≥ 44px`).toBeGreaterThanOrEqual(44);
-      expect(box!.width, `MC button ${i} width ≥ full width`).toBeGreaterThanOrEqual(300);
+
+      const row = btn.locator('xpath=ancestor::div[contains(@class,"option-row")][1]');
+      const rowBox = await row.boundingBox();
+      expect(rowBox!.width, `MC option-row ${i} spans screen ≥ 300px`).toBeGreaterThanOrEqual(300);
+
+      // 52px 🔊 + 8px gap when read-aloud renders; ~0 otherwise. Small sub-pixel tolerance.
+      const hasReadAloud = (await row.locator('.read-aloud-option-btn').count()) > 0;
+      const reserved = hasReadAloud ? 64 : 4;
+      expect(
+        rowBox!.width - box!.width,
+        `MC button ${i} fills its row apart from the 🔊 column`
+      ).toBeLessThanOrEqual(reserved);
     }
   }
 
