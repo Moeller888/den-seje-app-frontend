@@ -331,18 +331,25 @@ export default async function globalSetup() {
   // Provision teacher test accounts (idempotent)
   await ensureTeacherTestAccounts(supabase);
 
-  const { data: users, error: listError } =
-    await supabase.auth.admin.listUsers();
-
-  if (listError) {
-    throw new Error(`global-setup: listUsers failed — ${listError.message}`);
-  }
-
   // Primary test student — provision idempotently (same Section 97 pattern as the
   // teacher/student2 accounts) so CI does not depend on a pre-existing account.
   // global-setup fully resets this student's state below, so no historical data is
   // required. Secret values are never logged (only the resulting user id).
-  let user = users.users.find((u) => u.email === TEST_STUDENT_EMAIL);
+  // auth.admin.listUsers() is paginated (default 50/page); page through all users so
+  // an existing student on a later page is found rather than duplicated (which would
+  // otherwise throw "already registered" on createUser). Capped to avoid an infinite
+  // loop if the API were to ignore the page parameter.
+  let user: any = null;
+  for (let page = 1; page <= 100; page++) {
+    const { data: pageData, error: listError } =
+      await supabase.auth.admin.listUsers({ page, perPage: 200 });
+    if (listError) {
+      throw new Error(`global-setup: listUsers failed — ${listError.message}`);
+    }
+    const pageUsers: any[] = pageData?.users ?? [];
+    user = pageUsers.find((u: any) => u.email === TEST_STUDENT_EMAIL);
+    if (user || pageUsers.length === 0) break;
+  }
 
   if (!user) {
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
