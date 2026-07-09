@@ -339,6 +339,10 @@ export default async function globalSetup() {
   // an existing student on a later page is found rather than duplicated (which would
   // otherwise throw "already registered" on createUser). Capped to avoid an infinite
   // loop if the API were to ignore the page parameter.
+  // GoTrue stores emails normalized (lowercased); compare case-insensitively (and
+  // trimmed) so a secret whose casing differs from the stored email still matches
+  // instead of falling through to a duplicate createUser.
+  const wantedEmail = TEST_STUDENT_EMAIL.trim().toLowerCase();
   let user: any = null;
   for (let page = 1; page <= 100; page++) {
     const { data: pageData, error: listError } =
@@ -347,7 +351,7 @@ export default async function globalSetup() {
       throw new Error(`global-setup: listUsers failed — ${listError.message}`);
     }
     const pageUsers: any[] = pageData?.users ?? [];
-    user = pageUsers.find((u: any) => u.email === TEST_STUDENT_EMAIL);
+    user = pageUsers.find((u: any) => (u.email ?? "").trim().toLowerCase() === wantedEmail);
     if (user || pageUsers.length === 0) break;
   }
 
