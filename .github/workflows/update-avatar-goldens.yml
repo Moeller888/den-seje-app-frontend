@@ -1,0 +1,45 @@
+name: Update Avatar Goldens (Linux)
+
+# Manual-only. Regenerates the chromium-linux avatar golden baselines on the CI
+# platform (ubuntu) and uploads them as an artifact for human review before they
+# are committed. Never runs automatically; commits nothing itself.
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
+      TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Regenerate avatar goldens (chromium-linux)
+        run: >
+          npx playwright test
+          tests/avatar-cosmetics.spec.ts
+          tests/avatar-hair-decoupling.spec.ts
+          tests/avatar-hairstyle.spec.ts
+          tests/avatar-hairstyle-expansion.spec.ts
+          tests/avatar-identity-onboarding.spec.ts
+          tests/avatar-skin-tone.spec.ts
+          --project=chromium --grep "golden:" --update-snapshots
+      - name: Upload generated baselines
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: avatar-linux-goldens
+          path: tests/**/*-chromium-linux.png
+          retention-days: 7
+          if-no-files-found: error
