@@ -2,7 +2,7 @@ import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
 import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2, isAvatarR2ActiveFor } from "./js/avatar-layers.js";
-import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
+import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
@@ -501,6 +501,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
       await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
       if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(pd?.avatar_identity ?? null));
+      // On the FIRST load the expression/blink overlays are attached only after this
+      // function is awaited (see the life-engine init below), so the first-load signal
+      // is set there. On a later re-render the engines already exist, so mark here once
+      // the re-rendered composite has decoded.
+      if (exprEngine || blinkEngine) await markAvatarRendered(avatarDisplay);
       return;
     }
 
@@ -1218,6 +1223,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
       try { blinkEngine = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
     }
+    // First-load render-complete signal: fetchAvatar() (awaited above) painted the
+    // base/cosmetics and the expression engine has now attached its neutral overlay,
+    // so the composite is final. Deterministic wait point for golden screenshots.
+    await markAvatarRendered(avatarDisplay);
   }
   await loadAndRenderQuestion();
 });

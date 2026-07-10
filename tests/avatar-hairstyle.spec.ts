@@ -160,6 +160,10 @@ async function gotoLoginReduced(page: any) {
 }
 
 async function waitForImages(page: any, selector: string) {
+  // Wait for the app's render-complete signal (data-avatar-rendered="1"), set once the
+  // full avatar composite — base + cosmetics + expression overlay — has decoded. This is
+  // the deterministic wait point (#40); the img.complete check below is kept as a supplement.
+  await page.waitForSelector(`${selector}[data-avatar-rendered="1"]`, { timeout: 15000 });
   await page.waitForFunction(
     (sel: string) => {
       const imgs = Array.from(document.querySelectorAll(sel + " img"));
