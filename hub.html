@@ -1234,7 +1234,7 @@
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
   import { ALL_SLOTS, SLOT_Z, baseLayersFor, skinToneFor, RARITY_ORDER, RARITY_ICONS, isAvatarV2, isAvatarR2ActiveFor } from "./js/avatar-layers.js";
-  import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
+  import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
   import { BlinkEngine }      from "./js/avatar-blink-engine.js";
@@ -1574,6 +1574,7 @@
       showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";
       showcaseEl.dataset.gender = avatarGender;
       if (!blinkEngine) initAvatarLifeEngines();
+      await markAvatarRendered(avatarEl);
       return;
     }
 

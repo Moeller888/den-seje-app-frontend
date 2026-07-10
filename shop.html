@@ -433,7 +433,7 @@ import { loadTheme }  from "./js/themeManager.js";
 import {
   baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2,
 } from "./js/avatar-layers.js";
-import { mountC2Avatar, c2CosmeticLayers } from "./js/avatar-render-c2.js";
+import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 
 // Analytics (157D/157E). No-op unless enabled + consented; banner only when configured. Fail-soft.
 initAnalytics();
@@ -489,6 +489,7 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
         expr.style.zIndex = "3";
         expr.alt = "";
         wrap.appendChild(expr);
+        markAvatarRendered(wrap);
       });
     } else {
       // Section 152A/152B: shop previews are deliberately identity-independent —

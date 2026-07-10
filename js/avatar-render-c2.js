@@ -92,8 +92,11 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 
-  // Remove previously mounted C2 layers (idempotent re-render).
+  // Remove previously mounted C2 layers (idempotent re-render). Also clear the
+  // render-complete signal so a re-render is not mistaken for the finished frame
+  // (see markAvatarRendered); it is re-set once the full composite has decoded.
   rootEl.querySelectorAll("[data-c2-layer]").forEach((n) => n.remove());
+  rootEl.removeAttribute("data-avatar-rendered");
 
   for (const layer of layers) {
     if (layer.inline) {
@@ -125,4 +128,25 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   }
 
   return rootEl;
+}
+
+// Render-complete signal for deterministic screenshots (golden tests) and any
+// consumer that needs the avatar fully painted. Awaits every layer image in
+// rootEl — base + cosmetics AND the expression engine's neutral face overlay,
+// which is added after mountC2Avatar — to decode, then marks the container.
+// Call at the END of a page's avatar render sequence (after the life engines
+// have attached their overlay). Fail-soft: never throws out of a render.
+export async function markAvatarRendered(rootEl) {
+  if (!rootEl) return;
+  try {
+    const imgs = Array.from(rootEl.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map((img) =>
+        (typeof img.decode === "function" ? img.decode() : Promise.resolve()).catch(() => {})
+      )
+    );
+  } catch (_e) {
+    // ignore — mark rendered regardless so waiters never hang on a partial failure
+  }
+  rootEl.setAttribute("data-avatar-rendered", "1");
 }
