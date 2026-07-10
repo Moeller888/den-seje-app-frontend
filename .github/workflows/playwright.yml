@@ -4,6 +4,12 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+# Both this suite and update-avatar-goldens.yml mutate/read the SAME shared Supabase
+# test student profile. Serialize them across the whole repo so concurrent runs cannot
+# bleed state (e.g. equipped cosmetics) into golden regeneration. Queue, do not cancel.
+concurrency:
+  group: e2e-shared-supabase
+  cancel-in-progress: false
 jobs:
   test:
     timeout-minutes: 60

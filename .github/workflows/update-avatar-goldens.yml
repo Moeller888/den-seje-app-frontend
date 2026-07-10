@@ -6,6 +6,13 @@ name: Update Avatar Goldens (Linux)
 on:
   workflow_dispatch:
 
+# Both this regen and playwright.yml mutate/read the SAME shared Supabase test student
+# profile. Serialize them across the whole repo so a concurrent full suite cannot bleed
+# state (e.g. equipped cosmetics) into these goldens. Queue, do not cancel.
+concurrency:
+  group: e2e-shared-supabase
+  cancel-in-progress: false
+
 jobs:
   update:
     timeout-minutes: 30
