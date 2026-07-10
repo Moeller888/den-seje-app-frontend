@@ -12,6 +12,9 @@
 //   * keep non-skin / non-white dark feature pixels only,
 //   * connected-components → drop stray speckles.
 //
+// Inputs (tracked): assets/avatar/reference/Northstar Master.png + tools/avatar/fixtures/face-clean/
+//   (frozen pipeline inputs). Outputs go to the gitignored tools/avatar/build/ scratch dir.
+//
 // Outputs (gitignored, review-only, NOT runtime assets):
 //   face-neutral-v1.png · face-neutral-on-gray.png
 //   review-iter7-hair-eyes-face.png / -on-dark.png · face-neutral-report.json
@@ -19,19 +22,20 @@
 // NO promote, NO assets/avatar-r2 write, NO R2_MANIFEST change, AVATAR_R2 untouched, NO runtime code.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
-const PKG = join(HERE, "build", "phase2", "inpaint-v2-base");
+const PKG = join(HERE, "build", "phase2", "inpaint-v2-base"); // gitignored review-output dir (tools/avatar/build/, never committed)
+const FIX = join(HERE, "fixtures", "face-clean");            // tracked input assets (frozen pipeline inputs, committed)
 const MASTER = join(REPO, "assets", "avatar", "reference", "Northstar Master.png");
-const ITER7 = join(PKG, "body-neutral-medium-v2-candidate-iter7-shaded.png");
-const HAIRCOLOR = join(PKG, "hair-clean-color.png");
-const EYESCOMB = join(PKG, "eyes-neutral-fixed.png"); // for composite (eyes = fixed+iris; use combined via both)
-const EYESIRIS = join(PKG, "eyes-neutral-iris.png");
+const ITER7 = join(FIX, "body-neutral-medium-v2-candidate-iter7-shaded.png");
+const HAIRCOLOR = join(FIX, "hair-clean-color.png");
+const EYESCOMB = join(FIX, "eyes-neutral-fixed.png"); // for composite (eyes = fixed+iris; use combined via both)
+const EYESIRIS = join(FIX, "eyes-neutral-iris.png");
 const W = 1024, H = 1536;
 
 // feature regions (measured on the Master; brows just above the eye boxes y336, nose+mouth central-lower)
@@ -58,6 +62,7 @@ const isHairCol=(r,g,b)=>r>=48&&r<205&&g<r*0.93&&b<g*0.97&&(r-b)>=18&&r>g&&g>=b;
 const inBox=(x,y,B)=>x>=B.x0&&x<=B.x1&&y>=B.y0&&y<=B.y1;
 
 function main(){
+  mkdirSync(PKG, { recursive: true }); // ensure the gitignored output dir exists (fresh clone has no build/)
   const M=decodePng(readFileSync(MASTER));
   const B=decodePng(readFileSync(ITER7));
   const Hc=decodePng(readFileSync(HAIRCOLOR));
