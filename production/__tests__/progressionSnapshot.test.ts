@@ -4,7 +4,7 @@ import {
 import { generateProductionPlan } from "../progressionPolicy.ts";
 import { SUFFIX_REGISTRY, TAXONOMY_VERSION } from "../objectiveTaxonomy.ts";
 
-Deno.test("progression snapshot – stable plans for known objectives", async (t) => {
+Deno.test("progression snapshot â€“ stable plans for known objectives", async (t) => {
   const objectives = [
     "ww2_poland_invasion_start_year",
     "ww2_poland_invasion_impact",

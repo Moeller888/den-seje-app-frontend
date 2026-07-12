@@ -4,7 +4,7 @@
   * Deterministisk production-plan generator.
   *
   * REGLER:
-  * - Læser global SUFFIX_REGISTRY
+  * - LÃ¦ser global SUFFIX_REGISTRY
   * - Ekstraherer suffix deterministisk
   * - Ukendt suffix => throw (fail fast)
   * - Ingen implicit defaults
@@ -44,7 +44,7 @@
 
  /**
   * Stabil sorteringsorden for cognitive levels.
-  * Forhindrer snapshot-støj.
+  * Forhindrer snapshot-stÃ¸j.
   */
  const COGNITIVE_ORDER: Record<CognitiveLevel, number> = {
    recall: 0,
@@ -53,7 +53,7 @@
  };
 
  /**
-  * Generér deterministisk production plan
+  * GenerÃ©r deterministisk production plan
   */
  export function generateProductionPlan(
    objective: string
@@ -63,7 +63,7 @@
    const registryEntry = SUFFIX_REGISTRY[suffix];
 
    if (!registryEntry) {
-     // Ekstra sikkerhed (bør aldrig ske pga. extractSuffix)
+     // Ekstra sikkerhed (bÃ¸r aldrig ske pga. extractSuffix)
      throw new Error(
        "[progressionPolicy] Registry lookup failed for suffix: " + suffix
      );

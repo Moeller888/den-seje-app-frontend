@@ -100,7 +100,7 @@ createStudentBtn.addEventListener("click", async () => {
   }
 
   if (password.length < 6) {
-    createMessage.textContent = "Adgangskode skal vaere mindst 6 tegn.";
+    createMessage.textContent = "Adgangskode skal være mindst 6 tegn.";
     return;
   }
 
