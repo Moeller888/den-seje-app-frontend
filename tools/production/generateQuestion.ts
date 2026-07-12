@@ -31,7 +31,7 @@ export function generateQuestion(index: number): QuestionContract {
 
   if (cognitive === "recall") {
 
-    prompt = `Hvilket år sluttede Anden Verdenskrig i Europa? (${index})`;
+    prompt = `Hvilket Ã¥r sluttede Anden Verdenskrig i Europa? (${index})`;
 
     answerFormat = "year";
     answerValue = 1945;
@@ -45,7 +45,7 @@ export function generateQuestion(index: number): QuestionContract {
 
   } else {
 
-    prompt = `Analyser hvorfor afslutningen på Anden Verdenskrig i Europa i 1945 blev et vendepunkt i europæisk historie. (${index})`;
+    prompt = `Analyser hvorfor afslutningen pÃ¥ Anden Verdenskrig i Europa i 1945 blev et vendepunkt i europÃ¦isk historie. (${index})`;
 
     answerFormat = "text";
     answerValue = "analysis";

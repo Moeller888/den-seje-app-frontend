@@ -51,7 +51,7 @@ export function qualityGate(contract: any): void {
       throw new Error("QualityGate: text answer too short");
     }
 
-    if (!/[a-zA-ZÊ¯Â∆ÿ≈]/.test(answerValue)) {
+    if (!/[a-zA-Z√¶√∏√•√Ü√ò√Ö]/.test(answerValue)) {
       throw new Error("QualityGate: text answer invalid content");
     }
 

@@ -1,14 +1,14 @@
 function normalize(text: string): string {
 
   const synonyms: Record<string, string> = {
-    "besættelse": "besat",
+    "besÃ¦ttelse": "besat",
     "besatte": "besat",
-    "besættelsen": "besat",
+    "besÃ¦ttelsen": "besat",
     "begyndte": "start",
     "startede": "start",
-    "hvornår": "",
+    "hvornÃ¥r": "",
     "hvilket": "",
-    "år": "",
+    "Ã¥r": "",
     "i": "",
     "det": "",
     "den": "",
