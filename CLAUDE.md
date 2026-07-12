@@ -16,6 +16,17 @@ CODEBASE OVERVIEW
 **Roles:** `student`, `teacher`, `super_admin` — stored in `profiles.role`, checked on every page load.
 
 ----------------------------------------
+DANISH TEXT (LOCALIZATION)
+----------------------------------------
+
+Danish prose must preserve the real characters **æ ø å / Æ Ø Å**. Never ASCII-transliterate them
+to `ae/oe/aa` (or `AE/OE/AA`), and never leave mojibake (`Ã¦`, `Ã¸`, `Ã¥`, `�`/U+FFFD) in
+human-facing Danish: docs, the `docs/project-state.md` decision register, UI strings, PR
+bodies/titles, reports, and comments meant for humans. Save files as **UTF-8**, not Windows-1252.
+ASCII transliteration is allowed only for code identifiers, filenames, URLs, CLI flags, external
+API names, or model/tool names where Unicode would be unsafe — never for prose.
+
+----------------------------------------
 CANONICAL PROJECT DOCUMENTATION
 ----------------------------------------
 
