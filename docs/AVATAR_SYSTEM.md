@@ -218,6 +218,13 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     candidate stays in the **gitignored review area**; **no `assets/avatar-r2` write, no `R2_MANIFEST` change,
     `AVATAR_R2` stays `false`, Gate 3 stays PAUSED** until an explicit owner command starts it. Register:
     `project-state.md` (**D-047 … D-056**).
+  - **📌 TRACKED SOURCE ASSET (D-057, 2026-07-14) — SOURCE-ONLY, NOT RUNTIME ACTIVE.** The Gate-2 base is now
+    preserved as a durable, tracked source at **`assets/avatar/reference/neutral-base-v1-gate2-d053.png`**.
+    **Integrity lock — SHA-256 `2CB93EE00BE89D16D1B1E9CAE9781B596F931A52FD6F667238C9E9BDA38AFE4B`**
+    (1024×1536, alpha preserved, 331,506 bytes; **byte-identical copy**). The gitignored review file is still
+    kept, but **this tracked file is now the durable source copy**. **NOT promoted to `assets/avatar-r2` ·
+    `R2_MANIFEST` unchanged · `AVATAR_R2` stays `false` · Gate 3 stays PAUSED / NOT STARTED ·
+    `Northstar Master.png` remains the canonical datum (D-032).**
 
 ## 10. Performance considerations
 
