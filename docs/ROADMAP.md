@@ -187,9 +187,10 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    ([167a-phase2-cut-guides-review-worksheet.md](./167a-phase2-cut-guides-review-worksheet.md)) is
    PASS and the **Phase-2 raster eye-box is owner-countersigned APPROVED** — the plan §13 gate 1
    (Phase-2-scoped anchor/eye-box sign-off) is cleared. Approval is **raster-path only**; the **legacy
-   C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — gates
-   2, 3, 5 remain OPEN (AI-assisted masked v2 base + 164B.3, remaining face/eyes/eyelid/hair layers,
-   visual sign-off), so **Phase-2 implementation is still not started** and `AVATAR_R2` stays `false`.
+   C2 anchors (`cx68/92 cy47`) stay frozen**. **Phase-2 runtime code may pass gate 1 only** — ~~gates
+   2, 3, 5 remain OPEN~~ **[Gate 2 CLOSED 2026-07-14, D-056 — see below; gates 3 and 5 remain OPEN]**
+   (remaining face/eyes/eyelid/hair layers, visual sign-off), so **Phase-2 implementation is still not
+   started** and `AVATAR_R2` stays `false`.
    **✅ Gate 4 (WebP encoder) SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` 1.5.0
    (`tools/avatar/vendor/`, gitignored; reproducible via `fetch-cwebp.mjs`) + wrapper `encode-webp.mjs`;
    proven Phase-1 base 242 KB PNG → 37.7 KB WebP (alpha preserved, within budget); zero npm deps; build
@@ -200,7 +201,9 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    [167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md) — practical producer brief
    (layers, filenames/dims, keep-vs-remove, approved eye-box, 164B.3 gate, checklists; masked AI on the
    Master, no regeneration). Offline art deliverable; doc only.
-   **🔴 Gate 2 REOPENED / UNDER RECOVERY (2026-07-05) — iter7 INVALIDATED (D-043):** the iter7 base was
+   **⏳ HISTORICAL — SUPERSEDED BY D-056.** _Superseded by D-056: Gate 2 SATISFIED / CLOSED on 2026-07-14.
+   The paragraph below records why Gate 2 was reopened in July 2026 — it is **NOT current status**._
+   **Gate 2 REOPENED / UNDER RECOVERY (2026-07-05) — iter7 INVALIDATED (D-043)** _(historical)_**:** the iter7 base was
    found to have a structural **bust/chest-plate artifact**, so its owner-countersigned 164B.3
    CONDITIONAL PASS is **WITHDRAWN/SUPERSEDED** and the iter4→iter7 line is invalidated. A **candidate
    registered base-layer source is adopted** (REVISED 2026-07-06; **not a new Master** — the frozen Master
@@ -231,6 +234,9 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    recorded as technical debt. **Closing Gate 2 is NOT promotion:** candidate stays gitignored; **no
    `assets/avatar-r2` write; no `R2_MANIFEST` change; `AVATAR_R2` stays `false`; Gate 3 stays PAUSED**;
    Gate 5 open. Register: `project-state.md` (**D-047 … D-056**).
+   **▶ GATE 3 — CURRENT STATUS: PAUSED / NOT STARTED.** **Gate 3 may only start on an explicit owner
+   command.** **Closing Gate 2 does NOT automatically start Gate 3.** **D-053 remains gitignored and
+   unpromoted**, and **`AVATAR_R2` remains `false`**, until promotion is separately authorised.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.

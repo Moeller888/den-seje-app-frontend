@@ -176,10 +176,14 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     handoff** for gates 2–3 is written
     ([167a-phase2-artist-handoff.md](./167a-phase2-artist-handoff.md)). **Gate 4 (WebP encoder) is
     also SATISFIED (2026-07-02):** vendored libwebp `cwebp.exe` + `encode-webp.mjs`/`fetch-cwebp.mjs`
-    (build tooling, gitignored binary, zero deps). Gates 2, 3, 5 remain open.
-  - **Base RECOVERY (updated 2026-07-05, D-043):** an interim iter7 base briefly held a Gate-2 CONDITIONAL
+    (build tooling, gitignored binary, zero deps). ~~Gates 2, 3, 5 remain open.~~
+    **[Gate 2 CLOSED 2026-07-14, D-056 — see below. Gates 3 and 5 remain open.]**
+  - **⏳ HISTORICAL — SUPERSEDED BY D-056.** _Superseded by D-056: Gate 2 SATISFIED / CLOSED on 2026-07-14.
+    The paragraph below is kept for the record — it is **NOT current status**._
+    **Base RECOVERY (updated 2026-07-05, D-043):** an interim iter7 base briefly held a Gate-2 CONDITIONAL
     PASS but was **visually INVALIDATED** (structural **bust/chest-plate** artifact); that pass is
-    **withdrawn** and the iter4→iter7 line is invalidated. **Gate 2 is REOPENED / under recovery** with a
+    **withdrawn** and the iter4→iter7 line is invalidated. **Gate 2 was REOPENED / under recovery** _(at the
+    time — now closed, D-056)_ with a
     **candidate registered base-layer source** (REVISED 2026-07-06; **not a new Master** — the frozen
     `Northstar Master.png` remains the canonical identity/style/coordinate datum, **D-032 preserved, not
     superseded**) — `recovery-base-v1-blankface.png` (`assets/avatar/reference/`), which fixes the anatomy
