@@ -18,6 +18,11 @@ _Last reviewed: 2026-07-01._
 - **Avatar:** `AVATAR_V2 = true` is **live** (commit `52f8365`, 2026-06-25) — but rendering **flat
   placeholder SVGs**, not the Northstar Master raster. Master production + wiring is planned
   (`docs/167a-master-asset-raster-wiring-plan.md`), not executed.
+  **✅ Gate 2 (neutral base layer) CLOSED (2026-07-14, D-056)** — owner-approved candidate
+  `d042-outfit-candidate-d053-arm-residue.png` (sha `2CB93EE0…`); final 164B.3 = **PASS with an
+  owner-accepted inherited §7 alpha/matte exception**. **Not a promotion:** the candidate is still
+  gitignored; **`assets/avatar-r2` / `R2_MANIFEST` untouched, `AVATAR_R2` stays `false`, Gate 3 stays
+  PAUSED.** Gates 3 and 5 remain open.
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
@@ -216,7 +221,16 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    **DEFERRED** into neutral-outfit/base-assembly; **neutral-outfit/base-assembly PLAN recorded** (strategy
    B: Master body/feet + recovery head, then one masked neutralization pass; short-sleeve tee ⇒ underarm
    reconstruction). Plan: [167a-phase2-neutral-outfit-base-assembly-plan.md](./167a-phase2-neutral-outfit-base-assembly-plan.md).
-   **Gate 2 still REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED; `AVATAR_R2` false.**
+   **✅ GATE 2 CLOSED (2026-07-14, D-056).** The base-layer recovery reopened at D-043 is **complete**.
+   Owner-approved Gate-2 candidate: **`d042-outfit-candidate-d053-arm-residue.png`** (sha `2CB93EE0…`);
+   lineage **D-043 → D-048 donor lift → D-049 protect-mask-v2.1 → D-050 donor silhouette → D-052 collar
+   cleanup → D-053 arm/torso residue cleanup**. **Final 164B.3: PASS WITH OWNER-ACCEPTED INHERITED §7
+   ALPHA/MATTE EXCEPTION** — §2/§3/§4/§5/§6 all PASS (notably **§4: forearm ΔRGB vs the frozen hands 68 → 1**,
+   the section that had blocked since D-045). **§7 is accepted, NOT fixed:** a global ~1 px white-matte fringe
+   (**2,011 px**, of which **1,557 sit inside protect**) is inherited from the D-042/D-043 pipeline and is
+   recorded as technical debt. **Closing Gate 2 is NOT promotion:** candidate stays gitignored; **no
+   `assets/avatar-r2` write; no `R2_MANIFEST` change; `AVATAR_R2` stays `false`; Gate 3 stays PAUSED**;
+   Gate 5 open. Register: `project-state.md` (**D-047 … D-056**).
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
