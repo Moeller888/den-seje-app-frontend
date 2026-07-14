@@ -39,6 +39,13 @@ art layer behind them can be upgraded without a rewrite.
   pipeline, reusing DB/identity/slots/z-model/`AVATAR_V2`.
 - **The gap is art production + wiring, not architecture.** Plan of record:
   `docs/167a-master-asset-raster-wiring-plan.md`.
+- **✅ Gate 2 (neutral base layer) is CLOSED (2026-07-14, D-056)** — the base-layer recovery that had been
+  open since D-043 is finished. Owner-approved candidate: `d042-outfit-candidate-d053-arm-residue.png`
+  (sha `2CB93EE0…`); final 164B.3 = **PASS with an owner-accepted inherited §7 alpha/matte exception**
+  (a ~1 px white-matte fringe remains, accepted as D-042/D-043 technical debt — **accepted, not fixed**).
+  **This changes nothing at runtime:** the candidate is still **gitignored, not promoted**; `assets/avatar-r2`
+  and `R2_MANIFEST` are untouched; **`AVATAR_R2` stays `false`**; **Gate 3 stays PAUSED**. Gates 3 and 5
+  remain open. See `project-state.md` **D-047 … D-056**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
@@ -192,7 +199,21 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     B: Master body/feet + recovery head + one masked neutralization pass; short-sleeve tee ⇒ underarm
     reconstruction, highest-risk sub-area). Plan:
     [167a-phase2-neutral-outfit-base-assembly-plan.md](./167a-phase2-neutral-outfit-base-assembly-plan.md).
-    **Gate 2 still REOPENED / UNDER RECOVERY (not satisfied); Gate 3 PAUSED; `AVATAR_R2` false.**
+    **✅ GATE 2 CLOSED (2026-07-14, D-056).** The neutral base-layer recovery is **complete**. The
+    owner-approved Gate-2 candidate is **`d042-outfit-candidate-d053-arm-residue.png`** (sha `2CB93EE0…`),
+    lineage **D-043 base assembly → D-048 donor lift → D-049 protect-mask-v2.1 → D-050 donor silhouette →
+    D-052 collar cleanup → D-053 arm/torso residue cleanup**. **Final 164B.3 verdict: PASS WITH
+    OWNER-ACCEPTED INHERITED §7 ALPHA/MATTE EXCEPTION** — §2 PASS (shoulders +0.8 %; hand centroids on the
+    Master's; arms match within 1–2 px below y854; owner-confirmed drape-excluded silhouette IoU **0.9594**),
+    §3 PASS, **§4 PASS (forearm ΔRGB vs the frozen hands 68 → 1, no seam — the section that had blocked since
+    D-045)**, §5 PASS (0 px garment residue, no legible signature elements), §6 PASS. **§7 is an accepted
+    exception, NOT a fix:** a **global ~1 px white-antialias/matte fringe (2,011 px)** remains — inherited from
+    the D-042/D-043 pipeline (2,461 px pre-lift; the donor process *reduced* it), with **1,557 px inside
+    protect**, so clearing it would break protect-diff = 0. It is **accepted as technical debt** and may only
+    be revisited via a separate owner-approved alpha/protect decision. **Closing Gate 2 is NOT promotion:** the
+    candidate stays in the **gitignored review area**; **no `assets/avatar-r2` write, no `R2_MANIFEST` change,
+    `AVATAR_R2` stays `false`, Gate 3 stays PAUSED** until an explicit owner command starts it. Register:
+    `project-state.md` (**D-047 … D-056**).
 
 ## 10. Performance considerations
 
