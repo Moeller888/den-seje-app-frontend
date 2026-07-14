@@ -22,7 +22,21 @@ _Reusable: copy this file per review (or per-prototype rev) and fill in the blan
 | Master file hash/version | __________________________ |
 
 ## 2. Proportion measurements
-_Measure in the 1024×1536 space. Pass if `|Delta| ≤ Tolerance`. Anchors: head ctr (512,320) r≈192; eyes (435/589,301)._
+_Measure in the 1024×1536 space. Pass if `|Delta| ≤ Tolerance`._
+
+> **⚠ ANCHOR NOTE (D-055).** The legacy anchors previously quoted here — *head ctr (512,320) r≈192; eyes
+> (435/589,301)* — are **VOID and must NOT be used**. They came from scaling the D-004 SVG ×6.4 and were
+> never measured on the Master; the eye line alone is **~90 px off** (real iris centres ≈ (432,387)/(577,387)).
+> They produced the bogus "−16.1 % undersized skull" finding (voided by D-054).
+> **The authoritative anchor geometry for the Master is the human-calibrated block in
+> `tools/avatar/extract-anchor-masks.mjs`** (164L.4 `MANUAL_ANCHOR_OVERRIDES` + 164S eye semantics +
+> 164T eye-box/glasses recalibration) — independently confirmed by measurement in D-055.
+> **There is no head-centre/radius anchor in the production contract**; use `faceMaskRegion`,
+> `headwearRegion` and the 164T eye boxes instead.
+>
+> **RULE (D-054): `head/body ratio`, `heads-tall` and `skull height` may only be scored when the SAME
+> landmark definition is applied to BOTH images.** The Master's bald crown is **not measurable** (it is
+> hidden under hair), so a bald-skull-vs-Master skull comparison has **no valid datum** — do not invent one.
 
 | Metric | Master value | Prototype value | Delta | Tolerance | Pass/Fail |
 |---|---|---|---|---|---|
