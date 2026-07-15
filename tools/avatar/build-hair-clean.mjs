@@ -13,22 +13,24 @@
 //   hair-clean-color.png            (clean hair, colour, transparent bg — for review)
 //   hair-northstar-v1-luminance.png (grayscale LUMINANCE MAP — the D-031 runtime target, first pass)
 //   hair-clean-alone-on-gray.png    (hair alone on mid-grey → inspect for face-feature contamination)
-//   review-iter7-clean-hair.png / -on-dark.png (iter7 base + CLEAN hair composite)
+//   review-d057-clean-hair.png / -on-dark.png (D-057 Gate-2 base + CLEAN hair composite)
 //   hair-clean-report.json
 //
 // NO promote, NO assets/avatar-r2 write, NO R2_MANIFEST change, AVATAR_R2 untouched, NO runtime code.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
-const PKG = join(HERE, "build", "phase2", "inpaint-v2-base");
+const PKG = join(HERE, "build", "phase2", "gate3-d057");
 const MASTER = join(REPO, "assets", "avatar", "reference", "Northstar Master.png");
-const ITER7 = join(PKG, "body-neutral-medium-v2-candidate-iter7-shaded.png");
+// WP0 (G3-WP0): composite base = the tracked D-057 Gate-2 neutral base (sha 2CB93EE0…), replacing
+// the invalidated iter7 candidate (D-043). Hair EXTRACTION still reads only the Master.
+const ITER7 = join(REPO, "assets", "avatar", "reference", "neutral-base-v1-gate2-d053.png");
 const W = 1024, H = 1536;
 
 const HAIR_MAX_Y = 505;                                  // hair lives in the head zone
@@ -55,6 +57,7 @@ const inRR=(x,y,B)=>{if(x<B.x0||x>B.x1||y<B.y0||y>B.y1)return false;const cx=x<B
 function dilate(m,r){if(r<=0)return m;const t=new Uint8Array(W*H),o=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=0;for(let d=-r;d<=r;d++){const xx=x+d;if(xx>=0&&xx<W&&m[y*W+xx]){v=1;break;}}t[y*W+x]=v;}for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=0;for(let d=-r;d<=r;d++){const yy=y+d;if(yy>=0&&yy<H&&t[yy*W+x]){v=1;break;}}o[y*W+x]=v;}return o;}
 
 function main(){
+  mkdirSync(PKG, { recursive: true }); // ensure the gitignored output dir exists (fresh clone has no build/)
   const M=decodePng(readFileSync(MASTER));
   const B=decodePng(readFileSync(ITER7));
 
@@ -91,13 +94,13 @@ function main(){
   for(let i=0;i<W*H;i++)if(hairD[i]){gray[i*3]=M.rgba[i*4];gray[i*3+1]=M.rgba[i*4+1];gray[i*3+2]=M.rgba[i*4+2];}
   writeFileSync(join(PKG,"hair-clean-alone-on-gray.png"),encRGB(W,H,gray));
 
-  // 4. composite iter7 base + CLEAN hair (white + dark)
+  // 4. composite D-057 base + CLEAN hair (white + dark)
   function compose(bg){const out=Buffer.alloc(W*H*3);for(let i=0;i<W*H;i++){out[i*3]=bg[0];out[i*3+1]=bg[1];out[i*3+2]=bg[2];}
     for(let i=0;i<W*H;i++){const a=B.rgba[i*4+3];if(a>0){const A=a/255;out[i*3]=Math.round(B.rgba[i*4]*A+out[i*3]*(1-A));out[i*3+1]=Math.round(B.rgba[i*4+1]*A+out[i*3+1]*(1-A));out[i*3+2]=Math.round(B.rgba[i*4+2]*A+out[i*3+2]*(1-A));}}
     for(let i=0;i<W*H;i++)if(hairD[i]){out[i*3]=M.rgba[i*4];out[i*3+1]=M.rgba[i*4+1];out[i*3+2]=M.rgba[i*4+2];}
     return out;}
-  writeFileSync(join(PKG,"review-iter7-clean-hair.png"),encRGB(W,H,compose([255,255,255])));
-  writeFileSync(join(PKG,"review-iter7-clean-hair-on-dark.png"),encRGB(W,H,compose([38,40,46])));
+  writeFileSync(join(PKG,"review-d057-clean-hair.png"),encRGB(W,H,compose([255,255,255])));
+  writeFileSync(join(PKG,"review-d057-clean-hair-on-dark.png"),encRGB(W,H,compose([38,40,46])));
 
   // contamination check: any hair pixel inside the eye boxes after cleaning?
   let eyeContam=0;for(const Bx of EYE_BOXES)for(let y=Bx.y0;y<=Bx.y1;y++)for(let x=Bx.x0;x<=Bx.x1;x++)if(hairD[y*W+x])eyeContam++;
@@ -107,7 +110,7 @@ function main(){
     source:"Northstar Master.png",rawBrownPx:rawPx,faceFeatureExcludedPx:excluded,componentsFound:nlab,largestComponentPx:maxSz,
     keptComponents:keep.reduce((a,v)=>a+v,0),keptHairPx:hairPx,droppedIsolatedPx:dropped,dilatedHairPx:hairD.reduce((a,v)=>a+v,0),
     eyeBoxContaminationPx:eyeContam,luminanceRange:{min:+lmin.toFixed(1),max:+lmax.toFixed(1),mappedTo:"[90,250]"},
-    outputs:["hair-clean-color.png","hair-northstar-v1-luminance.png","hair-clean-alone-on-gray.png","review-iter7-clean-hair.png","review-iter7-clean-hair-on-dark.png"],
+    outputs:["hair-clean-color.png","hair-northstar-v1-luminance.png","hair-clean-alone-on-gray.png","review-d057-clean-hair.png","review-d057-clean-hair-on-dark.png"],
     boundaries:"review-only; NOT a runtime asset; no promote; no assets/avatar-r2; no R2_MANIFEST; AVATAR_R2 false",
   },null,2));
 
@@ -116,6 +119,6 @@ function main(){
   console.log("  kept "+keep.reduce((a,v)=>a+v,0)+" component(s) → hair "+hairPx+"px · dropped isolated blobs "+dropped+"px");
   console.log("  eye-box contamination after cleaning: "+eyeContam+"px "+(eyeContam===0?"(CLEAN ✓)":"(check!)"));
   console.log("  luminance map range "+lmin.toFixed(0)+"–"+lmax.toFixed(0)+" → [90,250]");
-  console.log("  → hair-clean-color.png · hair-northstar-v1-luminance.png · review-iter7-clean-hair(.png/-on-dark) · hair-clean-alone-on-gray.png");
+  console.log("  → hair-clean-color.png · hair-northstar-v1-luminance.png · review-d057-clean-hair(.png/-on-dark) · hair-clean-alone-on-gray.png");
 }
 main();
