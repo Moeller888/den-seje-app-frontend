@@ -17,23 +17,29 @@
 //   eyes-neutral-fixed.png   (sclera + catch-light + lash/outline, transparent bg)
 //   eyes-neutral-iris.png    (iris interior, tintable — Master brown default, transparent bg)
 //   eyes-combined-on-gray.png (iris + fixed = full eyes, on grey — inspection)
-//   review-iter7-hair-eyes.png / -on-dark.png (base iter7 + eyes + clean hair composite)
+//   review-d057-hair-eyes.png / -on-dark.png (D-057 base + eyes + clean hair composite)
 //   eyes-report.json
 //
 // NO promote, NO assets/avatar-r2 write, NO R2_MANIFEST change, AVATAR_R2 untouched, NO runtime code.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
-const PKG = join(HERE, "build", "phase2", "inpaint-v2-base");
+const PKG = join(HERE, "build", "phase2", "gate3-d057");
+const FIX = join(HERE, "fixtures", "face-clean");   // tracked fixtures (fallback inputs, committed)
 const MASTER = join(REPO, "assets", "avatar", "reference", "Northstar Master.png");
-const ITER7 = join(PKG, "body-neutral-medium-v2-candidate-iter7-shaded.png");
-const HAIRCOLOR = join(PKG, "hair-clean-color.png"); // clean hair layer from Gate 3 step 1
+// WP0 (G3-WP0): composite base = the tracked D-057 Gate-2 neutral base (sha 2CB93EE0…), replacing
+// the invalidated iter7 candidate (D-043). Eye EXTRACTION still reads only the Master.
+const ITER7 = join(REPO, "assets", "avatar", "reference", "neutral-base-v1-gate2-d053.png");
+// clean hair layer from Gate 3 step 1: primary = fresh gate3-d057 output; fallback = tracked fixture
+const HAIRCOLOR = existsSync(join(PKG, "hair-clean-color.png"))
+  ? join(PKG, "hair-clean-color.png")
+  : join(FIX, "hair-clean-color.png");
 const W = 1024, H = 1536;
 
 // eye boxes (164L), padded 4px to catch the full eye
@@ -56,6 +62,7 @@ const isWhite=(r,g,b)=>r>=228&&g>=216&&b>=196;
 function erode(m,r){const t=new Uint8Array(W*H),o=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=1;for(let d=-r;d<=r;d++){const xx=x+d;if(xx<0||xx>=W||!m[y*W+xx]){v=0;break;}}t[y*W+x]=v;}for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=1;for(let d=-r;d<=r;d++){const yy=y+d;if(yy<0||yy>=H||!t[yy*W+x]){v=0;break;}}o[y*W+x]=v;}return o;}
 
 function main(){
+  mkdirSync(PKG, { recursive: true }); // ensure the gitignored output dir exists (fresh clone has no build/)
   const M=decodePng(readFileSync(MASTER));
   const B=decodePng(readFileSync(ITER7));
   const Hc=decodePng(readFileSync(HAIRCOLOR));
@@ -93,27 +100,27 @@ function main(){
   for(let i=0;i<W*H;i++)if(content[i]){gray[i*3]=M.rgba[i*4];gray[i*3+1]=M.rgba[i*4+1];gray[i*3+2]=M.rgba[i*4+2];}
   writeFileSync(join(PKG,"eyes-combined-on-gray.png"),encRGB(W,H,gray));
 
-  // composite: base(iter7) → eyes(z4) → clean hair(z40)
+  // composite: base(D-057) → eyes(z4) → clean hair(z40)
   function over(out,i,px,pi){const a=px[pi*4+3];if(a<=0)return;const A=a/255;out[i*3]=Math.round(px[pi*4]*A+out[i*3]*(1-A));out[i*3+1]=Math.round(px[pi*4+1]*A+out[i*3+1]*(1-A));out[i*3+2]=Math.round(px[pi*4+2]*A+out[i*3+2]*(1-A));}
   function compose(bg){const out=Buffer.alloc(W*H*3);for(let i=0;i<W*H;i++){out[i*3]=bg[0];out[i*3+1]=bg[1];out[i*3+2]=bg[2];}
     for(let i=0;i<W*H;i++)over(out,i,B.rgba,i);                                   // base
     for(let i=0;i<W*H;i++)if(content[i]){out[i*3]=M.rgba[i*4];out[i*3+1]=M.rgba[i*4+1];out[i*3+2]=M.rgba[i*4+2];} // eyes
     for(let i=0;i<W*H;i++)over(out,i,Hc.rgba,i);                                  // clean hair on top
     return out;}
-  writeFileSync(join(PKG,"review-iter7-hair-eyes.png"),encRGB(W,H,compose([255,255,255])));
-  writeFileSync(join(PKG,"review-iter7-hair-eyes-on-dark.png"),encRGB(W,H,compose([38,40,46])));
+  writeFileSync(join(PKG,"review-d057-hair-eyes.png"),encRGB(W,H,compose([255,255,255])));
+  writeFileSync(join(PKG,"review-d057-hair-eyes-on-dark.png"),encRGB(W,H,compose([38,40,46])));
 
   writeFileSync(join(PKG,"eyes-report.json"),JSON.stringify({
     tool:"build-eyes-clean",method:"deterministic eye extraction from Master eye boxes (NON-AI, first pass)",
     note:"Large-eye anime: iris/pupil is a dark mass; iris/pupil/lash separation is APPROXIMATE. iris layer includes the pupil (D-015 pupil-fixed split = refinement). iris is Master-brown default; a tint-neutral iris map = refinement.",
     eyeBoxes:EYES,eyeContentPx:cN,whitePx:wN,darkPx:dN,lashOutlinePx:lN,irisInteriorPx:iN,strayDroppedPx:strayDropped,componentsFound:nlab,
-    outputs:["eyes-neutral-fixed.png","eyes-neutral-iris.png","eyes-combined-on-gray.png","review-iter7-hair-eyes.png","review-iter7-hair-eyes-on-dark.png"],
+    outputs:["eyes-neutral-fixed.png","eyes-neutral-iris.png","eyes-combined-on-gray.png","review-d057-hair-eyes.png","review-d057-hair-eyes-on-dark.png"],
     boundaries:"review-only; NOT runtime assets; no promote; no assets/avatar-r2; no R2_MANIFEST; AVATAR_R2 false",
   },null,2));
 
   console.log("✔ eyes layer extracted (first pass):");
   console.log("  eye content "+cN+"px  = white(sclera+catchlight) "+wN+" + dark(iris/pupil/lash) "+dN);
   console.log("  split → FIXED = white + lash/outline "+lN+"px ; IRIS interior "+iN+"px (tintable, brown default)");
-  console.log("  → eyes-neutral-fixed.png · eyes-neutral-iris.png · eyes-combined-on-gray.png · review-iter7-hair-eyes(.png/-on-dark)");
+  console.log("  → eyes-neutral-fixed.png · eyes-neutral-iris.png · eyes-combined-on-gray.png · review-d057-hair-eyes(.png/-on-dark)");
 }
 main();

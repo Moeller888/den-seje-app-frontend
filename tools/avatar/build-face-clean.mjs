@@ -12,30 +12,36 @@
 //   * keep non-skin / non-white dark feature pixels only,
 //   * connected-components → drop stray speckles.
 //
-// Inputs (tracked): assets/avatar/reference/Northstar Master.png + tools/avatar/fixtures/face-clean/
-//   (frozen pipeline inputs). Outputs go to the gitignored tools/avatar/build/ scratch dir.
+// Inputs (tracked): assets/avatar/reference/Northstar Master.png + the D-057 Gate-2 base
+//   (assets/avatar/reference/neutral-base-v1-gate2-d053.png) as the composite base; hair/eyes
+//   chain inputs primary = fresh gate3-d057 outputs, fallback = tools/avatar/fixtures/face-clean/.
+//   Outputs go to the gitignored tools/avatar/build/ scratch dir.
 //
 // Outputs (gitignored, review-only, NOT runtime assets):
 //   face-neutral-v1.png · face-neutral-on-gray.png
-//   review-iter7-hair-eyes-face.png / -on-dark.png · face-neutral-report.json
+//   review-d057-hair-eyes-face.png / -on-dark.png · face-neutral-report.json
 //
 // NO promote, NO assets/avatar-r2 write, NO R2_MANIFEST change, AVATAR_R2 untouched, NO runtime code.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
-const PKG = join(HERE, "build", "phase2", "inpaint-v2-base"); // gitignored review-output dir (tools/avatar/build/, never committed)
-const FIX = join(HERE, "fixtures", "face-clean");            // tracked input assets (frozen pipeline inputs, committed)
+const PKG = join(HERE, "build", "phase2", "gate3-d057");     // gitignored review-output dir (tools/avatar/build/, never committed)
+const FIX = join(HERE, "fixtures", "face-clean");            // tracked input assets (fallback pipeline inputs, committed)
 const MASTER = join(REPO, "assets", "avatar", "reference", "Northstar Master.png");
-const ITER7 = join(FIX, "body-neutral-medium-v2-candidate-iter7-shaded.png");
-const HAIRCOLOR = join(FIX, "hair-clean-color.png");
-const EYESCOMB = join(FIX, "eyes-neutral-fixed.png"); // for composite (eyes = fixed+iris; use combined via both)
-const EYESIRIS = join(FIX, "eyes-neutral-iris.png");
+// WP0 (G3-WP0): composite base = the tracked D-057 Gate-2 neutral base (sha 2CB93EE0…), replacing
+// the superseded iter7 fixture (D-043). Face EXTRACTION still reads only the Master.
+const ITER7 = join(REPO, "assets", "avatar", "reference", "neutral-base-v1-gate2-d053.png");
+// chain inputs: primary = fresh gate3-d057 outputs (hair/eyes steps); fallback = tracked fixtures
+const fromChain = (name) => existsSync(join(PKG, name)) ? join(PKG, name) : join(FIX, name);
+const HAIRCOLOR = fromChain("hair-clean-color.png");
+const EYESCOMB = fromChain("eyes-neutral-fixed.png"); // for composite (eyes = fixed+iris; use combined via both)
+const EYESIRIS = fromChain("eyes-neutral-iris.png");
 const W = 1024, H = 1536;
 
 // feature regions (measured on the Master; brows just above the eye boxes y336, nose+mouth central-lower)
@@ -109,8 +115,8 @@ function main(){
     for(let i=0;i<W*H;i++)over(out,i,Ef.rgba);     // eyes fixed z4 (sclera+lash+catchlight on top)
     for(let i=0;i<W*H;i++)over(out,i,Hc.rgba);     // hair z40
     return out;}
-  writeFileSync(join(PKG,"review-iter7-hair-eyes-face.png"),encRGB(W,H,compose([255,255,255])));
-  writeFileSync(join(PKG,"review-iter7-hair-eyes-face-on-dark.png"),encRGB(W,H,compose([38,40,46])));
+  writeFileSync(join(PKG,"review-d057-hair-eyes-face.png"),encRGB(W,H,compose([255,255,255])));
+  writeFileSync(join(PKG,"review-d057-hair-eyes-face-on-dark.png"),encRGB(W,H,compose([38,40,46])));
 
   // contamination checks
   let eyeContam=0;for(const Bx of EYE_BOXES)for(let y=Bx.y0;y<=Bx.y1;y++)for(let x=Bx.x0;x<=Bx.x1;x++)if(face[(y*W+x)*4+3])eyeContam++;
@@ -121,7 +127,7 @@ function main(){
     regions:{BROW,NOSE,MOUTH},rawFeaturePx:{brow:browN,nose:noseN,mouth:mouthN},keptPx:kept,strayDroppedPx:strays,
     eyeBoxContaminationPx:eyeContam,hairContaminationPx:hairContam,
     notes:"blush (multiply) not extracted (subtle; optional refinement). nose is minimal in the Master. Face layer = dark feature line-work only, tone-agnostic (D-022).",
-    outputs:["face-neutral-v1.png","face-neutral-on-gray.png","review-iter7-hair-eyes-face.png","review-iter7-hair-eyes-face-on-dark.png"],
+    outputs:["face-neutral-v1.png","face-neutral-on-gray.png","review-d057-hair-eyes-face.png","review-d057-hair-eyes-face-on-dark.png"],
     boundaries:"review-only; NOT runtime assets; no promote; no assets/avatar-r2; no R2_MANIFEST; AVATAR_R2 false",
   },null,2));
 
@@ -129,6 +135,6 @@ function main(){
   console.log("  raw feature px — brow "+browN+" · nose "+noseN+" · mouth "+mouthN);
   console.log("  kept "+kept+"px · stray speckles dropped "+strays+"px");
   console.log("  eye-box contamination "+eyeContam+"px "+(eyeContam===0?"(CLEAN ✓)":"(check!)")+" · hair contamination "+hairContam+"px "+(hairContam===0?"(CLEAN ✓)":"(check!)"));
-  console.log("  → face-neutral-v1.png · face-neutral-on-gray.png · review-iter7-hair-eyes-face(.png/-on-dark)");
+  console.log("  → face-neutral-v1.png · face-neutral-on-gray.png · review-d057-hair-eyes-face(.png/-on-dark)");
 }
 main();
