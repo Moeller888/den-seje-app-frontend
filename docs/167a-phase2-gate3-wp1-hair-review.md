@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — WP1 Hair Review Worksheet (G3-WP1)
 
-Status: **REVIEW-READY — owner countersign PENDING.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS WITH PUNCH-LIST (2026-07-15).** Review-only; nothing promoted.
 Date: 2026-07-15. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Owner-review evidence for the Gate-3 **hair layer candidate** (z40, D-031
@@ -54,15 +54,28 @@ Tooling: `tools/avatar/build-hair-clean.mjs` (extraction, PR #18/#69) +
 
 ## 4. Owner review checklist
 
-- [ ] Hair silhouette matches the Master (onion-skins) — no drift, no missing mass.
-- [ ] No visible halo at 32/48/64 px (`tint-small-sizes.png`).
-- [ ] Hairline gap (finding 3): accept as known defect / order a bounded fix task.
-- [ ] Tint darkness (finding 4): choose remap / gain / defer-colours.
-- [ ] Face/eye zones stay clean under hair (WP0 chain: contamination 0 px).
+- [x] Hair silhouette matches the Master (onion-skins) — no drift, no missing mass.
+- [x] No visible halo at 32/48/64 px (`tint-small-sizes.png`).
+- [x] Hairline gap (finding 3): **bounded fix task ORDERED** (punch-list item PL-1).
+- [x] Tint darkness (finding 4): **REMAP chosen** (punch-list item PL-2).
+- [x] Face/eye zones stay clean under hair (WP0 chain: contamination 0 px).
 
 ## 5. Verdict
 
-**Owner verdict: ______ (PASS / PASS WITH PUNCH-LIST / FAIL) · Date: ______**
+**Owner verdict: PASS WITH PUNCH-LIST · Date: 2026-07-15 · countersigned via owner command.**
+
+**Punch-list (each item = its own bounded, review-only task; the hair layer is NOT final
+until both are cleared and re-reviewed):**
+
+- **PL-1 — hairline coverage-gap fix (finding 3):** eliminate the 1,449 px of white
+  show-through at the hairline/temples. Deterministic, NON-AI; implementation choice
+  (widen the highlight-tone hair detection vs. backfill gap px from the Master inside
+  the hair silhouette) is decided in the task itself; extraction elsewhere must stay
+  byte-stable; new gap metric must be ~0 with no new face/eye contamination.
+- **PL-2 — luminance remap (finding 4):** re-normalise `hair-northstar-v1-luminance`
+  to a brighter band so the D-031 multiply tints are colour-faithful (acceptance:
+  `blonde` reads as blonde in the tint sheet; all 8 tokens visually distinct at
+  32/48/64 px). Deterministic remap of the existing map — no re-extraction, no AI.
 
 Recommended reading: `wp1/tint-sheet-head.png`, `wp1/tint-small-sizes.png`,
 `wp1/coverage-gap.png`, then `wp1/wp1-hair-report.json`.
@@ -72,5 +85,6 @@ Recommended reading: `wp1/tint-sheet-head.png`, `wp1/tint-small-sizes.png`,
 Review-only. No runtime change; no `assets/avatar-r2` write; no `R2_MANIFEST` change;
 `AVATAR_R2` stays `false`. `Northstar Master.png`, the D-057 base, `protect-mask-v2.1`
 and the §7 halo are untouched. The WP0 hair outputs were read, not modified. No AI.
-Gate 3 remains gated: findings 3–4 require owner decisions before any hair-layer
-refinement task starts, and **nothing here promotes the hair layer to a runtime asset**.
+Gate 3 remains gated: ~~findings 3–4 require owner decisions~~ **[decided 2026-07-15:
+PL-1 + PL-2 ordered — see §5]**; each punch-list item runs as its own bounded task, and
+**nothing here promotes the hair layer to a runtime asset**.
