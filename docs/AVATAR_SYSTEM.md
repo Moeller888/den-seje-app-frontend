@@ -225,6 +225,13 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     kept, but **this tracked file is now the durable source copy**. **NOT promoted to `assets/avatar-r2` ·
     `R2_MANIFEST` unchanged · `AVATAR_R2` stays `false` · Gate 3 stays PAUSED / NOT STARTED ·
     `Northstar Master.png` remains the canonical datum (D-032).**
+  - **📌 TRACKED PROTECT CONTRACT (D-058, 2026-07-14) — SOURCE-ONLY, NOT RUNTIME ACTIVE.** The active
+    Gate-2 protect-mask is now also preserved as a tracked source-only contract at
+    **`assets/avatar/reference/gate2-protect-mask-v2.1.png`** — **SHA-256
+    `302324B7B9C0ACB124C982294D1B85FEB9EDBF467AAAD0F0A52B2C7E96F692F5`**, **byte-identical** to the
+    owner-approved D-049 `protect-mask-v2.1` (the gitignored original is preserved untouched). **No
+    change to the mask's geometry or semantics** — not a new mask version, no new writable regions.
+    **Source-only, not runtime. Gate 3 stays PAUSED / NOT STARTED · `AVATAR_R2` stays `false`.**
 
 ## 10. Performance considerations
 
