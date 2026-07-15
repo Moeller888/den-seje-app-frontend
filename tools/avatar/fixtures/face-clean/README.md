@@ -18,7 +18,7 @@ live under `tools/avatar/build/`, which is gitignored scratch/output space (see
 | File | Role |
 |------|------|
 | `body-neutral-medium-v2-candidate-iter7-shaded.png` | **SUPERSEDED as composite base (D-043 invalidated iter7; replaced by D-057 in WP0).** Kept for historical reference only — no tool reads it any more. |
-| `hair-clean-color.png` | hair color layer (z40) — fallback chain input; also used to exclude the bangs mass |
+| `hair-clean-color.png` | hair color layer (z40) — fallback chain input, used in the review composite only (the bangs-mass exclusion is computed from the Master, not from this file) |
 | `eyes-neutral-fixed.png` | eyes: sclera + lash + catchlight (z4) — fallback chain input |
 | `eyes-neutral-iris.png` | eyes: iris (z4) — fallback chain input |
 
