@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — WP3 Face×5 Review Worksheet (G3-WP3)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Gate-3 work package **WP3 (face×5)**, ordered by owner command 2026-07-16.
@@ -90,19 +90,37 @@ the harness gates geometry/contract, not art quality.
 
 ## 6. Owner review checklist
 
-- [ ] `face-audit-overlay.png`: features sit inside the region boxes; eye boxes clean.
-- [ ] `composite-stack(-on-dark).png` + `stack-small-sizes.png`: the full stack reads
+- [x] `face-audit-overlay.png`: features sit inside the region boxes; eye boxes clean.
+- [x] `composite-stack(-on-dark).png` + `stack-small-sizes.png`: the full stack reads
       as the Master kid on both backgrounds and at 32 px.
-- [ ] `blush-analysis.png` reviewed → **decide the blush question (§3):** bounded
-      extraction follow-up ORDERED / blush left to the D-042 expression art.
-- [ ] Accept `face-neutral-v1.png` as the **Gate-3 face-neutral candidate (z3)**.
-- [ ] Acknowledge the expression-variant path: 4 files produced via D-042 masked
+- [x] `blush-analysis.png` reviewed → **blush decision: bounded extraction follow-up
+      ORDERED (2026-07-16)** — recorded in §7.
+- [x] Accept `face-neutral-v1.png` as the **Gate-3 face-neutral candidate (z3)**.
+- [x] Acknowledge the expression-variant path: 4 files produced via D-042 masked
       editing (art-producer scope, AI-assisted, outside this NON-AI chain), each
       gated by `validate-face-expression.mjs` + owner identity review.
 
 ## 7. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command
+(verbatim: "blush-ekstraktion bestilt").**
+
+**WP3's deterministic scope is CLEARED:**
+
+1. **`face-neutral-v1.png` is the accepted Gate-3 face-neutral candidate (z3).**
+2. **BLUSH EXTRACTION IS ORDERED** as the next bounded, review-only task
+   (G3-PL-B): deterministic extraction of the Master's symmetric under-eye blush
+   as a multiply component, with the measurement zones extended upward toward the
+   eye boxes (the §3 finding: the patches are clipped by the current zone tops).
+   Same rules as every Gate-3 task: NON-AI, interior-only measurement discipline
+   (D-049/D-052), hard guards, fail-loud, own worksheet + owner countersign.
+3. **The expression-variant path is acknowledged:** `curious, focused, determined,
+   proud` (+`happy, surprised`) are produced via D-042 masked editing by the art
+   producer, gated by `validate-face-expression.mjs` + owner identity review.
+   face×5 as a whole completes only when those files pass their gate.
+
+Acceptance does NOT promote anything (§8). Remaining Gate-3 queue after G3-PL-B:
+eyelid decision → integration composite — each on its own owner command.
 
 ## 8. Boundaries (binding)
 
