@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — Eyelid Decision Worksheet (G3-EYELID)
 
-Status: **⏳ PENDING OWNER DECISION.** Review-only; nothing promoted; no runtime change.
+Status: **✅ OWNER-COUNTERSIGNED: OPTION A CHOSEN (2026-07-16).** Review-only; nothing promoted; no runtime change.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** The eyelid/blink decision for the Gate-3 raster stack, ordered by owner
@@ -48,18 +48,32 @@ shots) make the fill-ring objectionable.
 
 ## 4. Owner decision checklist
 
-- [ ] `lid-closure-strip(.png/-on-dark)` + `lid-coverage-proof.png` reviewed.
-- [ ] **DECIDE: Option A (interim, re-positioned CSS-ellipse) / Option B (raster
-      eyelid via D-042).**
-- [ ] If A: adopt the measured wiring numbers (§2) — centres (66.7,60.3)/(90.6,60.3),
+- [x] `lid-closure-strip(.png/-on-dark)` + `lid-coverage-proof.png` reviewed.
+- [x] **DECIDED: Option A (interim, re-positioned CSS-ellipse).**
+- [x] The measured wiring numbers (§2) are adopted — centres (66.7,60.3)/(90.6,60.3),
       rx 8.91 / ry 9.06 @160, lid fill derived from the raster base per tone — as
       the binding parameters for the later, separately gated wiring step.
-- [ ] Acknowledge: no runtime change happens now; `avatar-blink-engine.js` is
+- [x] Acknowledged: no runtime change happens now; `avatar-blink-engine.js` is
       untouched until the wiring step is separately ordered.
 
 ## 5. Verdict
 
-**Owner verdict: PENDING · (fill in on decision).**
+**Owner verdict: OPTION A CHOSEN · Date: 2026-07-16 · countersigned via owner
+command (verbatim: "countersign eyelid-worksheetet — Option A valgt").**
+
+**The eyelid decision is CLOSED: the Gate-3 raster stack blinks with the interim
+CSS-ellipse lid, re-positioned to the North Star eye box.** Binding parameters for
+the later, separately gated wiring step (from §2, measured):
+
+- centres **(66.7, 60.3) / (90.6, 60.3)** @160-space (cut-guides eye-opening centres)
+- **rx 8.91 · ry 9.06** @160 (= the measured no-flash minimum, 57/58 px in Master space)
+- lid fill derived **from the raster base per skin tone** (medium ≈ `#FEC183`
+  measured), not the C2 gradient constants
+
+**Option B (raster eyelid, D-023/D-042) remains available later** as a refinement if
+full-closure stills make the fill-ring objectionable. No runtime change is made by
+this countersign; `avatar-blink-engine.js` stays untouched until the wiring step is
+separately ordered.
 
 ## 6. Boundaries (binding)
 
