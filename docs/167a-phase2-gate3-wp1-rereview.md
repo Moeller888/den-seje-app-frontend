@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — WP1 Re-Review of the Punch-Listed Hair Layer (G3-WP1-RR)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** The WP1 worksheet §5 (countersigned 2026-07-15) made the hair layer
@@ -56,28 +56,45 @@ fresh clone with three commands: `build-hair-clean.mjs` → `build-hair-pl1-gapf
 
 ## 4. Owner review checklist (includes the 2026-07-16 audit follow-ups)
 
-- [ ] `composite-color-on-dark.png` + `coverage-gap-check.png` reviewed (the two
+- [x] `composite-color-on-dark.png` + `coverage-gap-check.png` reviewed (the two
       artifacts the PL-1 checklist cited without display — now shown).
-- [ ] Onion skins: no drift against Master or D-057.
-- [ ] `tint-sheet-head.png`: all 8 tokens read as their names; blonde reads blonde.
-- [ ] **Explicit 32 px decision (audit follow-up):** the punch-list acceptance said
+- [x] Onion skins: no drift against Master or D-057.
+- [x] `tint-sheet-head.png`: all 8 tokens read as their names; blonde reads blonde.
+- [x] **Explicit 32 px decision (audit follow-up):** the punch-list acceptance said
       *"all 8 tokens visually distinct at 32/48/64 px"*. At 32 px the pairs
       black/dark_brown and red/auburn are readable but tight — this is a property of
-      the locked 155E palette, not of the map. Owner must EITHER accept this as
-      sufficient (recording that decision here) OR order further work (e.g. palette
-      spacing review) as a separate task.
-- [ ] **D-register decision (audit follow-up):** record the punch-list clearance +
-      this re-review as a D-xxx entry in `docs/project-state.md` (Gate-2 precedent
-      D-052/D-053), or confirm the Gate-3 practice that countersigned worksheets are
-      the decision record (WP1 precedent). Owner's call — either way the choice is
-      recorded in §5.
-- [ ] Accept `hair-pl1-color.png` + `hair-pl2-luminance.png` as the **Gate-3 hair
+      the locked 155E palette, not of the map. **Owner decision: ACCEPTED as
+      sufficient (2026-07-16)** — recorded in §5.
+- [x] **D-register decision (audit follow-up):** **Owner decision: WORKSHEET
+      PRACTICE CONFIRMED (2026-07-16)** — for the Gate-3 track, countersigned
+      worksheets (indexed in `docs/README.md`) are the decision record (WP1
+      precedent); no D-xxx entry is created for punch-list clearance or this
+      re-review. Recorded in §5.
+- [x] Accept `hair-pl1-color.png` + `hair-pl2-luminance.png` as the **Gate-3 hair
       layer candidate (z40)** — the WP1 conditional ("not final until re-reviewed")
       is thereby discharged.
 
 ## 5. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command.**
+
+**The WP1 conditional is DISCHARGED: `pl1/hair-pl1-color.png` +
+`pl2/hair-pl2-luminance.png` are the accepted Gate-3 hair layer candidate (z40).**
+
+Owner decisions recorded with this countersign (verbatim command: *"32 px accepteret,
+worksheets-praksis"*):
+
+1. **32 px legibility: ACCEPTED.** The tight-but-readable pairs black/dark_brown and
+   red/auburn at 32 px are accepted as a property of the locked 155E palette; no
+   palette-spacing work is ordered.
+2. **Decision-record practice for Gate 3: WORKSHEETS.** Countersigned worksheets
+   indexed in `docs/README.md` are the authoritative decision record for the Gate-3
+   track (WP1 precedent). `docs/project-state.md` remains the D-register for the
+   decisions it already holds (through D-058); no D-entry is created for PL-1/PL-2/this
+   re-review.
+
+Acceptance does NOT promote the layer (see §6). Next Gate-3 work package (eyes)
+requires its own owner command.
 
 ## 6. Boundaries (binding)
 
