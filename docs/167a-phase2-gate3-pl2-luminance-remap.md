@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — PL-2 Luminance Remap Worksheet (G3-PL2)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Punch-list item **PL-2** ordered by the owner countersign of the WP1 hair review
@@ -68,17 +68,24 @@ including a p50 outside the 190–215 corridor).
 
 ## 5. Owner review checklist
 
-- [ ] `blonde-before-after.png`: right side reads as blonde; strand shading preserved.
-- [ ] `tint-sheet-head.png`: all 8 tokens read as their names; none renders ~50 % dark.
-- [ ] `tint-tokens-small.png`: 8 tokens visually distinct at 64/48 px; 32 px readable
+- [x] `blonde-before-after.png`: right side reads as blonde; strand shading preserved.
+- [x] `tint-sheet-head.png`: all 8 tokens read as their names; none renders ~50 % dark.
+- [x] `tint-tokens-small.png`: 8 tokens visually distinct at 64/48 px; 32 px readable
       (tightest pairs: black/dark_brown, red/auburn).
-- [ ] Accept `hair-pl2-luminance.png` as the Gate-3 D-031 luminance-map candidate,
+- [x] Accept `hair-pl2-luminance.png` as the Gate-3 D-031 luminance-map candidate,
       clearing punch-list item PL-2 and unlocking the WP1 re-review of the full
       punch-listed hair layer.
 
 ## 6. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command.**
+
+**Punch-list status: PL-2 CLEARED — the WP1 punch-list (PL-1 + PL-2) is now fully
+cleared.** The punch-listed Gate-3 hair-layer candidate is **`pl1/hair-pl1-color.png`
+(silhouette/colour) + `pl2/hair-pl2-luminance.png` (D-031 runtime map candidate)**.
+Per the WP1 worksheet §5, the hair layer is still NOT final until this punch-listed
+layer passes the **WP1 re-review** — that re-review is the next bounded, review-only
+task and requires its own owner command.
 
 ## 7. Boundaries (binding)
 
