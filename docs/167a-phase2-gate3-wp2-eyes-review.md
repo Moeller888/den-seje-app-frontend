@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — WP2 Eyes Review Worksheet (G3-WP2)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Gate-3 work package **WP2 (eyes)**, ordered by owner command 2026-07-16.
@@ -75,20 +75,28 @@ decision** — this worksheet only demonstrates that the map tints cleanly.
 
 ## 6. Owner review checklist
 
-- [ ] `iris-before-after.png`: brown tint ≈ original Master eye (no fidelity loss).
-- [ ] `eyes-tint-sheet.png`: 6 preview colours all read as their names; pupil
+- [x] `iris-before-after.png`: brown tint ≈ original Master eye (no fidelity loss).
+- [x] `eyes-tint-sheet.png`: 6 preview colours all read as their names; pupil
       legible in each; catch-light uncoloured.
-- [ ] `anchor-check.png`: crosshairs sit on the iris disks.
-- [ ] `composite-full-look(-on-dark).png`: base + accepted hair + eyes reads
+- [x] `anchor-check.png`: crosshairs sit on the iris disks.
+- [x] `composite-full-look(-on-dark).png`: base + accepted hair + eyes reads
       correctly on both backgrounds.
-- [ ] Accept `eyes-iris-wp2-luminance.png` (+ unchanged `eyes-neutral-fixed.png`)
+- [x] Accept `eyes-iris-wp2-luminance.png` (+ unchanged `eyes-neutral-fixed.png`)
       as the **Gate-3 eyes layer candidate (z4 pair)**.
-- [ ] Note: the preview colour set is a proposal only; a runtime `EYE_COLOR` token
+- [x] Note: the preview colour set is a proposal only; a runtime `EYE_COLOR` token
       set is a separate decision (not ordered by this worksheet).
 
 ## 7. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command.**
+
+**WP2 is CLEARED: `wp2/eyes-iris-wp2-luminance.png` + the unchanged
+`eyes-neutral-fixed.png` are the accepted Gate-3 eyes layer candidate (z4 pair).**
+The spec clarification in §1 (pupil stays in the iris art per brief §4.4) is
+countersigned with it. The preview colour set remains a proposal — no runtime
+`EYE_COLOR` token set is ordered. Acceptance does NOT promote the layers (§8);
+the remaining WPs (face×5, eyelid decision, integration composite) each require
+their own owner command.
 
 ## 8. Boundaries (binding)
 
