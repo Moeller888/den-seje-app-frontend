@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — PL-1 Hairline Coverage-Gap Fix Worksheet (G3-PL1)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Punch-list item **PL-1** ordered by the owner countersign of the WP1 hair review
@@ -65,18 +65,24 @@ Tool verdict: **PASS** (the tool hard-fails and writes nothing on any guard brea
 
 ## 5. Owner review checklist
 
-- [ ] `hairline-before-after.png`: white show-through at hairline/temples is gone; the
+- [x] `hairline-before-after.png`: white show-through at hairline/temples is gone; the
       new edge reads as the Master's own strands (no smearing, no invented shapes).
-- [ ] `gap-fill-overlay.png`: green fill px sit only along the hairline/strand edges.
-- [ ] `coverage-gap-after.png`: no magenta anywhere (gap metric 0).
-- [ ] `review-d057-pl1-hair.png` / `-on-dark.png`: composite reads correctly on both
+- [x] `gap-fill-overlay.png`: green fill px sit only along the hairline/strand edges.
+- [x] `coverage-gap-after.png`: no magenta anywhere (gap metric 0).
+- [x] `review-d057-pl1-hair.png` / `-on-dark.png`: composite reads correctly on both
       backgrounds.
-- [ ] Accept `hair-pl1-color.png` + `hair-pl1-luminance.png` as the Gate-3 hair layer
+- [x] Accept `hair-pl1-color.png` + `hair-pl1-luminance.png` as the Gate-3 hair layer
       candidate going into PL-2.
 
 ## 6. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command.**
+
+**Punch-list status: PL-1 CLEARED.** The Gate-3 hair-layer candidate going into PL-2 is
+`pl1/hair-pl1-color.png` + `pl1/hair-pl1-luminance.png`; **PL-2 (luminance remap) takes
+`hair-pl1-luminance.png` as its input map** and remains its own bounded, review-only task.
+The hair layer is NOT final until PL-2 is cleared and the punch-listed layer is re-reviewed
+(WP1 worksheet §5).
 
 ## 7. Boundaries (binding)
 
