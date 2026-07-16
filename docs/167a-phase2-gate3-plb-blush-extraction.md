@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — G3-PL-B Blush Extraction Worksheet
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16).** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** Bounded task **G3-PL-B**, ordered by the WP3 countersign (2026-07-16,
@@ -56,18 +56,29 @@ describes.
 
 ## 5. Owner review checklist
 
-- [ ] `blush-zones-audit.png`: included px form two coherent cheek patches inside
+- [x] `blush-zones-audit.png`: included px form two coherent cheek patches inside
       the zones; nothing outside.
-- [ ] `blush-before-after.png`: the with-blush face reads like the Master (subtle,
+- [x] `blush-before-after.png`: the with-blush face reads like the Master (subtle,
       warm, symmetric — not painted-on).
-- [ ] `blush-tone-proof.png`: warms both medium and darkened skin without breakage.
-- [ ] `composite-stack-blush(-on-dark).png`: full stack + blush reads correctly.
-- [ ] Accept `face-blush-multiply-v1.png` as the **Gate-3 blush component candidate**
+- [x] `blush-tone-proof.png`: warms both medium and darkened skin without breakage.
+- [x] `composite-stack-blush(-on-dark).png`: full stack + blush reads correctly.
+- [x] Accept `face-blush-multiply-v1.png` as the **Gate-3 blush component candidate**
       (paired with the accepted face-neutral z3 candidate).
 
 ## 6. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command
+(verbatim: "blush-komponenten accepteret").**
+
+**G3-PL-B is CLEARED: `plb/face-blush-multiply-v1.png` is the accepted Gate-3
+blush component candidate**, paired with the accepted face-neutral z3 candidate.
+With this, WP3's §4.2 content gap (missing multiply blush) is closed on the
+deterministic side. Runtime wiring of the multiply element remains a later,
+separately gated code step (§4.3). Acceptance does NOT promote anything (§7).
+
+**Remaining Gate-3 queue:** eyelid decision → integration composite (each on its
+own owner command) · expression variants via the D-042 art-producer path, gated
+by `validate-face-expression.mjs`.
 
 ## 7. Boundaries (binding)
 
