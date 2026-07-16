@@ -1,6 +1,6 @@
 # 167A Phase-2 Gate 3 — Integration Composite Worksheet (G3-INTEGRATION)
 
-Status: **⏳ PENDING OWNER REVIEW.** Review-only; nothing promoted.
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-16) — DETERMINISTIC LAYER SET DECLARED COMPLETE.** Review-only; nothing promoted.
 Date: 2026-07-16. Producer: deterministic NON-AI tooling (no image generation).
 
 **Purpose.** The last deterministic Gate-3 item, ordered by owner command 2026-07-16:
@@ -64,22 +64,43 @@ closer to the Master (a later decision, NOT ordered here):
 
 ## 5. Owner review checklist
 
-- [ ] `master-vs-stacks.png` + `fidelity-heatmap.png`: identity path ≈ Master
+- [x] `master-vs-stacks.png` + `fidelity-heatmap.png`: identity path ≈ Master
       (p50 = 0); residuals are edges/scalp/blush-smoothstep, not drift.
-- [ ] §3 acknowledged: runtime default hair = token-brown (darker than Master) —
-      accepted for now as token-faithful; any change is a separate palette/band
-      decision (options a–d).
-- [ ] `hair-tint-matrix.png` / `iris-tint-matrix.png` / `stack-small-sizes.png`
-      reviewed.
-- [ ] **Declare the Gate-3 deterministic layer set COMPLETE** (base + blush + face
-      + eyes + hair, with the eyelid Option-A wiring numbers) — remaining Gate-3
-      work is the D-042 expression variants (art-producer path) and the separately
-      gated promotion/wiring steps (WebP encode, `assets/avatar-r2`, `R2_MANIFEST`,
-      engine re-position).
+- [x] §3 decided: **OPTION (a) CHOSEN** — runtime default hair = token-brown,
+      accepted as token-faithful to the shipped 155E identity model; options b–d
+      remain available as separate palette/band decisions.
+- [x] `hair-tint-matrix.png` / `iris-tint-matrix.png` / `stack-small-sizes.png`
+      reviewed (shown to the owner in-session 2026-07-16).
+- [x] **The Gate-3 deterministic layer set is DECLARED COMPLETE** — recorded in §6.
 
 ## 6. Verdict
 
-**Owner verdict: PENDING · (fill in on review).**
+**Owner verdict: PASS · Date: 2026-07-16 · countersigned via owner command
+(verbatim: "countersign integrationskompositten — option a valgt, lagsættet
+erklæres komplet").**
+
+**1. §3 decision: OPTION (a).** The runtime default hair renders as the locked
+155E `brown` token (darker than the Master's own hair) — accepted as
+token-faithful to the shipped identity model. Options b–d (new token, PL-2 band
+revisit, hybrid) remain available later as separate, explicitly ordered decisions.
+
+**2. THE GATE-3 DETERMINISTIC LAYER SET IS COMPLETE.** The owner-countersigned
+candidate set is:
+
+| z | Layer | File (gitignored candidate; regenerable via the tool chain) |
+|---|---|---|
+| 0 | base | `assets/avatar/reference/neutral-base-v1-gate2-d053.png` (tracked, D-057) |
+| 2 | blush | `plb/face-blush-multiply-v1.png` (multiply component) |
+| 3 | face | `face-neutral-v1.png` |
+| 4 | eyes | `wp2/eyes-iris-wp2-luminance.png` (× token) + `eyes-neutral-fixed.png` |
+| 40 | hair | `pl1/hair-pl1-color.png` (identity ref) · `pl2/hair-pl2-luminance.png` (× token, runtime) |
+| blink | eyelid | Option A parameters (eyelid worksheet, countersigned #85) — no asset |
+
+**What "complete" does NOT mean:** no promotion (WebP encode, `assets/avatar-r2`,
+`R2_MANIFEST` remain untouched), no runtime wiring (blink re-position included),
+`AVATAR_R2` stays `false`, and the D-042 expression variants remain unproduced
+(art-producer path, blocked on the separate external-image-API owner decision).
+Each of those is its own explicitly gated step.
 
 ## 7. Boundaries (binding)
 
