@@ -493,6 +493,21 @@ export function isR2Phase1SafeSlot(slot) {
   return R2_PHASE1_SAFE_SLOTS.indexOf(slot) !== -1;
 }
 
+// Shop-preview render decision (R2 shop-preview blocker fix). The preview's whole
+// purpose is to SHOW the item, so:
+//   "r2": R2 is actually active for the identity-independent preview (null
+//         identity = neutral × medium defaults) AND the item's slot passes the
+//         Phase-1 slot-gate (aura/back) → the R2 stack renders WITH the item.
+//   "c2": everything else — flag off, incomplete stack, or a non-R2-safe slot
+//         (hat/face/eyes/clothing…). The caller must then force the WHOLE C2
+//         preview (mountC2Avatar forceC2) so the item stays visible on its
+//         proven C2 anchors. Never an R2 avatar without the item, never a
+//         mixed half stack. Follows the ACTUALLY active render path, not the
+//         raw flag.
+export function shopPreviewModeFor(slot) {
+  return isAvatarR2ActiveFor(null) && isR2Phase1SafeSlot(slot) ? "r2" : "c2";
+}
+
 // Whether a full Phase-2 raster stack (base + hair) is available. True for the supported
 // neutral identity since the 2026-07-18 manifest registration, but NOT consumed by any
 // render path yet — the Phase-2 stack switch (PR C) is the separately gated wiring step.

@@ -107,14 +107,18 @@ function r2TintSupported() {
 // "avatar-layer", hub "profile-avatar-layer", app.js "quiz-avatar-layer", shop
 // "preview-layer") so positioning matches that surface. The data-c2-layer markers
 // are used for cleanup/detection regardless of class.
-export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [] } = {}) {
+// forceC2: explicit renderer override — the caller demands the WHOLE C2/SVG path
+// even when the R2 stack would be active (shop preview fix: a non-R2-safe item
+// must render complete-C2 so the item stays visible on its proven C2 anchors,
+// never an R2 avatar without the item). Default false → behaviour unchanged.
+export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [], forceC2 = false } = {}) {
   if (!rootEl) return rootEl;
 
   // 167A Phase-2 (PR C): use the decomposed raster stack ONLY when AVATAR_R2 is on AND
   // the COMPLETE stack resolves for this identity (U2: neutral × medium only); any
   // missing piece → composeR2Layers returns null → the existing C2/SVG path
-  // (byte-for-byte). Default off → C2.
-  const r2Layers = isAvatarR2() ? composeR2Layers(identity, cosmetics) : null;
+  // (byte-for-byte). Default off → C2. forceC2 → always the C2 path.
+  const r2Layers = (!forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
   const layers = r2Layers || composeC2Layers(identity, cosmetics);
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
