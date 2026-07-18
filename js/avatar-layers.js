@@ -341,8 +341,10 @@ export const R2_SERVED = { width: 512, height: 768 };
 // Only body_type "neutral" × skin_tone "medium" is supported by the raster set (U2);
 // every other identity stays on the C2/SVG path by resolver-null fallback.
 export const R2_MANIFEST = {
-  version:  2,
-  base:     { "neutral-medium": { v: 1, ext: "png" } }, // Phase-1 baked preview PNG (v2 WebP = PR C)
+  version:  3,
+  base:     { "neutral-medium": 2 }, // body-neutral-medium-v2.webp — the DECOMPOSED D-057 base (no
+                                     // face/eyes/hair). The Phase-1 baked v1 PNG stays on disk as the
+                                     // historical/rollback asset but is no longer referenced (D-018).
   face:     { "neutral": 1 },     // face/face-neutral-v1.webp (z3)
   blush:    { "multiply": 1 },    // face/face-blush-multiply-v1.webp (z2, mix-blend multiply)
   eyesIris: { "neutral": 1 },     // eyes/eyes-neutral-iris-v1.webp (z4, multiply × iris token)
@@ -415,13 +417,50 @@ export function hasR2BaseFor(identity) {
   return !!baseSrcForR2(identity);
 }
 
-// Whether the raster Phase-1 baked base is the ACTIVE render for this identity
-// (AVATAR_R2 on AND a raster base exists). Phase-1 guard: expression + blink overlays
-// are SKIPPED when this is true (the face is baked into the base), so they never render
-// on top of the baked face. Presence/breathing stays on; the C2/SVG path (this = false)
+// ── Phase-2 decomposed neutral stack (PR C) ───────────────────────────────────
+// Binding z-order and blend modes per the countersigned integration composite
+// (docs/167a-phase2-gate3-integration-composite.md §6): base 0 · blush 2 (multiply)
+// · face 3 · eyes 4 (iris multiply × token, fixed on top) · hair 40 (multiply × token).
+export const R2_STACK_Z = { base: 0, blush: 2, face: 3, eyes: 4, hair: 40 };
+
+// U1 (countersigned promotion worksheet §4): the measured Master-brown default iris
+// token — the ONLY iris tint in the neutral MVP. NOT a user-selectable EYE_COLOR
+// system and NOT a persisted identity field; adopting one is a separate owner decision.
+export const R2_IRIS_DEFAULT = "#A34A0F";
+
+// Resolves the COMPLETE decomposed neutral stack for an identity, or null if any
+// mandatory piece is missing — the render must never show a partial stack (whole
+// stack or C2 fallback). U2: only the exact manifest key `neutral-medium` resolves
+// (explicit male/female/dark identities miss the manifest and fall back to C2);
+// absent/invalid fields default to neutral/medium, mirroring the C2 defaults.
+export function r2StackSrcsFor(identity) {
+  const base  = baseSrcForR2(identity);
+  const blush = blushSrcForR2();
+  const face  = faceSrcForR2("neutral");
+  const eyes  = eyesSrcForR2("neutral");
+  const hair  = hairSrcForR2(identity);
+  if (!base || !blush || !face || !eyes || !eyes.iris || !eyes.fixed || !hair) return null;
+  return { base, blush, face, eyesIris: eyes.iris, eyesFixed: eyes.fixed, hair };
+}
+
+// Whether the raster stack is the ACTIVE render for this identity (AVATAR_R2 on AND
+// the complete decomposed stack resolves). Engine gate anchor: the face is the raster
+// face layer, so SVG overlays must not render on top. The C2/SVG path (this = false)
 // is unchanged. Default AVATAR_R2 false → always false in production.
 export function isAvatarR2ActiveFor(identity) {
-  return isAvatarR2() && hasR2BaseFor(identity);
+  return isAvatarR2() && !!r2StackSrcsFor(identity);
+}
+
+// Granular engine gate (PR C). Split so PR D can allow blink on the R2 stack
+// (re-positioned Option-A lid) WITHOUT touching the expression decision:
+//   - expression overlay: OFF on R2 (the neutral raster face is in the stack;
+//     raster expression swaps are the future D-042 track), ON on C2 (unchanged).
+//   - blink: OFF on R2 until PR D wires the countersigned geometry, ON on C2.
+export function r2ExpressionOverlayAllowedFor(identity) {
+  return !isAvatarR2ActiveFor(identity);
+}
+export function r2BlinkAllowedFor(identity) {
+  return !isAvatarR2ActiveFor(identity); // PR D: allow on R2 with re-positioned lid
 }
 
 // 167A Phase-1 cosmetic slot-gate. On the raster baked base, only cosmetics that render

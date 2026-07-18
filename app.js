@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2, isAvatarR2ActiveFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2, r2ExpressionOverlayAllowedFor, r2BlinkAllowedFor } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -1217,10 +1217,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const { data } = await supabase.from("profiles").select("avatar_identity").eq("id", studentId).maybeSingle();
       quizIdentity = data?.avatar_identity ?? null;
     } catch (e) { /* non-fatal */ }
-    const r2Active = isAvatarR2ActiveFor(quizIdentity);
+    // Granular R2 engine gate (PR C): expression overlay stays OFF on the raster
+    // stack (the neutral raster face is in the stack); blink stays OFF until PR D
+    // wires the re-positioned lid. Both stay ON on the C2 path (unchanged).
     try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
-    if (!r2Active) {
+    if (r2ExpressionOverlayAllowedFor(quizIdentity)) {
       try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
+    }
+    if (r2BlinkAllowedFor(quizIdentity)) {
       try { blinkEngine = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
     }
     // First-load render-complete signal: fetchAvatar() (awaited above) painted the
