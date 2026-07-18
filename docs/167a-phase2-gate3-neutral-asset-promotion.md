@@ -1,7 +1,7 @@
 # 167A Phase-2 Gate 3 — Neutral Asset Promotion Worksheet (PR A)
 
-Status: **⏳ PENDING OWNER REVIEW.** Date: 2026-07-18. Producer: deterministic NON-AI tooling
-(chain regeneration + vendored WebP encode). Ordered by owner command 2026-07-18
+Status: **✅ OWNER-COUNTERSIGNED: PASS (2026-07-18).** Date: 2026-07-18. Producer: deterministic
+NON-AI tooling (chain regeneration + vendored WebP encode). Ordered by owner command 2026-07-18
 ("Udfør PR A: deterministisk regenerering, verifikation, WebP-encode og promotion").
 
 **What this promotion IS:** the six owner-countersigned neutral Gate-3 layers (integration
@@ -127,14 +127,22 @@ owner commands.
 
 ## 6. Owner review checklist
 
-- [ ] §1 chain regeneration: all guards green; 6/6 byte-identical to countersigned candidates.
-- [ ] §3 hash table: source and WebP SHA-256 values accepted.
-- [ ] §3 budget: 39.4 KB total accepted (≤ 350 KB, per-layer ≤ 50 KB).
-- [ ] §4 U1: `#A34A0F` registered as the measured Master-brown default iris (wiring-time value).
-- [ ] §4 U2: only `neutral` × `medium` supported; everything else → C2 fail-soft at wiring.
-- [ ] §4 U4: blush name accepted; §C naming row to be added in PR B.
-- [ ] Verdict: PASS / FAIL.
+- [x] §1 chain regeneration: all guards green; 6/6 byte-identical to countersigned candidates.
+- [x] §3 hash table: source and WebP SHA-256 values accepted.
+- [x] §3 budget: 39.4 KB total accepted (≤ 350 KB, per-layer ≤ 50 KB).
+- [x] §4 U1: `#A34A0F` registered as the measured Master-brown default iris (wiring-time value).
+- [x] §4 U2: only `neutral` × `medium` supported; everything else → C2 fail-soft at wiring.
+- [x] §4 U4: blush name accepted; §C naming row to be added in PR B.
+- [x] Verdict: PASS.
 
 ## 7. Verdict
 
-**Owner verdict: PENDING.**
+**Owner verdict: PASS · Date: 2026-07-18 · countersigned via owner command (verbatim:
+"Countersign promotion-worksheetet: PASS — udfør derefter PR B").**
+
+The six neutral WebP production assets (§3), the U1 measured Master-brown default iris
+(`#A34A0F`), the U2 identity restriction (`neutral` × `medium` only, all else C2 fail-soft
+at wiring) and the U4 blush name are accepted as promoted. The countersign changes nothing
+at runtime: `R2_MANIFEST` registration is the next gated step (**PR B, ordered by the same
+owner command**), render wiring is PR C — each with its own green-CI merge gate.
+`AVATAR_R2` stays `false`; expressions remain unproduced (D-042 path unchanged).
