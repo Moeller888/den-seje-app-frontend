@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, C2_BASE_Z, isAvatarR2, baseSrcForR2, hasR2BaseFor, isR2Phase1SafeSlot } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2Phase1SafeSlot } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
@@ -57,19 +57,44 @@ export function composeC2Layers(identity, cosmetics = []) {
   return [base, ...cos, hair];
 }
 
-// 167A step 3a (Phase-1, D-040 "Master-as-is"): raster layer descriptors — the baked
-// base <img> (z0) + equipped cosmetics. NO hair layer: face/eyes/hair/outfit are baked
-// into the Phase-1 base. Same descriptor shape as composeC2Layers, so mountC2Avatar's
-// existing loop renders it unchanged (base + cosmetics as <img>).
+// 167A Phase-2 (PR C): the DECOMPOSED neutral raster stack. Returns the ordered
+// descriptor list, or **null when the complete stack does not resolve** — the caller
+// must then fall back to the C2/SVG path (never a partial raster avatar).
+// Binding order/blend (integration composite §6): base z0 (normal) · blush z2
+// (mix-blend multiply, tone-agnostic) · face z3 (normal) · iris z4 (luminance map
+// × R2_IRIS_DEFAULT) · eyes-fixed z4 (normal, ON TOP of the iris — same z, so DOM
+// order decides: iris is emitted first, deliberately) · cosmetics (Phase-1 safe
+// slots only) · hair z40 (luminance map × the identity's hair token).
 export function composeR2Layers(identity, cosmetics = []) {
-  const base = { src: baseSrcForR2(identity), z: C2_BASE_Z, isBase: true, inline: false };
-  // 167A Phase-1 slot-gate: only anchor-independent, behind-figure cosmetics (aura/back)
-  // render on the baked base. Head/face/eye + clothing items misalign on the legacy
-  // anchors / clash with the baked outfit → gated until Phase-2. Raster path only.
+  const s = r2StackSrcsFor(identity);
+  if (!s) return null;                                // incomplete stack → C2 fallback
+  // Phase-1 cosmetic slot-gate unchanged: only anchor-independent, behind-figure
+  // cosmetics (aura/back) render on the raster stack until the anchor revision.
   const cos = (Array.isArray(cosmetics) ? cosmetics : [])
     .filter((c) => c && c.src && typeof c.z === "number" && isR2Phase1SafeSlot(c.slot))
     .map((c) => ({ src: c.src, z: c.z, isBase: false, inline: false }));
-  return [base, ...cos];
+  return [
+    { src: s.base,      z: R2_STACK_Z.base,  isBase: true,  inline: false },
+    { src: s.blush,     z: R2_STACK_Z.blush, isBase: false, inline: false, blend: "multiply", marker: "blush" },
+    { src: s.face,      z: R2_STACK_Z.face,  isBase: false, inline: false, marker: "face" },
+    { src: s.eyesIris,  z: R2_STACK_Z.eyes,  isBase: false, inline: false, tint: "iris", marker: "iris" },
+    { src: s.eyesFixed, z: R2_STACK_Z.eyes,  isBase: false, inline: false, marker: "eyes" },
+    ...cos,
+    { src: s.hair,      z: R2_STACK_Z.hair,  isBase: false, inline: false, tint: "hair", marker: "hair-r2" },
+  ];
+}
+
+// Feature-detect the tint mechanism (plan §6): CSS mask (confines the token fill to
+// the map's alpha) + mix-blend multiply (modulates it by the map's luminance). When
+// unsupported, the caller renders the untinted map instead — never fails the render.
+function r2TintSupported() {
+  try {
+    return typeof CSS !== "undefined" && typeof CSS.supports === "function" &&
+      CSS.supports("mix-blend-mode", "multiply") &&
+      (CSS.supports("mask-image", 'url("x")') || CSS.supports("-webkit-mask-image", 'url("x")'));
+  } catch (_e) {
+    return false;
+  }
 }
 
 // The single C2 render path. Mounts base (<img>) + hair (inline <svg>, token-
@@ -85,10 +110,12 @@ export function composeR2Layers(identity, cosmetics = []) {
 export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [] } = {}) {
   if (!rootEl) return rootEl;
 
-  // 167A step 3a: use the raster base ONLY when AVATAR_R2 is on AND a Phase-1 base exists
-  // for this identity; otherwise the existing C2/SVG path (byte-for-byte). Default off → C2.
-  const useR2 = isAvatarR2() && hasR2BaseFor(identity);
-  const layers = useR2 ? composeR2Layers(identity, cosmetics) : composeC2Layers(identity, cosmetics);
+  // 167A Phase-2 (PR C): use the decomposed raster stack ONLY when AVATAR_R2 is on AND
+  // the COMPLETE stack resolves for this identity (U2: neutral × medium only); any
+  // missing piece → composeR2Layers returns null → the existing C2/SVG path
+  // (byte-for-byte). Default off → C2.
+  const r2Layers = isAvatarR2() ? composeR2Layers(identity, cosmetics) : null;
+  const layers = r2Layers || composeC2Layers(identity, cosmetics);
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 
@@ -97,6 +124,13 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   // (see markAvatarRendered); it is re-set once the full composite has decoded.
   rootEl.querySelectorAll("[data-c2-layer]").forEach((n) => n.remove());
   rootEl.removeAttribute("data-avatar-rendered");
+
+  // R2 only: scope the stack's mix-blend layers (blush/tints) to the avatar composite
+  // so they can never blend with the page behind it. Visually inert on its own, and
+  // the C2 branch is untouched (no style write on the C2 path).
+  if (r2Layers) rootEl.style.isolation = "isolate";
+
+  const tintOk = r2TintSupported();
 
   for (const layer of layers) {
     if (layer.inline) {
@@ -114,15 +148,44 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       } catch (_e) {
         // Fail-soft: skip hair, keep the base. Never throw out of render.
       }
+    } else if (layer.tint && tintOk) {
+      // Phase-2 tinted luminance layer (plan §6): wrapper masked to the map's alpha,
+      // background = the tint token, inner <img> (the map) multiplies over it →
+      // rendered = map luminance × token, confined to the map's silhouette.
+      // Tokens: hair → the identity's existing --hair-base token (155E model,
+      // token-faithful default per the integration countersign §3 option a);
+      // iris → R2_IRIS_DEFAULT (U1 measured Master-brown; no EYE_COLOR system).
+      const src = cdnUrl(layer.src);
+      const tintColor = layer.tint === "hair" ? tokens.base : R2_IRIS_DEFAULT;
+      const wrap = document.createElement("div");
+      wrap.setAttribute("data-c2-layer", layer.marker || "tint");
+      wrap.className = cls("tint");
+      wrap.style.zIndex = String(layer.z);
+      wrap.style.setProperty("--hair-base", tokens.base);
+      wrap.style.backgroundColor = tintColor;
+      wrap.style.webkitMaskImage = 'url("' + src + '")';
+      wrap.style.webkitMaskSize = "100% 100%";
+      wrap.style.webkitMaskRepeat = "no-repeat";
+      wrap.style.maskImage = 'url("' + src + '")';
+      wrap.style.maskSize = "100% 100%";
+      wrap.style.maskRepeat = "no-repeat";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      img.style.cssText = "display:block;width:100%;height:100%;mix-blend-mode:multiply;";
+      wrap.appendChild(img);
+      rootEl.appendChild(wrap);
     } else {
       const img = document.createElement("img");
-      img.setAttribute("data-c2-layer", layer.isBase ? "base" : "cosmetic");
+      img.setAttribute("data-c2-layer", layer.marker || (layer.isBase ? "base" : "cosmetic"));
       img.className = cls("base");
       // 157G: optional Cloudinary delivery for RASTER layers. Default-off + raster-only
-      // → returns layer.src unchanged today (all current layers are SVG). Fail-soft.
+      // → returns layer.src unchanged today. Fail-soft. A tint layer without tint
+      // support lands here too → renders the untinted map (plan §6 fallback).
       img.src = cdnUrl(layer.src);
       img.alt = "";
       img.style.zIndex = String(layer.z);
+      if (layer.blend) img.style.mixBlendMode = layer.blend;   // blush: multiply
       rootEl.appendChild(img);
     }
   }
