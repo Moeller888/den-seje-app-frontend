@@ -44,8 +44,13 @@ art layer behind them can be upgraded without a rewrite.
   (sha `2CB93EE0…`); final 164B.3 = **PASS with an owner-accepted inherited §7 alpha/matte exception**
   (a ~1 px white-matte fringe remains, accepted as D-042/D-043 technical debt — **accepted, not fixed**).
   **This changes nothing at runtime:** the candidate is still **gitignored, not promoted**; `assets/avatar-r2`
-  and `R2_MANIFEST` are untouched; **`AVATAR_R2` stays `false`**; **Gate 3 stays PAUSED**. Gates 3 and 5
-  remain open. See `project-state.md` **D-047 … D-056**.
+  and `R2_MANIFEST` are untouched; **`AVATAR_R2` stays `false`**. **Gate 3 has since STARTED on explicit
+  owner command (2026-07-15, WP0 PR #69), and its deterministic layer set is COMPLETE and
+  owner-countersigned (integration composite PASS, PR #86/#87)** — accepted candidates: hair z40, eyes z4,
+  face z3 (neutral) + blush; decision record = the owner-countersigned Gate-3 worksheets (register
+  unchanged through D-058). **Remaining Gate-3 scope: the four D-042 expression variants** (producer tool
+  merged PR #88, never run; running it requires a separate owner decision on external image API: vendor +
+  Master upload + budget). Nothing promoted. Gate 5 remains open. See `project-state.md` **D-047 … D-058**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
@@ -190,7 +195,8 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     (bald scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a
     deterministic **(+25 x, +285 y)** translation (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical) but is
     **not passed** (needs (+25,+285) registration + feet-completion + outfit neutralization + a fresh
-    164B.3). **Gate 3 is PAUSED**; the hair/eyes/face **tooling** stays useful but its outputs are **not
+    164B.3). **Gate 3 is PAUSED** _(at the time — since started 2026-07-15, see §2 status)_; the
+    hair/eyes/face **tooling** stays useful but its outputs are **not
     approved layers** against the corrected base-layer path. Phase-2 runtime code may pass gates 1 + 4 only; **`AVATAR_R2` stays `false`**;
     nothing promoted. Decision: [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md);
     register: `project-state.md` (D-043). **Next step = Gate 2A DEFINED / PLANNED (2026-07-06):** narrow
@@ -216,22 +222,23 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     protect**, so clearing it would break protect-diff = 0. It is **accepted as technical debt** and may only
     be revisited via a separate owner-approved alpha/protect decision. **Closing Gate 2 is NOT promotion:** the
     candidate stays in the **gitignored review area**; **no `assets/avatar-r2` write, no `R2_MANIFEST` change,
-    `AVATAR_R2` stays `false`, Gate 3 stays PAUSED** until an explicit owner command starts it. Register:
-    `project-state.md` (**D-047 … D-056**).
+    `AVATAR_R2` stays `false`, Gate 3 stayed PAUSED** _(at the time — the explicit owner start command has
+    since been given, 2026-07-15, WP0 PR #69)_. Register: `project-state.md` (**D-047 … D-056**).
   - **📌 TRACKED SOURCE ASSET (D-057, 2026-07-14) — SOURCE-ONLY, NOT RUNTIME ACTIVE.** The Gate-2 base is now
     preserved as a durable, tracked source at **`assets/avatar/reference/neutral-base-v1-gate2-d053.png`**.
     **Integrity lock — SHA-256 `2CB93EE00BE89D16D1B1E9CAE9781B596F931A52FD6F667238C9E9BDA38AFE4B`**
     (1024×1536, alpha preserved, 331,506 bytes; **byte-identical copy**). The gitignored review file is still
     kept, but **this tracked file is now the durable source copy**. **NOT promoted to `assets/avatar-r2` ·
-    `R2_MANIFEST` unchanged · `AVATAR_R2` stays `false` · Gate 3 stays PAUSED / NOT STARTED ·
-    `Northstar Master.png` remains the canonical datum (D-032).**
+    `R2_MANIFEST` unchanged · `AVATAR_R2` stays `false` · Gate 3 stayed PAUSED / NOT STARTED _(at the
+    time — since started 2026-07-15)_ · `Northstar Master.png` remains the canonical datum (D-032).**
   - **📌 TRACKED PROTECT CONTRACT (D-058, 2026-07-14) — SOURCE-ONLY, NOT RUNTIME ACTIVE.** The active
     Gate-2 protect-mask is now also preserved as a tracked source-only contract at
     **`assets/avatar/reference/gate2-protect-mask-v2.1.png`** — **SHA-256
     `302324B7B9C0ACB124C982294D1B85FEB9EDBF467AAAD0F0A52B2C7E96F692F5`**, **byte-identical** to the
     owner-approved D-049 `protect-mask-v2.1` (the gitignored original is preserved untouched). **No
     change to the mask's geometry or semantics** — not a new mask version, no new writable regions.
-    **Source-only, not runtime. Gate 3 stays PAUSED / NOT STARTED · `AVATAR_R2` stays `false`.**
+    **Source-only, not runtime. Gate 3 stayed PAUSED / NOT STARTED _(at the time — since started
+    2026-07-15)_ · `AVATAR_R2` stays `false`.**
 
 ## 10. Performance considerations
 

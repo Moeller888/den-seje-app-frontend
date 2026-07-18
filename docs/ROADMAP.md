@@ -21,8 +21,11 @@ _Last reviewed: 2026-07-01._
   **✅ Gate 2 (neutral base layer) CLOSED (2026-07-14, D-056)** — owner-approved candidate
   `d042-outfit-candidate-d053-arm-residue.png` (sha `2CB93EE0…`); final 164B.3 = **PASS with an
   owner-accepted inherited §7 alpha/matte exception**. **Not a promotion:** the candidate is still
-  gitignored; **`assets/avatar-r2` / `R2_MANIFEST` untouched, `AVATAR_R2` stays `false`, Gate 3 stays
-  PAUSED.** Gates 3 and 5 remain open.
+  gitignored; **`assets/avatar-r2` / `R2_MANIFEST` untouched, `AVATAR_R2` stays `false`.**
+  **Gate 3 has since STARTED on explicit owner command (2026-07-15, WP0 PR #69), and its deterministic
+  layer set is COMPLETE and owner-countersigned (integration composite PASS, PR #86/#87)** — remaining
+  Gate-3 scope is the four D-042 expression variants (producer tool merged PR #88, never run). Nothing
+  promoted. Gate 5 remains open.
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
@@ -212,7 +215,8 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    scalp, ears, head→neck→collar, no bust-plate, blank face) and registers to the Master by a deterministic
    translation **(+25 x, +285 y)** (body IoU ≈ 0.9921; ≈ 84.3 % pixels identical). It is **NOT passed:**
    needs (+25,+285) registration, feet-completion from the Master if needed, outfit neutralization (still
-   non-neutral), and a fresh 164B.3 review. **Gate 3 PAUSED** (hair/eyes/face **tooling** stays useful, but
+   non-neutral), and a fresh 164B.3 review. **Gate 3 PAUSED** _(at the time — since started 2026-07-15,
+   see the Gate-3 status entry below)_ (hair/eyes/face **tooling** stays useful, but
    its **outputs are not approved layers** against the corrected base-layer path); Gate 5 open. **NOT promoted; no
    `assets/avatar-r2/`; no `R2_MANIFEST`; `AVATAR_R2` `false`;** Phase-2 not started. Decision:
    [167a-phase2-base-recovery-decision.md](./167a-phase2-base-recovery-decision.md).
@@ -232,11 +236,19 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
    the section that had blocked since D-045). **§7 is accepted, NOT fixed:** a global ~1 px white-matte fringe
    (**2,011 px**, of which **1,557 sit inside protect**) is inherited from the D-042/D-043 pipeline and is
    recorded as technical debt. **Closing Gate 2 is NOT promotion:** candidate stays gitignored; **no
-   `assets/avatar-r2` write; no `R2_MANIFEST` change; `AVATAR_R2` stays `false`; Gate 3 stays PAUSED**;
-   Gate 5 open. Register: `project-state.md` (**D-047 … D-056**).
-   **▶ GATE 3 — CURRENT STATUS: PAUSED / NOT STARTED.** **Gate 3 may only start on an explicit owner
-   command.** **Closing Gate 2 does NOT automatically start Gate 3.** **D-053 remains gitignored and
-   unpromoted**, and **`AVATAR_R2` remains `false`**, until promotion is separately authorised.
+   `assets/avatar-r2` write; no `R2_MANIFEST` change; `AVATAR_R2` stays `false`; Gate 3 stayed PAUSED
+   _(at the time)_**; Gate 5 open. Register: `project-state.md` (**D-047 … D-056**).
+   **▶ GATE 3 — CURRENT STATUS: STARTED (2026-07-15, explicit owner command, WP0 PR #69) —
+   DETERMINISTIC LAYER SET COMPLETE & OWNER-COUNTERSIGNED (integration composite PASS, PR #86/#87).**
+   Accepted Gate-3 candidates (gitignored build outputs, regenerable from the tracked D-057/D-058
+   sources): hair z40 (`pl1/hair-pl1-color.png` + `pl2/hair-pl2-luminance.png`), eyes z4
+   (`wp2/eyes-iris-wp2-luminance.png` + `eyes-neutral-fixed.png`), face z3 (neutral) + blush component.
+   Decision record = the owner-countersigned Gate-3 worksheets (no new D-entries; register unchanged
+   through D-058). **Remaining Gate-3 scope: the four D-042 expression variants** — producer tool
+   `tools/avatar/build-face-expr-d042.mjs` is merged (PR #88) but has NEVER run; running it requires a
+   separate owner decision (external image API: vendor + Master upload + budget). **D-053 remains
+   gitignored and unpromoted**, and **`AVATAR_R2` remains `false`**, until promotion is separately
+   authorised.
 4. Visual-fidelity QA (32/48/64px legibility + human onion-skin sign-off) — **✅ done (Phase-1 PASS).**
 5. Test/golden re-baseline from the Master render.
 6. Production verification + sign-off.
