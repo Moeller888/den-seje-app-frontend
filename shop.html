@@ -431,7 +431,7 @@ import { emit }       from "./js/events.js";
 import { initBadges, addBadge, hasBadge } from "./js/newBadges.js";
 import { loadTheme }  from "./js/themeManager.js";
 import {
-  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2,
+  baseLayersFor, SLOT_Z, RARITY_COLORS, RARITY_LABELS, RARITY_SORT_ORDER, SHOP_CATEGORIES, isAvatarV2, shopPreviewModeFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 
@@ -478,17 +478,27 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
     // governs compositing regardless of append order).
     if (isAvatarV2()) {
       // Section 159B: previewed item rendered via the shared C2 cosmetic pipeline.
-      // Section 159D: the C2 base is faceless (the Expression layer owns the face)
-      // and the shop preview has no expression engine, so add a STATIC neutral
-      // expression (z=3, below hair/cosmetics) to restore face parity with legacy.
+      // R2 shop-preview fix: the preview's purpose is to SHOW the item. Only when
+      // R2 is actually active AND the item's slot is Phase-1 R2-safe (aura/back)
+      // does the R2 stack render (it passes the slot-gate, so the item shows).
+      // Every other case forces the WHOLE C2 preview (forceC2) so the item stays
+      // visible on its proven C2 anchors — never an R2 avatar without the item.
+      const previewMode = shopPreviewModeFor(slotType);
       const cosmetics = c2CosmeticLayers({ [slotType]: imageUrl }, (id) => id);
-      mountC2Avatar(wrap, null, { layerClass: "preview-layer", cosmetics }).then(() => {
-        const expr = document.createElement("img");
-        expr.className = "preview-layer";
-        expr.src = "/assets/avatar/expressions/expr-neutral.svg";
-        expr.style.zIndex = "3";
-        expr.alt = "";
-        wrap.appendChild(expr);
+      mountC2Avatar(wrap, null, { layerClass: "preview-layer", cosmetics, forceC2: previewMode !== "r2" }).then(() => {
+        // Section 159D: the C2 base is faceless (the Expression layer owns the
+        // face) and the shop preview has no expression engine, so the C2 preview
+        // adds a STATIC neutral expression (z=3, below hair/cosmetics) for face
+        // parity with legacy. The R2 stack has its OWN raster face layer — the
+        // static overlay would double-draw the face there, so C2 only.
+        if (previewMode !== "r2") {
+          const expr = document.createElement("img");
+          expr.className = "preview-layer";
+          expr.src = "/assets/avatar/expressions/expr-neutral.svg";
+          expr.style.zIndex = "3";
+          expr.alt = "";
+          wrap.appendChild(expr);
+        }
         markAvatarRendered(wrap);
       });
     } else {
