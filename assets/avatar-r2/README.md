@@ -14,12 +14,16 @@ deterministic alpha-cut of the Master (`tools/avatar/extract-master-base.mjs`) �
 needed to ship it. To switch to WebP later: encode `…-v2.webp`, drop it here, and change the manifest
 entry to `{ v: 2, ext: "webp" }` (new version — never mutate a shipped asset, D-018).
 
-**WebP swap DEFERRED (2026-07-01).** No WebP encoder is available in the environment (no
-cwebp / ffmpeg / ImageMagick / sharp), and adding a dependency (or hand-rolling an encoder) was
-declined to avoid new deps. Decision:
-- **The PNG (`…-v1.png`, ~244 KB — within the <350 KB budget) is the current Phase-1 runtime asset.**
-- **WebP remains the future production target** (D-013).
-- **The WebP swap is deferred until a proper encoder is available.**
+**WebP encoder AVAILABLE (2026-07-18; supersedes the 2026-07-01 "no encoder" deferral).**
+The repo has a **vendored libwebp `cwebp.exe` 1.5.0** (`tools/avatar/vendor/`, gitignored,
+reproducibly fetched by `node tools/avatar/fetch-cwebp.mjs`) plus the deterministic wrapper
+`tools/avatar/encode-webp.mjs` (q90 / alpha_q100 / -m6 / -metadata none, `--half` → 512×768).
+**No external npm/system dependency was added.** Status:
+- **The Phase-1 PNG (`…-v1.png`, ~244 KB) is still the manifest-registered runtime base** —
+  swapping it remains a separate, gated wiring step (D-018: new version, never mutate).
+- The **Phase-2 neutral layer set is encoded and promoted as tracked WebP files** (see
+  `docs/167a-phase2-gate3-neutral-asset-promotion.md`) — present here but **NOT registered
+  in `R2_MANIFEST` and not loaded by the app** until the separately gated manifest/wiring PRs.
 
 **Execution path LOCKED (2026-07-01): D-040 Phase-1 "Master-as-is"** (163F Phase-2 decomposition
 deferred). The base is the **full Master avatar baked** (skin+body+face+eyes+hair+outfit) — mechanical /
