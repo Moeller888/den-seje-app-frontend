@@ -138,12 +138,12 @@ test("engine gate with flag OFF: C2 behaviour unchanged (both engines allowed)",
   assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true);
 });
 
-test("engine gate with opt-in: expression AND blink both OFF on the R2 stack (blink = PR D)", () => {
+test("engine gate with opt-in: expression OFF on the R2 stack, blink allowed (PR D)", () => {
   withR2OptIn(() => {
     assert.equal(isAvatarR2(), true);
     assert.equal(isAvatarR2ActiveFor(NEUTRAL_MEDIUM), true);
     assert.equal(r2ExpressionOverlayAllowedFor(NEUTRAL_MEDIUM), false);
-    assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), false);
+    assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true); // PR D: blink runs with the R2 profile
   });
 });
 

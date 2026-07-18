@@ -1233,7 +1233,7 @@
   import { getXPProgressInLevel } from "./js/progression.js";
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
-  import { ALL_SLOTS, SLOT_Z, baseLayersFor, skinToneFor, RARITY_ORDER, RARITY_ICONS, isAvatarV2, r2ExpressionOverlayAllowedFor, r2BlinkAllowedFor } from "./js/avatar-layers.js";
+  import { ALL_SLOTS, SLOT_Z, baseLayersFor, RARITY_ORDER, RARITY_ICONS, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
   import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
@@ -1519,15 +1519,16 @@
     // rendered, the hub stays static (no floating expression overlay).
     if (!avatarEl.querySelector("img.profile-avatar-layer")) return;
 
-    // Granular R2 engine gate (PR C): expression overlay stays OFF on the raster stack
-    // (the neutral raster face is in the stack); blink stays OFF until PR D wires the
-    // re-positioned lid. Presence/breathing stays. C2/SVG path unchanged.
+    // Granular R2 engine gate (PR C, blink completed by PR D): expression overlay
+    // stays OFF on the raster stack (the neutral raster face is in the stack);
+    // blink runs on BOTH paths with the profile matching the active render path.
     if (r2ExpressionOverlayAllowedFor(avatarIdentity)) {
       try { exprEngine   = new ExpressionEngine(avatarEl); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
     }
     try { presenceEngine = new PresenceEngine(avatarEl);   } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-    if (r2BlinkAllowedFor(avatarIdentity)) {
-      try { blinkEngine  = new BlinkEngine(avatarEl, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+    const blinkCfg = blinkConfigFor(avatarIdentity);
+    if (blinkCfg.allowed) {
+      try { blinkEngine  = new BlinkEngine(avatarEl, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
     }
   }
 
