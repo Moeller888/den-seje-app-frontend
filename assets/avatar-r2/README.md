@@ -38,6 +38,7 @@ Served WebP at **512×768** (from the 1024×1536 master), transparent background
 assets/avatar-r2/
   base/    body-{body_type}-{skin_tone}-v{n}.webp   (per skin tone)
   face/    face-{expression}-v{n}.webp              (shared)
+  face/    face-blush-multiply-v{n}.webp            (shared multiply component, PL-B — U4)
   eyes/    eyes-{set}-{iris|fixed}-v{n}.webp         (shared)
   eyelid/  eyelid-{skin_tone}-v{n}.webp             (per skin tone)
   hair/    hair-northstar-v{n}.webp                 (shared)

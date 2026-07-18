@@ -328,19 +328,27 @@ export const R2_SERVED = { width: 512, height: 768 };
 // (a bare number is shorthand for `{ v, ext:"webp" }`). Populating an entry makes the
 // matching resolver return a path — consumed by the render ONLY when `AVATAR_R2` is on.
 // Naming per §C: body-{body_type}-{skin_tone}-vN · face-{expression}-vN ·
+// face-blush-multiply-vN (separate multiply component, PL-B) ·
 // eyes-{set}-{iris|fixed}-vN · eyelid-{skin_tone}-vN · hair-northstar-vN.
 //
-// PHASE-1 (D-040) PREVIEW: the base is a **temporary transparent PNG** (`ext:"png"`) —
-// the deterministic alpha-cut of the Master (tools/avatar/extract-master-base.mjs). WebP
-// is the production target (D-013); swap to `ext:"webp"` (new version) once encoded.
+// PHASE-1 (D-040) PREVIEW: the base entry stays the **baked Phase-1 PNG** (`ext:"png"`,
+// the deterministic alpha-cut of the Master) — today's render reads ONLY this entry.
+// The Phase-2 NEUTRAL layer entries below (face/blush/eyes/hair, registered 2026-07-18
+// per the countersigned promotion worksheet docs/167a-phase2-gate3-neutral-asset-
+// promotion.md) resolve to the promoted WebP files but have NO consumer yet: the
+// Phase-2 decomposed stack switch is the separately gated wiring step (PR C), which
+// also bumps the base entry to the decomposed v2 WebP. Until then nothing loads them.
+// Only body_type "neutral" × skin_tone "medium" is supported by the raster set (U2);
+// every other identity stays on the C2/SVG path by resolver-null fallback.
 export const R2_MANIFEST = {
-  version:  1,
-  base:     { "neutral-medium": { v: 1, ext: "png" } }, // Phase-1 preview PNG (WebP = future)
-  face:     {},   // e.g. { "neutral": 1 }
-  eyesIris: {},   // e.g. { "neutral": 1 }
-  eyesFixed:{},   // e.g. { "neutral": 1 }
-  eyelid:   {},   // e.g. { "medium": 1 }
-  hair:     {},   // e.g. { "northstar": 1 }
+  version:  2,
+  base:     { "neutral-medium": { v: 1, ext: "png" } }, // Phase-1 baked preview PNG (v2 WebP = PR C)
+  face:     { "neutral": 1 },     // face/face-neutral-v1.webp (z3)
+  blush:    { "multiply": 1 },    // face/face-blush-multiply-v1.webp (z2, mix-blend multiply)
+  eyesIris: { "neutral": 1 },     // eyes/eyes-neutral-iris-v1.webp (z4, multiply × iris token)
+  eyesFixed:{ "neutral": 1 },     // eyes/eyes-neutral-fixed-v1.webp (z4)
+  eyelid:   {},                   // Option A countersigned: CSS-ellipse lid — no raster asset
+  hair:     { "northstar": 1 },   // hair/hair-northstar-v1.webp (z40, multiply × hair token)
 };
 
 // Normalise a manifest entry → { v, ext } or null. WebP is the default/production
@@ -388,6 +396,14 @@ export function eyelidSrcForR2(identity) {
   return e ? r2Path("eyelid", "eyelid-" + tone, e) : null;
 }
 
+// Blush is a SEPARATE multiply component (PL-B countersign): tone-agnostic per-channel
+// factors, rendered with mix-blend-mode:multiply between base (z0) and face (z3).
+// Lives in the face/ folder per the promotion worksheet (U4 naming decision).
+export function blushSrcForR2() {
+  const e = r2Entry(R2_MANIFEST.blush["multiply"]);
+  return e ? r2Path("face", "face-blush-multiply", e) : null;
+}
+
 export function hairSrcForR2(identity) {
   const e = r2Entry(R2_MANIFEST.hair["northstar"]);
   return e ? r2Path("hair", "hair-northstar", e) : null;
@@ -419,7 +435,9 @@ export function isR2Phase1SafeSlot(slot) {
   return R2_PHASE1_SAFE_SLOTS.indexOf(slot) !== -1;
 }
 
-// Whether a full Phase-2 raster stack (base + hair) is available. False in Phase-1.
+// Whether a full Phase-2 raster stack (base + hair) is available. True for the supported
+// neutral identity since the 2026-07-18 manifest registration, but NOT consumed by any
+// render path yet — the Phase-2 stack switch (PR C) is the separately gated wiring step.
 export function hasR2StackFor(identity) {
   return !!(baseSrcForR2(identity) && hairSrcForR2(identity));
 }
