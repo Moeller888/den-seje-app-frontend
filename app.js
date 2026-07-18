@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, skinToneFor, isAvatarV2, r2ExpressionOverlayAllowedFor, r2BlinkAllowedFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -500,7 +500,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
       await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
-      if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(pd?.avatar_identity ?? null));
+      // PR D: re-apply the full blink profile (mode + tone) so the lids always
+      // match the render path this re-render actually took (R2 active vs C2).
+      if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(pd?.avatar_identity ?? null));
       // On the FIRST load the expression/blink overlays are attached only after this
       // function is awaited (see the life-engine init below), so the first-load signal
       // is set there. On a later re-render the engines already exist, so mark here once
@@ -539,8 +541,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // the instant render above stays correct.
     base.src = baseSrcFor(profileData?.avatar_identity ?? null);
     if (hairImg) hairImg.src = hairSrcFor(profileData?.avatar_identity ?? null);
-    // Section 152E: align the blink eyelid fill with the resolved skin tone.
-    if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(profileData?.avatar_identity ?? null));
+    // Section 152E: align the blink eyelid fill with the resolved skin tone
+    // (PR D: via the full profile so mode always matches the render path).
+    if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(profileData?.avatar_identity ?? null));
 
     const equippedSlots = profileData?.equipped_slots ?? {};
     const equippedIds = Object.values(equippedSlots).filter(Boolean);
@@ -1217,15 +1220,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       const { data } = await supabase.from("profiles").select("avatar_identity").eq("id", studentId).maybeSingle();
       quizIdentity = data?.avatar_identity ?? null;
     } catch (e) { /* non-fatal */ }
-    // Granular R2 engine gate (PR C): expression overlay stays OFF on the raster
-    // stack (the neutral raster face is in the stack); blink stays OFF until PR D
-    // wires the re-positioned lid. Both stay ON on the C2 path (unchanged).
+    // Granular R2 engine gate (PR C, blink completed by PR D): expression overlay
+    // stays OFF on the raster stack (the neutral raster face is in the stack);
+    // blink runs on BOTH paths with the profile matching the active render path
+    // (Option-A geometry/fill on active R2, unchanged C2 profile otherwise).
     try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
     if (r2ExpressionOverlayAllowedFor(quizIdentity)) {
       try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
     }
-    if (r2BlinkAllowedFor(quizIdentity)) {
-      try { blinkEngine = new BlinkEngine(avatarDisplay);      } catch (e) { /* non-fatal */ }
+    const blinkCfg = blinkConfigFor(quizIdentity);
+    if (blinkCfg.allowed) {
+      try { blinkEngine = new BlinkEngine(avatarDisplay, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { /* non-fatal */ }
     }
     // First-load render-complete signal: fetchAvatar() (awaited above) painted the
     // base/cosmetics and the expression engine has now attached its neutral overlay,

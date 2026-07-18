@@ -451,16 +451,35 @@ export function isAvatarR2ActiveFor(identity) {
   return isAvatarR2() && !!r2StackSrcsFor(identity);
 }
 
-// Granular engine gate (PR C). Split so PR D can allow blink on the R2 stack
-// (re-positioned Option-A lid) WITHOUT touching the expression decision:
+// Granular engine gate (PR C, blink completed by PR D):
 //   - expression overlay: OFF on R2 (the neutral raster face is in the stack;
 //     raster expression swaps are the future D-042 track), ON on C2 (unchanged).
-//   - blink: OFF on R2 until PR D wires the countersigned geometry, ON on C2.
+//   - blink: ON everywhere since PR D — on the active R2 stack with the
+//     countersigned Option-A profile, on C2 with the unchanged C2 profile.
+//     Which profile applies is decided by blinkConfigFor() below.
 export function r2ExpressionOverlayAllowedFor(identity) {
   return !isAvatarR2ActiveFor(identity);
 }
 export function r2BlinkAllowedFor(identity) {
-  return !isAvatarR2ActiveFor(identity); // PR D: allow on R2 with re-positioned lid
+  return true; // PR D: blink allowed on both paths; profile chosen via blinkConfigFor()
+}
+
+// PR D: the SINGLE blink decision for every surface (app.js, hub.html,
+// avatar.html). Returns { allowed, mode, skinTone } for BlinkEngine:
+//   new BlinkEngine(el, cfg.skinTone, { mode: cfg.mode })   — at init
+//   blinkEngine.setProfile(cfg)                              — on re-render
+// mode follows the ACTUALLY active render path for the identity
+// (isAvatarR2ActiveFor = flag/opt-in AND the complete stack resolves), never the
+// raw flag alone — an unsupported identity that falls back to the C2 render
+// blinks with the C2 profile, and a missing manifest entry does the same.
+// Surfaces must not duplicate R2 geometry or fills; those live in
+// BLINK_PROFILES (js/avatar-blink-engine.js).
+export function blinkConfigFor(identity) {
+  return {
+    allowed: r2BlinkAllowedFor(identity),
+    mode: isAvatarR2ActiveFor(identity) ? "r2" : "c2",
+    skinTone: skinToneFor(identity),
+  };
 }
 
 // 167A Phase-1 cosmetic slot-gate. On the raster baked base, only cosmetics that render

@@ -46,6 +46,32 @@ const EYES = {
 // lid, not a coloured shape. Unknown tones fall back to medium.
 const EYELID_FILL = { medium: '#EDB888', dark: '#865935' };
 
+// ── R2 blink profile (PR D) ──────────────────────────────────────────────────
+// Option-A countersigned lid geometry for the decomposed neutral raster stack,
+// measured against the promoted eye maps in the same 160×240 viewBox: full
+// closure covers 10 755 of 10 755 eye pixels (0 uncovered). These numbers are
+// bound to the countersigned measurement — do not re-derive or "correct" them.
+const R2_EYES = {
+  L: { cx: 66.7, cy: 60.3, rx: 8.91, ry: 9.06 },
+  R: { cx: 90.6, cy: 60.3, rx: 8.91, ry: 9.06 },
+};
+
+// R2 eyelid fill — version-bound raster tone map. Each value is MEASURED on the
+// promoted R2 base raster it names (not derived from the C2 SVG gradients, so
+// the C2 map above stays untouched). A future dark R2 base adds its own
+// measured entry here. No runtime pixel sampling — values are baked constants.
+//   medium: measured on base/body-neutral-medium-v2.webp → #FEC183
+const R2_EYELID_FILL = { medium: '#FEC183' };
+
+// Geometry/fill profile per render path. The engine stays ONE engine; the mode
+// only selects which eye boxes and which tone map the lids use.
+//   c2 (default): existing SVG-derived geometry + Section-152E fills — unchanged.
+//   r2:           Option-A geometry + raster-measured fills (neutral × medium).
+export const BLINK_PROFILES = {
+  c2: { eyes: EYES,    fill: EYELID_FILL },
+  r2: { eyes: R2_EYES, fill: R2_EYELID_FILL },
+};
+
 // Blink animation timing (ms) — calibrated to natural human blink physiology
 const CLOSE_MS   = 88;   // eyelid close: ~80–100ms natural range
 const HOLD_MS    = 16;   // closure hold: 0–30ms natural range
@@ -66,13 +92,17 @@ const INTERVALS = {
 };
 
 export class BlinkEngine {
-  constructor(container, skinTone) {
+  // options.mode selects the geometry/fill profile ('c2' | 'r2'); omitted or
+  // unknown → 'c2', so every pre-PR-D call-site keeps its exact behaviour.
+  constructor(container, skinTone, options) {
+    const mode      = options && BLINK_PROFILES[options.mode] ? options.mode : 'c2';
     this._container = container;
     this._lidL      = null;
     this._lidR      = null;
     this._timer     = null;
     this._profile   = 'neutral';
-    this._skinTone  = EYELID_FILL[skinTone] ? skinTone : 'medium';
+    this._mode      = mode;
+    this._skinTone  = this._fillMap()[skinTone] ? skinTone : 'medium';
     this._destroyed = false;
     this._prefersRM = this._detectRM();
 
@@ -93,11 +123,34 @@ export class BlinkEngine {
   // Defensive: unknown tones fall back to medium. Updates live lids in place so
   // an in-flight engine reflects the new tone without a rebuild.
   setSkinTone(skinTone) {
-    const tone = EYELID_FILL[skinTone] ? skinTone : 'medium';
+    const fill = this._fillMap();
+    const tone = fill[skinTone] ? skinTone : 'medium';
     if (tone === this._skinTone) return;
     this._skinTone = tone;
-    if (this._lidL) this._lidL.setAttribute('fill', EYELID_FILL[tone]);
-    if (this._lidR) this._lidR.setAttribute('fill', EYELID_FILL[tone]);
+    if (this._lidL) this._lidL.setAttribute('fill', fill[tone]);
+    if (this._lidR) this._lidR.setAttribute('fill', fill[tone]);
+  }
+
+  // PR D: re-apply the full geometry/fill profile on a LIVE engine. Needed when
+  // the same surface re-renders onto a different path without a reload (e.g. the
+  // avatar editor switches an R2-active identity to one that falls back to C2):
+  // the lids must never keep R2 geometry over a C2 render, or vice versa.
+  // cfg = { mode, skinTone } — the shape blinkConfigFor() (js/avatar-layers.js)
+  // returns. Unknown mode → 'c2', unknown tone → 'medium'. Applies
+  // unconditionally (same tone name can map to a different fill per mode).
+  setProfile(cfg) {
+    this._mode = cfg && BLINK_PROFILES[cfg.mode] ? cfg.mode : 'c2';
+    const eyes = this._eyes();
+    const fill = this._fillMap();
+    this._skinTone = cfg && fill[cfg.skinTone] ? cfg.skinTone : 'medium';
+    if (this._lidL) {
+      this._applyLidGeometry(this._lidL, eyes.L);
+      this._lidL.setAttribute('fill', fill[this._skinTone]);
+    }
+    if (this._lidR) {
+      this._applyLidGeometry(this._lidR, eyes.R);
+      this._lidR.setAttribute('fill', fill[this._skinTone]);
+    }
   }
 
   destroy() {
@@ -109,6 +162,18 @@ export class BlinkEngine {
   }
 
   // ── Internal ─────────────────────────────────────────────────────────────────
+
+  _profileDef() {
+    return BLINK_PROFILES[this._mode] || BLINK_PROFILES.c2;
+  }
+
+  _eyes() {
+    return this._profileDef().eyes;
+  }
+
+  _fillMap() {
+    return this._profileDef().fill;
+  }
 
   _buildLayer() {
     const existing = document.getElementById(LAYER_ID);
@@ -123,20 +188,19 @@ export class BlinkEngine {
       'position:absolute;top:0;left:0;width:100%;height:100%;' +
       'z-index:5;pointer-events:none;overflow:visible;';
 
-    this._lidL = this._makeLid(ns, EYES.L);
-    this._lidR = this._makeLid(ns, EYES.R);
+    const eyes = this._eyes();
+    this._lidL = this._makeLid(ns, eyes.L);
+    this._lidR = this._makeLid(ns, eyes.R);
     svg.appendChild(this._lidL);
     svg.appendChild(this._lidR);
     this._container.appendChild(svg);
   }
 
   _makeLid(ns, eye) {
+    const fill = this._fillMap();
     const el = document.createElementNS(ns, 'ellipse');
-    el.setAttribute('cx',   eye.cx);
-    el.setAttribute('cy',   eye.cy);
-    el.setAttribute('rx',   eye.rx);
-    el.setAttribute('ry',   eye.ry);
-    el.setAttribute('fill', EYELID_FILL[this._skinTone] || EYELID_FILL.medium);
+    this._applyLidGeometry(el, eye);
+    el.setAttribute('fill', fill[this._skinTone] || fill.medium);
     // transform-box:fill-box → transform-origin relative to element bounding box
     // transform-origin:50% 0% → pivot at top-center of the ellipse
     // scaleY(0) → collapses to a line at the top — eyelid invisible (open state)
@@ -144,6 +208,13 @@ export class BlinkEngine {
     el.style.cssText =
       'transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(0);';
     return el;
+  }
+
+  _applyLidGeometry(lid, eye) {
+    lid.setAttribute('cx', eye.cx);
+    lid.setAttribute('cy', eye.cy);
+    lid.setAttribute('rx', eye.rx);
+    lid.setAttribute('ry', eye.ry);
   }
 
   _scheduleNext() {

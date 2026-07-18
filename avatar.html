@@ -712,8 +712,8 @@ import { emit }        from "./js/events.js";
 import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
-  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor, skinToneFor,
-  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, r2ExpressionOverlayAllowedFor, r2BlinkAllowedFor,
+  ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
+  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -937,7 +937,9 @@ function renderAvatar(animate = false) {
 
   // Section 152E: keep the blink engine's eyelid fill in sync with the current
   // skin tone across identity changes (no-op until the engine is initialised).
-  if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(avatarIdentity));
+  // PR D: full profile re-apply — the legacy path never renders R2, and
+  // blinkConfigFor resolves to the C2 profile whenever R2 is not active.
+  if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(avatarIdentity));
 
   // Set highest rarity on wrap for CSS aura + border (P5)
   const highest = getHighestRarity() ?? "";
@@ -981,7 +983,11 @@ async function renderAvatarC2(animate = false) {
     else preview.appendChild(exprOverlay);
   }
   if (blinkLayer) preview.appendChild(blinkLayer);
-  if (blinkEngine) blinkEngine.setSkinTone(skinToneFor(avatarIdentity));
+  // PR D: re-apply the full blink profile so the lids match the render path this
+  // re-render actually took (Option-A geometry on active R2, C2 profile on the
+  // C2 fallback) — an identity switch away from neutral × medium must never
+  // leave R2 lids over a C2 render.
+  if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(avatarIdentity));
 
   if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
   await markAvatarRendered(preview);
@@ -1217,15 +1223,16 @@ function initAvatarLifeEngines() {
   // before renderAll(), the page stays static (no floating expression overlay).
   if (!preview.querySelector("img.avatar-layer")) return;
 
-  // Granular R2 engine gate (PR C): expression overlay stays OFF on the raster stack
-  // (the neutral raster face is in the stack); blink stays OFF until PR D wires the
-  // re-positioned lid. Presence/breathing stays. C2/SVG path unchanged.
+  // Granular R2 engine gate (PR C, blink completed by PR D): expression overlay
+  // stays OFF on the raster stack (the neutral raster face is in the stack);
+  // blink runs on BOTH paths with the profile matching the active render path.
   if (r2ExpressionOverlayAllowedFor(avatarIdentity)) {
     try { exprEngine   = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
   }
   try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-  if (r2BlinkAllowedFor(avatarIdentity)) {
-    try { blinkEngine  = new BlinkEngine(preview, skinToneFor(avatarIdentity)); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
+  const blinkCfg = blinkConfigFor(avatarIdentity);
+  if (blinkCfg.allowed) {
+    try { blinkEngine  = new BlinkEngine(preview, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
   }
 }
 
