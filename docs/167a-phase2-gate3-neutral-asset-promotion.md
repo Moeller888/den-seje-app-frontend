@@ -61,6 +61,19 @@ the D-057 register value `2CB93EE0…`).
 | 5 | iris luminance (z4) | **multiply × eye token** (D-031) | `wp2/eyes-iris-wp2-luminance.png` (WP2, #79) | `build-eyes-wp2-refine.mjs` | `3969428B6C142D71AA1CFBBBC07B481DE741283EA81227AD6EE180BFB7C013DE` | `assets/avatar-r2/eyes/eyes-neutral-iris-v1.webp` | `0187788C8D2203AA733AEBC18E2F9FD8B6AF6D171D352C8F6A428B12A5D9F1D7` | 1,560 B |
 | 6 | hair runtime (z40) | **multiply × `--hair-base` token** (D-031) | `pl2/hair-pl2-luminance.png` (WP1-RR, #77) | `build-hair-pl1-gapfix.mjs` → `build-hair-pl2-remap.mjs` | `89DA08E96668B04266D72FEFF741A6D8F21BFB2A2EEBF7499F0FC6BB4F00FD8B` | `assets/avatar-r2/hair/hair-northstar-v1.webp` | `3EDC70BCC4420516B7B9A17E577147CB4F3A23411111899382F2041E25199055` | 6,626 B |
 
+> **HISTORICAL NOTE — row 1 (base) hash superseded in production (2026-07-20, D-059).**
+> The WebP SHA-256 `0DEA2348…` / 23,594 B recorded for
+> `assets/avatar-r2/base/body-neutral-medium-v2.webp` above is the **hash of the asset as
+> countersigned at Gate-3 promotion**. It is **retained unchanged as historical record** —
+> this table documents what was countersigned and must not be rewritten.
+> The **current production hash** for that file is
+> `3A30D8C7BC29A4813E9F4F2902FED26235B3458A56F733C11067559968DA4F37` / 66,526 B,
+> registered in **D-059** (`docs/project-state.md`), which removed an opaque matte rim,
+> partial-alpha contamination and detached debris from the runtime asset and re-encoded it
+> `-lossless -exact`. **The countersigned source PNG (`2CB93EE0…`, D-057) is unchanged**, as
+> are all five other rows. `AVATAR_R2` remains `false`. D-059 is a **temporary runtime
+> remediation**; the permanent source-art fix is later 167a work.
+
 All six are **runtime-role** assets. The hair **identity** reference `pl1/hair-pl1-color.png`
 (SHA `3FCD7717DE099C1E42CA8686A08790172BE8331D2ECDB092E6CA2EDF0A38A45D`) was used for chain
 verification only and is **NOT promoted** (identity/QA reference per the integration
