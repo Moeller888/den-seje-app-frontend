@@ -68,11 +68,12 @@ the D-057 register value `2CB93EE0…`).
 > this table documents what was countersigned and must not be rewritten.
 > The **current production hash** for that file is
 > `3A30D8C7BC29A4813E9F4F2902FED26235B3458A56F733C11067559968DA4F37` / 66,526 B,
-> registered in **D-059** (`docs/project-state.md`), which removed an opaque matte rim,
-> partial-alpha contamination and detached debris from the runtime asset and re-encoded it
-> `-lossless -exact`. **The countersigned source PNG (`2CB93EE0…`, D-057) is unchanged**, as
-> are all five other rows. `AVATAR_R2` remains `false`. D-059 is a **temporary runtime
-> remediation**; the permanent source-art fix is later 167a work.
+> registered in **D-059** (`docs/project-state.md`), which **partially** remediated the alpha
+> fringe — opaque matte rim, partial-alpha contamination and detached debris — and re-encoded
+> the runtime asset `-lossless -exact`. **The countersigned source PNG (`2CB93EE0…`, D-057) is
+> unchanged**, as are all five other rows. `AVATAR_R2` remains `false`. D-059 is a **partial,
+> temporary runtime remediation** — trouser and shoe edges are cleared, but a light fringe
+> remains along the forearms (see D-059 §11); the permanent source-art fix is later 167a work.
 
 All six are **runtime-role** assets. The hair **identity** reference `pl1/hair-pl1-color.png`
 (SHA `3FCD7717DE099C1E42CA8686A08790172BE8331D2ECDB092E6CA2EDF0A38A45D`) was used for chain
