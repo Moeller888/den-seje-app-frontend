@@ -75,6 +75,19 @@ the D-057 register value `2CB93EE0…`).
 > temporary runtime remediation** — trouser and shoe edges are cleared, but a light fringe
 > remains along the forearms (see D-059 §11); the permanent source-art fix is later 167a work.
 
+> **HISTORICAL NOTE — row 1 (base) hash superseded again (2026-07-21, D-061).**
+> Following the owner-approved narrow protect write-exception (D-060 conflict → owner path (a)),
+> the arm fringe was fixed as **Candidate B** and the row-1 runtime was re-promoted. The
+> **current production hash** for `assets/avatar-r2/base/body-neutral-medium-v2.webp` is now
+> `28765EEA616DD92B…` / 67,174 B (was `3A30D8C7…` / 66,526 B under D-059), registered in
+> **D-061** (`docs/project-state.md`). A new tracked arm-fringe source
+> `assets/avatar/reference/neutral-base-v2-armfringe.png` (`347A258F…`) and a narrow
+> write-exception contract `assets/avatar/reference/arm-fringe-write-exception-v1.png`
+> (`47DBEC44…`) were added. **The countersigned D-057 source PNG (`2CB93EE0…`) and the D-058
+> protect contract (`302324B7…`) are byte-identical and unchanged; D-058 is NOT weakened.** The
+> `0DEA2348…` value in the table remains the historical Gate-3 countersign and must not be
+> rewritten. `AVATAR_R2` remains `false`. A faint residual is accepted (D-061 §8).
+
 All six are **runtime-role** assets. The hair **identity** reference `pl1/hair-pl1-color.png`
 (SHA `3FCD7717DE099C1E42CA8686A08790172BE8331D2ECDB092E6CA2EDF0A38A45D`) was used for chain
 verification only and is **NOT promoted** (identity/QA reference per the integration
