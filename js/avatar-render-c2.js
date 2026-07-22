@@ -16,6 +16,37 @@ import { cdnUrl } from "./cloudinary.js";
 // local assets — safe to cache for the session.
 const _hairTextCache = new Map();
 
+// Per-element mount generation. Every mountC2Avatar call bumps this; after each
+// await the call checks it still owns the element and aborts (without touching the
+// DOM) if a newer mount superseded it — so a stale/aborted load can never overwrite
+// a newer render (activation-audit F1, race contract §5).
+const _mountGen = new WeakMap();
+
+// Preload + decode one image URL off-DOM. Resolves only when the bitmap is fully
+// decoded; rejects on HTTP error, decode failure, empty/invalid URL, or a
+// zero-width result. This is the atomic gate: the visible R2 stack is only mounted
+// once EVERY mandatory layer has resolved here (no partial-R2 flash, F1/§4).
+function preloadDecode(url) {
+  return new Promise((resolve, reject) => {
+    if (typeof url !== "string" || url.length === 0) { reject(new Error("empty url")); return; }
+    if (typeof Image === "undefined") { resolve(); return; } // non-DOM env (unit tests) → skip gate
+    const img = new Image();
+    img.onerror = () => reject(new Error("load error: " + url));
+    img.src = url;
+    const done = () => {
+      if (!img.naturalWidth) { reject(new Error("zero-width: " + url)); return; }
+      resolve();
+    };
+    if (typeof img.decode === "function") {
+      img.decode().then(done, () => reject(new Error("decode failed: " + url)));
+    } else if (img.complete) {
+      done();
+    } else {
+      img.onload = done;
+    }
+  });
+}
+
 async function fetchSvgText(src) {
   if (_hairTextCache.has(src)) return _hairTextCache.get(src);
   const res = await fetch(src);
@@ -111,23 +142,73 @@ function r2TintSupported() {
 // even when the R2 stack would be active (shop preview fix: a non-R2-safe item
 // must render complete-C2 so the item stays visible on its proven C2 anchors,
 // never an R2 avatar without the item). Default false → behaviour unchanged.
+// Which R2 layers are MANDATORY (whole-stack-atomic unit): the base + the neutral
+// stack markers. Safe cosmetic overlays (aura/back) are OPTIONAL — a failure there
+// drops only that overlay, never the base to C2 (activation-audit F1 / §3).
+const _R2_MANDATORY_MARKERS = new Set(["base", "blush", "face", "iris", "eyes", "hair-r2"]);
+function _isMandatoryR2(layer) {
+  return !!layer && (layer.isBase === true || _R2_MANDATORY_MARKERS.has(layer.marker));
+}
+
+// Returns the render path actually mounted: "r2" | "c2" (also stamped on
+// rootEl.dataset.avatarRenderPath), or "aborted" when a newer mount superseded this
+// one (DOM left untouched). Callers key the blink profile off the returned path so
+// an asset-load fallback never leaves R2 lids on a C2 base.
 export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [], forceC2 = false } = {}) {
-  if (!rootEl) return rootEl;
+  if (!rootEl) return "c2";
+
+  // Race/abort contract (§5): claim this element for this mount generation.
+  const myGen = (_mountGen.get(rootEl) || 0) + 1;
+  _mountGen.set(rootEl, myGen);
+  const isCurrent = () => _mountGen.get(rootEl) === myGen;
 
   // 167A Phase-2 (PR C): use the decomposed raster stack ONLY when AVATAR_R2 is on AND
   // the COMPLETE stack resolves for this identity (U2: neutral × medium only); any
   // missing piece → composeR2Layers returns null → the existing C2/SVG path
   // (byte-for-byte). Default off → C2. forceC2 → always the C2 path.
-  const r2Layers = (!forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
+  let r2Layers = (!forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
+
+  // ATOMIC R2 GATE (activation-audit F1 / §3 / §4): before making the R2 stack
+  // visible, preload+decode EVERY mandatory layer off-DOM. If any mandatory layer
+  // fails (HTTP 4xx/5xx, onerror, decode reject, zero-width, empty URL), drop the
+  // WHOLE stack to the complete C2 path — never a partial R2 stack, never a broken
+  // base. Optional safe overlays that fail are dropped individually (base survives).
+  if (r2Layers) {
+    const mandatory = r2Layers.filter(_isMandatoryR2);
+    const optional  = r2Layers.filter((l) => !_isMandatoryR2(l));
+    try {
+      await Promise.all(mandatory.map((l) => preloadDecode(cdnUrl(l.src))));
+    } catch (err) {
+      // One controlled, non-sensitive warning (§9): reason only, no identity/token.
+      try { console.warn("avatar-r2: mandatory layer failed to load → C2 fallback"); } catch (_e) {}
+      r2Layers = null; // atomic whole-stack fallback
+    }
+    if (!isCurrent()) return "aborted"; // a newer mount took over during preload — do not touch the DOM
+    if (r2Layers) {
+      // Preload optional overlays; keep only the ones that decoded (individual drop).
+      const kept = [];
+      await Promise.all(optional.map(async (l) => {
+        try { await preloadDecode(cdnUrl(l.src)); kept.push(l); }
+        catch (_e) { try { console.warn("avatar-r2: optional overlay dropped (load failed)"); } catch (_ee) {} }
+      }));
+      if (!isCurrent()) return "aborted";
+      r2Layers = r2Layers.filter((l) => _isMandatoryR2(l) || kept.includes(l));
+    }
+  }
+
   const layers = r2Layers || composeC2Layers(identity, cosmetics);
+  const path = r2Layers ? "r2" : "c2";
   const tokens = hairColorTokensFor(identity);
   const cls = (kind) => layerClass + (animate ? " layer-fade-in" : "");
 
   // Remove previously mounted C2 layers (idempotent re-render). Also clear the
   // render-complete signal so a re-render is not mistaken for the finished frame
   // (see markAvatarRendered); it is re-set once the full composite has decoded.
+  // Done AFTER the atomic preload so the prior render stays visible until the new
+  // complete stack is ready (no blank/partial window, §4).
   rootEl.querySelectorAll("[data-c2-layer]").forEach((n) => n.remove());
   rootEl.removeAttribute("data-avatar-rendered");
+  if (rootEl.dataset) rootEl.dataset.avatarRenderPath = path; // real DOM always has dataset; guard for mocks
 
   // R2 only: scope the stack's mix-blend layers (blush/tints) to the avatar composite
   // so they can never blend with the page behind it. Visually inert on its own, and
@@ -137,6 +218,7 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   const tintOk = r2TintSupported();
 
   for (const layer of layers) {
+    if (!isCurrent()) return "aborted"; // superseded mid-build → stop mutating the DOM
     if (layer.inline) {
       const wrap = document.createElement("div");
       wrap.setAttribute("data-c2-layer", "hair");
@@ -147,7 +229,9 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       wrap.style.setProperty("--hair-base", tokens.base);
       wrap.style.setProperty("--hair-shadow", tokens.shadow);
       try {
-        wrap.innerHTML = await fetchSvgText(layer.src);
+        const svgText = await fetchSvgText(layer.src);
+        if (!isCurrent()) return "aborted"; // superseded during hair fetch
+        wrap.innerHTML = svgText;
         rootEl.appendChild(wrap);
       } catch (_e) {
         // Fail-soft: skip hair, keep the base. Never throw out of render.
@@ -194,7 +278,7 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
     }
   }
 
-  return rootEl;
+  return path;
 }
 
 // Render-complete signal for deterministic screenshots (golden tests) and any

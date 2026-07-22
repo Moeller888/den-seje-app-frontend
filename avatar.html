@@ -974,7 +974,10 @@ async function renderAvatarC2(animate = false) {
 
   // Section 159B: resolve equipped cosmetics (legacy assets) for C2 render parity.
   const cosmetics = c2CosmeticLayers(equippedSlots, id => ownedItems.find(i => i.id === id)?.image_url);
-  await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics });
+  // Returns the render path ACTUALLY mounted ("r2"/"c2"/"aborted") after the atomic
+  // asset-load gate — used below so blink follows the real render, not the manifest.
+  const renderPath = await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics });
+  if (renderPath === "aborted") return; // a newer render superseded this one
 
   const baseEl = preview.querySelector('[data-c2-layer="base"]');
   if (exprOverlay) {
@@ -986,8 +989,9 @@ async function renderAvatarC2(animate = false) {
   // PR D: re-apply the full blink profile so the lids match the render path this
   // re-render actually took (Option-A geometry on active R2, C2 profile on the
   // C2 fallback) — an identity switch away from neutral × medium must never
-  // leave R2 lids over a C2 render.
-  if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(avatarIdentity));
+  // leave R2 lids over a C2 render. F1: key off the ACTUAL mounted path so an
+  // R2 asset-load fallback also uses the C2 lids.
+  if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(avatarIdentity, renderPath === "r2"));
 
   if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
   await markAvatarRendered(preview);
@@ -1226,11 +1230,15 @@ function initAvatarLifeEngines() {
   // Granular R2 engine gate (PR C, blink completed by PR D): expression overlay
   // stays OFF on the raster stack (the neutral raster face is in the stack);
   // blink runs on BOTH paths with the profile matching the active render path.
-  if (r2ExpressionOverlayAllowedFor(avatarIdentity)) {
+  // F1: key the engines off the ACTUAL mounted path (dataset.avatarRenderPath set
+  // by mountC2Avatar's atomic gate), so an R2 asset-load fallback gets the C2
+  // living contract (expression ON, C2 lids) — not the manifest-only guess.
+  const r2Active = preview.dataset.avatarRenderPath === "r2";
+  if (!r2Active) {
     try { exprEngine   = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
   }
   try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-  const blinkCfg = blinkConfigFor(avatarIdentity);
+  const blinkCfg = blinkConfigFor(avatarIdentity, r2Active);
   if (blinkCfg.allowed) {
     try { blinkEngine  = new BlinkEngine(preview, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
   }

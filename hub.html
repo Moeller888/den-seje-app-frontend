@@ -1522,11 +1522,14 @@
     // Granular R2 engine gate (PR C, blink completed by PR D): expression overlay
     // stays OFF on the raster stack (the neutral raster face is in the stack);
     // blink runs on BOTH paths with the profile matching the active render path.
-    if (r2ExpressionOverlayAllowedFor(avatarIdentity)) {
+    // F1: key off the ACTUAL mounted path (dataset.avatarRenderPath) so an R2
+    // asset-load fallback follows the C2 living contract (expression ON, C2 lids).
+    const r2Active = avatarEl.dataset.avatarRenderPath === "r2";
+    if (!r2Active) {
       try { exprEngine   = new ExpressionEngine(avatarEl); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
     }
     try { presenceEngine = new PresenceEngine(avatarEl);   } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
-    const blinkCfg = blinkConfigFor(avatarIdentity);
+    const blinkCfg = blinkConfigFor(avatarIdentity, r2Active);
     if (blinkCfg.allowed) {
       try { blinkEngine  = new BlinkEngine(avatarEl, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { console.warn("BLINK ENGINE INIT FAILED:", e); }
     }
@@ -1571,7 +1574,8 @@
     // no-ops on the missing base, so the (!blinkEngine) guard prevents a double init.
     if (isAvatarV2()) {
       const cosmetics = c2CosmeticLayers(equippedSlots, id => allShopItems.find(i => i.id === id)?.image_url);
-      await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics });
+      const renderPath = await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics });
+      if (renderPath === "aborted") return; // a newer render superseded this one
       showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";
       showcaseEl.dataset.gender = avatarGender;
       if (!blinkEngine) initAvatarLifeEngines();
