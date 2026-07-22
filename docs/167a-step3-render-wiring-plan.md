@@ -1,5 +1,17 @@
 # 167A Step 3 — Renderer Raster Wiring Plan
 
+> **ADDITIVE NOTE (2026-07-22, D-062):** `mountC2Avatar` now applies an **atomic
+> asset-load gate** — when R2 is chosen it preloads + decodes every MANDATORY layer
+> (base/blush/face/iris/eyes/hair) off-DOM before the stack is shown; ANY mandatory
+> failure (404, decode reject, zero-width, missing entry) drops the WHOLE avatar to
+> the complete C2 path (never a partial R2 stack). Optional safe overlays (aura/back)
+> drop individually without collapsing the base. A per-element mount generation makes
+> a stale/aborted load unable to overwrite a newer render. `mountC2Avatar` returns the
+> actually-mounted path (`"r2"|"c2"|"aborted"`) and stamps `rootEl.dataset.avatarRenderPath`;
+> surfaces key the expression + blink profile off that ACTUAL path (`blinkConfigFor(id, r2Active)`),
+> so a fallback follows the C2 living contract. `AVATAR_R2` stays `false`. Closes
+> activation-audit F1; see D-062 in `docs/project-state.md`.
+
 Status: **PLAN — not executed.** No code changed by this doc. Gated on the produced WebP art (step 2).
 Date: 2026-07-01. Owner: project owner (solo).
 Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-wiring-plan.md) (§F/§I),

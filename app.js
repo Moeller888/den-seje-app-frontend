@@ -499,10 +499,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
-      await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
+      const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
+      if (renderPath === "aborted") return; // a newer render superseded this one
       // PR D: re-apply the full blink profile (mode + tone) so the lids always
       // match the render path this re-render actually took (R2 active vs C2).
-      if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(pd?.avatar_identity ?? null));
+      // F1: key off the ACTUAL mounted path, so an R2 asset-load fallback uses C2 lids.
+      if (blinkEngine) blinkEngine.setProfile(blinkConfigFor(pd?.avatar_identity ?? null, renderPath === "r2"));
       // On the FIRST load the expression/blink overlays are attached only after this
       // function is awaited (see the life-engine init below), so the first-load signal
       // is set there. On a later re-render the engines already exist, so mark here once
@@ -1224,11 +1226,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // stays OFF on the raster stack (the neutral raster face is in the stack);
     // blink runs on BOTH paths with the profile matching the active render path
     // (Option-A geometry/fill on active R2, unchanged C2 profile otherwise).
+    // F1: key the engines off the ACTUAL mounted path (dataset.avatarRenderPath set
+    // by mountC2Avatar's atomic gate) so an R2 asset-load fallback follows the C2
+    // living contract (expression ON, C2 lids), not the manifest-only guess.
+    const r2Active = avatarDisplay.dataset.avatarRenderPath === "r2";
     try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
-    if (r2ExpressionOverlayAllowedFor(quizIdentity)) {
+    if (!r2Active) {
       try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
     }
-    const blinkCfg = blinkConfigFor(quizIdentity);
+    const blinkCfg = blinkConfigFor(quizIdentity, r2Active);
     if (blinkCfg.allowed) {
       try { blinkEngine = new BlinkEngine(avatarDisplay, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { /* non-fatal */ }
     }

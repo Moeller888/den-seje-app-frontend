@@ -474,10 +474,19 @@ export function r2BlinkAllowedFor(identity) {
 // blinks with the C2 profile, and a missing manifest entry does the same.
 // Surfaces must not duplicate R2 geometry or fills; those live in
 // BLINK_PROFILES (js/avatar-blink-engine.js).
-export function blinkConfigFor(identity) {
+// r2ActiveOverride (optional boolean): the ACTUAL render path outcome from
+// mountC2Avatar (which returns "r2"/"c2" after its atomic asset-load gate). When
+// provided it decides the mode, so an asset-load fallback (manifest resolves but a
+// mandatory layer failed to load → C2) never leaves R2 lids on a C2 base
+// (activation-audit F1). Omitted → the manifest-based isAvatarR2ActiveFor (unchanged
+// default; correct at init and for unsupported identities).
+export function blinkConfigFor(identity, r2ActiveOverride) {
+  const r2Active = typeof r2ActiveOverride === "boolean"
+    ? r2ActiveOverride
+    : isAvatarR2ActiveFor(identity);
   return {
     allowed: r2BlinkAllowedFor(identity),
-    mode: isAvatarR2ActiveFor(identity) ? "r2" : "c2",
+    mode: r2Active ? "r2" : "c2",
     skinTone: skinToneFor(identity),
   };
 }
