@@ -12,6 +12,17 @@
 > so a fallback follows the C2 living contract. `AVATAR_R2` stays `false`. Closes
 > activation-audit F1; see D-062 in `docs/project-state.md`.
 
+> **ADDITIVE NOTE (2026-07-22, D-063):** the atomic preload delays when
+> `mountC2Avatar` appends its layers, which exposed a latent avatar.html bug — the
+> top-level `initAvatarLifeEngines()` (after `await loadAll()`, which fires the async
+> render without awaiting) ran before the layers existed and bailed, so blink/
+> expression/presence never mounted on avatar.html. Fixed: the engines now init at
+> the end of `renderAvatarC2()` once its layers exist (guarded double-init; the
+> top-level call is a guarded fallback). hub.html/app.js already init post-mount.
+> A test-only `BlinkEngine.forceFrame()` seam + `window.__avatarBlinkEngine` handle
+> enable deterministic open/closed blink-frame goldens (F5); neither runs in
+> production. `AVATAR_R2` stays `false`. See D-063 in `docs/project-state.md`.
+
 Status: **PLAN — not executed.** No code changed by this doc. Gated on the produced WebP art (step 2).
 Date: 2026-07-01. Owner: project owner (solo).
 Builds on: [167a-master-asset-raster-wiring-plan.md](./167a-master-asset-raster-wiring-plan.md) (§F/§I),

@@ -995,6 +995,13 @@ async function renderAvatarC2(animate = false) {
 
   if (wrap) wrap.dataset.highestRarity = getHighestRarity() ?? "";
   await markAvatarRendered(preview);
+
+  // Init the life engines once the render has actually appended its layers. The
+  // atomic R2 preload (D-062) delays the append, so the top-level init after
+  // loadAll() can run before the layers exist and bail; initialising here (guarded
+  // against a double-init) mirrors hub.html and keeps blink/expression/presence
+  // reliable on both the R2 and C2 paths. No-op on re-renders (engine already set).
+  if (!blinkEngine) initAvatarLifeEngines();
 }
 
 function renderSlotList() {
@@ -1476,7 +1483,10 @@ async function handleEquipTitle(titleId) {
 
 initBadges("avatar");
 await loadAll();
-initAvatarLifeEngines();
+// Fallback: renderAvatarC2() now inits the engines once its layers are appended
+// (the atomic R2 preload can delay that past this point). Guard against a double
+// init — only create here if the render did not already.
+if (!blinkEngine) initAvatarLifeEngines();
 </script>
 
 </body>

@@ -110,6 +110,12 @@ export class BlinkEngine {
       this._buildLayer();
       this._scheduleNext();
     }
+
+    // Deterministic-frame test handle (activation-audit F5 blink-frame goldens).
+    // Exposes the live engine so a test can call forceFrame() to freeze a known
+    // open/closed lid frame. Inert in production — nothing reads it there, so it
+    // is a no-op for users and does not alter auto-blink timing or rendering.
+    try { if (typeof window !== 'undefined') window.__avatarBlinkEngine = this; } catch (_e) {}
   }
 
   // Called by app.js when quiz state transitions — adjusts interval profile
@@ -159,6 +165,34 @@ export class BlinkEngine {
     const layer = document.getElementById(LAYER_ID);
     if (layer && layer.parentNode) layer.parentNode.removeChild(layer);
     this._lidL = this._lidR = this._container = null;
+  }
+
+  // Deterministic test seam (activation-audit F5): freeze a STATIC blink frame.
+  //   forceFrame('closed') — lids fully down (scaleY(1)); forceFrame('open') — lids
+  //   fully retracted (scaleY(0), the resting open state).
+  // Cancels any pending auto-blink and builds the lid layer if absent (e.g. when
+  // prefers-reduced-motion suppressed it at construction), using THIS engine's
+  // mode geometry/fill (r2 or c2) — so a golden captures the engine's real lids,
+  // not a test replica. No transition → the frame is instant and stable. This is
+  // the ONLY caller path that sets a static frame; normal runtime never calls it,
+  // so auto-blink scheduling and user-facing behaviour are unchanged.
+  forceFrame(state) {
+    if (this._destroyed || !this._container) return;
+    if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+    if (!this._lidL || !this._lidR) this._buildLayer();
+    // Surfaces hide the blink layer under prefers-reduced-motion via a CSS rule
+    // (#avatar-blink-layer { display:none }). A forced frame must be visible to be
+    // captured, so pin display inline (inline beats the media rule). Test-only:
+    // nothing calls forceFrame in production, so reduced-motion users still see
+    // no blink layer.
+    const layer = document.getElementById(LAYER_ID);
+    if (layer) layer.style.display = 'block';
+    const scale = state === 'closed' ? 1 : 0;
+    for (const lid of [this._lidL, this._lidR]) {
+      if (!lid) continue;
+      lid.style.transition = 'none';
+      lid.style.transform  = `scaleY(${scale})`;
+    }
   }
 
   // ── Internal ─────────────────────────────────────────────────────────────────
