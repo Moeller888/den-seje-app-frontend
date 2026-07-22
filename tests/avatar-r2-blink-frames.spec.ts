@@ -83,15 +83,18 @@ function makeRoute(identity: object) {
   };
 }
 
-async function openSurface(browser: any, urlPath: string, identity: object) {
+async function openSurface(browser: any, urlPath: string, identity: object, testFlag = true) {
   const ctx = await browser.newContext({ viewport: { width: 900, height: 700 }, reducedMotion: "reduce" });
   const errs: string[] = [];
   await ctx.route("**://*.supabase.co/**", makeRoute(identity));
-  await ctx.addInitScript(([k, s]: [string, any]) => {
+  await ctx.addInitScript(([k, s, flag]: [string, any, boolean]) => {
+    // Gate the deterministic blink test handle on (js/avatar-blink-engine.js only
+    // exposes window.__avatarBlinkEngine when this flag is true — production never sets it).
+    if (flag) (window as any).__AVATAR_TEST__ = true;
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
     localStorage.setItem("avatar_r2", "1");
-  }, [`sb-${REF}-auth-token`, SESSION]);
+  }, [`sb-${REF}-auth-token`, SESSION, testFlag]);
   const page = await ctx.newPage();
   page.on("pageerror", (e) => errs.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") errs.push("[console] " + m.text()); });
@@ -240,4 +243,41 @@ test("C2 fallback uses C2 lids, never R2 geometry", async ({ browser }) => {
   expect(info.hasR2Base, "no R2 base on fallback").toBeFalsy();
   expect(info.lidCx, "fallback lids use C2 geometry").toEqual(["68", "92"]);
   await ctx.close();
+});
+
+test("blink test handle is GATED: exposed only under window.__AVATAR_TEST__", async ({ browser }) => {
+  // (a) WITHOUT the test flag → production behaviour → NO global exposed.
+  {
+    const { ctx, page } = await openSurface(browser, "/avatar.html", idNeutralMedium, /* testFlag */ false);
+    await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 15000 });
+    await page.waitForTimeout(300);
+    const exposed = await page.evaluate(() => ({
+      flag: (window as any).__AVATAR_TEST__ === true,
+      handle: typeof (window as any).__avatarBlinkEngine !== "undefined" && (window as any).__avatarBlinkEngine !== null,
+    }));
+    expect(exposed.flag, "no test flag in this context").toBeFalsy();
+    expect(exposed.handle, "production must NOT expose the blink-engine global").toBeFalsy();
+    await ctx.close();
+  }
+  // (b) WITH the test flag → global exposed; destroy clears it; a fresh engine replaces it.
+  {
+    const { ctx, page } = await openSurface(browser, "/avatar.html", idNeutralMedium /* testFlag defaults true */);
+    await waitForR2(page, "#avatar-preview");
+    const present = await page.evaluate(() => !!(window as any).__avatarBlinkEngine && typeof (window as any).__avatarBlinkEngine.forceFrame === "function");
+    expect(present, "test mode exposes the handle").toBeTruthy();
+    // destroy clears the global (engine === this)
+    const afterDestroy = await page.evaluate(() => { (window as any).__avatarBlinkEngine.destroy(); return (window as any).__avatarBlinkEngine; });
+    expect(afterDestroy, "destroy clears the global for the destroyed engine").toBeNull();
+    // a newly constructed engine (test mode) re-registers the global
+    const afterRemount = await page.evaluate(async () => {
+      const mod = await import("/js/avatar-blink-engine.js");
+      const el = document.querySelector("#avatar-preview");
+      const e = new mod.BlinkEngine(el, "medium", { mode: "r2" });
+      const ok = (window as any).__avatarBlinkEngine === e;
+      e.destroy();
+      return ok;
+    });
+    expect(afterRemount, "a remount replaces the global with the new engine").toBeTruthy();
+    await ctx.close();
+  }
 });

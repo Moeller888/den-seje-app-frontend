@@ -111,11 +111,15 @@ export class BlinkEngine {
       this._scheduleNext();
     }
 
-    // Deterministic-frame test handle (activation-audit F5 blink-frame goldens).
-    // Exposes the live engine so a test can call forceFrame() to freeze a known
-    // open/closed lid frame. Inert in production — nothing reads it there, so it
-    // is a no-op for users and does not alter auto-blink timing or rendering.
-    try { if (typeof window !== 'undefined') window.__avatarBlinkEngine = this; } catch (_e) {}
+    // Deterministic-frame test handle (activation-audit F5 blink-frame goldens),
+    // GATED behind an explicit test signal: exposed ONLY when a test harness sets
+    // `window.__AVATAR_TEST__ === true` (via addInitScript before the page loads).
+    // Normal production never sets that flag, so no blink-engine global is exposed
+    // to users. Lets a test call forceFrame() to freeze a known open/closed frame.
+    // Does not alter auto-blink timing or rendering either way.
+    try {
+      if (typeof window !== 'undefined' && window.__AVATAR_TEST__ === true) window.__avatarBlinkEngine = this;
+    } catch (_e) {}
   }
 
   // Called by app.js when quiz state transitions — adjusts interval profile
@@ -165,6 +169,13 @@ export class BlinkEngine {
     const layer = document.getElementById(LAYER_ID);
     if (layer && layer.parentNode) layer.parentNode.removeChild(layer);
     this._lidL = this._lidR = this._container = null;
+    // Test handle only: if the global still points at THIS engine, clear it so a
+    // destroyed engine is never left reachable. The === this guard is implicitly
+    // test-scoped (production never sets the global). A remount overwrites it with
+    // the new engine via the constructor above.
+    try {
+      if (typeof window !== 'undefined' && window.__avatarBlinkEngine === this) window.__avatarBlinkEngine = null;
+    } catch (_e) {}
   }
 
   // Deterministic test seam (activation-audit F5): freeze a STATIC blink frame.
