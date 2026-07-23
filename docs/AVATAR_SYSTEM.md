@@ -171,6 +171,14 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
   Phase-1 of the Master wiring (D-040 "Master-as-is") temporarily makes face/eyes/blink **static**
   (baked base) while keeping breathing; Phase-2 (163F decomposition) **restores the living engines**
   on the Master art. This sequencing (look-fix first, living-system second) is the 167A recommendation.
+  - **Phase-2 status (updated 2026-07-23): SHIPPED under opt-in (`AVATAR_R2` still `false`).** The
+    decomposed neutral WebP stack (base v2 + face + eyes + iris + blush + hair) is promoted and wired
+    (D-057…D-058 sources, D-059/D-061 base fixes, PR-C/PR-D render + blink). The living engines are
+    **restored on the raster stack**: blink LIVE (Option-A lids, D-061/D-063), breathing LIVE; dynamic
+    expressions remain off (fixed neutral raster face). Robustness: atomic C2 fallback on any failed R2
+    asset (D-062); render-scale + blink open/closed goldens (F4/F5). Activation-readiness audit: F1/F4/F5
+    closed, F2 open. Pilot: [167a-phase1-pilot-rollout.md](./167a-phase1-pilot-rollout.md). _The block
+    below is the earlier Gate-progression history and is kept for the record — it is NOT current status._
   - **Phase-2 status (updated 2026-07-02): PLANNED, not started.** Audit + implementation plan
     ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief
     ([167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md)) are written; the P2-0 cut-guide tool

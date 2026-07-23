@@ -23,7 +23,7 @@ Registry: `js/flags.js` (read-only diagnostics). Rules: [CLAUDE_WORKFLOW.md](./C
 | Flag | Location | Default | Override | Accessor | Fail-soft |
 |---|---|---|---|---|---|
 | `AVATAR_V2` | `js/avatar-layers.js` | **`true`** (on) | `localStorage.avatar_v2='1'` | `isAvatarV2()` | render falls back to base/legacy |
-| `AVATAR_R2` | `js/avatar-layers.js` | `false` (167A Phase-1) | `localStorage.avatar_r2='1'` (per-browser pilot opt-in) | `isAvatarR2()` | render falls back to the C2/SVG path (Phase-1 raster base is a temporary PNG preview; WebP = production target). Pilot rollout: `docs/167a-phase1-pilot-rollout.md` |
+| `AVATAR_R2` | `js/avatar-layers.js` | `false` (167A) | `localStorage.avatar_r2='1'` (per-browser pilot opt-in) | `isAvatarR2()` | off → C2/SVG path (byte-for-byte). On (opt-in) the render is the **Phase-2 decomposed WebP stack** (base `body-neutral-medium-v2.webp` + face/eyes/iris/blush/hair) with **live blink**; a failed mandatory R2 asset atomically falls back to complete C2 (D-062). Neutral-medium only. Pilot rollout: `docs/167a-phase1-pilot-rollout.md` |
 | `ENABLE_SENTRY` | `js/sentry.js` (+ `SENTRY_DSN`, + `error_monitoring` consent) | `false` | — | `isSentryConfigured()` / `isMonitoringEnabled()` | no SDK/network; console logging continues |
 | `ENABLE_OCR` | `js/ocr/index.js` | `false` | — | `isOcrEnabled()` | no control; manual text entry |
 | `ENABLE_CLOUDINARY` | `js/cloudinary.js` (+ cloud name) | `false` | — | `isCloudinaryEnabled()` | returns origin URL |
