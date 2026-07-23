@@ -1,10 +1,17 @@
-# 167A Phase-1 — Pilot Rollout (AVATAR_R2 opt-in)
+# 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
 Status: **Opt-in mechanism live; enable per pilot user.** `AVATAR_R2 = false` by default (production
-unchanged). Date: 2026-07-01. Owner: project owner.
-Prereq: Phase-1 signed off PASS ([167a-phase1-visual-signoff-checklist.md](./167a-phase1-visual-signoff-checklist.md)).
+unchanged). Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064) for the current
+Phase-2 decomposed stack** (see the activation-readiness audit; closes finding F3). Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
-[157r-feature-flags.md](./157r-feature-flags.md).
+[157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
+
+> **What changed since the 2026-07-01 Phase-1 draft (read this first):** the opt-in avatar is no longer
+> the single **baked PNG** with a static face. It is now the **Phase-2 decomposed WebP stack** — a
+> `body-neutral-medium-v2.webp` base plus separate **face, eyes (+iris tint), blush and hair (tinted)**
+> layers — and the **living engines are back on**: **blink is LIVE** on R2 (Option-A eyelids, D-061/D-063)
+> and **breathing** stays. Only **dynamic facial expressions** are still off on R2 (the raster face is a
+> fixed neutral; expression swaps are a future art track). The eligibility criteria in §2 are unchanged.
 
 ---
 
@@ -18,26 +25,42 @@ Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 
 No cohort logic, no DB flag, no global flip. Only browsers that set the key see the raster avatar;
 everyone else renders the untouched C2/SVG avatar. Verified end-to-end: no key → C2 `.svg`; `="1"` →
-raster `.png`; cleared → C2 `.svg`.
+the R2 decomposed **WebP** stack; cleared → C2 `.svg`.
 
-## 2. Pilot group selection criteria (choose carefully)
+**Whole-stack-or-C2 (D-062):** R2 only renders when the COMPLETE stack resolves AND every mandatory
+layer loads. If any mandatory R2 asset 404s or fails to decode, the avatar **atomically falls back to
+the complete C2 render** — never a broken/partial R2 avatar. So an opt-in browser can only ever see a
+clean R2 avatar or a clean C2 avatar, never a half-rendered one.
+
+## 2. Pilot group selection criteria (unchanged — still correct)
 
 To avoid visible cosmetic loss and inconsistent fallback, pick pilot users who are:
 
-- **Neutral / medium avatar identity** — only `neutral`+`medium` resolves the raster base; other
+- **Neutral / medium avatar identity** — only `neutral`+`medium` resolves the raster stack; other
   body types / skin tones fall back to C2 (the pilot would see no change), so include only neutral-medium.
-- **Not reliant on head/face/eye/clothing cosmetics** — the Phase-1 slot-gate renders **only aura/back**;
-  a user who equips a hat/mask/glasses/clothing item would see it **disappear**.
+  The gate is manifest-key based, so a manipulated client cannot force R2 on an unsupported identity.
+- **Not reliant on head/face/eye/clothing cosmetics** — the slot-gate renders **only aura/back** on the
+  raster stack; a user who equips a hat/mask/glasses/clothing item would see it **not render on R2** (the
+  shop preview forces full C2 for those items so they stay visible in the shop).
 - **Preferably no cosmetics, or only aura/back** — so nothing visibly vanishes.
 
-A user meeting all three gets a clean Phase-1 experience (the Master avatar + any aura/back they own).
+A user meeting all three gets a clean experience (the decomposed R2 avatar + any aura/back they own).
 
-## 3. Known Phase-1 characteristics (by design — tell pilot users)
+## 3. Known Phase-2 characteristics (by design — tell pilot users)
 
-- Avatar art is the **North Star Master** baked base (PNG preview; WebP is the deferred production target).
-- **Living face is static** in Phase-1 (expression/blink suppressed over the baked face); breathing stays.
-- **Head/face/eye + clothing cosmetics are hidden** on the raster base until the Phase-2 anchor revision.
-- **One fixed neutral-medium base** (per-user skin/hair variation is Phase-2).
+- Avatar art is the **decomposed North Star neutral stack**, served as **WebP** (base `…-v2.webp` +
+  face/eyes/iris/blush/hair), total ≈ **82 KB** across the six layers.
+- **The face is alive:** **blink is LIVE** (Option-A eyelids, measured medium fill) and **breathing**
+  runs. **Dynamic expressions (happy/sad/…) are NOT yet on R2** — the raster face is a fixed neutral;
+  the expression overlay stays off on R2 (expression swaps are a later art track).
+- **Head/face/eye + clothing cosmetics are hidden** on the raster stack until the anchor revision;
+  **aura/back cosmetics DO render.**
+- **One fixed neutral-medium base** (per-user skin-tone variation for R2 is future work); **hair colour
+  IS tinted** live from the identity token.
+- **Known accepted cosmetic debt (D-061):** a faint light residual can remain along the forearms/hands
+  on dark backgrounds at large sizes (owner-accepted; gone at small sizes). Trousers/shoes are clean.
+- **Robustness (D-062):** any failed R2 asset → complete C2 fallback (no broken avatar). Blink lids are
+  covered by goldens (D-063).
 
 ## 4. Onboarding steps
 
@@ -46,8 +69,9 @@ A user meeting all three gets a clean Phase-1 experience (the Master avatar + an
    - Console: `localStorage.setItem("avatar_r2","1")` then reload.
    - Enable bookmarklet: `javascript:(function(){localStorage.setItem('avatar_r2','1');location.reload();})();`
    - Opt-out bookmarklet: `javascript:(function(){localStorage.removeItem('avatar_r2');location.reload();})();`
-   - (Do **not** ship a UI toggle for Phase-1.)
-3. Verify: the avatar on hub/quiz/avatar pages shows the Master raster; equipped aura/back still show.
+   - (Do **not** ship a UI toggle yet.)
+3. Verify: the avatar on hub/quiz/avatar pages shows the decomposed R2 stack (base `…-r2/base/…v2.webp`),
+   the eyes **blink**, and equipped aura/back still show.
 
 > **Boundary:** the key lives in `localStorage`, which is **per-browser/per-device** — it cannot be
 > set remotely. Onboarding is the pilot user running the one-liner in their own browser. There is no
@@ -59,23 +83,29 @@ A user meeting all three gets a clean Phase-1 experience (the Master avatar + an
 - **Whole pilot:** nothing to roll back globally — `AVATAR_R2` is already `false`; the feature is only
   ever on for browsers that set the key. (Reverting the override capability would be a one-line code
   change to `isAvatarR2()`, but is not needed to stop the pilot.)
+- **Bad asset shipped:** the C2 default is untouched regardless; D-062's atomic fallback means even an
+  opt-in browser degrades to a clean C2 avatar until the asset is fixed.
 
 ## 6. Guardrails
 
-- **Do not flip `AVATAR_R2 = true`** (that enables it for every eligible user — not a pilot).
-- **No DB cohorting / no percentage rollout** in Phase-1.
-- Production behaviour for non-pilot users is **unchanged**.
-- This is a **preview**, not production activation of the raster avatar, and **not** Phase-2.
+- **Do not flip `AVATAR_R2 = true`** (that enables it for every eligible neutral-medium browser at once —
+  not a pilot).
+- **No DB cohorting / no percentage rollout** exists in code — a real allowlist/percentage rollout would
+  need a code change to `isAvatarR2()`; today it is per-browser opt-in or a one-line global flip only.
+- Production behaviour for non-pilot users is **unchanged** (C2/SVG, byte-for-byte).
+- This is a **controlled pilot of the decomposed Phase-2 stack**, not a global production activation.
+- **Before a broader (student-facing) pilot:** the activation-readiness audit's remaining item **F2**
+  (make the arm-fringe reproducer idempotent) should be closed; F1/F4/F5 are already closed (D-062/D-063
+  + R2 goldens).
 
 ## 7. Pilot log
 
 | # | User | Identity | Cosmetics | Eligibility | Onboarding | Status |
 |---|---|---|---|---|---|---|
-| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium` (default) | none equipped | ✅ qualifies (neutral-medium, no gated cosmetics) | `localStorage.avatar_r2='1'` (§4) in that account's browser | **✅ Verified (2026-07-01)** — enabled in a signed-in browser session; raster renders on avatar/hub/quiz (base = `…-r2/…png`); no cosmetic loss, no C2 fallback. |
+| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium` (default) | none equipped | ✅ qualifies (neutral-medium, no gated cosmetics) | `localStorage.avatar_r2='1'` (§4) in that account's browser | **✅ Verified 2026-07-01 (Phase-1 baked base — historical)**; **re-verified for the Phase-2 decomposed stack via the fixture-intercepted activation-readiness audit (2026-07-22): R2 renders on avatar/hub/quiz, base = `…-r2/base/body-neutral-medium-v2.webp`, blink live, no broken images, no C2 fallback.** |
 
-_Verified 2026-07-01: profile `avatar_identity` = neutral / medium (default), `equipped_slots` empty →
-raster resolves and no cosmetics disappear. Onboarding flow verified end-to-end (no key → C2 `.svg`;
-`avatar_r2=1` → raster `.png`; cleared → C2) and the rendered pilot experience captured on all three
-surfaces. **Note:** the opt-in is per-browser `localStorage` (no server-side state) — persistent
-activation still requires setting the key in the account's actual browser/device. Add a row per
-additional pilot user; keep the group small and to the §2 criteria._
+_History: the 2026-07-01 verification was against the Phase-1 baked **PNG** base with a static face. The
+current pilot experience is the Phase-2 decomposed **WebP** stack with live blink — verified read-only on
+all three surfaces (fixture-intercepted, 0 backend contact) in the activation-readiness audit; render-scale
++ blink open/closed frames are golden-protected (F4/F5). The opt-in remains per-browser `localStorage`
+(no server-side state). Add a row per additional pilot user; keep the group small and to the §2 criteria._
