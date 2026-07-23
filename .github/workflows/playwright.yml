@@ -7,10 +7,20 @@ on:
 # Both this suite and update-avatar-goldens.yml mutate/read the SAME shared Supabase
 # test student profile. Serialize them across the whole repo so concurrent runs cannot
 # bleed state (e.g. equipped cosmetics) into golden regeneration. Queue, do not cancel.
+# NOTE: docs/avatar-tool fast modes do NOT touch Supabase, but the group is evaluated
+# before file classification, so they still queue here. That is safe (they never mutate
+# state) and keeps the lock simple; a per-mode concurrency split is deferred (D-066).
 concurrency:
   group: e2e-shared-supabase
   cancel-in-progress: false
 jobs:
+  # Single required check `test` — path-aware. It ALWAYS runs and always reports, so a
+  # branch-protection "test" requirement is satisfied in every mode. Which steps execute
+  # depends on the classified mode (docs / avatar-tool / full); see .github/ci/classify-changes.mjs.
+  #   - pull_request → classify changed files; docs/avatar-tool run fast checks only, full
+  #     runs the whole existing Playwright flow.
+  #   - push (e.g. to main) → forced `full` (the safety net; classification never skips main-CI).
+  #   - any error / unknown / empty classification → `full` (fail closed).
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -28,17 +38,174 @@ jobs:
       TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Full history so fast-mode git diff --check can compare the PR base..head.
+        fetch-depth: 0
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+
+    # ── Classify the change set ────────────────────────────────────────────────
+    # Official actions/github-script (not a third-party changed-files action). Paginates
+    # pulls.listFiles, imports the pure classifier, sets outputs.mode, logs the file list,
+    # and writes the job summary. push/non-PR events are forced to `full`.
+    - id: classify
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const path = require('path');
+          const fs = require('fs');
+          const { pathToFileURL } = require('url');
+
+          let files = [];
+          let forcedFull = false;
+          if (context.eventName === 'pull_request') {
+            const iterator = github.paginate.iterator(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            for await (const { data } of iterator) {
+              for (const f of data) files.push(f.filename);
+            }
+          } else {
+            // push (e.g. to main) or any non-PR trigger → always full (safety net).
+            forcedFull = true;
+          }
+
+          let mode;
+          try {
+            if (forcedFull) {
+              mode = 'full';
+            } else {
+              const mod = await import(pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href);
+              mode = mod.classify(files);
+            }
+          } catch (err) {
+            // Fail closed on any classifier/import error.
+            core.warning('classification error → falling back to full: ' + err.message);
+            mode = 'full';
+          }
+          if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
+
+          const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
+          fs.writeFileSync(listPath, files.join('\n'));
+          core.setOutput('mode', mode);
+          core.setOutput('files_path', listPath);
+
+          core.startGroup('Path-aware CI classification');
+          console.log('event : ' + context.eventName);
+          console.log('commit: ' + context.sha);
+          console.log('mode  : ' + mode);
+          console.log('changed files (' + files.length + '):');
+          for (const f of files) console.log('  ' + f);
+          if (forcedFull) console.log('(non-PR event → forced full)');
+          core.endGroup();
+
+          const checks = mode === 'docs'
+            ? 'classifier unit tests, git diff --check, mojibake scan'
+            : mode === 'avatar-tool'
+            ? 'classifier unit tests, git diff --check, mojibake scan, node --check on changed tools/avatar scripts'
+            : 'classifier unit tests, npm ci, Playwright browser install, global setup, full Playwright suite';
+          const reason = mode === 'docs'
+            ? 'docs — Playwright not required; documentation checks passed'
+            : mode === 'avatar-tool'
+            ? 'avatar-tool — Playwright not required; standalone tool checks passed'
+            : (forcedFull
+                ? 'full — non-PR/main push always runs the full suite'
+                : 'full — changes outside docs/** and tools/avatar/** require the full suite');
+
+          await core.summary
+            .addHeading('Path-aware Playwright CI')
+            .addTable([
+              [{ data: 'Field', header: true }, { data: 'Value', header: true }],
+              ['event', context.eventName],
+              ['commit', context.sha],
+              ['mode', mode],
+              ['Playwright skipped', mode === 'full' ? 'no' : 'yes'],
+              ['checks', checks],
+              ['reason', reason],
+            ])
+            .addHeading('Changed files', 3)
+            .addRaw(files.length ? files.map((f) => '- `' + f + '`').join('\n') : '_none reported_')
+            .write();
+
+    # ── Classifier unit tests — run in EVERY mode ─────────────────────────────
+    # Fast, node-only. Guarantees the classification logic is verified on every PR and push
+    # (including this full-mode workflow PR), proving the docs/avatar-tool decisions.
+    - name: Classifier unit tests
+      run: node --test tests/unit/ci-classify-changes.test.mjs
+
+    # ── Fast checks (docs + avatar-tool) ──────────────────────────────────────
+    - name: Fast checks — whitespace + mojibake
+      if: steps.classify.outputs.mode == 'docs' || steps.classify.outputs.mode == 'avatar-tool'
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        FILES: ${{ steps.classify.outputs.files_path }}
+      run: |
+        set -euo pipefail
+        echo "== git diff --check (whitespace / conflict markers) =="
+        git diff --check "$BASE_SHA" "$HEAD_SHA"
+        echo "== mojibake scan on changed docs/** =="
+        node - "$FILES" <<'NODE'
+        const fs = require('fs');
+        const listPath = process.argv[2];
+        const files = fs.readFileSync(listPath, 'utf8').split('\n')
+          .map((s) => s.trim()).filter(Boolean).filter((f) => f.startsWith('docs/'));
+        // Detection code points as fromCharCode so the workflow file itself carries no literal mojibake.
+        const forbidden = [
+          ['U+00C3 mojibake lead', String.fromCharCode(0xC3)],
+          ['U+FFFD replacement char', String.fromCharCode(0xFFFD)],
+          ['U+00EF U+00BF U+00BD sequence', String.fromCharCode(0xEF, 0xBF, 0xBD)],
+        ];
+        let bad = false;
+        for (const f of files) {
+          if (!fs.existsSync(f)) continue;
+          const text = fs.readFileSync(f, 'utf8');
+          for (const [name, ch] of forbidden) {
+            if (text.includes(ch)) { console.log(`::error file=${f}::mojibake detected (${name})`); bad = true; }
+          }
+        }
+        if (bad) { console.log('mojibake found in changed docs'); process.exit(1); }
+        console.log('no mojibake in ' + files.length + ' changed doc file(s)');
+        NODE
+        echo "fast doc checks OK"
+
+    # ── Avatar-tool syntax check ──────────────────────────────────────────────
+    - name: Avatar-tool syntax check (node --check)
+      if: steps.classify.outputs.mode == 'avatar-tool'
+      env:
+        FILES: ${{ steps.classify.outputs.files_path }}
+      run: |
+        set -euo pipefail
+        checked=0
+        while IFS= read -r f; do
+          [ -z "$f" ] && continue
+          case "$f" in
+            tools/avatar/*.mjs|tools/avatar/*.js) ;;
+            *) continue ;;
+          esac
+          [ -f "$f" ] || continue
+          echo "node --check $f"
+          node --check "$f"
+          checked=$((checked+1))
+        done < "$FILES"
+        echo "node --check passed on $checked changed tools/avatar script(s)"
+
+    # ── Full suite (unchanged) ────────────────────────────────────────────────
     - name: Install dependencies
+      if: steps.classify.outputs.mode == 'full'
       run: npm ci
     - name: Install Playwright Browsers
+      if: steps.classify.outputs.mode == 'full'
       run: npx playwright install --with-deps
     - name: Run Playwright tests
+      if: steps.classify.outputs.mode == 'full'
       run: npx playwright test
     - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+      if: ${{ steps.classify.outputs.mode == 'full' && !cancelled() }}
       with:
         name: playwright-report
         path: playwright-report/
