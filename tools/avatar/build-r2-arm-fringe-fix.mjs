@@ -21,10 +21,12 @@
 // IDEMPOTENT / REPRODUCIBLE (finding F2):
 //   The runtime is both the INPUT (D-059, pre-fix) and the OUTPUT (D-061, promoted). The tool
 //   accepts EITHER on disk. From the D-059 input it re-derives the fix; from the already-promoted
-//   D-061 output the exception mask is empty (the matte is already recoloured), so re-derivation
-//   changes nothing and re-encodes to the identical file. Either way it reproduces exactly the
-//   three tracked artefacts, so a fresh clone on main can verify provenance without the pre-fix
-//   blob, and `--promote` is safe to re-run (byte-identical, tree stays clean).
+//   D-061 output the runtime-side selection mask is empty and the runtime candidate touches 0 px
+//   (the matte is already recoloured), so re-derivation changes nothing and re-encodes to the
+//   identical file. The owner-approved SOURCE-side exception mask is unchanged (still 2353 px) and
+//   is reproduced byte-for-byte — it is derived from the D-057 source, not from the runtime. Either
+//   way the tool reproduces exactly the three tracked artefacts, so a fresh clone on main can verify
+//   provenance without the pre-fix blob, and `--promote` is safe to re-run (byte-identical, clean tree).
 //
 // HARD-FAIL INVARIANTS (any violation aborts before writing anything):
 //   * D-057 source + D-058 protect hashes locked; runtime == D-059 input OR D-061 output
@@ -67,7 +69,8 @@ const PROT_SHA  = "302324b7b9c0acb124c982294d1b85feb9edbf467aaad0f0a52b2c7e96f69
 // accepts EITHER so it stays reproducible/verifiable after promotion (finding F2):
 //   * RT_SHA     — the D-059 pre-fix runtime: re-derives the fix from scratch.
 //   * RT_OUT_SHA — the D-061 promoted runtime already on main: re-derivation is a verified
-//                  no-op (the arm matte is already recoloured, so the exception mask is empty).
+//                  no-op (the arm matte is already recoloured, so the runtime-side selection
+//                  mask is empty and the runtime candidate touches 0 px).
 // Both paths must produce exactly RT_OUT_SHA. Any other blob is rejected.
 const RT_SHA    = "3a30d8c7bc29a4813e9f4f2902fed26235b3458a56f733c11067559968da4f37";
 const RT_OUT_SHA = "28765eea616dd92beb73273c67d6d603cabd9f92af8057d2d9a5fe50c01032f9";
