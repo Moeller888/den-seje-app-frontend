@@ -42,6 +42,8 @@ _Last reviewed: 2026-07-01._
   avatar-tool-only PRs skip the full browser suite (fast checks only); **push to main and any
   runtime/test/asset/workflow change always run the full suite** (fail-closed). The required
   `test` check is preserved in every mode. Live-backend/concurrency split deferred.
+  **Live on main since `17d0574` (2026-07-23).** The two fast paths are **docs** (only `docs/**`)
+  and **avatar-tool** (only `tools/avatar/**` + `docs/**`); everything else stays full.
 
 ## Completed sections
 
