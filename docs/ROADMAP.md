@@ -26,6 +26,12 @@ _Last reviewed: 2026-07-01._
   layer set is COMPLETE and owner-countersigned (integration composite PASS, PR #86/#87)** — remaining
   Gate-3 scope is the four D-042 expression variants (producer tool merged PR #88, never run). Nothing
   promoted. Gate 5 remains open.
+  **✅ R2 activation-readiness audit CLOSED — VERIFIED & COMPLETE on main (2026-07-23, `9d27df5`).**
+  All findings **F1–F5 closed** (D-062 runtime asset-load-failure→C2 fallback · D-065 idempotent
+  arm-fringe reproducer · D-064 Phase-2 pilot-doc refresh · F4 R2 goldens · D-063 blink open/closed
+  goldens); **F6** = accepted debt (D-061 faint arm residual); **F7/F8** = LOW. Green main CI
+  (365 passed). **`AVATAR_R2` stays `false`** — audit closure is verification only, **no pilot,
+  no flag-flip.** See `docs/project-state.md` (D-062…D-065) + `docs/167a-phase1-pilot-rollout.md`.
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
