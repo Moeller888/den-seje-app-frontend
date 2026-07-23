@@ -18,17 +18,27 @@
 // Nothing outside the exception mask is touched. The D-058 protect PNG is never
 // written; the D-057 source PNG is never overwritten.
 //
+// IDEMPOTENT / REPRODUCIBLE (finding F2):
+//   The runtime is both the INPUT (D-059, pre-fix) and the OUTPUT (D-061, promoted). The tool
+//   accepts EITHER on disk. From the D-059 input it re-derives the fix; from the already-promoted
+//   D-061 output the exception mask is empty (the matte is already recoloured), so re-derivation
+//   changes nothing and re-encodes to the identical file. Either way it reproduces exactly the
+//   three tracked artefacts, so a fresh clone on main can verify provenance without the pre-fix
+//   blob, and `--promote` is safe to re-run (byte-identical, tree stays clean).
+//
 // HARD-FAIL INVARIANTS (any violation aborts before writing anything):
-//   * input hashes must match the locked D-057 / D-058 / D-059 values
+//   * D-057 source + D-058 protect hashes locked; runtime == D-059 input OR D-061 output
 //   * main-figure alpha unchanged (alphaMainDiff == 0)
 //   * zero change outside the exception mask (source + runtime)
 //   * protect-diff outside the exception == 0
 //   * two independent encodes are byte-identical (determinism)
 //   * runtime keeps D-059's trouser/shoe result (change is exception-only)
+//   * derived artefacts equal the tracked D-061 outputs byte-for-byte (exc / source / runtime sha)
+//   * idempotency: re-running over the promoted D-061 runtime touches 0 px
 //
 // USAGE (PowerShell):
-//   node tools/avatar/build-r2-arm-fringe-fix.mjs            # verify + dry-run
-//   node tools/avatar/build-r2-arm-fringe-fix.mjs --promote  # write tracked artefacts
+//   node tools/avatar/build-r2-arm-fringe-fix.mjs            # verify + dry-run (idempotent on main)
+//   node tools/avatar/build-r2-arm-fringe-fix.mjs --promote  # write tracked artefacts (no-op if current)
 //
 // Requires the vendored encoders (gitignored, fetchable):
 //   node tools/avatar/fetch-dwebp.mjs   (dwebp + cwebp 1.5.0)
@@ -53,12 +63,25 @@ const PROT_PNG  = join(REPO, "assets", "avatar", "reference", "gate2-protect-mas
 const RUNTIME   = join(REPO, "assets", "avatar-r2", "base", "body-neutral-medium-v2.webp");
 const SRC_SHA   = "2cb93ee00be89d16d1b1e9cae9781b596f931a52fd6f667238c9e9bda38afe4b";
 const PROT_SHA  = "302324b7b9c0acb124c982294d1b85feb9edbf467aaad0f0a52b2c7e96f692f5";
+// The runtime is BOTH the input (D-059, pre-fix) AND the output (D-061, promoted). The tool
+// accepts EITHER so it stays reproducible/verifiable after promotion (finding F2):
+//   * RT_SHA     — the D-059 pre-fix runtime: re-derives the fix from scratch.
+//   * RT_OUT_SHA — the D-061 promoted runtime already on main: re-derivation is a verified
+//                  no-op (the arm matte is already recoloured, so the exception mask is empty).
+// Both paths must produce exactly RT_OUT_SHA. Any other blob is rejected.
 const RT_SHA    = "3a30d8c7bc29a4813e9f4f2902fed26235b3458a56f733c11067559968da4f37";
+const RT_OUT_SHA = "28765eea616dd92beb73273c67d6d603cabd9f92af8057d2d9a5fe50c01032f9";
 
 // ── promotion targets ────────────────────────────────────────────────────────
 const OUT_EXC   = join(REPO, "assets", "avatar", "reference", "arm-fringe-write-exception-v1.png");
 const OUT_SRC   = join(REPO, "assets", "avatar", "reference", "neutral-base-v2-armfringe.png");
 const OUT_RT    = RUNTIME; // overwritten in place on --promote
+
+// ── expected outputs (the D-061 promoted artefacts already tracked on main) ──
+// The tool self-verifies it reproduces exactly these byte-for-byte — from the D-059 input
+// OR idempotently from the already-promoted D-061 runtime. A mismatch hard-fails.
+const EXC_OUT_SHA = "47dbec44a7ef6c3b196fef18d81e0cba72572c6df04f07305c07ae96c998a6c5";
+const SRC_OUT_SHA = "347a258fb962db383d5fc8b5271c613fd873319b4416d31e80651f7f20dca165";
 
 // ── exception definition (owner-approved Candidate B) ────────────────────────
 const SRC_NW = 215, SRC_EDGE = 3, SRC_Y0 = 700, SRC_Y1 = 1190, SRC_TX0 = 380, SRC_TX1 = 624;
@@ -147,9 +170,15 @@ function main(){
   const bad = [];
   if(inHash.src!==SRC_SHA) bad.push(`D-057 source ${inHash.src}`);
   if(inHash.prot!==PROT_SHA) bad.push(`D-058 protect ${inHash.prot}`);
-  if(inHash.rt!==RT_SHA) bad.push(`D-059 runtime ${inHash.rt}`);
+  // runtime: accept the D-059 input (fresh derivation) OR the D-061 output (idempotent no-op)
+  let rtPromoted = false;
+  if(inHash.rt===RT_SHA) rtPromoted = false;
+  else if(inHash.rt===RT_OUT_SHA) rtPromoted = true;
+  else bad.push(`runtime ${inHash.rt} (neither D-059 input ${RT_SHA.slice(0,12)}… nor D-061 output ${RT_OUT_SHA.slice(0,12)}…)`);
   if(bad.length){ console.error("✖ input hash mismatch:\n  "+bad.join("\n  ")); process.exit(4); }
-  console.log("✓ inputs hash-locked (D-057 / D-058 / D-059)");
+  console.log(rtPromoted
+    ? "✓ inputs hash-locked (D-057 / D-058; runtime already = D-061 output → idempotent verify mode)"
+    : "✓ inputs hash-locked (D-057 / D-058 / D-059 input)");
 
   // 2) build source + runtime candidate B
   const S = buildSource();
@@ -182,6 +211,13 @@ function main(){
   if(R.noSkin!==0) fail.push(`runtime noSkin=${R.noSkin}`);
   if(!rtDet) fail.push("runtime encode not deterministic");
   if(rAlpha!==0||rRgb!==0) fail.push(`runtime lossless roundtrip not exact (a=${rAlpha},rgb=${rRgb})`);
+  // reproduction: the derived artefacts must equal the tracked D-061 outputs byte-for-byte
+  if(excSha!==EXC_OUT_SHA) fail.push(`exception mask sha ${excSha.slice(0,16)} != tracked ${EXC_OUT_SHA.slice(0,16)}`);
+  if(srcCandSha!==SRC_OUT_SHA) fail.push(`source cand sha ${srcCandSha.slice(0,16)} != tracked ${SRC_OUT_SHA.slice(0,16)}`);
+  if(rtSha!==RT_OUT_SHA) fail.push(`runtime sha ${rtSha.slice(0,16)} != tracked D-061 ${RT_OUT_SHA.slice(0,16)}`);
+  // idempotency: re-running over the already-promoted D-061 runtime must change nothing
+  if(rtPromoted && (R.mask.reduce((s,v)=>s+v,0)!==0 || (R.connected+R.detached)!==0))
+    fail.push(`idempotency broken: re-run over promoted runtime touched ${R.connected+R.detached} px (mask ${R.mask.reduce((s,v)=>s+v,0)})`);
 
   console.log(`\nexception mask : ${S.mask.reduce((s,v)=>s+v,0)} px (connected ${S.connected}, detached ${S.detached})  sha ${excSha.slice(0,16)}  ${excPng.length} B`);
   console.log(`source cand B  : ${S.src.w}x${S.src.h}  sha ${srcCandSha.slice(0,16)}  ${srcPng.length} B`);
@@ -190,9 +226,11 @@ function main(){
   console.log(`  verify: alphaMainDiff=${R.verify.alphaMainDiff} outsideMaskDiff=${R.verify.outsideMaskDiff} det=${rtDet} roundtrip(a=${rAlpha},rgb=${rRgb})`);
 
   if(fail.length){ console.error("\n✖ INVARIANT FAILURE — nothing written:\n  "+fail.join("\n  ")); process.exit(5); }
-  console.log("\n✓ all invariants hold");
+  console.log(rtPromoted
+    ? "\n✓ all invariants hold — runtime already promoted (D-061); re-derivation is a verified byte-identical no-op"
+    : "\n✓ all invariants hold");
 
-  if(!promote){ console.log("\n(dry-run) pass --promote to write:\n  "+OUT_EXC+"\n  "+OUT_SRC+"\n  "+OUT_RT); return; }
+  if(!promote){ console.log("\n(dry-run) pass --promote to write"+(rtPromoted?" (byte-identical no-op — tree stays clean)":"")+":\n  "+OUT_EXC+"\n  "+OUT_SRC+"\n  "+OUT_RT); return; }
 
   writeFileSync(OUT_EXC, excPng);
   writeFileSync(OUT_SRC, srcPng);
