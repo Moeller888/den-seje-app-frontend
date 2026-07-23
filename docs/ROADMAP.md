@@ -38,6 +38,10 @@ _Last reviewed: 2026-07-01._
   "🔊 Læs op", on-device, no consent, fail-soft; Danish voice preferred. First platform service
   activated for students; Piper clips remain an offline deliverable.
 - **Docs:** this foundation set (Section 157AA) being established.
+- **CI (D-066):** the Playwright workflow is **path-aware** — docs-only and standalone
+  avatar-tool-only PRs skip the full browser suite (fast checks only); **push to main and any
+  runtime/test/asset/workflow change always run the full suite** (fail-closed). The required
+  `test` check is preserved in every mode. Live-backend/concurrency split deferred.
 
 ## Completed sections
 
