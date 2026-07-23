@@ -94,9 +94,9 @@ A user meeting all three gets a clean experience (the decomposed R2 avatar + any
   need a code change to `isAvatarR2()`; today it is per-browser opt-in or a one-line global flip only.
 - Production behaviour for non-pilot users is **unchanged** (C2/SVG, byte-for-byte).
 - This is a **controlled pilot of the decomposed Phase-2 stack**, not a global production activation.
-- **Before a broader (student-facing) pilot:** the activation-readiness audit's remaining item **F2**
-  (make the arm-fringe reproducer idempotent) should be closed; F1/F4/F5 are already closed (D-062/D-063
-  + R2 goldens).
+- **Activation-readiness audit:** all findings **F1–F5 are closed** (D-062 atomic fallback, D-063 blink
+  goldens, D-064 doc refresh, D-065 idempotent reproducer + R2 goldens). F6 is accepted debt (D-061 faint
+  arm residual), F7/F8 are LOW. No open blocker remains before a controlled student-facing pilot.
 
 ## 7. Pilot log
 
