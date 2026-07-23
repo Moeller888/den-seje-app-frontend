@@ -3,8 +3,9 @@
 // Mirrors fetch-cwebp.mjs: downloads Google's official libwebp `dwebp.exe`
 // (Windows x64) and extracts it to tools/avatar/vendor/dwebp.exe. The binary is
 // GITIGNORED (never committed); this script makes it reproducible (owner / CI /
-// a fresh clone re-fetches). Needed by build-r2-alpha-decontaminate.mjs to
-// decode the promoted runtime WebPs back to RGBA for alpha-aware analysis.
+// a fresh clone re-fetches). Needed by build-r2-alpha-decontaminate.mjs and by
+// build-r2-arm-fringe-fix.mjs (D-065, verify/idempotent mode) to decode the
+// promoted runtime WebPs back to RGBA for alpha-aware analysis.
 //
 //   node tools/avatar/fetch-dwebp.mjs
 //
