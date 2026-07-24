@@ -33,6 +33,7 @@ jobs:
           const { pathToFileURL } = require('url');
           const modUrl = pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href;
 
+          const mod = await import(modUrl);
           let mode = 'full';
           let files = [];
           let reason = 'full — non-PR/main push always runs the full suite';
@@ -47,11 +48,11 @@ jobs:
               for await (const { data } of iterator) {
                 for (const f of data) files.push(f.filename);
               }
-              if (files.length > 3000) {
+              // pulls.listFiles caps at 3000; a list AT the cap may be truncated → fail closed.
+              if (mod.fileCountForcesFull(files.length)) {
                 mode = 'full';
-                reason = 'full — file list too large (' + files.length + ') to classify safely';
+                reason = 'full — file list too large or truncated (' + files.length + '; API caps at ' + mod.MAX_CHANGED_FILES + ')';
               } else {
-                const mod = await import(modUrl);
                 mode = mod.classify(files);
                 reason = mode === 'docs'
                   ? 'docs — Playwright not required; documentation checks only'
@@ -68,19 +69,22 @@ jobs:
           }
           if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
 
-          let group;
-          try {
-            const mod = await import(modUrl);
-            group = mod.concurrencyGroup(mode, context.runId);
-          } catch (err) {
-            core.warning('concurrency-group error → shared lock: ' + err.message);
-            group = 'e2e-shared-supabase';
+          // Encode the changed-files payload; if it exceeds the job-output cap, fail closed to
+          // full + shared and drop the payload (full does not need the list).
+          let b64 = Buffer.from(JSON.stringify(files)).toString('base64');
+          if (mod.outputTooLarge(b64.length)) {
+            mode = 'full';
+            reason = 'full — changed-files payload too large (' + b64.length + ' b64 chars > ' + mod.MAX_OUTPUT_B64_LEN + '), failing closed';
+            files = [];
+            b64 = '';
           }
+
+          // concurrency_group OUTPUT is for logging/summary only — the real job lock is derived
+          // from classify result + validated mode in the `test` job's concurrency expression.
+          let group = mod.concurrencyGroup(mode, context.runId);
           if (typeof group !== 'string' || group === '') group = 'e2e-shared-supabase';
-          // Belt-and-suspenders: only fast modes may use a non-shared group.
           if (mode === 'full' && group !== 'e2e-shared-supabase') group = 'e2e-shared-supabase';
 
-          const b64 = Buffer.from(JSON.stringify(files)).toString('base64');
           core.setOutput('mode', mode);
           core.setOutput('concurrency_group', group);
           core.setOutput('changed_files_b64', b64);
@@ -127,8 +131,19 @@ jobs:
     if: always()
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    # The ACTUAL job lock — does NOT trust the classify concurrency_group output alone. A fast
+    # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/avatar-tool, and
+    # it is derived from the trusted github.run_id. Every other state (classify
+    # failure/cancelled/skipped, missing/invalid/full mode, partial outputs) → the shared lock.
+    # Mirrors jobLockGroup() in .github/ci/classify-changes.mjs.
     concurrency:
-      group: ${{ needs.classify.outputs.concurrency_group || 'e2e-shared-supabase' }}
+      group: >-
+        ${{
+          (needs.classify.result == 'success'
+            && (needs.classify.outputs.mode == 'docs' || needs.classify.outputs.mode == 'avatar-tool'))
+          && format('ci-fast-{0}', github.run_id)
+          || 'e2e-shared-supabase'
+        }}
       cancel-in-progress: false
     # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
     # process.env via repository Actions secrets. Values live ONLY in GitHub Secrets. If a
@@ -160,30 +175,44 @@ jobs:
         script: |
           const fs = require('fs');
           const path = require('path');
+          const { pathToFileURL } = require('url');
+          const mod = await import(pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href);
+
           const raw = process.env.CLASSIFY_MODE || '';
           const mode = (raw === 'docs' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';
+          const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
 
-          let files = [];
-          let decoded = true;
-          try {
-            const b64 = process.env.CHANGED_FILES_B64 || '';
-            const parsed = b64 ? JSON.parse(Buffer.from(b64, 'base64').toString('utf8')) : [];
-            if (Array.isArray(parsed)) files = parsed.filter((f) => typeof f === 'string');
-            else decoded = false;
-          } catch (err) {
-            decoded = false;
-            core.warning('changed-files decode failed: ' + err.message);
-          }
-
-          // Fast modes NEED the file list. If it can't be decoded, fail this check clearly —
-          // never fall through to the full suite (the job is already on the fast lock).
-          if ((mode === 'docs' || mode === 'avatar-tool') && !decoded) {
-            core.setFailed('fast mode (' + mode + ') but the changed-files list could not be decoded');
+          if (mode === 'full') {
+            // Full does not need the changed-files list; write an empty file and proceed.
+            fs.writeFileSync(listPath, '');
+            core.setOutput('mode', 'full');
+            core.setOutput('files_path', listPath);
+            console.log('effective mode: full');
             return;
           }
 
-          const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
-          fs.writeFileSync(listPath, files.length ? files.join('\n') + '\n' : '');
+          // Fast mode (docs/avatar-tool): the payload MUST be present, decodable, and valid.
+          // Any failure fails the check clearly — never escalate to the full suite here, because
+          // this job already holds the fast lock (running full unlocked is the exact thing to avoid).
+          const b64 = process.env.CHANGED_FILES_B64 || '';
+          if (b64 === '') {
+            core.setFailed('fast mode (' + mode + ') but CHANGED_FILES_B64 is empty/missing');
+            return;
+          }
+          let files;
+          try {
+            files = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+          } catch (err) {
+            core.setFailed('fast mode (' + mode + ') but the changed-files payload could not be base64/JSON decoded: ' + err.message);
+            return;
+          }
+          const v = mod.validateFastPayload(mode, files);
+          if (!v.ok) {
+            core.setFailed('fast mode (' + mode + ') payload invalid: ' + v.error);
+            return;
+          }
+
+          fs.writeFileSync(listPath, files.join('\n') + '\n');
           core.setOutput('mode', mode);
           core.setOutput('files_path', listPath);
           console.log('effective mode: ' + mode + ' (' + files.length + ' changed file(s))');

@@ -50,6 +50,66 @@ export function concurrencyGroup(mode, runId) {
   return "ci-fast-" + id;
 }
 
+// The ACTUAL job lock for the `test` job. This mirrors the GitHub expression in
+// .github/workflows/playwright.yml exactly and is the single source of truth for the lock —
+// the classify `concurrency_group` OUTPUT is kept only for logging, never trusted as authority.
+// A fast group is chosen ONLY when classify SUCCEEDED and the validated mode is docs/avatar-tool,
+// and it is derived from the trusted github.run_id. Every other state — classify
+// failure/cancelled/skipped, missing/invalid/full mode, partial outputs — takes the shared lock.
+// (Note: github.run_id is always a positive integer, so this never emits a malformed group in CI.)
+export function jobLockGroup(classifyResult, mode, runId) {
+  const fast =
+    classifyResult === "success" &&
+    (mode === MODES.DOCS || mode === MODES.AVATAR_TOOL);
+  return fast ? "ci-fast-" + String(runId) : SHARED_LOCK;
+}
+
+// GitHub's pulls.listFiles returns AT MOST 3000 files — a change set at that size may be
+// truncated, so the classification is untrustworthy. Fail closed to full at the cap.
+export const MAX_CHANGED_FILES = 3000;
+export function fileCountForcesFull(count) {
+  return typeof count !== "number" || !Number.isFinite(count) || count >= MAX_CHANGED_FILES;
+}
+
+// Conservative cap on the base64 changed-files job output (GitHub limits job-output size).
+// Fast-mode lists are tiny, so this only ever trips on a huge full-mode PR (where the list is
+// unused) — fail closed to full + shared and drop the payload.
+export const MAX_OUTPUT_B64_LEN = 512 * 1024;
+export function outputTooLarge(b64Length) {
+  return typeof b64Length !== "number" || !Number.isFinite(b64Length) || b64Length > MAX_OUTPUT_B64_LEN;
+}
+
+// Validate the decoded changed-files payload for a FAST mode before running its checks. Returns
+// { ok: true } or { ok: false, error }. Full mode does not need the list → always ok. In fast
+// mode the payload must be a NON-EMPTY array of non-empty strings, with every path inside the
+// mode's safe set (nothing silently filtered). Fails closed so a fast job never runs hollow.
+export function validateFastPayload(mode, files) {
+  if (mode !== MODES.DOCS && mode !== MODES.AVATAR_TOOL) return { ok: true };
+  if (!Array.isArray(files)) return { ok: false, error: "changed-files payload is not an array" };
+  if (files.length === 0) return { ok: false, error: "changed-files payload is empty" };
+  for (const f of files) {
+    if (typeof f !== "string" || f.trim() === "") {
+      return { ok: false, error: "changed-files contains a non-string/empty entry" };
+    }
+  }
+  if (mode === MODES.DOCS) {
+    if (!files.every((f) => f.startsWith(DOCS_PREFIX))) {
+      return { ok: false, error: "docs mode but a path is outside docs/**" };
+    }
+    return { ok: true };
+  }
+  // avatar-tool
+  const hasTool = files.some((f) => f.startsWith(AVATAR_TOOL_PREFIX));
+  const onlyToolOrDocs = files.every(
+    (f) => f.startsWith(AVATAR_TOOL_PREFIX) || f.startsWith(DOCS_PREFIX),
+  );
+  if (!hasTool) return { ok: false, error: "avatar-tool mode but no tools/avatar/** path" };
+  if (!onlyToolOrDocs) {
+    return { ok: false, error: "avatar-tool mode but a path is outside tools/avatar/** or docs/**" };
+  }
+  return { ok: true };
+}
+
 // Normalise a single path entry. Returns null for anything unusable (→ fail closed to full).
 function normalise(p) {
   if (typeof p !== "string") return null;
