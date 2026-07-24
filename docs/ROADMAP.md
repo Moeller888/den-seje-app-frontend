@@ -53,6 +53,10 @@ _Last reviewed: 2026-07-01._
   `classify` job routes docs/avatar-tool to an isolated `ci-fast-<run_id>` group, so they no longer
   queue behind full runs; full-mode and every fail-closed case keep the shared lock (a full suite can
   never run unlocked), and full stays serialized with `update-avatar-goldens.yml`.
+  **D-067 is now merged to main; this docs-only PR is the separate live verification** that docs-mode
+  takes an isolated `ci-fast-<run_id>` group and its `test` job starts and completes **without waiting
+  for the concurrent forced-full `e2e-shared-supabase` main run** — the timing evidence is recorded
+  here once observed.
 
 ## Completed sections
 
