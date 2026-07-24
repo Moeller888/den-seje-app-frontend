@@ -49,6 +49,10 @@ _Last reviewed: 2026-07-01._
   skipped) · full-mode (PR #106/#109, whole Playwright suite, 365 passed) · every push to main ran
   forced-full · the required `test` check stayed green in all modes. A missing-trailing-newline bug
   that made the avatar-tool `node --check` a no-op was fixed first (D-066 follow-up, PR #109).
+  **D-067 (2026-07-24):** fast modes now run **outside** the shared `e2e-shared-supabase` lock — a
+  `classify` job routes docs/avatar-tool to an isolated `ci-fast-<run_id>` group, so they no longer
+  queue behind full runs; full-mode and every fail-closed case keep the shared lock (a full suite can
+  never run unlocked), and full stays serialized with `update-avatar-goldens.yml`.
 
 ## Completed sections
 
