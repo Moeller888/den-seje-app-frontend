@@ -176,9 +176,18 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     (D-057…D-058 sources, D-059/D-061 base fixes, PR-C/PR-D render + blink). The living engines are
     **restored on the raster stack**: blink LIVE (Option-A lids, D-061/D-063), breathing LIVE; dynamic
     expressions remain off (fixed neutral raster face). Robustness: atomic C2 fallback on any failed R2
-    asset (D-062); render-scale + blink open/closed goldens (F4/F5). Activation-readiness audit: F1/F4/F5
-    closed, F2 open. Pilot: [167a-phase1-pilot-rollout.md](./167a-phase1-pilot-rollout.md). _The block
-    below is the earlier Gate-progression history and is kept for the record — it is NOT current status._
+    asset (D-062); render-scale + blink open/closed goldens (F4/F5). Activation-readiness audit: F1–F5
+    all closed (F2 closed by D-065). Pilot: [167a-phase1-pilot-rollout.md](./167a-phase1-pilot-rollout.md).
+  - **Expression layers PROMOTED (2026-07-24, D-068): four owner-approved D-042 face layers are tracked
+    but DORMANT.** `proud v1 · curious v1 · focused v2 · determined v2` are encoded to WebP under
+    `assets/avatar-r2/face/` and registered in `R2_MANIFEST.face` (v3→4), produced by the D-042
+    deterministic Master-composite pipeline (donor = brows/nose/mouth only; Master authoritative outside
+    the write mask). **No render change:** `faceSrcForR2` is called only with `"neutral"`, so the entries
+    are dormant until a separately gated expression-wiring step; `AVATAR_R2` stays `false`. `focused v1` /
+    `determined v1` were owner-rejected and not promoted. Worksheet:
+    [167a-phase2-gate3-expression-asset-promotion.md](./167a-phase2-gate3-expression-asset-promotion.md).
+    Shared R2 raster artefacts (eyes/hair/arms/shoes) are a separate outstanding blocker, not fixed here.
+    _The block below is the earlier Gate-progression history and is kept for the record — it is NOT current status._
   - **Phase-2 status (updated 2026-07-02): PLANNED, not started.** Audit + implementation plan
     ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief
     ([167a-phase2-asset-brief.md](./167a-phase2-asset-brief.md)) are written; the P2-0 cut-guide tool
