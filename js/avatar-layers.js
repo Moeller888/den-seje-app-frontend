@@ -341,11 +341,17 @@ export const R2_SERVED = { width: 512, height: 768 };
 // Only body_type "neutral" × skin_tone "medium" is supported by the raster set (U2);
 // every other identity stays on the C2/SVG path by resolver-null fallback.
 export const R2_MANIFEST = {
-  version:  3,
+  version:  4,
   base:     { "neutral-medium": 2 }, // body-neutral-medium-v2.webp — the DECOMPOSED D-057 base (no
                                      // face/eyes/hair). The Phase-1 baked v1 PNG stays on disk as the
                                      // historical/rollback asset but is no longer referenced (D-018).
-  face:     { "neutral": 1 },     // face/face-neutral-v1.webp (z3)
+  // face expressions (z3). "neutral" is the ONLY key the render resolves today (faceSrcForR2 is
+  // called solely with "neutral"). The four owner-approved D-042 expression layers — proud v1,
+  // curious v1, focused v2, determined v2 (docs/167a-phase2-gate3-expression-asset-promotion.md,
+  // owner visual sign-off 2026-07-24) — are registered here but DORMANT: no code path requests
+  // them, so they change no active behaviour until the separately gated expression-wiring step.
+  // focused v1 / determined v1 were OWNER_REJECTED and are NOT promoted or registered.
+  face:     { "neutral": 1, "proud": 1, "curious": 1, "focused": 2, "determined": 2 }, // face/face-{expr}-v{n}.webp (z3)
   blush:    { "multiply": 1 },    // face/face-blush-multiply-v1.webp (z2, mix-blend multiply)
   eyesIris: { "neutral": 1 },     // eyes/eyes-neutral-iris-v1.webp (z4, multiply × iris token)
   eyesFixed:{ "neutral": 1 },     // eyes/eyes-neutral-fixed-v1.webp (z4)
