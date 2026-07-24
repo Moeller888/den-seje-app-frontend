@@ -53,6 +53,12 @@ _Last reviewed: 2026-07-01._
   `classify` job routes docs/avatar-tool to an isolated `ci-fast-<run_id>` group, so they no longer
   queue behind full runs; full-mode and every fail-closed case keep the shared lock (a full suite can
   never run unlocked), and full stays serialized with `update-avatar-goldens.yml`.
+  **D-067 merged to main (`44701e0`); lock-bypass PROVEN live (PR #112).** While the forced-full main
+  run (`30103292846`, `push`, `e2e-shared-supabase`) was still **in_progress** (started 14:58:33Z), the
+  docs-only proof run (`30103516035`) took mode **docs** → isolated group **`ci-fast-30103516035`** and
+  its `test` job **started 15:01:48Z and completed `success` 15:01:57Z (~9 s)** — Playwright, browser
+  install and `npm ci` all skipped, required `test` green — i.e. docs-mode **finished before** the main
+  run, never queuing behind the shared lock.
 
 ## Completed sections
 
