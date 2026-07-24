@@ -90,7 +90,9 @@ jobs:
           if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
 
           const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
-          fs.writeFileSync(listPath, files.join('\n'));
+          // Trailing newline so any line-based reader sees every entry (a `while read`
+          // loop drops the final line of a file that does not end in a newline).
+          fs.writeFileSync(listPath, files.length ? files.join('\n') + '\n' : '');
           core.setOutput('mode', mode);
           core.setOutput('files_path', listPath);
 
@@ -180,19 +182,23 @@ jobs:
         FILES: ${{ steps.classify.outputs.files_path }}
       run: |
         set -euo pipefail
-        checked=0
-        while IFS= read -r f; do
-          [ -z "$f" ] && continue
-          case "$f" in
-            tools/avatar/*.mjs|tools/avatar/*.js) ;;
-            *) continue ;;
-          esac
-          [ -f "$f" ] || continue
-          echo "node --check $f"
-          node --check "$f"
-          checked=$((checked+1))
-        done < "$FILES"
-        echo "node --check passed on $checked changed tools/avatar script(s)"
+        # Node-based (like the mojibake scan) so a missing trailing newline in the file
+        # list can never drop the last entry — a bash `while read` loop silently would.
+        node - "$FILES" <<'NODE'
+        const fs = require('fs');
+        const { execFileSync } = require('child_process');
+        const files = fs.readFileSync(process.argv[2], 'utf8').split('\n')
+          .map((s) => s.trim()).filter(Boolean)
+          .filter((f) => f.startsWith('tools/avatar/') && (f.endsWith('.mjs') || f.endsWith('.js')));
+        let checked = 0;
+        for (const f of files) {
+          if (!fs.existsSync(f)) continue;
+          console.log('node --check ' + f);
+          execFileSync(process.execPath, ['--check', f], { stdio: 'inherit' });
+          checked++;
+        }
+        console.log('node --check passed on ' + checked + ' changed tools/avatar script(s)');
+        NODE
 
     # ── Full suite (unchanged) ────────────────────────────────────────────────
     - name: Install dependencies
