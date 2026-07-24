@@ -4,32 +4,136 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-# Both this suite and update-avatar-goldens.yml mutate/read the SAME shared Supabase
-# test student profile. Serialize them across the whole repo so concurrent runs cannot
-# bleed state (e.g. equipped cosmetics) into golden regeneration. Queue, do not cancel.
-# NOTE: docs/avatar-tool fast modes do NOT touch Supabase, but the group is evaluated
-# before file classification, so they still queue here. That is safe (they never mutate
-# state) and keeps the lock simple; a per-mode concurrency split is deferred (D-066).
-concurrency:
-  group: e2e-shared-supabase
-  cancel-in-progress: false
+
+# Concurrency is PER-JOB on `test` (see below), not workflow-level, so docs/avatar-tool
+# fast runs get an isolated `ci-fast-<run_id>` group and never queue behind the shared
+# Supabase lock. full-mode and every fail-closed fallback take `e2e-shared-supabase`,
+# preserving serialization with update-avatar-goldens.yml (both mutate the same shared
+# test-student profile). A full suite can never run under a fast group — see
+# .github/ci/classify-changes.mjs `concurrencyGroup`. (D-067)
+
 jobs:
-  # Single required check `test` — path-aware. It ALWAYS runs and always reports, so a
-  # branch-protection "test" requirement is satisfied in every mode. Which steps execute
-  # depends on the classified mode (docs / avatar-tool / full); see .github/ci/classify-changes.mjs.
-  #   - pull_request → classify changed files; docs/avatar-tool run fast checks only, full
-  #     runs the whole existing Playwright flow.
-  #   - push (e.g. to main) → forced `full` (the safety net; classification never skips main-CI).
-  #   - any error / unknown / empty classification → `full` (fail closed).
+  # ── Classify — no shared lock (touches no Supabase state) ───────────────────
+  # Determines the mode and the concurrency group the `test` job will take. Fail-closed:
+  # any error / non-PR event / oversized list → mode=full + group=e2e-shared-supabase.
+  classify:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.classify.outputs.mode }}
+      concurrency_group: ${{ steps.classify.outputs.concurrency_group }}
+      changed_files_b64: ${{ steps.classify.outputs.changed_files_b64 }}
+      reason: ${{ steps.classify.outputs.reason }}
+    steps:
+    - uses: actions/checkout@v4
+    - id: classify
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const path = require('path');
+          const { pathToFileURL } = require('url');
+          const modUrl = pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href;
+
+          let mode = 'full';
+          let files = [];
+          let reason = 'full — non-PR/main push always runs the full suite';
+          try {
+            if (context.eventName === 'pull_request') {
+              const iterator = github.paginate.iterator(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                per_page: 100,
+              });
+              for await (const { data } of iterator) {
+                for (const f of data) files.push(f.filename);
+              }
+              if (files.length > 3000) {
+                mode = 'full';
+                reason = 'full — file list too large (' + files.length + ') to classify safely';
+              } else {
+                const mod = await import(modUrl);
+                mode = mod.classify(files);
+                reason = mode === 'docs'
+                  ? 'docs — Playwright not required; documentation checks only'
+                  : mode === 'avatar-tool'
+                  ? 'avatar-tool — Playwright not required; standalone tool checks only'
+                  : 'full — changes outside docs/** and tools/avatar/** require the full suite';
+              }
+            }
+          } catch (err) {
+            core.warning('classification error → forced full: ' + err.message);
+            mode = 'full';
+            files = [];
+            reason = 'full — classifier error, failing closed';
+          }
+          if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
+
+          let group;
+          try {
+            const mod = await import(modUrl);
+            group = mod.concurrencyGroup(mode, context.runId);
+          } catch (err) {
+            core.warning('concurrency-group error → shared lock: ' + err.message);
+            group = 'e2e-shared-supabase';
+          }
+          if (typeof group !== 'string' || group === '') group = 'e2e-shared-supabase';
+          // Belt-and-suspenders: only fast modes may use a non-shared group.
+          if (mode === 'full' && group !== 'e2e-shared-supabase') group = 'e2e-shared-supabase';
+
+          const b64 = Buffer.from(JSON.stringify(files)).toString('base64');
+          core.setOutput('mode', mode);
+          core.setOutput('concurrency_group', group);
+          core.setOutput('changed_files_b64', b64);
+          core.setOutput('reason', reason);
+
+          const lockClass = group === 'e2e-shared-supabase' ? 'shared Supabase lock' : 'isolated fast run';
+          const checks = mode === 'docs'
+            ? 'classifier unit tests, git diff --check, mojibake scan'
+            : mode === 'avatar-tool'
+            ? 'classifier unit tests, git diff --check, mojibake scan, node --check on changed tools/avatar scripts'
+            : 'classifier unit tests, npm ci, Playwright browser install, global setup, full Playwright suite';
+
+          core.startGroup('Path-aware CI classification');
+          console.log('event      : ' + context.eventName);
+          console.log('commit     : ' + context.sha);
+          console.log('mode       : ' + mode);
+          console.log('group      : ' + group + ' (' + lockClass + ')');
+          console.log('changed    : ' + files.length + ' file(s)');
+          for (const f of files) console.log('  ' + f);
+          core.endGroup();
+
+          await core.summary
+            .addHeading('Path-aware Playwright CI — execution plan')
+            .addTable([
+              [{ data: 'Field', header: true }, { data: 'Value', header: true }],
+              ['event', context.eventName],
+              ['commit', context.sha],
+              ['mode', mode],
+              ['concurrency group', group],
+              ['lock class', lockClass],
+              ['Playwright skipped', mode === 'full' ? 'no' : 'yes'],
+              ['checks selected', checks],
+              ['reason', reason],
+            ])
+            .addHeading('Changed files', 3)
+            .addRaw(files.length ? files.map((f) => '- `' + f + '`').join('\n') : '_none reported_')
+            .write();
+
+  # ── Required check `test` — dynamic per-mode job-level lock ──────────────────
+  # Always runs (if: always()) so the required `test` check reports in every mode, even if
+  # classify failed. Job-level concurrency comes from classify; missing/invalid → shared lock.
   test:
+    needs: classify
+    if: always()
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ needs.classify.outputs.concurrency_group || 'e2e-shared-supabase' }}
+      cancel-in-progress: false
     # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
-    # process.env. Provide them via repository Actions secrets (Settings → Secrets and
-    # variables → Actions). Values live ONLY in GitHub Secrets — never in this file.
-    # If a secret is unset the reference resolves to empty and CI stays red at global-setup
-    # (no regression); it goes green once the secrets are provisioned. GitHub does not expose
-    # these to pull_request runs from forks — only same-repo branches.
+    # process.env via repository Actions secrets. Values live ONLY in GitHub Secrets. If a
+    # secret is unset the reference resolves to empty and CI stays red at global-setup (no
+    # regression); it goes green once secrets are provisioned. Not exposed to fork PRs.
     env:
       SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
@@ -45,107 +149,57 @@ jobs:
       with:
         node-version: lts/*
 
-    # ── Classify the change set ────────────────────────────────────────────────
-    # Official actions/github-script (not a third-party changed-files action). Paginates
-    # pulls.listFiles, imports the pure classifier, sets outputs.mode, logs the file list,
-    # and writes the job summary. push/non-PR events are forced to `full`.
-    - id: classify
+    # Normalise the effective mode (fail-closed to full) and decode the changed-files list
+    # produced by classify. Never trust the raw job output for step conditions.
+    - id: mode
       uses: actions/github-script@v7
+      env:
+        CLASSIFY_MODE: ${{ needs.classify.outputs.mode }}
+        CHANGED_FILES_B64: ${{ needs.classify.outputs.changed_files_b64 }}
       with:
         script: |
-          const path = require('path');
           const fs = require('fs');
-          const { pathToFileURL } = require('url');
+          const path = require('path');
+          const raw = process.env.CLASSIFY_MODE || '';
+          const mode = (raw === 'docs' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';
 
           let files = [];
-          let forcedFull = false;
-          if (context.eventName === 'pull_request') {
-            const iterator = github.paginate.iterator(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              per_page: 100,
-            });
-            for await (const { data } of iterator) {
-              for (const f of data) files.push(f.filename);
-            }
-          } else {
-            // push (e.g. to main) or any non-PR trigger → always full (safety net).
-            forcedFull = true;
+          let decoded = true;
+          try {
+            const b64 = process.env.CHANGED_FILES_B64 || '';
+            const parsed = b64 ? JSON.parse(Buffer.from(b64, 'base64').toString('utf8')) : [];
+            if (Array.isArray(parsed)) files = parsed.filter((f) => typeof f === 'string');
+            else decoded = false;
+          } catch (err) {
+            decoded = false;
+            core.warning('changed-files decode failed: ' + err.message);
           }
 
-          let mode;
-          try {
-            if (forcedFull) {
-              mode = 'full';
-            } else {
-              const mod = await import(pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href);
-              mode = mod.classify(files);
-            }
-          } catch (err) {
-            // Fail closed on any classifier/import error.
-            core.warning('classification error → falling back to full: ' + err.message);
-            mode = 'full';
+          // Fast modes NEED the file list. If it can't be decoded, fail this check clearly —
+          // never fall through to the full suite (the job is already on the fast lock).
+          if ((mode === 'docs' || mode === 'avatar-tool') && !decoded) {
+            core.setFailed('fast mode (' + mode + ') but the changed-files list could not be decoded');
+            return;
           }
-          if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
 
           const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
-          // Trailing newline so any line-based reader sees every entry (a `while read`
-          // loop drops the final line of a file that does not end in a newline).
           fs.writeFileSync(listPath, files.length ? files.join('\n') + '\n' : '');
           core.setOutput('mode', mode);
           core.setOutput('files_path', listPath);
+          console.log('effective mode: ' + mode + ' (' + files.length + ' changed file(s))');
 
-          core.startGroup('Path-aware CI classification');
-          console.log('event : ' + context.eventName);
-          console.log('commit: ' + context.sha);
-          console.log('mode  : ' + mode);
-          console.log('changed files (' + files.length + '):');
-          for (const f of files) console.log('  ' + f);
-          if (forcedFull) console.log('(non-PR event → forced full)');
-          core.endGroup();
-
-          const checks = mode === 'docs'
-            ? 'classifier unit tests, git diff --check, mojibake scan'
-            : mode === 'avatar-tool'
-            ? 'classifier unit tests, git diff --check, mojibake scan, node --check on changed tools/avatar scripts'
-            : 'classifier unit tests, npm ci, Playwright browser install, global setup, full Playwright suite';
-          const reason = mode === 'docs'
-            ? 'docs — Playwright not required; documentation checks passed'
-            : mode === 'avatar-tool'
-            ? 'avatar-tool — Playwright not required; standalone tool checks passed'
-            : (forcedFull
-                ? 'full — non-PR/main push always runs the full suite'
-                : 'full — changes outside docs/** and tools/avatar/** require the full suite');
-
-          await core.summary
-            .addHeading('Path-aware Playwright CI')
-            .addTable([
-              [{ data: 'Field', header: true }, { data: 'Value', header: true }],
-              ['event', context.eventName],
-              ['commit', context.sha],
-              ['mode', mode],
-              ['Playwright skipped', mode === 'full' ? 'no' : 'yes'],
-              ['checks', checks],
-              ['reason', reason],
-            ])
-            .addHeading('Changed files', 3)
-            .addRaw(files.length ? files.map((f) => '- `' + f + '`').join('\n') : '_none reported_')
-            .write();
-
-    # ── Classifier unit tests — run in EVERY mode ─────────────────────────────
-    # Fast, node-only. Guarantees the classification logic is verified on every PR and push
-    # (including this full-mode workflow PR), proving the docs/avatar-tool decisions.
+    # Classifier + concurrency unit tests — run in EVERY mode.
     - name: Classifier unit tests
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'full'
       run: node --test tests/unit/ci-classify-changes.test.mjs
 
     # ── Fast checks (docs + avatar-tool) ──────────────────────────────────────
     - name: Fast checks — whitespace + mojibake
-      if: steps.classify.outputs.mode == 'docs' || steps.classify.outputs.mode == 'avatar-tool'
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'avatar-tool'
       env:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        FILES: ${{ steps.classify.outputs.files_path }}
+        FILES: ${{ steps.mode.outputs.files_path }}
       run: |
         set -euo pipefail
         echo "== git diff --check (whitespace / conflict markers) =="
@@ -153,8 +207,7 @@ jobs:
         echo "== mojibake scan on changed docs/** =="
         node - "$FILES" <<'NODE'
         const fs = require('fs');
-        const listPath = process.argv[2];
-        const files = fs.readFileSync(listPath, 'utf8').split('\n')
+        const files = fs.readFileSync(process.argv[2], 'utf8').split('\n')
           .map((s) => s.trim()).filter(Boolean).filter((f) => f.startsWith('docs/'));
         // Detection code points as fromCharCode so the workflow file itself carries no literal mojibake.
         const forbidden = [
@@ -177,9 +230,9 @@ jobs:
 
     # ── Avatar-tool syntax check ──────────────────────────────────────────────
     - name: Avatar-tool syntax check (node --check)
-      if: steps.classify.outputs.mode == 'avatar-tool'
+      if: steps.mode.outputs.mode == 'avatar-tool'
       env:
-        FILES: ${{ steps.classify.outputs.files_path }}
+        FILES: ${{ steps.mode.outputs.files_path }}
       run: |
         set -euo pipefail
         # Node-based (like the mojibake scan) so a missing trailing newline in the file
@@ -202,17 +255,30 @@ jobs:
 
     # ── Full suite (unchanged) ────────────────────────────────────────────────
     - name: Install dependencies
-      if: steps.classify.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'full'
       run: npm ci
     - name: Install Playwright Browsers
-      if: steps.classify.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'full'
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      if: steps.classify.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'full'
       run: npx playwright test
     - uses: actions/upload-artifact@v4
-      if: ${{ steps.classify.outputs.mode == 'full' && !cancelled() }}
+      if: ${{ steps.mode.outputs.mode == 'full' && !cancelled() }}
       with:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+
+    # ── Completion summary line ───────────────────────────────────────────────
+    - name: Summarise completion
+      if: ${{ success() }}
+      env:
+        MODE: ${{ steps.mode.outputs.mode }}
+      run: |
+        set -euo pipefail
+        case "${MODE:-full}" in
+          docs)        echo "docs fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
+          avatar-tool) echo "avatar-tool fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
+          *)           echo "full Playwright suite completed" >> "$GITHUB_STEP_SUMMARY" ;;
+        esac

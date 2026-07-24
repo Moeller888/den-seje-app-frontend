@@ -18,6 +18,38 @@ const AVATAR_TOOL_PREFIX = "tools/avatar/";
 
 export const MODES = Object.freeze({ DOCS: "docs", AVATAR_TOOL: "avatar-tool", FULL: "full" });
 
+// The shared Supabase lock — full-mode and every fail-closed fallback take this group so
+// the full Playwright suite stays serialized with update-avatar-goldens.yml (both mutate the
+// same shared test-student profile). Fast modes (docs / avatar-tool) never touch Supabase and
+// get an isolated per-run group instead, so they don't queue behind it.
+export const SHARED_LOCK = "e2e-shared-supabase";
+
+// A run id is usable for an isolated fast group only if it is a positive integer (GitHub's
+// github.run_id). Anything else → null → fail closed to the shared lock. No regex.
+function normaliseRunId(runId) {
+  if (typeof runId === "number") {
+    return Number.isInteger(runId) && runId > 0 ? String(runId) : null;
+  }
+  if (typeof runId === "string") {
+    const t = runId.trim();
+    if (t === "") return null;
+    for (const c of t) if (c < "0" || c > "9") return null;
+    return t.length ? t : null;
+  }
+  return null;
+}
+
+// Pick the GitHub Actions concurrency group for a run. FAIL-CLOSED: only docs/avatar-tool
+// with a valid run id get an isolated `ci-fast-<runId>` group; full, unknown/empty mode, or a
+// missing/invalid run id all take the shared Supabase lock. A full suite can therefore never
+// run under a fast group — over-locking is safe, under-locking is not.
+export function concurrencyGroup(mode, runId) {
+  if (mode !== MODES.DOCS && mode !== MODES.AVATAR_TOOL) return SHARED_LOCK;
+  const id = normaliseRunId(runId);
+  if (id === null) return SHARED_LOCK;
+  return "ci-fast-" + id;
+}
+
 // Normalise a single path entry. Returns null for anything unusable (→ fail closed to full).
 function normalise(p) {
   if (typeof p !== "string") return null;
