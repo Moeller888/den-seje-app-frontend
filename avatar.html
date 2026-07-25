@@ -1241,9 +1241,12 @@ function initAvatarLifeEngines() {
   // by mountC2Avatar's atomic gate), so an R2 asset-load fallback gets the C2
   // living contract (expression ON, C2 lids) — not the manifest-only guess.
   const r2Active = preview.dataset.avatarRenderPath === "r2";
-  if (!r2Active) {
-    try { exprEngine   = new ExpressionEngine(preview); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
-  }
+  // D-069: expression on both paths — R2 swaps the decomposed z3 face layer (`{ r2: true }`).
+  try {
+    exprEngine = r2Active
+      ? new ExpressionEngine(preview, { r2: true })
+      : new ExpressionEngine(preview);
+  } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
   try { presenceEngine = new PresenceEngine(wrap);      } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
   const blinkCfg = blinkConfigFor(avatarIdentity, r2Active);
   if (blinkCfg.allowed) {

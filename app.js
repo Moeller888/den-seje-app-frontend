@@ -1231,9 +1231,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // living contract (expression ON, C2 lids), not the manifest-only guess.
     const r2Active = avatarDisplay.dataset.avatarRenderPath === "r2";
     try { presenceEngine = new PresenceEngine(avatarDisplay);  } catch (e) { /* non-fatal */ }
-    if (!r2Active) {
-      try { exprEngine  = new ExpressionEngine(avatarDisplay); } catch (e) { /* non-fatal */ }
-    }
+    // D-069: expression runs on BOTH paths — C2 via its own overlay, R2 via a swap of the
+    // decomposed z3 face layer (`{ r2: true }`). Blink/breathing are unaffected.
+    try {
+      exprEngine = r2Active
+        ? new ExpressionEngine(avatarDisplay, { r2: true })
+        : new ExpressionEngine(avatarDisplay);
+    } catch (e) { /* non-fatal */ }
     const blinkCfg = blinkConfigFor(quizIdentity, r2Active);
     if (blinkCfg.allowed) {
       try { blinkEngine = new BlinkEngine(avatarDisplay, blinkCfg.skinTone, { mode: blinkCfg.mode }); } catch (e) { /* non-fatal */ }
