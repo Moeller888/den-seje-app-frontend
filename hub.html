@@ -1525,9 +1525,12 @@
     // F1: key off the ACTUAL mounted path (dataset.avatarRenderPath) so an R2
     // asset-load fallback follows the C2 living contract (expression ON, C2 lids).
     const r2Active = avatarEl.dataset.avatarRenderPath === "r2";
-    if (!r2Active) {
-      try { exprEngine   = new ExpressionEngine(avatarEl); } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
-    }
+    // D-069: expression on both paths — R2 swaps the decomposed z3 face layer (`{ r2: true }`).
+    try {
+      exprEngine = r2Active
+        ? new ExpressionEngine(avatarEl, { r2: true })
+        : new ExpressionEngine(avatarEl);
+    } catch (e) { console.warn("EXPR ENGINE INIT FAILED:", e); }
     try { presenceEngine = new PresenceEngine(avatarEl);   } catch (e) { console.warn("PRESENCE ENGINE INIT FAILED:", e); }
     const blinkCfg = blinkConfigFor(avatarIdentity, r2Active);
     if (blinkCfg.allowed) {

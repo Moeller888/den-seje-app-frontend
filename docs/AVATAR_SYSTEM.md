@@ -187,6 +187,13 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     `determined v1` were owner-rejected and not promoted. Worksheet:
     [167a-phase2-gate3-expression-asset-promotion.md](./167a-phase2-gate3-expression-asset-promotion.md).
     Shared R2 raster artefacts (eyes/hair/arms/shoes) are a separate outstanding blocker, not fixed here.
+  - **Expression WIRED on R2 (2026-07-25, D-069): the promoted layers now render via a z3 face-layer
+    swap, behind opt-in.** The `ExpressionEngine` drives the existing decomposed face layer
+    (`[data-c2-layer="face"]`) via `faceSrcForR2` in an R2 mode (`{ r2: true }`) on quiz + avatar + hub;
+    blink/breathing unaffected (eye boxes excluded from the expression mask); missing asset → neutral
+    (D-062 contract). **`AVATAR_R2` stays `false`** (no activation). Plan:
+    [167a-phase3-expression-wiring-plan.md](./167a-phase3-expression-wiring-plan.md). Per-surface
+    expression **goldens** are the finalization follow-up (`forceExpression` seam in place).
     _The block below is the earlier Gate-progression history and is kept for the record — it is NOT current status._
   - **Phase-2 status (updated 2026-07-02): PLANNED, not started.** Audit + implementation plan
     ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief

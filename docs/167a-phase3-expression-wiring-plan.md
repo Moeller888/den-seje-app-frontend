@@ -1,9 +1,10 @@
 # 167A Phase-3 — Avatar R2 Expression Wiring Plan
 
-Status: **PROPOSED — awaiting owner approval before implementation.** Date: 2026-07-24. Owner: project
-owner (solo). No runtime change in this document; **`AVATAR_R2` stays `false`.** Prereq (done): the
-four owner-approved expression face layers are promoted + registered but **dormant** (D-068 ·
-`167a-phase2-gate3-expression-asset-promotion.md`).
+Status: **APPROVED 2026-07-25 → core wiring IMPLEMENTED (D-069).** The engine now drives the R2 z3
+face layer behind opt-in; **`AVATAR_R2` stays `false`.** The per-surface **expression goldens** are the
+finalization follow-up (the `forceExpression` seam is in place). Owner: project owner (solo). Prereq
+(done): the four expression face layers are promoted + registered but were dormant (D-068 ·
+`167a-phase2-gate3-expression-asset-promotion.md`); D-069 makes them render on the R2 path.
 
 Owner direction (2026-07-24): **plan first**, and **wire all surfaces** (accept a subtle small-size
 read). This document is the plan to approve; implementation follows as a separate gated PR.

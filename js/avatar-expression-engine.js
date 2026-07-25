@@ -11,6 +11,12 @@
 //   - Every path falls back gracefully to neutral on any error.
 
 import { EXPRESSIONS } from './avatar-personality.js';
+import { faceSrcForR2 } from './avatar-layers.js';
+import { cdnUrl } from './cloudinary.js';
+
+// The five expressions the engine can display (D-024 positive-only set). Used to sanitise in
+// R2 mode where the src resolver is faceSrcForR2 rather than the C2 EXPRESSIONS map.
+const VALID_EXPRESSIONS = ["neutral", "curious", "focused", "determined", "proud"];
 
 // ── Relational Delay — beats of reception before expression arrives ─────────────
 // Matches the presence engine's breathing delays so both systems respond together.
@@ -84,8 +90,18 @@ export const STATE_EXPR_MAP = {
 // ── ExpressionEngine ───────────────────────────────────────────────────────────
 
 export class ExpressionEngine {
-  constructor(container) {
+  // options (167A Phase-3, D-069):
+  //   r2:true      — R2 mode: instead of creating a z0 overlay, drive the EXISTING decomposed
+  //                  z3 face layer (`[data-c2-layer="face"]`) src via faceSrcForR2, so expressions
+  //                  render as a face-layer swap in the R2 stack (blink/breathing untouched).
+  //   srcFor(name) — override the src resolver (mainly for tests); defaults to the C2 EXPRESSIONS
+  //                  map, or `cdnUrl(faceSrcForR2(name))` in R2 mode.
+  constructor(container, options = {}) {
     this._container   = container;
+    this._r2          = options.r2 === true;
+    this._srcFor      = (typeof options.srcFor === "function")
+      ? options.srcFor
+      : (this._r2 ? ((name) => cdnUrl(faceSrcForR2(name))) : ((name) => EXPRESSIONS[name]));
     this._stateExpr   = "neutral";   // expression driven by current UI state
     this._eventExpr   = null;        // event-driven override (proud/determined) or null
     this._eventPriority = PRIORITY.STATE;
@@ -93,11 +109,26 @@ export class ExpressionEngine {
     this._fadeTimer      = null;      // ongoing fade-out/in timer
     this._relationalTimer = null;    // delay before event expression arrives
     this._displayed   = "neutral";   // what is actually shown right now
-    this._overlay     = null;        // the single expression img element
+    this._overlay     = null;        // the target img element (C2: own overlay; R2: the face layer)
+    this._ownsOverlay = false;       // C2 creates+owns the overlay; R2 borrows the face layer
     this._prefersRM   = this._detectReducedMotion();
 
     this._initOverlay();
     this._preloadAll();
+  }
+
+  // Test seam (goldens): instantly show a specific expression, no fade/timers. Nothing in
+  // production calls this — mirrors BlinkEngine.forceFrame for deterministic capture.
+  forceExpression(name) {
+    if (!VALID_EXPRESSIONS.includes(name)) name = "neutral";
+    this._clearEventTimer();
+    this._clearFadeTimer();
+    this._clearRelationalTimer();
+    this._eventExpr = null;
+    this._eventPriority = PRIORITY.STATE;
+    this._stateExpr = name;
+    this._displayed = null;          // force _display to apply even if it matches
+    this._display(name, 0, false);
   }
 
   // ── Public API ───────────────────────────────────────────────────────────────
@@ -159,8 +190,20 @@ export class ExpressionEngine {
     this._clearEventTimer();
     this._clearFadeTimer();
     this._clearRelationalTimer();
-    if (this._overlay && this._overlay.parentNode) {
-      this._overlay.parentNode.removeChild(this._overlay);
+    if (this._overlay) {
+      if (this._ownsOverlay && this._overlay.parentNode) {
+        // C2: we created the overlay → remove it.
+        this._overlay.parentNode.removeChild(this._overlay);
+      } else if (!this._ownsOverlay) {
+        // R2: we borrowed the stack's face layer → leave it, but restore it to neutral so a
+        // torn-down engine never leaves a stuck non-neutral face on a persisting element.
+        try {
+          this._overlay.style.transition = "none";
+          this._overlay.style.opacity = "1";
+          const n = this._srcFor("neutral");
+          if (n) this._overlay.src = n;
+        } catch (_e) { /* non-fatal */ }
+      }
     }
     this._overlay = null;
     this._container = null;
@@ -207,13 +250,13 @@ export class ExpressionEngine {
 
   // Core display change: cross-fades to the target expression
   _display(exprName, fadeDuration, isCritical) {
-    // Sanitise
-    if (!EXPRESSIONS[exprName]) exprName = "neutral";
+    // Sanitise — the src resolver returns falsy for an unknown expression → neutral.
+    if (!this._srcFor(exprName)) exprName = "neutral";
     // Skip if already showing this expression
     if (this._displayed === exprName) return;
 
     this._displayed = exprName;
-    const src = EXPRESSIONS[exprName];
+    const src = this._srcFor(exprName);
 
     if (!this._overlay) return;
 
@@ -247,7 +290,7 @@ export class ExpressionEngine {
       // Fallback: if src fails to load, degrade gracefully to neutral
       this._overlay.onerror = () => {
         if (!this._overlay) return;
-        this._overlay.src = EXPRESSIONS["neutral"] ?? "";
+        this._overlay.src = this._srcFor("neutral") ?? "";
       };
     }, fadeOut + 8);
   }
@@ -258,7 +301,16 @@ export class ExpressionEngine {
     try {
       if (!this._container) return;
 
+      // R2 mode: borrow the EXISTING decomposed face layer (z3) as the swap target — do NOT
+      // create or own an overlay. Its src is already the mounted neutral face asset.
+      if (this._r2) {
+        this._overlay = this._container.querySelector('[data-c2-layer="face"]');
+        this._ownsOverlay = false;
+        return;
+      }
+
       this._overlay = document.createElement("img");
+      this._ownsOverlay = true;
       this._overlay.className = "quiz-avatar-layer avatar-expr-overlay";
       this._overlay.style.zIndex = "0";
       this._overlay.style.opacity = "1";
@@ -281,12 +333,23 @@ export class ExpressionEngine {
   }
 
   _preloadAll() {
-    // Pre-cache all expression SVGs so first-use transitions have no network delay
-    Object.values(EXPRESSIONS).forEach(src => {
-      if (src === EXPRESSIONS["neutral"]) return; // already loaded as overlay src
-      const img = new Image();
-      img.src = src;
-    });
+    // Pre-cache the non-neutral expression assets so first-use transitions have no network delay.
+    // R2 mode preloads the four expression WebPs; C2 preloads the SVG map. Neutral is already the
+    // mounted/overlay src.
+    try {
+      if (this._r2) {
+        for (const name of ["curious", "focused", "determined", "proud"]) {
+          const src = this._srcFor(name);
+          if (src) { const img = new Image(); img.src = src; }
+        }
+        return;
+      }
+      Object.values(EXPRESSIONS).forEach(src => {
+        if (src === EXPRESSIONS["neutral"]) return; // already loaded as overlay src
+        const img = new Image();
+        img.src = src;
+      });
+    } catch (_e) { /* preload is best-effort */ }
   }
 
   _clearEventTimer() {
