@@ -115,6 +115,14 @@ export class ExpressionEngine {
 
     this._initOverlay();
     this._preloadAll();
+
+    // Deterministic-golden test handle — GATED behind an explicit test signal: exposed ONLY when
+    // a harness sets `window.__AVATAR_TEST__ === true` (via addInitScript before load). Production
+    // never sets it, so no expression-engine global reaches users. Mirrors the blink-engine handle;
+    // lets a golden call forceExpression() to pin a known expression frame.
+    try {
+      if (typeof window !== "undefined" && window.__AVATAR_TEST__ === true) window.__avatarExprEngine = this;
+    } catch (_e) { /* non-fatal */ }
   }
 
   // Test seam (goldens): instantly show a specific expression, no fade/timers. Nothing in
@@ -207,6 +215,10 @@ export class ExpressionEngine {
     }
     this._overlay = null;
     this._container = null;
+    // Clear the gated test handle when it still points at this engine.
+    try {
+      if (typeof window !== "undefined" && window.__avatarExprEngine === this) window.__avatarExprEngine = null;
+    } catch (_e) { /* non-fatal */ }
   }
 
   // ── Internal ─────────────────────────────────────────────────────────────────
