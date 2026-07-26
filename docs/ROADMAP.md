@@ -32,6 +32,17 @@ _Last reviewed: 2026-07-01._
   goldens); **F6** = accepted debt (D-061 faint arm residual); **F7/F8** = LOW. Green main CI
   (365 passed). **`AVATAR_R2` stays `false`** — audit closure is verification only, **no pilot,
   no flag-flip.** See `docs/project-state.md` (D-062…D-065) + `docs/167a-phase1-pilot-rollout.md`.
+  **✅ Shared R2 raster-artefact question CLOSED for pilot (2026-07-26, D-071).** A read-only
+  render-scale audit measured the shared raster stack at the app's **real** render sizes (avatar
+  `180×270`, hub `110×165`/`100×150`, quiz `52×78`) and found every area `NOT_VISIBLE_AT_REAL_SCALE`;
+  the D-061 arm residual shows only under heavy diagnostic zoom. **Binding owner decision D —
+  `OWNER_ACCEPTED_FOR_PILOT_WITH_DOCUMENTED_RASTER_DEBT`:** no alpha cleanup / no source re-cut; the
+  shared raster artefacts are **no longer an active blocker** at the current render sizes (F6-style debt
+  accepted for a controlled pilot). Re-audit if a surface wider than ≈180 px, a fullscreen/hero avatar,
+  a higher display scale, or a base/hair/shoe asset change is introduced. **`AVATAR_R2` stays `false`**
+  (no activation). Remaining separate tracks: controlled R2 pilot · broad R2 activation · optional
+  small-size supplementary cue (distinct from raster fringe) · pilot findings. See `docs/project-state.md`
+  (D-071) + `docs/AVATAR_SYSTEM.md`.
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
