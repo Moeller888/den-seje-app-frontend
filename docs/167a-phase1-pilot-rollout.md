@@ -1,8 +1,10 @@
 # 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
-Status: **Opt-in mechanism live; enable per pilot user.** `AVATAR_R2 = false` by default (production
-unchanged). Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064) for the current
-Phase-2 decomposed stack** (see the activation-readiness audit; closes finding F3). Owner: project owner.
+Status: **Pilot AUTHORIZED to begin (2026-07-26, D-071) — enable per pilot user.** `AVATAR_R2 = false`
+by default (production unchanged). Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23
+(D-064) for the current Phase-2 decomposed stack** (see the activation-readiness audit; closes finding
+F3); **operationalized 2026-07-26 (D-071)** — the render-scale raster-artefact audit closed the last
+open concern (§7), so this is now a live GO with defined scope + exit criteria (§8). Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
 
@@ -97,8 +99,61 @@ A user meeting all three gets a clean experience (the decomposed R2 avatar + any
 - **Activation-readiness audit:** all findings **F1–F5 are closed** (D-062 atomic fallback, D-063 blink
   goldens, D-064 doc refresh, D-065 idempotent reproducer + R2 goldens). F6 is accepted debt (D-061 faint
   arm residual), F7/F8 are LOW. No open blocker remains before a controlled student-facing pilot.
+- **Render-scale raster debt accepted (D-071, 2026-07-26):** the shared R2 raster artefacts were measured
+  at the app's real render sizes (avatar `180×270`, hub `110×165`/`100×150`, quiz `52×78`) and are all
+  `NOT_VISIBLE_AT_REAL_SCALE`; the owner accepted the D-061 residual for this controlled pilot
+  (`OWNER_ACCEPTED_FOR_PILOT_WITH_DOCUMENTED_RASTER_DEBT`). The raster artefacts are **no longer a blocker**
+  — but the re-audit triggers in §8 are binding pilot guardrails.
 
-## 7. Pilot log
+## 7. Pilot GO — authorization & scope (D-071)
+
+**Authorization.** The controlled pilot is **authorized to begin (2026-07-26, D-071).** All
+activation-readiness findings F1–F5 are closed, F6 is accepted debt, and the render-scale audit confirmed
+the shared raster artefacts are not user-visible at the app's real render sizes. This authorizes the
+**per-browser opt-in pilot only** — it is **not** a global activation.
+
+**Still forbidden (unchanged guardrails, §6):** do **not** flip `AVATAR_R2 = true`; do **not** ship a UI
+toggle; no DB cohort / percentage rollout. Those belong to the separate **broad R2 activation** track, not
+this pilot.
+
+**Scope of this pilot:**
+- **Start point:** the dedicated **test-student** account (already verified — §9 row 1).
+- **Then:** a **small** group of real students (guideline **≈3–8**), onboarded **one at a time**, each
+  confirmed against the §2 eligibility criteria (neutral-medium identity, no gated head/face/eye/clothing
+  cosmetics) **before** onboarding.
+- **Selection owner:** the project owner picks candidates and verifies eligibility (identity token +
+  equipped slots) per user.
+- **Grow only on clean signal:** expand the group only after the current cohort reports a clean experience
+  (§8). Keep it time-boxed and small.
+
+## 8. Success, observation & exit criteria
+
+**Success signals (qualitative — there is no pilot telemetry yet; optional observability is a separate
+track).** For each onboarded user, on avatar / hub / quiz:
+- the **decomposed R2 stack renders** (base `…-r2/base/body-neutral-medium-v2.webp`);
+- the eyes **blink** and breathing runs;
+- any equipped **aura/back still shows**;
+- **no broken images** and **no half-rendered avatar** (D-062 guarantees clean R2 or clean C2);
+- **no report of visible arm fringe** in normal use at the real sizes above.
+
+**Watch / re-audit triggers (binding — pause onboarding + re-audit the raster track on any of, per D-071):**
+a new avatar surface wider than **≈180 CSS-px**; a fullscreen/hero avatar; a materially higher actual
+display scale; a new dark theme where edges become visible at 100 %; any change to base/hair/shoe assets;
+owner or pilot users observing visible fringe in normal use; a device-pixel/render-strategy change that
+makes asset edges more prominent. A re-audit must again use real app render size as the primary basis.
+
+**Feedback capture.** No telemetry exists, so collect feedback **out-of-band** (owner asks each pilot user)
+and record observations as rows/notes in the §9 pilot log. A lightweight, fail-soft in-app observability
+signal (R2-render vs C2-fallback) is an **optional separate track**, not part of this GO.
+
+**Exit / rollback (see §5).**
+- **Per user:** clear the key (`localStorage.removeItem("avatar_r2")`), reload → back to C2 instantly.
+- **Whole pilot:** nothing global to roll back — `AVATAR_R2` is already `false`.
+- **Abort criteria:** any broken-avatar report **not** explained by the D-062 C2 fallback, or **any**
+  re-audit trigger firing → pause new onboarding, opt-out affected users if needed, and re-audit before
+  resuming.
+
+## 9. Pilot log
 
 | # | User | Identity | Cosmetics | Eligibility | Onboarding | Status |
 |---|---|---|---|---|---|---|
