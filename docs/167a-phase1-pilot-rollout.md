@@ -138,7 +138,10 @@ toggle; no DB cohort / percentage rollout. Those belong to the separate **broad 
 
 A user may be classified **`ONBOARDED`** only after **all** of the following are performed in the **actual
 persistent browser profile that will be used during the pilot**. An **automated Playwright verification does
-not by itself satisfy this gate.**
+not by itself satisfy this gate.** **Copy-ready procedure (D-073):**
+[167a-persistent-browser-onboarding-kit.md](./167a-persistent-browser-onboarding-kit.md) — the manual,
+step-by-step execution of this gate (Fase A, the persistence-gate, the opt-out demo, and the `ONBOARDED`
+decision box).
 
 1. Eligibility verified (§2).
 2. The user signs in to the **persistent pilot browser**.
@@ -235,3 +238,8 @@ to base/hair/shoe assets · a pilot user seeing fringe in normal use · a device
 
 _The opt-in remains per-browser `localStorage` (no server-side state). A user reaches `ONBOARDED` only via
 the §8 persistent-browser gate. Add a row per user using the §11 data-minimal fields; keep Wave 1 to §7/§9._
+
+**Next concrete step:** run the manual persistent-browser onboarding kit
+([167a-persistent-browser-onboarding-kit.md](./167a-persistent-browser-onboarding-kit.md), D-073) for the
+test-student in a real persistent browser profile. Until that completes, pilot status stays
+`AUTHORIZED_BUT_NOT_STARTED` and the test-student stays `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`.

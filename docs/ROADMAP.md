@@ -51,6 +51,12 @@ _Last reviewed: 2026-07-01._
   (§7–§15: Wave 1 target 3 / max 5, 7 days & ≥3 sessions, feedback+severity, abort + PASS/PASS_WITH_DEBT/
   PAUSED/FAILED). **Observability and allowlist enablement remain later separate tracks; no broad
   activation.** **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-072).
+  **▶ Manual onboarding kit READY (2026-07-26, D-073).** `docs/167a-persistent-browser-onboarding-kit.md`
+  is the copy-ready, manual procedure for the persistent-browser gate (Fase A → close/reopen persistence
+  gate → opt-out demo → `ONBOARDED` decision box, with data-minimal log + error table). The **next manual
+  gate** is running it for the **test-student in a real persistent browser profile**; **no user is onboarded
+  yet**. **C (observability)** and **B (allowlist)** remain separate later tracks; **no broad activation**;
+  **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-073).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
