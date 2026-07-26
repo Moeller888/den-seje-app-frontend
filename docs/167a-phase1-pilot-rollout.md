@@ -198,6 +198,13 @@ session count · final status · follow-up needed.
 **The log must NEVER contain:** full name · email · UID · passwords · tokens · `localStorage` contents ·
 any unnecessary personal data.
 
+**Optional observability (designed, NOT implemented — D-074).** A privacy-safe, console-only, pilot-gated
+render signal (R2 / C2-fallback / render-failed) is **designed** in
+[167a-r2-pilot-observability-design.md](./167a-r2-pilot-observability-design.md) and awaits an owner
+decision. It is **advisory only**: manual onboarding (§8, D-073) can be completed **without** it, and it must
+**never** be a condition for R2 rendering. Pilot status stays `AUTHORIZED_BUT_NOT_STARTED`; the test-student
+stays `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`; `AVATAR_R2` stays `false`.
+
 ## 12. Abort criteria
 
 Pause the pilot **immediately** on any of: a mixed C2/R2 stack · wrong avatar identity · broken/missing

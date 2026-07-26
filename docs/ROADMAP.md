@@ -57,6 +57,13 @@ _Last reviewed: 2026-07-01._
   gate** is running it for the **test-student in a real persistent browser profile**; **no user is onboarded
   yet**. **C (observability)** and **B (allowlist)** remain separate later tracks; **no broad activation**;
   **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-073).
+  **▶ C-track (observability) AUDITED + DESIGNED, not implemented (2026-07-26, D-074).**
+  `docs/167a-r2-pilot-observability-design.md` designs a privacy-safe, **console-only, pilot-gated** render
+  signal (r2 / c2_fallback / render_failed) with a single central emission point in `mountC2Avatar`, fail-soft
+  + WeakSet dedup, **no backend / no database / no identifier / no persistence**. Recommended decision
+  `CONSOLE_ONLY_PILOT_OBSERVABILITY`; **owner decision required before any runtime PR**. Observability is
+  **advisory** — manual onboarding (D-073) works without it. **B (allowlist)** remains a separate later track;
+  **no broad activation**; **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-074).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
