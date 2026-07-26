@@ -1,6 +1,7 @@
 # 167A — Avatar R2 pilot observability (design, D-074)
 
-**Status:** `DESIGN_READY_AWAITING_OWNER_DECISION`
+**Status:** `OWNER_DECISION_CONFIRMED` — **`CONSOLE_ONLY_PILOT_OBSERVABILITY`** (owner, 2026-07-26).
+Implementation is a **separate future runtime PR** (see §16); this document remains design-only.
 **Type:** read-only audit + design. **Nothing is implemented.** No runtime/asset/test/golden/workflow change.
 **Related:** D-071 (raster debt accepted), D-072 (pilot protocol + status), D-073 (manual onboarding kit).
 **Pilot status (unchanged):** `AUTHORIZED_BUT_NOT_STARTED`. **Test-student (unchanged):**
@@ -347,4 +348,12 @@ Choose one:
 central emission point (`mountC2Avatar` return), reliable pilot gating (`avatar_r2==="1"`), no PII, no
 network, a fail-soft design, dedup (WeakSet), a full test plan, no impact on the C2 default, and no golden
 impact. If any of these could not be met, the recommendation would be `NO_OBSERVABILITY_BEFORE_PILOT`; none
-is blocked. **No code is written until the owner selects an option.**
+is blocked.
+
+**✅ OWNER DECISION (2026-07-26): `CONSOLE_ONLY_PILOT_OBSERVABILITY`.** The console-only, pilot-gated model is
+the binding decision. Consequences: the later runtime PR may implement exactly the design in §6–§18 (schema,
+gating, timing, fail-soft, dedup, console contract, tests, acceptance criteria); **no backend / database /
+identifier / persistence** is authorised. This decision **authorises the design, not activation** — it does
+**not** onboard any user, does **not** change `AVATAR_R2` (stays `false`), and does **not** change pilot
+status (`AUTHORIZED_BUT_NOT_STARTED`). Observability stays **advisory** and must never gate R2 rendering.
+Implementation remains a **separate runtime PR** the owner triggers when desired.
