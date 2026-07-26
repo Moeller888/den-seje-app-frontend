@@ -43,6 +43,14 @@ _Last reviewed: 2026-07-01._
   (no activation). Remaining separate tracks: controlled R2 pilot · broad R2 activation · optional
   small-size supplementary cue (distinct from raster fringe) · pilot findings. See `docs/project-state.md`
   (D-071) + `docs/AVATAR_SYSTEM.md`.
+  **▶ Controlled R2 pilot — operationally planned, `AUTHORIZED_BUT_NOT_STARTED` (2026-07-26, D-072).**
+  R2 has been **live-verified technically** on production (avatar/hub/quiz `renderPath=r2`, no C2 fallback),
+  but that check ran in an **ephemeral automated browser** — **no persistent pilot user is onboarded yet**.
+  The next concrete gate is **manual onboarding in a persistent browser profile** (close → reopen → opt-in
+  still present → `renderPath=r2`), per the finalized protocol in `docs/167a-phase1-pilot-rollout.md`
+  (§7–§15: Wave 1 target 3 / max 5, 7 days & ≥3 sessions, feedback+severity, abort + PASS/PASS_WITH_DEBT/
+  PAUSED/FAILED). **Observability and allowlist enablement remain later separate tracks; no broad
+  activation.** **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-072).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
