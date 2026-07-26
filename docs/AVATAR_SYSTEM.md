@@ -187,6 +187,9 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     `determined v1` were owner-rejected and not promoted. Worksheet:
     [167a-phase2-gate3-expression-asset-promotion.md](./167a-phase2-gate3-expression-asset-promotion.md).
     Shared R2 raster artefacts (eyes/hair/arms/shoes) are a separate outstanding blocker, not fixed here.
+    _(Superseded 2026-07-26 by D-071: the render-scale audit found these artefacts not user-visible at the
+    app's real render sizes; owner accepted the residual for a controlled pilot — no longer a blocker. See the
+    current-state bullet below.)_
   - **Expression WIRED on R2 (2026-07-25, D-069): the promoted layers now render via a z3 face-layer
     swap, behind opt-in.** The `ExpressionEngine` drives the existing decomposed face layer
     (`[data-c2-layer="face"]`) via `faceSrcForR2` in an R2 mode (`{ r2: true }`) on quiz + avatar + hub;
@@ -194,6 +197,19 @@ preset** for delivery/optimisation only. Decision deferred to Sections 157F/157G
     (D-062 contract). **`AVATAR_R2` stays `false`** (no activation). Plan:
     [167a-phase3-expression-wiring-plan.md](./167a-phase3-expression-wiring-plan.md). Per-surface
     expression **goldens** are the finalization follow-up (`forceExpression` seam in place).
+  - **Shared R2 raster artefacts — render-scale audit CLOSED, owner-accepted for pilot (2026-07-26, D-071).**
+    A read-only audit measured the shared raster stack (base/arms/hair/shoes/eyes) **at the app's real render
+    sizes** — avatar `180×270`, hub `110×165` (100×150 mobile), quiz `52×78`, `deviceScaleFactor 1`, R2 vs C2
+    under identical conditions on the real render paths. Every area is **`NOT_VISIBLE_AT_REAL_SCALE`**; the
+    D-061 arm residual is only a tiny anti-aliasing ramp under heavy diagnostic magnification on an artificial
+    dark background, and R2 adds no new user-visible edge over C2 (a clear upgrade). **Binding owner decision:
+    `OWNER_ACCEPTED_FOR_PILOT_WITH_DOCUMENTED_RASTER_DEBT`** — no alpha cleanup, no source re-cut, no new image
+    production; the residual is accepted for a controlled pilot and the shared raster artefacts are **no longer
+    a blocker at the existing render sizes**. This is **not** broad R2 activation — **`AVATAR_R2` stays
+    `false`.** Re-open the raster track only on a re-audit trigger (new surface wider than ≈180 px, fullscreen/
+    hero avatar, higher display scale, a dark theme where edges show at 100 %, a base/hair/shoe asset change,
+    observed fringe in normal pilot use, or a device-pixel/render-strategy change). Small-size expression
+    legibility is a **separate** concern, not this raster-fringe track. Register: D-071 in `project-state.md`.
     _The block below is the earlier Gate-progression history and is kept for the record — it is NOT current status._
   - **Phase-2 status (updated 2026-07-02): PLANNED, not started.** Audit + implementation plan
     ([167a-phase2-decomposition-plan.md](./167a-phase2-decomposition-plan.md)) + asset brief
