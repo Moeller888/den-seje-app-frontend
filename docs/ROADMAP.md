@@ -77,6 +77,12 @@ _Last reviewed: 2026-07-01._
   `"c2"` for every slot so every product card renders the whole C2 preview with the item visible — no
   per-card R2, no inconsistent grid. Shop-preview-only; avatar/hub/quiz/R2-runtime/manifest/buy/equip
   untouched; **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-077).
+  **▶ Controlled R2 pilot STARTED — `PILOT_WAVE_1_IN_PROGRESS` (2026-07-27, D-078).** The test-student was
+  manually `ONBOARDED` through the persistent-browser gate (D-073 kit; owner-witnessed, Chrome/desktop): opt-in
+  survived a real browser close-and-reopen, `renderPath=r2` on avatar/hub/quiz with no mixed stack, opt-out
+  demonstrated. Pilot status moves `AUTHORIZED_BUT_NOT_STARTED` → **`PILOT_WAVE_1_IN_PROGRESS`** (1 of target
+  3, max 5). Docs-only; **no code/runtime/user-data change; `AVATAR_R2` stays `false`** (per-browser opt-in
+  only, no global flag-flip). See `docs/project-state.md` (D-078).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
