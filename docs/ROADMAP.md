@@ -66,6 +66,12 @@ _Last reviewed: 2026-07-01._
   authorises the **design, not activation**. Observability is **advisory** — manual onboarding (D-073) works
   without it. **B (allowlist)** remains a separate later track; **no broad activation**; **`AVATAR_R2` stays
   `false`.** See `docs/project-state.md` (D-074).
+  **▶ C-track (observability) IMPLEMENTED — console-only (2026-07-27, D-076).** First runtime PR of the pilot
+  arc: `js/avatar-r2-observability.js` + one central emission in `mountC2Avatar` (r2 / c2_fallback /
+  render_failed), pilot-gated on `localStorage.avatar_r2==="1"`, fail-soft, WeakSet-deduped, **no
+  backend/network/database/persistence/PII**; unit + self-served fixture-intercepted Playwright coverage.
+  Advisory — never gates rendering; C2-default functionally/visually/DOM unchanged; existing goldens
+  unchanged. **`AVATAR_R2` stays `false`;** pilot status unchanged. See `docs/project-state.md` (D-076).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.

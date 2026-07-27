@@ -499,7 +499,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
-      const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics });
+      const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics, surface: "quiz" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       // PR D: re-apply the full blink profile (mode + tone) so the lids always
       // match the render path this re-render actually took (R2 active vs C2).

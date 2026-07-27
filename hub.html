@@ -1577,7 +1577,7 @@
     // no-ops on the missing base, so the (!blinkEngine) guard prevents a double init.
     if (isAvatarV2()) {
       const cosmetics = c2CosmeticLayers(equippedSlots, id => allShopItems.find(i => i.id === id)?.image_url);
-      const renderPath = await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics });
+      const renderPath = await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics, surface: "hub" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";
       showcaseEl.dataset.gender = avatarGender;

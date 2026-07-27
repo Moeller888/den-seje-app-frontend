@@ -11,6 +11,7 @@
 
 import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2Phase1SafeSlot } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
+import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
 // In-memory cache of fetched hair SVG text (keyed by src). Hair files are static
 // local assets — safe to cache for the session.
@@ -154,7 +155,7 @@ function _isMandatoryR2(layer) {
 // rootEl.dataset.avatarRenderPath), or "aborted" when a newer mount superseded this
 // one (DOM left untouched). Callers key the blink profile off the returned path so
 // an asset-load fallback never leaves R2 lids on a C2 base.
-export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [], forceC2 = false } = {}) {
+export async function mountC2Avatar(rootEl, identity, { animate = false, layerClass = "avatar-layer", cosmetics = [], forceC2 = false, surface } = {}) {
   if (!rootEl) return "c2";
 
   // Race/abort contract (§5): claim this element for this mount generation.
@@ -162,6 +163,15 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   _mountGen.set(rootEl, myGen);
   const isCurrent = () => _mountGen.get(rootEl) === myGen;
 
+  // D-076 pilot observability: track WHY we fall back to C2 (only distinguishable causes).
+  // Emitted once centrally before the final return; advisory + fail-soft; never on "aborted".
+  let fellBackReason = null;
+
+  // The whole render body runs under one try/catch so an otherwise-UNHANDLED exception is
+  // reported as result "render_failed" then RE-THROWN unchanged (identical error/stack/rejection
+  // → callers behave exactly as before). Handled C2 fallbacks return "c2" normally and are NOT
+  // caught here (they are classified c2_fallback below). Observability never affects the render.
+  try {
   // 167A Phase-2 (PR C): use the decomposed raster stack ONLY when AVATAR_R2 is on AND
   // the COMPLETE stack resolves for this identity (U2: neutral × medium only); any
   // missing piece → composeR2Layers returns null → the existing C2/SVG path
@@ -182,6 +192,7 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       // One controlled, non-sensitive warning (§9): reason only, no identity/token.
       try { console.warn("avatar-r2: mandatory layer failed to load → C2 fallback"); } catch (_e) {}
       r2Layers = null; // atomic whole-stack fallback
+      fellBackReason = "required_asset_failed"; // D-076 observability reason
     }
     if (!isCurrent()) return "aborted"; // a newer mount took over during preload — do not touch the DOM
     if (r2Layers) {
@@ -278,7 +289,28 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
     }
   }
 
+  // D-076: single central emission, only when the result is final and this mount is current.
+  // Never on "aborted"/missing root; the helper is silent for a missing/invalid surface and
+  // for a non-opted-in browser. Fail-soft wrapper so it can never affect the returned render.
+  if (isCurrent()) {
+    const result = path === "r2" ? "r2" : "c2_fallback";
+    const reason = path === "r2"
+      ? "unknown"
+      : (fellBackReason || (forceC2 ? "forced_c2" : "identity_ineligible"));
+    try { emitR2RenderObservability({ surface, result, reason, root: rootEl }); } catch (_e) {}
+  }
+
   return path;
+  } catch (err) {
+    // Otherwise-unhandled render exception → advisory render_failed, then RE-THROW the identical
+    // error (preserves rejection/stack/caller semantics; see the D-076 audit in the PR). Only the
+    // CURRENT mount reports: a superseded/stale mount must neither emit nor consume the root's dedup
+    // slot, so a later current mount on the same root can still emit its correct final result.
+    if (isCurrent()) {
+      try { emitR2RenderObservability({ surface, result: "render_failed", reason: "render_exception", root: rootEl }); } catch (_e) {}
+    }
+    throw err;
+  }
 }
 
 // Render-complete signal for deterministic screenshots (golden tests) and any
