@@ -508,19 +508,20 @@ export function isR2Phase1SafeSlot(slot) {
   return R2_PHASE1_SAFE_SLOTS.indexOf(slot) !== -1;
 }
 
-// Shop-preview render decision (R2 shop-preview blocker fix). The preview's whole
-// purpose is to SHOW the item, so:
-//   "r2": R2 is actually active for the identity-independent preview (null
-//         identity = neutral × medium defaults) AND the item's slot passes the
-//         Phase-1 slot-gate (aura/back) → the R2 stack renders WITH the item.
-//   "c2": everything else — flag off, incomplete stack, or a non-R2-safe slot
-//         (hat/face/eyes/clothing…). The caller must then force the WHOLE C2
-//         preview (mountC2Avatar forceC2) so the item stays visible on its
-//         proven C2 anchors. Never an R2 avatar without the item, never a
-//         mixed half stack. Follows the ACTUALLY active render path, not the
-//         raw flag.
+// Shop-preview render decision. PILOT POLICY — FORCE_ALL_SHOP_PREVIEWS_TO_C2:
+// EVERY shop product-card preview renders the WHOLE C2 stack — always "c2", for every slot,
+// regardless of the R2 opt-in. The caller pairs this with mountC2Avatar's forceC2, so the item
+// always shows on its proven C2 anchors and no card ever renders the R2 stack.
+//
+// Why: the grid previously rendered aura/back cards on the R2 stack while every other slot
+// (headwear/face/body/…) rendered C2, so the shop grid visibly mixed two avatar styles card-to-card
+// and looked unfinished. Forcing all cards to C2 keeps the grid consistent (no per-card R2 during the
+// pilot). This is a SHOP-PREVIEW-ONLY policy: it does NOT touch the R2 runtime,
+// isAvatarR2()/isAvatarR2ActiveFor(), the manifest, or the avatar/hub/quiz render paths — those still
+// use R2 under the opt-in. `slot` is kept in the signature for the caller; `isR2Phase1SafeSlot` (used by
+// the R2 runtime cosmetic gate) is unchanged.
 export function shopPreviewModeFor(slot) {
-  return isAvatarR2ActiveFor(null) && isR2Phase1SafeSlot(slot) ? "r2" : "c2";
+  return "c2";
 }
 
 // Whether a full Phase-2 raster stack (base + hair) is available. True for the supported

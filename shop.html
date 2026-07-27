@@ -478,11 +478,10 @@ function createMiniPaperDoll(imageUrl, slotType, isNew) {
     // governs compositing regardless of append order).
     if (isAvatarV2()) {
       // Section 159B: previewed item rendered via the shared C2 cosmetic pipeline.
-      // R2 shop-preview fix: the preview's purpose is to SHOW the item. Only when
-      // R2 is actually active AND the item's slot is Phase-1 R2-safe (aura/back)
-      // does the R2 stack render (it passes the slot-gate, so the item shows).
-      // Every other case forces the WHOLE C2 preview (forceC2) so the item stays
-      // visible on its proven C2 anchors — never an R2 avatar without the item.
+      // PILOT POLICY — FORCE_ALL_SHOP_PREVIEWS_TO_C2: shopPreviewModeFor() now returns "c2"
+      // for EVERY slot, so every product card forces the WHOLE C2 preview (forceC2) with the
+      // item visible on its proven C2 anchors — no per-card R2, no mixed grid. avatar/hub/quiz
+      // are unaffected (they don't use this path). See js/avatar-layers.js shopPreviewModeFor.
       const previewMode = shopPreviewModeFor(slotType);
       const cosmetics = c2CosmeticLayers({ [slotType]: imageUrl }, (id) => id);
       mountC2Avatar(wrap, null, { layerClass: "preview-layer", cosmetics, forceC2: previewMode !== "r2" }).then(() => {

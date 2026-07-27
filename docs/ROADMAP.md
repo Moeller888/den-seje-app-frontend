@@ -72,6 +72,11 @@ _Last reviewed: 2026-07-01._
   backend/network/database/persistence/PII**; unit + self-served fixture-intercepted Playwright coverage.
   Advisory — never gates rendering; C2-default functionally/visually/DOM unchanged; existing goldens
   unchanged. **`AVATAR_R2` stays `false`;** pilot status unchanged. See `docs/project-state.md` (D-076).
+  **▶ Shop-preview grid forced to C2 (2026-07-27, D-077).** `FORCE_ALL_SHOP_PREVIEWS_TO_C2`: the shop
+  previously mixed R2 (aura/back) and C2 (all other slots) card-to-card; `shopPreviewModeFor` now returns
+  `"c2"` for every slot so every product card renders the whole C2 preview with the item visible — no
+  per-card R2, no inconsistent grid. Shop-preview-only; avatar/hub/quiz/R2-runtime/manifest/buy/equip
+  untouched; **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-077).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
