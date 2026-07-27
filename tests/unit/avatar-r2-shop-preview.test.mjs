@@ -1,9 +1,10 @@
-// ── Shop-preview R2 blocker fix: unit tests ───────────────────────────────────
-// Covers the central shop-preview decision (shopPreviewModeFor) and the
-// mountC2Avatar forceC2 renderer override: a non-R2-safe item always renders the
-// WHOLE C2 preview with the item visible; an R2-safe item renders the R2 stack
-// WITH the item; the preview never shows an R2 avatar without the item, and the
-// R2 stack carries exactly ONE face layer (no legacy overlay double-draw).
+// ── Shop-preview: FORCE_ALL_SHOP_PREVIEWS_TO_C2 (pilot) unit tests ────────────
+// The shop-preview decision (shopPreviewModeFor) now returns "c2" for EVERY slot, so every
+// product card forces the WHOLE C2 preview (mountC2Avatar forceC2) with the item visible — no
+// per-card R2, no mixed grid. These tests prove: shopPreviewModeFor is "c2" for all slots (incl.
+// the former R2-safe aura/back) under every flag/opt-in state; the C2 preview shows the item and
+// leaks no R2 layer; and the avatar/hub/quiz render path (default mount, no forceC2) STILL renders
+// R2 under opt-in (unaffected).
 // Node-runnable via a minimal fake DOM (tint feature-detect is off in node, so
 // tinted layers render as plain <img> — src assertions are unaffected).
 //
@@ -77,11 +78,11 @@ test("flag off: every slot previews as C2 (production unchanged)", () => {
   }
 });
 
-test("opt-in: exactly the Phase-1 safe slots preview as R2", () => {
+test("FORCE_ALL_SHOP_PREVIEWS_TO_C2: every slot previews as C2 even under R2 opt-in", () => {
   withR2OptIn(() => {
-    assert.equal(isAvatarR2ActiveFor(null), true);
-    for (const slot of R2_PHASE1_SAFE_SLOTS) assert.equal(shopPreviewModeFor(slot), "r2", slot);
-    for (const slot of ["hat", "headwear", "face", "eyes", "torso", "body", "neck", undefined, null]) {
+    assert.equal(isAvatarR2ActiveFor(null), true); // the R2 runtime IS active for the identity…
+    // …but the shop preview is forced to C2 for EVERY slot — including the former R2-safe aura/back.
+    for (const slot of [...R2_PHASE1_SAFE_SLOTS, "hat", "headwear", "face", "eyes", "torso", "body", "neck", undefined, null]) {
       assert.equal(shopPreviewModeFor(slot), "c2", String(slot));
     }
   });
@@ -107,15 +108,20 @@ test("forceC2 under opt-in renders the WHOLE C2 preview with the item visible", 
   }));
 });
 
-test("R2-safe item under opt-in renders the R2 stack WITH the item", async () => {
-  await withR2OptIn(() => withDom(async (root) => {
-    assert.equal(shopPreviewModeFor("aura"), "r2");
-    const cosmetics = c2CosmeticLayers(AURA_COSMETIC, resolve);
-    await mountC2Avatar(root, null, { layerClass: "preview-layer", cosmetics });
-    const srcs = srcsOf(root);
-    assert.ok(srcs.some((s) => s.includes("avatar-r2/base/")), "R2 base must render");
-    assert.ok(srcs.includes(AURA_COSMETIC.aura), "the aura item must be visible on the R2 stack");
-  }));
+test("aura/back under opt-in now preview as C2 with the item visible (no R2 base)", async () => {
+  await withR2OptIn(async () => {
+    for (const [slot, src] of [["aura", "/x/aura.svg"], ["back", "/x/wings.svg"]]) {
+      assert.equal(shopPreviewModeFor(slot), "c2", slot);
+      await withDom(async (root) => {
+        const cosmetics = c2CosmeticLayers({ [slot]: src }, resolve);
+        // The shop drives forceC2 from previewMode !== "r2" → always true now.
+        await mountC2Avatar(root, null, { layerClass: "preview-layer", cosmetics, forceC2: shopPreviewModeFor(slot) !== "r2" });
+        const srcs = srcsOf(root);
+        assert.ok(!srcs.some((s) => s.includes("avatar-r2")), slot + ": no R2 layer may leak into the shop preview");
+        assert.ok(srcs.includes(src), slot + " item must be visible in the C2 preview");
+      });
+    }
+  });
 });
 
 test("item is ALWAYS visible: the shop decision never yields R2-without-item", async () => {
