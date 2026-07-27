@@ -976,7 +976,7 @@ async function renderAvatarC2(animate = false) {
   const cosmetics = c2CosmeticLayers(equippedSlots, id => ownedItems.find(i => i.id === id)?.image_url);
   // Returns the render path ACTUALLY mounted ("r2"/"c2"/"aborted") after the atomic
   // asset-load gate — used below so blink follows the real render, not the manifest.
-  const renderPath = await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics });
+  const renderPath = await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics, surface: "avatar" });
   if (renderPath === "aborted") return; // a newer render superseded this one
 
   const baseEl = preview.querySelector('[data-c2-layer="base"]');
