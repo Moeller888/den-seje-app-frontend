@@ -26,3 +26,11 @@ tools/avatar/vendor/
 # backups/: local prod snapshot(s); tools/164b-prototype/: obsolete prototype/scratch
 backups/
 tools/164b-prototype/
+
+# Nested second clone of THIS repo (two-clone sync model: root + den-seje-app-frontend).
+# It is a local working copy, NOT a submodule — it must never be tracked as a gitlink.
+# Being tracked as a mode-160000 gitlink with no .gitmodules made `actions/checkout`
+# post-cleanup run `git submodule foreach` and fail with "No url found for submodule …"
+# (exit 128, emitted as a warning) on every CI run, and kept `M den-seje-app-frontend`
+# permanently dirty. Untracked here so git ignores the embedded clone entirely.
+den-seje-app-frontend/
