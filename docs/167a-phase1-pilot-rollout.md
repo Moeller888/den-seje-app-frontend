@@ -205,6 +205,13 @@ decision. It is **advisory only**: manual onboarding (§8, D-073) can be complet
 **never** be a condition for R2 rendering. Pilot status stays `AUTHORIZED_BUT_NOT_STARTED`; the test-student
 stays `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`; `AVATAR_R2` stays `false`.
 
+**Allowlist enablement (audited — DEFER for the pilot, D-075).** Central per-account enablement was audited in
+[167a-r2-pilot-allowlist-design.md](./167a-r2-pilot-allowlist-design.md). Recommendation:
+**`NO_ALLOWLIST_FOR_PILOT`** — for Wave 1, keep the per-browser opt-in via the D-073 kit (zero PII, no code
+change). A client-side student-UID list is **rejected** (it would ship children's identifiers to the public
+bundle); if central enablement is ever needed at scale, use a **server-side eligibility flag**, never a
+client UID list. `AVATAR_R2` stays `false`; pilot status unchanged.
+
 ## 12. Abort criteria
 
 Pause the pilot **immediately** on any of: a mixed C2/R2 stack · wrong avatar identity · broken/missing

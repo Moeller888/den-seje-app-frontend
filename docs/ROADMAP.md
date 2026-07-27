@@ -66,6 +66,13 @@ _Last reviewed: 2026-07-01._
   authorises the **design, not activation**. Observability is **advisory** — manual onboarding (D-073) works
   without it. **B (allowlist)** remains a separate later track; **no broad activation**; **`AVATAR_R2` stays
   `false`.** See `docs/project-state.md` (D-074).
+  **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
+  `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
+  student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
+  Recommended decision **`NO_ALLOWLIST_FOR_PILOT`**: Wave 1 (3–5) is already enabled per-browser via the
+  D-073 kit; if central enablement is ever needed at scale, use a **server-side eligibility flag** (RLS,
+  own-account-only), never a client UID list. **Owner decision required**; no code, no migration; **no broad
+  activation**; **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-075).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
