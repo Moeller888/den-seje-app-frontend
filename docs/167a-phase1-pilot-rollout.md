@@ -1,11 +1,12 @@
 # 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
-Status: **`AUTHORIZED_BUT_NOT_STARTED` (2026-07-26, D-072).** The pilot mechanism is ready and R2 is
-**live-verified technically** on production, but **no user is yet documented as a persistent pilot
-participant** — Wave 1 begins only after the persistent-browser onboarding gate (§8). `AVATAR_R2 = false`
-by default (production unchanged); no broad activation. Originally written 2026-07-01 for Phase-1;
-**refreshed 2026-07-23 (D-064)** for the Phase-2 decomposed stack; **operationalized 2026-07-26 (D-071**
-raster debt accepted **/ D-072** onboarding protocol + status correction). Owner: project owner.
+Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-07-27, D-078) — 1 participant `ONBOARDED`.** The test-student
+passed the full persistent-browser onboarding gate (§8) in an owner-witnessed manual run (Chrome / desktop);
+Wave 1 is now in progress (1 of target 3, max 5). `AVATAR_R2 = false` by default (production unchanged); no
+broad activation, no global flag-flip — R2 is on only for browsers that set the per-browser opt-in.
+Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064)** for the Phase-2 decomposed stack;
+**operationalized 2026-07-26 (D-071** raster debt accepted **/ D-072** onboarding protocol + status
+correction); **Wave 1 started 2026-07-27 (D-078)**. Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
 
@@ -108,13 +109,13 @@ A user meeting all three gets a clean experience (the decomposed R2 avatar + any
 
 ## 7. Pilot GO — authorization, status & Wave 1 scope (D-071 / D-072)
 
-**Overall pilot status: `AUTHORIZED_BUT_NOT_STARTED`.**
+**Overall pilot status: `PILOT_WAVE_1_IN_PROGRESS` — 1 participant `ONBOARDED` (2026-07-27, D-078).**
 - The pilot **mechanism is ready** (per-browser opt-in, whole-stack-or-C2 fallback).
-- R2 is **live-verified technically** on production (see §15 row 1) — this is a technical render proof, **not**
-  onboarding.
 - The **raster debt is accepted** (D-071).
-- **No user is yet documented as a persistent pilot participant.**
-- **Wave 1 begins only after** the persistent-browser onboarding gate (§8).
+- **Participant #1 (test-student) is `ONBOARDED`** — the full persistent-browser gate (§8) passed in an
+  owner-witnessed manual run (Chrome / desktop): opt-in survived a real browser close-and-reopen, `renderPath`
+  stayed `r2` on avatar/hub/quiz with no mixed stack, and opt-out was demonstrated (see §15 row 1).
+- **Wave 1 target 3, max 5** — onboard further users one at a time via the §8 gate.
 - **`AVATAR_R2 = false`** — no broad activation.
 
 **Live verification ≠ onboarding (D-072).** A live R2 render proven in an **ephemeral, automated browser
@@ -198,12 +199,12 @@ session count · final status · follow-up needed.
 **The log must NEVER contain:** full name · email · UID · passwords · tokens · `localStorage` contents ·
 any unnecessary personal data.
 
-**Optional observability (designed, NOT implemented — D-074).** A privacy-safe, console-only, pilot-gated
-render signal (R2 / C2-fallback / render-failed) is **designed** in
-[167a-r2-pilot-observability-design.md](./167a-r2-pilot-observability-design.md) and awaits an owner
-decision. It is **advisory only**: manual onboarding (§8, D-073) can be completed **without** it, and it must
-**never** be a condition for R2 rendering. Pilot status stays `AUTHORIZED_BUT_NOT_STARTED`; the test-student
-stays `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`; `AVATAR_R2` stays `false`.
+**Optional observability (designed D-074, IMPLEMENTED D-076).** A privacy-safe, console-only, pilot-gated
+render signal (R2 / C2-fallback / render-failed) is designed in
+[167a-r2-pilot-observability-design.md](./167a-r2-pilot-observability-design.md) and shipped in D-076. It is
+**advisory only**: manual onboarding (§8, D-073) can be completed **without** it, and it must **never** be a
+condition for R2 rendering. (During the D-078 onboarding it emitted the expected `avatar_r2_render` events on
+the opt-in browser.) `AVATAR_R2` stays `false`.
 
 **Allowlist enablement (audited — DEFER for the pilot, D-075).** Central per-account enablement was audited in
 [167a-r2-pilot-allowlist-design.md](./167a-r2-pilot-allowlist-design.md). Recommendation:
@@ -248,12 +249,12 @@ to base/hair/shoe assets · a pilot user seeing fringe in normal use · a device
 
 | # | Pilot-id | Identity | Cosmetics | Eligibility | Persistent onboarding | Status |
 |---|---|---|---|---|---|---|
-| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) | `body_type=neutral`, `skin_tone=medium`, `hairstyle=default` (read live 2026-07-26) | `equipped_slots={}` (none) | ✅ neutral-medium, no gated cosmetics (from the live profile 2026-07-26) | ⏳ **not established** — persistent-browser gate (§8) steps 6–10 not performed | **`LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER` (2026-07-26, D-072).** R2 was **live-verified on production**: on **avatar, hub and quiz** — `renderPath=r2` (no C2 fallback), base = `…-r2/base/body-neutral-medium-v2.webp`, all six layers present (`base·blush·face·iris·eyes·hair-r2`), no broken images, no C2 `.svg` mixing; neutral-medium eligibility verified. **But** the check ran in a **temporary automated browser context** — **no persistent browser profile was created or documented**, and the `localStorage` opt-in **was not documented to survive a browser close-and-reopen**. Persistent onboarding is therefore **not proven** (this does **not** assert the key was deleted). No user data was changed; no quiz answer was submitted. The account is therefore **not yet an active pilot participant**. _Earlier: ✅ 2026-07-01 (Phase-1 baked base, historical); re-verified 2026-07-22 via the fixture-intercepted activation-readiness audit._ |
+| 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) · browser **Chrome** · **desktop** | `body_type=neutral`, `skin_tone=medium`, `hairstyle=default` | `equipped_slots={}` (none) | ✅ neutral-medium, no gated cosmetics | ✅ **established (2026-07-27)** — full §8 persistent-browser gate passed | **`ONBOARDED` (2026-07-27, D-078).** Manual persistent-browser onboarding completed in an **owner-witnessed step-by-step run** (D-073 kit) in a **normal persistent Chrome profile on desktop** (not incognito/guest). Proof: **browser-local opt-in activated**; **Fase A** — `renderPath=r2` with no C2 `.svg` mixing and no broken images on **avatar, hub and quiz**; **persistence gate** — the browser was **fully closed (normal, not forced)** and the **same profile reopened**, and the **browser-local opt-in persisted after the full browser restart** with `renderPath` still `r2` on all three surfaces; **opt-out demonstrated and opt-in restored** (the avatar fell back to the C2 render, the app stayed functional, then R2 was restored). **No code, backend, database, account-profile or user-record changes; only browser-local pilot opt-in state was changed.** No account identifiers were recorded. _Earlier: `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER` (2026-07-26, D-072); ✅ 2026-07-01 (Phase-1, historical); re-verified 2026-07-22 via the fixture-intercepted activation-readiness audit._ |
 
 _The opt-in remains per-browser `localStorage` (no server-side state). A user reaches `ONBOARDED` only via
 the §8 persistent-browser gate. Add a row per user using the §11 data-minimal fields; keep Wave 1 to §7/§9._
 
-**Next concrete step:** run the manual persistent-browser onboarding kit
-([167a-persistent-browser-onboarding-kit.md](./167a-persistent-browser-onboarding-kit.md), D-073) for the
-test-student in a real persistent browser profile. Until that completes, pilot status stays
-`AUTHORIZED_BUT_NOT_STARTED` and the test-student stays `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`.
+**Next concrete step:** Wave 1 is in progress with participant #1 (`ONBOARDED`, D-078). Onboard up to the
+target of 3 (max 5) further users **one at a time** via the §8 persistent-browser gate (D-073 kit), each
+recorded here with the §11 data-minimal fields; observe against the §10 success criteria and §9/§12 exposure
+& duration, and pause on any §12 abort trigger. `AVATAR_R2` stays `false` (per-browser opt-in only).
