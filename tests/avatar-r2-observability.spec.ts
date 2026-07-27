@@ -1,7 +1,11 @@
 // Avatar R2 pilot-observability verification (D-076). SELF-SERVED + FIXTURE-INTERCEPTED: a
 // local static server serves this branch's code and every *.supabase.co call is answered from
-// fixtures — 0 backend contact, no shared-student mutation, no real token. Verifies the
-// console-only, pilot-gated render signal on avatar / hub / quiz: one event per root per load,
+// fixtures with fictitious local values — so the SPEC ITSELF makes no real backend request and no
+// shared-student mutation, and uses no real token. NOTE: the repo's DEFAULT playwright.config.ts runs
+// tests/global-setup.ts first, which DOES contact Supabase (question-pool health check + idempotent
+// test-account provisioning) before any spec — that is repo global setup, not this spec. Run this spec
+// via `playwright.observability.config.ts` (no globalSetup, no .env) for a fully backend-free run.
+// Verifies the console-only, pilot-gated render signal on avatar / hub / quiz: one event per root per load,
 // correct surface/result/reason, c2_fallback on a mandatory-asset failure, silence without opt-in,
 // dedup on rerender, and render_failed on an otherwise-unhandled render exception. No goldens.
 
