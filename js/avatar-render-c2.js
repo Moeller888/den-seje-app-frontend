@@ -303,8 +303,12 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   return path;
   } catch (err) {
     // Otherwise-unhandled render exception → advisory render_failed, then RE-THROW the identical
-    // error (preserves rejection/stack/caller semantics; see the D-076 audit in the PR).
-    try { emitR2RenderObservability({ surface, result: "render_failed", reason: "render_exception", root: rootEl }); } catch (_e) {}
+    // error (preserves rejection/stack/caller semantics; see the D-076 audit in the PR). Only the
+    // CURRENT mount reports: a superseded/stale mount must neither emit nor consume the root's dedup
+    // slot, so a later current mount on the same root can still emit its correct final result.
+    if (isCurrent()) {
+      try { emitR2RenderObservability({ surface, result: "render_failed", reason: "render_exception", root: rootEl }); } catch (_e) {}
+    }
     throw err;
   }
 }

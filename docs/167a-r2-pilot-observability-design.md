@@ -4,7 +4,9 @@
 Implementation is a **separate runtime PR** (see §16); this document remains the design record.
 **Implemented in D-076 (2026-07-27)** — the console-only design shipped as a runtime PR (helper +
 central emission on the shared render path); status stays `OWNER_DECISION_CONFIRMED` (design record).
-**Type:** read-only audit + design. **Nothing is implemented.** No runtime/asset/test/golden/workflow change.
+**Type:** read-only audit + design. **At the time of the D-074 design decision, nothing had been
+implemented; runtime implementation is recorded separately in D-076.** This document itself makes no
+runtime/asset/test/golden/workflow change.
 **Related:** D-071 (raster debt accepted), D-072 (pilot protocol + status), D-073 (manual onboarding kit).
 **Pilot status (unchanged):** `AUTHORIZED_BUT_NOT_STARTED`. **Test-student (unchanged):**
 `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER`. **`AVATAR_R2 = false`.**
