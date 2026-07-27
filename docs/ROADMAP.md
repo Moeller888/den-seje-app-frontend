@@ -71,8 +71,11 @@ _Last reviewed: 2026-07-01._
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
   Recommended decision **`NO_ALLOWLIST_FOR_PILOT`**: Wave 1 (3–5) is already enabled per-browser via the
   D-073 kit; if central enablement is ever needed at scale, use a **server-side eligibility flag** (RLS,
-  own-account-only), never a client UID list. **Owner decision required**; no code, no migration; **no broad
-  activation**; **`AVATAR_R2` stays `false`.** See `docs/project-state.md` (D-075).
+  own-account-only), never a client UID list. **✅ Owner decision CONFIRMED (2026-07-27):
+  `NO_ALLOWLIST_FOR_PILOT`** (design-doc status `OWNER_DECISION_CONFIRMED`) — no allowlist built; Wave 1 stays
+  per-browser (D-073); a server-side flag would be its own future audited runtime+migration PR if scale ever
+  demands it. No code, no migration; **no broad activation**; **`AVATAR_R2` stays `false`.** See
+  `docs/project-state.md` (D-075).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
   analytics boundaries decided). **No service implemented yet.**
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz

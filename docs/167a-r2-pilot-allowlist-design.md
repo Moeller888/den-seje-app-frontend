@@ -1,6 +1,7 @@
 # 167A — Avatar R2 pilot allowlist enablement (design, D-075)
 
-**Status:** `DESIGN_READY_AWAITING_OWNER_DECISION`
+**Status:** `OWNER_DECISION_CONFIRMED` — **`NO_ALLOWLIST_FOR_PILOT`** (owner, 2026-07-27). No allowlist is
+built for the pilot; Wave 1 stays on the per-browser opt-in (D-073 kit). This document remains design-only.
 **Type:** read-only audit + design. **Nothing is implemented.** No runtime/asset/test/golden/workflow change.
 **Related:** D-071 (raster debt accepted), D-072 (pilot protocol + status), D-073 (manual onboarding kit),
 D-074 (observability, console-only, owner-confirmed).
@@ -186,4 +187,12 @@ Choose one:
 **Recommendation: `NO_ALLOWLIST_FOR_PILOT`.** The Wave-1 pilot is already enabled safely per-browser (D-073)
 with no PII; the only *real* allowlists either leak children's UIDs (A/B) or require an unjustified backend +
 data-flow change for 3–5 users (D). Revisit with option D **only** at a scale where manual onboarding is
-impractical. **No code is written until the owner selects an option.**
+impractical.
+
+**✅ OWNER DECISION (2026-07-27): `NO_ALLOWLIST_FOR_PILOT`.** No allowlist is built for the pilot. Wave 1
+stays on the per-browser `localStorage.avatar_r2` opt-in via the D-073 kit. Options A and B (client-side
+student-UID lists) are **rejected** on privacy/GDPR grounds. If central enablement is ever needed at scale,
+the future path is **option D (server-side eligibility flag, RLS, own-account-only)** — never a client UID
+list; that would be its own audited runtime + migration PR. This decision changes **nothing** at runtime: no
+code, no migration, no data-flow change; `AVATAR_R2` stays `false`; pilot status stays
+`AUTHORIZED_BUT_NOT_STARTED`.
