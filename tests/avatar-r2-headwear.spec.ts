@@ -142,9 +142,12 @@ test("shop stays uniform C2 preview even with R2 opt-in (D-077 unaffected)", asy
   await ctx.close();
 });
 
-// ── Golden MATRIX: all five headwear items on the R2 figure (one-glance review) ─
+// ── Golden MATRIX: all five headwear items × three surface sizes on the R2 figure ─
+// One compact, labelled grid (rows = the avatar/hub/quiz render sizes, columns = the five
+// items) so placement, cut-off, floating, hidden face/eyes and the over-hair order are all
+// reviewable at one glance and at real responsive scale — instead of 15 separate screenshots.
 test("golden: R2 headwear matrix (all five items)", async ({ browser, browserName }) => {
-  const ctx = await browser.newContext({ viewport: { width: 1180, height: 420 }, reducedMotion: "reduce" });
+  const ctx = await browser.newContext({ viewport: { width: 1160, height: 720 }, reducedMotion: "reduce" });
   await ctx.route("**://*.supabase.co/**", makeRoute(null));
   await ctx.addInitScript(() => localStorage.setItem("avatar_r2", "1"));
   const page = await ctx.newPage();
@@ -152,31 +155,49 @@ test("golden: R2 headwear matrix (all five items)", async ({ browser, browserNam
   const info = await page.evaluate(async (hats: string[]) => {
     const mod: any = await import("/js/avatar-render-c2.js");
     const id = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "tousled", hair_color: "brown" };
-    document.body.style.cssText = "margin:0;background:#1a1c24;display:flex;flex-wrap:nowrap";
+    // The three surface sizes headwear must survive (keeps the 2:3 avatar-canvas aspect).
+    const SIZES = [
+      { name: "avatar", w: 180, h: 270 },
+      { name: "hub", w: 112, h: 168 },
+      { name: "quiz", w: 72, h: 108 },
+    ];
+    document.body.style.cssText = "margin:0;background:#1a1c24;color:#c9cfdd;font:12px/1.3 system-ui,sans-serif;padding:16px";
+    const label = (text: string, cls: string) => { const el = document.createElement("div"); el.className = cls; el.style.cssText = "white-space:pre-line;text-align:center;align-self:center;justify-self:center"; el.textContent = text; return el; };
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:inline-grid;grid-template-columns:auto repeat(5,max-content);gap:12px 14px;align-items:end;justify-items:center";
+    grid.appendChild(label("", "mx-corner")); // top-left corner
+    for (const hat of hats) grid.appendChild(label(hat, "mx-col-label"));
     const out: any[] = [];
-    for (const hat of hats) {
-      const wrap = document.createElement("div");
-      wrap.style.cssText = "position:relative;width:220px;height:330px;margin:6px";
-      wrap.dataset.hat = hat;
-      document.body.appendChild(wrap);
-      const cosmetics = mod.c2CosmeticLayers({ headwear: "/assets/avatar/hat/" + hat + ".svg" }, (x: string) => x);
-      const rp = await mod.mountC2Avatar(wrap, id, { layerClass: "mx-layer", cosmetics });
-      const hw = wrap.querySelector('[data-c2-layer="headwear"]') as HTMLImageElement | null;
-      out.push({ hat, rp, hasHeadwear: !!hw, z: hw ? Number(hw.style.zIndex) : null, c2: !!wrap.querySelector('img[src*="-c2.svg"]') });
+    for (const size of SIZES) {
+      grid.appendChild(label(size.name + "\n" + size.w + "×" + size.h, "mx-row-label"));
+      for (const hat of hats) {
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position:relative;width:" + size.w + "px;height:" + size.h + "px;outline:1px solid #2c3142";
+        wrap.dataset.hat = hat; wrap.dataset.size = size.name;
+        grid.appendChild(wrap);
+        const cosmetics = mod.c2CosmeticLayers({ headwear: "/assets/avatar/hat/" + hat + ".svg" }, (x: string) => x);
+        const rp = await mod.mountC2Avatar(wrap, id, { layerClass: "mx-layer", cosmetics });
+        const hw = wrap.querySelector('[data-c2-layer="headwear"]') as HTMLImageElement | null;
+        out.push({ hat, size: size.name, rp, hasHeadwear: !!hw, z: hw ? Number(hw.style.zIndex) : null, c2: !!wrap.querySelector('img[src*="-c2.svg"]') });
+      }
     }
+    document.body.appendChild(grid);
     // wait for all layer images to decode
     await Promise.all(Array.from(document.images).map((im) => (im.decode ? im.decode().catch(() => {}) : Promise.resolve())));
     return out;
   }, HATS);
-  // structural invariants for every item (all browsers)
+  // structural invariants for every item × size (all browsers): R2, headwear present above
+  // the hair (z>40), no C2 base leak — 15 cells.
+  expect(info.length, "5 items × 3 sizes").toBe(15);
   for (const it of info) {
-    expect(it.rp, `${it.hat}: R2`).toBe("r2");
-    expect(it.hasHeadwear, `${it.hat}: headwear layer`).toBeTruthy();
-    expect(it.z, `${it.hat}: z above hair 40`).toBeGreaterThan(40);
-    expect(it.c2, `${it.hat}: no C2 svg leak`).toBeFalsy();
+    const tag = `${it.hat}@${it.size}`;
+    expect(it.rp, `${tag}: R2`).toBe("r2");
+    expect(it.hasHeadwear, `${tag}: headwear layer`).toBeTruthy();
+    expect(it.z, `${tag}: z above hair 40`).toBeGreaterThan(40);
+    expect(it.c2, `${tag}: no C2 svg leak`).toBeFalsy();
   }
   if (browserName === "chromium") {
-    await expect(page.locator("body")).toHaveScreenshot("r2-headwear-matrix.png", { maxDiffPixels: 350 });
+    await expect(page.locator("body")).toHaveScreenshot("r2-headwear-matrix.png", { maxDiffPixels: 400 });
   }
   await ctx.close();
 });
