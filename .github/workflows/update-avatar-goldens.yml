@@ -44,6 +44,7 @@ jobs:
           tests/avatar-r2-render.spec.ts
           tests/avatar-r2-blink-frames.spec.ts
           tests/avatar-r2-expression-frames.spec.ts
+          tests/avatar-r2-headwear.spec.ts
           --project=chromium --grep "golden:" --update-snapshots
       - name: Upload generated baselines
         if: ${{ !cancelled() }}

@@ -508,6 +508,47 @@ export function isR2Phase1SafeSlot(slot) {
   return R2_PHASE1_SAFE_SLOTS.indexOf(slot) !== -1;
 }
 
+// ── R2 runtime cosmetic support (Phase-2 anchor revision — ADDITIVE) ──────────
+// Which cosmetic slots render on the R2 raster stack, their R2-specific z, and the wrapper transform
+// that re-seats a C2-canvas asset (viewBox "0 0 160 240") onto the R2 figure. The source asset files
+// are NEVER modified. This is DISTINCT from R2_PHASE1_SAFE_SLOTS (aura/back — behind the figure,
+// anchor-independent, no transform), which is left byte-functionally UNCHANGED.
+// Still GATED (no R2 z / transform here): eyes, face, neck, torso, body.
+export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear"];
+export function isR2SupportedCosmeticSlot(slot) {
+  return R2_SUPPORTED_COSMETIC_SLOTS.indexOf(slot) !== -1;
+}
+// R2 z per supported slot. aura/back keep their existing behind-base z (== C2_LAYER_Z, both < base 0,
+// so they paint behind the R2 base exactly as before). headwear sits ABOVE the R2 hair
+// (R2_STACK_Z.hair = 40).
+export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45 };
+// Wrapper CSS transform (+ origin) mapping a C2-canvas headwear asset onto the R2 head. Applied to the
+// cosmetic layer only (source SVG untouched). A STANDARD transform for all hats, with version-controlled
+// per-item overrides keyed by the STABLE asset basename (e.g. "pirate-hat"). Calibrated against all five
+// current headwear items (crown-golden/silver, hat-blue, pirate-hat, bow-yellow).
+export const R2_HEADWEAR_TRANSFORM_ORIGIN = "50% 0%";
+// CALIBRATED (all five current items reviewed on the R2 avatar surface): the C2-canvas hats align
+// NATIVELY on the R2 head (same North Star head anchor), so the standard transform is identity. The
+// mechanism is retained so a future hat that needs re-seating is a per-item, version-controlled config
+// change (add an entry to R2_HEADWEAR_TRANSFORM_OVERRIDES keyed by asset basename) — never an asset edit.
+export const R2_HEADWEAR_TRANSFORM_DEFAULT = "translateY(0%) scale(1)";
+export const R2_HEADWEAR_TRANSFORM_OVERRIDES = {
+  // e.g. "pirate-hat": "translateY(-4%) scale(1.05)"  — none needed for the current five.
+};
+// "/assets/avatar/hat/pirate-hat.svg" → "pirate-hat"
+export function r2CosmeticBasename(src) {
+  if (typeof src !== "string") return "";
+  const file = src.split("/").pop() || "";
+  return file.replace(/\.[a-z0-9]+$/i, "");
+}
+export function r2HeadwearTransformFor(src) {
+  const key = r2CosmeticBasename(src);
+  return {
+    transform: R2_HEADWEAR_TRANSFORM_OVERRIDES[key] ?? R2_HEADWEAR_TRANSFORM_DEFAULT,
+    origin: R2_HEADWEAR_TRANSFORM_ORIGIN,
+  };
+}
+
 // Shop-preview render decision. PILOT POLICY — FORCE_ALL_SHOP_PREVIEWS_TO_C2:
 // EVERY shop product-card preview renders the WHOLE C2 stack — always "c2", for every slot,
 // regardless of the R2 opt-in. The caller pairs this with mountC2Avatar's forceC2, so the item

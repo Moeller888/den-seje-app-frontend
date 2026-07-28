@@ -83,6 +83,13 @@ _Last reviewed: 2026-07-01._
   demonstrated. Pilot status moves `AUTHORIZED_BUT_NOT_STARTED` → **`PILOT_WAVE_1_IN_PROGRESS`** (1 of target
   3, max 5). Docs-only; **no code/runtime/user-data change; `AVATAR_R2` stays `false`** (per-browser opt-in
   only, no global flag-flip). See `docs/project-state.md` (D-078).
+  **▶ R2 full-cosmetic-support track — slice 1: HEADWEAR (2026-07-28, D-079).** First item-equipment slice
+  from the equipment audit: `headwear` now renders on the R2 stack (dedicated R2 z above hair + a
+  version-controlled wrapper transform; source assets untouched; all five current hats align natively). aura/
+  back were already supported; **eyes/face/neck/torso/body stay gated** (need R2-specific assets / runtime).
+  Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
+  stays `false`**; pilot status unchanged. Next slices: eyes → face → neck → torso → body. See
+  `docs/project-state.md` (D-079).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
