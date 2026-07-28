@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2Phase1SafeSlot } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -100,11 +100,23 @@ export function composeC2Layers(identity, cosmetics = []) {
 export function composeR2Layers(identity, cosmetics = []) {
   const s = r2StackSrcsFor(identity);
   if (!s) return null;                                // incomplete stack → C2 fallback
-  // Phase-1 cosmetic slot-gate unchanged: only anchor-independent, behind-figure
-  // cosmetics (aura/back) render on the raster stack until the anchor revision.
+  // R2 cosmetic slot-gate: aura/back (behind-figure, unchanged) + headwear (Phase-2 anchor revision,
+  // D-079). eyes/face/neck/torso/body stay filtered OUT. headwear gets its dedicated R2 z (above hair)
+  // and a wrapper transform re-seating the C2-canvas asset onto the R2 head (source SVG untouched);
+  // aura/back keep their exact prior z + no marker/transform (byte-functional).
   const cos = (Array.isArray(cosmetics) ? cosmetics : [])
-    .filter((c) => c && c.src && typeof c.z === "number" && isR2Phase1SafeSlot(c.slot))
-    .map((c) => ({ src: c.src, z: c.z, isBase: false, inline: false }));
+    .filter((c) => c && c.src && typeof c.z === "number" && isR2SupportedCosmeticSlot(c.slot))
+    .map((c) => {
+      const z = R2_COSMETIC_Z[c.slot] ?? c.z;
+      const layer = { src: c.src, z, isBase: false, inline: false };
+      if (c.slot === "headwear") {
+        layer.marker = "headwear";
+        const t = r2HeadwearTransformFor(c.src);
+        layer.transform = t.transform;
+        layer.transformOrigin = t.origin;
+      }
+      return layer;
+    });
   return [
     { src: s.base,      z: R2_STACK_Z.base,  isBase: true,  inline: false },
     { src: s.blush,     z: R2_STACK_Z.blush, isBase: false, inline: false, blend: "multiply", marker: "blush" },
@@ -285,6 +297,11 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
       img.alt = "";
       img.style.zIndex = String(layer.z);
       if (layer.blend) img.style.mixBlendMode = layer.blend;   // blush: multiply
+      // R2 cosmetic re-seat transform (D-079, headwear): applied to the layer only; source untouched.
+      if (layer.transform) {
+        img.style.transform = layer.transform;
+        img.style.transformOrigin = layer.transformOrigin || "center";
+      }
       rootEl.appendChild(img);
     }
   }

@@ -122,15 +122,28 @@ test("binding layer order and blend modes (integration composite §6)", () => {
   assert.match(hair.src, /hair-northstar-v1\.webp$/, "runtime hair must be the luminance map, never hair-pl1-color");
 });
 
-test("cosmetic slot-gate: only aura/back pass on the R2 stack", () => {
+test("cosmetic slot-gate: aura/back/headwear pass; eyes/face/neck/torso/body stay gated (D-079)", () => {
   const cosmetics = [
     { slot: "aura", src: "/x/aura.svg", z: -30 },
+    { slot: "back", src: "/x/wings.svg", z: -20 },
     { slot: "headwear", src: "/x/hat.svg", z: 50 },
+    { slot: "eyes", src: "/x/glasses.svg", z: 55 },
+    { slot: "face", src: "/x/mask.svg", z: 50 },
+    { slot: "torso", src: "/x/armor.svg", z: 20 },
+    { slot: "body", src: "/x/suit.svg", z: 10 },
+    { slot: "neck", src: "/x/chain.svg", z: 30 },
   ];
   const layers = composeR2Layers(NEUTRAL_MEDIUM, cosmetics);
   const srcs = layers.map((l) => l.src);
-  assert.ok(srcs.includes("/x/aura.svg"), "aura (approved slot) must render");
-  assert.ok(!srcs.includes("/x/hat.svg"), "headwear must stay gated");
+  assert.ok(srcs.includes("/x/aura.svg"), "aura passes");
+  assert.ok(srcs.includes("/x/wings.svg"), "back passes");
+  assert.ok(srcs.includes("/x/hat.svg"), "headwear passes (D-079)");
+  for (const s of ["/x/glasses.svg", "/x/mask.svg", "/x/armor.svg", "/x/suit.svg", "/x/chain.svg"]) {
+    assert.ok(!srcs.includes(s), s + " must stay gated");
+  }
+  // headwear gets its DEDICATED R2 z (above the R2 hair, 40), not the raw incoming c.z
+  const hw = layers.find((l) => l.src === "/x/hat.svg");
+  assert.ok(hw.z > 40, "headwear z above the R2 hair");
 });
 
 test("engine gate with flag OFF: C2 behaviour unchanged (both engines allowed)", () => {
