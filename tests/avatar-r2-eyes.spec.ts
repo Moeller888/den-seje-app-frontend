@@ -37,10 +37,15 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => { await new Promise<void>((r) => server.close(() => r())); });
 
-const EYES = ["glasses-round"];         // the ONLY active eyes item (migration 20260521000000)
-const REP = "glasses-round";
+// The ONLY live eyes catalog item: id `glasses-round`, but since migration 20260623000000 its image_url
+// is the front-only 164Z asset glasses-round-basic-v1.svg (asset-basename glasses-round-basic-v1). The
+// fixtures mirror the LIVE binding — catalog id ≠ asset basename.
+const EYES_ID = "glasses-round";                 // live catalog id
+const EYES_ASSET = "glasses-round-basic-v1";     // live asset basename (what image_url points at)
+const EYES_IDS = [EYES_ID];
+const REP = EYES_ID;
 const HAT = "hat-blue";                 // for the headwear + glasses combo test
-const eyesUrl = (id: string) => `/assets/avatar/glasses/${id}.svg`;
+const eyesUrl = (asset: string) => `/assets/avatar/glasses/${asset}.svg`;
 const hatUrl = (id: string) => `/assets/avatar/hat/${id}.svg`;
 const UID = "00000000-0000-4000-8000-000000000001";
 const idNeutralMedium = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "tousled", hair_color: "brown", chosen_at: "2026-06-01T00:00:00Z" };
@@ -49,7 +54,8 @@ function jwt() { const b = (o: any) => Buffer.from(JSON.stringify(o)).toString("
 const SESSION = { access_token: jwt(), token_type: "bearer", expires_in: 2592000, expires_at: Math.floor(Date.now() / 1000) + 2592000, refresh_token: "f", user: USER };
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS" };
 const today = new Date().toISOString().slice(0, 10);
-const EYES_ITEM = (id: string) => ({ id, name: id, price: 90, rarity: "common", type: "avatar", image_url: eyesUrl(id), slot_type: "eyes", layer_order: 7 });
+// live binding: catalog id `glasses-round` → image_url the basic-v1 asset (migration 20260623000000)
+const EYES_ITEM = (id: string) => ({ id, name: id, price: 90, rarity: "common", type: "avatar", image_url: eyesUrl(EYES_ASSET), slot_type: "eyes", layer_order: 7 });
 const HAT_ITEM = (id: string) => ({ id, name: id, price: 10, rarity: "common", type: "avatar", image_url: hatUrl(id), slot_type: "headwear", layer_order: 5 });
 
 function makeRoute(equipped: Record<string, string>) {
@@ -70,7 +76,7 @@ function makeRoute(equipped: Record<string, string>) {
     if (p.startsWith("/rest/v1/profiles")) return j(one(profile));
     if (p.startsWith("/rest/v1/student_progress")) return j([{ student_id: UID, xp: 420, coins: 500 }]);
     if (p.startsWith("/rest/v1/user_items")) return j(owned);
-    if (p.startsWith("/rest/v1/shop_items")) return j([...EYES.map(EYES_ITEM), HAT_ITEM(HAT)]);
+    if (p.startsWith("/rest/v1/shop_items")) return j([...EYES_IDS.map(EYES_ITEM), HAT_ITEM(HAT)]);
     if (p.startsWith("/rest/v1/daily_login_rewards")) return j(one({ student_id: UID, last_claimed_date: today }));
     return j([]);
   };
@@ -132,7 +138,7 @@ for (const [name, url, sel] of [
     expect(r.renderPath, `${name}: R2`).toBe("r2");
     expect(r.internalEyes, `${name}: exactly one internal eyes layer`).toBe(1);
     expect(r.cosmeticCount, `${name}: exactly one eyes-cosmetic layer`).toBe(1);
-    expect(r.cosmeticSrc, `${name}: cosmetic src is the glasses asset`).toContain(`${REP}.svg`);
+    expect(r.cosmeticSrc, `${name}: cosmetic src is the live glasses asset`).toContain(`${EYES_ASSET}.svg`);
     expect(r.cosmeticZ! > 5, `${name}: cosmetic (${r.cosmeticZ}) above blink lid z5`).toBeTruthy();
     expect(r.cosmeticZ! < r.hairZ!, `${name}: cosmetic (${r.cosmeticZ}) under hair (${r.hairZ})`).toBeTruthy();
     expect(r.c2Svg, `${name}: no C2 .svg base leak`).toBeFalsy();
@@ -217,7 +223,7 @@ test("golden: R2 glasses matrix (sizes × expressions + blink)", async ({ browse
   await ctx.addInitScript(() => { (window as any).__AVATAR_TEST__ = true; localStorage.setItem("avatar_r2", "1"); });
   const page = await ctx.newPage();
   await page.goto(`${baseUrl}/_matrix.html`, { waitUntil: "networkidle" });
-  const info = await page.evaluate(async (rep: string) => {
+  const info = await page.evaluate(async (asset: string) => {
     const mod: any = await import("/js/avatar-render-c2.js");
     const lay: any = await import("/js/avatar-layers.js");
     const blinkMod: any = await import("/js/avatar-blink-engine.js");
@@ -242,7 +248,7 @@ test("golden: R2 glasses matrix (sizes × expressions + blink)", async ({ browse
         const wrap = document.createElement("div");
         wrap.style.cssText = "position:relative;width:" + size.w + "px;height:" + size.h + "px;outline:1px solid #2c3142";
         grid.appendChild(wrap);
-        const cosmetics = mod.c2CosmeticLayers({ eyes: "/assets/avatar/glasses/" + rep + ".svg" }, (x: string) => x);
+        const cosmetics = mod.c2CosmeticLayers({ eyes: "/assets/avatar/glasses/" + asset + ".svg" }, (x: string) => x);
         const rp = await mod.mountC2Avatar(wrap, id, { layerClass: "mx-layer", cosmetics });
         // expression = a face-layer src swap (exactly what ExpressionEngine does on R2)
         if (st.face) { const f = wrap.querySelector('[data-c2-layer="face"]') as HTMLImageElement | null; if (f) f.src = lay.faceSrcForR2(st.face); }
@@ -255,7 +261,7 @@ test("golden: R2 glasses matrix (sizes × expressions + blink)", async ({ browse
     document.body.appendChild(grid);
     await Promise.all(Array.from(document.images).map((im) => (im.decode ? im.decode().catch(() => {}) : Promise.resolve())));
     return out;
-  }, REP);
+  }, EYES_ASSET);
   // structural invariants for every cell (all browsers)
   expect(info.length, "4 states × 3 sizes").toBe(12);
   for (const it of info) {

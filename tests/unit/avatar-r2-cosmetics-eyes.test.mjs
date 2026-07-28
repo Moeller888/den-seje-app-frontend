@@ -34,7 +34,10 @@ function withR2OptIn(fn) {
   try { return fn(); } finally { delete globalThis.localStorage; }
 }
 const NM = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "tousled", hair_color: "brown" };
-const GLASSES = "/assets/avatar/glasses/glasses-round.svg"; // the ONLY active eyes item
+// The ONLY live eyes item is catalog id `glasses-round`, but since migration 20260623000000 its
+// image_url points at the front-only asset glasses-round-basic-v1.svg — that is what the render
+// resolves and what r2EyesTransformFor() keys off (asset-basename glasses-round-basic-v1).
+const GLASSES = "/assets/avatar/glasses/glasses-round-basic-v1.svg"; // the ONLY active eyes item (live asset)
 const resolve = (x) => x;
 const layerBy = (root, m) => root.children.filter((c) => c.attrs["data-c2-layer"] === m);
 const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
@@ -81,18 +84,24 @@ test("cosmetic marker is DISTINCT from the mandatory internal 'eyes' layer (no c
   }));
 });
 
-test("standard transform + deterministic per-item override; unknown item → default", () => {
-  // glasses-round has a version-controlled override (oversized/wide → downscale)
-  const rounded = r2EyesTransformFor(GLASSES);
-  assert.equal(rounded.transform, R2_EYES_TRANSFORM_OVERRIDES["glasses-round"]);
-  assert.ok(/scale\(/.test(rounded.transform), "glasses-round downscale applied");
-  // a future/unknown front-glasses asset gets the STANDARD vertical re-seat
+test("live asset glasses-round-basic-v1 uses the STANDARD transform (no scale); override table empty", () => {
+  // The live asset's lens spacing (~24) already matches the R2 eyes (~24.7), so it needs ONLY the
+  // standard vertical C2→R2 eye-line re-seat — no scale, no per-item override.
+  const live = r2EyesTransformFor(GLASSES);
+  assert.equal(live.transform, R2_EYES_TRANSFORM_DEFAULT, "live asset uses translateY(4.4%)");
+  assert.equal(live.transform, "translateY(4.4%)");
+  assert.ok(!/scale\(/.test(live.transform), "no scale on the live asset");
+  assert.equal(live.origin, "center");
+  assert.equal(r2CosmeticBasename(GLASSES), "glasses-round-basic-v1");
+  // the override table is currently EMPTY (mechanism retained for a FUTURE asset only)
+  assert.deepEqual(R2_EYES_TRANSFORM_OVERRIDES, {}, "no active per-item override");
+  // a future / any correctly-proportioned front-glasses asset gets the STANDARD re-seat too
   const other = r2EyesTransformFor("/assets/avatar/glasses/some-future-glasses.svg");
   assert.equal(other.transform, R2_EYES_TRANSFORM_DEFAULT);
+  // the legacy asset the catalog NO LONGER serves also just gets the default (no stale override)
+  assert.equal(r2EyesTransformFor("/assets/avatar/glasses/glasses-round.svg").transform, R2_EYES_TRANSFORM_DEFAULT);
   // deterministic
   assert.deepEqual(r2EyesTransformFor(GLASSES), r2EyesTransformFor(GLASSES));
-  assert.equal(typeof rounded.origin, "string");
-  assert.equal(r2CosmeticBasename(GLASSES), "glasses-round");
 });
 
 test("still-gated slots (face/neck/torso/body) stay filtered OUT alongside an equipped eyes item", async () => {

@@ -562,14 +562,17 @@ export function r2HeadwearTransformFor(src) {
 // OVERRIDE keyed by the stable asset basename handles items whose lens size/spacing also differ.
 export const R2_EYES_TRANSFORM_ORIGIN = "center";
 export const R2_EYES_TRANSFORM_DEFAULT = "translateY(4.4%)";
-// CALIBRATED against the ONLY current eyes item, "glasses-round" (lenses cx 66/94 → spacing 28, r 13):
-// its lenses are oversized and wider-set than the R2 eyes, so beyond the vertical re-seat it also needs
-// a downscale. scale(0.88) maps the lens spacing 28 → 24.6 (≈ the R2 eye spacing 24.7) and the lens
-// centres to (67.7,57.3)/(92.3,57.3) ≈ the R2 eyes; translateY(1%) lands the eye-line. Reviewed on the
-// R2 figure (both pupils visible through the lenses, reads as round glasses, fringe covers the upper
-// rim naturally). A future front-glasses asset authored on the R2 eye-line needs only the DEFAULT.
+// The ONLY live eyes catalog item is "Runde Briller" (id `glasses-round`), and since migration
+// 20260623000000_bind_glasses_round_basic_svg.sql its image_url is the front-only 164Z asset
+// `/assets/avatar/glasses/glasses-round-basic-v1.svg` (asset-basename `glasses-round-basic-v1`). That
+// asset's lens spacing (≈24) already matches the R2 eyes (≈24.7), so it needs ONLY the standard
+// vertical C2→R2 eye-line re-seat (translateY(4.4%)) — NO scale. Reviewed on the R2 figure: both pupils
+// centred in the lenses, reads as round glasses, the fringe covers the upper rim naturally. The
+// per-item override table stays as the mechanism for a FUTURE asset whose lens size/spacing differs;
+// it is currently EMPTY (the live asset uses the default). Never key it on the legacy
+// `glasses-round.svg`, which the catalog no longer serves.
 export const R2_EYES_TRANSFORM_OVERRIDES = {
-  "glasses-round": "translateY(1%) scale(0.88)",
+  // e.g. "some-future-wide-glasses": "translateY(1%) scale(0.88)" — none needed for the current item.
 };
 export function r2EyesTransformFor(src) {
   const key = r2CosmeticBasename(src);
