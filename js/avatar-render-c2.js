@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -100,10 +100,13 @@ export function composeC2Layers(identity, cosmetics = []) {
 export function composeR2Layers(identity, cosmetics = []) {
   const s = r2StackSrcsFor(identity);
   if (!s) return null;                                // incomplete stack → C2 fallback
-  // R2 cosmetic slot-gate: aura/back (behind-figure, unchanged) + headwear (Phase-2 anchor revision,
-  // D-079). eyes/face/neck/torso/body stay filtered OUT. headwear gets its dedicated R2 z (above hair)
-  // and a wrapper transform re-seating the C2-canvas asset onto the R2 head (source SVG untouched);
-  // aura/back keep their exact prior z + no marker/transform (byte-functional).
+  // R2 cosmetic slot-gate: aura/back (behind-figure, unchanged) + headwear (D-079) + eyes/glasses
+  // (D-080). face/neck/torso/body stay filtered OUT. headwear gets its dedicated R2 z (above hair) and
+  // a wrapper transform re-seating the C2-canvas asset onto the R2 head; the eyes COSMETIC gets its own
+  // R2 z (6, above the internal eye stack + blink lid, under the hair) + a wrapper transform re-seating
+  // the C2-canvas glasses onto the R2 eye-line, and is DOM-tagged "eyes-cosmetic" — DISTINCT from the
+  // mandatory internal "eyes" layer so it never collides and the blink/expression engines never touch
+  // it. Both source SVGs are untouched. aura/back keep their exact prior z + no marker/transform.
   const cos = (Array.isArray(cosmetics) ? cosmetics : [])
     .filter((c) => c && c.src && typeof c.z === "number" && isR2SupportedCosmeticSlot(c.slot))
     .map((c) => {
@@ -112,6 +115,11 @@ export function composeR2Layers(identity, cosmetics = []) {
       if (c.slot === "headwear") {
         layer.marker = "headwear";
         const t = r2HeadwearTransformFor(c.src);
+        layer.transform = t.transform;
+        layer.transformOrigin = t.origin;
+      } else if (c.slot === "eyes") {
+        layer.marker = "eyes-cosmetic";
+        const t = r2EyesTransformFor(c.src);
         layer.transform = t.transform;
         layer.transformOrigin = t.origin;
       }
