@@ -513,8 +513,8 @@ export function isR2Phase1SafeSlot(slot) {
 // that re-seats a C2-canvas asset (viewBox "0 0 160 240") onto the R2 figure. The source asset files
 // are NEVER modified. This is DISTINCT from R2_PHASE1_SAFE_SLOTS (aura/back — behind the figure,
 // anchor-independent, no transform), which is left byte-functionally UNCHANGED.
-// Still GATED (no R2 z / transform here): face, neck, torso, body.
-export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes"];
+// Still GATED (no R2 z / transform here): neck, torso, body.
+export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes", "face"];
 export function isR2SupportedCosmeticSlot(slot) {
   return R2_SUPPORTED_COSMETIC_SLOTS.indexOf(slot) !== -1;
 }
@@ -522,10 +522,12 @@ export function isR2SupportedCosmeticSlot(slot) {
 // so they paint behind the R2 base exactly as before). headwear sits ABOVE the R2 hair
 // (R2_STACK_Z.hair = 40). The eyes COSMETIC (glasses) sits at 6 — ABOVE the internal R2 eye stack
 // (iris/eyes-fixed z4) and the blink lids (z5), but BELOW the hair (40, so the fringe covers the upper
-// rim/temples) and below headwear (45). This is the COSMETIC eyes slot; it is DOM-tagged with the
-// distinct marker "eyes-cosmetic" (see composeR2Layers) so it never collides with the mandatory
-// internal "eyes" layer and the blink/expression engines never touch it.
-export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45, eyes: 6 };
+// rim/temples) and below headwear (45). The face COSMETIC (mask) default sits at 8 — above the eyes
+// cosmetic and the internal eye stack + blink lids, under the hair — but a full-face mask (panda) gets a
+// per-item z ABOVE the hair (see R2_FACE_Z_OVERRIDES). Each cosmetic is DOM-tagged with its OWN distinct
+// marker ("eyes-cosmetic" / "face-cosmetic", see composeR2Layers) so it never collides with the
+// mandatory internal "eyes"/"face" layers and the blink/expression engines never touch it.
+export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45, eyes: 6, face: 8 };
 // Wrapper CSS transform (+ origin) mapping a C2-canvas headwear asset onto the R2 head. Applied to the
 // cosmetic layer only (source SVG untouched). A STANDARD transform for all hats, with version-controlled
 // per-item overrides keyed by the STABLE asset basename (e.g. "pirate-hat"). Calibrated against all five
@@ -580,6 +582,39 @@ export function r2EyesTransformFor(src) {
     transform: R2_EYES_TRANSFORM_OVERRIDES[key] ?? R2_EYES_TRANSFORM_DEFAULT,
     origin: R2_EYES_TRANSFORM_ORIGIN,
   };
+}
+
+// Wrapper CSS transform (+ origin) re-seating a C2-canvas face/mask asset onto the R2 face. The three
+// live masks are HETEROGENEOUS (authored on the higher C2 face): `ninja-mask` covers the lower face
+// (mouth), `hero-mask` is an eye-domino, `panda-mask` is a full-face replacement — so each gets its own
+// per-item transform (there is no single sensible standard; the DEFAULT is only a fallback re-seat for a
+// future asset). transform-origin CENTER. The source SVGs are NEVER modified. Calibrated on the R2
+// figure at avatar/hub/quiz sizes (ninja cloth over the mouth with eyes visible above; hero domino on
+// the eye-line; panda full face covered).
+export const R2_FACE_TRANSFORM_ORIGIN = "center";
+export const R2_FACE_TRANSFORM_DEFAULT = "translateY(5%)";
+export const R2_FACE_TRANSFORM_OVERRIDES = {
+  "ninja-mask": "translateY(6.5%)",
+  "hero-mask": "translateY(5%)",
+  "panda-mask": "translateY(6%) scale(1.1)",
+};
+export function r2FaceTransformFor(src) {
+  const key = r2CosmeticBasename(src);
+  return {
+    transform: R2_FACE_TRANSFORM_OVERRIDES[key] ?? R2_FACE_TRANSFORM_DEFAULT,
+    origin: R2_FACE_TRANSFORM_ORIGIN,
+  };
+}
+// Per-item z for the face COSMETIC. Default `R2_COSMETIC_Z.face` (8: above the eye stack + blink + glasses,
+// UNDER the hair — for masks that leave the head silhouette, e.g. lower-face ninja, eye-domino hero). A
+// full-face mask that REPLACES the whole face (panda, with its own ears/eyes/nose/mouth) must paint ABOVE
+// the hair (41: over hair 40, still under headwear 45 so a hat sits on top). Keyed by asset basename.
+export const R2_FACE_Z_OVERRIDES = {
+  "panda-mask": 41,
+};
+export function r2FaceZFor(src) {
+  const key = r2CosmeticBasename(src);
+  return R2_FACE_Z_OVERRIDES[key] ?? R2_COSMETIC_Z.face;
 }
 
 // Shop-preview render decision. PILOT POLICY — FORCE_ALL_SHOP_PREVIEWS_TO_C2:
