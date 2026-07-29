@@ -513,15 +513,19 @@ export function isR2Phase1SafeSlot(slot) {
 // that re-seats a C2-canvas asset (viewBox "0 0 160 240") onto the R2 figure. The source asset files
 // are NEVER modified. This is DISTINCT from R2_PHASE1_SAFE_SLOTS (aura/back — behind the figure,
 // anchor-independent, no transform), which is left byte-functionally UNCHANGED.
-// Still GATED (no R2 z / transform here): eyes, face, neck, torso, body.
-export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear"];
+// Still GATED (no R2 z / transform here): face, neck, torso, body.
+export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes"];
 export function isR2SupportedCosmeticSlot(slot) {
   return R2_SUPPORTED_COSMETIC_SLOTS.indexOf(slot) !== -1;
 }
 // R2 z per supported slot. aura/back keep their existing behind-base z (== C2_LAYER_Z, both < base 0,
 // so they paint behind the R2 base exactly as before). headwear sits ABOVE the R2 hair
-// (R2_STACK_Z.hair = 40).
-export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45 };
+// (R2_STACK_Z.hair = 40). The eyes COSMETIC (glasses) sits at 6 — ABOVE the internal R2 eye stack
+// (iris/eyes-fixed z4) and the blink lids (z5), but BELOW the hair (40, so the fringe covers the upper
+// rim/temples) and below headwear (45). This is the COSMETIC eyes slot; it is DOM-tagged with the
+// distinct marker "eyes-cosmetic" (see composeR2Layers) so it never collides with the mandatory
+// internal "eyes" layer and the blink/expression engines never touch it.
+export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45, eyes: 6 };
 // Wrapper CSS transform (+ origin) mapping a C2-canvas headwear asset onto the R2 head. Applied to the
 // cosmetic layer only (source SVG untouched). A STANDARD transform for all hats, with version-controlled
 // per-item overrides keyed by the STABLE asset basename (e.g. "pirate-hat"). Calibrated against all five
@@ -546,6 +550,35 @@ export function r2HeadwearTransformFor(src) {
   return {
     transform: R2_HEADWEAR_TRANSFORM_OVERRIDES[key] ?? R2_HEADWEAR_TRANSFORM_DEFAULT,
     origin: R2_HEADWEAR_TRANSFORM_ORIGIN,
+  };
+}
+
+// Wrapper CSS transform (+ origin) re-seating a C2-canvas eyes/glasses asset (authored on the C2
+// eye-line cy≈46–47 in the 160×240 canvas) onto the R2 figure's eye-line (measured cy≈57, iris
+// centroids ~(66,57)/(91,57), spacing ≈24.7). Applied to the cosmetic layer only — the source SVG is
+// untouched. transform-origin is CENTER (uniform scale about the face centre keeps both lenses on both
+// eyes). The STANDARD transform is the pure vertical re-seat a correctly-proportioned front-glasses
+// asset needs (C2 cy≈46 → R2 cy≈57 ≈ +4.4% of the 240-tall canvas); a version-controlled per-item
+// OVERRIDE keyed by the stable asset basename handles items whose lens size/spacing also differ.
+export const R2_EYES_TRANSFORM_ORIGIN = "center";
+export const R2_EYES_TRANSFORM_DEFAULT = "translateY(4.4%)";
+// The ONLY live eyes catalog item is "Runde Briller" (id `glasses-round`), and since migration
+// 20260623000000_bind_glasses_round_basic_svg.sql its image_url is the front-only 164Z asset
+// `/assets/avatar/glasses/glasses-round-basic-v1.svg` (asset-basename `glasses-round-basic-v1`). That
+// asset's lens spacing (≈24) already matches the R2 eyes (≈24.7), so it needs ONLY the standard
+// vertical C2→R2 eye-line re-seat (translateY(4.4%)) — NO scale. Reviewed on the R2 figure: both pupils
+// centred in the lenses, reads as round glasses, the fringe covers the upper rim naturally. The
+// per-item override table stays as the mechanism for a FUTURE asset whose lens size/spacing differs;
+// it is currently EMPTY (the live asset uses the default). Never key it on the legacy
+// `glasses-round.svg`, which the catalog no longer serves.
+export const R2_EYES_TRANSFORM_OVERRIDES = {
+  // e.g. "some-future-wide-glasses": "translateY(1%) scale(0.88)" — none needed for the current item.
+};
+export function r2EyesTransformFor(src) {
+  const key = r2CosmeticBasename(src);
+  return {
+    transform: R2_EYES_TRANSFORM_OVERRIDES[key] ?? R2_EYES_TRANSFORM_DEFAULT,
+    origin: R2_EYES_TRANSFORM_ORIGIN,
   };
 }
 

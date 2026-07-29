@@ -90,6 +90,18 @@ _Last reviewed: 2026-07-01._
   Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
   stays `false`**; pilot status unchanged. Next slices: eyes → face → neck → torso → body. See
   `docs/project-state.md` (D-079).
+  **▶ R2 full-cosmetic-support track — slice 2: EYES/GLASSES (2026-07-28, D-080; live-catalog-corrected
+  2026-07-29).** The `eyes` slot now renders on the R2 stack as a DISTINCT cosmetic layer
+  (`data-c2-layer="eyes-cosmetic"`, z6 — above the internal eye stack + blink lid, under the hair)
+  re-seated onto the R2 eye-line by a version-controlled wrapper transform. The one live eyes item
+  (catalog id `glasses-round`, image_url the front-only **`glasses-round-basic-v1.svg`** per migration
+  `20260623000000`) uses the **standard `translateY(4.4%)` — no scale** (its lens spacing already matches
+  the R2 eyes); the per-item override table stays as the mechanism for a future asset but is empty. Source
+  SVG untouched. Blink and expressions leave the glasses in place; headwear shows simultaneously with the
+  correct z-order. aura/back/headwear were already supported; **face/neck/torso/body stay gated.**
+  Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
+  stays `false`**; pilot status unchanged. Next slices: face → neck → torso → body. See
+  `docs/project-state.md` (D-080).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.

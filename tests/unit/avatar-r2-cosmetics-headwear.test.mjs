@@ -40,9 +40,9 @@ const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
 
 test("headwear is an R2-supported cosmetic slot; still-gated slots are NOT", () => {
-  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear"]);
+  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes"]);
   for (const s of ["aura", "back", "headwear"]) assert.equal(isR2SupportedCosmeticSlot(s), true, s);
-  for (const s of ["eyes", "face", "neck", "torso", "body", "hat", undefined, null]) assert.equal(isR2SupportedCosmeticSlot(s), false, String(s));
+  for (const s of ["face", "neck", "torso", "body", "hat", "glasses", undefined, null]) assert.equal(isR2SupportedCosmeticSlot(s), false, String(s));
 });
 
 test("R2 headwear z sits ABOVE the R2 hair", () => {
@@ -81,11 +81,11 @@ test("aura/back stay byte-functional on R2 (cosmetic marker, prior z, no transfo
   }));
 });
 
-test("still-gated slots (eyes/face/neck/torso/body) are filtered OUT of the R2 stack", async () => {
+test("still-gated slots (face/neck/torso/body) are filtered OUT of the R2 stack", async () => {
   await withR2OptIn(() => withDom(async (root) => {
-    const cosmetics = c2CosmeticLayers({ eyes: "/x/glasses.svg", face: "/x/mask.svg", neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
+    const cosmetics = c2CosmeticLayers({ face: "/x/mask.svg", neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
     await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
-    for (const s of ["/x/glasses.svg", "/x/mask.svg", "/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
+    for (const s of ["/x/mask.svg", "/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
       assert.ok(!srcsOf(root).includes(s), s + " must NOT leak into the R2 stack");
     }
     assert.ok(srcsOf(root).some((x) => x.includes("avatar-r2/base/")), "R2 base still renders");
