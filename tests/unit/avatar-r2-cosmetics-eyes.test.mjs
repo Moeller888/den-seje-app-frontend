@@ -45,7 +45,7 @@ const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
 
 test("eyes is an R2-supported cosmetic slot (D-080)", () => {
-  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes"]);
+  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face"]);
   assert.equal(isR2SupportedCosmeticSlot("eyes"), true);
 });
 
@@ -104,12 +104,12 @@ test("live asset glasses-round-basic-v1 uses the STANDARD transform (no scale); 
   assert.deepEqual(r2EyesTransformFor(GLASSES), r2EyesTransformFor(GLASSES));
 });
 
-test("still-gated slots (face/neck/torso/body) stay filtered OUT alongside an equipped eyes item", async () => {
+test("still-gated slots (neck/torso/body) stay filtered OUT alongside an equipped eyes item", async () => {
   await withR2OptIn(() => withDom(async (root) => {
-    const cosmetics = c2CosmeticLayers({ eyes: GLASSES, face: "/x/mask.svg", neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
+    const cosmetics = c2CosmeticLayers({ eyes: GLASSES, neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
     await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
     assert.ok(srcsOf(root).includes(GLASSES), "eyes/glasses passes");
-    for (const s of ["/x/mask.svg", "/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
+    for (const s of ["/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
       assert.ok(!srcsOf(root).includes(s), s + " must NOT leak into the R2 stack");
     }
   }));

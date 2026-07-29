@@ -99,6 +99,15 @@ _Last reviewed: 2026-07-01._
   the R2 eyes); the per-item override table stays as the mechanism for a future asset but is empty. Source
   SVG untouched. Blink and expressions leave the glasses in place; headwear shows simultaneously with the
   correct z-order. aura/back/headwear were already supported; **face/neck/torso/body stay gated.**
+  **▶ R2 full-cosmetic-support track — slice 3: FACE/MASKS (2026-07-29, D-081).** The `face` slot now
+  renders on the R2 stack as a DISTINCT cosmetic layer (`data-c2-layer="face-cosmetic"`). The three live
+  masks are heterogeneous, so each gets a per-item transform + z: `ninja-mask` (lower-face) `translateY(6.5%)`
+  z8 under hair; `hero-mask` (eye-domino) `translateY(5%)` z8 under hair; `panda-mask` (full-face)
+  `translateY(6%) scale(1.1)` z41 ABOVE hair (a hat still sits on top). Masks that cover the eyes hide
+  blink/expression underneath (intentional); ninja leaves the eyes visible. Source SVGs untouched.
+  aura/back/headwear/eyes were already supported; **neck/torso/body stay gated.** Shop stays uniform C2
+  (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2` stays `false`**;
+  pilot status unchanged. Next slices: neck → torso → body. See `docs/project-state.md` (D-081).
   Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
   stays `false`**; pilot status unchanged. Next slices: face → neck → torso → body. See
   `docs/project-state.md` (D-080).

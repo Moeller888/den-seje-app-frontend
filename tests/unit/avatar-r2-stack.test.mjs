@@ -122,13 +122,13 @@ test("binding layer order and blend modes (integration composite §6)", () => {
   assert.match(hair.src, /hair-northstar-v1\.webp$/, "runtime hair must be the luminance map, never hair-pl1-color");
 });
 
-test("cosmetic slot-gate: aura/back/headwear/eyes pass; face/neck/torso/body stay gated (D-080)", () => {
+test("cosmetic slot-gate: aura/back/headwear/eyes/face pass; neck/torso/body stay gated (D-081)", () => {
   const cosmetics = [
     { slot: "aura", src: "/x/aura.svg", z: -30 },
     { slot: "back", src: "/x/wings.svg", z: -20 },
     { slot: "headwear", src: "/x/hat.svg", z: 50 },
     { slot: "eyes", src: "/x/glasses.svg", z: 55 },
-    { slot: "face", src: "/x/mask.svg", z: 50 },
+    { slot: "face", src: "/x/hero-mask.svg", z: 50 },
     { slot: "torso", src: "/x/armor.svg", z: 20 },
     { slot: "body", src: "/x/suit.svg", z: 10 },
     { slot: "neck", src: "/x/chain.svg", z: 30 },
@@ -139,7 +139,8 @@ test("cosmetic slot-gate: aura/back/headwear/eyes pass; face/neck/torso/body sta
   assert.ok(srcs.includes("/x/wings.svg"), "back passes");
   assert.ok(srcs.includes("/x/hat.svg"), "headwear passes (D-079)");
   assert.ok(srcs.includes("/x/glasses.svg"), "eyes/glasses passes (D-080)");
-  for (const s of ["/x/mask.svg", "/x/armor.svg", "/x/suit.svg", "/x/chain.svg"]) {
+  assert.ok(srcs.includes("/x/hero-mask.svg"), "face/mask passes (D-081)");
+  for (const s of ["/x/armor.svg", "/x/suit.svg", "/x/chain.svg"]) {
     assert.ok(!srcs.includes(s), s + " must stay gated");
   }
   // headwear gets its DEDICATED R2 z (above the R2 hair, 40), not the raw incoming c.z
@@ -152,9 +153,14 @@ test("cosmetic slot-gate: aura/back/headwear/eyes pass; face/neck/torso/body sta
   assert.ok(glasses.z > R2_STACK_Z.eyes && glasses.z < R2_STACK_Z.hair, "eyes cosmetic z between internal eyes and hair");
   assert.ok(glasses.z > 5, "eyes cosmetic z above the blink lid (z5)");
   assert.ok(typeof glasses.transform === "string" && glasses.transform.length > 0, "eyes cosmetic carries a wrapper transform");
-  // exactly ONE mandatory internal eyes layer remains, tagged with the bare "eyes" marker
-  const internalEyes = layers.filter((l) => l.marker === "eyes");
-  assert.equal(internalEyes.length, 1, "exactly one internal 'eyes' layer");
+  // the face COSMETIC uses a DISTINCT marker (not the mandatory internal "face") + a wrapper transform
+  const mask = layers.find((l) => l.src === "/x/hero-mask.svg");
+  assert.equal(mask.marker, "face-cosmetic", "face cosmetic marker is distinct from internal 'face'");
+  assert.ok(mask.z > 5 && mask.z < R2_STACK_Z.hair, "hero-mask face cosmetic z above blink lid, under hair");
+  assert.ok(typeof mask.transform === "string" && mask.transform.length > 0, "face cosmetic carries a wrapper transform");
+  // exactly ONE mandatory internal eyes layer AND one internal face layer remain (bare markers)
+  assert.equal(layers.filter((l) => l.marker === "eyes").length, 1, "exactly one internal 'eyes' layer");
+  assert.equal(layers.filter((l) => l.marker === "face").length, 1, "exactly one internal 'face' layer");
 });
 
 test("engine gate with flag OFF: C2 behaviour unchanged (both engines allowed)", () => {
