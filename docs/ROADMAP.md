@@ -158,6 +158,19 @@ _Last reviewed: 2026-07-01._
   and stop before the fingertips. **`AVATAR_R2` stays `false`**; pilot status unchanged; until the owner
   decides, **D-083's C2 fallback stays the shipped behaviour**. See
   `docs/167a-r2-torso-asset-production-plan.md`, `docs/project-state.md` (D-084).
+  **▶ Option A — step A1 BUILT: torso occlusion mask + slot template (2026-07-31, D-085).**
+  Deterministic, NON-AI tool (`npm run avatar:r2-torso-mask`, read-only by default) derives three masks —
+  hard / edit-allowed / protect — from the **runtime** base `body-neutral-medium-v2.webp` (pinned SHA) on
+  the Master canvas 1024×1536, re-measuring and asserting the D-084 landmarks on every run. Tracked as a
+  **production template** under `tools/avatar/fixtures/r2-torso/` — **not** a runtime asset; nothing was
+  promoted to `assets/`. 28/28 gates, byte-identical across independent builds, unit 236/236. **Two
+  disclosed residues:** a 6 px detached sleeve-tip fringe (bounded, sub-pixel at render size) and
+  **2,740 px of the tee's collar curve above the locked shoulder line — the one residue with a visible
+  consequence, and an owner call** (accept, or revise D-084 `shoulderY` 560→≈540). **A2 (artwork) and A3
+  (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
+  stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
+  **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
+  `docs/project-state.md` (D-085).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
