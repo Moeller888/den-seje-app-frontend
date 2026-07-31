@@ -140,8 +140,14 @@ _Last reviewed: 2026-07-01._
   an R2-specific asset — still open art work) · neck/body **closed, `NO_CATALOG_ITEMS`**. See
   `docs/project-state.md` (D-083).
   Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
-  stays `false`**; pilot status unchanged. Next slices: face → neck → torso → body. See
-  `docs/project-state.md` (D-080).
+  stays `false`**; pilot status unchanged. See `docs/project-state.md` (D-080).
+  **▶ R2 full-cosmetic-support track — CURRENT STATUS (2026-07-31, after D-083).** Supersedes every earlier
+  "next slices" plan in this section: **aura/back/headwear/eyes/face wired** · **torso handled by the
+  whole-avatar C2 fallback (D-083)** — an equipped Ridderdragt always renders, on the C2 path, and never
+  disappears · **neck/body closed as `NO_CATALOG_ITEMS`** (no catalog content to wire). **No further wiring
+  slices are planned.** **Optional future work:** an R2-specific torso asset (option A of the D-082 audit,
+  AI permitted per D-034) — the only way to show armour ON the R2 figure; art production first, not
+  scheduled and not blocking. **`AVATAR_R2` stays `false`**; pilot status stays `PILOT_WAVE_1_IN_PROGRESS`.
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
