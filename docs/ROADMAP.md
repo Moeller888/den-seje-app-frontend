@@ -148,6 +148,16 @@ _Last reviewed: 2026-07-01._
   slices are planned.** **Optional future work:** an R2-specific torso asset (option A of the D-082 audit,
   AI permitted per D-034) — the only way to show armour ON the R2 figure; art production first, not
   scheduled and not blocking. **`AVATAR_R2` stays `false`**; pilot status stays `PILOT_WAVE_1_IN_PROGRESS`.
+  **▶ Option A SPECIFIED — R2 torso asset production plan + measured mask spec (2026-07-31, D-084).**
+  Docs-only; **no asset produced**. Option A is **Tier-1 + Tier-2** work (A1 occlusion mask → A2 artwork →
+  A3 wiring), because **D-037 keeps the `torso` mask CONDITIONAL** until a mask exists that fully occludes
+  the base tee and leaves forearms/hands to the base — so **A2/A3 need an explicit owner decision** to
+  discharge that condition. Geometry re-measured on the **runtime** base `body-neutral-medium-v2.webp`
+  (D-082 had measured the historical v1 PNG): arms are seam-separated from the torso, and **arms/hands run
+  alongside the hips BELOW both the tee hem and the crotch**, so the mask must pinch to the seam columns
+  and stop before the fingertips. **`AVATAR_R2` stays `false`**; pilot status unchanged; until the owner
+  decides, **D-083's C2 fallback stays the shipped behaviour**. See
+  `docs/167a-r2-torso-asset-production-plan.md`, `docs/project-state.md` (D-084).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
