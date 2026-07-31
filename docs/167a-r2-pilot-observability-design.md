@@ -63,7 +63,12 @@ Each item is tagged **[direct]** (proven by code), **[inference]** (reasonable, 
 
 **Fallback reasons directly distinguishable at a central emission point (within an opt-in browser):**
 `required_asset_failed` (the mandatory catch, via a local boolean), `identity_ineligible` (`composeR2Layers`
-null and not `forceC2`), `forced_c2` (`forceC2` true — shop only, never on pilot surfaces), else `unknown`.
+null and not `forceC2`), `forced_c2` (`forceC2` true — shop only, never on pilot surfaces),
+`unsupported_cosmetic_equipped` (added 2026-07-31, D-083: an equipped cosmetic the R2 stack cannot render
+drops the whole avatar to C2 — checked before the identity, so it is never reported as
+`identity_ineligible`), else `unknown`. Adding a reason code does **not** bump the event `version`: the
+schema is unchanged (`reason` stays one string field) and an unrecognised reason still degrades to
+`unknown`.
 Splitting `required_asset_failed` into "missing" vs "decode" is **not** reliable without inspecting
 `err.message` (brittle + contains an asset URL) → **[inference]**, deferred.
 
@@ -207,6 +212,7 @@ console.info("[avatar-r2-observability]", {
 | `required_asset_failed` | mandatory `preloadDecode` catch (`:181`) | direct | yes | yes | **v1** |
 | `identity_ineligible` | `composeR2Layers` null & not `forceC2` (`:169`) | direct | yes | yes | **v1** |
 | `forced_c2` | `forceC2 === true` (shop only) | direct | yes | yes | v1 (never on pilot surfaces) |
+| `unsupported_cosmetic_equipped` | an equipped cosmetic in a slot the R2 stack cannot render (neck/torso/body) → whole-avatar C2 (D-082 option B / D-083) | direct | yes (slot names only, never emitted — the reason string carries no item id) | yes | **v1** (added 2026-07-31) |
 | `render_exception` | guarded try/catch added by impl PR | direct (once added) | yes (no err text) | yes | **v1** (with the wrapper) |
 | `unknown` | any case not safely distinguishable | direct | yes | yes | **v1** |
 | `asset_missing` vs `asset_decode` split | `err.message` inspection | inference | risky (URL) | no | **deferred** |

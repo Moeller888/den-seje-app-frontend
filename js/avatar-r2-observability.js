@@ -21,7 +21,11 @@ const _emittedRoots = new WeakSet();
 
 const _RESULTS = ["r2", "c2_fallback", "render_failed"];
 const _SURFACES = ["avatar", "hub", "quiz"];
-const _REASONS = ["unknown", "required_asset_failed", "identity_ineligible", "forced_c2", "render_exception"];
+// v1 reason vocabulary. `unsupported_cosmetic_equipped` was ADDED in D-082 option B (an equipped
+// cosmetic whose slot the R2 stack cannot render — today only `torso` — drops the WHOLE avatar to C2
+// so the paid item stays visible). The event schema itself is unchanged: `reason` is still one
+// string field, so `version` stays 1; an unknown reason still degrades to "unknown".
+const _REASONS = ["unknown", "required_asset_failed", "identity_ineligible", "forced_c2", "unsupported_cosmetic_equipped", "render_exception"];
 
 // Emit at most one observability event for `root` this page load. Silent (no event, no
 // dedup mark) when the browser is not R2-opted-in, or when surface/result/root are invalid.

@@ -104,14 +104,16 @@ test("live asset glasses-round-basic-v1 uses the STANDARD transform (no scale); 
   assert.deepEqual(r2EyesTransformFor(GLASSES), r2EyesTransformFor(GLASSES));
 });
 
-test("still-gated slots (neck/torso/body) stay filtered OUT alongside an equipped eyes item", async () => {
+test("an unsupported slot alongside an equipped eyes item drops the WHOLE avatar to C2 (D-082)", async () => {
   await withR2OptIn(() => withDom(async (root) => {
     const cosmetics = c2CosmeticLayers({ eyes: GLASSES, neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
-    await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
-    assert.ok(srcsOf(root).includes(GLASSES), "eyes/glasses passes");
-    for (const s of ["/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
-      assert.ok(!srcsOf(root).includes(s), s + " must NOT leak into the R2 stack");
+    const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
+    assert.equal(rp, "c2", "the R2 stack is refused while an unrenderable item is equipped");
+    // Every equipped item stays visible — the glasses too, now on their C2 anchors.
+    for (const s of [GLASSES, "/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
+      assert.ok(srcsOf(root).includes(s), s + " must stay visible on the C2 path");
     }
+    assert.ok(!srcsOf(root).some((x) => x.includes("avatar-r2/")), "no R2 layer in the forced C2 render");
   }));
 });
 

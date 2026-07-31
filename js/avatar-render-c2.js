@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -98,10 +98,18 @@ export function composeC2Layers(identity, cosmetics = []) {
 // order decides: iris is emitted first, deliberately) · cosmetics (Phase-1 safe
 // slots only) · hair z40 (luminance map × the identity's hair token).
 export function composeR2Layers(identity, cosmetics = []) {
+  // D-082 option B (NO SILENT ITEM LOSS): if ANY equipped cosmetic sits in a slot the R2 stack
+  // cannot render (neck/torso/body — today only the `torso` Ridderdragt has catalog content), the
+  // R2 stack is refused for the WHOLE avatar so the caller renders the complete C2 path with the
+  // item visible. Filtering it out silently would show a paid item on C2 and nothing on R2.
+  // Checked BEFORE the stack resolve: the decision depends only on what is equipped.
+  if (r2RequiresC2Fallback(cosmetics)) return null;   // unsupported equipped item → C2 fallback
   const s = r2StackSrcsFor(identity);
   if (!s) return null;                                // incomplete stack → C2 fallback
   // R2 cosmetic slot-gate: aura/back (behind-figure, unchanged) + headwear (D-079) + eyes/glasses
-  // (D-080) + face/mask (D-081). neck/torso/body stay filtered OUT. headwear gets its dedicated R2 z
+  // (D-080) + face/mask (D-081). An unsupported slot (neck/torso/body) can no longer reach this
+  // filter — the D-082 guard above already refused the whole R2 stack for it, so the filter here is
+  // the defensive floor, never the mechanism that hides an equipped item. headwear gets its dedicated R2 z
   // (above hair) + a wrapper transform re-seating the C2-canvas asset onto the R2 head; the eyes
   // COSMETIC gets its own R2 z (6, above the internal eye stack + blink lid, under the hair) + a wrapper
   // transform re-seating the C2-canvas glasses onto the R2 eye-line; the face COSMETIC (mask) gets a
@@ -206,6 +214,13 @@ export async function mountC2Avatar(rootEl, identity, { animate = false, layerCl
   // missing piece → composeR2Layers returns null → the existing C2/SVG path
   // (byte-for-byte). Default off → C2. forceC2 → always the C2 path.
   let r2Layers = (!forceC2 && isAvatarR2()) ? composeR2Layers(identity, cosmetics) : null;
+
+  // D-082 option B: distinguish the "equipped item the R2 stack cannot render" fallback from the
+  // identity-ineligible one, so the pilot can tell the two apart. Advisory only — the render
+  // decision was already made inside composeR2Layers; this just labels it.
+  if (!forceC2 && isAvatarR2() && !r2Layers && r2RequiresC2Fallback(cosmetics)) {
+    fellBackReason = "unsupported_cosmetic_equipped";
+  }
 
   // ATOMIC R2 GATE (activation-audit F1 / §3 / §4): before making the R2 stack
   // visible, preload+decode EVERY mandatory layer off-DOM. If any mandatory layer
