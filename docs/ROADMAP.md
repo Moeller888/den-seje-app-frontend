@@ -107,7 +107,27 @@ _Last reviewed: 2026-07-01._
   blink/expression underneath (intentional); ninja leaves the eyes visible. Source SVGs untouched.
   aura/back/headwear/eyes were already supported; **neck/torso/body stay gated.** Shop stays uniform C2
   (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2` stays `false`**;
-  pilot status unchanged. Next slices: neck → torso → body. See `docs/project-state.md` (D-081).
+  pilot status unchanged. ~~Next slices: neck → torso → body.~~ **Superseded by D-082** — see below. See
+  `docs/project-state.md` (D-081).
+  **▶ R2 full-cosmetic-support track — REMAINING-SLOT AUDIT: the plan is not executable as recorded
+  (2026-07-30, D-082).** Read-only live-catalog + geometry audit of the three remaining slots.
+  **`neck` and `body` have NO catalog items at all** (0 rows each) → nothing to wire; closed as
+  `NO_CATALOG_ITEMS`, not carried as pending slices. The only remaining slot with content is **`torso`**
+  (1 item: `armor-knight` / "Ridderdragt", 300 coins), and it **cannot be re-seated by a wrapper
+  transform**: the item is authored on the C2 wide-arm pose, while the R2 Master figure holds its arms
+  down against the body, so **all six arm-side elements (both arm plates, both elbow guards, both
+  pauldrons) land on fully transparent canvas — 0 px of R2 figure beneath them**. Seating the arms needs
+  scale 0.46, fitting the chest needs 0.76: mutually exclusive. `NEEDS_R2_SPECIFIC_ASSET` is therefore
+  **confirmed as measured fact**, and torso is an **art-production** item, not a wiring slice.
+  **Also found — MAJOR live pilot defect:** the slot-gate drops an equipped torso item **silently**, so a
+  pilot student who paid 300 coins sees the armour on C2 and **nothing on R2** (no data loss; opt-out
+  restores it). **Recommendation: fix the silent loss first via whole-avatar `forceC2` while a torso item
+  is equipped (option B), and treat an R2-specific torso asset (option A, AI permitted per D-034) as
+  separate later art work.** Read-only: no runtime/asset/test/golden/catalog change; **`AVATAR_R2` stays
+  `false`**; pilot status stays `PILOT_WAVE_1_IN_PROGRESS`. **OWNER DECISION (2026-07-31): option B** —
+  whole-avatar `forceC2` while a torso item is equipped, implemented in a **separate runtime PR**; option A
+  (R2-specific torso asset) deferred as separate art work, not rejected; neck/body closed as
+  `NO_CATALOG_ITEMS`. See `docs/167a-r2-cosmetic-slot-completion-audit.md`, `docs/project-state.md` (D-082).
   Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
   stays `false`**; pilot status unchanged. Next slices: face → neck → torso → body. See
   `docs/project-state.md` (D-080).
