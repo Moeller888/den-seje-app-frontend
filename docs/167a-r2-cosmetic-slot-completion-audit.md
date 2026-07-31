@@ -4,8 +4,10 @@
 audit itself is unchanged; the decision is recorded in §8 and shipped as **D-083** (see
 `docs/project-state.md`), which closes the §6 defect. Option A (an R2-specific torso asset) remains open
 art work.
-**Type:** read-only audit + measurement. **Nothing is implemented.** No runtime/asset/manifest/test/golden/
-migration/workflow change.
+**Type:** read-only audit + measurement. **The audit itself implemented nothing** — it changed no runtime,
+asset, manifest, test, golden, migration or workflow file, and §1–§7 + §9 below describe that read-only
+work exactly as it was carried out. The decision it asked for (option B) was taken and **subsequently
+implemented in a separate PR — D-083, PR #134, merged 2026-07-31** (see §8).
 **Related:** D-079 (headwear slice), D-080 (eyes slice), D-081 (face slice), D-071 (raster debt accepted),
 D-077 (shop uniform C2), D-078 (pilot Wave 1 started), D-034 (AI allowed for shop/cosmetic overlays),
 D-033 (AI rejected for base/rig layers).
@@ -228,23 +230,22 @@ torso **handled by B, upgradeable by A**; neck/body **closed, no content**.
 
 **OWNER DECISION (2026-07-31): option B — force whole-avatar C2 while a torso item is equipped.**
 Option A (an R2-specific torso asset) is **not** rejected, but is deferred as separate art work; `neck` and
-`body` are closed as `NO_CATALOG_ITEMS`. **No code change is part of this document or this PR** — B is
-implemented in a separate runtime PR (extend the existing tested `forceC2` path + tests), and this section
-is the record of the choice.
+`body` are closed as `NO_CATALOG_ITEMS`. No code change was part of the audit itself: this section is the
+record of the choice, and B was implemented in its own runtime PR.
 
-**IMPLEMENTED (2026-07-31) as D-083** — `composeR2Layers` now refuses the R2 stack for the WHOLE avatar
-when any equipped cosmetic sits in a slot the stack cannot render (`r2RequiresC2Fallback`), so the complete
-C2 path renders with the item visible; the fallback is reported with its own observability reason
-`unsupported_cosmetic_equipped`. Generic by slot, so `neck`/`body` are covered too if they ever gain items.
-See `docs/project-state.md` (D-083).
+**IMPLEMENTED AND MERGED (2026-07-31) as D-083, PR #134** — `composeR2Layers` refuses the R2 stack for the
+WHOLE avatar when any equipped cosmetic sits in a slot the stack cannot render (`r2RequiresC2Fallback`), so
+the complete C2 path renders with the item visible; the fallback is reported with its own observability
+reason `unsupported_cosmetic_equipped`. Generic by slot, so `neck`/`body` are covered too if they ever gain
+items. The §6 defect is closed. See `docs/project-state.md` (D-083).
 
-No code, asset or catalog change follows from this document. The next PR implements the owner's choice
-(**B** of §7). Whichever is chosen:
+The decision gate is therefore **closed**. It held for the implementation as shipped, and holds for option
+A should it be taken up later:
 
-- `AVATAR_R2` stays `false` — none of these options is an activation or a flag-flip.
-- Buy / ownership / `equipped_slots` / equip / unequip stay unchanged (A and B are render-side only).
+- `AVATAR_R2` stayed `false` — none of these options is an activation or a flag-flip.
+- Buy / ownership / `equipped_slots` / equip / unequip stayed unchanged (A and B are render-side only).
 - The shop stays uniform C2 (D-077).
-- The whole-stack-or-C2 contract and the atomic preload gate (D-062) stay intact.
+- The whole-stack-or-C2 contract and the atomic preload gate (D-062) stayed intact.
 
 ---
 
