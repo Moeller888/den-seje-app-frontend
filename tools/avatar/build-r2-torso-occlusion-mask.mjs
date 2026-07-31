@@ -39,6 +39,7 @@ import { createHash } from "node:crypto";
 import { inflateSync, deflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve, sep } from "node:path";
+import { verifyVendoredDwebp, EXE_SHA256 as DWEBP_SHA256, VERSION as DWEBP_VERSION } from "./fetch-dwebp.mjs";
 
 export const TOOL = "build-r2-torso-occlusion-mask";
 export const TOOL_VERSION = "1.0.0";
@@ -187,8 +188,13 @@ const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
 
 // ── input: decode the runtime WebP via the vendored dwebp, then upscale x2 ───
 function loadBase() {
-  if (!existsSync(DWEBP)) {
-    throw new Error("missing tools/avatar/vendor/dwebp.exe (gitignored) — fetch it with: node tools/avatar/fetch-dwebp.mjs");
+  // The decoder is gitignored, so a fresh clone must bootstrap it — and it must be the PINNED binary,
+  // not just any dwebp on disk (D-085 phase 2). Both conditions produce an explicit, actionable error.
+  const v = verifyVendoredDwebp(DWEBP);
+  if (!v.ok) {
+    throw new Error(
+      `vendored WebP decoder unusable (${v.reason}).\n  ${v.how}\n` +
+      (v.sha256 ? `  found sha256 ${v.sha256}\n  expected     ${v.expected}\n` : ""));
   }
   if (!existsSync(INPUT)) throw new Error("missing runtime base: " + INPUT_REL);
   const bytes = readFileSync(INPUT);
@@ -337,7 +343,44 @@ function measure(base) {
     if (a <= b) torsoSpan[y] = [a, b];
   }
 
-  return { solid, nonzero, rows, rowAt, torsoSpan, measured: { shoulderY, sleeveEndY, hemY, crotchY, fingertipY, seamX0: corLeft, seamX1: corRight } };
+  // ── The TEE as a topological object (D-085 revision) ──────────────────────
+  // The tee's collar/shoulder curve rises above the shoulder line, and one sleeve reaches lower than
+  // the other. A band rule cannot express either, so the garment is identified by CONNECTIVITY: take
+  // the garment-classified solid pixels, 8-connect them, and keep the components that touch a seed
+  // taken from the middle of the torso. The shoes are grey too — they form their own components and
+  // never touch the seed, so they stay out.
+  const garment = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) if (solid[i] && classify(rgba, i) === "garment") garment[i] = 1;
+  const seed = new Uint8Array(w * h);
+  for (let y = sleeveEndY - 120; y < hemY - 40; y++) {
+    const sp = torsoSpan[y] || [corLeft, corRight];
+    for (let x = sp[0]; x <= sp[1]; x++) if (garment[y * w + x]) seed[y * w + x] = 1;
+  }
+  const tee = new Uint8Array(w * h);
+  for (const px of components(garment, w, h)) {
+    if (!px.some((i) => seed[i])) continue;
+    for (const i of px) tee[i] = 1;
+  }
+  // Close 1–2 px fold shadows inside the garment (they classify as "other" and would otherwise punch
+  // holes in the collar): a pixel that is solid, not skin, and enclosed by tee neighbours joins the tee.
+  for (let pass = 0; pass < 2; pass++) {
+    const add = [];
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      if (tee[i] || !solid[i] || classify(rgba, i) === "skin") continue;
+      let n = 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        if (tee[(y + dy) * w + (x + dx)]) n++;
+      }
+      if (n >= 5) add.push(i);                    // enclosed on most sides → interior shading
+    }
+    for (const i of add) tee[i] = 1;
+  }
+  let teeTop = h;
+  for (let i = 0; i < w * h; i++) if (tee[i]) { teeTop = Math.min(teeTop, (i / w) | 0); if (teeTop === 0) break; }
+
+  return { solid, nonzero, rows, rowAt, torsoSpan, garment, tee, teeTop,
+    measured: { shoulderY, sleeveEndY, hemY, crotchY, fingertipY, seamX0: corLeft, seamX1: corRight } };
 }
 
 // ── mask construction ───────────────────────────────────────────────────────
@@ -349,18 +392,21 @@ function buildMasks(base, m, z) {
   const hard = new Uint8Array(w * h);
   const hem = new Uint8Array(w * h);
 
-  // Above the sleeve end the row is the garment span (torso + short sleeves). Take every solid pixel
-  // EXCEPT bare skin: the two sleeves do not end on exactly the same row, so a plain "whole row" rule
-  // would grab a few px of the arm that is already bare on one side. Shading/outline pixels (class
-  // "other") stay in — they are the garment's own edge.
+  // (1) THE WHOLE TEE, topologically — collar curve above the shoulder line and the longer sleeve's
+  // tail included. This is what closes the D-037 "fully occlude the base tee" requirement; the band
+  // rules below are the geometric floor, not the definition of the garment.
+  for (let i = 0; i < w * h; i++) if (m.tee[i]) hard[i] = 1;
+
+  // (2) Above the sleeve end: every solid pixel of the row EXCEPT bare skin, so fold shading and the
+  // garment's own outline come along (the two sleeves do not end on the same row).
   for (let y = L.shoulderY; y < L.sleeveEndY; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       if (solid[i] && classify(base.rgba, i) !== "skin") hard[i] = 1;
     }
   }
-  // Below the sleeve end the arms are BARE and outboard: pinch to the per-row torso span (already
-  // bounded by the locked D-084 corridor and immune to a closed seam — see measure()).
+  // (3) Below the sleeve end the arms are bare: pinch to the per-row torso span. Fabric outboard of the
+  // span is already covered by (1); anything else out there is anatomy and stays untouched.
   for (let y = L.sleeveEndY; y < L.hemY; y++) {
     const sp = m.torsoSpan[y]; if (!sp) continue;
     for (let x = sp[0]; x <= sp[1]; x++) if (solid[y * w + x]) hard[y * w + x] = 1;
@@ -378,16 +424,20 @@ function buildMasks(base, m, z) {
 
   // edit = dilate(hard, FEATHER) clipped to the figure and to the allowed bands, plus the hem extension
   const edit = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) if (hard[i]) edit[i] = 1;   // edit always contains hard
   const R2 = FEATHER * FEATHER;
+  // The <=4 px blend is granted ONLY between the shoulder line and the hem. Above the shoulder line the
+  // mask borders the neck, so the collar zone gets NO feather at all — a blend there would land on skin.
   for (let y = L.shoulderY; y < L.hemY; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
+      if (edit[i]) continue;
       if (!nonzero[i]) continue;                     // never bleed onto transparent canvas
       if (z.headNeck[i] || z.forearmHand[i] || z.leg[i]) continue; // never bleed onto locked anatomy
-      // Below the sleeve end the feather may not leave the corridor at all — not even onto the arm's
-      // ANTI-ALIASED edge (alpha 1..127), which the solid-pixel zones above do not cover.
+      if (classify(base.rgba, i) === "skin") continue;             // never bleed onto bare skin
+      // Below the sleeve end the feather may not leave the corridor — not even onto the arm's
+      // ANTI-ALIASED edge (alpha 1..127), which the solid-pixel zones do not cover.
       if (y >= L.sleeveEndY && (x < L.seamX0 || x > L.seamX1)) continue;
-      if (hard[i]) { edit[i] = 1; continue; }
       let near = 0;
       for (let dy = -FEATHER; dy <= FEATHER && !near; dy++) {
         const yy = y + dy; if (yy < L.shoulderY || yy >= L.hemY) continue;
@@ -413,14 +463,16 @@ function buildMasks(base, m, z) {
 // Anatomy zones the mask must never touch. Defined by POSITION, not by run structure, so a row whose
 // arm/torso seam happens to close cannot reclassify a forearm as torso.
 function zones(base, m) {
-  const { w, h } = base; const { solid, torsoSpan } = m; const L = D084;
+  const { w, h } = base; const { solid, torsoSpan, tee } = m; const L = D084;
   const headNeck = new Uint8Array(w * h), forearmHand = new Uint8Array(w * h), leg = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) {
     const sp = torsoSpan[y];
     for (let x = 0; x < w; x++) {
       const i = y * w + x; if (!solid[i]) continue;
-      if (y < L.shoulderY) headNeck[i] = 1;                                     // head + neck
-      // bare arms + hands: everything solid outboard of the row's torso span, below the sleeve end
+      if (tee[i]) continue;                       // garment is never anatomy — see measure()
+      if (y < L.shoulderY) headNeck[i] = 1;                                     // head + neck (skin)
+      // bare arms + hands: solid, NON-GARMENT pixels outboard of the row's torso span below the sleeve
+      // end. The longer sleeve's tail lives out there too, and it is fabric, not anatomy.
       if (y >= L.sleeveEndY && (!sp || x < sp[0] || x > sp[1])) forearmHand[i] = 1;
       if (y >= L.crotchY) leg[i] = 1;                                           // legs
     }
@@ -486,22 +538,48 @@ function runGates(base, m, masks, z) {
     const delta = Math.abs(m.measured[k] - L[k]);
     add("landmark:" + k, m.measured[k] >= 0 && delta <= LANDMARK_TOL, { locked: L[k], measured: m.measured[k], delta, tolerance: LANDMARK_TOL });
   }
-  // band limits
-  let aboveShoulder = 0, atOrBelowCrotch = 0;
-  for (let y = 0; y < L.shoulderY; y++) for (let x = 0; x < w; x++) if (hard[y * w + x] || edit[y * w + x]) aboveShoulder++;
+  // ── D-037 CORE REQUIREMENT: the base tee must be FULLY occludable ──────────
+  // Measured over the whole garment as a topological object — collar curve and sleeve tails included,
+  // not just the band below the shoulder line. This gate is the reason the D-085 revision exists.
+  let teeTotal = 0, teeUncovered = 0;
+  const conflicts = { skinOrNeck: 0, forearmHand: 0, leg: 0, other: 0 };
+  const uncoveredSample = [];
+  for (let i = 0; i < w * h; i++) {
+    if (!m.tee[i]) continue;
+    teeTotal++;
+    if (hard[i]) continue;
+    teeUncovered++;
+    if (z.headNeck[i]) conflicts.skinOrNeck++;
+    else if (z.forearmHand[i]) conflicts.forearmHand++;
+    else if (z.leg[i]) conflicts.leg++;
+    else conflicts.other++;
+    if (uncoveredSample.length < 12) uncoveredSample.push({ x: i % w, y: (i / w) | 0 });
+  }
+  add("base-tee-garment-uncovered", teeUncovered === 0,
+    { teeTotalPx: teeTotal, uncoveredPx: teeUncovered, conflicts, sample: uncoveredSample });
+
+  // band limits — above the shoulder line ONLY the tee's own collar curve may be masked
+  let aboveShoulderNonTee = 0, atOrBelowCrotch = 0;
+  for (let y = 0; y < L.shoulderY; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    if ((hard[i] || edit[i]) && !m.tee[i]) aboveShoulderNonTee++;
+  }
   for (let y = L.crotchY; y < h; y++) for (let x = 0; x < w; x++) if (hard[y * w + x] || edit[y * w + x]) atOrBelowCrotch++;
-  add("no-px-above-shoulder", aboveShoulder === 0, { px: aboveShoulder, limit: "y < " + L.shoulderY });
+  add("above-shoulder-only-tee-collar", aboveShoulderNonTee === 0, { px: aboveShoulderNonTee, limit: "y < " + L.shoulderY, teeTopY: m.teeTop });
   add("no-px-at-or-below-crotch", atOrBelowCrotch === 0, { px: atOrBelowCrotch, limit: "y >= " + L.crotchY });
 
   // Nothing outboard of the corridor below the sleeve end — checked on the MASK's own geometry, so it
   // also covers the arm's anti-aliased edge, which the solid-pixel anatomy zones do not include.
-  let outboard = 0;
+  let outboardNonTee = 0, outboardTeeFabric = 0;
   for (let y = L.sleeveEndY; y < h; y++) for (let x = 0; x < w; x++) {
     if (x >= L.seamX0 && x <= L.seamX1) continue;
     const i = y * w + x;
-    if (hard[i] || edit[i]) outboard++;
+    if (!(hard[i] || edit[i])) continue;
+    if (m.tee[i]) outboardTeeFabric++; else outboardNonTee++;
   }
-  add("no-mask-outboard-below-sleeve-end", outboard === 0, { px: outboard, corridor: [L.seamX0, L.seamX1] });
+  add("outboard-below-sleeve-end-is-tee-fabric-only", outboardNonTee === 0,
+    { nonTeePx: outboardNonTee, teeFabricPx: outboardTeeFabric, corridor: [L.seamX0, L.seamX1],
+      note: "the longer sleeve's tail reaches below the sleeve-end line and outboard of the corridor; it is fabric, so it is covered — anatomy out there is not" });
 
   // anatomy locks
   add("no-head-or-neck", overlap(edit, z.headNeck) === 0, { px: overlap(edit, z.headNeck) });
@@ -619,10 +697,21 @@ function runGates(base, m, masks, z) {
   add("hard-is-single-region", comps.length === 1, { components: comps.length, sizes: comps.slice(0, 6) });
   add("no-specks", comps.every((c) => c >= MIN_COMPONENT), { minComponent: MIN_COMPONENT, smallest: comps[comps.length - 1] ?? 0 });
 
-  // the mask must not sit on bare skin (the sleeves do not end on the same row left and right)
-  let onSkin = 0;
-  for (let i = 0; i < w * h; i++) if (hard[i] && solid[i] && classify(rgba, i) === "skin") onSkin++;
+  // the mask must not sit on bare skin anywhere — neck, arms or hands
+  let onSkin = 0, editOnSkin = 0;
+  for (let i = 0; i < w * h; i++) {
+    if (!solid[i] || classify(rgba, i) !== "skin") continue;
+    if (hard[i]) onSkin++;
+    if (edit[i]) editOnSkin++;
+  }
   add("hard-not-on-bare-skin", onSkin === 0, { px: onSkin });
+  add("edit-not-on-bare-skin", editOnSkin === 0, { px: editOnSkin });
+
+  // the collar zone must be part of the SAME region as the torso (not a detached cap)
+  const teeAbove = [];
+  for (let y = 0; y < L.shoulderY; y++) for (let x = 0; x < w; x++) if (hard[y * w + x]) teeAbove.push(y * w + x);
+  add("collar-zone-present-and-connected", teeAbove.length > 0 && components(hard, w, h).length === 1,
+    { collarPxAboveShoulder: teeAbove.length, hardRegions: components(hard, w, h).length });
 
   return g;
 }
@@ -723,22 +812,40 @@ export function build() {
   };
   const stat = (mask, buf) => ({ px: count(mask), bbox: bbox(mask, base.w, base.h), sha256: sha256(buf), bytes: buf.length });
 
-  // Reported residue (NOT a failure, and NOT fixable inside this tool): the base tee's shoulder/collar
-  // curve rises ABOVE the locked shoulder line, and D-084 forbids any mask pixel at y < shoulderY. Those
-  // pixels therefore stay outside the template. Quantified here so the owner reviews a number, not a
-  // vague caveat — see docs/167a-r2-torso-occlusion-mask-review.md.
-  // Scoped to the collar band immediately above the shoulder line — grey outline pixels elsewhere on
-  // the figure also classify as "garment" and would inflate a whole-canvas count into nonsense.
+  // CLOSED in the D-085 revision: the tee's collar/shoulder curve above the locked shoulder line used
+  // to be an accepted 2,740 px residue, because the first cut obeyed a flat "0 px at y < 560" rule.
+  // The garment is now identified topologically, so the curve is inside the mask. Both numbers are kept
+  // in the record: how much collar the mask owns, and how much is still uncovered (must be 0).
   const COLLAR_BAND = 60;                       // Master px above the shoulder line
   const above = new Uint8Array(base.w * base.h);
-  let abovePx = 0;
+  let teeCollarPx = 0, teeCollarUncovered = 0;
+  // Colour-only "grey" pixels in the same band that are NOT part of the garment. Measured with their
+  // adjacency and distance to the tee, because that is the evidence for calling them anatomy: the
+  // classifier reads shadowed neck/jaw skin and outline strokes as grey, and painting them would put
+  // the mask on the neck. Reported, never covered.
+  let nonTeeGrey = 0, nonTeeAdjacent = 0, nonTeeFar = 0;
   for (let y = Math.max(0, D084.shoulderY - COLLAR_BAND); y < D084.shoulderY; y++) for (let x = 0; x < base.w; x++) {
     const i = y * base.w + x;
-    if (m.solid[i] && classify(base.rgba, i) === "garment") { above[i] = 1; abovePx++; }
+    if (!m.solid[i]) continue;
+    if (m.tee[i]) { above[i] = 1; teeCollarPx++; if (!masks.hard[i]) teeCollarUncovered++; continue; }
+    if (classify(base.rgba, i) !== "garment") continue;
+    nonTeeGrey++;
+    let adjacent = false, near = false;
+    for (let dy = -10; dy <= 10 && !near; dy++) for (let dx = -10; dx <= 10; dx++) {
+      const yy = y + dy, xx = x + dx;
+      if (yy < 0 || yy >= base.h || xx < 0 || xx >= base.w) continue;
+      if (!m.tee[yy * base.w + xx]) continue;
+      near = true;
+      if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) adjacent = true;
+      break;
+    }
+    if (adjacent) nonTeeAdjacent++;
+    if (!near) nonTeeFar++;
   }
   const spec = {
     tool: TOOL, toolVersion: TOOL_VERSION,
     input: { path: INPUT_REL, sha256: base.inputSha, width: SRC_W, height: SRC_H, note: "RUNTIME base (R2_MANIFEST base neutral-medium: 2). The Phase-1 v1 PNG is NOT an input." },
+    decoder: { name: "libwebp dwebp", version: DWEBP_VERSION, sha256: DWEBP_SHA256, vendored: "tools/avatar/vendor/dwebp.exe (gitignored)", bootstrap: "node tools/avatar/fetch-dwebp.mjs" },
     output: { width: OUT_W, height: OUT_H, upscale: UPSCALE, solidThreshold: SOLID, featherMax: FEATHER },
     landmarks: { locked: { ...D084 }, measured: { ...m.measured }, toleranceMasterPx: LANDMARK_TOL },
     masks: {
@@ -747,11 +854,19 @@ export function build() {
       "torso-protect-v1.png": stat(masks.protect, png.protect),
     },
     hemExtension: { px: count(masks.hem), bbox: bbox(masks.hem, base.w, base.h) },
+    tee: { px: count(m.tee), topY: m.teeTop, bbox: bbox(m.tee, base.w, base.h),
+      how: "8-connected garment components seeded from the mid-torso; the shoes are grey too but form their own components and never touch the seed" },
     residues: {
-      garmentAboveShoulderLine: {
-        px: abovePx, bbox: bbox(above, base.w, base.h), bandMasterPx: COLLAR_BAND,
+      collarAboveShoulderLine: {
+        status: teeCollarUncovered === 0 ? "CLOSED" : "OPEN",
+        teeCollarPx, uncoveredPx: teeCollarUncovered,
+        bbox: bbox(above, base.w, base.h), bandMasterPx: COLLAR_BAND,
         band: { y0: D084.shoulderY - COLLAR_BAND, y1: D084.shoulderY - 1 },
-        why: "The tee's shoulder/collar curve rises above the locked shoulder line; D-084 forbids mask pixels at y < shoulderY, so these stay uncovered. Owner review: accept (a torso item carries its own neckline) or revise the landmark.",
+        note: "Was an accepted 2,740 px residue in the first A1 cut, which obeyed a flat '0 px at y < shoulderY' rule. The garment is now identified topologically, so the collar curve is inside the mask and the D-037 full-occlusion requirement is met.",
+      },
+      nonTeeGreyInCollarBand: {
+        px: nonTeeGrey, adjacentToTee: nonTeeAdjacent, fartherThan10px: nonTeeFar,
+        why: "Shadowed neck/jaw skin and outline strokes that the colour classifier reads as grey. None touches the garment; covering them would put the mask on the neck, which the anatomy gates forbid. Counted as anatomy, not as uncovered tee.",
       },
       detachedFringe: (gates.find((g) => g.id === "no-unreachable-garment") || { detail: {} }).detail,
     },

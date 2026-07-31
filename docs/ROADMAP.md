@@ -165,8 +165,15 @@ _Last reviewed: 2026-07-01._
   **production template** under `tools/avatar/fixtures/r2-torso/` — **not** a runtime asset; nothing was
   promoted to `assets/`. 28/28 gates, byte-identical across independent builds, unit 236/236. **Two
   disclosed residues:** a 6 px detached sleeve-tip fringe (bounded, sub-pixel at render size) and
-  **2,740 px of the tee's collar curve above the locked shoulder line — the one residue with a visible
-  consequence, and an owner call** (accept, or revise D-084 `shoulderY` 560→≈540). **A2 (artwork) and A3
+  2,740 px of the tee's collar curve above the locked shoulder line — **the latter was a D-037 violation
+  and is CLOSED in revision 2 (same PR): the garment is now identified topologically (95,799 px, top row
+  528), a binding gate `base-tee-garment-uncovered = 0 px` covers the whole tee including the collar, and
+  the grey neckline ring is gone at all four render sizes. Revision 2 also closed the reproducibility
+  gap: the vendored decoder is CHECKSUM-pinned in `fetch-dwebp.mjs`, the builder refuses an unpinned
+  binary, and the determinism tests fail loudly instead of skipping (unit 241/241, 0 skipped). CI still
+  does not run `npm run test:unit` at all — the minimal workflow step is written out in the review doc
+  §5.2 but deliberately NOT made, since it downloads a third-party binary in CI and the runners are Linux
+  while the pinned binary is a Windows build.** **A2 (artwork) and A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,

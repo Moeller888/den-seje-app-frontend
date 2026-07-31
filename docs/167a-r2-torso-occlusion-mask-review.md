@@ -1,6 +1,13 @@
 # 167A — R2 torso occlusion mask + slot template (A1 of option A): build & review record, D-085
 
 **Status:** `A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`.
+**Revision 2 (2026-07-31)** — two blockers from revision 1 are closed:
+**(1)** the flat "0 px above y=560" rule left **2,740 px of the base tee's collar curve uncovered**, which
+breaks D-037's *fully occlude the base tee* requirement. The garment is now identified **topologically**,
+the collar is inside the mask, and a binding gate `base-tee-garment-uncovered = 0 px` measures the whole
+tee. **(2)** the builder/determinism tests **skipped** when the gitignored decoder was absent, so
+reproducibility was never proven; the decoder is now **checksum-pinned** and those tests **fail loudly
+instead of skipping**. Status is unchanged and may only become `A1_ACCEPTED` after owner visual review.
 **Type:** deterministic, NON-AI tooling + tracked mask template. **No artwork was produced. No slot was
 activated.** `D-037` remains **CONDITIONAL** — this document does not discharge it.
 **Plan of record:** `docs/167a-r2-torso-asset-production-plan.md` (D-084).
@@ -74,9 +81,11 @@ Two measurement rules had to be made robust, and both are worth recording:
 
 | file | meaning | px | bbox (Master) | SHA-256 |
 |---|---|---|---|---|
-| `torso-occlusion-hard-v1.png` | where a torso replacement **must** be fully opaque | 96,182 | x 328–697, y 560–901 | `761cde77929e45bac1a48cb21ab645524525ed41836d52b2a9ddcb57fd019eba` |
-| `torso-edit-allowed-v1.png` | hard + ≤4 px blend + the optional hem extension | 122,344 | x 328–699, y 560–999 | `608eced0c346360071cb6d8c4b3d9e74cacd65d4542ae684b0e84c6d48432318` |
-| `torso-protect-v1.png` | the exact complement of edit — the anatomy/identity lock for A2 | 1,450,520 | full canvas | `623379959b3fe60e1f1b6d7d0def5b5011cff8a276b12c05b913c9a69b37fd98` |
+| `torso-occlusion-hard-v1.png` | where a torso replacement **must** be fully opaque | 98,993 | x 328–697, **y 528**–903 | `d2af2b6068431a61ea423c4006505f127520e43ec58ae56e89d7a1de4ca6805c` |
+| `torso-edit-allowed-v1.png` | hard + ≤4 px blend + the optional hem extension | 124,811 | x 328–699, y 528–999 | `ad8f35223bfd5715fa9ec3fd4dba5b3d8174f79b3526719149a6b0ba1ddb46e4` |
+| `torso-protect-v1.png` | the exact complement of edit — the anatomy/identity lock for A2 | 1,448,053 | full canvas | `9113e23720279330147adaa0124dc54345067f3fed39df0684207359c1e879e1` |
+
+The mask now starts at **y 528**, not 560: that is the collar curve (revision 2).
 
 Spec: `tools/avatar/fixtures/r2-torso/torso-mask-spec-v1.json`. Optional **hem extension**: 25,468 px,
 x 372–639, y 902–999 (corridor only, clipped to the silhouette).
@@ -85,13 +94,31 @@ All three are 1024×1536, binary alpha (0 or 255), white RGB, `IHDR`/`IDAT`/`IEN
 timestamp, so the bytes depend solely on the pixels. **They live under `tools/avatar/fixtures/r2-torso/`,
 not under `assets/`: this is a production template, not a runtime asset.**
 
+### 3.0 The garment is a topological object, not a band (revision 2)
+
+A band rule cannot express either the collar curve (which rises to y 528) or the fact that the two
+sleeves end on different rows. So the tee is identified by **connectivity**: garment-classified solid
+pixels are 8-connected, and the components touching a seed taken from the middle of the torso are the
+garment — **95,799 px, top row 528, bbox x 328–697 / y 528–903**. The shoes are grey too, but they form
+their own components and never touch the seed, so they stay out. Two closing passes absorb 1–2 px fold
+shadows that classify as "other" and would otherwise punch holes in the collar.
+
+**Everything the mask owns follows from that object.** The band rules below remain as the geometric
+floor — they add the garment's own outline and shading inside the torso — but they no longer *define*
+the garment.
+
 ### 3.1 Band rules actually implemented
 
-- `y < 560` — nothing. Head and neck are untouchable.
+- `y < 560` — **only the tee's own collar curve** (gate `above-shoulder-only-tee-collar`); the neck,
+  head and hair are untouchable, and the collar zone gets **no feather at all**, because a blend there
+  would land on skin.
 - `560 … 714` — every solid pixel of the row **except bare skin**. The two sleeves do not end on the same
   row, so a plain "whole row" rule grabbed a few pixels of the arm that is already bare on one side.
 - `714 … 902` — pinched to the per-row torso span (bounded by the locked corridor). Deliberately
   independent of the row's run structure, so a row whose seam happens to close cannot leak onto a forearm.
+  Fabric that belongs to the tee but lies outboard (the longer sleeve's tail) is covered by the
+  topological rule above, and **only** fabric: gate
+  `outboard-below-sleeve-end-is-tee-fabric-only` allows 0 non-garment pixels out there.
 - `902 … 1000` — optional hem extension, corridor only, clipped to the silhouette.
 - `y >= 1000` — nothing. Legs are untouchable.
 - The ≤4 px blend never crosses onto transparent canvas, onto locked anatomy, or outboard of the corridor
@@ -100,7 +127,17 @@ not under `assets/`: this is a production template, not a runtime asset.**
 
 ---
 
-## 4. Gates — 28/28 pass
+## 4. Gates — 31/31 pass
+
+**The binding one (revision 2): `base-tee-garment-uncovered = 0 px`** — of the garment's **95,799 px**,
+zero lie outside the hard mask, with a per-zone conflict breakdown (skin/neck 0, forearm/hand 0, leg 0,
+other 0). This is the gate that expresses D-037's *fully occlude the base tee*, and it measures the whole
+tee — collar curve included — not just the band below the shoulder line.
+
+Also added in revision 2: `above-shoulder-only-tee-collar` · `outboard-below-sleeve-end-is-tee-fabric-only`
+· `edit-not-on-bare-skin` · `collar-zone-present-and-connected`.
+
+### 4.1 Revision-1 gate set (retained)
 
 `landmark:` ×7 (drift ≤24 px) · `no-px-above-shoulder` · `no-px-at-or-below-crotch` ·
 `no-mask-outboard-below-sleeve-end` · `no-head-or-neck` · `no-forearm-or-hand` · `no-legs` ·
@@ -116,25 +153,74 @@ itself forbidden, plus the fringe below.
 
 ---
 
-## 5. Accepted residues — disclosed, bounded, measured
+## 5. Residues — one closed, one bounded
 
-Two things the template does **not** cover. Neither is hidden; both are in the spec JSON.
+**(a) Collar/shoulder curve — CLOSED in revision 2.** It was a 2,740 px residue and a genuine D-037
+violation. The topological garment definition brings **2,657 px of collar** into the mask; **0 px of the
+tee remain uncovered.** The mask's top row moved 560 → **528**.
 
-**(a) Detached sleeve-tip fringe — 6 px.** At x 698–699, y 706–709 the base carries solid pixels
-(alpha exactly 128) separated from the sleeve body by a sub-threshold ramp, 4.1–5.7 px from the mask.
-Bringing them in would require breaking one of three locked rules: an island-free mask, the ≤4 px
-feather, or the `alpha >= 128` solidity convention. Bounded by a hard gate at ≤16 px and ≤8 px distance.
-**Scale check:** 6 Master px is ~0.2 px at the avatar render size (180×270) — below one output pixel.
+**(b) Detached sleeve-tip fringe — 6 px, still an accepted, bounded residue.** At x 698–699, y 706–709 the
+base carries solid pixels (alpha exactly 128) separated from the sleeve body by a sub-threshold ramp,
+4.1–5.7 px away; they form their own 6 px garment component and never touch the tee. Bringing them in
+would break one of three locked rules: an island-free mask, the ≤4 px feather, or the `alpha >= 128`
+solidity convention. Hard-bounded at ≤16 px and ≤8 px distance. **Scale check:** 6 Master px is ~0.2 px at
+the avatar render size (180×270) — below one output pixel.
 
-**(b) Collar/shoulder curve above the locked shoulder line — 2,740 px**, x 394–633, y 500–559.
-The tee's shoulder seam curves *upward*, and D-084 forbids any mask pixel at `y < 560`, so a thin band of
-the base tee sits outside the template. **This is the one residue with visible consequences:** ~2.9 % of
-the tee, and at 180×270 it is a thin grey ring at the neckline that an armour item would not occlude.
-**Owner decision — two options, both legitimate:** accept it (most torso garments carry their own collar
-or neckline, which covers the ring visually), or revise the D-084 `shoulderY` landmark from 560 to ≈540 in
-a follow-up so the band becomes maskable. **A1 does not choose;** the mask ships on the locked landmark.
+**(c) Not a residue, but recorded so the numbers reconcile: 176 grey NON-garment pixels** in the collar
+band (y 500–559). The colour classifier reads shadowed neck/jaw skin and outline strokes as grey. The
+evidence that they are anatomy, not fabric: **0 of 176 touch the garment** and 104 sit more than 10 px
+away. Covering them would put the mask on the neck, which the anatomy gates forbid. They are counted as
+anatomy, never as uncovered tee.
 
 ---
+
+## 5.1 Reproducibility in a clean clone (revision 2)
+
+The decoder `tools/avatar/vendor/dwebp.exe` is **gitignored by repo policy**, so a fresh clone bootstraps
+it with the sanctioned script — no new binary and no new npm dependency were introduced:
+
+```
+node tools/avatar/fetch-dwebp.mjs      # official libwebp 1.5.0 release, then a CHECKSUM check
+npm run avatar:r2-torso-mask           # verify (read-only)
+npm run test:unit                      # includes the builder + determinism tests
+```
+
+**What changed:** `fetch-dwebp.mjs` pinned only a version and a URL. It now also pins the **SHA-256 of
+the extracted executable** (`ee66951d…`, 505,344 bytes) and refuses to install a mismatch, and it exports
+`verifyVendoredDwebp()`, which the builder calls before decoding — a decoder that is missing *or not the
+pinned one* is an explicit, actionable error. The spec JSON records which decoder produced the template.
+
+**Provenance, stated plainly:** the pinned hash was taken from the binary this repo had already vendored
+via that script from the official URL. It is a pin against **silent drift** — a re-cut release, a
+truncated download, a swapped file — **not** an independent verification against a signature published by
+Google. Anyone re-pinning it should verify the upstream release first.
+
+**The tests no longer skip.** `verify-writes-nothing`, `two-build determinism` and the new
+`base tee fully occludable, measured on the decoded base` all call `requireDecoder()`, which fails with
+the bootstrap instruction instead of skipping; a further test asserts this file contains no `t.skip(`.
+
+### 5.2 CI gap — reported, deliberately NOT fixed here
+
+**`npm run test:unit` does not run in CI at all.** `.github/workflows/playwright.yml` runs exactly one
+unit file (`tests/unit/ci-classify-changes.test.mjs`) plus the Playwright suite. So these tests are a
+**local** gate today, and this PR does not change that.
+
+The **minimal** change that would close it — **not made here, because a workflow change needs its own
+decision**:
+
+```yaml
+    - name: Avatar tooling unit tests
+      if: steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'full'
+      run: |
+        node tools/avatar/fetch-dwebp.mjs
+        npm run test:unit
+```
+
+Two things the owner should weigh before authorising it: the step **downloads a third-party binary in
+CI** (mitigated, not eliminated, by the checksum pin), and the runners are Linux while the vendored
+`dwebp.exe` is a Windows build — so a Linux CI would need the `linux-x86-64` archive from the same
+release, i.e. a second pinned checksum in `fetch-dwebp.mjs`. **That is a design decision, not a
+mechanical edit, so it is left to you.**
 
 ## 6. Review artifacts (regenerable, gitignored)
 
@@ -147,10 +233,11 @@ Regenerate with `npm run avatar:r2-torso-mask -- --write`.
 
 ## 7. Visual assessment (honest)
 
-Reviewed on the overlays and the four-scale sheet:
+Reviewed on the regenerated overlays and the four-scale sheet (revision 2):
 
-- **The grey tee is coverable** across the chest, back-of-shoulder curve and both short sleeves — apart
-  from the collar band in §5(b).
+- **The grey neckline ring is gone.** The mask closes tightly around the collar at all four render sizes
+  — 180×270, 112×168, 72×108 and 52×78 — which was the specific check this revision had to satisfy.
+- **The grey tee is coverable** across the chest, shoulder curve, collar and both short sleeves.
 - **Head and neck untouched;** the mask starts cleanly at the collar line.
 - **Both forearms and both hands are fully preserved** — this was the failure mode that broke two earlier
   iterations of the tool (1,169 px and then 2 px of arm contact), and it is now enforced by construction
@@ -161,10 +248,11 @@ Reviewed on the overlays and the four-scale sheet:
 - **All four render sizes read as a coherent torso region**, including 52×78 where the shape is only a
   few pixels wide.
 
-**Uncertainties I cannot settle from geometry alone:** whether the collar residue is acceptable in
-practice (it depends on the artwork's neckline), and whether an armour silhouette wider than the base tee
-would look right when it must stay inside a corridor measured on a slim figure. Both belong to the A2
-brief and to owner judgement, not to a mask.
+**Uncertainties I cannot settle from geometry alone:** whether an armour silhouette wider than the base
+tee would look right when it must stay inside a corridor measured on a slim figure, and whether the
+neckline shape the mask now dictates suits the intended artwork. Both belong to the A2 brief and to owner
+judgement, not to a mask. The collar question from revision 1 is no longer among them — it was a defect,
+and it is fixed.
 
 **A1 is not PASS on automated gates alone.** Status stays `A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`.
 
@@ -187,8 +275,14 @@ participant log unchanged.
 |---|---|
 | Reviewed by | _(owner)_ |
 | Date | _(pending)_ |
-| Verdict | ☐ ACCEPT template as-is · ☐ ACCEPT with the collar landmark revised (D-084 `shoulderY` 560 → ≈540) · ☐ REJECT |
-| Notes on the collar residue §5(b) | _(pending)_ |
+| Verdict | ☐ ACCEPT template (→ `A1_ACCEPTED`) · ☐ ACCEPT with changes · ☐ REJECT |
+| Neckline shape the mask dictates (§7) | _(pending)_ |
+| Bounded 6 px sleeve-tip residue §5(b) | ☐ accepted · ☐ not accepted |
+| CI unit-test step §5.2 | ☐ authorise the workflow change · ☐ leave as a local gate |
 | Authorises A2 (artwork) | ☐ yes — requires discharging D-037 · ☐ not yet |
 
 Until this table is filled in, A1 is built but **not accepted**, and no A2 work may start.
+`A1_ACCEPTED` additionally requires: full base-tee occlusion proven (**done — gate
+`base-tee-garment-uncovered = 0`**), clean-clone reproducibility proven (**done — checksum-pinned
+bootstrap, no skipped tests; CI wiring still open per §5.2**), and the regenerated review images shown to
+and accepted by the owner (**pending — this table**).

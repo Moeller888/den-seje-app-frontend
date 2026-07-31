@@ -16,8 +16,9 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  decodePng, D084, OUT_W, OUT_H, INPUT_EXPECT_SHA, MIN_COMPONENT, FRINGE_TOLERANCE_PX, TOOL,
+  decodePng, D084, OUT_W, OUT_H, INPUT_EXPECT_SHA, MIN_COMPONENT, FRINGE_TOLERANCE_PX, TOOL, build,
 } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
+import { verifyVendoredDwebp, EXE_SHA256, VERSION as DWEBP_VERSION } from "../../tools/avatar/fetch-dwebp.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -95,13 +96,28 @@ test("hard is a subset of edit (the blend zone only ever adds)", () => {
 });
 
 // ── banding rules from D-084 ────────────────────────────────────────────────
-test("no mask pixel above the shoulder line (head and neck are untouchable)", () => {
-  let above = 0;
+test("above the shoulder line the mask carries the tee's COLLAR CURVE — and only that (D-085 revision)", () => {
+  // The first A1 cut obeyed a flat "0 px above y=560" rule and left 2,740 px of the base tee's collar
+  // uncovered, which breaks D-037's full-occlusion requirement. The collar is now inside the mask.
+  let above = 0, minY = OUT_H, minX = OUT_W, maxX = 0;
   for (let y = 0; y < D084.shoulderY; y++) for (let x = 0; x < OUT_W; x++) {
     const i = y * OUT_W + x;
-    if (hardA[i] || editA[i]) above++;
+    if (!hardA[i]) continue;
+    above++; if (y < minY) minY = y; if (x < minX) minX = x; if (x > maxX) maxX = x;
   }
-  assert.equal(above, 0);
+  assert.ok(above > 2000, `the collar curve must be masked, got ${above} px`);
+  assert.ok(minY >= 500, `the collar zone must not climb into the head, topmost row ${minY}`);
+  assert.ok(minX >= D084.seamX0 - 20 && maxX <= D084.seamX1 + 80, `collar stays over the shoulders, x ${minX}..${maxX}`);
+  // and the recorded residue says the same thing
+  assert.equal(spec.residues.collarAboveShoulderLine.status, "CLOSED");
+  assert.equal(spec.residues.collarAboveShoulderLine.uncoveredPx, 0);
+});
+
+test("grey NON-garment pixels in the collar band stay out (they are neck/jaw shading, not tee)", () => {
+  const r = spec.residues.nonTeeGreyInCollarBand;
+  assert.ok(r.px > 0, "the metric is reported, not silently dropped");
+  assert.equal(r.adjacentToTee, 0, "none of them touches the garment");
+  assert.ok(r.fartherThan10px > 0, "most sit well away from the garment");
 });
 
 test("no mask pixel at or below the crotch (legs are untouchable)", () => {
@@ -113,7 +129,7 @@ test("no mask pixel at or below the crotch (legs are untouchable)", () => {
   assert.equal(below, 0);
 });
 
-test("below the sleeve end nothing sits outboard of the seam corridor (forearms and hands survive)", () => {
+test("below the sleeve end only TEE FABRIC may sit outboard of the corridor — never anatomy", () => {
   let outboard = 0;
   for (let y = D084.sleeveEndY; y < OUT_H; y++) {
     for (let x = 0; x < OUT_W; x++) {
@@ -122,7 +138,10 @@ test("below the sleeve end nothing sits outboard of the seam corridor (forearms 
       if (hardA[i] || editA[i]) outboard++;
     }
   }
-  assert.equal(outboard, 0, "no mask pixel outside the corridor below the sleeve end");
+  const gate = spec.gates.find((g) => g.id === "outboard-below-sleeve-end-is-tee-fabric-only");
+  assert.ok(gate && gate.pass, "the recorded gate passed");
+  assert.equal(gate.detail.nonTeePx, 0, "no non-garment pixel outboard");
+  assert.equal(outboard, gate.detail.teeFabricPx, "every outboard pixel in the fixture is accounted for as fabric");
 });
 
 test("the fingertip line is cleared with margin", () => {
@@ -192,13 +211,18 @@ test("every gate recorded in the tracked spec passed, and the status is the A1 r
   assert.equal(spec.status, "A1_BUILT_GATES_PASS_OWNER_VISUAL_REVIEW_REQUIRED");
 });
 
-test("the accepted residues are bounded and disclosed", () => {
+test("the one remaining residue is bounded and disclosed; the collar residue is closed", () => {
+  // The 6 px detached sleeve-tip fringe stays: it cannot enter the mask without breaking the
+  // island-free rule, the 4 px feather or the alpha>=128 solidity convention. It is sub-pixel at
+  // render size and hard-bounded.
   const fringe = spec.residues.detachedFringe;
   assert.ok(fringe.detachedFringePx <= FRINGE_TOLERANCE_PX, "detached fringe within tolerance");
   assert.equal(fringe.beyondMaxDistance, 0, "nothing detached beyond the max distance");
-  const collar = spec.residues.garmentAboveShoulderLine;
-  assert.ok(collar.px > 0, "the collar residue is reported, not hidden");
-  assert.ok(collar.bbox.y1 < D084.shoulderY, "the residue lies entirely above the shoulder line");
+  // The collar residue that blocked owner acceptance is gone, not re-labelled.
+  const collar = spec.residues.collarAboveShoulderLine;
+  assert.equal(collar.status, "CLOSED");
+  assert.equal(collar.uncoveredPx, 0);
+  assert.ok(collar.teeCollarPx > 2000, "the collar curve is genuinely in the mask, got " + collar.teeCollarPx);
 });
 
 test("the boundary record states what A1 does NOT do", () => {
@@ -225,12 +249,48 @@ test("the PNG decoder rejects malformed input instead of guessing", () => {
   assert.throws(() => decodePng(truncated, "truncated"), /no IHDR/);
 });
 
-// ── builder round-trips (need the gitignored decoder) ───────────────────────
-const haveDwebp = existsSync(DWEBP);
+// ── decoder bootstrap contract (D-085 phase 2) ──────────────────────────────
+// The decoder is gitignored, so a fresh clone bootstraps it with `node tools/avatar/fetch-dwebp.mjs`.
+// That script now pins a CHECKSUM as well as the version+URL. These tests never skip: a missing or
+// wrong decoder is a loud failure, because "skipped" would mean reproducibility was never proven.
 const runTool = (args) => spawnSync(process.execPath, [TOOL_PATH, ...args], { encoding: "utf8" });
+function requireDecoder() {
+  const v = verifyVendoredDwebp();
+  assert.ok(v.ok,
+    `vendored WebP decoder unusable (${v.reason}). ${v.how || ""}\n` +
+    "This test must NOT be skipped: without the decoder the builder's reproducibility is unproven (D-085 phase 2).");
+}
 
-test("verify mode reproduces the tracked masks byte-for-byte and writes nothing", (t) => {
-  if (!haveDwebp) return t.skip("tools/avatar/vendor/dwebp.exe absent (gitignored) — run `node tools/avatar/fetch-dwebp.mjs` to cover this locally");
+test("the decoder is version- AND checksum-pinned, and the guard reports both failure modes", () => {
+  assert.equal(DWEBP_VERSION, "1.5.0");
+  assert.match(EXE_SHA256, /^[0-9a-f]{64}$/);
+  // missing binary → actionable bootstrap instruction, never a silent pass
+  const missing = verifyVendoredDwebp(join(REPO, "tools", "avatar", "vendor", "definitely-not-here.exe"));
+  assert.equal(missing.ok, false);
+  assert.equal(missing.reason, "missing");
+  assert.match(missing.how, /fetch-dwebp\.mjs/);
+  // wrong content at the right path → checksum mismatch, not acceptance
+  const wrong = verifyVendoredDwebp(INPUT);           // a real file, but not dwebp
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.reason, "checksum-mismatch");
+  assert.equal(wrong.expected, EXE_SHA256);
+});
+
+test("the vendored decoder present in this working copy is the pinned one", () => {
+  requireDecoder();
+  assert.equal(verifyVendoredDwebp().sha256, EXE_SHA256);
+  assert.equal(spec.decoder.sha256, EXE_SHA256, "the spec records which decoder produced the template");
+  assert.equal(spec.decoder.version, DWEBP_VERSION);
+});
+
+test("no critical test in this file is skipped", () => {
+  const src = readFileSync(join(HERE, "avatar-r2-torso-occlusion-mask.test.mjs"), "utf8");
+  assert.ok(!/\bt\.skip\(/.test(src), "builder/determinism tests must fail loudly, never skip");
+});
+
+// ── builder round-trips ─────────────────────────────────────────────────────
+test("verify mode reproduces the tracked masks byte-for-byte and writes nothing", () => {
+  requireDecoder();
   const before = readdirSync(FIX).map((f) => [f, sha256(readFileSync(join(FIX, f)))]);
   const res = runTool([]);
   assert.equal(res.status, 0, res.stdout + res.stderr);
@@ -239,15 +299,34 @@ test("verify mode reproduces the tracked masks byte-for-byte and writes nothing"
   assert.deepEqual(after, before, "verify mode must not touch the tracked files");
 });
 
-test("two independent builds produce byte-identical outputs", (t) => {
-  if (!haveDwebp) return t.skip("tools/avatar/vendor/dwebp.exe absent (gitignored)");
+test("two independent builds produce byte-identical outputs", () => {
+  requireDecoder();
   const first = readdirSync(FIX).map((f) => [f, sha256(readFileSync(join(FIX, f)))]);
   const res = runTool(["--write"]);
   assert.equal(res.status, 0, res.stdout + res.stderr);
   const second = readdirSync(FIX).map((f) => [f, sha256(readFileSync(join(FIX, f)))]);
   assert.deepEqual(second, first, "the build is deterministic");
-  // and the SHAs recorded in the spec are the SHAs of the files on disk
   for (const [name, s] of Object.entries(spec.masks)) {
     assert.equal(sha256(readFileSync(join(FIX, name))), s.sha256, name + " SHA matches the spec record");
   }
+});
+
+// ── the D-037 core requirement, verified against the BASE, not just the fixtures ──
+test("every pixel of the base tee is inside the mask — measured on the decoded base itself", () => {
+  requireDecoder();
+  const r = build();
+  let teeTotal = 0, uncovered = 0, onSkin = 0;
+  for (let i = 0; i < r.m.tee.length; i++) {
+    if (!r.m.tee[i]) continue;
+    teeTotal++;
+    if (!r.masks.hard[i]) uncovered++;
+  }
+  for (let i = 0; i < r.masks.edit.length; i++) {
+    if (r.masks.edit[i] && (r.z.headNeck[i] || r.z.forearmHand[i] || r.z.leg[i])) onSkin++;
+  }
+  assert.ok(teeTotal > 90000, "the garment was actually found, got " + teeTotal);
+  assert.equal(uncovered, 0, "D-037: the base tee must be fully occludable");
+  assert.equal(onSkin, 0, "no overlap with head, neck, forearms, hands or legs");
+  assert.equal(r.m.teeTop, spec.tee.topY);
+  assert.equal(r.gates.filter((g) => !g.pass).length, 0, "all gates pass on a live build");
 });

@@ -8,6 +8,13 @@
     "height": 768,
     "note": "RUNTIME base (R2_MANIFEST base neutral-medium: 2). The Phase-1 v1 PNG is NOT an input."
   },
+  "decoder": {
+    "name": "libwebp dwebp",
+    "version": "1.5.0",
+    "sha256": "ee66951df0f868f0c41f49fcc2d0fc53072912b7357836317ca177cbae5eb343",
+    "vendored": "tools/avatar/vendor/dwebp.exe (gitignored)",
+    "bootstrap": "node tools/avatar/fetch-dwebp.mjs"
+  },
   "output": {
     "width": 1024,
     "height": 1536,
@@ -38,37 +45,37 @@
   },
   "masks": {
     "torso-occlusion-hard-v1.png": {
-      "px": 96182,
+      "px": 98993,
       "bbox": {
         "x0": 328,
-        "y0": 560,
+        "y0": 528,
         "x1": 697,
-        "y1": 901
+        "y1": 903
       },
-      "sha256": "761cde77929e45bac1a48cb21ab645524525ed41836d52b2a9ddcb57fd019eba",
-      "bytes": 9957
+      "sha256": "d2af2b6068431a61ea423c4006505f127520e43ec58ae56e89d7a1de4ca6805c",
+      "bytes": 10275
     },
     "torso-edit-allowed-v1.png": {
-      "px": 122344,
+      "px": 124811,
       "bbox": {
         "x0": 328,
-        "y0": 560,
+        "y0": 528,
         "x1": 699,
         "y1": 999
       },
-      "sha256": "608eced0c346360071cb6d8c4b3d9e74cacd65d4542ae684b0e84c6d48432318",
-      "bytes": 10350
+      "sha256": "ad8f35223bfd5715fa9ec3fd4dba5b3d8174f79b3526719149a6b0ba1ddb46e4",
+      "bytes": 10704
     },
     "torso-protect-v1.png": {
-      "px": 1450520,
+      "px": 1448053,
       "bbox": {
         "x0": 0,
         "y0": 0,
         "x1": 1023,
         "y1": 1535
       },
-      "sha256": "623379959b3fe60e1f1b6d7d0def5b5011cff8a276b12c05b913c9a69b37fd98",
-      "bytes": 10335
+      "sha256": "9113e23720279330147adaa0124dc54345067f3fed39df0684207359c1e879e1",
+      "bytes": 10670
     }
   },
   "hemExtension": {
@@ -80,12 +87,25 @@
       "y1": 999
     }
   },
+  "tee": {
+    "px": 95799,
+    "topY": 528,
+    "bbox": {
+      "x0": 328,
+      "y0": 528,
+      "x1": 697,
+      "y1": 903
+    },
+    "how": "8-connected garment components seeded from the mid-torso; the shoes are grey too but form their own components and never touch the seed"
+  },
   "residues": {
-    "garmentAboveShoulderLine": {
-      "px": 2740,
+    "collarAboveShoulderLine": {
+      "status": "CLOSED",
+      "teeCollarPx": 2657,
+      "uncoveredPx": 0,
       "bbox": {
         "x0": 394,
-        "y0": 500,
+        "y0": 528,
         "x1": 633,
         "y1": 559
       },
@@ -94,7 +114,13 @@
         "y0": 500,
         "y1": 559
       },
-      "why": "The tee's shoulder/collar curve rises above the locked shoulder line; D-084 forbids mask pixels at y < shoulderY, so these stay uncovered. Owner review: accept (a torso item carries its own neckline) or revise the landmark."
+      "note": "Was an accepted 2,740 px residue in the first A1 cut, which obeyed a flat '0 px at y < shoulderY' rule. The garment is now identified topologically, so the collar curve is inside the mask and the D-037 full-occlusion requirement is met."
+    },
+    "nonTeeGreyInCollarBand": {
+      "px": 176,
+      "adjacentToTee": 0,
+      "fartherThan10px": 104,
+      "why": "Shadowed neck/jaw skin and outline strokes that the colour classifier reads as grey. None touches the garment; covering them would put the mask on the neck, which the anatomy gates forbid. Counted as anatomy, not as uncovered tee."
     },
     "detachedFringe": {
       "reachableViaFeather": 6,
@@ -214,11 +240,27 @@
       }
     },
     {
-      "id": "no-px-above-shoulder",
+      "id": "base-tee-garment-uncovered",
+      "pass": true,
+      "detail": {
+        "teeTotalPx": 95799,
+        "uncoveredPx": 0,
+        "conflicts": {
+          "skinOrNeck": 0,
+          "forearmHand": 0,
+          "leg": 0,
+          "other": 0
+        },
+        "sample": []
+      }
+    },
+    {
+      "id": "above-shoulder-only-tee-collar",
       "pass": true,
       "detail": {
         "px": 0,
-        "limit": "y < 560"
+        "limit": "y < 560",
+        "teeTopY": 528
       }
     },
     {
@@ -230,14 +272,16 @@
       }
     },
     {
-      "id": "no-mask-outboard-below-sleeve-end",
+      "id": "outboard-below-sleeve-end-is-tee-fabric-only",
       "pass": true,
       "detail": {
-        "px": 0,
+        "nonTeePx": 0,
+        "teeFabricPx": 0,
         "corridor": [
           372,
           640
-        ]
+        ],
+        "note": "the longer sleeve's tail reaches below the sleeve-end line and outboard of the corridor; it is fabric, so it is covered — anatomy out there is not"
       }
     },
     {
@@ -280,12 +324,12 @@
       "pass": true,
       "detail": {
         "garmentTotal": 93304,
-        "garmentCovered": 92668,
-        "coverage": 0.99318,
+        "garmentCovered": 92676,
+        "coverage": 0.99327,
         "reachableViaEdit": 6,
         "detachedFringePx": 6,
         "fringeTolerance": 16,
-        "onArmEdgeInCorridor": 158,
+        "onArmEdgeInCorridor": 150,
         "onBareArm": 466
       }
     },
@@ -342,7 +386,7 @@
       "id": "feather-within-4px",
       "pass": true,
       "detail": {
-        "featherPx": 694,
+        "featherPx": 496,
         "violations": 0,
         "maxRadius": 4
       }
@@ -401,7 +445,7 @@
       "detail": {
         "components": 1,
         "sizes": [
-          96182
+          98993
         ]
       }
     },
@@ -410,7 +454,7 @@
       "pass": true,
       "detail": {
         "minComponent": 64,
-        "smallest": 96182
+        "smallest": 98993
       }
     },
     {
@@ -418,6 +462,21 @@
       "pass": true,
       "detail": {
         "px": 0
+      }
+    },
+    {
+      "id": "edit-not-on-bare-skin",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "collar-zone-present-and-connected",
+      "pass": true,
+      "detail": {
+        "collarPxAboveShoulder": 2657,
+        "hardRegions": 1
       }
     }
   ],
