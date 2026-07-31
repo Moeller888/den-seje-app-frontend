@@ -250,9 +250,15 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `docs/avatar-r2-slot-completion-audit-d082` | `fd9e6395ef905b180f8c515f1fa51da15a2199ab` | D-082 remaining-slot completion audit + owner decision B |
 | `feat/avatar-r2-torso-force-c2-d083` | `4604bc5424843ed287710a6a3727fb48a15fc1c8` | D-083 unrenderable equipped cosmetic drops the whole avatar to C2 |
 | `docs/d083-post-merge-doc-consistency` | `cde16de862ec4ec1587a6d6ef3eb9b08af1aadeb` | post-merge doc contradictions resolved after D-083 |
+| `docs/r2-torso-asset-production-plan-d084` | `b18cac6d898f83c977606929b9ed9a0b14740e0b` | D-084 option-A torso asset production plan + measured mask spec |
 
-Merge commits on `main` for the last three: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135).
-Branches **not** deleted in that cleanup: `avatar/d042-proud-master-composite` (local only).
+Merge commits on `main` for the last four: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135),
+`dd4d408` (PR #137). Branches **not** deleted in that cleanup:
+`avatar/d042-proud-master-composite` (local only).
+
+Two branches are deliberately **absent** from this table because no decision entry cites them — they carried
+only the bookkeeping itself: `docs/deleted-branch-sha-reference` (`6a51e52`, merge `f275bfd`, PR #136) and
+the branch that added this row.
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
