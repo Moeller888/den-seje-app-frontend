@@ -122,16 +122,13 @@ test("binding layer order and blend modes (integration composite §6)", () => {
   assert.match(hair.src, /hair-northstar-v1\.webp$/, "runtime hair must be the luminance map, never hair-pl1-color");
 });
 
-test("cosmetic slot-gate: aura/back/headwear/eyes/face pass; neck/torso/body stay gated (D-081)", () => {
+test("cosmetic slot-gate: aura/back/headwear/eyes/face pass (D-081); an unsupported slot refuses the WHOLE stack (D-082)", () => {
   const cosmetics = [
     { slot: "aura", src: "/x/aura.svg", z: -30 },
     { slot: "back", src: "/x/wings.svg", z: -20 },
     { slot: "headwear", src: "/x/hat.svg", z: 50 },
     { slot: "eyes", src: "/x/glasses.svg", z: 55 },
     { slot: "face", src: "/x/hero-mask.svg", z: 50 },
-    { slot: "torso", src: "/x/armor.svg", z: 20 },
-    { slot: "body", src: "/x/suit.svg", z: 10 },
-    { slot: "neck", src: "/x/chain.svg", z: 30 },
   ];
   const layers = composeR2Layers(NEUTRAL_MEDIUM, cosmetics);
   const srcs = layers.map((l) => l.src);
@@ -140,8 +137,14 @@ test("cosmetic slot-gate: aura/back/headwear/eyes/face pass; neck/torso/body sta
   assert.ok(srcs.includes("/x/hat.svg"), "headwear passes (D-079)");
   assert.ok(srcs.includes("/x/glasses.svg"), "eyes/glasses passes (D-080)");
   assert.ok(srcs.includes("/x/hero-mask.svg"), "face/mask passes (D-081)");
-  for (const s of ["/x/armor.svg", "/x/suit.svg", "/x/chain.svg"]) {
-    assert.ok(!srcs.includes(s), s + " must stay gated");
+  // D-082 option B: neck/torso/body are NOT silently filtered any more — each one refuses the whole
+  // R2 stack (null → the caller renders the complete C2 path with the item visible).
+  for (const gated of [
+    { slot: "torso", src: "/x/armor.svg", z: 20 },
+    { slot: "body", src: "/x/suit.svg", z: 10 },
+    { slot: "neck", src: "/x/chain.svg", z: 30 },
+  ]) {
+    assert.equal(composeR2Layers(NEUTRAL_MEDIUM, [...cosmetics, gated]), null, gated.slot + " must refuse the R2 stack");
   }
   // headwear gets its DEDICATED R2 z (above the R2 hair, 40), not the raw incoming c.z
   const hw = layers.find((l) => l.src === "/x/hat.svg");

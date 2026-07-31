@@ -118,14 +118,15 @@ test("mask + glasses + headwear compose with the correct z-order (headwear > pan
   }));
 });
 
-test("still-gated slots (neck/torso/body) stay filtered OUT alongside an equipped mask", async () => {
+test("an unsupported slot alongside an equipped mask drops the WHOLE avatar to C2 (D-082)", async () => {
   await withR2OptIn(() => withDom(async (root) => {
     const cosmetics = c2CosmeticLayers({ face: NINJA, neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
-    await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
-    assert.ok(srcsOf(root).includes(NINJA), "face/mask passes");
-    for (const s of ["/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
-      assert.ok(!srcsOf(root).includes(s), s + " must NOT leak into the R2 stack");
+    const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
+    assert.equal(rp, "c2", "the R2 stack is refused while an unrenderable item is equipped");
+    for (const s of [NINJA, "/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
+      assert.ok(srcsOf(root).includes(s), s + " must stay visible on the C2 path");
     }
+    assert.ok(!srcsOf(root).some((x) => x.includes("avatar-r2/")), "no R2 layer in the forced C2 render");
   }));
 });
 

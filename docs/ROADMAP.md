@@ -128,6 +128,17 @@ _Last reviewed: 2026-07-01._
   whole-avatar `forceC2` while a torso item is equipped, implemented in a **separate runtime PR**; option A
   (R2-specific torso asset) deferred as separate art work, not rejected; neck/body closed as
   `NO_CATALOG_ITEMS`. See `docs/167a-r2-cosmetic-slot-completion-audit.md`, `docs/project-state.md` (D-082).
+  **▶ R2 full-cosmetic-support track — DEFECT CLOSED, option B shipped (2026-07-31, D-083).** An equipped
+  cosmetic in a slot the R2 stack cannot render (neck/torso/body) no longer disappears: `composeR2Layers`
+  refuses the R2 stack for the **whole avatar**, so the complete C2 path renders **with the item visible**.
+  Generic by slot (new pure helpers `r2UnrenderableCosmeticSlots` / `r2RequiresC2Fallback`), so a future
+  neck/body item is covered too; `R2_SUPPORTED_COSMETIC_SLOTS` unchanged; C2 path byte-unchanged;
+  buy/equip/ownership untouched and the fallback reverses on unequip. Reported with its own observability
+  reason `unsupported_cosmetic_equipped` (event schema/version unchanged). No golden added/re-baselined.
+  Unit 215/215, torso spec 8/8, full suite 503 passed / exit 0. **`AVATAR_R2` stays `false`**; pilot status
+  unchanged. **Track status:** aura/back/headwear/eyes/face **wired** · torso **handled by B** (option A —
+  an R2-specific asset — still open art work) · neck/body **closed, `NO_CATALOG_ITEMS`**. See
+  `docs/project-state.md` (D-083).
   Shop stays uniform C2 (D-077); buy/equip/ownership untouched; whole-stack-or-C2 preserved; **`AVATAR_R2`
   stays `false`**; pilot status unchanged. Next slices: face → neck → torso → body. See
   `docs/project-state.md` (D-080).

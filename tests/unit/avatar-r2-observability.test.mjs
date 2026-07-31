@@ -186,8 +186,10 @@ test("each valid reason passes through unchanged (with a compatible result)", ()
     emitR2RenderObservability({ surface: "hub", result: "c2_fallback", reason: "required_asset_failed", root: {} });
     emitR2RenderObservability({ surface: "quiz", result: "c2_fallback", reason: "identity_ineligible", root: {} });
     emitR2RenderObservability({ surface: "avatar", result: "c2_fallback", reason: "forced_c2", root: {} });
+    // D-082 option B: an equipped cosmetic the R2 stack cannot render (torso) → whole-avatar C2.
+    emitR2RenderObservability({ surface: "quiz", result: "c2_fallback", reason: "unsupported_cosmetic_equipped", root: {} });
     emitR2RenderObservability({ surface: "hub", result: "render_failed", reason: "render_exception", root: {} });
     const reasons = [...calls.info.map((c) => c[1].reason), ...calls.warn.map((c) => c[1].reason)];
-    assert.deepEqual(reasons.sort(), ["forced_c2", "identity_ineligible", "render_exception", "required_asset_failed", "unknown"]);
+    assert.deepEqual(reasons.sort(), ["forced_c2", "identity_ineligible", "render_exception", "required_asset_failed", "unknown", "unsupported_cosmetic_equipped"]);
   });
 });

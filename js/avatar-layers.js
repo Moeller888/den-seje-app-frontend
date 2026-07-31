@@ -518,6 +518,36 @@ export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes", 
 export function isR2SupportedCosmeticSlot(slot) {
   return R2_SUPPORTED_COSMETIC_SLOTS.indexOf(slot) !== -1;
 }
+
+// ── D-082 option B: NO SILENT ITEM LOSS on the R2 stack ──────────────────────
+// An equipped cosmetic in a slot the R2 stack cannot render (neck/torso/body) used to be filtered
+// out of composeR2Layers with NO fallback: a student who bought and equipped the Ridderdragt (the
+// only live `torso` item, 300 coins) saw it on C2 and NOTHING on R2 — no layer, no warning. The
+// audit (docs/167a-r2-cosmetic-slot-completion-audit.md, D-082) measured that this item cannot be
+// re-seated by the wrapper-transform mechanism that carried headwear/eyes/face (all six arm-side
+// elements land on 0 px of R2 figure), so wiring the slot is art production, not a config change.
+// Until that art exists, the whole avatar renders C2 while such an item is equipped: the student
+// always sees what they paid for, on the proven C2 anchors. Same reasoning as D-077 (shop previews).
+//
+// Renderability is judged with the SAME criteria composeR2Layers applies to a cosmetic entry
+// (`src` present + numeric `z` — what c2CosmeticLayers already validated), so a malformed entry,
+// which would not render on the C2 path either, never forces the avatar off R2.
+// Returns the DISTINCT unsupported slots present, in encounter order (never throws; [] for junk).
+export function r2UnrenderableCosmeticSlots(cosmetics) {
+  const list = Array.isArray(cosmetics) ? cosmetics : [];
+  const out = [];
+  for (const c of list) {
+    if (!c || !c.src || typeof c.z !== "number") continue;  // not renderable on EITHER path → ignore
+    if (isR2SupportedCosmeticSlot(c.slot)) continue;        // supported → renders on the R2 stack
+    if (out.indexOf(c.slot) === -1) out.push(c.slot);
+  }
+  return out;
+}
+// True when the WHOLE avatar must fall back to C2 because at least one equipped cosmetic cannot
+// render on the R2 stack. Deterministic, pure, no side effects.
+export function r2RequiresC2Fallback(cosmetics) {
+  return r2UnrenderableCosmeticSlots(cosmetics).length > 0;
+}
 // R2 z per supported slot. aura/back keep their existing behind-base z (== C2_LAYER_Z, both < base 0,
 // so they paint behind the R2 base exactly as before). headwear sits ABOVE the R2 hair
 // (R2_STACK_Z.hair = 40). The eyes COSMETIC (glasses) sits at 6 — ABOVE the internal R2 eye stack

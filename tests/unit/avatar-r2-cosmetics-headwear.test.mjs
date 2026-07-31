@@ -81,14 +81,15 @@ test("aura/back stay byte-functional on R2 (cosmetic marker, prior z, no transfo
   }));
 });
 
-test("still-gated slots (neck/torso/body) are filtered OUT of the R2 stack", async () => {
+test("unsupported slots (neck/torso/body) drop the WHOLE avatar to C2 with the items visible (D-082)", async () => {
   await withR2OptIn(() => withDom(async (root) => {
     const cosmetics = c2CosmeticLayers({ neck: "/x/chain.svg", torso: "/x/armor.svg", body: "/x/suit.svg" }, resolve);
-    await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
+    const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
+    assert.equal(rp, "c2", "an item the R2 stack cannot render forces the whole avatar to C2");
     for (const s of ["/x/chain.svg", "/x/armor.svg", "/x/suit.svg"]) {
-      assert.ok(!srcsOf(root).includes(s), s + " must NOT leak into the R2 stack");
+      assert.ok(srcsOf(root).includes(s), s + " must stay VISIBLE on the C2 path (never silently dropped)");
     }
-    assert.ok(srcsOf(root).some((x) => x.includes("avatar-r2/base/")), "R2 base still renders");
+    assert.ok(!srcsOf(root).some((x) => x.includes("avatar-r2/")), "no R2 layer in the forced C2 render");
   }));
 });
 
