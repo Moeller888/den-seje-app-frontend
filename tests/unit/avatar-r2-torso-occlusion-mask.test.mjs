@@ -241,7 +241,15 @@ test("no fixture leaked into a runtime asset directory", () => {
   assert.deepEqual(names, [
     "torso-edit-allowed-v1.png", "torso-mask-spec-v1.json", "torso-occlusion-hard-v1.png", "torso-protect-v1.png",
   ]);
-  assert.ok(!existsSync(join(REPO, "assets", "avatar-r2", "torso")), "nothing was promoted to assets/avatar-r2/");
+  // A1 itself still promotes nothing. The torso asset that exists from D-089 onwards was placed by
+  // the separate, owner-gated promotion tool — never by this builder, which may only write the
+  // template and its gitignored review artifacts.
+  // (The builder READS the runtime base as its input, so the check is on WRITES: every write goes
+  // through `guardedPath`, whose allowlist is the fixture dir and the gitignored build dir only.)
+  const builderSrc = readFileSync(join(REPO, "tools", "avatar", "build-r2-torso-occlusion-mask.mjs"), "utf8");
+  assert.match(builderSrc, /function guardedPath\(/, "the A1 builder must keep its write guard");
+  assert.match(builderSrc, /const allowed = \[resolve\(FIX_DIR\) \+ sep, resolve\(BUILD_DIR\) \+ sep\]/,
+    "the write allowlist must stay the fixture + build dirs — never the runtime asset tree");
 });
 
 // ── malformed input ─────────────────────────────────────────────────────────

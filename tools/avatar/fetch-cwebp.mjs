@@ -11,10 +11,11 @@
 // This downloads + stages a third-party binary — run it deliberately.
 // ---------------------------------------------------------------------------
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VENDOR = join(HERE, "vendor");
@@ -22,6 +23,29 @@ const OUT = join(VENDOR, "cwebp.exe");
 
 const VERSION = "1.5.0";
 const URL = `https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${VERSION}-windows-x64.zip`;
+
+// Checksum pin for the EXTRACTED executable, mirroring fetch-dwebp.mjs (D-085 revision 2).
+// PROVENANCE, stated plainly: this was taken from the already-vendored binary that produced the
+// existing runtime assets. It is a pin against silent drift — NOT an independent verification
+// against a Google-published signature. An asset encoder is exactly the place where an unnoticed
+// binary swap would be invisible in review, which is why the encode step refuses to run without it.
+export const EXE_SHA256 = "6fcb809892083ce6558878082c0b5a927442654dac963b0d02268f6e99986787";
+export const EXE_BYTES = 741888;
+
+// Runtime guard for consumers (promotion tool, tests): present AND the pinned one?
+// Returns { ok, reason, sha256 } — never throws, so a caller can turn it into its own clear failure.
+export function verifyVendoredCwebp(path = OUT) {
+  if (!existsSync(path)) {
+    return { ok: false, reason: "missing", sha256: null,
+      how: "node tools/avatar/fetch-cwebp.mjs   (downloads libwebp " + VERSION + " and verifies the pinned checksum)" };
+  }
+  const sha256 = createHash("sha256").update(readFileSync(path)).digest("hex");
+  if (sha256 !== EXE_SHA256) {
+    return { ok: false, reason: "checksum-mismatch", sha256, expected: EXE_SHA256,
+      how: "delete tools/avatar/vendor/cwebp.exe and re-run: node tools/avatar/fetch-cwebp.mjs" };
+  }
+  return { ok: true, reason: "pinned", sha256 };
+}
 
 // ── minimal ZIP reader (store + deflate), enough for a libwebp release zip ────
 function findEOCD(buf) {
@@ -67,11 +91,28 @@ async function main() {
   console.log("  downloaded " + (zip.length / 1024 / 1024).toFixed(2) + " MB");
 
   const exe = extractEntry(zip, "/cwebp.exe");
+
+  // Verify BEFORE staging: a mismatched encoder must never reach vendor/, because everything
+  // downstream trusts it to have produced the bytes we then commit as an asset.
+  const sha = createHash("sha256").update(exe).digest("hex");
+  if (sha !== EXE_SHA256) {
+    throw new Error("extracted cwebp.exe sha256 " + sha + "\n  != pinned " + EXE_SHA256 +
+      "\n  refusing to install an unpinned encoder (see the PROVENANCE note above)");
+  }
+  if (exe.length !== EXE_BYTES) {
+    throw new Error("extracted cwebp.exe is " + exe.length + " B, expected " + EXE_BYTES);
+  }
+
   mkdirSync(VENDOR, { recursive: true });
   writeFileSync(OUT, exe);
-  console.log("✔ extracted → " + OUT + "  (" + (exe.length / 1024).toFixed(0) + " KB)");
+  console.log("✔ extracted → " + OUT + "  (" + (exe.length / 1024).toFixed(0) + " KB, sha " + sha.slice(0, 16) + "… = pinned)");
   console.log("  (gitignored — verify with:  tools/avatar/vendor/cwebp.exe -version)");
   console.log("  encode with:  node tools/avatar/encode-webp.mjs <in.png> <out.webp> [--half]");
 }
 
-main().catch((e) => { console.error("✖ fetch-cwebp failed:", e.message); process.exit(1); });
+// Only download when run deliberately. Importing this module (for `verifyVendoredCwebp`) must
+// never reach for the network.
+const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+if (invokedDirectly) {
+  main().catch((e) => { console.error("✖ fetch-cwebp failed:", e.message); process.exit(1); });
+}
