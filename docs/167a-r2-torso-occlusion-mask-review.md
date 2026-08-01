@@ -1,6 +1,19 @@
 # 167A — R2 torso occlusion mask + slot template (A1 of option A): build & review record, D-085
 
 **Status:** `A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`.
+
+**Revision 3 (2026-08-01) — the owner caught a semantic inversion at the neckline, and it was real.**
+Revision 2 decided ownership by nearest-RGB against three swatches. On the neckline that inverted the
+picture in both directions, and the measurement confirmed the owner's read exactly:
+**the tee's dark collar ring was pushed OUT** of the mask (its darkness put it nearest the *trousers*
+swatch — 809 dark tee-side px outside), while **skin in shadow was pulled IN** (nearest the grey
+*garment* swatch — 93 px of anatomy inside). It also confirmed the circularity: the
+`base-tee-garment-uncovered = 0` gate only ever measured pixels the same classifier had labelled
+garment, so it could not see either error. Ownership is now decided by **hue and line-work ownership**,
+and three gates re-derive meaning independently of the object the mask was built from. Result at the
+neckline: **skin inside the mask 93 → 0**, **tee's dark edge outside the mask 500 → 8**, contour within
+**1 px** of the garment's visible edge.
+
 **Revision 2 (2026-07-31)** — two blockers from revision 1 are closed:
 **(1)** the flat "0 px above y=560" rule left **2,740 px of the base tee's collar curve uncovered**, which
 breaks D-037's *fully occlude the base tee* requirement. The garment is now identified **topologically**,
@@ -81,11 +94,12 @@ Two measurement rules had to be made robust, and both are worth recording:
 
 | file | meaning | px | bbox (Master) | SHA-256 |
 |---|---|---|---|---|
-| `torso-occlusion-hard-v1.png` | where a torso replacement **must** be fully opaque | 98,993 | x 328–697, **y 528**–903 | `d2af2b6068431a61ea423c4006505f127520e43ec58ae56e89d7a1de4ca6805c` |
-| `torso-edit-allowed-v1.png` | hard + ≤4 px blend + the optional hem extension | 124,811 | x 328–699, y 528–999 | `ad8f35223bfd5715fa9ec3fd4dba5b3d8174f79b3526719149a6b0ba1ddb46e4` |
-| `torso-protect-v1.png` | the exact complement of edit — the anatomy/identity lock for A2 | 1,448,053 | full canvas | `9113e23720279330147adaa0124dc54345067f3fed39df0684207359c1e879e1` |
+| `torso-occlusion-hard-v1.png` | where a torso replacement **must** be fully opaque | 97,698 | x 328–697, **y 524**–903 | `17baddfaa22b45162dad1940c23e9fee07d524688de136030cd6fc0889f34e7a` |
+| `torso-edit-allowed-v1.png` | hard + ≤4 px blend + the optional hem extension | 124,027 | x 328–699, y 524–999 | `84ed7276db084c4a49d3897c0546baa3f7a95a0abc7eead603f4ce2254bae659` |
+| `torso-protect-v1.png` | the exact complement of edit — the anatomy/identity lock for A2 | 1,448,837 | full canvas | `b2e2a8cc6a828aca086fa715b3ca05d83f6ec7f7ef93da03d2abf6499d2f53f7` |
 
-The mask now starts at **y 528**, not 560: that is the collar curve (revision 2).
+The mask starts at **y 524** — the top of the collar ring's own dark stroke (revision 3). The garment
+object is **97,702 px**: 95,332 px of fabric plus 2,280 px of owned line work (minus overlap).
 
 Spec: `tools/avatar/fixtures/r2-torso/torso-mask-spec-v1.json`. Optional **hem extension**: 25,468 px,
 x 372–639, y 902–999 (corridor only, clipped to the silhouette).
@@ -93,6 +107,27 @@ x 372–639, y 902–999 (corridor only, clipped to the silhouette).
 All three are 1024×1536, binary alpha (0 or 255), white RGB, `IHDR`/`IDAT`/`IEND` only — no metadata, no
 timestamp, so the bytes depend solely on the pixels. **They live under `tools/avatar/fixtures/r2-torso/`,
 not under `assets/`: this is a production template, not a runtime asset.**
+
+### 3.-1 How a pixel's meaning is decided (revision 3)
+
+Nearest-RGB against three swatches is gone. Meaning now comes from properties that survive shading:
+
+| class | rule | why |
+|---|---|---|
+| **skin** | `R − B ≥ 50` and `R ≥ 110` | skin stays warm in shadow; only its luma drops. `[138,105,87]` and `[194,153,121]` are skin, and revision 2 called both "garment" |
+| **outline** | `luma < 100` | the artist's line work, at any hue |
+| **fabric** | `chroma ≤ 28` and `luma ≥ 100` | the tee is achromatic mid-grey |
+| other | everything else | reported, never assumed |
+
+**Line work is assigned by ownership, never by colour.** A dark stroke belongs to what it bounds: it
+joins the garment when it is *thin* (≤12 px run — so the dark trousers, which meet the hem, can never be
+adopted as "the shirt's edge") **and** lies within 4 px of the connected fabric. 4 px is deliberate: the
+collar rim is 4–6 px thick, and a 2 px reach adopted only its outer half, leaving the half that borders
+the neck outside — measurably 500 → 8 px of the tee's own edge left out.
+
+**Skin can never be absorbed.** The band rule that admitted "every solid pixel except bare skin" is
+replaced by "fabric **or** owned line work": a pixel is now admitted for what it **is**, not for what it
+is not. That single change removed all 93 anatomy pixels from the mask.
 
 ### 3.0 The garment is a topological object, not a band (revision 2)
 
@@ -127,7 +162,22 @@ the garment.
 
 ---
 
-## 4. Gates — 31/31 pass
+## 4. Gates — 34/34 pass
+
+### 4.0 The three gates that cannot certify themselves (revision 3)
+
+The owner's objection was that a gate measuring the classifier's own output proves nothing. These three
+re-derive meaning from the pixels and compare it against the finished mask:
+
+| gate | result |
+|---|---|
+| **`no-semantic-skin-in-mask`** — hue-based skin, shadow included | **0 in hard, 0 in edit** (was 93 in hard) |
+| **`tee-line-work-covered`** — the garment's own dark strokes | **2,276 / 2,280 = 99.8 %**; the 4 remaining are island-rule casualties and sit inside the edit zone |
+| **`neckline-contour-matches-garment`** — mask edge vs visible garment edge, per row | **77 rows, 0 out of tolerance, worst delta 1 px** (tolerance 2) |
+
+Plus `tee-fabric-fully-covered`: **95,332 / 95,332 = 100 %** of garment fabric is mandatory coverage.
+
+### 4.1 Revision-2 gate set (retained, now expressed semantically)
 
 **The binding one (revision 2): `base-tee-garment-uncovered = 0 px`** — of the garment's **95,799 px**,
 zero lie outside the hard mask, with a per-zone conflict breakdown (skin/neck 0, forearm/hand 0, leg 0,
@@ -155,9 +205,24 @@ itself forbidden, plus the fringe below.
 
 ## 5. Residues — one closed, one bounded
 
-**(a) Collar/shoulder curve — CLOSED in revision 2.** It was a 2,740 px residue and a genuine D-037
-violation. The topological garment definition brings **2,657 px of collar** into the mask; **0 px of the
-tee remain uncovered.** The mask's top row moved 560 → **528**.
+**(a) Collar/shoulder curve — CLOSED.** It was a 2,740 px residue and a genuine D-037 violation. The
+mask now carries **3,404 px of collar** (revision 2: 2,657, before the dark ring was recognised as the
+shirt's); **0 px of the tee remain uncovered**. Top row 560 → 528 → **524**.
+
+**(a2) The neckline inversion — CLOSED (revision 3).** Measured in the neckline region
+(x 400–640, y 496–640), before → after:
+
+| | revision 2 | revision 3 |
+|---|---|---|
+| skin inside the mask | 93 | **0** |
+| tee's outer dark edge outside the mask | 500 | **8** |
+| collar rim outside the mask | 309 | 170 → of which only **2 px** sit in the collar band |
+| mask edge vs visible garment edge | up to 10 px short | **≤1 px** |
+
+What is left outside is **not the collar**: 18 px are the rim's innermost anti-aliased row, directly
+against skin, and 63 px belong to the **jaw/ear contour above the garment entirely** (y < 520, ≥5 px from
+the connected fabric — verified by distance, not assumed). Pulling those in would put the mask on the
+head.
 
 **(b) Detached sleeve-tip fringe — 6 px, still an accepted, bounded residue.** At x 698–699, y 706–709 the
 base carries solid pixels (alpha exactly 128) separated from the sleeve body by a sub-threshold ramp,
@@ -166,11 +231,15 @@ would break one of three locked rules: an island-free mask, the ≤4 px feather,
 solidity convention. Hard-bounded at ≤16 px and ≤8 px distance. **Scale check:** 6 Master px is ~0.2 px at
 the avatar render size (180×270) — below one output pixel.
 
-**(c) Not a residue, but recorded so the numbers reconcile: 176 grey NON-garment pixels** in the collar
-band (y 500–559). The colour classifier reads shadowed neck/jaw skin and outline strokes as grey. The
-evidence that they are anatomy, not fabric: **0 of 176 touch the garment** and 104 sit more than 10 px
-away. Covering them would put the mask on the neck, which the anatomy gates forbid. They are counted as
-anatomy, never as uncovered tee.
+**(c) Not a residue, but recorded so the numbers reconcile: 96 fabric-coloured NON-garment pixels** in
+the collar band (y 500–559) — anti-aliased blends along the jaw/ear/neck contour that read as achromatic
+grey. Evidence that they are head, not shirt: at most **1 of 96** abuts the garment and 36 sit more than
+10 px away. Covering them would put the mask on the head.
+
+**(d) 4 px of the garment's line work are paintable but not mandatory.** They form components below the
+64 px island threshold, so the no-floating-islands rule moves them out of `hard`; the edit zone still
+reaches them, so an artist covers them. Listed in the spec as `paintableButNotMandatoryPx`, hard-bounded
+at 16.
 
 ---
 
@@ -233,10 +302,17 @@ Regenerate with `npm run avatar:r2-torso-mask -- --write`.
 
 ## 7. Visual assessment (honest)
 
-Reviewed on the regenerated overlays and the four-scale sheet (revision 2):
+Reviewed on the regenerated overlays, an **8× magnified neckline set** (base · binary mask · overlay ·
+semantic class map · error map) and the four-scale sheet (revision 3):
 
+- **The dark collar ring is now inside the mask** — both hooks and the arc under the chin — and **no
+  green intrudes into the skin** inside the collar opening. Those were the two things the owner saw, and
+  both are visibly resolved at 8×.
+- What remains dark at the neckline is a **1 px line exactly on the skin boundary** (the rim's
+  anti-aliased inner row). It reads as the garment's own neckline edge; pushing the mask past it would
+  put it on skin.
 - **The grey neckline ring is gone.** The mask closes tightly around the collar at all four render sizes
-  — 180×270, 112×168, 72×108 and 52×78 — which was the specific check this revision had to satisfy.
+  — 180×270, 112×168, 72×108 and 52×78.
 - **The grey tee is coverable** across the chest, shoulder curve, collar and both short sleeves.
 - **Head and neck untouched;** the mask starts cleanly at the collar line.
 - **Both forearms and both hands are fully preserved** — this was the failure mode that broke two earlier

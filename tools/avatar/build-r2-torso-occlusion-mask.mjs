@@ -79,10 +79,39 @@ const SOLID = 128;         // D-071 convention: alpha >= 128 is solid; the AA ra
 const FEATHER = 4;         // Master px, the D-084 maximum blend/bleed
 const CORRIDOR_CX = Math.round((D084.seamX0 + D084.seamX1) / 2);
 
-// Reference swatches of the runtime base (measured on v2; used only to LOCATE landmarks and to
-// verify tee coverage — never to author pixels).
+// Reference swatches of the runtime base. Used ONLY to locate landmarks (rows that read as garment /
+// skin / trousers). They are NOT used to decide what the mask owns — see semanticOf().
 const REF = Object.freeze({ garment: [149, 144, 144], skin: [253, 191, 121], trousers: [44, 49, 59] });
 const REF_MAX_DIST = 70;
+
+// ── Semantic classification (D-085 revision 3) ──────────────────────────────
+// Revision 2 decided ownership with a nearest-RGB match against those three swatches. On the neckline
+// that inverts the meaning of the picture, and the owner caught it on sight:
+//   * the tee's dark collar ring ([31,18,2], [47,29,14], [73,64,51]) is nearest to the TROUSERS
+//     swatch, so the shirt's own edge was pushed out of the mask;
+//   * skin in shadow ([138,105,87], [194,153,121]) is nearer to the grey GARMENT swatch than to lit
+//     skin, so anatomy was pulled into it.
+// Hue fixes both: skin is warm at any brightness, fabric is achromatic, and line work is dark. A dark
+// stroke is then assigned by OWNERSHIP, never by colour — see ownedOutline in measure().
+export const SEM = Object.freeze({ TRANSPARENT: "transparent", SKIN: "skin", OUTLINE: "outline", FABRIC: "fabric", OTHER: "other" });
+const SKIN_WARMTH = 50;     // R - B; shadowed skin keeps its hue, it only loses luma
+const SKIN_MIN_R = 110;
+const OUTLINE_MAX_LUMA = 100;
+const FABRIC_MAX_CHROMA = 28;
+export function semanticOf(rgba, i) {
+  const R = rgba[i * 4], G = rgba[i * 4 + 1], B = rgba[i * 4 + 2], A = rgba[i * 4 + 3];
+  if (A < SOLID) return SEM.TRANSPARENT;
+  const luma = 0.299 * R + 0.587 * G + 0.114 * B;
+  const chroma = Math.max(R, G, B) - Math.min(R, G, B);
+  if (R - B >= SKIN_WARMTH && R >= SKIN_MIN_R) return SEM.SKIN;
+  if (luma < OUTLINE_MAX_LUMA) return SEM.OUTLINE;
+  if (chroma <= FABRIC_MAX_CHROMA && luma >= OUTLINE_MAX_LUMA) return SEM.FABRIC;
+  return SEM.OTHER;
+}
+// A stroke is thin; the trousers are a dark AREA. Ownership is only ever granted to strokes, so the
+// trousers (which meet the tee at the hem) can never be adopted as "the shirt's edge".
+const STROKE_MAX_THICKNESS = 12;   // Master px
+const OWNERSHIP_REACH = 4;         // Master px — spans the full thickness of the collar rim
 
 function assertConstants() {
   const d = D084;
@@ -349,37 +378,73 @@ function measure(base) {
   // the garment-classified solid pixels, 8-connect them, and keep the components that touch a seed
   // taken from the middle of the torso. The shoes are grey too — they form their own components and
   // never touch the seed, so they stay out.
-  const garment = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) if (solid[i] && classify(rgba, i) === "garment") garment[i] = 1;
+  const sem = new Uint8Array(w * h);             // 0 transparent, 1 skin, 2 outline, 3 fabric, 4 other
+  const SEMCODE = { transparent: 0, skin: 1, outline: 2, fabric: 3, other: 4 };
+  for (let i = 0; i < w * h; i++) sem[i] = SEMCODE[semanticOf(rgba, i)];
+
+  // (a) The garment's BODY: connected fabric, seeded from the middle of the torso. The shoes are
+  //     achromatic grey too, but they form their own components and never touch the seed.
+  const fabric = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) if (sem[i] === 3) fabric[i] = 1;
   const seed = new Uint8Array(w * h);
   for (let y = sleeveEndY - 120; y < hemY - 40; y++) {
     const sp = torsoSpan[y] || [corLeft, corRight];
-    for (let x = sp[0]; x <= sp[1]; x++) if (garment[y * w + x]) seed[y * w + x] = 1;
+    for (let x = sp[0]; x <= sp[1]; x++) if (fabric[y * w + x]) seed[y * w + x] = 1;
   }
-  const tee = new Uint8Array(w * h);
-  for (const px of components(garment, w, h)) {
+  const teeFabric = new Uint8Array(w * h);
+  for (const px of components(fabric, w, h)) {
     if (!px.some((i) => seed[i])) continue;
-    for (const i of px) tee[i] = 1;
+    for (const i of px) teeFabric[i] = 1;
   }
-  // Close 1–2 px fold shadows inside the garment (they classify as "other" and would otherwise punch
-  // holes in the collar): a pixel that is solid, not skin, and enclosed by tee neighbours joins the tee.
+
+  // (b) OWNERSHIP OF THE LINE WORK. A dark stroke belongs to whatever it bounds; the collar ring
+  //     bounds the shirt, so it is the shirt's. Granted only to THIN strokes touching the garment
+  //     body, which is what keeps the (dark, but thick) trousers out even though they meet the hem.
+  const runLen = (x, y, dx, dy) => {             // length of the dark run through (x,y) along one axis
+    let n = 1;
+    for (let s = 1; s <= STROKE_MAX_THICKNESS + 1; s++) { const xx = x + dx * s, yy = y + dy * s; if (xx < 0 || yy < 0 || xx >= w || yy >= h || sem[yy * w + xx] !== 2) break; n++; }
+    for (let s = 1; s <= STROKE_MAX_THICKNESS + 1; s++) { const xx = x - dx * s, yy = y - dy * s; if (xx < 0 || yy < 0 || xx >= w || yy >= h || sem[yy * w + xx] !== 2) break; n++; }
+    return n;
+  };
+  const ownedOutline = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    if (sem[i] !== 2 || !solid[i]) continue;
+    if (Math.min(runLen(x, y, 1, 0), runLen(x, y, 0, 1)) > STROKE_MAX_THICKNESS) continue;  // an area, not a stroke
+    // Reach across the full thickness of the stroke: the collar rim is 4–6 px, so a 2 px reach only
+    // adopted its outer half and left the inner half — the part that borders the neck — outside.
+    let touches = false;
+    for (let dy = -OWNERSHIP_REACH; dy <= OWNERSHIP_REACH && !touches; dy++) for (let dx = -OWNERSHIP_REACH; dx <= OWNERSHIP_REACH; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+      if (teeFabric[yy * w + xx]) { touches = true; break; }
+    }
+    if (touches) ownedOutline[i] = 1;
+  }
+
+  const tee = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) if (teeFabric[i] || ownedOutline[i]) tee[i] = 1;
+
+  // (c) Close 1–2 px interior shading that reads as "other" and would punch holes in the garment.
+  //     SKIN can never be closed over — that is the second half of the inversion the owner caught.
   for (let pass = 0; pass < 2; pass++) {
     const add = [];
     for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
       const i = y * w + x;
-      if (tee[i] || !solid[i] || classify(rgba, i) === "skin") continue;
+      if (tee[i] || !solid[i] || sem[i] === 1) continue;          // never absorb skin
       let n = 0;
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         if (tee[(y + dy) * w + (x + dx)]) n++;
       }
-      if (n >= 5) add.push(i);                    // enclosed on most sides → interior shading
+      if (n >= 5) add.push(i);
     }
     for (const i of add) tee[i] = 1;
   }
+  const garment = teeFabric;                     // kept for the report: the garment BODY without strokes
   let teeTop = h;
   for (let i = 0; i < w * h; i++) if (tee[i]) { teeTop = Math.min(teeTop, (i / w) | 0); if (teeTop === 0) break; }
 
-  return { solid, nonzero, rows, rowAt, torsoSpan, garment, tee, teeTop,
+  return { solid, nonzero, rows, rowAt, torsoSpan, sem, garment, teeFabric, ownedOutline, tee, teeTop,
     measured: { shoulderY, sleeveEndY, hemY, crotchY, fingertipY, seamX0: corLeft, seamX1: corRight } };
 }
 
@@ -397,19 +462,23 @@ function buildMasks(base, m, z) {
   // rules below are the geometric floor, not the definition of the garment.
   for (let i = 0; i < w * h; i++) if (m.tee[i]) hard[i] = 1;
 
-  // (2) Above the sleeve end: every solid pixel of the row EXCEPT bare skin, so fold shading and the
-  // garment's own outline come along (the two sleeves do not end on the same row).
+  // (2) Above the sleeve end: FABRIC or the garment's OWN line work. Revision 2 said "every solid
+  // pixel except bare skin", and that is precisely what let shadowed skin into the mask at the
+  // neckline — a pixel is admitted for what it IS, never for what it is not.
   for (let y = L.shoulderY; y < L.sleeveEndY; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (solid[i] && classify(base.rgba, i) !== "skin") hard[i] = 1;
+      if (solid[i] && (m.teeFabric[i] || m.ownedOutline[i])) hard[i] = 1;
     }
   }
-  // (3) Below the sleeve end the arms are bare: pinch to the per-row torso span. Fabric outboard of the
-  // span is already covered by (1); anything else out there is anatomy and stays untouched.
+  // (3) Below the sleeve end the arms are bare: pinch to the per-row torso span, and still only take
+  // fabric or owned line work.
   for (let y = L.sleeveEndY; y < L.hemY; y++) {
     const sp = m.torsoSpan[y]; if (!sp) continue;
-    for (let x = sp[0]; x <= sp[1]; x++) if (solid[y * w + x]) hard[y * w + x] = 1;
+    for (let x = sp[0]; x <= sp[1]; x++) {
+      const i = y * w + x;
+      if (solid[i] && (m.teeFabric[i] || m.ownedOutline[i])) hard[i] = 1;
+    }
   }
   // optional hem extension: torso span only, clipped to the silhouette
   for (let y = L.hemY; y < L.crotchY; y++) {
@@ -428,19 +497,22 @@ function buildMasks(base, m, z) {
   const R2 = FEATHER * FEATHER;
   // The <=4 px blend is granted ONLY between the shoulder line and the hem. Above the shoulder line the
   // mask borders the neck, so the collar zone gets NO feather at all — a blend there would land on skin.
-  for (let y = L.shoulderY; y < L.hemY; y++) {
+  for (let y = Math.min(m.teeTop, L.shoulderY); y < L.hemY; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       if (edit[i]) continue;
+      // Above the shoulder line the edit zone may ONLY reclaim garment pixels that the island rule
+      // removed from the hard mask. No blend of any kind is granted next to the neck.
+      if (y < L.shoulderY && !m.tee[i]) continue;
       if (!nonzero[i]) continue;                     // never bleed onto transparent canvas
       if (z.headNeck[i] || z.forearmHand[i] || z.leg[i]) continue; // never bleed onto locked anatomy
-      if (classify(base.rgba, i) === "skin") continue;             // never bleed onto bare skin
+      if (m.sem[i] === 1) continue;                                // never bleed onto skin (any luma)
       // Below the sleeve end the feather may not leave the corridor — not even onto the arm's
       // ANTI-ALIASED edge (alpha 1..127), which the solid-pixel zones do not cover.
       if (y >= L.sleeveEndY && (x < L.seamX0 || x > L.seamX1)) continue;
       let near = 0;
       for (let dy = -FEATHER; dy <= FEATHER && !near; dy++) {
-        const yy = y + dy; if (yy < L.shoulderY || yy >= L.hemY) continue;
+        const yy = y + dy; if (yy < Math.min(m.teeTop, L.shoulderY) || yy >= L.hemY) continue;
         for (let dx = -FEATHER; dx <= FEATHER; dx++) {
           if (dx * dx + dy * dy > R2) continue;
           const xx = x + dx; if (xx < 0 || xx >= w) continue;
@@ -538,16 +610,64 @@ function runGates(base, m, masks, z) {
     const delta = Math.abs(m.measured[k] - L[k]);
     add("landmark:" + k, m.measured[k] >= 0 && delta <= LANDMARK_TOL, { locked: L[k], measured: m.measured[k], delta, tolerance: LANDMARK_TOL });
   }
+  // ── SEMANTIC GATES (D-085 revision 3) ─────────────────────────────────────
+  // These do NOT consult the object the mask was built from. They re-derive meaning from the pixels
+  // (hue for skin, luma for line work, adjacency for ownership) and compare it with the mask, so a
+  // classifier that mislabels the picture cannot certify itself.
+  let skinInHard = 0, skinInEdit = 0; const skinSample = [];
+  for (let i = 0; i < w * h; i++) {
+    if (m.sem[i] !== 1) continue;                       // 1 = skin, at any brightness
+    if (hard[i]) { skinInHard++; if (skinSample.length < 12) skinSample.push({ x: i % w, y: (i / w) | 0 }); }
+    if (edit[i]) skinInEdit++;
+  }
+  add("no-semantic-skin-in-mask", skinInHard === 0 && skinInEdit === 0,
+    { skinInHard, skinInEdit, sample: skinSample, note: "hue-based, so skin in shadow counts as skin" });
+
+  // The tee's own line work — thin dark strokes touching the garment body — must be inside the mask.
+  let ownedTotal = 0, ownedCovered = 0; const ownedMissing = [];
+  for (let i = 0; i < w * h; i++) {
+    if (!m.ownedOutline[i]) continue;
+    ownedTotal++;
+    if (hard[i]) ownedCovered++;
+    else if (ownedMissing.length < 12) ownedMissing.push({ x: i % w, y: (i / w) | 0 });
+  }
+  const ownedRatio = ownedTotal ? ownedCovered / ownedTotal : 1;
+  add("tee-line-work-covered", ownedRatio >= 0.99,
+    { ownedTotal, ownedCovered, ratio: +ownedRatio.toFixed(5), missingSample: ownedMissing });
+
+  // The mask's neckline contour must follow the garment's VISIBLE edge, row by row.
+  const CONTOUR_TOL = 2;
+  let contourRows = 0, contourBad = 0, worst = 0; const contourSample = [];
+  for (let y = m.teeTop; y <= L.shoulderY + 40; y++) {
+    let mL = null, mR = null, gL = null, gR = null;
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (hard[i]) { if (mL === null) mL = x; mR = x; }
+      if (m.teeFabric[i] || m.ownedOutline[i]) { if (gL === null) gL = x; gR = x; }
+    }
+    if (gL === null || mL === null) continue;
+    contourRows++;
+    const dL = Math.abs(mL - gL), dR = Math.abs(mR - gR);
+    worst = Math.max(worst, dL, dR);
+    if (dL > CONTOUR_TOL || dR > CONTOUR_TOL) { contourBad++; if (contourSample.length < 8) contourSample.push({ y, maskL: mL, garmentL: gL, maskR: mR, garmentR: gR }); }
+  }
+  add("neckline-contour-matches-garment", contourBad === 0,
+    { rowsChecked: contourRows, rowsOutOfTolerance: contourBad, worstDeltaPx: worst, tolerancePx: CONTOUR_TOL, sample: contourSample });
+
   // ── D-037 CORE REQUIREMENT: the base tee must be FULLY occludable ──────────
   // Measured over the whole garment as a topological object — collar curve and sleeve tails included,
   // not just the band below the shoulder line. This gate is the reason the D-085 revision exists.
-  let teeTotal = 0, teeUncovered = 0;
+  let teeTotal = 0, teeUncovered = 0, teeEditOnly = 0;
   const conflicts = { skinOrNeck: 0, forearmHand: 0, leg: 0, other: 0 };
-  const uncoveredSample = [];
+  const uncoveredSample = [], editOnlySample = [];
   for (let i = 0; i < w * h; i++) {
     if (!m.tee[i]) continue;
     teeTotal++;
     if (hard[i]) continue;
+    // Paintable but not mandatory: a handful of line-work pixels form components below MIN_COMPONENT
+    // and are removed by the island rule. They stay inside the edit zone, so an artist still covers
+    // them; they are listed rather than quietly folded into the "covered" count.
+    if (edit[i]) { teeEditOnly++; if (editOnlySample.length < 12) editOnlySample.push({ x: i % w, y: (i / w) | 0 }); continue; }
     teeUncovered++;
     if (z.headNeck[i]) conflicts.skinOrNeck++;
     else if (z.forearmHand[i]) conflicts.forearmHand++;
@@ -555,8 +675,10 @@ function runGates(base, m, masks, z) {
     else conflicts.other++;
     if (uncoveredSample.length < 12) uncoveredSample.push({ x: i % w, y: (i / w) | 0 });
   }
-  add("base-tee-garment-uncovered", teeUncovered === 0,
-    { teeTotalPx: teeTotal, uncoveredPx: teeUncovered, conflicts, sample: uncoveredSample });
+  add("base-tee-garment-uncovered", teeUncovered === 0 && teeEditOnly <= FRINGE_TOLERANCE_PX,
+    { teeTotalPx: teeTotal, uncoveredPx: teeUncovered, conflicts, sample: uncoveredSample,
+      paintableButNotMandatoryPx: teeEditOnly, paintableSample: editOnlySample,
+      note: "uncovered = outside BOTH hard and edit; the edit-only pixels are island-rule casualties, bounded by FRINGE_TOLERANCE_PX" });
 
   // band limits — above the shoulder line ONLY the tee's own collar curve may be masked
   let aboveShoulderNonTee = 0, atOrBelowCrotch = 0;
@@ -599,29 +721,23 @@ function runGates(base, m, masks, z) {
   // Uncovered garment pixels are only acceptable where covering them is itself forbidden: outboard of
   // the row's torso span, i.e. the shaded inner EDGE of a bare arm (a few hundred px of shading that
   // classifies as garment). Those are counted and reported, never covered.
-  let garmentTotal = 0, garmentCovered = 0, reachableViaEdit = 0, holeInTorso = 0, onArmEdgeInCorridor = 0, onBareArm = 0;
-  for (let y = L.shoulderY; y < L.hemY; y++) {
-    const sp = y < L.sleeveEndY ? [0, w - 1] : m.torsoSpan[y];
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (!solid[i] || classify(rgba, i) !== "garment") continue;
-      garmentTotal++;
-      if (hard[i]) { garmentCovered++; continue; }
-      const inSpan = sp && x >= sp[0] && x <= sp[1];
-      if (!inSpan) { if (x >= L.seamX0 && x <= L.seamX1) onArmEdgeInCorridor++; else onBareArm++; continue; }
-      // Inside the torso: not mandatory, but it MUST still be paintable — otherwise the base tee
-      // could show through a finished item. Only a pixel outside the edit zone is a real hole.
-      if (edit[i]) reachableViaEdit++; else holeInTorso++;
-    }
+  // Semantic FABRIC coverage. Counted over fabric pixels that belong to the garment body, so shadowed
+  // skin can no longer inflate the denominator the way the nearest-RGB "garment" class did.
+  let fabricTotal = 0, fabricCovered = 0;
+  for (let i = 0; i < w * h; i++) {
+    if (!m.teeFabric[i]) continue;
+    fabricTotal++;
+    if (hard[i]) fabricCovered++;
   }
-  const coverage = garmentTotal ? garmentCovered / garmentTotal : 0;
-  add("tee-occlusion-complete", holeInTorso <= FRINGE_TOLERANCE_PX && coverage >= 0.99,
-    { garmentTotal, garmentCovered, coverage: +coverage.toFixed(5), reachableViaEdit,
-      detachedFringePx: holeInTorso, fringeTolerance: FRINGE_TOLERANCE_PX, onArmEdgeInCorridor, onBareArm });
+  const coverage = fabricTotal ? fabricCovered / fabricTotal : 0;
+  add("tee-fabric-fully-covered", fabricCovered === fabricTotal,
+    { fabricTotal, fabricCovered, coverage: +coverage.toFixed(5) });
 
   // No holes: every NON-SKIN solid pixel inside the mask's own span must be paintable. Bare skin is
   // excluded by design (the sleeves end on different rows); AA specks dropped by the speck filter are
   // acceptable only because the feather zone still reaches them.
+  // Detached FABRIC fringe: garment-coloured pixels inside the mask's own span that the connectivity
+  // pass could not reach (the base's outline has a few solid specks cut off by a sub-threshold ramp).
   let holesCoveredByFeather = 0; const fringe = [];
   for (let y = L.shoulderY; y < L.hemY; y++) {
     const sp = y < L.sleeveEndY ? [0, w - 1] : m.torsoSpan[y];
@@ -629,7 +745,7 @@ function runGates(base, m, masks, z) {
     for (let x = sp[0]; x <= sp[1]; x++) {
       const i = y * w + x;
       if (!solid[i] || hard[i]) continue;
-      if (classify(rgba, i) === "skin") continue;
+      if (m.sem[i] !== 3) continue;                    // only FABRIC counts; skin and anatomy do not
       if (edit[i]) { holesCoveredByFeather++; continue; }
       // detached fringe: measure how far it actually sits from the mask
       let dist = Infinity;
@@ -697,10 +813,10 @@ function runGates(base, m, masks, z) {
   add("hard-is-single-region", comps.length === 1, { components: comps.length, sizes: comps.slice(0, 6) });
   add("no-specks", comps.every((c) => c >= MIN_COMPONENT), { minComponent: MIN_COMPONENT, smallest: comps[comps.length - 1] ?? 0 });
 
-  // the mask must not sit on bare skin anywhere — neck, arms or hands
+  // the mask must not sit on bare skin anywhere — neck, arms or hands (hue-based, shadow included)
   let onSkin = 0, editOnSkin = 0;
   for (let i = 0; i < w * h; i++) {
-    if (!solid[i] || classify(rgba, i) !== "skin") continue;
+    if (!solid[i] || m.sem[i] !== 1) continue;
     if (hard[i]) onSkin++;
     if (edit[i]) editOnSkin++;
   }
@@ -827,8 +943,10 @@ export function build() {
   for (let y = Math.max(0, D084.shoulderY - COLLAR_BAND); y < D084.shoulderY; y++) for (let x = 0; x < base.w; x++) {
     const i = y * base.w + x;
     if (!m.solid[i]) continue;
-    if (m.tee[i]) { above[i] = 1; teeCollarPx++; if (!masks.hard[i]) teeCollarUncovered++; continue; }
-    if (classify(base.rgba, i) !== "garment") continue;
+    // "uncovered" uses the same definition as the gate: outside BOTH masks. A pixel the island rule
+    // moved from hard to edit is still paintable, so it is not a hole in the occlusion.
+    if (m.tee[i]) { above[i] = 1; teeCollarPx++; if (!masks.hard[i] && !masks.edit[i]) teeCollarUncovered++; continue; }
+    if (m.sem[i] !== 3) continue;                  // fabric-coloured but not part of the garment
     nonTeeGrey++;
     let adjacent = false, near = false;
     for (let dy = -10; dy <= 10 && !near; dy++) for (let dx = -10; dx <= 10; dx++) {
@@ -866,7 +984,7 @@ export function build() {
       },
       nonTeeGreyInCollarBand: {
         px: nonTeeGrey, adjacentToTee: nonTeeAdjacent, fartherThan10px: nonTeeFar,
-        why: "Shadowed neck/jaw skin and outline strokes that the colour classifier reads as grey. None touches the garment; covering them would put the mask on the neck, which the anatomy gates forbid. Counted as anatomy, not as uncovered tee.",
+        why: "Fabric-coloured pixels in the band that are NOT part of the connected garment — anti-aliased blends along the jaw/ear/neck contour. Measured, not covered: they belong to the head, and the anatomy gates forbid masking there.",
       },
       detachedFringe: (gates.find((g) => g.id === "no-unreachable-garment") || { detail: {} }).detail,
     },

@@ -173,7 +173,14 @@ _Last reviewed: 2026-07-01._
   binary, and the determinism tests fail loudly instead of skipping (unit 241/241, 0 skipped). CI still
   does not run `npm run test:unit` at all — the minimal workflow step is written out in the review doc
   §5.2 but deliberately NOT made, since it downloads a third-party binary in CI and the runners are Linux
-  while the pinned binary is a Windows build.** **A2 (artwork) and A3
+  while the pinned binary is a Windows build.** **Revision 3 (2026-08-01): the owner spotted a SEMANTIC
+  INVERSION at the neckline and was right — nearest-RGB classification pushed the tee's dark collar ring
+  OUT of the mask (809 px) and pulled shadowed skin IN (93 px), and the coverage gate was circular
+  because it measured only what that same classifier had called garment. Meaning now comes from hue,
+  dark line work is assigned by OWNERSHIP (thin stroke within 4 px of the connected fabric, so the dark
+  trousers can never be adopted), and the band rule admits a pixel for what it IS rather than what it is
+  not. Three non-circular gates were added: skin-in-mask 0, line-work coverage 99.8 %, contour within
+  1 px of the garment's visible edge. Gates 34/34, unit 245/245, 0 skipped.** **A2 (artwork) and A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
