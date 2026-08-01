@@ -196,7 +196,17 @@ _Last reviewed: 2026-07-01._
   and four-scale legibility incl. 52×78) and self-tests on five synthetic candidates, plus the art brief
   `docs/167a-r2-torso-a2-art-brief.md`. **No artwork produced, no AI called.** `torso` is still absent
   from `R2_SUPPORTED_COSMETIC_SLOTS`, **D-083's C2 fallback stays live**, `AVATAR_R2` stays `false`.
-  Unit 257/257. See `docs/project-state.md` (D-086). **A3
+  Unit 257/257. See `docs/project-state.md` (D-086).
+  **▶ A2 first candidate generated and REJECTED (2026-08-01, D-087).** Torso adapter built
+  (`npm run avatar:generate-openai-torso`, one image per run, key from env only, output gitignored) with
+  two deterministic non-AI steps after generation — **fit** (scale to COVER the mandatory region) and
+  **clip** (multiply by the edit mask) — because a raw generation cannot otherwise be judged. First
+  candidate: harness verdict **REJECT** on `hard-region-fully-opaque` (88.6 % — the armour tapers at the
+  waist and is notched at the neck while the mask is the wider tee shape), `alpha-clean-no-halo`
+  (193 orphan soft px — the API baked in a dark vignette despite `background: transparent`) and
+  `no-floating-islands`. **The art itself is on-brief**; the faults are mechanical and addressable.
+  **No fix applied and nothing promoted — the candidate is recorded as rejected, not iterated into a
+  pass.** Unit 264/264. See `docs/project-state.md` (D-087). **A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,

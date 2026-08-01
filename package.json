@@ -22,7 +22,8 @@
     "avatar:emit-glasses-svg": "node tools/avatar/emit-glasses-svg.mjs",
     "avatar:render-glasses-preview": "node tools/avatar/render-glasses-preview.mjs",
     "avatar:r2-torso-mask": "node tools/avatar/build-r2-torso-occlusion-mask.mjs",
-    "avatar:r2-torso-check": "node tools/avatar/check-r2-torso-candidate.mjs"
+    "avatar:r2-torso-check": "node tools/avatar/check-r2-torso-candidate.mjs",
+    "avatar:generate-openai-torso": "node tools/avatar/openai-generate-torso-item.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
