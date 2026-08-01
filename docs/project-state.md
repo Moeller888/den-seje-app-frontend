@@ -254,9 +254,10 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `docs/d083-post-merge-doc-consistency` | `cde16de862ec4ec1587a6d6ef3eb9b08af1aadeb` | post-merge doc contradictions resolved after D-083 |
 | `docs/r2-torso-asset-production-plan-d084` | `b18cac6d898f83c977606929b9ed9a0b14740e0b` | D-084 option-A torso asset production plan + measured mask spec |
 | `tools/r2-torso-occlusion-mask-d085` | `810161bebb0bb4c501f246160ed3f5fde55a6290` | D-085 A1 torso occlusion mask + slot template (tip = revision 3, the neckline-semantics fix) |
+| `feat/a2-torso-artwork-harness-d086` | `2c8579b86ea239e3ce390a265465ce0b61e12758` | D-086 D-037 discharged for torso, A2 opened — candidate QA harness + art brief |
 
-Merge commits on `main` for the last five: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135),
-`dd4d408` (PR #137), `a2fe5db` (PR #139). Branches **not** deleted in that cleanup:
+Merge commits on `main`: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135), `dd4d408`
+(PR #137), `a2fe5db` (PR #139), `045998b` (PR #142). Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
 **D-085 carried three commits**, and the register cites the branch rather than any single one, so all three
