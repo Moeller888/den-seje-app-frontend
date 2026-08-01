@@ -1,7 +1,9 @@
 # 167A — A2 art brief: the Ridderdragt re-authored for the R2 figure, D-086
 
-**Status:** `A2_OPEN — ARTWORK NOT PRODUCED`.
-**Type:** production brief + QA contract. **No artwork exists yet.** No runtime, catalog, manifest or
+**Status:** `A2_ACCEPTED` (owner, 2026-08-01, D-088) — candidate 2 accepted; see §7. **Not promoted, not
+wired**: nothing under `assets/avatar-r2/`, no `R2_MANIFEST` write, `torso` still absent from
+`R2_SUPPORTED_COSMETIC_SLOTS`.
+**Type:** production brief + QA contract + per-candidate sign-off record. No runtime, catalog, manifest or
 asset change.
 **Depends on:** D-085 (`A1_ACCEPTED` — the mask template this brief is measured against), D-086 (the
 D-037 discharge that opened A2).
@@ -113,11 +115,29 @@ student until A3 ships. `AVATAR_R2` stays `false`. Promotion of an accepted cand
 
 ## 7. Owner sign-off (per candidate)
 
+### Candidate 1 — REJECTED (2026-08-01, D-087)
+
 | field | value |
 |---|---|
-| Candidate file / SHA-256 | _(pending)_ |
-| Harness verdict | _(pending)_ |
-| Style conformance to Master | _(pending)_ |
-| Content safety (kids platform) | _(pending)_ |
-| Reads as the Ridderdragt at 52×78 | _(pending)_ |
-| Verdict | ☐ ACCEPT → proceed to A3 · ☐ REVISE · ☐ REJECT |
+| Candidate file / SHA-256 | `torso-armor-knight-candidate.png` (superseded) · `dc332329…` |
+| Harness verdict | **REJECT** — `hard-region-fully-opaque` 88.6 %, `alpha-clean-no-halo` 193 orphan soft px, `no-floating-islands` 3 components |
+| Verdict | **☒ REJECT** — recorded as rejected rather than iterated into a pass; the art was on-brief, the faults mechanical |
+
+### Candidate 2 — ACCEPTED (2026-08-01, D-088)
+
+| field | value |
+|---|---|
+| Candidate file / SHA-256 | `tools/avatar/build/ai-input/torso-armor-knight-candidate.png` · `31f4b2b60737d5801cb115d3bdcac632881b8223ad7107be3a9b0655ebc7cfe0` (raw `83fcff0c…`, overscan 1.05, fit scale 0.438) |
+| Harness verdict | **PASS_AUTOMATED** — mandatory region 97,698/97,698 = 100 %, one region, no halo, 0 px outside the edit zone, legible at all four D-071 sizes |
+| Adapter-constructed pixels (disclosed) | **8,608 px = 8.81 % of the mandatory region, 8.55 % of visible artwork**; largest contiguous 4,833 px; 734 px touching the outer contour; shoulder 5,990 · torso 2,618 · collar 0 · skirt 0 |
+| Style conformance to Master | ACCEPTED (covered by the owner's acceptance of the review set; no separate rating was recorded) |
+| Content safety (kids platform) | ACCEPTED (as above) |
+| Reads as the Ridderdragt at 52×78 | ACCEPTED — reviewed on `09-four-scale-review.png` |
+| Reviewed material | the 12-file set in `Desktop\D087-candidate-2-review\`, incl. `07-BACKFILL-ONLY-map.png` |
+| Integrity at acceptance | candidate on disk re-hashes to the accepted SHA; review renders are flattened composites whose **strictly opaque pixels are byte-identical** (deltas confined to 35,826 px at alpha 250–254) |
+| Verdict | **☒ ACCEPT → proceed to A3** (owner, 2026-08-01) |
+
+**Acceptance promotes and wires nothing.** A3 must re-verify the SHA above before encoding, so promotion
+provably ships the accepted pixels. Risk `R-A2-ARTEFACT`: the accepted artwork and its raw generation are
+**gitignored and not reproducible** (the model call is non-deterministic) — the raw is the irreplaceable
+file until A3 puts the asset under version control.

@@ -217,12 +217,23 @@ _Last reviewed: 2026-07-01._
   were rejected on sight. Final candidate `31f4b2b6…`: 100 % mandatory coverage, one region, legible at
   all four sizes, **8.55 % of visible artwork adapter-constructed and fully disclosed** in the report,
   the sidecar and a magenta backfill map. Owner review set on the Desktop. Unit 279/279. **Not
-  accepted, not promoted, not wired** — `AVATAR_R2` `false`, D-083 fallback untouched, **D-088 reserved
-  for acceptance**. **A3
-  (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
-  stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
-  **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
-  `docs/project-state.md` (D-085).
+  accepted, not promoted, not wired** — `AVATAR_R2` `false`, D-083 fallback untouched. See
+  `docs/project-state.md` (D-087).
+  **▶ A2 ACCEPTED by the owner — the artwork gate is cleared (2026-08-01, D-088).** Candidate
+  `31f4b2b6…` reviewed on the 12-file set and accepted, **including the disclosure that 8,608 px
+  (8.81 % of the mandatory region, 8.55 % of the visible artwork) were constructed by the adapter rather
+  than drawn by the model** — the owner reviewed the magenta backfill-only map that isolates exactly
+  those pixels. Integrity checked at acceptance: the candidate on disk re-hashes to the accepted SHA, and
+  the review renders are flattened composites in which **every strictly opaque pixel is byte-identical**
+  (the deltas are 35,826 px at alpha 250–254 blending into the flat background). **Recorded risk
+  `R-A2-ARTEFACT`: the accepted artwork is gitignored and NOT reproducible** — the model call is not
+  deterministic, so the raw generation is the irreplaceable file until promotion puts it under version
+  control. Status **`A2_ACCEPTED`**. **Acceptance promotes and wires NOTHING:** nothing under
+  `assets/avatar-r2/`, no `R2_MANIFEST` write, `torso` still absent from `R2_SUPPORTED_COSMETIC_SLOTS`,
+  **`js/` byte-unchanged**, **D-083's C2 fallback remains the live protection for the Ridderdragt**,
+  `AVATAR_R2` stays `false`, pilot status unchanged. **A3 (promotion + wiring + tests + goldens) is
+  unstarted** and must re-verify the candidate SHA before encoding, so it provably ships the accepted
+  pixels; the catalog model (D-084 §7c) is decided there. See `docs/project-state.md` (D-088).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
