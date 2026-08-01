@@ -34,25 +34,39 @@ const FIX_DIR = join(HERE, "fixtures", "r2-torso");
 const OUT_DIR = join(HERE, "build", "ai-input");
 const RAW = join(OUT_DIR, "torso-armor-knight-raw.png");
 const CANDIDATE = join(OUT_DIR, "torso-armor-knight-candidate.png");
+const CANDIDATE_NO_BACKFILL = join(OUT_DIR, "torso-armor-knight-candidate-nobackfill.png");
+const BACKFILL_MAP = join(OUT_DIR, "torso-armor-knight-backfill-map.png");
+const BACKFILL_META = join(OUT_DIR, "torso-armor-knight-candidate.backfill.json");
 const rel = (p) => resolve(p).slice(resolve(REPO).length + 1).split(sep).join("/");
 
 const MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SIZE = `${OUT_W}x${OUT_H}`;          // the Master canvas the brief requires
+export const ALPHA_FLOOR = 24;             // below this, a pixel is background glow rather than artwork
+export const MIN_COMPONENT = 64;           // Master px, same speck threshold as the A1 mask builder
+export const DEFAULT_OVERSCAN = 1.0;
 
 // Prompt derived from docs/167a-r2-torso-a2-art-brief.md §1 and §3. The exclusions are not stylistic
 // preferences: the arms are BARE in the R2 base and the mask forbids drawing on them, so pauldrons,
 // arm plates and gauntlets would be rejected by the harness no matter how good they looked.
+// Revised after candidate 1 (D-087). That image was on-brief as art but its SILHOUETTE did not match
+// the mask: it tapered at the waist and had slits between the skirt plates, leaving 11.4 % of the
+// mandatory region bare. Scaling it up closed the number but cropped away the breastplate, collar and
+// plate edges — it stopped reading as the Ridderdragt. So the shape is now part of the prompt.
 const PROMPT = [
-  "A FRONT-FACING children's knight armour CHEST PIECE, front view only, as a clothing overlay.",
-  "A rounded steel breastplate with a simple centre ridge, small shoulder caps that stop at the",
-  "shoulder line, its own armour collar around the neck opening, and a leather belt with a plain",
-  "buckle at the waist. Optionally a short skirt of two or three broad plates below the belt.",
+  "A FRONT-FACING children's knight armour TUNIC, front view only, as a clothing overlay.",
+  "SHAPE IS CRITICAL: the outline must be a broad T-shirt shape — wide straight shoulders, short",
+  "sleeve caps, straight sides that do NOT taper at the waist, and a straight flat hem at the bottom.",
+  "The garment must be a SINGLE SOLID SHAPE with no gaps, no slits, no cut-outs and no separated",
+  "plates: any skirt below the belt is one continuous piece.",
+  "Decorate that shape as steel plate armour: a rounded breastplate with a centre ridge, a closed",
+  "armour collar filling the neckline, and a leather belt with a plain buckle at the waist.",
   "NO arms, NO arm plates, NO pauldrons sticking out sideways, NO gauntlets, NO hands.",
-  "Transparent background. ONLY the armour garment — no head, no neck, no face, no skin, no hair,",
-  "no legs, no character, no mannequin, no scene, no text, no logo, no drop shadow.",
+  "FULLY TRANSPARENT background — no glow, no vignette, no gradient, no drop shadow, no backdrop.",
+  "ONLY the garment — no head, no neck, no face, no skin, no hair, no legs, no character,",
+  "no mannequin, no scene, no text, no logo.",
   "Style: premium anime mobile-game equipment, clean cel-shaded, flat shading with one clear",
-  "highlight and one shadow tone, bold readable silhouette that still reads at thumbnail size.",
-  "Centred garment only, filling most of the frame vertically.",
+  "highlight and one shadow tone, bold silhouette that still reads at thumbnail size.",
+  "Centred, filling most of the frame.",
 ].join(" ");
 
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
@@ -101,13 +115,158 @@ export function fitAndClip(rawBuf, hard, edit, opts = {}) {
       const sy = Math.round((y - dstCy) / scale + srcCy);
       if (sx < 0 || sy < 0 || sx >= src.w || sy >= src.h) continue;
       const si = sy * src.w + sx;
+      let a = src.rgba[si * 4 + 3];
+      // ALPHA FLOOR — asset hygiene, not redesign. The image API baked a soft vignette into the
+      // "transparent" background of candidate 1, which the halo gate correctly rejected. Everything
+      // below the floor is that glow, so it is dropped outright; nothing above it is altered.
+      if (a < ALPHA_FLOOR) continue;
       out[di * 4] = src.rgba[si * 4];
       out[di * 4 + 1] = src.rgba[si * 4 + 1];
       out[di * 4 + 2] = src.rgba[si * 4 + 2];
-      out[di * 4 + 3] = src.rgba[si * 4 + 3];
+      out[di * 4 + 3] = a;
     }
   }
-  return { png: encodePngRGBA(OUT_W, OUT_H, out), scale: +scale.toFixed(4), sourceBbox: sb, targetBbox: tb };
+  // Speck removal, same rule the mask builder uses: an opaque fragment under MIN_COMPONENT px is
+  // debris from the vignette, not garment geometry.
+  const dropped = dropSmallOpaqueComponents(out, OUT_W, OUT_H, MIN_COMPONENT);
+
+  // BACKFILL — the step that makes full occlusion achievable at all. Fit and prompt work got coverage
+  // to ~95 %; the rest is structural (the mask's outer shoulder corners, and negative space inside the
+  // art such as a slit between skirt plates). Scaling further closed the number but cropped the
+  // breastplate and collar away, i.e. the item stopped reading as the Ridderdragt. So instead: every
+  // pixel of the MANDATORY region that the art leaves bare is filled with the garment's own colour,
+  // taken from the nearest opaque artwork pixel. It paints under nothing and over nothing — the art is
+  // untouched wherever it exists, and D-037's "fully occlude the base tee" is satisfied by
+  // construction rather than by luck.
+  let backfilled = 0;
+  let backfillMask = new Uint8Array(OUT_W * OUT_H);
+  if (opts.backfill !== false) {
+    backfilled = backfillMandatory(out, hard, OUT_W, OUT_H, backfillMask);
+  }
+  return {
+    png: encodePngRGBA(OUT_W, OUT_H, out), scale: +scale.toFixed(4),
+    sourceBbox: sb, targetBbox: tb, alphaFloor: ALPHA_FLOOR, specksDropped: dropped,
+    backfilledPx: backfilled, backfillMask,
+    backfill: describeBackfill(backfillMask, hard, out, OUT_W, OUT_H),
+  };
+}
+
+// Disclosure, not decoration: a candidate must never hide how much of what you see was constructed by
+// the adapter rather than drawn by the image model.
+export const BACKFILL_BANDS = Object.freeze({ collar: [0, 560], shoulder: [560, 714], torso: [714, 902], skirt: [902, 1000] });
+export function describeBackfill(mask, hard, rgba, w, h) {
+  let px = 0, hardPx = 0, visible = 0;
+  const bands = { collar: 0, shoulder: 0, torso: 0, skirt: 0 };
+  for (let i = 0; i < w * h; i++) {
+    if (hard[i]) hardPx++;
+    if (rgba[i * 4 + 3] >= 250) visible++;
+    if (!mask[i]) continue;
+    px++;
+    const y = (i / w) | 0;
+    for (const [name, [a, b]] of Object.entries(BACKFILL_BANDS)) if (y >= a && y < b) { bands[name]++; break; }
+  }
+  // largest contiguous backfill region (8-connected)
+  const seen = new Uint8Array(w * h); let largest = 0;
+  const N = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  for (let s = 0; s < w * h; s++) {
+    if (!mask[s] || seen[s]) continue;
+    const q = [s]; seen[s] = 1;
+    for (let k = 0; k < q.length; k++) {
+      const j = q[k], y = (j / w) | 0, x = j % w;
+      for (const [dx, dy] of N) {
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const t = yy * w + xx;
+        if (mask[t] && !seen[t]) { seen[t] = 1; q.push(t); }
+      }
+    }
+    if (q.length > largest) largest = q.length;
+  }
+  // does the fill reach the garment's visible outer edge? (a backfilled pixel with a non-hard neighbour)
+  let touchesOuterContour = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    if (!mask[i]) continue;
+    for (const [dx, dy] of N) if (!hard[(y + dy) * w + (x + dx)]) { touchesOuterContour++; break; }
+  }
+  return {
+    px, shareOfHardMask: hardPx ? +(px / hardPx).toFixed(5) : 0,
+    shareOfVisibleArtwork: visible ? +(px / visible).toFixed(5) : 0,
+    largestContiguousRegionPx: largest, touchesOuterContourPx: touchesOuterContour,
+    byBand: bands,
+    note: "backfill = pixels the ADAPTER constructed from the nearest garment-body colour, not pixels the image model drew",
+  };
+}
+
+// Fill bare pixels of the mandatory region with the colour of the nearest opaque artwork pixel.
+// Deterministic: a two-pass chamfer sweep, so the result depends only on the input image.
+function backfillMandatory(rgba, hard, w, h, outMask) {
+  // Source pixels are opaque GARMENT BODY only. The first cut sampled any opaque pixel, so the
+  // nearest source for a bare shoulder corner was the black outline stroke, and the fill dragged dark
+  // wedges into the mask's corners — the gate went green while the picture got worse. Excluding the
+  // line work (luma < 100) makes the fill extend the steel tone instead.
+  const src = new Int32Array(w * h).fill(-1);
+  for (let i = 0; i < w * h; i++) {
+    if (rgba[i * 4 + 3] < 250) continue;
+    const luma = 0.299 * rgba[i * 4] + 0.587 * rgba[i * 4 + 1] + 0.114 * rgba[i * 4 + 2];
+    if (luma < 100) continue;                       // outline stroke: never a fill colour
+    src[i] = i;
+  }
+  const dist = new Float64Array(w * h).fill(Infinity);
+  for (let i = 0; i < w * h; i++) if (src[i] >= 0) dist[i] = 0;
+  const relax = (i, j, d) => {
+    if (src[j] < 0) return;
+    const nd = dist[j] + d;
+    if (nd < dist[i]) { dist[i] = nd; src[i] = src[j]; }
+  };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    if (x > 0) relax(i, i - 1, 1); if (y > 0) relax(i, i - w, 1);
+    if (x > 0 && y > 0) relax(i, i - w - 1, 1.414); if (x < w - 1 && y > 0) relax(i, i - w + 1, 1.414);
+  }
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+    const i = y * w + x;
+    if (x < w - 1) relax(i, i + 1, 1); if (y < h - 1) relax(i, i + w, 1);
+    if (x < w - 1 && y < h - 1) relax(i, i + w + 1, 1.414); if (x > 0 && y < h - 1) relax(i, i + w - 1, 1.414);
+  }
+  let n = 0;
+  for (let i = 0; i < w * h; i++) {
+    if (!hard[i] || rgba[i * 4 + 3] >= 250) continue;
+    const s = src[i];
+    if (s < 0) continue;
+    rgba[i * 4] = rgba[s * 4]; rgba[i * 4 + 1] = rgba[s * 4 + 1]; rgba[i * 4 + 2] = rgba[s * 4 + 2]; rgba[i * 4 + 3] = 255;
+    if (outMask) outMask[i] = 1;
+    n++;
+  }
+  return n;
+}
+
+// 8-connected components over the OPAQUE pixels; anything smaller than minPx is erased.
+function dropSmallOpaqueComponents(rgba, w, h, minPx) {
+  const on = new Uint8Array(w * h);
+  // 250, not 128: the harness judges islands on its OPAQUE definition, so cleaning on a looser
+  // threshold leaves specks that are isolated in the judge's view but attached in ours.
+  for (let i = 0; i < w * h; i++) on[i] = rgba[i * 4 + 3] >= 250 ? 1 : 0;
+  const seen = new Uint8Array(w * h);
+  const N = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  let dropped = 0;
+  for (let s = 0; s < w * h; s++) {
+    if (!on[s] || seen[s]) continue;
+    const px = [s]; seen[s] = 1;
+    for (let k = 0; k < px.length; k++) {
+      const j = px[k], y = (j / w) | 0, x = j % w;
+      for (const [dx, dy] of N) {
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const t = yy * w + xx;
+        if (on[t] && !seen[t]) { seen[t] = 1; px.push(t); }
+      }
+    }
+    if (px.length >= minPx) continue;
+    for (const i of px) { rgba[i * 4] = 0; rgba[i * 4 + 1] = 0; rgba[i * 4 + 2] = 0; rgba[i * 4 + 3] = 0; }
+    dropped++;
+  }
+  return dropped;
 }
 
 function instructAndExit() {
@@ -152,9 +311,13 @@ async function main(argv) {
   const edit = loadMask("torso-edit-allowed-v1.png");
 
   const fitOnlyIdx = argv.indexOf("--fit-only");
+  const overIdx = argv.indexOf("--overscan");
+  const overscan = overIdx !== -1 && argv[overIdx + 1] ? Number(argv[overIdx + 1]) : DEFAULT_OVERSCAN;
+  if (!(overscan > 0 && overscan <= 1.6)) { console.error("--overscan must be in (0, 1.6]"); process.exit(1); }
+
   let raw;
   if (fitOnlyIdx !== -1) {
-    const p = argv[fitOnlyIdx + 1] || RAW;
+    const p = (argv[fitOnlyIdx + 1] && !argv[fitOnlyIdx + 1].startsWith("--")) ? argv[fitOnlyIdx + 1] : RAW;
     if (!existsSync(p)) { console.error("raw image not found: " + p); process.exit(1); }
     raw = readFileSync(p);
   } else {
@@ -162,19 +325,43 @@ async function main(argv) {
     if (!raw) return;                       // no key: instructions were printed, nothing attempted
   }
 
-  const fitted = fitAndClip(raw, hard, edit);
+  const backfill = !argv.includes("--no-backfill");
+  const fitted = fitAndClip(raw, hard, edit, { overscan, backfill });
   mkdirSync(OUT_DIR, { recursive: true });
-  writeFileSync(CANDIDATE, fitted.png);
+  const target = backfill ? CANDIDATE : CANDIDATE_NO_BACKFILL;
+  writeFileSync(target, fitted.png);
+
+  // Sidecar: the harness reads it so the report states, in the same place as the verdict, how much of
+  // the candidate the adapter constructed. Written next to the candidate, never into assets/.
+  const meta = {
+    tool: "openai-generate-torso-item", overscan, alphaFloor: fitted.alphaFloor,
+    specksDropped: fitted.specksDropped, backfilledPx: fitted.backfilledPx,
+    sourceRawSha256: sha256(raw), candidateSha256: sha256(fitted.png),
+    fit: { scale: fitted.scale, sourceBbox: fitted.sourceBbox, targetBbox: fitted.targetBbox },
+    backfill: fitted.backfill,
+  };
+  if (backfill) {
+    writeFileSync(BACKFILL_META, JSON.stringify(meta, null, 2) + "\n");
+    // A visual map of exactly which pixels were constructed — magenta on transparent.
+    const map = Buffer.alloc(OUT_W * OUT_H * 4);
+    for (let i = 0; i < OUT_W * OUT_H; i++) {
+      if (!fitted.backfillMask[i]) continue;
+      map[i * 4] = 255; map[i * 4 + 1] = 0; map[i * 4 + 2] = 200; map[i * 4 + 3] = 255;
+    }
+    writeFileSync(BACKFILL_MAP, encodePngRGBA(OUT_W, OUT_H, map));
+  }
 
   console.log(JSON.stringify({
     status: fitOnlyIdx !== -1 ? "REFITTED" : "GENERATED",
     model: fitOnlyIdx !== -1 ? undefined : MODEL,
-    size: SIZE,
+    size: SIZE, overscan, backfill,
     rawBytes: raw.length, rawSha256: sha256(raw),
     candidateBytes: fitted.png.length, candidateSha256: sha256(fitted.png),
+    alphaFloor: fitted.alphaFloor, specksDropped: fitted.specksDropped, backfilledPx: fitted.backfilledPx,
+    backfillDisclosure: fitted.backfill,
     fit: { scale: fitted.scale, sourceBbox: fitted.sourceBbox, targetBbox: fitted.targetBbox },
-    raw: rel(RAW), candidate: rel(CANDIDATE),
-    next: "npm run avatar:r2-torso-check -- " + rel(CANDIDATE),
+    raw: rel(RAW), candidate: rel(target),
+    next: "npm run avatar:r2-torso-check -- " + rel(target),
     boundaries: "gitignored build artifacts only; nothing promoted to assets/; torso slot still gated; AVATAR_R2 false",
   }, null, 2));
 }

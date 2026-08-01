@@ -206,7 +206,19 @@ _Last reviewed: 2026-07-01._
   (193 orphan soft px — the API baked in a dark vignette despite `background: transparent`) and
   `no-floating-islands`. **The art itself is on-brief**; the faults are mechanical and addressable.
   **No fix applied and nothing promoted — the candidate is recorded as rejected, not iterated into a
-  pass.** Unit 264/264. See `docs/project-state.md` (D-087). **A3
+  pass.** Unit 264/264. See `docs/project-state.md` (D-087).
+  **▶ A2 candidate 2 PASSES the automated gates — still not accepted (2026-08-01, D-087 revision).**
+  Adapter fixes: alpha floor (the model baked a vignette into the "transparent" background), speck
+  threshold aligned with the judge's own definition, `--overscan`, `--no-backfill`, and **backfill** —
+  a deterministic fill of the mandatory region with the nearest garment-body colour, never over drawn
+  artwork and never sampling the outline stroke. **Two moments where the number lied and the picture
+  told the truth:** overscan 1.6 reached 99.86 % coverage while cropping the armour into a grey tunic,
+  and the first backfill passed every gate while dragging dark wedges into the shoulder corners. Both
+  were rejected on sight. Final candidate `31f4b2b6…`: 100 % mandatory coverage, one region, legible at
+  all four sizes, **8.55 % of visible artwork adapter-constructed and fully disclosed** in the report,
+  the sidecar and a magenta backfill map. Owner review set on the Desktop. Unit 279/279. **Not
+  accepted, not promoted, not wired** — `AVATAR_R2` `false`, D-083 fallback untouched, **D-088 reserved
+  for acceptance**. **A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
