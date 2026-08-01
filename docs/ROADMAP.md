@@ -180,7 +180,12 @@ _Last reviewed: 2026-07-01._
   dark line work is assigned by OWNERSHIP (thin stroke within 4 px of the connected fabric, so the dark
   trousers can never be adopted), and the band rule admits a pixel for what it IS rather than what it is
   not. Three non-circular gates were added: skin-in-mask 0, line-work coverage 99.8 %, contour within
-  1 px of the garment's visible edge. Gates 34/34, unit 245/245, 0 skipped.** **A2 (artwork) and A3
+  1 px of the garment's visible edge. Gates 34/34, unit 245/245, 0 skipped.**
+  **▶ A1 ACCEPTED by the owner (2026-08-01).** Reviewed on the revision-3 images incl. an 8× neckline set;
+  the bounded 6 px sleeve-tip residue and 4 px paintable-but-not-mandatory line work are accepted with it.
+  **Two decisions deliberately left open: `D-037` stays CONDITIONAL (so A2 is NOT authorised), and the CI
+  unit-test step is NOT authorised — the builder/determinism tests stay a local gate.** Acceptance changes
+  no flag and no runtime. **A2 (artwork) and A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
