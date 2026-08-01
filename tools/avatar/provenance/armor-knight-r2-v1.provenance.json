@@ -1,0 +1,157 @@
+{
+  "tool": "promote-r2-torso-asset",
+  "toolVersion": "1.0.0",
+  "decision": "D-089",
+  "acceptance": {
+    "decision": "D-088",
+    "status": "A2_ACCEPTED",
+    "note": "owner visual acceptance of A2 candidate 2, incl. the disclosed adapter-constructed pixels"
+  },
+  "source": {
+    "path": "tools/avatar/build/ai-input/torso-armor-knight-candidate.png",
+    "sha256": "31f4b2b60737d5801cb115d3bdcac632881b8223ad7107be3a9b0655ebc7cfe0",
+    "width": 1024,
+    "height": 1536,
+    "colorType": "RGBA",
+    "rawGenerationSha256": "83fcff0c543150cd8c1c0e0b2abfb22c66584407dce98067da6354815de1c87e",
+    "overscan": 1.05,
+    "fitScale": 0.438,
+    "backfilledPx": 8608,
+    "backfillShareOfVisibleArtwork": 0.0855,
+    "backfillShareOfHardMask": 0.0881
+  },
+  "downscale": {
+    "method": "premultiplied 2x2 box average",
+    "from": "1024x1536",
+    "to": "512x768",
+    "referenceSha256": "044d18d1fe898f30ad7ea91b300acaf05ba208badf66631d388d7b20b52b00a8"
+  },
+  "encoder": {
+    "name": "libwebp cwebp",
+    "version": "1.5.0",
+    "sha256": "6fcb809892083ce6558878082c0b5a927442654dac963b0d02268f6e99986787",
+    "args": [
+      "-lossless",
+      "-exact",
+      "-z",
+      "9",
+      "-metadata",
+      "none"
+    ],
+    "lossless": true,
+    "exactAlpha": true,
+    "command": "cwebp -lossless -exact -z 9 -metadata none <reference.png> -o <out.webp>"
+  },
+  "decoder": {
+    "name": "libwebp dwebp",
+    "sha256": "ee66951df0f868f0c41f49fcc2d0fc53072912b7357836317ca177cbae5eb343"
+  },
+  "output": {
+    "path": "assets/avatar-r2/torso/armor-knight-r2-v1.webp",
+    "sha256": "78ca7bf5b3e9b2889852b7d4c85c680f28168fe802b0d4956711450a986835f6",
+    "bytes": 30064,
+    "width": 512,
+    "height": 768,
+    "budgetBytes": 51200,
+    "withinBudget": true
+  },
+  "gates": [
+    {
+      "id": "served-dimensions",
+      "pass": true,
+      "detail": {
+        "got": "512x768",
+        "expect": "512x768"
+      }
+    },
+    {
+      "id": "alpha-preserved",
+      "pass": true,
+      "detail": {
+        "transparent": 367947,
+        "partial": 125,
+        "opaque": 25144
+      }
+    },
+    {
+      "id": "no-ink-outside-edit-zone",
+      "pass": true,
+      "detail": {
+        "strayOutsideEdit": 0
+      }
+    },
+    {
+      "id": "no-ink-on-protect-mask",
+      "pass": true,
+      "detail": {
+        "inkOnProtect": 0
+      }
+    },
+    {
+      "id": "hard-region-fully-opaque",
+      "pass": true,
+      "detail": {
+        "hardTotal": 24406,
+        "hardGap": 0,
+        "coverage": 1
+      }
+    },
+    {
+      "id": "alpha-clean-no-halo",
+      "pass": true,
+      "detail": {
+        "orphanSoft": 4,
+        "tolerance": 16
+      }
+    },
+    {
+      "id": "no-floating-islands",
+      "pass": true,
+      "detail": {
+        "components": 1,
+        "largest": 25144,
+        "specks": [],
+        "minComponent": 16
+      }
+    },
+    {
+      "id": "decoded-matches-reference-exactly",
+      "pass": true,
+      "detail": {
+        "differingBytes": 0
+      }
+    },
+    {
+      "id": "legible-at-render-sizes",
+      "pass": true,
+      "detail": {
+        "min": 0.55,
+        "scales": [
+          {
+            "size": "180x270",
+            "coverage": 1
+          },
+          {
+            "size": "112x168",
+            "coverage": 1
+          },
+          {
+            "size": "72x108",
+            "coverage": 1
+          },
+          {
+            "size": "52x78",
+            "coverage": 0.996
+          }
+        ]
+      }
+    }
+  ],
+  "runtime": {
+    "avatarR2": false,
+    "torsoSupported": false,
+    "d083FallbackPresent": true,
+    "manifestRegistered": false,
+    "note": "A3.1 promotes the asset only. R2_MANIFEST lives in js/avatar-layers.js and is NOT edited here; registration + wiring are A3.2. The runtime still uses the D-083 whole-avatar C2 fallback for this item."
+  }
+}

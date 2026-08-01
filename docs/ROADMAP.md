@@ -234,6 +234,25 @@ _Last reviewed: 2026-07-01._
   `AVATAR_R2` stays `false`, pilot status unchanged. **A3 (promotion + wiring + tests + goldens) is
   unstarted** and must re-verify the candidate SHA before encoding, so it provably ships the accepted
   pixels; the catalog model (D-084 §7c) is decided there. See `docs/project-state.md` (D-088).
+  **▶ A3.1 — the accepted armour is a TRACKED ASSET; still nothing wired (2026-08-01, D-089).**
+  `assets/avatar-r2/torso/armor-knight-r2-v1.webp` — 512×768, **30,064 B**, sha `78ca7bf5…`, encoded
+  from the D-088 source `31f4b2b6…` through the **existing** runtime-asset pipeline: premultiplied
+  2×2 box ÷2 (as `extract-master-base.mjs` produced the base) → **`cwebp -lossless -exact -z 9
+  -metadata none`** (as base v2 in D-061, as D-084 §5 mandates). No new encoder, no new dependency.
+  The lossy `encode-webp.mjs` q90 wrapper is the *overlay* lane and deliberately not used here: a
+  garment that must fully occlude the base tee cannot afford a lossy alpha edge. **Every gate is
+  measured on the DECODED WebP** — 0 px outside the edit zone, 0 px on protect, served mandatory
+  region **24,406/24,406 = 100 %**, one component, halo 4/16, legible at all four D-071 sizes, and
+  **`decoded-matches-reference-exactly` = 0 differing bytes**, which is what actually proves the
+  encode was lossless rather than asking cwebp to vouch for itself. **`R2_MANIFEST` was NOT updated:**
+  it lives inside `js/avatar-layers.js`, which this PR must not touch — registration moves to A3.2,
+  matching the precedent that left the D-042 expression layers promoted-but-dormant. Risk
+  `R-A2-ARTEFACT` is **closed** (the artwork is in version control); the out-of-repo backup is kept,
+  since the served asset is a ÷2 derivative. **No runtime effect, verified by test:** `js/`
+  byte-unchanged, `torso` still absent from `R2_SUPPORTED_COSMETIC_SLOTS`, no runtime file
+  references the asset, **D-083's C2 fallback untouched**, `AVATAR_R2` `false`, pilot status
+  unchanged. Unit **303/303**. **A3.2 outstanding:** manifest, wiring, render-path mapping, catalog
+  model, tests, goldens, shop/avatar/quiz verification. See `docs/project-state.md` (D-089).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.

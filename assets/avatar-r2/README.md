@@ -42,7 +42,20 @@ assets/avatar-r2/
   eyes/    eyes-{set}-{iris|fixed}-v{n}.webp         (shared)
   eyelid/  eyelid-{skin_tone}-v{n}.webp             (per skin tone)
   hair/    hair-northstar-v{n}.webp                 (shared)
+  torso/   {item}-r2-v{n}.webp                      (cosmetic garment, shared — D-089)
 ```
+
+**`torso/armor-knight-r2-v1.webp` (D-089, 30,064 B) is PRESENT but NOT REGISTERED and NOT LOADED.**
+It is the Ridderdragt re-authored for the R2 figure (A2, owner-accepted in D-088) and promoted by
+`tools/avatar/promote-r2-torso-asset.mjs`, which pins the accepted source SHA. `torso` is still
+absent from `R2_SUPPORTED_COSMETIC_SLOTS`, so an equipped Ridderdragt still drops the whole avatar
+to C2 via the D-083 fallback — unchanged, and still the correct behaviour until A3.2 wires the slot.
+Provenance (source/output SHAs, encoder, flags, every gate): `tools/avatar/provenance/`.
+
+Unlike the face/eyes/hair overlays — encoded with the lossy `encode-webp.mjs` wrapper (q90) — this
+garment is encoded **`-lossless -exact -z 9 -metadata none`**, the same flags as the runtime base
+(D-061) and as mandated by D-084 §5: it must fully occlude the base tee, and a lossy alpha edge is
+exactly where that fails.
 
 When a layer is produced: drop the WebP here and register its version in `R2_MANIFEST`
 (and bump `version`). The matching resolver (`baseSrcForR2`, `faceSrcForR2`, `eyesSrcForR2`,

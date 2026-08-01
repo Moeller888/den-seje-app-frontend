@@ -123,7 +123,12 @@ test("the harness is a judge, not a promoter: no artwork or runtime path is writ
   assert.ok(!/assets[\\/]avatar-r2/.test(src), "never writes into the runtime asset tree");
   assert.ok(!/R2_MANIFEST/.test(src.replace(/\/\/.*$/gm, "")), "never touches the manifest");
   assert.ok(!/OPENAI|api\.openai|fetch\(/i.test(src), "contains no generator and no network call");
-  assert.ok(!existsSync(join(REPO, "assets", "avatar-r2", "torso")), "nothing has been promoted to assets/");
+  // The torso asset DOES exist from D-089 onwards (A3.1, owner-authorised). What must stay true is
+  // that it never got there via this harness: promotion has its own audited, SHA-pinned tool.
+  if (existsSync(join(REPO, "assets", "avatar-r2", "torso"))) {
+    assert.ok(existsSync(join(REPO, "tools", "avatar", "promote-r2-torso-asset.mjs")),
+      "an asset exists but the audited promotion tool does not — it was placed by something unreviewed");
+  }
 });
 
 test("the torso slot is still gated and D-037 is not discharged by this harness", async () => {

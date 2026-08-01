@@ -141,3 +141,19 @@ student until A3 ships. `AVATAR_R2` stays `false`. Promotion of an accepted cand
 provably ships the accepted pixels. Risk `R-A2-ARTEFACT`: the accepted artwork and its raw generation are
 **gitignored and not reproducible** (the model call is non-deterministic) — the raw is the irreplaceable
 file until A3 puts the asset under version control.
+
+### A3.1 — promoted (2026-08-01, D-089)
+
+The SHA above **was** re-verified before encoding, and again after the run. The accepted candidate is now
+`assets/avatar-r2/torso/armor-knight-r2-v1.webp` — 512×768, 30,064 B, sha
+`78ca7bf5b3e9b2889852b7d4c85c680f28168fe802b0d4956711450a986835f6`, produced by
+`tools/avatar/promote-r2-torso-asset.mjs` (premultiplied 2×2 box ÷2 → `cwebp -lossless -exact -z 9
+-metadata none`). Full provenance: `tools/avatar/provenance/armor-knight-r2-v1.provenance.json`.
+
+**Risk `R-A2-ARTEFACT` is closed** — the artwork is under version control. The out-of-repo backup is
+**kept**: the served asset is a ÷2 derivative, so anything needing authoring scale still depends on the
+1024×1536 source and the non-reproducible raw generation, both still gitignored.
+
+**Still not wired.** `torso` is absent from `R2_SUPPORTED_COSMETIC_SLOTS`, `R2_MANIFEST` has no torso
+entry, `AVATAR_R2` is `false`, and D-083's whole-avatar C2 fallback remains what makes the Ridderdragt
+visible to the pilot student. A3.2 owns registration, wiring, the catalog model, goldens and verification.
