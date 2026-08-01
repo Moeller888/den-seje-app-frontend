@@ -26,7 +26,7 @@ Option A is **Tier-1 + Tier-2 work** in the 164D pipeline, not a config change:
 
 | step | what | who/how | gate |
 |---|---|---|---|
-| **A1** | torso **occlusion mask** derived from the runtime R2 base (this document specifies it; deriving the pixel mask is the next executable step) | deterministic measurement, **no AI** (mirrors D-041/164K for accessory slots) | owner accepts the mask region |
+| **A1** | torso **occlusion mask** derived from the runtime R2 base — **BUILT 2026-07-31 (D-085), owner review pending**; tool `npm run avatar:r2-torso-mask`, template `tools/avatar/fixtures/r2-torso/`, record `docs/167a-r2-torso-occlusion-mask-review.md` | deterministic measurement, **no AI** (mirrors D-041/164K for accessory slots) | owner accepts the mask region |
 | **A2** | the torso **overlay artwork** inside that mask | **AI permitted** (D-034/D-040 Tier 2: isolated slot overlays only) | D-037 automated gates + human style/safety review + owner visual sign-off |
 | **A3** | **wiring PR** — `torso` into `R2_SUPPORTED_COSMETIC_SLOTS`, z + per-item transform, unit + Playwright tests, goldens | code | tests green, owner sign-off |
 

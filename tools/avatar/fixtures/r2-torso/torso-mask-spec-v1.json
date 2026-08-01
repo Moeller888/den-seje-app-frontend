@@ -1,0 +1,627 @@
+{
+  "tool": "build-r2-torso-occlusion-mask",
+  "toolVersion": "1.0.0",
+  "input": {
+    "path": "assets/avatar-r2/base/body-neutral-medium-v2.webp",
+    "sha256": "28765eea616dd92beb73273c67d6d603cabd9f92af8057d2d9a5fe50c01032f9",
+    "width": 512,
+    "height": 768,
+    "note": "RUNTIME base (R2_MANIFEST base neutral-medium: 2). The Phase-1 v1 PNG is NOT an input."
+  },
+  "decoder": {
+    "name": "libwebp dwebp",
+    "version": "1.5.0",
+    "sha256": "ee66951df0f868f0c41f49fcc2d0fc53072912b7357836317ca177cbae5eb343",
+    "vendored": "tools/avatar/vendor/dwebp.exe (gitignored)",
+    "bootstrap": "node tools/avatar/fetch-dwebp.mjs"
+  },
+  "output": {
+    "width": 1024,
+    "height": 1536,
+    "upscale": 2,
+    "solidThreshold": 128,
+    "featherMax": 4
+  },
+  "landmarks": {
+    "locked": {
+      "shoulderY": 560,
+      "sleeveEndY": 714,
+      "hemY": 902,
+      "crotchY": 1000,
+      "fingertipY": 1054,
+      "seamX0": 372,
+      "seamX1": 640
+    },
+    "measured": {
+      "shoulderY": 562,
+      "sleeveEndY": 714,
+      "hemY": 904,
+      "crotchY": 1000,
+      "fingertipY": 1057,
+      "seamX0": 388,
+      "seamX1": 627
+    },
+    "toleranceMasterPx": 24
+  },
+  "masks": {
+    "torso-occlusion-hard-v1.png": {
+      "px": 97698,
+      "bbox": {
+        "x0": 328,
+        "y0": 524,
+        "x1": 697,
+        "y1": 903
+      },
+      "sha256": "17baddfaa22b45162dad1940c23e9fee07d524688de136030cd6fc0889f34e7a",
+      "bytes": 10246
+    },
+    "torso-edit-allowed-v1.png": {
+      "px": 124027,
+      "bbox": {
+        "x0": 328,
+        "y0": 524,
+        "x1": 699,
+        "y1": 999
+      },
+      "sha256": "84ed7276db084c4a49d3897c0546baa3f7a95a0abc7eead603f4ce2254bae659",
+      "bytes": 10622
+    },
+    "torso-protect-v1.png": {
+      "px": 1448837,
+      "bbox": {
+        "x0": 0,
+        "y0": 0,
+        "x1": 1023,
+        "y1": 1535
+      },
+      "sha256": "b2e2a8cc6a828aca086fa715b3ca05d83f6ec7f7ef93da03d2abf6499d2f53f7",
+      "bytes": 10608
+    }
+  },
+  "hemExtension": {
+    "px": 25468,
+    "bbox": {
+      "x0": 372,
+      "y0": 902,
+      "x1": 639,
+      "y1": 999
+    }
+  },
+  "tee": {
+    "px": 97702,
+    "topY": 524,
+    "bbox": {
+      "x0": 328,
+      "y0": 524,
+      "x1": 697,
+      "y1": 903
+    },
+    "how": "8-connected garment components seeded from the mid-torso; the shoes are grey too but form their own components and never touch the seed"
+  },
+  "residues": {
+    "collarAboveShoulderLine": {
+      "status": "CLOSED",
+      "teeCollarPx": 3404,
+      "uncoveredPx": 0,
+      "bbox": {
+        "x0": 388,
+        "y0": 524,
+        "x1": 639,
+        "y1": 559
+      },
+      "bandMasterPx": 60,
+      "band": {
+        "y0": 500,
+        "y1": 559
+      },
+      "note": "Was an accepted 2,740 px residue in the first A1 cut, which obeyed a flat '0 px at y < shoulderY' rule. The garment is now identified topologically, so the collar curve is inside the mask and the D-037 full-occlusion requirement is met."
+    },
+    "nonTeeGreyInCollarBand": {
+      "px": 96,
+      "adjacentToTee": 1,
+      "fartherThan10px": 36,
+      "why": "Fabric-coloured pixels in the band that are NOT part of the connected garment — anti-aliased blends along the jaw/ear/neck contour. Measured, not covered: they belong to the head, and the anatomy gates forbid masking there."
+    },
+    "detachedFringe": {
+      "reachableViaFeather": 10,
+      "detachedFringePx": 12,
+      "tolerance": 16,
+      "beyondMaxDistance": 0,
+      "maxDistance": 8,
+      "pixels": [
+        {
+          "x": 699,
+          "y": 706,
+          "alpha": 128,
+          "distanceToMask": 4.1
+        },
+        {
+          "x": 699,
+          "y": 707,
+          "alpha": 128,
+          "distanceToMask": 4.5
+        },
+        {
+          "x": 698,
+          "y": 708,
+          "alpha": 128,
+          "distanceToMask": 4.2
+        },
+        {
+          "x": 699,
+          "y": 708,
+          "alpha": 128,
+          "distanceToMask": 5
+        },
+        {
+          "x": 698,
+          "y": 709,
+          "alpha": 128,
+          "distanceToMask": 5
+        },
+        {
+          "x": 699,
+          "y": 709,
+          "alpha": 128,
+          "distanceToMask": 5.7
+        },
+        {
+          "x": 638,
+          "y": 888,
+          "alpha": 255,
+          "distanceToMask": 5
+        },
+        {
+          "x": 639,
+          "y": 888,
+          "alpha": 255,
+          "distanceToMask": 6
+        },
+        {
+          "x": 640,
+          "y": 888,
+          "alpha": 255,
+          "distanceToMask": 7
+        },
+        {
+          "x": 638,
+          "y": 889,
+          "alpha": 255,
+          "distanceToMask": 5
+        },
+        {
+          "x": 639,
+          "y": 889,
+          "alpha": 255,
+          "distanceToMask": 6
+        },
+        {
+          "x": 640,
+          "y": 889,
+          "alpha": 255,
+          "distanceToMask": 7
+        }
+      ]
+    }
+  },
+  "gates": [
+    {
+      "id": "landmark:shoulderY",
+      "pass": true,
+      "detail": {
+        "locked": 560,
+        "measured": 562,
+        "delta": 2,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:sleeveEndY",
+      "pass": true,
+      "detail": {
+        "locked": 714,
+        "measured": 714,
+        "delta": 0,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:hemY",
+      "pass": true,
+      "detail": {
+        "locked": 902,
+        "measured": 904,
+        "delta": 2,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:crotchY",
+      "pass": true,
+      "detail": {
+        "locked": 1000,
+        "measured": 1000,
+        "delta": 0,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:fingertipY",
+      "pass": true,
+      "detail": {
+        "locked": 1054,
+        "measured": 1057,
+        "delta": 3,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:seamX0",
+      "pass": true,
+      "detail": {
+        "locked": 372,
+        "measured": 388,
+        "delta": 16,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "landmark:seamX1",
+      "pass": true,
+      "detail": {
+        "locked": 640,
+        "measured": 627,
+        "delta": 13,
+        "tolerance": 24
+      }
+    },
+    {
+      "id": "no-semantic-skin-in-mask",
+      "pass": true,
+      "detail": {
+        "skinInHard": 0,
+        "skinInEdit": 0,
+        "sample": [],
+        "note": "hue-based, so skin in shadow counts as skin"
+      }
+    },
+    {
+      "id": "tee-line-work-covered",
+      "pass": true,
+      "detail": {
+        "ownedTotal": 2280,
+        "ownedCovered": 2276,
+        "ratio": 0.99825,
+        "missingSample": [
+          {
+            "x": 548,
+            "y": 540
+          },
+          {
+            "x": 549,
+            "y": 540
+          },
+          {
+            "x": 548,
+            "y": 541
+          },
+          {
+            "x": 549,
+            "y": 541
+          }
+        ]
+      }
+    },
+    {
+      "id": "neckline-contour-matches-garment",
+      "pass": true,
+      "detail": {
+        "rowsChecked": 77,
+        "rowsOutOfTolerance": 0,
+        "worstDeltaPx": 1,
+        "tolerancePx": 2,
+        "sample": []
+      }
+    },
+    {
+      "id": "base-tee-garment-uncovered",
+      "pass": true,
+      "detail": {
+        "teeTotalPx": 97702,
+        "uncoveredPx": 0,
+        "conflicts": {
+          "skinOrNeck": 0,
+          "forearmHand": 0,
+          "leg": 0,
+          "other": 0
+        },
+        "sample": [],
+        "paintableButNotMandatoryPx": 4,
+        "paintableSample": [
+          {
+            "x": 548,
+            "y": 540
+          },
+          {
+            "x": 549,
+            "y": 540
+          },
+          {
+            "x": 548,
+            "y": 541
+          },
+          {
+            "x": 549,
+            "y": 541
+          }
+        ],
+        "note": "uncovered = outside BOTH hard and edit; the edit-only pixels are island-rule casualties, bounded by FRINGE_TOLERANCE_PX"
+      }
+    },
+    {
+      "id": "above-shoulder-only-tee-collar",
+      "pass": true,
+      "detail": {
+        "px": 0,
+        "limit": "y < 560",
+        "teeTopY": 524
+      }
+    },
+    {
+      "id": "no-px-at-or-below-crotch",
+      "pass": true,
+      "detail": {
+        "px": 0,
+        "limit": "y >= 1000"
+      }
+    },
+    {
+      "id": "outboard-below-sleeve-end-is-tee-fabric-only",
+      "pass": true,
+      "detail": {
+        "nonTeePx": 0,
+        "teeFabricPx": 0,
+        "corridor": [
+          372,
+          640
+        ],
+        "note": "the longer sleeve's tail reaches below the sleeve-end line and outboard of the corridor; it is fabric, so it is covered — anatomy out there is not"
+      }
+    },
+    {
+      "id": "no-head-or-neck",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "no-forearm-or-hand",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "no-legs",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "edit-inside-silhouette",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "hard-inside-solid-figure",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "tee-fabric-fully-covered",
+      "pass": true,
+      "detail": {
+        "fabricTotal": 95332,
+        "fabricCovered": 95332,
+        "coverage": 1
+      }
+    },
+    {
+      "id": "no-unreachable-garment",
+      "pass": true,
+      "detail": {
+        "reachableViaFeather": 10,
+        "detachedFringePx": 12,
+        "tolerance": 16,
+        "beyondMaxDistance": 0,
+        "maxDistance": 8,
+        "pixels": [
+          {
+            "x": 699,
+            "y": 706,
+            "alpha": 128,
+            "distanceToMask": 4.1
+          },
+          {
+            "x": 699,
+            "y": 707,
+            "alpha": 128,
+            "distanceToMask": 4.5
+          },
+          {
+            "x": 698,
+            "y": 708,
+            "alpha": 128,
+            "distanceToMask": 4.2
+          },
+          {
+            "x": 699,
+            "y": 708,
+            "alpha": 128,
+            "distanceToMask": 5
+          },
+          {
+            "x": 698,
+            "y": 709,
+            "alpha": 128,
+            "distanceToMask": 5
+          },
+          {
+            "x": 699,
+            "y": 709,
+            "alpha": 128,
+            "distanceToMask": 5.7
+          },
+          {
+            "x": 638,
+            "y": 888,
+            "alpha": 255,
+            "distanceToMask": 5
+          },
+          {
+            "x": 639,
+            "y": 888,
+            "alpha": 255,
+            "distanceToMask": 6
+          },
+          {
+            "x": 640,
+            "y": 888,
+            "alpha": 255,
+            "distanceToMask": 7
+          },
+          {
+            "x": 638,
+            "y": 889,
+            "alpha": 255,
+            "distanceToMask": 5
+          },
+          {
+            "x": 639,
+            "y": 889,
+            "alpha": 255,
+            "distanceToMask": 6
+          },
+          {
+            "x": 640,
+            "y": 889,
+            "alpha": 255,
+            "distanceToMask": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "feather-within-4px",
+      "pass": true,
+      "detail": {
+        "featherPx": 1015,
+        "violations": 0,
+        "maxRadius": 4
+      }
+    },
+    {
+      "id": "protect-is-complement-of-edit",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "protect-covers:head-neck",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "protect-covers:forearm-hand",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "protect-covers:leg",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "hem-extension-in-corridor",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "fingertip-clearance",
+      "pass": true,
+      "detail": {
+        "px": 0,
+        "from": 1046
+      }
+    },
+    {
+      "id": "masks-binary",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "id": "hard-is-single-region",
+      "pass": true,
+      "detail": {
+        "components": 1,
+        "sizes": [
+          97698
+        ]
+      }
+    },
+    {
+      "id": "no-specks",
+      "pass": true,
+      "detail": {
+        "minComponent": 64,
+        "smallest": 97698
+      }
+    },
+    {
+      "id": "hard-not-on-bare-skin",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "edit-not-on-bare-skin",
+      "pass": true,
+      "detail": {
+        "px": 0
+      }
+    },
+    {
+      "id": "collar-zone-present-and-connected",
+      "pass": true,
+      "detail": {
+        "collarPxAboveShoulder": 3400,
+        "hardRegions": 1
+      }
+    }
+  ],
+  "status": "A1_BUILT_GATES_PASS_OWNER_VISUAL_REVIEW_REQUIRED",
+  "boundaries": {
+    "d037": "CONDITIONAL — not discharged by this tool",
+    "d083Fallback": "unchanged — whole-avatar C2 while an unrenderable cosmetic is equipped",
+    "avatarR2": false,
+    "wroteRuntimeAsset": false,
+    "wroteR2Manifest": false,
+    "aiUsed": false
+  }
+}

@@ -158,6 +158,33 @@ _Last reviewed: 2026-07-01._
   and stop before the fingertips. **`AVATAR_R2` stays `false`**; pilot status unchanged; until the owner
   decides, **D-083's C2 fallback stays the shipped behaviour**. See
   `docs/167a-r2-torso-asset-production-plan.md`, `docs/project-state.md` (D-084).
+  **▶ Option A — step A1 BUILT: torso occlusion mask + slot template (2026-07-31, D-085).**
+  Deterministic, NON-AI tool (`npm run avatar:r2-torso-mask`, read-only by default) derives three masks —
+  hard / edit-allowed / protect — from the **runtime** base `body-neutral-medium-v2.webp` (pinned SHA) on
+  the Master canvas 1024×1536, re-measuring and asserting the D-084 landmarks on every run. Tracked as a
+  **production template** under `tools/avatar/fixtures/r2-torso/` — **not** a runtime asset; nothing was
+  promoted to `assets/`. 28/28 gates, byte-identical across independent builds, unit 236/236. **Two
+  disclosed residues:** a 6 px detached sleeve-tip fringe (bounded, sub-pixel at render size) and
+  2,740 px of the tee's collar curve above the locked shoulder line — **the latter was a D-037 violation
+  and is CLOSED in revision 2 (same PR): the garment is now identified topologically (95,799 px, top row
+  528), a binding gate `base-tee-garment-uncovered = 0 px` covers the whole tee including the collar, and
+  the grey neckline ring is gone at all four render sizes. Revision 2 also closed the reproducibility
+  gap: the vendored decoder is CHECKSUM-pinned in `fetch-dwebp.mjs`, the builder refuses an unpinned
+  binary, and the determinism tests fail loudly instead of skipping (unit 241/241, 0 skipped). CI still
+  does not run `npm run test:unit` at all — the minimal workflow step is written out in the review doc
+  §5.2 but deliberately NOT made, since it downloads a third-party binary in CI and the runners are Linux
+  while the pinned binary is a Windows build.** **Revision 3 (2026-08-01): the owner spotted a SEMANTIC
+  INVERSION at the neckline and was right — nearest-RGB classification pushed the tee's dark collar ring
+  OUT of the mask (809 px) and pulled shadowed skin IN (93 px), and the coverage gate was circular
+  because it measured only what that same classifier had called garment. Meaning now comes from hue,
+  dark line work is assigned by OWNERSHIP (thin stroke within 4 px of the connected fabric, so the dark
+  trousers can never be adopted), and the band rule admits a pixel for what it IS rather than what it is
+  not. Three non-circular gates were added: skin-in-mask 0, line-work coverage 99.8 %, contour within
+  1 px of the garment's visible edge. Gates 34/34, unit 245/245, 0 skipped.** **A2 (artwork) and A3
+  (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
+  stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
+  **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
+  `docs/project-state.md` (D-085).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
