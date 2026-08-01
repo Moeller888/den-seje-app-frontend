@@ -252,14 +252,20 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `feat/avatar-r2-torso-force-c2-d083` | `4604bc5424843ed287710a6a3727fb48a15fc1c8` | D-083 unrenderable equipped cosmetic drops the whole avatar to C2 |
 | `docs/d083-post-merge-doc-consistency` | `cde16de862ec4ec1587a6d6ef3eb9b08af1aadeb` | post-merge doc contradictions resolved after D-083 |
 | `docs/r2-torso-asset-production-plan-d084` | `b18cac6d898f83c977606929b9ed9a0b14740e0b` | D-084 option-A torso asset production plan + measured mask spec |
+| `tools/r2-torso-occlusion-mask-d085` | `810161bebb0bb4c501f246160ed3f5fde55a6290` | D-085 A1 torso occlusion mask + slot template (tip = revision 3, the neckline-semantics fix) |
 
-Merge commits on `main` for the last four: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135),
-`dd4d408` (PR #137). Branches **not** deleted in that cleanup:
+Merge commits on `main` for the last five: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135),
+`dd4d408` (PR #137), `a2fe5db` (PR #139). Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
-Two branches are deliberately **absent** from this table because no decision entry cites them — they carried
-only the bookkeeping itself: `docs/deleted-branch-sha-reference` (`6a51e52`, merge `f275bfd`, PR #136) and
-the branch that added this row.
+**D-085 carried three commits**, and the register cites the branch rather than any single one, so all three
+are recorded here: `e25997e` (A1 as first built) · `ee05232` (revision 2 — full base-tee occlusion +
+checksum-pinned decoder) · `810161b` (revision 3 — the neckline semantic inversion, found by the owner on
+sight). The row above points at the tip.
+
+Branches are deliberately **absent** from this table when no decision entry cites them — they carried only
+the bookkeeping itself: `docs/deleted-branch-sha-reference` (`6a51e52`, merge `f275bfd`, PR #136),
+`docs/d084-branch-sha-row` (`e98798e`, merge `622493d`, PR #138) and the branch that added this row.
 
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
