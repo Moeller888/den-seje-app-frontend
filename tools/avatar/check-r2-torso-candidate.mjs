@@ -108,7 +108,13 @@ function boxDownscaleAlpha(alpha, w, h, tw, th) {
   return out;
 }
 
-export function checkCandidate(candidateBuf, masks, label = "candidate") {
+// A candidate may be partly CONSTRUCTED by the adapter (backfill of the mandatory region). That must
+// never be invisible in the verdict, so the adapter's sidecar is folded into the report and a
+// dominant fill blocks. The 25 % line is a judgement call, not a law of nature — it is written here so
+// the owner can argue with it rather than discover it.
+export const MAX_BACKFILL_SHARE = 0.25;
+
+export function checkCandidate(candidateBuf, masks, label = "candidate", meta = null) {
   const gates = []; const add = (id, pass, detail) => gates.push({ id, pass: !!pass, detail });
   const img = decodePng(candidateBuf, label);
   const { hard, edit, protect } = masks;
@@ -195,6 +201,23 @@ export function checkCandidate(candidateBuf, masks, label = "candidate") {
   gates.push({ id: "budget-advisory", pass: true, advisory: true,
     detail: { candidatePngBytes: candidateBuf.length, servedAreaEstimateBytes: est, note: "advisory only: the ≤50 KB budget is enforced on the encoded 512×768 WebP, not on this PNG" } });
 
+  // Backfill disclosure. Without a sidecar the provenance is simply unknown — say so rather than
+  // implying the whole image was drawn.
+  if (meta && meta.backfill) {
+    const b = meta.backfill;
+    gates.push({ id: "backfill-disclosure", pass: true, advisory: true, detail: {
+      backfilledPx: b.px, shareOfHardMask: b.shareOfHardMask, shareOfVisibleArtwork: b.shareOfVisibleArtwork,
+      largestContiguousRegionPx: b.largestContiguousRegionPx, touchesOuterContourPx: b.touchesOuterContourPx,
+      byBand: b.byBand, overscan: meta.overscan, alphaFloor: meta.alphaFloor, specksDropped: meta.specksDropped,
+      sourceRawSha256: meta.sourceRawSha256, candidateSha256: meta.candidateSha256 } });
+    add("backfill-not-dominant", (b.shareOfVisibleArtwork ?? 0) <= MAX_BACKFILL_SHARE,
+      { shareOfVisibleArtwork: b.shareOfVisibleArtwork, limit: MAX_BACKFILL_SHARE,
+        note: "above this the item is mostly adapter-constructed rather than drawn" });
+  } else {
+    gates.push({ id: "backfill-disclosure", pass: true, advisory: true, detail: {
+      backfilledPx: null, note: "no adapter sidecar next to this candidate — provenance unknown, assume nothing" } });
+  }
+
   const blocking = gates.filter((g) => !g.pass && !g.advisory);
   return {
     gates, verdict: blocking.length === 0 ? "PASS_AUTOMATED" : "REJECT",
@@ -272,7 +295,10 @@ function main(argv) {
   if (!file) { console.error("usage: node tools/avatar/check-r2-torso-candidate.mjs <candidate.png> | --selftest"); process.exitCode = 1; return; }
   if (!existsSync(file)) { console.error("candidate not found: " + file); process.exitCode = 1; return; }
   const buf = readFileSync(file);
-  const res = checkCandidate(buf, masks, rel(file));
+  const sidecar = file.replace(/\.png$/i, ".backfill.json");
+  let meta = null;
+  if (existsSync(sidecar)) { try { meta = JSON.parse(readFileSync(sidecar, "utf8")); } catch { meta = null; } }
+  const res = checkCandidate(buf, masks, rel(file), meta);
   report(res, rel(file));
   mkdirSync(OUT_DIR, { recursive: true });
   const out = join(OUT_DIR, "candidate-report.json");

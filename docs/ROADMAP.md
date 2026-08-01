@@ -196,7 +196,29 @@ _Last reviewed: 2026-07-01._
   and four-scale legibility incl. 52×78) and self-tests on five synthetic candidates, plus the art brief
   `docs/167a-r2-torso-a2-art-brief.md`. **No artwork produced, no AI called.** `torso` is still absent
   from `R2_SUPPORTED_COSMETIC_SLOTS`, **D-083's C2 fallback stays live**, `AVATAR_R2` stays `false`.
-  Unit 257/257. See `docs/project-state.md` (D-086). **A3
+  Unit 257/257. See `docs/project-state.md` (D-086).
+  **▶ A2 first candidate generated and REJECTED (2026-08-01, D-087).** Torso adapter built
+  (`npm run avatar:generate-openai-torso`, one image per run, key from env only, output gitignored) with
+  two deterministic non-AI steps after generation — **fit** (scale to COVER the mandatory region) and
+  **clip** (multiply by the edit mask) — because a raw generation cannot otherwise be judged. First
+  candidate: harness verdict **REJECT** on `hard-region-fully-opaque` (88.6 % — the armour tapers at the
+  waist and is notched at the neck while the mask is the wider tee shape), `alpha-clean-no-halo`
+  (193 orphan soft px — the API baked in a dark vignette despite `background: transparent`) and
+  `no-floating-islands`. **The art itself is on-brief**; the faults are mechanical and addressable.
+  **No fix applied and nothing promoted — the candidate is recorded as rejected, not iterated into a
+  pass.** Unit 264/264. See `docs/project-state.md` (D-087).
+  **▶ A2 candidate 2 PASSES the automated gates — still not accepted (2026-08-01, D-087 revision).**
+  Adapter fixes: alpha floor (the model baked a vignette into the "transparent" background), speck
+  threshold aligned with the judge's own definition, `--overscan`, `--no-backfill`, and **backfill** —
+  a deterministic fill of the mandatory region with the nearest garment-body colour, never over drawn
+  artwork and never sampling the outline stroke. **Two moments where the number lied and the picture
+  told the truth:** overscan 1.6 reached 99.86 % coverage while cropping the armour into a grey tunic,
+  and the first backfill passed every gate while dragging dark wedges into the shoulder corners. Both
+  were rejected on sight. Final candidate `31f4b2b6…`: 100 % mandatory coverage, one region, legible at
+  all four sizes, **8.55 % of visible artwork adapter-constructed and fully disclosed** in the report,
+  the sidecar and a magenta backfill map. Owner review set on the Desktop. Unit 279/279. **Not
+  accepted, not promoted, not wired** — `AVATAR_R2` `false`, D-083 fallback untouched, **D-088 reserved
+  for acceptance**. **A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,
