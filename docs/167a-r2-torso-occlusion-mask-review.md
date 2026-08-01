@@ -1,6 +1,9 @@
 # 167A — R2 torso occlusion mask + slot template (A1 of option A): build & review record, D-085
 
-**Status:** `A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`.
+**Status:** `A1_ACCEPTED` (owner, 2026-08-01 — see §9). Was `A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`.
+Acceptance covers **A1 only**: `D-037` stays **CONDITIONAL**, A2 (artwork) is **not** authorised, and the
+CI unit-test step of §5.2 is deliberately **not** taken up — the builder/determinism tests stay a local
+gate.
 
 **Revision 3 (2026-08-01) — the owner caught a semantic inversion at the neckline, and it was real.**
 Revision 2 decided ownership by nearest-RGB against three swatches. On the neckline that inverted the
@@ -187,19 +190,25 @@ tee — collar curve included — not just the band below the shoulder line.
 Also added in revision 2: `above-shoulder-only-tee-collar` · `outboard-below-sleeve-end-is-tee-fabric-only`
 · `edit-not-on-bare-skin` · `collar-zone-present-and-connected`.
 
-### 4.1 Revision-1 gate set (retained)
+### 4.1 The full gate set as it stands (34, all passing)
 
-`landmark:` ×7 (drift ≤24 px) · `no-px-above-shoulder` · `no-px-at-or-below-crotch` ·
-`no-mask-outboard-below-sleeve-end` · `no-head-or-neck` · `no-forearm-or-hand` · `no-legs` ·
-`edit-inside-silhouette` · `hard-inside-solid-figure` · `tee-occlusion-complete` ·
+`landmark:shoulderY` · `landmark:sleeveEndY` · `landmark:hemY` · `landmark:crotchY` ·
+`landmark:fingertipY` · `landmark:seamX0` · `landmark:seamX1` (drift ≤24 px) ·
+**`no-semantic-skin-in-mask`** · **`tee-line-work-covered`** · **`neckline-contour-matches-garment`** ·
+`base-tee-garment-uncovered` · `above-shoulder-only-tee-collar` · `no-px-at-or-below-crotch` ·
+`outboard-below-sleeve-end-is-tee-fabric-only` · `no-head-or-neck` · `no-forearm-or-hand` · `no-legs` ·
+`edit-inside-silhouette` · `hard-inside-solid-figure` · **`tee-fabric-fully-covered`** ·
 `no-unreachable-garment` · `feather-within-4px` · `protect-is-complement-of-edit` ·
 `protect-covers:head-neck` · `protect-covers:forearm-hand` · `protect-covers:leg` ·
 `hem-extension-in-corridor` · `fingertip-clearance` · `masks-binary` · `hard-is-single-region` ·
-`no-specks` · `hard-not-on-bare-skin`.
+`no-specks` · `hard-not-on-bare-skin` · `edit-not-on-bare-skin` · `collar-zone-present-and-connected`.
 
-Tee occlusion: **93,304 garment pixels in the band, 92,668 mandatory-covered (99.32 %)**; the remainder is
-accounted for exactly — 466 px on bare arms and 158 px on the arms' shaded inner edge, where covering is
-itself forbidden, plus the fringe below.
+Revision 3 renamed or replaced four gates that were phrased in terms of the old nearest-RGB classes:
+`tee-occlusion-complete` → `tee-fabric-fully-covered` (fabric of the garment, not "garment"-coloured
+pixels) · `no-px-above-shoulder` → `above-shoulder-only-tee-collar` · `no-mask-outboard-below-sleeve-end`
+→ `outboard-below-sleeve-end-is-tee-fabric-only` · and `no-unreachable-garment` now counts **fabric**
+only. The revision-2 figure quoted here previously (93,304 garment px, 99.32 % covered) counted shadowed
+skin as garment and is superseded by §4.0.
 
 ---
 
@@ -349,16 +358,26 @@ participant log unchanged.
 
 | field | value |
 |---|---|
-| Reviewed by | _(owner)_ |
-| Date | _(pending)_ |
-| Verdict | ☐ ACCEPT template (→ `A1_ACCEPTED`) · ☐ ACCEPT with changes · ☐ REJECT |
-| Neckline shape the mask dictates (§7) | _(pending)_ |
-| Bounded 6 px sleeve-tip residue §5(b) | ☐ accepted · ☐ not accepted |
-| CI unit-test step §5.2 | ☐ authorise the workflow change · ☐ leave as a local gate |
-| Authorises A2 (artwork) | ☐ yes — requires discharging D-037 · ☐ not yet |
+| Reviewed by | **Owner** |
+| Date | **2026-08-01** |
+| Verdict | **☑ ACCEPT template → `A1_ACCEPTED`** |
+| Review basis | The revision-3 images, reviewed at full size and at **8× magnification** on the neckline (original · binary mask · overlay · semantic class map · error map) plus the four-scale sheet. Copies at `Desktop\D085-review-rev3\`. |
+| Neckline shape the mask dictates (§7) | **Accepted.** The dark collar ring is inside the mask; the 1 px anti-aliased line on the skin boundary reads as the garment's own neckline edge and is accepted as-is. |
+| Bounded 6 px sleeve-tip residue §5(b) | **☑ accepted** — sub-pixel at every render size, hard-bounded at 16 px |
+| 4 px paintable-but-not-mandatory line work §5(d) | **☑ accepted** — reachable through the edit zone |
+| CI unit-test step §5.2 | **☑ leave as a local gate.** The workflow change is **not** authorised: it would download a third-party binary in CI, and the Linux runners would need a second pinned checksum. `npm run test:unit` remains the local gate. |
+| Authorises A2 (artwork) | **☐ not yet** — **`D-037` stays CONDITIONAL and is NOT discharged.** A1's acceptance does not open artwork production; that needs its own decision. |
 
-Until this table is filled in, A1 is built but **not accepted**, and no A2 work may start.
-`A1_ACCEPTED` additionally requires: full base-tee occlusion proven (**done — gate
-`base-tee-garment-uncovered = 0`**), clean-clone reproducibility proven (**done — checksum-pinned
-bootstrap, no skipped tests; CI wiring still open per §5.2**), and the regenerated review images shown to
-and accepted by the owner (**pending — this table**).
+**Status: `A1_ACCEPTED` (2026-08-01).** The three preconditions are met: full base-tee occlusion proven
+(`base-tee-garment-uncovered = 0`, `tee-fabric-fully-covered` 100 %, and the semantic gates that do not
+consult the classifier's own output), clean-clone reproducibility proven (checksum-pinned decoder
+bootstrap, no skipped tests, byte-identical across builds), and the regenerated review images reviewed
+and accepted by the owner.
+
+**What acceptance does NOT do:** it does not discharge D-037, does not activate the torso slot, does not
+change `R2_SUPPORTED_COSMETIC_SLOTS`, and does not alter D-083's whole-avatar C2 fallback, which remains
+the live protection for the Ridderdragt. `AVATAR_R2` stays `false`; pilot status stays
+`PILOT_WAVE_1_IN_PROGRESS`.
+
+**Next step, when the owner wants it:** discharge the D-037 condition in its own decision entry, which
+unblocks **A2** (artwork inside this mask; AI permitted per D-034), and then **A3** (wiring).
