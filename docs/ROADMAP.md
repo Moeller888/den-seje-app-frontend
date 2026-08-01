@@ -270,6 +270,22 @@ _Last reviewed: 2026-07-01._
   Unit **328/328**, torso spec **14/14**, classifier `full`. **No golden added on purpose:** baking a
   baseline before the owner has looked would let the suite bless an unreviewed appearance. Review set
   in `_avatar-artefakter\D090-runtime-review\`. See `docs/project-state.md` (D-090).
+  **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
+  owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
+  skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
+  the legs, and the garment tracks the body at all four D-071 sizes. **One observation was put to
+  the owner first and the acceptance covers it:** at the smallest sizes the armour's silhouette is
+  close to the base tee's — the `legible-at-render-sizes` gate measures **coverage**, not
+  **distinguishability from wearing nothing**, so this was a product judgement no gate could make.
+  A read-only consistency audit ran before the acceptance and **corrected a wording error, not a
+  defect**: D-090's "the C2 render path is byte-unchanged" was imprecise — `git diff` contains no
+  hunk touching `composeC2Layers`, `c2CosmeticLayers` or `baseLayersForC2`, so **those functions are
+  byte-identical**; the module changed only because the import line and R2-only code share the file.
+  Re-proved with existing tests only (unit 39/39, torso Playwright 14/14) plus green main CI on
+  `aa1b8e9`. **The track is done: A1 (D-085) → A2 (D-087/D-088) → A3.1 (D-089) → A3.2 (D-090/D-091).**
+  **Acceptance activates nothing:** `AVATAR_R2` stays `false`, pilot status unchanged, no wave
+  widened, and **no golden baseline yet** — now unblocked, but its own PR under the regen → gallery →
+  owner-approval flow, since it changes what CI enforces. See `docs/project-state.md` (D-091).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
