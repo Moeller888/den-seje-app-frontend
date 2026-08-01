@@ -164,6 +164,13 @@ Support for this slot is per ITEM: an unregistered torso item still drops the wh
 the garment is a **mandatory** layer, so a failed load does the same rather than leaving an R2 figure
 without the paid item. Shop previews stay C2 (D-077) and **`AVATAR_R2` remains `false`**.
 
-Status **`A3.2_RUNTIME_WIRED — OWNER_VISUAL_REVIEW_REQUIRED`**: the automated gates pass, but no golden
-baseline was committed, because that would let the suite bless an appearance the owner has not yet
-reviewed. Review set: `_avatar-artefakter\D090-runtime-review\`.
+Status **`A3.2_ACCEPTED`** (owner, 2026-08-02, D-091). Reviewed on the 11-file runtime set in
+`_avatar-artefakter\D090-runtime-review\` and accepted, **including the observation that at the
+smallest render sizes the armour's silhouette is close to the base tee's** — the legibility gate
+measures coverage, not distinguishability from wearing nothing, so that was a product judgement, made
+deliberately rather than by a gate.
+
+**Option A is complete:** A1 mask (D-085) → A2 artwork (D-087/D-088) → A3.1 promotion (D-089) → A3.2
+wiring (D-090/D-091). **Acceptance activates nothing:** `AVATAR_R2` stays `false`, pilot status is
+unchanged, and **the golden baseline is now unblocked but deliberately not part of this** — it changes
+what CI enforces and belongs in its own PR under the regen → gallery → owner-approval flow.
