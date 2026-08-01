@@ -264,10 +264,12 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `feat/a2-torso-adapter-d087` | `cf93bc898592cd17df84b47a7413dc00440f2654` | D-087 A2 torso adapter (tip = the revision: alpha floor, speck fix, overscan, disclosed backfill) |
 | `docs/d088-a2-owner-acceptance` | `fe8ce7a66670974dc9a1ce548aab522c2d0aacf0` | D-088 owner acceptance of A2 candidate 2, incl. the disclosed adapter-constructed pixels |
 | `feat/avatar-r2-torso-asset-promotion-d089` | `783c299e99066d7e4679b7c3ff993dbc6ab61a2f` | D-089 A3.1 — accepted Ridderdragt promoted to a tracked 512×768 lossless WebP asset, no wiring |
+| `docs/d089-branch-sha-row` | `61fa939fe986f6dc61636656ac583eac6fb27c53` | D-088/D-089 branch tips + the missing merge commits recorded |
+| `feat/avatar-r2-torso-runtime-wiring-d090` | `52674acdc41ee75219dceb759980c6ccb2c59d0e` | D-090 A3.2 — torso wired into the R2 runtime (per-item gating, mandatory garment layer) |
 
 Merge commits on `main`: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135), `dd4d408`
 (PR #137), `a2fe5db` (PR #139), `045998b` (PR #142), `9dd8c62` (PR #144), `12ad136` (PR #145),
-`a7c0853` (PR #146). Branches **not** deleted in that cleanup:
+`a7c0853` (PR #146), `de5d0e0` (PR #147), `aa1b8e9` (PR #148). Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
 **D-085 carried three commits**, and the register cites the branch rather than any single one, so all three
