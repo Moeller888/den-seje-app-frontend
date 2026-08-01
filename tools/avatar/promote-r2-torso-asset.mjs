@@ -345,9 +345,14 @@ function runtimeGuards() {
   if (!/export const AVATAR_R2 = false;/.test(js)) fail("AVATAR_R2 is not `false` in js/avatar-layers.js");
   const slots = js.match(/R2_SUPPORTED_COSMETIC_SLOTS\s*=\s*\[([^\]]*)\]/);
   if (!slots) fail("could not read R2_SUPPORTED_COSMETIC_SLOTS");
-  if (/["']torso["']/.test(slots[1])) fail("`torso` is already in R2_SUPPORTED_COSMETIC_SLOTS — A3.1 must not wire the slot");
   if (!/r2RequiresC2Fallback/.test(js)) fail("D-083 fallback helper missing from js/avatar-layers.js");
-  return { avatarR2: false, torsoSupported: false, d083FallbackPresent: true };
+  // Whether the slot is wired is RECORDED, not enforced. The original A3.1 guard hard-failed when
+  // `torso` appeared in the slot list — which was right while wiring did not exist, but it made this
+  // tool refuse to run the moment D-090 wired the slot, i.e. it blocked exactly the re-verification
+  // a later step needs. What this tool must guarantee is that IT never wires anything, and that is
+  // enforced structurally by assertWritable (it cannot write js/ at all), not by inspecting the world.
+  const torsoSupported = /["']torso["']/.test(slots[1]);
+  return { avatarR2: false, torsoSupported, d083FallbackPresent: true };
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────────────────────
@@ -358,7 +363,7 @@ export function run({ promote = false, review = false, source = DEFAULT_SOURCE }
   say(`${TOOL} v${TOOL_VERSION} — ${promote ? "--promote" : "verify only (no writes)"}`);
 
   const guards = runtimeGuards();
-  say("✓ runtime guards: AVATAR_R2 false · torso NOT in R2_SUPPORTED_COSMETIC_SLOTS · D-083 fallback present");
+  say(`✓ runtime guards: AVATAR_R2 false · D-083 fallback present · torso slot wired: ${guards.torsoSupported ? "yes (D-090)" : "no"} (recorded, not enforced — this tool cannot write js/)`);
 
   const encSha = requireBinary(CWEBP, "cwebp", ENCODER_SHA256);
   const decSha = requireBinary(DWEBP, "dwebp", DECODER_SHA256);

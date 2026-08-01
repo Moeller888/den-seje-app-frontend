@@ -40,9 +40,12 @@ const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
 
 test("headwear is an R2-supported cosmetic slot; still-gated slots are NOT", () => {
-  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face"]);
+  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face", "torso"]);   // torso added by D-090
   for (const s of ["aura", "back", "headwear"]) assert.equal(isR2SupportedCosmeticSlot(s), true, s);
-  for (const s of ["neck", "torso", "body", "hat", "glasses", "mask", undefined, null]) assert.equal(isR2SupportedCosmeticSlot(s), false, String(s));
+  // `torso` left this list in D-090 (per-ITEM gating, owned by the torso wiring suite). The rest
+  // stay false: neck/body have no catalog content, and hat/glasses/mask are legacy names that are
+  // not slot keys at all.
+  for (const s of ["neck", "body", "hat", "glasses", "mask", undefined, null]) assert.equal(isR2SupportedCosmeticSlot(s), false, String(s));
 });
 
 test("R2 headwear z sits ABOVE the R2 hair", () => {

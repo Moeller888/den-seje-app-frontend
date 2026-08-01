@@ -341,7 +341,7 @@ export const R2_SERVED = { width: 512, height: 768 };
 // Only body_type "neutral" × skin_tone "medium" is supported by the raster set (U2);
 // every other identity stays on the C2/SVG path by resolver-null fallback.
 export const R2_MANIFEST = {
-  version:  4,
+  version:  5,
   base:     { "neutral-medium": 2 }, // body-neutral-medium-v2.webp — the DECOMPOSED D-057 base (no
                                      // face/eyes/hair). The Phase-1 baked v1 PNG stays on disk as the
                                      // historical/rollback asset but is no longer referenced (D-018).
@@ -357,6 +357,15 @@ export const R2_MANIFEST = {
   eyesFixed:{ "neutral": 1 },     // eyes/eyes-neutral-fixed-v1.webp (z4)
   eyelid:   {},                   // Option A countersigned: CSS-ellipse lid — no raster asset
   hair:     { "northstar": 1 },   // hair/hair-northstar-v1.webp (z40, multiply × hair token)
+  // COSMETIC garments keyed by the CATALOG ITEM (D-090). Unlike every entry above — which is part of
+  // the mandatory figure — this registers a shop item's R2-SPECIFIC artwork: torso/armor-knight-r2-v1
+  // .webp, the Ridderdragt re-authored for the R2 silhouette (A2, accepted D-088; promoted D-089,
+  // sha 78ca7bf5…). The C2 path keeps using the existing /assets/avatar/shirt/armor-knight.svg, so
+  // this is a PER-RENDER-PATH asset on the SAME `shop_items` row: same item id, same purchase, same
+  // ownership, no catalog or database change (D-084 §7c).
+  // A torso item that is NOT registered here has no R2 artwork and therefore still forces the whole
+  // avatar to C2 via D-083 — the registration IS the renderability contract.
+  torso:    { "armor-knight": 1 },// torso/armor-knight-r2-v1.webp (z1, above base, far below hair)
 };
 
 // Normalise a manifest entry → { v, ext } or null. WebP is the default/production
@@ -415,6 +424,18 @@ export function blushSrcForR2() {
 export function hairSrcForR2(identity) {
   const e = r2Entry(R2_MANIFEST.hair["northstar"]);
   return e ? r2Path("hair", "hair-northstar", e) : null;
+}
+
+// Torso GARMENT resolver (D-090). Keyed by the catalog item's stable asset basename — the same key
+// the headwear/eyes/face transform overrides use — so no new identifier is introduced anywhere.
+// Returns the R2-specific artwork ONLY for a registered item, else null. Null is meaningful here:
+// it is what makes an unregistered torso item fall the whole avatar to C2 (D-083) instead of
+// rendering an R2 figure with the garment missing.
+export function torsoSrcForR2(itemKey) {
+  const key = (typeof itemKey === "string" && itemKey.length > 0) ? itemKey : null;
+  if (!key) return null;
+  const e = r2Entry(R2_MANIFEST.torso[key]);
+  return e ? r2Path("torso", key + "-r2", e) : null;
 }
 
 // Whether a Phase-1 raster BASE is available (base alone; face/eyes/hair are baked into
@@ -514,9 +535,35 @@ export function isR2Phase1SafeSlot(slot) {
 // are NEVER modified. This is DISTINCT from R2_PHASE1_SAFE_SLOTS (aura/back — behind the figure,
 // anchor-independent, no transform), which is left byte-functionally UNCHANGED.
 // Still GATED (no R2 z / transform here): neck, torso, body.
-export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes", "face"];
+export const R2_SUPPORTED_COSMETIC_SLOTS = ["aura", "back", "headwear", "eyes", "face", "torso"];
 export function isR2SupportedCosmeticSlot(slot) {
   return R2_SUPPORTED_COSMETIC_SLOTS.indexOf(slot) !== -1;
+}
+
+// ── D-090: slots whose R2 support is PER ITEM, not per slot ──────────────────
+// aura/back/headwear/eyes/face re-seat the SAME C2 asset onto the R2 figure, so slot support implies
+// item support: if the C2 asset exists, the R2 layer exists. `torso` is the first slot where that is
+// false. The C2 armour is drawn for the C2 arm pose and lands on 0 px of the R2 figure (measured,
+// D-082), so an R2 torso item needs its OWN artwork — and only `armor-knight` has any.
+// Therefore support for this slot is decided by the manifest, item by item. A second torso item
+// added to the shop tomorrow would have no R2 artwork and MUST keep falling back to C2 rather than
+// rendering an R2 avatar in its underwear.
+export const R2_ITEM_ASSET_SLOTS = ["torso"];
+export function r2SlotNeedsItemAsset(slot) {
+  return R2_ITEM_ASSET_SLOTS.indexOf(slot) !== -1;
+}
+// The R2-specific src for a cosmetic, or null when the slot re-seats the C2 asset instead.
+export function r2ItemAssetSrcFor(slot, c2Src) {
+  if (slot === "torso") return torsoSrcForR2(r2CosmeticBasename(c2Src));
+  return null;
+}
+// Can THIS cosmetic entry render on the R2 stack? Slot support first, then — for the item-asset
+// slots — the existence of registered R2 artwork for this exact item.
+export function r2CosmeticRenderable(c) {
+  if (!c || !c.src || typeof c.z !== "number") return false;   // renders on NEITHER path
+  if (!isR2SupportedCosmeticSlot(c.slot)) return false;
+  if (r2SlotNeedsItemAsset(c.slot)) return !!r2ItemAssetSrcFor(c.slot, c.src);
+  return true;
 }
 
 // ── D-082 option B: NO SILENT ITEM LOSS on the R2 stack ──────────────────────
@@ -538,7 +585,7 @@ export function r2UnrenderableCosmeticSlots(cosmetics) {
   const out = [];
   for (const c of list) {
     if (!c || !c.src || typeof c.z !== "number") continue;  // not renderable on EITHER path → ignore
-    if (isR2SupportedCosmeticSlot(c.slot)) continue;        // supported → renders on the R2 stack
+    if (r2CosmeticRenderable(c)) continue;                  // supported → renders on the R2 stack
     if (out.indexOf(c.slot) === -1) out.push(c.slot);
   }
   return out;
@@ -557,7 +604,12 @@ export function r2RequiresC2Fallback(cosmetics) {
 // per-item z ABOVE the hair (see R2_FACE_Z_OVERRIDES). Each cosmetic is DOM-tagged with its OWN distinct
 // marker ("eyes-cosmetic" / "face-cosmetic", see composeR2Layers) so it never collides with the
 // mandatory internal "eyes"/"face" layers and the blink/expression engines never touch it.
-export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45, eyes: 6, face: 8 };
+// The torso GARMENT sits at 1: immediately above the R2 base (0) — it replaces the base tee's pixels
+// and its A1 mask is measured against that exact silhouette — and below every face-area layer
+// (blush 2, face 3, eyes 4, blink 5, eyes-cosmetic 6, face-cosmetic 8) and far below hair 40 /
+// headwear 45, per the D-084 §5 contract "above base, below hair". Nothing else paints on the body,
+// so 1 is unambiguous rather than merely available.
+export const R2_COSMETIC_Z = { aura: C2_LAYER_Z.aura, back: C2_LAYER_Z.back, headwear: 45, eyes: 6, face: 8, torso: 1 };
 // Wrapper CSS transform (+ origin) mapping a C2-canvas headwear asset onto the R2 head. Applied to the
 // cosmetic layer only (source SVG untouched). A STANDARD transform for all hats, with version-controlled
 // per-item overrides keyed by the STABLE asset basename (e.g. "pirate-hat"). Calibrated against all five

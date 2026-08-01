@@ -43,9 +43,16 @@ test.afterAll(async () => { await new Promise<void>((r) => server.close(() => r(
 
 // The live catalog rows this spec mirrors (D-082 §2): one torso item, plus two R2-supported items.
 const ARMOR = "armor-knight";
+// A second torso item with NO R2 artwork — the shape of any torso item added after D-090. It is the
+// one that must still force the whole avatar to C2, so the D-083 protection keeps being exercised.
+const UNWIRED = "future-robe";
 const HAT = "hat-blue";
 const GLASSES = "glasses-round";
 const armorUrl = `/assets/avatar/shirt/${ARMOR}.svg`;
+// Deliberately points at a REAL file so the C2 render is not testing a 404. What makes it unwired is
+// its basename: `cape-red` is not registered in R2_MANIFEST.torso, so it has no R2 artwork.
+const unwiredUrl = "/assets/avatar/shirt/cape-red.svg";
+const ARMOR_R2 = "/assets/avatar-r2/torso/armor-knight-r2-v1.webp";
 const hatUrl = `/assets/avatar/hat/${HAT}.svg`;
 const glassesUrl = "/assets/avatar/glasses/glasses-round-basic-v1.svg";
 const UID = "00000000-0000-4000-8000-000000000001";
@@ -59,6 +66,7 @@ const ITEMS = [
   { id: ARMOR, name: "Ridderdragt", price: 300, rarity: "rare", type: "avatar", image_url: armorUrl, slot_type: "torso", layer_order: 2 },
   { id: HAT, name: HAT, price: 10, rarity: "common", type: "avatar", image_url: hatUrl, slot_type: "headwear", layer_order: 5 },
   { id: GLASSES, name: "Runde Briller", price: 50, rarity: "common", type: "avatar", image_url: glassesUrl, slot_type: "eyes", layer_order: 7 },
+  { id: UNWIRED, name: "Fremtidig kappe", price: 100, rarity: "rare", type: "avatar", image_url: unwiredUrl, slot_type: "torso", layer_order: 2 },
 ];
 
 function makeRoute(equipped: Record<string, string>) {
@@ -118,6 +126,8 @@ function probe(page: any, sel: string) {
       renderPath: root.dataset.avatarRenderPath ?? null,
       srcs,
       hasArmor: srcs.some((x) => x.includes("armor-knight.svg")),
+      hasArmorR2: srcs.some((x) => x.includes("armor-knight-r2-v1.webp")),
+      hasUnwired: srcs.some((x) => x.includes("cape-red.svg")),
       hasR2: srcs.some((x) => x.includes("avatar-r2/")),
       r2Markers: root.querySelectorAll('[data-c2-layer="hair-r2"],[data-c2-layer="blush"],[data-c2-layer="iris"]').length,
       c2Base: srcs.some((x) => x.includes("-c2.svg")),
@@ -134,12 +144,12 @@ const SURFACES = [
 
 // ── The defect this PR closes: the paid item must never vanish ────────────────
 for (const [name, url, sel] of SURFACES) {
-  test(`equipped Ridderdragt → whole avatar C2 with the armour visible — ${name}`, async ({ browser }) => {
-    const { ctx, page } = await open(browser, url, { torso: ARMOR });
+  test(`a torso item WITHOUT R2 artwork → whole avatar C2, item visible — ${name}`, async ({ browser }) => {
+    const { ctx, page } = await open(browser, url, { torso: UNWIRED });
     await page.waitForSelector(`${sel}[data-avatar-rendered="1"]`, { timeout: 20000 });
     const r = await probe(page, sel);
     expect(r.renderPath, `${name}: forced to C2 while an unrenderable item is equipped`).toBe("c2");
-    expect(r.hasArmor, `${name}: the item the student paid for is rendered`).toBeTruthy();
+    expect(r.hasUnwired, `${name}: the item the student paid for is rendered`).toBeTruthy();
     expect(r.hasR2, `${name}: no R2 asset in the forced C2 render`).toBeFalsy();
     expect(r.r2Markers, `${name}: no R2 stack markers`).toBe(0);
     expect(r.c2Base, `${name}: the complete C2 base renders`).toBeTruthy();
@@ -148,12 +158,12 @@ for (const [name, url, sel] of SURFACES) {
   });
 }
 
-test("R2-supported items equipped alongside the armour come along to C2 (never a half-dressed figure)", async ({ browser }) => {
-  const { ctx, page } = await open(browser, "/avatar.html", { torso: ARMOR, headwear: HAT, eyes: GLASSES });
+test("R2-supported items equipped alongside an unrenderable one come along to C2 (never a half-dressed figure)", async ({ browser }) => {
+  const { ctx, page } = await open(browser, "/avatar.html", { torso: UNWIRED, headwear: HAT, eyes: GLASSES });
   await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
   const r = await probe(page, "#avatar-preview");
   expect(r.renderPath).toBe("c2");
-  expect(r.hasArmor, "armour visible").toBeTruthy();
+  expect(r.hasUnwired, "the unrenderable torso item is visible").toBeTruthy();
   expect(r.srcs.some((x: string) => x.includes(`${HAT}.svg`)), "hat visible").toBeTruthy();
   expect(r.srcs.some((x: string) => x.includes("glasses-round-basic-v1.svg")), "glasses visible").toBeTruthy();
   expect(r.hasR2, "no R2 leak").toBeFalsy();
@@ -172,7 +182,7 @@ test("scoped, not sticky: without the armour the same student renders R2 again",
 
 // ── Observability: the fallback is reported with its OWN reason ───────────────
 test("observability: c2_fallback / unsupported_cosmetic_equipped (never identity_ineligible)", async ({ browser }) => {
-  const { ctx, page, drain } = await open(browser, "/avatar.html", { torso: ARMOR });
+  const { ctx, page, drain } = await open(browser, "/avatar.html", { torso: UNWIRED });
   await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
   const events = await drain();
   expect(events.length, "exactly one event for the avatar root").toBe(1);
@@ -189,8 +199,72 @@ test("no opt-in: unchanged C2 render with the armour, and no observability event
   await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
   const r = await probe(page, "#avatar-preview");
   expect(r.renderPath).toBe("c2");
-  expect(r.hasArmor).toBeTruthy();
+  expect(r.hasArmor, "the C2 SVG renders exactly as before").toBeTruthy();
+  expect(r.hasArmorR2, "no R2 asset may load without the opt-in").toBeFalsy();
   expect((await drain()).length, "a non-opted-in browser stays silent").toBe(0);
+  await ctx.close();
+});
+
+// ── D-090 (A3.2): the armour now RENDERS on the R2 figure ────────────────────
+for (const [name, url, sel] of SURFACES) {
+  test(`equipped Ridderdragt renders ON the R2 stack — ${name}`, async ({ browser }) => {
+    const { ctx, page } = await open(browser, url, { torso: ARMOR });
+    await page.waitForSelector(`${sel}[data-avatar-rendered="1"]`, { timeout: 20000 });
+    const r = await probe(page, sel);
+    expect(r.renderPath, `${name}: the armour no longer forces C2`).toBe("r2");
+    expect(r.hasArmorR2, `${name}: the R2 garment is mounted`).toBeTruthy();
+    expect(r.hasArmor, `${name}: the C2 SVG must not leak into the R2 render`).toBeFalsy();
+    expect(r.r2Markers, `${name}: the full R2 stack is present`).toBeGreaterThan(0);
+    expect(r.broken, `${name}: no broken images`).toBe(0);
+    await ctx.close();
+  });
+}
+
+test("D-090: the armour renders together with headwear and glasses on R2", async ({ browser }) => {
+  const { ctx, page } = await open(browser, "/avatar.html", { torso: ARMOR, headwear: HAT, eyes: GLASSES });
+  await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
+  const r = await probe(page, "#avatar-preview");
+  expect(r.renderPath).toBe("r2");
+  expect(r.hasArmorR2).toBeTruthy();
+  for (const s of [hatUrl, glassesUrl]) expect(r.srcs.some((x: string) => x.includes(s))).toBeTruthy();
+  expect(r.broken).toBe(0);
+  await ctx.close();
+});
+
+test("D-090: unequipping the armour leaves a clean R2 render", async ({ browser }) => {
+  const { ctx, page } = await open(browser, "/avatar.html", {});
+  await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
+  const r = await probe(page, "#avatar-preview");
+  expect(r.renderPath).toBe("r2");
+  expect(r.hasArmorR2, "no sticky garment layer").toBeFalsy();
+  await ctx.close();
+});
+
+// THE case that protects the student: if the R2 garment cannot be fetched, the WHOLE avatar must
+// fall to C2 with the armour visible — never an R2 figure standing there without the paid item.
+test("D-090: a failing R2 garment drops the WHOLE avatar to C2, armour still visible", async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 900, height: 900 }, reducedMotion: "reduce" });
+  await ctx.route("**://*.supabase.co/**", makeRoute({ torso: ARMOR }));
+  await ctx.route(`**${ARMOR_R2}`, (route: Route) => route.fulfill({ status: 404, body: "gone" }));
+  await ctx.addInitScript(([k, s]: [string, any]) => {
+    (window as any).__AVATAR_TEST__ = true;
+    localStorage.setItem(k, JSON.stringify(s));
+    localStorage.setItem("avatar_v2", "1");
+    localStorage.setItem("avatar_r2", "1");
+  }, [`sb-${REF}-auth-token`, SESSION]);
+  const page = await ctx.newPage();
+  const raw: any[] = [];
+  page.on("console", (m) => { if (m.text().includes("[avatar-r2-observability]")) raw.push(m); });
+  await page.goto(`${baseUrl}/avatar.html`, { waitUntil: "networkidle" });
+  await page.waitForSelector('#avatar-preview[data-avatar-rendered="1"]', { timeout: 20000 });
+  const r = await probe(page, "#avatar-preview");
+  expect(r.renderPath, "a mandatory layer failed → whole-stack C2").toBe("c2");
+  expect(r.hasArmor, "the student still sees the item they paid for").toBeTruthy();
+  expect(r.hasR2, "no partial R2 stack survives").toBeFalsy();
+  expect(r.broken, "no broken image is left in the DOM").toBe(0);
+  const reasons: string[] = [];
+  for (const m of raw) { try { reasons.push((await m.args()[1].jsonValue()).reason); } catch { /* ignore */ } }
+  expect(reasons, "reported as an asset failure, not as an unsupported item").toContain("required_asset_failed");
   await ctx.close();
 });
 

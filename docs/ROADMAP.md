@@ -253,6 +253,23 @@ _Last reviewed: 2026-07-01._
   references the asset, **D-083's C2 fallback untouched**, `AVATAR_R2` `false`, pilot status
   unchanged. Unit **303/303**. **A3.2 outstanding:** manifest, wiring, render-path mapping, catalog
   model, tests, goldens, shop/avatar/quiz verification. See `docs/project-state.md` (D-089).
+  **▶ A3.2 — the armour RENDERS on the R2 figure (2026-08-01, D-090).** Status
+  **`A3.2_RUNTIME_WIRED — OWNER_VISUAL_REVIEW_REQUIRED`**. Catalog model as recommended in D-084 §7c
+  and with **zero data change**: same `shop_items` row, same item id, same purchase — C2 keeps the
+  SVG, R2 uses the D-089 WebP. `R2_MANIFEST.torso = { "armor-knight": 1 }` (version 4 → 5), resolved
+  by `torsoSrcForR2()`; z = **1** (above the base it replaces, below every face layer and the hair).
+  **The architectural change is that support is now per ITEM, not per slot:** every other cosmetic
+  re-seats the same asset C2 uses, so slot support implied item support; a torso item needs its own
+  artwork, so **a second torso item added tomorrow still falls back to C2** — the registration is the
+  renderability contract. The garment is the one **mandatory** cosmetic layer: if it fails to load
+  the WHOLE avatar drops to C2 with the armour visible, because dropping just the overlay would
+  reproduce D-082 (proven by 404-ing the asset in Playwright). **D-083 is narrowed, not replaced** —
+  its suites were repointed at an unwired torso item so the protection is still exercised in full.
+  Observability needed **no new reason and no schema change**. Shop previews stay C2 (D-077),
+  `AVATAR_R2` stays `false`, the C2 path is byte-unchanged, no DB/migration/RLS/Edge-Function change.
+  Unit **328/328**, torso spec **14/14**, classifier `full`. **No golden added on purpose:** baking a
+  baseline before the owner has looked would let the suite bless an unreviewed appearance. Review set
+  in `_avatar-artefakter\D090-runtime-review\`. See `docs/project-state.md` (D-090).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.

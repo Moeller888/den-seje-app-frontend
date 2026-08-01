@@ -17,8 +17,9 @@ test("safety: AVATAR_R2 stays false after expression promotion", () => {
   assert.equal(AVATAR_R2, false);
 });
 
-test("manifest version bumped to 4 (expression registration)", () => {
-  assert.equal(R2_MANIFEST.version, 4);
+test("the manifest version is bumped whenever registrations change", () => {
+  // 4 = expression registration (D-042). 5 = torso garment registration (D-090).
+  assert.equal(R2_MANIFEST.version, 5);
 });
 
 test("the four owner-approved expressions are registered at their accepted versions", () => {

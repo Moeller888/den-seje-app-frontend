@@ -217,11 +217,14 @@ test("the served thresholds are the authoring thresholds divided by the area fac
 
 // ── A3.1 must not wire anything ──────────────────────────────────────────────────────────────
 
-test("torso is still absent from R2_SUPPORTED_COSMETIC_SLOTS", () => {
-  const js = readFileSync(LAYERS, "utf8");
-  const m = js.match(/R2_SUPPORTED_COSMETIC_SLOTS\s*=\s*\[([^\]]*)\]/);
-  assert.ok(m, "slot list not found");
-  assert.ok(!/["']torso["']/.test(m[1]), "A3.1 must not enable the slot — that is A3.2");
+test("the promotion tool is not what wires the slot", () => {
+  // A3.1 originally asserted `torso` was absent from the slot list. D-090 (A3.2) wired it, so the
+  // world-state claim is obsolete — but the invariant behind it is not: promotion must never be the
+  // step that enables a slot. That is now enforced structurally rather than by inspecting the world.
+  const tool = readFileSync(TOOL_SRC, "utf8");
+  assert.ok(!/R2_SUPPORTED_COSMETIC_SLOTS\s*=/.test(tool), "the tool must never assign the slot list");
+  assert.ok(!/writeFileSync\([^)]*LAYERS_JS/.test(tool), "the tool must never write js/avatar-layers.js");
+  assert.throws(() => assertWritable(LAYERS), /refusing to write/);
 });
 
 test("AVATAR_R2 is still false and the D-083 fallback is still present", () => {
@@ -231,23 +234,26 @@ test("AVATAR_R2 is still false and the D-083 fallback is still present", () => {
   assert.match(js, /r2UnrenderableCosmeticSlots/);
 });
 
-test("no runtime file references the promoted torso asset", () => {
+test("the runtime never hardcodes the asset path — it resolves through the manifest", () => {
+  // A3.1 asserted no runtime file mentioned the asset at all. D-090 registers it, so the check that
+  // still matters is that no file hardcodes the FILENAME: the path must be derived from the manifest
+  // version, or a future v2 would ship while the runtime silently kept requesting v1.
   const files = ["avatar-layers.js", "avatar-render-c2.js", "avatar-r2-observability.js"];
   for (const f of files) {
     const p = join(REPO, "js", f);
     if (!existsSync(p)) continue;
-    const s = readFileSync(p, "utf8");
-    assert.ok(!s.includes("armor-knight-r2"), `${f} references the promoted asset — that is A3.2 wiring`);
-    assert.ok(!/avatar-r2\/torso/.test(s), `${f} references the torso asset directory`);
+    // Strip BOTH full-line and trailing `//` comments: documenting the resolved path next to the
+    // manifest entry is exactly what a reader needs, and is not a hardcoded dependency.
+    const code = readFileSync(p, "utf8").replace(/\/\/.*$/gm, "");
+    assert.ok(!code.includes("armor-knight-r2-v1.webp"), `${f} hardcodes the versioned filename`);
+    assert.ok(!code.includes("/assets/avatar-r2/torso/"), `${f} hardcodes the asset directory`);
   }
 });
 
-test("the manifest was deliberately NOT edited by this step", () => {
+test("the provenance still records that A3.1 itself registered nothing", () => {
+  // The record of what A3.1 did must not drift just because A3.2 later did more.
   assert.equal(prov().runtime.manifestRegistered, false);
-  const js = readFileSync(LAYERS, "utf8");
-  const manifest = js.match(/R2_MANIFEST\s*=\s*\{[\s\S]*?\n\};/);
-  assert.ok(manifest, "manifest not found");
-  assert.ok(!/torso/.test(manifest[0]), "R2_MANIFEST must not carry a torso entry after A3.1");
+  assert.match(prov().runtime.note, /registration \+ wiring are A3\.2/);
 });
 
 // ── the tool itself is contained ─────────────────────────────────────────────────────────────

@@ -45,7 +45,7 @@ const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
 
 test("eyes is an R2-supported cosmetic slot (D-080)", () => {
-  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face"]);
+  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face", "torso"]);   // torso added by D-090
   assert.equal(isR2SupportedCosmeticSlot("eyes"), true);
 });
 

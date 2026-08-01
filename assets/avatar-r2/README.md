@@ -45,12 +45,19 @@ assets/avatar-r2/
   torso/   {item}-r2-v{n}.webp                      (cosmetic garment, shared — D-089)
 ```
 
-**`torso/armor-knight-r2-v1.webp` (D-089, 30,064 B) is PRESENT but NOT REGISTERED and NOT LOADED.**
+**`torso/armor-knight-r2-v1.webp` (D-089, 30,064 B) is REGISTERED and LOADED since D-090.**
 It is the Ridderdragt re-authored for the R2 figure (A2, owner-accepted in D-088) and promoted by
-`tools/avatar/promote-r2-torso-asset.mjs`, which pins the accepted source SHA. `torso` is still
-absent from `R2_SUPPORTED_COSMETIC_SLOTS`, so an equipped Ridderdragt still drops the whole avatar
-to C2 via the D-083 fallback — unchanged, and still the correct behaviour until A3.2 wires the slot.
-Provenance (source/output SHAs, encoder, flags, every gate): `tools/avatar/provenance/`.
+`tools/avatar/promote-r2-torso-asset.mjs`, which pins the accepted source SHA. Registered as
+`R2_MANIFEST.torso = { "armor-knight": 1 }` and resolved by `torsoSrcForR2()` at **z 1** — above the
+base whose tee it replaces, below every face layer and the hair. Provenance (source/output SHAs,
+encoder, flags, every gate): `tools/avatar/provenance/`.
+
+**Registration is the renderability contract for this slot.** `torso` is the only slot gated per
+ITEM: the C2 armour is drawn for the C2 arm pose and covers 0 px of the R2 figure, so every torso
+item needs its OWN artwork. A torso item that is not registered here has none, and an equipped copy
+still drops the whole avatar to C2 via the D-083 fallback. The garment is also the one **mandatory**
+cosmetic layer — if it fails to load, the whole avatar goes to C2 with the armour visible rather than
+rendering an R2 figure without the item the student paid for.
 
 Unlike the face/eyes/hair overlays — encoded with the lossy `encode-webp.mjs` wrapper (q90) — this
 garment is encoded **`-lossless -exact -z 9 -metadata none`**, the same flags as the runtime base
