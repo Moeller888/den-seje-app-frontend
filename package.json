@@ -21,7 +21,8 @@
     "avatar:create-item-candidate-manifest": "node tools/avatar/create-item-candidate-manifest.mjs",
     "avatar:emit-glasses-svg": "node tools/avatar/emit-glasses-svg.mjs",
     "avatar:render-glasses-preview": "node tools/avatar/render-glasses-preview.mjs",
-    "avatar:r2-torso-mask": "node tools/avatar/build-r2-torso-occlusion-mask.mjs"
+    "avatar:r2-torso-mask": "node tools/avatar/build-r2-torso-occlusion-mask.mjs",
+    "avatar:r2-torso-check": "node tools/avatar/check-r2-torso-candidate.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",

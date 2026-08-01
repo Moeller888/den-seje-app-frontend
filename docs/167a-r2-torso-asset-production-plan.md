@@ -27,7 +27,7 @@ Option A is **Tier-1 + Tier-2 work** in the 164D pipeline, not a config change:
 | step | what | who/how | gate |
 |---|---|---|---|
 | **A1** | torso **occlusion mask** derived from the runtime R2 base — **BUILT 2026-07-31 (D-085), owner review pending**; tool `npm run avatar:r2-torso-mask`, template `tools/avatar/fixtures/r2-torso/`, record `docs/167a-r2-torso-occlusion-mask-review.md` | deterministic measurement, **no AI** (mirrors D-041/164K for accessory slots) | owner accepts the mask region |
-| **A2** | the torso **overlay artwork** inside that mask | **AI permitted** (D-034/D-040 Tier 2: isolated slot overlays only) | D-037 automated gates + human style/safety review + owner visual sign-off |
+| **A2** | the torso **overlay artwork** inside that mask — **OPEN since 2026-08-01 (D-086)**: D-037's condition is discharged for `torso`, scope is a re-authoring of the existing `armor-knight` Ridderdragt, brief at `docs/167a-r2-torso-a2-art-brief.md`, judge at `npm run avatar:r2-torso-check`. **No artwork produced yet.** | **AI permitted** (D-034/D-040 Tier 2: isolated slot overlays only) | D-037 automated gates + human style/safety review + owner visual sign-off |
 | **A3** | **wiring PR** — `torso` into `R2_SUPPORTED_COSMETIC_SLOTS`, z + per-item transform, unit + Playwright tests, goldens | code | tests green, owner sign-off |
 
 ### 1.1 The blocking constraint — a locked decision stands in the way
@@ -181,12 +181,13 @@ rejection, not a style choice.
 
 ## 7. Owner decisions required before any production
 
-1. **Discharge the D-037 condition?** Activating a torso mask at all is a locked-decision change
-   (D-037 conditional, D-040 deferred). Producing the mask (A1) is measurement and can proceed without it;
-   **A2/A3 cannot.**
-2. **Scope of the artwork:** re-author *only* `armor-knight` as an R2-native item, or treat this as the
-   first item of an R2 torso slot that later takes more items? The mask is the same either way; the brief
-   and the catalog impact are not.
+1. **Discharge the D-037 condition?** — **DONE 2026-08-01 (D-086).** The condition ("a torso occlusion
+   mask that fully occludes the base tee and leaves forearms/hands to the base") is met and verified by
+   the accepted A1 template, and is discharged **for the `torso` slot only**; D-037's framework and
+   D-040's deferral of `bottom`/`shoes` are untouched. **A2 is open; A3 is not.**
+2. **Scope of the artwork** — **ANSWERED 2026-08-01 (D-086): re-author the existing `armor-knight`
+   Ridderdragt.** A student who bought knight's armour must still see knight's armour; the catalog row and
+   purchase history stay untouched. The mask would have been the same either way; the brief is not.
 3. **Catalog model:** one row with a per-render-path asset (C2 svg + R2 webp), or a separate R2 item id?
    This decides whether the wiring PR touches `shop_items` at all. **Recommendation: per-render-path asset
    on the same row** — the student owns "Ridderdragt", not two products; purchase history stays intact.
