@@ -154,6 +154,16 @@ The SHA above **was** re-verified before encoding, and again after the run. The 
 **kept**: the served asset is a ÷2 derivative, so anything needing authoring scale still depends on the
 1024×1536 source and the non-reproducible raw generation, both still gitignored.
 
-**Still not wired.** `torso` is absent from `R2_SUPPORTED_COSMETIC_SLOTS`, `R2_MANIFEST` has no torso
-entry, `AVATAR_R2` is `false`, and D-083's whole-avatar C2 fallback remains what makes the Ridderdragt
-visible to the pilot student. A3.2 owns registration, wiring, the catalog model, goldens and verification.
+### A3.2 — wired (2026-08-01, D-090)
+
+Registered as `R2_MANIFEST.torso = { "armor-knight": 1 }` (manifest version 5) at **z 1**, on the same
+`shop_items` row with **no database, migration or catalog change** — C2 keeps the SVG, R2 uses the WebP.
+An opted-in student now sees the armour on the R2 figure on avatar, hub and quiz.
+
+Support for this slot is per ITEM: an unregistered torso item still drops the whole avatar to C2, and
+the garment is a **mandatory** layer, so a failed load does the same rather than leaving an R2 figure
+without the paid item. Shop previews stay C2 (D-077) and **`AVATAR_R2` remains `false`**.
+
+Status **`A3.2_RUNTIME_WIRED — OWNER_VISUAL_REVIEW_REQUIRED`**: the automated gates pass, but no golden
+baseline was committed, because that would let the suite bless an appearance the owner has not yet
+reviewed. Review set: `_avatar-artefakter\D090-runtime-review\`.

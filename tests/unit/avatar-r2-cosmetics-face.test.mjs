@@ -42,10 +42,12 @@ const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 
 test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
 
-test("face is an R2-supported cosmetic slot (D-081); neck/torso/body still are NOT", () => {
-  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face"]);
+test("face is an R2-supported cosmetic slot (D-081); neck/body still are NOT", () => {
+  assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face", "torso"]);   // torso added by D-090
   assert.equal(isR2SupportedCosmeticSlot("face"), true);
-  for (const s of ["neck", "torso", "body"]) assert.equal(isR2SupportedCosmeticSlot(s), false, s);
+  // `torso` moved out of this list in D-090 — but it is gated PER ITEM, not per slot, which the
+  // torso wiring suite owns. neck/body have no catalog content and stay slot-gated.
+  for (const s of ["neck", "body"]) assert.equal(isR2SupportedCosmeticSlot(s), false, s);
 });
 
 test("face-cosmetic default z is above the eye stack (z4) + blink lid (z5) + glasses (z6), under the hair", () => {

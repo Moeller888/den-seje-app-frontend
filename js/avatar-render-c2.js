@@ -9,7 +9,7 @@
 // this module inlines the SVG and sets those two CSS variables from the identity's
 // resolved token pair. All other layers stay <img> (sandboxed, no recolor needed).
 
-import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, isR2SupportedCosmeticSlot, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback } from "./avatar-layers.js";
+import { baseLayersForC2, hairColorTokensFor, C2_LAYER_Z, isAvatarR2, r2StackSrcsFor, R2_STACK_Z, R2_IRIS_DEFAULT, R2_COSMETIC_Z, r2HeadwearTransformFor, r2EyesTransformFor, r2FaceTransformFor, r2FaceZFor, r2RequiresC2Fallback, r2CosmeticRenderable, r2ItemAssetSrcFor } from "./avatar-layers.js";
 import { cdnUrl } from "./cloudinary.js";
 import { emitR2RenderObservability } from "./avatar-r2-observability.js";
 
@@ -98,11 +98,13 @@ export function composeC2Layers(identity, cosmetics = []) {
 // order decides: iris is emitted first, deliberately) · cosmetics (Phase-1 safe
 // slots only) · hair z40 (luminance map × the identity's hair token).
 export function composeR2Layers(identity, cosmetics = []) {
-  // D-082 option B (NO SILENT ITEM LOSS): if ANY equipped cosmetic sits in a slot the R2 stack
-  // cannot render (neck/torso/body — today only the `torso` Ridderdragt has catalog content), the
-  // R2 stack is refused for the WHOLE avatar so the caller renders the complete C2 path with the
+  // D-082 option B (NO SILENT ITEM LOSS): if ANY equipped cosmetic cannot render on the R2 stack,
+  // the stack is refused for the WHOLE avatar so the caller renders the complete C2 path with the
   // item visible. Filtering it out silently would show a paid item on C2 and nothing on R2.
   // Checked BEFORE the stack resolve: the decision depends only on what is equipped.
+  // D-090 narrowed WHICH items those are — `armor-knight` now has R2 artwork and renders here — but
+  // the guard itself is unchanged and still covers neck/body, any future torso item without R2
+  // artwork, and any other unsupported slot.
   if (r2RequiresC2Fallback(cosmetics)) return null;   // unsupported equipped item → C2 fallback
   const s = r2StackSrcsFor(identity);
   if (!s) return null;                                // incomplete stack → C2 fallback
@@ -119,11 +121,21 @@ export function composeR2Layers(identity, cosmetics = []) {
   // the blink/expression engines never touch them. All source SVGs are untouched. aura/back keep their
   // exact prior z + no marker/transform.
   const cos = (Array.isArray(cosmetics) ? cosmetics : [])
-    .filter((c) => c && c.src && typeof c.z === "number" && isR2SupportedCosmeticSlot(c.slot))
+    .filter((c) => r2CosmeticRenderable(c))
     .map((c) => {
       const z = R2_COSMETIC_Z[c.slot] ?? c.z;
       const layer = { src: c.src, z, isBase: false, inline: false };
-      if (c.slot === "headwear") {
+      if (c.slot === "torso") {
+        // D-090: the ONLY slot that SWAPS the asset instead of re-seating it. The C2 armour is drawn
+        // for the C2 arm pose and covers 0 px of the R2 figure (measured, D-082), so R2 uses its own
+        // artwork (D-089) while C2 keeps the SVG — one catalog row, two render-path assets. No
+        // transform: the raster is authored on the R2 canvas, so it is already in place.
+        // Marked MANDATORY (see _R2_MANDATORY_MARKERS): if this asset fails to load, the WHOLE
+        // avatar drops to C2. Dropping only the overlay would be the D-082 defect again — a paid
+        // item silently missing — and here it is avoidable, because the C2 path still has the SVG.
+        layer.marker = "torso-cosmetic";
+        layer.src = r2ItemAssetSrcFor("torso", c.src) || c.src;
+      } else if (c.slot === "headwear") {
         layer.marker = "headwear";
         const t = r2HeadwearTransformFor(c.src);
         layer.transform = t.transform;
@@ -183,7 +195,13 @@ function r2TintSupported() {
 // Which R2 layers are MANDATORY (whole-stack-atomic unit): the base + the neutral
 // stack markers. Safe cosmetic overlays (aura/back) are OPTIONAL — a failure there
 // drops only that overlay, never the base to C2 (activation-audit F1 / §3).
-const _R2_MANDATORY_MARKERS = new Set(["base", "blush", "face", "iris", "eyes", "hair-r2"]);
+// "torso-cosmetic" is the one COSMETIC in the mandatory set (D-090), and the asymmetry is
+// deliberate. Every other cosmetic re-seats the SAME asset the C2 path uses, so if it fails to load
+// C2 would fail identically — dropping just that overlay is the only sensible response. The R2 torso
+// garment is a DIFFERENT file that exists only on the R2 path, so a failure there IS recoverable:
+// the complete C2 avatar still shows the armour the student paid for. Dropping it individually would
+// reproduce D-082 exactly — an R2 figure standing there without the item it is wearing.
+const _R2_MANDATORY_MARKERS = new Set(["base", "blush", "face", "iris", "eyes", "hair-r2", "torso-cosmetic"]);
 function _isMandatoryR2(layer) {
   return !!layer && (layer.isBase === true || _R2_MANDATORY_MARKERS.has(layer.marker));
 }
