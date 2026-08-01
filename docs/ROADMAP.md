@@ -185,7 +185,18 @@ _Last reviewed: 2026-07-01._
   the bounded 6 px sleeve-tip residue and 4 px paintable-but-not-mandatory line work are accepted with it.
   **Two decisions deliberately left open: `D-037` stays CONDITIONAL (so A2 is NOT authorised), and the CI
   unit-test step is NOT authorised — the builder/determinism tests stay a local gate.** Acceptance changes
-  no flag and no runtime. **A2 (artwork) and A3
+  no flag and no runtime.
+  **▶ D-037 DISCHARGED for `torso`; A2 OPENED (2026-08-01, D-086).** The condition D-037 set — a torso
+  occlusion mask that fully occludes the base tee and leaves forearms/hands to the base — is met and
+  verified by the accepted A1 template, and is discharged **for `torso` only** (D-037's framework and
+  D-040's deferral of bottom/shoes are untouched). **Scope: re-author the EXISTING `armor-knight`
+  Ridderdragt** for the R2 figure — same product, same catalog row, purchase history untouched. Built in
+  the same PR: a deterministic **NON-AI QA harness** (`npm run avatar:r2-torso-check`) that judges one
+  candidate against the accepted masks (0 px outside `edit`, 0 px of `hard` under alpha 250, halo, island
+  and four-scale legibility incl. 52×78) and self-tests on five synthetic candidates, plus the art brief
+  `docs/167a-r2-torso-a2-art-brief.md`. **No artwork produced, no AI called.** `torso` is still absent
+  from `R2_SUPPORTED_COSMETIC_SLOTS`, **D-083's C2 fallback stays live**, `AVATAR_R2` stays `false`.
+  Unit 257/257. See `docs/project-state.md` (D-086). **A3
   (wiring) are NOT started:** `D-037` stays **CONDITIONAL** and is not discharged, **D-083's C2 fallback
   stays the active protection**, `AVATAR_R2` stays `false`, pilot status unchanged. Status
   **`A1_BUILT — OWNER_VISUAL_REVIEW_REQUIRED`**. See `docs/167a-r2-torso-occlusion-mask-review.md`,

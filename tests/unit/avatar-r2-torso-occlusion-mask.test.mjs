@@ -303,9 +303,15 @@ test("verify mode reproduces the tracked masks byte-for-byte and writes nothing"
 
 test("two independent builds produce byte-identical outputs", () => {
   requireDecoder();
+  // Compare BUILD against BUILD, not checkout against build: on Windows git checks the JSON out with
+  // CRLF (core.autocrlf) while the tool writes LF, so the first write legitimately changes those bytes
+  // once. The property under test is that the builder is deterministic, not that git's line-ending
+  // normalisation matches it — the PNGs, being binary, are unaffected either way.
+  const w1 = runTool(["--write"]);
+  assert.equal(w1.status, 0, w1.stdout + w1.stderr);
   const first = readdirSync(FIX).map((f) => [f, sha256(readFileSync(join(FIX, f)))]);
-  const res = runTool(["--write"]);
-  assert.equal(res.status, 0, res.stdout + res.stderr);
+  const w2 = runTool(["--write"]);
+  assert.equal(w2.status, 0, w2.stdout + w2.stderr);
   const second = readdirSync(FIX).map((f) => [f, sha256(readFileSync(join(FIX, f)))]);
   assert.deepEqual(second, first, "the build is deterministic");
   for (const [name, s] of Object.entries(spec.masks)) {
