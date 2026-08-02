@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:unit:ci": "node tests/run-unit-ci.mjs",
     "test:unit:ai": "deno test --allow-env supabase/functions/_shared/ai/",
     "avatar:extract-masks": "node tools/avatar/extract-anchor-masks.mjs",
     "avatar:extract-master-base": "node tools/avatar/extract-master-base.mjs",
