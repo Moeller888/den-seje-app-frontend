@@ -338,6 +338,44 @@ to base/hair/shoe assets · a pilot user seeing fringe in normal use · a device
 |---|---|---|---|---|---|---|
 | 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) · browser **Chrome** · **desktop** | `body_type=neutral`, `skin_tone=medium`, `hairstyle=default` | `equipped_slots={}` (none) | ✅ neutral-medium, no gated cosmetics | ✅ **established (2026-07-27)** — full §8 persistent-browser gate passed | **`ONBOARDED` (2026-07-27, D-078).** Manual persistent-browser onboarding completed in an **owner-witnessed step-by-step run** (D-073 kit) in a **normal persistent Chrome profile on desktop** (not incognito/guest). Proof: **browser-local opt-in activated**; **Fase A** — `renderPath=r2` with no C2 `.svg` mixing and no broken images on **avatar, hub and quiz**; **persistence gate** — the browser was **fully closed (normal, not forced)** and the **same profile reopened**, and the **browser-local opt-in persisted after the full browser restart** with `renderPath` still `r2` on all three surfaces; **opt-out demonstrated and opt-in restored** (the avatar fell back to the C2 render, the app stayed functional, then R2 was restored). **No code, backend, database, account-profile or user-record changes; only browser-local pilot opt-in state was changed.** No account identifiers were recorded. _Earlier: `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER` (2026-07-26, D-072); ✅ 2026-07-01 (Phase-1, historical); re-verified 2026-07-22 via the fixture-intercepted activation-readiness audit._ |
 
+| 2 | _(anonymous pilot-id — assign at onboarding; **never** name, email or UID)_ | _(pending — must be `body_type=neutral`, `skin_tone=medium`)_ | _(pending — record what is equipped; per the corrected §2 owning cosmetics no longer disqualifies)_ | ☐ neutral-medium · ☐ browser profile is persistent (not private/incognito/guest, does not clear site-data on close) | ☐ Fase A · ☐ **persistence gate (full close + reopen)** · ☐ opt-out demonstrated | **`NOT_STARTED`** — prepared template only. **No one is onboarded by this row.** |
+
+**Participant 2 — capture sheet for the run (§11 data-minimal fields).** Fill during the §8 gate; leave
+anything unobserved blank rather than assumed. **Never record** full name · email · UID · passwords ·
+tokens · `localStorage` contents · any unnecessary personal data.
+
+| field | value |
+|---|---|
+| anonymous pilot-id | |
+| onboarding date | |
+| browser / version | |
+| device type · desktop or mobile | |
+| eligibility verified (§2) | |
+| persistent onboarding verified (§8) | |
+| **browser-restart verified** (the binding one) | |
+| R2 on avatar · hub · quiz | |
+| stack integrity — `hasMandatoryBase` true, `mixedC2Svg` empty, `brokenImages` empty | |
+| expressions observed | |
+| blink observed | |
+| breathing observed | |
+| fallback observed (if it occurred) | |
+| cosmetics equipped, and did each render as expected | |
+| visual issues | |
+| functional issues | |
+| user's short assessment | |
+| observer's assessment | |
+| severity (`INFO` · `MINOR` · `MAJOR` · `BLOCKING` only) | |
+| opt-out verified | |
+| session count (§9: ≥3, with ≥1 each on quiz/hub/avatar) | |
+| final status | |
+| follow-up needed | |
+
+> **Reading the stack check with cosmetics equipped.** The onboarding kit predates the cosmetic wiring
+> (D-079/D-080/D-081/D-090). If the participant wears a hat, glasses or a mask, `.svg` sources **will**
+> appear in `layers` — that is correct, because those slots re-seat the C2 asset onto the R2 figure. Only
+> the `-c2.svg` suffix (the base) indicates real C2 mixing. If they wear the Ridderdragt, expect
+> `armor-knight-r2-v1.webp`; seeing `armor-knight.svg` in an R2 stack **is** a fault.
+
 _The opt-in remains per-browser `localStorage` (no server-side state). A user reaches `ONBOARDED` only via
 the §8 persistent-browser gate. Add a row per user using the §11 data-minimal fields; keep Wave 1 to §7/§9._
 
