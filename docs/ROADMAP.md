@@ -286,6 +286,19 @@ _Last reviewed: 2026-07-01._
   **Acceptance activates nothing:** `AVATAR_R2` stays `false`, pilot status unchanged, no wave
   widened, and **no golden baseline yet** — now unblocked, but its own PR under the regen → gallery →
   owner-approval flow, since it changes what CI enforces. See `docs/project-state.md` (D-091).
+  **▶ Golden baseline for the armour — CI now enforces its appearance (2026-08-02, D-092).**
+  `tests/avatar-r2-torso-golden.spec.ts`: a 3×4 matrix — **`no item` · `Ridderdragt` · `+ headwear/
+  eyes`** across the four D-071 sizes. The first two columns are the point: D-091 recorded that at
+  the smallest sizes the armour approaches the base tee, and `legible-at-render-sizes` **cannot see
+  that** — it measures coverage, not distinguishability from wearing nothing. Placing "nothing
+  equipped" beside "armour" at every size makes that difference the thing under review. Before any
+  pixel comparison the spec asserts per cell: `renderPath=r2`, the R2 WebP present (absent when
+  nothing is equipped), no C2 SVG leak, garment `z===1`, no broken images. The **chromium-linux**
+  baseline came from the manual `update-avatar-goldens.yml` workflow (which gained the spec in its
+  regen list and still commits nothing), because a Windows-rendered PNG would never match CI. That
+  regen also re-rendered every other avatar golden: **46 identical, 0 differing, 1 new** — no drift,
+  and only the torso file was taken. Test-only; `AVATAR_R2` stays `false`, pilot status unchanged.
+  See `docs/project-state.md` (D-092).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
