@@ -36,19 +36,31 @@ layer loads. If any mandatory R2 asset 404s or fails to decode, the avatar **ato
 the complete C2 render** — never a broken/partial R2 avatar. So an opt-in browser can only ever see a
 clean R2 avatar or a clean C2 avatar, never a half-rendered one.
 
-## 2. Pilot group selection criteria (unchanged — still correct)
+## 2. Pilot group selection criteria (CORRECTED 2026-08-02, D-093)
+
+> **This section was stale and is now corrected.** It stated that the slot-gate renders "only aura/back",
+> which stopped being true at **D-079** (headwear), **D-080** (eyes/glasses), **D-081** (face/mask) and
+> **D-090** (torso). Wave 1's cohort was therefore selected against a rule that had already been
+> superseded — harmless in practice, because excluding cosmetics is stricter than reality, but it would
+> have wrongly excluded eligible users from Wave 2. The criteria below reflect what the runtime does today.
 
 To avoid visible cosmetic loss and inconsistent fallback, pick pilot users who are:
 
 - **Neutral / medium avatar identity** — only `neutral`+`medium` resolves the raster stack; other
   body types / skin tones fall back to C2 (the pilot would see no change), so include only neutral-medium.
   The gate is manifest-key based, so a manipulated client cannot force R2 on an unsupported identity.
-- **Not reliant on head/face/eye/clothing cosmetics** — the slot-gate renders **only aura/back** on the
-  raster stack; a user who equips a hat/mask/glasses/clothing item would see it **not render on R2** (the
-  shop preview forces full C2 for those items so they stay visible in the shop).
-- **Preferably no cosmetics, or only aura/back** — so nothing visibly vanishes.
+- **Cosmetics: what renders on R2 today** — `aura`, `back` (behind the figure, unchanged), `headwear`
+  (D-079), `eyes`/glasses (D-080), `face`/mask (D-081), and `torso` **for `armor-knight` only** (D-090:
+  that slot is gated per ITEM, and the Ridderdragt is the only item with R2 artwork).
+- **What still forces the whole avatar to C2** — `neck` and `body` (no catalog items exist, D-082), and
+  **any future torso item without R2 artwork**. A user who equips one of those sees the complete C2
+  avatar with the item visible — never a partial stack, never a missing paid item (D-083).
+- **Nothing a user owns can silently vanish.** That is the D-083 guarantee, and it is what makes it safe
+  to stop screening on cosmetics: the worst case is "this user sees C2 instead of R2", not "this user
+  lost an item they paid for".
 
-A user meeting all three gets a clean experience (the decomposed R2 avatar + any aura/back they own).
+A user meeting the identity criterion gets a clean experience; which cosmetics they own now changes only
+**whether** they see R2, never whether they see their items.
 
 ## 3. Known Phase-2 characteristics (by design — tell pilot users)
 
@@ -134,6 +146,81 @@ toggle; no DB cohort / percentage rollout. Those belong to the separate **broad 
   supervised users**.
 - The **test-student may be participant #1**, but only **after** it passes the persistent-browser gate (§8).
 - **Grow only on clean signal:** expand toward the maximum only after the current cohort reports clean (§10).
+
+## 7b. Wave 2 — definition (D-093, 2026-08-02)
+
+**Status: `PILOT_WAVE_2_DEFINED — NOT STARTED`. Wave 2 does not open until Wave 1 closes (§7b.1).**
+
+Wave 2 exists because Wave 1 **cannot answer the question that now matters**. Wave 1's cohort was
+selected to own no cosmetics, so it exercises the bare figure only. Everything wired since — headwear,
+glasses, masks, and above all the Ridderdragt (D-085…D-092) — is unobserved by a real user in a real
+browser. Wave 2 is the cosmetic wave.
+
+### 7b.1 Entry condition — binding
+
+Wave 2 **may not begin** until **all** of:
+
+1. Wave 1 reaches a **§13 final classification** of `PILOT_PASS` or `PILOT_PASS_WITH_DEBT`.
+   (Today: `PILOT_WAVE_1_IN_PROGRESS`, **1 participant of target 3** — Wave 1 is not complete.)
+2. Wave 1's §9 exposure is met by its participants: 7 calendar days, ≥3 real sessions, ≥1 observed
+   session each on quiz, hub and avatar.
+3. **No open `BLOCKING` finding and no unresolved `MAJOR` finding** from Wave 1.
+4. The owner records the Wave-1 classification and an explicit **Wave 2 GO** in §15.
+
+A `PILOT_FAIL` or an active §12 abort **closes the track**; Wave 2 does not follow automatically.
+
+### 7b.2 Scope
+
+- **Target 3 participants; maximum 5** without a new owner decision — the same shape as Wave 1,
+  deliberately not larger. Wave 2 adds a new *dimension* (cosmetics), not a new *scale*.
+- **One primary browser/device per user.**
+- Onboarded **one at a time** via the §8 persistent-browser gate (D-073 kit), each recorded in §15.
+- **At least one participant must own and equip the Ridderdragt** — otherwise Wave 2 fails to test the
+  thing it exists for. If no eligible student owns it, the owner may use an internal test account.
+- **At least one participant should own a headwear/eyes/face item**, so the re-seated slots are observed
+  alongside the swapped-asset slot.
+- Prefer **internal test accounts or closely supervised users**. No whole class, no public rollout.
+
+### 7b.3 What Wave 2 must observe (in addition to §10)
+
+- The **Ridderdragt renders on the R2 figure** on avatar, hub and quiz — not the C2 SVG.
+- **No mixed stack** with the garment equipped.
+- **Equip / unequip** the armour repeatedly: R2 returns cleanly, no sticky layer.
+- The garment reads correctly at the user's **real surface sizes**, including the smallest — the
+  D-091 observation (at small sizes the armour approaches the base tee) is a **known, accepted**
+  characteristic; record whether real users notice it, but it is **not** a defect.
+- **Other cosmetics** (hat / glasses / mask) render together with the armour, correct z-order.
+- If a user equips a `neck`/`body` item or a future unwired torso item: the **whole avatar falls to C2
+  with the item visible** (D-083). Observing this once is valuable; it is correct behaviour, not a fault.
+
+### 7b.4 Wave-2-specific abort triggers (in addition to §12)
+
+Pause immediately on: an **R2 figure rendering without an equipped item** (the D-082 defect returning) ·
+the armour rendering on the **wrong anatomy** or clipping the arms · a **partial** stack with any
+cosmetic equipped · the garment failing to load without the whole avatar falling back · **equip/unequip
+leaving a stale layer**.
+
+### 7b.5 Mechanism — unchanged, and deliberately so
+
+- **Per-browser opt-in only** (`localStorage.avatar_r2 = "1"`), exactly as Wave 1.
+- **`AVATAR_R2` stays `false`.** Flipping it is **not** a way to run a wave: it enables R2 for every
+  eligible browser at once (§6), which is broad activation, not a pilot.
+- **No allowlist** — `NO_ALLOWLIST_FOR_PILOT` (D-075) still holds. A client-side UID list would ship
+  children's identifiers to the public bundle. If central enablement is ever wanted, it is a
+  **server-side eligibility flag** and its own audited track.
+- No UI toggle, no DB cohort, no percentage rollout.
+
+### 7b.6 Owner decisions still open
+
+These are **not** set by this definition and must be recorded in §15 before Wave 2 starts:
+
+| decision | default proposed here |
+|---|---|
+| Wave 1 final classification | — (owner) |
+| Wave 2 GO | — (owner) |
+| Participant count | target 3, max 5 |
+| Duration | 7 calendar days (as §9) |
+| Who supplies a Ridderdragt-owning participant | — (owner) |
 
 ## 8. Persistent-browser onboarding gate (D-072) — binding
 
@@ -258,3 +345,19 @@ the §8 persistent-browser gate. Add a row per user using the §11 data-minimal 
 target of 3 (max 5) further users **one at a time** via the §8 persistent-browser gate (D-073 kit), each
 recorded here with the §11 data-minimal fields; observe against the §10 success criteria and §9/§12 exposure
 & duration, and pause on any §12 abort trigger. `AVATAR_R2` stays `false` (per-browser opt-in only).
+
+**Wave 2 is DEFINED but NOT STARTED (§7b, D-093).** It is the cosmetic wave — Wave 1's cohort owns no
+cosmetics, so the Ridderdragt and the re-seated slots are still unobserved by a real user. Wave 2 opens
+only after Wave 1 reaches a §13 classification of `PILOT_PASS` / `PILOT_PASS_WITH_DEBT` with its §9
+exposure met and no open BLOCKING/MAJOR finding, and only on an explicit owner GO recorded here.
+
+**Wave 2 GO log** (fill in when Wave 1 closes):
+
+| field | value |
+|---|---|
+| Wave 1 final classification (§13) | _(pending)_ |
+| Wave 1 exposure met (§9) | _(pending)_ |
+| Open BLOCKING / MAJOR findings | _(pending)_ |
+| Wave 2 GO | ☐ GO · ☐ NO-GO — _(owner, date)_ |
+| Participant count agreed | _(pending — proposed: target 3, max 5)_ |
+| Ridderdragt-owning participant | _(pending)_ |

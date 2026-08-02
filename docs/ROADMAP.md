@@ -299,6 +299,19 @@ _Last reviewed: 2026-07-01._
   regen also re-rendered every other avatar golden: **46 identical, 0 differing, 1 new** — no drift,
   and only the torso file was taken. Test-only; `AVATAR_R2` stays `false`, pilot status unchanged.
   See `docs/project-state.md` (D-092).
+  **▶ Pilot Wave 2 DEFINED — not started (2026-08-02, D-093).** Status **`PILOT_WAVE_2_DEFINED —
+  NOT STARTED`**; overall pilot stays `PILOT_WAVE_1_IN_PROGRESS`. **`AVATAR_R2` is a GLOBAL switch,
+  not a wave selector** — flipping it enables R2 for every eligible browser at once, which §6 already
+  forbids in writing; waves are enabled per-browser exactly as Wave 1 was. **Wave 2 is the cosmetic
+  wave:** Wave 1's cohort owns no cosmetics, so headwear, glasses, masks and above all the
+  Ridderdragt are unobserved by a real user. **Binding entry condition:** Wave 1 must first reach
+  `PILOT_PASS` / `PILOT_PASS_WITH_DEBT` with its §9 exposure met and no open BLOCKING/MAJOR finding,
+  plus an explicit owner GO — Wave 1 is at **1 participant of target 3**, so Wave 2 cannot start yet.
+  Scope: target 3 / max 5, one at a time through the §8 gate, **at least one participant owning and
+  equipping the Ridderdragt**. Also corrected here: **§2's selection criteria were stale** — they
+  still claimed only aura/back render, untrue since D-079/D-080/D-081/D-090, which would have wrongly
+  excluded eligible Wave-2 users. Docs-only: no activation, no participant onboarded, no browser
+  opted in, `AVATAR_R2` stays `false`. See `docs/project-state.md` (D-093).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.
