@@ -272,11 +272,13 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `feat/avatar-r2-torso-runtime-wiring-d090` | `52674acdc41ee75219dceb759980c6ccb2c59d0e` | D-090 A3.2 — torso wired into the R2 runtime (per-item gating, mandatory garment layer) |
 | `docs/d090-branch-sha-row` | `2d328d553cff0f10aaa5c1682b25631506b84ddb` | D-088/D-089/D-090 branch tips + merge commits recorded |
 | `docs/d091-a32-owner-acceptance` | `ff94fe262fc18f518f8675bf70e1b87db9b1a7d8` | D-091 owner acceptance of A3.2 — option A complete; the D-090 C2 wording corrected |
+| `docs/d091-branch-sha-row` | `f6cf439bec70a4215eea6cee9b7fd7384c9ff85f` | D-091 branch tip + merge commits recorded |
+| `feat/avatar-r2-torso-golden-d092` | `9a686b8975708f2b84088d5cc8b365ba60d70c9c` | D-092 torso golden baseline (matrix incl. the "no item" control column) |
 
 Merge commits on `main`: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135), `dd4d408`
 (PR #137), `a2fe5db` (PR #139), `045998b` (PR #142), `9dd8c62` (PR #144), `12ad136` (PR #145),
 `a7c0853` (PR #146), `de5d0e0` (PR #147), `aa1b8e9` (PR #148), `c976995` (PR #149), `d9ee017`
-(PR #150). Branches **not** deleted in that cleanup:
+(PR #150), `7ee4c94` (PR #151), `0ab357d` (PR #152). Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
 **D-085 carried three commits**, and the register cites the branch rather than any single one, so all three
