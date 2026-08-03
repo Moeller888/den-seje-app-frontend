@@ -64,7 +64,8 @@ test("every band is disclosed for every candidate, covered or not", () => {
   assert.equal(d.advisory, true, "disclosure must never block on its own");
   for (const name of Object.keys(BANDS)) {
     if (!d.detail.bands[name]) continue;   // a band with no mandatory pixels is skipped
-    assert.ok(d.detail.bands[name].coverage >= 0.999, name);
+    assert.ok(d.detail.bands[name].drawn.coverage >= 0.999, name);
+    assert.ok(d.detail.bands[name].asSubmitted.coverage >= 0.999, name);
   }
 });
 
@@ -114,5 +115,62 @@ test("band coverage is measured on OPAQUE pixels, like the mandatory-region gate
   }
   const res = checkCandidate(encodePngRGBA(OUT_W, OUT_H, rgba), masks, "translucent");
   const d = gate(res, "band-coverage-disclosure");
-  for (const b of Object.values(d.detail.bands)) assert.equal(b.coveredPx, 0);
+  for (const b of Object.values(d.detail.bands)) assert.equal(b.asSubmitted.coveredPx, 0);
+});
+
+// ── the hole that the first version of this gate had ─────────────────────────────────────────
+// The gate originally measured the candidate AS SUBMITTED — and a candidate normally arrives with
+// backfill already applied, so every band read as covered and the gate passed. It was defeated by
+// exactly the mechanism it exists to expose. These tests keep it closed.
+
+test("a band the model barely drew is BLOCKED even when backfill has filled it", () => {
+  // The prompt-v2 shape: the collar band is fully opaque in the file, but 58.5 % of it was
+  // constructed by the adapter. Judged as submitted this passes; judged on what was drawn it must not.
+  const [y0, y1] = BANDS.collar;
+  let collarHard = 0;
+  for (let y = y0; y < y1; y++) for (let x = 0; x < OUT_W; x++) if (masks.hard[y * OUT_W + x]) collarHard++;
+  const meta = { backfill: { byBand: { collar: Math.round(collarHard * 0.585), shoulder: 0, torso: 0, skirt: 0 } } };
+  const res = checkCandidate(fullCandidate(), masks, "backfilled-collar", meta);
+  const g = gate(res, "no-band-largely-uncovered");
+  assert.equal(g.pass, false, "backfill must not be able to hide a band the model did not draw");
+  assert.ok(g.detail.lowBands.some((s) => s.startsWith("collar")), JSON.stringify(g.detail.lowBands));
+  assert.equal(g.detail.measuredOn, "drawn (backfill subtracted)");
+});
+
+test("the disclosure separates what was drawn from what was submitted", () => {
+  const [y0, y1] = BANDS.shoulder;
+  let hard = 0;
+  for (let y = y0; y < y1; y++) for (let x = 0; x < OUT_W; x++) if (masks.hard[y * OUT_W + x]) hard++;
+  const filled = Math.round(hard * 0.2);
+  const res = checkCandidate(fullCandidate(), masks, "partly-filled", { backfill: { byBand: { shoulder: filled } } });
+  const b = gate(res, "band-coverage-disclosure").detail.bands.shoulder;
+  assert.equal(b.asSubmitted.coveredPx, hard, "the file really is fully opaque there");
+  assert.equal(b.backfilledPx, filled);
+  assert.equal(b.drawn.coveredPx, hard - filled, "drawn = covered minus backfilled");
+  assert.ok(Math.abs(b.drawn.coverage - 0.8) < 0.01);
+});
+
+test("without a sidecar the provenance is reported as UNKNOWN, not assumed", () => {
+  // Silence here would repeat the original mistake: treating "no evidence of filling" as
+  // "nothing was filled".
+  const res = checkCandidate(fullCandidate(), masks, "no-sidecar");
+  const d = gate(res, "band-coverage-disclosure");
+  assert.equal(d.detail.provenanceKnown, false);
+  assert.match(d.detail.note, /OVERSTATES/);
+  for (const b of Object.values(d.detail.bands)) assert.equal(b.backfilledPx, null);
+});
+
+test("the accepted asset's real backfill split still passes — no retroactive failure", () => {
+  // D-088's actual numbers. The gate must catch missing garment, not re-judge approved work.
+  const meta = { backfill: { byBand: { collar: 0, shoulder: 5990, torso: 2618, skirt: 0 } } };
+  const res = checkCandidate(fullCandidate(), masks, "accepted-shape", meta);
+  const g = gate(res, "no-band-largely-uncovered");
+  assert.equal(g.pass, true, "87.95 % drawn in the shoulder band is above the floor and was accepted");
+});
+
+test("a sidecar cannot claim more backfill than there are pixels", () => {
+  const res = checkCandidate(fullCandidate(), masks, "absurd", { backfill: { byBand: { collar: 99999999 } } });
+  const b = gate(res, "band-coverage-disclosure").detail.bands.collar;
+  assert.equal(b.drawn.coveredPx, 0, "clamped at zero rather than going negative");
+  assert.ok(b.drawn.coverage >= 0);
 });

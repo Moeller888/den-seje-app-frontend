@@ -32,11 +32,31 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
 const FIX_DIR = join(HERE, "fixtures", "r2-torso");
 const OUT_DIR = join(HERE, "build", "ai-input");
-const RAW = join(OUT_DIR, "torso-armor-knight-raw.png");
-const CANDIDATE = join(OUT_DIR, "torso-armor-knight-candidate.png");
-const CANDIDATE_NO_BACKFILL = join(OUT_DIR, "torso-armor-knight-candidate-nobackfill.png");
-const BACKFILL_MAP = join(OUT_DIR, "torso-armor-knight-backfill-map.png");
-const BACKFILL_META = join(OUT_DIR, "torso-armor-knight-candidate.backfill.json");
+// Which prompt this run sends. Declared here because the output filenames derive from it.
+export const PROMPT_VERSION = "v3";
+// Output names carry the PROMPT VERSION (D-095). Without this, a v2 run would overwrite in place the
+// files that ARE the accepted asset's provenance: `…-raw.png` is the non-reproducible generation
+// (`83fcff0c…`) and `…-candidate.png` is the owner-accepted artwork (`31f4b2b6…`, D-088). The owner's
+// out-of-repo backup would make that recoverable, but "recoverable" is not a reason to overwrite
+// approved work. v1 keeps its historical, unsuffixed names so nothing already recorded moves.
+const SUFFIX = PROMPT_VERSION === "v1" ? "" : `-${PROMPT_VERSION}`;
+const RAW = join(OUT_DIR, `torso-armor-knight-raw${SUFFIX}.png`);
+const CANDIDATE = join(OUT_DIR, `torso-armor-knight-candidate${SUFFIX}.png`);
+const CANDIDATE_NO_BACKFILL = join(OUT_DIR, `torso-armor-knight-candidate${SUFFIX}-nobackfill.png`);
+const BACKFILL_MAP = join(OUT_DIR, `torso-armor-knight-backfill-map${SUFFIX}.png`);
+const BACKFILL_META = join(OUT_DIR, `torso-armor-knight-candidate${SUFFIX}.backfill.json`);
+// Hard stop: these two files are provenance for an accepted, shipped asset. Nothing in this tool may
+// write them again, whatever the version suffix ends up being.
+const PROTECTED_OUTPUTS = Object.freeze([
+  join(OUT_DIR, "torso-armor-knight-raw.png"),
+  join(OUT_DIR, "torso-armor-knight-candidate.png"),
+]);
+function assertNotProtected(p) {
+  if (PROTECTED_OUTPUTS.some((q) => resolve(q) === resolve(p))) {
+    throw new Error(`refusing to overwrite accepted-asset provenance: ${p}\n  (D-088 accepted 31f4b2b6…; its raw is non-reproducible)`);
+  }
+  return p;
+}
 const rel = (p) => resolve(p).slice(resolve(REPO).length + 1).split(sep).join("/");
 
 const MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
@@ -52,7 +72,9 @@ export const DEFAULT_OVERSCAN = 1.0;
 // the mask: it tapered at the waist and had slits between the skirt plates, leaving 11.4 % of the
 // mandatory region bare. Scaling it up closed the number but cropped away the breastplate, collar and
 // plate edges — it stopped reading as the Ridderdragt. So the shape is now part of the prompt.
-const PROMPT = [
+// PROMPT v1 produced candidates 1 and 2 (D-087/D-088). Kept verbatim so the register can say which
+// prompt produced which candidate, and so v2 can be diffed against it rather than described.
+export const PROMPT_V1 = [
   "A FRONT-FACING children's knight armour TUNIC, front view only, as a clothing overlay.",
   "SHAPE IS CRITICAL: the outline must be a broad T-shirt shape — wide straight shoulders, short",
   "sleeve caps, straight sides that do NOT taper at the waist, and a straight flat hem at the bottom.",
@@ -68,6 +90,76 @@ const PROMPT = [
   "highlight and one shadow tone, bold silhouette that still reads at thumbnail size.",
   "Centred, filling most of the frame.",
 ].join(" ");
+
+// PROMPT v2 — the D-095 fix. v1 asked for "short sleeve caps"; the model delivered exactly that, and
+// the sleeves ended 41.2 % down the garment while the base tee's reach 50.1 %. That 9-point shortfall
+// IS the 5,990 backfill pixels in the shoulder band. Every other line is unchanged from v1, so a
+// difference in the result can be attributed to the sleeve instruction and nothing else.
+//
+// The requirement is stated PROPORTIONALLY (fractions of the garment's own height and width) because
+// the generation is scaled before it meets the mask — an absolute pixel figure would be meaningless
+// to the model and wrong after placement.
+export const PROMPT_V2 = [
+  "A FRONT-FACING children's knight armour TUNIC, front view only, as a clothing overlay.",
+  "SHAPE IS CRITICAL: the outline must be a broad T-shirt shape — wide straight shoulders,",
+  "straight sides that do NOT taper at the waist, and a straight flat hem at the bottom.",
+  "SLEEVE LENGTH IS THE MOST IMPORTANT REQUIREMENT: the sleeves must extend DOWN to HALFWAY between",
+  "the shoulders and the hem — reaching the middle of the garment's height, well below the armpit.",
+  "They are elbow-length sleeves, NOT short caps and NOT tiny shoulder pads.",
+  "The sleeve ends must be the WIDEST part of the whole silhouette, wider than the chest and the",
+  "waist, forming a broad T shape whose horizontal bar is thick and reaches the middle of the height.",
+  "Each sleeve ends in a straight horizontal cuff, not a rounded taper.",
+  "The garment must be a SINGLE SOLID SHAPE with no gaps, no slits, no cut-outs and no separated",
+  "plates: any skirt below the belt is one continuous piece.",
+  "Decorate that shape as steel plate armour: a rounded breastplate with a centre ridge, a closed",
+  "armour collar filling the neckline, and a leather belt with a plain buckle at the waist.",
+  "NO arms, NO arm plates, NO pauldrons sticking out sideways, NO gauntlets, NO hands.",
+  "FULLY TRANSPARENT background — no glow, no vignette, no gradient, no drop shadow, no backdrop.",
+  "ONLY the garment — no head, no neck, no face, no skin, no hair, no legs, no character,",
+  "no mannequin, no scene, no text, no logo.",
+  "Style: premium anime mobile-game equipment, clean cel-shaded, flat shading with one clear",
+  "highlight and one shadow tone, bold silhouette that still reads at thumbnail size.",
+  "Centred, filling most of the frame.",
+].join(" ");
+
+// PROMPT v3 — fixes what v2 broke, and the fix is structural rather than verbal.
+//
+// v2 opened with "SLEEVE LENGTH IS THE MOST IMPORTANT REQUIREMENT". The model obeyed the ranking:
+// sleeves reached the middle (shoulder backfill 5,990 → 3,809) but the collar became an open scoop
+// and the skirt gained an arch cut-out — both explicitly forbidden in the SAME prompt. Collar
+// coverage fell 100 % → 41.5 %, skirt 100 % → 56.5 %, and total backfill rose 8,608 → 10,486.
+//
+// The lesson is not "word the sleeves differently". It is that RANKING one requirement teaches the
+// model that the others are negotiable. v3 therefore states three shape requirements as an
+// unranked, numbered set of equals, and — because a model corrects better against a concrete
+// counter-example than an abstract rule — names the exact two failures to avoid.
+export const PROMPT_V3 = [
+  "A FRONT-FACING children's knight armour TUNIC, front view only, as a clothing overlay.",
+  "THREE SHAPE REQUIREMENTS, ALL EQUALLY MANDATORY — none may be sacrificed for another:",
+  "(1) SLEEVES: elbow-length, extending DOWN to halfway between the shoulders and the hem, ending in",
+  "a straight horizontal cuff. The sleeve ends are the widest part of the silhouette, forming a broad",
+  "T whose horizontal bar is thick. NOT short caps, NOT tiny shoulder pads.",
+  "(2) COLLAR: a CLOSED, HIGH armour collar that completely fills the neckline and rings the neck,",
+  "leaving only a small round hole for the neck itself. NOT a scooped, U-shaped, V-shaped or open",
+  "neckline; NOT a wide bare chest opening.",
+  "(3) BOTTOM: the skirt below the belt is ONE CONTINUOUS SOLID PIECE ending in a straight flat",
+  "horizontal hem. NO arch, NO notch, NO split, NO slit, NO cut-out and NO gap anywhere along the",
+  "bottom edge or up the centre.",
+  "The whole garment is a SINGLE SOLID SHAPE with straight sides that do NOT taper at the waist.",
+  "Decorate that shape as steel plate armour: a rounded breastplate with a centre ridge, and a",
+  "leather belt with a plain buckle at the waist.",
+  "NO arms, NO arm plates, NO pauldrons sticking out sideways, NO gauntlets, NO hands.",
+  "FULLY TRANSPARENT background — no glow, no vignette, no gradient, no drop shadow, no backdrop.",
+  "ONLY the garment — no head, no neck, no face, no skin, no hair, no legs, no character,",
+  "no mannequin, no scene, no text, no logo.",
+  "Style: premium anime mobile-game equipment, clean cel-shaded, flat shading with one clear",
+  "highlight and one shadow tone, bold silhouette that still reads at thumbnail size.",
+  "Centred, filling most of the frame.",
+].join(" ");
+
+// The prompt actually sent. Recorded in the sidecar as `promptVersion`, so a candidate can always
+// be traced back to the wording that produced it.
+const PROMPT = PROMPT_V3;
 
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 
@@ -302,7 +394,7 @@ async function generate() {
   const b64 = json?.data?.[0]?.b64_json;
   if (!b64) { console.error(JSON.stringify({ status: "NO_IMAGE_RETURNED", model: MODEL }, null, 2)); process.exit(1); }
   const bytes = Buffer.from(b64, "base64");
-  writeFileSync(RAW, bytes);
+  writeFileSync(assertNotProtected(RAW), bytes);
   return bytes;
 }
 
@@ -329,7 +421,7 @@ async function main(argv) {
   const fitted = fitAndClip(raw, hard, edit, { overscan, backfill });
   mkdirSync(OUT_DIR, { recursive: true });
   const target = backfill ? CANDIDATE : CANDIDATE_NO_BACKFILL;
-  writeFileSync(target, fitted.png);
+  writeFileSync(assertNotProtected(target), fitted.png);
 
   // Sidecar: the harness reads it so the report states, in the same place as the verdict, how much of
   // the candidate the adapter constructed. Written next to the candidate, never into assets/.
@@ -341,14 +433,14 @@ async function main(argv) {
     backfill: fitted.backfill,
   };
   if (backfill) {
-    writeFileSync(BACKFILL_META, JSON.stringify(meta, null, 2) + "\n");
+    writeFileSync(assertNotProtected(BACKFILL_META), JSON.stringify(meta, null, 2) + "\n");
     // A visual map of exactly which pixels were constructed — magenta on transparent.
     const map = Buffer.alloc(OUT_W * OUT_H * 4);
     for (let i = 0; i < OUT_W * OUT_H; i++) {
       if (!fitted.backfillMask[i]) continue;
       map[i * 4] = 255; map[i * 4 + 1] = 0; map[i * 4 + 2] = 200; map[i * 4 + 3] = 255;
     }
-    writeFileSync(BACKFILL_MAP, encodePngRGBA(OUT_W, OUT_H, map));
+    writeFileSync(assertNotProtected(BACKFILL_MAP), encodePngRGBA(OUT_W, OUT_H, map));
   }
 
   console.log(JSON.stringify({

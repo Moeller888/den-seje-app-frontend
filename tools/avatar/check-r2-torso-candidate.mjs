@@ -188,7 +188,18 @@ export function checkCandidate(candidateBuf, masks, label = "candidate", meta = 
   //     It also catches the opposite failure: a mesh-warp experiment raised the shoulder band to
   //     95.6 % while DROPPING the skirt to 46.1 % — an aggregate improvement achieved by robbing
   //     other bands, invisible in a single coverage figure.
+  // THE GATE MUST JUDGE WHAT THE ARTIST DREW, NOT WHAT THE ADAPTER FILLED IN.
+  //
+  // The first version of this gate measured the candidate as submitted, and the candidate normally
+  // ARRIVES with backfill already applied — so every band read as covered and the gate passed. It
+  // was defeated by exactly the mechanism it was built to expose: prompt-v2's candidate draws only
+  // 41.5 % of the collar band, yet passed, because backfill had filled the other 58.5 %.
+  //
+  // The adapter's sidecar already records backfill per band, so the drawn coverage is simply
+  // covered − backfilled. Both figures are reported: `asSubmitted` is what the file contains,
+  // `drawn` is what the image model actually produced, and the blocking decision uses `drawn`.
   const bandCoverage = {};
+  const backfillByBand = (meta && meta.backfill && meta.backfill.byBand) ? meta.backfill.byBand : null;
   for (const [name, [y0, y1]] of Object.entries(BANDS)) {
     let tot = 0, cov = 0;
     for (let y = Math.max(0, y0); y < Math.min(h, y1); y++) {
@@ -200,18 +211,33 @@ export function checkCandidate(candidateBuf, masks, label = "candidate", meta = 
       }
     }
     if (tot === 0) continue;
-    bandCoverage[name] = { hardPx: tot, coveredPx: cov, missingPx: tot - cov, coverage: +(cov / tot).toFixed(5) };
+    const filled = backfillByBand ? (backfillByBand[name] ?? 0) : 0;
+    // Clamp: a sidecar can only ever explain pixels that are actually there.
+    const drawn = Math.max(0, cov - filled);
+    bandCoverage[name] = {
+      hardPx: tot,
+      asSubmitted: { coveredPx: cov, missingPx: tot - cov, coverage: +(cov / tot).toFixed(5) },
+      backfilledPx: backfillByBand ? filled : null,
+      drawn: { coveredPx: drawn, missingPx: tot - drawn, coverage: +(drawn / tot).toFixed(5) },
+    };
   }
-  const lowBands = Object.entries(bandCoverage).filter(([, b]) => b.coverage < MIN_BAND_COVERAGE).map(([n, b]) => `${n} ${(b.coverage * 100).toFixed(1)}%`);
-  // Advisory: the full picture, always reported so a shortfall can never be silent again.
+  // Without a sidecar the split is UNKNOWN — say so rather than assume the whole candidate was
+  // drawn, which would let an undisclosed fill pass the same way backfill did.
+  const provenanceKnown = !!backfillByBand;
+  const lowBands = Object.entries(bandCoverage)
+    .filter(([, b]) => b.drawn.coverage < MIN_BAND_COVERAGE)
+    .map(([n, b]) => `${n} ${(b.drawn.coverage * 100).toFixed(1)}% drawn`);
   gates.push({ id: "band-coverage-disclosure", pass: true, advisory: true, detail: {
-    bands: bandCoverage, reference: REFERENCE_BAND_COVERAGE,
-    note: "coverage BEFORE any backfill. Compare against the reference: a band far below it means the artwork is missing there, not merely mis-scaled.",
+    bands: bandCoverage, reference: REFERENCE_BAND_COVERAGE, provenanceKnown,
+    note: provenanceKnown
+      ? "`drawn` = coverage by the image model alone, with the adapter's backfill subtracted per band. The blocking gate uses `drawn`."
+      : "no backfill sidecar found, so `drawn` equals `asSubmitted` — if this candidate was filled by something else, this figure OVERSTATES what was drawn.",
   } });
   // Blocking only where the garment is largely ABSENT from a band. Deliberately set below the
   // accepted asset's 87.95 % shoulder figure: this gate exists to catch a missing garment part,
   // not to retroactively fail an asset the owner accepted with that shortfall disclosed.
-  add("no-band-largely-uncovered", lowBands.length === 0, { minCoverage: MIN_BAND_COVERAGE, lowBands, bands: bandCoverage });
+  add("no-band-largely-uncovered", lowBands.length === 0,
+    { minCoverage: MIN_BAND_COVERAGE, measuredOn: "drawn (backfill subtracted)", provenanceKnown, lowBands, bands: bandCoverage });
 
   // 3. Alpha cleanliness. A halo is a semi-transparent pixel with no opaque pixel next to it — the
   //    D-058/D-061 failure mode, measured rather than eyeballed.
