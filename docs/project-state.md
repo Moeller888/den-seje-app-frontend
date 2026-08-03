@@ -287,12 +287,15 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `docs/pilot-participant-2-template` | `b8645a5995f0155c1dfe3eaaa05b4aa9b9b4e980` | participant-2 row + capture sheet prepared (nobody onboarded) |
 | `feat/unit-tests-in-ci-d094` | `ff88fda032c32824276c1413918256cafd711523` | D-094 the unit suite runs in CI (`unit` job, exclusion list, anti-drift guard) |
 | `tools/avatar-r2-garment-mesh-d095` | `ce7f1b5ecb4353b2fbaa4747e2c9c9ad53ca84d9` | D-095 garment-mesh POC + per-band coverage — **tip is a merge of `main`; the work is `d7a8e65`** |
+| `docs/d094-d095-branch-sha-rows` | `959e66aaec291745d8d9b682498d99d8dfa49bfe` | D-094/D-095 branch tips + merge commits recorded |
+| `fix/torso-harness-drawn-coverage-d096` | `ff22319649ac2a3651f7a1f527bdfa2cab602bcf` | D-096 band gate judges `drawn` not `asSubmitted`; prompt + output-path versioning; accepted-provenance write guard |
 
 Merge commits on `main`: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135), `dd4d408`
 (PR #137), `a2fe5db` (PR #139), `045998b` (PR #142), `9dd8c62` (PR #144), `12ad136` (PR #145),
 `a7c0853` (PR #146), `de5d0e0` (PR #147), `aa1b8e9` (PR #148), `c976995` (PR #149), `d9ee017`
 (PR #150), `7ee4c94` (PR #151), `0ab357d` (PR #152), `a4f661e` (PR #153), `7668a16` (PR #154),
-`8fbc4cc` (PR #155), `2a5a838` (PR #156), `bcad56f` (PR #157), `5334d34` (PR #158).
+`8fbc4cc` (PR #155), `2a5a838` (PR #156), `bcad56f` (PR #157), `5334d34` (PR #158), `973e5bd`
+(PR #159), `0a97066` (PR #160).
 Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
