@@ -330,6 +330,20 @@ _Last reviewed: 2026-07-01._
   still claimed only aura/back render, untrue since D-079/D-080/D-081/D-090, which would have wrongly
   excluded eligible Wave-2 users. Docs-only: no activation, no participant onboarded, no browser
   opted in, `AVATAR_R2` stays `false`. See `docs/project-state.md` (D-093).
+  **▶ The unit suite runs in CI (2026-08-02, D-094).** Until now `npm run test:unit` ran **only on a
+  developer machine**, so the D-083 fallback, D-090's per-item gating and mandatory garment layer,
+  and the D-089 asset SHA pin were local-only promises — a regression could merge green. D-085 §5.2
+  had deferred this on the assumption that the vendored libwebp made it awkward; **measuring instead
+  of assuming** (hide `tools/avatar/vendor/`, run the suite) showed **316 of 328 passed without it —
+  only 12 failed, in 2 files**. New `unit` job (pure Node, **deliberately outside the
+  `e2e-shared-supabase` lock**, since a queued run there can be displaced and cancelled) plus a
+  runner and a single shared exclusion list. An **anti-drift guard** (7 tests) keeps the list honest
+  and was verified by dropping in a probe file and watching it fail. **Recorded residue:** exclusion
+  is per FILE, so **54 tests are excluded to avoid 12** — CI runs **281 of 335 (84 %)**, and the
+  asset-SHA and mask-integrity tests are among those still uncovered. Remedy is known and small
+  (split the 12 into `*.binary.test.mjs`, → ~323/335) and deliberately kept a separate change.
+  Test/CI infrastructure only; `js/` untouched, `AVATAR_R2` stays `false`.
+  See `docs/project-state.md` (D-094).
   **▶ B-track (allowlist) AUDITED + DESIGNED, recommend DEFER (2026-07-26, D-075).**
   `docs/167a-r2-pilot-allowlist-design.md`: the activation gate has no uid today, and a client-side
   student-UID allowlist would ship children's identifiers to the public bundle (GDPR) — **rejected**.

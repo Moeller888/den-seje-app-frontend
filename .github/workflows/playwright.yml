@@ -16,6 +16,30 @@ jobs:
   # ── Classify — no shared lock (touches no Supabase state) ───────────────────
   # Determines the mode and the concurrency group the `test` job will take. Fail-closed:
   # any error / non-PR event / oversized list → mode=full + group=e2e-shared-supabase.
+  # ── Unit suite — no shared lock, no backend, no browser ────────────────────
+  # Until D-094 the 328 unit tests ran ONLY on a developer machine, so the guarantees the avatar
+  # work rests on (D-083 fallback, D-090 per-item gating + mandatory garment layer, the D-089
+  # asset SHA pin) were never enforced by CI and a regression could merge green.
+  #
+  # This job is pure Node: no network, no Supabase, no Playwright. It therefore does NOT take the
+  # `e2e-shared-supabase` concurrency group — taking it would queue this behind unrelated live-
+  # backend work for no reason, and a queued run in that group can be displaced and cancelled.
+  #
+  # It runs every unit file except the two that drive the vendored Windows libwebp binaries
+  # (tests/unit-ci-exclusions.mjs). Those still run, and still fail loudly, locally.
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit suite
+        run: npm run test:unit:ci
+
   classify:
     runs-on: ubuntu-latest
     outputs:
