@@ -27,6 +27,7 @@ import { dirname, join, resolve, sep } from "node:path";
 import { decodePng, encodePngRGBA } from "../build-r2-torso-occlusion-mask.mjs";
 import { OPAQUE, VISIBLE, BANDS } from "../check-r2-torso-candidate.mjs";
 import { geometry, plateSeam, W, H } from "./sleeve-donor-challenger.mjs";
+import { classifyExposure, exposureReport, CATEGORY } from "./fabric-exposure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..", "..");
@@ -399,16 +400,17 @@ function main() {
   }
 
   // Does the shoulder PLATE actually cover the fabric's top edge? For each fabric column, the
-  // topmost fabric row must have v1 artwork directly above it — otherwise the fabric's own edge is
-  // exposed and the "plate on top" claim fails.
-  let covered = 0, exposed = 0;
-  for (let x = 0; x < W; x++) {
-    let top = -1;
-    for (let y = 0; y < H; y++) if (reg.fabric[y * W + x]) { top = y; break; }
-    if (top <= 0) continue;
-    (v1.rgba[((top - 1) * W + x) * 4 + 3] >= OPAQUE) ? covered++ : exposed++;
-  }
-  report.plateCoversFabricTop = { columnsCovered: covered, columnsExposed: exposed, pass: exposed === 0 };
+  // topmost fabric row must have artwork directly above it — otherwise the fabric's own edge is
+  // exposed and the "plate on top" claim fails. This counted EVERY uncovered top and reported 28,
+  // most of which were the garment's own silhouette; the decision now lives in one shared place.
+  // See fabric-exposure.mjs (D-098).
+  const opaqueForExposure = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) opaqueForExposure[i] = v1.rgba[i * 4 + 3] >= OPAQUE ? 1 : 0;
+  const fabricBool = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) fabricBool[i] = reg.fabric[i] ? 1 : 0;
+  const exposure = classifyExposure({ hard: masks.hard, visibleFabric: fabricBool, opaque: opaqueForExposure, edit: masks.edit, protect: masks.protect, width: W, height: H });
+  const exposed = exposure.counts[CATEGORY.C];
+  report.plateCoversFabricTop = { ...exposureReport(exposure), pass: exposed === 0 };
 
   // 52x78 legibility + gradient banding for the shaded variant
   const legib = {};
@@ -425,7 +427,7 @@ function main() {
     ["fabric is one piece per sleeve (2 components)", report.semanticSplit.fabricComponents === 2],
     ["no fabric specks", report.semanticSplit.fabricSpecks === 0],
     ["left/right balanced (>= 0.6)", report.semanticSplit.leftRightBalance >= 0.6],
-    ["plate covers the fabric's top edge everywhere", exposed === 0],
+    ["plate covers the fabric's top edge everywhere (true_cut = 0)", exposed === 0],
     ["residual repair << previous 8608", reg.residualPx < 8608 * 0.25],
     ["v1 pixel-identical outside the fabric mask", report.variants["C-neutral"].differsFromV1OutsideFabricMask === 0],
     ["0 ink outside edit (C)", report.variants["C-neutral"].inkOutsideEdit === 0],
@@ -443,7 +445,7 @@ function main() {
   console.log(`  intentional fabric   ${reg.fabricPx}  (left ${reg.leftPx} / right ${reg.rightPx}, balance ${report.semanticSplit.leftRightBalance})`);
   console.log(`  residual REPAIR      ${reg.residualPx}`);
   console.log(`  fabric components ${fabComps.length}  largest ${fabComps[0]}  specks ${report.semanticSplit.fabricSpecks}`);
-  console.log(`\nplate covers fabric top: ${covered} columns covered, ${exposed} exposed`);
+  console.log(`\nplate covers fabric top: true_cut ${exposed}  ·  mandatory_run_silhouette ${exposure.counts[CATEGORY.A]}  ·  non_mandatory_fabric ${exposure.counts[CATEGORY.B]} (OPEN)`);
   console.log(`52x78 distinct tone buckets: ${JSON.stringify(legib)}`);
   console.log("\nvariant                         missing   diff-vs-v1-outside-fabric  comps");
   for (const [k, v] of Object.entries(report.variants)) {

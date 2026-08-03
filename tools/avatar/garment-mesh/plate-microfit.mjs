@@ -26,6 +26,7 @@ import { OPAQUE, VISIBLE, BANDS } from "../check-r2-torso-candidate.mjs";
 import { geometry, plateSeam, W, H } from "./sleeve-donor-challenger.mjs";
 import { warp, distortionMetrics, SCHEMA_VERSION } from "./mesh-core.mjs";
 import { sleeveFabric, shoulderPlates, CUFF_Y } from "./fabric-plate-fit.mjs";
+import { classifyExposure, exposureReport, CATEGORY } from "./fabric-exposure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..", "..");
@@ -229,19 +230,16 @@ function main() {
       visFab[i] = 1; fabPx++; ((i % W) < 512) ? fabL++ : fabR++;
     }
     // EXPOSED means a TRUE CUT edge: mandatory area above the fabric that neither plate nor fabric
-    // covers. Where the fabric's top coincides with the mandatory mask's own top, that edge IS the
-    // garment's silhouette — the same boundary the accepted asset has — and counting it as exposed
-    // (as the first version did) doubled the reported problem from 4 columns to 12.
-    const exposed = [], silhouetteEdges = [];
-    for (let x = 0; x < W; x++) {
-      let top = -1;
-      for (let y = 0; y < H; y++) if (visFab[y * W + x]) { top = y; break; }
-      if (top <= 0) continue;
-      if (img[((top - 1) * W + x) * 4 + 3] >= OPAQUE) continue;      // covered directly above
-      let maskTop = -1;
-      for (let y = 0; y < H; y++) if (masks.hard[y * W + x]) { maskTop = y; break; }
-      if (maskTop >= 0 && top <= maskTop + 1) silhouetteEdges.push(x); else exposed.push(x);
-    }
+    // covers. The rule used to live here, and it was wrong twice over — it compared against the
+    // column's FIRST mandatory run and never asked whether the fabric was mandatory at all, which
+    // is how three silhouette columns became D-097 §7's "needs ~10 px of new plate artwork".
+    // The decision now lives in ONE place for every tool; see fabric-exposure.mjs (D-098).
+    const opaque = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) opaque[i] = img[i * 4 + 3] >= OPAQUE ? 1 : 0;
+    const exposure = classifyExposure({ hard: masks.hard, visibleFabric: visFab, opaque, edit: masks.edit, protect: masks.protect, width: W, height: H });
+    const exposed = exposure.byCategory[CATEGORY.C];
+    const silhouetteEdges = exposure.byCategory[CATEGORY.A];
+    const nonMandatoryFabric = exposure.byCategory[CATEGORY.B];
     const bands = {};
     for (const [n, [a, b]] of Object.entries(BANDS)) {
       let tot = 0, cov = 0;
@@ -260,7 +258,7 @@ function main() {
     const on = new Uint8Array(W * H);
     for (let i = 0; i < W * H; i++) on[i] = img[i * 4 + 3] >= OPAQUE ? 1 : 0;
     const fc = comps(visFab);
-    return { visFab, silhouetteEdges, fabricPx: fabPx, fabricLeft: fabL, fabricRight: fabR, exposedColumns: exposed, bands, residual: Object.values(bands).reduce((s, b) => s + b.missingPx, 0), inkOutsideEdit: stray, inkOnProtect: onProt, orphanSoftPx: orphan, components: comps(on).length, fabricComponents: fc.length, fabricSpecks: fc.filter((c) => c.length < 64).length };
+    return { visFab, silhouetteEdges, nonMandatoryFabric, exposure, fabricPx: fabPx, fabricLeft: fabL, fabricRight: fabR, exposedColumns: exposed, bands, residual: Object.values(bands).reduce((s, b) => s + b.missingPx, 0), inkOutsideEdit: stray, inkOnProtect: onProt, orphanSoftPx: orphan, components: comps(on).length, fabricComponents: fc.length, fabricSpecks: fc.filter((c) => c.length < 64).length };
   };
   const mB = measureOn(before), mA = measureOn(after);
 
@@ -289,6 +287,8 @@ function main() {
       left: { bbox: fitL.bbox, vertexMove: fitL.vertexMove, changedPx: fitL.changedPx, foldovers: fitL.metrics.foldovers, areaRatio: fitL.metrics.areaRatio, maxLongestEdgeRatio: fitL.metrics.maxLongestEdgeRatio, maxAbsRotationDeg: fitL.metrics.maxAbsRotationDeg },
       right: { bbox: fitR.bbox, vertexMove: fitR.vertexMove, changedPx: fitR.changedPx, foldovers: fitR.metrics.foldovers, areaRatio: fitR.metrics.areaRatio, maxLongestEdgeRatio: fitR.metrics.maxLongestEdgeRatio, maxAbsRotationDeg: fitR.metrics.maxAbsRotationDeg },
     },
+    exposureBefore: exposureReport(mB.exposure),
+    exposureAfter: exposureReport(mA.exposure),
     before: { exposedColumns: mB.exposedColumns.length, residual: mB.residual },
     after: { exposedColumns: mA.exposedColumns.length, exposedSample: mA.exposedColumns.slice(0, 12), residual: mA.residual, bands: mA.bands, fabricPx: mA.fabricPx, fabricLeft: mA.fabricLeft, fabricRight: mA.fabricRight, fabricBalance: +(Math.min(mA.fabricLeft, mA.fabricRight) / Math.max(mA.fabricLeft, mA.fabricRight)).toFixed(4), fabricComponents: mA.fabricComponents, fabricSpecks: mA.fabricSpecks, inkOutsideEdit: mA.inkOutsideEdit, inkOnProtect: mA.inkOnProtect, orphanSoftPx: mA.orphanSoftPx, components: mA.components },
     newlyCoveredColumns: mB.exposedColumns.length - mA.exposedColumns.length,
@@ -296,7 +296,8 @@ function main() {
     distinctToneBucketsAt52x78: tones.size,
   };
   const checks = [
-    ["exposedFabricTopColumns = 0", mA.exposedColumns.length === 0],
+    // Category C only. The threshold is still exactly zero — see fabric-exposure.mjs (D-098).
+    ["true_cut fabric-top columns = 0", mA.exposedColumns.length === 0],
     ["foldovers = 0", fitL.metrics.foldovers === 0 && fitR.metrics.foldovers === 0],
     ["no change in collar/breastplate/belt/skirt", forbidden === 0],
     ["v1 pixel-identical outside fabric + plate masks", outsideDiff === 0],
@@ -350,7 +351,10 @@ function main() {
   console.log(`area-ratio   L max ${fitL.metrics.areaRatio.max} p95 ${fitL.metrics.areaRatio.p95}   R max ${fitR.metrics.areaRatio.max}`);
   console.log(`edge ratio   L ${fitL.metrics.maxLongestEdgeRatio}  R ${fitR.metrics.maxLongestEdgeRatio}   foldovers ${fitL.metrics.foldovers}/${fitR.metrics.foldovers}`);
   console.log(`changed plate px  L ${fitL.changedPx}  R ${fitR.changedPx}`);
-  console.log(`\nexposed columns  before ${mB.exposedColumns.length}  →  after ${mA.exposedColumns.length}` + (mA.exposedColumns.length ? "  (" + mA.exposedColumns.slice(0, 12).join(",") + ")" : ""));
+  console.log(`\ntrue_cut columns              before ${mB.exposedColumns.length}  →  after ${mA.exposedColumns.length}` + (mA.exposedColumns.length ? "  (" + mA.exposedColumns.slice(0, 12).join(",") + ")" : ""));
+  console.log(`mandatory_run_silhouette      before ${mB.silhouetteEdges.length}  →  after ${mA.silhouetteEdges.length}   (the garment's own outer edge — not a fault)`);
+  console.log(`non_mandatory_fabric          before ${mB.nonMandatoryFabric.length}  →  after ${mA.nonMandatoryFabric.length}` + (mA.nonMandatoryFabric.length ? "  (" + mA.nonMandatoryFabric.join(",") + ")" : "") + "   — OPEN question about the fabric mask's shape");
+  console.log(`the shipped D-097 rule would have called ${mA.exposure.counts.legacyD097Cut} of these a cut: ${mA.exposure.legacyD097CutColumns.join(",") || "none"}`);
   console.log(`residual  before ${mB.residual}  →  after ${mA.residual}   (cap 1702)`);
   console.log("\nchecks:");
   for (const c of report.checks) console.log(`  ${c.pass ? "✓" : "✖"} ${c.name}`);
