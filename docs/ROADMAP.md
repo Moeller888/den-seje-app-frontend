@@ -302,6 +302,20 @@ _Last reviewed: 2026-07-01._
   8,608 vs v2 10,486 vs v3 9,172 — each fix moved the shortfall to another band. Prompt wording has
   stopped being the productive lever; the next step is a targeted sleeve-donor challenger, not a v4.
   Unit 348/348 (CI 294). See `docs/project-state.md` (D-096).
+  **▶ Shoulder-band shortfall traced to its end (2026-08-03, D-097).** Two results, design only.
+  **A sleeve-donor challenger BEATS the accepted asset:** grafting only the prompt-v3 sleeves onto
+  v1 gives shoulder **88.0 → 98.5 %**, missing **8,608 → 3,364 (−61 %)**, with everything outside
+  the sleeve masks **byte-identical to v1** and a seam no more visible than the garment's own
+  armhole line. The seam took three attempts — twice I assumed the armhole sat at the torso-column
+  edge; reading the luma profile showed it 10–40 px further **inboard**, because that column was the
+  skirt's width, not the breastplate's. **The owner's reframing — "the shoulder guard sits on top of
+  the backfill, so the backfill is given meaning" — inverts the pipeline** to fabric first, plates
+  over it. Of the 8,608 gap pixels, **7,559 are sleeve** (legitimately fabric) and **1,049 remain
+  repair**: `residualRepairBackfill` falls **−88 %** without relabelling anything. A local plate
+  mesh (8 px out/down, edge-ratio 1.08, 0 foldovers) cut exposed fabric edges **28 → 3**. **What is
+  left is 3 columns needing ~10 px of new plate artwork** — a small illustrator correction, and the
+  honest limit of what composition alone can do. Nothing promoted, accepted asset untouched,
+  `AVATAR_R2` `false`. See `docs/project-state.md` (D-097).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
