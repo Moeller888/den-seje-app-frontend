@@ -288,6 +288,20 @@ _Last reviewed: 2026-07-01._
   `skirt 46.1 %`). Real remedy is the **source**: sleeves that reach y≈714. Unit 336/336. Tooling
   and harness only; the accepted asset untouched, `AVATAR_R2` `false`.
   See `docs/project-state.md` (D-095).
+  **▶ The band gate was defeated by backfill — fixed (2026-08-03, D-096).** D-095's
+  `no-band-largely-uncovered` measured the candidate **as submitted**, and candidates arrive with
+  backfill already applied — so a candidate whose collar band the model drew only **41.5 %** of
+  passed. The gate built to stop backfill hiding a missing garment part was hidden by backfill.
+  Now it measures **`drawn` = covered − backfilled** from the adapter's own sidecar and blocks on
+  that; a missing sidecar is reported as `provenanceKnown: false` with an explicit warning that the
+  figure **overstates** what was drawn. Verified both ways: the v2 candidate now **rejects**, the
+  **owner-accepted asset still passes** (87.95 % drawn). Also: prompts are versioned (v1 kept
+  verbatim, since it produced the accepted candidate), and output paths are versioned with a hard
+  stop — the generator would otherwise have overwritten **in place** the non-reproducible raw
+  (`83fcff0c…`) and the accepted candidate (`31f4b2b6…`). **Three generations did not beat v1:**
+  8,608 vs v2 10,486 vs v3 9,172 — each fix moved the shortfall to another band. Prompt wording has
+  stopped being the productive lever; the next step is a targeted sleeve-donor challenger, not a v4.
+  Unit 348/348 (CI 294). See `docs/project-state.md` (D-096).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
