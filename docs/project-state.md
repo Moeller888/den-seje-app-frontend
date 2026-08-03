@@ -281,11 +281,16 @@ at the time of deletion (`git merge-base --is-ancestor <sha> main`). Use the sha
 | `feat/avatar-r2-torso-golden-d092` | `9a686b8975708f2b84088d5cc8b365ba60d70c9c` | D-092 torso golden baseline (matrix incl. the "no item" control column) |
 | `docs/d092-branch-sha-row` | `cd8cdb756617897c3c2fff2a94960fd6521cb2f6` | D-092 branch tip + merge commits recorded |
 | `docs/d093-pilot-wave-2` | `c167273a5ea7af2cfbecbed3caa1120b0f2080ec` | D-093 Wave 2 defined (not started); the stale §2 selection criteria corrected |
+| `docs/d093-branch-sha-row` | `4d04392b0eb985cee4fce302ba0111152e24d792` | D-093 branch tip + merge commits recorded |
+| `docs/pilot-participant-2-template` | `b8645a5995f0155c1dfe3eaaa05b4aa9b9b4e980` | participant-2 row + capture sheet prepared (nobody onboarded) |
+| `feat/unit-tests-in-ci-d094` | `ff88fda032c32824276c1413918256cafd711523` | D-094 the unit suite runs in CI (`unit` job, exclusion list, anti-drift guard) |
+| `tools/avatar-r2-garment-mesh-d095` | `ce7f1b5ecb4353b2fbaa4747e2c9c9ad53ca84d9` | D-095 garment-mesh POC + per-band coverage — **tip is a merge of `main`; the work is `d7a8e65`** |
 
 Merge commits on `main`: `3b63599` (PR #133), `54ee8ba` (PR #134), `a6e576a` (PR #135), `dd4d408`
 (PR #137), `a2fe5db` (PR #139), `045998b` (PR #142), `9dd8c62` (PR #144), `12ad136` (PR #145),
 `a7c0853` (PR #146), `de5d0e0` (PR #147), `aa1b8e9` (PR #148), `c976995` (PR #149), `d9ee017`
-(PR #150), `7ee4c94` (PR #151), `0ab357d` (PR #152), `a4f661e` (PR #153), `7668a16` (PR #154).
+(PR #150), `7ee4c94` (PR #151), `0ab357d` (PR #152), `a4f661e` (PR #153), `7668a16` (PR #154),
+`8fbc4cc` (PR #155), `2a5a838` (PR #156), `bcad56f` (PR #157), `5334d34` (PR #158).
 Branches **not** deleted in that cleanup:
 `avatar/d042-proud-master-composite` (local only).
 
