@@ -1,0 +1,1983 @@
+{
+  "version": 1,
+  "generatedBy": "warp-garment-mesh.mjs --autofit",
+  "note": "Auto-fit SUGGESTS targets from the hard-mask contour. It never approves a result.",
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "vertices": [
+    {
+      "id": "collar-l-out",
+      "source": [
+        453,
+        524
+      ],
+      "target": [
+        452.5,
+        524
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-l-o2",
+      "source": [
+        464.8,
+        524
+      ],
+      "target": [
+        464.4,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-l-mid",
+      "source": [
+        476.6,
+        524
+      ],
+      "target": [
+        476.3,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-l-in",
+      "source": [
+        491.35,
+        524
+      ],
+      "target": [
+        491.175,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-mid",
+      "source": [
+        512,
+        524
+      ],
+      "target": [
+        512,
+        524
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "collar-r-in",
+      "source": [
+        533,
+        524
+      ],
+      "target": [
+        532.825,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-r-mid",
+      "source": [
+        548,
+        524
+      ],
+      "target": [
+        547.7,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-r-o2",
+      "source": [
+        560,
+        524
+      ],
+      "target": [
+        559.6,
+        524
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "collar-r-out",
+      "source": [
+        572,
+        524
+      ],
+      "target": [
+        571.5,
+        524
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-l-out",
+      "source": [
+        384,
+        560
+      ],
+      "target": [
+        381.5,
+        560
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-l-o2",
+      "source": [
+        409.6,
+        560
+      ],
+      "target": [
+        407.6,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-l-mid",
+      "source": [
+        435.2,
+        560
+      ],
+      "target": [
+        433.70000000000005,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-l-in",
+      "source": [
+        467.2,
+        560
+      ],
+      "target": [
+        466.32500000000005,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-mid",
+      "source": [
+        512,
+        560
+      ],
+      "target": [
+        512,
+        560
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-r-in",
+      "source": [
+        556.8,
+        560
+      ],
+      "target": [
+        557.675,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-r-mid",
+      "source": [
+        588.8,
+        560
+      ],
+      "target": [
+        590.3,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-r-o2",
+      "source": [
+        614.4,
+        560
+      ],
+      "target": [
+        616.4,
+        560
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "shoulder-r-out",
+      "source": [
+        640,
+        560
+      ],
+      "target": [
+        642.5,
+        560
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-l-out",
+      "source": [
+        338,
+        640
+      ],
+      "target": [
+        339.5,
+        640
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-l-o2",
+      "source": [
+        372.8,
+        640
+      ],
+      "target": [
+        374,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-l-mid",
+      "source": [
+        407.6,
+        640
+      ],
+      "target": [
+        408.5,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-l-in",
+      "source": [
+        451.1,
+        640
+      ],
+      "target": [
+        451.625,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-mid",
+      "source": [
+        512,
+        640
+      ],
+      "target": [
+        512,
+        640
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "chest-r-in",
+      "source": [
+        573.25,
+        640
+      ],
+      "target": [
+        572.375,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-r-mid",
+      "source": [
+        617,
+        640
+      ],
+      "target": [
+        615.5,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-r-o2",
+      "source": [
+        652,
+        640
+      ],
+      "target": [
+        650,
+        640
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "chest-r-out",
+      "source": [
+        687,
+        640
+      ],
+      "target": [
+        684.5,
+        640
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-l-out",
+      "source": [
+        410,
+        680
+      ],
+      "target": [
+        329.5,
+        680
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-l-o2",
+      "source": [
+        430.4,
+        680
+      ],
+      "target": [
+        366,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-l-mid",
+      "source": [
+        450.8,
+        680
+      ],
+      "target": [
+        402.5,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-l-in",
+      "source": [
+        476.3,
+        680
+      ],
+      "target": [
+        448.125,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-mid",
+      "source": [
+        512,
+        680
+      ],
+      "target": [
+        512,
+        680
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "widest-r-in",
+      "source": [
+        547.7,
+        680
+      ],
+      "target": [
+        575.875,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-r-mid",
+      "source": [
+        573.2,
+        680
+      ],
+      "target": [
+        621.5,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-r-o2",
+      "source": [
+        593.6,
+        680
+      ],
+      "target": [
+        658,
+        680
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "widest-r-out",
+      "source": [
+        614,
+        680
+      ],
+      "target": [
+        694.5,
+        680
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-l-out",
+      "source": [
+        414,
+        714
+      ],
+      "target": [
+        397.5,
+        714
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-l-o2",
+      "source": [
+        433.6,
+        714
+      ],
+      "target": [
+        420.4,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-l-mid",
+      "source": [
+        453.2,
+        714
+      ],
+      "target": [
+        443.3,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-l-in",
+      "source": [
+        477.7,
+        714
+      ],
+      "target": [
+        471.925,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-mid",
+      "source": [
+        512,
+        714
+      ],
+      "target": [
+        512,
+        714
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-r-in",
+      "source": [
+        546.65,
+        714
+      ],
+      "target": [
+        552.075,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-r-mid",
+      "source": [
+        571.4,
+        714
+      ],
+      "target": [
+        580.7,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-r-o2",
+      "source": [
+        591.2,
+        714
+      ],
+      "target": [
+        603.6,
+        714
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "sleeve-r-out",
+      "source": [
+        611,
+        714
+      ],
+      "target": [
+        626.5,
+        714
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "belttop-l-out",
+      "source": [
+        412,
+        756
+      ],
+      "target": [
+        397.5,
+        756
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-l-o2",
+      "source": [
+        432,
+        756
+      ],
+      "target": [
+        420.4,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-l-mid",
+      "source": [
+        452,
+        756
+      ],
+      "target": [
+        443.3,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-l-in",
+      "source": [
+        477,
+        756
+      ],
+      "target": [
+        471.925,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-mid",
+      "source": [
+        512,
+        756
+      ],
+      "target": [
+        512,
+        756
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-r-in",
+      "source": [
+        547.35,
+        756
+      ],
+      "target": [
+        552.075,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-r-mid",
+      "source": [
+        572.6,
+        756
+      ],
+      "target": [
+        580.7,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-r-o2",
+      "source": [
+        592.8,
+        756
+      ],
+      "target": [
+        603.6,
+        756
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "belttop-r-out",
+      "source": [
+        613,
+        756
+      ],
+      "target": [
+        626.5,
+        756
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-l-out",
+      "source": [
+        410,
+        786
+      ],
+      "target": [
+        395.5,
+        786
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-l-o2",
+      "source": [
+        430.4,
+        786
+      ],
+      "target": [
+        418.8,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-l-mid",
+      "source": [
+        450.8,
+        786
+      ],
+      "target": [
+        442.1,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-l-in",
+      "source": [
+        476.3,
+        786
+      ],
+      "target": [
+        471.225,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-mid",
+      "source": [
+        512,
+        786
+      ],
+      "target": [
+        512,
+        786
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-r-in",
+      "source": [
+        548.05,
+        786
+      ],
+      "target": [
+        552.775,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-r-mid",
+      "source": [
+        573.8,
+        786
+      ],
+      "target": [
+        581.9,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-r-o2",
+      "source": [
+        594.4,
+        786
+      ],
+      "target": [
+        605.2,
+        786
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "beltbot-r-out",
+      "source": [
+        615,
+        786
+      ],
+      "target": [
+        628.5,
+        786
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": true
+    },
+    {
+      "id": "skirt-l-out",
+      "source": [
+        393,
+        850
+      ],
+      "target": [
+        386.5,
+        850
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-l-o2",
+      "source": [
+        416.8,
+        850
+      ],
+      "target": [
+        411.6,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-l-mid",
+      "source": [
+        440.6,
+        850
+      ],
+      "target": [
+        436.70000000000005,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-l-in",
+      "source": [
+        470.35,
+        850
+      ],
+      "target": [
+        468.07500000000005,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-mid",
+      "source": [
+        512,
+        850
+      ],
+      "target": [
+        512,
+        850
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-r-in",
+      "source": [
+        554,
+        850
+      ],
+      "target": [
+        555.925,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-r-mid",
+      "source": [
+        584,
+        850
+      ],
+      "target": [
+        587.3,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-r-o2",
+      "source": [
+        608,
+        850
+      ],
+      "target": [
+        612.4,
+        850
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "skirt-r-out",
+      "source": [
+        632,
+        850
+      ],
+      "target": [
+        637.5,
+        850
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-l-out",
+      "source": [
+        451,
+        903
+      ],
+      "target": [
+        474.5,
+        903
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-l-o2",
+      "source": [
+        463.2,
+        903
+      ],
+      "target": [
+        482,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-l-mid",
+      "source": [
+        475.4,
+        903
+      ],
+      "target": [
+        489.5,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-l-in",
+      "source": [
+        490.65,
+        903
+      ],
+      "target": [
+        498.875,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-mid",
+      "source": [
+        512,
+        903
+      ],
+      "target": [
+        512,
+        903
+      ],
+      "role": "feature",
+      "lockedX": true,
+      "lockedY": false
+    },
+    {
+      "id": "hem-r-in",
+      "source": [
+        534.05,
+        903
+      ],
+      "target": [
+        525.125,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-r-mid",
+      "source": [
+        549.8,
+        903
+      ],
+      "target": [
+        534.5,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-r-o2",
+      "source": [
+        562.4,
+        903
+      ],
+      "target": [
+        542,
+        903
+      ],
+      "role": "interior",
+      "lockedX": false,
+      "lockedY": false
+    },
+    {
+      "id": "hem-r-out",
+      "source": [
+        575,
+        903
+      ],
+      "target": [
+        549.5,
+        903
+      ],
+      "role": "boundary",
+      "lockedX": false,
+      "lockedY": false
+    }
+  ],
+  "triangles": [
+    [
+      "collar-l-out",
+      "collar-l-o2",
+      "shoulder-l-o2"
+    ],
+    [
+      "collar-l-out",
+      "shoulder-l-o2",
+      "shoulder-l-out"
+    ],
+    [
+      "collar-l-o2",
+      "collar-l-mid",
+      "shoulder-l-mid"
+    ],
+    [
+      "collar-l-o2",
+      "shoulder-l-mid",
+      "shoulder-l-o2"
+    ],
+    [
+      "collar-l-mid",
+      "collar-l-in",
+      "shoulder-l-in"
+    ],
+    [
+      "collar-l-mid",
+      "shoulder-l-in",
+      "shoulder-l-mid"
+    ],
+    [
+      "collar-l-in",
+      "collar-mid",
+      "shoulder-mid"
+    ],
+    [
+      "collar-l-in",
+      "shoulder-mid",
+      "shoulder-l-in"
+    ],
+    [
+      "collar-mid",
+      "collar-r-in",
+      "shoulder-r-in"
+    ],
+    [
+      "collar-mid",
+      "shoulder-r-in",
+      "shoulder-mid"
+    ],
+    [
+      "collar-r-in",
+      "collar-r-mid",
+      "shoulder-r-mid"
+    ],
+    [
+      "collar-r-in",
+      "shoulder-r-mid",
+      "shoulder-r-in"
+    ],
+    [
+      "collar-r-mid",
+      "collar-r-o2",
+      "shoulder-r-o2"
+    ],
+    [
+      "collar-r-mid",
+      "shoulder-r-o2",
+      "shoulder-r-mid"
+    ],
+    [
+      "collar-r-o2",
+      "collar-r-out",
+      "shoulder-r-out"
+    ],
+    [
+      "collar-r-o2",
+      "shoulder-r-out",
+      "shoulder-r-o2"
+    ],
+    [
+      "shoulder-l-out",
+      "shoulder-l-o2",
+      "chest-l-o2"
+    ],
+    [
+      "shoulder-l-out",
+      "chest-l-o2",
+      "chest-l-out"
+    ],
+    [
+      "shoulder-l-o2",
+      "shoulder-l-mid",
+      "chest-l-mid"
+    ],
+    [
+      "shoulder-l-o2",
+      "chest-l-mid",
+      "chest-l-o2"
+    ],
+    [
+      "shoulder-l-mid",
+      "shoulder-l-in",
+      "chest-l-in"
+    ],
+    [
+      "shoulder-l-mid",
+      "chest-l-in",
+      "chest-l-mid"
+    ],
+    [
+      "shoulder-l-in",
+      "shoulder-mid",
+      "chest-mid"
+    ],
+    [
+      "shoulder-l-in",
+      "chest-mid",
+      "chest-l-in"
+    ],
+    [
+      "shoulder-mid",
+      "shoulder-r-in",
+      "chest-r-in"
+    ],
+    [
+      "shoulder-mid",
+      "chest-r-in",
+      "chest-mid"
+    ],
+    [
+      "shoulder-r-in",
+      "shoulder-r-mid",
+      "chest-r-mid"
+    ],
+    [
+      "shoulder-r-in",
+      "chest-r-mid",
+      "chest-r-in"
+    ],
+    [
+      "shoulder-r-mid",
+      "shoulder-r-o2",
+      "chest-r-o2"
+    ],
+    [
+      "shoulder-r-mid",
+      "chest-r-o2",
+      "chest-r-mid"
+    ],
+    [
+      "shoulder-r-o2",
+      "shoulder-r-out",
+      "chest-r-out"
+    ],
+    [
+      "shoulder-r-o2",
+      "chest-r-out",
+      "chest-r-o2"
+    ],
+    [
+      "chest-l-out",
+      "chest-l-o2",
+      "widest-l-o2"
+    ],
+    [
+      "chest-l-out",
+      "widest-l-o2",
+      "widest-l-out"
+    ],
+    [
+      "chest-l-o2",
+      "chest-l-mid",
+      "widest-l-mid"
+    ],
+    [
+      "chest-l-o2",
+      "widest-l-mid",
+      "widest-l-o2"
+    ],
+    [
+      "chest-l-mid",
+      "chest-l-in",
+      "widest-l-in"
+    ],
+    [
+      "chest-l-mid",
+      "widest-l-in",
+      "widest-l-mid"
+    ],
+    [
+      "chest-l-in",
+      "chest-mid",
+      "widest-mid"
+    ],
+    [
+      "chest-l-in",
+      "widest-mid",
+      "widest-l-in"
+    ],
+    [
+      "chest-mid",
+      "chest-r-in",
+      "widest-r-in"
+    ],
+    [
+      "chest-mid",
+      "widest-r-in",
+      "widest-mid"
+    ],
+    [
+      "chest-r-in",
+      "chest-r-mid",
+      "widest-r-mid"
+    ],
+    [
+      "chest-r-in",
+      "widest-r-mid",
+      "widest-r-in"
+    ],
+    [
+      "chest-r-mid",
+      "chest-r-o2",
+      "widest-r-o2"
+    ],
+    [
+      "chest-r-mid",
+      "widest-r-o2",
+      "widest-r-mid"
+    ],
+    [
+      "chest-r-o2",
+      "chest-r-out",
+      "widest-r-out"
+    ],
+    [
+      "chest-r-o2",
+      "widest-r-out",
+      "widest-r-o2"
+    ],
+    [
+      "widest-l-out",
+      "widest-l-o2",
+      "sleeve-l-o2"
+    ],
+    [
+      "widest-l-out",
+      "sleeve-l-o2",
+      "sleeve-l-out"
+    ],
+    [
+      "widest-l-o2",
+      "widest-l-mid",
+      "sleeve-l-mid"
+    ],
+    [
+      "widest-l-o2",
+      "sleeve-l-mid",
+      "sleeve-l-o2"
+    ],
+    [
+      "widest-l-mid",
+      "widest-l-in",
+      "sleeve-l-in"
+    ],
+    [
+      "widest-l-mid",
+      "sleeve-l-in",
+      "sleeve-l-mid"
+    ],
+    [
+      "widest-l-in",
+      "widest-mid",
+      "sleeve-mid"
+    ],
+    [
+      "widest-l-in",
+      "sleeve-mid",
+      "sleeve-l-in"
+    ],
+    [
+      "widest-mid",
+      "widest-r-in",
+      "sleeve-r-in"
+    ],
+    [
+      "widest-mid",
+      "sleeve-r-in",
+      "sleeve-mid"
+    ],
+    [
+      "widest-r-in",
+      "widest-r-mid",
+      "sleeve-r-mid"
+    ],
+    [
+      "widest-r-in",
+      "sleeve-r-mid",
+      "sleeve-r-in"
+    ],
+    [
+      "widest-r-mid",
+      "widest-r-o2",
+      "sleeve-r-o2"
+    ],
+    [
+      "widest-r-mid",
+      "sleeve-r-o2",
+      "sleeve-r-mid"
+    ],
+    [
+      "widest-r-o2",
+      "widest-r-out",
+      "sleeve-r-out"
+    ],
+    [
+      "widest-r-o2",
+      "sleeve-r-out",
+      "sleeve-r-o2"
+    ],
+    [
+      "sleeve-l-out",
+      "sleeve-l-o2",
+      "belttop-l-o2"
+    ],
+    [
+      "sleeve-l-out",
+      "belttop-l-o2",
+      "belttop-l-out"
+    ],
+    [
+      "sleeve-l-o2",
+      "sleeve-l-mid",
+      "belttop-l-mid"
+    ],
+    [
+      "sleeve-l-o2",
+      "belttop-l-mid",
+      "belttop-l-o2"
+    ],
+    [
+      "sleeve-l-mid",
+      "sleeve-l-in",
+      "belttop-l-in"
+    ],
+    [
+      "sleeve-l-mid",
+      "belttop-l-in",
+      "belttop-l-mid"
+    ],
+    [
+      "sleeve-l-in",
+      "sleeve-mid",
+      "belttop-mid"
+    ],
+    [
+      "sleeve-l-in",
+      "belttop-mid",
+      "belttop-l-in"
+    ],
+    [
+      "sleeve-mid",
+      "sleeve-r-in",
+      "belttop-r-in"
+    ],
+    [
+      "sleeve-mid",
+      "belttop-r-in",
+      "belttop-mid"
+    ],
+    [
+      "sleeve-r-in",
+      "sleeve-r-mid",
+      "belttop-r-mid"
+    ],
+    [
+      "sleeve-r-in",
+      "belttop-r-mid",
+      "belttop-r-in"
+    ],
+    [
+      "sleeve-r-mid",
+      "sleeve-r-o2",
+      "belttop-r-o2"
+    ],
+    [
+      "sleeve-r-mid",
+      "belttop-r-o2",
+      "belttop-r-mid"
+    ],
+    [
+      "sleeve-r-o2",
+      "sleeve-r-out",
+      "belttop-r-out"
+    ],
+    [
+      "sleeve-r-o2",
+      "belttop-r-out",
+      "belttop-r-o2"
+    ],
+    [
+      "belttop-l-out",
+      "belttop-l-o2",
+      "beltbot-l-o2"
+    ],
+    [
+      "belttop-l-out",
+      "beltbot-l-o2",
+      "beltbot-l-out"
+    ],
+    [
+      "belttop-l-o2",
+      "belttop-l-mid",
+      "beltbot-l-mid"
+    ],
+    [
+      "belttop-l-o2",
+      "beltbot-l-mid",
+      "beltbot-l-o2"
+    ],
+    [
+      "belttop-l-mid",
+      "belttop-l-in",
+      "beltbot-l-in"
+    ],
+    [
+      "belttop-l-mid",
+      "beltbot-l-in",
+      "beltbot-l-mid"
+    ],
+    [
+      "belttop-l-in",
+      "belttop-mid",
+      "beltbot-mid"
+    ],
+    [
+      "belttop-l-in",
+      "beltbot-mid",
+      "beltbot-l-in"
+    ],
+    [
+      "belttop-mid",
+      "belttop-r-in",
+      "beltbot-r-in"
+    ],
+    [
+      "belttop-mid",
+      "beltbot-r-in",
+      "beltbot-mid"
+    ],
+    [
+      "belttop-r-in",
+      "belttop-r-mid",
+      "beltbot-r-mid"
+    ],
+    [
+      "belttop-r-in",
+      "beltbot-r-mid",
+      "beltbot-r-in"
+    ],
+    [
+      "belttop-r-mid",
+      "belttop-r-o2",
+      "beltbot-r-o2"
+    ],
+    [
+      "belttop-r-mid",
+      "beltbot-r-o2",
+      "beltbot-r-mid"
+    ],
+    [
+      "belttop-r-o2",
+      "belttop-r-out",
+      "beltbot-r-out"
+    ],
+    [
+      "belttop-r-o2",
+      "beltbot-r-out",
+      "beltbot-r-o2"
+    ],
+    [
+      "beltbot-l-out",
+      "beltbot-l-o2",
+      "skirt-l-o2"
+    ],
+    [
+      "beltbot-l-out",
+      "skirt-l-o2",
+      "skirt-l-out"
+    ],
+    [
+      "beltbot-l-o2",
+      "beltbot-l-mid",
+      "skirt-l-mid"
+    ],
+    [
+      "beltbot-l-o2",
+      "skirt-l-mid",
+      "skirt-l-o2"
+    ],
+    [
+      "beltbot-l-mid",
+      "beltbot-l-in",
+      "skirt-l-in"
+    ],
+    [
+      "beltbot-l-mid",
+      "skirt-l-in",
+      "skirt-l-mid"
+    ],
+    [
+      "beltbot-l-in",
+      "beltbot-mid",
+      "skirt-mid"
+    ],
+    [
+      "beltbot-l-in",
+      "skirt-mid",
+      "skirt-l-in"
+    ],
+    [
+      "beltbot-mid",
+      "beltbot-r-in",
+      "skirt-r-in"
+    ],
+    [
+      "beltbot-mid",
+      "skirt-r-in",
+      "skirt-mid"
+    ],
+    [
+      "beltbot-r-in",
+      "beltbot-r-mid",
+      "skirt-r-mid"
+    ],
+    [
+      "beltbot-r-in",
+      "skirt-r-mid",
+      "skirt-r-in"
+    ],
+    [
+      "beltbot-r-mid",
+      "beltbot-r-o2",
+      "skirt-r-o2"
+    ],
+    [
+      "beltbot-r-mid",
+      "skirt-r-o2",
+      "skirt-r-mid"
+    ],
+    [
+      "beltbot-r-o2",
+      "beltbot-r-out",
+      "skirt-r-out"
+    ],
+    [
+      "beltbot-r-o2",
+      "skirt-r-out",
+      "skirt-r-o2"
+    ],
+    [
+      "skirt-l-out",
+      "skirt-l-o2",
+      "hem-l-o2"
+    ],
+    [
+      "skirt-l-out",
+      "hem-l-o2",
+      "hem-l-out"
+    ],
+    [
+      "skirt-l-o2",
+      "skirt-l-mid",
+      "hem-l-mid"
+    ],
+    [
+      "skirt-l-o2",
+      "hem-l-mid",
+      "hem-l-o2"
+    ],
+    [
+      "skirt-l-mid",
+      "skirt-l-in",
+      "hem-l-in"
+    ],
+    [
+      "skirt-l-mid",
+      "hem-l-in",
+      "hem-l-mid"
+    ],
+    [
+      "skirt-l-in",
+      "skirt-mid",
+      "hem-mid"
+    ],
+    [
+      "skirt-l-in",
+      "hem-mid",
+      "hem-l-in"
+    ],
+    [
+      "skirt-mid",
+      "skirt-r-in",
+      "hem-r-in"
+    ],
+    [
+      "skirt-mid",
+      "hem-r-in",
+      "hem-mid"
+    ],
+    [
+      "skirt-r-in",
+      "skirt-r-mid",
+      "hem-r-mid"
+    ],
+    [
+      "skirt-r-in",
+      "hem-r-mid",
+      "hem-r-in"
+    ],
+    [
+      "skirt-r-mid",
+      "skirt-r-o2",
+      "hem-r-o2"
+    ],
+    [
+      "skirt-r-mid",
+      "hem-r-o2",
+      "hem-r-mid"
+    ],
+    [
+      "skirt-r-o2",
+      "skirt-r-out",
+      "hem-r-out"
+    ],
+    [
+      "skirt-r-o2",
+      "hem-r-out",
+      "hem-r-o2"
+    ]
+  ],
+  "constraints": {
+    "symmetryPairs": [
+      [
+        "collar-l-out",
+        "collar-r-out"
+      ],
+      [
+        "collar-l-o2",
+        "collar-r-o2"
+      ],
+      [
+        "collar-l-mid",
+        "collar-r-mid"
+      ],
+      [
+        "collar-l-in",
+        "collar-r-in"
+      ],
+      [
+        "shoulder-l-out",
+        "shoulder-r-out"
+      ],
+      [
+        "shoulder-l-o2",
+        "shoulder-r-o2"
+      ],
+      [
+        "shoulder-l-mid",
+        "shoulder-r-mid"
+      ],
+      [
+        "shoulder-l-in",
+        "shoulder-r-in"
+      ],
+      [
+        "chest-l-out",
+        "chest-r-out"
+      ],
+      [
+        "chest-l-o2",
+        "chest-r-o2"
+      ],
+      [
+        "chest-l-mid",
+        "chest-r-mid"
+      ],
+      [
+        "chest-l-in",
+        "chest-r-in"
+      ],
+      [
+        "widest-l-out",
+        "widest-r-out"
+      ],
+      [
+        "widest-l-o2",
+        "widest-r-o2"
+      ],
+      [
+        "widest-l-mid",
+        "widest-r-mid"
+      ],
+      [
+        "widest-l-in",
+        "widest-r-in"
+      ],
+      [
+        "sleeve-l-out",
+        "sleeve-r-out"
+      ],
+      [
+        "sleeve-l-o2",
+        "sleeve-r-o2"
+      ],
+      [
+        "sleeve-l-mid",
+        "sleeve-r-mid"
+      ],
+      [
+        "sleeve-l-in",
+        "sleeve-r-in"
+      ],
+      [
+        "belttop-l-out",
+        "belttop-r-out"
+      ],
+      [
+        "belttop-l-o2",
+        "belttop-r-o2"
+      ],
+      [
+        "belttop-l-mid",
+        "belttop-r-mid"
+      ],
+      [
+        "belttop-l-in",
+        "belttop-r-in"
+      ],
+      [
+        "beltbot-l-out",
+        "beltbot-r-out"
+      ],
+      [
+        "beltbot-l-o2",
+        "beltbot-r-o2"
+      ],
+      [
+        "beltbot-l-mid",
+        "beltbot-r-mid"
+      ],
+      [
+        "beltbot-l-in",
+        "beltbot-r-in"
+      ],
+      [
+        "skirt-l-out",
+        "skirt-r-out"
+      ],
+      [
+        "skirt-l-o2",
+        "skirt-r-o2"
+      ],
+      [
+        "skirt-l-mid",
+        "skirt-r-mid"
+      ],
+      [
+        "skirt-l-in",
+        "skirt-r-in"
+      ],
+      [
+        "hem-l-out",
+        "hem-r-out"
+      ],
+      [
+        "hem-l-o2",
+        "hem-r-o2"
+      ],
+      [
+        "hem-l-mid",
+        "hem-r-mid"
+      ],
+      [
+        "hem-l-in",
+        "hem-r-in"
+      ]
+    ],
+    "horizontalGroups": [
+      [
+        "belttop-l-out",
+        "belttop-l-o2",
+        "belttop-l-mid",
+        "belttop-l-in",
+        "belttop-mid",
+        "belttop-r-in",
+        "belttop-r-mid",
+        "belttop-r-o2",
+        "belttop-r-out"
+      ],
+      [
+        "beltbot-l-out",
+        "beltbot-l-o2",
+        "beltbot-l-mid",
+        "beltbot-l-in",
+        "beltbot-mid",
+        "beltbot-r-in",
+        "beltbot-r-mid",
+        "beltbot-r-o2",
+        "beltbot-r-out"
+      ]
+    ],
+    "verticalGroups": [
+      [
+        "collar-mid",
+        "shoulder-mid",
+        "chest-mid",
+        "widest-mid",
+        "sleeve-mid",
+        "belttop-mid",
+        "beltbot-mid",
+        "skirt-mid",
+        "hem-mid"
+      ]
+    ],
+    "pinnedVertices": [
+      "collar-l-out",
+      "collar-l-o2",
+      "collar-l-mid",
+      "collar-l-in",
+      "collar-mid",
+      "collar-r-in",
+      "collar-r-mid",
+      "collar-r-o2",
+      "collar-r-out"
+    ]
+  }
+}

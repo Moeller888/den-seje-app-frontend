@@ -270,6 +270,24 @@ _Last reviewed: 2026-07-01._
   Unit **328/328**, torso spec **14/14**, classifier `full`. **No golden added on purpose:** baking a
   baseline before the owner has looked would let the suite bless an unreviewed appearance. Review set
   in `_avatar-artefakter\D090-runtime-review\`. See `docs/project-state.md` (D-090).
+  **▶ Garment-mesh POC — and the real diagnosis (2026-08-02, D-095).** Status
+  **`GARMENT_MESH_POC — POC_NEEDS_REVISION`**. A deterministic piecewise-affine mesh (inverse
+  mapping, barycentric, premultiplied bilinear, enforced constraints, per-triangle distortion
+  metrics) was built to see whether local deformation could replace backfill. It raised coverage
+  88.32 → 92.57 % and cut missing pixels 11,407 → 7,260 — **and made the shoulders into pointed
+  flares.** Doubling the topology to 128 triangles produced **byte-identical** distortion metrics,
+  proving the flare is the row's own 1.70× stretch, not a concentration more vertices could
+  spread. **The measurement that mattered:** at y=640 the artwork covers the mask completely; by
+  y=680 it is 205 px against 366. **The armour's sleeves end at y≈680; the base tee's reach
+  y≈714.** The deficit is *absent* garment, not misplaced garment — and it explains the shipped
+  asset's 5,990 shoulder-band backfill pixels exactly. The D-086 brief did ask for shoulder caps
+  across 560–714; the harness measured only TOTAL coverage, so backfill closed the hole before
+  anyone asked why. **Durable fix:** the harness now measures coverage **per band** before
+  backfill, always discloses it, and blocks below 60 %. It catches both shapes — a missing garment
+  part, and an aggregate "improvement" bought by robbing bands (the mesh output is rejected on
+  `skirt 46.1 %`). Real remedy is the **source**: sleeves that reach y≈714. Unit 336/336. Tooling
+  and harness only; the accepted asset untouched, `AVATAR_R2` `false`.
+  See `docs/project-state.md` (D-095).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above

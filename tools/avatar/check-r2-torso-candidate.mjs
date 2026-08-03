@@ -114,6 +114,23 @@ function boxDownscaleAlpha(alpha, w, h, tw, th) {
 // the owner can argue with it rather than discover it.
 export const MAX_BACKFILL_SHARE = 0.25;
 
+// ── D-095: per-band coverage ──────────────────────────────────────────────────
+// The same bands the adapter attributes backfill to, so a shortfall and its fill are reported in
+// the same vocabulary. Master-canvas y ranges.
+export const BANDS = Object.freeze({ collar: [0, 560], shoulder: [560, 714], torso: [714, 902], skirt: [902, 1000] });
+// Blocking floor: below this a band is not "slightly short", the garment is largely ABSENT there.
+// Set below the accepted Ridderdragt's 87.95 % shoulder figure on purpose — this gate is here to
+// catch a missing garment part, not to retroactively fail an owner-accepted asset whose shortfall
+// was measured and disclosed (D-087/D-088).
+export const MIN_BAND_COVERAGE = 0.60;
+// Measured on the accepted asset BEFORE backfill (D-095). Reported alongside every candidate so a
+// reviewer can see at a glance whether a new candidate is better or worse than what shipped.
+export const REFERENCE_BAND_COVERAGE = Object.freeze({
+  asset: "armor-knight-r2-v1 (accepted, D-088) before backfill",
+  collar: 1.0, shoulder: 0.87952, torso: 0.94106, skirt: 1.0,
+  note: "the shoulder figure is the armour's sleeves stopping at y≈680 while the base tee reaches y≈714",
+});
+
 export function checkCandidate(candidateBuf, masks, label = "candidate", meta = null) {
   const gates = []; const add = (id, pass, detail) => gates.push({ id, pass: !!pass, detail });
   const img = decodePng(candidateBuf, label);
@@ -160,6 +177,41 @@ export function checkCandidate(candidateBuf, masks, label = "candidate", meta = 
   const hardGaps = hardTotal - hardCovered;
   add("hard-region-fully-opaque", hardGaps <= MAX_HARD_GAP_PX,
     { hardTotal, hardCovered, gapPx: hardGaps, ofWhichSemiTransparent: hardSoft, coverage: hardTotal ? +(hardCovered / hardTotal).toFixed(5) : 0, sample: gapSample });
+
+  // 2b. PER-BAND coverage (D-095). The aggregate number above cannot tell WHERE a candidate falls
+  //     short, and that blindness had a concrete cost: the accepted Ridderdragt covers the collar,
+  //     torso and skirt fully but only 87.95 % of the SHOULDER band, because its sleeves stop at
+  //     y≈680 while the base tee's reach y≈714. The art brief asked for shoulder caps across
+  //     560–714; the generation did not deliver them; backfill filled the gap with the nearest
+  //     garment colour, and nobody traced why that band needed 5,990 px until D-095 measured it.
+  //
+  //     It also catches the opposite failure: a mesh-warp experiment raised the shoulder band to
+  //     95.6 % while DROPPING the skirt to 46.1 % — an aggregate improvement achieved by robbing
+  //     other bands, invisible in a single coverage figure.
+  const bandCoverage = {};
+  for (const [name, [y0, y1]] of Object.entries(BANDS)) {
+    let tot = 0, cov = 0;
+    for (let y = Math.max(0, y0); y < Math.min(h, y1); y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (!masks.hard[i]) continue;
+        tot++;
+        if (alpha[i] >= OPAQUE) cov++;
+      }
+    }
+    if (tot === 0) continue;
+    bandCoverage[name] = { hardPx: tot, coveredPx: cov, missingPx: tot - cov, coverage: +(cov / tot).toFixed(5) };
+  }
+  const lowBands = Object.entries(bandCoverage).filter(([, b]) => b.coverage < MIN_BAND_COVERAGE).map(([n, b]) => `${n} ${(b.coverage * 100).toFixed(1)}%`);
+  // Advisory: the full picture, always reported so a shortfall can never be silent again.
+  gates.push({ id: "band-coverage-disclosure", pass: true, advisory: true, detail: {
+    bands: bandCoverage, reference: REFERENCE_BAND_COVERAGE,
+    note: "coverage BEFORE any backfill. Compare against the reference: a band far below it means the artwork is missing there, not merely mis-scaled.",
+  } });
+  // Blocking only where the garment is largely ABSENT from a band. Deliberately set below the
+  // accepted asset's 87.95 % shoulder figure: this gate exists to catch a missing garment part,
+  // not to retroactively fail an asset the owner accepted with that shortfall disclosed.
+  add("no-band-largely-uncovered", lowBands.length === 0, { minCoverage: MIN_BAND_COVERAGE, lowBands, bands: bandCoverage });
 
   // 3. Alpha cleanliness. A halo is a semi-transparent pixel with no opaque pixel next to it — the
   //    D-058/D-061 failure mode, measured rather than eyeballed.
