@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "den-seje-app-frontend",
+  "compatibility_date": "2026-08-04",
+
+  // ASSET-ONLY WORKER. There is deliberately no "main", no Worker script, no bindings and no
+  // Functions: this deployment serves static files and nothing else. The app talks to Supabase
+  // directly from the browser, exactly as it did on Vercel, so no server-side code is involved.
+  //
+  // "directory" is the generated output of tools/cloudflare-build-static.mjs — NEVER the repo
+  // root. The root holds .env files, the docs/ decision register, tests/, tools/, supabase/ and
+  // tracked node_modules; the build script copies only an explicit allowlist and then re-validates
+  // the result, so none of that can be published.
+  "assets": {
+    "directory": "./dist-cloudflare",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
