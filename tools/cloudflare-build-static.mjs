@@ -50,9 +50,21 @@ export const ASSET_DIRS = Object.freeze([
 ]);
 // Pages that must exist in the output or the build fails.
 export const MANDATORY = Object.freeze([
-  "index.html", "login.html", "hub.html", "docs.html", "404.html",
+  "index.html", "login.html", "hub.html", "docs.html", "404.html", "_redirects",
   "app.js", "style.css", "supabaseClient.js", "css/theme.css",
 ]);
+
+// THE ONLY ROUTING RULE. `html_handling: "none"` keeps explicit .html addresses intact — nothing
+// 307s the extension away — but it also stops `/` resolving to index.html on its own. This
+// restores exactly that one behaviour and nothing else.
+//
+// Status 200 makes it an INTERNAL REWRITE, not a redirect: the browser's address bar keeps showing
+// `/` and no 3xx is emitted. A 301/302 here would put `/index.html` in the URL bar and reintroduce
+// the round trip this change exists to remove.
+//
+// Deliberately NOT a SPA fallback (`/* /index.html 200`): unknown paths must keep reaching the 404
+// page, so a mistyped or dead link fails visibly instead of silently rendering the quiz.
+export const REDIRECTS_RULE = "/ /index.html 200";
 
 // ── what may never appear in the output ───────────────────────────────────────────────────────
 export const FORBIDDEN_EXTENSIONS = Object.freeze([
@@ -221,6 +233,16 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
     }
   }
   // The generated docs.html must be the stub, and must never reach for the docs directory.
+  // `_redirects` is Cloudflare CONFIGURATION, not an asset. It must hold exactly the one rewrite —
+  // a second rule, or a wildcard turning this into a SPA fallback, would silently change routing
+  // for every unknown path and is refused here rather than discovered in production.
+  const redirects = join(outDir, "_redirects");
+  if (existsSync(redirects)) {
+    const lines = readFileSync(redirects, "utf8").split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length !== 1) problems.push(`_redirects must hold exactly one rule, found ${lines.length}`);
+    else if (lines[0] !== REDIRECTS_RULE) problems.push(`_redirects rule is ${JSON.stringify(lines[0])}, expected ${JSON.stringify(REDIRECTS_RULE)}`);
+    if (/^\/\*/m.test(readFileSync(redirects, "utf8"))) problems.push("_redirects contains a wildcard SPA fallback — unknown paths must reach the 404 page");
+  }
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {
     const t = readFileSync(docs, "utf8");
@@ -257,7 +279,8 @@ export function build({ quiet = false } = {}) {
   }
   writeFileSync(join(OUT, "docs.html"), docsStubHtml(), "utf8");
   writeFileSync(join(OUT, "404.html"), notFoundHtml(), "utf8");
-  const generated = ["404.html", "docs.html"];
+  writeFileSync(join(OUT, "_redirects"), REDIRECTS_RULE + "\n", "utf8");
+  const generated = ["404.html", "_redirects", "docs.html"];
 
   for (const m of MANDATORY) {
     if (!existsSync(join(OUT, m))) throw new Error(`mandatory file missing from the output: ${m}`);

@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative, sep } from "node:path";
 import {
-  build, validateOutput, docsStubHtml, notFoundHtml, DOCS_STUB_MARKER,
+  build, validateOutput, docsStubHtml, notFoundHtml, DOCS_STUB_MARKER, REDIRECTS_RULE,
   RUNTIME_HTML, ROOT_FILES, MANDATORY, FORBIDDEN_DIRS, FORBIDDEN_STRINGS, KNOWN_STRING_EXCEPTIONS,
 } from "../../tools/cloudflare-build-static.mjs";
 
@@ -104,6 +104,66 @@ test("hub.html and admin.html can still open /docs.html without a 404", () => {
     assert.ok(read(page).includes("docs.html"), `${page} should still link to docs.html`);
   }
   assert.ok(has("docs.html"), "so docs.html must exist in the output");
+});
+
+// ── the explicit .html routing contract ───────────────────────────────────────────────────────
+// Cloudflare's default `auto-trailing-slash` strips the extension and 307s: /login.html → /login.
+// This app is a multipage app whose runtime links, role redirects and Playwright assertions all
+// use explicit .html addresses, so hosting is configured to match the app rather than the tests
+// being weakened to match the hosting.
+test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () => {
+  const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
+  assert.match(wrangler, /"html_handling":\s*"none"/);
+  assert.ok(!/"html_handling":\s*"auto-trailing-slash"/.test(wrangler), "auto-trailing-slash 307s away the .html extension");
+  assert.match(wrangler, /"not_found_handling":\s*"404-page"/, "the 404 page behaviour must be preserved");
+  assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
+});
+
+test("_redirects is generated with exactly the one root rewrite", () => {
+  assert.ok(has("_redirects"));
+  const raw = read("_redirects");
+  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+  assert.deepEqual(lines, ["/ /index.html 200"]);
+  assert.equal(lines[0], REDIRECTS_RULE);
+  // status 200 = internal rewrite: the browser keeps showing "/" and no 3xx is emitted
+  assert.match(lines[0], /\s200$/, "must be a rewrite, not a 301/302 redirect");
+});
+
+test("_redirects is NOT a SPA fallback — unknown paths must still reach the 404 page", () => {
+  const raw = read("_redirects");
+  assert.ok(!/^\s*\/\*/m.test(raw), "a wildcard rule would swallow every unknown path");
+  assert.ok(!raw.includes("/*"), "no wildcard anywhere");
+});
+
+test("validateOutput rejects a tampered _redirects", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "cf-redirects-"));
+  try {
+    writeFileSync(join(tmp, "index.html"), "<html></html>", "utf8");
+    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n", "utf8");
+    assert.deepEqual(validateOutput(tmp).problems, []);
+
+    writeFileSync(join(tmp, "_redirects"), "/* /index.html 200\n", "utf8");
+    let p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("SPA fallback") || x.includes("rule is")), "a wildcard must be refused");
+
+    writeFileSync(join(tmp, "_redirects"), "/ /index.html 302\n", "utf8");
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("rule is")), "a 302 must be refused — it would expose /index.html in the URL bar");
+
+    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n/extra /other 200\n", "utf8");
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("exactly one rule")), "a second rule must be refused");
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("no extensionless twin of any runtime page ships, so /login can only ever be a 404", () => {
+  for (const page of RUNTIME_HTML) {
+    const bare = page.replace(/\.html$/, "");
+    assert.ok(!has(bare), `${bare} must not exist as an asset`);
+    assert.ok(!existsSync(join(OUT, bare)), `${bare} must not exist on disk`);
+  }
 });
 
 test("404.html is generated, neutral, and links back into the app", () => {
@@ -271,6 +331,18 @@ test("the build refuses to publish the repository root", () => {
   const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
   assert.match(wrangler, /"directory":\s*"\.\/dist-cloudflare"/);
   assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only — no main entry");
+});
+
+test("the serve-check still asserts the routing contract over HTTP", () => {
+  const src = readFileSync(join(REPO, "tools", "cloudflare-serve-check.mjs"), "utf8");
+  // the extensionless 404 list must cover the pages whose URLs the Playwright suite asserts on
+  for (const bare of ["/login", "/teacher", "/student-detail", "/avatar", "/reset-password"]) {
+    assert.ok(src.includes(`"${bare}"`), `serve-check must prove ${bare} is a 404`);
+  }
+  assert.ok(src.includes('"/_redirects"'), "serve-check must prove /_redirects is unreachable");
+  assert.ok(src.includes('"/student-detail.html?id=test"'), "serve-check must prove a query string still serves");
+  // raw status, or a 307 resolving to 200 would look like a pass
+  assert.match(src, /redirect:\s*["']manual["']/, "serve-check must not follow redirects");
 });
 
 test("dist-cloudflare is gitignored so the build output can never be committed", () => {
