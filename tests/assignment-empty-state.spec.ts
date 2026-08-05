@@ -1,8 +1,8 @@
-// Section 146: Assignment-aware empty-state UX tests.
+﻿// Section 146: Assignment-aware empty-state UX tests.
 //
 // Verifies the two-variant no_questions UI:
-//   1. Generic (active_domains=null)  → celebration message + hub + retry buttons
-//   2. Assignment (active_domains set) → domain-specific message + teacher instruction
+//   1. Generic (active_domains=null)  â†’ celebration message + hub + retry buttons
+//   2. Assignment (active_domains set) â†’ domain-specific message + teacher instruction
 //
 // The edge function is intercepted via page.route() to return {step:"no_questions"}
 // without needing to exhaust the real question pool.
@@ -12,12 +12,11 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD                  = "https://den-seje-app-frontend.vercel.app";
 const STUDENT_EMAIL         = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS          = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL          = process.env.SUPABASE_URL!;
@@ -41,7 +40,7 @@ test.afterAll(async () => {
   await adminClient.from("profiles").update({ active_domains: null }).eq("id", studentId);
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loginAndInterceptNoQuestions(page: any) {
   // Intercept get-next-question before navigation so it fires on first load
@@ -65,7 +64,7 @@ async function loginAndInterceptNoQuestions(page: any) {
   });
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("1. Generic no_questions (no domains) shows celebration message", async ({
   page,
@@ -77,8 +76,8 @@ test("1. Generic no_questions (no domains) shows celebration message", async ({
 
   await loginAndInterceptNoQuestions(page);
 
-  // Generic message — no domain restriction
-  await expect(page.locator("#question")).toContainText(/ingen flere spørgsmål/i);
+  // Generic message â€” no domain restriction
+  await expect(page.locator("#question")).toContainText(/ingen flere spÃ¸rgsmÃ¥l/i);
   // Must NOT show teacher instruction (that's only for assignment case)
   await expect(page.locator("#no-questions-sub")).not.toBeAttached();
 });
@@ -98,12 +97,12 @@ test("2. Assignment no_questions shows domain-specific message and teacher instr
   await loginAndInterceptNoQuestions(page);
 
   // Assignment-specific message
-  await expect(page.locator("#question")).toContainText(/ingen flere spørgsmål i det tildelte emne/i);
+  await expect(page.locator("#question")).toContainText(/ingen flere spÃ¸rgsmÃ¥l i det tildelte emne/i);
 
   // Teacher instruction with domain name
   const sub = page.locator("#no-questions-sub");
   await expect(sub).toBeAttached();
-  await expect(sub).toContainText(/spørg din lærer/i);
+  await expect(sub).toContainText(/spÃ¸rg din lÃ¦rer/i);
   await expect(sub).toContainText(/Den Kolde Krig/i);
 });
 
@@ -118,7 +117,7 @@ test("3. Retry button appears in generic no_questions state", async ({
   await loginAndInterceptNoQuestions(page);
 
   await expect(page.locator("#retry-question-btn")).toBeVisible();
-  await expect(page.locator("#retry-question-btn")).toHaveText("Prøv igen");
+  await expect(page.locator("#retry-question-btn")).toHaveText("PrÃ¸v igen");
 });
 
 test("4. Hub button appears in generic no_questions state", async ({
@@ -132,7 +131,7 @@ test("4. Hub button appears in generic no_questions state", async ({
   await loginAndInterceptNoQuestions(page);
 
   await expect(page.locator("#go-hub-btn")).toBeVisible();
-  await expect(page.locator("#go-hub-btn")).toHaveText("Gå til hub");
+  await expect(page.locator("#go-hub-btn")).toHaveText("GÃ¥ til hub");
 });
 
 test("5. Both recovery buttons appear in assignment no_questions state", async ({

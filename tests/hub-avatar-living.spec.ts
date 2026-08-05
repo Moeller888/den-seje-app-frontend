@@ -1,11 +1,11 @@
-// Section 151B: Living Hub Avatar — life engines + reward-moment reactions on hub.html.
+﻿// Section 151B: Living Hub Avatar â€” life engines + reward-moment reactions on hub.html.
 // Verifies: engine mount (expression/blink/breathing), achievement unlock reaction,
 // daily + weekly quest claim reactions, daily reward modal reaction, welcome-back,
 // and reduced-motion behavior.
 //
 // Economy safety: coins are snapshotted in beforeAll and restored in afterAll, so
 // quest/daily-reward claims performed by these tests are economy-neutral. The
-// achievement fixture uses first_correct (title reward, ON CONFLICT DO NOTHING) —
+// achievement fixture uses first_correct (title reward, ON CONFLICT DO NOTHING) â€”
 // re-unlocking grants no coins.
 
 import { test, expect } from "@playwright/test";
@@ -13,12 +13,11 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD          = "https://den-seje-app-frontend.vercel.app";
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
@@ -55,7 +54,7 @@ test.beforeAll(async () => {
   if (!student) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = student.id;
 
-  // Economy snapshot — restored in afterAll so claims here are net-zero.
+  // Economy snapshot â€” restored in afterAll so claims here are net-zero.
   const { data: progress, error: progError } = await adminClient
     .from("student_progress")
     .select("coins")
@@ -86,14 +85,14 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // Restore the coin balance — all claims performed by this spec are rolled back.
+  // Restore the coin balance â€” all claims performed by this spec are rolled back.
   await adminClient
     .from("student_progress")
     .update({ coins: coinsSnapshot })
     .eq("student_id", studentId);
 });
 
-// ── Fixtures ──────────────────────────────────────────────────────────────────
+// â”€â”€ Fixtures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Prevent the daily reward auto-claim modal from appearing (it blocks clicks).
 async function markDailyRewardClaimedToday() {
@@ -174,7 +173,7 @@ async function makeWeeklyQuestClaimable() {
   if (error) throw new Error(`weekly quest fixture failed: ${error.message}`);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loginAsStudent(page: any) {
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
@@ -186,7 +185,7 @@ async function loginAsStudent(page: any) {
 
 async function openHubPage(page: any) {
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
-  // At least one avatar layer — signals renderProfileAvatar() (and engine init) ran.
+  // At least one avatar layer â€” signals renderProfileAvatar() (and engine init) ran.
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
 
@@ -196,7 +195,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
 });
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("1. Hub avatar mounts all life engines", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
@@ -231,7 +230,7 @@ test("2. Achievement unlock triggers critical proud reaction", async ({
   await markDailyRewardClaimedToday();
 
   // Remove first_correct so evaluate_achievements re-unlocks it on hub load.
-  // Its reward is the 'rookie' title (ON CONFLICT DO NOTHING) — no coin drift.
+  // Its reward is the 'rookie' title (ON CONFLICT DO NOTHING) â€” no coin drift.
   const { error } = await adminClient
     .from("user_achievements")
     .delete()
@@ -242,7 +241,7 @@ test("2. Achievement unlock triggers critical proud reaction", async ({
   await loginAsStudent(page);
   await openHubPage(page);
 
-  // evaluate_achievements → toast → ACHIEVEMENT_UNLOCK reaction (RPC chain: ~1-2s).
+  // evaluate_achievements â†’ toast â†’ ACHIEVEMENT_UNLOCK reaction (RPC chain: ~1-2s).
   await expect(page.locator("#avatarShowcase")).toHaveAttribute(
     "data-avatar-reaction",
     "achievement",
@@ -338,7 +337,7 @@ test("6. Welcome-back after >=30s hidden triggers curious reaction", async ({
   await openHubPage(page);
 
   // Synthetic visibility cycle: hide, jump Date.now past the 30s threshold,
-  // show. Tests the handler path — real tab-hiding is unreachable in headless.
+  // show. Tests the handler path â€” real tab-hiding is unreachable in headless.
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", { value: true, configurable: true });
     document.dispatchEvent(new Event("visibilitychange"));
@@ -360,8 +359,8 @@ test("6. Welcome-back after >=30s hidden triggers curious reaction", async ({
   );
 });
 
-// ── Reduced motion ────────────────────────────────────────────────────────────
-// page.emulateMedia, NOT test.use({ reducedMotion }) — the latter is silently
+// â”€â”€ Reduced motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// page.emulateMedia, NOT test.use({ reducedMotion }) â€” the latter is silently
 // ignored in this harness (proven during Section 151A).
 
 test("7. Reduced motion disables animation but engines stay mounted", async ({
@@ -378,7 +377,7 @@ test("7. Reduced motion disables animation but engines stay mounted", async ({
   // Blink layer is never built under reduced motion.
   await expect(page.locator("#avatar-blink-layer")).toHaveCount(0);
 
-  // Expression overlay still mounts — instant swaps instead of fades.
+  // Expression overlay still mounts â€” instant swaps instead of fades.
   await expect(page.locator("#profileAvatar .avatar-expr-overlay")).toBeAttached();
 
   // Breathing disabled by the media query.

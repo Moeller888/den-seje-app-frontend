@@ -1,5 +1,5 @@
-// Section 134: End-to-end verification of the adaptive placement lifecycle.
-// Exercises: trigger → complete → DB save → skip on second login → current_band persist.
+﻿// Section 134: End-to-end verification of the adaptive placement lifecycle.
+// Exercises: trigger â†’ complete â†’ DB save â†’ skip on second login â†’ current_band persist.
 // Requires Section 132 RLS fix (profiles_self_update policy) to pass.
 
 import { test, expect } from '@playwright/test';
@@ -7,14 +7,13 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail } from './helpers.js';
+import { findAuthUserByEmail, PROD } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const PROD           = 'https://den-seje-app-frontend.vercel.app';
 const STUDENT_EMAIL  = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS   = process.env.TEST_STUDENT_PASSWORD!;
 
@@ -25,7 +24,7 @@ const QUESTION_READY_TIMEOUT = 30_000;
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loginStudent(page: any): Promise<void> {
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
@@ -86,7 +85,7 @@ async function answerAndAdvance(page: any): Promise<void> {
   );
 }
 
-// ── Setup / Teardown ──────────────────────────────────────────────────────────
+// â”€â”€ Setup / Teardown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test.beforeAll(async () => {
   adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -119,11 +118,11 @@ test.afterAll(async () => {
   }).eq('id', studentId);
 });
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('1. Placement overlay appears for unplaced grade-7 student', async ({ page }) => {
   await loginStudent(page);
-  // Grade is set, placement_band is null → overlay must appear
+  // Grade is set, placement_band is null â†’ overlay must appear
   await expect(page.locator('#placement-overlay')).toBeVisible({ timeout: 15000 });
   await expect(page.locator('#placement-question')).not.toBeEmpty();
 });
@@ -156,7 +155,7 @@ test('3. Second login skips placement (placement_band already set)', async ({ pa
   // login + question load in Firefox requires more than the 30s default.
   test.setTimeout(60_000);
 
-  // placement_band was saved by test 2 — placement must NOT retrigger
+  // placement_band was saved by test 2 â€” placement must NOT retrigger
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
@@ -166,7 +165,7 @@ test('3. Second login skips placement (placement_band already set)', async ({ pa
 });
 
 test('4. 10 answered questions triggers current_band persistence', async ({ page }) => {
-  // 10 question cycles take ~40-80s depending on browser/network — extend timeout.
+  // 10 question cycles take ~40-80s depending on browser/network â€” extend timeout.
   test.setTimeout(120_000);
 
   // Clean slate for this session: keep placement_band, reset current_band + instances
@@ -176,11 +175,11 @@ test('4. 10 answered questions triggers current_band persistence', async ({ page
   await loginStudent(page);
   await page.waitForSelector('#question[data-state="ready"]', { timeout: QUESTION_READY_TIMEOUT });
 
-  // Answer 10 questions — persistCurrentBand() fires after the 10th.
+  // Answer 10 questions â€” persistCurrentBand() fires after the 10th.
   for (let i = 0; i < 10; i++) {
     await answerAndAdvance(page);
   }
-  // After answerAndAdvance × 10, question 11 is in ready state.
+  // After answerAndAdvance Ã— 10, question 11 is in ready state.
   // persistCurrentBand() (fire-and-forget) was called during question 10 processing;
   // by the time q11 is loaded the async DB write is complete.
 
@@ -199,7 +198,7 @@ test('5. Third login uses current_band and skips placement', async ({ page }) =>
   // login + question load in Firefox requires more than the 30s default.
   test.setTimeout(60_000);
 
-  // Primary assertion: quiz loads directly — no placement overlay.
+  // Primary assertion: quiz loads directly â€” no placement overlay.
   // This holds whether the startup band comes from current_band or placement_band,
   // as long as at least one is set (placement_band was set by test 2).
   await loginStudent(page);

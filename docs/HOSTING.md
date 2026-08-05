@@ -168,6 +168,38 @@ NÆSTE MANUELLE SKRIDT (owner)
 7. Fjern først Vercel-deploymentet, når alt ovenstående er verificeret.
 
 ----------------------------------------
+PLAYWRIGHT — SÅDAN SKIFTES E2E-MÅLET
+----------------------------------------
+
+E2E-målet er nu defineret **ét sted**: `PROD` i `tests/helpers.ts`. Tidligere var adressen
+kopieret ind i 21 spec-filer i ni forskellige formateringer, så et værtsskifte var en 21-filers
+redigering — og suiten kunne kun nogensinde pege på én hardcodet adresse.
+
+```ts
+export const PROD = (process.env.PROD_BASE_URL ?? "https://den-seje-app-frontend.vercel.app")
+  .replace(/\/+$/, "");
+```
+
+**To måder at skifte mål, begge uden at røre en eneste spec:**
+
+1. **Midlertidigt / i CI** — sæt miljøvariablen. Ingen kodeændring:
+   ```
+   PROD_BASE_URL=https://<worker>.workers.dev
+   ```
+   I `.github/workflows/playwright.yml` sættes den på `test`-jobbet. Det er den rigtige måde at
+   verificere Cloudflare-hosten, før domænet flyttes.
+
+2. **Permanent** — ret default-værdien i `tests/helpers.ts`. Én linje.
+
+Standardværdien er bevidst stadig Vercel-adressen: at flytte værten er en selvstændig beslutning,
+ikke en sidegevinst ved en oprydning.
+
+`tests/unit/e2e-base-url.test.mjs` (7 tests) holder det på plads: adressen må kun stå ét sted,
+`PROD_BASE_URL` skal virke, trailing slash skal fjernes, ingen spec må redeklarere sin egen `PROD`,
+og enhver spec der bruger `PROD` skal importere den fra `./helpers.js`. Guarden er verificeret ved
+at slippe en spec med en hardcodet adresse ind i mappen og se den fejle.
+
+----------------------------------------
 SIKKERHEDSGEVINST
 ----------------------------------------
 

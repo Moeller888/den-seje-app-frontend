@@ -1,8 +1,8 @@
-// Sections 143-145 + 152C.
+﻿// Sections 143-145 + 152C.
 // Tests 1-6 (rewritten in Section 152C): the identity panel on avatar.html
-// replaced the gender panel — body choice now writes avatar_identity via the
+// replaced the gender panel â€” body choice now writes avatar_identity via the
 // set_avatar_identity RPC and re-renders the body immediately.
-// Tests 7-11 (unchanged): the gender TINT system (avatar_gender → data-gender
+// Tests 7-11 (unchanged): the gender TINT system (avatar_gender â†’ data-gender
 // on the hub showcase) is explicitly untouched by 152C and still verified.
 
 import { test, expect } from "@playwright/test";
@@ -10,18 +10,17 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD                  = "https://den-seje-app-frontend.vercel.app";
 const STUDENT_EMAIL         = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS          = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL          = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// C2 base body file per body_type (medium skin — these identities carry no
+// C2 base body file per body_type (medium skin â€” these identities carry no
 // skin_tone). AVATAR_V2/C2 render path; C2 forced in-test via localStorage override.
 const BODY_FILE_FOR: Record<string, string> = {
   neutral: "body-neutral-medium-c2.svg",
@@ -78,11 +77,11 @@ async function loginAsStudent(page: any) {
 
 async function openAvatarPage(page: any) {
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  // Identity buttons render at the end of loadAll() — signals load complete.
+  // Identity buttons render at the end of loadAll() â€” signals load complete.
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 }
 
-// ── Tests 1-6: identity panel (Section 152C) ──────────────────────────────────
+// â”€â”€ Tests 1-6: identity panel (Section 152C) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("1. Identity panel shows all three body options", async ({
   page,
@@ -102,7 +101,7 @@ test("1. Identity panel shows all three body options", async ({
   await expect(page.locator(".identity-btn[data-body-type='neutral']")).toHaveText("Neutral");
 });
 
-test("2. Student can select Dreng — body re-renders immediately", async ({
+test("2. Student can select Dreng â€” body re-renders immediately", async ({
   page,
   browserName,
 }) => {
@@ -135,7 +134,7 @@ test("2. Student can select Dreng — body re-renders immediately", async ({
   expect((row as any)?.avatar_identity?.chosen_at).toBeTruthy();
 });
 
-test("3. Student can select Pige — body re-renders immediately", async ({
+test("3. Student can select Pige â€” body re-renders immediately", async ({
   page,
   browserName,
 }) => {
@@ -152,7 +151,7 @@ test("3. Student can select Pige — body re-renders immediately", async ({
   ).toBeAttached();
 });
 
-test("4. Student can select Neutral — body returns to the neutral base", async ({
+test("4. Student can select Neutral â€” body returns to the neutral base", async ({
   page,
   browserName,
 }) => {
@@ -212,7 +211,7 @@ test("6. Existing avatar menu still works with the identity panel", async ({
   expect(imgCount).toBeGreaterThanOrEqual(1);
 });
 
-// ── Tests 7-11: hub gender tint (Sections 144-145 — UNTOUCHED by 152C) ───────
+// â”€â”€ Tests 7-11: hub gender tint (Sections 144-145 â€” UNTOUCHED by 152C) â”€â”€â”€â”€â”€â”€â”€
 
 async function openHubPage(page: any) {
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });

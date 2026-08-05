@@ -1,36 +1,35 @@
-// Section 152B: Hair Decoupling tests.
+﻿// Section 152B: Hair Decoupling tests.
 //
 // GOLDEN tests ("golden:" prefix): pixel-regression against baselines captured
 // from production BEFORE the decoupling (commit 7edc2f5 rendering). Baselines
 // live in tests/avatar-hair-decoupling.spec.ts-snapshots/ and are PERMANENT
 // regression assets protecting 152B, 152C body variants, and future hair work.
 // Captured/compared with reduced motion (no breathing/blink) for determinism.
-// Platform-specific (chromium/win32) — local runs only, like the rest of the suite.
+// Platform-specific (chromium/win32) â€” local runs only, like the rest of the suite.
 //
 // STRUCTURAL tests: hair layer present on all four render surfaces, body.svg
 // and expression SVGs are hairless, eyebrows survive (they share the hair
-// color #4a3626 — over-deletion guard), headwear stacks above hair.
+// color #4a3626 â€” over-deletion guard), headwear stacks above hair.
 
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD          = "https://den-seje-app-frontend.vercel.app";
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Path signatures (exact strings from the SVG sources)
-const HAIR_CAP_SIG  = "M 52 44 Q 46 11 66 9";          // main hair cap — in all 6 files pre-152B
+const HAIR_CAP_SIG  = "M 52 44 Q 46 11 66 9";          // main hair cap â€” in all 6 files pre-152B
 const HAIR_BANG_SIG = "M 58 37 Q 64 26 74 24";          // forward bang
-const BODY_BELT_SIG = 'rect x="40" y="174"';            // belt — body.svg must keep its body
+const BODY_BELT_SIG = 'rect x="40" y="174"';            // belt â€” body.svg must keep its body
 const HAIR_COLOR    = "#4a3626";                        // hair fill AND eyebrow stroke color
 
 const EXPRESSIONS = ["neutral", "focused", "proud", "curious", "determined"];
@@ -62,7 +61,7 @@ test.beforeAll(async () => {
   }
   headwearItemId = (hats[0] as any).id;
 
-  // Renderer only draws OWNED items — ensure ownership (idempotent).
+  // Renderer only draws OWNED items â€” ensure ownership (idempotent).
   const { data: owned } = await adminClient
     .from("user_items")
     .select("item_id")
@@ -118,7 +117,7 @@ test.afterAll(async () => {
   await adminClient.from("profiles").update({ equipped_slots: {} }).eq("id", studentId);
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loginAsStudent(page: any) {
   await page.fill("#email", STUDENT_EMAIL);
@@ -135,7 +134,7 @@ async function gotoLoginReduced(page: any) {
 // All <img> inside the selector must be fully loaded before a screenshot.
 async function waitForImages(page: any, selector: string) {
   // Wait for the app's render-complete signal (data-avatar-rendered="1"), set once the
-  // full avatar composite — base + cosmetics + expression overlay — has decoded. This is
+  // full avatar composite â€” base + cosmetics + expression overlay â€” has decoded. This is
   // the deterministic wait point (#40); the img.complete check below is kept as a supplement.
   await page.waitForSelector(`${selector}[data-avatar-rendered="1"]`, { timeout: 15000 });
   await page.waitForFunction(
@@ -151,7 +150,7 @@ async function waitForImages(page: any, selector: string) {
   );
 }
 
-// ── Golden pixel-regression tests ─────────────────────────────────────────────
+// â”€â”€ Golden pixel-regression tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("golden: avatar page bare avatar matches baseline", async ({
   page,
@@ -233,7 +232,7 @@ test("golden: shop first item preview matches baseline", async ({
   });
 });
 
-// ── Structural tests (post-decoupling state) ──────────────────────────────────
+// â”€â”€ Structural tests (post-decoupling state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("structure: hair layer renders on all four surfaces", async ({
   page,
@@ -288,7 +287,7 @@ test("structure: body.svg is hairless but keeps body and face", async ({
   expect(svg, "hair cap must be removed from body.svg").not.toContain(HAIR_CAP_SIG);
   expect(svg, "forward bang must be removed from body.svg").not.toContain(HAIR_BANG_SIG);
   expect(svg, "body (belt) must remain").toContain(BODY_BELT_SIG);
-  // Eyebrows share the hair color — they must survive the deletion.
+  // Eyebrows share the hair color â€” they must survive the deletion.
   expect(svg, "eyebrows must remain in body.svg").toContain(HAIR_COLOR);
 });
 

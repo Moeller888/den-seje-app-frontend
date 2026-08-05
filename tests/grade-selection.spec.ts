@@ -1,8 +1,8 @@
-// Section 140: Grade selection failure recovery tests.
+﻿// Section 140: Grade selection failure recovery tests.
 //
 // The grade selector appears once on a student's first visit (selected_grade = null).
 // Tests use page.route to intercept the set_student_grade Supabase RPC and
-// simulate failure conditions against the real production backend — no mocking
+// simulate failure conditions against the real production backend â€” no mocking
 // of auth, profile reads, or the quiz flow.
 //
 // Supabase RPC URL: **/rpc/set_student_grade**
@@ -12,12 +12,11 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD              = "https://den-seje-app-frontend.vercel.app";
 const SUPABASE_URL       = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const STUDENT_EMAIL      = process.env.TEST_STUDENT_EMAIL!;
@@ -48,11 +47,11 @@ async function loginAndWaitForApp(page: any): Promise<void> {
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  // Wait for index.html — URL change confirms redirect
+  // Wait for index.html â€” URL change confirms redirect
   await page.waitForURL(/index\.html/, { timeout: 20000 });
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("1. Grade selector appears for student with no grade and selection succeeds", async ({
   page,
@@ -71,7 +70,7 @@ test("1. Grade selector appears for student with no grade and selection succeeds
   await expect(overlay).toBeVisible({ timeout: 10000 });
   await expect(page.locator(".grade-btn").first()).toBeEnabled();
 
-  // Student selects grade 9 — no routing, real RPC
+  // Student selects grade 9 â€” no routing, real RPC
   await page.locator(".grade-btn[data-grade='9']").click();
 
   // Overlay must hide and quiz must reach ready state
@@ -175,12 +174,12 @@ test("4. Retry after failure succeeds and advances to quiz", async ({
   await loginAndWaitForApp(page);
   await expect(page.locator("#grade-selector-overlay")).toBeVisible({ timeout: 10000 });
 
-  // First click — fails
+  // First click â€” fails
   await page.locator(".grade-btn[data-grade='9']").click();
   await expect(page.locator("#grade-status")).toContainText("Kunne ikke gemme", { timeout: 5000 });
   await expect(page.locator(".grade-btn").first()).toBeEnabled();
 
-  // Second click — succeeds
+  // Second click â€” succeeds
   await page.locator(".grade-btn[data-grade='9']").click();
   await expect(page.locator("#grade-selector-overlay")).not.toBeVisible({ timeout: 15000 });
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });

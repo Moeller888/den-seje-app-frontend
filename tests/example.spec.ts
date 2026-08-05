@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { PROD } from './helpers.js';
 
 test('Login and answer question flow works', async ({ page }) => {
-  await page.goto('https://den-seje-app-frontend.vercel.app/login.html');
+  await page.goto(`${PROD}/login.html`);
 
   await page.fill('input[type="email"]', process.env.TEST_STUDENT_EMAIL!);
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);

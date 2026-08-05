@@ -1,13 +1,13 @@
-// Section 136: Password reset & student self-service tests.
+﻿// Section 136: Password reset & student self-service tests.
 // UI tests use the production page. API tests drive the update flow directly
-// via the student's anon-key client — no real email required.
+// via the student's anon-key client â€” no real email required.
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail } from './helpers.js';
+import { findAuthUserByEmail, PROD } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -15,11 +15,10 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Public anon key — already in deployed frontend JS, not a secret.
+// Public anon key â€” already in deployed frontend JS, not a secret.
 const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc';
 
-const PROD            = 'https://den-seje-app-frontend.vercel.app';
 const STUDENT_EMAIL   = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS    = process.env.TEST_STUDENT_PASSWORD!;
 const TEMP_PASS       = 'TempPass2026!';
@@ -42,7 +41,7 @@ test.afterAll(async () => {
   await adminClient.auth.admin.updateUserById(studentId, { password: STUDENT_PASS });
 });
 
-// ── UI tests ─────────────────────────────────────────────────────────────────
+// â”€â”€ UI tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('1. "Glemt adgangskode?" link is visible on login page', async ({ page }) => {
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
@@ -77,7 +76,7 @@ test('3. Submitting empty email shows validation error', async ({ page }) => {
 });
 
 test('4. Reset request form handles Supabase response gracefully', async ({ page, browserName }) => {
-  // Deduplicate across browsers — the API call is identical in all three;
+  // Deduplicate across browsers â€” the API call is identical in all three;
   // Supabase also rate-limits password reset emails, so only one attempt per run.
   test.skip(browserName !== 'chromium', 'API-call deduplication across browsers');
 
@@ -95,7 +94,7 @@ test('4. Reset request form handles Supabase response gracefully', async ({ page
 });
 
 test('5. reset-password.html without a token shows invalid-link message', async ({ page }) => {
-  // Direct navigation without a recovery hash → must show invalid section
+  // Direct navigation without a recovery hash â†’ must show invalid section
   await page.goto(`${PROD}/reset-password.html`, { waitUntil: 'domcontentloaded' });
 
   await expect(page.locator('#invalid-section')).toBeVisible({ timeout: 5000 });
@@ -103,14 +102,14 @@ test('5. reset-password.html without a token shows invalid-link message', async 
   await expect(page.locator('#invalid-section')).toContainText(/ugyldig/i);
 });
 
-// ── API-level password update tests ──────────────────────────────────────────
+// â”€â”€ API-level password update tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // These tests bypass the email flow and directly verify that:
 //   - supabase.auth.updateUser() works from a student client
 //   - the new password allows login
 //   - the old password no longer works
 
 test('6. Student can update own password via Supabase updateUser', async () => {
-  // Sign in then call updateUser on the SAME client — updateUser requires an
+  // Sign in then call updateUser on the SAME client â€” updateUser requires an
   // active auth session in the client, not just an Authorization header.
   const studentClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },

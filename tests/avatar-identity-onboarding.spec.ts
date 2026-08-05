@@ -1,6 +1,6 @@
-// Section 152C: Avatar identity onboarding tests.
+﻿// Section 152C: Avatar identity onboarding tests.
 // Soft prompt (Model C): students with chosen_at = null see the identity
-// overlay on index.html BEFORE the grade selector; "Vælg senere" dismisses
+// overlay on index.html BEFORE the grade selector; "VÃ¦lg senere" dismisses
 // without writing (re-prompts next login); choosing calls set_avatar_identity.
 // Teachers never see the prompt. Shop previews stay identity-independent.
 //
@@ -13,12 +13,11 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail } from "./helpers.js";
+import { findAuthUserByEmail, PROD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-const PROD          = "https://den-seje-app-frontend.vercel.app";
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL ?? "teacher-test@hotmail.com";
@@ -26,7 +25,7 @@ const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!"
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// C2 base body file per body_type (medium skin — these identities carry no
+// C2 base body file per body_type (medium skin â€” these identities carry no
 // skin_tone, so baseSrcForC2 resolves to the medium variant). AVATAR_V2/C2 render
 // path; tests enable C2 via a localStorage override (see beforeEach), global flag
 // stays false.
@@ -84,7 +83,7 @@ async function loginAsStudent(page: any) {
   await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
 }
 
-// ── Identity flow ─────────────────────────────────────────────────────────────
+// â”€â”€ Identity flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("1. chosen_at null shows the prompt with the current body marked", async ({
   page,
@@ -98,13 +97,13 @@ test("1. chosen_at null shows the prompt with the current body marked", async ({
   const overlay = page.locator("#identity-overlay");
   await expect(overlay).toBeVisible({ timeout: 15000 });
 
-  // The student's current body is marked — "Behold" is one tap.
+  // The student's current body is marked â€” "Behold" is one tap.
   await expect(
     page.locator(".identity-card[data-body-type='neutral']")
   ).toHaveClass(/identity-card--current/);
   await expect(
     page.locator(".identity-card[data-body-type='neutral'] .identity-card-current-badge")
-  ).toHaveText("Nuværende");
+  ).toHaveText("NuvÃ¦rende");
 });
 
 test("2. Choosing Pige sets chosen_at and renders the female body", async ({
@@ -151,7 +150,7 @@ test("3. No prompt when chosen_at is set", async ({ page, browserName }) => {
   await expect(page.locator("#identity-overlay")).toBeHidden();
 });
 
-test("4. 'Vælg senere' dismisses without writing and re-prompts next login", async ({
+test("4. 'VÃ¦lg senere' dismisses without writing and re-prompts next login", async ({
   page,
   browserName,
 }) => {
@@ -166,7 +165,7 @@ test("4. 'Vælg senere' dismisses without writing and re-prompts next login", as
   await page.locator("#identity-later-btn").click();
   await expect(overlay).toBeHidden();
 
-  // Quiz flow continues — the prompt never blocks learning.
+  // Quiz flow continues â€” the prompt never blocks learning.
   await page.waitForSelector("#options button", { timeout: 30000 });
 
   // Nothing was written.
@@ -195,7 +194,7 @@ test("5. Teachers never see the identity prompt", async ({ page, browserName }) 
   // appear (role gate in maybeShowIdentityPrompt; the teacher's own profile
   // has chosen_at null from the 152A backfill, so without the gate it WOULD
   // show). index.html is not a supported teacher page and its init has no
-  // guaranteed milestones for teachers — so the assertion is a bounded watch
+  // guaranteed milestones for teachers â€” so the assertion is a bounded watch
   // with no milestone dependency: the overlay must not become visible.
   await page.goto(`${PROD}/index.html`, { waitUntil: "load" });
 
@@ -204,12 +203,12 @@ test("5. Teachers never see the identity prompt", async ({ page, browserName }) 
     await page.locator("#identity-overlay").waitFor({ state: "visible", timeout: 8000 });
     appeared = true;
   } catch {
-    // never became visible — the requirement holds
+    // never became visible â€” the requirement holds
   }
   expect(appeared, "identity overlay must never appear for teachers").toBe(false);
 });
 
-// ── Rendering across surfaces ─────────────────────────────────────────────────
+// â”€â”€ Rendering across surfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test("6. All three bodies render on avatar page and hub", async ({
   page,
@@ -257,11 +256,11 @@ test("7. Shop previews stay identity-independent (neutral base)", async ({
   ).toHaveCount(0);
 });
 
-// ── Golden pixel baselines for the new bodies (permanent) ─────────────────────
+// â”€â”€ Golden pixel baselines for the new bodies (permanent) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function waitForImages(page: any, selector: string) {
   // Wait for the app's render-complete signal (data-avatar-rendered="1"), set once the
-  // full avatar composite — base + cosmetics + expression overlay — has decoded. This is
+  // full avatar composite â€” base + cosmetics + expression overlay â€” has decoded. This is
   // the deterministic wait point (#40); the img.complete check below is kept as a supplement.
   await page.waitForSelector(`${selector}[data-avatar-rendered="1"]`, { timeout: 15000 });
   await page.waitForFunction(
