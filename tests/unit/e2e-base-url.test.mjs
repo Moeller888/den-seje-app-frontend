@@ -41,24 +41,49 @@ test("helpers.ts defines PROD exactly once", () => {
   assert.equal(defs.length, 1, "PROD must have a single definition");
 });
 
+// Evaluate helpers.ts's PROD expression under a chosen PROD_BASE_URL. The specs are TypeScript
+// and this suite is plain Node, so the resolution logic is exercised from source rather than
+// imported — which also means the declaration and the export must be evaluated together.
+function evaluatePROD(envValue) {
+  const src = readFileSync(HELPERS, "utf8");
+  const decl = src.match(/^const CONFIGURED_BASE_URL = (.*);$/m);
+  const expr = src.match(/^export const PROD = (.*);$/m);
+  assert.ok(decl && expr, "could not locate the PROD expression in helpers.ts");
+  const prev = process.env.PROD_BASE_URL;
+  if (envValue === undefined) delete process.env.PROD_BASE_URL; else process.env.PROD_BASE_URL = envValue;
+  try {
+    const CONFIGURED_BASE_URL = eval(decl[1]);
+    return eval(expr[1]);
+  } finally {
+    if (prev === undefined) delete process.env.PROD_BASE_URL; else process.env.PROD_BASE_URL = prev;
+  }
+}
+
 test("PROD is overridable via PROD_BASE_URL, so CI can be repointed without a code edit", () => {
   const src = readFileSync(HELPERS, "utf8");
   assert.match(src, /process\.env\.PROD_BASE_URL/, "PROD must read PROD_BASE_URL");
-  const expr = src.match(/^export const PROD = (.*);$/m);
-  assert.ok(expr, "could not locate the PROD expression");
-
-  const evaluate = (envValue) => {
-    const prev = process.env.PROD_BASE_URL;
-    if (envValue === undefined) delete process.env.PROD_BASE_URL; else process.env.PROD_BASE_URL = envValue;
-    try { return eval(expr[1]); } finally {
-      if (prev === undefined) delete process.env.PROD_BASE_URL; else process.env.PROD_BASE_URL = prev;
-    }
-  };
+  const evaluate = evaluatePROD;
   assert.equal(evaluate("https://example.workers.dev"), "https://example.workers.dev");
   // a trailing slash must not survive, or `${PROD}/login.html` becomes a double slash
   assert.equal(evaluate("https://example.workers.dev/"), "https://example.workers.dev");
   assert.equal(evaluate("https://example.workers.dev///"), "https://example.workers.dev");
   assert.match(evaluate(undefined), /^https:\/\/\S+$/, "the default must still be an absolute origin");
+});
+
+test("an EMPTY PROD_BASE_URL counts as unset — an unset Actions variable expands to \"\"", () => {
+  const evaluate = evaluatePROD;
+  const fallback = evaluate(undefined);
+  // The failure this prevents: PROD === "" would make every test navigate to a bare "/login.html".
+  for (const empty of ["", "   ", "\t", "\n"]) {
+    assert.equal(evaluate(empty), fallback, `${JSON.stringify(empty)} must fall back to the default`);
+  }
+  assert.equal(evaluate("  https://example.workers.dev  "), "https://example.workers.dev", "surrounding whitespace must be trimmed");
+});
+
+test("the workflow wires PROD_BASE_URL from a repository variable, not a secret", () => {
+  const wf = readFileSync(join(HERE, "..", "..", ".github", "workflows", "playwright.yml"), "utf8");
+  assert.match(wf, /PROD_BASE_URL:\s*\$\{\{\s*vars\.PROD_BASE_URL\s*\}\}/, "the test job must pass PROD_BASE_URL through");
+  assert.ok(!/PROD_BASE_URL:\s*\$\{\{\s*secrets\./.test(wf), "a hostname is not a secret — use vars so it stays auditable");
 });
 
 test("every spec that uses PROD imports it from the shared helper", () => {

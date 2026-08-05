@@ -179,6 +179,13 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
       TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      # Where the E2E suite points. A repository VARIABLE, not a secret — a hostname is not
+      # sensitive, and a variable stays visible and auditable in the repo settings.
+      # UNSET IS SAFE: the reference resolves to an empty string, and tests/helpers.ts treats
+      # empty as absent and falls back to its default, so this line changes nothing until the
+      # variable is created. Set it to the Cloudflare Worker origin to repoint CI with no code
+      # change (Settings → Secrets and variables → Actions → Variables). See docs/HOSTING.md.
+      PROD_BASE_URL:             ${{ vars.PROD_BASE_URL }}
     steps:
     - uses: actions/checkout@v4
       with:
