@@ -11,9 +11,22 @@
   // root. The root holds .env files, the docs/ decision register, tests/, tools/, supabase/ and
   // tracked node_modules; the build script copies only an explicit allowlist and then re-validates
   // the result, so none of that can be published.
+  // ROUTING CONTRACT: EXPLICIT .html, PRESERVED.
+  //
+  // `auto-trailing-slash` — the Cloudflare default — strips the extension and 307s:
+  //     /login.html → 307 → /login        /teacher.html → 307 → /teacher
+  // This app is a traditional multipage app. Its runtime links, the role redirects in js/login.js
+  // and the Playwright contract all use explicit .html addresses, and four assertions compare the
+  // final URL exactly. `none` keeps the hosting faithful to the app, instead of weakening the tests
+  // to match a hosting default.
+  //
+  // The cost of `none` is that `/` no longer resolves to index.html on its own, so the build emits
+  // a `_redirects` file holding a single rewrite (`/ /index.html 200` — status 200 means an
+  // INTERNAL rewrite, so the browser's URL stays `/`). Cloudflare consumes `_redirects` as
+  // configuration and never serves it as an asset; a test asserts it stays unreachable.
   "assets": {
     "directory": "./dist-cloudflare",
-    "html_handling": "auto-trailing-slash",
+    "html_handling": "none",
     "not_found_handling": "404-page"
   }
 }

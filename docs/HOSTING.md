@@ -52,12 +52,12 @@ Frontenden ligger i **repo-roden**, side om side med `.env`, `.env.local`, `KUN 
 `dist-cloudflare/` og **validerer resultatet bagefter**. En denylist ville kun være så god som den
 sidste, der huskede at udvide den.
 
-Output: **170 filer, 5,54 MB**
+Output: **171 filer, 5,54 MB**
 
 | | Antal | |
 |---|---|---|
 | Runtime-HTML | 13 | kopieret uændret |
-| Genereret | 2 | `docs.html` (stub), `404.html` |
+| Genereret | 3 | `docs.html` (stub), `404.html`, `_redirects` |
 | Root-entry | 3 | `app.js`, `style.css`, `supabaseClient.js` |
 | `js/` | 79 | kun `.js` (`.jsx` er build-kilde) |
 | `css/` | 1 | `theme.css` |
@@ -74,6 +74,62 @@ linkene virker fortsat, intet internt serveres, og der hentes ingen Markdown.
 **Kilde-`docs.html` kopieres ikke. Der er 0 filer fra `docs/` i outputtet.**
 
 **`404.html`** — krævet af `not_found_handling: "404-page"`. Neutral, uden projektinformation.
+
+**`_redirects`** — én enkelt regel, se routingafsnittet nedenfor.
+
+### ROUTING: EKSPLICITTE .html-ADRESSER BEVARES
+
+Cloudflares standard, `html_handling: "auto-trailing-slash"`, fjerner endelsen og svarer **307**:
+
+```
+/login.html          → 307 → /login
+/teacher.html        → 307 → /teacher
+/student-detail.html → 307 → /student-detail
+```
+
+Det er verificeret på den kørende production-Worker, ikke gættet.
+
+Appen er en traditionel multipage-app. Runtime-links, rolleredirects i `js/login.js` og
+Playwright-kontrakten bruger alle eksplicitte `.html`-adresser, og fire assertions sammenligner den
+endelige URL nøjagtigt:
+
+```
+tests/student-detail-domains.spec.ts:21,37   toHaveURL(`${PROD}/login.html`)
+tests/teacher-dashboard.spec.ts:65           toHaveURL(`${PROD}/teacher.html`)
+tests/teacher-dashboard.spec.ts:85           toHaveURL(`${PROD}/student-detail.html?id=…`)
+```
+
+Derfor er hostingen rettet ind efter appen frem for at svække testene til Cloudflares standard:
+
+```jsonc
+"html_handling": "none"
+```
+
+**Prisen** er, at `/` ikke længere selv finder `index.html`. Buildet genererer derfor en
+`_redirects` med præcis én regel:
+
+```
+/ /index.html 200
+```
+
+Status **200 betyder intern rewrite**, ikke redirect: browserens adresselinje viser fortsat `/`,
+og der udsendes ingen 3xx. En 301/302 ville lægge `/index.html` i adresselinjen og genindføre
+netop det ekstra rundtur, ændringen fjerner.
+
+Det er **bevidst ikke** en SPA-fallback (`/* /index.html 200`): ukendte stier skal fortsat ramme
+404-siden, så et forkert link fejler synligt i stedet for lydløst at rendere quizzen.
+`validateOutput()` afviser både en wildcard-regel, en 301/302 og en ekstra regel.
+
+Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
+
+**Kontrakten, bevist af `tools/cloudflare-serve-check.mjs`:**
+
+| | |
+|---|---|
+| `/` `/index.html` `/login.html` `/teacher.html` `/student-detail.html?id=…` `/avatar.html` `/reset-password.html` | **200, ingen 3xx** |
+| `/login` `/teacher` `/student-detail` `/avatar` `/reset-password` `/hub` `/admin` `/shop` | **404** |
+| `/_redirects` `/_headers` | **404** — konfiguration, ikke asset |
+| ukendte stier | den neutrale 404-side |
 
 ### Bevidst udeladt
 
