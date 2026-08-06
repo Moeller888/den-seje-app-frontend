@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -39,7 +39,7 @@ test.beforeAll(async () => {
       .select('id')
       .range(pageStart, pageStart + PAGE_SIZE - 1);
 
-    if (pageErr) throw new Error(`no-questions setup: questions fetch failed â€” ${pageErr.message}`);
+    if (pageErr) throw new Error(`no-questions setup: questions fetch failed — ${pageErr.message}`);
     if (!page || page.length === 0) break;
 
     allIds.push(...page);
@@ -95,7 +95,7 @@ test('Shows empty state when no questions are available', async ({ page }) => {
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
   await page.click('button');
 
-  // logout-btn is intentionally hidden in the mobile redesign â€” wait for the question element directly
+  // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly
   const question = page.locator('#question');
 
   // 20s: Vercel Edge Function cold start can take up to ~18s when suite has been idle
@@ -103,5 +103,5 @@ test('Shows empty state when no questions are available', async ({ page }) => {
 
   await expect(question).toHaveAttribute('data-state', 'empty', { timeout: 20000 });
 
-  await expect(question).toContainText(/ingen flere spÃ¸rgsmÃ¥l/i);
+  await expect(question).toContainText(/ingen flere spørgsmål/i);
 });

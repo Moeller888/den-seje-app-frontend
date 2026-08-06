@@ -80,6 +80,26 @@ test("an EMPTY PROD_BASE_URL counts as unset — an unset Actions variable expan
   assert.equal(evaluate("  https://example.workers.dev  "), "https://example.workers.dev", "surrounding whitespace must be trimmed");
 });
 
+test("no spec file contains mojibake — Danish assertions must keep æ ø å", () => {
+  // This caught a real regression. Tidying the imports with a PowerShell `Get-Content -Raw` pass
+  // decoded UTF-8 as Windows-1252 and wrote it back as UTF-8, turning the assertion
+  // /ingen flere spørgsmål/i into /ingen flere spÃ¸rgsmÃ¥l/i in 3 files and every em dash into
+  // "â€”" in 10. The suite was green locally and failed only against the live app, because the
+  // page renders correct Danish and only the EXPECTATION was corrupted.
+  const MARKERS = ["Ã¦", "Ã¸", "Ã¥", "Ã†", "Ã˜", "Ã…", "â€", "�"];
+  const offenders = [];
+  for (const f of specs) {
+    const src = readSpec(f);
+    for (const m of MARKERS) if (src.includes(m)) offenders.push(`${f}: ${m}`);
+  }
+  assert.deepEqual(offenders, [], "UTF-8 read as Windows-1252 — re-read the file as UTF-8 and rewrite it");
+});
+
+test("the Danish no-questions assertions still use real æ ø å", () => {
+  const src = readSpec("no-questions.spec.ts");
+  assert.match(src, /ingen flere spørgsmål/, "the empty-state assertion must match what the app renders");
+});
+
 test("the workflow wires PROD_BASE_URL from a repository variable, not a secret", () => {
   const wf = readFileSync(join(HERE, "..", "..", ".github", "workflows", "playwright.yml"), "utf8");
   assert.match(wf, /PROD_BASE_URL:\s*\$\{\{\s*vars\.PROD_BASE_URL\s*\}\}/, "the test job must pass PROD_BASE_URL through");

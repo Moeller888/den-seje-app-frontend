@@ -1,11 +1,11 @@
-﻿// Section 151B: Living Hub Avatar â€” life engines + reward-moment reactions on hub.html.
+// Section 151B: Living Hub Avatar — life engines + reward-moment reactions on hub.html.
 // Verifies: engine mount (expression/blink/breathing), achievement unlock reaction,
 // daily + weekly quest claim reactions, daily reward modal reaction, welcome-back,
 // and reduced-motion behavior.
 //
 // Economy safety: coins are snapshotted in beforeAll and restored in afterAll, so
 // quest/daily-reward claims performed by these tests are economy-neutral. The
-// achievement fixture uses first_correct (title reward, ON CONFLICT DO NOTHING) â€”
+// achievement fixture uses first_correct (title reward, ON CONFLICT DO NOTHING) —
 // re-unlocking grants no coins.
 
 import { test, expect } from "@playwright/test";
@@ -54,7 +54,7 @@ test.beforeAll(async () => {
   if (!student) throw new Error(`Test student not found: ${STUDENT_EMAIL}`);
   studentId = student.id;
 
-  // Economy snapshot â€” restored in afterAll so claims here are net-zero.
+  // Economy snapshot — restored in afterAll so claims here are net-zero.
   const { data: progress, error: progError } = await adminClient
     .from("student_progress")
     .select("coins")
@@ -85,14 +85,14 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // Restore the coin balance â€” all claims performed by this spec are rolled back.
+  // Restore the coin balance — all claims performed by this spec are rolled back.
   await adminClient
     .from("student_progress")
     .update({ coins: coinsSnapshot })
     .eq("student_id", studentId);
 });
 
-// â”€â”€ Fixtures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 // Prevent the daily reward auto-claim modal from appearing (it blocks clicks).
 async function markDailyRewardClaimedToday() {
@@ -173,7 +173,7 @@ async function makeWeeklyQuestClaimable() {
   if (error) throw new Error(`weekly quest fixture failed: ${error.message}`);
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function loginAsStudent(page: any) {
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
@@ -185,7 +185,7 @@ async function loginAsStudent(page: any) {
 
 async function openHubPage(page: any) {
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
-  // At least one avatar layer â€” signals renderProfileAvatar() (and engine init) ran.
+  // At least one avatar layer — signals renderProfileAvatar() (and engine init) ran.
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
 
@@ -195,7 +195,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
 });
 
-// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Tests ─────────────────────────────────────────────────────────────────────
 
 test("1. Hub avatar mounts all life engines", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
@@ -230,7 +230,7 @@ test("2. Achievement unlock triggers critical proud reaction", async ({
   await markDailyRewardClaimedToday();
 
   // Remove first_correct so evaluate_achievements re-unlocks it on hub load.
-  // Its reward is the 'rookie' title (ON CONFLICT DO NOTHING) â€” no coin drift.
+  // Its reward is the 'rookie' title (ON CONFLICT DO NOTHING) — no coin drift.
   const { error } = await adminClient
     .from("user_achievements")
     .delete()
@@ -241,7 +241,7 @@ test("2. Achievement unlock triggers critical proud reaction", async ({
   await loginAsStudent(page);
   await openHubPage(page);
 
-  // evaluate_achievements â†’ toast â†’ ACHIEVEMENT_UNLOCK reaction (RPC chain: ~1-2s).
+  // evaluate_achievements → toast → ACHIEVEMENT_UNLOCK reaction (RPC chain: ~1-2s).
   await expect(page.locator("#avatarShowcase")).toHaveAttribute(
     "data-avatar-reaction",
     "achievement",
@@ -337,7 +337,7 @@ test("6. Welcome-back after >=30s hidden triggers curious reaction", async ({
   await openHubPage(page);
 
   // Synthetic visibility cycle: hide, jump Date.now past the 30s threshold,
-  // show. Tests the handler path â€” real tab-hiding is unreachable in headless.
+  // show. Tests the handler path — real tab-hiding is unreachable in headless.
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", { value: true, configurable: true });
     document.dispatchEvent(new Event("visibilitychange"));
@@ -359,8 +359,8 @@ test("6. Welcome-back after >=30s hidden triggers curious reaction", async ({
   );
 });
 
-// â”€â”€ Reduced motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// page.emulateMedia, NOT test.use({ reducedMotion }) â€” the latter is silently
+// ── Reduced motion ────────────────────────────────────────────────────────────
+// page.emulateMedia, NOT test.use({ reducedMotion }) — the latter is silently
 // ignored in this harness (proven during Section 151A).
 
 test("7. Reduced motion disables animation but engines stay mounted", async ({
@@ -377,7 +377,7 @@ test("7. Reduced motion disables animation but engines stay mounted", async ({
   // Blink layer is never built under reduced motion.
   await expect(page.locator("#avatar-blink-layer")).toHaveCount(0);
 
-  // Expression overlay still mounts â€” instant swaps instead of fades.
+  // Expression overlay still mounts — instant swaps instead of fades.
   await expect(page.locator("#profileAvatar .avatar-expr-overlay")).toBeAttached();
 
   // Breathing disabled by the media query.

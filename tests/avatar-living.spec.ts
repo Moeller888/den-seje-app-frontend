@@ -1,4 +1,4 @@
-﻿// Section 151A: Avatar lives everywhere â€” life engines + equip reactions on avatar.html.
+// Section 151A: Avatar lives everywhere — life engines + equip reactions on avatar.html.
 // Verifies: expression overlay mounts, blink layer initializes, equip/unequip trigger
 // graded avatar reactions (data-avatar-reaction on #avatarWrap), legendary takes the
 // critical path, and prefers-reduced-motion disables animation without breaking state.
@@ -21,7 +21,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;
 
-// Discovered from shop_items in beforeAll â€” no hardcoded item ids.
+// Discovered from shop_items in beforeAll — no hardcoded item ids.
 let lowerItemId: string;        // common (fallback: uncommon) equipable item
 let lowerItemSlot: string;      // its slot_type (drives the unequip button selector)
 let lowerReaction: string;      // "equip-common" | "equip-uncommon"
@@ -87,7 +87,7 @@ test.beforeEach(async () => {
 test.beforeEach(async ({ page }) => {
   // C2 render exercised in TEST ONLY via a localStorage override (decoupled from the
   // global AVATAR_V2 flag). The expression/blink/reaction engines must still mount
-  // on the C2 render path â€” this is exactly what these tests verify.
+  // on the C2 render path — this is exactly what these tests verify.
   await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
 });
 
@@ -106,11 +106,11 @@ async function loginAsStudent(page: any) {
 
 async function openAvatarPage(page: any) {
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
-  // Identity buttons render at the end of loadAll() â€” signals data + render complete.
+  // Identity buttons render at the end of loadAll() — signals data + render complete.
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
 }
 
-// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Tests ─────────────────────────────────────────────────────────────────────
 
 test("1. Avatar loads with base body layer", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
@@ -143,7 +143,7 @@ test("3. Blink system initializes", async ({ page, browserName }) => {
 
   const blinkLayer = page.locator("#avatar-preview #avatar-blink-layer");
   await expect(blinkLayer).toBeAttached();
-  // Two eyelid ellipses â€” one per eye.
+  // Two eyelid ellipses — one per eye.
   await expect(blinkLayer.locator("ellipse")).toHaveCount(2);
 });
 
@@ -177,7 +177,7 @@ test("4. Equip triggers proud reaction, unequip triggers curious", async ({
     { timeout: 8000 }
   );
 
-  // Unequip the same slot â†’ brief curious reaction, never negative.
+  // Unequip the same slot → brief curious reaction, never negative.
   await page.locator(`.unequip-btn[data-slot="${lowerItemSlot}"]`).click();
 
   await expect(page.locator("#avatarWrap")).toHaveAttribute(
@@ -218,7 +218,7 @@ test("5. Legendary equip triggers the critical reaction path", async ({
   );
 });
 
-// â”€â”€ Reduced motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Reduced motion ────────────────────────────────────────────────────────────
 // Note: test.use({ reducedMotion: "reduce" }) is not honored in this harness
 // (verified: matchMedia stays false on every page). page.emulateMedia() works
 // and is applied before any navigation, so the avatar page scripts see it.
@@ -237,7 +237,7 @@ test.describe("reduced motion", () => {
     // Blink layer is never built under reduced motion.
     await expect(page.locator("#avatar-blink-layer")).toHaveCount(0);
 
-    // Expression overlay still mounts â€” expressions swap instantly instead of fading.
+    // Expression overlay still mounts — expressions swap instantly instead of fading.
     await expect(page.locator("#avatar-preview .avatar-expr-overlay")).toBeAttached();
 
     // Breathing animation is disabled by the media query.
@@ -253,7 +253,7 @@ test.describe("reduced motion", () => {
       "data-avatar-reaction",
       lowerReaction
     );
-    // The slot is actually equipped â€” unequip button appears for that slot.
+    // The slot is actually equipped — unequip button appears for that slot.
     await expect(page.locator(`.unequip-btn[data-slot="${lowerItemSlot}"]`)).toBeVisible();
   });
 });
