@@ -153,7 +153,11 @@ jobs:
   test:
     needs: classify
     if: always()
-    timeout-minutes: 60
+    # 90, not 60: the suite outgrew the old ceiling. Measured on 860d653 — 816 tests, 705 resolved
+    # (454 passed, 251 skipped) and **0 failures** when the job was killed at 60 minutes. It was a
+    # clock limit, not a test result. `workers: 1` stays because every e2e test shares ONE Supabase
+    # test student (see the e2e-shared-supabase lock below), and all three browsers stay.
+    timeout-minutes: 90
     runs-on: ubuntu-latest
     # The ACTUAL job lock — does NOT trust the classify concurrency_group output alone. A fast
     # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/avatar-tool, and
