@@ -85,6 +85,20 @@ async function answerAndAdvance(page: any): Promise<void> {
   );
 }
 
+// ── Execution mode ───────────────────────────────────────────────────────────
+// These tests form a chain: test 2 writes placement_band, tests 3-5 depend on it, and test 4
+// writes the current_band that test 5 reads. beforeAll deliberately clears those columns to
+// establish the unplaced starting point.
+//
+// Without serial mode that chain is not retry-safe. Playwright restarts the worker after a
+// failure, beforeAll runs again, placement_band is cleared — and the retry of test 3, 4 or 5
+// then logs in as an unplaced student, gets the placement overlay instead of the quiz, and can
+// never pass. One genuine failure turned into six red results that way (run 31106350724).
+//
+// Serial mode retries the group as a whole from test 1, so the chain is always rebuilt in order
+// before the test that depends on it runs.
+test.describe.configure({ mode: 'serial' });
+
 // ── Setup / Teardown ──────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
