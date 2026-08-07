@@ -48,7 +48,16 @@ New feature flags (all **default-off** except where noted; see [`157r-feature-fl
 ## Current Production State
 - **Supabase:** project `den-seje-app` (ref `tjzbehwfagiwpwodsgwg`), region eu-west-1, plan **Pro**.
 - **Data:** 31 profiles; 5 with equipped cosmetics; 2 with an explicit legacy hairstyle.
-- **Frontend:** Vercel (`den-seje-app-frontend.vercel.app`), auto-deploys from GitHub `main`.
+- **Frontend:** ~~Vercel (`den-seje-app-frontend.vercel.app`), auto-deploys from GitHub `main`.~~
+  > **STATUS UPDATE — 2026-08-07: HOSTING IS MID-MIGRATION AND THE VERCEL HOST IS DOWN.**
+  > Vercel Hobby was paused after ~3M edge requests against the plan's 1M limit; the production URL
+  > returns **`402 Payment Required`** on every page. A Cloudflare Workers (Static Assets) deployment
+  > is **prepared and deployable** (`den-seje-app-frontend.christ-moeller.workers.dev`, asset-only,
+  > allowlist build) and is what CI now tests against via the `PROD_BASE_URL` repository variable —
+  > but it is **not activated for users**: DNS, custom domain and the Supabase redirect-URL list are
+  > unchanged, and `tests/helpers.ts` still defaults to the Vercel address on purpose.
+  > **Until the host switch is completed, users on the Vercel domain get 402.**
+  > Canonical: [`HOSTING.md`](./HOSTING.md) — do not restate hosting details here.
 - **Avatar shown to users (as of 2026-06-15):** **LEGACY** render. C2 built but not active.
   > **STATUS UPDATE — 2026-06-30 (Section 157AB): SUPERSEDED.** `AVATAR_V2 = true` is now **live in
   > production** (commit `52f8365`, 2026-06-25). The **C2 render path is the default** for users.
@@ -57,8 +66,11 @@ New feature flags (all **default-off** except where noted; see [`157r-feature-fl
   > Canonical: [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md) §2.
 
 ## Current Commit
-- `origin/main` = **`4029594`** ("docs: eye system ADR + hybrid raster pipeline ADR (D-012..D-019)").
-- Frontend clone and ROOT clone both at `4029594` (in sync).
+- `origin/main` = **`ad899b6`** ("Merge pull request #164 … fix/avatar-r2-exposure-classifier-d098").
+  **D-098 is merged** (2026-08-07, CI green: Playwright 525 passed / 0 failed, unit 358 pass / 0 fail).
+  The register entry below still cites branch `fix/avatar-r2-exposure-classifier-d098`; that branch
+  still exists on `origin`, so the citation resolves — it is not in the deleted-branch table.
+- Frontend clone and ROOT clone both at `ad899b6` (in sync).
 - One GitHub repo: `Moeller888/den-seje-app-frontend`. The ROOT clone embeds the
   frontend as a vestigial gitlink that is **not** on the Vercel deploy path.
 
