@@ -316,6 +316,22 @@ _Last reviewed: 2026-07-01._
   left is 3 columns needing ~10 px of new plate artwork** — a small illustrator correction, and the
   honest limit of what composition alone can do. Nothing promoted, accepted asset untouched,
   `AVATAR_R2` `false`. See `docs/project-state.md` (D-097).
+  **▶ No new plate artwork is needed — D-097's last 3 columns were my metric's false positives
+  (2026-08-03, D-098).** Status **`D098_EXPOSURE_CLASSIFIER_CORRECTED — NO_PLATE_ARTWORK_REQUIRED`**.
+  The proposed correction was **10 pixels**; **all 10 lie outside `torso-edit-allowed-v1` and on
+  `torso-protect-v1`** (the two are exact complements), so nobody may paint there — illustrator
+  included — and **8 of the 10 are already drawn by the existing plate and clipped away by that same
+  mask**. The columns are not cuts: a mandatory column can be **discontinuous** (x=338 runs y 646–649
+  and again y 656–693), and **100 of 370 mandatory columns are multi-run**. My exposure test compared
+  each fabric top only against the column's **first** run and never asked whether the fabric was
+  mandatory at all. Exposure is now classified as **A `mandatory_run_silhouette` / B
+  `non_mandatory_fabric` / C `true_cut`**, with **the threshold unchanged at exactly zero category-C
+  columns** — C is 0 in every scenario, including doing nothing. The rule was duplicated in three
+  tools and now lives once, in `tools/avatar/garment-mesh/fabric-exposure.mjs`. **Still open, not
+  fixed here:** category B (x 687, 692), the 2-component micro-fit composite, residual 1,635 vs the
+  1,049 target, and the 6-component fabric underlayer. **This supersedes only D-097 §7's "needs ~10 px
+  of new plate artwork"; the rest of D-097 stands.** No artwork, asset, mask or runtime change;
+  `AVATAR_R2` `false`. Unit 369/369 (CI 315). See `docs/project-state.md` (D-098).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above

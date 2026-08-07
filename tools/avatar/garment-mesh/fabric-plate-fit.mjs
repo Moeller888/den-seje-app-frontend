@@ -29,6 +29,7 @@ import { decodePng, encodePngRGBA } from "../build-r2-torso-occlusion-mask.mjs";
 import { OPAQUE, VISIBLE, BANDS } from "../check-r2-torso-candidate.mjs";
 import { geometry, plateSeam, W, H } from "./sleeve-donor-challenger.mjs";
 import { warp, distortionMetrics, SCHEMA_VERSION } from "./mesh-core.mjs";
+import { classifyExposure, exposureReport, CATEGORY } from "./fabric-exposure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..", "..");
@@ -316,15 +317,14 @@ function main() {
     ((i % W) < 512) ? fabL++ : fabR++;
   }
   // Exposed fabric top: a visible-fabric column whose topmost pixel has no plate/artwork above it.
-  const exposedCols = [];
-  for (let x = 0; x < W; x++) {
-    let top = -1;
-    for (let y = 0; y < H; y++) if (visibleFabric[y * W + x]) { top = y; break; }
-    if (top <= 0) continue;
-    const above = (top - 1) * W + x;
-    const covered = v1.rgba[above * 4 + 3] >= OPAQUE || fitL.rgba[above * 4 + 3] >= OPAQUE || fitR.rgba[above * 4 + 3] >= OPAQUE;
-    if (!covered) exposedCols.push(x);
+  // This tool used to count EVERY such column and reported 10 — including the garment's own outer
+  // silhouette. The decision now lives in one shared place; see fabric-exposure.mjs (D-098).
+  const opaqueForExposure = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    opaqueForExposure[i] = (v1.rgba[i * 4 + 3] >= OPAQUE || fitL.rgba[i * 4 + 3] >= OPAQUE || fitR.rgba[i * 4 + 3] >= OPAQUE) ? 1 : 0;
   }
+  const exposure = classifyExposure({ hard: masks.hard, visibleFabric, opaque: opaqueForExposure, edit: masks.edit, protect: masks.protect, width: W, height: H });
+  const exposedCols = exposure.byCategory[CATEGORY.C];
   const bands = {};
   for (const [n, [a, b]] of Object.entries(BANDS)) {
     let tot = 0, cov = 0;
@@ -384,6 +384,7 @@ function main() {
       right: { bbox: fitR.bbox, foldovers: fitR.metrics?.foldovers, areaRatio: fitR.metrics?.areaRatio },
       outwardPx: 10, downPx: 8,
     },
+    exposure: exposureReport(exposure),
     fabricTopExposedColumns: exposedCols.length, exposedColumnsSample: exposedCols.slice(0, 20),
     bands, residualRepairBackfillPx: residual,
     inkOutsideEdit: stray, inkOnProtect: onProtect, orphanSoftPx: orphan,
@@ -393,7 +394,7 @@ function main() {
   };
 
   const checks = [
-    ["0 exposed fabric-top columns", exposedCols.length === 0],
+    ["0 true_cut fabric-top columns", exposedCols.length === 0],
     ["fabric is 2 clean components", fc.length === 2],
     ["no fabric specks", report.fabric.specks === 0],
     ["left/right balance >= 0.75", report.fabric.leftRightBalance >= 0.75],
@@ -456,7 +457,9 @@ function main() {
   write(join(OUT, "report.json"), Buffer.from(JSON.stringify(report, null, 2) + "\n", "utf8"));
 
   console.log(`fabric visible ${fabPx} px (left ${fabL} / right ${fabR}, balance ${report.fabric.leftRightBalance}), components ${fc.length}, specks ${report.fabric.specks}`);
-  console.log(`EXPOSED fabric-top columns: ${exposedCols.length}` + (exposedCols.length ? "  at x " + exposedCols.slice(0, 12).join(",") : ""));
+  console.log(`fabric-top columns  true_cut ${exposure.counts[CATEGORY.C]}` + (exposedCols.length ? " at x " + exposedCols.slice(0, 12).join(",") : "") +
+    `  ·  mandatory_run_silhouette ${exposure.counts[CATEGORY.A]}  ·  non_mandatory_fabric ${exposure.counts[CATEGORY.B]}` +
+    (exposure.counts[CATEGORY.B] ? " at x " + exposure.byCategory[CATEGORY.B].join(",") + " (OPEN)" : ""));
   console.log(`plate mesh foldovers L=${fitL.metrics?.foldovers} R=${fitR.metrics?.foldovers}`);
   console.log(`residual repair ${residual} (cap 1049) · components ${cc.length} · halo ${orphan} · 52x78 tones ${tones.size}`);
   console.log("\nchecks:");
