@@ -7,13 +7,13 @@
  * Chromium + WebKit only.
  */
 import { test, expect } from '@playwright/test';
+import { PROD } from './helpers.js';
 
 // Skip entire file on Firefox — isMobile is not supported
 test.beforeEach(async ({}, testInfo) => {
   testInfo.skip(testInfo.project.name === 'firefox', 'Firefox does not support isMobile context option');
 });
 
-const PROD = 'https://den-seje-app-frontend.vercel.app';
 const EMAIL    = process.env.TEST_STUDENT_EMAIL!;
 const PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 

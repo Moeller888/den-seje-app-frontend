@@ -7,14 +7,13 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail } from './helpers.js';
+import { findAuthUserByEmail, PROD } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SUPABASE_URL             = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const PROD           = 'https://den-seje-app-frontend.vercel.app';
 const STUDENT_EMAIL  = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS   = process.env.TEST_STUDENT_PASSWORD!;
 
@@ -85,6 +84,20 @@ async function answerAndAdvance(page: any): Promise<void> {
     { timeout: 30000, polling: 500 }
   );
 }
+
+// ── Execution mode ───────────────────────────────────────────────────────────
+// These tests form a chain: test 2 writes placement_band, tests 3-5 depend on it, and test 4
+// writes the current_band that test 5 reads. beforeAll deliberately clears those columns to
+// establish the unplaced starting point.
+//
+// Without serial mode that chain is not retry-safe. Playwright restarts the worker after a
+// failure, beforeAll runs again, placement_band is cleared — and the retry of test 3, 4 or 5
+// then logs in as an unplaced student, gets the placement overlay instead of the quiz, and can
+// never pass. One genuine failure turned into six red results that way (run 31106350724).
+//
+// Serial mode retries the group as a whole from test 1, so the chain is always rebuilt in order
+// before the test that depends on it runs.
+test.describe.configure({ mode: 'serial' });
 
 // ── Setup / Teardown ──────────────────────────────────────────────────────────
 

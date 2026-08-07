@@ -882,12 +882,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       adjustDifficultyBand(true);
       if (sessionCorrectStreak >= 5 && sessionCorrectStreak > bestSessionStreak) {
         bestSessionStreak = sessionCorrectStreak;
-        supabase.rpc("update_best_session_streak", { p_count: bestSessionStreak }).catch(() => {});
+        // supabase.rpc() returns a PostgrestFilterBuilder — a thenable WITHOUT .catch().
+        // Calling .catch() on it threw a synchronous TypeError that aborted submitAnswer and
+        // froze the state machine in SUBMITTING_ANSWER. then(onOk, onErr) both executes the
+        // request and swallows failures, which is the fire-and-forget behaviour intended here.
+        supabase.rpc("update_best_session_streak", { p_count: bestSessionStreak }).then(() => {}, () => {});
       }
 
       // Hidden achievement: night_owl — correct answer between 00:00–03:59 local time
       if (new Date().getHours() < 4) {
-        supabase.rpc("set_night_correct").catch(() => {});
+        // Same PostgrestFilterBuilder caveat as update_best_session_streak above.
+        supabase.rpc("set_night_correct").then(() => {}, () => {});
       }
 
       await fetchProgress();
