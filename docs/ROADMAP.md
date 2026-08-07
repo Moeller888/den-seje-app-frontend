@@ -442,6 +442,37 @@ _Last reviewed: 2026-07-01._
   titles, leaderboard, social, shop economy + atomic purchase, RLS hardening, learning-engine
   metadata + concept state, multiple curriculum content sprints.
 
+**Hosting / CI changes (2026-08-04 → 2026-08-07):**
+- **Frontend prepared for Cloudflare Workers** — commits `3bdd311` (PR #165) + `da20cb1` (PR #167).
+  Asset-only Worker built from an explicit allowlist (`tools/cloudflare-build-static.mjs`), with the
+  explicit-`.html` routing contract preserved. **Prepared, not activated** — DNS, custom domain and
+  the Supabase redirect-URL list are unchanged. Canonical: [`HOSTING.md`](./HOSTING.md).
+- **E2E target defined once, overridable via `PROD_BASE_URL`** — commit `baae8f7` (PR #166). All 21
+  specs had hardcoded the Vercel address; they now import `PROD` from `tests/helpers.ts`, and CI
+  points it at the Cloudflare host through a repository variable. The default is deliberately still
+  the Vercel address — moving the host is its own decision. Guarded by
+  `tests/unit/e2e-base-url.test.mjs`.
+- **`placement-e2e` made retry-safe** — commit `dbcd19d` (PR #170). The five placement tests are a
+  chain (test 2 writes `placement_band`, tests 3-5 depend on it), but Playwright restarts the worker
+  after a failure, so `beforeAll` re-ran and cleared exactly that state — meaning retries of tests
+  3-5 could **never** pass and one real failure became six red results. `test.describe.configure({
+  mode: 'serial' })` retries the group as a whole from test 1. No assertion was changed or weakened.
+
+**Production defects fixed:**
+- **Quiz froze permanently after five correct answers in a row** — fixed 2026-08-07, commit
+  `7ff6e9f` (PR #168). `supabase.rpc()` returns a `PostgrestFilterBuilder`, a thenable that has
+  **no `.catch()`**, so the fire-and-forget `.catch(() => {})` at `app.js:885` threw a synchronous
+  `TypeError` inside `submitAnswer` — before `fetchProgress()`, before `setUIState(TRANSITIONING)`
+  and before `loadAndRenderQuestion()`. Nothing caught it, so the state machine was left stuck in
+  `SUBMITTING_ANSWER` and the quiz was dead until a page reload. Trigger: `sessionCorrectStreak >= 5
+  && > bestSessionStreak`; the same bug sat at `app.js:890` for any correct answer between 00:00 and
+  03:59 local time. **Latent since `530e661` (2026-05-19).** Fixed with `then(onOk, onErr)`, which
+  executes the request and swallows failures.
+  **Side effect now resolved:** because the builder only sends its request on `then()`, the two
+  hidden achievements behind those calls — `update_best_session_streak` and `set_night_correct` —
+  had **never fired at all**. They do now.
+  Found by reading the Playwright trace of run `31106350724`, not the CI logs.
+
 **Documentation:**
 - 157A — Zero-cost service integration audit (boundaries + first-service recommendation).
 - 167A — Master asset raster wiring **plan** (plan only, not executed).
