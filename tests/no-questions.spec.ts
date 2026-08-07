@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail } from './helpers.js';
+import { findAuthUserByEmail, PROD } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -89,7 +89,7 @@ test.afterAll(async () => {
 });
 
 test('Shows empty state when no questions are available', async ({ page }) => {
-  await page.goto('https://den-seje-app-frontend.vercel.app/login.html');
+  await page.goto(`${PROD}/login.html`);
 
   await page.fill('input[type="email"]', TEST_STUDENT_EMAIL);
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);

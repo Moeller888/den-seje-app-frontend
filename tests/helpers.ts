@@ -9,7 +9,29 @@ import * as path from "path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-export const PROD = "https://den-seje-app-frontend.vercel.app";
+/**
+ * THE ONE PLACE THE E2E TARGET IS DEFINED.
+ *
+ * It used to be copy-pasted into 21 spec files in nine different formattings, which meant moving
+ * host was a 21-file edit — and that the whole suite could only ever point at one hardcoded
+ * origin. When Vercel Hobby was paused and production started returning HTTP 402, every one of the
+ * 816 tests failed against a dead URL, each retried twice, and the job hit the 60-minute limit and
+ * was cancelled with no failure summary. A cancelled run looks identical to a hang.
+ *
+ * `PROD_BASE_URL` makes the target a setting rather than a source edit, so CI can be repointed at
+ * the Cloudflare Worker (or at a preview version) without touching a single spec. The default is
+ * deliberately still the Vercel address: this change is a refactor, and flipping the host is a
+ * separate, deliberate decision — see docs/HOSTING.md.
+ *
+ * An EMPTY value counts as unset, not as an override. In Actions `${{ vars.PROD_BASE_URL }}`
+ * expands to "" when the repository variable does not exist, and `??` would happily accept that
+ * empty string — every test would then navigate to "/login.html" with no origin. So the workflow
+ * can reference the variable unconditionally: unset simply means the default.
+ *
+ * Trailing slashes are stripped so `${PROD}/login.html` cannot become a double slash.
+ */
+const CONFIGURED_BASE_URL = (process.env.PROD_BASE_URL ?? "").trim();
+export const PROD = (CONFIGURED_BASE_URL || "https://den-seje-app-frontend.vercel.app").replace(/\/+$/, "");
 
 export const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL    ?? "teacher-test@hotmail.com";
 export const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";

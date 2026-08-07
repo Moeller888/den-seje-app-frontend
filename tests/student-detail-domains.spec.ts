@@ -6,8 +6,8 @@
  * cover the auth guard — the only paths exercisable without teacher credentials.
  */
 import { test, expect } from '@playwright/test';
+import { PROD } from './helpers.js';
 
-const PROD = 'https://den-seje-app-frontend.vercel.app';
 const STUDENT_EMAIL    = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
