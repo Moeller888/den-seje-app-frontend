@@ -102,6 +102,37 @@ test('5. reset-password.html without a token shows invalid-link message', async 
   await expect(page.locator('#invalid-section')).toContainText(/ugyldig/i);
 });
 
+// The recovery-link path was unreachable from the outside for as long as it was broken: no test
+// ever opened a URL carrying a recovery fragment, so the page could hang forever on the loading
+// section and CI stayed green. These two tests close that hole. They need no mailbox and no real
+// token — the point is that the page must always REACH a decision. Before the fix it reached
+// none, because the shared client runs with `detectSessionInUrl: false` and PASSWORD_RECOVERY
+// never fired; the loading section stayed visible indefinitely and nothing was logged.
+
+test('9. recovery-shaped link with an unusable token resolves instead of hanging', async ({ page }) => {
+  await page.goto(
+    `${PROD}/reset-password.html#type=recovery&access_token=NOT_A_REAL_TOKEN&refresh_token=NOT_A_REAL_TOKEN`,
+    { waitUntil: 'domcontentloaded' },
+  );
+
+  // The decision must land well inside this window; the old code never landed at all.
+  await expect(page.locator('#invalid-section')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#loading-section')).not.toBeVisible();
+  await expect(page.locator('#form-section')).not.toBeVisible();
+});
+
+test('10. recovery link without refresh_token resolves instead of hanging', async ({ page }) => {
+  // setSession requires both tokens. A half-formed link must fail closed, not spin.
+  await page.goto(
+    `${PROD}/reset-password.html#type=recovery&access_token=NOT_A_REAL_TOKEN`,
+    { waitUntil: 'domcontentloaded' },
+  );
+
+  await expect(page.locator('#invalid-section')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#loading-section')).not.toBeVisible();
+  await expect(page.locator('#form-section')).not.toBeVisible();
+});
+
 // ── API-level password update tests ──────────────────────────────────────────
 // These tests bypass the email flow and directly verify that:
 //   - supabase.auth.updateUser() works from a student client

@@ -41,15 +41,36 @@ if (forced) {
   // No recovery token in URL — invalid or direct navigation.
   showInvalid();
 } else {
-  // Valid-looking token: wait for Supabase to establish the session.
-  // onAuthStateChange fires synchronously when the client processes the hash.
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === "PASSWORD_RECOVERY") {
-      showForm();
-    } else if (event === "SIGNED_OUT") {
+  // The shared client is created with `detectSessionInUrl: false` (js/supabase.js), so it never
+  // parses the recovery fragment and PASSWORD_RECOVERY can therefore never fire. Waiting for that
+  // event left the page stuck on the loading section forever, with no console error — verified
+  // live on the production Worker. Establish the session explicitly from the hash instead.
+  const refreshToken = hash.get("refresh_token");
+
+  if (!refreshToken) {
+    // setSession requires BOTH tokens; a recovery link missing one cannot be honoured.
+    console.error("[reset-password] recovery hash has no refresh_token");
+    showInvalid();
+  } else {
+    const { data, error } = await supabase.auth.setSession({
+      access_token:  token,
+      refresh_token: refreshToken,
+    });
+
+    if (error || !data || !data.session) {
+      console.error("[reset-password] setSession failed:", error ? error.message : "no session returned");
       showInvalid();
+    } else {
+      showForm();
+      // Preserved from the previous implementation: if the session goes away while the user is
+      // still on this page, fall back to the invalid state.
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_OUT") {
+          showInvalid();
+        }
+      });
     }
-  });
+  }
 }
 
 resetForm.addEventListener("submit", async (e) => {
