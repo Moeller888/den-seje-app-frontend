@@ -34,12 +34,53 @@ test("login.html is in the output — it is the active entry page for every role
   assert.match(read("login.html"), /<html/i);
 });
 
+// ── the public landing page ───────────────────────────────────────────────────────────────────
+// `/` rewrites to landing.html, so the page and its stylesheet are load-bearing: if either is
+// missing the site's front door is a 404 or an unstyled document.
+test("landing.html and css/landing.css ship — they are what `/` resolves to", () => {
+  assert.ok(has("landing.html"), "the root rewrite target must exist");
+  assert.ok(has("css/landing.css"), "the landing page would render unstyled");
+  assert.ok(has("js/landing.js"), "the header and mobile menu would be inert");
+});
+
+test("the landing page's call to action points at login.html, not at the quiz", () => {
+  const t = read("landing.html");
+  assert.match(t, /href="login\.html"/, "the CTA must enter through the shared login page");
+  // index.html bounces an anonymous visitor straight back to login after painting the quiz shell.
+  assert.ok(!/href="index\.html"/.test(t), "the landing page must never link into the quiz directly");
+  assert.ok(has("login.html"), "the CTA would otherwise land on a 404");
+});
+
+test("the landing page is noindex while the site is pre-launch", () => {
+  assert.match(
+    read("landing.html"),
+    /<meta\s+name="robots"\s+content="noindex,\s*nofollow">/i,
+    "pre-launch the public page must not be indexed",
+  );
+});
+
+test("the landing page contacts no third party — no external host, no webfont, no tracker", () => {
+  for (const f of ["landing.html", "css/landing.css", "js/landing.js"]) {
+    const t = read(f);
+    assert.ok(!/https?:\/\//i.test(t), `${f} references an external URL`);
+    assert.ok(!/\/\/(?:fonts|cdn|unpkg|jsdelivr)\./i.test(t), `${f} references a CDN`);
+    assert.ok(!/@import\s+url\(/i.test(t), `${f} pulls in a remote stylesheet`);
+    assert.ok(!/\b(fetch|XMLHttpRequest|navigator\.sendBeacon)\s*\(/.test(t), `${f} makes a request`);
+  }
+});
+
+test("the landing page ships no avatar or product imagery — none is approved yet", () => {
+  const t = read("landing.html");
+  assert.ok(!/<img\b/i.test(t), "no <img> may ship until real product screenshots are approved");
+  assert.ok(!/assets\/avatar/i.test(t), "avatar assets must not be used as marketing visuals");
+});
+
 test("every mandatory runtime file is present", () => {
   for (const m of MANDATORY) assert.ok(existsSync(join(OUT, m)), `missing ${m}`);
 });
 
-test("all 13 runtime HTML pages are copied", () => {
-  assert.equal(RUNTIME_HTML.length, 13);
+test("all 14 runtime HTML pages are copied", () => {
+  assert.equal(RUNTIME_HTML.length, 14);
   for (const p of RUNTIME_HTML) assert.ok(has(p), `missing ${p}`);
 });
 
@@ -119,14 +160,33 @@ test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () 
   assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
 });
 
-test("_redirects is generated with exactly the one root rewrite", () => {
+test("_redirects is generated with exactly the one root rewrite — to the LANDING page", () => {
   assert.ok(has("_redirects"));
   const raw = read("_redirects");
   const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
-  assert.deepEqual(lines, ["/ /index.html 200"]);
+  assert.deepEqual(lines, ["/ /landing.html 200"]);
   assert.equal(lines[0], REDIRECTS_RULE);
   // status 200 = internal rewrite: the browser keeps showing "/" and no 3xx is emitted
   assert.match(lines[0], /\s200$/, "must be a rewrite, not a 301/302 redirect");
+});
+
+// The whole point of Model A: the quiz did NOT move. `/` changed meaning; `/index.html` did not.
+test("the root rewrite does NOT point at the quiz, and the quiz keeps its own address", () => {
+  const raw = read("_redirects");
+  assert.ok(!raw.includes("/index.html"), "`/` must no longer resolve to the quiz");
+  assert.ok(has("index.html"), "the quiz must still ship at its own unchanged address");
+  // the quiz page itself must be untouched by this change
+  const quiz = read("index.html");
+  assert.match(quiz, /<div class="game-shell">/, "index.html must still be the quiz shell");
+  assert.match(quiz, /id="question"/, "index.html must still be the quiz");
+  assert.match(quiz, /src="app\.js"/, "index.html must still load the quiz app");
+});
+
+test("student role routing still targets index.html — the landing page did not take it over", () => {
+  // js/login.js is the single owner of role routing. If the landing work had touched it, the
+  // student would stop reaching the quiz after login; this is the standing proof it did not.
+  assert.match(read("js/login.js"), /window\.location\.href\s*=\s*"index\.html"/,
+    "students must still be routed to the quiz after login");
 });
 
 test("_redirects is NOT a SPA fallback — unknown paths must still reach the 404 page", () => {
@@ -138,21 +198,27 @@ test("_redirects is NOT a SPA fallback — unknown paths must still reach the 40
 test("validateOutput rejects a tampered _redirects", () => {
   const tmp = mkdtempSync(join(tmpdir(), "cf-redirects-"));
   try {
-    writeFileSync(join(tmp, "index.html"), "<html></html>", "utf8");
-    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n", "utf8");
+    writeFileSync(join(tmp, "landing.html"), "<html></html>", "utf8");
+    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 200\n", "utf8");
     assert.deepEqual(validateOutput(tmp).problems, []);
 
-    writeFileSync(join(tmp, "_redirects"), "/* /index.html 200\n", "utf8");
+    writeFileSync(join(tmp, "_redirects"), "/* /landing.html 200\n", "utf8");
     let p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("SPA fallback") || x.includes("rule is")), "a wildcard must be refused");
 
-    writeFileSync(join(tmp, "_redirects"), "/ /index.html 302\n", "utf8");
+    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 302\n", "utf8");
     p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("rule is")), "a 302 must be refused — it would expose /index.html in the URL bar");
+    assert.ok(p.some((x) => x.includes("rule is")), "a 302 must be refused — it would expose /landing.html in the URL bar");
 
-    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n/extra /other 200\n", "utf8");
+    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 200\n/extra /other 200\n", "utf8");
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("exactly one rule")), "a second rule must be refused");
+
+    // A rewrite silently retargeted at the quiz must be refused too — that would put the app
+    // behind the public front door again and expose the quiz shell to anonymous visitors.
+    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n", "utf8");
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("rule is")), "retargeting the root at the quiz must be refused");
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
@@ -166,11 +232,14 @@ test("no extensionless twin of any runtime page ships, so /login can only ever b
   }
 });
 
-test("404.html is generated, neutral, and links back into the app", () => {
+test("404.html is generated, neutral, and links back to the public front page", () => {
   assert.ok(has("404.html"));
   const t = read("404.html");
   assert.match(t, /404/);
-  assert.match(t, /href="(index|login)\.html"/);
+  // The front page is the landing page now. Linking to the quiz would bounce an anonymous
+  // visitor straight back out to login after a flash of app UI.
+  assert.match(t, /href="landing\.html"/);
+  assert.ok(has("landing.html"), "the 404 link would otherwise be a 404 itself");
   for (const s of FORBIDDEN_STRINGS) assert.ok(!t.includes(s), `404.html leaks ${s}`);
 });
 
@@ -336,9 +405,12 @@ test("the build refuses to publish the repository root", () => {
 test("the serve-check still asserts the routing contract over HTTP", () => {
   const src = readFileSync(join(REPO, "tools", "cloudflare-serve-check.mjs"), "utf8");
   // the extensionless 404 list must cover the pages whose URLs the Playwright suite asserts on
-  for (const bare of ["/login", "/teacher", "/student-detail", "/avatar", "/reset-password"]) {
+  for (const bare of ["/login", "/teacher", "/student-detail", "/avatar", "/reset-password", "/landing"]) {
     assert.ok(src.includes(`"${bare}"`), `serve-check must prove ${bare} is a 404`);
   }
+  // and it must prove the root rewrite lands on the landing page, not on the quiz
+  assert.ok(src.includes('"/landing.html"'), "serve-check must prove /landing.html serves");
+  assert.match(src, /THE QUIZ DID NOT MOVE/, "serve-check must prove /index.html still serves the quiz");
   assert.ok(src.includes('"/_redirects"'), "serve-check must prove /_redirects is unreachable");
   assert.ok(src.includes('"/student-detail.html?id=test"'), "serve-check must prove a query string still serves");
   // raw status, or a 307 resolving to 200 would look like a pass

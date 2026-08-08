@@ -8,6 +8,26 @@ _Last reviewed: 2026-07-01._
 > decisions D-001…D-041) and a newer **Platform / services track** (Section 157A audit → 157B+).
 > They share the same one-section-at-a-time discipline ([CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md)).
 > The avatar decision register lives in `docs/project-state.md`; this file gives the cross-track view.
+>
+> **A third track opened 2026-08-08: the public website / landing page ("Lærlig").** It is
+> deliberately independent of the avatar and platform tracks and touches no app code. Canonical:
+> [LANDING.md](./LANDING.md).
+
+---
+
+## Public website / landing track — Model A implemented, NOT deployed (2026-08-08)
+
+- **Owner decision: Model A.** A new public front page `landing.html` was added and `/` now
+  rewrites to it. **The quiz did not move:** `index.html`, `app.js`, `js/login.js`, every auth
+  guard and every role redirect are unchanged, and `/index.html` still serves the quiz.
+- **Brand:** the landing page says **Lærlig**; the app still says "DEN SEJE APP". The brand
+  transition is an accepted, documented phase-1 condition — not an oversight.
+- **Honest by construction:** no AI claims (no AI service is implemented), no prices, no invented
+  contact details, and **no images at all** — no approved marketing screenshots exist yet, and
+  avatar reference art must not stand in for a live avatar the user does not get.
+- **`AVATAR_R2` stays `false`.** No avatar asset, manifest or feature flag was touched.
+- **Not deployed.** Pre-launch `noindex, nofollow`; no domain, no DNS, no Supabase redirect-URL
+  change. Blocked on the Cloudflare host switch (see [HOSTING.md](./HOSTING.md)).
 
 ---
 

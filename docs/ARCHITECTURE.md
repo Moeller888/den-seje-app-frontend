@@ -83,8 +83,9 @@ Supabase client is loaded from a CDN ESM URL.
 
 | Page | Script | Role | Audience |
 |---|---|---|---|
+| `landing.html` | `js/landing.js` | **Public marketing front page** — `/` rewrites to it. No Supabase client, no session, no images. Its CTA is a plain link to `login.html`. See [LANDING.md](./LANDING.md). | public |
 | `login.html` | `js/login.js` | Email/password login; redirects by `profiles.role`. | all |
-| `index.html` | `app.js` (+ `supabaseClient.js`) | Student quiz app — the core loop. | student |
+| `index.html` | `app.js` (+ `supabaseClient.js`) | Student quiz app — the core loop. Served at `/index.html`; **not** what `/` serves. | student |
 | `hub.html` | inline + `js/` engines | Navigation hub; retention/achievements/avatar surfaces. | student |
 | `shop.html` | inline | Coin shop; calls `buy-item`. | student |
 | `avatar.html` | `js/` avatar engines | Avatar viewer / customisation surface. | student |

@@ -105,20 +105,26 @@ Derfor er hostingen rettet ind efter appen frem for at svække testene til Cloud
 "html_handling": "none"
 ```
 
-**Prisen** er, at `/` ikke længere selv finder `index.html`. Buildet genererer derfor en
-`_redirects` med præcis én regel:
+**Prisen** er, at `/` ikke længere selv finder en side. Buildet genererer derfor en `_redirects`
+med præcis én regel:
 
 ```
-/ /index.html 200
+/ /landing.html 200
 ```
+
+**Roden er den offentlige landingsside, ikke quizzen.** `/` serverer marketingsiden
+`landing.html`; elevens quiz beholder sin egen adresse på `/index.html`, uflyttet og uomdøbt.
+Beslutningen, begrundelsen og hele kontrakten er dokumenteret i [`LANDING.md`](./LANDING.md) —
+gentag den ikke her.
 
 Status **200 betyder intern rewrite**, ikke redirect: browserens adresselinje viser fortsat `/`,
-og der udsendes ingen 3xx. En 301/302 ville lægge `/index.html` i adresselinjen og genindføre
-netop det ekstra rundtur, ændringen fjerner.
+og der udsendes ingen 3xx. En 301/302 ville lægge `/landing.html` i adresselinjen og genindføre
+netop det ekstra rundtur, reglen fjerner.
 
-Det er **bevidst ikke** en SPA-fallback (`/* /index.html 200`): ukendte stier skal fortsat ramme
-404-siden, så et forkert link fejler synligt i stedet for lydløst at rendere quizzen.
-`validateOutput()` afviser både en wildcard-regel, en 301/302 og en ekstra regel.
+Det er **bevidst ikke** en SPA-fallback (`/* /landing.html 200`): ukendte stier skal fortsat ramme
+404-siden, så et forkert link fejler synligt i stedet for lydløst at rendere forsiden.
+`validateOutput()` afviser en wildcard-regel, en 301/302, en ekstra regel — og en regel, der
+stille peger roden tilbage på quizzen.
 
 Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
 
@@ -126,8 +132,10 @@ Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
 
 | | |
 |---|---|
-| `/` `/index.html` `/login.html` `/teacher.html` `/student-detail.html?id=…` `/avatar.html` `/reset-password.html` | **200, ingen 3xx** |
-| `/login` `/teacher` `/student-detail` `/avatar` `/reset-password` `/hub` `/admin` `/shop` | **404** |
+| `/` `/landing.html` `/index.html` `/login.html` `/teacher.html` `/student-detail.html?id=…` `/avatar.html` `/reset-password.html` | **200, ingen 3xx** |
+| `/` og `/landing.html` | samme dokument |
+| `/` og `/index.html` | **forskellige** dokumenter — quizzen flyttede ikke |
+| `/login` `/teacher` `/student-detail` `/avatar` `/reset-password` `/hub` `/admin` `/shop` `/landing` | **404** |
 | `/_redirects` `/_headers` | **404** — konfiguration, ikke asset |
 | ukendte stier | den neutrale 404-side |
 

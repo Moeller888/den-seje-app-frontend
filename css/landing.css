@@ -1,0 +1,733 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÆRLIG — public landing page (landing.html only)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Scope:   landing.html. No app page loads this file, and this file changes no
+            app styling. It layers ON TOP of css/theme.css and consumes that
+            file's tokens so the landing page stays in the same product family
+            as the app — theme.css itself is NOT modified.
+
+   Palette: the DEFAULT theme's deep navy is the base. The lighter highlights are
+            borrowed from the ICE theme (--accent #0288d1) and from --info-text
+            (#90caf9). Landing-local values are declared once in .landing-scope
+            below so nothing leaks into the app's token namespace.
+
+   Fonts:   system stack only. No webfont file, no CDN, no external request —
+            the page must work with zero third-party contact.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Landing-local surface + accent scale. Derived from theme.css tokens where a
+     token exists; literal only where the landing page needs a value the app has
+     no token for (translucency, blur radii, glow strengths). */
+  --l-bg:          var(--bg-main);        /* #12122a */
+  --l-bg-deep:     var(--avatar-outer);   /* #0a0a20 */
+  --l-panel:       var(--bg-panel);       /* #1a1a3e */
+  --l-border:      var(--border);         /* #2a2a5a */
+
+  --l-text:        var(--text-main);      /* #e0e0e0 */
+  --l-bright:      var(--text-bright);    /* #ffffff */
+  --l-dim:         var(--text-dim);       /* #cccccc */
+  /* Deliberately NOT --text-muted (#555588): ~3.1:1 on --bg-main is below the
+     4.5:1 needed for body text. This is the landing page's readable secondary. */
+  --l-soft:        #9aa3c4;
+
+  --l-accent:      #0288d1;               /* ice --accent */
+  --l-accent-soft: #90caf9;               /* --info-text  */
+  --l-accent-deep: #1565c0;               /* default --accent */
+
+  --l-shell:       1120px;
+  --l-radius:      16px;
+  --l-radius-cta:  22px;
+
+  --l-ease:        cubic-bezier(.2, .8, .2, 1);
+
+  --l-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+            Arial, "Noto Sans", sans-serif;
+}
+
+/* ── Reset (page-local) ───────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--l-font);
+  background: var(--l-bg);
+  color: var(--l-text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+img, svg { max-width: 100%; }
+
+/* Anchor targets must clear the sticky header. */
+[id] { scroll-margin-top: 96px; }
+
+/* ── Focus: always visible, never removed ─────────────────────────────────── */
+
+:focus-visible {
+  outline: 3px solid var(--l-accent-soft);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  padding: 12px 18px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--l-accent-deep);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: top 160ms var(--l-ease);
+}
+.skip-link:focus-visible { top: 12px; }
+
+/* ── Layout shell ─────────────────────────────────────────────────────────── */
+
+.shell {
+  width: 100%;
+  max-width: var(--l-shell);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 48px);
+}
+.shell-narrow { max-width: 760px; }
+
+#top-sentinel { position: absolute; top: 0; height: 24px; width: 100%; pointer-events: none; }
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background-color 200ms var(--l-ease), border-color 200ms var(--l-ease);
+}
+
+/* Scrolled state — solid by default so the header is always readable. */
+.site-header.is-scrolled {
+  background: rgba(18, 18, 42, .94);
+  border-bottom-color: rgba(42, 42, 90, .7);
+}
+/* Progressive enhancement: translucent glass only where it is actually supported. */
+@supports ((backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px))) {
+  .site-header.is-scrolled {
+    background: rgba(18, 18, 42, .72);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+  }
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 68px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.wordmark-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--l-bright);
+}
+.wordmark-text::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: var(--l-accent);
+  vertical-align: 2px;
+}
+
+.nav-desktop { display: flex; align-items: center; gap: clamp(14px, 2vw, 30px); }
+.nav-desktop a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44x44 is the minimum target size. Short labels ("Priser") are 37px wide on their own, so the
+     width floor is as load-bearing as the height floor — a test asserts both. */
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--l-dim);
+  font-size: .9375rem;
+  text-decoration: none;
+  transition: color 160ms var(--l-ease);
+}
+.nav-desktop a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 12px;
+  width: 100%;
+  height: 2px;
+  background: var(--l-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms var(--l-ease);
+}
+.nav-desktop a:hover { color: var(--l-bright); }
+.nav-desktop a:hover::after { transform: scaleX(1); }
+
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.login-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--border-btn);
+  border-radius: 10px;
+  color: var(--l-dim);
+  font-size: .9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 160ms var(--l-ease), color 160ms var(--l-ease),
+              background-color 160ms var(--l-ease);
+}
+.login-link:hover {
+  color: var(--l-bright);
+  border-color: rgba(2, 136, 209, .55);
+  background: rgba(2, 136, 209, .08);
+}
+
+.nav-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: 1px solid var(--border-btn);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.nav-toggle-bar {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--l-dim);
+  transition: transform 200ms var(--l-ease), opacity 200ms var(--l-ease);
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) { transform: translateY(3.5px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) { transform: translateY(-3.5px) rotate(-45deg); }
+
+.nav-mobile { display: none; }
+.nav-mobile[hidden] { display: none; }
+
+/* ── Ambient background ───────────────────────────────────────────────────── */
+
+.ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+/* The glow is a radial gradient that fades to transparent on its own, NOT a solid disc softened
+   by a blur. That matters: the 640px breakpoint drops `filter: blur()` because it is expensive on
+   low-end school tablets, and a solid disc without its blur renders as a hard-edged circle. This
+   way the shape is soft at every breakpoint and the blur is pure enhancement. */
+.ambient span {
+  position: absolute;
+  display: block;
+  filter: blur(60px);
+}
+.ambient-a {
+  width: min(58vw, 620px);
+  aspect-ratio: 1;
+  top: -12%;
+  left: -8%;
+  background: radial-gradient(circle at 50% 50%, rgba(2, 136, 209, .20) 0%, rgba(2, 136, 209, .07) 45%, transparent 72%);
+}
+.ambient-b {
+  width: min(52vw, 560px);
+  aspect-ratio: 1;
+  bottom: -18%;
+  right: -10%;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 32, 96, .62) 0%, rgba(30, 32, 96, .24) 45%, transparent 72%);
+}
+
+.grid-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right,  rgba(42, 42, 90, .34) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 42, 90, .34) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 0%, transparent 78%);
+          mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 0%, transparent 78%);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding: 120px 0 96px;
+  overflow: hidden;
+}
+.hero-inner { position: relative; z-index: 1; text-align: center; }
+
+.eyebrow {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--l-accent-soft);
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: clamp(2.6rem, 6.5vw, 5.25rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--l-bright);
+  max-width: 18ch;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.hero-sub {
+  margin: 26px auto 0;
+  max-width: 34ch;
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  line-height: 1.55;
+  color: var(--l-dim);
+  text-wrap: pretty;
+}
+
+.hero-meta {
+  margin-top: 26px;
+  font-size: .9375rem;
+  color: var(--l-soft);
+}
+.hero-meta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding-inline: 6px;
+  color: var(--l-soft);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 160ms var(--l-ease), border-color 160ms var(--l-ease);
+}
+.hero-meta a:hover { color: var(--l-bright); border-bottom-color: var(--l-accent); }
+.hero-meta .dot { padding-inline: 4px; }
+
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+.scroll-line {
+  display: block;
+  width: 1px;
+  height: 52px;
+  background: linear-gradient(to bottom, rgba(144, 202, 249, .55), transparent);
+}
+
+/* ── The CTA portal — the page's one high-investment object ───────────────── */
+
+.cta-portal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 44px;
+  min-height: 92px;
+  min-width: min(320px, 100%);
+  padding: 0 44px;
+  border: 1px solid rgba(144, 202, 249, .35);
+  border-radius: var(--l-radius-cta);
+  background: linear-gradient(145deg, #1e3a8f 0%, var(--l-accent-deep) 55%, var(--l-accent) 100%);
+  color: var(--l-bright);
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  text-decoration: none;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .22) inset,
+    0 -1px 0 rgba(0, 0, 0, .30) inset,
+    0 18px 44px -14px rgba(2, 136, 209, .55),
+    0 6px 18px -8px rgba(0, 0, 0, .60);
+  transition: transform 220ms var(--l-ease), box-shadow 220ms var(--l-ease);
+}
+
+/* Aura — sits BEHIND the surface. */
+.cta-portal::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 55%, rgba(2, 136, 209, .75), transparent 70%);
+  filter: blur(28px);
+  opacity: .5;
+  transition: opacity 220ms var(--l-ease);
+}
+
+/* Top sheen — the "glass" highlight across the upper half. */
+.cta-portal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 55%);
+  pointer-events: none;
+}
+
+.cta-arrow {
+  font-size: 1.125rem;
+  transition: transform 220ms var(--l-ease);
+}
+
+/* Hover only where hover genuinely exists — never on touch. */
+@media (hover: hover) {
+  .cta-portal:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, .26) inset,
+      0 -1px 0 rgba(0, 0, 0, .30) inset,
+      0 24px 60px -14px rgba(2, 136, 209, .70),
+      0 8px 22px -8px rgba(0, 0, 0, .60);
+  }
+  .cta-portal:hover::before { opacity: .85; }
+  .cta-portal:hover .cta-arrow { transform: translateX(4px); }
+}
+
+.cta-portal:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .18) inset,
+    0 -1px 0 rgba(0, 0, 0, .30) inset,
+    0 6px 18px -10px rgba(2, 136, 209, .55);
+  transition-duration: 90ms;
+}
+
+/* The focus ring must read ON TOP of the glow — an outline, not a box-shadow. */
+.cta-portal:focus-visible {
+  outline: 3px solid var(--l-accent-soft);
+  outline-offset: 4px;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+
+.section { position: relative; padding: clamp(96px, 12vh, 168px) 0; }
+.section-alt { background: linear-gradient(180deg, transparent, rgba(10, 10, 32, .55), transparent); }
+
+.section + .section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, var(--l-shell));
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(42, 42, 90, .85), transparent);
+}
+
+h2 {
+  font-size: clamp(1.9rem, 3.6vw, 3rem);
+  font-weight: 650;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--l-bright);
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+.lede {
+  margin-top: 22px;
+  max-width: 62ch;
+  font-size: 1.0625rem;
+  color: var(--l-text);
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 52px;
+  list-style: none;
+}
+.cards-tight { margin-top: 44px; }
+
+.card {
+  padding: 28px;
+  border: 1px solid rgba(42, 42, 90, .7);
+  border-radius: var(--l-radius);
+  background: linear-gradient(160deg, rgba(26, 26, 62, .85), rgba(16, 16, 58, .70));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .05) inset,
+    0 20px 40px -24px rgba(0, 0, 0, .70);
+  transition: transform 200ms var(--l-ease), border-color 200ms var(--l-ease);
+}
+.card:hover { transform: translateY(-2px); border-color: rgba(2, 136, 209, .45); }
+
+.card-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(2, 136, 209, .30);
+  border-radius: 11px;
+  background: rgba(2, 136, 209, .10);
+  color: var(--l-accent-soft);
+}
+.card-icon svg { width: 21px; height: 21px; }
+
+.card h3 {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--l-bright);
+  margin-bottom: 10px;
+}
+.card p { color: var(--l-soft); font-size: .96875rem; }
+
+/* ── Steps ────────────────────────────────────────────────────────────────── */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 52px;
+  list-style: none;
+  counter-reset: step;
+}
+.step { padding-top: 26px; border-top: 1px solid rgba(42, 42, 90, .8); }
+.step-num {
+  display: block;
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--l-accent);
+  margin-bottom: 14px;
+}
+.step h3 {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--l-bright);
+  margin-bottom: 10px;
+}
+.step p { color: var(--l-soft); font-size: .96875rem; }
+
+/* ── Split (elev / lærer) ─────────────────────────────────────────────────── */
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-top: 52px;
+}
+.split-col {
+  padding: 32px;
+  border: 1px solid rgba(42, 42, 90, .7);
+  border-radius: var(--l-radius);
+  background: linear-gradient(160deg, rgba(26, 26, 62, .70), rgba(16, 16, 58, .55));
+}
+.split-head {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--l-accent-soft);
+  margin-bottom: 22px;
+}
+
+.ticks { list-style: none; display: grid; gap: 15px; }
+.ticks li {
+  position: relative;
+  padding-left: 30px;
+  color: var(--l-text);
+  font-size: 1rem;
+}
+.ticks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .55em;
+  width: 13px;
+  height: 7px;
+  border-left: 2px solid var(--l-accent);
+  border-bottom: 2px solid var(--l-accent);
+  transform: rotate(-45deg);
+}
+
+/* ── Closing CTA ──────────────────────────────────────────────────────────── */
+
+.closing {
+  position: relative;
+  padding: clamp(96px, 13vh, 176px) 0;
+  background: var(--l-bg-deep);
+  border-top: 1px solid rgba(42, 42, 90, .6);
+  overflow: hidden;
+  text-align: center;
+}
+.ambient-closing .ambient-a {
+  top: auto;
+  bottom: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(2, 136, 209, .20);
+}
+.closing-inner { position: relative; z-index: 1; }
+.closing h2 { margin-inline: auto; }
+.closing-sub { margin-top: 16px; color: var(--l-soft); font-size: 1.0625rem; }
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+
+.site-footer { background: var(--l-bg-deep); border-top: 1px solid rgba(42, 42, 90, .6); }
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-block: 64px 40px;
+}
+.footer-brand p { margin-top: 10px; color: var(--l-soft); font-size: .9375rem; max-width: 28ch; }
+
+.footer-nav { display: flex; flex-direction: column; }
+.footer-head {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--l-soft);
+  margin-bottom: 8px;
+}
+.footer-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--l-dim);
+  font-size: .9375rem;
+  text-decoration: none;
+  transition: color 160ms var(--l-ease);
+}
+.footer-nav a:hover { color: var(--l-bright); }
+
+.footer-base {
+  padding-block: 22px 30px;
+  border-top: 1px solid rgba(42, 42, 90, .5);
+}
+.footer-base p { color: var(--text-muted); font-size: .875rem; }
+
+/* ═══ RESPONSIVE ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 1200px) {
+  :root { --l-shell: 980px; }
+}
+
+@media (max-width: 900px) {
+  .nav-desktop { display: none; }
+  .nav-toggle { display: inline-flex; }
+
+  .nav-mobile {
+    display: flex;
+    flex-direction: column;
+    padding: 8px clamp(20px, 5vw, 48px) 24px;
+    background: rgba(18, 18, 42, .97);
+    border-top: 1px solid rgba(42, 42, 90, .6);
+  }
+  .nav-mobile[hidden] { display: none; }
+  .nav-mobile a {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    color: var(--l-dim);
+    font-size: 1.0625rem;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(42, 42, 90, .45);
+  }
+  .nav-mobile a:last-child { border-bottom: none; }
+
+  .cards, .steps, .split { grid-template-columns: repeat(2, 1fr); }
+  .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+
+@media (max-width: 640px) {
+  .hero { min-height: auto; padding: 108px 0 76px; }
+  /* Blur is expensive on low-end school tablets. Dropping it is safe here because the glow is a
+     radial gradient that already fades to transparent — no hard edge appears. */
+  .ambient span { filter: none; }
+  .grid-veil { background-size: 54px 54px; }
+
+  h1 { max-width: 100%; }
+  .hero-sub { max-width: 26ch; }
+
+  .cta-portal {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 64px;
+    padding: 0 24px;
+    font-size: 1.125rem;
+    margin-top: 36px;
+  }
+
+  .cards, .steps, .split, .footer-inner { grid-template-columns: 1fr; }
+  .card, .split-col { padding: 24px; }
+  .section { padding: 76px 0; }
+}
+
+/* ═══ REDUCED MOTION ═══════════════════════════════════════════════════════
+   Motion is removed; the affordances that carried it are kept as colour and
+   border changes, so nothing becomes unusable or invisible.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* No lift, no slide — the glow still responds so hover remains legible. */
+  .cta-portal:hover,
+  .cta-portal:active { transform: none; }
+  .cta-portal:hover .cta-arrow { transform: none; }
+  .nav-desktop a:hover::after { transform: scaleX(1); }
+  .card:hover { transform: none; }
+}
