@@ -206,11 +206,13 @@ beslutning som `KNOWN_STRING_EXCEPTIONS`.
 KENDT FASE-1-FORHOLD: BRANDOVERGANGEN
 ----------------------------------------
 
-Landingssiden hedder **Lærlig**. Appen bagved hedder fortsat **DEN SEJE APP** — det står i
-`<title>` på `index.html` og `login.html`.
+Landingssiden hedder **Lærlig**, og `login.html` gør nu det samme (`<title>Log ind — Lærlig</title>`
+plus wordmark og et "Tilbage til Lærlig"-link).
 
-En besøgende går derfor fra "Lærlig" til "DEN SEJE APP" i ét klik. Det er **accepteret for fase 1**
-og bevidst ikke rettet her: en brandmigration rører hver eneste side og hører til sit eget spor.
+Appen bag login hedder fortsat **DEN SEJE APP** — det står i `<title>` på `index.html`, `hub.html`
+og de øvrige elev-/lærersider. Overgangen er altså rykket ét skridt længere ind i flowet: forside
+og login er Lærlig, resten er ikke. Det er fortsat **accepteret for fase 1**; en fuld brandmigration
+rører hver eneste side og hører til sit eget spor.
 
 ----------------------------------------
 ÅBNE PUNKTER (EJER)
@@ -224,8 +226,15 @@ og bevidst ikke rettet her: en brandmigration rører hver eneste side og hører 
    værtsskiftet er gennemført — og Supabases liste over tilladte redirect-URL'er skal opdateres,
    **før** brugere sendes til det nye domæne (`js/login.js` bygger sin `redirectTo` ud fra
    `window.location.origin`).
-3. **`login.html` er ustylet rå HTML.** Den er det første, en besøgende ser efter det vigtigste
-   klik på siden. En poleret forside, der leverer direkte ind i den, gør springet mere synligt,
-   ikke mindre. Selvstændig opgave.
+3. ~~**`login.html` er ustylet rå HTML.**~~ **LØST 2026-08-08.** `login.html` deler nu
+   landingssidens flade: samme tokens, ambient glow, glas-kort, wordmark og knapsprog
+   (`css/login.css`). Markup-kontrakten er urørt — alle ID'er, `#forgotBtn`-teksten og den
+   **inline `display:none`** på `#forgot-panel`, som `js/login.js` toggler imod. Dækket af
+   `tests/login-page.spec.ts`.
+   **Én rest:** `js/login.js` sætter `resetMessage.style.color` til `"red"`/`"green"` inline, og
+   inline vinder over CSS. Begge nøgleord er ulæselige på den mørke flade (grøn ≈ 2,4:1), så
+   `#reset-message` har fået en lys chip-flade, hvor begge klarer 4,5:1. Rodårsagsrettelsen er at
+   bytte de to linjer ud med CSS-klasser — en `js/login.js`-ændring, som er bevidst holdt uden for
+   dette scope. Anbefales som næste lille opgave.
 4. **Produktbilleder mangler.** Se afsnittet ovenfor.
 5. **`noindex` skal fjernes ved lancering.**

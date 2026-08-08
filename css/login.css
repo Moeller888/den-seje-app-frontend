@@ -1,0 +1,388 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÆRLIG — login page (login.html only)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Scope:   login.html. Loaded after css/theme.css, whose tokens it consumes.
+            It does not modify theme.css and no other page loads this file.
+
+   Purpose: login.html is the first thing a visitor sees after the landing
+            page's main call to action. It used to be unstyled browser default
+            on a white background, which made that one click feel like leaving
+            the product. This file makes the two surfaces read as one.
+
+   Contract: the markup's IDs, the inline `display:none` on #forgot-panel and
+            the visible text of #forgotBtn are load-bearing for js/login.js and
+            for tests/password-reset.spec.ts. Styling only — nothing here
+            depends on, or changes, that behaviour.
+
+   Fonts:   system stack only. No webfont, no CDN, no external request.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --lg-bg:          var(--bg-main);        /* #12122a */
+  --lg-bg-deep:     var(--avatar-outer);   /* #0a0a20 */
+  --lg-panel:       var(--bg-panel);       /* #1a1a3e */
+  --lg-border:      var(--border);         /* #2a2a5a */
+
+  --lg-text:        var(--text-main);      /* #e0e0e0 */
+  --lg-bright:      var(--text-bright);    /* #ffffff */
+  --lg-dim:         var(--text-dim);       /* #cccccc */
+  /* Not --text-muted (#555588): ~3.1:1 on --bg-main is below 4.5:1 for text. */
+  --lg-soft:        #9aa3c4;
+
+  --lg-accent:      #0288d1;               /* ice --accent      */
+  --lg-accent-soft: #90caf9;               /* --info-text       */
+  --lg-accent-deep: #1565c0;               /* default --accent  */
+
+  --lg-ease:        cubic-bezier(.2, .8, .2, 1);
+  --lg-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+             Arial, "Noto Sans", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 40px 20px;
+  font-family: var(--lg-font);
+  background: var(--lg-bg);
+  color: var(--lg-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Ambient background — the landing page's treatment, quieter ───────────── */
+/* Radial gradients that fade out on their own, so dropping the blur on small
+   screens cannot produce a hard-edged disc. */
+
+.ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.ambient span { position: absolute; display: block; filter: blur(60px); }
+.ambient-a {
+  width: min(70vw, 560px);
+  aspect-ratio: 1;
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle at 50% 50%, rgba(2, 136, 209, .20) 0%, rgba(2, 136, 209, .07) 45%, transparent 72%);
+}
+.ambient-b {
+  width: min(64vw, 500px);
+  aspect-ratio: 1;
+  bottom: -22%;
+  right: -14%;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 32, 96, .62) 0%, rgba(30, 32, 96, .24) 45%, transparent 72%);
+}
+.grid-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right,  rgba(42, 42, 90, .34) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 42, 90, .34) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 0%, transparent 78%);
+          mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 0%, transparent 78%);
+}
+
+/* ── Focus: always visible, never removed ─────────────────────────────────── */
+
+:focus-visible {
+  outline: 3px solid var(--lg-accent-soft);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Wordmark — identical treatment to the landing page header ────────────── */
+
+.login-brand {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+.login-brand .wordmark-text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--lg-bright);
+}
+.login-brand .wordmark-text::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: var(--lg-accent);
+  vertical-align: 2px;
+}
+
+/* ── The card ─────────────────────────────────────────────────────────────── */
+
+.box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 32px;
+  border: 1px solid rgba(42, 42, 90, .8);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(26, 26, 62, .92), rgba(16, 16, 58, .82));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .06) inset,
+    0 30px 60px -30px rgba(0, 0, 0, .85);
+}
+/* Progressive enhancement: only where it is genuinely supported. */
+@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  .box {
+    background: linear-gradient(160deg, rgba(26, 26, 62, .78), rgba(16, 16, 58, .66));
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+            backdrop-filter: blur(12px) saturate(1.2);
+  }
+}
+
+.box h2 {
+  font-size: 1.6rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--lg-bright);
+  margin-bottom: 6px;
+}
+.login-sub {
+  font-size: .9375rem;
+  color: var(--lg-soft);
+  margin-bottom: 26px;
+}
+
+/* ── Fields ───────────────────────────────────────────────────────────────── */
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: .8125rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--lg-soft);
+  margin-bottom: 7px;
+}
+
+input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-btn);
+  border-radius: 10px;
+  background: rgba(10, 10, 32, .6);
+  color: var(--lg-bright);
+  /* 16px prevents iOS Safari from zooming the viewport on focus. */
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 160ms var(--lg-ease), background-color 160ms var(--lg-ease);
+}
+input::placeholder { color: #5f6a8f; }
+input:hover { border-color: rgba(2, 136, 209, .4); }
+input:focus { outline: none; border-color: var(--lg-accent); background: rgba(10, 10, 32, .85); }
+input:focus-visible {
+  outline: 3px solid var(--lg-accent-soft);
+  outline-offset: 2px;
+  border-color: var(--lg-accent);
+}
+
+/* ── Primary action — the landing CTA's language, sized for a form ────────── */
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#loginBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 24px;
+  padding: 0 24px;
+  border: 1px solid rgba(144, 202, 249, .35);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #1e3a8f 0%, var(--lg-accent-deep) 55%, var(--lg-accent) 100%);
+  color: var(--lg-bright);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .20) inset,
+    0 -1px 0 rgba(0, 0, 0, .28) inset,
+    0 14px 32px -14px rgba(2, 136, 209, .55),
+    0 4px 12px -6px rgba(0, 0, 0, .6);
+  transition: transform 200ms var(--lg-ease), box-shadow 200ms var(--lg-ease);
+}
+#loginBtn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 55%);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  #loginBtn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, .24) inset,
+      0 -1px 0 rgba(0, 0, 0, .28) inset,
+      0 20px 44px -14px rgba(2, 136, 209, .70),
+      0 6px 16px -6px rgba(0, 0, 0, .6);
+  }
+}
+#loginBtn:active { transform: translateY(0); transition-duration: 90ms; }
+#loginBtn:focus-visible { outline: 3px solid var(--lg-accent-soft); outline-offset: 3px; }
+
+/* ── Messages ─────────────────────────────────────────────────────────────── */
+
+/* #message is styled entirely here — js/login.js only writes its textContent. */
+.message {
+  min-height: 1.25rem;
+  margin-top: 14px;
+  font-size: .9375rem;
+  color: var(--error-bright);
+  text-align: center;
+}
+.message:empty { margin-top: 0; }
+
+/* #reset-message is different: js/login.js sets `style.color` to the keywords
+   "red" and "green" INLINE, which beats any colour declared here. Those two
+   keywords are unreadable on this dark card (green #008000 lands near 2.4:1).
+   Rather than fight the inline style, the element is given a light surface, on
+   which both keywords clear 4.5:1. Nothing about the script changes.
+   The root-cause fix — swapping those two lines for CSS classes — is a
+   js/login.js change and deliberately out of scope here. */
+#reset-message {
+  display: block;
+  margin-top: 12px;
+  font-size: .875rem;
+  line-height: 1.5;
+  text-align: left;
+}
+#reset-message:not(:empty) {
+  padding: 10px 12px;
+  border: 1px solid rgba(42, 42, 90, .5);
+  border-radius: 9px;
+  background: #e8ecf5;
+}
+
+/* ── Forgot-password area ─────────────────────────────────────────────────── */
+
+.forgot-row { margin-top: 18px; text-align: center; }
+
+#forgotBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--lg-soft);
+  font-size: .875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 160ms var(--lg-ease);
+}
+#forgotBtn:hover { color: var(--lg-bright); }
+
+/* The inline `display:none` in the markup is what js/login.js toggles against;
+   this rule only describes the panel once the script has revealed it. */
+#forgot-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(42, 42, 90, .7);
+}
+#forgot-panel p {
+  font-size: .875rem;
+  color: var(--lg-soft);
+  margin-bottom: 12px;
+}
+#resetRequestBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 0 18px;
+  border: 1px solid var(--border-btn);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--lg-dim);
+  font-size: .9375rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: border-color 160ms var(--lg-ease), background-color 160ms var(--lg-ease), color 160ms var(--lg-ease);
+}
+#resetRequestBtn:hover {
+  color: var(--lg-bright);
+  border-color: rgba(2, 136, 209, .5);
+  background: rgba(2, 136, 209, .1);
+}
+#resetRequestBtn:disabled { opacity: .55; cursor: default; }
+#resetRequestBtn:focus-visible { outline: 3px solid var(--lg-accent-soft); outline-offset: 3px; }
+
+/* ── Back to the public site ──────────────────────────────────────────────── */
+
+.login-back {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 8px;
+  color: var(--lg-soft);
+  font-size: .9375rem;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 160ms var(--lg-ease), border-color 160ms var(--lg-ease);
+}
+.login-back:hover { color: var(--lg-bright); border-bottom-color: var(--lg-accent); }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  body { justify-content: flex-start; padding-top: 56px; gap: 22px; }
+  /* Blur is expensive on low-end school tablets; the gradients already fade. */
+  .ambient span { filter: none; }
+  .grid-veil { background-size: 54px 54px; }
+  .box { padding: 28px 22px; border-radius: 16px; }
+  .box h2 { font-size: 1.4rem; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  /* Movement goes; colour and glow stay, so every affordance survives. */
+  #loginBtn:hover,
+  #loginBtn:active { transform: none; }
+}

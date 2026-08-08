@@ -1,68 +1,77 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="default">
 <head>
   <meta charset="UTF-8">
-  <title>Login – DEN SEJE APP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
+  <title>Log ind — Lærlig</title>
 
-    .box {
-      border: 1px solid #ccc;
-      padding: 20px;
-      max-width: 400px;
-      margin: 100px auto;
-    }
-
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .message {
-      margin-top: 10px;
-      color: red;
-    }
-  </style>
+  <!-- Same tokens as the landing page and the app, so the step from the public
+       front page into the product does not look like leaving the product. -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
-  <div class="box">
-    <h2>Login</h2>
-    <form id="login-form">
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Adgangskode">
-      <button type="submit" id="loginBtn">Login</button>
-    </form>
-    <div class="message" id="message"></div>
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient-a"></span>
+    <span class="ambient-b"></span>
+  </div>
+  <div class="grid-veil" aria-hidden="true"></div>
 
-    <div style="text-align:center;margin-top:12px;">
-      <button type="button" id="forgotBtn"
-        style="background:none;border:none;color:#555;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;">
+  <a class="login-brand" href="landing.html">
+    <span class="wordmark-text">Lærlig</span>
+  </a>
+
+  <main class="box">
+    <h2>Log ind</h2>
+    <p class="login-sub">Fortsæt, hvor du slap.</p>
+
+    <!-- No `novalidate`: the original form relied on the browser's native validation for a
+         malformed email, and this change is a restyle, not a change to how the form behaves. -->
+    <form id="login-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="din@email.dk" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label for="password">Adgangskode</label>
+        <input type="password" id="password" placeholder="Din adgangskode" autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="loginBtn">Log ind</button>
+    </form>
+
+    <div class="message" id="message" role="status" aria-live="polite"></div>
+
+    <div class="forgot-row">
+      <button type="button" id="forgotBtn" aria-controls="forgot-panel">
         Glemt adgangskode?
       </button>
     </div>
 
-    <div id="forgot-panel" style="display:none;margin-top:16px;border-top:1px solid #ccc;padding-top:16px;">
-      <p style="margin-bottom:8px;font-size:14px;">
+    <!-- The inline `display:none` is LOAD-BEARING. js/login.js toggles this panel by
+         reading `forgotPanel.style.display` — the INLINE value. Move it into CSS and
+         the first click reads "" instead of "none", so the panel would be set to
+         "none" and could never open. tests/password-reset.spec.ts covers both states. -->
+    <div id="forgot-panel" style="display:none;">
+      <p>
         Skriv din email-adresse. Vi sender dig et link til at oprette en ny adgangskode.
       </p>
-      <input type="email" id="reset-email" placeholder="Din email" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box;">
-      <button type="button" id="resetRequestBtn" style="width:100%;padding:10px;cursor:pointer;">
+      <div class="field">
+        <label for="reset-email">Email</label>
+        <input type="email" id="reset-email" placeholder="Din email" autocomplete="email">
+      </div>
+      <button type="button" id="resetRequestBtn">
         Send nulstillingslink
       </button>
-      <div id="reset-message" style="margin-top:8px;font-size:13px;"></div>
+      <div id="reset-message" role="status" aria-live="polite"></div>
     </div>
-  </div>
+  </main>
+
+  <a class="login-back" href="landing.html">← Tilbage til Lærlig</a>
 
   <script type="module" src="./js/supabase.js"></script>
   <script type="module" src="./js/login.js"></script>
