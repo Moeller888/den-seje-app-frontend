@@ -299,15 +299,20 @@ img, svg { max-width: 100%; }
      2. `align-items: center` then split the leftover space evenly above and
         below the content, on top of a 120px top padding.
    The gap therefore grew with the window: 155px at 800px tall, 294px at 1080px.
-   Subtracting the header height fixes the first; aligning to the start fixes
-   the second. The 40px top padding is the whole distance from the header's
-   bottom edge to the eyebrow — no compensating negative margin is involved. */
+   Aligning to the start fixed the second fault; dropping the viewport-height
+   floor entirely fixes the first, because there is no longer a box taller than
+   its content for the leftover space to appear in.
+
+   THE HERO IS CONTENT-HEIGHT. It is deliberately NOT a full first screen: the
+   next section is meant to be visible at the fold, so the page reads as
+   continuous rather than as a title card the reader has to get past. The 40px
+   top padding is the whole distance from the header's bottom edge to the
+   eyebrow — no compensating negative margin is involved. */
 .hero {
   position: relative;
   display: flex;
   align-items: flex-start;
-  min-height: calc(100svh - var(--l-header-h));
-  padding: 40px 0 96px;
+  padding: 40px 0 88px;
   overflow: hidden;
 }
 .hero-inner { position: relative; z-index: 1; text-align: center; }
@@ -360,20 +365,6 @@ h1 {
 }
 .hero-meta a:hover { color: var(--l-bright); border-bottom-color: var(--l-accent); }
 .hero-meta .dot { padding-inline: 4px; }
-
-.scroll-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 34px;
-  transform: translateX(-50%);
-  z-index: 1;
-}
-.scroll-line {
-  display: block;
-  width: 1px;
-  height: 52px;
-  background: linear-gradient(to bottom, rgba(144, 202, 249, .55), transparent);
-}
 
 /* ── The CTA portal — the page's one high-investment object ───────────────── */
 

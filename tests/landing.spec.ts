@@ -336,16 +336,24 @@ for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as co
   });
 }
 
-test("the hero is not pushed down by a doubled viewport height", async ({ page }) => {
+test("the hero is content-height — the next section is visible at the fold", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openLanding(page);
-  const { heroTop, heroBottom, viewportH } = await page.evaluate(() => {
-    const r = document.querySelector(".hero")!.getBoundingClientRect();
-    return { heroTop: r.top, heroBottom: r.bottom, viewportH: window.innerHeight };
+  const m = await page.evaluate(() => {
+    const hero = document.querySelector(".hero")!.getBoundingClientRect();
+    const next = document.querySelector("#produktet")!.getBoundingClientRect();
+    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight };
   });
-  // The hero fills exactly the space left under the header — not a whole extra viewport.
-  expect(heroBottom - viewportH, "the first screen must not overflow the viewport").toBeLessThanOrEqual(2);
-  expect(heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
+  expect(m.heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
+  // No viewport-height floor: the hero is only as tall as what is in it, so the section
+  // below reaches into the first screen instead of sitting past a full-height title card.
+  expect(m.heroBottom, "the hero must not fill the whole first screen").toBeLessThan(m.viewportH);
+  expect(m.nextTop, "the next section must be reachable within the first viewport").toBeLessThan(m.viewportH);
+});
+
+test("no scroll indicator remains — it would point at something already visible", async ({ page }) => {
+  await openLanding(page);
+  await expect(page.locator(".scroll-hint")).toHaveCount(0);
 });
 
 test("the header is above the hero and stays put — no invisible spacer", async ({ page }) => {
