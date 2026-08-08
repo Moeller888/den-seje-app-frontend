@@ -346,6 +346,18 @@ _Last reviewed: 2026-07-01._
   (7 days, ≥3 sessions) is not met for either participant**, so no §13 classification is available yet.
   Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2` stays `false`**; Wave 2 stays
   `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-099).
+  **▶ OWNER DECISION — Wave 1's participant target reduced 3 → 2, and thereby MET (2026-08-08, D-100).**
+  **No third participant will be onboarded.** Both onboarding runs are complete and independently
+  evidenced (D-078, D-099), and a third comparable **internal test account** — same `neutral-medium`
+  identity, same empty cosmetic set, same browser type — is not expected to add material new evidence.
+  Permitted by the document as written: §7 sets a *target* 3 with only the **maximum 5** gated on a new
+  owner decision, and §13 specifies no participant count at all. **This does not close or classify Wave 1
+  and does not waive §9:** status stays `PILOT_WAVE_1_IN_PROGRESS` **on exposure, not headcount** — 7
+  calendar days, ≥3 real sessions per participant, ≥1 observed session each on quiz/hub/avatar, plus §10's
+  requirement for active observation rather than mere absence of error reports. **Earliest possible close
+  2026-08-15.** The evidence Wave 1 still lacks is **cosmetics**, which its §2 cohort structurally cannot
+  supply — that is Wave 2's job (D-093). Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2`
+  stays `false`**; Wave 2 untouched, still `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-100).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
