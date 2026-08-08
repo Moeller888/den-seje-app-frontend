@@ -1,13 +1,14 @@
 # 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
-Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-08-08, D-099) — 2 participants `ONBOARDED`.** Both passed the
-full persistent-browser onboarding gate (§8) in owner-witnessed manual runs (Chrome / desktop); Wave 1 is
-now in progress (2 of target 3, max 5). `AVATAR_R2 = false` by default (production unchanged); no
+Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-08-08, D-100) — 2 participants `ONBOARDED`; the Wave-1 target is
+now 2 and is MET.** Both passed the full persistent-browser onboarding gate (§8) in owner-witnessed manual
+runs (Chrome / desktop). **Wave 1 stays IN PROGRESS on §9 exposure, not on headcount** — no third participant
+will be onboarded (D-100). `AVATAR_R2 = false` by default (production unchanged); no
 broad activation, no global flag-flip — R2 is on only for browsers that set the per-browser opt-in.
 Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064)** for the Phase-2 decomposed stack;
 **operationalized 2026-07-26 (D-071** raster debt accepted **/ D-072** onboarding protocol + status
-correction); **Wave 1 started 2026-07-27 (D-078)**; **participant #2 onboarded 2026-08-08 (D-099)**.
-Owner: project owner.
+correction); **Wave 1 started 2026-07-27 (D-078)**; **participant #2 onboarded 2026-08-08 (D-099)**;
+**target reduced 3 → 2 by owner decision 2026-08-08 (D-100)**. Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
 
@@ -132,7 +133,12 @@ A user meeting the identity criterion gets a clean experience; which cosmetics t
   passed in an owner-witnessed manual run (Chrome / desktop): opt-in survived a full browser close-and-reopen,
   `renderPath` stayed `r2` with the complete six-layer stack on avatar/hub/quiz, no mixed stack, no broken
   layers, and opt-out was demonstrated and the opt-in restored (see §15 row 2).
-- **Wave 1 target 3, max 5** — onboard further users one at a time via the §8 gate.
+- **Wave 1 target is 2 and is MET (D-100, 2026-08-08).** The target was reduced from 3 by owner decision:
+  both required onboarding runs are complete, and a third comparable **internal test account** is not
+  expected to add material new evidence — it would exercise the same identity, the same empty cosmetic
+  set and the same browser type. **No third participant will be onboarded.** The `maximum 5` ceiling is
+  untouched and still requires a new owner decision to approach.
+- **Wave 1 is NOT complete.** What remains is **§9 exposure**, not participants — see §9 and §7b.1.
 - **`AVATAR_R2 = false`** — no broad activation.
 
 **Live verification ≠ onboarding (D-072).** A live R2 render proven in an **ephemeral, automated browser
@@ -143,7 +149,9 @@ context** — with no persistent profile and no evidence the opt-in survives a b
 toggle; no DB cohort / percentage rollout. Those belong to the separate **broad R2 activation** track.
 
 **Wave 1 scope:**
-- **Target 3** pilot users; **maximum 5** without a new owner decision.
+- **Target 2** pilot users (**reduced from 3 by owner decision D-100, 2026-08-08**; both onboarded, target
+  met); **maximum 5** without a new owner decision. Reducing the target does **not** relax §9, §10, §12 or
+  §13 — those are unchanged and still binding.
 - **One primary browser/device per user** in the first wave.
 - Users onboarded **one at a time**, each confirmed against the §2 eligibility criteria (neutral-medium
   identity, no gated head/face/eye/clothing cosmetics) **before** onboarding.
@@ -166,7 +174,8 @@ browser. Wave 2 is the cosmetic wave.
 Wave 2 **may not begin** until **all** of:
 
 1. Wave 1 reaches a **§13 final classification** of `PILOT_PASS` or `PILOT_PASS_WITH_DEBT`.
-   (Today: `PILOT_WAVE_1_IN_PROGRESS`, **2 participants of target 3** — Wave 1 is not complete.)
+   (Today: `PILOT_WAVE_1_IN_PROGRESS`. The participant target is **2 of 2 — MET** since D-100; what is
+   still outstanding is **condition 2 below**, the §9 exposure. Headcount is no longer the blocker.)
 2. Wave 1's §9 exposure is met by its participants: 7 calendar days, ≥3 real sessions, ≥1 observed
    session each on quiz, hub and avatar.
 3. **No open `BLOCKING` finding and no unresolved `MAJOR` finding** from Wave 1.
@@ -384,12 +393,17 @@ tokens · `localStorage` contents · any unnecessary personal data.
 _The opt-in remains per-browser `localStorage` (no server-side state). A user reaches `ONBOARDED` only via
 the §8 persistent-browser gate. Add a row per user using the §11 data-minimal fields; keep Wave 1 to §7/§9._
 
-**Next concrete step:** Wave 1 is in progress with participants #1 (`ONBOARDED`, D-078) and #2
-(`ONBOARDED`, D-099) — **2 of target 3**. Onboard **one** further user via the §8 persistent-browser gate
-(D-073 kit), recorded here with the §11 data-minimal fields; observe against the §10 success criteria and
-§9/§12 exposure & duration, and pause on any §12 abort trigger. Note that §9 exposure (7 calendar days,
-≥3 real sessions each) is **not yet met for either participant**, so Wave 1 cannot be classified under §13
-on participant count alone. `AVATAR_R2` stays `false` (per-browser opt-in only).
+**Next concrete step:** Wave 1's cohort is **complete** — participants #1 (`ONBOARDED`, D-078) and #2
+(`ONBOARDED`, D-099), **2 of target 2** since D-100. **No further onboarding.** What remains is
+**accumulating and recording §9 exposure** for both participants: 7 calendar days, ≥3 real app sessions
+each, with ≥1 observed session each on quiz, hub and the avatar page. Observe against the §10 success
+criteria — which require **active observation or concrete feedback**, since the absence of error reports
+does not count as success — and pause on any §12 abort trigger. Only when §9 is met can the owner record
+a §13 classification. `AVATAR_R2` stays `false` (per-browser opt-in only).
+
+> **Earliest possible Wave-1 close: 2026-08-15**, seven calendar days after participant #2's onboarding,
+> and only if real use is actually logged in that window. Participant #1's calendar time has long passed
+> (onboarded 2026-07-27); what is missing for both is **recorded real sessions**, not elapsed days.
 
 **Wave 2 is DEFINED but NOT STARTED (§7b, D-093).** It is the cosmetic wave — Wave 1's cohort owns no
 cosmetics, so the Ridderdragt and the re-seated slots are still unobserved by a real user. Wave 2 opens
