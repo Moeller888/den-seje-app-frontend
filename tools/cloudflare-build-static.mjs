@@ -15,6 +15,8 @@
 //               served, and no Markdown is fetched. Deliberate hardening of the deployment, not a
 //               change to the app.
 //   404.html  — required by `not_found_handling: "404-page"`; neutral, no internal information.
+//               It links to `landing.html`, the public front page — not to the quiz, which would
+//               bounce an anonymous visitor straight back out to login.
 //
 // RUNS WITH NO DEPENDENCIES INSTALLED (Cloudflare sets SKIP_DEPENDENCY_INSTALL=1): Node builtins
 // only. Deterministic on Windows and Linux — every listing is sorted, paths are normalised to
@@ -34,10 +36,12 @@ const OUT = join(REPO, OUT_DIR_NAME);
 // `teacher.html` and `reset-password.html` are not optional: js/login.js routes teachers to the
 // first by role, and sets Supabase's password-recovery `redirectTo` to the second. Dropping either
 // breaks a live flow, which is why the reference check below is a test and not a code review step.
+// `landing.html` is the PUBLIC front page and the target of the root rewrite below, so it is
+// likewise not optional: without it, `/` would rewrite to a file that does not exist.
 export const RUNTIME_HTML = Object.freeze([
   "achievements.html", "admin.html", "avatar.html", "collection.html", "hub.html", "index.html",
-  "leaderboard.html", "login.html", "reset-password.html", "shop.html", "student-detail.html",
-  "teacher.html", "themes.html",
+  "landing.html", "leaderboard.html", "login.html", "reset-password.html", "shop.html",
+  "student-detail.html", "teacher.html", "themes.html",
 ]);
 // Entry files the pages load directly from the root.
 export const ROOT_FILES = Object.freeze(["app.js", "style.css", "supabaseClient.js"]);
@@ -49,22 +53,30 @@ export const ASSET_DIRS = Object.freeze([
   { dir: "assets", extensions: [".svg", ".png", ".webp", ".wav"] },
 ]);
 // Pages that must exist in the output or the build fails.
+// `landing.html` and `css/landing.css` are mandatory because `/` rewrites to the first and it is
+// unreadable without the second — a missing landing page must fail the build, not production.
 export const MANDATORY = Object.freeze([
-  "index.html", "login.html", "hub.html", "docs.html", "404.html", "_redirects",
-  "app.js", "style.css", "supabaseClient.js", "css/theme.css",
+  "index.html", "login.html", "hub.html", "landing.html", "docs.html", "404.html", "_redirects",
+  "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css",
 ]);
 
 // THE ONLY ROUTING RULE. `html_handling: "none"` keeps explicit .html addresses intact — nothing
-// 307s the extension away — but it also stops `/` resolving to index.html on its own. This
-// restores exactly that one behaviour and nothing else.
+// 307s the extension away — but it also stops `/` resolving to anything on its own. This restores
+// exactly that one behaviour and nothing else.
+//
+// THE ROOT IS THE PUBLIC LANDING PAGE, NOT THE QUIZ. `/` serves the marketing page at
+// `landing.html`; the student quiz keeps its own address at `/index.html`, unmoved and unrenamed,
+// and every in-app link, role redirect and Playwright assertion that names `/index.html` continues
+// to resolve exactly as before. The landing page's "VI LÆRER!" call to action is a plain relative
+// link to `login.html`, which is where role routing already lives (js/login.js).
 //
 // Status 200 makes it an INTERNAL REWRITE, not a redirect: the browser's address bar keeps showing
-// `/` and no 3xx is emitted. A 301/302 here would put `/index.html` in the URL bar and reintroduce
-// the round trip this change exists to remove.
+// `/` and no 3xx is emitted. A 301/302 here would put `/landing.html` in the URL bar and reintroduce
+// the round trip this rule exists to remove.
 //
-// Deliberately NOT a SPA fallback (`/* /index.html 200`): unknown paths must keep reaching the 404
-// page, so a mistyped or dead link fails visibly instead of silently rendering the quiz.
-export const REDIRECTS_RULE = "/ /index.html 200";
+// Deliberately NOT a SPA fallback (`/* /landing.html 200`): unknown paths must keep reaching the 404
+// page, so a mistyped or dead link fails visibly instead of silently rendering the landing page.
+export const REDIRECTS_RULE = "/ /landing.html 200";
 
 // ── what may never appear in the output ───────────────────────────────────────────────────────
 export const FORBIDDEN_EXTENSIONS = Object.freeze([
@@ -191,7 +203,7 @@ export function notFoundHtml() {
     <h1>404</h1>
     <h2>Siden blev ikke fundet</h2>
     <p>Siden findes ikke eller er blevet flyttet.</p>
-    <a href="index.html">Gå til forsiden</a>
+    <a href="landing.html">Gå til forsiden</a>
   </main>
 </body>
 </html>

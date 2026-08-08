@@ -20,8 +20,10 @@ if (!existsSync(ROOT)) { console.error("dist-cloudflare/ is missing — run: npm
 // than approximating it:
 //   html_handling: "none"  → paths resolve LITERALLY. No extension guessing, so `/login` is a 404
 //                            and `/login.html` is served directly with no 3xx.
-//   _redirects             → the single `/ /index.html 200` rewrite. Status 200 means INTERNAL:
-//                            the response body is index.html while the URL stays `/`.
+//   _redirects             → the single `/ /landing.html 200` rewrite. Status 200 means INTERNAL:
+//                            the response body is landing.html while the URL stays `/`.
+//                            The quiz keeps its own address at /index.html and is NOT what `/`
+//                            serves — both halves of that are asserted below.
 //   `_redirects` itself is configuration and is never served as an asset.
 const REWRITES = new Map(
   readFileSync(join(ROOT, "_redirects"), "utf8").split("\n").map((l) => l.trim()).filter(Boolean)
@@ -51,7 +53,7 @@ const server = createServer((req, res) => {
 });
 
 const MUST_SERVE = [
-  "/", "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
+  "/", "/landing.html", "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
   "/student-detail.html", "/student-detail.html?id=test", "/avatar.html",
   "/achievements.html", "/collection.html", "/leaderboard.html", "/themes.html", "/reset-password.html",
   "/docs.html", "/404.html",
@@ -62,6 +64,7 @@ const MUST_SERVE = [
 // The .html contract: explicit addresses serve directly, extensionless ones do NOT exist.
 const EXTENSIONLESS_MUST_404 = [
   "/login", "/teacher", "/student-detail", "/avatar", "/reset-password", "/hub", "/admin", "/shop",
+  "/landing",
 ];
 const MUST_NOT_SERVE = [
   "/_redirects", "/_headers",
@@ -102,15 +105,26 @@ server.listen(0, "127.0.0.1", async () => {
     console.log(`  ${ok ? "OK  " : "FAIL"} ${String(r.status).padStart(3)}  ${p}`);
   }
 
-  console.log("\nROOT REWRITE — / serves index.html without a redirect:");
+  console.log("\nROOT REWRITE — / serves landing.html without a redirect:");
   {
-    const root = await get("/"), idx = await get("/index.html");
-    const okStatus = root.status === 200 && idx.status === 200;
-    const okBody = root.body === idx.body && root.body.length > 0;
+    const root = await get("/"), landing = await get("/landing.html");
+    const okStatus = root.status === 200 && landing.status === 200;
+    const okBody = root.body === landing.body && root.body.length > 0;
     if (!okStatus) failures++;
     if (!okBody) failures++;
-    console.log(`  ${okStatus ? "OK  " : "FAIL"} / = ${root.status}, /index.html = ${idx.status} (neither is a 3xx)`);
-    console.log(`  ${okBody ? "OK  " : "FAIL"} / returns the index.html body (${root.body.length} bytes)`);
+    console.log(`  ${okStatus ? "OK  " : "FAIL"} / = ${root.status}, /landing.html = ${landing.status} (neither is a 3xx)`);
+    console.log(`  ${okBody ? "OK  " : "FAIL"} / returns the landing.html body (${root.body.length} bytes)`);
+  }
+
+  console.log("\nTHE QUIZ DID NOT MOVE — /index.html still serves, and / is NOT the quiz:");
+  {
+    const root = await get("/"), idx = await get("/index.html");
+    const okQuiz = idx.status === 200 && idx.body.includes('class="game-shell"');
+    const okDistinct = root.body !== idx.body;
+    if (!okQuiz) failures++;
+    if (!okDistinct) failures++;
+    console.log(`  ${okQuiz ? "OK  " : "FAIL"} /index.html = ${idx.status} and is still the quiz shell`);
+    console.log(`  ${okDistinct ? "OK  " : "FAIL"} / and /index.html serve different documents`);
   }
 
   console.log("\nMUST NOT SERVE (404 + the neutral 404 page):");
