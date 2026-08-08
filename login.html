@@ -53,12 +53,16 @@
     </div>
 
     <div id="forgot-panel" style="display:none;margin-top:16px;border-top:1px solid #ccc;padding-top:16px;">
+      <!-- Section 173: the wording must stay role-neutral. It is shown before sign-in, so it
+           cannot promise a mail to "you" (students are helped by their teacher) and it must not
+           hint at which kind of account the address belongs to. -->
       <p style="margin-bottom:8px;font-size:14px;">
-        Skriv din email-adresse. Vi sender dig et link til at oprette en ny adgangskode.
+        Skriv din email-adresse, så sørger vi for, at du kan komme videre.
+        Er du elev, får din lærer besked og kan give dig en ny adgangskode.
       </p>
       <input type="email" id="reset-email" placeholder="Din email" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box;">
       <button type="button" id="resetRequestBtn" style="width:100%;padding:10px;cursor:pointer;">
-        Send nulstillingslink
+        Bed om hjælp
       </button>
       <div id="reset-message" style="margin-top:8px;font-size:13px;"></div>
     </div>
