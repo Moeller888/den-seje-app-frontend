@@ -35,21 +35,34 @@ resetRequestBtn.addEventListener("click", async () => {
 
   resetRequestBtn.disabled = true;
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + "/reset-password.html",
+  // Section 173: password help is decided server-side, because this page cannot know the
+  // caller's role before they are signed in — and must not be able to find out.
+  //
+  //   student             -> the teacher they are linked to is notified
+  //   teacher/super_admin -> ordinary Supabase recovery mail, unchanged
+  //   unknown address     -> nothing happens
+  //
+  // request-password-help returns the same body for all three, so this page shows one message
+  // and never learns which case it was. Do NOT reintroduce a role-dependent branch here.
+  const { data, error } = await supabase.functions.invoke("request-password-help", {
+    body: { email },
   });
 
   resetRequestBtn.disabled = false;
 
-  if (error) {
+  // A transport failure is the only thing worth surfacing: it says nothing about the account,
+  // only that the request did not reach us. Everything else is deliberately indistinguishable.
+  if (error && !data) {
     resetMessage.style.color = "red";
-    resetMessage.textContent = "Fejl: " + error.message;
+    resetMessage.textContent = "Kunne ikke sende anmodningen. Prøv igen.";
     return;
   }
 
   resetMessage.style.color = "green";
   resetMessage.textContent =
-    "Link sendt! Tjek din email og klik på linket for at oprette en ny adgangskode.";
+    (data && typeof data.message === "string" && data.message.length > 0)
+      ? data.message
+      : "Hvis kontoen findes, har din lærer fået besked.";
   resetEmailInput.value = "";
 });
 
