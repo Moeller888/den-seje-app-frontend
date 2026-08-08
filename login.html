@@ -28,7 +28,9 @@
     <h2>Log ind</h2>
     <p class="login-sub">Fortsæt, hvor du slap.</p>
 
-    <form id="login-form" novalidate>
+    <!-- No `novalidate`: the original form relied on the browser's native validation for a
+         malformed email, and this change is a restyle, not a change to how the form behaves. -->
+    <form id="login-form">
       <div class="field">
         <label for="email">Email</label>
         <input type="email" id="email" placeholder="din@email.dk" autocomplete="email">
