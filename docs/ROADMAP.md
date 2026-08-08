@@ -332,6 +332,20 @@ _Last reviewed: 2026-07-01._
   1,049 target, and the 6-component fabric underlayer. **This supersedes only D-097 §7's "needs ~10 px
   of new plate artwork"; the rest of D-097 stands.** No artwork, asset, mask or runtime change;
   `AVATAR_R2` `false`. Unit 369/369 (CI 315). See `docs/project-state.md` (D-098).
+  **▶ Pilot Wave 1 participant #2 ONBOARDED — Wave 1 is 2 of target 3 (2026-08-08, D-099).** The §8
+  persistent-browser gate was executed manually, owner-witnessed, in a normal persistent Chrome profile
+  on desktop: `renderPath=r2` with the complete six-layer stack on avatar/hub/quiz, no mixed stack, no
+  broken layers, the opt-in **survived a full browser close-and-reopen**, and opt-out was demonstrated
+  and then restored. **No new account was created** — the documented `tests/global-setup.ts` §97
+  mechanism already provisions an eligible internal test student, so a third would have been a redundant
+  parallel path. **Two early attempts ran against the wrong account and were caught by measurement, not
+  by eye:** an R2 render on a null identity is pixel-identical to a correct one, because the base
+  resolver falls back to `neutral`/`medium` — identity is now verified before a render counts as gate
+  evidence. Separate pre-existing observation, not R2-specific and not fixed here: `avatar.html` renders
+  a default avatar on a dead session because `loadAll()` ignores the profile query error. **§9 exposure
+  (7 days, ≥3 sessions) is not met for either participant**, so no §13 classification is available yet.
+  Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2` stays `false`**; Wave 2 stays
+  `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-099).
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
