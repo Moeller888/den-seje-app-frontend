@@ -1,12 +1,13 @@
 # 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
-Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-07-27, D-078) — 1 participant `ONBOARDED`.** The test-student
-passed the full persistent-browser onboarding gate (§8) in an owner-witnessed manual run (Chrome / desktop);
-Wave 1 is now in progress (1 of target 3, max 5). `AVATAR_R2 = false` by default (production unchanged); no
+Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-08-08, D-099) — 2 participants `ONBOARDED`.** Both passed the
+full persistent-browser onboarding gate (§8) in owner-witnessed manual runs (Chrome / desktop); Wave 1 is
+now in progress (2 of target 3, max 5). `AVATAR_R2 = false` by default (production unchanged); no
 broad activation, no global flag-flip — R2 is on only for browsers that set the per-browser opt-in.
 Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064)** for the Phase-2 decomposed stack;
 **operationalized 2026-07-26 (D-071** raster debt accepted **/ D-072** onboarding protocol + status
-correction); **Wave 1 started 2026-07-27 (D-078)**. Owner: project owner.
+correction); **Wave 1 started 2026-07-27 (D-078)**; **participant #2 onboarded 2026-08-08 (D-099)**.
+Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
 
@@ -121,12 +122,16 @@ A user meeting the identity criterion gets a clean experience; which cosmetics t
 
 ## 7. Pilot GO — authorization, status & Wave 1 scope (D-071 / D-072)
 
-**Overall pilot status: `PILOT_WAVE_1_IN_PROGRESS` — 1 participant `ONBOARDED` (2026-07-27, D-078).**
+**Overall pilot status: `PILOT_WAVE_1_IN_PROGRESS` — 2 participants `ONBOARDED` (2026-08-08, D-099).**
 - The pilot **mechanism is ready** (per-browser opt-in, whole-stack-or-C2 fallback).
 - The **raster debt is accepted** (D-071).
 - **Participant #1 (test-student) is `ONBOARDED`** — the full persistent-browser gate (§8) passed in an
   owner-witnessed manual run (Chrome / desktop): opt-in survived a real browser close-and-reopen, `renderPath`
   stayed `r2` on avatar/hub/quiz with no mixed stack, and opt-out was demonstrated (see §15 row 1).
+- **Participant #2 (second internal test account) is `ONBOARDED`** (2026-08-08, D-099) — the same §8 gate
+  passed in an owner-witnessed manual run (Chrome / desktop): opt-in survived a full browser close-and-reopen,
+  `renderPath` stayed `r2` with the complete six-layer stack on avatar/hub/quiz, no mixed stack, no broken
+  layers, and opt-out was demonstrated and the opt-in restored (see §15 row 2).
 - **Wave 1 target 3, max 5** — onboard further users one at a time via the §8 gate.
 - **`AVATAR_R2 = false`** — no broad activation.
 
@@ -161,7 +166,7 @@ browser. Wave 2 is the cosmetic wave.
 Wave 2 **may not begin** until **all** of:
 
 1. Wave 1 reaches a **§13 final classification** of `PILOT_PASS` or `PILOT_PASS_WITH_DEBT`.
-   (Today: `PILOT_WAVE_1_IN_PROGRESS`, **1 participant of target 3** — Wave 1 is not complete.)
+   (Today: `PILOT_WAVE_1_IN_PROGRESS`, **2 participants of target 3** — Wave 1 is not complete.)
 2. Wave 1's §9 exposure is met by its participants: 7 calendar days, ≥3 real sessions, ≥1 observed
    session each on quiz, hub and avatar.
 3. **No open `BLOCKING` finding and no unresolved `MAJOR` finding** from Wave 1.
@@ -338,7 +343,7 @@ to base/hair/shoe assets · a pilot user seeing fringe in normal use · a device
 |---|---|---|---|---|---|---|
 | 1 | Dedicated **test-student** account (`TEST_STUDENT`, see `.env`) · browser **Chrome** · **desktop** | `body_type=neutral`, `skin_tone=medium`, `hairstyle=default` | `equipped_slots={}` (none) | ✅ neutral-medium, no gated cosmetics | ✅ **established (2026-07-27)** — full §8 persistent-browser gate passed | **`ONBOARDED` (2026-07-27, D-078).** Manual persistent-browser onboarding completed in an **owner-witnessed step-by-step run** (D-073 kit) in a **normal persistent Chrome profile on desktop** (not incognito/guest). Proof: **browser-local opt-in activated**; **Fase A** — `renderPath=r2` with no C2 `.svg` mixing and no broken images on **avatar, hub and quiz**; **persistence gate** — the browser was **fully closed (normal, not forced)** and the **same profile reopened**, and the **browser-local opt-in persisted after the full browser restart** with `renderPath` still `r2` on all three surfaces; **opt-out demonstrated and opt-in restored** (the avatar fell back to the C2 render, the app stayed functional, then R2 was restored). **No code, backend, database, account-profile or user-record changes; only browser-local pilot opt-in state was changed.** No account identifiers were recorded. _Earlier: `LIVE_VERIFIED_IN_EPHEMERAL_TEST_BROWSER` (2026-07-26, D-072); ✅ 2026-07-01 (Phase-1, historical); re-verified 2026-07-22 via the fixture-intercepted activation-readiness audit._ |
 
-| 2 | _(anonymous pilot-id — assign at onboarding; **never** name, email or UID)_ | _(pending — must be `body_type=neutral`, `skin_tone=medium`)_ | _(pending — record what is equipped; per the corrected §2 owning cosmetics no longer disqualifies)_ | ☐ neutral-medium · ☐ browser profile is persistent (not private/incognito/guest, does not clear site-data on close) | ☐ Fase A · ☐ **persistence gate (full close + reopen)** · ☐ opt-out demonstrated | **`NOT_STARTED`** — prepared template only. **No one is onboarded by this row.** |
+| 2 | Pilot-id **`W1-P2`** — dedicated **internal test account** (`TEST_STUDENT2`, provisioned by `tests/global-setup.ts` §97) · browser **Chrome** · **desktop** | `body_type=neutral`, `skin_tone` **absent → resolves `medium`** via the documented `skinToneFor()` default, `hairstyle=default` | `equipped_slots={}` (none) | ✅ neutral-medium (manifest key `neutral-medium` resolves), no equipped cosmetics | ✅ **established (2026-08-08)** — full §8 persistent-browser gate passed | **`ONBOARDED` (2026-08-08, D-099).** Manual persistent-browser onboarding completed in an **owner-witnessed step-by-step run** (D-073 kit) in a **normal persistent Chrome profile on desktop** (not incognito/guest), origin `https://xn--lrlig-sra.dk`. Proof: **browser-local opt-in activated**; **Fase A** — `renderPath=r2` with the complete **six-layer** stack (`base, blush, face, iris, eyes, hair-r2`), `hasMandatoryBase=true`, **no** C2 `.svg` mixing and **no** broken images on **avatar, hub and quiz**; **persistence gate** — the browser was **fully closed (normal, not forced)** and the **same profile reopened**, and the **browser-local opt-in persisted after the full browser restart** with `renderPath` still `r2` and the same six-layer stack on all three surfaces; **opt-out demonstrated and opt-in restored** (the avatar fell back to the complete C2 render — base `body-neutral-medium-c2.svg` — the app stayed functional, then R2 was restored clean). Account identity was verified against the profile **before** the render was accepted as evidence, so the R2 render is attributable to this participant and not to a resolver fallback. **No code, backend, database, account-profile or user-record changes; only browser-local pilot opt-in state was changed.** No account identifiers were recorded. |
 
 **Participant 2 — capture sheet for the run (§11 data-minimal fields).** Fill during the §8 gate; leave
 anything unobserved blank rather than assumed. **Never record** full name · email · UID · passwords ·
@@ -346,29 +351,29 @@ tokens · `localStorage` contents · any unnecessary personal data.
 
 | field | value |
 |---|---|
-| anonymous pilot-id | |
-| onboarding date | |
-| browser / version | |
-| device type · desktop or mobile | |
-| eligibility verified (§2) | |
-| persistent onboarding verified (§8) | |
-| **browser-restart verified** (the binding one) | |
-| R2 on avatar · hub · quiz | |
-| stack integrity — `hasMandatoryBase` true, `mixedC2Svg` empty, `brokenImages` empty | |
-| expressions observed | |
-| blink observed | |
-| breathing observed | |
-| fallback observed (if it occurred) | |
-| cosmetics equipped, and did each render as expected | |
-| visual issues | |
-| functional issues | |
-| user's short assessment | |
-| observer's assessment | |
-| severity (`INFO` · `MINOR` · `MAJOR` · `BLOCKING` only) | |
-| opt-out verified | |
-| session count (§9: ≥3, with ≥1 each on quiz/hub/avatar) | |
-| final status | |
-| follow-up needed | |
+| anonymous pilot-id | `W1-P2` |
+| onboarding date | 2026-08-08 |
+| browser / version | Chrome (version not recorded) |
+| device type · desktop or mobile | desktop |
+| eligibility verified (§2) | ✅ `body_type=neutral`; `skin_tone` absent → resolves `medium`; `equipped_slots={}`; manifest key `neutral-medium` resolves |
+| persistent onboarding verified (§8) | ✅ full gate executed manually, owner-witnessed, normal persistent Chrome profile |
+| **browser-restart verified** (the binding one) | ✅ browser fully closed (normal, not forced), same profile reopened, opt-in still present |
+| R2 on avatar · hub · quiz | ✅ · ✅ · ✅ — before **and** after the restart |
+| stack integrity — `hasMandatoryBase` true, `mixedC2Svg` empty, `brokenImages` empty | ✅ on all three surfaces, both before and after the restart; six layers `base, blush, face, iris, eyes, hair-r2` |
+| expressions observed | n/a — the R2 face is a fixed neutral raster layer by design (§3); the expression overlay is off on R2 |
+| blink observed | ✅ confirmed by the owner's §7 visual check |
+| breathing observed | ✅ confirmed by the owner's §7 visual check |
+| fallback observed (if it occurred) | ✅ deliberately, as the §5 opt-out demo: complete C2 render (base `body-neutral-medium-c2.svg`), no broken images, app functional; R2 restored clean afterwards |
+| cosmetics equipped, and did each render as expected | none equipped |
+| visual issues | none — identity, head, hair, eyes, arms and shoes read correctly at 100 % at real render size; no visible raster fringe |
+| functional issues | none for this participant. **Separate pre-existing observation (not R2-specific, logged for its own track):** with an expired/revoked session, `avatar.html` keeps rendering a default avatar because `loadAll()` does not check the profile query error, so the identity silently resolves to the `neutral-medium` defaults. Same behaviour on the C2 path. Encountered during setup, before this participant was signed in. |
+| user's short assessment | n/a — internal test account, no end user |
+| observer's assessment | clean run; every gate criterion measured rather than eyeballed; no anomaly attributable to R2 |
+| severity (`INFO` · `MINOR` · `MAJOR` · `BLOCKING` only) | `INFO` |
+| opt-out verified | ✅ demonstrated, and the opt-in restored afterwards |
+| session count (§9: ≥3, with ≥1 each on quiz/hub/avatar) | 1 (onboarding session) — §9 exposure **not yet met** |
+| final status | **`ONBOARDED`** |
+| follow-up needed | accumulate §9 exposure (7 calendar days, ≥3 real sessions); onboard participant #3 to reach the Wave 1 target of 3 |
 
 > **Reading the stack check with cosmetics equipped.** The onboarding kit predates the cosmetic wiring
 > (D-079/D-080/D-081/D-090). If the participant wears a hat, glasses or a mask, `.svg` sources **will**
@@ -379,10 +384,12 @@ tokens · `localStorage` contents · any unnecessary personal data.
 _The opt-in remains per-browser `localStorage` (no server-side state). A user reaches `ONBOARDED` only via
 the §8 persistent-browser gate. Add a row per user using the §11 data-minimal fields; keep Wave 1 to §7/§9._
 
-**Next concrete step:** Wave 1 is in progress with participant #1 (`ONBOARDED`, D-078). Onboard up to the
-target of 3 (max 5) further users **one at a time** via the §8 persistent-browser gate (D-073 kit), each
-recorded here with the §11 data-minimal fields; observe against the §10 success criteria and §9/§12 exposure
-& duration, and pause on any §12 abort trigger. `AVATAR_R2` stays `false` (per-browser opt-in only).
+**Next concrete step:** Wave 1 is in progress with participants #1 (`ONBOARDED`, D-078) and #2
+(`ONBOARDED`, D-099) — **2 of target 3**. Onboard **one** further user via the §8 persistent-browser gate
+(D-073 kit), recorded here with the §11 data-minimal fields; observe against the §10 success criteria and
+§9/§12 exposure & duration, and pause on any §12 abort trigger. Note that §9 exposure (7 calendar days,
+≥3 real sessions each) is **not yet met for either participant**, so Wave 1 cannot be classified under §13
+on participant count alone. `AVATAR_R2` stays `false` (per-browser opt-in only).
 
 **Wave 2 is DEFINED but NOT STARTED (§7b, D-093).** It is the cosmetic wave — Wave 1's cohort owns no
 cosmetics, so the Ridderdragt and the re-seated slots are still unobserved by a real user. Wave 2 opens
