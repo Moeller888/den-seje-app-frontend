@@ -5,6 +5,11 @@
 // deployed frontend lags a PR branch (PR builds do not deploy), so a UI-level test would be
 // measuring the wrong code.
 //
+// THE FUNCTION IS ASYNCHRONOUS. Since the timing fix it answers BEFORE doing any account work
+// (EdgeRuntime.waitUntil), so an audit row does not exist at the moment HTTP 200 arrives.
+// Every assertion about a row therefore polls within a bounded window instead of assuming
+// same-millisecond visibility.
+//
 // Setup and assertions use the service role, exactly like teacher-password-reset.spec.ts.
 
 import { test, expect } from '@playwright/test';
@@ -27,6 +32,9 @@ const SUPABASE_ANON_KEY =
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const FN_URL = `${SUPABASE_URL}/functions/v1/request-password-help`;
 
+// How long a backgrounded request may take to leave its trace before we call it a failure.
+const ROW_TIMEOUT_MS = 20_000;
+
 let admin: ReturnType<typeof createClient>;
 let studentId: string;
 let originalTeacherId: string | null = null;
@@ -34,9 +42,11 @@ let originalTeacherId: string | null = null;
 interface HelpResponse {
   status: number;
   bodyText: string;
+  ms: number;
 }
 
 async function callHelp(email: unknown): Promise<HelpResponse> {
+  const started = Date.now();
   const res = await fetch(FN_URL, {
     method: 'POST',
     headers: {
@@ -46,7 +56,8 @@ async function callHelp(email: unknown): Promise<HelpResponse> {
     },
     body: JSON.stringify({ email }),
   });
-  return { status: res.status, bodyText: await res.text() };
+  const bodyText = await res.text();
+  return { status: res.status, bodyText, ms: Date.now() - started };
 }
 
 async function rowsForStudent(id: string) {
@@ -58,8 +69,41 @@ async function rowsForStudent(id: string) {
   return Array.isArray(data) ? data : [];
 }
 
+// Polls until `predicate` holds or the window expires. Returns the rows either way so the
+// caller can assert on what it actually saw.
+async function waitForRows(
+  id: string,
+  predicate: (rows: any[]) => boolean,
+  timeoutMs = ROW_TIMEOUT_MS,
+): Promise<any[]> {
+  const deadline = Date.now() + timeoutMs;
+  let rows = await rowsForStudent(id);
+  while (!predicate(rows) && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 500));
+    rows = await rowsForStudent(id);
+  }
+  return rows;
+}
+
 async function clearRowsForStudent(id: string) {
   await admin.from('password_help_requests').delete().eq('student_id', id);
+}
+
+// Puts the student into the notification cooldown WITHOUT sending a mail, so latency can be
+// measured against a real account that will never reach Resend.
+async function seedCooldown(id: string, teacherId: string | null) {
+  await admin.from('password_help_requests').insert({
+    student_id: id,
+    teacher_id: teacherId,
+    status: 'notified',
+    notification_sent_at: new Date().toISOString(),
+  });
+}
+
+function median(values: number[]): number {
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
 }
 
 test.describe.configure({ mode: 'serial' });
@@ -91,16 +135,18 @@ test.afterAll(async () => {
 
 test('1. valid student request is accepted and recorded', async () => {
   await clearRowsForStudent(studentId);
+  // Seed the cooldown first: this test proves the request is processed and audited, and it can
+  // do that from a suppressed outcome without putting a real mail in a teacher's inbox.
+  await seedCooldown(studentId, originalTeacherId);
 
   const res = await callHelp(STUDENT_EMAIL);
   expect(res.status).toBe(200);
 
-  const rows = await rowsForStudent(studentId);
-  expect(rows.length, 'a request row must be written').toBe(1);
+  const rows = await waitForRows(studentId, (r) => r.length >= 2);
+  expect(rows.length, 'the request must leave an audit row').toBeGreaterThanOrEqual(2);
   expect(rows[0].student_id).toBe(studentId);
-  // 'notified' when Resend is configured, 'mail_failed' when it is not. Both are controlled
-  // outcomes; what must never happen is a missing row or an unhandled error.
-  expect(['notified', 'mail_failed']).toContain(rows[0].status);
+  expect(rows[0].status).toBe('suppressed_cooldown');
+  expect(rows[0].notification_sent_at).toBeNull();
 });
 
 test('2 + 9. unknown address is indistinguishable from a real one', async () => {
@@ -125,21 +171,19 @@ test('3 + 20. a staff address neither leaks nor creates a student request row', 
   const teacherEmail = teacherUser?.user?.email;
   expect(typeof teacherEmail, 'teacher must have an address').toBe('string');
 
-  const before = await rowsForStudent(studentId);
   const res = await callHelp(teacherEmail as string);
-
   expect(res.status).toBe(200);
-  // Same outward body as the student case — no role disclosure.
+
   const studentRes = await callHelp(STUDENT_EMAIL);
   expect(res.bodyText).toBe(studentRes.bodyText);
 
-  // Staff recovery must not write into the student help table.
-  const rowsForTeacherAsStudent = await rowsForStudent(teacherId);
-  expect(rowsForTeacherAsStudent.length, 'no help row for a staff account').toBe(0);
-  expect((await rowsForStudent(studentId)).length).toBeGreaterThanOrEqual(before.length);
+  // Staff recovery must not write into the student help table. Give the background task time
+  // to have written a row if it were going to, then assert that it did not.
+  await new Promise((r) => setTimeout(r, 3000));
+  expect((await rowsForStudent(teacherId)).length, 'no help row for a staff account').toBe(0);
 });
 
-test('4. student without a teacher is recorded as no_teacher and still answers generically', async () => {
+test('4. student without a teacher is recorded as no_teacher', async () => {
   await clearRowsForStudent(studentId);
   await admin.from('profiles').update({ teacher_id: null }).eq('id', studentId);
 
@@ -147,7 +191,7 @@ test('4. student without a teacher is recorded as no_teacher and still answers g
     const res = await callHelp(STUDENT_EMAIL);
     expect(res.status).toBe(200);
 
-    const rows = await rowsForStudent(studentId);
+    const rows = await waitForRows(studentId, (r) => r.length >= 1);
     expect(rows.length).toBe(1);
     expect(rows[0].status).toBe('no_teacher');
     expect(rows[0].teacher_id).toBeNull();
@@ -157,24 +201,18 @@ test('4. student without a teacher is recorded as no_teacher and still answers g
   }
 });
 
-test('6. a second request inside the cooldown sends no new mail', async () => {
+test('6. a request inside the cooldown is suppressed and sends no mail', async () => {
   await clearRowsForStudent(studentId);
+  await seedCooldown(studentId, originalTeacherId);
 
   await callHelp(STUDENT_EMAIL);
-  const first = await rowsForStudent(studentId);
-  expect(first.length).toBe(1);
 
-  await callHelp(STUDENT_EMAIL);
-  const rows = await rowsForStudent(studentId);
-
-  expect(rows.length, 'the second attempt is recorded too').toBe(2);
-
-  // Only meaningful once the first attempt actually notified; when Resend is unconfigured the
-  // first row is 'mail_failed' and the cooldown does not engage, which is correct behaviour.
-  if (first[0].status === 'notified') {
-    expect(rows[0].status).toBe('suppressed_cooldown');
-    expect(rows[0].notification_sent_at).toBeNull();
-  }
+  const rows = await waitForRows(studentId, (r) => r.length >= 2);
+  expect(rows.length).toBe(2);
+  expect(rows[0].status).toBe('suppressed_cooldown');
+  expect(rows[0].notification_sent_at).toBeNull();
+  // Exactly one 'notified' row — the seeded one. No second mail was sent.
+  expect(rows.filter((r) => r.status === 'notified').length).toBe(1);
 });
 
 test('8 + 10. the response carries no address, no id, no secret', async () => {
@@ -184,6 +222,42 @@ test('8 + 10. the response carries no address, no id, no secret', async () => {
   for (const forbidden of ['@', 'teacher_id', 'student_id', 'token', 'password', 'service_role', 'resend', 'eyj']) {
     expect(body.includes(forbidden), `response must not contain "${forbidden}"`).toBe(false);
   }
+});
+
+test('ANTI-ENUMERATION: latency must not distinguish a real account from an unknown one', async () => {
+  test.setTimeout(120_000);
+
+  // The student stays inside the cooldown for the whole measurement, so every call for the real
+  // address is suppressed server-side and no mail is ever sent.
+  await clearRowsForStudent(studentId);
+  await seedCooldown(studentId, originalTeacherId);
+
+  const N = 7;
+  const knownMs: number[] = [];
+  const unknownMs: number[] = [];
+
+  // Interleaved, so a slow patch of network hits both series rather than biasing one.
+  for (let i = 0; i < N; i++) {
+    knownMs.push((await callHelp(STUDENT_EMAIL)).ms);
+    unknownMs.push((await callHelp(`no-such-user-${Date.now()}-${i}@example.invalid`)).ms);
+  }
+
+  const kMed = median(knownMs);
+  const uMed = median(unknownMs);
+  const delta = Math.abs(kMed - uMed);
+
+  console.log(`[anti-enumeration] known median=${kMed}ms unknown median=${uMed}ms delta=${delta}ms`);
+  console.log(`[anti-enumeration] known=${knownMs.join(',')} unknown=${unknownMs.join(',')}`);
+
+  // The regression this guards against was ~1050 ms of structural difference (account lookup +
+  // rate-limit read + Resend call on the hot path). 600 ms sits well below that and well above
+  // ordinary network jitter between two calls to the same endpoint.
+  expect(delta, `median latency must not differ structurally (known=${kMed}, unknown=${uMed})`)
+    .toBeLessThan(600);
+
+  // And prove the measurement did not quietly send mail.
+  const rows = await rowsForStudent(studentId);
+  expect(rows.filter((r) => r.status === 'notified').length, 'no extra mail during measurement').toBe(1);
 });
 
 test('14 + 16. the mail link grants nothing: a foreign teacher still cannot reset', async () => {
@@ -198,12 +272,6 @@ test('14 + 16. the mail link grants nothing: a foreign teacher still cannot rese
   const foreign = all.find((t) => t.id !== originalTeacherId);
   test.skip(!foreign, 'needs a second teacher account to impersonate');
 
-  const { data: foreignUser } = await admin.auth.admin.getUserById(foreign!.id as string);
-  const foreignEmail = foreignUser?.user?.email;
-  test.skip(!foreignEmail, 'second teacher has no address');
-
-  // Without that teacher's password we cannot mint their JWT here, so assert the invariant the
-  // check rests on: the student is not owned by the foreign teacher.
   const { data: owned } = await admin
     .from('profiles')
     .select('id')
@@ -218,6 +286,8 @@ test('14 + 16. the mail link grants nothing: a foreign teacher still cannot rese
 // 5.  Teacher without an address — Supabase requires an email on every auth.users row (see
 //     migration 20260608000000), so the state is unreachable. The branch exists and the
 //     'teacher_no_email' status is accepted by the table's CHECK constraint.
+// 7.  Daily-cap boundary — reaching it means five real notifications. Deliberately not
+//     exercised against a live teacher inbox; the cooldown path covers the same code.
 // 11. Absence of secrets in logs — asserted by code review: the function logs only status codes
 //     and short reason slugs, and _shared/monitoring.ts scrubs payloads before sending.
 // 12/13. Mail body contents — no mail sink is available in CI. Covered by review of
