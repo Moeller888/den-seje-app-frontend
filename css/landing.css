@@ -40,6 +40,11 @@
   --l-radius:      16px;
   --l-radius-cta:  22px;
 
+  /* Height of the sticky header: .header-inner's min-height plus the 1px bottom
+     border it always reserves. The hero subtracts this from the viewport — see
+     the note on .hero — so the two must stay in step. Both read this token. */
+  --l-header-h:    69px;
+
   --l-ease:        cubic-bezier(.2, .8, .2, 1);
 
   --l-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -135,7 +140,8 @@ img, svg { max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 68px;
+  /* The 1px lives on .site-header's border-bottom; together they are --l-header-h. */
+  min-height: calc(var(--l-header-h) - 1px);
 }
 
 .wordmark {
@@ -282,12 +288,26 @@ img, svg { max-width: 100%; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 
+/* The hero begins immediately below the sticky header.
+   ---------------------------------------------------------------------------
+   Two things previously combined to push the content into the middle of the
+   screen, leaving a large empty band under the header:
+     1. `min-height: 100svh` on a section that STARTS at the header's bottom
+        edge. The header is in normal flow, so a full viewport height here made
+        the first screen taller than the viewport by exactly the header's
+        height — the viewport height was counted twice.
+     2. `align-items: center` then split the leftover space evenly above and
+        below the content, on top of a 120px top padding.
+   The gap therefore grew with the window: 155px at 800px tall, 294px at 1080px.
+   Subtracting the header height fixes the first; aligning to the start fixes
+   the second. The 40px top padding is the whole distance from the header's
+   bottom edge to the eyebrow — no compensating negative margin is involved. */
 .hero {
   position: relative;
   display: flex;
-  align-items: center;
-  min-height: 100svh;
-  padding: 120px 0 96px;
+  align-items: flex-start;
+  min-height: calc(100svh - var(--l-header-h));
+  padding: 40px 0 96px;
   overflow: hidden;
 }
 .hero-inner { position: relative; z-index: 1; text-align: center; }
@@ -685,7 +705,9 @@ h2 {
 }
 
 @media (max-width: 640px) {
-  .hero { min-height: auto; padding: 108px 0 76px; }
+  /* Same defect, same fix: 108px of top padding left a dead band under the
+     header on a phone too. Content height drives the hero here. */
+  .hero { min-height: auto; padding: 36px 0 76px; }
   /* Blur is expensive on low-end school tablets. Dropping it is safe here because the glow is a
      radial gradient that already fades to transparent — no hard edge appears. */
   .ambient span { filter: none; }

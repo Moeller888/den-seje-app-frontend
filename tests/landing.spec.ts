@@ -306,6 +306,62 @@ for (const [label, width] of [["desktop", 1280], ["tablet", 860], ["mobile", 390
   });
 }
 
+// ── the hero sits directly under the header ───────────────────────────────────────────────────
+// Regression guard. The hero used to be `min-height: 100svh` + `align-items: center` on a section
+// that starts BELOW the sticky header, so the viewport height was counted twice and the leftover
+// space was split above the content. That left a dead band under the header which GREW with the
+// window — 155px at 800px tall, 294px at 1080px. The measurement below is taken at several heights
+// precisely because a fixed-height-only check would not have caught it.
+for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as const) {
+  test(`the eyebrow sits 35-45px under the header at ${w}x${h}`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    await openLanding(page);
+
+    const m = await page.evaluate(() => {
+      const r = (s: string) => {
+        const el = document.querySelector(s);
+        return el ? el.getBoundingClientRect() : null;
+      };
+      const header = r(".site-header");
+      const eyebrow = r(".hero .eyebrow");
+      return header && eyebrow ? { headerBottom: header.bottom, headerH: header.height, eyebrowTop: eyebrow.top } : null;
+    });
+
+    expect(m, "header or eyebrow missing").not.toBeNull();
+    expect(m!.headerH, "the header must be visible and occupy real height").toBeGreaterThan(40);
+
+    const gap = m!.eyebrowTop - m!.headerBottom;
+    expect(gap, `gap under the header was ${Math.round(gap)}px`).toBeGreaterThanOrEqual(35);
+    expect(gap, `gap under the header was ${Math.round(gap)}px`).toBeLessThanOrEqual(45);
+  });
+}
+
+test("the hero is not pushed down by a doubled viewport height", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  const { heroTop, heroBottom, viewportH } = await page.evaluate(() => {
+    const r = document.querySelector(".hero")!.getBoundingClientRect();
+    return { heroTop: r.top, heroBottom: r.bottom, viewportH: window.innerHeight };
+  });
+  // The hero fills exactly the space left under the header — not a whole extra viewport.
+  expect(heroBottom - viewportH, "the first screen must not overflow the viewport").toBeLessThanOrEqual(2);
+  expect(heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
+});
+
+test("the header is above the hero and stays put — no invisible spacer", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  const s = await page.evaluate(() => {
+    const h = document.querySelector(".site-header")!.getBoundingClientRect();
+    const cs = getComputedStyle(document.querySelector(".site-header")!);
+    return { top: h.top, height: h.height, position: cs.position, display: cs.display };
+  });
+  expect(s.top).toBe(0);
+  expect(s.position).toBe("sticky");
+  expect(s.display).not.toBe("none");
+  expect(s.height).toBeGreaterThan(40);
+});
+
 test("the desktop nav is replaced by the toggle below the 900px breakpoint", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await openLanding(page);
