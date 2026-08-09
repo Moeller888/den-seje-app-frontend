@@ -5,7 +5,7 @@
 // onto the R2 face by a per-item wrapper transform; the mandatory internal "face" layer is untouched
 // (exactly one of each); blink & expression leave the mask in place; headwear composes above; opt-out →
 // C2; the shop stays uniform C2 (D-077). Plus a compact golden MATRIX of all three masks × avatar/hub/
-// quiz sizes. AVATAR_R2 stays false; R2 is per-browser opt-in.
+// quiz sizes. AVATAR_R2 is true (D-101), so R2 is the default; the C2 cases opt out with "0".
 import { test, expect, Route } from "@playwright/test";
 import * as http from "http";
 import * as fs from "fs";
@@ -83,7 +83,7 @@ async function open(browser: any, url: string, equipped: Record<string, string>,
     (window as any).__AVATAR_TEST__ = true;
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
-    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.removeItem("avatar_r2");
+    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.setItem("avatar_r2", "0");
   }, [`sb-${REF}-auth-token`, SESSION, optIn]);
   const page = await ctx.newPage();
   await page.goto(`${baseUrl}${url}`, { waitUntil: "networkidle" });

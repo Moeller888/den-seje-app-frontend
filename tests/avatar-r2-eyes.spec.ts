@@ -89,7 +89,7 @@ async function open(browser: any, url: string, equipped: Record<string, string>,
     (window as any).__AVATAR_TEST__ = true; // gates the blink/expression forceFrame handles
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
-    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.removeItem("avatar_r2");
+    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.setItem("avatar_r2", "0");
   }, [`sb-${REF}-auth-token`, SESSION, optIn]);
   const page = await ctx.newPage();
   await page.goto(`${baseUrl}${url}`, { waitUntil: "networkidle" });
