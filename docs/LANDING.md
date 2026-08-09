@@ -1,11 +1,33 @@
 # Landing page — Lærlig (offentlig forside)
 
-Status: **implementeret, ikke deployet.** Denne tranche tilføjer en offentlig landingsside og
-flytter rodruten `/` over på den. Den ændrer ikke appen, auth, Supabase, avatarsystemet eller
-hostingopsætningen i øvrigt, og der er ikke tilknyttet noget domæne.
+Status: **LIVE i produktion** (2026-08-08). Landingssiden er implementeret, merget og deployet.
+Rodruten `/` serverer den. Appen, auth, Supabase og avatarsystemet er uændrede.
+
+**Produktionsadresse:** `https://den-seje-app-frontend.christ-moeller.workers.dev`
+Der er fortsat **ikke** tilknyttet noget custom domæne — `lærlig.dk` peger ikke på noget.
 
 Kanonisk for routing/hosting i øvrigt: [`HOSTING.md`](./HOSTING.md). Sidetabellen bor i
 [`ARCHITECTURE.md`](./ARCHITECTURE.md) §3.
+
+----------------------------------------
+LEVERANCEHISTORIK
+----------------------------------------
+
+Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev leveret i.
+
+| # | PR | Merge | Hvad |
+|---|---|---|---|
+| 1 | [#176](https://github.com/Moeller888/den-seje-app-frontend/pull/176) | `be78b0d` | Landingssiden + rodrewrite `/` → `/landing.html` |
+| 2 | [#178](https://github.com/Moeller888/den-seje-app-frontend/pull/178) | `afac962` | Fjernet den tomme topzone mellem header og hero |
+| 3 | [#177](https://github.com/Moeller888/den-seje-app-frontend/pull/177) | `afa4d3d` | `login.html` visuelt tilpasset landingssiden |
+| 4 | [#179](https://github.com/Moeller888/den-seje-app-frontend/pull/179) | `fc45af5` | Heroen strammet ind til indholdshøjde |
+
+*(#177 blev merget efter #178, selv om den blev åbnet før — dens CI-kørsel blev fortrængt af
+concurrency-låsen og skulle køres igen på den rigtige commit.)*
+
+Verificeret på produktionen efter hver merge: `/` og `/landing.html` = 200 og samme dokument,
+`/index.html` = 200 og fortsat quizzen, `/login.html` = 200, `/landing` = 404,
+`AVATAR_R2 = false`.
 
 ----------------------------------------
 BESLUTNINGEN (MODEL A)
@@ -76,13 +98,15 @@ FILER
 
 **Nye**
 
-| Fil | |
-|---|---|
-| `landing.html` | siden. Semantisk HTML, in-page-ankre, ingen eksterne ressourcer |
-| `css/landing.css` | landingsspecifik CSS. Forbruger `theme.css`-tokens; ændrer ikke `theme.css` |
-| `js/landing.js` | kun to ting: headerens scrolltilstand og en tilgængelig mobilmenu |
-| `tests/landing.spec.ts` | 26 tests: routing, CTA, tilgængelighed, mobilmenu, responsivitet, reduced motion |
-| `playwright.landing.config.ts` | isoleret config — se begrundelsen nedenfor |
+| Fil | | Tranche |
+|---|---|---|
+| `landing.html` | siden. Semantisk HTML, in-page-ankre, ingen eksterne ressourcer | #176 |
+| `css/landing.css` | landingsspecifik CSS. Forbruger `theme.css`-tokens; ændrer ikke `theme.css` | #176 |
+| `js/landing.js` | kun to ting: headerens scrolltilstand og en tilgængelig mobilmenu | #176 |
+| `tests/landing.spec.ts` | 33 tests: routing, CTA, tilgængelighed, mobilmenu, responsivitet, reduced motion, herogeometri | #176, #178, #179 |
+| `playwright.landing.config.ts` | isoleret config for begge offentlige overflader — se begrundelsen nedenfor | #176, #177 |
+| `css/login.css` | loginspecifik CSS på samme tokens som landingssiden | #177 |
+| `tests/login-page.spec.ts` | 15 tests: markup-kontrakten `js/login.js` afhænger af, glemt-panelets toggle, tilgængelighed, responsivitet | #177 |
 
 **Ændrede**
 
@@ -92,6 +116,7 @@ FILER
 | `tests/unit/cloudflare-static-build.test.mjs` | 13 → 14 sider; nye landingsassertions; rewrite-kontrakten; "quizzen flyttede ikke" |
 | `tools/cloudflare-serve-check.mjs` | `/landing.html` i `MUST_SERVE`, `/landing` i 404-listen, rodrewrite + "quizzen flyttede ikke" over HTTP |
 | `docs/HOSTING.md`, `docs/ARCHITECTURE.md` | routingafsnit og sidetabel |
+| `login.html` (#177) | restylet på landingssidens flade. **Markup-kontrakten er urørt:** alle ID'er, `#forgotBtn`-teksten og den inline `display:none` på `#forgot-panel` |
 
 ### Hvorfor `playwright.landing.config.ts` findes
 
@@ -189,6 +214,36 @@ DESIGN
 - **44×44 minimum hitområde.** Korte navnelabels ("Priser") er 37px brede af sig selv, så
   breddegulvet er lige så bærende som højdegulvet. En test hævder begge.
 
+### Heroens geometri (efter #178 og #179)
+
+**Heroen er indholdshøj. Der er intet viewportbaseret `min-height`.** Den er 642–644 px høj
+uanset vinduesstørrelse, og næste sektion (`#produktet`) er **bevidst synlig ved folden**, så
+siden læses som sammenhængende frem for som et titelkort, læseren skal forbi.
+
+**Afstanden fra headerens underkant til heroens eyebrow er 40 px** — målt konstant på
+produktionen ved 1280×800, 1440×900, 1536×864 og 1920×1080. Fire assertions i
+`tests/landing.spec.ts` holder den mellem 35 og 45 px, bevidst målt ved **flere** viewporthøjder.
+
+Sådan så det ud før. `.hero` havde `min-height: 100svh` **og** `align-items: center` **og**
+120 px top-padding, på en sektion der starter ved headerens underkant. Viewporthøjden blev
+dermed talt to gange, og centreringen delte det overskydende rum ligeligt over og under
+indholdet. Gabet voksede med vinduet — 155 px ved 800 px høj, 294 px ved 1080 px:
+
+| Viewport | Gab før | Gab nu |
+|---|---|---|
+| 1280×800 | 155 px | 40 px |
+| 1440×900 | 204 px | 40 px |
+| 1536×864 | 186 px | 40 px |
+| 1920×1080 | 294 px | 40 px |
+
+`--l-header-h: 69px` bruges af **både** `.header-inner` (som `calc(var(--l-header-h) - 1px)`,
+hvor 1px er dens border) og af heroen, så de to ikke kan glide fra hinanden.
+
+**Scroll-indikatoren er fjernet** (#179). Med en indholdshøj hero landede den to pixel under de
+sekundære links, og den var samtidig blevet overflødig: den pegede ned på en sektion, læseren
+allerede kan se. Markup og CSS er begge væk, og en test hævder at `.scroll-hint` ikke
+genopstår.
+
 ----------------------------------------
 PRE-LAUNCH
 ----------------------------------------
@@ -221,11 +276,17 @@ rører hver eneste side og hører til sit eget spor.
 1. **Der er ingen kontaktmulighed på siden.** Der findes ingen dokumenteret kontaktadresse i
    repoet, og der er ikke opfundet en. En offentlig side til skoler bør have én — den skal komme
    fra ejeren.
-2. **Hosting er ikke afsluttet.** Vercel svarer 402; Cloudflare-Workeren er deploybar, men ikke
-   aktiveret for brugere; `lærlig.dk` er ikke tilknyttet. Landingssiden kan ikke publiceres, før
-   værtsskiftet er gennemført — og Supabases liste over tilladte redirect-URL'er skal opdateres,
-   **før** brugere sendes til det nye domæne (`js/login.js` bygger sin `redirectTo` ud fra
-   `window.location.origin`).
+2. **Custom domæne mangler.** Værtsskiftet til Cloudflare er gennemført, og siden er live på
+   `https://den-seje-app-frontend.christ-moeller.workers.dev`. Men `lærlig.dk` er **ikke**
+   tilknyttet, så brandnavnet på siden svarer ikke til adressen. Vercel-checket fejler fortsat
+   med `Account is blocked` på hver PR — en kontospærring, uafhængig af koden, som ikke blokerer
+   merge (`main` er ikke branch-protected).
+   **Skal verificeres:** `js/login.js` bygger sin `redirectTo` ud fra `window.location.origin`,
+   så password-recovery peger nu på workers.dev-adressen. Det er **ikke** bekræftet, at den
+   origin står på Supabases liste over tilladte redirect-URL'er. Er den ikke det, er
+   password-recovery i stykker i produktion lige nu. Det kan ikke testes uden at sende en rigtig
+   mail, så det kræver et opslag i Supabase-dashboardet. Samme kontrol skal gentages, **før**
+   et custom domæne tages i brug.
 3. ~~**`login.html` er ustylet rå HTML.**~~ **LØST 2026-08-08.** `login.html` deler nu
    landingssidens flade: samme tokens, ambient glow, glas-kort, wordmark og knapsprog
    (`css/login.css`). Markup-kontrakten er urørt — alle ID'er, `#forgotBtn`-teksten og den
