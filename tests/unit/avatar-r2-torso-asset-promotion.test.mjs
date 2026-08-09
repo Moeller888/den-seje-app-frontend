@@ -227,9 +227,12 @@ test("the promotion tool is not what wires the slot", () => {
   assert.throws(() => assertWritable(LAYERS), /refusing to write/);
 });
 
-test("AVATAR_R2 is still false and the D-083 fallback is still present", () => {
+// D-101 turned the render switch on. What this test guards is unchanged in substance: promoting a
+// torso asset must not be what changes the switch, and the D-083 whole-avatar fallback — the thing
+// that stops an unrenderable cosmetic from silently vanishing — must still be wired.
+test("the render switch is the D-101 default and the D-083 fallback is still present", () => {
   const js = readFileSync(LAYERS, "utf8");
-  assert.match(js, /export const AVATAR_R2 = false;/);
+  assert.match(js, /export const AVATAR_R2 = true;/);
   assert.match(js, /r2RequiresC2Fallback/);
   assert.match(js, /r2UnrenderableCosmeticSlots/);
 });

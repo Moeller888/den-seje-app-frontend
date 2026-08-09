@@ -68,8 +68,8 @@ function faceLayersOf(root) {
 
 // ── Central decision: shopPreviewModeFor ─────────────────────────────────────
 
-test("safety: AVATAR_R2 stays false", () => {
-  assert.equal(AVATAR_R2, false);
+test("activation contract (D-101): AVATAR_R2 is the default-on switch", () => {
+  assert.equal(AVATAR_R2, true);
 });
 
 test("flag off: every slot previews as C2 (production unchanged)", () => {
@@ -145,16 +145,36 @@ test("R2 preview carries exactly ONE face layer (no double-draw source)", async 
   }));
 });
 
-test("flag off: C2 preview output is unchanged by the new option (default + explicit)", async () => {
-  for (const opts of [{}, { forceC2: false }, { forceC2: true }]) {
-    await withDom(async (root) => {
-      const cosmetics = c2CosmeticLayers(HAT_COSMETIC, resolve);
-      await mountC2Avatar(root, null, { layerClass: "preview-layer", cosmetics, ...opts });
-      const srcs = srcsOf(root);
-      assert.ok(!srcs.some((s) => s.includes("avatar-r2")));
-      assert.ok(srcs.includes(HAT_COSMETIC.headwear));
-    });
+// D-101: R2 is the default, so an opted-out browser is what exercises the C2 preview output.
+// `forceC2: true` is separately covered below and holds regardless of the switch.
+test("opted out (\"0\"): C2 preview output is unchanged by the new option (default + explicit)", async () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
+    for (const opts of [{}, { forceC2: false }, { forceC2: true }]) {
+      await withDom(async (root) => {
+        const cosmetics = c2CosmeticLayers(HAT_COSMETIC, resolve);
+        await mountC2Avatar(root, null, { layerClass: "preview-layer", cosmetics, ...opts });
+        const srcs = srcsOf(root);
+        assert.ok(!srcs.some((s) => s.includes("avatar-r2")));
+        assert.ok(srcs.includes(HAT_COSMETIC.headwear));
+      });
+    }
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
   }
+});
+
+// The shop's D-077 uniformity guarantee must not depend on the render switch: with R2 now the
+// DEFAULT, `forceC2: true` alone still has to produce an all-C2 preview.
+test("default (R2 on): forceC2 still yields an all-C2 preview (D-077 uniformity)", async () => {
+  await withDom(async (root) => {
+    const cosmetics = c2CosmeticLayers(HAT_COSMETIC, resolve);
+    await mountC2Avatar(root, null, { layerClass: "preview-layer", cosmetics, forceC2: true });
+    const srcs = srcsOf(root);
+    assert.ok(!srcs.some((s) => s.includes("avatar-r2")));
+    assert.ok(srcs.includes(HAT_COSMETIC.headwear));
+  });
 });
 
 test("regression: default mount (no forceC2) still renders R2 under opt-in (app/hub/avatar unchanged)", async () => {

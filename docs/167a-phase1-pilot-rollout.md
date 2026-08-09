@@ -1,14 +1,22 @@
 # 167A — Avatar R2 Pilot Rollout (AVATAR_R2 opt-in)
 
-Status: **`PILOT_WAVE_1_IN_PROGRESS` (2026-08-08, D-100) — 2 participants `ONBOARDED`; the Wave-1 target is
-now 2 and is MET.** Both passed the full persistent-browser onboarding gate (§8) in owner-witnessed manual
-runs (Chrome / desktop). **Wave 1 stays IN PROGRESS on §9 exposure, not on headcount** — no third participant
-will be onboarded (D-100). `AVATAR_R2 = false` by default (production unchanged); no
-broad activation, no global flag-flip — R2 is on only for browsers that set the per-browser opt-in.
+Status: **`PILOT_DISCONTINUED_BY_OWNER` (2026-08-08, D-101).** The pilot was **ended by owner decision
+before its §9 exposure was met.** It was **not completed and it did not pass** — the remaining §9
+requirements were **WAIVED**, and no §13 classification (`PILOT_PASS` / `PILOT_PASS_WITH_DEBT` / …) was
+reached or awarded. The closing acceptance is the **owner's own manual check** of the current R2 build,
+not pilot evidence. **R2 is now the DEFAULT render (`AVATAR_R2 = true`)** — see §16 for exactly what was
+and was not established, and for the rollback.
+
+Everything recorded below §16 is preserved **as historical evidence of what actually happened**: two
+participants were genuinely onboarded through the full §8 persistent-browser gate (D-078, D-099), and
+those results stand unchanged. **No session data was reconstructed, back-dated or invented to close the
+pilot, and no earlier gate or review result has been rewritten to PASS.**
+
 Originally written 2026-07-01 for Phase-1; **refreshed 2026-07-23 (D-064)** for the Phase-2 decomposed stack;
 **operationalized 2026-07-26 (D-071** raster debt accepted **/ D-072** onboarding protocol + status
 correction); **Wave 1 started 2026-07-27 (D-078)**; **participant #2 onboarded 2026-08-08 (D-099)**;
-**target reduced 3 → 2 by owner decision 2026-08-08 (D-100)**. Owner: project owner.
+**target reduced 3 → 2 by owner decision 2026-08-08 (D-100)**; **pilot discontinued and R2 activated by
+owner decision 2026-08-08 (D-101)**. Owner: project owner.
 Related: [167a-step3-render-wiring-plan.md](./167a-step3-render-wiring-plan.md),
 [157r-feature-flags.md](./157r-feature-flags.md), [project-state.md](./project-state.md) (D-057…D-063).
 
@@ -420,3 +428,104 @@ exposure met and no open BLOCKING/MAJOR finding, and only on an explicit owner G
 | Wave 2 GO | ☐ GO · ☐ NO-GO — _(owner, date)_ |
 | Participant count agreed | _(pending — proposed: target 3, max 5)_ |
 | Ridderdragt-owning participant | _(pending)_ |
+
+> **Superseded by §16.** Wave 2 was never started and is now moot as a *pilot* stage: the pilot track
+> was discontinued (D-101). The rows above are left as they were — **not** filled in retrospectively.
+
+---
+
+## 16. Pilot DISCONTINUED by owner decision — R2 activated (D-101, 2026-08-08)
+
+**Status: `PILOT_DISCONTINUED_BY_OWNER`. This is not a pass.**
+
+### 16.1 The decision, stated plainly
+
+The owner ended the pilot before it completed, for reasons of time, and accepted the current R2 build
+on the basis of their **own manual check** of its function and visual result. R2 was then made the
+default render.
+
+Three things follow, and they must not be blurred:
+
+1. **The pilot did not pass. It was abandoned.** No §13 classification was reached. `PILOT_PASS` and
+   `PILOT_PASS_WITH_DEBT` were **not** awarded and must not be inferred from the activation.
+2. **The remaining §9 exposure was WAIVED, not satisfied.** §9's requirements — 7 calendar days,
+   ≥3 real app sessions per participant, ≥1 observed session each on quiz, hub and the avatar page —
+   were **never met by either participant**. §9 itself is unchanged in this document; it was overridden
+   by decision, not edited into compliance.
+3. **The acceptance basis is the owner's manual check, not accumulated pilot evidence.** That is a
+   legitimate basis for an owner-authorised activation. It is a *different and weaker* evidence base
+   than the one this document was designed to produce, and the difference is recorded here on purpose.
+
+### 16.2 What the pilot did establish (unchanged, historical)
+
+These results are real, were measured at the time, and are **not** rewritten:
+
+- **Participant #1** — `ONBOARDED` 2026-07-27 (D-078), full §8 persistent-browser gate passed.
+- **Participant #2** — `ONBOARDED` 2026-08-08 (D-099), full §8 gate passed: `renderPath=r2` with the
+  complete six-layer stack on avatar, hub and quiz; no mixed stack; no broken layers; the opt-in
+  survived a full browser close-and-reopen; opt-out demonstrated and restored.
+
+That is **two onboarding runs**, each a point-in-time check. It is **not** longitudinal use.
+
+### 16.3 What the pilot never established — the honest gap
+
+- **No sustained real use.** Zero participants reached §9's session or duration thresholds.
+- **No cosmetics were ever observed by a pilot user.** Wave 1's cohort was selected to own nothing, and
+  Wave 2 — the cosmetic wave (§7b) — never started. The **Ridderdragt** (D-085…D-092) and the re-seated
+  headwear / eyes / face slots therefore reach production **without a single real-user observation**.
+- **Only `hairstyle` values equivalent to the default were ever exercised**, because both participants
+  had `hairstyle=default`/absent. See 16.5.
+- **No mobile observation**, and no §10 "active observation or concrete feedback" beyond the two runs.
+
+### 16.4 Activation — what changed technically
+
+`AVATAR_R2` moves `false` → **`true`** in `js/avatar-layers.js`. R2 is the default for every browser;
+no opt-in is required. `isAvatarR2()` now honours **only** the exact value `"0"`, and only to force C2.
+
+**The legacy pilot value `"1"` is now inert.** It falls through to the default like any other value.
+That is deliberate: it is what makes a global rollback absolute, so no browser can pin itself to R2
+against the flag. Missing, empty, malformed or unreadable storage also falls through to the default.
+
+Nothing else changed: no asset, no manifest, no design, no Supabase, no migration, no user record. The
+D-062 atomic asset gate and the D-083 whole-avatar fallback are untouched.
+
+### 16.5 Who actually sees R2 — measured, not estimated
+
+Measured read-only against the live `profiles` table on 2026-08-08 (aggregate counts only, no
+identifiers): **28 students.**
+
+| | count |
+|---|---|
+| Render **R2** (`neutral` + `medium`) | **23** |
+| Stay on **C2** (`male` body type — no raster art) | 5 |
+| Equipped torso item `armor-knight` (has R2 art) | 1 |
+| Any equipped cosmetic at all | 7 |
+
+**A known consequence, recorded because it was never in scope for the pilot:** `hairSrcForR2()` ignores
+`identity.hairstyle` and always resolves `hair-northstar-v1.webp`. The C2 path resolves one of **seven**
+selectable hairstyles. So every one of the 23 R2-bound students sees the North Star hair regardless of
+what they chose. Of those, **1** has an explicitly non-default stored hairstyle (`buzzcut`); the other
+22 stored `default` or nothing, so their C2 hair was already the default. Hair **colour** is still
+tinted live from the identity token — it is the **style** that is fixed.
+
+This is a property of the R2 build the owner accepted, not a defect introduced by activation. It is
+listed here so it is a **known** trade-off rather than a discovered one.
+
+### 16.6 Rollback — two levels
+
+| level | how | effect |
+|---|---|---|
+| **Per browser** | `localStorage.setItem("avatar_r2", "0")` then reload | that browser renders complete C2. Undo by clearing the key. |
+| **Global** | set `AVATAR_R2 = false` in `js/avatar-layers.js` and redeploy | every browser renders C2, **including** any carrying a stale `"1"`. |
+
+Neither requires a database, migration or user-record change. The automatic per-identity fallbacks are
+unchanged and still apply on top: an identity the manifest does not cover, an unregistered torso item
+(D-083), or a mandatory layer that fails to load (D-062) all render the complete C2 avatar.
+
+### 16.7 What is explicitly NOT claimed by this section
+
+- Not a `PILOT_PASS`. Not a `PILOT_PASS_WITH_DEBT`. Not a completed pilot.
+- Not evidence that §9, §10 or §13 were satisfied.
+- Not a Wave 2. Wave 2 remains **defined and never started**; discontinuing the pilot track does not
+  start it, and no cosmetic wave observation exists.
+- Not a re-classification of any earlier `FAIL`, `PAUSED` or `CONDITIONAL` result. Those stand as recorded.

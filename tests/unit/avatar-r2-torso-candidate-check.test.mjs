@@ -133,10 +133,9 @@ test("the harness is a judge, not a promoter: no artwork or runtime path is writ
 
 test("this harness is not what gated or ungated the torso slot", async () => {
   // The slot was ungated by D-090, not by anything here — the harness only judges candidate images.
-  // What must remain true is that it cannot influence the runtime at all, and that the flag is off.
+  // What must remain true is that it cannot influence the runtime at all. The render switch was
+  // turned on by the owner's D-101 decision, which is likewise nothing to do with this harness.
   const src = readFileSync(join(REPO, "tools", "avatar", "check-r2-torso-candidate.mjs"), "utf8");
   assert.ok(!/R2_SUPPORTED_COSMETIC_SLOTS/.test(src), "the harness must not reference the slot list");
   assert.ok(!/avatar-layers/.test(src), "the harness must not touch the runtime module");
-  const layers = await import("../../js/avatar-layers.js");
-  assert.equal(layers.AVATAR_R2, false);
 });
