@@ -1,35 +1,36 @@
 // Section 173: Teacher-mediated password help — request endpoint.
 //
 // Called from login.html by a user who is NOT signed in. It never tells the caller anything
-// about the account: every syntactically valid address gets the same body, and — since the
-// response is sent before any account work begins — the same shape of timing.
+// about the account: every syntactically valid address gets the same body, status and headers,
+// and — since the response is produced before any account work begins — the same timing.
+//
+// This file is WIRING ONLY. The behaviour lives in three pure modules that carry no client, no
+// fetch and no env, so each can be tested with fakes and no network:
+//
+//   handler.ts          the HTTP contract (status, body, headers, background scheduling)
+//   route.ts            classification: unknown / staff / student
+//   student-pipeline.ts the student flow: teacher lookup, atomic reservation, mail, finalise
 //
 // WHAT THIS ENDPOINT DOES NOT DO
 //   - it issues no token, and the mail it sends carries no credential of any kind
 //   - it never returns the teacher's address, name, id, or any internal outcome
-//   - it grants no authority: the actual password change still goes through the existing
-//     reset-student-password function, which re-verifies profiles.teacher_id server-side
+//   - it grants no authority: the password change still goes through reset-student-password,
+//     which re-verifies profiles.teacher_id server-side on every call
 //
-// ROLE ROUTING (decided server-side, never by the client)
-//   student            -> notify the teacher the student is linked to
-//   teacher/super_admin -> ordinary Supabase recovery mail for their own account, unchanged
-//   unknown address    -> nothing happens
-// The caller cannot distinguish these three cases.
-//
-// TIMING SIDE-CHANNEL — WHY THE WORK IS BACKGROUNDED
-// The first version did the account lookup, the rate-limit read and the Resend call BEFORE
-// responding. Measured against production that made a real student take ~1753 ms and an unknown
-// address ~695 ms: identical bodies, but the duration told them apart. A minimum-duration floor
-// cannot fix that, because it can only raise the fast path — it cannot lower the slow one
-// without guessing Resend's worst-case latency.
-//
-// So the whole pipeline now runs as a background task and the response is sent first. The
-// outward path performs NO account-dependent work at all, which removes the channel by
-// construction rather than by padding.
+// ERROR POLICY
+// Every Supabase and Auth call below checks `error` and THROWS on failure. A technical fault is
+// never allowed to become a business outcome — a failed profile read must not read as "not a
+// student", and a failed auth lookup must not read as "the teacher has no address". Throws are
+// caught once, at the bottom, and captured without any address, id, token or provider payload.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withObservability } from "../_shared/monitoring.ts";
+import { createHandler } from "./handler.ts";
+import { routeHelpRequest } from "./route.ts";
+import { runStudentPipeline } from "./student-pipeline.ts";
+import type { MailResult, ReserveResult } from "./student-pipeline.ts";
+import { assertFinalizedExactlyOne, parseReserveResult } from "./adapters.ts";
 
 const SUPABASE_URL              = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -43,60 +44,47 @@ const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "";
 // because mail clients and HTTP headers cannot be trusted with the Unicode form.
 const APP_BASE_URL = (Deno.env.get("APP_BASE_URL") ?? "https://xn--lrlig-sra.dk").replace(/\/+$/, "");
 
-// Rate limiting. Documented thresholds — see the PR body.
-const COOLDOWN_MINUTES = 15;   // a second valid request inside this window sends no mail
-const DAILY_CAP        = 5;    // hard ceiling per student per rolling 24h
+// Rate-limit parameters. Enforced inside reserve_password_help, not here.
+const COOLDOWN_MINUTES = 15;
+const DAILY_CAP        = 5;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// ── Minimal structural client types ─────────────────────────────────────────
+// Naming only what is actually used keeps `deno check` happy (the concrete client is
+// SupabaseClient<any,"public","public",...>, which does not match the un-parameterised default)
+// and makes each helper's dependency legible.
 
-// The ONLY body this endpoint ever returns for a syntactically valid address.
-const GENERIC_BODY = {
-  ok: true,
-  message: "Hvis kontoen findes, har din lærer fået besked.",
-};
-
-function jsonResponse(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+interface QueryResult<T> {
+  data: T | null;
+  error: { message?: string } | null;
 }
 
-function isPlausibleEmail(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-  const trimmed = value.trim();
-  if (trimmed.length < 3 || trimmed.length > 320) return false;
-  // Deliberately permissive: this is an input sanity check, not an address validator. The
-  // authority on whether an address exists is auth.users, and we never reveal that answer.
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed);
-}
-
-// Mirrors the guarded pattern already used by _shared/monitoring.ts:286-298.
-//
-// The fallback differs from monitoring's on purpose. Losing a telemetry flush is acceptable;
-// losing a teacher's notification is not. So when the runtime cannot keep background work
-// alive, we AWAIT the work instead of firing an unattended promise the isolate may kill. That
-// costs the timing uniformity — a conscious, logged degradation, never a silently dropped mail.
-function canBackground(): boolean {
+interface AdminClient {
+  auth: {
+    admin: {
+      listUsers(params: { page: number; perPage: number }): Promise<
+        QueryResult<{ users?: Array<{ id?: unknown; email?: unknown }> }>
+      >;
+      getUserById(id: string): Promise<QueryResult<{ user?: { email?: unknown } | null }>>;
+    };
+  };
   // deno-lint-ignore no-explicit-any
-  const ER = (globalThis as any).EdgeRuntime;
-  return !!ER && typeof ER.waitUntil === "function";
+  from(table: string): any;
+  // deno-lint-ignore no-explicit-any
+  rpc(fn: string, args: Record<string, unknown>): Promise<QueryResult<any>>;
 }
 
-function background(promise: Promise<void>): void {
-  // deno-lint-ignore no-explicit-any
-  const ER = (globalThis as any).EdgeRuntime;
-  ER.waitUntil(promise);
+function fail(stage: string, error: { message?: string } | null): never {
+  // The message is ours, not the caller's data: no address, id, token or provider body.
+  throw new Error(`${stage} failed: ${error?.message ?? "unknown error"}`);
 }
+
+// ── Lookups ─────────────────────────────────────────────────────────────────
 
 // auth.admin.listUsers() is paginated and has no server-side email filter, so page through and
 // match case-insensitively. Mirrors the documented approach in tests/helpers.ts. At pilot scale
 // (tens of accounts) this is a single page.
 async function findUserByEmail(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   email: string,
 ): Promise<{ id: string; email: string | null } | null> {
   const wanted = email.trim().toLowerCase();
@@ -104,9 +92,9 @@ async function findUserByEmail(
 
   while (page <= 50) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) throw error;
+    if (error) fail("listUsers", error);
 
-    const users = Array.isArray(data?.users) ? data.users : [];
+    const users = Array.isArray(data?.users) ? data!.users! : [];
     if (users.length === 0) return null;
 
     for (const u of users) {
@@ -124,8 +112,8 @@ async function findUserByEmail(
   return null;
 }
 
-// Escapes text placed into the HTML part of the mail. The only interpolated value is the
-// student's display name, which comes from our own database, but it is user-editable text.
+// ── Mail ────────────────────────────────────────────────────────────────────
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -135,13 +123,8 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-interface MailResult {
-  sent: boolean;
-  reason: string | null;
-}
-
-// Sends the notification. Returns a controlled result; never throws to the caller, and never
-// puts provider payloads, addresses or secrets into the returned reason.
+// Returns a controlled result; never throws, and never puts provider payloads, addresses or
+// secrets into the returned reason.
 async function sendTeacherNotification(
   teacherEmail: string,
   studentName: string,
@@ -186,13 +169,7 @@ async function sendTeacherNotification(
         "Authorization": `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: RESEND_FROM_EMAIL,
-        to: [teacherEmail],
-        subject,
-        text,
-        html,
-      }),
+      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [teacherEmail], subject, text, html }),
     });
 
     if (!res.ok) {
@@ -206,189 +183,157 @@ async function sendTeacherNotification(
   }
 }
 
+// ── Pipeline wiring ─────────────────────────────────────────────────────────
+
 // deno-lint-ignore no-explicit-any
 type Ctx = { captureException: (e: unknown, extra?: any) => void; captureMessage: (m: string, l?: string, extra?: any) => void };
 
-// THE WHOLE PIPELINE. Runs after the response has been sent (or, in the degraded fallback,
-// before it). It resolves in every case and never rejects, so it can never become an unhandled
+async function insertAudit(
+  admin: AdminClient,
+  stage: string,
+  row: Record<string, unknown>,
+): Promise<void> {
+  const { error } = await admin.from("password_help_requests").insert(row);
+  if (error) fail(stage, error);
+}
+
+// Resolves every outcome internally and never rejects, so it can never become an unhandled
 // rejection inside a background task.
 async function processHelpRequest(email: string, ctx: Ctx): Promise<void> {
   try {
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
-    });
+    }) as unknown as AdminClient;
 
-    const user = await findUserByEmail(admin, email);
+    await routeHelpRequest(email, {
+      findUserByEmail: (address) => findUserByEmail(admin, address),
 
-    // Unknown address: nothing to do, nothing to record. No row is written, so the table can
-    // never be used to enumerate what was tried.
-    if (!user) return;
+      loadProfile: async (userId) => {
+        const { data, error } = await admin
+          .from("profiles")
+          .select("role, teacher_id, full_name")
+          .eq("id", userId)
+          .maybeSingle();
+        // A failed read must NOT look like "no profile", which the router would treat as
+        // "not a student" and discard the request in silence.
+        if (error) fail("profile lookup", error);
+        if (!data) return null;
+        return {
+          role:       typeof data.role === "string" ? data.role : null,
+          teacher_id: typeof data.teacher_id === "string" ? data.teacher_id : null,
+          full_name:  typeof data.full_name === "string" ? data.full_name : null,
+        };
+      },
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("role, teacher_id, full_name")
-      .eq("id", user.id)
-      .maybeSingle();
+      // Sent with the anon key, which is exactly what the browser used to do. No redirectTo is
+      // passed, so GoTrue uses its configured Site URL — an address allow-listed by definition.
+      sendStaffRecovery: SUPABASE_ANON_KEY
+        ? async (address: string) => {
+            const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+              auth: { autoRefreshToken: false, persistSession: false },
+            });
+            const { error } = await publicClient.auth.resetPasswordForEmail(address);
+            return { error: error ?? null };
+          }
+        : null,
 
-    const role = profile && typeof profile.role === "string" ? profile.role : null;
+      captureMessage: (message, level, extra) => ctx.captureMessage(message, level, extra),
 
-    // Teachers and admins keep ordinary Supabase recovery. Sent with the anon key, which is
-    // exactly what the browser used to do. No redirectTo is passed, so GoTrue uses its
-    // configured Site URL — an address that is allow-listed by definition.
-    if (role === "teacher" || role === "super_admin") {
-      if (SUPABASE_ANON_KEY) {
-        const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-          auth: { autoRefreshToken: false, persistSession: false },
+      // The outcome is deliberately discarded here: the router's contract is void, and nothing
+      // about the response may depend on what the pipeline concluded.
+      handleStudent: async (studentId, studentProfile) => {
+        await runStudentPipeline(studentId, studentProfile, {
+          auditNoTeacher: (id) =>
+            insertAudit(admin, "audit no_teacher", {
+              student_id: id,
+              teacher_id: null,
+              status: "no_teacher",
+              failure_reason: "student_has_no_teacher",
+            }),
+
+          getTeacherEmail: async (teacherId) => {
+            const { data, error } = await admin.auth.admin.getUserById(teacherId);
+            // A transport/auth failure is NOT "the teacher has no address".
+            if (error) fail("teacher lookup", error);
+            const address = data?.user && typeof data.user.email === "string" ? data.user.email.trim() : "";
+            return address;
+          },
+
+          auditTeacherNoEmail: (id, teacherId) =>
+            insertAudit(admin, "audit teacher_no_email", {
+              student_id: id,
+              teacher_id: teacherId,
+              status: "teacher_no_email",
+              failure_reason: "teacher_missing_email",
+            }),
+
+          reserve: async (id, teacherId): Promise<ReserveResult> => {
+            const { data, error } = await admin.rpc("reserve_password_help", {
+              p_student_id: id,
+              p_teacher_id: teacherId,
+              p_cooldown_minutes: COOLDOWN_MINUTES,
+              p_daily_cap: DAILY_CAP,
+            });
+            if (error) fail("reserve_password_help", error);
+            // Only the three documented decisions are accepted. A malformed answer throws
+            // rather than being read as a suppression (which would silently stop help) or as
+            // permission (which would send mail without a reservation).
+            return parseReserveResult(data);
+          },
+
+          sendMail: (teacherEmail, studentName, id) =>
+            sendTeacherNotification(teacherEmail, studentName, id),
+
+          finalize: async (requestId, status, reason) => {
+            // Scoped to the reserved row AND its expected current state: a row that is no longer
+            // 'reserved' must not be overwritten. RETURNING gives back what actually changed,
+            // because a PostgREST update that matches zero rows reports no error at all.
+            const { data, error } = await admin
+              .from("password_help_requests")
+              .update({
+                status,
+                notification_sent_at: status === "notified" ? new Date().toISOString() : null,
+                failure_reason: reason,
+              })
+              .eq("id", requestId)
+              .eq("status", "reserved")
+              .select("id, status");
+            if (error) fail("finalize reservation", error);
+            assertFinalizedExactlyOne(data, requestId, status);
+          },
+
+          captureMessage: (message, level, extra) => ctx.captureMessage(message, level, extra),
+          captureException: (error, extra) => ctx.captureException(error, extra),
         });
-        const { error: recoveryError } = await publicClient.auth.resetPasswordForEmail(email);
-        if (recoveryError) {
-          ctx.captureMessage("staff recovery mail failed", "warning", { role });
-        }
-      } else {
-        ctx.captureMessage("staff recovery skipped: SUPABASE_ANON_KEY unset", "warning", { role });
-      }
-      return;
-    }
-
-    // Anything that is not a student stops here: no row, no mail.
-    if (role !== "student") return;
-
-    const studentId = user.id;
-    const teacherId = typeof profile?.teacher_id === "string" && profile.teacher_id.length > 0
-      ? profile.teacher_id
-      : null;
-
-    // ── Rate limiting ────────────────────────────────────────────────────────
-    // Both windows are evaluated against this student's own history. Suppressed requests are
-    // still recorded, so the audit trail shows the attempt and why no mail went out.
-    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: recentRows, error: recentError } = await admin
-      .from("password_help_requests")
-      .select("created_at, status")
-      .eq("student_id", studentId)
-      .gte("created_at", since24h)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (recentError) {
-      // Fail closed: if the rate-limit state cannot be read, do not send mail.
-      ctx.captureException(recentError, { stage: "rate_limit_read" });
-      return;
-    }
-
-    const recent = Array.isArray(recentRows) ? recentRows : [];
-    const notified = recent.filter((r) => r && r.status === "notified");
-
-    if (notified.length >= DAILY_CAP) {
-      await admin.from("password_help_requests").insert({
-        student_id: studentId,
-        teacher_id: teacherId,
-        status: "suppressed_daily_cap",
-        failure_reason: `cap_${DAILY_CAP}_per_24h`,
-      });
-      return;
-    }
-
-    const cooldownCutoff = Date.now() - COOLDOWN_MINUTES * 60 * 1000;
-    const lastNotifiedAt = notified.length > 0 ? Date.parse(String(notified[0].created_at)) : NaN;
-
-    if (Number.isFinite(lastNotifiedAt) && lastNotifiedAt > cooldownCutoff) {
-      await admin.from("password_help_requests").insert({
-        student_id: studentId,
-        teacher_id: teacherId,
-        status: "suppressed_cooldown",
-        failure_reason: `cooldown_${COOLDOWN_MINUTES}m`,
-      });
-      return;
-    }
-
-    // ── Teacher lookup ───────────────────────────────────────────────────────
-    if (!teacherId) {
-      await admin.from("password_help_requests").insert({
-        student_id: studentId,
-        teacher_id: null,
-        status: "no_teacher",
-        failure_reason: "student_has_no_teacher",
-      });
-      return;
-    }
-
-    const { data: teacherUser, error: teacherError } = await admin.auth.admin.getUserById(teacherId);
-    const teacherEmail = !teacherError && teacherUser?.user && typeof teacherUser.user.email === "string"
-      ? teacherUser.user.email.trim()
-      : "";
-
-    if (!teacherEmail) {
-      await admin.from("password_help_requests").insert({
-        student_id: studentId,
-        teacher_id: teacherId,
-        status: "teacher_no_email",
-        failure_reason: "teacher_missing_email",
-      });
-      return;
-    }
-
-    // ── Notify ───────────────────────────────────────────────────────────────
-    const studentName =
-      profile && typeof profile.full_name === "string" && profile.full_name.trim().length > 0
-        ? profile.full_name.trim()
-        : "En elev";
-
-    const mail = await sendTeacherNotification(teacherEmail, studentName, studentId);
-
-    await admin.from("password_help_requests").insert({
-      student_id: studentId,
-      teacher_id: teacherId,
-      status: mail.sent ? "notified" : "mail_failed",
-      notification_sent_at: mail.sent ? new Date().toISOString() : null,
-      failure_reason: mail.sent ? null : mail.reason,
+      },
     });
-
-    if (!mail.sent) {
-      ctx.captureMessage("teacher notification not sent", "warning", { reason: mail.reason });
-    }
   } catch (err) {
-    // The response has already been sent by now, so there is nothing to change about it. The
-    // failure is captured internally and swallowed here so the background task always settles.
+    // The response was sent long before this. The failure is captured internally and swallowed
+    // here so the background task always settles.
     try {
       ctx.captureException(err, { stage: "process_help_request" });
     } catch (_e) { /* capture must never be the thing that breaks the task */ }
   }
 }
 
-serve(withObservability("request-password-help", async (req, ctx) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+// Mirrors the guarded pattern in _shared/monitoring.ts:286-298. The fallback differs on
+// purpose: losing a telemetry flush is acceptable, losing a teacher's notification is not, so
+// when the runtime cannot keep background work alive the caller awaits instead of firing an
+// unattended promise the isolate may kill.
+function scheduleBackground(work: Promise<void>): boolean {
+  // deno-lint-ignore no-explicit-any
+  const ER = (globalThis as any).EdgeRuntime;
+  if (ER && typeof ER.waitUntil === "function") {
+    ER.waitUntil(work);
+    return true;
   }
+  return false;
+}
 
-  if (req.method !== "POST") {
-    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
-  }
-
-  const body = await req.json().catch(() => null);
-  const rawEmail = body && typeof body === "object" ? (body as Record<string, unknown>).email : undefined;
-
-  // A malformed request is the one case that is NOT indistinguishable — it says nothing about
-  // any account, only that the caller sent something that is not an address at all.
-  if (!isPlausibleEmail(rawEmail)) {
-    return jsonResponse({ ok: false, error: "email required" }, 400);
-  }
-
-  const email = rawEmail.trim();
-  const work = processHelpRequest(email, ctx);
-
-  if (canBackground()) {
-    // Response first, work after: nothing account-dependent happens before we answer, so all
-    // valid addresses are indistinguishable by duration as well as by body.
-    background(work);
-    return jsonResponse(GENERIC_BODY, 200);
-  }
-
-  // Degraded path: the runtime cannot keep background work alive. Correctness wins over
-  // uniformity — we await rather than fire an unattended promise the isolate may kill, and we
-  // record that the guarantee is reduced so it shows up rather than passing unnoticed.
-  ctx.captureMessage("EdgeRuntime.waitUntil unavailable — help request processed inline", "warning");
-  await work;
-  return jsonResponse(GENERIC_BODY, 200);
-}));
+serve(withObservability("request-password-help", (req, ctx) =>
+  createHandler({
+    process: (email) => processHelpRequest(email, ctx),
+    scheduleBackground,
+    captureMessage: (message, level, extra) => ctx.captureMessage(message, level, extra),
+  })(req)
+));

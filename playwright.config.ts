@@ -31,17 +31,34 @@ export default defineConfig({
   },
 
   projects: [
+    // Section 173: API-only specs drive Edge Functions over fetch and assert against the
+    // database. They use no `page` fixture, so running them once per browser engine bought no
+    // extra coverage — it only multiplied their writes against the single shared test student,
+    // and in run 31266753389 it multiplied a real outbound e-mail by three.
+    //
+    // The split uses per-project testMatch/testIgnore rather than de-duplicating the report, so
+    // the spec is COLLECTED once: its beforeAll/afterAll hooks never run in the browser projects.
+    //
+    // Kept deliberately narrow. Other specs are browser-less too, but moving them here would
+    // change collected counts across the whole suite — a separate decision, not this fix.
+    {
+      name: 'api',
+      testMatch: /password-help\.spec\.ts/,
+    },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: /password-help\.spec\.ts/,
     },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      testIgnore: /password-help\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      testIgnore: /password-help\.spec\.ts/,
     },
   ],
 });
