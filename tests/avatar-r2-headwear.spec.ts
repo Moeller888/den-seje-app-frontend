@@ -3,7 +3,7 @@
 // renders on the R2 stack on avatar/hub/quiz (layer above the R2 hair, no C2-base leak, no broken
 // images), living engines intact, opt-out → C2, and the shop stays uniform C2 (D-077 unaffected).
 // Plus a compact golden MATRIX of all five current headwear items on the R2 figure for one-glance
-// transform review. Global AVATAR_R2 stays false; R2 is per-browser opt-in.
+// transform review. AVATAR_R2 is true (D-101), so R2 is the default; the C2 cases opt out with "0".
 import { test, expect, Route } from "@playwright/test";
 import * as http from "http";
 import * as fs from "fs";
@@ -75,7 +75,7 @@ async function open(browser: any, url: string, equippedHat: string | null, optIn
   await ctx.addInitScript(([k, s, opt]: [string, any, boolean]) => {
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
-    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.removeItem("avatar_r2");
+    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.setItem("avatar_r2", "0");
   }, [`sb-${REF}-auth-token`, SESSION, optIn]);
   const page = await ctx.newPage();
   await page.goto(`${baseUrl}${url}`, { waitUntil: "networkidle" });
