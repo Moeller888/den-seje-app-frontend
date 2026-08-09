@@ -20,10 +20,12 @@ if (!existsSync(ROOT)) { console.error("dist-cloudflare/ is missing — run: npm
 // than approximating it:
 //   html_handling: "none"  → paths resolve LITERALLY. No extension guessing, so `/login` is a 404
 //                            and `/login.html` is served directly with no 3xx.
-//   _redirects             → the single `/ /landing.html 200` rewrite. Status 200 means INTERNAL:
-//                            the response body is landing.html while the URL stays `/`.
-//                            The quiz keeps its own address at /index.html and is NOT what `/`
-//                            serves — both halves of that are asserted below.
+//   _redirects             → the public website's routing table: `/` plus one clean route per
+//                            information page, each an internal 200 rewrite. Status 200 means
+//                            INTERNAL: the response body is the .html file while the URL keeps
+//                            showing the clean path. The quiz keeps its own address at
+//                            /index.html and is NOT what `/` serves — both halves are asserted
+//                            below, as is every clean route in the table.
 //   `_redirects` itself is configuration and is never served as an asset.
 const REWRITES = new Map(
   readFileSync(join(ROOT, "_redirects"), "utf8").split("\n").map((l) => l.trim()).filter(Boolean)
@@ -52,8 +54,20 @@ const server = createServer((req, res) => {
   res.end(readFileSync(abs));
 });
 
+// The public website: every clean route AND the .html file behind it must serve.
+const PUBLIC_ROUTES = [
+  ["/", "/landing.html"],
+  ["/produktet", "/produktet.html"],
+  ["/saadan-virker-det", "/saadan-virker-det.html"],
+  ["/elev-og-laerer", "/elev-og-laerer.html"],
+  ["/til-skoler", "/til-skoler.html"],
+  ["/priser", "/priser.html"],
+  ["/om-laerlig", "/om-laerlig.html"],
+];
+
 const MUST_SERVE = [
-  "/", "/landing.html", "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
+  ...PUBLIC_ROUTES.flat(),
+  "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
   "/student-detail.html", "/student-detail.html?id=test", "/avatar.html",
   "/achievements.html", "/collection.html", "/leaderboard.html", "/themes.html", "/reset-password.html",
   "/docs.html", "/404.html",
@@ -105,15 +119,13 @@ server.listen(0, "127.0.0.1", async () => {
     console.log(`  ${ok ? "OK  " : "FAIL"} ${String(r.status).padStart(3)}  ${p}`);
   }
 
-  console.log("\nROOT REWRITE — / serves landing.html without a redirect:");
-  {
-    const root = await get("/"), landing = await get("/landing.html");
-    const okStatus = root.status === 200 && landing.status === 200;
-    const okBody = root.body === landing.body && root.body.length > 0;
-    if (!okStatus) failures++;
-    if (!okBody) failures++;
-    console.log(`  ${okStatus ? "OK  " : "FAIL"} / = ${root.status}, /landing.html = ${landing.status} (neither is a 3xx)`);
-    console.log(`  ${okBody ? "OK  " : "FAIL"} / returns the landing.html body (${root.body.length} bytes)`);
+  console.log("\nCLEAN ROUTES — each serves its page internally, with no redirect:");
+  for (const [route, file] of PUBLIC_ROUTES) {
+    const a = await get(route), b = await get(file);
+    const okStatus = a.status === 200 && b.status === 200;
+    const okBody = a.body === b.body && a.body.length > 0;
+    if (!okStatus || !okBody) failures++;
+    console.log(`  ${okStatus && okBody ? "OK  " : "FAIL"} ${route.padEnd(20)} → ${file.padEnd(24)} ${a.status}/${b.status}, identical body (${a.body.length} B)`);
   }
 
   console.log("\nTHE QUIZ DID NOT MOVE — /index.html still serves, and / is NOT the quiz:");

@@ -11,9 +11,9 @@
   <meta name="description"
         content="Lærlig er en dansk læringsplatform til folkeskolen. Korte spørgsmålsforløb, feedback der forklarer, og en lærer der har det sidste ord.">
 
-  <!-- Design tokens are shared with the app so the landing page stays in the same product family.
-       The landing page deliberately does NOT read the student's saved theme: it always renders the
-       default navy identity, so the brand surface is deterministic for every visitor. -->
+  <!-- Design tokens are shared with the app so the site stays in the same product family.
+       The public pages deliberately do NOT read the student's saved theme: they always render
+       the default navy identity, so the brand surface is deterministic for every visitor. -->
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/landing.css">
 </head>
@@ -25,18 +25,22 @@
        viewport, not by a scroll listener. No work happens on the scroll thread. -->
   <div id="top-sentinel" aria-hidden="true"></div>
 
+  <!-- The header markup is repeated on every public page. There is no build step and no
+       server-side include, and injecting it with JavaScript would leave the site's navigation
+       broken without JS and flash on every load. Repetition is the honest cost; the styling
+       and behaviour are shared through css/landing.css and js/landing.js. -->
   <header class="site-header" id="site-header">
     <div class="shell header-inner">
-      <a class="wordmark" href="#main">
+      <a class="wordmark" href="/">
         <span class="wordmark-text">Lærlig</span>
       </a>
 
       <nav class="nav-desktop" aria-label="Primær">
-        <a href="#produktet">Produktet</a>
-        <a href="#saadan-virker-det">Sådan virker det</a>
-        <a href="#elev-og-laerer">For elev &amp; lærer</a>
-        <a href="#til-skoler">Til skoler</a>
-        <a href="#priser">Priser</a>
+        <a href="/produktet">Produktet</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/elev-og-laerer">For elev &amp; lærer</a>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
       </nav>
 
       <div class="header-actions">
@@ -50,12 +54,12 @@
     </div>
 
     <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
-      <a href="#produktet">Produktet</a>
-      <a href="#saadan-virker-det">Sådan virker det</a>
-      <a href="#elev-og-laerer">For elev &amp; lærer</a>
-      <a href="#til-skoler">Til skoler</a>
-      <a href="#priser">Priser</a>
-      <a href="#om">Om Lærlig</a>
+      <a href="/produktet">Produktet</a>
+      <a href="/saadan-virker-det">Sådan virker det</a>
+      <a href="/elev-og-laerer">For elev &amp; lærer</a>
+      <a href="/til-skoler">Til skoler</a>
+      <a href="/priser">Priser</a>
+      <a href="/om-laerlig">Om Lærlig</a>
     </nav>
   </header>
 
@@ -84,192 +88,58 @@
         </a>
 
         <p class="hero-meta">
-          <a href="#saadan-virker-det">Sådan virker det</a>
+          <a href="/saadan-virker-det">Sådan virker det</a>
           <span class="dot" aria-hidden="true">·</span>
-          <a href="#til-skoler">Til skoler</a>
+          <a href="/til-skoler">Til skoler</a>
         </p>
       </div>
-      <!-- No scroll indicator: the hero is content-height, so the next section is already
-           visible at the fold. An arrow pointing at something the reader can see is noise. -->
     </section>
 
-    <!-- ══ PRODUKTET ═════════════════════════════════════════════════════════ -->
-    <section id="produktet" class="section" aria-labelledby="produktet-title">
+    <!-- ══ OVERSIGT ══════════════════════════════════════════════════════════
+         The front page is deliberately short. Each area below is its own page. -->
+    <section class="explore" aria-labelledby="explore-title">
       <div class="shell">
-        <p class="eyebrow">Produktet</p>
-        <h2 id="produktet-title">Korte forløb, der bygger varig viden.</h2>
-        <p class="lede">
-          Lærlig er en dansk læringsplatform til elever i cirka 8–16-årsalderen. Eleven svarer på
-          spørgsmål fra undervisningens indhold, får svar med det samme og kommer videre. Ingen lange
-          sessioner — momentum betyder mere end mængde.
-        </p>
+        <p class="eyebrow">Hjemmesiden</p>
+        <h2 id="explore-title">Find rundt.</h2>
 
-        <ul class="cards" role="list">
-          <li class="card">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12h4l3 7 4-14 3 7h4"/>
-              </svg>
-            </span>
-            <h3>Korte spørgsmålsforløb</h3>
-            <p>
-              Log ind, svar, få feedback, videre til næste. Sløjfen er kort med vilje, så eleven
-              holder tempoet og kan nå noget på den tid, der er.
-            </p>
+        <ul class="explore-grid" role="list">
+          <li>
+            <a class="explore-card" href="/produktet">
+              <h3>Produktet</h3>
+              <p>Hvad Lærlig er, og hvordan de korte forløb bygger varig viden.</p>
+            </a>
           </li>
-
-          <li class="card">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>
-              </svg>
-            </span>
-            <h3>Gentagelse med mening</h3>
-            <p>
-              Et rigtigt svar planlægger spørgsmålet til gensyn næste dag. Et forkert svar kommer
-              igen efter få minutter. Det, eleven ikke kan endnu, er også det, eleven ser igen først.
-            </p>
+          <li>
+            <a class="explore-card" href="/saadan-virker-det">
+              <h3>Sådan virker det</h3>
+              <p>De tre trin, eleven går igennem hver gang.</p>
+            </a>
           </li>
-
-          <li class="card">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 17h.01"/><path d="M12 13.5V13a2.5 2.5 0 1 0-2.5-2.5"/>
-                <circle cx="12" cy="12" r="9"/>
-              </svg>
-            </span>
-            <h3>Feedback, der forklarer</h3>
-            <p>
-              Et forkert svar kan bære en forklaring og et signal om, hvilken misforståelse der
-              ligger bag. Feedback skal undervise, ikke bare markere.
-            </p>
+          <li>
+            <a class="explore-card" href="/elev-og-laerer">
+              <h3>For elev &amp; lærer</h3>
+              <p>To sider af den samme time — hvad hver part får ud af den.</p>
+            </a>
+          </li>
+          <li>
+            <a class="explore-card" href="/til-skoler">
+              <h3>Til skoler</h3>
+              <p>De tre principper platformen er bygget efter.</p>
+            </a>
+          </li>
+          <li>
+            <a class="explore-card" href="/priser">
+              <h3>Priser</h3>
+              <p>Hvor prismodellen står, og hvorfor den ikke er fastlagt endnu.</p>
+            </a>
+          </li>
+          <li>
+            <a class="explore-card" href="/om-laerlig">
+              <h3>Om Lærlig</h3>
+              <p>Et dansk produkt i pilotfase — hvem der bygger det, og hvordan.</p>
+            </a>
           </li>
         </ul>
-      </div>
-    </section>
-
-    <!-- ══ SÅDAN VIRKER DET ══════════════════════════════════════════════════ -->
-    <section id="saadan-virker-det" class="section section-alt" aria-labelledby="saadan-title">
-      <div class="shell">
-        <p class="eyebrow">Sådan virker det</p>
-        <h2 id="saadan-title">Tre trin, hver gang.</h2>
-
-        <ol class="steps" role="list">
-          <li class="step">
-            <span class="step-num" aria-hidden="true">01</span>
-            <h3>Eleven svarer</h3>
-            <p>
-              Multiple choice, tal eller tekst — alt efter hvad spørgsmålet kalder på.
-            </p>
-          </li>
-          <li class="step">
-            <span class="step-num" aria-hidden="true">02</span>
-            <h3>Systemet vurderer det, der sikkert kan vurderes</h3>
-            <p>
-              Entydige svar afgøres med det samme efter faste regler. Alt tvetydigt — de lange,
-              skrevne svar — går videre til læreren i stedet for at blive gættet på.
-            </p>
-          </li>
-          <li class="step">
-            <span class="step-num" aria-hidden="true">03</span>
-            <h3>Næste spørgsmål tilpasses</h3>
-            <p>
-              Valget følger elevens klassetrin og sværhedsgrad og de spørgsmål, der står til
-              gensyn. Ikke tilfældighed.
-            </p>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ══ FOR ELEV & LÆRER ══════════════════════════════════════════════════ -->
-    <section id="elev-og-laerer" class="section" aria-labelledby="elev-laerer-title">
-      <div class="shell">
-        <p class="eyebrow">For elev &amp; lærer</p>
-        <h2 id="elev-laerer-title">To sider af den samme time.</h2>
-
-        <div class="split">
-          <div class="split-col">
-            <h3 class="split-head">For eleven</h3>
-            <ul class="ticks" role="list">
-              <li>XP og mønter for indsats, der holder ved — efter faste regler, aldrig held.</li>
-              <li>En figur, eleven selv former: krop, frisure, hårfarve og hudtone.</li>
-              <li>Ting til figuren, man sparer op til og selv vælger.</li>
-              <li>Feedback, der aldrig gør eleven mindre. Ingen nederlagsskærme.</li>
-            </ul>
-          </div>
-
-          <div class="split-col">
-            <h3 class="split-head">For læreren</h3>
-            <ul class="ticks" role="list">
-              <li>Overblik over klassen og den enkelte elevs progression.</li>
-              <li>Gennemgang af elevernes lange, skrevne svar ét sted.</li>
-              <li>XP for de svar gives efter lærerens vurdering — ikke maskinens.</li>
-              <li>Læreren har det sidste ord. Intet system tilsidesætter det stille.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ TIL SKOLER ════════════════════════════════════════════════════════ -->
-    <section id="til-skoler" class="section section-alt" aria-labelledby="skoler-title">
-      <div class="shell">
-        <p class="eyebrow">Til skoler</p>
-        <h2 id="skoler-title">Bygget efter tre principper.</h2>
-
-        <ul class="cards cards-tight" role="list">
-          <li class="card">
-            <h3>Læreren er autoriteten</h3>
-            <p>
-              Automatikken afgør kun det, der er sikkert at afgøre. Alt tvetydigt lander hos
-              læreren. Det er et arkitekturvalg, ikke en indstilling.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Forudsigelighed frem for smarte påfund</h3>
-            <p>
-              XP, mønter og progression beregnes efter eksplicitte regler. Tilfældighed afgør
-              aldrig, om et svar er rigtigt, eller hvad eleven får ud af det.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Dataminimering som designprincip</h3>
-            <p>
-              Platformen bruges af mindreårige. Hvor lidt data der behandles, er en begrænsning
-              lagt ind fra start — ikke noget, der blev tilføjet bagefter.
-            </p>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ══ PRISER ════════════════════════════════════════════════════════════ -->
-    <section id="priser" class="section" aria-labelledby="priser-title">
-      <div class="shell shell-narrow">
-        <p class="eyebrow">Priser</p>
-        <h2 id="priser-title">Prisen er ikke fastlagt endnu.</h2>
-        <p class="lede">
-          Lærlig er før lancering og køres i pilotskala med et mindre antal klasser. Der findes
-          derfor endnu ingen offentlige priser eller abonnementer, og vi opfinder dem ikke for at
-          fylde siden ud. Prismodellen fastlægges sammen med de første skoler.
-        </p>
-      </div>
-    </section>
-
-    <!-- ══ OM ════════════════════════════════════════════════════════════════ -->
-    <section id="om" class="section section-alt" aria-labelledby="om-title">
-      <div class="shell shell-narrow">
-        <p class="eyebrow">Om Lærlig</p>
-        <h2 id="om-title">Et dansk produkt i pilotfase.</h2>
-        <p class="lede">
-          Lærlig bygges i Danmark til danske skoler. Det er et lille, selvstændigt drevet produkt,
-          og det er en fordel: der bygges én ting ad gangen, og stabilitet vejer tungere end
-          hastighed. Platformen er før lancering og afprøves med et mindre antal klasser.
-        </p>
       </div>
     </section>
 
@@ -297,21 +167,21 @@
         <p>Læring, der tilpasser sig eleven.</p>
       </div>
 
-      <nav class="footer-nav" aria-label="Sidefod">
+      <nav class="footer-nav" aria-label="Sidefod: produktet">
         <h2 class="footer-head">Produktet</h2>
-        <a href="#produktet">Hvad Lærlig er</a>
-        <a href="#saadan-virker-det">Sådan virker det</a>
-        <a href="#elev-og-laerer">For elev &amp; lærer</a>
+        <a href="/produktet">Hvad Lærlig er</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/elev-og-laerer">For elev &amp; lærer</a>
       </nav>
 
-      <nav class="footer-nav" aria-label="Skoler">
+      <nav class="footer-nav" aria-label="Sidefod: skoler">
         <h2 class="footer-head">Skoler</h2>
-        <a href="#til-skoler">Til skoler</a>
-        <a href="#priser">Priser</a>
-        <a href="#om">Om Lærlig</a>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+        <a href="/om-laerlig">Om Lærlig</a>
       </nav>
 
-      <nav class="footer-nav" aria-label="Adgang">
+      <nav class="footer-nav" aria-label="Sidefod: adgang">
         <h2 class="footer-head">Adgang</h2>
         <a href="login.html">Log ind</a>
       </nav>
