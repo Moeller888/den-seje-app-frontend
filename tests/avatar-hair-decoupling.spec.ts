@@ -110,7 +110,13 @@ test.beforeEach(async ({ page }) => {
   // C2 render exercised in TEST ONLY via a localStorage override; global AVATAR_V2
   // stays false. Under C2 hair renders as an inline <svg> (data-c2-layer="hair"),
   // the base is a *-c2.svg img, and cosmetics use the C2 z-model.
-  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+  // D-101: R2 is now the DEFAULT render. This spec asserts C2-only behaviour (see the file
+  // header), so it pins itself to C2 through the supported per-browser opt-out instead of
+  // relying on a global default. addInitScript runs before any page script on every
+  // navigation, so the choice is made before the avatar mounts. No assertion or golden changes.
+  await page.addInitScript(() => {
+    try { localStorage.setItem("avatar_v2", "1"); localStorage.setItem("avatar_r2", "0"); } catch (e) {}
+  });
 });
 
 test.afterAll(async () => {
