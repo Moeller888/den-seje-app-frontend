@@ -281,12 +281,12 @@ rører hver eneste side og hører til sit eget spor.
    tilknyttet, så brandnavnet på siden svarer ikke til adressen. Vercel-checket fejler fortsat
    med `Account is blocked` på hver PR — en kontospærring, uafhængig af koden, som ikke blokerer
    merge (`main` er ikke branch-protected).
-   **Skal verificeres:** `js/login.js` bygger sin `redirectTo` ud fra `window.location.origin`,
-   så password-recovery peger nu på workers.dev-adressen. Det er **ikke** bekræftet, at den
-   origin står på Supabases liste over tilladte redirect-URL'er. Er den ikke det, er
-   password-recovery i stykker i produktion lige nu. Det kan ikke testes uden at sende en rigtig
-   mail, så det kræver et opslag i Supabase-dashboardet. Samme kontrol skal gentages, **før**
-   et custom domæne tages i brug.
+   **Password-recovery på Worker-origin er verificeret.** `js/login.js` bygger sin `redirectTo`
+   ud fra `window.location.origin`; Supabase accepterer den origin, og recovery-flowet svarer
+   303 til `…workers.dev/reset-password.html`. Verifikationen brugte `generateLink`, så der blev
+   ikke sendt nogen mail og ikke ændret noget brugerkodeord.
+   **Gælder kun denne origin.** Tages et custom domæne i brug, skal dét domænes
+   recovery-redirect godkendes i Supabase og verificeres særskilt, før brugere sendes derhen.
 3. ~~**`login.html` er ustylet rå HTML.**~~ **LØST 2026-08-08.** `login.html` deler nu
    landingssidens flade: samme tokens, ambient glow, glas-kort, wordmark og knapsprog
    (`css/login.css`). Markup-kontrakten er urørt — alle ID'er, `#forgotBtn`-teksten og den
