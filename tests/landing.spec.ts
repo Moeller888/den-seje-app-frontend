@@ -27,11 +27,23 @@ const MIME: Record<string, string> = {
   ".wav": "audio/wav",
 };
 
-// The production rule, read from the build script so the two cannot drift apart.
+// The production routing table, read from the build script so the two cannot drift apart.
 const BUILD_SRC = fs.readFileSync(path.join(ROOT, "tools", "cloudflare-build-static.mjs"), "utf8");
-const RULE_MATCH = BUILD_SRC.match(/export const REDIRECTS_RULE = "([^"]+)"/);
-const REDIRECTS_RULE = RULE_MATCH ? RULE_MATCH[1] : "";
-const RULE_PARTS = REDIRECTS_RULE.split(/\s+/);           // ["/", "/landing.html", "200"]
+const TABLE_BLOCK = (BUILD_SRC.match(/export const REDIRECT_RULES = Object\.freeze\(\[([\s\S]*?)\]\);/) || [])[1] ?? "";
+const REDIRECT_RULES: string[] = [...TABLE_BLOCK.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+// clean route → the file it serves
+const ROUTES = new Map<string, string>(
+  REDIRECT_RULES.map((r) => { const [from, to] = r.split(/\s+/); return [from, to]; }),
+);
+// The six information pages, in menu order.
+const PAGES: Array<[string, string]> = [
+  ["/produktet", "Korte forløb, der bygger varig viden."],
+  ["/saadan-virker-det", "Tre trin, hver gang."],
+  ["/elev-og-laerer", "To sider af den samme time."],
+  ["/til-skoler", "Bygget efter tre principper."],
+  ["/priser", "Prisen er ikke fastlagt endnu."],
+  ["/om-laerlig", "Et dansk produkt i pilotfase."],
+];
 
 let server: http.Server;
 let baseUrl: string;
@@ -40,8 +52,9 @@ test.beforeAll(async () => {
   server = http.createServer((req, res) => {
     let p = decodeURIComponent((req.url || "/").split("?")[0]);
 
-    // The single internal rewrite. Status 200 = the body changes, the URL does not.
-    if (p === RULE_PARTS[0] && RULE_PARTS[2] === "200") p = RULE_PARTS[1];
+    // The routing table's internal rewrites. Status 200 = the body changes, the URL does not.
+    const target = ROUTES.get(p);
+    if (target) p = target;
 
     try {
       const fp = path.normalize(path.join(ROOT, p));
@@ -78,8 +91,152 @@ async function openLanding(page: any, urlPath = "/") {
 
 // ── the routing contract ──────────────────────────────────────────────────────────────────────
 
-test("the build script's root rewrite targets the landing page", () => {
-  expect(REDIRECTS_RULE).toBe("/ /landing.html 200");
+test("the build script declares the full public routing table", () => {
+  expect(REDIRECT_RULES).toEqual([
+    "/ /landing.html 200",
+    "/produktet /produktet.html 200",
+    "/saadan-virker-det /saadan-virker-det.html 200",
+    "/elev-og-laerer /elev-og-laerer.html 200",
+    "/til-skoler /til-skoler.html 200",
+    "/priser /priser.html 200",
+    "/om-laerlig /om-laerlig.html 200",
+  ]);
+});
+
+// ── the six information pages ─────────────────────────────────────────────────────────────────
+
+for (const [route, heading] of PAGES) {
+  test(`${route} serves its own page, keeps the clean URL, and has one h1`, async ({ page }) => {
+    const res = await page.goto(baseUrl + route, { waitUntil: "load" });
+    expect(res?.status()).toBe(200);
+    expect(new URL(page.url()).pathname).toBe(route);      // internal rewrite: no 3xx, no .html
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("h1")).toHaveText(heading);
+  });
+}
+
+test("every clean route and its .html file render the same document", async ({ request }) => {
+  for (const [route, file] of ROUTES) {
+    const a = await request.get(baseUrl + route);
+    const b = await request.get(baseUrl + file);
+    expect(a.status(), `${route} did not serve`).toBe(200);
+    expect(b.status(), `${file} did not serve`).toBe(200);
+    expect(await a.text(), `${route} and ${file} differ`).toBe(await b.text());
+  }
+});
+
+test("the front page is short: hero, overview, closing CTA — and none of the moved sections", async ({ page }) => {
+  await openLanding(page);
+  await expect(page.locator("main > section")).toHaveCount(3);
+  for (const gone of [".cards", ".steps", ".split", ".ticks"]) {
+    await expect(page.locator(gone), `${gone} is still on the front page`).toHaveCount(0);
+  }
+  // …and it links to all six pages.
+  for (const [route] of PAGES) {
+    await expect(page.locator(`.explore-card[href="${route}"]`)).toHaveCount(1);
+  }
+});
+
+test("the navigation uses page links everywhere — no in-page anchors left in any nav", async ({ page }) => {
+  for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const hrefs = await page.locator("header nav a, footer nav a").evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href") || ""));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const h of hrefs) expect(h.startsWith("#"), `${route} nav still has ${h}`).toBe(false);
+  }
+});
+
+test("the current page is marked with aria-current in the navigation", async ({ page }) => {
+  for (const [route] of PAGES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const marked = await page.locator('[aria-current="page"]').evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
+    expect(marked.length, `${route} marks nothing current`).toBeGreaterThan(0);
+    for (const h of marked) expect(h).toBe(route);
+  }
+  // The front page is not a menu entry, so it marks nothing.
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  await expect(page.locator('[aria-current="page"]')).toHaveCount(0);
+});
+
+test("every navigation and footer link on every public page resolves to 200", async ({ page, request }) => {
+  const checked = new Set<string>();
+  for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const hrefs = await page.locator("header a, footer a, main a").evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href") || ""));
+    for (const h of hrefs) {
+      if (!h || h.startsWith("#") || h.startsWith("http")) continue;
+      const key = h.startsWith("/") ? h : "/" + h;
+      if (checked.has(key)) continue;
+      checked.add(key);
+      const r = await request.get(baseUrl + key);
+      expect(r.status(), `${route} links to ${h}, which is ${r.status()}`).toBe(200);
+    }
+  }
+  expect(checked.size).toBeGreaterThan(6);
+});
+
+test("the wordmark returns to the front page from every information page", async ({ page }) => {
+  for (const [route] of PAGES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    expect(await page.locator(".wordmark").getAttribute("href")).toBe("/");
+  }
+});
+
+test("Log ind keeps its destination on every public page", async ({ page }) => {
+  for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const href = await page.locator(".login-link").evaluate((el) => (el as HTMLAnchorElement).href);
+    expect(new URL(href).pathname).toBe("/login.html");
+  }
+});
+
+test("no information page has horizontal overflow or an empty screen at desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const [route] of PAGES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const m = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      headerBottom: document.querySelector(".site-header")!.getBoundingClientRect().bottom,
+      h1Top: document.querySelector("h1")!.getBoundingClientRect().top,
+    }));
+    expect(m.overflow, `${route} scrolls sideways`).toBeLessThanOrEqual(1);
+    // The page hero is compact: the heading sits close under the header, never a screen below it.
+    expect(m.h1Top - m.headerBottom, `${route} has a large empty band under the header`).toBeLessThan(140);
+  }
+});
+
+test("the mobile menu works on an information page, not just the front page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(baseUrl + "/til-skoler", { waitUntil: "load" });
+  const toggle = page.locator("#nav-toggle");
+  const menu = page.locator("#nav-mobile");
+  await expect(menu).toBeHidden();
+  await toggle.click();
+  await expect(menu).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(toggle).toBeFocused();
+});
+
+test("every information page loads with no off-host request and no console error", async ({ page }) => {
+  const offHost: string[] = [];
+  const errors: string[] = [];
+  page.on("request", (r) => {
+    const u = r.url();
+    if (!u.startsWith(baseUrl) && !u.startsWith("data:") && !u.startsWith("about:")) offHost.push(u);
+  });
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  for (const [route] of PAGES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    await page.waitForTimeout(120);
+  }
+  expect(offHost).toEqual([]);
+  expect(errors).toEqual([]);
 });
 
 test("/ serves the landing page, and the URL stays / (internal rewrite, no 3xx)", async ({ page }) => {
@@ -341,7 +498,8 @@ test("the hero is content-height — the next section is visible at the fold", a
   await openLanding(page);
   const m = await page.evaluate(() => {
     const hero = document.querySelector(".hero")!.getBoundingClientRect();
-    const next = document.querySelector("#produktet")!.getBoundingClientRect();
+    // The overview replaced the old #produktet section as the first block under the hero.
+    const next = document.querySelector(".explore")!.getBoundingClientRect();
     return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight };
   });
   expect(m.heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);

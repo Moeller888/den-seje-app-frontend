@@ -1,7 +1,8 @@
 # Landing page — Lærlig (offentlig forside)
 
-Status: **LIVE i produktion** (2026-08-08). Landingssiden er implementeret, merget og deployet.
-Rodruten `/` serverer den. Appen, auth, Supabase og avatarsystemet er uændrede.
+Status: **LIVE i produktion.** Hjemmesiden er implementeret, merget og deployet. Den er
+**flersidet**: forsiden på `/` plus seks selvstændige informationssider bag rene ruter. Appen,
+auth, Supabase og avatarsystemet er uændrede.
 
 **Produktionsadresse:** `https://den-seje-app-frontend.christ-moeller.workers.dev`
 Der er fortsat **ikke** tilknyttet noget custom domæne — `lærlig.dk` peger ikke på noget.
@@ -21,6 +22,15 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 2 | [#178](https://github.com/Moeller888/den-seje-app-frontend/pull/178) | `afac962` | Fjernet den tomme topzone mellem header og hero |
 | 3 | [#177](https://github.com/Moeller888/den-seje-app-frontend/pull/177) | `afa4d3d` | `login.html` visuelt tilpasset landingssiden |
 | 4 | [#179](https://github.com/Moeller888/den-seje-app-frontend/pull/179) | `fc45af5` | Heroen strammet ind til indholdshøjde |
+| 5 | [#181](https://github.com/Moeller888/den-seje-app-frontend/pull/181) · [#182](https://github.com/Moeller888/den-seje-app-frontend/pull/182) | `4d85c5c` · `4c6ea58` | Dette dokument bragt i overensstemmelse med produktionen |
+| 6 | denne tranche | — | **One-pager → flersidet hjemmeside.** Seks selvstændige sider bag rene ruter; forsiden kortet ned til hero, oversigt og slut-CTA |
+
+**Hvorfor den var en one-pager til at begynde med.** Tranche 1 leverede én side, fordi det var det,
+Model A-auditten omfattede: målet dér var at få en offentlig forside overhovedet og at flytte `/`
+sikkert over på den uden at røre appens routing. Menupunkterne var derfor in-page-ankre
+(`#produktet`, `#priser`, …) — billigst muligt, og uden behov for nye ruter. Det holdt, indtil
+indholdet voksede: alle seks emner lå på samme side, forsiden blev ~5.400 px høj, og hvert
+menuklik scrollede i stedet for at navigere. Denne tranche retter strukturen, ikke symptomet.
 
 *(#177 blev merget efter #178, selv om den blev åbnet før — dens CI-kørsel blev fortrængt af
 concurrency-låsen og skulle køres igen på den rigtige commit.)*
@@ -53,17 +63,40 @@ migration af appens mest centrale rute for at få en marketingside.
 ROUTINGKONTRAKTEN
 ----------------------------------------
 
-```
-/                → intern rewrite (200) → /landing.html    offentlig forside
-/landing.html    → samme side, eksplicit adresse
-/index.html      → elevens quiz, UÆNDRET
-/login.html      → fælles login for alle roller, UÆNDRET
-/landing         → 404 (den eksplicitte .html-kontrakt gælder også landingssiden)
-```
+Hjemmesiden er **flersidet**. Hvert menupunkt er sin egen HTML-fil bag en ren rute:
 
-`_redirects` indeholder fortsat **præcis én regel**. `validateOutput()` afviser en ekstra regel,
-en wildcard og en 301/302 — og afviser nu også en regel, der stille peger roden tilbage på
-quizzen. Status **200 betyder intern rewrite**: adresselinjen bliver stående på `/`.
+| Rute | Fil |
+|---|---|
+| `/` | `landing.html` |
+| `/produktet` | `produktet.html` |
+| `/saadan-virker-det` | `saadan-virker-det.html` |
+| `/elev-og-laerer` | `elev-og-laerer.html` |
+| `/til-skoler` | `til-skoler.html` |
+| `/priser` | `priser.html` |
+| `/om-laerlig` | `om-laerlig.html` |
+
+Uændret ved siden af: `/index.html` = elevens quiz, `/login.html` = fælles login. `/landing`,
+`/login`, `/hub` m.fl. er fortsat **404** — kun de syv offentlige sider har rene ruter.
+
+**`_redirects` er ikke længere én regel, men en eksplicit tabel.** `REDIRECT_RULES` i
+`tools/cloudflare-build-static.mjs` er kilden, og `validateOutput()` holder den emitterede fil
+op mod den **linje for linje, i samme rækkefølge**. Den afviser en ekstra regel, en manglende
+regel, en ombytning, enhver wildcard, enhver status ≠ 200, en regel der peger roden tilbage på
+quizzen — og en rute, hvis målfil ikke rent faktisk ligger i outputtet.
+
+Det er bevidst **ikke** en mønsterbaseret resolver: intet resolver ved konvention, så en
+stavefejl eller et dødt link rammer stadig 404-siden. At tilføje en offentlig side kræver en
+linje i `REDIRECT_RULES` **og** en i `RUNTIME_HTML`.
+
+Status **200 betyder intern rewrite**: adresselinjen bliver stående på den rene rute.
+
+### Hvorfor header og footer er kopieret ind på hver side
+
+Der er ingen build-proces og ingen server-side include, og at injicere navigationen med
+JavaScript ville efterlade hjemmesidens navigation ødelagt uden JS og give et glimt ved hver
+indlæsning. Markup-gentagelsen er den ærlige pris; **styling og opførsel er delt** gennem
+`css/landing.css` og `js/landing.js`. En unit-test sammenligner navigationen på alle syv sider
+og fejler, hvis de driver fra hinanden.
 
 **Quizzen er ikke flyttet, omdøbt eller ændret.** `index.html`, `app.js`, `js/login.js`, alle
 auth-guards og alle rolleredirects er byte-identiske med `bde9ca5`. En unit-test hævder eksplicit,

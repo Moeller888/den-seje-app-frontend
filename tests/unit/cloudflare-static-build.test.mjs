@@ -11,9 +11,13 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative, sep } from "node:path";
 import {
-  build, validateOutput, docsStubHtml, notFoundHtml, DOCS_STUB_MARKER, REDIRECTS_RULE,
+  build, validateOutput, docsStubHtml, notFoundHtml, DOCS_STUB_MARKER, REDIRECT_RULES, ROUTE_TO_FILE,
   RUNTIME_HTML, ROOT_FILES, MANDATORY, FORBIDDEN_DIRS, FORBIDDEN_STRINGS, KNOWN_STRING_EXCEPTIONS,
 } from "../../tools/cloudflare-build-static.mjs";
+
+// The public website's pages, in menu order. Used by several assertions below.
+const PUBLIC_PAGES = ["produktet.html", "saadan-virker-det.html", "elev-og-laerer.html",
+                      "til-skoler.html", "priser.html", "om-laerlig.html"];
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -79,8 +83,8 @@ test("every mandatory runtime file is present", () => {
   for (const m of MANDATORY) assert.ok(existsSync(join(OUT, m)), `missing ${m}`);
 });
 
-test("all 14 runtime HTML pages are copied", () => {
-  assert.equal(RUNTIME_HTML.length, 14);
+test("all 20 runtime HTML pages are copied", () => {
+  assert.equal(RUNTIME_HTML.length, 20);
   for (const p of RUNTIME_HTML) assert.ok(has(p), `missing ${p}`);
 });
 
@@ -104,7 +108,7 @@ test("the required JS and asset trees are copied", () => {
   assert.ok(has("js/supabase.js"), "the shared Supabase client must ship");
 });
 
-test("every local HTML reference resolves to a file that exists in the output", () => {
+test("every local HTML reference resolves — directly, or through a declared clean route", () => {
   const missing = [];
   for (const page of [...RUNTIME_HTML, "docs.html", "404.html"]) {
     const html = read(page);
@@ -112,12 +116,142 @@ test("every local HTML reference resolves to a file that exists in the output", 
       const raw = m[1].trim();
       if (!raw || /^(https?:|data:|mailto:|javascript:|#|\/\/)/i.test(raw)) continue;
       if (raw.includes("${")) continue;                       // template literal, resolved at runtime
-      const rel = raw.replace(/^\.?\//, "").split(/[?#]/)[0];
+      const path = raw.split(/[?#]/)[0];
+      if (!path) continue;
+      // A clean route is a real destination: the Worker rewrites it to a file that must ship.
+      if (Object.prototype.hasOwnProperty.call(ROUTE_TO_FILE, path)) {
+        if (!has(ROUTE_TO_FILE[path])) missing.push(`${page} -> ${path} (route target ${ROUTE_TO_FILE[path]})`);
+        continue;
+      }
+      const rel = path.replace(/^\.?\//, "");
       if (!rel || rel.endsWith("/")) continue;
-      if (!has(rel)) missing.push(`${page} -> ${rel}`);
+      if (!has(rel)) missing.push(`${page} -> ${raw}`);
     }
   }
-  assert.deepEqual(missing, [], "referenced files absent from the output");
+  assert.deepEqual(missing, [], "referenced files or routes absent from the output");
+});
+
+// ── the multipage public website ──────────────────────────────────────────────────────────────
+test("all six information pages ship", () => {
+  for (const p of PUBLIC_PAGES) assert.ok(has(p), `missing ${p}`);
+});
+
+test("every clean route rewrites to a page that actually shipped", () => {
+  for (const [route, file] of Object.entries(ROUTE_TO_FILE)) {
+    assert.ok(has(file), `${route} rewrites to ${file}, which is not in the output`);
+  }
+});
+
+test("the front page is SHORT — the long sections were moved out, not hidden", () => {
+  const home = read("landing.html");
+  // Checked on STRUCTURE, not on prose: the overview cards legitimately quote a page's heading
+  // as a teaser, so a substring search would flag its own link text. What must be gone is the
+  // section content itself — the card grids, the step list and the two-column split.
+  for (const markup of ['class="cards"', 'class="cards cards-tight"', 'class="steps"',
+                        'class="split"', 'class="ticks"', 'class="card"', 'class="step"']) {
+    assert.ok(!home.includes(markup), `front page still carries section markup: ${markup}`);
+  }
+  assert.ok(!/id="(produktet|saadan-virker-det|elev-og-laerer|til-skoler|priser|om)"/.test(home),
+    "front page still has the old in-page section anchors");
+  assert.ok(!/display:\s*none/i.test(home), "a moved section must not merely be hidden");
+  assert.ok(!/\bhidden\b(?![-\w])/.test(home.replace(/id="nav-mobile"[^>]*>/, "")) ||
+            home.includes('id="nav-mobile"'), "no section may be hidden rather than moved");
+
+  // And each moved section must now exist on its own page.
+  assert.ok(read("produktet.html").includes('class="cards"'), "the product cards did not arrive");
+  assert.ok(read("saadan-virker-det.html").includes('class="steps"'), "the steps did not arrive");
+  assert.ok(read("elev-og-laerer.html").includes('class="split"'), "the split did not arrive");
+  assert.ok(read("til-skoler.html").includes('class="cards cards-tight"'), "the principles did not arrive");
+});
+
+test("the front page stays lean — well under the old one-pager", () => {
+  const home = read("landing.html");
+  const sections = (home.match(/<section\b/g) || []).length;
+  assert.ok(sections <= 4, `front page has ${sections} sections; it should be hero + overview + CTA`);
+});
+
+test("each information page carries exactly one h1 and its own title and description", () => {
+  const titles = new Set(), descriptions = new Set();
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const t = read(p);
+    assert.equal((t.match(/<h1[\s>]/g) || []).length, 1, `${p} must have exactly one <h1>`);
+    const title = (t.match(/<title>([^<]+)<\/title>/) || [])[1];
+    // The attribute may be wrapped onto the next line — match across whitespace.
+    const desc = (t.match(/<meta name="description"\s+content="([^"]+)"/) || [])[1];
+    assert.ok(title, `${p} has no <title>`);
+    assert.ok(desc, `${p} has no meta description`);
+    assert.ok(!titles.has(title), `${p} reuses the title "${title}"`);
+    assert.ok(!descriptions.has(desc), `${p} reuses another page's description`);
+    titles.add(title); descriptions.add(desc);
+  }
+});
+
+test("the navigation is identical on every public page, and marks the current one", () => {
+  const navOf = (html, sel) => (html.match(new RegExp(`<nav class="${sel}"[\\s\\S]*?</nav>`)) || [])[0] || "";
+  const strip = (s) => s.replace(/\s+aria-current="page"/g, "");
+
+  const baseDesktop = strip(navOf(read("landing.html"), "nav-desktop"));
+  const baseMobile = strip(navOf(read("landing.html"), "nav-mobile"));
+  assert.ok(baseDesktop.length > 0 && baseMobile.length > 0, "the front page has no navigation");
+
+  for (const p of PUBLIC_PAGES) {
+    const html = read(p);
+    assert.equal(strip(navOf(html, "nav-desktop")), baseDesktop, `${p} desktop nav differs`);
+    assert.equal(strip(navOf(html, "nav-mobile")), baseMobile, `${p} mobile nav differs`);
+
+    // "Om Lærlig" is deliberately mobile-and-footer only — the desktop bar has five entries and
+    // a sixth would crowd it. So that page marks itself once; the other five mark twice.
+    const expected = p === "om-laerlig.html" ? 1 : 2;
+    assert.equal((html.match(/aria-current="page"/g) || []).length, expected,
+      `${p} must mark its own entry current in every nav that contains it`);
+
+    // Whatever the count, the marks must sit on the link that points at this page.
+    const route = "/" + p.replace(/\.html$/, "");
+    for (const m of html.matchAll(/<a href="([^"]+)"\s+aria-current="page"/g)) {
+      assert.equal(m[1], route, `${p} marks ${m[1]} current instead of ${route}`);
+    }
+  }
+  // The front page marks nothing: it is not one of the menu entries.
+  assert.ok(!read("landing.html").includes('aria-current="page"'),
+    "the front page is not a menu entry and must not mark one current");
+});
+
+test("the navigation uses real page links, not the old in-page anchors", () => {
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const html = read(p);
+    const navs = html.match(/<nav[\s\S]*?<\/nav>/g) || [];
+    assert.ok(navs.length >= 2, `${p} is missing navigation`);
+    for (const nav of navs) {
+      for (const m of nav.matchAll(/href="([^"]+)"/g)) {
+        assert.ok(!m[1].startsWith("#"), `${p} still has a hash link in the nav: ${m[1]}`);
+      }
+    }
+  }
+});
+
+test("every public page loads the shared stylesheet and script — no per-page copies", () => {
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const t = read(p);
+    assert.match(t, /href="css\/theme\.css"/, `${p} does not load the shared tokens`);
+    assert.match(t, /href="css\/landing\.css"/, `${p} does not load the shared stylesheet`);
+    assert.match(t, /src="js\/landing\.js"/, `${p} does not load the shared script`);
+    assert.ok(!/<style[\s>]/.test(t), `${p} carries page-local CSS instead of using the shared file`);
+  }
+});
+
+test("the information pages contact no third party and ship no imagery", () => {
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const t = read(p);
+    assert.ok(!/https?:\/\//i.test(t), `${p} references an external URL`);
+    assert.ok(!/<img\b/i.test(t), `${p} ships an image — none is approved yet`);
+    assert.ok(!/assets\/avatar/i.test(t), `${p} uses avatar art as a marketing visual`);
+  }
+});
+
+test("every public page is noindex while the site is pre-launch", () => {
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    assert.match(read(p), /<meta name="robots" content="noindex, nofollow">/, `${p} is indexable`);
+  }
 });
 
 // ── the docs.html stub ────────────────────────────────────────────────────────────────────────
@@ -160,14 +294,31 @@ test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () 
   assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
 });
 
-test("_redirects is generated with exactly the one root rewrite — to the LANDING page", () => {
+test("_redirects is generated as exactly the declared routing table", () => {
   assert.ok(has("_redirects"));
+  const lines = read("_redirects").split("\n").map((l) => l.trim()).filter(Boolean);
+  assert.deepEqual(lines, [
+    "/ /landing.html 200",
+    "/produktet /produktet.html 200",
+    "/saadan-virker-det /saadan-virker-det.html 200",
+    "/elev-og-laerer /elev-og-laerer.html 200",
+    "/til-skoler /til-skoler.html 200",
+    "/priser /priser.html 200",
+    "/om-laerlig /om-laerlig.html 200",
+  ]);
+  assert.deepEqual(lines, [...REDIRECT_RULES]);
+  // status 200 = internal rewrite: the address bar keeps the clean path and no 3xx is emitted
+  for (const l of lines) assert.match(l, /\s200$/, `${l} must be a rewrite, not a 301/302`);
+});
+
+test("the routing table is an explicit list — no pattern could ever match a stray path", () => {
   const raw = read("_redirects");
-  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
-  assert.deepEqual(lines, ["/ /landing.html 200"]);
-  assert.equal(lines[0], REDIRECTS_RULE);
-  // status 200 = internal rewrite: the browser keeps showing "/" and no 3xx is emitted
-  assert.match(lines[0], /\s200$/, "must be a rewrite, not a 301/302 redirect");
+  assert.ok(!raw.includes("*"), "no wildcard anywhere");
+  assert.ok(!/:\w/.test(raw), "no placeholder segments");
+  // Every route is a literal, single-segment path.
+  for (const from of Object.keys(ROUTE_TO_FILE)) {
+    assert.match(from, /^\/[a-z-]*$/, `${from} is not a literal single-segment route`);
+  }
 });
 
 // The whole point of Model A: the quiz did NOT move. `/` changed meaning; `/index.html` did not.
@@ -197,38 +348,62 @@ test("_redirects is NOT a SPA fallback — unknown paths must still reach the 40
 
 test("validateOutput rejects a tampered _redirects", () => {
   const tmp = mkdtempSync(join(tmpdir(), "cf-redirects-"));
+  const writeTable = (lines) => writeFileSync(join(tmp, "_redirects"), lines.join("\n") + "\n", "utf8");
   try {
-    writeFileSync(join(tmp, "landing.html"), "<html></html>", "utf8");
-    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 200\n", "utf8");
+    // A faithful copy of the real table, with every target present, must validate clean.
+    for (const f of Object.values(ROUTE_TO_FILE)) writeFileSync(join(tmp, f), "<html></html>", "utf8");
+    writeTable([...REDIRECT_RULES]);
     assert.deepEqual(validateOutput(tmp).problems, []);
 
-    writeFileSync(join(tmp, "_redirects"), "/* /landing.html 200\n", "utf8");
+    writeTable([...REDIRECT_RULES, "/* /landing.html 200"]);
     let p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("SPA fallback") || x.includes("rule is")), "a wildcard must be refused");
+    assert.ok(p.some((x) => x.includes("wildcard")), "a wildcard must be refused");
 
-    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 302\n", "utf8");
+    writeTable(REDIRECT_RULES.map((r, i) => (i === 0 ? "/ /landing.html 302" : r)));
     p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("rule is")), "a 302 must be refused — it would expose /landing.html in the URL bar");
+    assert.ok(p.some((x) => x.includes("not an internal 200 rewrite") || x.includes("line 1")),
+      "a 302 must be refused — it would expose /landing.html in the URL bar");
 
-    writeFileSync(join(tmp, "_redirects"), "/ /landing.html 200\n/extra /other 200\n", "utf8");
+    writeTable([...REDIRECT_RULES, "/extra /other.html 200"]);
     p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("exactly one rule")), "a second rule must be refused");
+    assert.ok(p.some((x) => x.includes("exactly")), "an extra rule must be refused");
 
-    // A rewrite silently retargeted at the quiz must be refused too — that would put the app
-    // behind the public front door again and expose the quiz shell to anonymous visitors.
-    writeFileSync(join(tmp, "_redirects"), "/ /index.html 200\n", "utf8");
+    writeTable(REDIRECT_RULES.slice(0, -1));
     p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("rule is")), "retargeting the root at the quiz must be refused");
+    assert.ok(p.some((x) => x.includes("exactly")), "a missing rule must be refused");
+
+    // Reordering is refused too: the emitted file must match the declaration exactly.
+    writeTable([REDIRECT_RULES[1], REDIRECT_RULES[0], ...REDIRECT_RULES.slice(2)]);
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("line 1")), "a reordered table must be refused");
+
+    // A rewrite silently retargeted at the quiz must be refused — that would put the app behind
+    // the public front door again and expose the quiz shell to anonymous visitors.
+    writeTable(REDIRECT_RULES.map((r, i) => (i === 0 ? "/ /index.html 200" : r)));
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("line 1")), "retargeting the root at the quiz must be refused");
+
+    // A route pointing at a page that was never shipped must be refused.
+    rmSync(join(tmp, "priser.html"));
+    writeTable([...REDIRECT_RULES]);
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("missing from the output")), "a dangling route target must be refused");
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
 });
 
-test("no extensionless twin of any runtime page ships, so /login can only ever be a 404", () => {
+test("no extensionless twin of any runtime page ships — clean paths exist only as rewrites", () => {
   for (const page of RUNTIME_HTML) {
     const bare = page.replace(/\.html$/, "");
     assert.ok(!has(bare), `${bare} must not exist as an asset`);
     assert.ok(!existsSync(join(OUT, bare)), `${bare} must not exist on disk`);
+  }
+  // So an app address like /login can still only ever be a 404: it is not a file, and it is not
+  // in the routing table either. Only the six public pages have clean routes.
+  for (const app of ["/login", "/hub", "/teacher", "/admin", "/index", "/landing"]) {
+    assert.ok(!Object.prototype.hasOwnProperty.call(ROUTE_TO_FILE, app),
+      `${app} must not have a clean route — app addresses stay explicit .html`);
   }
 });
 

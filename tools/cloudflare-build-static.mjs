@@ -36,12 +36,14 @@ const OUT = join(REPO, OUT_DIR_NAME);
 // `teacher.html` and `reset-password.html` are not optional: js/login.js routes teachers to the
 // first by role, and sets Supabase's password-recovery `redirectTo` to the second. Dropping either
 // breaks a live flow, which is why the reference check below is a test and not a code review step.
-// `landing.html` is the PUBLIC front page and the target of the root rewrite below, so it is
-// likewise not optional: without it, `/` would rewrite to a file that does not exist.
+// The seven PUBLIC website pages — `landing.html` plus the six information pages — are likewise
+// not optional: each one is the target of a rewrite in REDIRECT_RULES below, and a missing file
+// would leave its clean route rewriting to nothing. `validateOutput()` checks that link both ways.
 export const RUNTIME_HTML = Object.freeze([
-  "achievements.html", "admin.html", "avatar.html", "collection.html", "hub.html", "index.html",
-  "landing.html", "leaderboard.html", "login.html", "reset-password.html", "shop.html",
-  "student-detail.html", "teacher.html", "themes.html",
+  "achievements.html", "admin.html", "avatar.html", "collection.html", "elev-og-laerer.html",
+  "hub.html", "index.html", "landing.html", "leaderboard.html", "login.html", "om-laerlig.html",
+  "priser.html", "produktet.html", "reset-password.html", "saadan-virker-det.html", "shop.html",
+  "student-detail.html", "teacher.html", "themes.html", "til-skoler.html",
 ]);
 // Entry files the pages load directly from the root.
 export const ROOT_FILES = Object.freeze(["app.js", "style.css", "supabaseClient.js"]);
@@ -57,26 +59,47 @@ export const ASSET_DIRS = Object.freeze([
 // unreadable without the second — a missing landing page must fail the build, not production.
 export const MANDATORY = Object.freeze([
   "index.html", "login.html", "hub.html", "landing.html", "docs.html", "404.html", "_redirects",
-  "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css",
+  "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html", "til-skoler.html",
+  "priser.html", "om-laerlig.html",
+  "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css", "js/landing.js",
 ]);
 
-// THE ONLY ROUTING RULE. `html_handling: "none"` keeps explicit .html addresses intact — nothing
-// 307s the extension away — but it also stops `/` resolving to anything on its own. This restores
-// exactly that one behaviour and nothing else.
+// THE ROUTING TABLE. `html_handling: "none"` keeps explicit .html addresses intact — nothing 307s
+// the extension away — but it also means a clean path like `/produktet` resolves to nothing on its
+// own. Each public route is therefore listed here explicitly, one internal rewrite per page.
 //
-// THE ROOT IS THE PUBLIC LANDING PAGE, NOT THE QUIZ. `/` serves the marketing page at
-// `landing.html`; the student quiz keeps its own address at `/index.html`, unmoved and unrenamed,
-// and every in-app link, role redirect and Playwright assertion that names `/index.html` continues
-// to resolve exactly as before. The landing page's "VI LÆRER!" call to action is a plain relative
-// link to `login.html`, which is where role routing already lives (js/login.js).
+// THE ROOT IS THE PUBLIC WEBSITE, NOT THE QUIZ. `/` serves `landing.html`; the student quiz keeps
+// its own address at `/index.html`, unmoved and unrenamed, and every in-app link, role redirect and
+// Playwright assertion that names `/index.html` resolves exactly as before. The site's "VI LÆRER!"
+// call to action is a plain relative link to `login.html`, which is where role routing already
+// lives (js/login.js).
 //
-// Status 200 makes it an INTERNAL REWRITE, not a redirect: the browser's address bar keeps showing
-// `/` and no 3xx is emitted. A 301/302 here would put `/landing.html` in the URL bar and reintroduce
-// the round trip this rule exists to remove.
+// Status 200 makes each entry an INTERNAL REWRITE, not a redirect: the address bar keeps showing
+// the clean path and no 3xx is emitted. A 301/302 would expose the `.html` file in the URL bar and
+// reintroduce the round trip these rules exist to remove.
 //
-// Deliberately NOT a SPA fallback (`/* /landing.html 200`): unknown paths must keep reaching the 404
-// page, so a mistyped or dead link fails visibly instead of silently rendering the landing page.
-export const REDIRECTS_RULE = "/ /landing.html 200";
+// AN EXPLICIT LIST, NEVER A PATTERN. This deliberately is not a SPA fallback (`/* … 200`) and not a
+// generic extensionless resolver: unknown paths must keep reaching the 404 page, so a mistyped or
+// dead link fails visibly instead of silently rendering a marketing page. `validateOutput()` holds
+// the emitted file to exactly this list, in this order, refuses any wildcard, refuses any status
+// other than 200, and refuses a rule whose target is not actually in the output.
+//
+// Adding a public page means adding it here AND to RUNTIME_HTML. Nothing resolves by convention.
+export const REDIRECT_RULES = Object.freeze([
+  "/ /landing.html 200",
+  "/produktet /produktet.html 200",
+  "/saadan-virker-det /saadan-virker-det.html 200",
+  "/elev-og-laerer /elev-og-laerer.html 200",
+  "/til-skoler /til-skoler.html 200",
+  "/priser /priser.html 200",
+  "/om-laerlig /om-laerlig.html 200",
+]);
+
+// Clean route → the file it serves. Derived from the table above so the two cannot disagree; used
+// by the reference check in the tests to resolve links like `href="/produktet"`.
+export const ROUTE_TO_FILE = Object.freeze(Object.fromEntries(
+  REDIRECT_RULES.map((r) => { const [from, to] = r.split(/\s+/); return [from, to.replace(/^\//, "")]; }),
+));
 
 // ── what may never appear in the output ───────────────────────────────────────────────────────
 export const FORBIDDEN_EXTENSIONS = Object.freeze([
@@ -245,15 +268,32 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
     }
   }
   // The generated docs.html must be the stub, and must never reach for the docs directory.
-  // `_redirects` is Cloudflare CONFIGURATION, not an asset. It must hold exactly the one rewrite —
-  // a second rule, or a wildcard turning this into a SPA fallback, would silently change routing
-  // for every unknown path and is refused here rather than discovered in production.
+  // `_redirects` is Cloudflare CONFIGURATION, not an asset. It must hold exactly the routing table
+  // declared above — no more, no fewer, in the same order. An extra rule, a wildcard turning this
+  // into a SPA fallback, or a 3xx status would silently change routing and is refused here rather
+  // than discovered in production. Every rewrite target must also exist in the output, so a route
+  // can never point at a file that was not shipped.
   const redirects = join(outDir, "_redirects");
   if (existsSync(redirects)) {
-    const lines = readFileSync(redirects, "utf8").split("\n").map((l) => l.trim()).filter(Boolean);
-    if (lines.length !== 1) problems.push(`_redirects must hold exactly one rule, found ${lines.length}`);
-    else if (lines[0] !== REDIRECTS_RULE) problems.push(`_redirects rule is ${JSON.stringify(lines[0])}, expected ${JSON.stringify(REDIRECTS_RULE)}`);
-    if (/^\/\*/m.test(readFileSync(redirects, "utf8"))) problems.push("_redirects contains a wildcard SPA fallback — unknown paths must reach the 404 page");
+    const raw = readFileSync(redirects, "utf8");
+    const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length !== REDIRECT_RULES.length) {
+      problems.push(`_redirects must hold exactly ${REDIRECT_RULES.length} rule(s), found ${lines.length}`);
+    }
+    for (let i = 0; i < Math.max(lines.length, REDIRECT_RULES.length); i++) {
+      if (lines[i] !== REDIRECT_RULES[i]) {
+        problems.push(`_redirects line ${i + 1} is ${JSON.stringify(lines[i] ?? null)}, expected ${JSON.stringify(REDIRECT_RULES[i] ?? null)}`);
+      }
+    }
+    if (/\*/.test(raw)) problems.push("_redirects contains a wildcard — unknown paths must reach the 404 page");
+    for (const line of lines) {
+      const [, to, status] = line.split(/\s+/);
+      if (status !== "200") problems.push(`_redirects rule ${JSON.stringify(line)} is not an internal 200 rewrite`);
+      const target = (to ?? "").replace(/^\//, "");
+      if (target && !existsSync(join(outDir, target))) {
+        problems.push(`_redirects rewrites to a file missing from the output: ${target}`);
+      }
+    }
   }
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {
@@ -291,7 +331,7 @@ export function build({ quiet = false } = {}) {
   }
   writeFileSync(join(OUT, "docs.html"), docsStubHtml(), "utf8");
   writeFileSync(join(OUT, "404.html"), notFoundHtml(), "utf8");
-  writeFileSync(join(OUT, "_redirects"), REDIRECTS_RULE + "\n", "utf8");
+  writeFileSync(join(OUT, "_redirects"), REDIRECT_RULES.join("\n") + "\n", "utf8");
   const generated = ["404.html", "_redirects", "docs.html"];
 
   for (const m of MANDATORY) {
