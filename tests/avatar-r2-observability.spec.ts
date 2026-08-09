@@ -83,7 +83,7 @@ async function open(browser: any, urlPath: string, opts: { identity?: object; op
   await ctx.addInitScript(([k, s, opt, fail]: [string, any, boolean, boolean]) => {
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
-    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.removeItem("avatar_r2");
+    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.setItem("avatar_r2", "0");
     if (fail) {
       // Controlled local fixture: force an otherwise-unhandled render exception by making the
       // avatar root reject appends (scoped by id → other DOM is untouched).
