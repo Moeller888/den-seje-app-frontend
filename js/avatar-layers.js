@@ -299,25 +299,44 @@ export function baseLayersForC2(identity) {
 // the r2 manifest + resolvers live ALONGSIDE the existing C2/SVG resolvers (unchanged).
 // Phase-1 (D-040 "Master-as-is") is active: `R2_MANIFEST.base` holds the baked base as a
 // **temporary PNG preview** (WebP = production target). The render (mountC2Avatar) consults
-// these ONLY when `AVATAR_R2` is true (default false → C2/SVG path, byte-for-byte).
+// these ONLY when `AVATAR_R2` is true — the default since D-101. A browser opted out with
+// `localStorage.avatar_r2 = "0"`, or any identity the manifest does not cover, still takes the
+// untouched C2/SVG path, byte-for-byte.
 //
 // Guardrail (docs/167a-architecture-preservation-report.md): 167A is an ASSET migration.
 // This block adds resolvers + a manifest; identity model, z-model, engines, render entry
 // point and existing public interfaces are untouched.
 
-// Master raster render switch — DEFAULT OFF. `AVATAR_R2` stays false in production; the C2/SVG path
-// is the untouched fallback. `isAvatarR2()` also honours a per-browser OPT-IN override
-// (`localStorage.avatar_r2 = "1"`) — the mechanism for the small Phase-1 PILOT (167A), mirroring
-// `AVATAR_V2`. No cohort/DB targeting; enabled per browser only. Pilot selection criteria +
-// enable/disable steps: docs/167a-phase1-pilot-rollout.md.
-export const AVATAR_R2 = false;
+// Master raster render switch — DEFAULT ON since D-101 (2026-08-08). The owner ended the 167A
+// pilot by decision and accepted the current R2 build after a manual check; the remaining §9
+// exposure was WAIVED, not passed (docs/167a-phase1-pilot-rollout.md §16). R2 is now the default
+// render for every browser; no opt-in is required.
+//
+// ROLLBACK, two levels, both without a database or user-record change:
+//   1. PER BROWSER  — `localStorage.avatar_r2 = "0"` → that browser renders C2. Survives reloads;
+//                     clear the key to return to the default.
+//   2. GLOBAL       — set `AVATAR_R2 = false` below and redeploy → every browser renders C2,
+//                     including ones carrying a stale key (see below).
+//
+// KEY SEMANTICS ARE DELIBERATELY ASYMMETRIC. Only the exact string "0" is honoured, and only ever
+// to force C2. The legacy Phase-1 pilot value "1" is now INERT: it falls through to the default
+// like any other value. That is what makes the global rollback absolute — a pilot browser cannot
+// pin itself to R2 while the flag says C2 (activation contract: no stale local state may hold a
+// user on an outdated variant). Missing, empty, malformed or unreadable storage also falls
+// through to the default, so the choice is deterministic and this never throws.
+//
+// This switch decides ELIGIBILITY only. `isAvatarR2ActiveFor()` still requires the complete
+// manifest stack to resolve, and `mountC2Avatar` still runs the D-062 atomic asset gate — an
+// unsupported identity (anything but neutral × medium) or a failed mandatory layer renders the
+// complete C2 avatar exactly as before.
+export const AVATAR_R2 = true;
 export function isAvatarR2() {
-  if (AVATAR_R2) return true;
   try {
-    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_r2") === "1";
+    if (typeof localStorage !== "undefined" && localStorage.getItem("avatar_r2") === "0") return false;
   } catch (_e) {
-    return false;
+    // storage blocked/unavailable → fall through to the default; never throw
   }
+  return AVATAR_R2;
 }
 
 // Served raster root + canonical served dimensions (ADR-163D: 1024×1536 master → 512×768).
@@ -473,7 +492,7 @@ export function r2StackSrcsFor(identity) {
 // Whether the raster stack is the ACTIVE render for this identity (AVATAR_R2 on AND
 // the complete decomposed stack resolves). Engine gate anchor: the face is the raster
 // face layer, so SVG overlays must not render on top. The C2/SVG path (this = false)
-// is unchanged. Default AVATAR_R2 false → always false in production.
+// is unchanged, and is still what an unsupported identity or an opted-out browser renders.
 export function isAvatarR2ActiveFor(identity) {
   return isAvatarR2() && !!r2StackSrcsFor(identity);
 }

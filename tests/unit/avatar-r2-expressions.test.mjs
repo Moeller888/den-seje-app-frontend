@@ -13,8 +13,8 @@ import { AVATAR_R2, R2_MANIFEST, faceSrcForR2, r2StackSrcsFor } from "../../js/a
 
 const NEUTRAL_MEDIUM = { body_type: "neutral", skin_tone: "medium" };
 
-test("safety: AVATAR_R2 stays false after expression promotion", () => {
-  assert.equal(AVATAR_R2, false);
+test("expression promotion did not change the render switch (now default-on, D-101)", () => {
+  assert.equal(AVATAR_R2, true);
 });
 
 test("the manifest version is bumped whenever registrations change", () => {

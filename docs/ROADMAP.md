@@ -378,6 +378,22 @@ _Last reviewed: 2026-07-01._
   2026-08-15.** The evidence Wave 1 still lacks is **cosmetics**, which its §2 cohort structurally cannot
   supply — that is Wave 2's job (D-093). Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2`
   stays `false`**; Wave 2 untouched, still `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-100).
+  **▶ OWNER DECISION — the R2 pilot is DISCONTINUED (not passed) and R2 is now the DEFAULT render
+  (2026-08-08, D-101).** Status **`PILOT_DISCONTINUED_BY_OWNER`**; `AVATAR_R2` `false` → **`true`**.
+  The owner ended the pilot on grounds of time, checked the current R2 build themselves and accepted
+  its function and visual result. **This is not a pass: no §13 classification was reached, and the
+  remaining §9 exposure was WAIVED, not satisfied** — §9's text is unchanged, it was overridden by
+  decision rather than edited into compliance. **No pilot data was invented or back-dated, and no
+  earlier FAIL/PAUSED/CONDITIONAL result was rewritten to PASS.** What the pilot did establish stands:
+  two genuine §8 onboarding runs (D-078, D-099) — point-in-time checks, not longitudinal use. **What it
+  never established:** no sustained real use, and **no cosmetic was ever observed by a pilot user**, so
+  the Ridderdragt and the re-seated slots reach production unobserved. Mechanism: `isAvatarR2()` now
+  honours only `'0'` (force C2); the legacy `'1'` is **inert**, which is what makes the global rollback
+  absolute. Measured blast radius (28 students): **23 on R2**, 5 stay C2; all 23 get the North Star hair
+  because R2 ignores the 7 selectable hairstyles (1 had a non-default style stored). Rollback: per
+  browser `'0'`, globally flip the flag — no DB or user-record change. **No asset, manifest, design,
+  Supabase, migration or golden-baseline change; Wave 2 still `DEFINED — NOT STARTED`.** See
+  `docs/project-state.md` (D-101) and `167a-phase1-pilot-rollout.md` §16.
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above

@@ -163,10 +163,18 @@ test("blinkConfigFor(identity, false) forces c2 lids even when the manifest reso
 test("blinkConfigFor(identity, true) forces r2 lids", () => {
   assert.equal(blinkConfigFor(NEUTRAL, true).mode, "r2");
 });
-test("blinkConfigFor(identity) unchanged default (no override) → manifest-based", () => {
-  // no localStorage opt-in effect here: AVATAR_R2 false + node → c2
-  const saved = globalThis.localStorage; delete globalThis.localStorage;
-  try { assert.equal(blinkConfigFor(NEUTRAL).mode, "c2"); } finally { globalThis.localStorage = saved; }
+test("blinkConfigFor(identity) with no override → manifest-based", () => {
+  // D-101: R2 is the default, so no-storage resolves to r2 for a supported identity, and the C2
+  // mode is what an explicit opt-out ("0") produces. Both directions are pinned here.
+  const saved = globalThis.localStorage;
+  delete globalThis.localStorage;
+  try {
+    assert.equal(blinkConfigFor(NEUTRAL).mode, "r2");
+    globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+    assert.equal(blinkConfigFor(NEUTRAL).mode, "c2");
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
 });
 
 test.after(() => clearMocks());
