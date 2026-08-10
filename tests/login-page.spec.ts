@@ -156,11 +156,12 @@ test("the page renders on the product's dark navy surface, not the browser defau
   expect(themed).toBe("#12122a");
 });
 
-test("it carries the same Laerlig wordmark and links back to the landing page", async ({ page }) => {
+test("it carries the same Laerlig wordmark and links home to /", async ({ page }) => {
   await openLogin(page);
   await expect(page.locator(".login-brand .wordmark-text")).toHaveText("Lærlig");
-  expect(await page.locator(".login-brand").getAttribute("href")).toBe("landing.html");
-  expect(await page.locator(".login-back").getAttribute("href")).toBe("landing.html");
+  // "/" — the same home destination the wordmark uses on every public page, not the .html file.
+  expect(await page.locator(".login-brand").getAttribute("href")).toBe("/");
+  expect(await page.locator(".login-back").getAttribute("href")).toBe("/");
 });
 
 test("the tab title is the Laerlig brand, not the old internal name", async ({ page }) => {

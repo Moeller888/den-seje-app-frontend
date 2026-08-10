@@ -37,13 +37,17 @@ const ROUTES = new Map<string, string>(
 );
 // The six information pages, in menu order.
 const PAGES: Array<[string, string]> = [
-  ["/produktet", "Korte forløb, der bygger varig viden."],
+  ["/produktet", "Det svære kommer igen."],
   ["/saadan-virker-det", "Tre trin, hver gang."],
   ["/elev-og-laerer", "To sider af den samme time."],
-  ["/til-skoler", "Bygget efter tre principper."],
+  ["/til-skoler", "Læreren bestemmer."],
   ["/priser", "Prisen er ikke fastlagt endnu."],
-  ["/om-laerlig", "Et dansk produkt i pilotfase."],
+  ["/om-laerlig", "Lærlig er i pilotdrift."],
 ];
+
+// The five entries in the main menu. "Om Lærlig" is reachable from the footer only, so it is
+// deliberately not one of them — the same rule on desktop and on mobile.
+const MENU = PAGES.filter(([r]) => r !== "/om-laerlig").map(([r]) => r);
 
 let server: http.Server;
 let baseUrl: string;
@@ -148,16 +152,33 @@ test("the navigation uses page links everywhere — no in-page anchors left in a
 });
 
 test("the current page is marked with aria-current in the navigation", async ({ page }) => {
-  for (const [route] of PAGES) {
+  for (const route of MENU) {
     await page.goto(baseUrl + route, { waitUntil: "load" });
     const marked = await page.locator('[aria-current="page"]').evaluateAll(
       (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
     expect(marked.length, `${route} marks nothing current`).toBeGreaterThan(0);
     for (const h of marked) expect(h).toBe(route);
   }
-  // The front page is not a menu entry, so it marks nothing.
-  await page.goto(baseUrl + "/", { waitUntil: "load" });
-  await expect(page.locator('[aria-current="page"]')).toHaveCount(0);
+  // Pages that are not menu entries mark nothing: the front page, and /om-laerlig, which is
+  // reachable from the footer only.
+  for (const route of ["/", "/om-laerlig"]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    await expect(page.locator('[aria-current="page"]'), `${route} must not mark a menu entry`).toHaveCount(0);
+  }
+});
+
+test("the desktop and mobile menus list exactly the same five pages", async ({ page }) => {
+  for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const desktop = await page.locator(".nav-desktop a").evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
+    const mobile = await page.locator("#nav-mobile a").evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
+    expect(desktop, `${route}: menu drifted`).toEqual(MENU);
+    expect(mobile, `${route}: the mobile menu differs from desktop`).toEqual(MENU);
+    // …and Om Lærlig is still reachable, from the footer.
+    await expect(page.locator('footer a[href="/om-laerlig"]')).toHaveCount(1);
+  }
 });
 
 test("every navigation and footer link on every public page resolves to 200", async ({ page, request }) => {

@@ -604,6 +604,19 @@ h2 {
   color: var(--l-text);
 }
 
+/* An inline link inside body copy — used where a page needs to point somewhere without a
+   full-weight button competing with the page's own call to action. */
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--l-accent-soft);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 160ms var(--l-ease);
+}
+.text-link:hover { color: var(--l-bright); }
+
 /* ── Cards ────────────────────────────────────────────────────────────────── */
 
 .cards {
