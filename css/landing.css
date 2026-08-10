@@ -520,57 +520,6 @@ img, svg { max-width: 100%; }
 .page-hero + .section { padding-top: clamp(40px, 5vh, 64px); }
 .page-hero + .section::before { content: none; }
 
-/* ── Front page: the overview that replaced the long one-pager ────────────── */
-
-.explore { padding: clamp(56px, 7vh, 88px) 0 clamp(72px, 9vh, 112px); }
-
-.explore-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 34px;
-  list-style: none;
-}
-
-.explore-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 100%;
-  padding: 24px 26px 22px;
-  border: 1px solid rgba(42, 42, 90, .7);
-  border-radius: var(--l-radius);
-  background: linear-gradient(160deg, rgba(26, 26, 62, .85), rgba(16, 16, 58, .70));
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, .05) inset,
-    0 20px 40px -24px rgba(0, 0, 0, .70);
-  color: inherit;
-  text-decoration: none;
-  transition: transform 200ms var(--l-ease), border-color 200ms var(--l-ease);
-}
-.explore-card:hover { transform: translateY(-2px); border-color: rgba(2, 136, 209, .45); }
-.explore-card:focus-visible { outline: 3px solid var(--l-accent-soft); outline-offset: 3px; }
-
-.explore-card h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.0625rem;
-  font-weight: 650;
-  color: var(--l-bright);
-}
-.explore-card h3::after {
-  content: "→";
-  font-size: .9rem;
-  color: var(--l-accent-soft);
-  transition: transform 200ms var(--l-ease);
-}
-@media (hover: hover) {
-  .explore-card:hover h3::after { transform: translateX(3px); }
-}
-.explore-card p { color: var(--l-soft); font-size: .9375rem; }
-
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 
 .section { position: relative; padding: clamp(96px, 12vh, 168px) 0; }
@@ -820,7 +769,7 @@ h2 {
   }
   .nav-mobile a:last-child { border-bottom: none; }
 
-  .cards, .steps, .split, .explore-grid { grid-template-columns: repeat(2, 1fr); }
+  .cards, .steps, .split { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
 
   .nav-mobile a[aria-current="page"] { color: var(--l-bright); }
@@ -856,11 +805,10 @@ h2 {
     margin-top: 36px;
   }
 
-  .cards, .steps, .split, .footer-inner, .explore-grid { grid-template-columns: 1fr; }
+  .cards, .steps, .split, .footer-inner { grid-template-columns: 1fr; }
   .card, .split-col { padding: 24px; }
   .section { padding: 76px 0; }
   .page-hero { padding: 32px 0 4px; }
-  .explore { padding: 48px 0 64px; }
 }
 
 /* ═══ REDUCED MOTION ═══════════════════════════════════════════════════════

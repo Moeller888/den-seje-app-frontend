@@ -23,7 +23,14 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 3 | [#177](https://github.com/Moeller888/den-seje-app-frontend/pull/177) | `afa4d3d` | `login.html` visuelt tilpasset landingssiden |
 | 4 | [#179](https://github.com/Moeller888/den-seje-app-frontend/pull/179) | `fc45af5` | Heroen strammet ind til indholdshøjde |
 | 5 | [#181](https://github.com/Moeller888/den-seje-app-frontend/pull/181) · [#182](https://github.com/Moeller888/den-seje-app-frontend/pull/182) | `4d85c5c` · `4c6ea58` | Dette dokument bragt i overensstemmelse med produktionen |
-| 6 | denne tranche | — | **One-pager → flersidet hjemmeside.** Seks selvstændige sider bag rene ruter; forsiden kortet ned til hero, oversigt og slut-CTA |
+| 6 | [#183](https://github.com/Moeller888/den-seje-app-frontend/pull/183) | `fa7296f` | **One-pager → flersidet hjemmeside.** Seks selvstændige sider bag rene ruter |
+| 7 | [#186](https://github.com/Moeller888/den-seje-app-frontend/pull/186) | `ff6f029` | Teksten skrevet om i almindeligt dansk; "Om Lærlig" flyttet til footeren alene |
+| 8 | denne tranche | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
+
+**Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
+produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks
+oversigtskort fjernet, og de er **ikke** erstattet af en ny tekstsektion. Slut-CTA'en røg med:
+med kortene væk stod dens "VI LÆRER!"-knap kun én skærm under den identiske knap i heroen.
 
 **Hvorfor den var en one-pager til at begynde med.** Tranche 1 leverede én side, fordi det var det,
 Model A-auditten omfattede: målet dér var at få en offentlig forside overhovedet og at flytte `/`

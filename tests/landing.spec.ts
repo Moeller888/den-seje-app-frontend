@@ -131,13 +131,18 @@ test("every clean route and its .html file render the same document", async ({ r
 
 test("the front page is short: hero, overview, closing CTA — and none of the moved sections", async ({ page }) => {
   await openLanding(page);
-  await expect(page.locator("main > section")).toHaveCount(3);
-  for (const gone of [".cards", ".steps", ".split", ".ticks"]) {
+  // The hero and nothing else. The front page is the way in, not the whole sales page: the
+  // reader gets curious and explores through the menu. A second copy of the same call to
+  // action, one screen below the first, is exactly what this guards against.
+  await expect(page.locator("main > section")).toHaveCount(1);
+  await expect(page.locator(".cta-portal"), "one call to action, not two").toHaveCount(1);
+  for (const gone of [".cards", ".steps", ".split", ".ticks", ".explore", ".explore-card", ".closing"]) {
     await expect(page.locator(gone), `${gone} is still on the front page`).toHaveCount(0);
   }
-  // …and it links to all six pages.
+  // The six pages are reached through the menu and the footer, not through cards on the front page.
   for (const [route] of PAGES) {
-    await expect(page.locator(`.explore-card[href="${route}"]`)).toHaveCount(1);
+    await expect(page.locator(`header a[href="${route}"], footer a[href="${route}"]`).first(),
+      `${route} is not reachable from the menu or the footer`).toHaveCount(1);
   }
 });
 
@@ -514,20 +519,23 @@ for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as co
   });
 }
 
-test("the hero is content-height — the next section is visible at the fold", async ({ page }) => {
+test("the hero is content-height, and the whole front page is short", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openLanding(page);
   const m = await page.evaluate(() => {
     const hero = document.querySelector(".hero")!.getBoundingClientRect();
-    // The overview replaced the old #produktet section as the first block under the hero.
-    const next = document.querySelector(".explore")!.getBoundingClientRect();
-    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight };
+    const footer = document.querySelector(".site-footer")!.getBoundingClientRect();
+    return {
+      heroTop: hero.top, heroBottom: hero.bottom, footerTop: footer.top,
+      viewportH: window.innerHeight, docH: document.documentElement.scrollHeight,
+    };
   });
   expect(m.heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
-  // No viewport-height floor: the hero is only as tall as what is in it, so the section
-  // below reaches into the first screen instead of sitting past a full-height title card.
+  // No viewport-height floor: the hero is only as tall as what is in it.
   expect(m.heroBottom, "the hero must not fill the whole first screen").toBeLessThan(m.viewportH);
-  expect(m.nextTop, "the next section must be reachable within the first viewport").toBeLessThan(m.viewportH);
+  // The footer follows the hero directly, so the page stays inside about two screens.
+  expect(m.footerTop - m.heroBottom, "an empty band opened up under the hero").toBeLessThan(40);
+  expect(m.docH, "the front page grew back into a long page").toBeLessThan(m.viewportH * 2);
 });
 
 test("no scroll indicator remains — it would point at something already visible", async ({ page }) => {
