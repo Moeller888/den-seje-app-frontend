@@ -199,9 +199,10 @@ test("the navigation is identical on every public page, and marks the current on
     assert.equal(strip(navOf(html, "nav-desktop")), baseDesktop, `${p} desktop nav differs`);
     assert.equal(strip(navOf(html, "nav-mobile")), baseMobile, `${p} mobile nav differs`);
 
-    // "Om Lærlig" is deliberately mobile-and-footer only — the desktop bar has five entries and
-    // a sixth would crowd it. So that page marks itself once; the other five mark twice.
-    const expected = p === "om-laerlig.html" ? 1 : 2;
+    // ONE consistent rule: the main navigation is the same five entries on desktop and mobile.
+    // "Om Lærlig" lives in the footer only, so — like the front page — it is not a menu entry
+    // and marks nothing. The five that are menu entries mark themselves twice, once per nav.
+    const expected = p === "om-laerlig.html" ? 0 : 2;
     assert.equal((html.match(/aria-current="page"/g) || []).length, expected,
       `${p} must mark its own entry current in every nav that contains it`);
 
@@ -214,6 +215,20 @@ test("the navigation is identical on every public page, and marks the current on
   // The front page marks nothing: it is not one of the menu entries.
   assert.ok(!read("landing.html").includes('aria-current="page"'),
     "the front page is not a menu entry and must not mark one current");
+
+  // The desktop and mobile menus must carry exactly the same entries — the asymmetry where
+  // "Om Lærlig" appeared on mobile only is what this pins shut.
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const html = read(p);
+    const hrefs = (nav) => [...(navOf(html, nav).matchAll(/href="([^"]+)"/g))].map((m) => m[1]);
+    assert.deepEqual(hrefs("nav-mobile"), hrefs("nav-desktop"),
+      `${p}: the mobile menu must list the same pages as the desktop menu`);
+    assert.equal(hrefs("nav-desktop").length, 5, `${p}: the main menu should stay five entries`);
+    assert.ok(!hrefs("nav-desktop").includes("/om-laerlig"),
+      `${p}: "Om Lærlig" belongs in the footer, not the main menu`);
+    assert.ok(html.includes('<a href="/om-laerlig">Om Lærlig</a>'),
+      `${p}: "Om Lærlig" must still be reachable from the footer`);
+  }
 });
 
 test("the navigation uses real page links, not the old in-page anchors", () => {
