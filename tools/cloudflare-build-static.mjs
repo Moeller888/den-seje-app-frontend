@@ -101,6 +101,35 @@ export const ROUTE_TO_FILE = Object.freeze(Object.fromEntries(
   REDIRECT_RULES.map((r) => { const [from, to] = r.split(/\s+/); return [from, to.replace(/^\//, "")]; }),
 ));
 
+// ── SEARCH-ENGINE CLASSIFICATION ──────────────────────────────────────────────────────────────
+// Every HTML page that ships is EITHER public marketing OR an internal surface. There is no third
+// state and no default: `validateOutput()` refuses an output containing a page that is in neither
+// list, so a new page cannot reach production without someone deciding which it is.
+//
+// PUBLIC pages carry NO robots directive at all — indexing is the default, and an explicit
+// "index, follow" would just be one more thing to keep correct.
+//
+// INTERNAL pages carry `noindex`. They are the student app, the teacher and admin surfaces, the
+// auth flows, and the two generated system pages. They answer nothing a searcher is looking for:
+// without JavaScript they render a loading shell, and with it the auth guard bounces to login.
+// NOTE: noindex keeps them out of search results; it does NOT make them private. The real
+// boundary is the auth guard and RLS — this list is about search hygiene, not access control.
+export const PUBLIC_HTML = Object.freeze([
+  "landing.html", "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html",
+  "til-skoler.html", "priser.html", "om-laerlig.html",
+]);
+export const INTERNAL_HTML = Object.freeze([
+  // student app
+  "index.html", "hub.html", "shop.html", "avatar.html", "collection.html", "themes.html",
+  "leaderboard.html", "achievements.html",
+  // teacher + admin
+  "teacher.html", "student-detail.html", "admin.html",
+  // auth flows
+  "login.html", "reset-password.html",
+  // generated system pages
+  "docs.html", "404.html",
+]);
+
 // ── what may never appear in the output ───────────────────────────────────────────────────────
 export const FORBIDDEN_EXTENSIONS = Object.freeze([
   ".md", ".map", ".ts", ".jsx", ".mjs", ".cjs", ".json", ".ps1", ".log", ".txt", ".lock", ".jsonl", ".env", ".yml", ".yaml",
@@ -208,6 +237,7 @@ export function notFoundHtml() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Siden blev ikke fundet</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
@@ -295,6 +325,24 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
       }
     }
   }
+  // Every shipped page must be classified, and must match its class. An unclassified page is
+  // refused outright: that is what stops a new HTML file reaching production with nobody having
+  // decided whether search engines may show it.
+  for (const rel of files) {
+    if (!/^[^/]+\.html$/.test(rel)) continue;                    // root-level pages only
+    const isPublic = PUBLIC_HTML.includes(rel);
+    const isInternal = INTERNAL_HTML.includes(rel);
+    if (!isPublic && !isInternal) {
+      problems.push(`unclassified page in output: ${rel} — add it to PUBLIC_HTML or INTERNAL_HTML`);
+      continue;
+    }
+    if (isPublic && isInternal) { problems.push(`${rel} is in both PUBLIC_HTML and INTERNAL_HTML`); continue; }
+    const html = readFileSync(join(outDir, rel), "utf8");
+    const noindex = /<meta\s+name="robots"[^>]*content="[^"]*noindex/i.test(html);
+    if (isInternal && !noindex) problems.push(`internal page is indexable: ${rel} needs a noindex robots meta`);
+    if (isPublic && /noindex|nofollow/i.test(html)) problems.push(`public page blocks indexing: ${rel}`);
+  }
+
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {
     const t = readFileSync(docs, "utf8");
