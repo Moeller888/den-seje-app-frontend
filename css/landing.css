@@ -686,15 +686,18 @@ h2 {
   vertical-align: 1px;
 }
 
+/* The whole attribution is italic, and every word of it — including "fra" — is real text in the
+   markup. Nothing is generated: a reader who selects and copies the line gets the citation
+   exactly as it reads on screen. */
 .dict-source {
   margin-top: 18px;
   font-size: .875rem;
+  font-style: italic;
   letter-spacing: .01em;
   color: var(--l-soft);
 }
-/* The em dash is generated so the citation reads as an attribution without the character
-   sitting in the markup, where it would be copied along with the source name. */
-.dict-source::before { content: "— "; }
+/* <cite> is already italic by default; this keeps it from being the only differing weight. */
+.dict-source cite { font-style: inherit; }
 .dict-source a {
   color: var(--l-soft);
   text-decoration: underline;
