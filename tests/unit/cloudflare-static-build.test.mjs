@@ -269,6 +269,22 @@ test("every public page is noindex while the site is pre-launch", () => {
   }
 });
 
+test("the site is reachable — one contact address, in the footer of every public page", () => {
+  const CONTACT = "mailto:Christarbejde@gmail.com";
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const t = read(p);
+    assert.ok(t.includes(`<a href="${CONTACT}">Skriv til os</a>`),
+      `${p}: the footer must offer a way to get in touch`);
+    // Exactly one address, so a second one cannot drift in unnoticed.
+    assert.equal((t.match(/mailto:/g) || []).length, p === "priser.html" ? 2 : 1,
+      `${p}: unexpected number of mailto links`);
+  }
+  // Pricing invites schools to write, so it must actually carry the address in the body too.
+  assert.match(read("priser.html"), /Vil du høre mere\?/);
+  assert.ok(read("priser.html").includes(`href="${CONTACT}"`),
+    "the pricing page invites contact but does not give the address");
+});
+
 // ── the docs.html stub ────────────────────────────────────────────────────────────────────────
 test("docs.html exists and IS the generated public stub, not the source page", () => {
   assert.ok(has("docs.html"));
