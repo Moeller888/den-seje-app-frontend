@@ -193,7 +193,8 @@ test("every navigation and footer link on every public page resolves to 200", as
     const hrefs = await page.locator("header a, footer a, main a").evaluateAll(
       (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href") || ""));
     for (const h of hrefs) {
-      if (!h || h.startsWith("#") || h.startsWith("http")) continue;
+      // mailto: is a real destination but not one an HTTP request can resolve.
+      if (!h || h.startsWith("#") || h.startsWith("http") || h.startsWith("mailto:")) continue;
       const key = h.startsWith("/") ? h : "/" + h;
       if (checked.has(key)) continue;
       checked.add(key);
