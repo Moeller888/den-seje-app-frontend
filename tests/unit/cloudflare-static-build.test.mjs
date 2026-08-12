@@ -55,12 +55,11 @@ test("the landing page's call to action points at login.html, not at the quiz", 
   assert.ok(has("login.html"), "the CTA would otherwise land on a 404");
 });
 
-test("the landing page is noindex while the site is pre-launch", () => {
-  assert.match(
-    read("landing.html"),
-    /<meta\s+name="robots"\s+content="noindex,\s*nofollow">/i,
-    "pre-launch the public page must not be indexed",
-  );
+test("the landing page is indexable — no robots meta at all", () => {
+  // Indexing is the default, so the page carries no robots tag rather than an "index, follow"
+  // one. The check is for ABSENCE: a stray noindex here would quietly delist the front page.
+  assert.ok(!/name="robots"/i.test(read("landing.html")),
+    "the front page must not carry a robots meta tag");
 });
 
 test("the landing page contacts no third party — no external host, no webfont, no tracker", () => {
@@ -263,9 +262,17 @@ test("the information pages contact no third party and ship no imagery", () => {
   }
 });
 
-test("every public page is noindex while the site is pre-launch", () => {
+test("all seven public pages are indexable, and nothing else became indexable with them", () => {
+  // The seven marketing pages: no robots directive, so the default (index, follow) applies.
   for (const p of ["landing.html", ...PUBLIC_PAGES]) {
-    assert.match(read(p), /<meta name="robots" content="noindex, nofollow">/, `${p} is indexable`);
+    assert.ok(!/noindex|nofollow/i.test(read(p)), `${p} still blocks indexing`);
+    assert.ok(!/name="robots"/i.test(read(p)), `${p} still carries a robots meta tag`);
+  }
+  // These two are NOT public marketing pages and must keep theirs. Opening indexing on the
+  // seven should never have leaked into the app's entry page or the internal docs stub.
+  for (const p of ["login.html", "docs.html"]) {
+    assert.match(read(p), /<meta name="robots" content="noindex[^"]*">/i,
+      `${p} must stay out of search results`);
   }
 });
 
