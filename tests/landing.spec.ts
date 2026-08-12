@@ -358,10 +358,14 @@ test("the page loads with zero off-host requests and no console errors", async (
 
 // ── accessibility ─────────────────────────────────────────────────────────────────────────────
 
-test("document language is Danish and the page is noindex while pre-launch", async ({ page }) => {
+test("document language is Danish, and every public page is indexable", async ({ page }) => {
   await openLanding(page);
   expect(await page.locator("html").getAttribute("lang")).toBe("da");
-  expect(await page.locator('meta[name="robots"]').getAttribute("content")).toBe("noindex, nofollow");
+  // Indexing is the default: the pages carry no robots directive at all.
+  for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    await expect(page.locator('meta[name="robots"]'), `${route} still blocks indexing`).toHaveCount(0);
+  }
 });
 
 test("there is exactly one h1, and every section is labelled", async ({ page }) => {
