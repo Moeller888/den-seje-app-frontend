@@ -176,6 +176,32 @@ Specen er selvbetjent (en lokal `http.Server` serverer branchens egne filer og m
 rodrewriten), så den består **også** under default-configen i CI, uden at landingssiden behøver
 være deployet.
 
+### Ordbogsopslaget på `/elev-og-laerer`
+
+Mellem sidens indledning og opdelingen mellem elev og lærer står navnets egen ordbogsdefinition
+som et typografisk citat:
+
+> **lærlig**, adj. · † om person: som egner sig til at belæres eller undervises; lærenem; lærvillig
+> fra *[Ordbog over det danske Sprog](https://ordnet.dk/ods/ordbog?query=l%C3%A6rlig)*, bind 13, 1932
+
+Fire ting er bevidste og testdækkede:
+
+- **Rigtig HTML-tekst**, ikke et skærmbillede fra Ordnet. Den kan markeres, søges i og læses op.
+- **Daggeren `†` er bevaret.** Den er ordbogens egen markering af, at betydningen er forældet —
+  fjernes den, ændres påstanden. Den er derfor ikke skjult for skærmlæsere.
+- **Kildeangivelsen er hel tekst.** Ordet "fra" står i markup, ikke som en genereret `::before`,
+  og værkets titel er pakket i `<cite>`. Hele linjen er kursiv. En CSS-genereret tankestreg ville
+  se ens ud på skærmen, men hverken kunne kopieres eller læses op — testen afviser den eksplicit.
+- **Ingen overskrift over og ingen forklarende tekst under.** Opslaget står alene; en forklaring
+  ville forklare pointen ihjel.
+
+Kildelinket er den eneste eksterne adresse på hele hjemmesiden. Det er et `<a href>`, ikke en
+indlæst ressource: browseren henter intet fra ordnet.dk, medmindre den besøgende selv klikker.
+Unit-testen skelner nu mellem de to — `src`/`link`/`@import` mod en fremmed vært er stadig forbudt.
+
+Typografien bruger en **lokalt installeret serif** (Georgia med fallbacks). Det holder
+no-webfont-reglen og giver samtidig det redaktionelle udtryk, systemfonten ikke kan.
+
 ----------------------------------------
 TEKSTENS DOKUMENTATIONSGRUNDLAG
 ----------------------------------------

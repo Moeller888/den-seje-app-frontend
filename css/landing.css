@@ -638,6 +638,84 @@ h2 {
 }
 .step p { color: var(--l-soft); font-size: .96875rem; }
 
+/* ── The dictionary entry (elev-og-laerer) ────────────────────────────────── */
+/* A pull quote, not a card. No border box and no panel background: the effect comes from
+   whitespace, one hairline rule and the change of typeface. A serif is used for the entry
+   itself — Georgia and its fallbacks are installed locally, so this stays within the
+   no-webfont rule while reading as editorial rather than as UI. */
+
+.dict-quote {
+  max-width: 46ch;
+  margin: clamp(8px, 2vh, 24px) 0 clamp(44px, 6vh, 72px);
+  padding-top: clamp(28px, 4vh, 44px);
+  border-top: 1px solid rgba(42, 42, 90, .9);
+}
+
+.dict-quote blockquote { margin: 0; }
+
+.dict-headword {
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+  line-height: 1.1;
+}
+.dict-word {
+  font-size: clamp(2.4rem, 6vw, 3.75rem);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.015em;
+  color: var(--l-accent-soft);
+}
+.dict-pos {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-style: italic;
+  color: var(--l-soft);
+}
+
+.dict-sense {
+  margin-top: 14px;
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+  font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+  line-height: 1.65;
+  color: var(--l-text);
+}
+/* The dagger marks an obsolete sense. Slightly raised and in the accent so it reads as
+   notation rather than punctuation — but it stays selectable, quotable text. */
+.dict-obelisk {
+  color: var(--l-accent);
+  padding-right: 2px;
+  font-size: 1.05em;
+  vertical-align: 1px;
+}
+
+/* The whole attribution is italic, and every word of it — including "fra" — is real text in the
+   markup. Nothing is generated: a reader who selects and copies the line gets the citation
+   exactly as it reads on screen. */
+.dict-source {
+  margin-top: 18px;
+  font-size: .875rem;
+  font-style: italic;
+  letter-spacing: .01em;
+  color: var(--l-soft);
+}
+/* <cite> is already italic by default; this keeps it from being the only differing weight. */
+.dict-source cite { font-style: inherit; }
+.dict-source a {
+  color: var(--l-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(154, 163, 196, .45);
+  transition: color 160ms var(--l-ease), text-decoration-color 160ms var(--l-ease);
+}
+.dict-source a:hover { color: var(--l-bright); text-decoration-color: var(--l-accent); }
+
+@media (max-width: 640px) {
+  .dict-quote {
+    max-width: none;
+    margin-bottom: 40px;
+    padding-top: 26px;
+  }
+  .dict-sense { font-size: 1.0625rem; }
+}
+
 /* ── Split (elev / lærer) ─────────────────────────────────────────────────── */
 
 .split {
