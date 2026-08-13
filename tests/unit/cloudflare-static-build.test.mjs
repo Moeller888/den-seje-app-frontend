@@ -376,7 +376,7 @@ test("3b — validateOutput REFUSES an unclassified or misclassified page", () =
 });
 
 test("the site is reachable — one contact address, in the footer of every public page", () => {
-  const CONTACT = "mailto:Christarbejde@gmail.com";
+  const CONTACT = "mailto:kontakt@lærlig.dk";
   for (const p of ["landing.html", ...PUBLIC_PAGES]) {
     const t = read(p);
     assert.ok(t.includes(`<a href="${CONTACT}">Skriv til os</a>`),
@@ -384,11 +384,18 @@ test("the site is reachable — one contact address, in the footer of every publ
     // Exactly one address, so a second one cannot drift in unnoticed.
     assert.equal((t.match(/mailto:/g) || []).length, p === "priser.html" ? 2 : 1,
       `${p}: unexpected number of mailto links`);
+    // The public site writes from its own domain. A personal free-mail address — the private
+    // Gmail this replaced, or any other — must not come back, in a link or as visible text.
+    assert.ok(!/@(?:gmail|hotmail|outlook|yahoo|live)\.[a-z.]+/i.test(t),
+      `${p}: a personal free-mail address is on the page instead of the domain address`);
   }
   // Pricing invites schools to write, so it must actually carry the address in the body too.
   assert.match(read("priser.html"), /Vil du høre mere\?/);
   assert.ok(read("priser.html").includes(`href="${CONTACT}"`),
     "the pricing page invites contact but does not give the address");
+  // …and show it, so a reader can copy it without opening a mail client.
+  assert.ok(read("priser.html").includes(">kontakt@lærlig.dk</a>"),
+    "the pricing page must display the address as text, not only as a link target");
 });
 
 // ── the docs.html stub ────────────────────────────────────────────────────────────────────────
