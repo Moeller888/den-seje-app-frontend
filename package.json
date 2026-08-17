@@ -27,7 +27,8 @@
     "avatar:r2-torso-mask": "node tools/avatar/build-r2-torso-occlusion-mask.mjs",
     "avatar:r2-torso-check": "node tools/avatar/check-r2-torso-candidate.mjs",
     "avatar:generate-openai-torso": "node tools/avatar/openai-generate-torso-item.mjs",
-    "avatar:r2-torso-promote": "node tools/avatar/promote-r2-torso-asset.mjs"
+    "avatar:r2-torso-promote": "node tools/avatar/promote-r2-torso-asset.mjs",
+    "avatar:r2-hair-fit": "node tools/avatar/measure-r2-hair-fit.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
