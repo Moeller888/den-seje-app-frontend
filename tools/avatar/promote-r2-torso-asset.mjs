@@ -2,10 +2,15 @@
 // ---------------------------------------------------------------------------------------------
 // Deterministic · NON-AI · NO network · NO image generation · NO manual retouching.
 //
-// This is the ASSET step only. It does NOT wire anything: `js/` is never written, `R2_MANIFEST`
-// is never edited, `torso` is not added to `R2_SUPPORTED_COSMETIC_SLOTS`, and `AVATAR_R2` stays
-// `false`. After this tool runs, the runtime still drops the whole avatar to C2 when the armour is
-// equipped (D-083) — exactly as before. Registration + wiring are A3.2.
+// This is the ASSET step only. It does NOT wire anything: `js/` is never written, `R2_MANIFEST` is
+// never edited, `torso` is not added to `R2_SUPPORTED_COSMETIC_SLOTS`, and `AVATAR_R2` is never
+// touched. Whatever the render state is when this runs, this tool leaves it exactly as it found it
+// and records it in the provenance. Registration + wiring are A3.2.
+//
+// The two lines above described the world of 2026-08-01, when A3.1 shipped: nothing was wired and
+// the flag was `false`. Both have since changed by decision — D-090 registered the item, D-101 made
+// R2 the default render — so the runtime state is now REPORTED rather than asserted. See
+// runtimeGuards() for why a flag meant to be flipped both ways cannot be a precondition.
 //
 // PIPELINE — reused from the established runtime-asset path, not invented here:
 //   1024×1536 RGBA PNG (owner-accepted, SHA-pinned)
@@ -342,7 +347,20 @@ function maskToRgba(w, h, mask) {
 // ── runtime guards: this tool must never be the thing that switches the avatar over ────────────
 function runtimeGuards() {
   const js = readFileSync(LAYERS_JS, "utf8");
-  if (!/export const AVATAR_R2 = false;/.test(js)) fail("AVATAR_R2 is not `false` in js/avatar-layers.js");
+  // The render switch is READ and RECORDED, not required to hold a particular value — same reasoning
+  // as the slot list below, applied to the flag. The original guard demanded `AVATAR_R2 = false`,
+  // which was right while R2 was pilot-gated: promoting a torso asset must not be the act that puts
+  // it in front of users. D-101 then made R2 the default (`= true`), so the assertion no longer
+  // described a hazard — it just made this tool refuse to run at all, blocking the re-verification
+  // its own verify mode exists for, and it would have failed symmetrically after a global rollback
+  // to C2. A flag whose whole purpose is to be flipped in both directions cannot be a precondition.
+  // What must be guaranteed is that THIS TOOL never changes the switch, and that is structural:
+  // assertWritable cannot write `js/` at all (see the write guard above), so no value of the flag
+  // makes this tool able to touch it. Reading it must still work, because the provenance records the
+  // render state at promotion time — an unreadable declaration is a hard failure.
+  const flag = /export const AVATAR_R2 = (true|false);/.exec(js);
+  if (!flag) fail("could not read AVATAR_R2 from js/avatar-layers.js");
+  const avatarR2 = flag[1] === "true";
   const slots = js.match(/R2_SUPPORTED_COSMETIC_SLOTS\s*=\s*\[([^\]]*)\]/);
   if (!slots) fail("could not read R2_SUPPORTED_COSMETIC_SLOTS");
   if (!/r2RequiresC2Fallback/.test(js)) fail("D-083 fallback helper missing from js/avatar-layers.js");
@@ -352,7 +370,7 @@ function runtimeGuards() {
   // a later step needs. What this tool must guarantee is that IT never wires anything, and that is
   // enforced structurally by assertWritable (it cannot write js/ at all), not by inspecting the world.
   const torsoSupported = /["']torso["']/.test(slots[1]);
-  return { avatarR2: false, torsoSupported, d083FallbackPresent: true };
+  return { avatarR2, torsoSupported, d083FallbackPresent: true };
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────────────────────
@@ -363,7 +381,7 @@ export function run({ promote = false, review = false, source = DEFAULT_SOURCE }
   say(`${TOOL} v${TOOL_VERSION} — ${promote ? "--promote" : "verify only (no writes)"}`);
 
   const guards = runtimeGuards();
-  say(`✓ runtime guards: AVATAR_R2 false · D-083 fallback present · torso slot wired: ${guards.torsoSupported ? "yes (D-090)" : "no"} (recorded, not enforced — this tool cannot write js/)`);
+  say(`✓ runtime guards: AVATAR_R2 ${guards.avatarR2}${guards.avatarR2 ? " (D-101 default)" : ""} · D-083 fallback present · torso slot wired: ${guards.torsoSupported ? "yes (D-090)" : "no"} (both recorded, neither enforced — this tool cannot write js/)`);
 
   const encSha = requireBinary(CWEBP, "cwebp", ENCODER_SHA256);
   const decSha = requireBinary(DWEBP, "dwebp", DECODER_SHA256);
@@ -452,7 +470,7 @@ export function run({ promote = false, review = false, source = DEFAULT_SOURCE }
   if (placedSha !== outShaA) fail("the placed asset does not match the verified encode");
   say(`\n✓ PROMOTED → ${rel(DEST)} · ${tmpA.length} B · sha ${placedSha.slice(0, 16)}…`);
   say(`✓ provenance → ${rel(PROVENANCE)}`);
-  say("  js/ untouched · R2_MANIFEST untouched · torso still unsupported · AVATAR_R2 false");
+  say(`  js/ untouched · R2_MANIFEST untouched · torso slot wired: ${guards.torsoSupported ? "yes" : "no"} · AVATAR_R2 ${guards.avatarR2} (state as found, unchanged by this run)`);
 
   if (review) writeReviewImages(src, reference, decoded, masks512, provenance);
   return { ...result, budgetOk, provenance, wrote: true, outSha: outShaA, bytes: tmpA.length };
