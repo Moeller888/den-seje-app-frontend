@@ -449,7 +449,15 @@ export function run({ promote = false, review = false, source = DEFAULT_SOURCE }
     decoder: { name: "libwebp dwebp", sha256: decSha },
     output: { path: rel(DEST), sha256: outShaA, bytes: tmpA.length, width: OUT_W, height: OUT_H, budgetBytes: SIZE_BUDGET_BYTES, withinBudget: budgetOk },
     gates: result.gates.map((g) => ({ id: g.id, pass: g.pass, detail: g.detail })),
-    runtime: { ...guards, manifestRegistered: false, note: "A3.1 promotes the asset only. R2_MANIFEST lives in js/avatar-layers.js and is NOT edited here; registration + wiring are A3.2. The runtime still uses the D-083 whole-avatar C2 fallback for this item." },
+    // The note states THIS TOOL's scope and deliberately makes no claim about the current runtime.
+    // Its old closing sentence ("the runtime still uses the D-083 whole-avatar C2 fallback for this
+    // item") was true when A3.1 ran and false the moment D-090 wired the slot - the same mistake
+    // runtimeGuards() above had, in prose instead of in a check: a record that spells out world state
+    // goes stale as soon as the world moves on, and a stale record is worse than none, because it
+    // still reads as evidence. The render state is RECORDED as data instead (avatarR2,
+    // torsoSupported, read above). manifestRegistered stays false because it says what A3.1 ITSELF
+    // did; that is history and cannot go stale, however far the runtime moves.
+    runtime: { ...guards, manifestRegistered: false, note: "A3.1 promotes the asset only. R2_MANIFEST lives in js/avatar-layers.js and is NOT edited here; registration + wiring are A3.2 (done later, by D-090). Every sibling field is a record of promotion time, not of the present: manifestRegistered means A3.1 itself registered nothing, and avatarR2/torsoSupported are the render state READ from js/avatar-layers.js as it stood then." },
   };
 
   if (!promote) {
