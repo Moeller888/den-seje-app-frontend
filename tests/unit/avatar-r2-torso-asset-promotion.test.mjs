@@ -259,6 +259,26 @@ test("the provenance still records that A3.1 itself registered nothing", () => {
   assert.match(prov().runtime.note, /registration \+ wiring are A3\.2/);
 });
 
+test("the provenance note claims nothing about the runtime as it is today", () => {
+  // The counterpart to the test above, and the reason it needs one: the note used to close with
+  // "The runtime still uses the D-083 whole-avatar C2 fallback for this item." That was true when
+  // A3.1 ran and false from D-090 onwards, so a file whose entire job is to be trustworthy evidence
+  // carried a false sentence. manifestRegistered above is safe to assert BECAUSE it states what
+  // this tool DID; a present-tense claim about a runtime built to be changed is not, and belongs
+  // nowhere in a promotion record.
+  const note = prov().runtime.note;
+  assert.ok(!/D-083/.test(note), "the note describes runtime fallback behaviour: " + note);
+  assert.ok(!/\bstill uses\b/i.test(note), "the note makes a present-tense claim: " + note);
+  // The stale sentence is pinned as DATA, so this guard cannot quietly stop catching the thing it
+  // was written for - a check that no longer matches anything passes exactly like a correct one.
+  const STALE = "registration + wiring are A3.2. The runtime still uses the D-083 whole-avatar C2 fallback for this item.";
+  assert.ok(/D-083/.test(STALE) && /\bstill uses\b/i.test(STALE),
+    "the guard no longer rejects the sentence it exists to reject");
+  // and the tool must emit the exact string that is tracked, or fixing one leaves the other stale
+  assert.ok(readFileSync(TOOL_SRC, "utf8").includes(note),
+    "the tool source and the tracked provenance note have drifted apart");
+});
+
 // ── the tool itself is contained ─────────────────────────────────────────────────────────────
 
 test("the promotion tool makes no network call", () => {
