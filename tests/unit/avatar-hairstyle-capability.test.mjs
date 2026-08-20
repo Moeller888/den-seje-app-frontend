@@ -15,7 +15,9 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const HTML = readFileSync(join(REPO, "avatar.html"), "utf8");
 const RENDER_C2 = readFileSync(join(REPO, "js", "avatar-render-c2.js"), "utf8");
 
-const MESSAGE = "Frisureformer kommer snart til den nye avatar. Din hårfarve kan endnu ikke vælges.";
+// 155E shipped the hair-colour picker, so the sentence that said colour could not be
+// chosen would itself have become false. The message now points at the control.
+const MESSAGE = "Frisureformer kommer snart til den nye avatar. Farven kan du vælge nedenfor.";
 
 // Lift a top-level function out of the page by matching braces — no eval of the whole page.
 function source(name) {

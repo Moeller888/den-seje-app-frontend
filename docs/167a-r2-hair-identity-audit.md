@@ -309,8 +309,11 @@ picker exists anywhere in the app**. `set_avatar_identity` is called with `p_bod
 and `p_skin_tone` only — never `p_hair_color` — which matches the note in `js/avatar-layers.js` that
 155E shipped *“the data contract only”*; a read-only count on 2026-08-20 found **all 28 students with
 `hair_color` unset**, all rendering the default `brown`. The wording was corrected to say plainly that
-hair colour cannot be chosen yet. **Building that picker is 155E's missing UI, not part of D**, and is
-not done here.
+hair colour cannot be chosen yet. **Building that picker is 155E's missing UI, not part of D.**
+
+> **Followed up (2026-08-20, separately):** 155E's picker has since been built, so the panel message
+> no longer says colour cannot be chosen — it points at the control instead. The shape gap this
+> audit is about is unchanged, and option A is still the fix for it.
 
 ### Reversibility
 

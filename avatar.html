@@ -636,6 +636,18 @@
       outline-offset: 2px;
     }
 
+    /* 155E: the colour sample inside an existing .identity-btn. The Danish label
+       stays the primary cue, so colour is never the only way to tell them apart. */
+    .hair-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: -1px;
+      border: 1px solid var(--border);
+    }
+
     .identity-section-label {
       font-size: 11px;
       font-weight: 600;
@@ -703,6 +715,8 @@
   <div class="identity-buttons" id="identityButtons"></div>
   <div class="identity-section-label">Frisure</div>
   <div class="identity-buttons" id="hairstyleButtons"></div>
+  <div class="identity-section-label">Hårfarve</div>
+  <div class="identity-buttons" id="hairColorButtons"></div>
   <div class="identity-section-label">Hudtone</div>
   <div class="identity-buttons" id="skinToneButtons"></div>
 </div>
@@ -717,6 +731,7 @@ import { loadTheme }   from "./js/themeManager.js";
 import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
   RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, isAvatarR2ActiveFor, r2ExpressionOverlayAllowedFor, blinkConfigFor,
+  HAIR_COLORS, HAIR_COLOR_TOKENS, hairColorFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -1194,6 +1209,7 @@ function renderIdentity() {
   }).join("");
 
   renderHairstyle();
+  renderHairColor();
   renderSkinTone();
 }
 
@@ -1210,7 +1226,7 @@ function renderHairstyle() {
     container.innerHTML =
       '<p class="identity-note" data-hairstyle-unavailable>' +
       'Frisureformer kommer snart til den nye avatar. ' +
-      'Din hårfarve kan endnu ikke vælges.' +
+      'Farven kan du vælge nedenfor.' +
       '</p>';
     return;
   }
@@ -1237,6 +1253,43 @@ function renderHairstyle() {
     return `<button class="identity-btn${isActive ? ' active' : ''}"
                     data-hairstyle="${opt.value}"
                     aria-pressed="${isActive}">${opt.label}</button>`;
+  }).join("");
+}
+
+// 155E: the hair-colour picker. The palette and its {base, shadow} token pairs are
+// imported from js/avatar-layers.js — the same source the two render paths resolve
+// through — so the buttons cannot drift from what actually gets painted, and the
+// eight values are exactly the set set_avatar_identity validates against.
+// Shown on BOTH render paths: unlike the shape, the colour is honoured by C2 (CSS
+// vars on the inline hair SVG) and by R2 (the hair map is tinted from the token).
+const HAIR_COLOR_LABELS = {
+  black:        "Sort",
+  dark_brown:   "Mørkebrun",
+  brown:        "Brun",
+  light_brown:  "Lysebrun",
+  blonde:       "Blond",
+  red:          "Rød",
+  auburn:       "Kastanje",
+  fantasy_blue: "Fantasiblå",
+};
+
+function renderHairColor() {
+  const container = document.getElementById("hairColorButtons");
+  if (!container) return;
+
+  // hairColorFor resolves the default for a missing, empty or unknown value, so a
+  // broken identity still marks exactly one button active.
+  const current = hairColorFor(avatarIdentity);
+
+  container.innerHTML = HAIR_COLORS.map((value) => {
+    const tokens = HAIR_COLOR_TOKENS[value];
+    if (!tokens) return ""; // a palette entry without tokens is skipped, never half-drawn
+    const label = HAIR_COLOR_LABELS[value] || value;
+    const isActive = current === value;
+    return `<button class="identity-btn${isActive ? ' active' : ''}"
+                    data-hair-color="${value}"
+                    aria-pressed="${isActive}"><span class="hair-swatch" aria-hidden="true"
+                    style="background:${tokens.base};border-color:${tokens.shadow}"></span>${label}</button>`;
   }).join("");
 }
 
@@ -1377,6 +1430,14 @@ document.getElementById("hairstyleButtons").addEventListener("click", async (e) 
   btn.disabled = false;
 });
 
+document.getElementById("hairColorButtons").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".identity-btn[data-hair-color]");
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  await handleSetHairColor(btn.dataset.hairColor);
+  btn.disabled = false;
+});
+
 document.getElementById("skinToneButtons").addEventListener("click", async (e) => {
   const btn = e.target.closest(".identity-btn[data-skin-tone]");
   if (!btn || btn.disabled) return;
@@ -1481,6 +1542,35 @@ async function handleSetHairstyle(hairstyle) {
 
   avatarIdentity = data ?? avatarIdentity;
   showToast("✓ Frisure opdateret", "success");
+  renderAll(true);
+}
+
+async function handleSetHairColor(hairColor) {
+  // 155E: reject anything outside the palette before it reaches the RPC. The RPC
+  // validates too and would raise, but a rejected write must never look like a
+  // saved one, and the user should not see a database error for a UI bug.
+  if (!HAIR_COLORS.includes(hairColor)) {
+    console.error("SET HAIR COLOR: value outside the palette:", hairColor);
+    showToast("Kunne ikke gemme – prøv igen", "error");
+    playSound("error");
+    return;
+  }
+
+  const { data, error } = await supabase.rpc("set_avatar_identity", {
+    p_hair_color: hairColor,
+  });
+
+  if (error) {
+    console.error("SET HAIR COLOR ERROR:", error);
+    showToast("Kunne ikke gemme – prøv igen", "error");
+    playSound("error");
+    return;
+  }
+
+  // The RPC returns the MERGED identity, so body_type, hairstyle and skin_tone are
+  // preserved; re-rendering repaints the hair through the new token on both paths.
+  avatarIdentity = data ?? avatarIdentity;
+  showToast("✓ Hårfarve opdateret", "success");
   renderAll(true);
 }
 
