@@ -1,7 +1,9 @@
 # 167A — R2 hair-identity audit: the seven hairstyles the R2 render ignores, D-102
 
-**Status:** `DESIGN_READY_AWAITING_OWNER_DECISION`.
-**Type:** read-only audit + geometric measurement. **This audit implements nothing.** It changes no
+**Status:** `OWNER_DECIDED_OPTION_D — UI_HONESTY_IMPLEMENTED, OPTION_A_DEFERRED`
+(owner, 2026-08-20 — see §10). Was `DESIGN_READY_AWAITING_OWNER_DECISION`.
+**Type:** read-only audit + geometric measurement. **The audit itself implements nothing** — the
+decision it asked for was taken on 2026-08-20 and is implemented separately (§10). It changes no
 runtime, resolver, manifest, asset, z, transform, test, golden, catalog, migration, Edge Function,
 Supabase object or flag. It adds one **read-only measurement tool** and this document.
 **Related:** D-101 (R2 is the default render; this gap is recorded there as a known, never-pilot-tested
@@ -250,7 +252,7 @@ Reported rather than silently corrected, per `CLAUDE.md`:
 
 Neither is touched by this audit.
 
-## 8. The decision requested (D-102)
+## 8. The decision requested (D-102) — ANSWERED, see §10
 
 1. **Which option** — A, B, C or D, or D+A as recommended.
 2. If **A**: does hair count as a base/rig layer under D-033 (so: human paint-over only), and is the
@@ -259,7 +261,7 @@ Neither is touched by this audit.
    render-scale visual review with owner sign-off per slice.
 4. If **C**: which single style is nominated as the North Star equivalent, knowing §3.5 says none is.
 
-## 9. Boundaries of this change
+## 9. Boundaries of the audit itself
 
 Added: `docs/167a-r2-hair-identity-audit.md` (this file), `tools/avatar/measure-r2-hair-fit.mjs`
 (read-only; writes no file, not even under `tools/avatar/build/`), one `package.json` script entry, and
@@ -269,3 +271,50 @@ the register entry D-102 in `docs/project-state.md`.
 table, every test and golden baseline, the shop, catalog, database, migrations, RLS, Edge Functions,
 `AVATAR_R2`, and the D-062 atomic gate / D-083 fallback. No hairstyle is produced, wired or removed;
 no student record is read or written by anything this adds.
+
+## 10. Owner decision (2026-08-20)
+
+**Option D now. Option A remains the real fix. B and C are declined.** The recommendation in §5 was
+put to the owner and accepted as written.
+
+### What was decided
+
+- **D is implemented now.** On a render path that ignores the stored hairstyle, the avatar page stops
+  offering shape controls and states the situation instead. **This changes the UI promise only — it
+  changes no render, resolver, manifest, asset, z, transform, database, migration or flag.**
+- **A is approved as the visual end state**, and stays **blocked** on what it has always been blocked
+  on: six hand-painted North Star hair rasters, each through per-asset promotion and provenance, with
+  **D-033 barring AI for base/rig layers — and hair is one**. It enters the art queue as itself.
+- **B is declined.** §3 found no geometric obstacle, so this is a product judgement and is recorded as
+  one: flat two-tone SVG hair on the painted figure, on the identity layer, for 6 of 7 styles, is a
+  worse avatar than the one we have. If coverage is ever preferred over finish, the groundwork stands
+  and the unvalidated per-style transform of §3.3 is what remains ahead of it.
+- **C is declined**, on §3.5: no style is North Star-equivalent, so C would either drop nearly every
+  student to C2 or require nominating a style the asset measurably is not.
+
+### What D preserves
+
+- **Stored hairstyle values are preserved.** Nothing is cleared, reset or migrated — they are simply
+  not writable from a path that would not show them, so they stay valid the day A ships.
+- **Hair colour keeps working on R2.** The R2 stack still tints the hair map from
+  `identity.hair_color`; this decision does not touch that path.
+- **A path that honours the choice keeps the full control** — the seven buttons, the active marking
+  and the success confirmation are unchanged on C2.
+
+### One finding that changed the wording
+
+The message first proposed for the panel said *“Din hårfarve virker allerede.”* Checking it before
+shipping it showed it would have been a **second false promise**: the tint works, but **no hair-colour
+picker exists anywhere in the app**. `set_avatar_identity` is called with `p_body_type`, `p_hairstyle`
+and `p_skin_tone` only — never `p_hair_color` — which matches the note in `js/avatar-layers.js` that
+155E shipped *“the data contract only”*; a read-only count on 2026-08-20 found **all 28 students with
+`hair_color` unset**, all rendering the default `brown`. The wording was corrected to say plainly that
+hair colour cannot be chosen yet. **Building that picker is 155E's missing UI, not part of D**, and is
+not done here.
+
+### Reversibility
+
+**D is fully reversible and self-retiring.** The section is driven by one capability predicate keyed on
+the render path actually mounted. When A registers hair assets that honour `identity.hairstyle`, the
+R2 path starts serving the choice and the control returns on its own — there is no collection of
+special cases to unpick, and no owner decision is embedded in code.
