@@ -387,3 +387,36 @@ EXECUTION SCOPE CLARIFICATION
 - Every task must have a clear "done" condition
 - For tests: ALL tests must pass
 - Do NOT stop early
+
+========================================
+WORKING TREE INTEGRITY
+========================================
+
+47. BRUGERENS ARBEJDSÆNDRINGER MÅ ALDRIG KASSERES
+
+- Eksisterende ændringer i working tree tilhører brugeren og må aldrig kasseres
+  som "støj". Brug aldrig `git checkout --`, `git restore`, `git reset`,
+  `git clean`, stash eller tilsvarende til at fjerne CRLF/LF-afvigelser eller
+  andre uventede ændringer uden en særskilt, eksplicit brugerautorisation, der
+  navngiver BÅDE filen OG handlingen.
+- Hvis en fil kun afviger i linjeskift, skal den efterlades urørt og rapporteres
+  som sådan.
+- En ren eller tom normaliseret `git diff` er IKKE bevis for, at
+  working-tree-bytes er uvigtige.
+- Kontrollér status, rå bytes, linjeskift og hashes read-only - men
+  "normalisér" ikke filen.
+- En autorisation til at ændre ÉN bestemt fil udvider sig ikke til andre filer
+  eller til generel oprydning.
+- Hvis en eksisterende ændring blokerer arbejdet: STOP og spørg. Vælg aldrig på
+  brugerens vegne.
+
+48. EN GODKENDELSE GÆLDER KUN DE NAVNGIVNE HANDLINGER
+
+- En godkendelse gælder kun de konkret navngivne handlinger.
+- Tilladelse til at rette en fil omfatter ikke automatisk branchoprettelse,
+  commit, push, PR, CI-rerun, merge, branchsletning, skift af branch eller
+  synkronisering af andre kloner.
+- Tilladelse til at merge omfatter ikke sletning af branchen eller pull i andre
+  kloner.
+- Enhver yderligere mutation kræver særskilt, eksplicit autorisation.
+- Er du i tvivl om, hvorvidt en handling er dækket: STOP og spørg.
