@@ -582,7 +582,8 @@
 
     .title-equip-chip-icon { font-size: 9px; opacity: 0.75; flex-shrink: 0; }
 
-    .titles-empty {
+    .titles-empty,
+    .identity-note {
       color: var(--text-faint);
       font-size: 13px;
       font-style: italic;
@@ -715,7 +716,7 @@ import { initBadges, hasBadge } from "./js/newBadges.js";
 import { loadTheme }   from "./js/themeManager.js";
 import {
   ALL_SLOTS, SLOT_Z, SLOT_LABELS, SLOT_EMOJIS, baseLayersFor,
-  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor,
+  RARITY_COLORS, RARITY_LABELS, RARITY_ICONS, RARITY_ORDER, isAvatarV2, isAvatarR2ActiveFor, r2ExpressionOverlayAllowedFor, blinkConfigFor,
 } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
@@ -981,6 +982,14 @@ async function renderAvatarC2(animate = false) {
   const renderPath = await mountC2Avatar(preview, avatarIdentity, { animate, cosmetics, surface: "avatar" });
   if (renderPath === "aborted") return; // a newer render superseded this one
 
+  // D-102: the hairstyle section follows the path that was ACTUALLY mounted, for the
+  // same reason the blink profile does below — an R2 asset-load fallback lands on C2,
+  // and on C2 the stored hairstyle is honoured, so the controls belong there.
+  if (renderPath !== activeRenderPath) {
+    activeRenderPath = renderPath;
+    renderHairstyle();
+  }
+
   const baseEl = preview.querySelector('[data-c2-layer="base"]');
   if (exprOverlay) {
     exprOverlay.style.zIndex = "3"; // C2 z-model: expression below hair, above base
@@ -1138,6 +1147,23 @@ function renderTitles() {
   });
 }
 
+// ── D-102 hairstyle capability (owner decision 2026-08-20: option D) ─────────
+// The R2 render resolves ONE hair asset and ignores identity.hairstyle, so on that
+// path a shape picker promises something the picture cannot keep. The decision is
+// derived from the RENDER PATH only — never from a user count, a browser or a date.
+// When option A ships (six painted R2 hair rasters registered in R2_MANIFEST), the
+// R2 path starts honouring the choice and this predicate turns the full control back
+// on by itself; there is no scattered special-casing to unpick.
+let activeRenderPath = null; // "r2" | "c2" — set from the mount, once it is known
+
+function hairstyleShapesSupported() {
+  // Prefer the path actually mounted (it accounts for the atomic asset-load fallback).
+  // Before the first mount resolves, fall back to the same predicate the renderer
+  // itself uses, so the first paint is already correct rather than briefly wrong.
+  if (activeRenderPath) return activeRenderPath !== "r2";
+  return !isAvatarR2ActiveFor(avatarIdentity);
+}
+
 function renderIdentity() {
   // Tint system untouched (Section 152C scope): data-gender still mirrors the
   // stored avatar_gender and drives the existing CSS background tint.
@@ -1174,6 +1200,20 @@ function renderIdentity() {
 function renderHairstyle() {
   const container = document.getElementById("hairstyleButtons");
   if (!container) return;
+
+  // D-102 option D: on a path that ignores the stored shape, state that plainly
+  // instead of offering controls that would save a choice the picture never shows.
+  // Non-interactive by construction: no button, no link, no tabindex, so nothing
+  // here can be focused, clicked or announced as actionable. The stored value is
+  // left exactly as it is, and hair COLOUR is untouched by this branch.
+  if (!hairstyleShapesSupported()) {
+    container.innerHTML =
+      '<p class="identity-note" data-hairstyle-unavailable>' +
+      'Frisureformer kommer snart til den nye avatar. ' +
+      'Din hårfarve kan endnu ikke vælges.' +
+      '</p>';
+    return;
+  }
 
   const validHairstyles = ["default", "braid", "short", "curly", "long", "sidecut", "buzzcut"];
   const currentHairstyle =
@@ -1331,6 +1371,7 @@ document.getElementById("identityButtons").addEventListener("click", async (e) =
 document.getElementById("hairstyleButtons").addEventListener("click", async (e) => {
   const btn = e.target.closest(".identity-btn[data-hairstyle]");
   if (!btn || btn.disabled) return;
+  if (!hairstyleShapesSupported()) return; // D-102: never act on a stale control
   btn.disabled = true;
   await handleSetHairstyle(btn.dataset.hairstyle);
   btn.disabled = false;
@@ -1424,6 +1465,9 @@ async function handleSetIdentity(bodyType) {
 }
 
 async function handleSetHairstyle(hairstyle) {
+  // D-102: never write — and never claim success for — a shape the active render
+  // path will not show. Existing stored values are preserved, not cleared.
+  if (!hairstyleShapesSupported()) return;
   const { data, error } = await supabase.rpc("set_avatar_identity", {
     p_hairstyle: hairstyle,
   });
