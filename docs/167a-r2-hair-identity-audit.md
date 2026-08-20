@@ -23,7 +23,7 @@ On the C2 render path a student picks one of **seven** hairstyles and sees it. O
 the choice is read, validated, stored — and then **discarded at render time**:
 
 ```js
-// js/avatar-layers.js:424
+// js/avatar-layers.js:443
 export function hairSrcForR2(identity) {
   const e = r2Entry(R2_MANIFEST.hair["northstar"]);
   return e ? r2Path("hair", "hair-northstar", e) : null;
@@ -41,23 +41,25 @@ C2 values), and `window.__flags()` reports nothing wrong. The student changes th
 change is saved, and the picture does not move. Hair **colour** still works — it is a token tint applied
 to whichever asset resolves — so the avatar reacts to one half of the same panel and ignores the other.
 
-Scope of who is affected, per the read-only aggregate recorded in D-101 — **2026-08-08, 28 students,
-nine days old at the time of writing and not a fresh count**: **23 render R2** and therefore all 23 see
-the North Star hair; **1** of them had stored an explicitly non-default style (`buzzcut`), the other 22
-stored `default` or nothing. §3.5 below shows the 22 are **also** not
+Scope of who is affected, **re-measured read-only on 2026-08-20** (counts only, no identifiers):
+**28 students**, of whom **23 resolve the `neutral-medium` base and therefore render R2** — so all 23
+see the North Star hair. Within those 23 the stored hairstyle is **20 `(unset)`, 2 `default`, 1
+`buzzcut`**: **1** had stored an explicitly non-default style, the other 22 stored `default` or
+nothing. §3.5 below shows the 22 are **also** not
 seeing their default — the single R2 asset is not the visual equivalent of C2's default `short`.
 
-> **Re-measurement pending.** The distribution above is the D-101 aggregate, 9 days old at the time of
-> writing. A fresh read-only count (roles, stored hairstyle, resolved style, base key — counts only, no
-> identifiers) is the one number in this audit that could not be re-measured here: the query needs the
-> service-role key and was blocked by this environment's permission classifier. It does not change any
-> conclusion below, only the size of the affected group.
+> **Re-measured 2026-08-20.** The figures above are a fresh read-only aggregate — role, stored
+> hairstyle and resolved base key, counts only and no identifiers — replacing the D-101 aggregate
+> (2026-08-08) this audit was first written against. The headline is unchanged: that aggregate also
+> gave **23 on R2**. What the re-measurement adds is the breakdown within those 23, and it confirms
+> rather than revises every conclusion below. It is a point-in-time count and moves as students edit
+> their identity.
 
 ## 2. Why it happens — the mechanism, not the mistake
 
 Hair is a **mandatory** layer of the decomposed R2 stack, not a cosmetic. `r2StackSrcsFor` returns the
 whole stack or `null`, and `null` means the complete C2 avatar renders instead
-(`js/avatar-layers.js:482-498`):
+(`js/avatar-layers.js:487-490`):
 
 ```js
 const hair  = hairSrcForR2(identity);
@@ -229,8 +231,8 @@ review before it could ship.
 - **§3.4 is an average colour comparison only** — no spatial inspection was performed. It cannot show
   that the area a shorter cut exposes is finished, correctly shaded, or presentable anywhere in
   particular, and it defines no pass/fail tolerance.
-- **The live distribution is the 9-day-old D-101 aggregate, not a fresh measurement** (see the note in
-  §1).
+- **The live distribution is a point-in-time count (2026-08-20), not a standing fact** (see the note
+  in §1). It was re-measured for this audit; it moves as students change their identity.
 - **No visual artefact, no user report and no telemetry** informs this document. There is none: D-101
   activated R2 with no telemetry added, and no pilot user ever observed a non-default hairstyle.
 
@@ -238,8 +240,9 @@ review before it could ship.
 
 Reported rather than silently corrected, per `CLAUDE.md`:
 
-- `docs/project-state.md` §Current Commit still records `origin/main = ad899b6`; `main` is now at
-  `8fb167f`.
+- `docs/project-state.md` §Current Commit still records `origin/main = ad899b6`, which was already
+  several merges behind when this audit was written and falls further behind with every merge. The
+  fix is for that entry to stop quoting a SHA it cannot keep current — not to re-point it at today's.
 - The headers of `167a-r2-torso-asset-production-plan.md`,
   `167a-r2-cosmetic-slot-completion-audit.md` and `167a-r2-torso-a2-art-brief.md` still state
   **`AVATAR_R2 = false` (per-browser opt-in only)** and `PILOT_WAVE_1_IN_PROGRESS`. D-101 superseded
