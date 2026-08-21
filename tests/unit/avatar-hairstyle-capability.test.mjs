@@ -15,7 +15,9 @@ const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const HTML = readFileSync(join(REPO, "avatar.html"), "utf8");
 const RENDER_C2 = readFileSync(join(REPO, "js", "avatar-render-c2.js"), "utf8");
 
-const MESSAGE = "Frisureformer kommer snart til den nye avatar. Din hårfarve kan endnu ikke vælges.";
+// 155E shipped the hair-colour picker, so the sentence that said colour could not be
+// chosen would itself have become false. The message now points at the control.
+const MESSAGE = "Frisureformer kommer snart til den nye avatar. Farven kan du vælge nedenfor.";
 
 // Lift a top-level function out of the page by matching braces — no eval of the whole page.
 function source(name) {
@@ -169,4 +171,38 @@ test("the underlying predicate tracks the manifest, so option A re-enables the U
   assert.equal(isAvatarR2ActiveFor({ body_type: "male", skin_tone: "medium" }), false);
   // The gap this decision documents: one registered hair asset for seven selectable styles.
   assert.deepEqual(Object.keys(R2_MANIFEST.hair), ["northstar"]);
+});
+
+// ── the note has to be readable, or D-102 replaced buttons with something invisible ──
+
+test("the note the student must read clears the contrast minimum", () => {
+  // Not a name check: resolve the tokens from theme.css, model the cascade, and compute the
+  // ratio. --text-faint is the empty/disabled token and lands at 1.58:1 on the panel, which
+  // is below the 4.5:1 minimum - and a message nobody can read is not an honest UI.
+  const rules = [...HTML.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((m) => /\.identity-note\b/.test(m[1]) && /(^|[\s;])color\s*:/.test(m[2]));
+  assert.ok(rules.length, "no rule sets a colour on the note");
+
+  // last one wins at equal specificity, so that is the colour the student actually sees
+  const token = /color\s*:\s*var\((--[a-z-]+)\)/.exec(rules[rules.length - 1][2]);
+  assert.ok(token, "the note's colour is not taken from a theme token");
+  assert.notEqual(token[1], "--text-faint", "the note is back on the empty-state token");
+
+  const theme = readFileSync(join(REPO, "css", "theme.css"), "utf8");
+  const hex = (name) => {
+    const m = new RegExp(name + "\\s*:\\s*(#[0-9a-fA-F]{6})").exec(theme);
+    assert.ok(m, name + " not found in theme.css");
+    return m[1];
+  };
+  const lum = (h) => {
+    const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const fg = lum(hex(token[1])), bg = lum(hex("--bg-panel"));
+  const ratio = (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+  assert.ok(ratio >= 4.5, `note contrast ${ratio.toFixed(2)}:1 is below the 4.5:1 minimum`);
+
+  // and the shared typography rule keeps --text-faint for the real empty state
+  assert.match(HTML, /\.titles-empty,\s*\r?\n\s*\.identity-note \{\s*\r?\n\s*color: var\(--text-faint\);/);
 });
