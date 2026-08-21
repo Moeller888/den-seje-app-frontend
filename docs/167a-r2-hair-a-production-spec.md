@@ -1,7 +1,7 @@
 # 167A — Option A production spec: the seven R2 hairstyle rasters
 
-**Status:** `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**).
-Was `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
+**Status:** `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**, identity-lock
+accepted **D-105**). Was `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
 **Type:** specification + a deterministic, non-AI acceptance gate. **This document produces no
 artwork, promotes nothing and registers nothing.** It changes no runtime, resolver, manifest,
 asset, z, transform, flag, catalog, migration, Edge Function or Supabase object.
@@ -63,7 +63,7 @@ table, and which one was taken:
 | **Extend D-042 to new silhouettes** | **TAKEN (D-104).** Permits AI to author hairstyle silhouettes the Master does not contain. Requires an identity-lock that replaces masking — see §2.2. The R-6 drift risk D-032/D-033 measured applies in full and is **accepted, not dissolved**. |
 | Derive from the C2 vectors | Converting the authored C2 SVG paths to the R2 painted style: neither pure decomposition nor free generation. Close to option B, which the owner declined on product grounds. **Not taken.** |
 
-### 2.2 The replacement identity-lock: split authority
+### 2.2 The replacement identity-lock: split authority — ACCEPTED (D-105)
 
 Masking **was** D-042's identity-lock, and it cannot apply to a shape that is not in the Master. The
 hole is closed by splitting the authority instead of pretending one source covers both:
@@ -74,11 +74,16 @@ hole is closed by splitting the authority instead of pretending one source cover
 | **Finish** | the Northstar Master — line art, value structure, palette | `luminance-map`, `alpha-clean-no-halo`, `no-floating-islands` (§6), as far as finish is measurable at all |
 | **The residue** | the owner | per-asset visual sign-off at real render scale (D-059). **No measurement replaces this.** |
 
-**This split is the author's reading of the decision, recorded so it can be corrected.** What it
-deliberately does not claim: the gates bound geometry and finish, they do **not** detect style drift
-or identity drift (§7). The carve-out is **hair only** — free AI regeneration of the base, face or
-eyes remains forbidden, and so does any change to the Master's proportions, pose, palette or line-art
-convention (D-032).
+**Accepted by the owner on 2026-08-21 (D-105).** It was written as the author's reading and flagged
+as correctable; it is now the binding identity-lock for option-A hair production, and it replaces
+masking for this layer.
+
+What it still deliberately does not claim: the gates bound geometry and finish, they do **not**
+detect style drift or identity drift (§7). **Accepting the lock does not weaken that limit — it
+makes the owner sign-off row load-bearing**, because it is the only place style fidelity is ever
+judged. The carve-out is **hair only**: free AI regeneration of the base, face or eyes remains
+forbidden, and so does any change to the Master's proportions, pose, palette or line-art convention
+(D-032).
 
 Everything from §4 onwards is a property of the runtime, not of the hand that draws, and was
 unaffected by this decision.
@@ -215,10 +220,9 @@ exactly the gate it should. A gate that only ever sees good input cannot be show
 1. Whether `long` and `ponytail` ship in the first slice at all, given §7's last point: both drape
    past the shoulder onset (83.8) onto the D-090 garment, and the hair gates cannot see that
    interaction.
-2. Whether §2.2's split-authority reading is the identity-lock the owner intends. It is recorded as
-   the author's reading precisely so it can be corrected before artwork exists.
 
-**Closed:** the production method (§2, D-104) and the asset count (§3, D-104).
+**Closed:** the production method (§2, D-104), the asset count (§3, D-104) and the identity-lock
+(§2.2, D-105).
 
 ## 9. Boundaries of this change
 
