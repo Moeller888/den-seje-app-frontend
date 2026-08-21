@@ -1,7 +1,8 @@
 # 167A — Option A production spec: the seven R2 hairstyle rasters
 
 **Status:** `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**, identity-lock
-accepted **D-105**). Was `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
+accepted **D-105**, first slice = all seven **D-106**).
+Was `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
 **Type:** specification + a deterministic, non-AI acceptance gate. **This document produces no
 artwork, promotes nothing and registers nothing.** It changes no runtime, resolver, manifest,
 asset, z, transform, flag, catalog, migration, Edge Function or Supabase object.
@@ -125,10 +126,17 @@ silhouettes the student already recognises:
 | `short` | 52…108 | 56 | no |
 | `tousled` | 50…110 | 55 | no |
 | `curly` | 44…113 | 61 | no |
-| `long` | 41…119 | **146** | yes |
-| `ponytail` | 52…117 | **123** | yes |
+| `long` | 41…119 | **146** ⚠ | yes |
+| `ponytail` | 52…117 | **123** ⚠ | yes |
 | `buzz` | 53…107 | 47 | no |
 | `afro` | 34…126 | 61 | no |
+
+⚠ **The two draping extents are the weakest numbers in this spec, and D-106 knowingly ships them.**
+Every other landmark in this section is measured on the **shipping R2 base**; `long` 146 and
+`ponytail` 123 are measured on the **C2 body**, whose shoulders and torso are not the same object
+as the R2 figure's (R2 shoulder onset: 83.8). For those two styles the `respects-the-neck` gate is
+therefore a **bound, not a fit** — it stops the artwork running off the canvas, and says nothing
+about where the hair should actually end. §8 attaches the acceptance condition that follows.
 
 **These are targets for the silhouette, not a transform.** D-102 §3.3 offers a shared
 `translateY(~2.8 %)` as a *candidate* only; it has never been rendered, reviewed or
@@ -215,14 +223,24 @@ exactly the gate it should. A gate that only ever sees good input cannot be show
   (83.8) onto the D-090 garment; the interaction is a composed visual review, not a measurement on
   the hair alone.
 
-## 8. Open, for the owner
+## 8. Decisions taken, and the one condition they attach
 
-1. Whether `long` and `ponytail` ship in the first slice at all, given §7's last point: both drape
-   past the shoulder onset (83.8) onto the D-090 garment, and the hair gates cannot see that
-   interaction.
+**Nothing is open.** The production method (§2, D-104), the asset count (§3, D-104), the
+identity-lock (§2.2, D-105) and the first slice (D-106) are all decided.
 
-**Closed:** the production method (§2, D-104), the asset count (§3, D-104) and the identity-lock
-(§2.2, D-105).
+### 8.1 The condition D-106 attaches
+
+`long` and `ponytail` ship in the first slice, so all seven styles are produced together. Those two
+drape past the shoulder onset (83.8) onto the D-090 garment, and **the gates measure the hair alone
+— they cannot see that composition at all.** The z-model is not the problem: hair renders at z40,
+far above the torso garment at z1, so hair falls in front of clothing, which is correct and needs no
+change.
+
+The problem is visual, and it lands on the row D-105 made load-bearing. **For `long` and `ponytail`
+only, owner acceptance additionally requires a COMPOSED review — the style rendered on the R2 figure
+with a torso garment equipped, at real render scale (D-059).** Passing the gates is not sufficient
+for these two, and no automated check substitutes for it. See §4's ⚠ for why their targets are the
+weakest numbers here.
 
 ## 9. Boundaries of this change
 
