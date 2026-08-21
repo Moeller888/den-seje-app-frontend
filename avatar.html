@@ -590,6 +590,13 @@
       padding: 4px 0;
     }
 
+    /* D-102: this note is NOT an empty state - it replaced the hairstyle buttons, so being
+       read is its whole job. --text-faint is the token for empty and disabled text and lands
+       at 1.58:1 on --bg-panel, below the 4.5:1 minimum; --text-dim is the same token family
+       at 10.37:1. Only the COLOUR is overridden - size, italic and spacing stay shared above,
+       and .titles-empty keeps --text-faint because it really is an empty state. */
+    .identity-note { color: var(--text-dim); }
+
     /* ── Identity panel (Section 152C — replaces the gender panel) ── */
 
     .identity-panel {
