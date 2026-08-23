@@ -56,22 +56,23 @@
     .error { background: #3a1420; border: 1px solid #7a2438; color: #ffd7de; padding: 14px 16px; border-radius: 10px; }
   </style>
 </head>
-<body>
+<body style="display:none">
   <div class="wrap">
     <div class="topbar" id="topbar"></div>
     <div id="content"><p style="color:var(--dim)">Indlæser…</p></div>
   </div>
 
-  <script>
+  <script type="module">
+  import { supabase } from "./supabaseClient.js";
   (function () {
     "use strict";
 
-    // Allowlist — ONLY these docs render here. Everything else in docs/ stays raw .md,
-    // so this viewer can never be pointed at internal/infra docs.
-    var DOCS = {
-      "157o-read-aloud": { file: "157o-read-aloud.md", title: "157O — Read-Aloud (TTS)" },
-      "ROADMAP":         { file: "ROADMAP.md",         title: "ROADMAP — Den Seje App" }
-    };
+    // The allowlist lives in tools/publish-docs.mjs and reaches this page as manifest.json in
+    // the PRIVATE bucket, so there is exactly one list and the page cannot name a document the
+    // publisher never uploaded. The local documentation folder is not fetched any more: those
+    // published to the CDN at all, which is what keeps them unreadable without a session.
+    var DOCS = {};
+    var BUCKET = "docs";
     // Reverse map: filename (lowercase) -> slug, for internal link rewriting.
     var FILE_TO_SLUG = {};
     Object.keys(DOCS).forEach(function (slug) { FILE_TO_SLUG[DOCS[slug].file.toLowerCase()] = slug; });
@@ -88,7 +89,9 @@
       var base = u.replace(/^\.?\//, "").split(/[?#]/)[0];
       var lower = base.toLowerCase();
       if (FILE_TO_SLUG[lower]) return "docs.html?doc=" + encodeURIComponent(FILE_TO_SLUG[lower]);
-      if (/\.md$/i.test(base)) return "/docs/" + escapeHtml(base);
+      // Not published: the file is not on the CDN at all, so a /docs/ link would 404 and would
+      // advertise an internal path for nothing. Send the reader to the index of what IS available.
+      if (/\.md$/i.test(base)) return "docs.html";
       return escapeHtml(u);
     }
 
@@ -210,7 +213,7 @@
         return '<li><a href="docs.html?doc=' + encodeURIComponent(slug) + '">' + escapeHtml(DOCS[slug].title) + "</a></li>";
       }).join("");
       document.getElementById("content").innerHTML =
-        "<h1>Docs</h1><p style='color:var(--dim)'>Rendered read-aloud documentation.</p><ul class='doc-index'>" + items + "</ul>";
+        "<h1>Docs</h1><p style='color:var(--dim)'>Intern dokumentation. Kun for administratorer.</p><ul class='doc-index'>" + items + "</ul>";
     }
 
     function showError(msg) {
@@ -226,14 +229,16 @@
       var slug = getParam("doc");
       if (!slug) { showIndex(); return; }
       var entry = DOCS[slug];
-      if (!entry) { renderTopbar(null); showError("Ukendt dokument: " + slug + " (kun read-aloud-docs er tilgængelige her)."); return; }
+      if (!entry) { renderTopbar(null); showError("Ukendt dokument: " + slug + " (se listen på docs.html)."); return; }
 
       renderTopbar(slug);
       document.title = entry.title;
-      fetch("/docs/" + entry.file + "?v=" + Date.now(), { cache: "no-store" })
-        .then(function (r) {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.text();
+      supabase.storage.from(BUCKET).download(entry.file)
+        .then(function (res) {
+          // RLS decides this, not the page: a non-super_admin session gets an error here even
+          // if it reached the URL directly.
+          if (res.error || !res.data) throw new Error(res.error ? res.error.message : "tomt svar");
+          return res.data.text();
         })
         .then(function (md) {
           try {
@@ -248,7 +253,54 @@
         });
     }
 
-    main();
+    // ── access gate ──────────────────────────────────────────────────────────────────────
+    // Two independent things have to hold, and only one of them is this page's business.
+    // The page checks a session and a role so the user gets an honest message instead of an
+    // empty screen; the ACTUAL protection is the RLS policy on the private bucket, which does
+    // not care what this script believes. Bypassing the checks below gets you nothing.
+    function deny(msg) {
+      document.body.style.display = "block";
+      renderTopbar(null);
+      showError(msg);
+    }
+
+    (async function boot() {
+      try {
+        var sess = await supabase.auth.getSession();
+        if (!sess || !sess.data || !sess.data.session) {
+          window.location.replace("login.html");
+          return;
+        }
+        var uid = sess.data.session.user.id;
+        var prof = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
+        if (prof.error) { deny("Kunne ikke slå din rolle op — prøv igen."); return; }
+        if (!prof.data || prof.data.role !== "super_admin") {
+          deny("Denne side er kun for administratorer.");
+          return;
+        }
+
+        var man = await supabase.storage.from(BUCKET).download("manifest.json");
+        if (man.error || !man.data) {
+          deny("Dokumentlisten kunne ikke hentes. Er dokumenterne publiceret?");
+          return;
+        }
+        var parsed = JSON.parse(await man.data.text());
+        var list = (parsed && parsed.docs) || [];
+        if (!list.length) { deny("Der er ikke publiceret nogen dokumenter endnu."); return; }
+        list.forEach(function (d) {
+          if (d && d.slug && d.file) DOCS[d.slug] = { file: d.file, title: d.title || d.slug };
+        });
+
+        // FILE_TO_SLUG is built at parse time, when DOCS was still empty — rebuild it now that
+        // the manifest has populated DOCS, or links between published docs never resolve.
+        Object.keys(DOCS).forEach(function (s) { FILE_TO_SLUG[DOCS[s].file.toLowerCase()] = s; });
+
+        document.body.style.display = "block";
+        main();
+      } catch (e) {
+        deny("Uventet fejl: " + (e && e.message ? e.message : "ukendt"));
+      }
+    })();
   })();
   </script>
 </body>
