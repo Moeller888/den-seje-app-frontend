@@ -12,7 +12,7 @@ import { dirname, join, resolve, normalize } from "node:path";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..");
 const ROOT = join(REPO, "dist-cloudflare");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".wav": "audio/wav" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".wav": "audio/wav", ".xml": "application/xml" };
 
 if (!existsSync(ROOT)) { console.error("dist-cloudflare/ is missing — run: npm run build:cloudflare"); process.exit(1); }
 
@@ -70,7 +70,7 @@ const MUST_SERVE = [
   "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
   "/student-detail.html", "/student-detail.html?id=test", "/avatar.html",
   "/achievements.html", "/collection.html", "/leaderboard.html", "/themes.html", "/reset-password.html",
-  "/docs.html", "/404.html",
+  "/docs.html", "/404.html", "/sitemap.xml",
   "/app.js", "/style.css", "/supabaseClient.js", "/css/theme.css",
   "/js/supabase.js", "/js/login.js", "/js/avatar-layers.js",
   "/assets/avatar/base/body.svg", "/assets/avatar-r2/torso/armor-knight-r2-v1.webp",
@@ -137,6 +137,26 @@ server.listen(0, "127.0.0.1", async () => {
     if (!okDistinct) failures++;
     console.log(`  ${okQuiz ? "OK  " : "FAIL"} /index.html = ${idx.status} and is still the quiz shell`);
     console.log(`  ${okDistinct ? "OK  " : "FAIL"} / and /index.html serve different documents`);
+  }
+
+  // THE SITEMAP is what a search engine reads instead of the site, so it is checked over HTTP
+  // too: it must actually SERVE, and it must name exactly the public clean routes — not the
+  // .html files behind them, and nothing internal.
+  console.log("\nTHE SITEMAP — served, and listing exactly the public clean routes:");
+  {
+    const sm = await get("/sitemap.xml");
+    const locs = [...sm.body.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
+    const expected = PUBLIC_ROUTES.map(([route]) => "https://lærlig.dk" + route);
+    const okStatus = sm.status === 200;
+    const okList = JSON.stringify(locs) === JSON.stringify(expected);
+    const okClean = !/\.html/i.test(sm.body);
+    const okHttps = locs.length > 0 && locs.every((l) => l.startsWith("https://"));
+    for (const ok of [okStatus, okList, okClean, okHttps]) if (!ok) failures++;
+    console.log(`  ${okStatus ? "OK  " : "FAIL"} ${String(sm.status).padStart(3)}  /sitemap.xml`);
+    console.log(`  ${okList ? "OK  " : "FAIL"} lists the ${expected.length} public routes, in table order`);
+    console.log(`  ${okClean ? "OK  " : "FAIL"} carries no .html address`);
+    console.log(`  ${okHttps ? "OK  " : "FAIL"} every <loc> is https`);
+    for (const l of locs) console.log(`         ${l}`);
   }
 
   console.log("\nMUST NOT SERVE (404 + the neutral 404 page):");

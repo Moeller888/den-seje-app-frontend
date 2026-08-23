@@ -59,6 +59,7 @@ export const ASSET_DIRS = Object.freeze([
 // unreadable without the second — a missing landing page must fail the build, not production.
 export const MANDATORY = Object.freeze([
   "index.html", "login.html", "hub.html", "landing.html", "docs.html", "404.html", "_redirects",
+  "sitemap.xml",
   "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html", "til-skoler.html",
   "priser.html", "om-laerlig.html",
   "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css", "js/landing.js",
@@ -129,6 +130,57 @@ export const INTERNAL_HTML = Object.freeze([
   // generated system pages
   "docs.html", "404.html",
 ]);
+
+// ── THE SITEMAP ───────────────────────────────────────────────────────────────────
+// DERIVED, NEVER HAND-MAINTAINED. REDIRECT_RULES already IS the list of public addresses — one
+// clean route per marketing page, an explicit list with no pattern in it. The sitemap is generated
+// from that same table, so the two cannot drift apart: adding a public page stays one edit in
+// REDIRECT_RULES (plus RUNTIME_HTML and PUBLIC_HTML), and the sitemap follows on the next build.
+// `validateOutput()` refuses an output whose sitemap disagrees with the table, and refuses a table
+// whose targets disagree with PUBLIC_HTML — so a future mismatch fails the build, loudly.
+//
+// THE HOST IS AN IDN. `lærlig.dk` is the real domain; `xn--lrlig-sra.dk` is the same name written
+// in punycode. The sitemap protocol asks that URLs "follow the RFC-3986 standard for URIs, the
+// RFC-3987 standard for IRIs, and the XML standard"; RFC 3987 permits non-ASCII in the host, and
+// the document is UTF-8, so the readable form is standards-compliant and is what ships. It is one
+// constant on purpose: moving to the A-label, if Search Console ever demands it, is a one-line
+// change and every URL follows.
+export const SITE_ORIGIN = "https://lærlig.dk";
+
+// The public addresses, in the routing table's own order (the menu order). Derived, not restated.
+export const PUBLIC_ROUTES = Object.freeze(Object.keys(ROUTE_TO_FILE));
+
+// Percent-encode the PATH per RFC 3986, segment by segment, so a future route carrying a non-ASCII
+// letter or a space cannot emit a malformed URL. Today's routes match `^/[a-z-]*$` and therefore
+// pass through byte-for-byte — the encoding is here for the next route, not this one.
+const encodePath = (path) => path.split("/").map((seg) => encodeURIComponent(seg)).join("/");
+// The five characters the sitemap protocol requires to be entity-escaped. `&` must be replaced
+// first, or the ampersands introduced by the later replacements would be escaped twice.
+export const xmlEscape = (s) => String(s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+// The inverse, for reading a <loc> back out. `&amp;` LAST, for the mirror-image reason.
+export const xmlUnescape = (s) => String(s)
+  .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  .replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+
+export const SITEMAP_FILE = "sitemap.xml";
+export const SITEMAP_XMLNS = "http://www.sitemaps.org/schemas/sitemap/0.9";
+
+// The absolute URL of every public route, in table order.
+export const sitemapUrls = () => PUBLIC_ROUTES.map((route) => SITE_ORIGIN + encodePath(route));
+
+// NO <lastmod>, <changefreq> OR <priority>. The repository has no deterministic source for any of
+// them — a build timestamp is not a modification date, and a hand-picked priority is a guess
+// dressed up as data. A <url> carrying only <loc> is a complete, valid entry.
+// Deterministic by construction: no clock, no environment, no filesystem listing.
+export function sitemapXml() {
+  const entries = sitemapUrls()
+    .map((url) => `  <url>\n    <loc>${xmlEscape(url)}</loc>\n  </url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n`
+       + `<urlset xmlns="${SITEMAP_XMLNS}">\n${entries}\n</urlset>\n`;
+}
 
 // ── what may never appear in the output ───────────────────────────────────────────────────────
 export const FORBIDDEN_EXTENSIONS = Object.freeze([
@@ -263,6 +315,97 @@ export function notFoundHtml() {
 `;
 }
 
+// ── validation of the generated sitemap ───────────────────────────────────────────────────────
+// The sitemap is the one shipped file a search engine reads INSTEAD of the site, so a wrong one
+// fails quietly: nothing 404s, nothing looks broken, the wrong pages simply get indexed. It is
+// therefore checked two independent ways rather than one.
+//
+//   1. STRUCTURALLY, against the sitemap protocol — the declaration, the urlset namespace, matched
+//      tags, no element this build does not emit, no wildcard, https only, the right host, no
+//      .html address, no duplicate, and exactly the routes classified public, in the routing
+//      table's order. Every URL is READ BACK OUT of the document, not taken from the generator.
+//   2. BY IDENTITY, against sitemapXml() — the shipped bytes must be what the current routing
+//      table produces.
+//
+// Node ships no XML parser and the project's test stack does not carry one; taking on a dependency
+// to read seven <loc> elements would be a larger change than the thing it validates. The two
+// checks together are stronger than either alone: (1) catches a generator emitting plausible
+// nonsense, (2) catches a document edited after it was generated.
+export function validateSitemap(outDir) {
+  const problems = [];
+  const abs = join(outDir, SITEMAP_FILE);
+  if (!existsSync(abs)) { problems.push(`${SITEMAP_FILE} is missing from the output`); return problems; }
+  if (!lstatSync(abs).isFile()) { problems.push(`${SITEMAP_FILE} is not a regular file`); return problems; }
+
+  const xml = readFileSync(abs, "utf8");
+  const expected = sitemapUrls();
+
+  // ── the document's shape ──
+  if (!xml.startsWith(`<?xml version="1.0" encoding="UTF-8"?>\n`)) {
+    problems.push(`${SITEMAP_FILE} does not begin with the UTF-8 XML declaration`);
+  }
+  if (!xml.includes(`<urlset xmlns="${SITEMAP_XMLNS}">`)) {
+    problems.push(`${SITEMAP_FILE} is missing the sitemaps 0.9 urlset namespace`);
+  }
+  if (!xml.trimEnd().endsWith("</urlset>")) problems.push(`${SITEMAP_FILE} does not close its urlset`);
+  // Every element must be one this build emits. A stray <priority>, an invented <lastmod> or an
+  // injected <sitemapindex> is refused rather than ignored.
+  const ALLOWED_TAGS = ["urlset", "/urlset", "url", "/url", "loc", "/loc"];
+  for (const m of xml.replace(/<\?xml[^>]*\?>/, "").matchAll(/<([^>\s]+)[^>]*>/g)) {
+    if (!ALLOWED_TAGS.includes(m[1])) problems.push(`${SITEMAP_FILE} contains an unexpected element: <${m[1]}>`);
+  }
+  for (const [open, close] of [["<url>", "</url>"], ["<loc>", "</loc>"]]) {
+    const opened = xml.split(open).length - 1;
+    const closed = xml.split(close).length - 1;
+    if (opened !== closed) problems.push(`${SITEMAP_FILE} has ${opened} ${open} but ${closed} ${close}`);
+    if (opened !== expected.length) problems.push(`${SITEMAP_FILE} has ${opened} ${open} element(s), expected ${expected.length}`);
+  }
+  // No wildcard, and nothing that could stand in for a route nobody listed.
+  if (xml.includes("*")) {
+    problems.push(`${SITEMAP_FILE} contains a wildcard — every URL must be an explicit public route`);
+  }
+
+  // ── the URLs, read back out of the document ──
+  const locs = [...xml.matchAll(/<loc>([\s\S]*?)<\/loc>/g)].map((m) => xmlUnescape(m[1].trim()));
+  if (new Set(locs).size !== locs.length) problems.push(`${SITEMAP_FILE} lists a duplicate URL`);
+
+  const expectedHost = new URL(SITE_ORIGIN).hostname;
+  const parsed = [];
+  for (const loc of locs) {
+    let url;
+    try { url = new URL(loc); } catch {
+      problems.push(`${SITEMAP_FILE}: ${JSON.stringify(loc)} is not an absolute URL`);
+      continue;
+    }
+    parsed.push(url);
+    if (url.protocol !== "https:") problems.push(`${SITEMAP_FILE}: ${loc} does not use https`);
+    // `new URL` normalises an IDN host to its A-label, so this compares the same two forms
+    // whether the document was written in punycode or in Danish letters.
+    if (url.hostname !== expectedHost) problems.push(`${SITEMAP_FILE}: ${loc} is not on ${expectedHost}`);
+    if (/\.html/i.test(loc)) problems.push(`${SITEMAP_FILE}: ${loc} is a .html address, not the public clean route`);
+  }
+
+  // Exactly the public routes, in the routing table's order — no more, no fewer, no reordering.
+  if (JSON.stringify(locs) !== JSON.stringify(expected)) {
+    problems.push(`${SITEMAP_FILE} does not list exactly the public routes, in order: ` +
+      `expected ${JSON.stringify(expected)}, found ${JSON.stringify(locs)}`);
+  }
+  // …and no internal surface, named either as a file or as a route.
+  for (const page of INTERNAL_HTML) {
+    const stem = page.replace(/\.html$/, "");
+    if (xml.includes(page)) problems.push(`${SITEMAP_FILE} names an internal page: ${page}`);
+    if (parsed.some((u) => u.pathname === `/${stem}`)) {
+      problems.push(`${SITEMAP_FILE} lists the internal route /${stem}`);
+    }
+  }
+
+  // ── and the bytes must be what the current routing table generates ──
+  if (xml !== sitemapXml()) {
+    problems.push(`${SITEMAP_FILE} is not the document generated from REDIRECT_RULES — rebuild it`);
+  }
+  return problems;
+}
+
 // ── validation of the finished output ─────────────────────────────────────────────────────────
 export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions = KNOWN_STRING_EXCEPTIONS } = {}) {
   const problems = [];
@@ -288,7 +431,7 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
 
   const allowed = new Set(exceptions.map((e) => `${e.file}::${e.string}`));
   for (const rel of files) {
-    if (![".html", ".js", ".css", ".svg"].includes(extOf(rel))) continue;
+    if (![".html", ".js", ".css", ".svg", ".xml"].includes(extOf(rel))) continue;
     let text;
     try { text = readFileSync(join(outDir, rel), "utf8"); } catch { continue; }
     for (const s of strings) {
@@ -343,6 +486,21 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
     if (isPublic && /noindex|nofollow/i.test(html)) problems.push(`public page blocks indexing: ${rel}`);
   }
 
+  // ONE SOURCE OF TRUTH, ASSERTED. The routing table names the public ADDRESSES; PUBLIC_HTML names
+  // the public PAGES. The sitemap is derived from the first, the robots classification from the
+  // second. If the two ever describe different sets, the sitemap would be right about one of them
+  // and wrong about the other — so neither is trusted until they agree, and the build stops here
+  // rather than publishing a sitemap that quietly omits or invents a page.
+  const routedTargets = [...new Set(Object.values(ROUTE_TO_FILE))].sort();
+  const publicPages = [...PUBLIC_HTML].sort();
+  if (JSON.stringify(routedTargets) !== JSON.stringify(publicPages)) {
+    problems.push("the routing table and PUBLIC_HTML describe different public pages: " +
+      `${JSON.stringify(routedTargets)} vs ${JSON.stringify(publicPages)}`);
+  }
+  // The sitemap is checked when it is present, exactly as _redirects is; its EXISTENCE is enforced
+  // by MANDATORY in build(), so a build that fails to emit it stops before it reaches here.
+  if (existsSync(join(outDir, SITEMAP_FILE))) problems.push(...validateSitemap(outDir));
+
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {
     const t = readFileSync(docs, "utf8");
@@ -380,7 +538,8 @@ export function build({ quiet = false } = {}) {
   writeFileSync(join(OUT, "docs.html"), docsStubHtml(), "utf8");
   writeFileSync(join(OUT, "404.html"), notFoundHtml(), "utf8");
   writeFileSync(join(OUT, "_redirects"), REDIRECT_RULES.join("\n") + "\n", "utf8");
-  const generated = ["404.html", "_redirects", "docs.html"];
+  writeFileSync(join(OUT, SITEMAP_FILE), sitemapXml(), "utf8");
+  const generated = ["404.html", "_redirects", SITEMAP_FILE, "docs.html"];
 
   for (const m of MANDATORY) {
     if (!existsSync(join(OUT, m))) throw new Error(`mandatory file missing from the output: ${m}`);
