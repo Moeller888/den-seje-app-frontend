@@ -243,12 +243,31 @@
 
       renderTopbar(slug);
       document.title = entry.title;
-      supabase.storage.from(BUCKET).download(entry.file)
+      // Fetched by CONTENT HASH, not by filename: the object is immutable, so these bytes can
+      // never have been swapped underneath the manifest that named them.
+      supabase.storage.from(BUCKET).download(entry.key)
         .then(function (res) {
           // RLS decides this, not the page: a non-super_admin session gets an error here even
           // if it reached the URL directly.
           if (res.error || !res.data) throw new Error(res.error ? res.error.message : "tomt svar");
-          return res.data.text();
+          return res.data.arrayBuffer().then(function (buf) {
+            // Integrity: the manifest states the hash, so check it instead of trusting it.
+            // Fail CLOSED on a mismatch — a document that is not what the manifest says it is
+            // must not be rendered. If the browser has no SubtleCrypto (non-secure context),
+            // say so rather than silently skipping the check.
+            var text = new TextDecoder("utf-8").decode(buf);
+            if (!entry.sha256) return text;
+            if (!(window.crypto && window.crypto.subtle)) {
+              throw new Error("kan ikke verificere dokumentet i denne browserkontekst");
+            }
+            return window.crypto.subtle.digest("SHA-256", buf).then(function (d) {
+              var hex = Array.prototype.map.call(new Uint8Array(d), function (b) {
+                return ("0" + b.toString(16)).slice(-2);
+              }).join("");
+              if (hex !== entry.sha256) throw new Error("dokumentet matcher ikke sin kontrolsum");
+              return text;
+            });
+          });
         })
         .then(function (md) {
           try {
@@ -298,7 +317,11 @@
         var list = (parsed && parsed.docs) || [];
         if (!list.length) { deny("Der er ikke publiceret nogen dokumenter endnu."); return; }
         list.forEach(function (d) {
-          if (d && d.slug && d.file) DOCS[d.slug] = { file: d.file, title: d.title || d.slug };
+          // `key` is the content-addressed object name; `file` is a display name only. A
+          // manifest entry without a key is unusable and is skipped rather than guessed at.
+          if (d && d.slug && d.key) {
+            DOCS[d.slug] = { file: d.file || d.slug, key: d.key, sha256: d.sha256 || "", title: d.title || d.slug };
+          }
         });
 
         // FILE_TO_SLUG is built at parse time, when DOCS was still empty — rebuild it now that
