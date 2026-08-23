@@ -70,9 +70,10 @@ export function collect() {
 }
 
 // The manifest docs.html reads first, so the page never guesses what exists.
+// DETERMINISTIC BY CONSTRUCTION: it carries no wall-clock stamp, so the same documents produce
+// byte-identical output on every run and a re-publish that changes nothing is visibly a no-op.
 export function manifest(items) {
   return {
-    generated: new Date().toISOString(),
     bucket: BUCKET,
     docs: items.map((i) => ({ slug: i.slug, file: i.file, title: i.title, bytes: i.bytes.length, sha256: i.sha256 })),
   };
@@ -113,6 +114,22 @@ async function main() {
     console.log(`  ✓ uploaded ${i.file}`);
   }
 
+  // Stale objects, BEFORE the manifest goes up. A document dropped from the allowlist must stop
+  // being readable — leaving it in the bucket would keep it available to every super_admin while
+  // the manifest quietly stopped mentioning it, which is the worst of both.
+  const listed = await supabase.storage.from(BUCKET).list("", { limit: 1000 });
+  if (listed.error) throw new Error(`could not list the bucket: ${listed.error.message}`);
+  const keep = new Set([...items.map((i) => i.file), "manifest.json"]);
+  const stale = (listed.data || []).map((o) => o.name).filter((n) => !keep.has(n));
+  if (stale.length) {
+    const removed = await supabase.storage.from(BUCKET).remove(stale);
+    if (removed.error) throw new Error(`could not remove stale objects: ${removed.error.message}`);
+    for (const n of stale) console.log(`  ✓ removed stale ${n}`);
+  } else {
+    console.log("  ✓ no stale objects in the bucket");
+  }
+
+  // The manifest is written LAST, so it can never point at a document that is not up yet.
   const m = Buffer.from(JSON.stringify(manifest(items), null, 2) + "\n", "utf8");
   const { error: mErr } = await supabase.storage.from(BUCKET).upload("manifest.json", m, {
     contentType: "application/json; charset=utf-8",

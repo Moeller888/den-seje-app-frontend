@@ -77,22 +77,32 @@
     var FILE_TO_SLUG = {};
     Object.keys(DOCS).forEach(function (slug) { FILE_TO_SLUG[DOCS[slug].file.toLowerCase()] = slug; });
 
+    // Quotes are escaped too, not just angle brackets: the result of this is interpolated into
+    // the link href below, so an unescaped quote would end that attribute and let the rest of
+    // link target become new attributes — an onmouseover that fires without a click.
     function escapeHtml(s) {
-      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     }
 
-    // Rewrite a link target: allowlisted doc -> this viewer; other doc -> raw /docs/<file>;
-    // external / anchors kept as-is.
+    // Rewrite a link target. The scheme list is an ALLOWLIST, not a blocklist: only http(s),
+    // mailto and in-page anchors survive as themselves. Everything unrecognised — javascript:,
+    // data:text/html, vbscript:, or a target crafted to break out of the attribute — becomes a
+    // dead anchor. A viewer that runs in a super_admin session is the wrong place to be generous.
     function rewriteHref(u) {
       u = String(u).trim();
-      if (/^(https?:|mailto:|#)/i.test(u)) return escapeHtml(u);
+      if (/^(https?:\/\/|mailto:|#)/i.test(u)) return escapeHtml(u);
       var base = u.replace(/^\.?\//, "").split(/[?#]/)[0];
       var lower = base.toLowerCase();
       if (FILE_TO_SLUG[lower]) return "docs.html?doc=" + encodeURIComponent(FILE_TO_SLUG[lower]);
       // Not published: the file is not on the CDN at all, so a /docs/ link would 404 and would
       // advertise an internal path for nothing. Send the reader to the index of what IS available.
       if (/\.md$/i.test(base)) return "docs.html";
-      return escapeHtml(u);
+      return "#";
     }
 
     // Inline formatting. Order: extract code (raw) -> escape -> links -> bold -> italic -> restore code.
