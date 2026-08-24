@@ -73,6 +73,7 @@
     // published to the CDN at all, which is what keeps them unreadable without a session.
     var DOCS = {};
     var BUCKET = "docs";
+    var MANIFEST_NAME = "manifest.json";
     // Reverse map: filename (lowercase) -> slug, for internal link rewriting.
     var FILE_TO_SLUG = {};
     Object.keys(DOCS).forEach(function (slug) { FILE_TO_SLUG[DOCS[slug].file.toLowerCase()] = slug; });
@@ -235,6 +236,41 @@
       return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : null;
     }
 
+    // Fetches one document BY CONTENT HASH and proves it. Immutable key in, verified text out.
+    function fetchDoc(entry) {
+      return supabase.storage.from(BUCKET).download(entry.key).then(function (res) {
+        // RLS decides this, not the page: a non-super_admin session gets an error here even if it
+        // reached the URL directly.
+        if (res.error || !res.data) throw new Error(res.error ? res.error.message : "tomt svar");
+        return res.data.arrayBuffer().then(function (buf) {
+          // Integrity: the manifest states the hash, so check it instead of trusting it. Fail
+          // CLOSED on a mismatch. If the browser has no SubtleCrypto (non-secure context), say so
+          // rather than silently skipping the check.
+          var text = new TextDecoder("utf-8").decode(buf);
+          if (!entry.sha256) return text;
+          if (!(window.crypto && window.crypto.subtle)) {
+            throw new Error("kan ikke verificere dokumentet i denne browserkontekst");
+          }
+          return window.crypto.subtle.digest("SHA-256", buf).then(function (d) {
+            var hex = Array.prototype.map.call(new Uint8Array(d), function (b) {
+              return ("0" + b.toString(16)).slice(-2);
+            }).join("");
+            if (hex !== entry.sha256) throw new Error("dokumentet matcher ikke sin kontrolsum");
+            return text;
+          });
+        });
+      });
+    }
+
+    function show(md) {
+      try {
+        document.getElementById("content").innerHTML = render(md);
+      } catch (e) {
+        // Fail-soft: never blank; show the raw source rather than nothing.
+        document.getElementById("content").innerHTML = "<pre><code>" + escapeHtml(md) + "</code></pre>";
+      }
+    }
+
     function main() {
       var slug = getParam("doc");
       if (!slug) { showIndex(); return; }
@@ -243,39 +279,24 @@
 
       renderTopbar(slug);
       document.title = entry.title;
-      // Fetched by CONTENT HASH, not by filename: the object is immutable, so these bytes can
-      // never have been swapped underneath the manifest that named them.
-      supabase.storage.from(BUCKET).download(entry.key)
-        .then(function (res) {
-          // RLS decides this, not the page: a non-super_admin session gets an error here even
-          // if it reached the URL directly.
-          if (res.error || !res.data) throw new Error(res.error ? res.error.message : "tomt svar");
-          return res.data.arrayBuffer().then(function (buf) {
-            // Integrity: the manifest states the hash, so check it instead of trusting it.
-            // Fail CLOSED on a mismatch — a document that is not what the manifest says it is
-            // must not be rendered. If the browser has no SubtleCrypto (non-secure context),
-            // say so rather than silently skipping the check.
-            var text = new TextDecoder("utf-8").decode(buf);
-            if (!entry.sha256) return text;
-            if (!(window.crypto && window.crypto.subtle)) {
-              throw new Error("kan ikke verificere dokumentet i denne browserkontekst");
-            }
-            return window.crypto.subtle.digest("SHA-256", buf).then(function (d) {
-              var hex = Array.prototype.map.call(new Uint8Array(d), function (b) {
-                return ("0" + b.toString(16)).slice(-2);
-              }).join("");
-              if (hex !== entry.sha256) throw new Error("dokumentet matcher ikke sin kontrolsum");
-              return text;
-            });
+
+      // RECOVERY, EXACTLY ONCE. A tab that has been open across a publish still holds the manifest
+      // it booted with, and browser + CDN caches can hand out a stale one for a while after the
+      // switch. Either way the key it knows may no longer be the current one, so a failure is not
+      // necessarily an error — it may just be an old generation. Re-read the manifest, look the
+      // same slug up again, and try the new key. Once. A second failure fails closed: there is no
+      // loop here, and no path that renders unverified bytes.
+      fetchDoc(entry)
+        .then(show)
+        .catch(function (first) {
+          return loadManifest().then(function (fresh) {
+            if (!fresh) throw first;
+            var next = DOCS[slug];
+            if (!next || next.key === entry.key) throw first; // nothing newer to try
+            renderTopbar(slug);
+            document.title = next.title;
+            return fetchDoc(next).then(show);
           });
-        })
-        .then(function (md) {
-          try {
-            document.getElementById("content").innerHTML = render(md);
-          } catch (e) {
-            // Fail-soft: never blank; show the raw source rather than nothing.
-            document.getElementById("content").innerHTML = "<pre><code>" + escapeHtml(md) + "</code></pre>";
-          }
         })
         .catch(function (e) {
           showError("Kunne ikke hente dokumentet (" + (e && e.message ? e.message : "fejl") + ").");
@@ -293,6 +314,55 @@
       showError(msg);
     }
 
+    // THE CURRENT-POINTER READ. manifest.json is the one mutable object in the bucket, so it must
+    // never come from a cache: Supabase's default browser TTL is about an hour and CDN invalidation
+    // takes up to a minute, either of which can hand this tab a generation that has already been
+    // replaced.
+    //
+    // Two mechanisms, because one is not enough. A FRESH SIGNED URL every call: each signed URL
+    // carries a unique token, and Supabase treats every token as its own CDN cache key, so a new
+    // one can never be answered from an earlier response. Then `cache: "no-store"` and an explicit
+    // cacheNonce, which is the bypass Supabase documents, to keep the browser out of it too.
+    //
+    // The service key is not involved anywhere here: the signed URL is minted with the user's own
+    // session, so RLS decides whether it can be minted at all.
+    var manifestNonce = 0;
+    function loadManifest() {
+      manifestNonce++;
+      return supabase.storage.from(BUCKET).createSignedUrl(MANIFEST_NAME, 60)
+        .then(function (res) {
+          if (res.error || !res.data || !res.data.signedUrl) {
+            throw new Error(res.error ? res.error.message : "ingen signeret URL");
+          }
+          var url = res.data.signedUrl +
+            (res.data.signedUrl.indexOf("?") === -1 ? "?" : "&") +
+            "cacheNonce=" + Date.now() + "-" + manifestNonce;
+          return fetch(url, { cache: "no-store" });
+        })
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (parsed) {
+          var list = (parsed && parsed.docs) || [];
+          // Replace, never merge: a slug dropped from the manifest must disappear from this tab
+          // too, not linger from the generation it booted with.
+          Object.keys(DOCS).forEach(function (k) { delete DOCS[k]; });
+          Object.keys(FILE_TO_SLUG).forEach(function (k) { delete FILE_TO_SLUG[k]; });
+          list.forEach(function (d) {
+            if (d && d.slug && d.key) {
+              DOCS[d.slug] = {
+                file: d.file || d.slug, key: d.key,
+                sha256: d.sha256 || "", title: d.title || d.slug,
+              };
+            }
+          });
+          Object.keys(DOCS).forEach(function (s) { FILE_TO_SLUG[DOCS[s].file.toLowerCase()] = s; });
+          return list;
+        })
+        .catch(function () { return null; });
+    }
+
     (async function boot() {
       try {
         var sess = await supabase.auth.getSession();
@@ -308,26 +378,9 @@
           return;
         }
 
-        var man = await supabase.storage.from(BUCKET).download("manifest.json");
-        if (man.error || !man.data) {
-          deny("Dokumentlisten kunne ikke hentes. Er dokumenterne publiceret?");
-          return;
-        }
-        var parsed = JSON.parse(await man.data.text());
-        var list = (parsed && parsed.docs) || [];
+        var list = await loadManifest();
+        if (!list) { deny("Dokumentlisten kunne ikke hentes. Er dokumenterne publiceret?"); return; }
         if (!list.length) { deny("Der er ikke publiceret nogen dokumenter endnu."); return; }
-        list.forEach(function (d) {
-          // `key` is the content-addressed object name; `file` is a display name only. A
-          // manifest entry without a key is unusable and is skipped rather than guessed at.
-          if (d && d.slug && d.key) {
-            DOCS[d.slug] = { file: d.file || d.slug, key: d.key, sha256: d.sha256 || "", title: d.title || d.slug };
-          }
-        });
-
-        // FILE_TO_SLUG is built at parse time, when DOCS was still empty — rebuild it now that
-        // the manifest has populated DOCS, or links between published docs never resolve.
-        Object.keys(DOCS).forEach(function (s) { FILE_TO_SLUG[DOCS[s].file.toLowerCase()] = s; });
-
         document.body.style.display = "block";
         main();
       } catch (e) {

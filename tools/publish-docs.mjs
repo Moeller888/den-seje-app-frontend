@@ -9,19 +9,23 @@
 // so it is a literal list rather than a glob: adding a document to the internal folder must never
 // publish it by accident. Everything not named here stays on disk only.
 //
-// WHY CONTENT-ADDRESSED OBJECTS. Documents are stored as `o/<sha256>.md`, never under their source
-// filename. That makes every object IMMUTABLE: a changed document is a NEW key, so no reader ever
-// sees a name whose bytes changed underneath them. The consequence is the ordering below, which is
-// the whole point of this tool:
+// THE SHAPE OF A PUBLISH
 //
-//   1. upload the new objects        — invisible; nothing references them yet
-//   2. upload manifest.json          — THE SWITCH, and the only visible transition
-//   3. delete unreferenced objects   — garbage, by definition, once the switch has landed
+//   1. list `o/` COMPLETELY (paginated, or fail — a partial listing is never treated as the truth)
+//   2. for every document: create `o/<sha256>.md` if absent, else VERIFY the existing bytes
+//   3. overwrite manifest.json — THE SWITCH, and the only mutable object in the bucket
 //
-// Before step 2 a reader sees the entire OLD set; after it, the entire NEW set. There is no window
-// in which the manifest describes one version while the bytes are another, and a failure at any
-// step leaves the last complete publish intact. Deleting first — the obvious order — would be
-// wrong: it can strand the still-live manifest pointing at an object that no longer exists.
+//   There is no step 4. Publishing NEVER deletes anything.
+//
+// WHY NOTHING IS DELETED. Objects are content-addressed, so an old generation costs only storage —
+// but deleting it costs correctness. A viewer tab loaded before the switch, a browser cache (default
+// TTL ~1 hour) and the CDN (up to 60 s to invalidate) all keep pointing at the previous manifest for
+// a while, and a concurrent publisher may be mid-publish with objects only its own manifest names.
+// Deleting during a publish can strand any of them. Cleanup is therefore deliberate, separate debt —
+// see docs/167a-docs-delivery.md — not something `--write` does behind your back.
+//
+// A document dropped from the allowlist disappears from the manifest, and with it from the viewer,
+// immediately. Its object stays in the bucket, still private and still behind super_admin RLS.
 //
 //   node tools/publish-docs.mjs           # verify: report the plan, touch nothing
 //   node tools/publish-docs.mjs --write   # publish
@@ -43,6 +47,18 @@ export const TOOL = "publish-docs";
 export const BUCKET = "docs";
 export const MANIFEST_NAME = "manifest.json";
 export const OBJECT_PREFIX = "o/";
+
+// The manifest is the current-pointer and lives at a fixed path, so it must never be cached: the
+// Supabase default browser TTL is about an hour and CDN invalidation takes up to a minute, which is
+// exactly long enough to hand a reader a stale generation. The objects are the opposite case — the
+// key IS the content hash, so they can be cached effectively forever.
+export const MANIFEST_CACHE_CONTROL = "0";
+export const OBJECT_CACHE_CONTROL = "31536000";
+
+// list() defaults to 100 and caps well below the object count a long-lived bucket can reach, so
+// every listing pages to the end. A listing that cannot be completed is an error, never a shrug.
+export const LIST_PAGE_SIZE = 100;
+export const LIST_MAX_PAGES = 1000;
 
 // ── the allowlist ────────────────────────────────────────────────────────────────────────────
 // slug -> { file, title }. The slug is the URL fragment docs.html uses; the file is relative to
@@ -72,7 +88,7 @@ export const PUBLISHED = Object.freeze({
 
 export const SLUGS = Object.freeze(Object.keys(PUBLISHED));
 
-const sha256 = (b) => createHash("sha256").update(b).digest("hex");
+export const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 
 // The object key IS the content hash. That is what makes objects immutable.
 export const objectKey = (sha) => OBJECT_PREFIX + sha + ".md";
@@ -89,10 +105,9 @@ export function collect() {
   return out;
 }
 
-// The manifest docs.html reads first, so the page never guesses what exists — and it is the only
-// thing mapping a slug to an object key, which is what makes it the switch.
-// DETERMINISTIC BY CONSTRUCTION: no wall-clock stamp, so identical documents give identical bytes
-// and a re-publish that changes nothing is visibly a no-op.
+// The manifest is the ONLY thing mapping a slug to an object key, which is what makes it the
+// switch. DETERMINISTIC BY CONSTRUCTION: no wall-clock stamp, so identical documents give identical
+// bytes and a re-publish that changes nothing is visibly a no-op.
 export function manifest(items) {
   return {
     bucket: BUCKET,
@@ -109,21 +124,52 @@ export function manifest(items) {
 
 // Pure: what a publish would do, given what the bucket already holds. No IO, so it is testable
 // without a bucket and without credentials.
+//
+// `unreferenced` is REPORTED, never acted on. It is what a future, separate cleanup would consider,
+// and naming it here keeps the debt visible instead of silent.
 export function plan(items, existingNames = []) {
   const have = new Set(existingNames);
   const referenced = new Set(items.map((i) => i.key));
   return {
-    // Content-addressed: a key that already exists holds exactly these bytes, so re-uploading it
-    // would be a no-op. Skipping keeps a re-publish cheap and provably non-mutating.
     uploads: items.filter((i) => !have.has(i.key)),
-    // Garbage only AFTER the switch: whatever the NEW manifest does not reference. The manifest
-    // itself is never garbage.
-    gc: existingNames.filter((n) => n !== MANIFEST_NAME && !referenced.has(n)),
+    verify: items.filter((i) => have.has(i.key)),
+    unreferenced: existingNames.filter((n) => n !== MANIFEST_NAME && !referenced.has(n)),
   };
+}
+
+// Pages to the end of a prefix, or throws. A short page means the last page; anything else keeps
+// going. The page cap exists so a misbehaving endpoint cannot spin forever — hitting it is an
+// error, because a listing we cannot finish must not be mistaken for a complete one.
+export async function listAll(bucketApi, prefix, pageSize = LIST_PAGE_SIZE) {
+  const names = [];
+  for (let page = 0; page < LIST_MAX_PAGES; page++) {
+    const res = await bucketApi.list(prefix, { limit: pageSize, offset: page * pageSize });
+    if (res.error) throw new Error(`could not list ${prefix || "/"}: ${res.error.message}`);
+    const rows = res.data || [];
+    for (const r of rows) if (r && r.name) names.push(r.name);
+    if (rows.length < pageSize) return names;
+  }
+  throw new Error(`listing ${prefix || "/"} did not terminate within ${LIST_MAX_PAGES} pages`);
+}
+
+// True when Storage refused an upload because the key already exists — the race between listing
+// and creating. Matched on the documented status/name rather than on message text alone.
+export function isAlreadyExists(error) {
+  if (!error) return false;
+  const status = Number(error.statusCode || error.status || 0);
+  const text = `${error.error || ""} ${error.message || ""}`.toLowerCase();
+  return status === 409 || text.includes("already exists") || text.includes("duplicate");
 }
 
 async function main() {
   const write = process.argv.includes("--write");
+  if (process.argv.includes("--gc")) {
+    throw new Error(
+      "there is no --gc: publishing never deletes, and cleanup is deliberate separate work.\n" +
+      "  See docs/167a-docs-delivery.md — old generations are cheap, and deleting one while a\n" +
+      "  cached manifest or a concurrent publisher still points at it is not.",
+    );
+  }
   console.log(`${TOOL} — ${write ? "--write (publishing)" : "verify only (touches nothing)"}`);
 
   const items = collect();
@@ -149,49 +195,72 @@ async function main() {
 
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const store = supabase.storage.from(BUCKET);
 
-  const listed = await supabase.storage.from(BUCKET).list(OBJECT_PREFIX.replace(/\/$/, ""), { limit: 1000 });
-  if (listed.error) throw new Error(`could not list the bucket: ${listed.error.message}`);
-  const existing = (listed.data || []).map((o) => OBJECT_PREFIX + o.name);
-  const { uploads, gc } = plan(items, existing);
+  // STEP 1 — a COMPLETE listing, or nothing at all.
+  const existing = (await listAll(store, OBJECT_PREFIX.replace(/\/$/, ""))).map((n) => OBJECT_PREFIX + n);
+  const { uploads, verify, unreferenced } = plan(items, existing);
 
-  // STEP 1 — the new objects. Invisible: the live manifest does not reference them yet, so a
-  // failure here leaves the previous publish intact and readable.
-  for (const i of uploads) {
-    const { error } = await supabase.storage.from(BUCKET).upload(i.key, i.bytes, {
-      contentType: "text/markdown; charset=utf-8",
-      upsert: true, // the key is the content hash, so this can only ever rewrite identical bytes
-    });
-    if (error) throw new Error(`upload failed for ${i.key}: ${error.message}`);
-    console.log(`  ✓ uploaded ${i.key}  (${i.slug})`);
-  }
-  if (!uploads.length) console.log("  ✓ every document is already published, byte for byte");
+  // STEP 2 — create the missing objects; prove the present ones. Never overwrite.
+  for (const i of verify) console.log(`  ✓ ${await ensureObject(store, i, true)} ${i.key}  (${i.slug})`);
+  for (const i of uploads) console.log(`  ✓ ${await ensureObject(store, i, false)} ${i.key}  (${i.slug})`);
 
-  // STEP 2 — THE SWITCH. Until this lands, readers see the previous set in full.
+  // STEP 3 — THE SWITCH. Until this lands, readers see the previous generation in full.
   const m = Buffer.from(JSON.stringify(manifest(items), null, 2) + "\n", "utf8");
-  const { error: mErr } = await supabase.storage.from(BUCKET).upload(MANIFEST_NAME, m, {
+  const { error: mErr } = await store.upload(MANIFEST_NAME, m, {
     contentType: "application/json; charset=utf-8",
-    upsert: true,
+    cacheControl: MANIFEST_CACHE_CONTROL,
+    upsert: true, // the manifest is the one mutable object by design
   });
   if (mErr) throw new Error(`upload failed for ${MANIFEST_NAME}: ${mErr.message}`);
   console.log(`  ✓ switched ${MANIFEST_NAME}`);
 
-  // STEP 3 — garbage collection, only now. Nothing the live manifest references can be deleted,
-  // because the live manifest is the one just written.
-  if (gc.length) {
-    const removed = await supabase.storage.from(BUCKET).remove(gc);
-    if (removed.error) {
-      // Not fatal: the switch already landed, so the published state is correct and complete.
-      console.warn(`  ! could not remove ${gc.length} unreferenced object(s): ${removed.error.message}`);
-      console.warn("    the publish itself is live and consistent; re-run to collect them");
-    } else {
-      for (const n of gc) console.log(`  ✓ collected ${n}`);
-    }
-  } else {
-    console.log("  ✓ no unreferenced objects to collect");
+  if (unreferenced.length) {
+    console.log(`\n  note: ${unreferenced.length} object(s) from earlier generations remain in the bucket.`);
+    console.log("  They are unreachable from the viewer, still private, still super_admin-only, and");
+    console.log("  are NOT deleted — see docs/167a-docs-delivery.md.");
   }
+  console.log("\n✓ PUBLISHED to the private bucket. Readable by super_admin only. Nothing was deleted.");
+}
 
-  console.log("\n✓ PUBLISHED to the private bucket. Readable by super_admin only.");
+// Puts ONE document in the bucket and returns how. The three outcomes are the whole contract:
+//   "verified"       the key was already there and its bytes hash to it
+//   "uploaded"       the key was absent and was created
+//   "raced, verified" another writer created it in between, and its bytes hash to it
+// Anything else throws. There is no outcome in which this overwrites a key or accepts one on its
+// name alone.
+export async function ensureObject(store, item, alreadyPresent) {
+  if (alreadyPresent) {
+    await assertMatches(store, item);
+    return "verified";
+  }
+  const { error } = await store.upload(item.key, item.bytes, {
+    contentType: "text/markdown; charset=utf-8",
+    cacheControl: OBJECT_CACHE_CONTROL,
+    upsert: false, // server-enforced create-only: immutability is not left to this tool's word
+  });
+  if (!error) return "uploaded";
+  if (!isAlreadyExists(error)) throw new Error(`upload failed for ${item.key}: ${error.message}`);
+  // Someone created it between the listing and now. Accept it ONLY if the bytes are right.
+  await assertMatches(store, item);
+  return "raced, verified";
+}
+
+// A key that already exists is trusted only after its bytes hash to the key. Anything else is a
+// hard stop: silently continuing would publish a manifest pointing at content nobody verified.
+export async function assertMatches(store, item) {
+  const got = await store.download(item.key);
+  if (got.error || !got.data) {
+    throw new Error(`${item.key} exists but could not be read back: ${got.error ? got.error.message : "empty"}`);
+  }
+  const actual = sha256(Buffer.from(await got.data.arrayBuffer()));
+  if (actual !== item.sha256) {
+    throw new Error(
+      `${item.key} holds the wrong content.\n` +
+      `  expected ${item.sha256}\n  found    ${actual}\n` +
+      "  Refusing to overwrite or to publish a manifest that points at it.",
+    );
+  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
