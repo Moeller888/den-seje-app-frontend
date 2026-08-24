@@ -40,7 +40,8 @@ const OUT = join(REPO, OUT_DIR_NAME);
 // not optional: each one is the target of a rewrite in REDIRECT_RULES below, and a missing file
 // would leave its clean route rewriting to nothing. `validateOutput()` checks that link both ways.
 export const RUNTIME_HTML = Object.freeze([
-  "achievements.html", "admin.html", "avatar.html", "collection.html", "elev-og-laerer.html",
+  "achievements.html", "admin.html", "avatar.html", "collection.html", "docs.html",
+  "elev-og-laerer.html",
   "hub.html", "index.html", "landing.html", "leaderboard.html", "login.html", "om-laerlig.html",
   "priser.html", "produktet.html", "reset-password.html", "saadan-virker-det.html", "shop.html",
   "student-detail.html", "teacher.html", "themes.html", "til-skoler.html",
@@ -277,36 +278,11 @@ function listDir(rel, extensions) {
 
 // ── the two generated pages ───────────────────────────────────────────────────────────────────
 // No timestamps, no build ids, no project information — deterministic and neutral.
-export const DOCS_STUB_MARKER = "data-generated=\"cloudflare-static-build\"";
-export function docsStubHtml() {
-  return `<!DOCTYPE html>
-<html lang="da">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Dokumentation</title>
-<style>
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#0f1220; color:#e8eaf2; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  .card { max-width:32rem; padding:2rem; text-align:center; }
-  h1 { font-size:1.35rem; margin:0 0 .75rem; }
-  p { margin:0 0 1.5rem; color:#aab0c6; line-height:1.6; }
-  a { display:inline-block; padding:.65rem 1.25rem; border-radius:.5rem;
-      background:#4c6ef5; color:#fff; text-decoration:none; font-weight:600; }
-  a:hover { background:#3b5bdb; }
-</style>
-</head>
-<body ${DOCS_STUB_MARKER}>
-  <main class="card">
-    <h1>Dokumentationen er ikke offentligt tilgængelig</h1>
-    <p>Denne side er kun til internt brug.</p>
-    <a href="hub.html">Tilbage til forsiden</a>
-  </main>
-</body>
-</html>
-`;
-}
+// docs.html is no longer generated. It ships as the real viewer, and the documents it reads live
+// in a PRIVATE Supabase bucket (RLS: super_admin only) — never on the CDN. The stub existed only
+// because a public /docs/ directory would have been world-readable; that risk is now removed at
+// the source instead of papered over at the edge. validateOutput() enforces what the page may reach.
+
 export function notFoundHtml() {
   return `<!DOCTYPE html>
 <html lang="da">
@@ -586,6 +562,11 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
   // second. If the two ever describe different sets, the sitemap would be right about one of them
   // and wrong about the other — so neither is trusted until they agree, and the build stops here
   // rather than publishing a sitemap that quietly omits or invents a page.
+  // ONE SOURCE OF TRUTH, ASSERTED. The routing table names the public ADDRESSES; PUBLIC_HTML names
+  // the public PAGES. The sitemap is derived from the first, the robots classification from the
+  // second. If the two ever describe different sets, the sitemap would be right about one of them
+  // and wrong about the other — so neither is trusted until they agree, and the build stops here
+  // rather than publishing a sitemap that quietly omits or invents a page.
   const routedTargets = [...new Set(Object.values(ROUTE_TO_FILE))].sort();
   const publicPages = [...PUBLIC_HTML].sort();
   if (JSON.stringify(routedTargets) !== JSON.stringify(publicPages)) {
@@ -597,12 +578,17 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
   if (existsSync(join(outDir, SITEMAP_FILE))) problems.push(...validateSitemap(outDir));
   problems.push(...validateCanonicals(outDir));
 
+  // docs.html SHIPS as the real viewer now, so the question is no longer "is it inert" but "what
+  // can it reach". The documents are in a private bucket behind RLS and are never published, so
+  // the page must not name the docs/ directory, and it must gate on a session AND the role before
+  // it asks storage for anything. These are output checks: they fail the BUILD, not production.
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {
     const t = readFileSync(docs, "utf8");
-    if (!t.includes(DOCS_STUB_MARKER)) problems.push("docs.html in output is not the generated public stub");
-    if (/fetch\s*\(/.test(t)) problems.push("docs.html stub contains a fetch() call");
-    if (/["'`]\/?docs\//.test(t)) problems.push("docs.html stub references the docs/ directory");
+    if (/["'`]\/?docs\//.test(t)) problems.push("docs.html references the docs/ directory, which is never published");
+    if (!/getSession\s*\(/.test(t)) problems.push("docs.html does not require a session");
+    if (!t.includes("super_admin")) problems.push("docs.html does not gate on the super_admin role");
+    if (!/storage\s*\.\s*from\(/.test(t)) problems.push("docs.html does not read documents from private storage");
   }
   return { problems, files: files.sort() };
 }
@@ -631,11 +617,12 @@ export function build({ quiet = false } = {}) {
     copyFileSync(src, dest);
     copied.push(toPosix(rel));
   }
-  writeFileSync(join(OUT, "docs.html"), docsStubHtml(), "utf8");
   writeFileSync(join(OUT, "404.html"), notFoundHtml(), "utf8");
   writeFileSync(join(OUT, "_redirects"), REDIRECT_RULES.join("\n") + "\n", "utf8");
   writeFileSync(join(OUT, SITEMAP_FILE), sitemapXml(), "utf8");
-  const generated = ["404.html", "_redirects", SITEMAP_FILE, "docs.html"];
+  // docs.html is NOT in this list any more: it is copied like any other runtime page (#202), while
+  // sitemap.xml joins the generated set (#203).
+  const generated = ["404.html", "_redirects", SITEMAP_FILE];
 
   for (const m of MANDATORY) {
     if (!existsSync(join(OUT, m))) throw new Error(`mandatory file missing from the output: ${m}`);

@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build:cloudflare": "node tools/cloudflare-build-static.mjs",
+    "docs:publish": "node tools/publish-docs.mjs",
     "deploy:cloudflare": "npx --yes wrangler@4.118.0 deploy",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:unit:ci": "node tests/run-unit-ci.mjs",
