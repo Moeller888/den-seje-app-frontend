@@ -35,6 +35,11 @@ const REDIRECT_RULES: string[] = [...TABLE_BLOCK.matchAll(/"([^"]+)"/g)].map((m)
 const ROUTES = new Map<string, string>(
   REDIRECT_RULES.map((r) => { const [from, to] = r.split(/\s+/); return [from, to]; }),
 );
+// …and its inverse: the legacy .html address → the clean route it permanently moved to. Derived
+// exactly as tools/cloudflare-build-static.mjs derives LEGACY_HTML_REDIRECTS from FILE_TO_ROUTE,
+// so this spec models the production contract instead of a guess at it. A unit test asserts the
+// build's own list matches this derivation.
+const LEGACY = new Map<string, string>([...ROUTES].map(([route, file]) => [file, route]));
 // The six information pages, in menu order.
 const PAGES: Array<[string, string]> = [
   ["/produktet", "Det svære kommer igen."],
@@ -56,7 +61,19 @@ test.beforeAll(async () => {
   server = http.createServer((req, res) => {
     let p = decodeURIComponent((req.url || "/").split("?")[0]);
 
+    // A legacy .html address moved permanently. Answered before anything else, exactly as the
+    // asset worker does: Cloudflare follows redirects "regardless of whether or not an asset
+    // matches", so the fact that produktet.html is a real file on disk does not shortcut this.
+    const moved = LEGACY.get(p);
+    if (moved) {
+      const qs = (req.url || "").includes("?") ? "?" + (req.url || "").split("?").slice(1).join("?") : "";
+      res.writeHead(301, { location: moved + qs });
+      res.end();
+      return;
+    }
+
     // The routing table's internal rewrites. Status 200 = the body changes, the URL does not.
+    // This does NOT re-enter the redirect map above — that is what keeps the pair loop-free.
     const target = ROUTES.get(p);
     if (target) p = target;
 
@@ -129,6 +146,97 @@ test("every clean route and its .html file render the same document", async ({ r
   }
 });
 
+// -- the legacy .html addresses -------------------------------------------------------------------
+// In a real browser, following real redirects. The unit tests hold the RULES to the routing
+// contract; these hold the BEHAVIOUR to what a visitor and a crawler actually experience.
+
+test("every legacy .html address permanently moves to its clean route", async ({ request }) => {
+  for (const [route, file] of ROUTES) {
+    const res = await request.get(baseUrl + file, { maxRedirects: 0 });
+    expect(res.status(), `${file} must be a permanent redirect`).toBe(301);
+    expect(res.headers()["location"], `${file} must point at ${route}`).toBe(route);
+  }
+});
+
+test("following the redirect takes exactly one hop and ends on a 200 - no loop", async ({ request }) => {
+  for (const [route, file] of ROUTES) {
+    // Walked by hand rather than with maxRedirects, so the NUMBER of hops is observable. A loop
+    // would show up as the walk running to its limit instead of terminating at the second step.
+    let path = file;
+    let hops = 0;
+    let status = 0;
+    while (hops < 10) {
+      const res = await request.get(baseUrl + path, { maxRedirects: 0 });
+      status = res.status();
+      if (status !== 301) break;
+      path = res.headers()["location"];
+      hops++;
+    }
+    expect(hops, `${file} took ${hops} hops`).toBe(1);
+    expect(path).toBe(route);
+    expect(status).toBe(200);
+  }
+});
+
+test("the query string survives the redirect - tracking parameters are not dropped", async ({ request }) => {
+  const res = await request.get(baseUrl + "/produktet.html?utm_source=nyhedsbrev&utm_campaign=pilot",
+    { maxRedirects: 0 });
+  expect(res.status()).toBe(301);
+  expect(res.headers()["location"]).toBe("/produktet?utm_source=nyhedsbrev&utm_campaign=pilot");
+});
+
+test("the page renders properly after the redirect, with no console error", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  for (const [route, file] of ROUTES) {
+    const res = await page.goto(baseUrl + file, { waitUntil: "load" });
+    expect(res?.status(), `${file} did not end on a 200`).toBe(200);
+    expect(new URL(page.url()).pathname).toBe(route);
+    await expect(page.locator("h1")).toHaveCount(1);
+  }
+  expect(errors).toEqual([]);
+});
+
+test("back and forward behave normally across a redirect", async ({ page }) => {
+  // A redirect replaces its own entry in the history, so going back from the destination must
+  // land on where the visitor actually came from - not bounce them forward again through the 301.
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  await page.goto(baseUrl + "/produktet.html", { waitUntil: "load" });
+  expect(new URL(page.url()).pathname).toBe("/produktet");
+
+  await page.goBack({ waitUntil: "load" });
+  expect(new URL(page.url()).pathname, "back must reach the front page, not loop").toBe("/");
+
+  await page.goForward({ waitUntil: "load" });
+  expect(new URL(page.url()).pathname, "forward must return to the clean route").toBe("/produktet");
+  await expect(page.locator("h1")).toHaveCount(1);
+});
+
+test("no internal app address is redirected - the app keeps every URL it links to", async ({ request }) => {
+  for (const p of ["/index.html", "/login.html", "/reset-password.html", "/hub.html", "/shop.html",
+                   "/avatar.html", "/collection.html", "/themes.html", "/leaderboard.html",
+                   "/achievements.html", "/teacher.html", "/student-detail.html", "/admin.html"]) {
+    const res = await request.get(baseUrl + p, { maxRedirects: 0 });
+    expect(res.status(), `${p} must still serve directly`).toBe(200);
+  }
+});
+
+test("no navigation or footer link points at a legacy .html address", async ({ page }) => {
+  // We must not send our own visitors through a redirect we control.
+  for (const [route] of ROUTES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const hrefs = await page.locator("nav a, footer a").evaluateAll(
+      (els) => els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? ""));
+    for (const href of hrefs) {
+      for (const legacy of LEGACY.keys()) {
+        expect(href, `${route} links to the legacy address ${legacy}`).not.toBe(legacy);
+        expect(href).not.toBe(legacy.replace(/^\//, ""));
+      }
+    }
+  }
+});
+
 // -- the canonical contract --------------------------------------------------------------------
 // Every public page answers at TWO addresses: its clean route and its .html file, with identical
 // bodies (proved by the test above). The canonical tag is the only thing that tells a crawler
@@ -149,15 +257,15 @@ test("every public page declares exactly one canonical, naming its own clean rou
   }
 });
 
-test("the .html twin declares the SAME canonical as its clean route", async ({ page }) => {
-  // The point of the whole exercise: arriving at /produktet.html must still be told that the
-  // page is /produktet. A self-referencing .html canonical here would confirm the duplicate
-  // instead of resolving it.
+test("arriving at the legacy .html address lands on the clean route, carrying its canonical", async ({ page }) => {
+  // The .html address no longer delivers HTML at all, so there is no canonical to read there -
+  // the 301 is the stronger signal and it happens first. What matters is where the visitor ends
+  // up: the clean route, with the tag that names itself.
   for (const [route, file] of ROUTES) {
     await page.goto(baseUrl + file, { waitUntil: "load" });
+    expect(new URL(page.url()).pathname, `${file} should have moved to ${route}`).toBe(route);
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-    const href = await page.locator('link[rel="canonical"]').getAttribute("href");
-    expect(href, `${file} must point at ${route}, not at itself`).toBe(CANONICAL_ORIGIN + route);
+    expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toBe(CANONICAL_ORIGIN + route);
   }
 });
 
@@ -339,16 +447,21 @@ test("/ serves the landing page, and the URL stays / (internal rewrite, no 3xx)"
   await expect(page.locator("h1")).toHaveText("Læring, der tilpasser sig eleven.");
 });
 
-test("/landing.html serves the same document directly", async ({ page }) => {
+test("/landing.html has MOVED to / - the root case, end to end", async ({ page }) => {
+  // The one pair where the two rules name each other: `/landing.html -> / 301` and
+  // `/ -> /landing.html 200`. If a rewrite could re-enter the redirect table this is where it
+  // would spin, so the address is asserted as well as the status.
   const res = await page.goto(baseUrl + "/landing.html", { waitUntil: "load" });
-  expect(res?.status()).toBe(200);
+  expect(res?.status(), "the final response must be the page, not a redirect").toBe(200);
+  expect(new URL(page.url()).pathname, "the browser must end on the clean root").toBe("/");
   await expect(page.locator("h1")).toHaveText("Læring, der tilpasser sig eleven.");
 });
 
-test("/ and /landing.html render the identical page", async ({ page }) => {
+test("/ and /landing.html end on the same page, reached by different means", async ({ page }) => {
   await page.goto(baseUrl + "/", { waitUntil: "load" });
   const viaRoot = await page.content();
   await page.goto(baseUrl + "/landing.html", { waitUntil: "load" });
+  expect(new URL(page.url()).pathname).toBe("/");
   expect(await page.content()).toBe(viaRoot);
 });
 

@@ -27,6 +27,9 @@ if (!existsSync(ROOT)) { console.error("dist-cloudflare/ is missing — run: npm
 //                            /index.html and is NOT what `/` serves — both halves are asserted
 //                            below, as is every clean route in the table.
 //   `_redirects` itself is configuration and is never served as an asset.
+// Both tables, read straight out of the generated file: seven 200 rewrites and seven 301s off the
+// legacy .html addresses. Modelled exactly as workerd does it - a 301 is answered immediately, a
+// 200 rewrites internally, and NEITHER re-enters this map, which is what makes the pair loop-free.
 const REWRITES = new Map(
   readFileSync(join(ROOT, "_redirects"), "utf8").split("\n").map((l) => l.trim()).filter(Boolean)
     .map((line) => { const [from, to, status] = line.split(/\s+/); return [from, { to, status: Number(status) }]; }),
@@ -35,6 +38,14 @@ const REWRITES = new Map(
 const server = createServer((req, res) => {
   let p = decodeURIComponent(req.url.split("?")[0]);
   const rewrite = REWRITES.get(p);
+  // A permanent redirect is answered here and now. The query string rides along, exactly as
+  // Cloudflare does it (measured on workerd: /produktet.html?a=1 -> 301 -> /produktet?a=1).
+  if (rewrite && rewrite.status === 301) {
+    const qs = req.url.includes("?") ? "?" + req.url.split("?").slice(1).join("?") : "";
+    res.writeHead(301, { location: rewrite.to + qs });
+    res.end();
+    return;
+  }
   if (rewrite && rewrite.status === 200) p = rewrite.to;      // internal rewrite; the URL is unchanged
   if (p === "/_redirects" || p === "/_headers") {             // routing config is never an asset
     res.writeHead(404, { "content-type": "text/html" });
@@ -65,8 +76,9 @@ const PUBLIC_ROUTES = [
   ["/om-laerlig", "/om-laerlig.html"],
 ];
 
+// The clean routes serve; their legacy .html twins are asserted separately, as redirects.
 const MUST_SERVE = [
-  ...PUBLIC_ROUTES.flat(),
+  ...PUBLIC_ROUTES.map(([route]) => route),
   "/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html", "/shop.html",
   "/student-detail.html", "/student-detail.html?id=test", "/avatar.html",
   "/achievements.html", "/collection.html", "/leaderboard.html", "/themes.html", "/reset-password.html",
@@ -121,11 +133,69 @@ server.listen(0, "127.0.0.1", async () => {
 
   console.log("\nCLEAN ROUTES — each serves its page internally, with no redirect:");
   for (const [route, file] of PUBLIC_ROUTES) {
-    const a = await get(route), b = await get(file);
-    const okStatus = a.status === 200 && b.status === 200;
-    const okBody = a.body === b.body && a.body.length > 0;
+    const a = await get(route);
+    // The .html address no longer serves, so the body is compared against the FILE on disk — the
+    // thing the rewrite actually resolves to — rather than against a second HTTP response.
+    const onDisk = readFileSync(join(ROOT, file.replace(/^\//, "")), "utf8");
+    const okStatus = a.status === 200;
+    const okBody = a.body === onDisk && a.body.length > 0;
     if (!okStatus || !okBody) failures++;
-    console.log(`  ${okStatus && okBody ? "OK  " : "FAIL"} ${route.padEnd(20)} → ${file.padEnd(24)} ${a.status}/${b.status}, identical body (${a.body.length} B)`);
+    console.log(`  ${okStatus && okBody ? "OK  " : "FAIL"} ${route.padEnd(20)} → ${file.padEnd(24)} ${a.status}, body matches the file on disk (${a.body.length} B)`);
+  }
+
+  // ── the legacy .html addresses ──────────────────────────────────────────────────────
+  // The pair that had to be proven loop-free: .html -> 301 -> clean route -> 200, in ONE hop. A
+  // second hop here would mean the internal rewrite had re-entered the redirect table.
+  console.log("\nLEGACY .html — exactly one permanent redirect to the clean route, then 200:");
+  for (const [route, file] of PUBLIC_ROUTES) {
+    const r = await get(file);
+    const ok301 = r.status === 301 && r.location === route;
+    const after = ok301 ? await get(route) : { status: 0 };
+    const okFinal = after.status === 200;
+    if (!ok301 || !okFinal) failures++;
+    console.log(`  ${ok301 && okFinal ? "OK  " : "FAIL"} ${file.padEnd(24)} ${r.status} → ${String(r.location).padEnd(20)} → ${after.status}`);
+  }
+
+  console.log("\nNO REDIRECT LOOP — following the chain terminates at a 200:");
+  for (const [, file] of PUBLIC_ROUTES) {
+    let path = file, hops = 0, status = 0;
+    while (hops < 10) {
+      const r = await get(path);
+      status = r.status;
+      if (r.status !== 301) break;
+      path = r.location;
+      hops++;
+    }
+    const ok = hops === 1 && status === 200;
+    if (!ok) failures++;
+    console.log(`  ${ok ? "OK  " : "FAIL"} ${file.padEnd(24)} hops=${hops} final=${path} status=${status}`);
+  }
+
+  console.log("\nQUERY STRINGS SURVIVE THE REDIRECT:");
+  {
+    const r = await get("/produktet.html?utm_source=test&utm_campaign=x");
+    const ok = r.status === 301 && r.location === "/produktet?utm_source=test&utm_campaign=x";
+    if (!ok) failures++;
+    console.log(`  ${ok ? "OK  " : "FAIL"} /produktet.html?utm_source=test&utm_campaign=x → ${r.location}`);
+  }
+
+  console.log("\nINTERNAL .html IS UNTOUCHED — direct 200, never redirected:");
+  for (const p of ["/index.html", "/login.html", "/reset-password.html", "/hub.html", "/shop.html",
+                   "/avatar.html", "/collection.html", "/themes.html", "/leaderboard.html",
+                   "/achievements.html", "/teacher.html", "/student-detail.html", "/admin.html",
+                   "/docs.html", "/404.html"]) {
+    const r = await get(p);
+    const ok = r.status === 200;
+    if (!ok) failures++;
+    console.log(`  ${ok ? "OK  " : "FAIL"} ${String(r.status).padStart(3)}  ${p}${r.status === 301 ? "  <- REDIRECTED, must not be" : ""}`);
+  }
+
+  console.log("\nUNKNOWN .html STILL 404s — the redirects are a list, not a pattern:");
+  for (const p of ["/dette-findes-ikke.html", "/produktet.html.html", "/gamefeel.html", "/produktet/"]) {
+    const r = await get(p);
+    const ok = r.status === 404;
+    if (!ok) failures++;
+    console.log(`  ${ok ? "OK  " : "FAIL"} ${String(r.status).padStart(3)}  ${p}`);
   }
 
   console.log("\nTHE QUIZ DID NOT MOVE — /index.html still serves, and / is NOT the quiz:");
@@ -145,20 +215,25 @@ server.listen(0, "127.0.0.1", async () => {
   // CANONICAL. The same document answers at a clean route AND at its .html address, so both
   // must carry the SAME canonical, naming the clean route. This is the whole point of the tag:
   // whichever address a crawler arrives at, the page names one preferred URL.
-  console.log("\nCANONICAL - clean route and .html twin must both name the clean route:");
+  console.log("\nCANONICAL - the clean route names itself; the .html twin no longer serves HTML:");
   {
     const canonicalOf = (body) => {
       const tag = (body.match(/<link\b[^>]*>/gi) || []).filter((t) => /\brel\s*=\s*["']?canonical\b/i.test(t));
       if (tag.length !== 1) return { count: tag.length, href: null };
       return { count: 1, href: (tag[0].match(/\bhref\s*=\s*"([^"]*)"/i) || [])[1] ?? null };
     };
+    // The .html address is a 301 with no body now, so there is no rendered canonical to read there
+    // and none is expected: the redirect IS the stronger signal, and the page it lands on carries
+    // the tag. What is asserted here is that the clean route - the only address that still serves
+    // HTML - names itself, and that the redirect target and that canonical are the same URL.
     for (const [route, file] of PUBLIC_ROUTES) {
       const expected = "https://lærlig.dk" + route;
       const a = canonicalOf((await get(route)).body);
-      const b = canonicalOf((await get(file)).body);
-      const ok = a.count === 1 && b.count === 1 && a.href === expected && b.href === expected;
+      const legacy = await get(file);
+      const ok = a.count === 1 && a.href === expected
+        && legacy.status === 301 && legacy.location === route;
       if (!ok) failures++;
-      console.log(`  ${ok ? "OK  " : "FAIL"} ${route.padEnd(20)} + ${file.padEnd(24)} -> ${a.href ?? "(" + a.count + " tags)"}`);
+      console.log(`  ${ok ? "OK  " : "FAIL"} ${route.padEnd(20)} canonical ${String(a.href ?? "(" + a.count + " tags)").padEnd(34)} | ${file} ${legacy.status} -> ${legacy.location}`);
     }
     // …and no internal surface may declare one at all.
     for (const p of ["/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html",
