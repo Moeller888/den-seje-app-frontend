@@ -55,16 +55,38 @@ Dets objekt bliver liggende i bucket — stadig privat, stadig bag super_admin-R
 | `o/<sha256>.md` | `31536000` (1 år) | Nøglen **er** indholdshashen. Kan ikke blive forældet. |
 | `manifest.json` | `0` | Current-pointer på fast sti. Må aldrig serveres fra cache. |
 
-Viewer'en læser manifestet gennem en **frisk signeret URL ved hvert kald**. Hver signeret URL har et
-unikt token, og Supabase behandler hvert token som sin egen CDN-cachenøgle, så et nyt kald kan ikke
-besvares fra et tidligere svar. Dertil `cache: "no-store"` og en eksplicit `cacheNonce`.
+Viewer'en læser manifestet gennem det **autentificerede Storage-endpoint** med en ny `cacheNonce`
+ved hvert kald og `cache: "no-store"`. **Cache-busting ændrer ikke autorisationsmodellen** — den
+afgøres af headeren, ved hver enkelt anmodning.
+
+## 4a. Adgang: bruger-JWT ved hver læsning, ingen signerede URL'er
+
+Både manifestet og dokumenterne hentes med **brugerens aktuelle access token**:
+
+- manifestet via `GET /storage/v1/object/authenticated/docs/manifest.json` med
+  `Authorization: Bearer <brugerens JWT>` og anon-nøglen som `apikey`
+- dokumenterne via den autentificerede Supabase-klient (`storage.from(...).download(...)`)
+
+**RLS håndhæves dermed på hver eneste faktiske læsning.** Mister en bruger `super_admin`, afvises
+næste manifesthentning — også selvom JWT'en i sig selv stadig er gyldig — fordi policyen slår den
+*aktuelle* rolle op i `profiles`.
+
+**Der bruges ingen signerede URL'er, og der findes ingen fallback til dem.** En signeret URL er et
+bearer-link: Supabase signerer det med en separat intern nøgle, så det forbliver gyldigt indtil
+udløb *"regardless of any Auth key changes"* — logout, sessionudløb, nøglerotation og fjernet
+rolle tilbagekalder det ikke, og enhver, der har linket, kan læse. Manifestet indeholder interne
+titler, filnavne, hashes og objektnøgler, så et delbart link til det er præcis dét, denne funktion
+ikke må producere.
+
+Anon-nøglen sendes **kun** som `apikey`; den identificerer projektet over for API'et og autoriserer
+intet. **Service-rollen bruges udelukkende i den lokale publisher** og findes aldrig i browseren.
 
 ## 5. Viewer-genopretning
 
 En fane, der har stået åben gennem en publicering, kender en nøgle, der ikke længere er den aktuelle.
 Ved 404 **eller** hash-mismatch:
 
-1. hent manifestet friskt (nyt token, ny nonce)
+1. hent den aktuelle session, og hent manifestet friskt med den (ny nonce, ny Authorization-header)
 2. slå samme slug op igen
 3. hent den nye nøgle
 4. verificér SHA-256

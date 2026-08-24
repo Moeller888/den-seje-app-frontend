@@ -213,11 +213,50 @@ test("the manifest is written last, and written uncached", () => {
 
 // ── viewer contract (asserted from source, not executed) ─────────────────────────────────────
 
-test("viewer source: the manifest is read through a fresh signed URL, uncached", () => {
-  assert.match(PAGE_SRC, /createSignedUrl\(MANIFEST_NAME/, "the pointer is not re-signed per read");
+test("viewer source: there is NO signed-URL path anywhere", () => {
+  // A signed URL is a bearer link: Supabase signs it with a separate internal key, so it stays
+  // valid until expiry regardless of logout, session expiry, key rotation or a lost super_admin
+  // role, and anyone holding it can read. The manifest lists internal titles, filenames, hashes
+  // and object keys — a shareable link to it is precisely what must not exist.
+  assert.ok(!/createSignedUrl/.test(PAGE_SRC), "docs.html can mint a signed URL");
+  assert.ok(!/signedUrl/.test(PAGE_SRC), "docs.html still handles a signed URL");
+  assert.ok(!/object\/public\//.test(PAGE_SRC), "docs.html has a public-URL path");
+});
+
+test("viewer source: the manifest is read from the AUTHENTICATED endpoint with the user's JWT", () => {
+  assert.match(PAGE_SRC, /\/storage\/v1\/object\/authenticated\//, "not the authenticated endpoint");
+  assert.match(PAGE_SRC, /Authorization:\s*"Bearer "\s*\+\s*token/, "the user's JWT is not sent");
+  assert.match(PAGE_SRC, /apikey:\s*SUPABASE_ANON_KEY/, "the anon key is not used as the api key");
+  // the anon key must identify the project, never authorise the read
+  assert.ok(!/Authorization:\s*"Bearer "\s*\+\s*SUPABASE_ANON_KEY/.test(PAGE_SRC),
+    "the anon key is being used as authorisation");
+});
+
+test("viewer source: the token comes from the CURRENT session, not one captured at boot", () => {
+  const fn = PAGE_SRC.slice(PAGE_SRC.indexOf("function currentAccessToken()"));
+  const body = fn.slice(0, fn.indexOf("\n    }"));
+  assert.match(body, /supabase\.auth\.getSession\(\)/, "the session is not re-read");
+  assert.match(body, /ingen session/, "a missing session does not fail closed");
+  assert.match(body, /ingen access token/, "a missing access token does not fail closed");
+  // and the manifest read goes through it
+  assert.match(PAGE_SRC, /return currentAccessToken\(\)/, "the manifest read skips the session check");
+});
+
+test("viewer source: 401, 403 and 404 each fail closed and distinctly", () => {
+  for (const code of ["401", "403", "404"]) {
+    assert.ok(PAGE_SRC.includes("r.status === " + code), `${code} is not handled distinctly`);
+  }
   assert.match(PAGE_SRC, /cacheNonce=/, "no cache-buster on the pointer read");
   assert.match(PAGE_SRC, /cache:\s*"no-store"/, "the browser cache is not bypassed");
   assert.match(PAGE_SRC, /manifestNonce\+\+/, "the nonce does not change between reads");
+});
+
+test("the public config is exported as public, and the service key is nowhere near the browser", () => {
+  const client = readFileSync(join(HERE, "..", "..", "supabaseClient.js"), "utf8");
+  assert.match(client, /export \{ supabase, SUPABASE_URL, SUPABASE_ANON_KEY \}/);
+  for (const src of [client, PAGE_SRC]) {
+    assert.ok(!/SERVICE_ROLE|service_role/i.test(src), "a service-role reference reached the browser");
+  }
 });
 
 test("viewer source: a failed document triggers exactly ONE recovery, then fails closed", () => {
