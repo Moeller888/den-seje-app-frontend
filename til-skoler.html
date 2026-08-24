@@ -7,6 +7,13 @@
   <title>Til skoler — Lærlig</title>
   <meta name="description" content="Læreren bestemmer. Lærlig retter kun det, den kan være sikker på, og behandler så lidt elevdata som muligt.">
 
+  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE. This document also answers at
+       /til-skoler.html, so a crawler can reach the same page at two addresses. This tag
+       says which of them to index, and it names the same URL sitemap.xml lists. Derived
+       from the routing table in tools/cloudflare-build-static.mjs and verified against it
+       on every build - it is not free-form text. -->
+  <link rel="canonical" href="https://lærlig.dk/til-skoler">
+
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/landing.css">
 </head>

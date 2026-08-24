@@ -142,6 +142,34 @@ server.listen(0, "127.0.0.1", async () => {
   // THE SITEMAP is what a search engine reads instead of the site, so it is checked over HTTP
   // too: it must actually SERVE, and it must name exactly the public clean routes — not the
   // .html files behind them, and nothing internal.
+  // CANONICAL. The same document answers at a clean route AND at its .html address, so both
+  // must carry the SAME canonical, naming the clean route. This is the whole point of the tag:
+  // whichever address a crawler arrives at, the page names one preferred URL.
+  console.log("\nCANONICAL - clean route and .html twin must both name the clean route:");
+  {
+    const canonicalOf = (body) => {
+      const tag = (body.match(/<link\b[^>]*>/gi) || []).filter((t) => /\brel\s*=\s*["']?canonical\b/i.test(t));
+      if (tag.length !== 1) return { count: tag.length, href: null };
+      return { count: 1, href: (tag[0].match(/\bhref\s*=\s*"([^"]*)"/i) || [])[1] ?? null };
+    };
+    for (const [route, file] of PUBLIC_ROUTES) {
+      const expected = "https://lærlig.dk" + route;
+      const a = canonicalOf((await get(route)).body);
+      const b = canonicalOf((await get(file)).body);
+      const ok = a.count === 1 && b.count === 1 && a.href === expected && b.href === expected;
+      if (!ok) failures++;
+      console.log(`  ${ok ? "OK  " : "FAIL"} ${route.padEnd(20)} + ${file.padEnd(24)} -> ${a.href ?? "(" + a.count + " tags)"}`);
+    }
+    // …and no internal surface may declare one at all.
+    for (const p of ["/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html",
+                     "/docs.html", "/404.html"]) {
+      const { count } = canonicalOf((await get(p)).body);
+      const ok = count === 0;
+      if (!ok) failures++;
+      console.log(`  ${ok ? "OK  " : "FAIL"} ${p.padEnd(20)} declares no canonical (${count} found)`);
+    }
+  }
+
   console.log("\nTHE SITEMAP — served, and listing exactly the public clean routes:");
   {
     const sm = await get("/sitemap.xml");
