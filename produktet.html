@@ -7,11 +7,11 @@
   <title>Produktet — Lærlig</title>
   <meta name="description" content="Eleven svarer på spørgsmål fra undervisningen og får svar med det samme. Det, der driller, kommer igen.">
 
-  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE. This document also answers at
-       /produktet.html, so a crawler can reach the same page at two addresses. This tag
-       says which of them to index, and it names the same URL sitemap.xml lists. Derived
-       from the routing table in tools/cloudflare-build-static.mjs and verified against it
-       on every build - it is not free-form text. -->
+  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE, and now the only one. /produktet.html
+       used to serve this document too; it is a permanent 301 to the clean route today, so
+       there is one preferred URL per public page. The tag stays as defence in depth and
+       names the same URL sitemap.xml lists. Derived from the routing table in
+       tools/cloudflare-build-static.mjs and verified against it on every build. -->
   <link rel="canonical" href="https://lærlig.dk/produktet">
 
   <link rel="stylesheet" href="css/theme.css">

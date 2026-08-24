@@ -15,8 +15,9 @@
 //               served, and no Markdown is fetched. Deliberate hardening of the deployment, not a
 //               change to the app.
 //   404.html  — required by `not_found_handling: "404-page"`; neutral, no internal information.
-//               It links to `landing.html`, the public front page — not to the quiz, which would
-//               bounce an anonymous visitor straight back out to login.
+//               It links to `/`, the public front page — not to the quiz, which would bounce an
+//               anonymous visitor straight back out to login, and not to `landing.html`, which is
+//               now a 301 and would cost the visitor an extra round trip on our own error page.
 //
 // RUNS WITH NO DEPENDENCIES INSTALLED (Cloudflare sets SKIP_DEPENDENCY_INSTALL=1): Node builtins
 // only. Deterministic on Windows and Linux — every listing is sorted, paths are normalised to
@@ -66,9 +67,23 @@ export const MANDATORY = Object.freeze([
   "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css", "js/landing.js",
 ]);
 
-// THE ROUTING TABLE. `html_handling: "none"` keeps explicit .html addresses intact — nothing 307s
-// the extension away — but it also means a clean path like `/produktet` resolves to nothing on its
-// own. Each public route is therefore listed here explicitly, one internal rewrite per page.
+// THE ROUTING TABLE — THE 200 REWRITES ONLY. `html_handling: "none"` means a clean path like
+// `/produktet` resolves to nothing on its own, so each public route is listed here explicitly,
+// one internal rewrite per page.
+//
+// THE .html CONTRACT IS NOW ASYMMETRIC, AND DELIBERATELY SO:
+//   public clean route      → internal 200 rewrite to its HTML file; the address bar keeps the
+//                             clean path and no 3xx is emitted.
+//   public legacy .html URL → permanent 301 to the clean route (LEGACY_HTML_REDIRECTS below).
+//                             It is no longer a page of its own.
+//   internal app .html URL  → unchanged. /index.html, /login.html, /hub.html and the rest stay
+//                             direct 200 addresses; the app links to them and the Playwright
+//                             suite asserts on them exactly.
+//   anything else           → a real 404.
+//
+// THIS LIST STAYS THE 200 REWRITES ALONE. It is what ROUTE_TO_FILE — and through it PUBLIC_ROUTES,
+// the sitemap and every canonical — is derived from. Putting a `.html` source in here would give
+// ROUTE_TO_FILE a key like "/produktet.html" and quietly poison all three.
 //
 // THE ROOT IS THE PUBLIC WEBSITE, NOT THE QUIZ. `/` serves `landing.html`; the student quiz keeps
 // its own address at `/index.html`, unmoved and unrenamed, and every in-app link, role redirect and
@@ -195,6 +210,33 @@ export function canonicalUrlFor(file) {
   return route === undefined ? null : SITE_ORIGIN + encodePath(route);
 }
 
+// ── LEGACY .html ADDRESSES ────────────────────────────────────────────────────────
+// Each public page used to answer at TWO addresses with identical bodies. The canonical tag told
+// crawlers which one to prefer; this makes the technical address stop being a page at all.
+//
+// DERIVED FROM FILE_TO_ROUTE, so there is no fourth hand-kept list beside the sitemap, the
+// canonicals and the rewrites — all four come from REDIRECT_RULES.
+//
+// SEVEN LITERAL SOURCES, NEVER A PATTERN. `/*.html` or a generic extension stripper would catch
+// /login.html, /hub.html and the whole app with it. validateOutput() refuses a wildcard outright.
+//
+// NO LOOP, AND THIS IS THE PART THAT HAD TO BE PROVEN RATHER THAN ASSUMED. Cloudflare states that
+// redirects are followed "regardless of whether or not an asset matches the incoming request", so
+// the 301 fires even though produktet.html really is in the output; and that only the first
+// matching rule applies, so an internal rewrite does NOT re-enter this table. Measured on the real
+// asset worker (`wrangler dev`, workerd) before this was written: /produktet.html emits exactly one
+// 301 to /produktet, which then serves 200 from the rewrite. One hop, both rule orders, and query
+// strings carried across untouched.
+export const LEGACY_HTML_REDIRECTS = Object.freeze(
+  Object.entries(FILE_TO_ROUTE).map(([file, route]) => `/${file} ${route} 301`),
+);
+
+// The exact contents of the emitted `_redirects`, in order: the rewrites first, then the legacy
+// redirects. Order is not load-bearing here — the two sets have disjoint source paths and can
+// never compete, verified both ways round on workerd — but the emitted file is pinned to this
+// order anyway so a reshuffle is a visible, reviewed change rather than a silent one.
+export const REDIRECTS_FILE_LINES = Object.freeze([...REDIRECT_RULES, ...LEGACY_HTML_REDIRECTS]);
+
 // NO <lastmod>, <changefreq> OR <priority>. The repository has no deterministic source for any of
 // them — a build timestamp is not a modification date, and a hand-picked priority is a guess
 // dressed up as data. A <url> carrying only <loc> is a complete, valid entry.
@@ -308,7 +350,7 @@ export function notFoundHtml() {
     <h1>404</h1>
     <h2>Siden blev ikke fundet</h2>
     <p>Siden findes ikke eller er blevet flyttet.</p>
-    <a href="landing.html">Gå til forsiden</a>
+    <a href="/">Gå til forsiden</a>
   </main>
 </body>
 </html>
@@ -512,31 +554,63 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
     }
   }
   // The generated docs.html must be the stub, and must never reach for the docs directory.
-  // `_redirects` is Cloudflare CONFIGURATION, not an asset. It must hold exactly the routing table
+  // `_redirects` is Cloudflare CONFIGURATION, not an asset. It must hold exactly the two tables
   // declared above — no more, no fewer, in the same order. An extra rule, a wildcard turning this
-  // into a SPA fallback, or a 3xx status would silently change routing and is refused here rather
-  // than discovered in production. Every rewrite target must also exist in the output, so a route
-  // can never point at a file that was not shipped.
+  // into a SPA fallback, or a status other than the two this contract allows would silently change
+  // routing, and is refused here rather than discovered in production.
+  //
+  // TWO KINDS OF RULE, EACH CHECKED FOR A DIFFERENT THING:
+  //   200 — an internal rewrite. Its target is a FILE and must actually be in the output.
+  //   301 — a permanent redirect off a legacy .html address. Its target is a clean ROUTE, so it
+  //         must be one the rewrite table serves; and its source must be a PUBLIC page, so an
+  //         app surface can never be redirected out from under the running application.
   const redirects = join(outDir, "_redirects");
   if (existsSync(redirects)) {
     const raw = readFileSync(redirects, "utf8");
     const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
-    if (lines.length !== REDIRECT_RULES.length) {
-      problems.push(`_redirects must hold exactly ${REDIRECT_RULES.length} rule(s), found ${lines.length}`);
+    if (lines.length !== REDIRECTS_FILE_LINES.length) {
+      problems.push(`_redirects must hold exactly ${REDIRECTS_FILE_LINES.length} rule(s), found ${lines.length}`);
     }
-    for (let i = 0; i < Math.max(lines.length, REDIRECT_RULES.length); i++) {
-      if (lines[i] !== REDIRECT_RULES[i]) {
-        problems.push(`_redirects line ${i + 1} is ${JSON.stringify(lines[i] ?? null)}, expected ${JSON.stringify(REDIRECT_RULES[i] ?? null)}`);
+    for (let i = 0; i < Math.max(lines.length, REDIRECTS_FILE_LINES.length); i++) {
+      if (lines[i] !== REDIRECTS_FILE_LINES[i]) {
+        problems.push(`_redirects line ${i + 1} is ${JSON.stringify(lines[i] ?? null)}, expected ${JSON.stringify(REDIRECTS_FILE_LINES[i] ?? null)}`);
       }
     }
     if (/\*/.test(raw)) problems.push("_redirects contains a wildcard — unknown paths must reach the 404 page");
     for (const line of lines) {
-      const [, to, status] = line.split(/\s+/);
-      if (status !== "200") problems.push(`_redirects rule ${JSON.stringify(line)} is not an internal 200 rewrite`);
-      const target = (to ?? "").replace(/^\//, "");
-      if (target && !existsSync(join(outDir, target))) {
-        problems.push(`_redirects rewrites to a file missing from the output: ${target}`);
+      const [from, to, status] = line.split(/\s+/);
+      if (status !== "200" && status !== "301") {
+        problems.push(`_redirects rule ${JSON.stringify(line)} has status ${JSON.stringify(status ?? null)}; only 200 rewrites and 301 redirects are allowed`);
+        continue;
       }
+      if (status === "200") {
+        const target = (to ?? "").replace(/^\//, "");
+        if (target && !existsSync(join(outDir, target))) {
+          problems.push(`_redirects rewrites to a file missing from the output: ${target}`);
+        }
+        continue;
+      }
+      // A 301 off a legacy .html address.
+      const sourceFile = (from ?? "").replace(/^\//, "");
+      if (!PUBLIC_HTML.includes(sourceFile)) {
+        problems.push(`_redirects redirects ${JSON.stringify(from)}, which is not a public marketing page — internal .html addresses must keep serving directly`);
+      }
+      if (!Object.prototype.hasOwnProperty.call(ROUTE_TO_FILE, to ?? "")) {
+        problems.push(`_redirects redirects ${JSON.stringify(from)} to ${JSON.stringify(to)}, which is not a clean route the rewrite table serves`);
+      }
+      if (from === to) problems.push(`_redirects rule ${JSON.stringify(line)} redirects a path to itself`);
+      if (/\.html$/i.test(to ?? "")) {
+        problems.push(`_redirects redirects ${JSON.stringify(from)} to another .html address: ${to}`);
+      }
+    }
+    // Every public page must have exactly one legacy redirect, and no internal page may have any.
+    const redirected = lines.filter((l) => l.endsWith(" 301")).map((l) => l.split(/\s+/)[0].replace(/^\//, ""));
+    for (const file of PUBLIC_HTML) {
+      const n = redirected.filter((f) => f === file).length;
+      if (n !== 1) problems.push(`${file} is public and must have exactly one legacy 301, found ${n}`);
+    }
+    for (const file of INTERNAL_HTML) {
+      if (redirected.includes(file)) problems.push(`${file} is an internal surface and must not be redirected`);
     }
   }
   // Every shipped page must be classified, and must match its class. An unclassified page is
@@ -618,7 +692,7 @@ export function build({ quiet = false } = {}) {
     copied.push(toPosix(rel));
   }
   writeFileSync(join(OUT, "404.html"), notFoundHtml(), "utf8");
-  writeFileSync(join(OUT, "_redirects"), REDIRECT_RULES.join("\n") + "\n", "utf8");
+  writeFileSync(join(OUT, "_redirects"), REDIRECTS_FILE_LINES.join("\n") + "\n", "utf8");
   writeFileSync(join(OUT, SITEMAP_FILE), sitemapXml(), "utf8");
   // docs.html is NOT in this list any more: it is copied like any other runtime page (#202), while
   // sitemap.xml joins the generated set (#203).

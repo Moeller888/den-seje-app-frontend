@@ -16,6 +16,7 @@ import {
   RUNTIME_HTML, ROOT_FILES, MANDATORY, FORBIDDEN_DIRS, FORBIDDEN_STRINGS, KNOWN_STRING_EXCEPTIONS,
   ASSET_DIRS, SITE_ORIGIN, PUBLIC_ROUTES, SITEMAP_FILE, SITEMAP_XMLNS,
   FILE_TO_ROUTE, canonicalUrlFor, canonicalLinksIn, validateCanonicals,
+  LEGACY_HTML_REDIRECTS, REDIRECTS_FILE_LINES,
   sitemapUrls, sitemapXml, validateSitemap, xmlEscape, xmlUnescape,
 } from "../../tools/cloudflare-build-static.mjs";
 
@@ -390,6 +391,138 @@ test("3b — validateOutput REFUSES an unclassified or misclassified page", () =
     assert.ok(p.some((x) => x.includes("public page blocks indexing")), "a noindexed public page must be refused");
   } finally {
     rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// -- legacy .html addresses ----------------------------------------------------------------------
+// Each public page used to answer at two addresses. The canonical tag said which one to prefer;
+// these redirects stop the other one being a page at all. The danger is not that this fails to
+// work - it is that it works TOO broadly and swallows /login.html, /hub.html and the running app,
+// or that it loops. Both are held shut here.
+
+test("there are exactly seven legacy redirects, one per public page", () => {
+  assert.equal(LEGACY_HTML_REDIRECTS.length, 7);
+  assert.deepEqual([...LEGACY_HTML_REDIRECTS], [
+    "/landing.html / 301",
+    "/produktet.html /produktet 301",
+    "/saadan-virker-det.html /saadan-virker-det 301",
+    "/elev-og-laerer.html /elev-og-laerer 301",
+    "/til-skoler.html /til-skoler 301",
+    "/priser.html /priser 301",
+    "/om-laerlig.html /om-laerlig 301",
+  ]);
+});
+
+test("the legacy redirects are DERIVED from the routing contract, not a fourth list", () => {
+  // Recomputed straight from FILE_TO_ROUTE. Four things now come from REDIRECT_RULES - the
+  // rewrites, the sitemap, the canonicals and these redirects - and this is the assertion that
+  // stops the fourth quietly becoming hand-kept.
+  const derived = Object.entries(FILE_TO_ROUTE).map(([file, route]) => `/${file} ${route} 301`);
+  assert.deepEqual([...LEGACY_HTML_REDIRECTS], derived);
+  // Source = a public page; target = that page's clean route; and the pair round-trips.
+  for (const rule of LEGACY_HTML_REDIRECTS) {
+    const [from, to, status] = rule.split(/\s+/);
+    const file = from.replace(/^\//, "");
+    assert.ok(PUBLIC_HTML.includes(file), `${from} is not a public marketing page`);
+    assert.equal(to, FILE_TO_ROUTE[file]);
+    assert.equal(ROUTE_TO_FILE[to], file, `${to} does not round-trip back to ${file}`);
+    assert.equal(status, "301", "permanent redirect, not 302/307/308");
+  }
+});
+
+test("REDIRECT_RULES stays the 200 rewrites alone - or the sitemap and canonicals would be poisoned", () => {
+  // The trap this test exists for: ROUTE_TO_FILE is derived from REDIRECT_RULES, so putting a
+  // `.html` source into that array would give it a key like "/produktet.html" and corrupt
+  // PUBLIC_ROUTES, every canonical and the sitemap at once.
+  for (const rule of REDIRECT_RULES) assert.match(rule, /\s200$/, `${rule} is not a 200 rewrite`);
+  for (const route of Object.keys(ROUTE_TO_FILE)) {
+    assert.ok(!/\.html$/i.test(route), `ROUTE_TO_FILE has a .html key: ${route}`);
+    assert.match(route, /^\/[a-z-]*$/, `${route} is not a literal single-segment clean route`);
+  }
+  assert.deepEqual(sitemapUrls(), PUBLIC_ROUTES.map((r) => SITE_ORIGIN + r));
+});
+
+test("no internal .html address is redirected - the app keeps every one of its URLs", () => {
+  const redirected = LEGACY_HTML_REDIRECTS.map((r) => r.split(/\s+/)[0].replace(/^\//, ""));
+  for (const file of INTERNAL_HTML) {
+    assert.ok(!redirected.includes(file), `${file} is an internal surface and must not be redirected`);
+  }
+  // Named explicitly, so a silent reclassification is loud here too.
+  for (const file of ["index.html", "login.html", "reset-password.html", "hub.html", "shop.html",
+                      "avatar.html", "collection.html", "themes.html", "leaderboard.html",
+                      "achievements.html", "teacher.html", "student-detail.html", "admin.html",
+                      "docs.html", "404.html"]) {
+    assert.ok(!redirected.includes(file), `${file} must keep its direct address`);
+  }
+  assert.equal(redirected.length, 7);
+});
+
+test("the redirects are seven literal sources - never a wildcard or an extension stripper", () => {
+  const raw = read("_redirects");
+  assert.ok(!raw.includes("*"), "no wildcard anywhere");
+  assert.ok(!/:\w/.test(raw), "no placeholder or :splat segment");
+  for (const rule of LEGACY_HTML_REDIRECTS) {
+    const [from] = rule.split(/\s+/);
+    assert.match(from, /^\/[a-z-]+\.html$/, `${from} is not a literal single-segment .html source`);
+  }
+});
+
+test("the root case: /landing.html redirects to /, which rewrites back to landing.html", () => {
+  // The one asymmetric pair, and the only place a loop could plausibly hide: the two rules name
+  // each other. They cannot chain, because Cloudflare applies only the FIRST matching rule and an
+  // internal rewrite does not re-enter the table - measured on workerd before this was written.
+  assert.ok(LEGACY_HTML_REDIRECTS.includes("/landing.html / 301"));
+  assert.ok(REDIRECT_RULES.includes("/ /landing.html 200"));
+  assert.equal(FILE_TO_ROUTE["landing.html"], "/");
+  assert.equal(ROUTE_TO_FILE["/"], "landing.html");
+  // The file must still ship: `/` resolves to it, and a 301 to a route that serves nothing would
+  // turn the front door into a 404.
+  assert.ok(has("landing.html"));
+});
+
+test("no legacy redirect can point at another .html address, or the chain would not terminate", () => {
+  for (const rule of LEGACY_HTML_REDIRECTS) {
+    const [from, to] = rule.split(/\s+/);
+    assert.ok(!/\.html/i.test(to), `${from} redirects to another .html address: ${to}`);
+    assert.notEqual(from, to, `${from} redirects to itself`);
+    // The target must be a route the rewrite table actually serves, so following the redirect
+    // always lands on a 200 rather than on the 404 page.
+    assert.ok(Object.prototype.hasOwnProperty.call(ROUTE_TO_FILE, to), `${to} is not a served route`);
+  }
+  // Following each redirect once must terminate: the destination is never itself a redirect source.
+  const sources = new Set(LEGACY_HTML_REDIRECTS.map((r) => r.split(/\s+/)[0]));
+  for (const rule of LEGACY_HTML_REDIRECTS) {
+    const to = rule.split(/\s+/)[1];
+    assert.ok(!sources.has(to), `${to} is both a redirect target and a redirect source - that is a loop`);
+  }
+});
+
+test("the serve-check proves the redirect contract over HTTP, loop included", () => {
+  const src = readFileSync(join(REPO, "tools", "cloudflare-serve-check.mjs"), "utf8");
+  assert.match(src, /LEGACY \.html/, "serve-check must assert the legacy redirects");
+  assert.match(src, /NO REDIRECT LOOP/, "serve-check must follow the chain and prove it terminates");
+  assert.match(src, /QUERY STRINGS SURVIVE/, "serve-check must prove the query string rides along");
+  assert.match(src, /INTERNAL \.html IS UNTOUCHED/, "serve-check must prove the app keeps its addresses");
+  assert.match(src, /UNKNOWN \.html STILL 404/, "serve-check must prove the list is not a pattern");
+  assert.ok(src.includes("hops === 1"), "serve-check must require exactly one hop");
+});
+
+test("the documentation no longer claims .html addresses are preserved for public pages", () => {
+  // A stale comment is a lie that outlives the change. The old contract said every explicit .html
+  // address stays intact; that is now true only for the app.
+  const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
+  assert.ok(!/EXPLICIT \.html, PRESERVED/.test(wrangler), "wrangler.jsonc still states the old contract");
+  assert.match(wrangler, /ASYMMETRIC BY DESIGN/, "wrangler.jsonc must describe the new asymmetry");
+  assert.match(wrangler, /permanent 301 to the clean route/);
+  assert.match(wrangler, /internal app \.html URL  -> UNCHANGED/i);
+
+  const build = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
+  assert.match(build, /THE \.html CONTRACT IS NOW ASYMMETRIC/);
+  // And the public pages must not still tell readers they answer at two addresses.
+  for (const file of PUBLIC_HTML) {
+    const html = readFileSync(join(REPO, file), "utf8");
+    assert.ok(!/also answers at/i.test(html), `${file} still describes the .html twin as a live address`);
+    assert.match(html, /permanent 301 to the clean route/, `${file} does not describe the new contract`);
   }
 });
 
@@ -826,10 +959,11 @@ test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () 
   assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
 });
 
-test("_redirects is generated as exactly the declared routing table", () => {
+test("_redirects is generated as exactly the declared routing table — both halves", () => {
   assert.ok(has("_redirects"));
   const lines = read("_redirects").split("\n").map((l) => l.trim()).filter(Boolean);
   assert.deepEqual(lines, [
+    // the seven internal rewrites: the address bar keeps the clean path, no 3xx is emitted
     "/ /landing.html 200",
     "/produktet /produktet.html 200",
     "/saadan-virker-det /saadan-virker-det.html 200",
@@ -837,10 +971,21 @@ test("_redirects is generated as exactly the declared routing table", () => {
     "/til-skoler /til-skoler.html 200",
     "/priser /priser.html 200",
     "/om-laerlig /om-laerlig.html 200",
+    // …and the seven permanent redirects off the legacy .html addresses
+    "/landing.html / 301",
+    "/produktet.html /produktet 301",
+    "/saadan-virker-det.html /saadan-virker-det 301",
+    "/elev-og-laerer.html /elev-og-laerer 301",
+    "/til-skoler.html /til-skoler 301",
+    "/priser.html /priser 301",
+    "/om-laerlig.html /om-laerlig 301",
   ]);
-  assert.deepEqual(lines, [...REDIRECT_RULES]);
-  // status 200 = internal rewrite: the address bar keeps the clean path and no 3xx is emitted
-  for (const l of lines) assert.match(l, /\s200$/, `${l} must be a rewrite, not a 301/302`);
+  assert.deepEqual(lines, [...REDIRECTS_FILE_LINES]);
+  assert.equal(lines.length, 14);
+  assert.equal(lines.filter((l) => l.endsWith(" 200")).length, 7);
+  assert.equal(lines.filter((l) => l.endsWith(" 301")).length, 7);
+  // Only these two statuses may ever appear.
+  for (const l of lines) assert.match(l, /\s(200|301)$/, `${l} has a status this contract does not allow`);
 });
 
 test("the routing table is an explicit list — no pattern could ever match a stray path", () => {
@@ -887,40 +1032,63 @@ test("validateOutput rejects a tampered _redirects", () => {
     for (const f of Object.values(ROUTE_TO_FILE)) {
       writeFileSync(join(tmp, f), `<html><head><link rel="canonical" href="${canonicalUrlFor(f)}"></head></html>`, "utf8");
     }
-    writeTable([...REDIRECT_RULES]);
+    writeTable([...REDIRECTS_FILE_LINES]);
     assert.deepEqual(validateOutput(tmp).problems, []);
 
-    writeTable([...REDIRECT_RULES, "/* /landing.html 200"]);
+    writeTable([...REDIRECTS_FILE_LINES, "/* /landing.html 200"]);
     let p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("wildcard")), "a wildcard must be refused");
 
-    writeTable(REDIRECT_RULES.map((r, i) => (i === 0 ? "/ /landing.html 302" : r)));
+    // A blanket .html stripper is the single most dangerous thing that could be written here:
+    // it would catch /login.html, /hub.html and the whole running app.
+    writeTable([...REDIRECTS_FILE_LINES, "/*.html /:splat 301"]);
     p = validateOutput(tmp).problems;
-    assert.ok(p.some((x) => x.includes("not an internal 200 rewrite") || x.includes("line 1")),
+    assert.ok(p.some((x) => x.includes("wildcard")), "a generic .html stripper must be refused");
+
+    writeTable(REDIRECTS_FILE_LINES.map((r, i) => (i === 0 ? "/ /landing.html 302" : r)));
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("line 1") || x.includes("status")),
       "a 302 must be refused — it would expose /landing.html in the URL bar");
 
-    writeTable([...REDIRECT_RULES, "/extra /other.html 200"]);
+    // …and a 307/308 on a legacy address is refused too: the contract says 301, exactly.
+    writeTable(REDIRECTS_FILE_LINES.map((r) => (r === "/priser.html /priser 301" ? "/priser.html /priser 307" : r)));
+    p = validateOutput(tmp).problems;
+    assert.ok(p.length > 0, "a non-301 permanent-ish redirect must be refused");
+
+    writeTable([...REDIRECTS_FILE_LINES, "/extra /other.html 200"]);
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("exactly")), "an extra rule must be refused");
 
-    writeTable(REDIRECT_RULES.slice(0, -1));
+    writeTable(REDIRECTS_FILE_LINES.slice(0, -1));
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("exactly")), "a missing rule must be refused");
 
     // Reordering is refused too: the emitted file must match the declaration exactly.
-    writeTable([REDIRECT_RULES[1], REDIRECT_RULES[0], ...REDIRECT_RULES.slice(2)]);
+    writeTable([REDIRECTS_FILE_LINES[1], REDIRECTS_FILE_LINES[0], ...REDIRECTS_FILE_LINES.slice(2)]);
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("line 1")), "a reordered table must be refused");
 
     // A rewrite silently retargeted at the quiz must be refused — that would put the app behind
     // the public front door again and expose the quiz shell to anonymous visitors.
-    writeTable(REDIRECT_RULES.map((r, i) => (i === 0 ? "/ /index.html 200" : r)));
+    writeTable(REDIRECTS_FILE_LINES.map((r, i) => (i === 0 ? "/ /index.html 200" : r)));
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("line 1")), "retargeting the root at the quiz must be refused");
 
+    // AN INTERNAL SURFACE MUST NEVER BE REDIRECTED. This is the guard that keeps the app running:
+    // a 301 on /login.html would break the role routing in js/login.js and the Playwright contract.
+    writeTable([...REDIRECTS_FILE_LINES.slice(0, 7), "/login.html /login 301", ...REDIRECTS_FILE_LINES.slice(7)]);
+    p = validateOutput(tmp).problems;
+    assert.ok(p.some((x) => x.includes("not a public marketing page") || x.includes("line 8")),
+      "redirecting an internal app page must be refused");
+
+    // A legacy redirect pointing somewhere that is not a served clean route.
+    writeTable(REDIRECTS_FILE_LINES.map((r) => (r === "/priser.html /priser 301" ? "/priser.html /tilbud 301" : r)));
+    p = validateOutput(tmp).problems;
+    assert.ok(p.length > 0, "a redirect to an unserved route must be refused");
+
     // A route pointing at a page that was never shipped must be refused.
     rmSync(join(tmp, "priser.html"));
-    writeTable([...REDIRECT_RULES]);
+    writeTable([...REDIRECTS_FILE_LINES]);
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("missing from the output")), "a dangling route target must be refused");
   } finally {
@@ -948,8 +1116,12 @@ test("404.html is generated, neutral, and links back to the public front page", 
   assert.match(t, /404/);
   // The front page is the landing page now. Linking to the quiz would bounce an anonymous
   // visitor straight back out to login after a flash of app UI.
-  assert.match(t, /href="landing\.html"/);
-  assert.ok(has("landing.html"), "the 404 link would otherwise be a 404 itself");
+  // It links to the CLEAN root, not to landing.html: that address is a 301 today, and sending a
+  // visitor who already hit an error through an extra round trip on our own error page is exactly
+  // the kind of small carelessness this contract exists to prevent.
+  assert.match(t, /href="\/"/);
+  assert.ok(!/href="landing\.html"/.test(t), "the 404 page must not link through a redirect");
+  assert.ok(has("landing.html"), "the root rewrite target must still exist");
   for (const s of FORBIDDEN_STRINGS) assert.ok(!t.includes(s), `404.html leaks ${s}`);
 });
 
