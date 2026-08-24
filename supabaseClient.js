@@ -10,4 +10,7 @@ window.supabase = supabase;
 
 console.log("Supabase forbundet korrekt (ESM)");
 
-export { supabase };
+// The URL and the ANON key are public by design — the anon key identifies the project to the
+// API and authorises nothing on its own. Exported so a page can call a Storage endpoint the
+// SDK does not wrap, while still sending the USER's JWT for authorisation.
+export { supabase, SUPABASE_URL, SUPABASE_ANON_KEY };

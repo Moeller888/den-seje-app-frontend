@@ -63,7 +63,7 @@
   </div>
 
   <script type="module">
-  import { supabase } from "./supabaseClient.js";
+  import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabaseClient.js";
   (function () {
     "use strict";
 
@@ -314,32 +314,56 @@
       showError(msg);
     }
 
-    // THE CURRENT-POINTER READ. manifest.json is the one mutable object in the bucket, so it must
-    // never come from a cache: Supabase's default browser TTL is about an hour and CDN invalidation
-    // takes up to a minute, either of which can hand this tab a generation that has already been
-    // replaced.
+    // THE CURRENT-POINTER READ.
     //
-    // Two mechanisms, because one is not enough. A FRESH SIGNED URL every call: each signed URL
-    // carries a unique token, and Supabase treats every token as its own CDN cache key, so a new
-    // one can never be answered from an earlier response. Then `cache: "no-store"` and an explicit
-    // cacheNonce, which is the bypass Supabase documents, to keep the browser out of it too.
+    // AUTHORISATION. Every read carries the user's CURRENT access token to the authenticated
+    // Storage endpoint, so the RLS policy is evaluated against the live session on each request.
+    // A signed URL would not do this and was the wrong tool: Supabase signs those with a separate
+    // internal key, so they stay valid until expiry "regardless of any Auth key changes" — logout,
+    // session expiry, key rotation and losing super_admin do not revoke one, and anyone holding the
+    // link can read it. The manifest lists internal titles, filenames, hashes and object keys, so a
+    // shareable bearer link to it is exactly what this feature must not produce.
     //
-    // The service key is not involved anywhere here: the signed URL is minted with the user's own
-    // session, so RLS decides whether it can be minted at all.
+    // The anon key is sent as `apikey` only, which identifies the project to the API and authorises
+    // nothing. The service key is never in the browser.
+    //
+    // FRESHNESS. manifest.json is the one mutable object, so it must never come from a cache:
+    // Supabase's default browser TTL is about an hour and CDN invalidation takes up to a minute,
+    // either of which can hand this tab a generation that has already been replaced. A new
+    // cacheNonce per read plus `cache: "no-store"` keeps both out of it. Cache-busting changes
+    // nothing about authorisation — that is the header's job, on every request.
     var manifestNonce = 0;
-    function loadManifest() {
+    function manifestUrl() {
       manifestNonce++;
-      return supabase.storage.from(BUCKET).createSignedUrl(MANIFEST_NAME, 60)
-        .then(function (res) {
-          if (res.error || !res.data || !res.data.signedUrl) {
-            throw new Error(res.error ? res.error.message : "ingen signeret URL");
-          }
-          var url = res.data.signedUrl +
-            (res.data.signedUrl.indexOf("?") === -1 ? "?" : "&") +
-            "cacheNonce=" + Date.now() + "-" + manifestNonce;
-          return fetch(url, { cache: "no-store" });
+      return SUPABASE_URL + "/storage/v1/object/authenticated/" + BUCKET + "/" + MANIFEST_NAME +
+        "?cacheNonce=" + Date.now() + "-" + manifestNonce;
+    }
+
+    // Always the CURRENT session, never one captured at page load: a tab open across a logout or a
+    // role change must stop working, not keep replaying the token it booted with.
+    function currentAccessToken() {
+      return supabase.auth.getSession().then(function (s) {
+        var session = s && s.data ? s.data.session : null;
+        if (!session) throw new Error("ingen session");
+        if (!session.access_token) throw new Error("ingen access token");
+        return session.access_token;
+      });
+    }
+
+    function loadManifest() {
+      return currentAccessToken()
+        .then(function (token) {
+          return fetch(manifestUrl(), {
+            cache: "no-store",
+            headers: { Authorization: "Bearer " + token, apikey: SUPABASE_ANON_KEY },
+          });
         })
         .then(function (r) {
+          // Fail closed, and say which wall was hit. There is no fallback path: not a signed URL,
+          // not a public URL, not a cached copy.
+          if (r.status === 401) throw new Error("401 — sessionen er udløbet");
+          if (r.status === 403) throw new Error("403 — din bruger har ikke adgang");
+          if (r.status === 404) throw new Error("404 — dokumentlisten findes ikke");
           if (!r.ok) throw new Error("HTTP " + r.status);
           return r.json();
         })
