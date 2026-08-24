@@ -14,6 +14,8 @@ import {
   build, validateOutput, notFoundHtml, REDIRECT_RULES, ROUTE_TO_FILE,
   PUBLIC_HTML, INTERNAL_HTML,
   RUNTIME_HTML, ROOT_FILES, MANDATORY, FORBIDDEN_DIRS, FORBIDDEN_STRINGS, KNOWN_STRING_EXCEPTIONS,
+  ASSET_DIRS, SITE_ORIGIN, PUBLIC_ROUTES, SITEMAP_FILE, SITEMAP_XMLNS,
+  sitemapUrls, sitemapXml, validateSitemap, xmlEscape, xmlUnescape,
 } from "../../tools/cloudflare-build-static.mjs";
 
 // The public website's pages, in menu order. Used by several assertions below.
@@ -376,6 +378,206 @@ test("3b — validateOutput REFUSES an unclassified or misclassified page", () =
   }
 });
 
+// -- the sitemap --------------------------------------------------------------------------------
+// Google could not discover the site because /sitemap.xml was a 404 - nothing in the repository
+// had ever produced one. It is generated now, from the routing table itself. These tests are the
+// standing proof that it stays correct and cannot drift away from the routes it describes: a
+// sitemap is read INSTEAD of the site, so a wrong one fails quietly. Nothing 404s, nothing looks
+// broken, the wrong pages simply get indexed.
+
+test("sitemap.xml ships, as a regular file, and a build that loses it fails", () => {
+  assert.ok(has(SITEMAP_FILE), "the sitemap must be in the output");
+  assert.ok(lstatSync(join(OUT, SITEMAP_FILE)).isFile(), "the sitemap must be a regular file");
+  assert.ok(MANDATORY.includes(SITEMAP_FILE),
+    "existence must be enforced by MANDATORY, so a build that fails to emit it stops");
+});
+
+test("the sitemap's URLs are DERIVED from the routing table, not kept as a second list", () => {
+  // The contract that matters. What the sitemap says is a FUNCTION of REDIRECT_RULES, recomputed
+  // here straight from the raw rules: if someone ever replaces the derivation with a hand-kept
+  // array, the two stop agreeing the moment one of them is edited. (Every current route is ASCII,
+  // so percent-encoding is a no-op here; the encoder is exercised separately.)
+  const fromRules = REDIRECT_RULES.map((rule) => SITE_ORIGIN + rule.split(/\s+/)[0]);
+  assert.deepEqual(sitemapUrls(), fromRules);
+  assert.deepEqual([...PUBLIC_ROUTES], Object.keys(ROUTE_TO_FILE));
+});
+
+test("the routing table and PUBLIC_HTML describe the same seven public pages", () => {
+  // ONE source of truth. The table names the addresses, PUBLIC_HTML names the pages; the sitemap
+  // is derived from the first and the robots classification from the second.
+  assert.deepEqual([...new Set(Object.values(ROUTE_TO_FILE))].sort(), [...PUBLIC_HTML].sort());
+  assert.equal(PUBLIC_ROUTES.length, 7);
+  assert.equal(PUBLIC_HTML.length, 7);
+  const src = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
+  assert.match(src, /describe different public pages/,
+    "validateOutput must refuse a routing table that disagrees with PUBLIC_HTML");
+});
+
+test("the sitemap lists exactly the seven public routes, in the routing table's order", () => {
+  // A separate expected list on purpose: it is the one assertion that does not go through the
+  // generator, so a generator that is confidently wrong still fails here.
+  const locs = [...read(SITEMAP_FILE).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(locs, [
+    "https://l\u00e6rlig.dk/",
+    "https://l\u00e6rlig.dk/produktet",
+    "https://l\u00e6rlig.dk/saadan-virker-det",
+    "https://l\u00e6rlig.dk/elev-og-laerer",
+    "https://l\u00e6rlig.dk/til-skoler",
+    "https://l\u00e6rlig.dk/priser",
+    "https://l\u00e6rlig.dk/om-laerlig",
+  ]);
+  assert.equal(new Set(locs).size, locs.length, "no URL may be listed twice");
+  assert.deepEqual(locs, sitemapUrls(), "the shipped document must match the generator");
+});
+
+test("every URL is https, on the right host, and is the clean route - never the .html file", () => {
+  const xml = read(SITEMAP_FILE);
+  for (const loc of sitemapUrls()) {
+    const u = new URL(loc);
+    assert.equal(u.protocol, "https:", `${loc} is not https`);
+    // `new URL` normalises the IDN to its A-label, so this compares the same two forms whichever
+    // way the host happens to be written.
+    assert.equal(u.hostname, "xn--lrlig-sra.dk", `${loc} is not on the site's domain`);
+    assert.ok(!/\.html/i.test(loc), `${loc} is a .html address, not the public clean route`);
+  }
+  // The urlset's xmlns is an IDENTIFIER, not a fetched address: the sitemaps.org namespace URI
+  // is http:// by definition and must stay that way. So scheme and host are asserted on the
+  // <loc> VALUES, which is where they mean something, and the document as a whole is only
+  // checked for the things that may never appear in it at all.
+  const locText = sitemapUrls().join(" ");
+  assert.ok(!/http:\/\//.test(locText), "no plain-HTTP URL may appear");
+  assert.ok(!/www\./i.test(locText), "the site has no www host");
+  assert.ok(!/\.html/i.test(xml), "no .html address anywhere in the document");
+  assert.ok(!/laerlig\.dk/i.test(xml), "the ASCII spelling is a different domain");
+  assert.ok(!/xn--/i.test(xml), "the readable IRI form is what ships - see SITE_ORIGIN");
+});
+
+test("no internal surface appears in the sitemap - not as a file, not as a route", () => {
+  const xml = read(SITEMAP_FILE);
+  const paths = sitemapUrls().map((u) => new URL(u).pathname);
+  for (const page of INTERNAL_HTML) {
+    assert.ok(!xml.includes(page), `the sitemap names an internal page: ${page}`);
+    assert.ok(!paths.includes("/" + page.replace(/\.html$/, "")), `the sitemap lists /${page}`);
+  }
+  // Named explicitly, so a silent removal from INTERNAL_HTML stays loud here too.
+  for (const surface of ["index", "login", "reset-password", "hub", "shop", "avatar", "collection",
+                         "themes", "leaderboard", "achievements", "teacher", "student-detail",
+                         "admin", "docs", "404"]) {
+    assert.ok(!xml.includes(surface), `the sitemap mentions the internal surface ${surface}`);
+  }
+});
+
+test("the sitemap invents no metadata, and its XML structure is sound", () => {
+  const xml = read(SITEMAP_FILE);
+  // The repository has no deterministic source for any of these; inventing one would be a guess
+  // dressed up as data.
+  for (const tag of ["lastmod", "changefreq", "priority"]) {
+    assert.ok(!xml.includes(tag), `the sitemap carries a <${tag}> nothing here can honestly fill in`);
+  }
+  assert.ok(xml.startsWith(`<?xml version="1.0" encoding="UTF-8"?>\n`), "missing the XML declaration");
+  assert.ok(xml.includes(`<urlset xmlns="${SITEMAP_XMLNS}">`), "missing the sitemaps 0.9 namespace");
+  assert.equal(SITEMAP_XMLNS, "http://www.sitemaps.org/schemas/sitemap/0.9");
+  assert.ok(xml.trimEnd().endsWith("</urlset>"), "the urlset is not closed");
+  for (const [open, close] of [["<url>", "</url>"], ["<loc>", "</loc>"]]) {
+    assert.equal(xml.split(open).length - 1, 7, `expected 7 ${open}`);
+    assert.equal(xml.split(close).length - 1, 7, `expected 7 ${close}`);
+  }
+  assert.ok(!xml.includes("*"), "a wildcard would mean URLs nobody listed");
+  assert.ok(xml.endsWith("</urlset>\n"), "the document must end with a single newline");
+});
+
+test("the sitemap is deterministic - the same bytes twice, and no clock inside it", () => {
+  const first = readFileSync(join(build({ quiet: true }).outDir, SITEMAP_FILE));
+  const second = readFileSync(join(build({ quiet: true }).outDir, SITEMAP_FILE));
+  assert.ok(first.equals(second), "two builds of one commit must produce byte-identical output");
+  assert.equal(sitemapXml(), sitemapXml());
+  const xml = sitemapXml();
+  assert.ok(!/\d{4}-\d{2}-\d{2}/.test(xml), "the sitemap embeds a date");
+  assert.ok(!/\d{4}-\d{2}-\d{2}T/.test(xml), "the sitemap embeds a timestamp");
+  assert.ok(!/\d{9,}/.test(xml), "the sitemap embeds an epoch or a build id");
+});
+
+test("the generator discovers nothing - it reads the routing table, never the filesystem", () => {
+  const src = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
+  const from = src.indexOf("export const SITE_ORIGIN");
+  const to = src.indexOf("what may never appear in the output");
+  assert.ok(from > 0 && to > from, "the sitemap section moved - re-anchor this test");
+  const section = src.slice(from, to);
+  for (const forbidden of ["readdirSync", "listDir", "existsSync", "new Date", "Math.random", "process.env"]) {
+    assert.ok(!section.includes(forbidden),
+      `the sitemap generator uses ${forbidden}; its URLs must come from REDIRECT_RULES alone`);
+  }
+  assert.match(section, /Object\.keys\(ROUTE_TO_FILE\)/,
+    "the public routes must be derived from the routing table");
+});
+
+test("XML escaping is real, not incidental to today's all-ASCII routes", () => {
+  assert.equal(xmlEscape(`&<>"'`), "&amp;&lt;&gt;&quot;&apos;");
+  // `&` must be replaced FIRST, or the ampersands the later replacements introduce get escaped a
+  // second time and the document ends up saying something other than it means.
+  assert.equal(xmlEscape("<&>"), "&lt;&amp;&gt;");
+  assert.equal(xmlEscape("a?x=1&y=2"), "a?x=1&amp;y=2");
+  assert.equal(xmlUnescape(xmlEscape(`&<>"' \u00e6\u00f8\u00e5`)), `&<>"' \u00e6\u00f8\u00e5`);
+  assert.equal(xmlUnescape("&amp;lt;"), "&lt;", "unescaping must not run twice over its own output");
+  // And the path must be percent-encoded, so a future non-ASCII route cannot emit a broken URL.
+  const src = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
+  assert.match(src, /encodeURIComponent/, "the path must be percent-encoded, not concatenated raw");
+});
+
+test("sitemap.xml is the only XML in the output - the extension is not a new door", () => {
+  assert.deepEqual(result.files.filter((f) => f.endsWith(".xml")), [SITEMAP_FILE]);
+  for (const d of ASSET_DIRS) {
+    assert.ok(!d.extensions.includes(".xml"), `${d.dir}/ must not copy .xml files in from the repo`);
+  }
+  assert.ok(!RUNTIME_HTML.some((f) => f.endsWith(".xml")));
+  assert.ok(!ROOT_FILES.some((f) => f.endsWith(".xml")));
+});
+
+test("a sitemap that drifts from the routing table cannot pass validation", () => {
+  // The anti-drift guard, exercised. Each case is a way the sitemap could quietly stop describing
+  // the site: an extra page, a lost one, a reorder, a duplicate, a .html address, plain HTTP, the
+  // wrong host, an internal surface, invented metadata, a wildcard, a truncated document.
+  const tmp = mkdtempSync(join(tmpdir(), "cf-sitemap-"));
+  const write = (xml) => writeFileSync(join(tmp, SITEMAP_FILE), xml, "utf8");
+  const doc = (urls) => `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="${SITEMAP_XMLNS}">\n`
+    + urls.map((u) => `  <url>\n    <loc>${u}</loc>\n  </url>`).join("\n")
+    + `\n</urlset>\n`;
+  const urls = sitemapUrls();
+  const HOST = "https://l\u00e6rlig.dk";
+  try {
+    // The faithful document must validate clean, or every assertion below proves nothing.
+    write(sitemapXml());
+    assert.deepEqual(validateSitemap(tmp), []);
+
+    rmSync(join(tmp, SITEMAP_FILE));
+    assert.ok(validateSitemap(tmp).some((x) => x.includes("missing")), "a missing sitemap must be refused");
+
+    const cases = [
+      ["a page the routing table does not contain", doc([...urls, `${HOST}/kampagne`])],
+      ["a dropped public route", doc(urls.slice(0, -1))],
+      ["a reordered list", doc([urls[1], urls[0], ...urls.slice(2)])],
+      ["a duplicate URL", doc([...urls.slice(0, -1), urls[0]])],
+      ["a .html address", doc(urls.map((u, i) => (i === 1 ? `${HOST}/produktet.html` : u)))],
+      ["plain HTTP", doc(urls.map((u, i) => (i === 0 ? u.replace("https:", "http:") : u)))],
+      ["the ASCII look-alike host", doc(urls.map((u, i) => (i === 0 ? "https://laerlig.dk/" : u)))],
+      ["an internal surface", doc(urls.map((u, i) => (i === 1 ? `${HOST}/hub` : u)))],
+      ["invented metadata", sitemapXml().replace("</urlset>", "  <lastmod>2026-08-23</lastmod>\n</urlset>")],
+      ["a wildcard", doc(urls.map((u, i) => (i === 1 ? `${HOST}/*` : u)))],
+      ["a truncated document", sitemapXml().replace("</urlset>\n", "")],
+    ];
+    for (const [what, xml] of cases) {
+      write(xml);
+      assert.ok(validateSitemap(tmp).length > 0, `${what} must be refused`);
+    }
+
+    // ...and the faithful document still validates afterwards, so the guard is not simply stuck.
+    write(sitemapXml());
+    assert.deepEqual(validateSitemap(tmp), []);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("the site is reachable — one contact address, in the footer of every public page", () => {
   const CONTACT = "mailto:kontakt@lærlig.dk";
   for (const p of ["landing.html", ...PUBLIC_PAGES]) {
@@ -642,7 +844,7 @@ test("the forbidden strings do not occur in the output", () => {
   const allowed = new Set(KNOWN_STRING_EXCEPTIONS.map((e) => `${e.file}::${e.string}`));
   const found = [];
   for (const f of result.files) {
-    if (!/\.(html|js|css|svg)$/.test(f)) continue;
+    if (!/\.(html|js|css|svg|xml)$/.test(f)) continue;
     const t = readFileSync(join(OUT, f), "utf8");
     for (const s of FORBIDDEN_STRINGS) {
       if (t.includes(s) && !allowed.has(`${f}::${s}`)) found.push(`${f}: ${s}`);
@@ -743,6 +945,8 @@ test("the serve-check still asserts the routing contract over HTTP", () => {
   assert.ok(src.includes('"/landing.html"'), "serve-check must prove /landing.html serves");
   assert.match(src, /THE QUIZ DID NOT MOVE/, "serve-check must prove /index.html still serves the quiz");
   assert.ok(src.includes('"/_redirects"'), "serve-check must prove /_redirects is unreachable");
+  assert.ok(src.includes('"/sitemap.xml"'), "serve-check must prove /sitemap.xml actually serves");
+  assert.match(src, /THE SITEMAP/, "serve-check must assert what the sitemap contains, over HTTP");
   assert.ok(src.includes('"/student-detail.html?id=test"'), "serve-check must prove a query string still serves");
   // raw status, or a 307 resolving to 200 would look like a pass
   assert.match(src, /redirect:\s*["']manual["']/, "serve-check must not follow redirects");
