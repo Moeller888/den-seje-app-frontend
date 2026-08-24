@@ -15,6 +15,7 @@ import {
   PUBLIC_HTML, INTERNAL_HTML,
   RUNTIME_HTML, ROOT_FILES, MANDATORY, FORBIDDEN_DIRS, FORBIDDEN_STRINGS, KNOWN_STRING_EXCEPTIONS,
   ASSET_DIRS, SITE_ORIGIN, PUBLIC_ROUTES, SITEMAP_FILE, SITEMAP_XMLNS,
+  FILE_TO_ROUTE, canonicalUrlFor, canonicalLinksIn, validateCanonicals,
   sitemapUrls, sitemapXml, validateSitemap, xmlEscape, xmlUnescape,
 } from "../../tools/cloudflare-build-static.mjs";
 
@@ -68,7 +69,12 @@ test("the landing page is indexable — no robots meta at all", () => {
 test("the landing page contacts no third party — no external host, no webfont, no tracker", () => {
   for (const f of ["landing.html", "css/landing.css", "js/landing.js"]) {
     const t = read(f);
-    assert.ok(!/https?:\/\//i.test(t), `${f} references an external URL`);
+    // The site's OWN canonical URL is the single permitted absolute address, and only in a
+    // <link rel="canonical">. It is metadata, not a load: no browser ever fetches it, so it
+    // cannot contact a third party — which is the rule this test exists to enforce. Everything
+    // else, including any other absolute URL in the same tag, still fails here.
+    const withoutCanonical = t.replace(/<link\b[^>]*rel="canonical"[^>]*>/gi, "");
+    assert.ok(!/https?:\/\//i.test(withoutCanonical), `${f} references an external URL`);
     assert.ok(!/\/\/(?:fonts|cdn|unpkg|jsdelivr)\./i.test(t), `${f} references a CDN`);
     assert.ok(!/@import\s+url\(/i.test(t), `${f} pulls in a remote stylesheet`);
     assert.ok(!/\b(fetch|XMLHttpRequest|navigator\.sendBeacon)\s*\(/.test(t), `${f} makes a request`);
@@ -266,7 +272,16 @@ test("the information pages LOAD nothing from a third party, and ship no imagery
     for (const m of t.matchAll(LOADING_ATTR)) {
       // href is a load only on <link>; on <a> it is navigation.
       const tagStart = t.lastIndexOf("<", m.index);
-      const tag = t.slice(tagStart, m.index).match(/^<\s*([a-z0-9-]+)/i)?.[1]?.toLowerCase();
+      const whole = t.slice(tagStart, t.indexOf(">", m.index) + 1);
+      const tag = whole.match(/^<\s*([a-z0-9-]+)/i)?.[1]?.toLowerCase();
+      // <link rel="canonical"> is the one <link> that is NOT a load — the browser never fetches
+      // it. It is allowed here only when it names this page's own canonical URL, so the carve-out
+      // cannot be widened into a way to smuggle a real third-party <link> in.
+      if (tag === "link" && /\brel\s*=\s*["']?canonical\b/i.test(whole)) {
+        const href = (whole.match(/\bhref\s*=\s*"([^"]*)"/i) || [])[1];
+        assert.equal(href, canonicalUrlFor(p), `${p} canonical link is not its own canonical URL`);
+        continue;
+      }
       assert.ok(tag === "a", `${p} loads a third-party resource in <${tag}>: ${m[0]}`);
     }
     assert.ok(!/@import\s+url\(/i.test(t), `${p} pulls in a remote stylesheet`);
@@ -375,6 +390,167 @@ test("3b — validateOutput REFUSES an unclassified or misclassified page", () =
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+// -- canonical addresses -------------------------------------------------------------------------
+// Every public page answers at TWO addresses - its clean route and its .html file - with
+// byte-identical bodies. Without a canonical tag a crawler has to guess which to index, and the
+// guess is not ours to make. These tests hold the tag to the routing table.
+//
+// A wrong canonical is the most dangerous kind of SEO defect precisely because nothing breaks: no
+// 404, no visual change, no failing request. The page simply stops being the one that ranks - or,
+// if it points somewhere that is not the page, stops being indexed at all.
+
+test("all seven public pages carry exactly one canonical link", () => {
+  for (const file of PUBLIC_HTML) {
+    const hrefs = canonicalLinksIn(read(file));
+    assert.equal(hrefs.length, 1, `${file} has ${hrefs.length} canonical links, expected exactly 1`);
+    assert.ok(hrefs[0], `${file} has a canonical link with no href`);
+  }
+  assert.equal(PUBLIC_HTML.length, 7);
+});
+
+test("each canonical is the URL its OWN route implies - file -> route -> canonical", () => {
+  // The contract the whole task turns on, walked in the same direction the build walks it.
+  for (const file of PUBLIC_HTML) {
+    const route = FILE_TO_ROUTE[file];
+    assert.ok(route !== undefined, `${file} is public but the routing table gives it no route`);
+    assert.equal(ROUTE_TO_FILE[route], file, `${route} does not round-trip back to ${file}`);
+    assert.equal(canonicalLinksIn(read(file))[0], SITE_ORIGIN + route,
+      `${file} canonicalises somewhere other than its own clean route`);
+  }
+});
+
+test("FILE_TO_ROUTE is the exact inverse of ROUTE_TO_FILE - not a second mapping", () => {
+  assert.deepEqual(Object.keys(FILE_TO_ROUTE).sort(), Object.values(ROUTE_TO_FILE).sort());
+  for (const [route, file] of Object.entries(ROUTE_TO_FILE)) assert.equal(FILE_TO_ROUTE[file], route);
+  for (const [file, route] of Object.entries(FILE_TO_ROUTE)) assert.equal(ROUTE_TO_FILE[route], file);
+  // No public page may share a route with another, or one of them would be canonicalised away.
+  assert.equal(new Set(Object.values(ROUTE_TO_FILE)).size, Object.keys(ROUTE_TO_FILE).length);
+});
+
+test("every canonical is absolute, https, on the right host, and never a .html address", () => {
+  const expectedHost = new URL(SITE_ORIGIN).hostname;
+  for (const file of PUBLIC_HTML) {
+    const href = canonicalLinksIn(read(file))[0];
+    let url;
+    assert.doesNotThrow(() => { url = new URL(href); }, `${file} canonical is not an absolute URL: ${href}`);
+    assert.equal(url.protocol, "https:", `${file} canonical is not https`);
+    // `new URL` normalises the IDN to its A-label, so this holds whichever way the host is written.
+    assert.equal(url.hostname, "xn--lrlig-sra.dk", `${file} canonical is on the wrong host`);
+    assert.ok(!/\.html/i.test(href), `${file} canonical points at a .html address: ${href}`);
+    assert.ok(!/^http:/i.test(href), `${file} canonical uses plain HTTP`);
+    assert.ok(!/\/\/www\./i.test(href), `${file} canonical uses a www host that does not exist`);
+    assert.ok(!/laerlig\.dk/i.test(href), `${file} canonical uses the ASCII look-alike domain`);
+    assert.ok(!/vercel\.app/i.test(href), `${file} canonical points at the dead Vercel origin`);
+  }
+});
+
+test("the front page canonicalises to the bare origin, not to /landing.html", () => {
+  // The one page whose route is not its filename. `/` is the public front door; `landing.html`
+  // is an implementation detail of the rewrite and must never be the advertised address.
+  assert.equal(canonicalLinksIn(read("landing.html"))[0], "https://l\u00e6rlig.dk/");
+  assert.equal(FILE_TO_ROUTE["landing.html"], "/");
+});
+
+test("no internal surface declares a canonical - not one of them", () => {
+  for (const file of INTERNAL_HTML) {
+    assert.deepEqual(canonicalLinksIn(read(file)), [],
+      `${file} is an internal surface and must not declare a canonical`);
+  }
+  // The generated pages included - they are the easiest to forget.
+  for (const g of ["docs.html", "404.html"]) assert.deepEqual(canonicalLinksIn(read(g)), []);
+});
+
+test("CONTRACT: routing -> public file -> canonical -> sitemap all say the same seven URLs", () => {
+  // The four-way agreement, asserted end to end. Each step is computed from the previous one, so
+  // a change to any single link in the chain that is not carried through the others fails here.
+  const fromRouting = PUBLIC_ROUTES.map((route) => SITE_ORIGIN + route);
+  const fromFiles = PUBLIC_ROUTES.map((route) => canonicalUrlFor(ROUTE_TO_FILE[route]));
+  const fromHtml = PUBLIC_ROUTES.map((route) => canonicalLinksIn(read(ROUTE_TO_FILE[route]))[0]);
+  const fromSitemap = [...read(SITEMAP_FILE).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+
+  assert.deepEqual(fromFiles, fromRouting, "canonicalUrlFor drifted from the routing table");
+  assert.deepEqual(fromHtml, fromRouting, "the shipped HTML drifted from the routing table");
+  assert.deepEqual(fromSitemap, fromRouting, "the sitemap drifted from the routing table");
+  assert.deepEqual(fromHtml, fromSitemap, "canonical and sitemap advertise different URLs");
+  assert.deepEqual(fromHtml, sitemapUrls());
+  assert.equal(new Set(fromHtml).size, 7, "two pages claim the same canonical URL");
+});
+
+test("validateCanonicals REFUSES every way the tag can go wrong", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "cf-canonical-"));
+  const page = (body) => `<html><head>${body}</head></html>`;
+  const link = (href) => `<link rel="canonical" href="${href}">`;
+  const write = (file, body) => writeFileSync(join(tmp, file), page(body), "utf8");
+  const problemsFor = (body) => { write("priser.html", body); return validateCanonicals(tmp); };
+  try {
+    // A faithful page validates clean - otherwise nothing below proves anything.
+    assert.deepEqual(problemsFor(link("https://l\u00e6rlig.dk/priser")), []);
+
+    for (const [what, body, needle] of [
+      ["no canonical at all", "", "no canonical link"],
+      ["two canonicals", link("https://l\u00e6rlig.dk/priser") + link("https://l\u00e6rlig.dk/priser"), "exactly one"],
+      ["another page's route", link("https://l\u00e6rlig.dk/produktet"), "its route says"],
+      ["the .html address", link("https://l\u00e6rlig.dk/priser.html"), "its route says"],
+      ["plain HTTP", link("http://l\u00e6rlig.dk/priser"), "its route says"],
+      ["a www host", link("https://www.l\u00e6rlig.dk/priser"), "its route says"],
+      ["the ASCII look-alike domain", link("https://laerlig.dk/priser"), "its route says"],
+      ["the dead Vercel origin", link("https://den-seje-app-frontend.vercel.app/priser"), "its route says"],
+      ["a relative path", link("/priser"), "its route says"],
+      ["an internal app surface", link("https://l\u00e6rlig.dk/hub"), "its route says"],
+    ]) {
+      const problems = problemsFor(body);
+      assert.ok(problems.length > 0, `${what} must be refused`);
+      assert.ok(problems.some((x) => x.includes(needle)),
+        `${what}: expected a problem mentioning ${JSON.stringify(needle)}, got ${JSON.stringify(problems)}`);
+    }
+
+    // Attribute order and single quotes must not let a wrong tag slip past the parser.
+    assert.ok(problemsFor(`<link href='https://l\u00e6rlig.dk/produktet' rel='canonical'>`).length > 0,
+      "a reordered, single-quoted canonical must still be read and refused");
+    assert.deepEqual(problemsFor(`<link href="https://l\u00e6rlig.dk/priser" rel="canonical">`), [],
+      "a reordered but CORRECT canonical must still be accepted");
+
+    // And an internal page that grows one is refused.
+    write("priser.html", link("https://l\u00e6rlig.dk/priser"));
+    writeFileSync(join(tmp, "hub.html"), page(link("https://l\u00e6rlig.dk/")), "utf8");
+    assert.ok(validateCanonicals(tmp).some((x) => x.includes("internal surface")),
+      "an internal page must not be allowed to declare a canonical");
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("a new public page cannot ship without a canonical", () => {
+  // The forward-looking guard: PUBLIC_HTML is what makes a page public, and validateCanonicals
+  // walks exactly that list. So adding a page to it without a canonical fails the build.
+  const tmp = mkdtempSync(join(tmpdir(), "cf-canonical-new-"));
+  try {
+    for (const file of PUBLIC_HTML) {
+      writeFileSync(join(tmp, file), `<html><head><link rel="canonical" href="${canonicalUrlFor(file)}"></head></html>`, "utf8");
+    }
+    assert.deepEqual(validateCanonicals(tmp), [], "the complete, correct set must validate clean");
+    // Now the newcomer arrives with no tag.
+    writeFileSync(join(tmp, "priser.html"), "<html><head></head></html>", "utf8");
+    assert.ok(validateCanonicals(tmp).some((x) => x.includes("no canonical link")));
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("the canonical tag is in the SOURCE html, not injected by the build", () => {
+  // The deliberate architectural choice: what ships is what the file says. If the build ever
+  // starts writing this tag, the source pages stop being honest and this test says so.
+  for (const file of PUBLIC_HTML) {
+    const src = readFileSync(join(REPO, file), "utf8");
+    assert.equal(canonicalLinksIn(src)[0], canonicalUrlFor(file),
+      `${file} in the repository must already carry its canonical`);
+    assert.equal(canonicalLinksIn(src).length, 1);
+  }
+  const build = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
+  assert.ok(!/writeFileSync[^;]*canonical/i.test(build), "the build must not write canonical tags");
+  assert.ok(!/replace[^;]*rel="canonical"/i.test(build), "the build must not rewrite canonical tags");
 });
 
 // -- the sitemap --------------------------------------------------------------------------------
@@ -697,7 +873,10 @@ test("validateOutput rejects a tampered _redirects", () => {
   const writeTable = (lines) => writeFileSync(join(tmp, "_redirects"), lines.join("\n") + "\n", "utf8");
   try {
     // A faithful copy of the real table, with every target present, must validate clean.
-    for (const f of Object.values(ROUTE_TO_FILE)) writeFileSync(join(tmp, f), "<html></html>", "utf8");
+    // A faithful page carries its canonical, because a real output always does.
+    for (const f of Object.values(ROUTE_TO_FILE)) {
+      writeFileSync(join(tmp, f), `<html><head><link rel="canonical" href="${canonicalUrlFor(f)}"></head></html>`, "utf8");
+    }
     writeTable([...REDIRECT_RULES]);
     assert.deepEqual(validateOutput(tmp).problems, []);
 

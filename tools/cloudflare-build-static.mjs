@@ -170,6 +170,30 @@ export const SITEMAP_XMLNS = "http://www.sitemaps.org/schemas/sitemap/0.9";
 // The absolute URL of every public route, in table order.
 export const sitemapUrls = () => PUBLIC_ROUTES.map((route) => SITE_ORIGIN + encodePath(route));
 
+// ── CANONICAL ADDRESSES ───────────────────────────────────────────────────────────────────────
+// THE SAME DOCUMENT ANSWERS AT TWO URLS. `/produktet` is an internal rewrite to
+// `produktet.html`, and `html_handling: "none"` also serves `/produktet.html` literally — both
+// return 200 with byte-identical bodies. That is deliberate (the routing contract keeps explicit
+// .html addresses working), but it leaves a crawler to guess which address to index.
+//
+// Each public page therefore carries a self-referencing <link rel="canonical"> naming its clean
+// route. The tag lives in the SOURCE HTML, next to the title and description it belongs with,
+// and the build does not write it — a page whose file on disk differs from the page that ships
+// would be worse than the problem being solved. What the build does is REFUSE a tag that
+// disagrees with the routing table, which is why `canonicalUrlFor` is the same expression
+// `sitemapUrls()` uses: canonical and sitemap cannot say different things about one page.
+//
+// The inverse of the routing table. Derived, so a page can never be canonicalised to a route
+// the Worker does not actually serve it at.
+export const FILE_TO_ROUTE = Object.freeze(Object.fromEntries(
+  Object.entries(ROUTE_TO_FILE).map(([route, file]) => [file, route]),
+));
+// The canonical URL for a public page, or null if the page has no public route at all.
+export function canonicalUrlFor(file) {
+  const route = FILE_TO_ROUTE[file];
+  return route === undefined ? null : SITE_ORIGIN + encodePath(route);
+}
+
 // NO <lastmod>, <changefreq> OR <priority>. The repository has no deterministic source for any of
 // them — a build timestamp is not a modification date, and a hand-picked priority is a guess
 // dressed up as data. A <url> carrying only <loc> is a complete, valid entry.
@@ -313,6 +337,77 @@ export function notFoundHtml() {
 </body>
 </html>
 `;
+}
+
+// ── validation of the canonical tags ────────────────────────────────────────────────
+// Four things have to keep agreeing: the routing table, the public page, its canonical tag and
+// the sitemap. This is where the third is held to the first. A canonical is a strong,
+// SILENT signal — a wrong one does not 404 or look broken; it just tells Google to index the
+// wrong address, or to drop the page entirely if it points somewhere that is not the page.
+//
+// Parsed with a regex rather than a DOM: the check runs inside a build that must work with no
+// dependencies installed (Cloudflare sets SKIP_DEPENDENCY_INSTALL=1), and Node has no HTML
+// parser. The regex is deliberately loose about ATTRIBUTE ORDER and quoting so it cannot be
+// fooled by a tag written differently from the seven that exist today — a <link> is treated as
+// canonical if it carries rel=canonical in any position, and its href is then read out.
+const LINK_TAG = /<link\b[^>]*>/gi;
+const isCanonicalLink = (tag) => /\brel\s*=\s*["']?canonical\b/i.test(tag);
+const hrefOf = (tag) => (tag.match(/\bhref\s*=\s*"([^"]*)"/i)
+  || tag.match(/\bhref\s*=\s*'([^']*)'/i) || [])[1];
+
+export function canonicalLinksIn(html) {
+  return (html.match(LINK_TAG) || []).filter(isCanonicalLink).map(hrefOf);
+}
+
+export function validateCanonicals(outDir) {
+  const problems = [];
+  const expectedHost = new URL(SITE_ORIGIN).hostname;
+
+  // Every PUBLIC page: exactly one canonical, and it must be the URL its route implies.
+  for (const file of PUBLIC_HTML) {
+    const abs = join(outDir, file);
+    if (!existsSync(abs)) continue;                     // absence is MANDATORY’s business
+    const hrefs = canonicalLinksIn(readFileSync(abs, "utf8"));
+    if (hrefs.length === 0) { problems.push(`${file} is public but carries no canonical link`); continue; }
+    if (hrefs.length > 1) {
+      problems.push(`${file} carries ${hrefs.length} canonical links; a page may declare exactly one`);
+      continue;
+    }
+    const href = hrefs[0];
+    const expected = canonicalUrlFor(file);
+    if (expected === null) { problems.push(`${file} is in PUBLIC_HTML but has no route in the routing table`); continue; }
+    if (href !== expected) {
+      problems.push(`${file} canonicalises to ${JSON.stringify(href)}, but its route says ${JSON.stringify(expected)}`);
+      continue;
+    }
+    // Belt and braces: the same properties asserted independently of the string compare, so a
+    // mistake in SITE_ORIGIN itself cannot pass just because both sides share it.
+    let url;
+    try { url = new URL(href); } catch { problems.push(`${file} canonical is not an absolute URL: ${href}`); continue; }
+    if (url.protocol !== "https:") problems.push(`${file} canonical does not use https: ${href}`);
+    if (url.hostname !== expectedHost) problems.push(`${file} canonical is not on ${expectedHost}: ${href}`);
+    if (/\.html/i.test(href)) problems.push(`${file} canonical points at a .html address: ${href}`);
+  }
+
+  // Every INTERNAL page: none at all. They are noindex; a canonical here would either be
+  // meaningless or — worse — point a search engine from an app surface at a marketing page.
+  for (const file of INTERNAL_HTML) {
+    const abs = join(outDir, file);
+    if (!existsSync(abs)) continue;
+    const hrefs = canonicalLinksIn(readFileSync(abs, "utf8"));
+    if (hrefs.length > 0) {
+      problems.push(`${file} is an internal surface and must not declare a canonical: ${hrefs.join(", ")}`);
+    }
+  }
+
+  // The fourth agreement: the canonical SET and the sitemap must be the same seven URLs.
+  const canonicals = PUBLIC_ROUTES.map((route) => canonicalUrlFor(ROUTE_TO_FILE[route]));
+  const sitemap = sitemapUrls();
+  if (JSON.stringify(canonicals) !== JSON.stringify(sitemap)) {
+    problems.push("the canonical URLs and the sitemap URLs differ: " +
+      `${JSON.stringify(canonicals)} vs ${JSON.stringify(sitemap)}`);
+  }
+  return problems;
 }
 
 // ── validation of the generated sitemap ───────────────────────────────────────────────────────
@@ -500,6 +595,7 @@ export function validateOutput(outDir, { strings = FORBIDDEN_STRINGS, exceptions
   // The sitemap is checked when it is present, exactly as _redirects is; its EXISTENCE is enforced
   // by MANDATORY in build(), so a build that fails to emit it stops before it reaches here.
   if (existsSync(join(outDir, SITEMAP_FILE))) problems.push(...validateSitemap(outDir));
+  problems.push(...validateCanonicals(outDir));
 
   const docs = join(outDir, "docs.html");
   if (existsSync(docs)) {

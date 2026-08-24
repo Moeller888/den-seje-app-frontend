@@ -129,6 +129,72 @@ test("every clean route and its .html file render the same document", async ({ r
   }
 });
 
+// -- the canonical contract --------------------------------------------------------------------
+// Every public page answers at TWO addresses: its clean route and its .html file, with identical
+// bodies (proved by the test above). The canonical tag is the only thing that tells a crawler
+// which of the two is the page. Read out of the REAL DOM here rather than by regex, so a tag the
+// browser refuses to parse cannot pass a test that a string search would let through.
+//
+// SITE_ORIGIN is restated once, deliberately: this spec exists to check the pages independently of
+// the build script, and the routing table it does import is already asserted literally above.
+const CANONICAL_ORIGIN = "https://l\u00e6rlig.dk";
+
+test("every public page declares exactly one canonical, naming its own clean route", async ({ page }) => {
+  for (const [route] of ROUTES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const links = page.locator('link[rel="canonical"]');
+    await expect(links, `${route} must declare exactly one canonical`).toHaveCount(1);
+    expect(await links.getAttribute("href"), `${route} canonicalises somewhere else`)
+      .toBe(CANONICAL_ORIGIN + route);
+  }
+});
+
+test("the .html twin declares the SAME canonical as its clean route", async ({ page }) => {
+  // The point of the whole exercise: arriving at /produktet.html must still be told that the
+  // page is /produktet. A self-referencing .html canonical here would confirm the duplicate
+  // instead of resolving it.
+  for (const [route, file] of ROUTES) {
+    await page.goto(baseUrl + file, { waitUntil: "load" });
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+    const href = await page.locator('link[rel="canonical"]').getAttribute("href");
+    expect(href, `${file} must point at ${route}, not at itself`).toBe(CANONICAL_ORIGIN + route);
+  }
+});
+
+test("the browser RESOLVES every canonical to https on the real IDN host, with no .html", async ({ page }) => {
+  for (const [route] of ROUTES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    // `.href` on the DOM node is the RESOLVED URL - the browser applies the URL Standard, which
+    // is exactly what a crawler does. This is the proof that the human-readable IDN spelling
+    // addresses the same host as the punycode A-label, rather than an assumption that it does.
+    const resolved = await page.locator('link[rel="canonical"]')
+      .evaluate((el) => (el as HTMLLinkElement).href);
+    const u = new URL(resolved);
+    expect(u.protocol, `${route} canonical is not https`).toBe("https:");
+    expect(u.hostname, `${route} canonical is on the wrong host`).toBe("xn--lrlig-sra.dk");
+    expect(u.pathname.endsWith(".html"), `${route} canonical is a .html address`).toBe(false);
+    expect(u.search + u.hash, `${route} canonical carries a query or fragment`).toBe("");
+  }
+});
+
+test("the canonical set is exactly the routing table, with no page claiming another's URL", async ({ page }) => {
+  const seen: string[] = [];
+  for (const [route] of ROUTES) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    seen.push((await page.locator('link[rel="canonical"]').getAttribute("href")) ?? "");
+  }
+  expect(seen).toEqual([...ROUTES.keys()].map((r) => CANONICAL_ORIGIN + r));
+  expect(new Set(seen).size, "two pages claim the same canonical URL").toBe(seen.length);
+});
+
+test("no internal surface declares a canonical", async ({ page }) => {
+  for (const p of ["/index.html", "/login.html", "/hub.html", "/teacher.html", "/admin.html"]) {
+    await page.goto(baseUrl + p, { waitUntil: "domcontentloaded" });
+    await expect(page.locator('link[rel="canonical"]'),
+      `${p} is an internal surface and must not declare a canonical`).toHaveCount(0);
+  }
+});
+
 test("the front page is short: hero, overview, closing CTA — and none of the moved sections", async ({ page }) => {
   await openLanding(page);
   // The hero and nothing else. The front page is the way in, not the whole sales page: the
