@@ -8,8 +8,10 @@
 // UPDATE cannot address a row outside the pinned set, and that the three consumers know the value.
 //
 // WHAT THEY ARE NOT: a database run. Docker is not installed on this machine, so `supabase db reset`
-// cannot start a local Postgres and the SQL has NOT been executed anywhere. Runtime verification of
-// this migration is OUTSTANDING and is recorded as such in the PR and in D-107.
+// cannot start a local Postgres. The migration IS executed for real, against PostgreSQL compiled to
+// WebAssembly, by the sibling suite avatar-jobs-cancelled-migration-run.test.mjs — that file proves
+// what the SQL DOES; this one proves what it SAYS. Neither is a production run, which is still
+// outstanding and recorded as such in the PR and in D-107.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -90,9 +92,37 @@ test("cancelled does NOT require a claimed_at — a queued job can be cancelled 
 
 // ── The target set is pinned, bounded and unreachable from outside ───────────────────────────
 
-test("the ALTERs come FIRST, so ACCESS EXCLUSIVE is held before the set is pinned", () => {
-  // The lock the ALTERs take is what stops the pg_cron sweeper (active, every 5 min) mutating the
-  // table between the snapshot and the UPDATE. If the pin ran first, that window would be real.
+test("the search_path is pinned, so no schema can shadow a catalog function", () => {
+  // The migration runs as a highly privileged role and calls coalesce/now/jsonb_build_object/count
+  // unqualified. Without this, anything ahead of pg_catalog on the path could shadow one of them.
+  assert.match(SQL, /set local search_path = pg_catalog, public, pg_temp;/,
+    "no explicit search_path, so unqualified function calls are hijackable");
+  assert.ok(SQL.indexOf("set local search_path") < SQL.indexOf("alter table"),
+    "the search_path is pinned after DDL has already run");
+  assert.ok(/set local /.test(SQL) && !/^\s*set search_path/m.test(SQL),
+    "the search_path is set without LOCAL, so it leaks past COMMIT into the calling session");
+});
+
+test("the snapshot is addressed as pg_temp, so a public table cannot shadow it", () => {
+  assert.ok(!/from _d107_targets\b/.test(SQL), "the snapshot is read unqualified");
+  assert.ok(!/from _d107_targets t\b/.test(SQL), "the snapshot is joined unqualified");
+  assert.match(SQL, /from pg_temp\._d107_targets/, "the precondition does not qualify the snapshot");
+  assert.match(SQL, /select t\.id from pg_temp\._d107_targets t/, "the UPDATE does not qualify the snapshot");
+});
+
+test("the table is locked EXPLICITLY and first, not as a side effect of the ALTERs", () => {
+  assert.match(SQL, /lock table public\.avatar_generation_jobs in access exclusive mode;/,
+    "the exclusion relies entirely on ALTER TABLE's implicit lock");
+  const lock = SQL.indexOf("lock table public.avatar_generation_jobs");
+  assert.ok(lock < SQL.indexOf("alter table"), "the lock is taken after DDL has already started");
+  assert.ok(lock < SQL.indexOf("create temporary table"), "the set is pinned before the lock is held");
+  assert.ok(SQL.indexOf("begin;") < lock, "the lock is taken outside the transaction");
+});
+
+test("the DDL also precedes the pin, so the exclusion holds even without section 0", () => {
+  // Defence in depth: section 0 takes the lock explicitly, but the ALTERs would take the same one.
+  // Both must sit ahead of the snapshot — if the pin ever moved above them, the window the pg_cron
+  // sweeper (active, every 5 min) could slip through would reopen.
   const lastAlter = SQL.lastIndexOf("alter table public.avatar_generation_jobs");
   const pin = SQL.indexOf("create temporary table _d107_targets");
   assert.ok(lastAlter < pin, "the target set is pinned before the table is locked");
@@ -123,7 +153,7 @@ test("a job created AFTER the cutoff cannot be reached, because the UPDATE has n
   // This is the structural form of "new pending/failed jobs are not touched": the UPDATE addresses
   // ids from the pinned snapshot and nothing else. Even if a job fails mid-deploy, it is not in
   // _d107_targets and there is no clause that could pick it up.
-  assert.match(UPDATE, /where j\.id in \(select t\.id from _d107_targets t\)/,
+  assert.match(UPDATE, /where j\.id in \(select t\.id from pg_temp\._d107_targets t\)/,
     "the UPDATE re-evaluates a predicate instead of using the pinned ids");
   assert.ok(!/where[\s\S]*status\s+in\s*\(/.test(UPDATE),
     "the UPDATE carries its own status predicate, which can match rows outside the snapshot");
@@ -175,11 +205,11 @@ test("the distribution is checked per status, not only in total", () => {
 });
 
 test("asset and file references are asserted, and the counts come from the pinned set", () => {
-  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("from _d107_targets"));
+  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("from pg_temp._d107_targets"));
   assert.match(counted, /filter \(where copyright_review_result = 'hard_fail'\)/);
   assert.match(counted, /filter \(where resulting_asset_id is not null\)/);
   assert.match(counted, /filter \(where generated_files is not null\)/);
-  assert.match(DO_BLOCK, /from _d107_targets/,
+  assert.match(DO_BLOCK, /from pg_temp\._d107_targets/,
     "the preconditions count the live table instead of the pinned snapshot");
 });
 

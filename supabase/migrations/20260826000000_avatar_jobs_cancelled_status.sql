@@ -28,12 +28,30 @@
 
 begin;
 
+-- ── 0. Resolution and locking, pinned before anything else runs ────────────
+-- SEARCH PATH. This migration runs as a highly privileged role and calls
+-- unqualified functions (coalesce, now, jsonb_build_object, count). Without an
+-- explicit search_path, anything earlier on the path than pg_catalog could
+-- shadow one of them and run as that role. pg_catalog first removes that;
+-- pg_temp is last, so a temp object can never shadow a public one. SET LOCAL,
+-- so it reverts at COMMIT and cannot leak into the session that ran it.
+set local search_path = pg_catalog, public, pg_temp;
+
+-- LOCK. The ALTER TABLEs below would take ACCESS EXCLUSIVE anyway, but then the
+-- guarantee would depend on statement order — move the snapshot above them and
+-- the window silently reopens. Taking it explicitly, first, makes the exclusion
+-- a stated precondition of the whole transaction rather than a side effect.
+-- It matters: pg_cron job 'sweep-stale-generation-jobs' is active every 5
+-- minutes and moves stale 'generating' jobs into 'failed_retryable', which is
+-- one of the statuses backfilled below.
+lock table public.avatar_generation_jobs in access exclusive mode;
+
 -- ── 1. The status allowlist ────────────────────────────────────────────────
--- This is the first ALTER TABLE, so it takes ACCESS EXCLUSIVE on the table and
--- holds it until COMMIT. Everything below therefore runs with every other
--- reader and writer — the cron sweeper, claim_generation_job,
--- recover_stuck_job, fail_generation_job, the Edge Function, the admin page —
--- blocked at the door. See the concurrency note above section 4.
+-- The lock is already held from section 0, so every other reader and writer —
+-- the cron sweeper, claim_generation_job, recover_stuck_job,
+-- fail_generation_job, the Edge Function, the admin page — is blocked at the
+-- door for the rest of this transaction. See the concurrency note above
+-- section 4.
 alter table public.avatar_generation_jobs
   drop constraint generation_jobs_status_valid;
 
@@ -89,8 +107,9 @@ alter table public.avatar_generation_jobs
 -- section 5 and the UPDATE in section 6. Three things close it, and the first
 -- alone is sufficient:
 --
---   (a) the ALTER TABLEs above hold ACCESS EXCLUSIVE until COMMIT, so no other
---       session can read or write this table for the rest of the transaction;
+--   (a) section 0 took ACCESS EXCLUSIVE explicitly and holds it until COMMIT,
+--       so no other session can read or write this table for the rest of the
+--       transaction;
 --   (b) the target ids are MATERIALISED here, once. Sections 5 and 6 both
 --       address this table by id, so they cannot diverge even in principle —
 --       the predicate is never evaluated twice;
@@ -134,7 +153,7 @@ begin
          count(*) filter (where resulting_asset_id is not null),
          count(*) filter (where generated_files is not null)
     into v_total, v_perm, v_retry, v_pending, v_hard_fail, v_asset, v_gen_files
-    from _d107_targets;
+    from pg_temp._d107_targets;
 
   -- The backlog this migration was reviewed against, to the row. Any deviation
   -- means the database is not in the state the review assumed, and the only
@@ -194,7 +213,7 @@ begin
          -- have one (failed_permanent) keep their original, which is truthful.
          completed_at   = coalesce(j.completed_at, now()),
          status         = 'cancelled'
-   where j.id in (select t.id from _d107_targets t);
+   where j.id in (select t.id from pg_temp._d107_targets t);
 
   get diagnostics v_updated = row_count;
 
