@@ -156,6 +156,10 @@ function statusBadge(status) {
     failed_retryable:      ["Failed (retryable)", "#e65100"],
     failed_permanent:      ["Failed (permanent)", "#b71c1c"],
     pending_manual_review: ["Awaiting review",    "#6a1b9a"],
+    // Terminal and administrative: an operator closed this job, the pipeline
+    // did not. Muted on purpose — it is history, not something to act on, and
+    // it deliberately gets no Retry or Process button below.
+    cancelled:             ["Cancelled",          "#78909c"],
   };
   const [label, bg] = map[status] ?? [status, "#999999"];
   return `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:bold;color:#fff;background:${bg}">${label}</span>`;
