@@ -92,10 +92,11 @@ test("cancelled does NOT require a claimed_at — a queued job can be cancelled 
 
 // ── The target set is pinned, bounded and unreachable from outside ───────────────────────────
 
-test("the search_path is pinned, so no schema can shadow a catalog function", () => {
-  // The migration runs as a highly privileged role and calls coalesce/now/jsonb_build_object/count
-  // unqualified. Without this, anything ahead of pg_catalog on the path could shadow one of them.
-  assert.match(SQL, /set local search_path = pg_catalog, public, pg_temp;/,
+test("the search_path is pinned to pg_catalog and pg_temp ONLY", () => {
+  // The migration runs as a highly privileged role and calls coalesce/now/jsonb_build_object/count/
+  // sha256/convert_to/encode/string_agg unqualified — every one of them in pg_catalog. Anything
+  // ahead of pg_catalog could shadow one of them and run as that role.
+  assert.match(SQL, /set local search_path = pg_catalog, pg_temp;/,
     "no explicit search_path, so unqualified function calls are hijackable");
   assert.ok(SQL.indexOf("set local search_path") < SQL.indexOf("alter table"),
     "the search_path is pinned after DDL has already run");
@@ -103,11 +104,32 @@ test("the search_path is pinned, so no schema can shadow a catalog function", ()
     "the search_path is set without LOCAL, so it leaks past COMMIT into the calling session");
 });
 
-test("the snapshot is addressed as pg_temp, so a public table cannot shadow it", () => {
-  assert.ok(!/from _d107_targets\b/.test(SQL), "the snapshot is read unqualified");
-  assert.ok(!/from _d107_targets t\b/.test(SQL), "the snapshot is joined unqualified");
-  assert.match(SQL, /from pg_temp\._d107_targets/, "the precondition does not qualify the snapshot");
-  assert.match(SQL, /select t\.id from pg_temp\._d107_targets t/, "the UPDATE does not qualify the snapshot");
+test("'public' is NOT on the search_path, and reintroducing it fails here", () => {
+  // Nothing in this migration needs it: every relation is schema-qualified. Leaving it off means an
+  // object in public cannot shadow anything the migration resolves.
+  const stmt = SQL.slice(SQL.indexOf("set local search_path"),
+                         SQL.indexOf(";", SQL.indexOf("set local search_path")));
+  assert.ok(!/\bpublic\b/.test(stmt),
+    "'public' is back on the search_path — every relation here is qualified, so it is not needed");
+});
+
+test("every relation is schema-qualified, so the short search_path cannot break resolution", () => {
+  // Comments mention bare names freely; only executable SQL matters.
+  const code = SQL.split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
+  const refs = [...code.matchAll(/\b(?:from|join|update|into)\s+([a-z_][a-z0-9_.]*)/gi)]
+    .map((m) => m[1])
+    .filter((n) => !/^v_[a-z_]+$/.test(n));            // plpgsql SELECT ... INTO targets
+  for (const r of refs) {
+    assert.ok(/^(public|pg_temp|pg_catalog)\./.test(r),
+      `relation '${r}' is unqualified; with search_path = pg_catalog, pg_temp it may not resolve`);
+  }
+  // the snapshot specifically, in both places it is read
+  assert.ok(!/\bfrom _d107_targets\b/.test(code), "the snapshot is read unqualified");
+  assert.match(code, /from pg_temp\._d107_targets/, "the precondition does not qualify the snapshot");
+  assert.match(code, /select t\.id from pg_temp\._d107_targets t/, "the UPDATE does not qualify the snapshot");
+  // and the production table
+  assert.ok(!/\b(?:from|update|into)\s+avatar_generation_jobs\b/.test(code),
+    "the production table is referenced without its schema");
 });
 
 test("the table is locked EXPLICITLY and first, not as a side effect of the ALTERs", () => {
@@ -198,14 +220,14 @@ test("the distribution is checked per status, not only in total", () => {
   for (const v of ["v_perm", "v_retry", "v_pending"]) {
     assert.ok(DO_BLOCK.includes(`if ${v} <> `), `${v} is counted but never asserted`);
   }
-  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("into"));
+  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("into v_total"));
   assert.match(counted, /filter \(where status = 'failed_permanent'\)/);
   assert.match(counted, /filter \(where status = 'failed_retryable'\)/);
   assert.match(counted, /filter \(where status = 'pending'\)/);
 });
 
 test("asset and file references are asserted, and the counts come from the pinned set", () => {
-  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("from pg_temp._d107_targets"));
+  const counted = DO_BLOCK.slice(DO_BLOCK.indexOf("select count(*)"), DO_BLOCK.indexOf("into v_total"));
   assert.match(counted, /filter \(where copyright_review_result = 'hard_fail'\)/);
   assert.match(counted, /filter \(where resulting_asset_id is not null\)/);
   assert.match(counted, /filter \(where generated_files is not null\)/);
@@ -220,6 +242,50 @@ test("the actual affected row count is checked, and must be exactly 45", () => {
     "the affected row count is measured but not asserted");
   assert.ok(DO_BLOCK.indexOf("get diagnostics") < DO_BLOCK.indexOf("D107_ROWCOUNT"),
     "the row count is asserted before it is read");
+});
+
+test("the target set is pinned by IDENTITY, not only by shape", () => {
+  // Counts describe a shape. Any other 45 rows with the same 21/22/2 split, the same 19 staging-file
+  // references and no hard_fail satisfies every count guard. Only a hash over the ids does not.
+  assert.match(DO_BLOCK, /v_expected_fp constant text := '[0-9a-f]{64}';/,
+    "no expected fingerprint, so the reviewed rows are identified only by their shape");
+  assert.match(DO_BLOCK, /raise exception\s*\n?\s*'D107_PRECONDITION_TARGET_FINGERPRINT/,
+    "the fingerprint is computed but never enforced");
+});
+
+test("the fingerprint is computed the one deterministic way", () => {
+  const fp = DO_BLOCK.slice(DO_BLOCK.indexOf("select encode("), DO_BLOCK.indexOf("into v_fingerprint"));
+  assert.match(fp, /sha256\(/, "not SHA-256");
+  assert.match(fp, /string_agg\(t\.id::text, ',' order by t\.id\)/,
+    "the id list is unordered, differently ordered, or differently separated");
+  assert.match(fp, /convert_to\(/, "the encoding is not pinned, so the hashed bytes depend on the session");
+  assert.match(fp, /'hex'/, "the digest is not rendered as hex");
+  // ordering by the text rendering would follow the database collation
+  assert.ok(!/order by t\.id::text/.test(fp),
+    "ordering by ::text is collation-dependent and can reorder the hyphenated form");
+});
+
+test("the fingerprint is read from the pinned snapshot, i.e. after the lock", () => {
+  const fp = DO_BLOCK.slice(DO_BLOCK.indexOf("select encode("), DO_BLOCK.indexOf("if v_fingerprint"));
+  assert.match(fp, /from pg_temp\._d107_targets t/,
+    "the fingerprint is computed against the live table, not the snapshot the UPDATE will use");
+  assert.ok(SQL.indexOf("lock table") < SQL.indexOf("select encode("),
+    "the fingerprint is computed before the table is locked");
+  assert.ok(DO_BLOCK.indexOf("if v_fingerprint") < DO_BLOCK.indexOf("update public.avatar_generation_jobs"),
+    "the identity gate runs after the UPDATE it is supposed to guard");
+});
+
+test("the fingerprint comparison fails CLOSED on a null digest", () => {
+  // An empty snapshot makes string_agg NULL, hence the digest NULL. `NULL <> text` is NULL, which
+  // would not fire the branch — a guard that fails open when its input is missing.
+  assert.match(DO_BLOCK, /if v_fingerprint is distinct from v_expected_fp then/,
+    "the fingerprint is compared with <>, which does not fire when the digest is NULL");
+});
+
+test("no raw production uuid is committed anywhere in the migration", () => {
+  // The hash exists precisely so the 45 internal record ids stay out of this repository.
+  const uuids = SQL.match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi) ?? [];
+  assert.deepEqual(uuids, [], `raw uuid(s) leaked into the migration: ${uuids.join(", ")}`);
 });
 
 test("the whole thing is one transaction, so any raise rolls back the constraints too", () => {

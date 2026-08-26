@@ -8,7 +8,7 @@
 -- cannot simply be "set to cancelled" — the value is rejected by the status
 -- allowlist, and two consistency constraints disagree about what the timestamp
 -- columns must look like. Adding a state is a design change, so it is recorded
--- as one. See docs/project-state.md D-107.
+-- as one. See docs/project-state.md D-107 and D-108.
 --
 -- WHAT 'cancelled' MEANS
 -- An operator closed this job. It will never run again. It is distinct from
@@ -24,34 +24,44 @@
 -- production) and moves stale 'generating' jobs into 'failed_retryable' — the
 -- exact status this backfill targets. A job that fails the day this deploys
 -- must not be swept up in a cleanup of a 2026-05 backlog.
+--
+-- WHY COUNTS ARE NOT ENOUGH (D-108)
+-- The counts below describe the SHAPE of the backlog, not WHICH ROWS it is.
+-- Any other 45 rows with the same 21/22/2 split, the same 19 staging-file
+-- references and no hard_fail would satisfy every one of them. The reviewed
+-- set is therefore also pinned by IDENTITY: a SHA-256 over its sorted ids,
+-- computed while the table is locked. The hash is the only thing stored here —
+-- the 45 raw uuids are deliberately NOT committed to this repository.
 -- ============================================================================
 
 begin;
 
 -- ── 0. Resolution and locking, pinned before anything else runs ────────────
 -- SEARCH PATH. This migration runs as a highly privileged role and calls
--- unqualified functions (coalesce, now, jsonb_build_object, count). Without an
--- explicit search_path, anything earlier on the path than pg_catalog could
--- shadow one of them and run as that role. pg_catalog first removes that;
--- pg_temp is last, so a temp object can never shadow a public one. SET LOCAL,
--- so it reverts at COMMIT and cannot leak into the session that ran it.
-set local search_path = pg_catalog, public, pg_temp;
+-- unqualified functions (coalesce, now, jsonb_build_object, count, sha256,
+-- convert_to, encode, string_agg), every one of which lives in pg_catalog.
+-- 'public' is deliberately ABSENT: every relation here is fully qualified
+-- (public.avatar_generation_jobs, pg_temp._d107_targets), so nothing needs it,
+-- and leaving it out means an object in public cannot shadow anything this
+-- migration resolves. Only 'postgres' and 'supabase_admin' hold CREATE on
+-- public — measured read-only, 2026-08-26 — so this is defence in depth rather
+-- than a response to a known hostile object. SET LOCAL, so it reverts at COMMIT
+-- and cannot leak into the session that ran it.
+set local search_path = pg_catalog, pg_temp;
 
 -- LOCK. The ALTER TABLEs below would take ACCESS EXCLUSIVE anyway, but then the
 -- guarantee would depend on statement order — move the snapshot above them and
 -- the window silently reopens. Taking it explicitly, first, makes the exclusion
 -- a stated precondition of the whole transaction rather than a side effect.
--- It matters: pg_cron job 'sweep-stale-generation-jobs' is active every 5
--- minutes and moves stale 'generating' jobs into 'failed_retryable', which is
--- one of the statuses backfilled below.
+-- Everything that follows — the snapshot, the fingerprint, the counts and the
+-- UPDATE — therefore observes one single, frozen version of this table.
 lock table public.avatar_generation_jobs in access exclusive mode;
 
 -- ── 1. The status allowlist ────────────────────────────────────────────────
 -- The lock is already held from section 0, so every other reader and writer —
 -- the cron sweeper, claim_generation_job, recover_stuck_job,
 -- fail_generation_job, the Edge Function, the admin page — is blocked at the
--- door for the rest of this transaction. See the concurrency note above
--- section 4.
+-- door for the rest of this transaction.
 alter table public.avatar_generation_jobs
   drop constraint generation_jobs_status_valid;
 
@@ -136,14 +146,38 @@ select id, status, generated_files, copyright_review_result, resulting_asset_id
 -- ── 5 & 6. Fail-closed preconditions, then the update ──────────────────────
 do $$
 declare
-  v_total      int;
-  v_perm       int;
-  v_retry      int;
-  v_pending    int;
-  v_hard_fail  int;
-  v_asset      int;
-  v_gen_files  int;
-  v_updated    int;
+  v_total       int;
+  v_perm        int;
+  v_retry       int;
+  v_pending     int;
+  v_hard_fail   int;
+  v_asset       int;
+  v_gen_files   int;
+  v_updated     int;
+  v_fingerprint text;
+
+  -- IDENTITY OF THE REVIEWED SET, as a SHA-256 over its sorted ids.
+  --
+  -- HOW IT IS BUILT, and why each choice is forced:
+  --   - the ids come from pg_temp._d107_targets, i.e. the snapshot taken under
+  --     the lock, so the hash describes exactly the rows the UPDATE will touch;
+  --   - ORDER BY id uses uuid's own btree comparison, which is a byte compare
+  --     of the 16-byte value. It is locale-independent and stable across
+  --     versions. Ordering by id::text was rejected: text ordering follows the
+  --     database collation, and a collation that ignores punctuation would
+  --     reorder the hyphenated form;
+  --   - id::text renders the canonical lowercase hyphenated form, so the input
+  --     is fixed-width per id;
+  --   - ',' separates them, so no two different sets can concatenate into the
+  --     same string;
+  --   - convert_to(..., 'UTF8') pins the encoding, so the bytes hashed do not
+  --     depend on the client or server encoding.
+  --
+  -- Computed against production read-only on 2026-08-26 over exactly 45 ids
+  -- (input length 1664 = 45*36 + 44 separators, 45 distinct). The 45 raw uuids
+  -- are NOT stored here, or anywhere else in this repository — the hash is the
+  -- whole point: it proves identity without publishing internal record ids.
+  v_expected_fp constant text := '391949a3d9c5fc522faf1b0fbf2ae82403818423b29efac02bf631e170d4ff0c';
 begin
   select count(*),
          count(*) filter (where status = 'failed_permanent'),
@@ -158,6 +192,11 @@ begin
   -- The backlog this migration was reviewed against, to the row. Any deviation
   -- means the database is not in the state the review assumed, and the only
   -- safe response is to abort the whole transaction — constraints included.
+  --
+  -- These run BEFORE the fingerprint on purpose: they are kept as defence in
+  -- depth, and when the backlog has genuinely changed size or shape they name
+  -- WHAT changed. The fingerprint below is the gate that cannot be satisfied by
+  -- a coincidence, but on its own it can only say "not the reviewed set".
   if v_total <> 45 then
     raise exception 'D107_PRECONDITION_TOTAL: expected exactly 45 target jobs, found %', v_total;
   end if;
@@ -171,10 +210,11 @@ begin
     raise exception 'D107_PRECONDITION_PENDING: expected exactly 2, found %', v_pending;
   end if;
 
-  -- A hard_fail verdict is terminal and immutable (D-042-era trigger
-  -- enforce_copyright_result_transition), and generation_jobs_hard_fail_requires
-  -- _failed_permanent pins such a row to failed_permanent. Cancelling one would
-  -- be rejected downstream; refuse up front and say why.
+  -- A hard_fail verdict is terminal and immutable (the
+  -- enforce_copyright_result_transition trigger), and
+  -- generation_jobs_hard_fail_requires_failed_permanent pins such a row to
+  -- failed_permanent. Cancelling one would be rejected downstream; refuse up
+  -- front and say why.
   if v_hard_fail <> 0 then
     raise exception 'D107_PRECONDITION_HARD_FAIL: % target(s) carry a hard_fail copyright verdict', v_hard_fail;
   end if;
@@ -196,12 +236,34 @@ begin
     raise exception 'D107_PRECONDITION_GENERATED_FILES: expected exactly 19 targets with staging file references, found %', v_gen_files;
   end if;
 
+  -- ── THE IDENTITY GATE ────────────────────────────────────────────────────
+  -- Everything above describes a SHAPE. Swap one reviewed job for a different
+  -- one with the same status and the same absence of assets and files, and every
+  -- count above still passes. This is the check that does not.
+  select encode(
+           sha256(
+             convert_to(string_agg(t.id::text, ',' order by t.id), 'UTF8')),
+           'hex')
+    into v_fingerprint
+    from pg_temp._d107_targets t;
+
+  -- IS DISTINCT FROM, not <>: an empty snapshot makes string_agg return NULL and
+  -- the whole expression NULL, and `NULL <> text` is NULL, which would NOT fire
+  -- the branch. The count guards above already reject an empty set, but a guard
+  -- that fails open when its input is missing is the wrong shape for this job.
+  if v_fingerprint is distinct from v_expected_fp then
+    raise exception
+      'D107_PRECONDITION_TARGET_FINGERPRINT: the target set is not the reviewed one — expected %, computed %',
+      v_expected_fp, coalesce(v_fingerprint, '<null: empty target set>');
+  end if;
+
   -- ── The update ───────────────────────────────────────────────────────────
-  -- By id, against the set pinned in section 4. The prior status is captured
-  -- into failure_details BEFORE it is overwritten: it lives ONLY in the status
-  -- column — avatar_generation_events records stage/outcome, not job status —
-  -- so losing it here would lose it permanently. Merged with || so nothing
-  -- already in failure_details is discarded.
+  -- By id, against the set pinned in section 4 and just proven to be the
+  -- reviewed one. The prior status is captured into failure_details BEFORE it
+  -- is overwritten: it lives ONLY in the status column — avatar_generation_events
+  -- records stage/outcome, not job status — so losing it here would lose it
+  -- permanently. Merged with || so nothing already in failure_details is
+  -- discarded.
   update public.avatar_generation_jobs j
      set failure_details = coalesce(j.failure_details, '{}'::jsonb)
                            || jsonb_build_object(
@@ -217,9 +279,9 @@ begin
 
   get diagnostics v_updated = row_count;
 
-  -- The set was pinned and the table is locked, so this cannot legitimately
-  -- differ. Assert it anyway: if it ever does, something is wrong that this
-  -- migration does not understand, and it must not commit.
+  -- The set was pinned, fingerprinted and the table is locked, so this cannot
+  -- legitimately differ. Assert it anyway: if it ever does, something is wrong
+  -- that this migration does not understand, and it must not commit.
   if v_updated <> 45 then
     raise exception 'D107_ROWCOUNT: expected to cancel exactly 45 jobs, updated %', v_updated;
   end if;
