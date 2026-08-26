@@ -246,7 +246,7 @@ Run after every test group.
 
 ### Field correctness
 
-- [ ] `completed_at` non-null **only** for `status IN ('complete', 'failed_permanent')`
+- [ ] `completed_at` non-null **only** for `status IN ('complete', 'failed_permanent', 'cancelled')` (D-107 added `cancelled` as a third terminal state; it is administrative and the pipeline never produces it, so a batch run should still see none)
 - [ ] `retry_count` never exceeds 3
 - [ ] `resulting_asset_id` equals `target_asset_id` on every `complete` job
 - [ ] `resulting_asset_id` NULL on every non-`complete` job
