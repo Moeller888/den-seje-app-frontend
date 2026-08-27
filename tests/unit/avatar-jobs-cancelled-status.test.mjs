@@ -10,8 +10,8 @@
 // WHAT THEY ARE NOT: a database run. Docker is not installed on this machine, so `supabase db reset`
 // cannot start a local Postgres. The migration IS executed for real, against PostgreSQL compiled to
 // WebAssembly, by the sibling suite avatar-jobs-cancelled-migration-run.test.mjs — that file proves
-// what the SQL DOES; this one proves what it SAYS. Neither is a production run, which is still
-// outstanding and recorded as such in the PR and in D-107.
+// what the SQL DOES; this one proves what it SAYS. Neither is a production run — that happened on
+// 2026-08-27 and is recorded in D-109.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

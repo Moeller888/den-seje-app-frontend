@@ -31,7 +31,9 @@
 //   - The fixture replicates the table and all 24 CHECK constraints, not RLS, grants, pg_cron, the
 //     events FK or the copyright trigger. The migration cannot exercise those: it writes no
 //     events, deletes nothing, and never touches copyright_review_result.
-//   - Passing here is not permission to deploy. The production run is still outstanding.
+//   - Passing here was never permission to deploy. The migration was applied to production on
+//     2026-08-27 by a separate owner decision (D-109); these tests remain the regression guard
+//     for the SQL, not a record of that run.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
