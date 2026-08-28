@@ -344,6 +344,48 @@ Branches are deliberately **absent** from this table when no decision entry cite
 the bookkeeping itself: `docs/deleted-branch-sha-reference` (`6a51e52`, merge `f275bfd`, PR #136),
 `docs/d084-branch-sha-row` (`e98798e`, merge `622493d`, PR #138) and the branch that added this row.
 
+
+### Deleted branches — tip-commit reference (2026-08-28)
+
+A second cleanup, on the same terms as the 2026-07-31 one above. These 23 branches were **merged
+into `main` and then deleted** (local + `origin`), so their names no longer resolve as refs.
+**No content was lost** — each tip below was verified an ancestor of `origin/main` immediately
+before deletion **and again afterwards** (`git merge-base --is-ancestor <sha> origin/main`).
+Look the work up with `git show <sha>` / `git log <sha>`, or recreate the pointer with
+`git branch <name> <sha>`.
+
+Four tips are merge commits from syncing the branch with `main`, so their own subject says
+little; the sha still reaches the whole branch. Two branches were deliberately **kept**:
+`feat/teacher-mediated-password-help` (not merged — 2 commits on `origin`, and a third,
+`8fe26b2`, that exists only in a local worktree and has never been pushed) and
+`feat/avatar-r2-default-activation-d101` (merged, but still has a live worktree).
+
+| branch | tip commit | subject |
+|---|---|---|
+| `chore/restore-remote-migrations` | `436a63c9494d49a92ff3d291e1e6e63b7ad09236` | merge of `origin/main` into the branch — see the branch's own commits via `git log` |
+| `docs/r2-pilot-wave1-participant2` | `449427efa461c5808f5b3eaaf9a107cc1fcca05c` | record R2 pilot Wave 1 participant #2 as ONBOARDED (D-099) |
+| `docs/r2-pilot-wave1-target-2` | `3876a127b577e9bc7d57beeec1b1c452d44ae8bc` | owner decision D-100 — reduce Wave 1 target from 3 to 2 participants |
+| `feat/kontakt-laerlig-dk` | `b36a78bb851ee16292ed351688cce29b299d656d` | contact the site at kontakt@lærlig.dk, not a personal Gmail |
+| `fix/r2-specs-explicit-c2-optout` | `2974d591fde0b82c13cd674e0ff82f213387ea8a` | select C2 explicitly in the five R2 specs after the D-101 default |
+| `fix/avatar-r2-exposure-classifier-d098` | `313a055fcbb1dbb6937d3ec8191a8f7b90c3d2dd` | merge of `main` into the branch — see the branch's own commits via `git log` |
+| `fix/reset-password-recovery-session` | `c9d94b3ead0d2c9882151450ad57b5de78db1468` | establish the recovery session explicitly on reset-password |
+| `feat/laerlig-landing-model-a` | `b871585c91ae8c0d78b2fd0b0c8c756b822184e8` | add public Lærlig landing page |
+| `feat/login-page-visual-match` | `49e6144721a62975b38ba95620026b4c95a42717` | keep native form validation on login, restyle only |
+| `fix/landing-hero-top-gap` | `b5eff9a28bc039554a5f2b3b84f895d1ec324b0d` | remove the empty band between the header and the hero |
+| `fix/landing-hero-content-height` | `ede4aa9b0d81c3dc7eef12b5331711c2c346c095` | tighten the hero to content height |
+| `docs/landing-recovery-verified` | `2d9d9d957283d2c1cecfa2d12205e445a29d7e65` | record that password recovery on the Worker origin is verified |
+| `feat/laerlig-multipage-site` | `5f6bf3dc634a7b3fe4d972e74709406bd378ae5e` | merge of `origin/main` into the branch — see the branch's own commits via `git log` |
+| `docs/landing-status-after-launch` | `39718a9a080b4e4cb4dc15408d7753bfe1043c77` | update LANDING.md to match what is actually live |
+| `copy/simple-front-page` | `ca27d1763873f588aa80318325f0d757c871746c` | make the front page a simple entry, not a site index |
+| `copy/laerlig-human-language` | `8742ef543a2d4959b55afcd8afd1afbbaf849cf9` | rewrite the Lærlig site in plain Danish |
+| `feat/noindex-internal-pages` | `31e9222bb70c17ba32972729506eb20e64776122` | keep the app out of search results |
+| `feat/contact-address` | `4994eba98cf1a71dcb191360456a89f8f76cc6bf` | give the site a contact address |
+| `feat/laerlig-dictionary-quote` | `d4d1105fe82a7fefc4e5bdb7cc783d6e5746b018` | merge of `origin/main` into the branch — see the branch's own commits via `git log` |
+| `feat/allow-indexing` | `6091f808b8ccaf194ec7b63f29be3cb9221c2886` | let search engines index the seven public pages |
+| `feat/sitemap-xml` | `52311f84006910861b5f59b8de6a65ae20b678b9` | generate sitemap.xml from the Cloudflare routing table |
+| `feat/canonical-tags` | `46e0c1e454dbe33ddef86529a7d02a87100018e2` | self-referencing canonical tags on the seven public pages |
+| `feat/legacy-html-redirects` | `7186262812621d214b2f0185de613134152460d8` | permanently redirect the seven legacy public .html addresses |
+
 ## Completed Sections
 155A–155I · 156A–156C · [prod-apply 155E/155F] · 157 · 158A–158C · [ROOT sync] ·
 159A–159G · [ROOT sync] · 160 · 161A · 161B · 161B.5 (docs baseline committed) ·
