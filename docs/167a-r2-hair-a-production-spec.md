@@ -181,6 +181,72 @@ lossless and that no pixel of the accepted artwork moved.
 and are counted against the candidate — the D-059/D-061 lesson that a matte's residue is judged at
 render scale, on the surface, not on the full-res composite.
 
+#### The budget is TWO numbers, at two scales
+
+| Scale | Budget | Where it is enforced |
+|---|---:|---|
+| authoring 1024×1536 | **64** | `check-r2-hair-candidate.mjs` — `HALO_TOLERANCE_AUTHORING` |
+| served 512×768 | **16** | the same gate, on the real `downscaleHalf()` output |
+
+This mirrors the torso path exactly: `check-r2-torso-candidate` allows `MAX_ORPHAN_SOFT_PX = 64`
+at authoring scale, and `promote-r2-torso-asset` allows `MAX_ORPHAN_SOFT_PX_SERVED = 16` after the
+÷2 downscale — documented there as *"64 authoring px ÷ 4"*.
+
+**This gate previously declared 16 while citing that convention, and then applied it to the
+authoring candidate** — four times stricter than the torso gate at the same resolution, and
+measured before the very step that removes most sub-visible dust. Both budgets are now stated and
+both are checked, the served one against `downscaleHalf()` itself rather than a re-implementation.
+
+### 5.4 Orphan-dust removal — permitted, bounded, and not an approval
+
+A generated candidate carries thousands of isolated pixels at 1–3 % opacity: numerical dust from
+the image model's encoder. Measured on the afro candidate — 5 938 orphan-soft pixels at authoring
+scale, mean alpha **2.4/255**, 97 % of them at alpha ≤ 8. They are invisible, and they were the
+only thing standing between a geometrically correct candidate and the alpha gate.
+
+`tools/avatar/clean-r2-hair-alpha.mjs` removes them, deterministically and with no AI, network or
+randomness. A pixel is cleared **only if BOTH hold on the ORIGINAL input**:
+
+1. `alpha < 24` — the project's existing **`ALPHA_FLOOR`**, taken unchanged from
+   `openai-generate-torso-item.mjs` (*"below this, a pixel is background glow rather than
+   artwork"*). It was chosen for the torso work, **before any hair candidate existed**, and was
+   deliberately not fitted to the afro's numbers — a threshold picked to make one asset pass
+   proves nothing about the next one.
+2. it is **orphan-soft by this gate's own definition** — `0 < alpha < 128` and none of its four
+   orthogonal neighbours is ink.
+
+A cleared pixel becomes `0,0,0,0`. Every other byte is copied unchanged. Decisions are read from a
+snapshot of the original, so clearing one pixel can never orphan its neighbour in the same run:
+**no cascade, and the result does not depend on scan order.**
+
+**Geometry cannot move.** Ink is `alpha >= 128`; the tool only ever clears below 24. Ink count,
+envelope, components and every geometric gate are therefore identical before and after — and the
+sidecar report proves it by measuring both, rather than asserting it.
+
+**It can only write to one directory.** Output must resolve inside
+`tools/avatar/build/alpha-cleanup/` — a **positive allowlist**, applied to the PNG and its sidecar
+alike. The first version used a blacklist of runtime and protected prefixes instead; that was
+wrong, and not marginally so. It permitted `docs/`, `index.html`, `package.json`, and any path
+outside the repository entirely. A blacklist has to enumerate everything that must be protected
+and is wrong the moment something is added to the tree; an allowlist names the one place writing
+is intended and refuses the rest by default. The tool also refuses to overwrite an existing file,
+refuses input and output resolving to the same file, and requires a `.png` extension.
+
+**It is fail-closed.** Everything is computed and checked *before* anything is written: the
+cleaned image is encoded, decoded again, and compared to what was intended, then **nine
+postconditions** are evaluated — the authoring and served budgets, geometric identity, no change
+at or above `ALPHA_FLOOR`, none at or above ink, none with an ink neighbour, every removed pixel
+fully transparent, every non-qualifying byte untouched, and an exact encode round-trip. If any one
+of them fails the tool throws and writes **nothing at all** — no PNG, no sidecar, no partial file.
+A sidecar carrying `"pass": true` therefore cannot exist unless all nine actually ran and actually
+held.
+
+**Cleanup is not approval.** It removes a measurement obstacle, nothing else. Every geometry and
+identity requirement in §4 and §6 still applies unchanged, and per-asset owner sign-off at real
+render scale (D-059, D-105) is still the only place style fidelity and identity are judged. A
+cleaned candidate that passes all eleven gates is a candidate for review — never a promoted
+asset.
+
 ## 6. The measurable gates
 
 `tools/avatar/check-r2-hair-candidate.mjs` — deterministic, no AI, no network, **writes nothing**.
@@ -207,6 +273,19 @@ npm run avatar:r2-hair-check -- <candidate.png> <style>
 Each gate is exercised in both directions by `tests/unit/avatar-r2-hair-candidate-check.test.mjs`
 (17 tests, CI-safe — no vendored binary): a clean candidate passes, and one deliberate defect trips
 exactly the gate it should. A gate that only ever sees good input cannot be shown to work.
+
+**The served half of the alpha gate was, for a time, not being measured at all.** The test helper
+called `downscaleHalf(w, h, rgba)` and then read `.rgba`, `.w` and `.h` off the result — but that
+function returns a *raw RGBA `Buffer`*, not an object. Those three properties were `undefined`,
+the counting loop ran `y < undefined` zero times, and every served assertion in the file reported
+**0 orphans regardless of what the candidate contained**: a gate that could not fail, which is the
+exact defect this section claims to guard against. It was caught because 0 contradicted a
+measurement of 1 292 taken on the real afro. The helper now passes the dimensions explicitly, and
+the served numbers quoted in this document are measured ones. Two further suites cover the cleanup
+tool: `avatar-r2-hair-alpha-cleanup.test.mjs` (23 tests) and `avatar-r2-hair-alpha-guards.test.mjs`
+(21 tests), the latter including an end-to-end case where **17 served orphans fail the gate and 16
+pass** while the authoring budget stays satisfied — so the served bound is proven to be the thing
+deciding the outcome, not a number that happens to ride along.
 
 ## 7. What the gates do NOT establish
 
@@ -244,8 +323,13 @@ weakest numbers here.
 
 ## 9. Boundaries of this change
 
-Added: this document, `tools/avatar/check-r2-hair-candidate.mjs`, its unit test, and one
-`package.json` script.
+Added: this document, `tools/avatar/check-r2-hair-candidate.mjs`,
+`tools/avatar/clean-r2-hair-alpha.mjs`, three unit suites
+(`avatar-r2-hair-candidate-check.test.mjs`, `avatar-r2-hair-alpha-cleanup.test.mjs`,
+`avatar-r2-hair-alpha-guards.test.mjs`), and `package.json` scripts. The two tools share **one**
+definition of orphan-soft, exported from the gate and imported by the cleanup tool, so the
+threshold that decides what may be removed and the threshold that decides whether the result is
+acceptable cannot drift apart.
 
 **Unchanged:** every runtime file, `hairSrcForR2`, `R2_MANIFEST`, every asset, z and transform
 table, every golden baseline, the hairstyle picker and the hair-colour picker, the shop, catalog,

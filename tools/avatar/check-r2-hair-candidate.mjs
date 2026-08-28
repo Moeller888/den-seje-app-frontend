@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { decodePng } from "./build-r2-torso-occlusion-mask.mjs";
 import { RENDER_SIZES, MIN_SCALE_COVERAGE } from "./check-r2-torso-candidate.mjs";
+import { downscaleHalf } from "./promote-r2-torso-asset.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = join(HERE, "..", "..");
@@ -65,9 +66,42 @@ export const ALPHA_INK = 128;        // D-071 render-scale convention: alpha >= 
 export const MAX_MEAN_SAT = 0.02;    // the shipped hair measures 0.0000
 export const MAX_PEAK_SAT = 0.10;    // isolated antialiasing artefacts only
 export const MAX_SPECK_PX = 16;      // a component smaller than this is a speck, not a lock
-export const HALO_TOLERANCE = 16;    // orphan soft pixels, same convention as the torso gate
+// ORPHAN-SOFT BUDGET — TWO SCALES, because the torso convention is defined at two and this gate
+// used to conflate them. check-r2-torso-candidate allows MAX_ORPHAN_SOFT_PX = 64 on the 1024x1536
+// AUTHORING canvas; promote-r2-torso-asset allows MAX_ORPHAN_SOFT_PX_SERVED = 16 on the 512x768
+// SERVED asset, documented there as "64 authoring px / 4". This file declared 16 while claiming to
+// follow that convention and then applied it to the AUTHORING candidate — four times stricter than
+// the torso gate at the same resolution, and measured before the downscale that removes most
+// sub-visible dust. Both budgets are now stated, and both are checked.
+export const HALO_TOLERANCE_AUTHORING = 64;  // 1024x1536, matches check-r2-torso-candidate
+export const HALO_TOLERANCE_SERVED = 16;     // 512x768, after the real promotion downscale
 
 const u = (v) => Math.round(v * 10) / 10;
+
+// ── the ONE orphan-soft definition ───────────────────────────────────────────────────────────
+// A soft pixel (0 < alpha < ALPHA_INK) with no ink among its FOUR orthogonal neighbours is halo
+// left behind by a bad matte. Edge coordinates clamp, so a pixel on the border compares against
+// itself rather than falling off the canvas.
+//
+// This is exported and used by BOTH analyse() below and clean-r2-hair-alpha.mjs. It used to be
+// written out twice, with a comment claiming the two could not disagree — which a copy is exactly
+// free to do the moment either side is edited. There is now one implementation and no second copy.
+// Not the torso definition (eight neighbours, opaque-only): the hair gate's semantics are kept.
+export function isOrphanSoft(rgba, w, h, x, y) {
+  const a = rgba[(y * w + x) * 4 + 3];
+  if (a === 0 || a >= ALPHA_INK) return false;
+  const inkAt = (px, py) => rgba[(py * w + px) * 4 + 3] >= ALPHA_INK;
+  return !(inkAt(Math.max(0, x - 1), y) || inkAt(Math.min(w - 1, x + 1), y) ||
+           inkAt(x, Math.max(0, y - 1)) || inkAt(x, Math.min(h - 1, y + 1)));
+}
+
+// Standalone count over a raw RGBA buffer. Always equals analyse(rgba, w, h).orphanSoft — pinned
+// by a test, because that equality is the whole reason for sharing the definition.
+export function countOrphanSoft(rgba, w, h) {
+  let n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (isOrphanSoft(rgba, w, h, x, y)) n++;
+  return n;
+}
 
 // ── measurement ──────────────────────────────────────────────────────────────────────────────
 
@@ -88,10 +122,8 @@ export function analyse(rgba, w, h) {
       const a = rgba[i + 3];
       if (a === 0) continue;
       if (a < ALPHA_INK) {
-        // soft pixel with no ink neighbour = halo left behind by a bad matte
-        const near = (inkAt(Math.max(0, x - 1), y) || inkAt(Math.min(w - 1, x + 1), y) ||
-                      inkAt(x, Math.max(0, y - 1)) || inkAt(x, Math.min(h - 1, y + 1)));
-        if (!near) orphanSoft++;
+        // one shared definition, so this can never drift from the cleanup tool's view
+        if (isOrphanSoft(rgba, w, h, x, y)) orphanSoft++;
         continue;
       }
       ink++;
@@ -170,7 +202,12 @@ function legibility(rgba, w, h) {
 
 // ── the gates ────────────────────────────────────────────────────────────────────────────────
 
-export function gates(a, style) {
+// `servedOrphan` is the orphan-soft count of the SAME candidate after the production downscale.
+// Required, not optional: a default would let a caller silently skip half the alpha contract.
+export function gates(a, style, servedOrphan) {
+  if (!Number.isInteger(servedOrphan)) {
+    throw new Error("gates(): servedOrphan is required — count it on downscaleHalf() of the same candidate");
+  }
   const t = STYLE_TARGETS[style];
   if (!t) throw new Error(`unknown style '${style}' — expected one of ${STYLES.join(", ")}`);
   const out = [];
@@ -230,8 +267,10 @@ export function gates(a, style) {
   add("no-floating-islands", a.components.count === 1 || a.components.specks === 0,
     { components: a.components.count, largest: a.components.largest, specks: a.components.specks });
 
-  add("alpha-clean-no-halo", a.orphanSoft <= HALO_TOLERANCE,
-    { orphanSoft: a.orphanSoft, tolerance: HALO_TOLERANCE });
+  add("alpha-clean-no-halo",
+    a.orphanSoft <= HALO_TOLERANCE_AUTHORING && servedOrphan <= HALO_TOLERANCE_SERVED,
+    { orphanSoftAuthoring: a.orphanSoft, toleranceAuthoring: HALO_TOLERANCE_AUTHORING,
+      orphanSoftServed: servedOrphan, toleranceServed: HALO_TOLERANCE_SERVED });
 
   return out;
 }
@@ -247,7 +286,9 @@ export function run(candidatePath, style) {
   if (!existsSync(abs)) throw new Error(`candidate not found: ${abs}`);
   const png = decodePng(readFileSync(abs), "candidate");
   const a = analyse(png.rgba, png.w, png.h);
-  const result = gates(a, style);
+  // downscaleHalf returns a raw RGBA Buffer; the served canvas is w>>1 by h>>1.
+  const servedRgba = downscaleHalf(png.w, png.h, png.rgba);
+  const result = gates(a, style, analyse(servedRgba, png.w >> 1, png.h >> 1).orphanSoft);
 
   say(`  candidate ${candidatePath} · ${png.w}x${png.h} · style '${style}'`);
   say(`  ink ${a.ink} px · envelope ${a.envelope ? `x ${u(a.envelope.xLo)}..${u(a.envelope.xHi)} y ${u(a.envelope.yLo)}..${u(a.envelope.yHi)}` : "(none)"}`);

@@ -13,9 +13,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  analyse, gates, STYLE_TARGETS, STYLES, BASE, ALPHA_INK,
+  analyse, gates, countOrphanSoft, STYLE_TARGETS, STYLES, BASE, ALPHA_INK,
   SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
+import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
 
 const W = 256, H = 384;          // 2:3, same proportions as the authoring canvas
 const K = 160 / W;               // 0.625 C2 units per px
@@ -43,7 +44,15 @@ function goodShort() {
   return paint(blank(), { xLo: 55, xHi: 106, yLo: 20, yHi: 54 });
 }
 
-const check = (c, style = "short") => gates(analyse(c.rgba, c.w, c.h), style);
+// The served half of the alpha contract is measured on the real promotion downscale.
+//
+// downscaleHalf() returns a RAW RGBA Buffer — not { rgba, w, h }. Reading `.rgba`, `.w` and `.h`
+// off it yields undefined, analyse() then loops `y < undefined` zero times, and the served count
+// comes back as 0 no matter what the candidate contains. That is exactly how this helper was
+// written, so every served assertion in this file was passing vacuously. The dimensions are
+// therefore passed explicitly, derived from the source canvas.
+const servedOrphanOf = (c) => countOrphanSoft(downscaleHalf(c.w, c.h, c.rgba), c.w >> 1, c.h >> 1);
+const check = (c, style = "short") => gates(analyse(c.rgba, c.w, c.h), style, servedOrphanOf(c));
 const gate = (res, id) => {
   const g = res.find((x) => x.id === id);
   assert.ok(g, "gate not reported: " + id);
