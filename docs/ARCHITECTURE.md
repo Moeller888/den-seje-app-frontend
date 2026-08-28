@@ -142,7 +142,7 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
 cannot double-award.
 
 > **Migration-history note (TD-3):** the repo migration files can drift from the live DB version
-> ledger; `supabase db push` may be blocked. Apply schema changes via the Supabase MCP /
+> ledger; `supabase db push` is **forbidden** (D-110). Apply schema changes via the Supabase MCP /
 > `apply_migration` against the remote project, carefully. See [CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md).
 
 ## 5. Authentication & Authorization

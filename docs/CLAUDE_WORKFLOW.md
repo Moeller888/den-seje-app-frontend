@@ -89,7 +89,7 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
   duplicated across both clones — apply edits to both.
 - **Frontend deploys via Vercel** on push to `main`; **Edge Functions deploy separately**
   (`supabase functions deploy <name>`); **migrations** via Supabase MCP / `apply_migration`
-  (note TD-3: `db push` may be blocked by ledger drift).
+  (note TD-3: `db push` is **forbidden** — see [`migration-workflow-policy.md`](./migration-workflow-policy.md)).
 - Prefer new commits over amending; branch before committing if on a protected default branch.
 
 ## 6. Code rules (from CLAUDE.md — applied)

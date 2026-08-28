@@ -88,10 +88,12 @@ Deploy all functions:
 supabase functions deploy
 ```
 
-Push database migrations:
-```
-supabase db push
-```
+Apply a database migration — **`supabase db push` is FORBIDDEN** (D-110):
+The repo migration files and the live version ledger have drifted, so `db push` fails and
+`--include-all` would re-apply migrations that are already live. Migrations go through the
+Management API / Supabase plugin (`apply_migration`), and **only** with a separate owner
+authorisation for that specific migration. Read `docs/migration-workflow-policy.md` first.
+`supabase migration list --linked` is read-only and allowed.
 
 ----------------------------------------
 ARCHITECTURE
