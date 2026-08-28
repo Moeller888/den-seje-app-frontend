@@ -2,72 +2,80 @@
 // ---------------------------------------------------------------------------------------------
 // WHAT THIS REMOVES, AND NOTHING ELSE
 // A generated hair candidate carries thousands of isolated pixels at 1–3 % opacity: numerical dust
-// from the model's encoder, not artwork. Measured on the afro candidate: 5 938 orphan-soft pixels
-// at authoring scale, mean alpha 2.4/255, 97 % of them at alpha <= 8. They are invisible, and they
-// are the only reason a geometrically correct candidate cannot pass `alpha-clean-no-halo`.
+// from the image model's encoder, not artwork. Measured on the afro candidate: 5 938 orphan-soft
+// pixels at authoring scale, mean alpha 2.4/255, 97 % of them at alpha <= 8. They are invisible,
+// and they were the only thing between a geometrically correct candidate and the alpha gate.
 //
 // A pixel is cleared if and ONLY if BOTH hold ON THE ORIGINAL INPUT:
 //   1. alpha < ALPHA_FLOOR (24)
-//   2. it is orphan-soft by the hair gate's OWN definition — 0 < alpha < ALPHA_INK (128) and none
-//      of its four orthogonal neighbours is ink, edges clamped
+//   2. it is orphan-soft by the ONE shared definition exported from check-r2-hair-candidate.mjs
 // A cleared pixel becomes 0,0,0,0. Every other byte is copied unchanged.
 //
 // WHY 24, AND WHY IT WAS NOT TUNED HERE
-// ALPHA_FLOOR = 24 is this project's existing threshold, from
-// `tools/avatar/openai-generate-torso-item.mjs`: "below this, a pixel is background glow rather
-// than artwork". It was chosen for the torso work, before any hair candidate existed, and is
-// reused unchanged. It was deliberately NOT fitted to the afro's numbers — a threshold picked to
-// make one asset pass would prove nothing about the next one.
+// ALPHA_FLOOR = 24 is the project's existing threshold from openai-generate-torso-item.mjs
+// ("below this, a pixel is background glow rather than artwork"). It was chosen for the torso work,
+// before any hair candidate existed, and is reused unchanged. Deliberately not fitted to the afro:
+// a threshold picked to make one asset pass proves nothing about the next one.
 //
-// WHY GEOMETRY CANNOT MOVE
-// Ink is alpha >= 128. This tool only ever clears pixels below 24, so no ink pixel, envelope,
-// component count or geometric gate can change. The report proves it by measuring before and
-// after rather than asserting it.
+// FAIL-CLOSED
+// Everything is computed and validated BEFORE anything is written. If any postcondition fails the
+// tool throws and writes no file at all — not the PNG, not the sidecar, not a partial. A sidecar
+// with `pass: true` can therefore only exist if every check actually ran and actually held.
+//
+// WHERE IT MAY WRITE
+// A positive allowlist: output must resolve inside tools/avatar/build/alpha-cleanup/ and nowhere
+// else. A blacklist was tried first and was wrong — it happily allowed docs/, index.html,
+// package.json and paths outside the repository entirely.
 //
 // WHAT THIS IS NOT
 // Not a repair, not a fit, not an approval. Passing the alpha gate afterwards is a PRECONDITION
-// for owner review at real render scale (D-059), never a substitute for it.
+// for owner review at real render scale (D-059, D-105), never a substitute for it.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, resolve, join, sep } from "node:path";
+import { dirname, resolve, relative, join, isAbsolute, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePng, encodePngRGBA } from "./build-r2-torso-occlusion-mask.mjs";
 import { downscaleHalf } from "./promote-r2-torso-asset.mjs";
-import { analyse, ALPHA_INK } from "./check-r2-hair-candidate.mjs";
+import {
+  analyse, isOrphanSoft, countOrphanSoft, ALPHA_INK,
+  HALO_TOLERANCE_AUTHORING, HALO_TOLERANCE_SERVED,
+} from "./check-r2-hair-candidate.mjs";
 
 export const TOOL = "clean-r2-hair-alpha";
-export const TOOL_VERSION = "1.0.0";
+export const TOOL_VERSION = "2.0.0";
 
 // Reused unchanged from openai-generate-torso-item.mjs. Do not tune.
 export const ALPHA_FLOOR = 24;
 
 export const SRC_W = 1024, SRC_H = 1536;
 
-// Output may never land where a runtime asset, a protected fixture or production code lives.
-const FORBIDDEN_OUT = [
-  ["assets", "avatar-r2"], ["assets", "avatar"], ["js"], ["supabase"],
-  ["tools", "avatar", "fixtures"],
-];
+// The ONLY directory this tool may write into, relative to the repository root.
+export const WRITE_ROOT = join("tools", "avatar", "build", "alpha-cleanup");
+export const SIDECAR_SUFFIX = ".alpha-report.json";
 
-export function isForbiddenOutput(outPath, repoRoot) {
-  const rel = resolve(outPath).slice(resolve(repoRoot).length + 1).split(sep);
-  return FORBIDDEN_OUT.some((f) => f.every((seg, i) => rel[i] === seg));
+const HERE = dirname(fileURLToPath(import.meta.url));
+export const REPO_ROOT = resolve(join(HERE, "..", ".."));
+
+/**
+ * Positive allowlist. Returns null when the path is acceptable, otherwise the reason it is not.
+ * Structural, via resolve() + relative(): a path escapes if its relative form starts with ".." or
+ * is itself absolute, which also covers a sibling repository and anything outside the tree.
+ */
+export function checkWritePath(p, repoRoot = REPO_ROOT) {
+  const abs = resolve(repoRoot, p);
+  const rel = relative(resolve(repoRoot, WRITE_ROOT), abs);
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+    return `outside the only writable directory (${WRITE_ROOT.replace(/\\/g, "/")})`;
+  }
+  return null;
 }
 
-// The hair gate's own orphan test, mirrored exactly so the two can never disagree.
-export function isOrphanSoft(rgba, w, h, x, y) {
-  const a = rgba[(y * w + x) * 4 + 3];
-  if (a === 0 || a >= ALPHA_INK) return false;
-  const inkAt = (px, py) => rgba[(py * w + px) * 4 + 3] >= ALPHA_INK;
-  const near = inkAt(Math.max(0, x - 1), y) || inkAt(Math.min(w - 1, x + 1), y) ||
-               inkAt(x, Math.max(0, y - 1)) || inkAt(x, Math.min(h - 1, y + 1));
-  return !near;
+export function isAllowedWritePath(p, repoRoot = REPO_ROOT) {
+  return checkWritePath(p, repoRoot) === null;
 }
 
-export function countOrphanSoft(rgba, w, h) {
-  let n = 0;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (isOrphanSoft(rgba, w, h, x, y)) n++;
-  return n;
+export function sidecarPathFor(pngPath) {
+  return pngPath.replace(/\.png$/i, SIDECAR_SUFFIX);
 }
 
 /**
@@ -121,7 +129,7 @@ export function cleanAlpha(src, w, h) {
   }
 
   // Independent audit: recomputed from src vs out, not trusted from the loop above.
-  let atOrAboveFloor = 0, atOrAboveInk = 0, withInkNeighbour = 0, notFullyCleared = 0;
+  let atOrAboveFloor = 0, atOrAboveInk = 0, withInkNeighbour = 0, notFullyCleared = 0, otherBytesChanged = 0;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
@@ -132,6 +140,7 @@ export function cleanAlpha(src, w, h) {
       if (a >= ALPHA_INK) atOrAboveInk++;
       if (!isOrphanSoft(src, w, h, x, y)) withInkNeighbour++;
       if (!(out[i] === 0 && out[i + 1] === 0 && out[i + 2] === 0 && out[i + 3] === 0)) notFullyCleared++;
+      if (a >= ALPHA_FLOOR || !isOrphanSoft(src, w, h, x, y)) otherBytesChanged++;
     }
   }
 
@@ -150,6 +159,7 @@ export function cleanAlpha(src, w, h) {
         changedAtOrAboveInk: atOrAboveInk,
         changedWithInkNeighbour: withInkNeighbour,
         changedToSomethingOtherThanFullyTransparent: notFullyCleared,
+        nonQualifyingBytesChanged: otherBytesChanged,
       },
     },
   };
@@ -162,19 +172,40 @@ function geometryOf(rgba, w, h) {
   return { ink: a.ink, envelope: a.envelope, components: a.components, meanSat: a.meanSat, peakSat: a.peakSat };
 }
 
-export function run(inPath, outPath, repoRoot) {
-  const inAbs = resolve(inPath), outAbs = resolve(outPath);
-  if (inAbs === outAbs) throw new Error("REFUSED: in-place overwrite; give a distinct output path");
-  if (isForbiddenOutput(outAbs, repoRoot)) throw new Error(`REFUSED: output under a runtime/protected path: ${outPath}`);
+/**
+ * Computes everything, validates everything, and only then writes. Throws before any write if a
+ * postcondition fails, so a rejected candidate leaves the filesystem exactly as it was.
+ */
+export function run(inPath, outPath, repoRoot = REPO_ROOT) {
+  const inAbs = resolve(repoRoot, inPath);
+  const outAbs = resolve(repoRoot, outPath);
+  const sidecarAbs = sidecarPathFor(outAbs);
+
+  // ── path contract, before anything is read ────────────────────────────────────────────────
+  if (inAbs === outAbs) throw new Error("REFUSED: input and output are the same file");
+  if (extname(outAbs).toLowerCase() !== ".png") {
+    throw new Error(`REFUSED: output must end in .png, got "${extname(outAbs) || "(no extension)"}"`);
+  }
+  const whyOut = checkWritePath(outAbs, repoRoot);
+  if (whyOut) throw new Error(`REFUSED: output ${whyOut}`);
+  const whySide = checkWritePath(sidecarAbs, repoRoot);
+  if (whySide) throw new Error(`REFUSED: sidecar ${whySide}`);
+  if (sidecarAbs === outAbs) throw new Error("REFUSED: sidecar path collides with the PNG path");
+  if (!sidecarAbs.toLowerCase().endsWith(SIDECAR_SUFFIX)) {
+    throw new Error(`REFUSED: sidecar must end in ${SIDECAR_SUFFIX}`);
+  }
+  if (existsSync(outAbs)) throw new Error(`REFUSED: output already exists: ${outPath}`);
+  if (existsSync(sidecarAbs)) throw new Error(`REFUSED: sidecar already exists: ${sidecarPathFor(outPath)}`);
   if (!existsSync(inAbs)) throw new Error(`input not found: ${inPath}`);
 
+  // ── read and measure ─────────────────────────────────────────────────────────────────────
   const srcBuf = readFileSync(inAbs);
   const png = decodePng(srcBuf, "candidate");
   if (png.w !== SRC_W || png.h !== SRC_H) {
     throw new Error(`REFUSED: expected ${SRC_W}x${SRC_H} authoring canvas, got ${png.w}x${png.h}`);
   }
 
-  // downscaleHalf returns a raw RGBA Buffer; the served canvas is w>>1 by h>>1.
+  // downscaleHalf returns a RAW RGBA Buffer; the served canvas is w>>1 by h>>1.
   const sw = png.w >> 1, sh = png.h >> 1;
 
   const before = geometryOf(png.rgba, png.w, png.h);
@@ -186,48 +217,76 @@ export function run(inPath, outPath, repoRoot) {
   const after = geometryOf(rgba, png.w, png.h);
   const afterAuthoring = countOrphanSoft(rgba, png.w, png.h);
   const afterServed = countOrphanSoft(downscaleHalf(png.w, png.h, rgba), sw, sh);
+  const geometryIdentical = JSON.stringify(before) === JSON.stringify(after);
 
+  // Encode, then decode the encoded bytes back and compare — proves the PNG we are about to write
+  // actually round-trips to the pixels that were validated, rather than to something else.
   const outBuf = encodePngRGBA(png.w, png.h, rgba);
-  mkdirSync(dirname(outAbs), { recursive: true });
-  writeFileSync(outAbs, outBuf);
+  const rt = decodePng(outBuf, "encoded output");
+  const roundTripOk = rt.w === png.w && rt.h === png.h && Buffer.compare(Buffer.from(rt.rgba), Buffer.from(rgba)) === 0;
+
+  // ── postconditions — every one evaluated, then all of them required ───────────────────────
+  const postconditions = {
+    authoringWithinBudget: { pass: afterAuthoring <= HALO_TOLERANCE_AUTHORING, value: afterAuthoring, limit: HALO_TOLERANCE_AUTHORING },
+    servedWithinBudget: { pass: afterServed <= HALO_TOLERANCE_SERVED, value: afterServed, limit: HALO_TOLERANCE_SERVED },
+    geometryIdentical: { pass: geometryIdentical, value: geometryIdentical },
+    noChangeAtOrAboveAlphaFloor: { pass: report.invariants.changedAtOrAboveAlphaFloor === 0, value: report.invariants.changedAtOrAboveAlphaFloor },
+    noChangeAtOrAboveInk: { pass: report.invariants.changedAtOrAboveInk === 0, value: report.invariants.changedAtOrAboveInk },
+    noChangeWithInkNeighbour: { pass: report.invariants.changedWithInkNeighbour === 0, value: report.invariants.changedWithInkNeighbour },
+    allRemovedFullyTransparent: { pass: report.invariants.changedToSomethingOtherThanFullyTransparent === 0, value: report.invariants.changedToSomethingOtherThanFullyTransparent },
+    nonQualifyingBytesUntouched: { pass: report.invariants.nonQualifyingBytesChanged === 0, value: report.invariants.nonQualifyingBytesChanged },
+    encodedRoundTripsExactly: { pass: roundTripOk, value: roundTripOk },
+  };
+
+  const failed = Object.entries(postconditions).filter(([, v]) => !v.pass);
+  if (failed.length > 0) {
+    const detail = failed.map(([k, v]) => `${k}=${JSON.stringify(v.value)}`).join(", ");
+    throw new Error(`REFUSED: postcondition failed, nothing written — ${detail}`);
+  }
 
   const sidecar = {
     tool: TOOL,
     toolVersion: TOOL_VERSION,
+    pass: true,
+    postconditions,
     input: { path: inPath, sha256: sha(srcBuf), width: png.w, height: png.h },
     output: { path: outPath, sha256: sha(outBuf), width: png.w, height: png.h },
     ...report,
     orphanSoft: {
-      authoring: { before: beforeAuthoring, after: afterAuthoring, tolerance: 64, size: `${png.w}x${png.h}` },
+      authoring: { before: beforeAuthoring, after: afterAuthoring, tolerance: HALO_TOLERANCE_AUTHORING, size: `${png.w}x${png.h}` },
       served: {
-        before: beforeServed, after: afterServed, tolerance: 16, size: `${sw}x${sh}`,
+        before: beforeServed, after: afterServed, tolerance: HALO_TOLERANCE_SERVED, size: `${sw}x${sh}`,
         downscale: "premultiplied 2x2 box average — promote-r2-torso-asset.downscaleHalf, reused verbatim",
       },
     },
-    geometry: { before, after, identical: JSON.stringify(before) === JSON.stringify(after) },
+    geometry: { before, after, identical: geometryIdentical },
     note: "Dust removal is a PRECONDITION for owner review, never a visual approval (D-059).",
   };
-  writeFileSync(outAbs.replace(/\.png$/i, ".alpha-report.json"), JSON.stringify(sidecar, null, 2), "utf8");
+
+  // Only now does anything reach disk.
+  mkdirSync(dirname(outAbs), { recursive: true });
+  writeFileSync(outAbs, outBuf);
+  writeFileSync(sidecarAbs, JSON.stringify(sidecar, null, 2), "utf8");
   return sidecar;
 }
-
-const HERE = dirname(fileURLToPath(import.meta.url));
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const [, , inP, outP] = process.argv;
   if (!inP || !outP) {
     console.error(`usage: node tools/avatar/${TOOL}.mjs <in.png> <out.png>`);
+    console.error(`       output must be under ${WRITE_ROOT.replace(/\\/g, "/")}/ and must not already exist`);
     process.exit(2);
   }
   try {
-    const r = run(inP, outP, join(HERE, "..", ".."));
+    const r = run(inP, outP);
     console.log(`${TOOL} v${TOOL_VERSION}`);
-    console.log(`  in  ${r.input.sha256.slice(0, 16)}…  out ${r.output.sha256.slice(0, 16)}…`);
+    console.log(`  in  ${r.input.sha256}`);
+    console.log(`  out ${r.output.sha256}`);
     console.log(`  cleared ${r.pixelsChanged} px in ${r.removedComponents} components, max removed alpha ${r.maxRemovedAlpha} (floor ${r.alphaFloor})`);
     console.log(`  orphan authoring ${r.orphanSoft.authoring.before} → ${r.orphanSoft.authoring.after} (max ${r.orphanSoft.authoring.tolerance})`);
     console.log(`  orphan served    ${r.orphanSoft.served.before} → ${r.orphanSoft.served.after} (max ${r.orphanSoft.served.tolerance})`);
     console.log(`  geometry identical: ${r.geometry.identical}`);
-    console.log(`  changed at alpha>=24: ${r.invariants.changedAtOrAboveAlphaFloor} · at alpha>=128: ${r.invariants.changedAtOrAboveInk} · with ink neighbour: ${r.invariants.changedWithInkNeighbour}`);
+    console.log(`  postconditions: ${Object.keys(r.postconditions).length}/${Object.keys(r.postconditions).length} pass`);
   } catch (e) {
     console.error(String(e.message ?? e));
     process.exit(1);

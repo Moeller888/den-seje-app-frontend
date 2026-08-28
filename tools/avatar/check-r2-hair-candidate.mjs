@@ -78,6 +78,31 @@ export const HALO_TOLERANCE_SERVED = 16;     // 512x768, after the real promotio
 
 const u = (v) => Math.round(v * 10) / 10;
 
+// ── the ONE orphan-soft definition ───────────────────────────────────────────────────────────
+// A soft pixel (0 < alpha < ALPHA_INK) with no ink among its FOUR orthogonal neighbours is halo
+// left behind by a bad matte. Edge coordinates clamp, so a pixel on the border compares against
+// itself rather than falling off the canvas.
+//
+// This is exported and used by BOTH analyse() below and clean-r2-hair-alpha.mjs. It used to be
+// written out twice, with a comment claiming the two could not disagree — which a copy is exactly
+// free to do the moment either side is edited. There is now one implementation and no second copy.
+// Not the torso definition (eight neighbours, opaque-only): the hair gate's semantics are kept.
+export function isOrphanSoft(rgba, w, h, x, y) {
+  const a = rgba[(y * w + x) * 4 + 3];
+  if (a === 0 || a >= ALPHA_INK) return false;
+  const inkAt = (px, py) => rgba[(py * w + px) * 4 + 3] >= ALPHA_INK;
+  return !(inkAt(Math.max(0, x - 1), y) || inkAt(Math.min(w - 1, x + 1), y) ||
+           inkAt(x, Math.max(0, y - 1)) || inkAt(x, Math.min(h - 1, y + 1)));
+}
+
+// Standalone count over a raw RGBA buffer. Always equals analyse(rgba, w, h).orphanSoft — pinned
+// by a test, because that equality is the whole reason for sharing the definition.
+export function countOrphanSoft(rgba, w, h) {
+  let n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (isOrphanSoft(rgba, w, h, x, y)) n++;
+  return n;
+}
+
 // ── measurement ──────────────────────────────────────────────────────────────────────────────
 
 // Everything the gates need, in ONE pass over the candidate. Pure: no IO, no globals.
@@ -97,10 +122,8 @@ export function analyse(rgba, w, h) {
       const a = rgba[i + 3];
       if (a === 0) continue;
       if (a < ALPHA_INK) {
-        // soft pixel with no ink neighbour = halo left behind by a bad matte
-        const near = (inkAt(Math.max(0, x - 1), y) || inkAt(Math.min(w - 1, x + 1), y) ||
-                      inkAt(x, Math.max(0, y - 1)) || inkAt(x, Math.min(h - 1, y + 1)));
-        if (!near) orphanSoft++;
+        // one shared definition, so this can never drift from the cleanup tool's view
+        if (isOrphanSoft(rgba, w, h, x, y)) orphanSoft++;
         continue;
       }
       ink++;

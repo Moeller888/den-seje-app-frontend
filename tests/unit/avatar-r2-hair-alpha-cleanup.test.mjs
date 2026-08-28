@@ -10,11 +10,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  cleanAlpha, countOrphanSoft, isOrphanSoft, isForbiddenOutput, run,
-  ALPHA_FLOOR, SRC_W, SRC_H,
+  cleanAlpha, run, isAllowedWritePath, ALPHA_FLOOR, SRC_W, SRC_H,
 } from "../../tools/avatar/clean-r2-hair-alpha.mjs";
+// isOrphanSoft / countOrphanSoft now live in ONE place — the gate — and the cleanup tool imports
+// them from there. Importing them from the gate here is deliberate: it is the same function.
 import {
-  analyse, gates, ALPHA_INK, HALO_TOLERANCE_AUTHORING, HALO_TOLERANCE_SERVED,
+  analyse, gates, isOrphanSoft, countOrphanSoft, ALPHA_INK,
+  HALO_TOLERANCE_AUTHORING, HALO_TOLERANCE_SERVED,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
 
@@ -206,17 +208,20 @@ test("passing the alpha gate does not rescue a candidate that fails geometry", (
 
 // ── refusals ──────────────────────────────────────────────────────────────────────────────────
 
-test("in-place overwrite is refused", () => {
-  assert.throws(() => run("a/b/c.png", "a/b/c.png", "a"), /in-place/i);
+test("input equal to output is refused", () => {
+  assert.throws(() => run("tools/avatar/build/alpha-cleanup/c.png",
+                          "tools/avatar/build/alpha-cleanup/c.png"), /same file/i);
 });
 
-test("output under a runtime or protected path is refused", () => {
-  const root = process.cwd();
-  for (const p of ["assets/avatar-r2/hair/x.png", "assets/avatar/hair/x.png", "js/x.png",
-                   "supabase/x.png", "tools/avatar/fixtures/x.png"]) {
-    assert.equal(isForbiddenOutput(p, root), true, `${p} must be refused`);
+// The write contract moved from a blacklist to a positive allowlist; the exhaustive positive and
+// negative cases live in avatar-r2-hair-alpha-guards.test.mjs. This keeps a smoke check here so a
+// regression shows up in whichever suite a reader runs first.
+test("only the alpha-cleanup build directory is writable", () => {
+  assert.equal(isAllowedWritePath("tools/avatar/build/alpha-cleanup/x.png"), true);
+  for (const p of ["assets/avatar-r2/hair/x.png", "js/x.png", "docs/x.png", "package.json",
+                   "index.html", "../outside.png"]) {
+    assert.equal(isAllowedWritePath(p), false, `${p} must be refused`);
   }
-  assert.equal(isForbiddenOutput("tools/avatar/build/alpha-cleanup/x.png", root), false);
 });
 
 test("the authoring canvas size is required", () => {
