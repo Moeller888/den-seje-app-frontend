@@ -109,8 +109,11 @@ export async function runStudentPipeline(
   try {
     mail = await deps.sendMail(teacherEmail, displayName(profile), studentId);
   } catch (err) {
-    // The provider threw rather than returning a result. The reservation stays in place and
-    // keeps suppressing, and the row is finalised truthfully rather than left as 'reserved'.
+    // The provider threw rather than returning a result. This outcome is AMBIGUOUS: the message
+    // may already have been accepted before the answer was lost. 'technical_error' therefore
+    // counts against cooldown and cap exactly like 'notified' and 'mail_failed' do (see
+    // 20260808010000_password_help_reserve_rpc.sql) — the row is finalised truthfully rather
+    // than left as 'reserved', without that costing the rate-limit effect.
     deps.captureException(err, { stage: "send_mail" });
     try {
       await deps.finalize(reservation.requestId, "technical_error", "mail_threw");

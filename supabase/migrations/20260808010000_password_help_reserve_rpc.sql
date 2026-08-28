@@ -42,7 +42,10 @@ ALTER TABLE public.password_help_requests
 -- Serialisation: pg_advisory_xact_lock keyed on the student's uuid. The lock is taken inside
 -- the function's transaction and released when that transaction ends, so the read, the decision
 -- and the insert are indivisible with respect to any other caller for the SAME student.
--- Different students hash to different keys and never block each other.
+--
+-- Two different students CAN collide on the same 64-bit hash. That is harmless: a collision
+-- makes two unrelated callers take turns instead of running in parallel. It costs a little
+-- latency and never correctness, because the decision itself is scoped by student_id.
 CREATE OR REPLACE FUNCTION public.reserve_password_help(
   p_student_id       uuid,
   p_teacher_id       uuid,
@@ -78,16 +81,31 @@ BEGIN
     pg_catalog.hashtextextended(p_student_id::pg_catalog.text, 0)
   );
 
-  -- What consumes the budget: a mail that went out, a mail that was attempted and failed, and
-  -- a reservation whose outcome is unknown. Suppressions and the no-teacher/no-email records
-  -- are audit facts, not attempts, and deliberately do not count. Each reservation row is
+  -- WHAT CONSUMES THE BUDGET: every status a row can hold once a reservation exists.
+  --
+  --   reserved        the outcome is not known yet, or the function died before finalising
+  --   notified        the provider accepted the message
+  --   mail_failed     the provider rejected it, or was unreachable
+  --   technical_error the mail dependency threw
+  --
+  -- The last two are counted for the same reason as the first: a failure on our side of the
+  -- wire does NOT prove the provider did not accept the message. A lost response and a
+  -- rejected request are indistinguishable from here, so both must consume the budget — the
+  -- cost of over-counting is one delayed notification, the cost of under-counting is a
+  -- duplicate mail to a teacher, which is the thing this function exists to prevent.
+  --
+  -- If a future outcome can prove that NO provider call was made, it may be excluded here —
+  -- but only then, and it must be a status of its own rather than a reused one.
+  --
+  -- Suppressions and the no-teacher / no-email records are written WITHOUT a reservation:
+  -- they are audit facts, not attempts, and deliberately do not count. Each reservation row is
   -- counted once — the row is UPDATEd in place on finalisation, never duplicated.
   SELECT count(*), max(r.created_at)
     INTO v_attempts, v_last_at
     FROM public.password_help_requests AS r
    WHERE r.student_id = p_student_id
      AND r.created_at >= pg_catalog.now() - pg_catalog.make_interval(hours => 24)
-     AND r.status IN ('reserved', 'notified', 'mail_failed');
+     AND r.status IN ('reserved', 'notified', 'mail_failed', 'technical_error');
 
   IF v_attempts >= p_daily_cap THEN
     v_decision := 'suppressed_daily_cap';

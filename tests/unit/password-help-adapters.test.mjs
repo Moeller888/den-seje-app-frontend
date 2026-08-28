@@ -10,12 +10,22 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
 import {
   parseReserveResult,
   assertFinalizedExactlyOne,
   ALLOWED_DECISIONS,
   TERMINAL_STATUSES,
+  BUDGET_CONSUMING_STATUSES,
 } from "../../supabase/functions/request-password-help/adapters.ts";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const RESERVE_SQL = join(
+  HERE, "..", "..", "supabase", "migrations", "20260808010000_password_help_reserve_rpc.sql",
+);
 
 let fetchCalls = 0;
 let realFetch;
@@ -145,6 +155,57 @@ test("missing or malformed return data is a visible failure", () => {
     assert.throws(() => assertFinalizedExactlyOne(raw, ID, "notified"), /no row set/);
   }
   assert.throws(() => assertFinalizedExactlyOne([null], ID, "notified"), /malformed row/);
+});
+
+// ── Rate-limit budget: the SQL and the TypeScript must agree ─────────────────
+// This is a CONSISTENCY test between two artifacts, not a claim about runtime behaviour: the
+// database is the enforcer and it is not executed here. What it catches is the drift that
+// caused this fix — a terminal status existing in the code but missing from the SQL's counted
+// set, which would let an ambiguous outcome silently free up a new reservation.
+
+test("every status a reservation can hold consumes the budget", () => {
+  assert.deepEqual(
+    [...BUDGET_CONSUMING_STATUSES].sort(),
+    ["mail_failed", "notified", "reserved", "technical_error"],
+  );
+
+  // Nothing a reservation can end in may fall out of the budget.
+  for (const terminal of TERMINAL_STATUSES) {
+    assert.ok(
+      BUDGET_CONSUMING_STATUSES.includes(terminal),
+      `${terminal} is a post-reservation outcome and must consume the budget`,
+    );
+  }
+});
+
+test("technical_error still blocks an immediate new reservation", () => {
+  // The ambiguous case: sendMail threw, so the provider may or may not have accepted the
+  // message. If this status ever leaves the counted set, the next request reserves again and a
+  // teacher can receive two mails for one incident.
+  assert.ok(BUDGET_CONSUMING_STATUSES.includes("technical_error"));
+
+  const sql = readFileSync(RESERVE_SQL, "utf8");
+  const counted = sql.match(/r\.status IN \(([^)]*)\)/);
+  assert.ok(counted, "the counted-status list must be findable in the migration");
+
+  const sqlStatuses = [...counted[1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort();
+  assert.deepEqual(
+    sqlStatuses,
+    [...BUDGET_CONSUMING_STATUSES].sort(),
+    "the migration's counted statuses and BUDGET_CONSUMING_STATUSES must not drift apart",
+  );
+});
+
+test("statuses written WITHOUT a reservation stay out of the budget", () => {
+  // Suppressions and the no-teacher / no-email records are audit facts about requests that
+  // never reached the provider. Counting them would let one unhelpable student exhaust their
+  // own cap and lock out a later, valid request.
+  for (const auditOnly of ["suppressed_cooldown", "suppressed_daily_cap", "no_teacher", "teacher_no_email"]) {
+    assert.ok(
+      !BUDGET_CONSUMING_STATUSES.includes(auditOnly),
+      `${auditOnly} must not consume the budget`,
+    );
+  }
 });
 
 test("no network call was made by any test in this file", () => {

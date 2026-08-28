@@ -31,6 +31,19 @@ export type TerminalStatus = "notified" | "mail_failed" | "technical_error";
 
 export const TERMINAL_STATUSES: readonly string[] = ["notified", "mail_failed", "technical_error"];
 
+// Statuses that consume the rate-limit budget: every state a row can hold once a reservation
+// exists. All three terminal outcomes are ambiguous about whether the provider accepted the
+// message — a rejected request and a lost response look identical from here — so all of them
+// count, and so does an unfinished 'reserved'.
+//
+// THE SQL IS THE ENFORCER. This constant is not consulted at runtime; it exists so a drift
+// between it and the `status IN (...)` list in 20260808010000_password_help_reserve_rpc.sql is
+// caught by a test rather than by a duplicate mail landing in a teacher's inbox.
+export const BUDGET_CONSUMING_STATUSES: readonly string[] = [
+  "reserved",
+  ...TERMINAL_STATUSES,
+];
+
 export interface ReserveResult {
   decision: ReserveDecision;
   requestId: string;
