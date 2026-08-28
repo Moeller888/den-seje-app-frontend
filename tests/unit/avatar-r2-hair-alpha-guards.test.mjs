@@ -26,6 +26,11 @@ import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+// tools/avatar/build/ is gitignored scratch, so it does NOT exist in a fresh checkout: mkdtempSync
+// would fail with ENOENT and take the whole file down before a single test ran. That is exactly
+// how this suite failed on its first CI run, having passed locally where the directory happened to
+// be lying around from earlier tool runs.
+mkdirSync(join(REPO_ROOT, WRITE_ROOT), { recursive: true });
 const SANDBOX = mkdtempSync(join(REPO_ROOT, WRITE_ROOT, "t-"));
 after(() => rmSync(SANDBOX, { recursive: true, force: true }));
 const sandboxed = (name) => join(SANDBOX, name);
