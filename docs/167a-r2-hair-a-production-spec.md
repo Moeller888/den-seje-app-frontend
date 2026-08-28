@@ -181,6 +181,54 @@ lossless and that no pixel of the accepted artwork moved.
 and are counted against the candidate — the D-059/D-061 lesson that a matte's residue is judged at
 render scale, on the surface, not on the full-res composite.
 
+#### The budget is TWO numbers, at two scales
+
+| Scale | Budget | Where it is enforced |
+|---|---:|---|
+| authoring 1024×1536 | **64** | `check-r2-hair-candidate.mjs` — `HALO_TOLERANCE_AUTHORING` |
+| served 512×768 | **16** | the same gate, on the real `downscaleHalf()` output |
+
+This mirrors the torso path exactly: `check-r2-torso-candidate` allows `MAX_ORPHAN_SOFT_PX = 64`
+at authoring scale, and `promote-r2-torso-asset` allows `MAX_ORPHAN_SOFT_PX_SERVED = 16` after the
+÷2 downscale — documented there as *"64 authoring px ÷ 4"*.
+
+**This gate previously declared 16 while citing that convention, and then applied it to the
+authoring candidate** — four times stricter than the torso gate at the same resolution, and
+measured before the very step that removes most sub-visible dust. Both budgets are now stated and
+both are checked, the served one against `downscaleHalf()` itself rather than a re-implementation.
+
+### 5.4 Orphan-dust removal — permitted, bounded, and not an approval
+
+A generated candidate carries thousands of isolated pixels at 1–3 % opacity: numerical dust from
+the image model's encoder. Measured on the afro candidate — 5 938 orphan-soft pixels at authoring
+scale, mean alpha **2.4/255**, 97 % of them at alpha ≤ 8. They are invisible, and they were the
+only thing standing between a geometrically correct candidate and the alpha gate.
+
+`tools/avatar/clean-r2-hair-alpha.mjs` removes them, deterministically and with no AI, network or
+randomness. A pixel is cleared **only if BOTH hold on the ORIGINAL input**:
+
+1. `alpha < 24` — the project's existing **`ALPHA_FLOOR`**, taken unchanged from
+   `openai-generate-torso-item.mjs` (*"below this, a pixel is background glow rather than
+   artwork"*). It was chosen for the torso work, **before any hair candidate existed**, and was
+   deliberately not fitted to the afro's numbers — a threshold picked to make one asset pass
+   proves nothing about the next one.
+2. it is **orphan-soft by this gate's own definition** — `0 < alpha < 128` and none of its four
+   orthogonal neighbours is ink.
+
+A cleared pixel becomes `0,0,0,0`. Every other byte is copied unchanged. Decisions are read from a
+snapshot of the original, so clearing one pixel can never orphan its neighbour in the same run:
+**no cascade, and the result does not depend on scan order.**
+
+**Geometry cannot move.** Ink is `alpha >= 128`; the tool only ever clears below 24. Ink count,
+envelope, components and every geometric gate are therefore identical before and after — and the
+sidecar report proves it by measuring both, rather than asserting it.
+
+**Cleanup is not approval.** It removes a measurement obstacle, nothing else. Every geometry and
+identity requirement in §4 and §6 still applies unchanged, and per-asset owner sign-off at real
+render scale (D-059, D-105) is still the only place style fidelity and identity are judged. A
+cleaned candidate that passes all eleven gates is a candidate for review — never a promoted
+asset.
+
 ## 6. The measurable gates
 
 `tools/avatar/check-r2-hair-candidate.mjs` — deterministic, no AI, no network, **writes nothing**.

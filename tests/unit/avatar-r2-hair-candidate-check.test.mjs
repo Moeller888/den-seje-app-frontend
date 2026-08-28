@@ -16,6 +16,7 @@ import {
   analyse, gates, STYLE_TARGETS, STYLES, BASE, ALPHA_INK,
   SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
+import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
 
 const W = 256, H = 384;          // 2:3, same proportions as the authoring canvas
 const K = 160 / W;               // 0.625 C2 units per px
@@ -43,7 +44,13 @@ function goodShort() {
   return paint(blank(), { xLo: 55, xHi: 106, yLo: 20, yHi: 54 });
 }
 
-const check = (c, style = "short") => gates(analyse(c.rgba, c.w, c.h), style);
+// The served half of the alpha contract is measured on the real promotion downscale, so the helper
+// supplies it the same way the CLI does — the gate refuses to run without it.
+const servedOrphanOf = (c) => {
+  const s = downscaleHalf(c.w, c.h, c.rgba);
+  return analyse(s.rgba, s.w, s.h).orphanSoft;
+};
+const check = (c, style = "short") => gates(analyse(c.rgba, c.w, c.h), style, servedOrphanOf(c));
 const gate = (res, id) => {
   const g = res.find((x) => x.id === id);
   assert.ok(g, "gate not reported: " + id);
