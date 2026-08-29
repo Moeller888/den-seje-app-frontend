@@ -1,7 +1,9 @@
 # 167A — R2 hair-identity audit: the seven hairstyles the R2 render ignores, D-102
 
-**Status:** `OWNER_DECIDED_OPTION_D — UI_HONESTY_IMPLEMENTED, OPTION_A_DEFERRED`
-(owner, 2026-08-20 — see §10). Was `DESIGN_READY_AWAITING_OWNER_DECISION`.
+**Status:** `SUPERSEDED IN PART — see D-114 (2026-08-29)` · was `OWNER_DECIDED_OPTION_D — UI_HONESTY_IMPLEMENTED, OPTION_A_DEFERRED`
+(owner, 2026-08-20 — see §10), and before that `DESIGN_READY_AWAITING_OWNER_DECISION`. The defect
+this document measures is now closed for **one** of the seven styles; the measurements below stand
+unchanged, and re-deriving the document is a separate task.
 **Type:** read-only audit + geometric measurement. **The audit itself implements nothing** — the
 decision it asked for was taken on 2026-08-20 and is implemented separately (§10). It changes no
 runtime, resolver, manifest, asset, z, transform, test, golden, catalog, migration, Edge Function,
@@ -24,8 +26,14 @@ see in production today.
 On the C2 render path a student picks one of **seven** hairstyles and sees it. On the R2 render path
 the choice is read, validated, stored — and then **discarded at render time**:
 
+> **Historical as of 2026-08-29 (D-114).** The code below is the resolver **as it stood when this
+> audit was written**. It is quoted here because the whole document is derived from it; it is no
+> longer what ships. `hairSrcForR2` now reads the identity and resolves a per-style asset when one
+> is registered, falling back to `northstar` otherwise — so the defect is closed for `afro` and
+> still open for the other six styles.
+
 ```js
-// js/avatar-layers.js:443
+// js/avatar-layers.js:443 — SUPERSEDED, kept for provenance
 export function hairSrcForR2(identity) {
   const e = r2Entry(R2_MANIFEST.hair["northstar"]);
   return e ? r2Path("hair", "hair-northstar", e) : null;

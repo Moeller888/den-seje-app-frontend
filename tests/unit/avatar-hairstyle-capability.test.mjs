@@ -164,13 +164,33 @@ test("the capability is decided by the render path, not by population or browser
   }
 });
 
-test("the underlying predicate tracks the manifest, so option A re-enables the UI by itself", () => {
+test("the capability follows the render path, and the manifest does not move it on its own", () => {
   // Today the R2 stack resolves for a neutral/medium identity → R2 is active → no shapes.
   assert.equal(isAvatarR2ActiveFor({ body_type: "neutral", skin_tone: "medium" }), true);
   // An identity the R2 stack cannot serve falls to C2, where the shapes are honoured.
   assert.equal(isAvatarR2ActiveFor({ body_type: "male", skin_tone: "medium" }), false);
-  // The gap this decision documents: one registered hair asset for seven selectable styles.
-  assert.deepEqual(Object.keys(R2_MANIFEST.hair), ["northstar"]);
+});
+
+// This assertion used to pin `Object.keys(R2_MANIFEST.hair) === ["northstar"]` under a title saying
+// option A would "re-enable the UI by itself". Registering the first per-style asset on 2026-08-29
+// (D-114) fired it and showed the title was wrong: hairstyleShapesSupported() returns
+// `activeRenderPath !== "r2"` and never reads the manifest, so producing artwork does NOT re-enable
+// the picker. The owner kept the note deliberately — six of seven styles still have no R2 asset, so
+// showing seven buttons on the R2 path would offer six choices that do nothing.
+test("producing a per-style asset does NOT by itself re-enable the hairstyle UI", () => {
+  const src = source("hairstyleShapesSupported");
+  assert.ok(!/R2_MANIFEST/.test(src),
+    "the capability now reads the manifest — the note may no longer be the honest UI; revisit D-102");
+  assert.ok(Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, "afro"),
+    "the first per-style asset is gone — this test and D-114 describe a system that no longer exists");
+});
+
+test("the R2 hair manifest still carries northstar as the fallback for un-produced styles", () => {
+  const keys = Object.keys(R2_MANIFEST.hair);
+  assert.ok(keys.includes("northstar"),
+    "without northstar every style lacking artwork drops the whole avatar to C2");
+  assert.ok(keys.length < 8,
+    "all seven styles now have assets — the northstar fallback can retire and the note with it (D-102)");
 });
 
 // ── the note has to be readable, or D-102 replaced buttons with something invisible ──
