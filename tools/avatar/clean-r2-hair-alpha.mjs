@@ -27,12 +27,30 @@
 // else. A blacklist was tried first and was wrong — it happily allowed docs/, index.html,
 // package.json and paths outside the repository entirely.
 //
+// The allowlist is resolved through SYMLINKS, not merely lexically. resolve() + relative() answer
+// a question about strings; the filesystem answers a different one. `build/` is gitignored scratch
+// that tools create and delete freely, so a link planted inside it — or a link left at the output
+// path itself — would satisfy a string check and still land the bytes anywhere on disk. A DANGLING
+// link is the sharp case: existsSync() reports false, so the "already exists" guard waves it
+// through and the write follows the link out of the tree. Both files are therefore created with
+// O_EXCL, which refuses to follow a symlink at the final component at all.
+//
+// WHY THE COMMIT IS ORDERED, NOT MERELY GUARDED
+// Two files cannot be published in one atomic step. Both are written to temporaries, fsynced and
+// renamed, and the SIDECAR IS RENAMED FIRST. The two crash residues are not equally bad: a report
+// with no image is obviously incomplete and refuses the next run, whereas an image with no report
+// looks exactly like a validated output while carrying no evidence that anything was checked. The
+// ordering makes only the harmless residue reachable.
+//
 // WHAT THIS IS NOT
 // Not a repair, not a fit, not an approval. Passing the alpha gate afterwards is a PRECONDITION
 // for owner review at real render scale (D-059, D-105), never a substitute for it.
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { dirname, resolve, relative, join, isAbsolute, extname } from "node:path";
+import {
+  readFileSync, existsSync, mkdirSync, realpathSync, lstatSync,
+  openSync, writeSync, fsyncSync, closeSync, renameSync, unlinkSync,
+} from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import { dirname, resolve, relative, join, isAbsolute, extname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePng, encodePngRGBA } from "./build-r2-torso-occlusion-mask.mjs";
 import { downscaleHalf } from "./promote-r2-torso-asset.mjs";
@@ -42,7 +60,7 @@ import {
 } from "./check-r2-hair-candidate.mjs";
 
 export const TOOL = "clean-r2-hair-alpha";
-export const TOOL_VERSION = "2.0.0";
+export const TOOL_VERSION = "3.0.0";
 
 // Reused unchanged from openai-generate-torso-item.mjs. Do not tune.
 export const ALPHA_FLOOR = 24;
@@ -57,21 +75,87 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(join(HERE, "..", ".."));
 
 /**
- * Positive allowlist. Returns null when the path is acceptable, otherwise the reason it is not.
- * Structural, via resolve() + relative(): a path escapes if its relative form starts with ".." or
- * is itself absolute, which also covers a sibling repository and anything outside the tree.
+ * Resolves the deepest ANCESTOR of `abs` that exists, and returns it with the not-yet-existing
+ * tail re-attached. realpathSync() throws ENOENT on a path that is not there yet, and the output
+ * never is — so the link-following has to happen on the part of the path that does exist.
+ *
+ * `realpath` is injectable so the policy can be exercised on machines where creating a symlink
+ * needs a privilege this one does not have (Windows without developer mode returns EPERM). The
+ * real filesystem behaviour is asserted separately wherever links can actually be created.
  */
-export function checkWritePath(p, repoRoot = REPO_ROOT) {
+export function resolveThroughLinks(abs, realpath = realpathSync) {
+  let cur = abs;
+  const tail = [];
+  for (;;) {
+    try {
+      return tail.length === 0 ? realpath(cur) : join(realpath(cur), ...tail.reverse());
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err;
+    }
+    const parent = dirname(cur);
+    if (parent === cur) return abs;         // reached the root without finding anything that exists
+    tail.push(basename(cur));
+    cur = parent;
+  }
+}
+
+/**
+ * Positive allowlist. Returns null when the path is acceptable, otherwise the reason it is not.
+ *
+ * Two questions, both of which must hold. The LEXICAL one — resolve() + relative() — rejects a
+ * path whose relative form starts with ".." or is absolute, which covers `..` traversal, a sibling
+ * repository and anything outside the tree. The PHYSICAL one repeats the test after following
+ * symlinks on both sides, because the lexical answer is about strings and the write is not: a link
+ * planted anywhere along the path would otherwise satisfy the first check and defeat the second.
+ */
+export function checkWritePath(p, repoRoot = REPO_ROOT, realpath = realpathSync) {
   const abs = resolve(repoRoot, p);
-  const rel = relative(resolve(repoRoot, WRITE_ROOT), abs);
+  const root = resolve(repoRoot, WRITE_ROOT);
+
+  const rel = relative(root, abs);
   if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
     return `outside the only writable directory (${WRITE_ROOT.replace(/\\/g, "/")})`;
+  }
+
+  // The physical test is anchored on the REPOSITORY root, and the write root is re-derived from it
+  // lexically. Resolving the write root through links instead would be self-defeating: if that
+  // directory is itself a link to /tmp/attacker, both sides resolve to /tmp/attacker, the two
+  // agree, and the escape is waved through precisely when it succeeded.
+  const realAbs = resolveThroughLinks(abs, realpath);
+  const realRoot = join(resolveThroughLinks(resolve(repoRoot), realpath), WRITE_ROOT);
+  const realRel = relative(realRoot, realAbs);
+  if (realRel === "" || realRel.startsWith("..") || isAbsolute(realRel)) {
+    return `outside the only writable directory once symlinks are resolved ` +
+           `(${WRITE_ROOT.replace(/\\/g, "/")})`;
   }
   return null;
 }
 
-export function isAllowedWritePath(p, repoRoot = REPO_ROOT) {
-  return checkWritePath(p, repoRoot) === null;
+export function isAllowedWritePath(p, repoRoot = REPO_ROOT, realpath = realpathSync) {
+  return checkWritePath(p, repoRoot, realpath) === null;
+}
+
+/**
+ * Creates a file that must not already exist, and refuses to follow a symlink to do it.
+ *
+ * "wx" is O_CREAT|O_EXCL: the kernel fails with EEXIST if the final component is anything at all,
+ * INCLUDING a dangling symlink — which is exactly the case existsSync() reports as absent. The
+ * fsync is what makes the later rename meaningful; without it the rename can be durable while the
+ * contents behind it are not.
+ */
+/** True if ANYTHING occupies the path — a file, a directory, or a symlink of either kind. */
+export function pathPresent(p) {
+  try { lstatSync(p); return true; } catch { return false; }
+}
+
+function writeNewFileSync(path, data) {
+  const fd = openSync(path, "wx");
+  try {
+    writeSync(fd, data);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
 }
 
 export function sidecarPathFor(pngPath) {
@@ -194,8 +278,10 @@ export function run(inPath, outPath, repoRoot = REPO_ROOT) {
   if (!sidecarAbs.toLowerCase().endsWith(SIDECAR_SUFFIX)) {
     throw new Error(`REFUSED: sidecar must end in ${SIDECAR_SUFFIX}`);
   }
-  if (existsSync(outAbs)) throw new Error(`REFUSED: output already exists: ${outPath}`);
-  if (existsSync(sidecarAbs)) throw new Error(`REFUSED: sidecar already exists: ${sidecarPathFor(outPath)}`);
+  // lstat, not existsSync: existsSync() follows the link and reports FALSE for a dangling one, so
+  // it is blind to precisely the plant that would redirect the write out of the tree.
+  if (pathPresent(outAbs)) throw new Error(`REFUSED: output already exists: ${outPath}`);
+  if (pathPresent(sidecarAbs)) throw new Error(`REFUSED: sidecar already exists: ${sidecarPathFor(outPath)}`);
   if (!existsSync(inAbs)) throw new Error(`input not found: ${inPath}`);
 
   // ── read and measure ─────────────────────────────────────────────────────────────────────
@@ -263,10 +349,39 @@ export function run(inPath, outPath, repoRoot = REPO_ROOT) {
     note: "Dust removal is a PRECONDITION for owner review, never a visual approval (D-059).",
   };
 
-  // Only now does anything reach disk.
+  // ── commit ───────────────────────────────────────────────────────────────────────────────
+  // Only now does anything reach disk. Both files are staged under unguessable temporary names in
+  // the destination directory — same directory so the rename is a rename and not a copy — then
+  // renamed into place, SIDECAR FIRST. See the header: of the two possible crash residues, only
+  // the harmless one (a report with no image, which makes the next run refuse) is reachable.
   mkdirSync(dirname(outAbs), { recursive: true });
-  writeFileSync(outAbs, outBuf);
-  writeFileSync(sidecarAbs, JSON.stringify(sidecar, null, 2), "utf8");
+  const stamp = randomBytes(8).toString("hex");
+  const tmpOut = `${outAbs}.${stamp}.tmp`;
+  const tmpSidecar = `${sidecarAbs}.${stamp}.tmp`;
+  const sidecarJson = JSON.stringify(sidecar, null, 2);
+
+  try {
+    writeNewFileSync(tmpOut, outBuf);
+    writeNewFileSync(tmpSidecar, Buffer.from(sidecarJson, "utf8"));
+  } catch (err) {
+    for (const t of [tmpOut, tmpSidecar]) { try { unlinkSync(t); } catch { /* nothing staged */ } }
+    throw err;
+  }
+
+  // The final paths were checked for existence far above, but that check is not a guarantee by
+  // the time we get here. Re-assert immediately before the rename: renameSync overwrites silently,
+  // and lstat (not stat) is what sees a symlink planted at the destination rather than its target.
+  for (const p of [sidecarAbs, outAbs]) {
+    let clash = null;
+    try { clash = lstatSync(p); } catch { /* absent, which is what we require */ }
+    if (clash) {
+      for (const t of [tmpOut, tmpSidecar]) { try { unlinkSync(t); } catch { /* already gone */ } }
+      throw new Error(`REFUSED: destination appeared while writing, nothing committed: ${p}`);
+    }
+  }
+
+  renameSync(tmpSidecar, sidecarAbs);
+  renameSync(tmpOut, outAbs);
   return sidecar;
 }
 

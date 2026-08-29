@@ -232,6 +232,25 @@ and is wrong the moment something is added to the tree; an allowlist names the o
 is intended and refuses the rest by default. The tool also refuses to overwrite an existing file,
 refuses input and output resolving to the same file, and requires a `.png` extension.
 
+**The allowlist is resolved through symlinks, not merely lexically.** `resolve()` + `relative()`
+answer a question about strings; the write does not. `tools/avatar/build/` is gitignored scratch
+that tools create and delete freely, so a link planted inside it satisfied the string check and
+still sent the bytes anywhere on disk — and a **dangling** link was worse, because `existsSync()`
+follows it, finds nothing, and reports `false`, so the "already exists" guard waved through exactly
+the plant that escapes. The presence guards now use `lstat`, and both files are created with
+**`O_EXCL`**, which the kernel refuses to satisfy through a symlink at the final component.
+The physical check is anchored on the **repository root**, with the write root re-derived from it
+lexically: comparing `realpath(path)` against `realpath(writeRoot)` would be self-defeating, since
+a linked write root makes both sides resolve to the same outside directory and the escape would be
+accepted precisely when it succeeded.
+
+**The commit is ordered, because two files cannot be published atomically.** Both are staged under
+unguessable temporary names in the destination directory, `fsync`ed, and renamed into place — the
+**sidecar first**. The two possible crash residues are not equally bad: a report with no image is
+obviously incomplete and makes the next run refuse, whereas an image with no report looks exactly
+like a validated output while carrying no evidence that anything was checked. The ordering leaves
+only the harmless residue reachable.
+
 **It is fail-closed.** Everything is computed and checked *before* anything is written: the
 cleaned image is encoded, decoded again, and compared to what was intended, then **nine
 postconditions** are evaluated — the authoring and served budgets, geometric identity, no change
