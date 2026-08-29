@@ -1,0 +1,150 @@
+{
+  "tool": "clean-r2-hair-alpha",
+  "toolVersion": "3.0.0",
+  "pass": true,
+  "postconditions": {
+    "authoringWithinBudget": {
+      "pass": true,
+      "value": 27,
+      "limit": 64
+    },
+    "servedWithinBudget": {
+      "pass": true,
+      "value": 11,
+      "limit": 16
+    },
+    "geometryIdentical": {
+      "pass": true,
+      "value": true
+    },
+    "noChangeAtOrAboveAlphaFloor": {
+      "pass": true,
+      "value": 0
+    },
+    "noChangeAtOrAboveInk": {
+      "pass": true,
+      "value": 0
+    },
+    "noChangeWithInkNeighbour": {
+      "pass": true,
+      "value": 0
+    },
+    "allRemovedFullyTransparent": {
+      "pass": true,
+      "value": 0
+    },
+    "nonQualifyingBytesUntouched": {
+      "pass": true,
+      "value": 0
+    },
+    "encodedRoundTripsExactly": {
+      "pass": true,
+      "value": true
+    }
+  },
+  "input": {
+    "path": "tools/avatar/build/alpha-cleanup/afro.original.png",
+    "sha256": "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e",
+    "width": 1024,
+    "height": 1536
+  },
+  "output": {
+    "path": "tools/avatar/build/alpha-cleanup/afro.cleaned.png",
+    "sha256": "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd",
+    "width": 1024,
+    "height": 1536
+  },
+  "alphaFloor": 24,
+  "inkThreshold": 128,
+  "pixelsChanged": 5911,
+  "maxRemovedAlpha": 23,
+  "removedAlphaHistogram": {
+    "1": 3049,
+    "2": 1261,
+    "3": 714,
+    "4": 344,
+    "5": 177,
+    "6": 110,
+    "7": 72,
+    "8": 37,
+    "9": 27,
+    "10": 18,
+    "11": 23,
+    "12": 12,
+    "13": 20,
+    "14": 13,
+    "15": 10,
+    "16": 10,
+    "17": 2,
+    "18": 2,
+    "19": 3,
+    "20": 3,
+    "22": 2,
+    "23": 2
+  },
+  "removedBoundingBox": {
+    "minX": 192,
+    "minY": 33,
+    "maxX": 937,
+    "maxY": 1087
+  },
+  "removedComponents": 255,
+  "invariants": {
+    "changedAtOrAboveAlphaFloor": 0,
+    "changedAtOrAboveInk": 0,
+    "changedWithInkNeighbour": 0,
+    "changedToSomethingOtherThanFullyTransparent": 0,
+    "nonQualifyingBytesChanged": 0
+  },
+  "orphanSoft": {
+    "authoring": {
+      "before": 5938,
+      "after": 27,
+      "tolerance": 64,
+      "size": "1024x1536"
+    },
+    "served": {
+      "before": 1292,
+      "after": 11,
+      "tolerance": 16,
+      "size": "512x768",
+      "downscale": "premultiplied 2x2 box average — promote-r2-torso-asset.downscaleHalf, reused verbatim"
+    }
+  },
+  "geometry": {
+    "before": {
+      "ink": 172788,
+      "envelope": {
+        "xLo": 30.46875,
+        "xHi": 129.0625,
+        "yLo": 5.625,
+        "yHi": 76.5625
+      },
+      "components": {
+        "count": 1,
+        "largest": 172788,
+        "specks": 0
+      },
+      "meanSat": 0,
+      "peakSat": 0
+    },
+    "after": {
+      "ink": 172788,
+      "envelope": {
+        "xLo": 30.46875,
+        "xHi": 129.0625,
+        "yLo": 5.625,
+        "yHi": 76.5625
+      },
+      "components": {
+        "count": 1,
+        "largest": 172788,
+        "specks": 0
+      },
+      "meanSat": 0,
+      "peakSat": 0
+    },
+    "identical": true
+  },
+  "note": "Dust removal is a PRECONDITION for owner review, never a visual approval (D-059)."
+}
