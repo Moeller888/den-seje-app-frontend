@@ -47,12 +47,18 @@ export const TOOL_VERSION = "1.0.0";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
 const DWEBP = join(HERE, "vendor", "dwebp.exe");
-const INPUT_REL = "assets/avatar-r2/base/body-neutral-medium-v2.webp";
-const INPUT = join(REPO, "assets", "avatar-r2", "base", "body-neutral-medium-v2.webp");
+// REVIEW BRANCH — re-pointed at the v3 base CANDIDATE. `body-neutral-medium-v3.webp` is tracked but
+// is NOT registered in R2_MANIFEST, so the runtime still loads v2 and this changes no behaviour.
+// The v2 asset is untouched (D-018: never mutate a shipped asset; a new base is a new version).
+const INPUT_REL = "assets/avatar-r2/base/body-neutral-medium-v3.webp";
+const INPUT = join(REPO, "assets", "avatar-r2", "base", "body-neutral-medium-v3.webp");
 
-// Frozen input contract — the RUNTIME base (R2_MANIFEST base "neutral-medium": 2). The Phase-1 baked
-// v1 PNG is explicitly NOT a geometric input here (D-084 §2): it is the historical/rollback asset.
-export const INPUT_EXPECT_SHA = "28765eea616dd92beb73273c67d6d603cabd9f92af8057d2d9a5fe50c01032f9";
+// Frozen input contract — the base this mask set is derived from. The guard below is UNCHANGED and
+// still hard-fails on any mismatch; only the pinned value moves, and it moves deliberately, with the
+// candidate's measured SHA. The Phase-1 baked v1 PNG remains explicitly NOT a geometric input
+// (D-084 §2), and neither is v2 once this file points at v3.
+//   v2 (shipped runtime base): 28765eea616dd92beb73273c67d6d603cabd9f92af8057d2d9a5fe50c01032f9
+export const INPUT_EXPECT_SHA = "359ea9150ec8f466eb0a7debaff6d62d8082be32568f65c25cd602de9522f8f2";
 const SRC_W = 512, SRC_H = 768;          // served R2 dimensions
 export const OUT_W = 1024, OUT_H = 1536; // Master canvas (D-027/D-037 authoring canvas) = served x2
 const UPSCALE = 2;
