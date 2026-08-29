@@ -16,6 +16,9 @@ import { dirname, join } from "node:path";
 import {
   parseSubpaths, columnSpans, measureC2Style, C2_STYLES, C2_HEAD, K,
 } from "../../tools/avatar/measure-r2-hair-fit.mjs";
+// The hair sentinels below call the resolver rather than reading its source: the audit's own
+// lesson is that inspecting the code is not the same as measuring what it does.
+import { hairSrcForR2, R2_MANIFEST } from "../../js/avatar-layers.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -100,13 +103,39 @@ test("the canvas conversion matches the served R2 dimensions", () => {
     "the served R2 size changed — the audit's C2-canvas conversion is stale");
 });
 
-test("hairSrcForR2 still ignores the identity it is handed", () => {
-  // The defect the audit exists for. When this stops being true, D-102 has been acted on and the
-  // document must be closed rather than left describing a fixed system.
-  const fn = /export function hairSrcForR2\(identity\) \{([\s\S]*?)\n\}/.exec(LAYERS);
-  assert.ok(fn, "hairSrcForR2 not found");
-  assert.ok(!/identity/.test(fn[1]),
-    "hairSrcForR2 now reads `identity` — the R2 hair gap may be closed; update D-102 and this test");
-  assert.match(fn[1], /R2_MANIFEST\.hair\["northstar"\]/,
-    "hairSrcForR2 no longer resolves the single northstar asset — re-derive the audit");
+// This sentinel used to assert the opposite — that hairSrcForR2 ignored the identity handed to it,
+// which was the defect the audit exists for. It fired on 2026-08-29 exactly as designed when the
+// resolver was made style-aware (D-114), so it now guards the NEW contract instead of the old gap.
+// Behaviour, not source text: the audit's own lesson is that reading the code is not the same as
+// measuring what it does.
+test("hairSrcForR2 resolves the identity's style when that style has an asset", () => {
+  assert.equal(hairSrcForR2({ hairstyle: "afro" }), "/assets/avatar-r2/hair/hair-afro-v1.webp");
+});
+
+test("a style with NO R2 asset falls back to northstar, and does NOT drop the avatar to C2", () => {
+  // The load-bearing half. Hair is a mandatory layer, so returning null here would take the WHOLE
+  // avatar to C2 (r2StackSrcsFor) for every student whose style has no artwork yet — a rollback of
+  // D-101 delivered by a resolver. Six of the seven styles are in exactly that position today.
+  const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
+  for (const style of ["short", "tousled", "curly", "long", "ponytail", "buzz",
+                       "default", "braid", "sidecut", "buzzcut"]) {
+    assert.equal(hairSrcForR2({ hairstyle: style }), NORTHSTAR, `${style} must still render northstar`);
+  }
+});
+
+test("a hairstyle value from the database cannot reach an inherited property", () => {
+  // `hairstyle` is stored data. A bare `R2_MANIFEST.hair[value]` lookup would resolve "constructor"
+  // to Function rather than to a registered asset.
+  const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
+  for (const junk of ["constructor", "__proto__", "toString", "", "northstar-v1", 42, null, undefined]) {
+    assert.equal(hairSrcForR2({ hairstyle: junk }), NORTHSTAR, `${String(junk)} must fall back`);
+  }
+  for (const junk of [null, undefined, "x", 7, {}]) {
+    assert.equal(hairSrcForR2(junk), NORTHSTAR, "a malformed identity must fall back");
+  }
+});
+
+test("northstar stays registered — it is the fallback the whole R2 path leans on", () => {
+  assert.ok(Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, "northstar"),
+    "removing northstar would drop every un-produced style's avatar to C2");
 });

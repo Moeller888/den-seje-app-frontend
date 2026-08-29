@@ -375,7 +375,12 @@ export const R2_MANIFEST = {
   eyesIris: { "neutral": 1 },     // eyes/eyes-neutral-iris-v1.webp (z4, multiply × iris token)
   eyesFixed:{ "neutral": 1 },     // eyes/eyes-neutral-fixed-v1.webp (z4)
   eyelid:   {},                   // Option A countersigned: CSS-ellipse lid — no raster asset
-  hair:     { "northstar": 1 },   // hair/hair-northstar-v1.webp (z40, multiply × hair token)
+  // Keyed by the identity's hairstyle, plus "northstar" — the generic hair every R2 render used
+  // before any per-style asset existed, and still the fallback for a style with no asset of its
+  // own (see hairSrcForR2). "afro" is the first per-style R2 asset: owner-approved at real render
+  // scale 2026-08-29, produced by the runtime-asset path (downscaleHalf → cwebp -lossless -exact
+  // -z 9), decoded byte-identical to its 512×768 reference.
+  hair:     { "northstar": 1, "afro": 1 }, // hair/hair-{key}-v{n}.webp (z40, multiply × hair token)
   // COSMETIC garments keyed by the CATALOG ITEM (D-090). Unlike every entry above — which is part of
   // the mandatory figure — this registers a shop item's R2-SPECIFIC artwork: torso/armor-knight-r2-v1
   // .webp, the Ridderdragt re-authored for the R2 silhouette (A2, accepted D-088; promoted D-089,
@@ -440,9 +445,30 @@ export function blushSrcForR2() {
   return e ? r2Path("face", "face-blush-multiply", e) : null;
 }
 
+// The R2 hair the identity's style resolves to, or the generic `northstar` when that style has no
+// asset of its own. Mirrors hairSrcForC2's shape: a table lookup with a default, defensive about a
+// null or non-object identity.
+//
+// WHY northstar AND NOT null. Hair is a MANDATORY layer, so returning null drops the WHOLE avatar
+// to C2 (r2StackSrcsFor). With one per-style asset registered that would take every student whose
+// hairstyle is not `afro` off the R2 path entirely — a rollback of D-101 delivered by a resolver.
+// Falling back to northstar keeps today's render exactly as it is for those students and changes
+// the picture only for the style that actually has artwork. Once all seven styles are produced,
+// switching this fallback to null is the honest end state and a separate decision.
+//
+// hasOwnProperty, not a bare lookup: `hairstyle` comes from the database, and a value like
+// "constructor" would otherwise resolve to an inherited property rather than a registered asset.
+export const R2_HAIR_FALLBACK = "northstar";
+
 export function hairSrcForR2(identity) {
-  const e = r2Entry(R2_MANIFEST.hair["northstar"]);
-  return e ? r2Path("hair", "hair-northstar", e) : null;
+  const hairstyle = (identity && typeof identity === "object") ? identity.hairstyle : null;
+  const key = (typeof hairstyle === "string" &&
+               Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, hairstyle) &&
+               r2Entry(R2_MANIFEST.hair[hairstyle]))
+    ? hairstyle
+    : R2_HAIR_FALLBACK;
+  const e = r2Entry(R2_MANIFEST.hair[key]);
+  return e ? r2Path("hair", "hair-" + key, e) : null;
 }
 
 // Torso GARMENT resolver (D-090). Keyed by the catalog item's stable asset basename — the same key
