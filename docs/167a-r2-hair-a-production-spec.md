@@ -1,8 +1,15 @@
 # 167A — Option A production spec: the seven R2 hairstyle rasters
 
-**Status:** `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**, identity-lock
-accepted **D-105**, first slice = all seven **D-106**).
-Was `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
+**Status:** `PRODUCTION_IN_PROGRESS — AFRO_LANDED — GATE_CONTRACT_REVISED_D-115` (2026-08-30).
+Was `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**, identity-lock accepted
+**D-105**, first slice = all seven **D-106**); before that `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
+**§5.2, §5.3 and §6 were revised by D-115:** the visual acceptance gates measure the finished,
+decoded 512×768 runtime asset, and `no-floating-islands` uses 8-neighbour connectivity. No
+threshold, envelope or cleanup algorithm changed.
+> **Reported, not silently fixed:** the `NOT STARTED` half of the old status line was already stale
+> before this revision — D-111 produced a first candidate round and D-114 registered the approved
+> afro. Re-deriving the rest of this document against that is a separate task; the status line is
+> re-pointed here, and §3's "seven assets" scope is unaffected.
 **Type:** specification + a deterministic, non-AI acceptance gate. **This document produces no
 artwork, promotes nothing and registers nothing.** It changes no runtime, resolver, manifest,
 asset, z, transform, flag, catalog, migration, Edge Function or Supabase object.
@@ -166,14 +173,19 @@ Reused unchanged from the torso path (D-084/D-089), so no new pipeline is invent
 
 ```
 1024×1536 RGBA PNG (authoring canvas, SHA-pinned at acceptance)
+  → authoring alpha cleanup          (clean-r2-hair-alpha.mjs, §5.4)
   → premultiplied 2×2 box downscale ÷2
+  → served alpha cleanup             (clean-served-alpha.mjs — the SAME rule, coarser grid)
   → 512×768 RGBA reference PNG
   → cwebp -lossless -exact -z 9 -metadata none
+  → decode with the pinned dwebp     ← THIS is what the acceptance gates measure (§6, D-115)
   → assets/avatar-r2/hair/hair-<style>-v1.webp
 ```
 
 The decoded asset must equal the reference **byte for byte**; that is what proves the encode was
-lossless and that no pixel of the accepted artwork moved.
+lossless and that no pixel of the accepted artwork moved. `tools/avatar/build-r2-hair-runtime-asset.mjs`
+runs this chain and returns every intermediate, writing only into gitignored scratch — producing
+the bytes that would ship is **not** shipping them.
 
 ### 5.3 Alpha
 
@@ -181,21 +193,26 @@ lossless and that no pixel of the accepted artwork moved.
 and are counted against the candidate — the D-059/D-061 lesson that a matte's residue is judged at
 render scale, on the surface, not on the full-res composite.
 
-#### The budget is TWO numbers, at two scales
+#### The budget is TWO numbers, at two scales — and they are enforced in two places (D-115)
 
 | Scale | Budget | Where it is enforced |
 |---|---:|---|
-| authoring 1024×1536 | **64** | `check-r2-hair-candidate.mjs` — `HALO_TOLERANCE_AUTHORING` |
-| served 512×768 | **16** | the same gate, on the real `downscaleHalf()` output |
+| authoring 1024×1536 | **64** | `clean-r2-hair-alpha.mjs` — the `authoringWithinBudget` postcondition, which refuses to *write* a cleaned PNG above it |
+| **runtime** 512×768 | **16** | the `alpha-clean-no-halo` **runtime gate**, on the **decoded** asset |
 
 This mirrors the torso path exactly: `check-r2-torso-candidate` allows `MAX_ORPHAN_SOFT_PX = 64`
 at authoring scale, and `promote-r2-torso-asset` allows `MAX_ORPHAN_SOFT_PX_SERVED = 16` after the
 ÷2 downscale — documented there as *"64 authoring px ÷ 4"*.
 
-**This gate previously declared 16 while citing that convention, and then applied it to the
-authoring candidate** — four times stricter than the torso gate at the same resolution, and
-measured before the very step that removes most sub-visible dust. Both budgets are now stated and
-both are checked, the served one against `downscaleHalf()` itself rather than a re-implementation.
+**Neither number has ever changed.** What changed twice is where they are read. The gate first
+declared 16 while citing that convention and applied it to the *authoring* candidate — four times
+stricter than the torso gate at the same resolution. That was corrected to measure `downscaleHalf()`
+itself. **D-115 then moved it one step further, to the buffer that actually ships:** the downscale
+alone is still an intermediate, because the served cleanup pass runs after it. Gating on the
+intermediate meant refusing candidates for dust the pipeline was about to remove anyway — measured
+on `short`, 25 orphans in the intermediate against 14 in the shipped asset. `clean-r2-hair-alpha.mjs`
+renamed its postcondition `servedWithinBudget` → `runtimeWithinBudget` to match, and still reports
+the intermediate count so the two can never be confused again.
 
 ### 5.4 Orphan-dust removal — permitted, bounded, and not an approval
 
@@ -275,23 +292,72 @@ node tools/avatar/check-r2-hair-candidate.mjs <candidate.png> <style>
 npm run avatar:r2-hair-check -- <candidate.png> <style>
 ```
 
-| Gate | Refuses |
+**Eleven named checks, of two kinds (D-115).** The distinction is the whole point and the tool
+prints it: a precondition asks whether the delivered file is a usable *input*; an acceptance gate
+is the *visual judgement* and therefore measures the decoded 512×768 asset a browser paints.
+
+**Authoring preconditions (2)** — measured on the 1024×1536 source, because no downscale, cleanup
+or lossless encode can create or repair either property:
+
+| Precondition | Refuses |
 |---|---|
 | `dimensions` | anything but 1024×1536 RGBA |
-| `has-ink` | an empty candidate passing by vacuum |
 | `luminance-map` | colour baked into the asset (§5.1) |
+
+**Runtime acceptance gates (9)** — measured on the **decoded** asset, after the full §5.2 chain:
+
+| Gate | Refuses |
+|---|---|
+| `has-ink` | an empty asset passing by vacuum |
 | `covers-the-crown` | hair starting below y 31.6, leaving scalp showing |
 | `clears-the-eye-line` | hair reaching the eyes |
 | `respects-the-neck` | ink below y 81.6, except for `long`/`ponytail` up to their measured extent |
 | `within-style-envelope` | a silhouette outside its C2 x-span (±4 units) |
 | `centred-on-the-skull` | artwork hanging off the side of the head (centre ±2 of 80.5) |
-| `no-floating-islands` | detached specks |
-| `alpha-clean-no-halo` | orphan soft pixels above tolerance |
+| `no-floating-islands` | detached specks — **8-neighbour connectivity** (see below) |
+| `alpha-clean-no-halo` | orphan soft pixels above the served tolerance |
 | `legible-at-render-sizes` | a shape that dissolves at the four D-071 sizes |
 
+Before any gate runs, the decoded WebP is compared to the reference the encoder was handed. If
+they differ, the measurement basis is not the shipped image and the run is disqualified outright.
+
+#### `no-floating-islands` counts corners (D-115)
+
+A pixel joins the component it touches horizontally, vertically **or diagonally** — all eight
+neighbour positions. 4-neighbour connectivity sees only the four sides, so two pixels sharing a
+corner are "separate" to the algorithm while being physically joined on screen. After a ÷2 box
+downscale that is routine: averaging 2×2 blocks regularly leaves a silhouette's outermost pixel
+attached to the mass only at a corner, and calling it a floating island reports a defect no student
+can see. Every other component algorithm in the R2 asset contract was already 8-neighbour; the hair
+gate was the lone outlier.
+
+**The consequence, stated rather than buried:** an *unbroken diagonal chain* of ink counts as
+connected under this rule, however long and however thin. That is a real widening and it is
+accepted deliberately — such a chain is continuous ink on screen, and these gates have never
+claimed to judge whether a shape is good hair (§7). What the rule still refuses is ink separated by
+**at least one whole pixel** of non-ink.
+
+**The orphan-soft definition is a different question and did NOT change.** It still asks whether a
+faint pixel is attached to an edge, using the **four** orthogonal neighbours, because it decides
+what the cleanup tools may *delete*. Widening it would licence removing more artwork; widening the
+island rule only regroups pixels and removes nothing.
+
 Each gate is exercised in both directions by `tests/unit/avatar-r2-hair-candidate-check.test.mjs`
-(17 tests, CI-safe — no vendored binary): a clean candidate passes, and one deliberate defect trips
+(30 tests, CI-safe — no vendored binary): a clean candidate passes, and one deliberate defect trips
 exactly the gate it should. A gate that only ever sees good input cannot be shown to work.
+
+Since D-115 that suite also pins the connectivity contract from both sides, on synthetic fixtures
+that reproduce the real `(260,30)` case exactly — alpha 128, one diagonal ink neighbour at 225, no
+orthogonal ink. The counterfactual runs the **production flood fill with the old neighbour set**
+(and first asserts that, given the production neighbours, it reproduces `countComponents` exactly),
+so "it would have failed under 4-neighbour" is a measurement rather than a claim. Genuinely
+detached ink — one whole pixel of clearance or more — still fails, singly and in groups.
+
+`avatar-r2-hair-runtime-asset.test.mjs` (16 tests) carries the same proofs on REAL pixels: the
+codec round-trip, the shipped afro, and the `short` candidate. It drives the vendored libwebp, so
+it is listed in `tests/unit-ci-exclusions.mjs` and runs locally only; its structural claims are
+duplicated on the synthetic fixtures above, so CI coverage did not shrink. Its lossy-encode
+counterfactual proves the byte-for-byte check can actually fail.
 
 **The served half of the alpha gate was, for a time, not being measured at all.** The test helper
 called `downscaleHalf(w, h, rgba)` and then read `.rgba`, `.w` and `.h` off the result — but that

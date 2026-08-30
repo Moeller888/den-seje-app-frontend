@@ -15,7 +15,7 @@ import {
 // isOrphanSoft / countOrphanSoft now live in ONE place — the gate — and the cleanup tool imports
 // them from there. Importing them from the gate here is deliberate: it is the same function.
 import {
-  analyse, gates, isOrphanSoft, countOrphanSoft, ALPHA_INK,
+  analyse, runtimeGates, isOrphanSoft, countOrphanSoft, ALPHA_INK,
   HALO_TOLERANCE_AUTHORING, HALO_TOLERANCE_SERVED,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
@@ -164,31 +164,46 @@ function withOrphans(n, alpha = 100) {
 }
 
 const servedOrphanOf = (b) => countOrphanSoft(downscaleHalf(W, H, b), W >> 1, H >> 1);
-const alphaGate = (b) => gates(analyse(b, W, H), "short", servedOrphanOf(b))
-  .find((g) => g.id === "alpha-clean-no-halo");
+// Since D-115 the alpha gate measures the pixels it is HANDED, and the caller hands it the decoded
+// runtime asset. These canvases stand in for that buffer: the budget is an absolute pixel count,
+// so the arithmetic is identical at any size.
+const alphaGate = (b) => runtimeGates(b, W, H, "short").find((g) => g.id === "alpha-clean-no-halo");
 
-test("64 authoring orphans pass and 65 fail", () => {
-  // The two budgets are deliberately isolated here. A lattice dense enough to hold 64 authoring
-  // orphans also produces ~64 SERVED orphans, so measuring both at once would test the served
-  // bound instead of the authoring one. The served count is therefore pinned at 0 for this test;
-  // the test below does the mirror image for the served bound.
-  const gateAt = (n) => gates(analyse(withOrphans(n), W, H), "short", 0)
+test("the runtime bound is 16: 16 orphans pass and 17 fail", () => {
+  assert.equal(alphaGate(withOrphans(16)).pass, true, "16 must pass");
+  assert.equal(alphaGate(withOrphans(17)).pass, false, "17 must fail");
+  assert.equal(alphaGate(withOrphans(17)).detail.orphanSoftServed, 17);
+  assert.equal(alphaGate(withOrphans(17)).detail.toleranceServed, HALO_TOLERANCE_SERVED);
+});
+
+test("the gate counts the buffer it is given — it cannot be told a number instead", () => {
+  // The pre-D-115 signature took the served orphan count as an ARGUMENT, so a caller could hand it
+  // a figure measured on any image at all (or, as happened once, a silent 0). It now derives the
+  // count from the pixels, so the only way to change the verdict is to change the pixels.
+  const clean = withOrphans(2), dirty = withOrphans(40);
+  assert.equal(alphaGate(clean).detail.orphanSoftServed, countOrphanSoft(clean, W, H));
+  assert.equal(alphaGate(dirty).detail.orphanSoftServed, countOrphanSoft(dirty, W, H));
+  assert.equal(alphaGate(clean).pass, true);
+  assert.equal(alphaGate(dirty).pass, false);
+});
+
+test("the runtime gate judges the shipped image only — the authoring canvas is not its business", () => {
+  // 65 authoring orphans used to fail this gate. They no longer reach it: the gate judges the
+  // pixels that ship, and the authoring canvas is not those pixels. The 64-px budget is not gone —
+  // it is `authoringWithinBudget` in clean-r2-hair-alpha.mjs, which refuses to WRITE above it; the
+  // guards suite proves that refusal behaviourally. Nothing was loosened; the check bites earlier.
+  assert.equal(HALO_TOLERANCE_AUTHORING, 64, "the authoring budget is unchanged");
+
+  // Two DIFFERENT authoring canvases that reduce to the SAME runtime pixels must get the same
+  // verdict. If the gate still consulted the authoring image, these would disagree.
+  const dirty = withOrphans(80);                       // way over the 64 authoring budget
+  const runtimeOfDirty = cleanAlpha(downscaleHalf(W, H, cleanAlpha(dirty, W, H).rgba), W >> 1, H >> 1).rgba;
+  const gDirty = runtimeGates(runtimeOfDirty, W >> 1, H >> 1, "short")
     .find((g) => g.id === "alpha-clean-no-halo");
-  assert.equal(gateAt(64).pass, true, "64 must pass at authoring scale");
-  assert.equal(gateAt(65).pass, false, "65 must fail at authoring scale");
-  assert.equal(gateAt(65).detail.orphanSoftAuthoring, 65);
-});
-
-test("the served bound is enforced independently of the authoring bound", () => {
-  const b = withOrphans(10);
-  const a = analyse(b, W, H);
-  assert.equal(gates(a, "short", 16).find((g) => g.id === "alpha-clean-no-halo").pass, true);
-  assert.equal(gates(a, "short", 17).find((g) => g.id === "alpha-clean-no-halo").pass, false);
-});
-
-test("the gate refuses to run without a served count — no silent half-check", () => {
-  const b = withOrphans(4);
-  assert.throws(() => gates(analyse(b, W, H), "short"), /servedOrphan is required/);
+  assert.equal(gDirty.pass, countOrphanSoft(runtimeOfDirty, W >> 1, H >> 1) <= HALO_TOLERANCE_SERVED,
+    "the verdict must follow the runtime count and nothing else");
+  assert.equal(gDirty.detail.orphanSoftAuthoring, undefined,
+    "the runtime gate must not report an authoring figure it does not measure");
 });
 
 test("the served count uses the production downscale, not a look-alike", () => {
@@ -201,7 +216,7 @@ test("the served count uses the production downscale, not a look-alike", () => {
 test("passing the alpha gate does not rescue a candidate that fails geometry", () => {
   const b = blank();
   for (let y = 2; y < 90; y++) for (let x = 2; x < 62; x++) put(b, x, y, 255);   // vastly too wide
-  const g = gates(analyse(b, W, H), "short", servedOrphanOf(b));
+  const g = runtimeGates(b, W, H, "short");
   assert.equal(g.find((x) => x.id === "alpha-clean-no-halo").pass, true, "alpha is clean here");
   assert.equal(g.find((x) => x.id === "within-style-envelope").pass, false, "geometry must still refuse");
 });

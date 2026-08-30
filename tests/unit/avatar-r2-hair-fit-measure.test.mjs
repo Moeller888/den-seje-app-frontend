@@ -11,6 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
@@ -138,4 +139,30 @@ test("a hairstyle value from the database cannot reach an inherited property", (
 test("northstar stays registered — it is the fallback the whole R2 path leans on", () => {
   assert.ok(Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, "northstar"),
     "removing northstar would drop every un-produced style's avatar to C2");
+});
+
+// ── the approved afro asset is UNTOUCHED by the D-115 gate work ───────────────────────────────
+// D-115 changed WHICH image the acceptance gates measure and widened `no-floating-islands` to
+// eight neighbours. Neither is allowed to rewrite artwork the owner already signed off, and the
+// only way to prove that is to pin the bytes. This is deliberately a plain hash of the tracked
+// file, so it runs in CI and does not depend on the vendored libwebp binaries.
+test("the owner-approved afro asset is byte-for-byte unchanged", () => {
+  const asset = join(REPO, "assets", "avatar-r2", "hair", "hair-afro-v1.webp");
+  const buf = readFileSync(asset);
+  assert.equal(buf.length, 36356, "the afro asset changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "675f8f951c65266c75cc661163219a7958b612b0d45ec9471655f0bebf9eb09a",
+    "the afro asset was rebuilt or re-encoded — the owner approved THESE bytes (D-114)");
+});
+
+test("the approved afro CANDIDATE fixtures are unchanged too", () => {
+  // The cleaned PNG is what the owner actually reviewed at render scale; the original is its
+  // provenance. clean-r2-hair-alpha.mjs changed version in D-115, so pinning these proves the
+  // change was to a postcondition and not to a pixel.
+  const fix = (f) => createHash("sha256")
+    .update(readFileSync(join(REPO, "tools", "avatar", "fixtures", "r2-hair", f))).digest("hex");
+  assert.equal(fix("afro-original.png"),
+    "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e");
+  assert.equal(fix("afro-cleaned.png"),
+    "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd");
 });

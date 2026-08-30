@@ -47,10 +47,15 @@ test("no file OUTSIDE the list depends on a vendored binary", () => {
 });
 
 test("the exclusion list is as small as it is, and that is recorded", () => {
-  // 2 files / 12 tests, measured by hiding tools/avatar/vendor/ and running the suite.
+  // 3 files, measured by hiding tools/avatar/vendor/ and running the suite:
+  //   2 torso files / 12 tests  (D-094)
+  //   1 hair file  / 16 tests   (D-115 — the runtime-pixel gates must encode and decode to exist)
   // If this number grows, someone is opting more code out of CI and should have to justify it.
-  assert.equal(BINARY_DEPENDENT.length, 2,
-    "the CI exclusion list changed — that reduces or restores what CI enforces; update D-094 deliberately");
+  // The third entry's justification is written out in tests/unit-ci-exclusions.mjs: its structural
+  // claims are duplicated on synthetic fixtures in two suites that DO run in CI, so what CI
+  // enforces did not shrink.
+  assert.equal(BINARY_DEPENDENT.length, 3,
+    "the CI exclusion list changed — that reduces or restores what CI enforces; update D-094/D-115 deliberately");
 });
 
 test("CI actually runs the unit suite", () => {

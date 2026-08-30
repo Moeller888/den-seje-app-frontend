@@ -60,7 +60,7 @@ import {
 } from "./check-r2-hair-candidate.mjs";
 
 export const TOOL = "clean-r2-hair-alpha";
-export const TOOL_VERSION = "3.0.0";
+export const TOOL_VERSION = "4.0.0";   // 4.0.0: the served budget is checked on the RUNTIME buffer (D-115)
 
 // Reused unchanged from openai-generate-torso-item.mjs. Do not tune.
 export const ALPHA_FLOOR = 24;
@@ -303,6 +303,12 @@ export function run(inPath, outPath, repoRoot = REPO_ROOT) {
   const after = geometryOf(rgba, png.w, png.h);
   const afterAuthoring = countOrphanSoft(rgba, png.w, png.h);
   const afterServed = countOrphanSoft(downscaleHalf(png.w, png.h, rgba), sw, sh);
+  // THE RUNTIME BUFFER (D-115). `afterServed` above is the downscale on its own — an intermediate
+  // that never reaches a browser, because the served cleanup pass runs after it. Gating on that
+  // number meant refusing candidates for dust the pipeline was about to remove anyway. The budget
+  // is unchanged (16); what changed is that it is now read from the buffer that actually ships.
+  // The intermediate stays REPORTED, so nothing is hidden and the two are never confused again.
+  const afterRuntime = countOrphanSoft(cleanAlpha(downscaleHalf(png.w, png.h, rgba), sw, sh).rgba, sw, sh);
   const geometryIdentical = JSON.stringify(before) === JSON.stringify(after);
 
   // Encode, then decode the encoded bytes back and compare — proves the PNG we are about to write
@@ -314,7 +320,7 @@ export function run(inPath, outPath, repoRoot = REPO_ROOT) {
   // ── postconditions — every one evaluated, then all of them required ───────────────────────
   const postconditions = {
     authoringWithinBudget: { pass: afterAuthoring <= HALO_TOLERANCE_AUTHORING, value: afterAuthoring, limit: HALO_TOLERANCE_AUTHORING },
-    servedWithinBudget: { pass: afterServed <= HALO_TOLERANCE_SERVED, value: afterServed, limit: HALO_TOLERANCE_SERVED },
+    runtimeWithinBudget: { pass: afterRuntime <= HALO_TOLERANCE_SERVED, value: afterRuntime, limit: HALO_TOLERANCE_SERVED },
     geometryIdentical: { pass: geometryIdentical, value: geometryIdentical },
     noChangeAtOrAboveAlphaFloor: { pass: report.invariants.changedAtOrAboveAlphaFloor === 0, value: report.invariants.changedAtOrAboveAlphaFloor },
     noChangeAtOrAboveInk: { pass: report.invariants.changedAtOrAboveInk === 0, value: report.invariants.changedAtOrAboveInk },
@@ -341,8 +347,13 @@ export function run(inPath, outPath, repoRoot = REPO_ROOT) {
     orphanSoft: {
       authoring: { before: beforeAuthoring, after: afterAuthoring, tolerance: HALO_TOLERANCE_AUTHORING, size: `${png.w}x${png.h}` },
       served: {
-        before: beforeServed, after: afterServed, tolerance: HALO_TOLERANCE_SERVED, size: `${sw}x${sh}`,
+        before: beforeServed, after: afterServed, size: `${sw}x${sh}`,
         downscale: "premultiplied 2x2 box average — promote-r2-torso-asset.downscaleHalf, reused verbatim",
+        note: "INTERMEDIATE — the downscale before the served cleanup pass. Reported, not gated (D-115).",
+      },
+      runtime: {
+        after: afterRuntime, tolerance: HALO_TOLERANCE_SERVED, size: `${sw}x${sh}`,
+        note: "the buffer that ships, after the served cleanup pass — this is what runtimeWithinBudget gates",
       },
     },
     geometry: { before, after, identical: geometryIdentical },
@@ -399,7 +410,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     console.log(`  out ${r.output.sha256}`);
     console.log(`  cleared ${r.pixelsChanged} px in ${r.removedComponents} components, max removed alpha ${r.maxRemovedAlpha} (floor ${r.alphaFloor})`);
     console.log(`  orphan authoring ${r.orphanSoft.authoring.before} → ${r.orphanSoft.authoring.after} (max ${r.orphanSoft.authoring.tolerance})`);
-    console.log(`  orphan served    ${r.orphanSoft.served.before} → ${r.orphanSoft.served.after} (max ${r.orphanSoft.served.tolerance})`);
+    console.log(`  orphan served    ${r.orphanSoft.served.before} → ${r.orphanSoft.served.after} (intermediate, not gated)`);
+    console.log(`  orphan runtime   ${r.orphanSoft.runtime.after} (max ${r.orphanSoft.runtime.tolerance}) — the buffer that ships`);
     console.log(`  geometry identical: ${r.geometry.identical}`);
     console.log(`  postconditions: ${Object.keys(r.postconditions).length}/${Object.keys(r.postconditions).length} pass`);
   } catch (e) {

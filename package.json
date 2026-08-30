@@ -30,7 +30,8 @@
     "avatar:generate-openai-torso": "node tools/avatar/openai-generate-torso-item.mjs",
     "avatar:r2-torso-promote": "node tools/avatar/promote-r2-torso-asset.mjs",
     "avatar:r2-hair-fit": "node tools/avatar/measure-r2-hair-fit.mjs",
-    "avatar:r2-hair-check": "node tools/avatar/check-r2-hair-candidate.mjs"
+    "avatar:r2-hair-check": "node tools/avatar/check-r2-hair-candidate.mjs",
+    "avatar:r2-hair-runtime-asset": "node tools/avatar/build-r2-hair-runtime-asset.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
