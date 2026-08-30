@@ -34,10 +34,24 @@ node tools/avatar/clean-r2-hair-alpha.mjs \
   tools/avatar/build/alpha-cleanup/afro.cleaned.png
 ```
 
-The output is byte-identical to `afro-cleaned.png` — verified across three tool versions
-(1.0.0, 2.0.0, 3.0.0). Expect 5 938 → 27 orphan-soft at authoring scale, 1 292 → 11 served,
-5 911 pixels cleared in 255 components, highest removed alpha 23, geometry identical,
-9/9 postconditions, 11/11 gates.
+The output is byte-identical to `afro-cleaned.png` — verified across four tool versions
+(1.0.0, 2.0.0, 3.0.0, 4.0.0). Expect 5 938 → 27 orphan-soft at authoring scale, 1 292 → 11 in the
+intermediate downscale, **2 in the runtime buffer**, 5 911 pixels cleared in 255 components,
+highest removed alpha 23, geometry identical, 9/9 postconditions.
+
+`node tools/avatar/check-r2-hair-candidate.mjs tools/avatar/fixtures/r2-hair/afro-cleaned.png afro`
+reports **11/11** — 2 authoring preconditions + 9 runtime acceptance gates.
+
+### The two afro numbers, and why they are not interchangeable (D-115)
+
+| | orphan-soft | What it is |
+|---|---:|---|
+| the SHIPPED asset `hair-afro-v1.webp` (`675f8f95…`) | **11** | promoted on 2026-08-29, **before** `clean-served-alpha.mjs` existed, so it never went through the served cleanup pass |
+| the same source re-run through today's full pipeline | **2** | a *different* file (36 364 B, `8cd6ecb7…`) that has never been promoted and will not be |
+
+Both are inside the budget of 16, so the shipped asset passes `alpha-clean-no-halo` on its own
+decoded pixels. **The asset is deliberately not rebuilt:** the owner approved those exact pixels
+(D-114), and re-encoding would change its SHA for no visible gain. A test pins the shipped bytes.
 
 ## What the approval covers
 

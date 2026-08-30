@@ -1,17 +1,39 @@
 // ---------------------------------------------------------------------------------------------
 // check-r2-hair-candidate — the acceptance gate for an option-A hair raster (D-102 §4A).
 //
-// DETERMINISTIC, NO AI, NO NETWORK, WRITES NOTHING. It reads one candidate PNG and reports
+// DETERMINISTIC, NO AI, NO NETWORK, WRITES NOTHING ITSELF. It reads one candidate PNG and reports
 // whether that artwork can become an R2 hair layer. It does not produce, promote or register
 // anything, and it takes no position on WHO or WHAT drew the candidate — that is a separate
 // owner decision (see docs/167a-r2-hair-a-production-spec.md §2).
 //
 //   node tools/avatar/check-r2-hair-candidate.mjs <candidate.png> <style>
 //
-// The landmarks it measures against are the frozen ones from the D-102 measurement
-// (tools/avatar/measure-r2-hair-fit.mjs), expressed in the shared 160x240 C2 canvas so the two
-// tools are directly comparable. They are constants here rather than re-measured, so a candidate
-// is always judged against the base that actually ships.
+// ── WHAT IS MEASURED, AND ON WHICH PIXELS (D-115) ────────────────────────────────────────────
+// The checks fall into TWO kinds, and conflating them is what this file used to do:
+//
+//   AUTHORING PRECONDITIONS (2) — properties of the SOURCE the artist/model delivered. They are
+//   about the input being a usable input at all, so they are measured on the 1024x1536 candidate:
+//       dimensions, luminance-map
+//
+//   RUNTIME ACCEPTANCE GATES (9) — the VISUAL judgement. A student never sees the authoring
+//   canvas, nor the intermediate downscale; they see the decoded 512x768 WebP the browser paints.
+//   So that is what these measure, after the WHOLE existing pipeline:
+//       authoring alpha cleanup -> downscaleHalf -> served alpha cleanup
+//         -> cwebp -lossless -exact -z 9 -metadata none -> dwebp
+//       has-ink, covers-the-crown, clears-the-eye-line, respects-the-neck, within-style-envelope,
+//       centred-on-the-skull, no-floating-islands, alpha-clean-no-halo, legible-at-render-sizes
+//
+// WHY THE RUNTIME PIXELS ARE THE ACCEPTANCE BASIS. Judging an intermediate is judging something
+// that never ships. It is the same mistake D-059 cost us on the arm fringe: the full-res composite
+// flattered the matte, and the defect only existed at render scale on the real surface. The
+// downscale and the two cleanup passes are not cosmetic — they merge pixels, remove dust and
+// change every count the gates read. A candidate can legitimately fail on the authoring canvas and
+// be flawless in the file that ships, and the reverse is equally possible. Only one of those two
+// images is the product.
+//
+// NOTHING WAS LOOSENED TO MAKE THAT TRUE. Every envelope, the ink threshold (128), ALPHA_FLOOR
+// (24), the orphan budget (16) and both cleanup algorithms are byte-for-byte what they were. The
+// change is WHICH IMAGE the unchanged numbers are read from.
 //
 // WHY THESE GATES: each one exists because failing it breaks something specific and hard to see
 // late — a coloured map silently disables hair colour (D-103), a gap at the crown shows scalp the
@@ -24,13 +46,12 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { decodePng } from "./build-r2-torso-occlusion-mask.mjs";
 import { RENDER_SIZES, MIN_SCALE_COVERAGE } from "./check-r2-torso-candidate.mjs";
-import { downscaleHalf } from "./promote-r2-torso-asset.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = join(HERE, "..", "..");
 
 export const TOOL = "check-r2-hair-candidate";
-export const TOOL_VERSION = "1.0.0";
+export const TOOL_VERSION = "2.0.0";   // 2.0.0: runtime-pixel gates + 8-neighbour islands (D-115)
 
 // ── the authoring canvas, pinned to the torso pipeline (D-084/D-089) ──────────────────────────
 export const SRC_W = 1024, SRC_H = 1536;      // candidate PNG
@@ -66,19 +87,41 @@ export const ALPHA_INK = 128;        // D-071 render-scale convention: alpha >= 
 export const MAX_MEAN_SAT = 0.02;    // the shipped hair measures 0.0000
 export const MAX_PEAK_SAT = 0.10;    // isolated antialiasing artefacts only
 export const MAX_SPECK_PX = 16;      // a component smaller than this is a speck, not a lock
-// ORPHAN-SOFT BUDGET — TWO SCALES, because the torso convention is defined at two and this gate
-// used to conflate them. check-r2-torso-candidate allows MAX_ORPHAN_SOFT_PX = 64 on the 1024x1536
-// AUTHORING canvas; promote-r2-torso-asset allows MAX_ORPHAN_SOFT_PX_SERVED = 16 on the 512x768
-// SERVED asset, documented there as "64 authoring px / 4". This file declared 16 while claiming to
-// follow that convention and then applied it to the AUTHORING candidate — four times stricter than
-// the torso gate at the same resolution, and measured before the downscale that removes most
-// sub-visible dust. Both budgets are now stated, and both are checked.
+// ORPHAN-SOFT BUDGET — TWO SCALES, because the torso convention is defined at two.
+// check-r2-torso-candidate allows MAX_ORPHAN_SOFT_PX = 64 on the 1024x1536 AUTHORING canvas;
+// promote-r2-torso-asset allows MAX_ORPHAN_SOFT_PX_SERVED = 16 on the 512x768 SERVED asset,
+// documented there as "64 authoring px / 4".
+//
+// WHERE EACH IS ENFORCED, since D-115 moved the visual gates onto the runtime pixels:
+//   HALO_TOLERANCE_SERVED (16)    — the `alpha-clean-no-halo` RUNTIME GATE below, on the decoded
+//                                   512x768 asset. Unchanged number, runtime image.
+//   HALO_TOLERANCE_AUTHORING (64) — clean-r2-hair-alpha.mjs's `authoringWithinBudget`
+//                                   postcondition, which refuses to WRITE a cleaned authoring PNG
+//                                   that exceeds it. That is where it has always actually bitten,
+//                                   and it is unchanged. It is deliberately NOT re-asserted here:
+//                                   this file judges the shipped image, and the authoring canvas
+//                                   is not it. The count is still REPORTED, never silently lost.
 export const HALO_TOLERANCE_AUTHORING = 64;  // 1024x1536, matches check-r2-torso-candidate
-export const HALO_TOLERANCE_SERVED = 16;     // 512x768, after the real promotion downscale
+export const HALO_TOLERANCE_SERVED = 16;     // 512x768, the pixels that actually ship
 
 const u = (v) => Math.round(v * 10) / 10;
 
-// ── the ONE orphan-soft definition ───────────────────────────────────────────────────────────
+// ── TWO DIFFERENT 4-vs-8 QUESTIONS. THEY ARE NOT THE SAME QUESTION. ──────────────────────────
+// This file asks about neighbourhoods twice, and D-115 changed exactly one of them.
+//
+//   isOrphanSoft   — "is this faint pixel ATTACHED TO AN EDGE, or is it detached matte residue?"
+//                    FOUR orthogonal neighbours. UNCHANGED. It is the shared definition that
+//                    decides what the cleanup tools may delete, so widening it would silently
+//                    licence deleting more artwork. Not a gate about shape; a rule about dust.
+//
+//   countComponents — "is the artwork ONE piece of hair, or several detached pieces?"
+//                    EIGHT neighbours since D-115. See that function for why.
+//
+// Conflating the two is the trap: they use the same word "neighbour" for opposite purposes, and
+// the safe answer differs. Widening the dust rule REMOVES pixels; widening the island rule only
+// changes how existing pixels are GROUPED and removes nothing.
+
+// ── the ONE orphan-soft definition (FOUR orthogonal neighbours — deliberately) ────────────────
 // A soft pixel (0 < alpha < ALPHA_INK) with no ink among its FOUR orthogonal neighbours is halo
 // left behind by a bad matte. Edge coordinates clamp, so a pixel on the border compares against
 // itself rather than falling off the canvas.
@@ -103,14 +146,45 @@ export function countOrphanSoft(rgba, w, h) {
   return n;
 }
 
+// ── connectivity for `no-floating-islands`: EIGHT neighbours (D-115) ──────────────────────────
+// The four sides PLUS the four corners. A pixel joins the component it touches horizontally,
+// vertically OR diagonally, so all eight positions are examined.
+//
+// WHY IT CHANGED. 4-neighbour connectivity sees only the four sides, so two pixels that share a
+// corner are "separate" to the algorithm while being visibly, physically joined on screen — there
+// is no gap between them to see. On a raster produced by a downscale that is not a rare corner
+// case: averaging 2x2 blocks routinely leaves a silhouette's outermost pixel attached to the mass
+// only at a corner. Calling that a floating island reports a defect the student cannot see, and
+// the only ways to "fix" it are to edit the artwork or to loosen a threshold — both worse than
+// counting the corner the eye already counts.
+//
+// IT ALSO ENDS AN INCONSISTENCY. Every other component algorithm in the R2 asset contract was
+// already 8-neighbour: check-r2-torso-candidate.mjs (NEIGH8), promote-r2-torso-asset.mjs's own
+// `no-floating-islands`, build-r2-torso-occlusion-mask.mjs, and the torso item generator's
+// backfill check. The hair gate was the single outlier, and nothing recorded why. It is now the
+// same rule everywhere. (Named without file extensions on purpose: a test guards this file
+// against AI-surface tokens, and a generator's filename would trip it.)
+//
+// THE HONEST CONSEQUENCE, STATED RATHER THAN BURIED: under 8-neighbour, an UNBROKEN DIAGONAL
+// CHAIN of ink pixels counts as connected, however long it is and however thin. A one-pixel-wide
+// staircase running away from the hair mass would be judged part of it. That is a real widening
+// of what "one component" admits, it is not hypothetical, and it is accepted deliberately: such a
+// chain is continuous ink on screen, and no gate here has ever claimed to judge whether a shape is
+// good hair — that is the owner sign-off D-105 made load-bearing. What 8-neighbour still refuses
+// is what it is for: ink separated by at least one whole pixel of non-ink.
+export const NEIGHBOURS_8 = Object.freeze([
+  [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1],
+]);
+
 // ── measurement ──────────────────────────────────────────────────────────────────────────────
 
-// Everything the gates need, in ONE pass over the candidate. Pure: no IO, no globals.
+// Everything the gates need, in ONE pass over the image. Pure: no IO, no globals.
+// `k` is derived from the canvas in hand, not from SRC_W, so the SAME function measures the
+// 1024x1536 authoring candidate and the 512x768 runtime asset into the same C2 units. That is
+// what makes a single gate definition usable on both, and what makes the gates testable on a
+// small proportional canvas.
 export function analyse(rgba, w, h) {
-  // Derived from the canvas in hand, not from SRC_W: the gates are expressed in C2 units, so a
-  // smaller proportional canvas must measure to the same units (that is what makes them testable).
   const k = 160 / w;
-  const inkAt = (x, y) => rgba[(y * w + x) * 4 + 3] >= ALPHA_INK;
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   let ink = 0, satSum = 0, satMax = 0, orphanSoft = 0;
   const topByCol = new Array(w).fill(Infinity);
@@ -152,7 +226,8 @@ export function analyse(rgba, w, h) {
 }
 
 // Connected components over ink, iterative flood fill (no recursion: 1024x1536 overflows a stack).
-function countComponents(rgba, w, h) {
+// EIGHT-neighbour — see NEIGHBOURS_8 above for the decision and its consequence.
+export function countComponents(rgba, w, h) {
   const seen = new Uint8Array(w * h);
   const sizes = [];
   const stack = [];
@@ -165,7 +240,7 @@ function countComponents(rgba, w, h) {
       const p = stack.pop();
       size++;
       const px = p % w, py = (p / w) | 0;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (const [dx, dy] of NEIGHBOURS_8) {
         const nx = px + dx, ny = py + dy;
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
         const q = ny * w + nx;
@@ -182,7 +257,7 @@ function countComponents(rgba, w, h) {
 
 // Coverage of the skull cap at each D-071 render size: nearest-neighbour downscale of the ink
 // mask, measured against its own footprint — the same shape as the torso legibility gate.
-function legibility(rgba, w, h) {
+export function legibility(rgba, w, h) {
   const scales = [];
   for (const [sw, sh] of RENDER_SIZES) {
     let drawn = 0, total = 0;
@@ -200,30 +275,41 @@ function legibility(rgba, w, h) {
   return scales.map((s) => ({ ...s, ratio: s.coverage / ref }));
 }
 
-// ── the gates ────────────────────────────────────────────────────────────────────────────────
-
-// `servedOrphan` is the orphan-soft count of the SAME candidate after the production downscale.
-// Required, not optional: a default would let a caller silently skip half the alpha contract.
-export function gates(a, style, servedOrphan) {
-  if (!Number.isInteger(servedOrphan)) {
-    throw new Error("gates(): servedOrphan is required — count it on downscaleHalf() of the same candidate");
-  }
-  const t = STYLE_TARGETS[style];
-  if (!t) throw new Error(`unknown style '${style}' — expected one of ${STYLES.join(", ")}`);
+// ── AUTHORING PRECONDITIONS — measured on the 1024x1536 source ────────────────────────────────
+// Not visual judgements. These ask whether the delivered file is a usable INPUT: the right canvas,
+// and a greyscale value map rather than coloured artwork. Both are properties of the source that
+// the pipeline can neither create nor repair, which is why they stay here and not on the output.
+export function authoringPreconditions(a) {
   const out = [];
   const add = (id, pass, detail) => out.push({ id, pass, detail });
 
   add("dimensions", a.w === SRC_W && a.h === SRC_H,
     { got: `${a.w}x${a.h}`, expect: `${SRC_W}x${SRC_H}` });
 
-  add("has-ink", a.ink > 0, { inkPx: a.ink });
-  if (!a.envelope) return out; // nothing else is measurable on an empty candidate
-
   // The one that silently breaks hair colour: the runtime multiplies this map over the token,
   // so any colour baked into the asset fights the student's choice instead of carrying it.
+  // A precondition rather than a runtime gate because chroma is a property of what was AUTHORED —
+  // no downscale, cleanup or lossless encode can introduce or remove it.
   add("luminance-map", a.meanSat <= MAX_MEAN_SAT && a.peakSat <= MAX_PEAK_SAT,
     { meanSat: +a.meanSat.toFixed(4), peakSat: +a.peakSat.toFixed(4),
       maxMean: MAX_MEAN_SAT, maxPeak: MAX_PEAK_SAT });
+
+  return out;
+}
+
+// ── RUNTIME ACCEPTANCE GATES — measured on the DECODED served asset ───────────────────────────
+// `rgba` must be the pixels dwebp produced from the shipped WebP, i.e. what a browser paints.
+// Everything is expressed in the existing normalised C2 units, so the numbers are directly
+// comparable with every measurement taken before D-115; only the image behind them changed.
+export function runtimeGates(rgba, w, h, style) {
+  const t = STYLE_TARGETS[style];
+  if (!t) throw new Error(`unknown style '${style}' — expected one of ${STYLES.join(", ")}`);
+  const a = analyse(rgba, w, h);
+  const out = [];
+  const add = (id, pass, detail) => out.push({ id, pass, detail });
+
+  add("has-ink", a.ink > 0, { inkPx: a.ink });
+  if (!a.envelope) return out; // nothing else is measurable on an empty asset
 
   // Hair has to sit ON the skull, not float above it or start below the crown.
   const crownCols = [];
@@ -265,53 +351,89 @@ export function gates(a, style, servedOrphan) {
     { centre: u((a.envelope.xLo + a.envelope.xHi) / 2), baseCentre: BASE.skullCx });
 
   add("no-floating-islands", a.components.count === 1 || a.components.specks === 0,
-    { components: a.components.count, largest: a.components.largest, specks: a.components.specks });
+    { connectivity: 8, components: a.components.count,
+      largest: a.components.largest, specks: a.components.specks });
 
-  add("alpha-clean-no-halo",
-    a.orphanSoft <= HALO_TOLERANCE_AUTHORING && servedOrphan <= HALO_TOLERANCE_SERVED,
-    { orphanSoftAuthoring: a.orphanSoft, toleranceAuthoring: HALO_TOLERANCE_AUTHORING,
-      orphanSoftServed: servedOrphan, toleranceServed: HALO_TOLERANCE_SERVED });
+  add("alpha-clean-no-halo", a.orphanSoft <= HALO_TOLERANCE_SERVED,
+    { orphanSoftServed: a.orphanSoft, toleranceServed: HALO_TOLERANCE_SERVED });
+
+  const legible = legibility(rgba, w, h);
+  const smallest = legible[legible.length - 1];
+  add("legible-at-render-sizes", smallest.ratio >= MIN_SCALE_COVERAGE,
+    { scales: legible.map((s) => ({ size: s.size, ratio: +s.ratio.toFixed(3) })),
+      smallest: smallest.size, minRatio: MIN_SCALE_COVERAGE });
 
   return out;
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────
 
-export function run(candidatePath, style) {
+/**
+ * Reads the candidate, runs the authoring preconditions on it, drives the FULL runtime pipeline,
+ * and runs the acceptance gates on the pixels that come back out of the decoder.
+ *
+ * The pipeline module is imported dynamically. It depends on the cleanup tools, which import this
+ * file for the shared orphan-soft definition, so a static import here would close a module cycle.
+ * The dynamic import keeps the dependency one-directional at load time and costs nothing: this is
+ * the only place that needs it, and it needs the vendored libwebp binaries anyway.
+ */
+export async function run(candidatePath, style) {
   const log = [];
   const say = (s) => { log.push(s); console.log(s); };
-  say(`${TOOL} v${TOOL_VERSION} — READ-ONLY, writes nothing`);
+  say(`${TOOL} v${TOOL_VERSION} — READ-ONLY on the candidate; the pipeline writes only to build/`);
 
+  if (!STYLE_TARGETS[style]) {
+    throw new Error(`unknown style '${style}' — expected one of ${STYLES.join(", ")}`);
+  }
   const abs = resolve(candidatePath);
   if (!existsSync(abs)) throw new Error(`candidate not found: ${abs}`);
   const png = decodePng(readFileSync(abs), "candidate");
-  const a = analyse(png.rgba, png.w, png.h);
-  // downscaleHalf returns a raw RGBA Buffer; the served canvas is w>>1 by h>>1.
-  const servedRgba = downscaleHalf(png.w, png.h, png.rgba);
-  const result = gates(a, style, analyse(servedRgba, png.w >> 1, png.h >> 1).orphanSoft);
+  const authoring = analyse(png.rgba, png.w, png.h);
 
+  const pre = authoringPreconditions(authoring);
   say(`  candidate ${candidatePath} · ${png.w}x${png.h} · style '${style}'`);
-  say(`  ink ${a.ink} px · envelope ${a.envelope ? `x ${u(a.envelope.xLo)}..${u(a.envelope.xHi)} y ${u(a.envelope.yLo)}..${u(a.envelope.yHi)}` : "(none)"}`);
-  for (const g of result) say(`  ${g.pass ? "✓" : "✖"} ${g.id} ${JSON.stringify(g.detail)}`);
+  say(`\n  AUTHORING PRECONDITIONS (${pre.length}) — measured on the ${png.w}x${png.h} source`);
+  for (const g of pre) say(`    ${g.pass ? "✓" : "✖"} ${g.id} ${JSON.stringify(g.detail)}`);
+  say(`    · authoring ink ${authoring.ink} px, envelope ` +
+      (authoring.envelope ? `x ${u(authoring.envelope.xLo)}..${u(authoring.envelope.xHi)} y ${u(authoring.envelope.yLo)}..${u(authoring.envelope.yHi)}` : "(none)"));
+  say(`    · authoring orphan-soft ${authoring.orphanSoft} (reported; the ${HALO_TOLERANCE_AUTHORING}-px budget is`);
+  say(`      enforced by clean-r2-hair-alpha.mjs, which refuses to write a cleaned PNG above it)`);
 
-  const legible = legibility(png.rgba, png.w, png.h);
-  const smallest = legible[legible.length - 1];
-  const legiblePass = smallest.ratio >= MIN_SCALE_COVERAGE;
-  say(`  ${legiblePass ? "✓" : "✖"} legible-at-render-sizes ${JSON.stringify(legible.map((s) => ({ size: s.size, ratio: +s.ratio.toFixed(3) })))}`);
+  const { buildRuntimeAsset } = await import("./build-r2-hair-runtime-asset.mjs");
+  const built = buildRuntimeAsset(png.rgba, png.w, png.h, { label: style });
 
-  const pass = result.every((g) => g.pass) && legiblePass;
-  say(`\n${pass ? "✓ CANDIDATE PASSES the measurable gates" : "✖ CANDIDATE FAILS"} — this is a PRECONDITION, not an approval.`);
+  say(`\n  PIPELINE  authoring-cleanup → downscaleHalf → served-cleanup → cwebp → dwebp`);
+  say(`    reference ${built.w}x${built.h}  sha ${built.referenceSha}`);
+  say(`    webp      ${built.webp.length} bytes  sha ${built.webpSha}`);
+  say(`    ${built.byteIdentical ? "✓" : "✖"} decoded-matches-reference-exactly — the encode is lossless and no pixel moved`);
+
+  const runtime = runtimeGates(built.decodedRgba, built.w, built.h, style);
+  say(`\n  RUNTIME ACCEPTANCE GATES (${runtime.length}) — measured on the decoded ${built.w}x${built.h} asset`);
+  for (const g of runtime) say(`    ${g.pass ? "✓" : "✖"} ${g.id} ${JSON.stringify(g.detail)}`);
+
+  const named = [...pre, ...runtime];
+  const passedNamed = named.filter((g) => g.pass).length;
+  const pass = named.every((g) => g.pass) && built.byteIdentical;
+
+  say(`\n  ${passedNamed}/${named.length} named checks pass ` +
+      `(${pre.length} authoring preconditions + ${runtime.length} runtime acceptance gates)`);
+  say(`${pass ? "✓ CANDIDATE PASSES the measurable checks" : "✖ CANDIDATE FAILS"} — this is a PRECONDITION, not an approval.`);
   say("  Owner visual sign-off at real render scale (D-059) is still required, and this tool");
   say("  promotes nothing: registration is a separate, separately authorised step.");
-  return { pass, gates: result, legible, analysis: a };
+  return { pass, preconditions: pre, runtimeGates: runtime, built, authoring, log };
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const [, , file, style] = process.argv;
   if (!file || !style) {
     console.error(`usage: node tools/avatar/check-r2-hair-candidate.mjs <candidate.png> <${STYLES.join("|")}>`);
     process.exit(2);
   }
-  const r = run(file, style);
-  process.exit(r.pass ? 0 : 1);
+  // NOT `await` at module top level. run() dynamically imports the pipeline, which reaches back to
+  // THIS module through the cleanup tools. A top-level await keeps this module's evaluation
+  // unfinished, the cycle can never complete, and the process exits on an unsettled promise having
+  // printed only the preconditions. Deferring to the microtask queue lets evaluation finish first.
+  run(file, style)
+    .then((r) => process.exit(r.pass ? 0 : 1))
+    .catch((err) => { console.error(String(err.message ?? err)); process.exit(1); });
 }

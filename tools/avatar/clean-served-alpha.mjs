@@ -16,13 +16,17 @@
 // looser rule for the smaller canvas would be exactly the kind of drift the shared definition in
 // check-r2-hair-candidate.mjs exists to prevent.
 //
-// WHAT THIS TOOL DELIBERATELY DOES NOT DO
-// It changes NO gate and NO postcondition. `clean-r2-hair-alpha.mjs` still refuses on its own
-// served budget, and `check-r2-hair-candidate.mjs` still measures the served orphans of the
+// THE DECISION THIS TOOL ONCE DEFERRED HAS BEEN TAKEN (D-115)
+// This header used to say: "`check-r2-hair-candidate.mjs` still measures the served orphans of the
 // UNCLEANED downscale. Whether those two should instead measure the post-cleanup buffer is a
-// decision about what a gate means, and it is not this tool's to take. Until that decision is
-// made, this produces a reference for review and nothing more: it promotes nothing, registers
-// nothing, and writes no runtime asset.
+// decision about what a gate means, and it is not this tool's to take." The owner has now taken
+// it. The visual acceptance gates measure the finished, decoded 512x768 runtime asset — which is
+// this pass's output, encoded and decoded again — and `clean-r2-hair-alpha.mjs` gates its served
+// budget on the same buffer via `runtimeWithinBudget`. So `cleaned` below is no longer merely a
+// reference for review; it is the image the gates judge.
+//
+// What did NOT change: this tool still promotes nothing, registers nothing, and writes no runtime
+// asset. Producing the bytes that would ship is not shipping them.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
@@ -33,7 +37,7 @@ import { cleanAlpha, ALPHA_FLOOR, SRC_W, SRC_H, checkWritePath } from "./clean-r
 import { countOrphanSoft, isOrphanSoft, ALPHA_INK, HALO_TOLERANCE_SERVED } from "./check-r2-hair-candidate.mjs";
 
 export const TOOL = "clean-served-alpha";
-export const TOOL_VERSION = "1.0.0";
+export const TOOL_VERSION = "2.0.0";   // 2.0.0: servedWithinBudget renamed runtimeWithinBudget (D-115)
 export const OUT_W = SRC_W >> 1, OUT_H = SRC_H >> 1;   // 512 × 768
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -64,8 +68,10 @@ export function postconditions(served, cleaned, sw, sh) {
   const fail = [];
   const add = (id, ok, value) => { if (!ok) fail.push(`${id}=${JSON.stringify(value)}`); };
 
+  // `cleaned` IS the runtime buffer: encoding it losslessly and decoding it again reproduces it
+  // byte for byte, so this measures the shipped pixels and not an intermediate (D-115).
   const after = countOrphanSoft(cleaned, sw, sh);
-  add("servedWithinBudget", after <= HALO_TOLERANCE_SERVED, after);
+  add("runtimeWithinBudget", after <= HALO_TOLERANCE_SERVED, after);
 
   let ink0 = 0, ink1 = 0, aboveFloor = 0, aboveInk = 0, withNeighbour = 0, notCleared = 0, other = 0;
   for (let i = 0; i < served.length; i += 4) {

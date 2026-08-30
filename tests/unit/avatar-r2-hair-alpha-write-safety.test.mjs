@@ -266,6 +266,10 @@ test("SOURCE: the final files are created with O_EXCL, which will not follow a s
 });
 
 test("the tool version records that the write contract changed", () => {
-  assert.equal(TOOL_VERSION, "3.0.0");
+  // 4.0.0 (D-115): the served orphan budget is checked on the RUNTIME buffer — the downscale AFTER
+  // the served cleanup pass — instead of on the bare downscale, which is an intermediate that never
+  // reaches a browser. The postcondition was renamed `servedWithinBudget` -> `runtimeWithinBudget`
+  // with it. The budget itself (16) and every cleanup rule are unchanged; only the image moved.
+  assert.equal(TOOL_VERSION, "4.0.0");
   assert.equal(SIDECAR_SUFFIX, ".alpha-report.json");
 });

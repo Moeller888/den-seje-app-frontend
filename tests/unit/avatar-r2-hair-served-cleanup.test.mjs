@@ -87,7 +87,7 @@ test("the served budget is the gate's own constant, not a copy", () => {
   assert.ok(!/=\s*16\b/.test(SRC.replace(/^\s*\/\/.*$/gm, "")), "a literal 16 has appeared");
 });
 
-test("SOURCE: it changes no gate, no postcondition and no runtime asset", () => {
+test("SOURCE: it cannot reach the runtime asset, the manifest or a second ALPHA_FLOOR", () => {
   const code = SRC.replace(/^\s*\/\/.*$/gm, "");
   assert.ok(!/assets\/avatar-r2/.test(code), "it can reach the runtime asset directory");
   assert.ok(!/R2_MANIFEST/.test(code), "it can reach the manifest");
@@ -99,5 +99,5 @@ test("SOURCE: it changes no gate, no postcondition and no runtime asset", () => 
 });
 
 test("the tool version is stated", () => {
-  assert.equal(TOOL_VERSION, "1.0.0");
+  assert.equal(TOOL_VERSION, "2.0.0");
 });

@@ -19,9 +19,10 @@ import {
   WRITE_ROOT, SIDECAR_SUFFIX, REPO_ROOT, ALPHA_FLOOR, SRC_W, SRC_H,
 } from "../../tools/avatar/clean-r2-hair-alpha.mjs";
 import {
-  analyse, gates, isOrphanSoft, countOrphanSoft, ALPHA_INK, run as verifyCandidate,
+  analyse, runtimeGates, isOrphanSoft, countOrphanSoft, ALPHA_INK,
   HALO_TOLERANCE_AUTHORING, HALO_TOLERANCE_SERVED,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
+import { servedPass } from "../../tools/avatar/clean-served-alpha.mjs";
 import { downscaleHalf } from "../../tools/avatar/promote-r2-torso-asset.mjs";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 
@@ -187,7 +188,7 @@ test("a candidate that still blows the authoring budget is refused and writes NO
 test("the refusal names the failing postcondition", () => {
   const src = writeInput("in-named.png", candidatePng({ dust: 400, dustAlpha: 200 }));
   assert.throws(() => run(src, sandboxed("out-named.png")),
-    /authoringWithinBudget|servedWithinBudget/);
+    /authoringWithinBudget|runtimeWithinBudget/);
 });
 
 test("no stray files are left behind by any refusal", () => {
@@ -245,36 +246,58 @@ function candidateWithServedOrphans(n, alpha = 120) {
 
 const servedOf = (rgba) => countOrphanSoft(downscaleHalf(SRC_W, SRC_H, rgba), SRC_W >> 1, SRC_H >> 1);
 
-test("END-TO-END: 17 served orphans fail the alpha gate, 16 pass — with the real numbers", () => {
+// The RUNTIME buffer: the full pipeline's pixel output, which is what the gates judge since D-115.
+// This dust survives it — one authoring pixel at alpha 120 averages to 30, and the cleanup only
+// clears below ALPHA_FLOOR (24) — so the count reaching the gate really is n, not an artefact of
+// the cleanup having quietly removed the fixture.
+const runtimeBufferOf = (rgba) => servedPass(rgba, SRC_W, SRC_H).cleaned;
+const SW = SRC_W >> 1, SH = SRC_H >> 1;
+
+test("END-TO-END: 17 runtime orphans fail the alpha gate, 16 pass — with the real numbers", () => {
   const r16 = candidateWithServedOrphans(16);
   const r17 = candidateWithServedOrphans(17);
   assert.equal(servedOf(r16), 16, "fixture must produce exactly 16 served orphans");
   assert.equal(servedOf(r17), 17, "fixture must produce exactly 17 served orphans");
 
-  const g = (rgba) => gates(analyse(rgba, SRC_W, SRC_H), "short", servedOf(rgba))
-    .find((x) => x.id === "alpha-clean-no-halo");
+  // ...and the cleanup pass must not be what decides this. If it removed the dust the boundary
+  // would be testing the cleanup, not the budget.
+  const b16 = runtimeBufferOf(r16), b17 = runtimeBufferOf(r17);
+  assert.equal(countOrphanSoft(b16, SW, SH), 16, "the served cleanup must not touch this dust");
+  assert.equal(countOrphanSoft(b17, SW, SH), 17, "the served cleanup must not touch this dust");
 
-  const g16 = g(r16), g17 = g(r17);
-  assert.equal(g16.pass, true, "16 served orphans must pass");
-  assert.equal(g17.pass, false, "17 served orphans must fail");
+  const g = (buf) => runtimeGates(buf, SW, SH, "short").find((x) => x.id === "alpha-clean-no-halo");
+  const g16 = g(b16), g17 = g(b17);
+  assert.equal(g16.pass, true, "16 runtime orphans must pass");
+  assert.equal(g17.pass, false, "17 runtime orphans must fail");
 
-  // The detail must carry the REAL counts. If someone reintroduces `s.rgba/.w/.h` against the raw
-  // Buffer these become 0 and this assertion is what catches it.
+  // The detail must carry the REAL counts. A buffer/dimension mix-up collapses these to 0, and
+  // this assertion is what catches it.
   assert.equal(g16.detail.orphanSoftServed, 16);
   assert.equal(g17.detail.orphanSoftServed, 17);
-  assert.notEqual(g17.detail.orphanSoftServed, 0, "served count collapsed to zero — buffer misuse");
-  assert.ok(g17.detail.orphanSoftAuthoring <= HALO_TOLERANCE_AUTHORING,
+  assert.notEqual(g17.detail.orphanSoftServed, 0, "runtime count collapsed to zero — buffer misuse");
+
+  // The authoring canvas is comfortably inside its own budget, so it cannot be what fails here.
+  assert.ok(countOrphanSoft(r17, SRC_W, SRC_H) <= HALO_TOLERANCE_AUTHORING,
     "the authoring budget must not be what fails here");
 });
 
-test("END-TO-END: the real gate CLI path reports the same served count", () => {
-  const rgba = candidateWithServedOrphans(17);
-  const p = sandboxed("e2e-17.png");
-  writeFileSync(p, encodePngRGBA(SRC_W, SRC_H, rgba));
-  const res = verifyCandidate(p, "short");   // the real CLI entry point, decode included
-  const g = res.gates.find((x) => x.id === "alpha-clean-no-halo");
-  assert.equal(g.pass, false);
-  assert.equal(g.detail.orphanSoftServed, 17, "the CLI path lost the served count");
+test("COUNTERFACTUAL: the gate reads the RUNTIME buffer, not the intermediate downscale", () => {
+  // Dust below ALPHA_FLOOR: the intermediate downscale carries far more than 16 orphans, and the
+  // served cleanup then removes every one of them. Under the pre-D-115 contract — which measured
+  // the intermediate — this candidate was refused for dust that never reached a browser.
+  const rgba = candidateWithServedOrphans(60, 20);
+  const intermediate = servedOf(rgba);
+  const runtime = runtimeBufferOf(rgba);
+  assert.ok(intermediate > HALO_TOLERANCE_SERVED,
+    `the intermediate must exceed the budget for this test to mean anything (got ${intermediate})`);
+  assert.ok(countOrphanSoft(runtime, SW, SH) <= HALO_TOLERANCE_SERVED,
+    "the pipeline must actually clean this dust up");
+
+  const g = runtimeGates(runtime, SW, SH, "short").find((x) => x.id === "alpha-clean-no-halo");
+  assert.equal(g.pass, true, "the shipped pixels are clean, so the gate must pass");
+  assert.equal(g.detail.orphanSoftServed, countOrphanSoft(runtime, SW, SH));
+  assert.notEqual(g.detail.orphanSoftServed, intermediate,
+    "the gate reported the intermediate count — it is measuring the wrong image");
 });
 
 test("the budgets themselves are the torso convention", () => {
