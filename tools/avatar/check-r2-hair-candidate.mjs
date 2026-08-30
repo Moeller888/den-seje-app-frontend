@@ -71,18 +71,35 @@ export const BASE = Object.freeze({
 // These are the shapes the student already recognises, so a candidate that leaves its envelope
 // stops being the style they chose. Tolerance is generous on purpose: this gate catches a wrong
 // silhouette, not an artistic difference.
+// `highestY` is HOW MUCH CROWN VOLUME the style has, and it was missing until D-116. Without it
+// the top was unbounded: `covers-the-crown` is a MINIMUM (reach at least the bald skull),
+// `respects-the-neck` bounds the bottom, and `within-style-envelope` bounded only x. A candidate
+// could tower arbitrarily far over its style and still pass every check. It happened: the `short`
+// candidate reached y 9.4 against short's own 20.5 — a spiky cut wearing the name of a neat one.
+//
+// All four numbers come from the SAME source and the SAME tool: exact quadratic-Bezier and line
+// column crossings of the C2 assets' own path data (measure-r2-hair-fit.measureC2Style). That the
+// method is the one that produced the pre-existing values is not asserted, it is PROVEN — a test
+// re-derives xLo, xHi and lowestY from the tool and requires them to equal what is written here.
 export const STYLE_TARGETS = Object.freeze({
-  short:    { xLo: 52, xHi: 108, lowestY: 56,  drapes: false },
-  tousled:  { xLo: 50, xHi: 110, lowestY: 55,  drapes: false },
-  curly:    { xLo: 44, xHi: 113, lowestY: 61,  drapes: false },
-  long:     { xLo: 41, xHi: 119, lowestY: 146, drapes: true  },
-  ponytail: { xLo: 52, xHi: 117, lowestY: 123, drapes: true  },
-  buzz:     { xLo: 53, xHi: 107, lowestY: 47,  drapes: false },
-  afro:     { xLo: 34, xHi: 126, lowestY: 61,  drapes: false },
+  short:    { xLo: 52, xHi: 108, highestY: 20.50, lowestY: 56,  drapes: false },
+  tousled:  { xLo: 50, xHi: 110, highestY: 13.00, lowestY: 55,  drapes: false },
+  curly:    { xLo: 44, xHi: 113, highestY: 14.08, lowestY: 61,  drapes: false },
+  long:     { xLo: 41, xHi: 119, highestY: 18.50, lowestY: 146, drapes: true  },
+  ponytail: { xLo: 52, xHi: 117, highestY: 19.50, lowestY: 123, drapes: true  },
+  buzz:     { xLo: 53, xHi: 107, highestY: 21.50, lowestY: 47,  drapes: false },
+  afro:     { xLo: 34, xHi: 126, highestY:  6.02, lowestY: 61,  drapes: false },
 });
 export const STYLES = Object.freeze(Object.keys(STYLE_TARGETS));
 
 export const X_TOLERANCE = 4;        // C2 units the envelope may exceed its target on each side
+// The same generosity, applied upward (D-116). Stated as its own constant rather than reusing
+// X_TOLERANCE, because the two bound different things and should be free to diverge if a
+// measurement ever justifies it — not silently welded together by an alias. The value is 4 for the
+// same reason X_TOLERANCE is: it catches a wrong silhouette, not an artistic difference. Checked
+// against the two rasters that exist — the approved afro clears it by 3.6 units, and the `short`
+// candidate that provoked the decision misses it by 7.1.
+export const Y_TOLERANCE = 4;        // C2 units the envelope may rise above its style's own crown
 export const ALPHA_INK = 128;        // D-071 render-scale convention: alpha >= 128 is ink
 export const MAX_MEAN_SAT = 0.02;    // the shipped hair measures 0.0000
 export const MAX_PEAK_SAT = 0.10;    // isolated antialiasing artefacts only
@@ -341,11 +358,24 @@ export function runtimeGates(rgba, w, h, style) {
   add("respects-the-neck", t.drapes ? lowest <= t.lowestY + 2 : lowest <= BASE.neckY,
     { lowestInk: u(lowest), limit: t.drapes ? t.lowestY + 2 : BASE.neckY, drapes: t.drapes });
 
-  // The silhouette the student recognises.
-  add("within-style-envelope",
-    a.envelope.xLo >= t.xLo - X_TOLERANCE && a.envelope.xHi <= t.xHi + X_TOLERANCE,
-    { got: `${u(a.envelope.xLo)}..${u(a.envelope.xHi)}`,
-      target: `${t.xLo}..${t.xHi}`, tolerance: X_TOLERANCE });
+  // The silhouette the student recognises — now bounded on BOTH axes (D-116).
+  //
+  // The name always promised an envelope; until D-116 it delivered an x-span, and the gap was not
+  // theoretical. The `short` candidate matched short's width almost exactly (50.3..111.6 against
+  // 52..108) while standing 11 units taller than short has any business standing, and passed.
+  //
+  // The BOTTOM deliberately stays with `respects-the-neck`, which already owns it and knows about
+  // draping styles. This gate owns the width and the crown height; that one owns the collision
+  // with the torso garment. Two questions, two gates, no overlap.
+  const xOk = a.envelope.xLo >= t.xLo - X_TOLERANCE && a.envelope.xHi <= t.xHi + X_TOLERANCE;
+  const topLimit = t.highestY - Y_TOLERANCE;
+  const topOk = a.envelope.yLo >= topLimit;
+  add("within-style-envelope", xOk && topOk,
+    { x: `${u(a.envelope.xLo)}..${u(a.envelope.xHi)}`, xTarget: `${t.xLo}..${t.xHi}`,
+      xTolerance: X_TOLERANCE, xOk,
+      top: u(a.envelope.yLo), topLimit: u(topLimit), styleCrown: t.highestY,
+      yTolerance: Y_TOLERANCE, topOk,
+      note: topOk ? undefined : "the silhouette rises above this style's own crown — a taller cut wearing its name" });
 
   add("centred-on-the-skull", Math.abs((a.envelope.xLo + a.envelope.xHi) / 2 - BASE.skullCx) <= 2,
     { centre: u((a.envelope.xLo + a.envelope.xHi) / 2), baseCentre: BASE.skullCx });

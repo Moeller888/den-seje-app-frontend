@@ -20,7 +20,7 @@ import { dirname, join } from "node:path";
 import {
   analyse, authoringPreconditions, runtimeGates, countComponents, countOrphanSoft,
   NEIGHBOURS_8, STYLE_TARGETS, STYLES, BASE, ALPHA_INK, MAX_SPECK_PX,
-  SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE, HALO_TOLERANCE_SERVED,
+  SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE, Y_TOLERANCE, HALO_TOLERANCE_SERVED,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 
 const W = 256, H = 384;          // 2:3, same proportions as the authoring canvas
@@ -407,13 +407,16 @@ test("the base landmarks are the frozen D-102 measurements, not re-derived here"
   assert.equal(BASE.shoulderY, 83.8);
 });
 
-test("the thresholds D-115 did NOT touch are still exactly what they were", () => {
+test("the thresholds D-115 and D-116 did NOT touch are still exactly what they were", () => {
   assert.equal(ALPHA_INK, 128, "the ink threshold moved");
   assert.equal(HALO_TOLERANCE_SERVED, 16, "the orphan budget moved");
   assert.equal(MAX_SPECK_PX, 16, "the speck size moved");
   assert.equal(X_TOLERANCE, 4, "the envelope tolerance moved");
-  assert.deepEqual(STYLE_TARGETS.short, { xLo: 52, xHi: 108, lowestY: 56, drapes: false });
-  assert.deepEqual(STYLE_TARGETS.afro, { xLo: 34, xHi: 126, lowestY: 61, drapes: false });
+  // D-116 ADDED `highestY`; it changed none of the pre-existing numbers. This assertion fired when
+  // the field appeared, which is the sentinel working — the fix is to state the new shape, not to
+  // loosen the check to a subset that would stop noticing a real edit.
+  assert.deepEqual(STYLE_TARGETS.short, { xLo: 52, xHi: 108, highestY: 20.50, lowestY: 56, drapes: false });
+  assert.deepEqual(STYLE_TARGETS.afro, { xLo: 34, xHi: 126, highestY: 6.02, lowestY: 61, drapes: false });
 });
 
 test("the checker writes nothing and reaches no network", () => {
@@ -425,4 +428,82 @@ test("the checker writes nothing and reaches no network", () => {
   const code = src.replace(/^\s*\/\/.*$/gm, "");
   assert.ok(!/\bfetch\s*\(|node:https?\b|https?:\/\//.test(code), "the checker reaches out");
   assert.ok(!/openai|api[_-]?key/i.test(src), "no AI surface in an acceptance gate");
+});
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE TOP BOUND — `within-style-envelope` bounds BOTH axes since D-116
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+// A silhouette that stands far taller than its style. This is the real defect in miniature: the
+// `short` candidate matched short's WIDTH almost exactly and stood 11 units too tall, and the
+// x-only gate passed it.
+const towering = (style = "short") => paint(blank(), { xLo: 55, xHi: 106, yLo: 8, yHi: 54 });
+
+test("a candidate that towers over its style's own crown is refused", () => {
+  const g = gate(check(towering()), "within-style-envelope");
+  assert.equal(g.pass, false);
+  assert.equal(g.detail.xOk, true, "the WIDTH is fine — only the height is wrong");
+  assert.equal(g.detail.topOk, false);
+  assert.equal(g.detail.styleCrown, STYLE_TARGETS.short.highestY);
+  assert.equal(g.detail.topLimit, STYLE_TARGETS.short.highestY - Y_TOLERANCE);
+});
+
+test("COUNTERFACTUAL: without the top bound the same fixture passes — the bound is what decides", () => {
+  // Exactly the predicate the gate used before D-116. If this ever stops being true, the fixture
+  // has drifted and the test above is no longer proving anything about the top.
+  const c = towering();
+  const a = analyse(c.rgba, c.w, c.h);
+  const t = STYLE_TARGETS.short;
+  const xOnly = a.envelope.xLo >= t.xLo - X_TOLERANCE && a.envelope.xHi <= t.xHi + X_TOLERANCE;
+  assert.equal(xOnly, true, "the pre-D-116 x-only rule must accept this candidate");
+  assert.equal(gate(check(c), "within-style-envelope").pass, false, "the two-axis rule must refuse it");
+});
+
+test("the top bound is a stated number, not a silent fudge", () => {
+  const limit = STYLE_TARGETS.short.highestY - Y_TOLERANCE;   // 16.5
+  const justInside = paint(blank(), { xLo: 55, xHi: 106, yLo: 17, yHi: 54 });
+  const justOutside = paint(blank(), { xLo: 55, xHi: 106, yLo: 16, yHi: 54 });
+  assert.ok(analyse(justInside.rgba, W, H).envelope.yLo >= limit, "fixture: inside must be inside");
+  assert.ok(analyse(justOutside.rgba, W, H).envelope.yLo < limit, "fixture: outside must be outside");
+  assert.equal(gate(check(justInside), "within-style-envelope").pass, true);
+  assert.equal(gate(check(justOutside), "within-style-envelope").pass, false);
+});
+
+test("the bound is PER STYLE: the same artwork passes for a tall style and fails for a flat one", () => {
+  // Nothing global is being enforced — each style is judged against its own measured crown.
+  const tall = paint(blank(), { xLo: 40, xHi: 120, yLo: 8, yHi: 54 });
+  assert.equal(gate(check(tall, "afro"), "within-style-envelope").pass, true, "afro's crown is 6.02 — this fits");
+  const short = paint(blank(), { xLo: 55, xHi: 106, yLo: 8, yHi: 54 });
+  assert.equal(gate(check(short, "short"), "within-style-envelope").pass, false, "short's crown is 20.5 — this does not");
+  assert.equal(gate(check(short, "buzz"), "within-style-envelope").pass, false, "buzz is flatter still");
+});
+
+test("a candidate still has to REACH the crown — the two rules are a band, not one bound", () => {
+  // covers-the-crown is a MINIMUM (reach the bald skull at 31.6); the envelope top is a MAXIMUM.
+  // Between them the hair has somewhere legal to be, and both edges are enforced.
+  const tooLow = paint(blank(), { xLo: 55, xHi: 106, yLo: 35, yHi: 54 });
+  assert.equal(gate(check(tooLow), "covers-the-crown").pass, false, "too low: scalp shows");
+  assert.equal(gate(check(tooLow), "within-style-envelope").pass, true, "...but not too tall");
+
+  const tooHigh = towering();
+  assert.equal(gate(check(tooHigh), "covers-the-crown").pass, true, "too tall: it certainly reaches the skull");
+  assert.equal(gate(check(tooHigh), "within-style-envelope").pass, false, "...and that is the failure");
+});
+
+test("a clean candidate still passes with the top bound in place", () => {
+  const g = gate(check(goodShort()), "within-style-envelope");
+  assert.equal(g.pass, true);
+  assert.equal(g.detail.xOk, true);
+  assert.equal(g.detail.topOk, true);
+  assert.equal(g.detail.note, undefined, "no note on a pass");
+});
+
+test("Y_TOLERANCE is stated separately from X_TOLERANCE, even at the same value", () => {
+  assert.equal(Y_TOLERANCE, 4);
+  assert.equal(X_TOLERANCE, 4);
+  // every style carries a measured crown, and it is above the bald skull it has to cover
+  for (const s of STYLES) {
+    assert.equal(typeof STYLE_TARGETS[s].highestY, "number", s + " has no measured crown");
+    assert.ok(STYLE_TARGETS[s].highestY < BASE.crownY, s + " crown must sit above the bald skull");
+  }
 });

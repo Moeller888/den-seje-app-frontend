@@ -209,7 +209,11 @@ test("the Short candidate is the file the handover measured", { skip: skipShort 
     "the raw generator output changed");
 });
 
-test("Short passes 11/11: two authoring preconditions and nine runtime gates", { skip: skipShort }, () => {
+test("Short is 10/11 — it fails the top bound, and ONLY the top bound", { skip: skipShort }, () => {
+  // This test asserted 11/11 until D-116. That was true of the gate set as it then stood, and the
+  // number was never the point: the candidate is a spiky cut wearing `short`'s name, and the gates
+  // could not see it because nothing bounded the crown. Now one does, and the honest verdict is 10.
+  // The rest of the candidate is unchanged and still correct — width, matte, legibility, geometry.
   const { png, built } = short();
   assert.equal(built.byteIdentical, true);
 
@@ -218,10 +222,20 @@ test("Short passes 11/11: two authoring preconditions and nine runtime gates", {
   const all = [...pre, ...gates];
   const failed = all.filter((g) => !g.pass).map((g) => g.id);
 
-  assert.deepEqual(failed, [], "Short must pass every check: " + JSON.stringify(all, null, 1));
+  assert.deepEqual(failed, ["within-style-envelope"],
+    "exactly one check must fail: " + JSON.stringify(all, null, 1));
+  assert.equal(all.filter((g) => g.pass).length, 10);
   assert.equal(all.length, 11, "eleven named checks");
   assert.equal(pre.length, 2);
   assert.equal(gates.length, 9);
+
+  // and it is the HEIGHT that fails, not the width
+  const env = gates.find((g) => g.id === "within-style-envelope");
+  assert.equal(env.detail.xOk, true, "short's width was always right");
+  assert.equal(env.detail.topOk, false);
+  assert.equal(env.detail.top, 9.4, "the candidate's crown");
+  assert.equal(env.detail.styleCrown, 20.5, "short's own crown, measured from the C2 path data");
+  assert.equal(env.detail.topLimit, 16.5, "20.5 minus the 4-unit tolerance");
 });
 
 test("Short's runtime envelope and width are the measured ones", { skip: skipShort }, () => {
@@ -276,13 +290,22 @@ test("COUNTERFACTUAL: measuring the AUTHORING intermediate gives a different ver
     const runtime = runtimeGates(built.decodedRgba, built.w, built.h, "short");
 
     const gid = (list, id) => list.find((g) => g.id === id);
-    assert.equal(gid(authoringGates, "within-style-envelope").pass, false,
-      "the authoring canvas must fail the envelope, or this counterfactual proves nothing");
-    assert.equal(gid(runtime, "within-style-envelope").pass, true,
-      "the shipped asset must pass the envelope");
+    // Compared on the X AXIS specifically. Since D-116 both images fail the envelope gate overall —
+    // the candidate is too tall either way — so the whole-gate verdict no longer separates them.
+    // The width still does, and that is the thing D-115 was about: the authoring canvas overruns
+    // short's x-span, the image that actually ships does not.
+    assert.equal(gid(authoringGates, "within-style-envelope").detail.xOk, false,
+      "the authoring canvas must overrun the x-span, or this counterfactual proves nothing");
+    assert.equal(gid(runtime, "within-style-envelope").detail.xOk, true,
+      "the shipped asset's width must be inside the envelope");
 
     assert.equal(analyse(png.rgba, png.w, png.h).envelope.xHi, 112.03125);
     assert.equal(analyse(built.decodedRgba, built.w, built.h).envelope.xHi, 111.5625);
+
+    // both fail on height, and identically — the top bound is a property of the artwork, not of
+    // which image you measure, so it cannot be what distinguishes the two.
+    assert.equal(gid(authoringGates, "within-style-envelope").detail.topOk, false);
+    assert.equal(gid(runtime, "within-style-envelope").detail.topOk, false);
   });
 
 test("Short's decoded asset equals the encoder's reference byte-for-byte", { skip: skipShort }, () => {
