@@ -45,25 +45,37 @@ export const TEMPLATE_PATH = join("tools", "avatar", "fixtures", "r2-hair", "pro
 export const OUT_ROOT = join("tools", "avatar", "build", "r2-hair-gen");
 
 // ── per-style geometry ────────────────────────────────────────────────────────────────────────
-// `w` and `low` are the measured C2 targets expressed as percentages of the authoring canvas, and
-// they are re-derivable from the gate rather than invented here:
+// All three numbers are the measured C2 targets expressed as percentages of the authoring canvas,
+// re-derivable from the gate rather than invented here:
 //     w   = (STYLE_TARGETS[style].xHi - xLo) / 160 × 100
-//     low = STYLE_TARGETS[style].lowestY / 240 × 100
-// For `short` that is (108−52)/160 = 35.0 and 56/240 = 23.3, matching the values below.
-// `top` is the per-style C2 top anchor measured for round 3. Round 1 shipped no anchor at all and
-// ended with "Fill the canvas exactly; do not add margins", which the model obeyed — every
-// candidate came back 1.6–2.1× oversized (D-111 §3). Round 2 used one flat 13 % anchor for all
-// seven, which ignored that the styles differ. That instruction is gone and must not return.
+//     top =  STYLE_TARGETS[style].highestY   / 240 × 100
+//     low =  STYLE_TARGETS[style].lowestY    / 240 × 100
+// For `short` that is (108−52)/160 = 35.0, 20.50/240 = 8.5 and 56/240 = 23.3.
 //
-// afro carries the FIX-ROUND values, not round 3's: the owner rejected round 3's afro as too low
-// and too big, and w 40 / top 1 / low 18 is what produced the asset that was accepted and shipped.
+// HOW THE ANCHOR GOT HERE, BECAUSE EACH ROUND COST MONEY
+// Round 1 shipped no anchor at all and ended with "Fill the canvas exactly; do not add margins",
+// which the model obeyed — every candidate came back 1.6–2.1× oversized (D-111 §3). That
+// instruction is gone and must not return. Round 2 used one flat 13 % anchor for all seven, which
+// ignored that the styles differ. Round 3 introduced per-style anchors, hand-measured.
+//
+// D-116 REPLACED THOSE HAND-MEASURED ANCHORS, and the reason is not tidiness. The gate now bounds
+// the top at `highestY - Y_TOLERANCE`, and the round-3 anchors were a SEPARATE measurement of the
+// same property — so the prompt was asking for one number while the gate enforced another. The
+// margin that left varied from 4.92 units (tousled) down to **0.96** (curly): the model was being
+// asked to hit `curly` inside one unit of a 240-unit canvas, having overshot `short` by ten the
+// round before. Deriving the anchor gives every style the same Y_TOLERANCE of headroom instead of
+// a per-style accident, and makes prompt and gate two views of one measurement.
+//
+// afro carries the FIX-ROUND values, not round 3's and not the derivation: the owner rejected
+// round 3's afro as too low and too big, and w 40 / top 1 / low 18 is what produced the asset that
+// was accepted and shipped. Re-deriving it would undo an owner decision, so it is left alone.
 export const STYLES = Object.freeze({
-  short:    { w: 35, top: 7.9, low: 23, desc: "a short, neat cut: close over the ears, a little length on top, a clean tapered outline" },
-  tousled:  { w: 38, top: 5.8, low: 23, desc: "a tousled cut of similar length to short, but with broken, uneven locks and a few strands lifting away from the mass" },
-  curly:    { w: 43, top: 4.6, low: 25, desc: "a compact head of curls: the outline reads as many small rounded clumps, wider than short and sitting a little lower" },
-  long:     { w: 49, top: 7.1, low: 61, desc: "long straight hair falling well past the jaw and down over the shoulders, framing the face on both sides" },
-  ponytail: { w: 41, top: 7.5, low: 51, desc: "hair gathered back into a ponytail: smooth over the skull, with the tail hanging clearly to one side and below the neck" },
-  buzz:     { w: 34, top: 8.3, low: 20, desc: "a buzz cut: an extremely short, even crop that follows the skull closely with almost no volume" },
+  short:    { w: 35, top: 8.5, low: 23, desc: "a short, neat cut: close over the ears, a little length on top, a clean tapered outline" },
+  tousled:  { w: 38, top: 5.4, low: 23, desc: "a tousled cut of similar length to short, but with broken, uneven locks and a few strands lifting away from the mass" },
+  curly:    { w: 43, top: 5.9, low: 25, desc: "a compact head of curls: the outline reads as many small rounded clumps, wider than short and sitting a little lower" },
+  long:     { w: 49, top: 7.7, low: 61, desc: "long straight hair falling well past the jaw and down over the shoulders, framing the face on both sides" },
+  ponytail: { w: 41, top: 8.1, low: 51, desc: "hair gathered back into a ponytail: smooth over the skull, with the tail hanging clearly to one side and below the neck" },
+  buzz:     { w: 34, top: 9.0, low: 20, desc: "a buzz cut: an extremely short, even crop that follows the skull closely with almost no volume" },
   afro:     { w: 40, top: 1.0, low: 18, desc: "a wide, rounded afro: a large soft halo of dense texture, by far the widest of the seven" },
 });
 export const ALLOWED_STYLES = Object.freeze(Object.keys(STYLES));
