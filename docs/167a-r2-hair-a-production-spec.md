@@ -4,8 +4,10 @@
 Was `PRODUCTION_AUTHORISED — NOT STARTED` (owner, 2026-08-21 — **D-104**, identity-lock accepted
 **D-105**, first slice = all seven **D-106**); before that `SPEC_READY — PRODUCTION_METHOD_UNDECIDED`.
 **§5.2, §5.3 and §6 were revised by D-115:** the visual acceptance gates measure the finished,
-decoded 512×768 runtime asset, and `no-floating-islands` uses 8-neighbour connectivity. No
-threshold, envelope or cleanup algorithm changed.
+decoded 512×768 runtime asset, and `no-floating-islands` uses 8-neighbour connectivity.
+**§4 and §6 were revised again by D-116:** every style gains a measured **crown** and
+`within-style-envelope` now bounds the top as well as the width. No pre-existing threshold,
+envelope or cleanup algorithm changed by either.
 > **Reported, not silently fixed:** the `NOT STARTED` half of the old status line was already stale
 > before this revision — D-111 produced a first candidate round and D-114 registered the approved
 > afro. Re-deriving the rest of this document against that is a separate task; the status line is
@@ -128,15 +130,23 @@ a deliberately irregular forehead hairline swinging **33.8…50.3** across the b
 Per-style envelopes, measured from the C2 assets' own path data (audit §3.3) — these are the
 silhouettes the student already recognises:
 
-| Style | x-span | Lowest y | Drapes onto the body |
-|---|---|---|---|
-| `short` | 52…108 | 56 | no |
-| `tousled` | 50…110 | 55 | no |
-| `curly` | 44…113 | 61 | no |
-| `long` | 41…119 | **146** ⚠ | yes |
-| `ponytail` | 52…117 | **123** ⚠ | yes |
-| `buzz` | 53…107 | 47 | no |
-| `afro` | 34…126 | 61 | no |
+| Style | x-span | Crown (highest y) | Lowest y | Drapes onto the body |
+|---|---|---|---|---|
+| `short` | 52…108 | 20.50 | 56 | no |
+| `tousled` | 50…110 | 13.00 | 55 | no |
+| `curly` | 44…113 | 14.08 | 61 | no |
+| `long` | 41…119 | 18.50 | **146** ⚠ | yes |
+| `ponytail` | 52…117 | 19.50 | **123** ⚠ | yes |
+| `buzz` | 53…107 | 21.50 | 47 | no |
+| `afro` | 34…126 | 6.02 | 61 | no |
+
+**The crown column was added by D-116, and it closes a real hole.** Until then nothing bounded how
+HIGH a candidate could reach: `covers-the-crown` is a *minimum*, `respects-the-neck` bounds the
+bottom, and `within-style-envelope` bounded only x. A `short` candidate reached y 9.4 against
+short's own 20.5 — a spiky cut wearing a neat cut's name — and scored 11/11. All four numbers in
+this table come from the same tool and the same exact path crossings
+(`measure-r2-hair-fit.measureC2Style`); a test re-derives every one of them for all seven styles
+and fails if the table drifts from the artwork.
 
 ⚠ **The two draping extents are the weakest numbers in this spec, and D-106 knowingly ships them.**
 Every other landmark in this section is measured on the **shipping R2 base**; `long` 146 and
@@ -312,7 +322,7 @@ or lossless encode can create or repair either property:
 | `covers-the-crown` | hair starting below y 31.6, leaving scalp showing |
 | `clears-the-eye-line` | hair reaching the eyes |
 | `respects-the-neck` | ink below y 81.6, except for `long`/`ponytail` up to their measured extent |
-| `within-style-envelope` | a silhouette outside its C2 x-span (±4 units) |
+| `within-style-envelope` | a silhouette outside its C2 x-span (±4 units) **or rising more than 4 units above its style's own crown** (D-116) |
 | `centred-on-the-skull` | artwork hanging off the side of the head (centre ±2 of 80.5) |
 | `no-floating-islands` | detached specks — **8-neighbour connectivity** (see below) |
 | `alpha-clean-no-halo` | orphan soft pixels above the served tolerance |
@@ -343,10 +353,10 @@ what the cleanup tools may *delete*. Widening it would licence removing more art
 island rule only regroups pixels and removes nothing.
 
 Each gate is exercised in both directions by `tests/unit/avatar-r2-hair-candidate-check.test.mjs`
-(30 tests, CI-safe — no vendored binary): a clean candidate passes, and one deliberate defect trips
+(37 tests, CI-safe — no vendored binary): a clean candidate passes, and one deliberate defect trips
 exactly the gate it should. A gate that only ever sees good input cannot be shown to work.
 
-Since D-115 that suite also pins the connectivity contract from both sides, on synthetic fixtures
+Since D-116 it also pins the crown bound in both directions, per style, and with a counterfactual showing that the pre-D-116 x-only rule accepts the very fixture the two-axis rule refuses. Since D-115 that suite also pins the connectivity contract from both sides, on synthetic fixtures
 that reproduce the real `(260,30)` case exactly — alpha 128, one diagonal ink neighbour at 225, no
 orthogonal ink. The counterfactual runs the **production flood fill with the old neighbour set**
 (and first asserts that, given the production neighbours, it reproduces `countComponents` exactly),

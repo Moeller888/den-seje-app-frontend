@@ -17,6 +17,7 @@ import { dirname, join } from "node:path";
 import {
   parseSubpaths, columnSpans, measureC2Style, C2_STYLES, C2_HEAD, K,
 } from "../../tools/avatar/measure-r2-hair-fit.mjs";
+import { STYLE_TARGETS } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 // The hair sentinels below call the resolver rather than reading its source: the audit's own
 // lesson is that inspecting the code is not the same as measuring what it does.
 import { hairSrcForR2, R2_MANIFEST } from "../../js/avatar-layers.js";
@@ -165,4 +166,50 @@ test("the approved afro CANDIDATE fixtures are unchanged too", () => {
     "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e");
   assert.equal(fix("afro-cleaned.png"),
     "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd");
+});
+
+// ── STYLE_TARGETS is the ARTWORK's own measurement, not a hand-typed table (D-116) ────────────
+// The acceptance gate judges every candidate against these four numbers per style. If they can
+// drift from the C2 assets, the gate slowly starts enforcing a shape nobody authored. So they are
+// re-derived here from the same tool and the same exact path crossings that produced them, and
+// required to match. Change an SVG and this test fails until the table is updated deliberately.
+test("every STYLE_TARGETS number is re-derived from the C2 path data and matches", () => {
+  for (const style of C2_STYLES) {
+    const m = measureC2Style(style);
+    const t = STYLE_TARGETS[style];
+    assert.ok(t, `${style} missing from STYLE_TARGETS`);
+    assert.equal(t.xLo, m.xSpan.x0, `${style} xLo drifted from the artwork`);
+    assert.equal(t.xHi, m.xSpan.x1, `${style} xHi drifted from the artwork`);
+    assert.equal(t.lowestY, m.lowestY, `${style} lowestY drifted from the artwork`);
+    assert.equal(t.highestY, Math.round(m.highestY * 100) / 100, `${style} highestY drifted from the artwork`);
+    assert.equal(t.drapes, m.drapes, `${style} drapes flag drifted from the artwork`);
+  }
+});
+
+test("highestY is the mirror of lowestY — same scan, same crossings, opposite extreme", () => {
+  // The top was simply never computed. This pins that it is the SAME measurement as the bottom,
+  // so no second, looser notion of "how tall is this style" can appear later.
+  for (const style of C2_STYLES) {
+    const m = measureC2Style(style);
+    assert.ok(m.highestY < m.lowestY, `${style}: top must be above bottom`);
+    assert.ok(Number.isFinite(m.highestY), `${style}: highestY not measured`);
+    // every measured column top must be at or below the style's overall crown
+    for (const c of m.cols) {
+      if (c.crown === null) continue;
+      assert.ok(c.crown >= m.highestY - 1e-9,
+        `${style}: column crown ${c.crown} sits above the overall highest ${m.highestY}`);
+    }
+  }
+});
+
+test("the seven crowns are ordered as the styles look, buzz flattest and afro tallest", () => {
+  // A sanity check on the numbers themselves: if a future edit inverted the sign or mixed up the
+  // axis, this ordering breaks long before a candidate is judged against a nonsense bound.
+  const top = (s) => STYLE_TARGETS[s].highestY;
+  assert.ok(top("buzz") > top("short"), "buzz must be flatter than short");
+  assert.ok(top("short") > top("ponytail"), "short must be flatter than ponytail");
+  assert.ok(top("ponytail") > top("long"), "ponytail must be flatter than long");
+  assert.ok(top("long") > top("curly"), "long must be flatter than curly");
+  assert.ok(top("curly") > top("tousled"), "curly must be flatter than tousled");
+  assert.ok(top("tousled") > top("afro"), "tousled must be flatter than afro");
 });

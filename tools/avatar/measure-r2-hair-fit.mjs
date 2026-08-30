@@ -349,15 +349,19 @@ export function measureC2Style(style) {
     return { c2x: X, crown, hairline };
   });
 
-  // does the style drape below the head (side locks / tail)?
-  let lowest = -Infinity, widest = { x0: Infinity, x1: -Infinity };
+  // How far the style reaches, BOTH ways. `lowest` answers "does it drape below the head?";
+  // `highest` answers "how much crown volume does this style actually have?" — the number D-116
+  // needed and nothing recorded, which is why a candidate could tower over its style and pass.
+  // Same scan, same exact path crossings, mirrored: max of the span bottoms, min of the span tops.
+  let lowest = -Infinity, highest = Infinity, widest = { x0: Infinity, x1: -Infinity };
   for (let X = 30; X <= 130; X += 1) {
     const sp = columnSpans(subs, X);
     if (!sp.length) continue;
     widest.x0 = Math.min(widest.x0, X); widest.x1 = Math.max(widest.x1, X);
     lowest = Math.max(lowest, ...sp.map(([, y1]) => y1));
+    highest = Math.min(highest, ...sp.map(([y0]) => y0));
   }
-  return { style, cols, lowestY: lowest, xSpan: widest, drapes: lowest > CAP_MAX_Y };
+  return { style, cols, lowestY: lowest, highestY: highest, xSpan: widest, drapes: lowest > CAP_MAX_Y };
 }
 
 // ── report ──────────────────────────────────────────────────────────────────────────────────
