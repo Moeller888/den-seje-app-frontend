@@ -13,7 +13,7 @@ import {
   MODEL, SIZE, BACKGROUND, OUTPUT_FORMAT, MAX_REQUESTS, RETRIES, ENDPOINT,
   STYLES, ALLOWED_STYLES, TEMPLATE_PATH, OUT_ROOT, buildPrompt, requestConfig,
 } from "../../tools/avatar/openai-generate-hair-item.mjs";
-import { STYLE_TARGETS } from "../../tools/avatar/check-r2-hair-candidate.mjs";
+import { STYLE_TARGETS, Y_TOLERANCE, BASE } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -91,13 +91,41 @@ test("only the seven allowlisted styles are accepted", () => {
   }
 });
 
-test("the width and lowest-point percentages are the gate's own measured targets", () => {
+test("the width, TOP and lowest-point percentages are the gate's own measured targets", () => {
   // Not copied from another style and not invented: re-derived from STYLE_TARGETS here, so a
   // change to the measurements breaks this test rather than silently drifting from the artwork.
+  // `top` joined the derivation in D-116; before that it was a separate hand-measurement of the
+  // same property, and prompt and gate could — and did — disagree about it.
   for (const style of ["short", "tousled", "curly", "long", "ponytail", "buzz"]) {
     const t = STYLE_TARGETS[style];
     assert.equal(STYLES[style].w, Math.round((t.xHi - t.xLo) / 160 * 100), `${style} width`);
+    assert.equal(STYLES[style].top, Math.round(t.highestY / 240 * 1000) / 10, `${style} top anchor`);
     assert.equal(STYLES[style].low, Math.round(t.lowestY / 240 * 100), `${style} lowest point`);
+  }
+});
+
+test("the prompt asks for a crown the gate will accept, with the same headroom for every style", () => {
+  // THE POINT OF THE DERIVATION, asserted as behaviour rather than left as arithmetic in a comment.
+  // The prompt's anchor and the gate's bound are now two views of one measurement, so the distance
+  // between them is Y_TOLERANCE for every style — not a per-style accident ranging from 4.92 down
+  // to 0.96, which is what asking a model to hit `curly` inside one unit of 240 amounted to.
+  for (const style of ["short", "tousled", "curly", "long", "ponytail", "buzz"]) {
+    const asksFor = STYLES[style].top * 240 / 100;              // C2 units the prompt requests
+    const refusedAbove = STYLE_TARGETS[style].highestY - Y_TOLERANCE;
+    const headroom = asksFor - refusedAbove;
+    assert.ok(headroom > 0, `${style}: the prompt asks for a crown the gate would refuse outright`);
+    assert.ok(Math.abs(headroom - Y_TOLERANCE) <= 0.15,
+      `${style}: headroom ${headroom.toFixed(2)} should be Y_TOLERANCE (${Y_TOLERANCE}) within rounding`);
+  }
+});
+
+test("no style is asked to rise above the bald skull it has to cover", () => {
+  // A prompt that asked for a crown BELOW y 31.6 would be requesting artwork that fails
+  // covers-the-crown by construction. The band has two edges and the anchor must sit inside both.
+  for (const style of Object.keys(STYLES)) {
+    const asksFor = STYLES[style].top * 240 / 100;
+    assert.ok(asksFor < BASE.crownY,
+      `${style}: anchor ${asksFor.toFixed(2)} must be above the bald skull at ${BASE.crownY}`);
   }
 });
 
@@ -136,12 +164,37 @@ test("the prompt states the four things the hair must do", () => {
 });
 
 test("the prompt carries this style's geometry and no leftover tokens", () => {
-  const p = buildPrompt("short");
-  assert.match(p, /about 35% of the image WIDTH/);
-  assert.match(p, /begins about 7\.9% of the way down/);
-  assert.match(p, /reaches only about 23% of the way down/);
-  assert.match(p, /the entire bottom 77% of the canvas/);
-  assert.ok(!/\{\{|\}\}/.test(p), "an unsubstituted token survived");
+  // Derived from STYLES rather than hard-coded. The literal `7.9` used to sit here and went stale
+  // the moment D-116 re-derived the anchor — the sentinel fired correctly, but a test that has to
+  // be hand-edited every time a measurement moves will eventually be edited without thought.
+  // Asserting the SUBSTITUTION is what this test is actually for; the VALUES are pinned to the
+  // artwork by the derivation test above.
+  for (const style of ["short", "curly", "buzz"]) {
+    const g = STYLES[style];
+    const p = buildPrompt(style);
+    assert.match(p, new RegExp(`about ${g.w}% of the image WIDTH`), `${style} width not substituted`);
+    assert.match(p, new RegExp(`begins about ${String(g.top).replace(".", "\\.")}% of the way down`),
+      `${style} top anchor not substituted`);
+    assert.match(p, new RegExp(`reaches only about ${g.low}% of the way down`), `${style} lowest not substituted`);
+    assert.match(p, new RegExp(`the entire bottom ${100 - g.low}% of the canvas`), `${style} empty band not substituted`);
+    assert.ok(!/\{\{|\}\}/.test(p), `${style}: an unsubstituted token survived`);
+    assert.ok(p.includes(g.desc), `${style}: the description was not substituted`);
+  }
+});
+
+test("the six styles to be produced each render a distinct, complete prompt", () => {
+  // afro is excluded: it already shipped. These six are what remains, and a prompt that silently
+  // came out identical to another style's would produce a duplicate asset for real money.
+  const six = ["short", "tousled", "curly", "long", "ponytail", "buzz"];
+  const prompts = new Map();
+  for (const style of six) {
+    const p = buildPrompt(style);
+    assert.ok(p.length > 1500, `${style}: prompt is suspiciously short (${p.length})`);
+    assert.ok(!/\{\{|\}\}/.test(p), `${style}: an unsubstituted token survived`);
+    for (const [other, q] of prompts) assert.notEqual(p, q, `${style} and ${other} render the same prompt`);
+    prompts.set(style, p);
+  }
+  assert.equal(prompts.size, 6);
 });
 
 test("it is a hair layer only — the prompt excludes every other body part", () => {
