@@ -22,7 +22,8 @@ import {
   analyse, authoringPreconditions, runtimeGates, countComponents, countOrphanSoft,
   NEIGHBOURS_8, STYLE_TARGETS, STYLES, BASE, ALPHA_INK, MAX_SPECK_PX,
   SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE, Y_TOLERANCE, HALO_TOLERANCE_SERVED,
-  MAX_IRIS_PX_COVERED, irisMask, irisCoverage, IRIS_MASK_SHA256, IRIS_SOURCE,
+  MAX_IRIS_ALPHA, irisMask, irisCoverage, IRIS_MASK_SHA256, IRIS_MASK_FILE,
+  IRIS_SOURCE, IRIS_SOURCE_SHA256,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 
 const W = 256, H = 384;          // 2:3, same proportions as the authoring canvas
@@ -531,7 +532,7 @@ test("hair that covers the iris is refused even though it starts above the eye l
   assert.equal(g.pass, false);
   assert.equal(g.detail.startsAboveEyeLine, true, "the OLD condition is satisfied — that is the point");
   assert.equal(g.detail.irisClear, false);
-  assert.ok(g.detail.irisPixelsCovered > 0);
+  assert.ok(g.detail.irisMaxAlpha > 0);
   assert.equal(g.detail.irisPixelsTotal, 1156, "the iris mask's own ink count");
 });
 
@@ -555,24 +556,23 @@ test("COUNTERFACTUAL: the pre-D-118 rule accepts the very fixture the new rule r
 test("a clean candidate leaves the iris completely untouched", () => {
   const g = gate(check(goodShort()), "clears-the-eye-line");
   assert.equal(g.pass, true);
-  assert.equal(g.detail.irisPixelsCovered, 0);
+  assert.equal(g.detail.irisMaxAlpha, 0);
   assert.equal(g.detail.irisClear, true);
   assert.equal(g.detail.note, undefined, "no note on a pass");
 });
 
-test("the limit is ZERO, and it is reachable", () => {
-  // Not a number chosen to separate the fixtures: hair renders at z40, in front of the eyes, so
-  // there is no defensible amount of it over a pupil. northstar, afro, buzz and short all measure
-  // exactly 0 on the shipped assets, so the bar is demonstrably reachable rather than aspirational.
-  assert.equal(MAX_IRIS_PX_COVERED, 0);
+test("the limit is ZERO ALPHA, and it is reachable", () => {
+  // Not a number chosen to separate the fixtures. Measured on the real decoded runtime assets,
+  // northstar, afro, buzz and short all put NOTHING over the iris at any opacity at all: max
+  // alpha 0, obscured 0.00 %. Zero is what clean artwork does, not a bar invented for these eight.
+  assert.equal(MAX_IRIS_ALPHA, 0);
   const oneStray = goodShort();
   const iris = irisMask();
-  // place a single ink pixel on the first iris pixel there is, at this canvas's scale
   const i = iris.m.indexOf(1);
   const mx = i % iris.w, my = (i / iris.w) | 0;
   setA(oneStray, Math.floor((mx + 0.5) * W / iris.w), Math.floor((my + 0.5) * H / iris.h), 255);
   const g = gate(check(oneStray), "clears-the-eye-line");
-  assert.equal(g.detail.irisPixelsCovered >= 1, true, "the stray pixel must land on the iris");
+  assert.ok(g.detail.irisMaxAlpha >= 1, "the stray pixel must land on the iris");
   assert.equal(g.pass, false, "one pixel over the pupil is one too many");
 });
 
@@ -602,4 +602,143 @@ test("coverage is measured proportionally, so canvas size does not change the an
   assert.equal(irisCoverage(big.rgba, 512, 768).covered, iris.count, "full cover must read as full");
   const empty = new Uint8Array(512 * 768 * 4);
   assert.equal(irisCoverage(empty, 512, 768).covered, 0, "empty must read as zero");
+});
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE SUB-THRESHOLD VEIL — the hole a pixel COUNT above ALPHA_INK could never see
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+/** A continuous layer over the WHOLE iris at a chosen alpha. */
+function veilOverIris(alpha) {
+  const c = goodShort();
+  const iris = irisMask();
+  for (let i = 0; i < iris.m.length; i++) {
+    if (!iris.m[i]) continue;
+    const mx = i % iris.w, my = (i / iris.w) | 0;
+    setA(c, Math.floor((mx + 0.5) * W / iris.w), Math.floor((my + 0.5) * H / iris.h), alpha);
+  }
+  return c;
+}
+
+test("COUNTERFACTUAL: a veil at alpha 127 blacks out the pupil — the OLD count rule accepts it", () => {
+  // The first D-118 implementation counted pixels at alpha >= ALPHA_INK and required 0. A veil one
+  // level below ink obscures half the pupil and contributes ZERO to that count. This reproduces the
+  // old rule exactly; if it ever stops accepting the veil, the test below proves nothing.
+  const c = veilOverIris(ALPHA_INK - 1);
+  const cov = irisCoverage(c.rgba, c.w, c.h);
+  assert.equal(cov.inkCovered, 0, "not one pixel reaches the ink threshold — the old rule saw nothing");
+  assert.equal(cov.covered, cov.total, "yet every iris pixel is covered");
+  assert.ok(cov.obscuredFraction > 0.45, "and roughly half the pupil is actually obscured");
+});
+
+test("the hardened rule REFUSES that same veil", () => {
+  const g = gate(check(veilOverIris(ALPHA_INK - 1)), "clears-the-eye-line");
+  assert.equal(g.pass, false);
+  assert.equal(g.detail.irisMaxAlpha, ALPHA_INK - 1);
+  assert.equal(g.detail.irisPixelsOpaque, 0, "still zero by the OLD measure — that is the point");
+  assert.ok(g.detail.irisObscuredPct > 45);
+});
+
+test("a veil is refused at every opacity, down to a single alpha level", () => {
+  for (const a of [1, 16, 32, 64, 96, 127, 200, 255]) {
+    const g = gate(check(veilOverIris(a)), "clears-the-eye-line");
+    assert.equal(g.pass, false, `alpha ${a} over the whole pupil must be refused`);
+    assert.equal(g.detail.irisMaxAlpha, a);
+  }
+});
+
+test("a THIN partly transparent streak across the iris is refused", () => {
+  // Not a full veil: a few rows, semi-transparent. Small area, low opacity, still on the pupil.
+  const c = goodShort();
+  const iris = irisMask();
+  const rows = new Set();
+  for (let i = 0; i < iris.m.length; i++) if (iris.m[i]) rows.add((i / iris.w) | 0);
+  const sorted = [...rows].sort((a, b) => a - b);
+  const mid = sorted[Math.floor(sorted.length / 2)];
+  let painted = 0;
+  for (let i = 0; i < iris.m.length; i++) {
+    if (!iris.m[i]) continue;
+    const my = (i / iris.w) | 0;
+    if (my < mid || my > mid + 2) continue;
+    const mx = i % iris.w;
+    setA(c, Math.floor((mx + 0.5) * W / iris.w), Math.floor((my + 0.5) * H / iris.h), 70);
+    painted++;
+  }
+  assert.ok(painted > 0, "the streak must actually land on the iris");
+  const g = gate(check(c), "clears-the-eye-line");
+  assert.equal(g.pass, false);
+  assert.equal(g.detail.irisMaxAlpha, 70);
+  assert.equal(g.detail.irisPixelsOpaque, 0, "below ink, so the old rule would have missed it too");
+});
+
+test("innocent antialiasing NEAR the iris but not on it still passes", () => {
+  // The bound must refuse hair on the pupil, not hair in its neighbourhood. A soft ramp above the
+  // topmost iris row is legitimate fringe and must not be punished.
+  const c = goodShort();
+  const iris = irisMask();
+  let top = Infinity;
+  for (let i = 0; i < iris.m.length; i++) if (iris.m[i]) top = Math.min(top, (i / iris.w) | 0);
+  const y = Math.floor((top + 0.5) * H / iris.h) - 2;
+  for (let x = px(60); x < px(100); x++) setA(c, x, y, 90);
+  const g = gate(check(c), "clears-the-eye-line");
+  assert.equal(g.detail.irisMaxAlpha, 0, "the ramp must not touch the iris");
+  assert.equal(g.pass, true, "hair beside the pupil is not hair on the pupil");
+});
+
+test("the verdict is the same at runtime size and at unit-test size", () => {
+  // The gate runs on 512x768 in production and 256x384 here. A rule that changed answer with the
+  // canvas would be measuring the canvas, not the artwork.
+  const iris = irisMask();
+  const build = (w, h, alpha) => {
+    const rgba = new Uint8Array(w * h * 4);
+    for (let i = 0; i < iris.m.length; i++) {
+      if (!iris.m[i]) continue;
+      const mx = i % iris.w, my = (i / iris.w) | 0;
+      const x = Math.min(w - 1, Math.floor((mx + 0.5) * w / iris.w));
+      const y = Math.min(h - 1, Math.floor((my + 0.5) * h / iris.h));
+      const j = (y * w + x) * 4;
+      rgba[j] = rgba[j + 1] = rgba[j + 2] = 128; rgba[j + 3] = alpha;
+    }
+    return rgba;
+  };
+  for (const alpha of [1, 127, 255]) {
+    const big = irisCoverage(build(512, 768, alpha), 512, 768);
+    const small = irisCoverage(build(W, H, alpha), W, H);
+    assert.equal(big.maxAlpha, alpha);
+    assert.equal(small.maxAlpha, alpha);
+    assert.equal(big.covered, big.total, "full cover at runtime size");
+    assert.equal(small.covered, small.total, "full cover at test size");
+  }
+  assert.equal(irisCoverage(new Uint8Array(512 * 768 * 4), 512, 768).maxAlpha, 0);
+  assert.equal(irisCoverage(new Uint8Array(W * H * 4), W, H).maxAlpha, 0);
+});
+
+// ── the source -> fixture binding, executable rather than documentary ────────────────────────
+
+test("IRIS_SOURCE_SHA256 is ENFORCED: the shipped iris asset still has the pinned bytes", () => {
+  // Without this the constant is decoration. CI cannot decode the .webp — that needs the vendored
+  // binary — but it can verify the file's bytes, and that is what pins the mask's origin.
+  const src = join(dirname(fileURLToPath(import.meta.url)), "..", "..", IRIS_SOURCE);
+  const buf = readFileSync(src);
+  assert.equal(createHash("sha256").update(buf).digest("hex"), IRIS_SOURCE_SHA256,
+    IRIS_SOURCE + " changed. Regenerate the mask with\n" +
+    "  node tools/avatar/build/_view/make-iris-mask.mjs\n" +
+    "then update IRIS_SOURCE_SHA256 and IRIS_MASK_SHA256 together, deliberately.");
+});
+
+test("the mask fixture is bound to that source: dimensions, ink count and SHA all pinned", () => {
+  const m = irisMask();
+  assert.equal(m.w, 512, "the mask is at served scale");
+  assert.equal(m.h, 768);
+  assert.equal(m.count, 1156, "the iris layer's own ink count");
+  assert.equal(createHash("sha256").update(readFileSync(IRIS_MASK_FILE)).digest("hex"), IRIS_MASK_SHA256);
+});
+
+test("a one-byte change to the fixture would be refused, not silently believed", () => {
+  // irisMask() SHA-verifies on load, so a swapped fixture throws rather than quietly redefining
+  // where the eyes are. Proven without touching the real file.
+  const buf = readFileSync(IRIS_MASK_FILE);
+  assert.equal(createHash("sha256").update(buf).digest("hex"), IRIS_MASK_SHA256);
+  const tampered = createHash("sha256").update(Buffer.concat([buf, Buffer.from([0])])).digest("hex");
+  assert.notEqual(tampered, IRIS_MASK_SHA256);
 });
