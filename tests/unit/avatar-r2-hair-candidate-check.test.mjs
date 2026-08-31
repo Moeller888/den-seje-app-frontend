@@ -15,12 +15,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   analyse, authoringPreconditions, runtimeGates, countComponents, countOrphanSoft,
   NEIGHBOURS_8, STYLE_TARGETS, STYLES, BASE, ALPHA_INK, MAX_SPECK_PX,
   SRC_W, SRC_H, OUT_W, OUT_H, MAX_MEAN_SAT, X_TOLERANCE, Y_TOLERANCE, HALO_TOLERANCE_SERVED,
+  MAX_IRIS_PX_COVERED, irisMask, irisCoverage, IRIS_MASK_SHA256, IRIS_SOURCE,
 } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 
 const W = 256, H = 384;          // 2:3, same proportions as the authoring canvas
@@ -51,8 +53,15 @@ const alphaAt = (c, x, y) => c.rgba[(y * c.w + x) * 4 + 3];
 
 // A candidate that should satisfy every runtime gate for `short`: sits on the crown, clears the
 // eye line, stops above the neck, centred on the skull, inside the style envelope, grey, opaque.
+//
+// The bottom edge is 50, not 54, and that is a CORRECTION rather than a convenience (D-118). At 54
+// this rectangle reached 1.5 units into the iris, which starts at y 52.50 — it covered 9 of the
+// eye's own pixels. The old `clears-the-eye-line` could not see that, so the fixture passed and was
+// called clean; the new one does, and it is right. A solid slab across the whole forehead down to
+// the eyes was never clean hair: C2 `short`'s central hairline sits around y 33 and only its
+// TEMPLES reach 56. The fixture is now the shape it always claimed to be.
 function goodShort() {
-  return paint(blank(), { xLo: 55, xHi: 106, yLo: 20, yHi: 54 });
+  return paint(blank(), { xLo: 55, xHi: 106, yLo: 20, yHi: 50 });
 }
 // its top-left ink pixel, which the connectivity fixtures below hang off
 const MASS_X = px(55), MASS_Y = px(20);
@@ -506,4 +515,91 @@ test("Y_TOLERANCE is stated separately from X_TOLERANCE, even at the same value"
     assert.equal(typeof STYLE_TARGETS[s].highestY, "number", s + " has no measured crown");
     assert.ok(STYLE_TARGETS[s].highestY < BASE.crownY, s + " crown must sit above the bald skull");
   }
+});
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE EYES MUST BE CLEAR, NOT MERELY BELOW WHERE THE HAIR STARTS (D-118)
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+// Hair that BEGINS above the eye line and then continues straight down over the face. This is the
+// exact shape the image-guided `short` canary produced: it covered 100 % of the iris and 79 % of
+// the face, and the pre-D-118 gate passed it.
+const overTheFace = () => paint(blank(), { xLo: 55, xHi: 106, yLo: 20, yHi: 72 });
+
+test("hair that covers the iris is refused even though it starts above the eye line", () => {
+  const g = gate(check(overTheFace()), "clears-the-eye-line");
+  assert.equal(g.pass, false);
+  assert.equal(g.detail.startsAboveEyeLine, true, "the OLD condition is satisfied — that is the point");
+  assert.equal(g.detail.irisClear, false);
+  assert.ok(g.detail.irisPixelsCovered > 0);
+  assert.equal(g.detail.irisPixelsTotal, 1156, "the iris mask's own ink count");
+});
+
+test("COUNTERFACTUAL: the pre-D-118 rule accepts the very fixture the new rule refuses", () => {
+  // The old gate was `lowestForehead < eyeLineY` and nothing else. If this ever stops being true,
+  // the fixture has drifted and the test above proves nothing about the blind spot.
+  const c = overTheFace();
+  const a = analyse(c.rgba, c.w, c.h);
+  let lowestForehead = -Infinity;
+  for (let x = 0; x < a.w; x++) {
+    const cx = x * a.k;
+    if (cx < 65 || cx > 95) continue;
+    if (a.botByCol[x] === -Infinity) continue;
+    const yv = a.topByCol[x] * a.k;
+    if (yv > lowestForehead) lowestForehead = yv;
+  }
+  assert.equal(lowestForehead < BASE.eyeLineY, true, "the old rule must accept it");
+  assert.equal(gate(check(c), "clears-the-eye-line").pass, false, "the new rule must refuse it");
+});
+
+test("a clean candidate leaves the iris completely untouched", () => {
+  const g = gate(check(goodShort()), "clears-the-eye-line");
+  assert.equal(g.pass, true);
+  assert.equal(g.detail.irisPixelsCovered, 0);
+  assert.equal(g.detail.irisClear, true);
+  assert.equal(g.detail.note, undefined, "no note on a pass");
+});
+
+test("the limit is ZERO, and it is reachable", () => {
+  // Not a number chosen to separate the fixtures: hair renders at z40, in front of the eyes, so
+  // there is no defensible amount of it over a pupil. northstar, afro, buzz and short all measure
+  // exactly 0 on the shipped assets, so the bar is demonstrably reachable rather than aspirational.
+  assert.equal(MAX_IRIS_PX_COVERED, 0);
+  const oneStray = goodShort();
+  const iris = irisMask();
+  // place a single ink pixel on the first iris pixel there is, at this canvas's scale
+  const i = iris.m.indexOf(1);
+  const mx = i % iris.w, my = (i / iris.w) | 0;
+  setA(oneStray, Math.floor((mx + 0.5) * W / iris.w), Math.floor((my + 0.5) * H / iris.h), 255);
+  const g = gate(check(oneStray), "clears-the-eye-line");
+  assert.equal(g.detail.irisPixelsCovered >= 1, true, "the stray pixel must land on the iris");
+  assert.equal(g.pass, false, "one pixel over the pupil is one too many");
+});
+
+test("the iris mask is the shipped artwork, SHA-pinned, and a swap is refused", () => {
+  const m = irisMask();
+  assert.equal(m.w, 512);
+  assert.equal(m.h, 768);
+  assert.equal(m.count, 1156, "the iris layer's own ink count");
+  assert.equal(IRIS_MASK_SHA256, "8e7f2ff36ee53aa24f0afc0ea5595cacb757e236d8b3ef37b417000067dc5bd5");
+  assert.equal(IRIS_SOURCE, "assets/avatar-r2/eyes/eyes-neutral-iris-v1.webp");
+  // the fixture on disk really is what the constant claims
+  const buf = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "..",
+    "tools", "avatar", "fixtures", "r2-hair", "eye-iris-mask-v1.png"));
+  assert.equal(createHash("sha256").update(buf).digest("hex"), IRIS_MASK_SHA256);
+});
+
+test("coverage is measured proportionally, so canvas size does not change the answer", () => {
+  // The gate runs on 512x768 in production and on this small canvas in the suite. Both must ask
+  // the same question of the same anatomy, or the tests are measuring a different gate.
+  const big = { rgba: new Uint8Array(512 * 768 * 4), w: 512, h: 768 };
+  const iris = irisMask();
+  for (let i = 0; i < iris.m.length; i++) {
+    if (!iris.m[i]) continue;
+    const j = i * 4;
+    big.rgba[j] = 128; big.rgba[j + 1] = 128; big.rgba[j + 2] = 128; big.rgba[j + 3] = 255;
+  }
+  assert.equal(irisCoverage(big.rgba, 512, 768).covered, iris.count, "full cover must read as full");
+  const empty = new Uint8Array(512 * 768 * 4);
+  assert.equal(irisCoverage(empty, 512, 768).covered, 0, "empty must read as zero");
 });
