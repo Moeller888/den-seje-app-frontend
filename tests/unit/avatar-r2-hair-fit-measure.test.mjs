@@ -20,7 +20,9 @@ import {
 import { STYLE_TARGETS } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 // The hair sentinels below call the resolver rather than reading its source: the audit's own
 // lesson is that inspecting the code is not the same as measuring what it does.
-import { hairSrcForR2, R2_MANIFEST } from "../../js/avatar-layers.js";
+import {
+  hairSrcForR2, R2_MANIFEST, AVATAR_R2, isAvatarR2, isAvatarR2ActiveFor, r2StackSrcsFor,
+} from "../../js/avatar-layers.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -189,6 +191,67 @@ test("the owner-approved short asset is byte-for-byte the reviewed one", () => {
   assert.equal(createHash("sha256").update(buf).digest("hex"),
     "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
     "the short asset was rebuilt or re-encoded — the owner approved THESE bytes (D-119)");
+});
+
+// ── WHAT A REAL USER GETS, not what a constant says (D-119 §4) ───────────────────────────────
+// The first version of this promotion claimed it was "dormant in production because AVATAR_R2 is
+// false". AVATAR_R2 is TRUE and has been the default since D-101. The claim came from trusting a
+// stale note instead of reading the switch, and it understated the effect of merging. These tests
+// exist so that story cannot repeat: the render path is now asserted, not described.
+test("R2 is the DEFAULT render path — the switch is on and only \"0\" opts out", () => {
+  assert.equal(AVATAR_R2, true,
+    "AVATAR_R2 flipped. Every D-119 claim about what a merge does is now wrong — re-read the entry.");
+  assert.equal(isAvatarR2(), true, "a browser that never set the key must get R2");
+
+  // The opt-out is deliberately asymmetric (only the exact string "0"), so a stale pilot key
+  // cannot pin a browser to R2 against a global rollback. Proven, not restated.
+  const real = globalThis.localStorage;
+  try {
+    for (const [value, expected] of [["0", false], ["1", true], ["", true], ["true", true]]) {
+      globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? value : null) };
+      assert.equal(isAvatarR2(), expected, `avatar_r2="${value}" resolved the wrong way`);
+    }
+  } finally {
+    if (real === undefined) delete globalThis.localStorage; else globalThis.localStorage = real;
+  }
+});
+
+test("a real identity storing `short` gets the SHORT asset through the FULL R2 stack", () => {
+  // The behavioural claim the PR now makes: on deploy, this student sees the approved artwork.
+  // Asserting hairSrcForR2 alone would not prove it — the stack has to resolve as a whole, or
+  // r2StackSrcsFor returns null and the WHOLE avatar drops to C2 (D-083).
+  const id = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "short", hair_color: "brown" };
+  const stack = r2StackSrcsFor(id);
+
+  assert.notEqual(stack, null, "the stack must resolve, or the whole avatar falls to C2");
+  assert.equal(isAvatarR2ActiveFor(id), true, "this identity must render on R2, not C2");
+  assert.equal(stack.hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+  assert.notEqual(stack.hair, "/assets/avatar-r2/hair/hair-northstar-v1.webp",
+    "the fallback is still being served — the promotion did not take effect");
+  for (const key of ["base", "blush", "face", "eyesIris", "eyesFixed", "hair"]) {
+    assert.ok(stack[key], `the mandatory ${key} layer is missing — partial stacks must never render`);
+  }
+});
+
+test("an identity with absent fields ALSO lands on R2 short — the defaults are neutral/medium", () => {
+  // Why this is separate: the DB does not guarantee skin_tone, and the resolvers default absent or
+  // invalid fields to neutral/medium. So "no skin_tone stored" is not an edge case that stays on
+  // C2 — it is a normal student who gets the new asset too.
+  const id = { v: 1, body_type: "neutral", hairstyle: "short" };
+  assert.equal(isAvatarR2ActiveFor(id), true);
+  assert.equal(r2StackSrcsFor(id).hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+});
+
+test("an identity the raster set does NOT cover still falls to C2, short or not", () => {
+  // The other half: promoting artwork must not drag an unsupported identity onto R2. U2 covers
+  // only neutral × medium; everything else keeps the untouched C2/SVG path.
+  for (const id of [
+    { v: 1, body_type: "male", skin_tone: "medium", hairstyle: "short" },
+    { v: 1, body_type: "neutral", skin_tone: "dark", hairstyle: "short" },
+  ]) {
+    assert.equal(r2StackSrcsFor(id), null, "an uncovered identity must not resolve an R2 stack");
+    assert.equal(isAvatarR2ActiveFor(id), false, "an uncovered identity must render C2");
+  }
 });
 
 test("the short candidate's authoring source is tracked and unchanged", () => {
