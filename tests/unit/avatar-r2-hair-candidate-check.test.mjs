@@ -563,8 +563,12 @@ test("a clean candidate leaves the iris completely untouched", () => {
 
 test("the limit is ZERO ALPHA, and it is reachable", () => {
   // Not a number chosen to separate the fixtures. Measured on the real decoded runtime assets,
-  // northstar, afro, buzz and short all put NOTHING over the iris at any opacity at all: max
-  // alpha 0, obscured 0.00 %. Zero is what clean artwork does, not a bar invented for these eight.
+  // four layers are IRIS-CLEAN — northstar, afro, buzz and short put nothing over the iris at any
+  // opacity at all (max alpha 0, obscured 0.00 %). Iris-clean is NOT visually approved: only
+  // northstar and the owner-approved afro are approved artwork. `buzz` is visually REJECTED for
+  // its ear tips and `short` is rejected by the D-116 crown bound; they merely leave the pupil
+  // alone. The two APPROVED controls sitting at exactly zero is what justifies a fail-closed
+  // zero, and the other two prove it is technically achievable.
   assert.equal(MAX_IRIS_ALPHA, 0);
   const oneStray = goodShort();
   const iris = irisMask();
@@ -716,8 +720,12 @@ test("the verdict is the same at runtime size and at unit-test size", () => {
 // ── the source -> fixture binding, executable rather than documentary ────────────────────────
 
 test("IRIS_SOURCE_SHA256 is ENFORCED: the shipped iris asset still has the pinned bytes", () => {
-  // Without this the constant is decoration. CI cannot decode the .webp — that needs the vendored
-  // binary — but it can verify the file's bytes, and that is what pins the mask's origin.
+  // Without this the constant is decoration. WHAT THIS PROVES AND WHAT IT DOES NOT: hashing the
+  // source bytes detects drift in the source, and the companion test detects drift in the mask.
+  // Together they pin both ends. They do NOT, on their own, prove mathematically that the mask was
+  // DERIVED from that source, because CI never decodes the .webp — that needs the vendored binary.
+  // The derivation proof is the reproducible regeneration command, run locally:
+  //   node tools/avatar/build/_view/make-iris-mask.mjs
   const src = join(dirname(fileURLToPath(import.meta.url)), "..", "..", IRIS_SOURCE);
   const buf = readFileSync(src);
   assert.equal(createHash("sha256").update(buf).digest("hex"), IRIS_SOURCE_SHA256,

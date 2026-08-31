@@ -153,20 +153,29 @@ export const IRIS_SOURCE_SHA256 = "0187788c8d2203aa733aebc18e2f9fd8b6af6d171d352
 // fails.
 //
 // WHY ZERO, AND WHY THAT IS NOT AN INVENTED NUMBER. Measured on the real decoded runtime assets,
-// every layer that is visually acceptable puts NOTHING over the iris at any opacity whatsoever:
+// four layers are IRIS-CLEAN — they put nothing over the iris at any opacity whatsoever:
 //
 //   northstar 0 · afro 0 · buzz 0 · short 0     (max alpha 0, alpha-weighted 0.00 %)
 //   tousled 248 · long 254 · ponytail 254 · guided canary 254
 //
-// The four clean layers are not merely under a limit — they are at zero, at alpha > 0. The gap to
-// the nearest failure is the whole range. So zero is what clean artwork actually does, not a bar
-// invented to sort these eight fixtures.
+// IRIS-CLEAN IS NOT THE SAME AS VISUALLY APPROVED, and the four are not one category:
+//   northstar — approved positive control
+//   afro      — OWNER-APPROVED positive control
+//   buzz      — iris-clean, but VISUALLY REJECTED for the needle tips at the ears
+//   short     — iris-clean, but rejected by other geometric gates (the D-116 crown bound)
+// Only the first two are approved artwork. The other two merely happen to leave the pupil alone.
 //
-// The justification is also not "one faint pixel is visible" — it is not. It is that the served
-// cleanup has already removed orphaned dust below ALPHA_FLOOR, so any pixel still sitting on the
-// pupil afterwards is deliberate artwork, and there is no reason to paint hair onto a pupil.
-// If a future candidate ever fails on a faint antialiasing ramp, the detail carries the exact
-// alpha and the obscured fraction, and that is an owner call — not a reason to loosen this.
+// The case for a fail-closed zero is therefore:
+//   * the two APPROVED positive controls sit at exactly zero alpha over the iris;
+//   * the other two iris-clean layers show zero is technically achievable, not aspirational;
+//   * hair over the pupil is a visible conflict — it renders at z40, in front of the eyes;
+//   * and a future faint overlap pixel should be REPORTED for the owner to judge, rather than
+//     automatically loosening the threshold.
+//
+// Deliberately NOT claimed: that any surviving pixel is intentional artwork. Connected
+// antialiasing can survive the served cleanup without an artist ever meaning to put it there.
+// That is exactly why the detail carries the exact max alpha and obscured fraction — so a faint
+// overlap is a case the owner can weigh, not a silent rejection or a silent relaxation.
 export const MAX_IRIS_ALPHA = 0;
 
 let _iris = null;
