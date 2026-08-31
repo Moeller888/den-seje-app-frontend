@@ -29,8 +29,15 @@ the choice is read, validated, stored — and then **discarded at render time**:
 > **Historical as of 2026-08-29 (D-114).** The code below is the resolver **as it stood when this
 > audit was written**. It is quoted here because the whole document is derived from it; it is no
 > longer what ships. `hairSrcForR2` now reads the identity and resolves a per-style asset when one
-> is registered, falling back to `northstar` otherwise — so the defect is closed for `afro` and
-> still open for the other six styles.
+> is registered, falling back to `northstar` otherwise — so the defect is closed for `afro`
+> (D-114, 2026-08-29) and `short` (D-119, 2026-08-31), and still open for the other five styles.
+>
+> **The alias gap this leaves, recorded rather than quietly carried.** On the C2 path the legacy
+> 155F values `default` and `braid` alias to `short` and `ponytail`. The R2 path has no alias
+> table: it matches the raw stored `hairstyle` against `R2_MANIFEST.hair`. So a student stored as
+> `default` now sees short hair on C2 and `northstar` on R2. That predates the promotions and is
+> not closed by them — whether R2 should apply the aliases is a decision about stored data, and
+> is deliberately not taken here (D-119 §5).
 
 ```js
 // js/avatar-layers.js:443 — SUPERSEDED, kept for provenance

@@ -112,14 +112,24 @@ test("the canvas conversion matches the served R2 dimensions", () => {
 // measuring what it does.
 test("hairSrcForR2 resolves the identity's style when that style has an asset", () => {
   assert.equal(hairSrcForR2({ hairstyle: "afro" }), "/assets/avatar-r2/hair/hair-afro-v1.webp");
+  assert.equal(hairSrcForR2({ hairstyle: "short" }), "/assets/avatar-r2/hair/hair-short-v1.webp");
 });
 
 test("a style with NO R2 asset falls back to northstar, and does NOT drop the avatar to C2", () => {
   // The load-bearing half. Hair is a mandatory layer, so returning null here would take the WHOLE
   // avatar to C2 (r2StackSrcsFor) for every student whose style has no artwork yet — a rollback of
-  // D-101 delivered by a resolver. Six of the seven styles are in exactly that position today.
+  // D-101 delivered by a resolver. Five of the seven styles are in exactly that position today.
+  //
+  // `short` LEFT this list on 2026-08-31 (D-119) when its asset was promoted. That is the only
+  // behavioural change in that PR, and it is the change the promotion exists to make: this list is
+  // the register of what is still un-produced, so a style must be removed from it deliberately.
+  //
+  // The legacy 155F aliases stay here even though `default` and `braid` ALIAS to `short` and
+  // `ponytail` on the C2 path. R2 resolves the RAW stored value against the manifest — there is no
+  // alias table on this path — so `default` still means northstar, not the new short asset. If that
+  // ever changes it must be a decision, not a side effect of promoting artwork.
   const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
-  for (const style of ["short", "tousled", "curly", "long", "ponytail", "buzz",
+  for (const style of ["tousled", "curly", "long", "ponytail", "buzz",
                        "default", "braid", "sidecut", "buzzcut"]) {
     assert.equal(hairSrcForR2({ hairstyle: style }), NORTHSTAR, `${style} must still render northstar`);
   }
@@ -166,6 +176,31 @@ test("the approved afro CANDIDATE fixtures are unchanged too", () => {
     "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e");
   assert.equal(fix("afro-cleaned.png"),
     "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd");
+});
+
+// ── the approved SHORT asset, and the source it was built from (D-119) ───────────────────────
+// The owner approved a specific 512×768 WebP mounted on the real avatar, quoted by SHA. Pinning
+// the bytes is what makes that approval mean something later: a re-encode, a pipeline tweak or a
+// well-meant "optimisation" all change these hashes and fail here rather than silently shipping
+// artwork nobody signed off.
+test("the owner-approved short asset is byte-for-byte the reviewed one", () => {
+  const buf = readFileSync(join(REPO, "assets", "avatar-r2", "hair", "hair-short-v1.webp"));
+  assert.equal(buf.length, 14874, "the short asset changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
+    "the short asset was rebuilt or re-encoded — the owner approved THESE bytes (D-119)");
+});
+
+test("the short candidate's authoring source is tracked and unchanged", () => {
+  // Rounds 1–4 lost their prompts and raw responses with a deleted worktree (D-111 §9) because the
+  // only copies lived in gitignored scratch. The 1024×1536 authoring PNG this asset was built from
+  // is therefore tracked, so the approved artwork can be rebuilt from a fresh clone rather than
+  // from luck. It is the INPUT to the runtime-asset pipeline, which is what fixtures/ is for.
+  const buf = readFileSync(join(REPO, "tools", "avatar", "fixtures", "r2-hair", "short-crop-authoring.png"));
+  assert.equal(buf.length, 101088, "the tracked short source changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "ce789b496fab41c7bbb0228bae91edec22649c2782bff1c7bdde68f46d84683c",
+    "the tracked short source changed — it is the provenance of the approved asset");
 });
 
 // ── STYLE_TARGETS is the ARTWORK's own measurement, not a hand-typed table (D-116) ────────────
