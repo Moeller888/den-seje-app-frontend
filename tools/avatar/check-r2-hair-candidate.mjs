@@ -42,6 +42,7 @@
 // ---------------------------------------------------------------------------------------------
 
 import { readFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { decodePng } from "./build-r2-torso-occlusion-mask.mjs";
@@ -122,6 +123,112 @@ export const HALO_TOLERANCE_AUTHORING = 64;  // 1024x1536, matches check-r2-tors
 export const HALO_TOLERANCE_SERVED = 16;     // 512x768, the pixels that actually ship
 
 const u = (v) => Math.round(v * 10) / 10;
+
+// ── THE EYES, AS THE ARTWORK ITSELF DEFINES THEM (D-118) ─────────────────────────────────────
+// `clears-the-eye-line` used to read ONLY the TOP of each forehead column: "hair must not BEGIN
+// below the eye line". It never asked where the hair ENDED. A mass that started at y 33 and
+// continued down over the whole face therefore passed — measured on the image-guided `short`
+// canary, which covered 100 % of the iris and 79 % of the face and scored a pass on this gate.
+//
+// The fix needs to know where the eyes actually are, and that is not a number to invent: it is the
+// shipped iris layer's own ink. `eye-iris-mask-v1.png` is that layer thresholded at ALPHA_INK and
+// tracked as a fixture, so this file stays pure JS and CI-safe — decoding the .webp would need the
+// vendored binary and would drag the whole gate suite out of CI.
+//
+// WHY THE IRIS AND NOT THE WHOLE EYE: the approved afro grazes 4.7 % of the full eye layer (lid and
+// lash corner) and 0.0 % of the iris. Gating the full eye at zero would reject an asset the owner
+// has already accepted. The iris is the part you see out of, hair renders at z40 in FRONT of the
+// eyes (R2_STACK_Z), and there is no defensible amount of hair in front of a pupil — so the limit
+// is zero. It is zero on principle, not because zero happens to separate the fixtures: northstar,
+// afro, buzz and short all achieve exactly 0, so the bar is demonstrably reachable.
+export const IRIS_MASK_FILE = join(HERE, "fixtures", "r2-hair", "eye-iris-mask-v1.png");
+export const IRIS_MASK_SHA256 = "8e7f2ff36ee53aa24f0afc0ea5595cacb757e236d8b3ef37b417000067dc5bd5";
+export const IRIS_SOURCE = "assets/avatar-r2/eyes/eyes-neutral-iris-v1.webp";
+export const IRIS_SOURCE_SHA256 = "0187788c8d2203aa733aebc18e2f9fd8b6af6d171d352c8f6a428b12a5d9f1d7";
+// THE THRESHOLD HOLE THIS CLOSES. The first version counted only pixels at alpha >= ALPHA_INK, so
+// `0` did not mean "no hair over the iris" — it meant "no OPAQUE hair over the iris". A continuous
+// veil at alpha 127 could black out the entire pupil and pass, because not one of its pixels
+// reached the ink threshold. The limit is therefore on the MAXIMUM ALPHA any hair pixel has over
+// the iris, not on a count above a threshold: alpha 127 over the whole pupil now reads 127, and
+// fails.
+//
+// WHY ZERO, AND WHY THAT IS NOT AN INVENTED NUMBER. Measured on the real decoded runtime assets,
+// four layers are IRIS-CLEAN — they put nothing over the iris at any opacity whatsoever:
+//
+//   northstar 0 · afro 0 · buzz 0 · short 0     (max alpha 0, alpha-weighted 0.00 %)
+//   tousled 248 · long 254 · ponytail 254 · guided canary 254
+//
+// IRIS-CLEAN IS NOT THE SAME AS VISUALLY APPROVED, and the four are not one category:
+//   northstar — approved positive control
+//   afro      — OWNER-APPROVED positive control
+//   buzz      — iris-clean, but VISUALLY REJECTED for the needle tips at the ears
+//   short     — iris-clean, but rejected by other geometric gates (the D-116 crown bound)
+// Only the first two are approved artwork. The other two merely happen to leave the pupil alone.
+//
+// The case for a fail-closed zero is therefore:
+//   * the two APPROVED positive controls sit at exactly zero alpha over the iris;
+//   * the other two iris-clean layers show zero is technically achievable, not aspirational;
+//   * hair over the pupil is a visible conflict — it renders at z40, in front of the eyes;
+//   * and a future faint overlap pixel should be REPORTED for the owner to judge, rather than
+//     automatically loosening the threshold.
+//
+// Deliberately NOT claimed: that any surviving pixel is intentional artwork. Connected
+// antialiasing can survive the served cleanup without an artist ever meaning to put it there.
+// That is exactly why the detail carries the exact max alpha and obscured fraction — so a faint
+// overlap is a case the owner can weigh, not a silent rejection or a silent relaxation.
+export const MAX_IRIS_ALPHA = 0;
+
+let _iris = null;
+/** The iris mask, loaded once and SHA-verified. A swapped fixture must not pass unnoticed. */
+export function irisMask() {
+  if (_iris) return _iris;
+  const buf = readFileSync(IRIS_MASK_FILE);
+  const got = createHash("sha256").update(buf).digest("hex");
+  if (got !== IRIS_MASK_SHA256) {
+    throw new Error(`REFUSED: eye-iris-mask-v1.png SHA ${got.slice(0, 16)}… != pinned ` +
+      `${IRIS_MASK_SHA256.slice(0, 16)}… — the eye region is not the one this gate was calibrated on`);
+  }
+  const png = decodePng(buf, "iris mask");
+  const m = new Uint8Array(png.w * png.h);
+  let count = 0;
+  for (let i = 0; i < m.length; i++) if (png.rgba[i * 4 + 3] >= ALPHA_INK) { m[i] = 1; count++; }
+  _iris = { m, w: png.w, h: png.h, count };
+  return _iris;
+}
+
+/**
+ * How many of the iris's own pixels the hair covers. Sampled proportionally, so a gate measured on
+ * the 512x768 runtime asset and a test measured on a small proportional canvas ask the same
+ * question of the same anatomy.
+ */
+export function irisCoverage(rgba, w, h) {
+  const iris = irisMask();
+  let covered = 0, inkCovered = 0, maxAlpha = 0, alphaSum = 0;
+  for (let i = 0; i < iris.m.length; i++) {
+    if (!iris.m[i]) continue;
+    const mx = i % iris.w, my = (i / iris.w) | 0;
+    const x = Math.min(w - 1, Math.floor((mx + 0.5) * w / iris.w));
+    const y = Math.min(h - 1, Math.floor((my + 0.5) * h / iris.h));
+    const a = rgba[(y * w + x) * 4 + 3];
+    if (a > 0) covered++;
+    if (a >= ALPHA_INK) inkCovered++;
+    if (a > maxAlpha) maxAlpha = a;
+    alphaSum += a;
+  }
+  // Three different questions, reported together because each one alone can be fooled:
+  //   covered / inkCovered — HOW MANY iris pixels have hair over them. Says nothing about opacity,
+  //                          which is exactly how a sub-threshold veil slipped through.
+  //   maxAlpha            — the DENSEST single point. Catches a small solid blob that an averaged
+  //                          figure would dilute to nothing. This is what the gate decides on.
+  //   obscuredFraction    — how much of the pupil is ACTUALLY hidden, weighting each pixel by its
+  //                          own alpha. The quantity the eye responds to, and the one that makes a
+  //                          failure legible: "99 % obscured" and "0.08 % obscured" are different
+  //                          problems even though both are non-zero.
+  return {
+    covered, inkCovered, maxAlpha, total: iris.count,
+    obscuredFraction: alphaSum / (255 * iris.count),
+  };
+}
 
 // ── TWO DIFFERENT 4-vs-8 QUESTIONS. THEY ARE NOT THE SAME QUESTION. ──────────────────────────
 // This file asks about neighbourhoods twice, and D-115 changed exactly one of them.
@@ -350,8 +457,20 @@ export function runtimeGates(rgba, w, h, style) {
     const yv = a.topByCol[x] * a.k;
     if (yv > lowestForehead) lowestForehead = yv;
   }
-  add("clears-the-eye-line", lowestForehead < BASE.eyeLineY,
-    { lowestForeheadInk: u(lowestForehead), eyeLine: BASE.eyeLineY });
+  // TWO conditions, because the name promises the eyes are clear and the first condition alone
+  // only promises the hair BEGINS above them (D-118).
+  const startsAbove = lowestForehead < BASE.eyeLineY;
+  const iris = irisCoverage(rgba, w, h);
+  const irisClear = iris.maxAlpha <= MAX_IRIS_ALPHA;
+  add("clears-the-eye-line", startsAbove && irisClear,
+    { lowestForeheadInk: u(lowestForehead), eyeLine: BASE.eyeLineY, startsAboveEyeLine: startsAbove,
+      irisMaxAlpha: iris.maxAlpha, irisAlphaLimit: MAX_IRIS_ALPHA,
+      irisPixelsTouched: iris.covered, irisPixelsOpaque: iris.inkCovered, irisPixelsTotal: iris.total,
+      irisObscuredPct: +(iris.obscuredFraction * 100).toFixed(2), irisClear,
+      note: irisClear ? undefined
+        : "hair covers the pupil — it renders at z40, in front of the eyes, so this is not visible " +
+          "ambiguity. The limit is on MAX ALPHA, not on a count above the ink threshold: a veil " +
+          "just under ink would otherwise black out the whole pupil and pass." });
 
   // Ink below the neck collides with the torso garment unless the style is declared to drape.
   const lowest = a.envelope.yHi;
