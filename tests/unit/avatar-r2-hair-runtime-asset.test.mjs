@@ -352,9 +352,30 @@ test("the CLI exits non-zero on a candidate that fails, and names the style set 
   assert.match(junk.stderr, /unknown style/);
 });
 
-test("Short is NOT promoted — no hair asset exists for it", () => {
-  // The safety boundary this whole piece of work runs under. Producing the bytes in gitignored
-  // scratch is not shipping them; only an owner visual sign-off can start that.
-  assert.equal(existsSync(join(REPO, "assets", "avatar-r2", "hair", "hair-short-v1.webp")), false,
-    "a Short asset appeared in the runtime folder — promotion was not authorised");
+// This sentinel used to assert the opposite — that NO Short asset existed — because producing
+// bytes in gitignored scratch is not shipping them and only an owner sign-off could start that.
+// It fired on 2026-08-31 exactly as designed when the owner approved the tight-crop candidate at
+// real render scale and authorised promotion (D-119). The boundary it guarded held: the asset
+// arrived through an approval, not around one. It now guards the stronger claim that replaces it.
+test("the shipped Short asset is REPRODUCIBLE from its tracked source, byte for byte", () => {
+  // The afro's provenance is a pair of hashes; Short's can be better, because this file already
+  // drives the codec. Rebuilding the asset from the tracked 1024x1536 authoring PNG and requiring
+  // the result to equal the shipped bytes proves the whole chain — authoring cleanup,
+  // downscaleHalf, served cleanup, cwebp -lossless -exact -z 9 — still produces exactly the
+  // artwork the owner approved. A hash alone would only prove the file had not been edited.
+  requireBinaries();
+  const source = join(REPO, "tools", "avatar", "fixtures", "r2-hair", "short-crop-authoring.png");
+  const shipped = join(REPO, "assets", "avatar-r2", "hair", "hair-short-v1.webp");
+  assert.ok(existsSync(source), "the tracked Short source is gone — the asset is unreproducible");
+  assert.ok(existsSync(shipped), "the promoted Short asset is missing from the runtime folder");
+
+  const png = decodePng(readFileSync(source), "short-source");
+  const built = buildRuntimeAsset(png.rgba, png.w, png.h, { label: "test-short" });
+
+  assert.equal(built.byteIdentical, true, "the encode stopped being lossless");
+  assert.equal(sha256(built.webp), sha256(readFileSync(shipped)),
+    "rebuilding the tracked source no longer reproduces the shipped Short asset — one of them moved");
+  assert.equal(sha256(built.webp),
+    "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
+    "the reproduced bytes are not the ones the owner approved (D-119)");
 });

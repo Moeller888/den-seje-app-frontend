@@ -380,7 +380,13 @@ export const R2_MANIFEST = {
   // own (see hairSrcForR2). "afro" is the first per-style R2 asset: owner-approved at real render
   // scale 2026-08-29, produced by the runtime-asset path (downscaleHalf → cwebp -lossless -exact
   // -z 9), decoded byte-identical to its 512×768 reference.
-  hair:     { "northstar": 1, "afro": 1 }, // hair/hair-{key}-v{n}.webp (z40, multiply × hair token)
+  // "short" is the second, owner-approved at real render scale 2026-08-31 (D-119) on the same
+  // path. This registration is LIVE, not dormant: `AVATAR_R2` is true (default ON since D-101),
+  // so on deploy a student whose stored `hairstyle` is exactly "short" renders this asset on the
+  // next load. The five styles that still have no asset keep resolving to `northstar`, the
+  // hairstyle picker stays hidden on the R2 path (avatar.html's hairstyleShapesSupported() reads
+  // the render path, never this manifest), and no stored identity is changed by adding a key.
+  hair:     { "northstar": 1, "afro": 1, "short": 1 }, // hair/hair-{key}-v{n}.webp (z40, multiply × hair token)
   // COSMETIC garments keyed by the CATALOG ITEM (D-090). Unlike every entry above — which is part of
   // the mandatory figure — this registers a shop item's R2-SPECIFIC artwork: torso/armor-knight-r2-v1
   // .webp, the Ridderdragt re-authored for the R2 silhouette (A2, accepted D-088; promoted D-089,

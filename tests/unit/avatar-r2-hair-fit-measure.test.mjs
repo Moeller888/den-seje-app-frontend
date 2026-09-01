@@ -20,7 +20,9 @@ import {
 import { STYLE_TARGETS } from "../../tools/avatar/check-r2-hair-candidate.mjs";
 // The hair sentinels below call the resolver rather than reading its source: the audit's own
 // lesson is that inspecting the code is not the same as measuring what it does.
-import { hairSrcForR2, R2_MANIFEST } from "../../js/avatar-layers.js";
+import {
+  hairSrcForR2, R2_MANIFEST, AVATAR_R2, isAvatarR2, isAvatarR2ActiveFor, r2StackSrcsFor,
+} from "../../js/avatar-layers.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -112,14 +114,24 @@ test("the canvas conversion matches the served R2 dimensions", () => {
 // measuring what it does.
 test("hairSrcForR2 resolves the identity's style when that style has an asset", () => {
   assert.equal(hairSrcForR2({ hairstyle: "afro" }), "/assets/avatar-r2/hair/hair-afro-v1.webp");
+  assert.equal(hairSrcForR2({ hairstyle: "short" }), "/assets/avatar-r2/hair/hair-short-v1.webp");
 });
 
 test("a style with NO R2 asset falls back to northstar, and does NOT drop the avatar to C2", () => {
   // The load-bearing half. Hair is a mandatory layer, so returning null here would take the WHOLE
   // avatar to C2 (r2StackSrcsFor) for every student whose style has no artwork yet — a rollback of
-  // D-101 delivered by a resolver. Six of the seven styles are in exactly that position today.
+  // D-101 delivered by a resolver. Five of the seven styles are in exactly that position today.
+  //
+  // `short` LEFT this list on 2026-08-31 (D-119) when its asset was promoted. That is the only
+  // behavioural change in that PR, and it is the change the promotion exists to make: this list is
+  // the register of what is still un-produced, so a style must be removed from it deliberately.
+  //
+  // The legacy 155F aliases stay here even though `default` and `braid` ALIAS to `short` and
+  // `ponytail` on the C2 path. R2 resolves the RAW stored value against the manifest — there is no
+  // alias table on this path — so `default` still means northstar, not the new short asset. If that
+  // ever changes it must be a decision, not a side effect of promoting artwork.
   const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
-  for (const style of ["short", "tousled", "curly", "long", "ponytail", "buzz",
+  for (const style of ["tousled", "curly", "long", "ponytail", "buzz",
                        "default", "braid", "sidecut", "buzzcut"]) {
     assert.equal(hairSrcForR2({ hairstyle: style }), NORTHSTAR, `${style} must still render northstar`);
   }
@@ -166,6 +178,92 @@ test("the approved afro CANDIDATE fixtures are unchanged too", () => {
     "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e");
   assert.equal(fix("afro-cleaned.png"),
     "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd");
+});
+
+// ── the approved SHORT asset, and the source it was built from (D-119) ───────────────────────
+// The owner approved a specific 512×768 WebP mounted on the real avatar, quoted by SHA. Pinning
+// the bytes is what makes that approval mean something later: a re-encode, a pipeline tweak or a
+// well-meant "optimisation" all change these hashes and fail here rather than silently shipping
+// artwork nobody signed off.
+test("the owner-approved short asset is byte-for-byte the reviewed one", () => {
+  const buf = readFileSync(join(REPO, "assets", "avatar-r2", "hair", "hair-short-v1.webp"));
+  assert.equal(buf.length, 14874, "the short asset changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
+    "the short asset was rebuilt or re-encoded — the owner approved THESE bytes (D-119)");
+});
+
+// ── WHAT A REAL USER GETS, not what a constant says (D-119 §4) ───────────────────────────────
+// The first version of this promotion claimed it was "dormant in production because AVATAR_R2 is
+// false". AVATAR_R2 is TRUE and has been the default since D-101. The claim came from trusting a
+// stale note instead of reading the switch, and it understated the effect of merging. These tests
+// exist so that story cannot repeat: the render path is now asserted, not described.
+test("R2 is the DEFAULT render path — the switch is on and only \"0\" opts out", () => {
+  assert.equal(AVATAR_R2, true,
+    "AVATAR_R2 flipped. Every D-119 claim about what a merge does is now wrong — re-read the entry.");
+  assert.equal(isAvatarR2(), true, "a browser that never set the key must get R2");
+
+  // The opt-out is deliberately asymmetric (only the exact string "0"), so a stale pilot key
+  // cannot pin a browser to R2 against a global rollback. Proven, not restated.
+  const real = globalThis.localStorage;
+  try {
+    for (const [value, expected] of [["0", false], ["1", true], ["", true], ["true", true]]) {
+      globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? value : null) };
+      assert.equal(isAvatarR2(), expected, `avatar_r2="${value}" resolved the wrong way`);
+    }
+  } finally {
+    if (real === undefined) delete globalThis.localStorage; else globalThis.localStorage = real;
+  }
+});
+
+test("a real identity storing `short` gets the SHORT asset through the FULL R2 stack", () => {
+  // The behavioural claim the PR now makes: on deploy, this student sees the approved artwork.
+  // Asserting hairSrcForR2 alone would not prove it — the stack has to resolve as a whole, or
+  // r2StackSrcsFor returns null and the WHOLE avatar drops to C2 (D-083).
+  const id = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "short", hair_color: "brown" };
+  const stack = r2StackSrcsFor(id);
+
+  assert.notEqual(stack, null, "the stack must resolve, or the whole avatar falls to C2");
+  assert.equal(isAvatarR2ActiveFor(id), true, "this identity must render on R2, not C2");
+  assert.equal(stack.hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+  assert.notEqual(stack.hair, "/assets/avatar-r2/hair/hair-northstar-v1.webp",
+    "the fallback is still being served — the promotion did not take effect");
+  for (const key of ["base", "blush", "face", "eyesIris", "eyesFixed", "hair"]) {
+    assert.ok(stack[key], `the mandatory ${key} layer is missing — partial stacks must never render`);
+  }
+});
+
+test("an identity with absent fields ALSO lands on R2 short — the defaults are neutral/medium", () => {
+  // Why this is separate: the DB does not guarantee skin_tone, and the resolvers default absent or
+  // invalid fields to neutral/medium. So "no skin_tone stored" is not an edge case that stays on
+  // C2 — it is a normal student who gets the new asset too.
+  const id = { v: 1, body_type: "neutral", hairstyle: "short" };
+  assert.equal(isAvatarR2ActiveFor(id), true);
+  assert.equal(r2StackSrcsFor(id).hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+});
+
+test("an identity the raster set does NOT cover still falls to C2, short or not", () => {
+  // The other half: promoting artwork must not drag an unsupported identity onto R2. U2 covers
+  // only neutral × medium; everything else keeps the untouched C2/SVG path.
+  for (const id of [
+    { v: 1, body_type: "male", skin_tone: "medium", hairstyle: "short" },
+    { v: 1, body_type: "neutral", skin_tone: "dark", hairstyle: "short" },
+  ]) {
+    assert.equal(r2StackSrcsFor(id), null, "an uncovered identity must not resolve an R2 stack");
+    assert.equal(isAvatarR2ActiveFor(id), false, "an uncovered identity must render C2");
+  }
+});
+
+test("the short candidate's authoring source is tracked and unchanged", () => {
+  // Rounds 1–4 lost their prompts and raw responses with a deleted worktree (D-111 §9) because the
+  // only copies lived in gitignored scratch. The 1024×1536 authoring PNG this asset was built from
+  // is therefore tracked, so the approved artwork can be rebuilt from a fresh clone rather than
+  // from luck. It is the INPUT to the runtime-asset pipeline, which is what fixtures/ is for.
+  const buf = readFileSync(join(REPO, "tools", "avatar", "fixtures", "r2-hair", "short-crop-authoring.png"));
+  assert.equal(buf.length, 101088, "the tracked short source changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "ce789b496fab41c7bbb0228bae91edec22649c2782bff1c7bdde68f46d84683c",
+    "the tracked short source changed — it is the provenance of the approved asset");
 });
 
 // ── STYLE_TARGETS is the ARTWORK's own measurement, not a hand-typed table (D-116) ────────────
