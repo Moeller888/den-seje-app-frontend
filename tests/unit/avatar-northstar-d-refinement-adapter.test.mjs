@@ -375,12 +375,35 @@ const claimFingerprint = () => (existsSync(REAL_CLAIM.path)
   ? { present: true, bytes: readFileSync(REAL_CLAIM.path).length, sha: sha(readFileSync(REAL_CLAIM.path)) }
   : { present: false, dirExists: existsSync(dirname(REAL_CLAIM.path)) });
 
-/** True in every state: a run without both flags writes no output and no manifest. */
-const noOutputs = (label) => {
-  for (const p of [realOut.raw, realOut.manifest]) {
-    assert.equal(existsSync(p), false, label + ": " + p + " must not exist");
+/**
+ * The outputs are state-carrying too, and for the same reason as the claim: a completed request
+ * leaves refined.raw.png and refined.request.json behind FOREVER, in whichever clone it was run
+ * from. Asserting they are absent encodes the same unstated precondition the claim assertion did.
+ *
+ * The invariant that is actually true is symmetric: a run that does not send must neither create
+ * them, nor delete them, nor rewrite them. Absent stays absent; present stays present with the same
+ * bytes.
+ */
+const fileFingerprint = (p) => (existsSync(p)
+  ? { present: true, bytes: readFileSync(p).length, sha: sha(readFileSync(p)) }
+  : { present: false });
+const outputsFingerprint = () => ({ raw: fileFingerprint(realOut.raw), manifest: fileFingerprint(realOut.manifest) });
+
+const outputsUntouched = (label, before) => {
+  for (const [name, path] of [["raw result", realOut.raw], ["manifest", realOut.manifest]]) {
+    const was = name === "raw result" ? before.raw : before.manifest;
+    const now = fileFingerprint(path);
+    assert.equal(now.present, was.present,
+      label + ": the " + name + " " + (was.present ? "disappeared" : "was created") + " — " + path);
+    if (was.present) {
+      assert.equal(now.bytes, was.bytes, label + ": the " + name + " changed size");
+      assert.equal(now.sha, was.sha, label + ": the " + name + " was rewritten — a run that does not send must not touch it");
+    }
   }
 };
+
+/** Outputs already on disk block preflight too, exactly as a spent claim does. */
+const outputsPresent = () => existsSync(realOut.raw) || existsSync(realOut.manifest);
 
 /** True in every state: the claim is neither created nor modified by a run that does not send. */
 const claimUntouched = (label, before) => {
@@ -395,53 +418,65 @@ const claimUntouched = (label, before) => {
   }
 };
 
-/** Asserts the outcome of a run that must not send, for whichever state this machine is in. */
-const assertDidNotSend = (r, label) => {
-  noOutputs(label);
-  if (MANDATE_SPENT) {
-    // The mandate is spent, so preflight refuses before anything else. That is the design working.
-    assert.equal(r.status, 1, label + ": a spent mandate must fail preflight");
+/**
+ * Asserts the outcome of a run that must not send, for whichever state this machine is in.
+ * Preflight refuses for TWO independent reasons, and either is enough: a spent mandate, or outputs
+ * already on disk. Both are permanent consequences of a completed request, and both are the design
+ * working rather than a fault, so each is asserted by its own message when it applies.
+ */
+const assertDidNotSend = (r, label, beforeOutputs) => {
+  outputsUntouched(label, beforeOutputs);
+  const spent = MANDATE_SPENT;
+  const outputs = beforeOutputs.raw.present || beforeOutputs.manifest.present;
+  if (spent || outputs) {
+    assert.equal(r.status, 1, label + ": preflight must refuse when the mandate is spent or outputs exist");
     assert.match(r.stderr, /PREFLIGHT FAILED/, label);
-    assert.match(r.stderr, /MANDATE ALREADY SPENT/, label);
-    assert.match(r.stdout, /SPENT — the claim file exists/, label);
+    if (spent) {
+      assert.match(r.stderr, /MANDATE ALREADY SPENT/, label);
+      assert.match(r.stdout, /SPENT — the claim file exists/, label);
+    }
+    if (outputs) assert.match(r.stderr, /output already exists, refusing to overwrite/, label);
   } else {
     assert.equal(r.status, 0, label + ": " + r.stderr);
     assert.match(r.stdout, /NOTHING WAS SENT/, label);
     assert.match(r.stdout, /UNSPENT/, label);
+    assert.match(r.stdout, /No directory, no claim, no output and no manifest were written/, label);
   }
 };
 
 test("9. a run with no flags sends nothing, whatever the mandate's state", () => {
   const before = claimFingerprint();
-  noOutputs("before");
+  const beforeOutputs = outputsFingerprint();
   const r = runCli([]);
-  assertDidNotSend(r, "plain dry run");
+  assertDidNotSend(r, "plain dry run", beforeOutputs);
   claimUntouched("plain dry run", before);
   // these hold in both states — the tool always shows where the claim lives and where inputs come from
   assert.match(r.stdout, /TRACKED FIXTURES ONLY/);
   assert.match(r.stdout, /claim scope\s*:/, "the run must show the claim scope");
   assert.match(r.stdout, /claim path\s*:/, "the run must show the resolved claim path");
   assert.match(r.stdout, /outside repo\s*:\s*true/, "the claim must be outside the repository");
-  if (!MANDATE_SPENT) {
-    assert.match(r.stdout, /No directory, no claim, no output and no manifest were written/);
-  }
+
 });
 
 test("10. one missing flag sends nothing, whatever the mandate's state", () => {
   for (const args of [["--send"], [OWNER_APPROVAL_FLAG]]) {
     const before = claimFingerprint();
+    const beforeOutputs = outputsFingerprint();
     const r = runCli(args);
-    assertDidNotSend(r, "single flag " + args.join(" "));
+    assertDidNotSend(r, "single flag " + args.join(" "), beforeOutputs);
     claimUntouched("single flag " + args.join(" "), before);
+    outputsUntouched("single flag " + args.join(" "), beforeOutputs);
   }
 });
 
 test("11. a wrong owner token sends nothing, whatever the mandate's state", () => {
   for (const bad of ["--owner-approval=D-999", "--owner-approval=D-122", "--owner-approval="]) {
     const before = claimFingerprint();
+    const beforeOutputs = outputsFingerprint();
     const r = runCli(["--send", bad]);
-    assertDidNotSend(r, "wrong token " + bad);
+    assertDidNotSend(r, "wrong token " + bad, beforeOutputs);
     claimUntouched("wrong token " + bad, before);
+    outputsUntouched("wrong token " + bad, beforeOutputs);
   }
 });
 
