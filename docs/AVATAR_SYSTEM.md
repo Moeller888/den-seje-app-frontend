@@ -114,6 +114,23 @@ emotion. Baking eyes into the face would force an expression × color × variant
 **Tier model (D-040 production model — `docs/164d-shop-pipeline.md`):**
 - **Tier-0 (base/datum):** `assets/avatar/reference/Northstar Master.png` (1024×1536, frozen) is the
   **sole geometric source of truth** (D-032). MVP uses it as the fixed default base.
+- **North Star v2 (DESIGN reference only — D-124, 2026-09-06):**
+  `assets/avatar/reference/Northstar Master v2.png` (1024×1536 RGBA, 761,394 B,
+  sha256 `3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50`) is the **design and
+  authoring reference** new avatar work is drawn against, adopted on the owner's **visual** approval
+  with two documented deviations (narrower shoulders, legs ~3.09 pp short of D — see D-124 §5).
+  It is a **single flat figure** with body, face, eyes, hair and clothing baked together, while the
+  R2 runtime is a **separate-layer** system, so **the two are not interchangeable**.
+  It has **no runtime authority**: not in `R2_MANIFEST`, not in the resolver, not loaded by any page.
+  Deriving R2 layers from it is separate work needing its own owner decision, PR and gates.
+
+**Three roles, deliberately kept apart — do not collapse them:**
+
+| Artefact | Role | Authority |
+| --- | --- | --- |
+| `assets/avatar-r2/**` (six-layer stack) | what students actually see | **runtime** — unchanged |
+| `Northstar Master v2.png` | what new art is designed against | **design/authoring** (D-124) |
+| `Northstar Master.png` | historical datum every tool and gate hash-locks against | **geometry of record** (D-032), preserved byte-identical |
 - **Tier-1 (rig — Phase-2):** decompose Master into the neutral layer stack
   (base / face / eyes / blink / hair) by **AI-assisted masked decomposition** (D-042, 2026-07-02) —
   masked inpainting/outpainting **on the frozen Master only**, preserving the signed-off identity.
