@@ -237,15 +237,31 @@ test("CLAIM: other platforms use a deterministic user state directory, never tem
 });
 
 test("CLAIM: a location that would land inside the repo or temp is refused", () => {
-  const inRepo = resolveClaimPath({ env: { LOCALAPPDATA: "C:\\repo\\state" }, platform: "win32",
-    repoRoot: "C:\\repo", tmpDir: "C:\\temp", homeDir: "C:\\home" });
+  // Posix-style paths on purpose: they are real containment on BOTH platforms, whereas a
+  // Windows-style path is a single filename segment on Linux and would make this guard vacuous
+  // there — which is exactly how this test first passed locally and failed on CI.
+  const inRepo = resolveClaimPath({ env: { XDG_STATE_HOME: "/srv/repo/state" }, platform: "linux",
+    repoRoot: "/srv/repo", tmpDir: "/scratch/tmp", homeDir: "/home/u" });
   assert.equal(inRepo.ok, false, "a claim inside the repository must be refused");
   assert.match(inRepo.why, /inside the repository/);
 
-  const inTemp = resolveClaimPath({ env: { LOCALAPPDATA: "C:\\temp\\state" }, platform: "win32",
-    repoRoot: "C:\\repo", tmpDir: "C:\\temp", homeDir: "C:\\home" });
+  const inTemp = resolveClaimPath({ env: { XDG_STATE_HOME: "/scratch/tmp/state" }, platform: "linux",
+    repoRoot: "/srv/repo", tmpDir: "/scratch/tmp", homeDir: "/home/u" });
   assert.equal(inTemp.ok, false, "a claim inside temp must be refused");
   assert.match(inTemp.why, /inside the temp directory/);
+
+  // and the same two guards on the Windows branch, where backslash paths are real containment
+  if (process.platform === "win32") {
+    const winInRepo = resolveClaimPath({ env: { LOCALAPPDATA: "C:\\repo\\state" }, platform: "win32",
+      repoRoot: "C:\\repo", tmpDir: "C:\\temp", homeDir: "C:\\home" });
+    assert.equal(winInRepo.ok, false, "a claim inside the repository must be refused");
+    assert.match(winInRepo.why, /inside the repository/);
+
+    const winInTemp = resolveClaimPath({ env: { LOCALAPPDATA: "C:\\temp\\state" }, platform: "win32",
+      repoRoot: "C:\\repo", tmpDir: "C:\\temp", homeDir: "C:\\home" });
+    assert.equal(winInTemp.ok, false, "a claim inside temp must be refused");
+    assert.match(winInTemp.why, /inside the temp directory/);
+  }
 });
 
 test("CROSS-CLONE: both clones of the same repository resolve to the SAME claim file", () => {
