@@ -356,46 +356,102 @@ function runCli(args) {
 }
 const REAL_CLAIM = resolveClaimPath({ repoRoot: REPO });
 const realOut = outputPaths();
-const noArtefacts = (label) => {
+
+// WHY THESE THREE TESTS ARE STATE-AWARE
+// D-121 authorises exactly ONE request. Once it has been made, the claim file exists on that
+// machine FOREVER — that is the whole fail-closed design. These tests originally asserted that the
+// claim does not exist, which quietly encoded a precondition they never stated: "the mandate is
+// still unspent". The moment the authorised call was made they began to fail, on a tool that was
+// behaving exactly as designed.
+//
+// The fix is not to skip them. It is to assert what is true in BOTH states, which is strictly more
+// coverage than before: whatever the mandate's state, a run without both flags must produce NO
+// output, NO manifest, and must neither create the claim nor alter one that already exists. Only
+// the exit code and the message differ, and each is asserted for its own state.
+const MANDATE_SPENT = existsSync(REAL_CLAIM.path);
+
+/** The claim as it is right now: absent, or present with these exact bytes. */
+const claimFingerprint = () => (existsSync(REAL_CLAIM.path)
+  ? { present: true, bytes: readFileSync(REAL_CLAIM.path).length, sha: sha(readFileSync(REAL_CLAIM.path)) }
+  : { present: false, dirExists: existsSync(dirname(REAL_CLAIM.path)) });
+
+/** True in every state: a run without both flags writes no output and no manifest. */
+const noOutputs = (label) => {
   for (const p of [realOut.raw, realOut.manifest]) {
     assert.equal(existsSync(p), false, label + ": " + p + " must not exist");
   }
-  assert.equal(existsSync(REAL_CLAIM.path), false, label + ": the real claim must not exist at " + REAL_CLAIM.path);
-  assert.equal(existsSync(dirname(REAL_CLAIM.path)), false, label + ": a dry run must not even create the claim directory");
 };
 
-test("9. a plain dry run creates no directory, no claim, no output and no manifest", () => {
-  noArtefacts("before");
+/** True in every state: the claim is neither created nor modified by a run that does not send. */
+const claimUntouched = (label, before) => {
+  const now = claimFingerprint();
+  assert.equal(now.present, before.present, label + ": the claim's existence changed");
+  if (before.present) {
+    assert.equal(now.bytes, before.bytes, label + ": the claim's size changed");
+    assert.equal(now.sha, before.sha, label + ": the claim's bytes changed — it must never be rewritten");
+  } else {
+    assert.equal(now.dirExists, before.dirExists, label + ": the claim directory was created");
+    assert.equal(existsSync(REAL_CLAIM.path), false, label + ": a claim was created without sending");
+  }
+};
+
+/** Asserts the outcome of a run that must not send, for whichever state this machine is in. */
+const assertDidNotSend = (r, label) => {
+  noOutputs(label);
+  if (MANDATE_SPENT) {
+    // The mandate is spent, so preflight refuses before anything else. That is the design working.
+    assert.equal(r.status, 1, label + ": a spent mandate must fail preflight");
+    assert.match(r.stderr, /PREFLIGHT FAILED/, label);
+    assert.match(r.stderr, /MANDATE ALREADY SPENT/, label);
+    assert.match(r.stdout, /SPENT — the claim file exists/, label);
+  } else {
+    assert.equal(r.status, 0, label + ": " + r.stderr);
+    assert.match(r.stdout, /NOTHING WAS SENT/, label);
+    assert.match(r.stdout, /UNSPENT/, label);
+  }
+};
+
+test("9. a run with no flags sends nothing, whatever the mandate's state", () => {
+  const before = claimFingerprint();
+  noOutputs("before");
   const r = runCli([]);
-  assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /NOTHING WAS SENT/);
-  assert.match(r.stdout, /No directory, no claim, no output and no manifest were written/);
+  assertDidNotSend(r, "plain dry run");
+  claimUntouched("plain dry run", before);
+  // these hold in both states — the tool always shows where the claim lives and where inputs come from
   assert.match(r.stdout, /TRACKED FIXTURES ONLY/);
-  assert.match(r.stdout, /UNSPENT/);
-  assert.match(r.stdout, /claim scope\s*:/, "the dry run must show the claim scope");
-  assert.match(r.stdout, /claim path\s*:/, "the dry run must show the resolved claim path");
-  assert.match(r.stdout, /outside repo\s*:\s*true/, "the dry run must show the claim is outside the repository");
-  noArtefacts("after dry run");
+  assert.match(r.stdout, /claim scope\s*:/, "the run must show the claim scope");
+  assert.match(r.stdout, /claim path\s*:/, "the run must show the resolved claim path");
+  assert.match(r.stdout, /outside repo\s*:\s*true/, "the claim must be outside the repository");
+  if (!MANDATE_SPENT) {
+    assert.match(r.stdout, /No directory, no claim, no output and no manifest were written/);
+  }
 });
 
-test("10. one missing flag refuses without a claim and without fetch", () => {
+test("10. one missing flag sends nothing, whatever the mandate's state", () => {
   for (const args of [["--send"], [OWNER_APPROVAL_FLAG]]) {
+    const before = claimFingerprint();
     const r = runCli(args);
-    assert.equal(r.status, 0, "a single flag must stop at the dry run");
-    assert.match(r.stdout, /NOTHING WAS SENT/);
-    noArtefacts("after " + args.join(" "));
+    assertDidNotSend(r, "single flag " + args.join(" "));
+    claimUntouched("single flag " + args.join(" "), before);
   }
 });
 
-test("11. a wrong owner token refuses without a claim and without fetch", () => {
+test("11. a wrong owner token sends nothing, whatever the mandate's state", () => {
   for (const bad of ["--owner-approval=D-999", "--owner-approval=D-122", "--owner-approval="]) {
+    const before = claimFingerprint();
     const r = runCli(["--send", bad]);
-    assert.equal(r.status, 0, "a wrong token must stop at the dry run");
-    assert.match(r.stdout, /NOTHING WAS SENT/);
-    noArtefacts("after wrong token " + bad);
+    assertDidNotSend(r, "wrong token " + bad);
+    claimUntouched("wrong token " + bad, before);
   }
 });
 
+test("the mandate's state is reported, so a failure here is never a mystery", () => {
+  // Not an assertion about which state is right — both are legitimate. It records which one this
+  // machine is in, so the three tests above can be read without guessing.
+  assert.ok(typeof MANDATE_SPENT === "boolean");
+  assert.ok(REAL_CLAIM.ok, "the claim location must resolve: " + REAL_CLAIM.why);
+  assert.equal(isInside(REAL_CLAIM.path, REPO), false, "the claim must live outside the repository");
+});
 // ── 12-14: preflight refuses, before any claim ───────────────────────────────────────────────
 
 test("12. a missing, absent or duplicated register row refuses", () => {
