@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "Arm/hand protect mask v1 — the binding specification",
+    "status": "OWNER-APPROVED under D-128. Approval is bound to the sha256 below; a changed mask needs a new visual approval.",
+    "decisions": {
+      "D-126": "adopted the internal authoring fitting base as the next groundwork",
+      "D-127": "decided the four open questions; §6(f) authorised building and verifying this mask",
+      "D-128": "approves this exact file and corrects D-127 §3's raw strict-superset rule append-only"
+    },
+    "neverSent": "This mask is used only for local recomposition and acceptance checking. It is NEVER sent to the image API — D-127 §1 keeps every call maskless.",
+    "notAuthorised": "No fitting-base image call is authorised. No new one-shot claim may be created."
+  },
+  "canvas": { "width": 1024, "height": 1536, "bitDepth": 8, "colourType": 6 },
+  "convention": {
+    "activePixel": "alpha > 0",
+    "binary": true,
+    "rgbaValues": [
+      { "rgba": "0,0,0,0", "meaning": "inactive" },
+      { "rgba": "56,132,255,255", "meaning": "active" }
+    ],
+    "partiallyActivePixels": 0
+  },
+  "files": {
+    "approvedMask": {
+      "file": "arm-hand-protect-mask-v1.png",
+      "bytes": 8135,
+      "sha256": "2dda9904717381fde9bdd5556b79c83a00b4a3b9e5c6cb9bffeca3f13e6c2264",
+      "source": "tools/avatar/build/fitting-base-plan/mask-protect-arms-hands-candidate-v2.png",
+      "role": "the approved arm/hand protect mask"
+    },
+    "derivedBaseline": {
+      "file": "arm-hand-derived-baseline-v1.png",
+      "bytes": 7377,
+      "sha256": "ab6d1bd841094184c46956a6616b1360e91f58da6482158e26ec1432de365b60",
+      "source": "tools/avatar/build/fitting-base-plan/mask-protect-arms.png",
+      "role": "the OLD derived arm mask — evidence only, superseded; it contains the 1,054 false sleeve pixels"
+    },
+    "sleeveExclusions": {
+      "file": "arm-hand-sleeve-exclusions-v1.png",
+      "bytes": 6296,
+      "sha256": "73f01f47eef57f1e425c264468156e5a8d912064c770eeeab764f34526895974",
+      "source": "tools/avatar/build/fitting-base-plan/mask-arms-hands-removed-sleeve-pixels.png",
+      "role": "the 1,054 documented false t-shirt sleeve / hem pixels that D-128 excludes"
+    },
+    "headProtectMask": {
+      "file": "head-protect-mask-v1.png",
+      "bytes": 8368,
+      "sha256": "cc9c8b7a68dab60ab5c2914644d28676eefcb29e917a05f7bf4ce44093b737b3",
+      "source": "tools/avatar/build/fitting-base-plan/mask-protect-head.png",
+      "role": "the head protect zone, tracked so the zero-overlap check runs on a fresh clone"
+    },
+    "referenceArtwork": {
+      "file": "assets/avatar/reference/Northstar Master v2.png",
+      "bytes": 761394,
+      "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+      "role": "North Star v2 — the alpha the mask must stay inside; already tracked, not copied here"
+    }
+  },
+  "counts": {
+    "approvedMaskActive": 35939,
+    "oldDerivedBaselineActive": 24826,
+    "sleeveExclusions": 1054,
+    "correctedBaselineActive": 23772,
+    "lostCorrectedBaselinePixels": 0,
+    "retainedExclusionPixels": 0,
+    "addedOverCorrectedBaseline": 12167,
+    "viewerLeftActive": 17955,
+    "viewerRightActive": 17984
+  },
+  "boundingBoxes": {
+    "viewerLeft": { "x0": 303, "x1": 401, "y0": 628, "y1": 961 },
+    "viewerRight": { "x0": 621, "x1": 719, "y0": 628, "y1": 961 },
+    "topActiveY": 628,
+    "bottomActiveY": 961
+  },
+  "gates": {
+    "bindingConnectivity": 8,
+    "expectedComponents8": 2,
+    "expectedComponents4": 2,
+    "minArea": 30000,
+    "maxArea": 60000,
+    "areaNote": "The interval is a sanity check against an empty mask and against a torso-swallowing mask. It is NOT visual evidence. Only the sha256 identifies the approved artwork.",
+    "neckLineY": 433,
+    "maxActiveAtOrAboveNeckLine": 0,
+    "maxHeadZoneOverlap": 0,
+    "maxPixelsOutsideFigureAlpha": 0,
+    "maxEnclosedHoles": 0
+  },
+  "transitionZone": {
+    "pixels": 117,
+    "what": "visible skin and antialias immediately BELOW the old sleeve hem that is deliberately left unprotected",
+    "why": "the mask starts 2-3 px under the black sleeve hem so the coming generation can join a newly bared upper arm to the preserved forearm",
+    "status": "intentional under D-128 §4 — this is a transition zone, not a mask gap"
+  },
+  "provenance": {
+    "method": "hand-drawn polygons rasterised by a one-off script held outside both repositories; no colour classification, no flood fill, no contour detection, no morphology",
+    "sleeveHemsReadByEye": {
+      "viewerLeft": "(345,624) outer -> (403,638) inner",
+      "viewerRight": "(680,624) outer -> (622,638) inner"
+    },
+    "exclusionEvidence": {
+      "total": 1054,
+      "nearestSleeveFabric": 779,
+      "nearestBlackHemOutline": 251,
+      "nearestSkinButOnTheHemEdge": 24,
+      "belowTheHandReadHemLine": 0,
+      "note": "the 24 skin-nearest pixels are 1-2 px of antialias ON the hem edge itself; none is interior arm or hand skin"
+    },
+    "approvedOn": "2026-09-07",
+    "approvedBy": "owner, visually, on the candidate-v2 review page and contact sheet"
+  }
+}
