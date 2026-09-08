@@ -9,7 +9,7 @@ CODEBASE OVERVIEW
 "Den Seje App" is a Danish educational platform where students answer questions to earn XP and coins, and teachers manage students and content.
 
 **Stack:**
-- Frontend: Vanilla JS + HTML pages, no build step, deployed to Vercel (`den-seje-app-frontend/` is the Vercel root)
+- Frontend: Vanilla JS + HTML pages, no build step, deployed to Cloudflare Workers (Static Assets) — live on `https://lærlig.dk`. `tools/cloudflare-build-static.mjs` copies an explicit allowlist into the deployed bundle; see `docs/HOSTING.md`
 - Backend: Supabase (hosted) with Deno Edge Functions (`supabase/functions/`)
 - Tests: Playwright E2E, run against the live production URL
 
@@ -136,12 +136,12 @@ Invalid transitions are blocked and logged. Never bypass this machine.
 - RLS enforces authorization; Edge Functions always forward the user's JWT
 
 **Deployment:**
-- Frontend: edit files in `den-seje-app-frontend/`, commit and push from the root `.git` — Vercel auto-deploys
+- Frontend: edit files in `den-seje-app-frontend/`, commit and push from the root `.git` — Cloudflare auto-deploys on merge to `main`
 - Backend: `supabase functions deploy <name>` — functions are deployed independently from frontend
 
 **Tests** (`tests/`):
 - `example.spec.ts` — full student flow: login → question loads → answer → feedback → next question, no-questions state
-- Tests run against `https://den-seje-app-frontend.vercel.app` (production), not localhost
+- Tests run against live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
 - Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
 
 ----------------------------------------

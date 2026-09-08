@@ -342,17 +342,20 @@ rører hver eneste side og hører til sit eget spor.
 1. **Der er ingen kontaktmulighed på siden.** Der findes ingen dokumenteret kontaktadresse i
    repoet, og der er ikke opfundet en. En offentlig side til skoler bør have én — den skal komme
    fra ejeren.
-2. **Custom domæne mangler.** Værtsskiftet til Cloudflare er gennemført, og siden er live på
-   `https://den-seje-app-frontend.christ-moeller.workers.dev`. Men `lærlig.dk` er **ikke**
-   tilknyttet, så brandnavnet på siden svarer ikke til adressen. Vercel-checket fejler fortsat
-   med `Account is blocked` på hver PR — en kontospærring, uafhængig af koden, som ikke blokerer
-   merge (`main` er ikke branch-protected).
-   **Password-recovery på Worker-origin er verificeret.** `js/login.js` bygger sin `redirectTo`
-   ud fra `window.location.origin`; Supabase accepterer den origin, og recovery-flowet svarer
+2. ~~**Custom domæne mangler.**~~ **LØST.** Værtsskiftet til Cloudflare er gennemført, og
+   `lærlig.dk` er tilknyttet — siden svarer 200 på `https://lærlig.dk`, så brandnavnet på siden
+   svarer nu til adressen. Worker-adressen
+   `https://den-seje-app-frontend.christ-moeller.workers.dev` svarer fortsat også.
+   **Password-recovery blev verificeret på Worker-origin.** `js/login.js` bygger sin `redirectTo`
+   ud fra `window.location.origin`; Supabase accepterer den origin, og recovery-flowet svarede
    303 til `…workers.dev/reset-password.html`. Verifikationen brugte `generateLink`, så der blev
-   ikke sendt nogen mail og ikke ændret noget brugerkodeord.
-   **Gælder kun denne origin.** Tages et custom domæne i brug, skal dét domænes
+   ikke sendt nogen mail og ikke ændret noget brugerkodeord. Begge origins er siden tilføjet
+   Supabase' liste over tilladte redirect-URL'er.
+   **Gælder kun de godkendte origins.** Tages endnu et domæne i brug, skal dét domænes
    recovery-redirect godkendes i Supabase og verificeres særskilt, før brugere sendes derhen.
+   **Tilbage:** Vercel-checket fejler stadig med `Account is blocked` på hver PR — en
+   kontospærring uden for repoet, som ikke blokerer merge (`main` er ikke branch-protected), og
+   som kun forsvinder, hvis GitHub-integrationen kobles fra.
 3. ~~**`login.html` er ustylet rå HTML.**~~ **LØST 2026-08-08.** `login.html` deler nu
    landingssidens flade: samme tokens, ambient glow, glas-kort, wordmark og knapsprog
    (`css/login.css`). Markup-kontrakten er urørt — alle ID'er, `#forgotBtn`-teksten og den

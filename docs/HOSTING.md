@@ -1,10 +1,20 @@
 # Hosting — frontend på Cloudflare Workers (Static Assets)
 
-Status: **forberedt, ikke aktiveret.** Denne PR gør frontenden deploybar på Cloudflare.
-Den skifter ikke DNS, custom domain eller Supabase redirect-URL'er, og den fjerner ikke Vercel.
+Status: **AKTIVERET.** Produktionen kører på Cloudflare Workers (Static Assets) og er live på
+**`https://lærlig.dk`** (punycode `xn--lrlig-sra.dk`). Custom domain er tilknyttet, Supabase'
+redirect-URL'er er opdateret, og E2E-suiten peger på den levende vært. Deploy sker automatisk
+ved merge til `main`.
+
+Vercel er **ikke længere deploy-mål.** Den gamle adresse `den-seje-app-frontend.vercel.app`
+svarer fortsat `402 Payment Required`, og Vercel-checket fejler på hver PR med
+`Account is blocked`. Det er en kontospærring uden for repoet: ingen kodeændring kan fjerne
+checket — det kræver, at GitHub-integrationen kobles fra. **Checket er ikke et signal om
+kodens tilstand.**
+
+Afsnittet nedenfor er **historik** og forklarer, hvorfor migrationen blev nødvendig.
 
 ----------------------------------------
-HVORFOR
+HVORFOR — HISTORIK (2026-08)
 ----------------------------------------
 
 Vercel Hobby blev **pauset efter ca. 3M Edge Requests mod planens 1M-grænse**. Produktionen
@@ -25,18 +35,15 @@ Cloudflare Workers Static Assets vælges som ny frontend-host. Dashboardet tilby
 **asset-only Worker**.
 
 ----------------------------------------
-HVAD DER *IKKE* ÆNDRES
+HVAD MIGRATIONEN *IKKE* ÆNDREDE
 ----------------------------------------
 
 - **Supabase forbliver backend.** Ingen migration, ingen databaseændring, ingen Edge-Function-ændring.
 - Ingen ændring af appens funktionalitet. Ingen avatarændring. `AVATAR_R2` forbliver `false`.
-- **Den gamle Vercel-deployment fjernes ikke endnu.**
-- **Custom domain og Supabase redirect-URL'er ændres først efter owner-review.**
-  Det er vigtigt: `js/login.js` sætter `redirectTo: window.location.origin + "/reset-password.html"`,
-  så password-recovery følger det domæne, appen faktisk serveres fra. Supabase' liste over
-  tilladte redirect-URL'er skal opdateres, **før** brugere sendes til Cloudflare-domænet.
-- Playwright flyttes ikke i denne PR. Specsene peger fortsat på Vercel-adressen og vil fortsat
-  fejle, indtil hosting-skiftet faktisk gennemføres. **Det er en hostingfejl, ikke en kodefejl.**
+- **Password-recovery følger den origin, appen serveres fra.** `js/login.js` sætter
+  `redirectTo: window.location.origin + "/reset-password.html"`. Supabase' liste over tilladte
+  redirect-URL'er er opdateret med Cloudflare-domænet. **Tages endnu et domæne i brug, skal dét
+  domænes recovery-redirect godkendes i Supabase og verificeres, før brugere sendes derhen.**
 
 ----------------------------------------
 HVORDAN BUILDET VIRKER
@@ -164,16 +171,21 @@ hverken til `dependencies` eller `devDependencies`.
 Buildet kører udelukkende på Node-builtins og kræver derfor ingen installation.
 
 ----------------------------------------
-NÆSTE MANUELLE SKRIDT (owner)
+AKTIVERINGSFORLØBET — GENNEMFØRT
 ----------------------------------------
 
-1. Opret Worker `den-seje-app-frontend` i Cloudflare-dashboardet og forbind GitHub-repoet.
-2. Indsæt de fire værdier ovenfor.
-3. Deploy og verificér `*.workers.dev`-URL'en: login, quiz, shop, avatar.
-4. **Først derefter:** tilføj Cloudflare-domænet til Supabase' tilladte redirect-URL'er.
-5. Derefter custom domain.
-6. Derefter opdatér `PROD` i Playwright-specsene til den nye adresse.
-7. Fjern først Vercel-deploymentet, når alt ovenstående er verificeret.
+Skridtene blev udført i denne rækkefølge, hvert enkelt verificeret før det næste:
+
+1. ✅ Worker `den-seje-app-frontend` oprettet i Cloudflare-dashboardet og forbundet med GitHub-repoet.
+2. ✅ De fire værdier ovenfor indsat.
+3. ✅ `*.workers.dev`-URL'en verificeret: login, quiz, shop, avatar.
+4. ✅ Cloudflare-domænet tilføjet Supabase' tilladte redirect-URL'er.
+5. ✅ Custom domain `lærlig.dk` tilknyttet — svarer 200.
+6. ✅ E2E-målet flyttet: repository-variablen `PROD_BASE_URL`, og siden standardværdien i
+   `tests/helpers.ts`.
+
+**Udestående:** Vercel-integrationen er endnu ikke koblet fra GitHub, så `Account is blocked`-checket
+bliver ved med at fejle på hver PR. Det er den eneste tilbageværende Vercel-binding.
 
 ----------------------------------------
 PLAYWRIGHT — SÅDAN SKIFTES E2E-MÅLET
@@ -184,9 +196,13 @@ kopieret ind i 21 spec-filer i ni forskellige formateringer, så et værtsskifte
 redigering — og suiten kunne kun nogensinde pege på én hardcodet adresse.
 
 ```ts
-export const PROD = (process.env.PROD_BASE_URL ?? "https://den-seje-app-frontend.vercel.app")
-  .replace(/\/+$/, "");
+const CONFIGURED_BASE_URL = (process.env.PROD_BASE_URL ?? "").trim();
+export const PROD = (CONFIGURED_BASE_URL || "https://xn--lrlig-sra.dk").replace(/\/+$/, "");
 ```
+
+En **tom** værdi tæller som uangivet, ikke som en overstyring: i Actions udvider
+`${{ vars.PROD_BASE_URL }}` til `""`, når variablen ikke findes, og `??` ville acceptere den tomme
+streng — hver test ville så navigere til `/login.html` uden origin.
 
 **To måder at skifte mål, begge uden at røre en eneste spec:**
 
@@ -199,8 +215,9 @@ export const PROD = (process.env.PROD_BASE_URL ?? "https://den-seje-app-frontend
 
 2. **Permanent** — ret default-værdien i `tests/helpers.ts`. Én linje.
 
-Standardværdien er bevidst stadig Vercel-adressen: at flytte værten er en selvstændig beslutning,
-ikke en sidegevinst ved en oprydning.
+Standardværdien var oprindeligt bevidst Vercel-adressen, fordi et værtsskifte er en selvstændig
+beslutning og ikke en sidegevinst ved en oprydning. Den beslutning er nu truffet, og standarden er
+den levende vært.
 
 `tests/unit/e2e-base-url.test.mjs` (7 tests) holder det på plads: adressen må kun stå ét sted,
 `PROD_BASE_URL` skal virke, trailing slash skal fjernes, ingen spec må redeklarere sin egen `PROD`,

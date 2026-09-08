@@ -10,9 +10,9 @@ _Avatar internals: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md). AI rules: [AI_GUIDELI
 
 ```
                           ┌──────────────────────────────────────────┐
-   Browser (student/      │            FRONTEND (Vercel)             │
+   Browser (student/      │      FRONTEND (Cloudflare Workers)       │
    teacher/admin)         │  Static HTML + vanilla JS, NO build step │
-        │                 │  den-seje-app-frontend/ = Vercel root    │
+        │                 │  allowlist build → dist-cloudflare/      │
         │  HTTPS          │  Supabase URL + ANON key hardcoded in JS │
         ▼                 └──────────────────────────────────────────┘
         │                                   │
@@ -34,24 +34,27 @@ _Avatar internals: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md). AI rules: [AI_GUIDELI
 │  └──────────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────────┘
         ▲
-        │  Playwright E2E (tests/) run against the LIVE Vercel URL
+        │  Playwright E2E (tests/) run against the LIVE production URL
    CI / local
 ```
 
 **Stack summary**
-- **Frontend:** vanilla JS + static HTML, **no build step**, deployed to Vercel.
-  `den-seje-app-frontend/` is the Vercel root.
+- **Frontend:** vanilla JS + static HTML, **no build step** in the source sense, deployed to
+  **Cloudflare Workers (Static Assets)** and live on `https://lærlig.dk`. Deployment copies an
+  explicit allowlist into `dist-cloudflare/` (`tools/cloudflare-build-static.mjs`) rather than
+  serving the repo root. Canonical: [`HOSTING.md`](./HOSTING.md).
 - **Backend:** hosted Supabase — Postgres (with RLS), Auth, Storage, and Deno **Edge Functions**.
-- **Tests:** Playwright E2E against the production URL (`https://den-seje-app-frontend.vercel.app`),
-  3 browsers (Chromium/Firefox/WebKit), 1 worker, no parallelism.
+- **Tests:** Playwright E2E against the live production URL, 3 browsers (Chromium/Firefox/WebKit),
+  1 worker, no parallelism. The target is defined once as `PROD` in `tests/helpers.ts` and is
+  overridable through the `PROD_BASE_URL` repository variable.
 
 ## 2. Repository layout & the two-clone model
 
 The working tree exists as **two clones of the same GitHub repo** (`Moeller888/den-seje-app-frontend`):
 - **Root** clone (`C:\...\DEN SEJE APP\DEN SEJE APP\`) — full project incl. `supabase/`, `docs/`, `tests/`.
-- **`den-seje-app-frontend/`** sub-clone — the directory Vercel actually deploys.
+- **`den-seje-app-frontend/`** sub-clone — the working copy the frontend is normally edited in.
 
-The root embeds the frontend as a **vestigial gitlink** that is _not_ on the Vercel deploy path
+The root embeds the frontend as a **vestigial gitlink** that is _not_ on the deploy path
 (technical debt TD-4 in `project-state.md`). **Discipline:** push from one clone, fast-forward-pull
 the other, so both stay in sync. (See agent memory `project_repo_sync_model`.) Frontend source
 files (`app.js`, `*.html`, `js/`, `assets/`) are duplicated across both clones and must be edited
@@ -285,8 +288,8 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
 
 ## 11. Deployment
 
-- **Frontend:** edit files under `den-seje-app-frontend/`, commit, push `main` → **Vercel
-  auto-deploys**. (Keep the root clone in sync — §2.)
+- **Frontend:** edit files under `den-seje-app-frontend/`, commit, push `main` → **Cloudflare
+  auto-deploys** on merge. (Keep the root clone in sync — §2.)
 - **Edge Functions:** `supabase functions deploy <name>` (or deploy all). Independent of frontend.
 - **Database:** migrations applied via Supabase MCP / `apply_migration` against the remote project
   (note TD-3: `db push` may be blocked by ledger drift).

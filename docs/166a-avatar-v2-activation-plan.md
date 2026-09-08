@@ -4,6 +4,13 @@ Status: **PLAN ONLY — not executed.** AVATAR_V2 remains `false`.
 Date: 2026-06-24
 Owner: solo founder (pre-launch, pilot scale)
 
+> **HISTORICAL — 2026-09-08.** This plan was written before, and executed on, the old host:
+> `AVATAR_V2 = true` went live on 2026-06-25 (commit `52f8365`), and the deploy steps below say
+> "push → Vercel deploy → run suite". **Vercel is no longer a deploy target.** Production is
+> Cloudflare Workers at `https://lærlig.dk`, deploying on merge to `main`, and the E2E target comes
+> from `PROD` in `tests/helpers.ts`. Read the deploy ordering here as a record of what was done,
+> not as instructions to follow. Canonical hosting: [`HOSTING.md`](./HOSTING.md).
+
 > **STATUS UPDATE — 2026-06-30 (Section 157AB): EXECUTED / HISTORICAL.** This plan **was carried
 > out** — `AVATAR_V2 = true` shipped to production on 2026-06-25 (commit `52f8365`). The
 > "not executed / remains `false`" status line above is the **pre-activation** record, retained for

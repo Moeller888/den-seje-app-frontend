@@ -34,7 +34,8 @@ _Last reviewed: 2026-07-01._
 ## Current status (2026-06-30)
 
 - **Production:** Supabase project `den-seje-app` (`tjzbehwfagiwpwodsgwg`, eu-west-1, Pro);
-  frontend live on Vercel, auto-deploy from `main`.
+  frontend live on **Cloudflare Workers** at `https://lærlig.dk`, auto-deploy on merge to `main`.
+  Canonical: [`HOSTING.md`](./HOSTING.md).
 - **Avatar:** `AVATAR_V2 = true` is **live** (commit `52f8365`, 2026-06-25) — but rendering **flat
   placeholder SVGs**, not the Northstar Master raster. Master production + wiring is planned
   (`docs/167a-master-asset-raster-wiring-plan.md`), not executed.
@@ -509,11 +510,15 @@ _Last reviewed: 2026-07-01._
   Asset-only Worker built from an explicit allowlist (`tools/cloudflare-build-static.mjs`), with the
   explicit-`.html` routing contract preserved. **Prepared, not activated** — DNS, custom domain and
   the Supabase redirect-URL list are unchanged. Canonical: [`HOSTING.md`](./HOSTING.md).
+  > **SUPERSEDED — the host switch is complete.** Cloudflare now serves production at
+  > `https://lærlig.dk`; the "not activated" wording above describes only what those two PRs shipped.
 - **E2E target defined once, overridable via `PROD_BASE_URL`** — commit `baae8f7` (PR #166). All 21
   specs had hardcoded the Vercel address; they now import `PROD` from `tests/helpers.ts`, and CI
   points it at the Cloudflare host through a repository variable. The default is deliberately still
   the Vercel address — moving the host is its own decision. Guarded by
   `tests/unit/e2e-base-url.test.mjs`.
+  > **SUPERSEDED (PR #242).** The default is now the live host, and the guard's host pattern was
+  > widened so it keeps detecting a hardcoded origin after the move.
 - **`placement-e2e` made retry-safe** — commit `dbcd19d` (PR #170). The five placement tests are a
   chain (test 2 writes `placement_band`, tests 3-5 depend on it), but Playwright restarts the worker
   after a failure, so `beforeAll` re-ran and cleared exactly that state — meaning retries of tests
@@ -556,7 +561,7 @@ _Last reviewed: 2026-07-01._
   for live activation/validation** (turning flags on, sending real data), not to *build* the
   remaining sections. Privileged/paid steps are owner-only.
   - **Zero-cost interim (recommended, not required now):** much live validation can later run on a
-    **free local Supabase stack** (`supabase start`, Docker — no Pro) + a **free Vercel preview**,
+    **free local Supabase stack** (`supabase start`, Docker — no Pro) + a **free preview deployment on the current host**,
     deferring the **paid hosted branch** to pre-production rollout. This keeps staging on the roadmap
     without recurring cost until launch.
 
@@ -574,7 +579,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157D PostHog **module** (+ consent gate) | requires 157CB | none to build | **SOFT GATE** | Same pattern as 157B — a flagged `js/analytics.js` builds + static-validates with no infra. |
 | 157E analytics **events** | requires 157CB | 157D module | **SOFT GATE** | Code instrumentation, default-off. |
 | 157F Cloudinary **spec** | — | none | **UNGATED** | Pure specification. |
-| 157G Cloudinary **integration** | — | a (free) Cloudinary account for go-live | **SOFT GATE** | Build read-path/transform behind a flag; needs no Supabase Pro branch (frontend/Vercel-preview testable). |
+| 157G Cloudinary **integration** | — | a (free) Cloudinary account for go-live | **SOFT GATE** | Build read-path/transform behind a flag; needs no Supabase Pro branch (testable on a frontend preview deployment). |
 | 157H OCR **spec** | — | none | **UNGATED** | Pure specification. |
 | 157I OCR **implementation** | requires 157CB (implied) | none | **SOFT GATE** | In-browser Tesseract wasm; no secret/server/backend — even activation is zero-cost client-side. |
 | 157J Ollama reachability **decision** | gate | none | **UNGATED** | A decision/spec. |
@@ -610,7 +615,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`) — **done, default-off** | frontend-only | done |
 | **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`) — **done, default-off** | Edge | done |
 | **157CA** ✅ | Observability docs + static validation; 2 Sentry projects decided | docs | done |
-| **157CB** 🗓️ | Dedicated staging environment (Supabase branch + Vercel preview) | infra | **FUTURE INFRA** (not a blocker) |
+| **157CB** 🗓️ | Dedicated staging environment (Supabase branch + frontend preview) | infra | **FUTURE INFRA** (not a blocker) |
 | **Live obs. validation** | 157B/157C/157CA Part B checklists incl. PII-against-real-events | staging | **HARD GATE** |
 | **157D** ✅ | PostHog `js/analytics.js` module + GDPR consent gate — **done, default-off, consent-gated, unwired** | frontend-only | **SOFT** (done) |
 | **157E** ✅ | Core analytics events (login, question shown/answered, item purchased) + GDPR consent banner — **done, default-off, double-gated** | frontend-only | **SOFT** (done) |
@@ -793,7 +798,7 @@ production**; activation waits for a staging target (free local stack at first; 
     validation (HARD GATE), 157L/157M AI-grade activation, 157T production-readiness sign-off.
 
 > Activation of anything built above happens **after** a staging target exists — first the free local
-> Supabase stack + Vercel preview, then a paid hosted branch only at pre-launch. Building now does not
+> Supabase stack + a frontend preview, then a paid hosted branch only at pre-launch. Building now does not
 > incur cost; only running a hosted non-prod backend does.
 
 ## Status table
