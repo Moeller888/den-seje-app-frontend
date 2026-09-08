@@ -24,7 +24,10 @@ const specs = readdirSync(TESTS).filter((f) => f.endsWith(".spec.ts")).sort();
 const readSpec = (f) => readFileSync(join(TESTS, f), "utf8");
 
 // Any origin that is the app itself. Supabase and other third-party URLs are none of our business.
-const APP_HOST = /https?:\/\/[^\s"'`]*den-seje-app-frontend[^\s"'`]*/g;
+// Every host the app has ever been served from is listed, not just the current one: the guard has
+// to catch a spec that hardcodes the live Cloudflare host as much as one that pastes back the dead
+// Vercel address. Keying it on the current host alone would have gone blind the moment we moved.
+const APP_HOST = /https?:\/\/[^\s"'`]*(?:den-seje-app-frontend|xn--lrlig-sra\.dk|lærlig\.dk)[^\s"'`]*/g;
 
 test("there are spec files to guard", () => {
   assert.ok(specs.length >= 30, `expected the E2E suite, found ${specs.length} spec files`);

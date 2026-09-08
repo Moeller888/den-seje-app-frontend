@@ -19,9 +19,10 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
  * was cancelled with no failure summary. A cancelled run looks identical to a hang.
  *
  * `PROD_BASE_URL` makes the target a setting rather than a source edit, so CI can be repointed at
- * the Cloudflare Worker (or at a preview version) without touching a single spec. The default is
- * deliberately still the Vercel address: this change is a refactor, and flipping the host is a
- * separate, deliberate decision — see docs/HOSTING.md.
+ * a preview version without touching a single spec. That flip has now been made: production is the
+ * Cloudflare Worker on lærlig.dk, the Vercel account is blocked, and the old address is dead — so
+ * the default is the live host, written in punycode because that is what the repository variable
+ * `PROD_BASE_URL` holds and what URL comparisons in the specs see. See docs/HOSTING.md.
  *
  * An EMPTY value counts as unset, not as an override. In Actions `${{ vars.PROD_BASE_URL }}`
  * expands to "" when the repository variable does not exist, and `??` would happily accept that
@@ -31,7 +32,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
  * Trailing slashes are stripped so `${PROD}/login.html` cannot become a double slash.
  */
 const CONFIGURED_BASE_URL = (process.env.PROD_BASE_URL ?? "").trim();
-export const PROD = (CONFIGURED_BASE_URL || "https://den-seje-app-frontend.vercel.app").replace(/\/+$/, "");
+export const PROD = (CONFIGURED_BASE_URL || "https://xn--lrlig-sra.dk").replace(/\/+$/, "");
 
 export const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL    ?? "teacher-test@hotmail.com";
 export const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";

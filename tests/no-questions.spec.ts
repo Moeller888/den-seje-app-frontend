@@ -98,7 +98,8 @@ test('Shows empty state when no questions are available', async ({ page }) => {
   // logout-btn is intentionally hidden in the mobile redesign — wait for the question element directly
   const question = page.locator('#question');
 
-  // 20s: Vercel Edge Function cold start can take up to ~18s when suite has been idle
+  // 20s: a cold backend can take many seconds when the suite has been idle. The value was
+  // calibrated on the previous host and is left unchanged — see mobile-ux-validation.spec.ts.
   await expect(question).toHaveAttribute('data-state', /loading|empty/, { timeout: 20000 });
 
   await expect(question).toHaveAttribute('data-state', 'empty', { timeout: 20000 });
