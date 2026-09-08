@@ -26,7 +26,10 @@
       "role": "THE INTERNAL GARMENT-AUTHORING / FITTING BASE — tight neutral top, shorts, bare legs and feet",
       "filename": "fitting-base.H1.png",
       "tracked": false,
-      "storage": "EXTERNAL — outside both repositories, per D-127 §2. The image is never copied into the repository.",
+      "storagePolicy": "BINDING, per D-127 §2: H1 must NEVER be tracked in git, never published, and never placed under assets/ or any other deployable path. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image.",
+      "storageIntended": "D-127 §2's intended home is the external artefact archive outside both clones, alongside the D-121 artefacts.",
+      "storageObserved": "VERIFIED READ-ONLY on 2026-09-08, recorded as an observation and NOT as a claim that the intended location has been reached: the known working copy lives at tools/avatar/build/fitting-base-head-only-review/fitting-base.H1.png, INSIDE the primary clone's working directory. It is untracked and gitignored (.gitignore excludes tools/avatar/build/), so the binding storage policy holds — not tracked, not published, not under assets/ — but the file is NOT yet in the external archive D-127 §2 intends.",
+      "storageNoMoveAuthorised": "This contract moves, copies and deletes nothing. Relocating the known copy into the external archive is its own owner decision.",
       "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
       "bytes": 1832612,
       "width": 1024,
@@ -40,14 +43,26 @@
       "tracked": false,
       "sha256": "fa4c705e05b7832c1308f15dcecb28a47ec61416c91486a3930de3b4eaf854c1",
       "bytes": 1328092,
-      "relationToTarget": "Geometrically identical to the target: 0 differing silhouette pixels, 0 differing pixels inside the solid figure, identical global anchors. The two differ ONLY in transparent and semi-transparent edge pixels (soft-pixel count 27195 -> 6910)."
+      "relationToTarget": "Geometrically identical to the target: 0 differing silhouette pixels, 0 differing pixels inside the solid figure, identical global anchors. The two differ ONLY in transparent and semi-transparent edge pixels (soft-alpha pixel count 27195 -> 6910).",
+      "softAlphaDefinition": "soft-alpha pixel = 0 < alpha < 128, i.e. a pixel that is neither fully transparent nor solid under the D-071 convention (solid = alpha >= 128). Both counts above are measured with exactly this definition over the full 1024x1536 canvas.",
+      "softAlphaStatus": "PROVENANCE / CLEANUP EVIDENCE ONLY. The 27195 -> 6910 figure documents the alpha cleanup between refined.raw.png and the tracked target. It is NOT a new universal R3 acceptance threshold, it gates nothing, and no R3 asset is required to reach any particular soft-alpha count."
     },
     "pairEvidence": {
       "headBytesDifferingInsideHeadProtectMask": 0,
       "globalDeltas": { "top": 0, "sole": -1, "figureHeight": -1, "left": 0, "right": 0, "axisX": -0.13 },
       "armEdgeDeltaRange": "-2..+1 px across rows 645, 700, 760, 820, 880, 940",
       "statement": "All stable and reproducibly measurable global, head and arm anchors agree. No material geometric drift has been demonstrated.",
-      "notClaimed": "This is NOT a claim that the whole body's anatomy is identical, nor that all body proportions are preserved within 1-2 px. That cannot be proven under different clothing."
+      "notClaimed": "This is NOT a claim that the whole body's anatomy is identical, nor that all body proportions are preserved within 1-2 px. That cannot be proven under different clothing.",
+      "crotchProxy": {
+        "measuredDeltaPx": "approximately 12",
+        "what": "The measured crotch proxy differs by about 12 px between the target figure and H1.",
+        "nature": "Clothing-sensitive and anatomically ambiguous: the target wears trousers and H1 wears shorts, so the proxy does not locate the same landmark on both images.",
+        "status": "DIAGNOSTIC ONLY",
+        "isHardGate": false,
+        "isEvidenceOfMaterialDrift": false,
+        "triggers": "nothing — it must not trigger generation, warp, repair or promotion",
+        "noTolerance": "No tolerance is defined for it. It is reported, never gated."
+      }
     }
   },
 
@@ -65,16 +80,44 @@
     "canvas": { "master": [1024, 1536], "served": [512, 768] },
     "alphaRule": "solid = alpha >= 128 (D-071 convention)",
     "background": "fully transparent; no background, no shadow, no glow",
+
+    "paintOrder": {
+      "binding": true,
+      "rule": "The BINDING part of this layer contract is the RELATIVE paint order below, bottom to top. Numeric z-index values are NOT part of it — see zIndices, which are provisional and unapproved.",
+      "bottomToTop": ["base", "blush", "face", "eyes", "tee", "trousers", "shoes", "torso", "hair"],
+      "invariants": [
+        "the technical underlay is the bottom layer of the figure",
+        "the three default clothing layers paint above the underlay",
+        "a cosmetic torso garment paints above the default tee, because the tee is now its own layer instead of being baked into the base",
+        "hair paints above every face layer and every clothing layer"
+      ]
+    },
+
+    "zIndices": {
+      "status": "PROVISIONAL — EXAMPLE VALUES, NOT OWNER-APPROVED, NOT RUNTIME VALUES",
+      "binding": false,
+      "mayBeImplemented": false,
+      "inherited": {
+        "values": { "base": 0, "blush": 2, "face": 3, "eyes": 4, "hair": 40 },
+        "note": "These five reproduce the existing R2 internal stack (blush 2, face 3, eyes 4, blink lids 5, hair 40) unchanged. They are carried over, not decided here."
+      },
+      "provisional": {
+        "values": { "tee": 6, "trousers": 7, "shoes": 8, "torso": 20 },
+        "note": "Illustrative only. They express the binding paintOrder above and nothing more. No owner decision has fixed them, and they must not be written into any runtime resolver."
+      },
+      "knownCollision": "The provisional 6 and 8 COLLIDE numerically with the live R2_COSMETIC_Z in js/avatar-layers.js, where the eyes cosmetic (glasses) is 6 and the face cosmetic (mask) is 8. The provisional torso 20 is the C2_LAYER_Z value, NOT the live R2 torso-garment z, which is 1. None of these numbers may be implemented without a separate owner decision that resolves the collision and states how the R3 clothing layers coexist with the existing R2/C2 cosmetic stack."
+    },
+
     "slots": [
-      { "slot": "base",     "z": 0,  "newInR3": false, "content": "technical underlay: tight neutral top, shorts, bare legs and feet, BALD, BLANK FACE" },
-      { "slot": "blush",    "z": 2,  "newInR3": false, "blend": "multiply" },
-      { "slot": "face",     "z": 3,  "newInR3": false },
-      { "slot": "eyes",     "z": 4,  "newInR3": false, "note": "iris multiply x token, fixed on top" },
-      { "slot": "tee",      "z": 6,  "newInR3": true,  "content": "grey default t-shirt" },
-      { "slot": "trousers", "z": 7,  "newInR3": true,  "content": "blue default trousers" },
-      { "slot": "shoes",    "z": 8,  "newInR3": true,  "content": "grey default sneakers" },
-      { "slot": "torso",    "z": 20, "newInR3": false, "note": "cosmetic garment; must occlude the tee layer" },
-      { "slot": "hair",     "z": 40, "newInR3": false, "blend": "multiply x hair token" }
+      { "slot": "base",     "newInR3": false, "content": "technical underlay: tight neutral top, shorts, bare legs and feet, BALD, BLANK FACE" },
+      { "slot": "blush",    "newInR3": false, "blend": "multiply" },
+      { "slot": "face",     "newInR3": false },
+      { "slot": "eyes",     "newInR3": false, "note": "iris multiply x token, fixed on top" },
+      { "slot": "tee",      "newInR3": true,  "content": "grey default t-shirt" },
+      { "slot": "trousers", "newInR3": true,  "content": "blue default trousers" },
+      { "slot": "shoes",    "newInR3": true,  "content": "grey default sneakers" },
+      { "slot": "torso",    "newInR3": false, "note": "cosmetic garment; must occlude the tee layer" },
+      { "slot": "hair",     "newInR3": false, "blend": "multiply x hair token" }
     ],
     "newSlotsRationale": "R2 bakes the t-shirt, trousers and sneakers into its base layer. R3 makes them separate layers, so the default outfit becomes removable and the occlusion contract changes from 'garment occludes a baked tee' to 'garment occludes a separate tee layer'.",
     "excludedFromReproduction": {
@@ -87,12 +130,22 @@
     }
   },
 
+  "occlusionContract": {
+    "binding": true,
+    "armHandInvariant": "An R3 torso or equipment layer must NEVER unintentionally paint over exposed arms or hands. Whatever the final paint order and z values turn out to be, the visible arm and hand pixels of the approved underlay stay visible unless an approved garment is deliberately authored to cover them.",
+    "whyItChanged": "In R2 the torso garment sits immediately above the base and its artwork is authored against that exact baked silhouette. In R3 the torso garment sits above a separate tee layer, so it passes over more of the body and arm/hand exposure is no longer protected by its low position alone.",
+    "prerequisite": "The R3 occlusion/protect contract — which regions a torso or equipment layer MAY cover, and which arm and hand regions it MAY NOT — must be PRE-REGISTERED and owner-approved BEFORE armor-knight or any other torso equipment is produced or integrated. It is a precondition of that work, never a check applied afterwards.",
+    "fittingBaseMaskIsNotRuntime": "The existing fitting-base arm/hand protect mask is a fitting-base FIXTURE. It is NOT automatically an R3 runtime mask and carries no runtime authority. Any use of it as a reference or control when producing R3 assets must be documented and approved separately.",
+    "authorisation": "This clause is contract text only. It authorises no mask to be created, changed, derived or promoted, and no image call."
+  },
+
   "pixelSourcePolicy": {
     "oldR2AssetsMayBe": ["functional reference", "inventory of required layers and states", "visual inspiration", "documentation of existing behaviour", "fallback and rollback"],
     "oldR2AssetsMayNotBe": ["a pixel source", "a geometric authority", "a basis for automatic warp", "an argument for keeping the old proportions", "a permanent mixture of R2 and R3 geometry"],
     "differenceAnalysisMayBe": ["locating approximate garment regions", "coverage checking", "visualising differences", "detecting leakage outside an intended region", "validating a finished R3 composition against the target"],
     "differenceAnalysisMayNotBe": ["a finished garment mask", "a finished alpha layer", "automatic segmentation", "a pixel source for the tee, trousers or shoes", "evidence that the layers are cleanly separable"],
-    "why": "A difference shows that pixels differ, not which garment they belong to. The measured difference between the target and H1 is ONE connected blob of 215,300 px from neck to feet plus 428 smaller components — top, trousers, shoes, skin, body contour, antialiasing and generative difference are mixed together. A flat composite also cannot be inverted into overlapping layers: hair hides the cranium, the iris sits inside the eyes, blush is a blend mode, and pixels beneath the upper layers do not exist in the flat image."
+    "why": "A difference shows that pixels differ, not which garment they belong to. Measured read-only, the difference between the target and H1 forms ONE DOMINANT CONNECTED REGION running from the neck to the feet, plus many small scattered components. That one region mixes t-shirt, trousers, shoes, skin, body contour, alpha antialiasing and generative variation together, so it separates nothing. A flat composite also cannot be inverted into overlapping layers: hair hides the cranium, the iris sits inside the eyes, blush is a blend mode, and pixels beneath the upper layers do not exist in the flat image.",
+    "whyNoExactFigure": "No exact pixel or component count is recorded here. The earlier figures were measured without pinning the difference metric, the alpha and colour thresholds or the 4- versus 8-connectivity, so they are not independently reproducible. The qualitative conclusion above is what this contract binds, and it is stable under every definition measured. If a numeric diagnostic is ever recorded, it must state metric, alpha threshold, colour threshold and connectivity in full."
   },
 
   "assets": [
@@ -115,8 +168,13 @@
     { "id": 17, "name": "r3 runtime masks + mask spec", "slot": "fixtures", "method": "deterministic", "calls": 0 }
   ],
 
-  "imageCallBudget": { "minimum": 14, "maximum": 16, "isAuthorisation": false,
-    "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion." },
+  "imageCallBudget": {
+    "minimum": 14,
+    "maximum": 16,
+    "isAuthorisation": false,
+    "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
+    "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
+  },
 
   "deterministicOperations": [
     { "op": "master -> served 512x768", "how": "downscaleHalf + cwebp -lossless -exact -z 9, verified by decoding", "precedent": "the established promotion path for every R2 asset" },
@@ -145,11 +203,65 @@
     "17 armor-knight",
     "18 integration, canary, rollback"
   ],
+  "productionOrderIds": [
+    "contract",
+    "underlay",
+    "face-neutral",
+    "eyes-fixed",
+    "iris",
+    "blush",
+    "hair-northstar",
+    "tee",
+    "trousers",
+    "shoes",
+    "runtime-masks",
+    "default-composition",
+    "automatic-check",
+    "owner-visual-review",
+    "other-expressions",
+    "other-hairstyles",
+    "armor-knight",
+    "integration-canary-rollback"
+  ],
+  "productionOrderConstraintsNote": "Machine-readable dependencies over productionOrderIds, which is the same list as productionOrder in the same order. They record WHY the approved order is the order; they do not change it.",
+  "productionOrderConstraints": [
+    { "before": "underlay", "after": "face-neutral", "why": "every head layer is drawn onto the approved underlay geometry" },
+    { "before": "underlay", "after": "eyes-fixed", "why": "every head layer is drawn onto the approved underlay geometry" },
+    { "before": "underlay", "after": "iris", "why": "every head layer is drawn onto the approved underlay geometry" },
+    { "before": "underlay", "after": "blush", "why": "every head layer is drawn onto the approved underlay geometry" },
+    { "before": "underlay", "after": "hair-northstar", "why": "the hair is fitted to the approved cranium of the underlay" },
+    { "before": "underlay", "after": "tee", "why": "the default clothing is fitted to the underlay, never the other way round" },
+    { "before": "underlay", "after": "trousers", "why": "the default clothing is fitted to the underlay, never the other way round" },
+    { "before": "underlay", "after": "shoes", "why": "the default clothing is fitted to the underlay, never the other way round" },
+    { "before": "tee", "after": "runtime-masks", "why": "the tee layer's own alpha is the input the runtime masks are derived from" },
+    { "before": "trousers", "after": "runtime-masks", "why": "the garment layers are the input the runtime masks are derived from" },
+    { "before": "shoes", "after": "runtime-masks", "why": "the garment layers are the input the runtime masks are derived from" },
+    { "before": "underlay", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "face-neutral", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "eyes-fixed", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "iris", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "hair-northstar", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "tee", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "trousers", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "shoes", "after": "default-composition", "why": "the default composition needs every layer it composes" },
+    { "before": "runtime-masks", "after": "default-composition", "why": "occlusion has to be settled before the composition can be judged" },
+    { "before": "default-composition", "after": "automatic-check", "why": "there is nothing to check automatically until the composition exists" },
+    { "before": "automatic-check", "after": "owner-visual-review", "why": "the machine check runs first, so the owner reviews something that already passed it" },
+    { "before": "owner-visual-review", "after": "other-expressions", "why": "the main gate decides whether the layered approach works at all" },
+    { "before": "owner-visual-review", "after": "other-hairstyles", "why": "the main gate decides whether the layered approach works at all" },
+    { "before": "owner-visual-review", "after": "armor-knight", "why": "the main gate decides whether the layered approach works at all, and the occlusion contract must be approved before equipment is produced" },
+    { "before": "other-expressions", "after": "integration-canary-rollback", "why": "integration follows the approved assets" },
+    { "before": "other-hairstyles", "after": "integration-canary-rollback", "why": "integration follows the approved assets" },
+    { "before": "armor-knight", "after": "integration-canary-rollback", "why": "integration follows the approved assets" }
+  ],
 
   "firstSlice": {
     "identity": { "bodyType": "neutral", "skinTone": "medium", "hairstyle": "northstar" },
-    "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "blush", "northstar hair", "tee", "trousers", "shoes"],
+    "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "northstar hair", "tee", "trousers", "shoes"],
     "equipment": "none",
+    "excluded": {
+      "blush": "DELIBERATELY NOT in the first slice. Whether blush belongs to it is an open owner decision, listed in openOwnerDecisions, so it must not appear here as settled."
+    },
     "purpose": "prove that the layered R3 composition can recreate the target figure satisfactorily",
     "mustNotDependOn": "any automatic difference algorithm separating existing pixels"
   },
@@ -216,7 +328,9 @@
   "openOwnerDecisions": [
     "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",
     "how to close GAP-2 (no transition ring; hard horizontal seam at the neck line y433)",
-    "the z-index values proposed for the three new clothing slots (6, 7, 8)",
+    "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
+    "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
+    "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",
     "whether blush is part of the first slice",
     "whether the iris is a colour token or its own generated asset",
     "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
@@ -225,7 +339,8 @@
   "prohibitions": {
     "noImageRequestAuthorised": "D-132 and this contract authorise no image request.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
-    "noH1InRepository": "H1 is external and must not be copied into the repository. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image.",
-    "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract."
+    "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
+    "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
+    "noMaskWork": "This contract creates, changes, derives and promotes no mask of any kind."
   }
 }
