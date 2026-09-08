@@ -25,7 +25,7 @@ import { RENDER_SIZES } from "./check-r2-torso-candidate.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = join(HERE, "..", "..");
-export const SPEC_PATH = join(HERE, "fixtures", "fitting-base", "fitting-base-v1-spec.json");
+export const SPEC_PATH = join(HERE, "fixtures", "fitting-base", "fitting-base-spec-v1.json");
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const INK = ALPHA_INK;
 

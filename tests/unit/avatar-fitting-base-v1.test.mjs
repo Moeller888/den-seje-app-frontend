@@ -107,11 +107,19 @@ test("a file whose hash is not the approved one fails, and no other numbers are 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// The paths here are built from a real temporary directory, so they are absolute under the
+// semantics of whatever platform is running: a literal like "C:/x/y.png" is an absolute drive
+// path on Windows but an ordinary relative name on Linux, which resolve() would then prefix
+// with the working directory.
 test("the image path is resolvable by flag, by environment variable, then by the spec", () => {
-  assert.equal(resolveImagePath(SPEC, { image: "C:/x/y.png" }).toLowerCase().replace(/\\/g, "/"), "c:/x/y.png");
-  const viaEnv = resolveImagePath(SPEC, { env: { [SPEC.storage.externalPathEnvVar]: "C:/from/env.png" } });
-  assert.match(viaEnv.replace(/\\/g, "/"), /from\/env\.png$/);
-  assert.equal(resolveImagePath(SPEC, { env: {} }), SPEC.storage.externalPath);
+  const dir = mkdtempSync(join(tmpdir(), "d131-resolve-"));
+  try {
+    const viaFlag = join(dir, "from-flag.png");
+    assert.equal(resolveImagePath(SPEC, { image: viaFlag }), viaFlag);
+    const envPath = join(dir, "from-env.png");
+    assert.equal(resolveImagePath(SPEC, { env: { [SPEC.storage.externalPathEnvVar]: envPath } }), envPath);
+    assert.equal(resolveImagePath(SPEC, { env: {} }), SPEC.storage.externalPath);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test("the checker source contains no write, delete or rename call", () => {
