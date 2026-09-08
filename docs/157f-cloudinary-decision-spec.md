@@ -2,6 +2,12 @@
 
 Status: **SPEC / DECISION — no code, no account, no infra, no runtime change.**
 Date: 2026-06-30. Owner: project owner (solo). Gate: **UNGATED** (pure documentation).
+
+> **HOSTING NOTE — 2026-09-08.** Where this spec says assets are "CDN-served by Vercel", the host is
+> now **Cloudflare Workers** (`https://lærlig.dk`). The decision is unaffected: repo assets are still
+> served straight from a CDN, so the argument that Cloudinary adds little for SVG and becomes
+> relevant only for the 167A raster assets stands unchanged. Canonical hosting:
+> [`HOSTING.md`](./HOSTING.md).
 Builds on: the 157A audit, [ARCHITECTURE.md](./ARCHITECTURE.md) §8/§13, [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md)
 (§7 storage, §10 performance budget), `docs/167a-master-asset-raster-wiring-plan.md`.
 Decides the boundary for **157G** (Cloudinary delivery/optimisation), which stays **SOFT-gated**

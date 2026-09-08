@@ -36,9 +36,9 @@ New feature flags (all **default-off** except where noted; see [`157r-feature-fl
 - Diagnostics: `window.__flags()` reports live state (all services off; `AVATAR_V2` on).
 
 **Gates on remaining services work (not buildable now):**
-- **157CB — dedicated staging environment** (Supabase branch + Vercel preview) is the prerequisite
+- **157CB — dedicated staging environment** (Supabase branch + frontend preview) is the prerequisite
   for **activating/validating** any external service (Sentry/PostHog/AI). Policy: no external service
-  is activated or validated against production. Free interim = local Supabase stack + Vercel preview.
+  is activated or validated against production. Free interim = local Supabase stack + a frontend preview.
 - **Deferred/future infra:** 157L/157M (AI grade wired into `process-event` + teacher UI), 157P
   (Whisper STT), 157T (production-readiness). Piper audio clips + the 167A avatar art are **offline
   deliverables**.
@@ -58,6 +58,14 @@ New feature flags (all **default-off** except where noted; see [`157r-feature-fl
   > unchanged, and `tests/helpers.ts` still defaults to the Vercel address on purpose.
   > **Until the host switch is completed, users on the Vercel domain get 402.**
   > Canonical: [`HOSTING.md`](./HOSTING.md) — do not restate hosting details here.
+  >
+  > **STATUS UPDATE — 2026-09-08: THE HOST SWITCH IS COMPLETE. The block above is history.**
+  > Production is **Cloudflare Workers** on **`https://lærlig.dk`**, which answers 200. The custom
+  > domain is attached, the Supabase redirect-URL list is updated, and `tests/helpers.ts` now
+  > defaults to the live host. **Vercel is no longer a deploy target**; its old address still
+  > answers 402 and its GitHub check still fails with `Account is blocked` — an account
+  > suspension outside this repository, not a signal about the code.
+  > Canonical: [`HOSTING.md`](./HOSTING.md) — do not restate hosting details here.
 - **Avatar shown to users (as of 2026-06-15):** **LEGACY** render. C2 built but not active.
   > **STATUS UPDATE — 2026-06-30 (Section 157AB): SUPERSEDED.** `AVATAR_V2 = true` is now **live in
   > production** (commit `52f8365`, 2026-06-25). The **C2 render path is the default** for users.
@@ -72,7 +80,7 @@ New feature flags (all **default-off** except where noted; see [`157r-feature-fl
   still exists on `origin`, so the citation resolves — it is not in the deleted-branch table.
 - Frontend clone and ROOT clone both at `ad899b6` (in sync).
 - One GitHub repo: `Moeller888/den-seje-app-frontend`. The ROOT clone embeds the
-  frontend as a vestigial gitlink that is **not** on the Vercel deploy path.
+  frontend as a vestigial gitlink that is **not** on the deploy path.
 
 ## Feature Flags
 - **`AVATAR_V2` (as of 2026-06-15): `false` (OFF)** — `js/avatar-layers.js:230`.

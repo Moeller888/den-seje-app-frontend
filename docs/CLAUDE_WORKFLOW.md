@@ -55,7 +55,7 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
 - **Fast smoke (daily dev, ~10s):** `npx playwright test tests/example.spec.ts --project=chromium`
   — verifies the core flow (login → question → answer).
 - **Full suite (before push/release, ~55s):** `npx playwright test` — all specs on Chromium,
-  Firefox, WebKit (1 worker, no parallelism), against the **live** Vercel URL.
+  Firefox, WebKit (1 worker, no parallelism), against the **live** production URL.
 - **Always run tests BEFORE and AFTER a change.** Never assume a fix works; re-run.
 - **Never weaken a test to make it pass:** do not raise timeouts without a root cause, do not remove
   assertions, do not switch to weaker selectors, do not bypass failing conditions. **Fix the
@@ -87,7 +87,7 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
 - **Two-clone discipline** ([ARCHITECTURE.md](./ARCHITECTURE.md) §2): push from one clone,
   fast-forward-pull the other so root + `den-seje-app-frontend/` stay in sync. Frontend source is
   duplicated across both clones — apply edits to both.
-- **Frontend deploys via Vercel** on push to `main`; **Edge Functions deploy separately**
+- **Frontend deploys via Cloudflare Workers** on merge to `main`; **Edge Functions deploy separately**
   (`supabase functions deploy <name>`); **migrations** via Supabase MCP / `apply_migration`
   (note TD-3: `db push` is **forbidden** — see [`migration-workflow-policy.md`](./migration-workflow-policy.md)).
 - Prefer new commits over amending; branch before committing if on a protected default branch.
@@ -126,7 +126,7 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
 - [ ] AI work (if any) satisfies the [AI_GUIDELINES.md](./AI_GUIDELINES.md) §9 checklist.
 - [ ] Tests run **before and after**; full suite green; no test weakened.
 - [ ] Behind a default-off flag if it's new/risky behaviour; rollback path identified.
-- [ ] Two clones in sync; correct deploy path (Vercel / functions deploy / migration).
+- [ ] Two clones in sync; correct deploy path (Cloudflare / functions deploy / migration).
 - [ ] Decisions recorded (D-xxx in `project-state.md`; status in [ROADMAP.md](./ROADMAP.md)); docs
       point to a single source of truth (no duplication/contradiction).
 
