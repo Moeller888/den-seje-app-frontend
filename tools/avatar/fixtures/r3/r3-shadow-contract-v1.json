@@ -1,0 +1,231 @@
+{
+  "meta": {
+    "title": "R3 shadow stack — the binding contract",
+    "schema": "r3-shadow-contract",
+    "schemaVersion": 1,
+    "status": "CONTRACT ONLY — NO ASSET PRODUCED, NO IMAGE REQUEST AUTHORISED",
+    "decision": "D-132",
+    "adoptedOn": "2026-09-08",
+    "purpose": "R3 reproduces every geometry-bound raster layer for the approved target figure. It is a separate shadow stack, default OFF, that never modifies R2.",
+    "authorisesImageRequest": false,
+    "note": "Nothing in this file authorises a generative call. Each future call needs its own owner authorisation and its own one-shot claim."
+  },
+
+  "referencePair": {
+    "targetFigure": {
+      "role": "THE CLOTHED TARGET FIGURE — the desired default appearance, identity and visible geometry",
+      "path": "assets/avatar/reference/Northstar Master v2.png",
+      "tracked": true,
+      "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+      "bytes": 761394,
+      "width": 1024,
+      "height": 1536,
+      "measuredAnchors": { "top": 20, "sole": 1488, "figureHeight": 1469, "left": 292, "right": 732, "axisX": 512.13, "inkArea": 384270 }
+    },
+    "authoringBase": {
+      "role": "THE INTERNAL GARMENT-AUTHORING / FITTING BASE — tight neutral top, shorts, bare legs and feet",
+      "filename": "fitting-base.H1.png",
+      "tracked": false,
+      "storage": "EXTERNAL — outside both repositories, per D-127 §2. The image is never copied into the repository.",
+      "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+      "bytes": 1832612,
+      "width": 1024,
+      "height": 1536,
+      "measuredAnchors": { "top": 20, "sole": 1487, "figureHeight": 1468, "left": 292, "right": 732, "axisX": 512.0, "inkArea": 359658 },
+      "notAnatomicalGroundTruth": "H1 does not reconstruct the body hidden under the target figure's clothing. It is an authoring model, never ground truth."
+    },
+    "rawProvenance": {
+      "role": "RAW PROVENANCE of the target figure — the unretouched D-121 output",
+      "filename": "refined.raw.png",
+      "tracked": false,
+      "sha256": "fa4c705e05b7832c1308f15dcecb28a47ec61416c91486a3930de3b4eaf854c1",
+      "bytes": 1328092,
+      "relationToTarget": "Geometrically identical to the target: 0 differing silhouette pixels, 0 differing pixels inside the solid figure, identical global anchors. The two differ ONLY in transparent and semi-transparent edge pixels (soft-pixel count 27195 -> 6910)."
+    },
+    "pairEvidence": {
+      "headBytesDifferingInsideHeadProtectMask": 0,
+      "globalDeltas": { "top": 0, "sole": -1, "figureHeight": -1, "left": 0, "right": 0, "axisX": -0.13 },
+      "armEdgeDeltaRange": "-2..+1 px across rows 645, 700, 760, 820, 880, 940",
+      "statement": "All stable and reproducibly measurable global, head and arm anchors agree. No material geometric drift has been demonstrated.",
+      "notClaimed": "This is NOT a claim that the whole body's anatomy is identical, nor that all body proportions are preserved within 1-2 px. That cannot be proven under different clothing."
+    }
+  },
+
+  "architecture": {
+    "name": "R3 shadow",
+    "defaultEnabled": false,
+    "optIn": "explicit local opt-in only, never a cohort or percentage",
+    "fallbackChain": ["R3", "R2", "C2"],
+    "r2Guarantee": "R2 stays active and byte-identical. No existing R2 file is overwritten or modified.",
+    "rollback": "a single controlled switch; no data migration; no Supabase or student-data change",
+    "identityCoverage": { "bodyType": "neutral", "skinTone": "medium", "note": "Coverage is NOT widened in this migration. The other five body_type x skin_tone combinations keep the existing fallback. Widening needs its own decision." }
+  },
+
+  "layerContract": {
+    "canvas": { "master": [1024, 1536], "served": [512, 768] },
+    "alphaRule": "solid = alpha >= 128 (D-071 convention)",
+    "background": "fully transparent; no background, no shadow, no glow",
+    "slots": [
+      { "slot": "base",     "z": 0,  "newInR3": false, "content": "technical underlay: tight neutral top, shorts, bare legs and feet, BALD, BLANK FACE" },
+      { "slot": "blush",    "z": 2,  "newInR3": false, "blend": "multiply" },
+      { "slot": "face",     "z": 3,  "newInR3": false },
+      { "slot": "eyes",     "z": 4,  "newInR3": false, "note": "iris multiply x token, fixed on top" },
+      { "slot": "tee",      "z": 6,  "newInR3": true,  "content": "grey default t-shirt" },
+      { "slot": "trousers", "z": 7,  "newInR3": true,  "content": "blue default trousers" },
+      { "slot": "shoes",    "z": 8,  "newInR3": true,  "content": "grey default sneakers" },
+      { "slot": "torso",    "z": 20, "newInR3": false, "note": "cosmetic garment; must occlude the tee layer" },
+      { "slot": "hair",     "z": 40, "newInR3": false, "blend": "multiply x hair token" }
+    ],
+    "newSlotsRationale": "R2 bakes the t-shirt, trousers and sneakers into its base layer. R3 makes them separate layers, so the default outfit becomes removable and the occlusion contract changes from 'garment occludes a baked tee' to 'garment occludes a separate tee layer'.",
+    "excludedFromReproduction": {
+      "eyelid": "CSS ellipse, no raster asset",
+      "aura": "no R2 product asset exists",
+      "back": "no R2 product asset exists",
+      "headwear": "no R2 product asset exists",
+      "c2Assets": "a different render path",
+      "otherIdentityCombinations": "keep the existing fallback"
+    }
+  },
+
+  "pixelSourcePolicy": {
+    "oldR2AssetsMayBe": ["functional reference", "inventory of required layers and states", "visual inspiration", "documentation of existing behaviour", "fallback and rollback"],
+    "oldR2AssetsMayNotBe": ["a pixel source", "a geometric authority", "a basis for automatic warp", "an argument for keeping the old proportions", "a permanent mixture of R2 and R3 geometry"],
+    "differenceAnalysisMayBe": ["locating approximate garment regions", "coverage checking", "visualising differences", "detecting leakage outside an intended region", "validating a finished R3 composition against the target"],
+    "differenceAnalysisMayNotBe": ["a finished garment mask", "a finished alpha layer", "automatic segmentation", "a pixel source for the tee, trousers or shoes", "evidence that the layers are cleanly separable"],
+    "why": "A difference shows that pixels differ, not which garment they belong to. The measured difference between the target and H1 is ONE connected blob of 215,300 px from neck to feet plus 428 smaller components — top, trousers, shoes, skin, body contour, antialiasing and generative difference are mixed together. A flat composite also cannot be inverted into overlapping layers: hair hides the cranium, the iris sits inside the eyes, blush is a blend mode, and pixels beneath the upper layers do not exist in the flat image."
+  },
+
+  "assets": [
+    { "id": 1,  "name": "r3-base-neutral-medium", "slot": "base",     "method": "generated", "calls": 1 },
+    { "id": 2,  "name": "r3-tee-default",         "slot": "tee",      "method": "generated", "calls": 1 },
+    { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
+    { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
+    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
+    { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-or-token", "calls": "0-1" },
+    { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
+    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 10, "name": "r3-face-curious",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 11, "name": "r3-face-determined",     "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 12, "name": "r3-face-focused",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 13, "name": "r3-face-proud",          "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 14, "name": "r3-hair-afro",           "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 15, "name": "r3-hair-short",          "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 16, "name": "r3-torso-armor-knight",  "slot": "torso",    "method": "generated", "calls": 1 },
+    { "id": 17, "name": "r3 runtime masks + mask spec", "slot": "fixtures", "method": "deterministic", "calls": 0 }
+  ],
+
+  "imageCallBudget": { "minimum": 14, "maximum": 16, "isAuthorisation": false,
+    "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion." },
+
+  "deterministicOperations": [
+    { "op": "master -> served 512x768", "how": "downscaleHalf + cwebp -lossless -exact -z 9, verified by decoding", "precedent": "the established promotion path for every R2 asset" },
+    { "op": "runtime masks from approved layers", "how": "the tee layer's own alpha IS the tee region, so the D-085 colour classification is not needed", "precedent": "build-r2-torso-occlusion-mask.mjs, 34 gates" },
+    { "op": "colour tokens for hair and iris", "how": "one greyscale asset x a colour token", "precedent": "R2 already contracts hair and iris as multiply x token" },
+    { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" }
+  ],
+
+  "productionOrder": [
+    "1 R3 geometry and layer contract",
+    "2 technical underlay",
+    "3 neutral face",
+    "4 eyes fixed",
+    "5 iris",
+    "6 blush",
+    "7 northstar hair",
+    "8 default t-shirt",
+    "9 default trousers",
+    "10 default sneakers",
+    "11 runtime masks and occlusion",
+    "12 complete default composition",
+    "13 automatic check against the reference pair",
+    "14 owner visual review — the main gate",
+    "15 the four other expressions",
+    "16 afro and short",
+    "17 armor-knight",
+    "18 integration, canary, rollback"
+  ],
+
+  "firstSlice": {
+    "identity": { "bodyType": "neutral", "skinTone": "medium", "hairstyle": "northstar" },
+    "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "blush", "northstar hair", "tee", "trousers", "shoes"],
+    "equipment": "none",
+    "purpose": "prove that the layered R3 composition can recreate the target figure satisfactorily",
+    "mustNotDependOn": "any automatic difference algorithm separating existing pixels"
+  },
+
+  "firstCall": {
+    "name": "technical underlay",
+    "scope": "HEAD-ONLY EDIT of H1",
+    "rationale": "H1's body is already the approved authoring base — tight top, shorts, bare legs and feet, approved global anchors, approved arms and hands. Regenerating it would introduce new drift for no reason. Only the hidden bald cranium and blank face are missing.",
+    "inputs": {
+      "image1": { "file": "fitting-base.H1.png", "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4", "binding": "every existing pixel, the body geometry and the drawing style" },
+      "image2": { "file": "assets/avatar/reference/Northstar Master v2.png", "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "binding": "identity and style reference for head shape, skin tone and line style ONLY. Hair and facial features must NOT be copied into the underlay." }
+    },
+    "modelMayProduce": "only the hidden bald, featureless head",
+    "recomposition": {
+      "contract": "PRE-DEFINED, not after-the-fact repair",
+      "rules": [
+        "the generated candidate is used ONLY inside the pre-approved head edit region",
+        "H1 is reinstated byte-identically everywhere outside that region",
+        "a protected transition ring at the neck and head contour stays byte-identical where needed to prevent a seam",
+        "no generated pixel outside the permitted head region survives recomposition"
+      ]
+    },
+    "gates": {
+      "hardMachine": {
+        "format": "exactly 1024x1536, RGBA, bit depth 8, colour type 6",
+        "protectedBody": "exactly 0 differing RGBA bytes outside the approved head edit region after recomposition — H1's arms, hands, torso, top, shorts, legs and feet byte-identical",
+        "protectedTransition": "exactly 0 differing bytes in the pre-registered neck/transition ring",
+        "background": "alpha = 0 for every pixel outside the permitted figure/head envelope; no background, no shadow, no glow, no stray pixels, no unintended components",
+        "headRegion": "no hair remains, no eyes, no iris, no brows, no nose, no mouth, no texture, symbols or accessories",
+        "provenance": "pinned prompt, pinned inputs, pinned mask and mask semantics, documented recomposition, separate claim, full output hash and request id"
+      },
+      "ownerVisual": [
+        "the cranium shape is credible",
+        "the head visually belongs to the same figure",
+        "skin tone and line style match the reference pair",
+        "the head/neck transition is natural",
+        "no hair or facial residue",
+        "no strange anatomy"
+      ],
+      "notCompared": "The figure's global top and total height must NOT be compared directly with H1: removing the hair legitimately changes the topmost pixel. The body region is required to be byte-identical instead.",
+      "noNewTolerances": "No tolerance is set for ground contact, centre axis, body, hands, legs or feet in this call. After deterministic recomposition those regions must be byte-identical to H1 — the requirement is 0 differing pixels, not a tolerance.",
+      "sizeBudget": {
+        "applies": false,
+        "finding": "SIZE_BUDGET_BYTES = 50 KB is defined in promote-r2-torso-asset.mjs and enforced only there and in avatar-r2-torso-asset-promotion.test.mjs, both on the TORSO asset (D-084 §5). The currently active runtime base body-neutral-medium-v2.webp is 67,174 B and already exceeds it. The constant is therefore not a base-layer gate and must not block the R3 underlay. File size is reported, not gated."
+      }
+    }
+  },
+
+  "headMaskSuitability": {
+    "checkedReadOnly": true,
+    "mask": { "path": "tools/avatar/fixtures/fitting-base/head-protect-mask-v1.png", "sha256": "cc9c8b7a68dab60ab5c2914644d28676eefcb29e917a05f7bf4ce44093b737b3", "bytes": 8368 },
+    "semantics": { "alphaValues": [0, 255], "binary": true, "markerRGB": "236,72,153 (a marker colour, not data)", "editRegion": "alpha = 255", "protected": "alpha = 0" },
+    "geometry": { "px": 124099, "bbox": [292, 20, 732, 433], "components": 1 },
+    "coverage": { "h1SolidInside": 124099, "h1SolidOutside": 235559, "targetSolidInside": 124099 },
+    "verdict": "USABLE AS THE EDIT REGION, BUT NOT ON ITS OWN — two documented gaps block the first image call.",
+    "gaps": [
+      { "id": "GAP-1", "finding": "445 H1 solid pixels above y433 fall OUTSIDE the mask, spread thinly over 283 rows from y20 to y433, at most 10 px in any row. All 445 differ from the target, and the target has 0 such pixels — so they are H1's own generated head fringe, not the pasted head. Protecting everything outside the mask byte-identically would let them survive as stray hair on a bald head." },
+      { "id": "GAP-2", "finding": "The mask is strictly binary with no soft edge and no transition ring. Laterally it follows the figure exactly (mask span equals H1 span at y420-432), but its bottom is a hard horizontal cut at y433 — the neck line. The seam would be a straight horizontal line across the neck." }
+    ],
+    "consequence": "No new mask has been created. Closing either gap needs a separate owner decision.",
+    "prohibition": "The fitting-base masks are fixtures from the fitting-base work. They are NOT automatically promoted to runtime masks. Any use as a reference or control when producing R3 assets must be documented separately."
+  },
+
+  "openOwnerDecisions": [
+    "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",
+    "how to close GAP-2 (no transition ring; hard horizontal seam at the neck line y433)",
+    "the z-index values proposed for the three new clothing slots (6, 7, 8)",
+    "whether blush is part of the first slice",
+    "whether the iris is a colour token or its own generated asset",
+    "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
+  ],
+
+  "prohibitions": {
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request.",
+    "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
+    "noH1InRepository": "H1 is external and must not be copied into the repository. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image.",
+    "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract."
+  }
+}
