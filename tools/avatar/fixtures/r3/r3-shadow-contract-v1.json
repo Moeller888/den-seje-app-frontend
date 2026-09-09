@@ -363,7 +363,7 @@
       "transition": "RGB ramped; alpha = H1's alpha byte-identical, so generated alpha never decides the silhouette",
       "protect": "H1 RGBA byte-identical",
       "ramp": "denominator 20; num(y) = 445 - y; out = floor((num * generated + (20 - num) * h1 + 10) / 20) on 8-bit sRGB channels, round-half-up, integer only, no colour correction afterwards",
-      "seamProperty": "num(445) = 0, so the band's last row IS H1's own bytes and the y445/y446 seam is byte-continuous by construction",
+      "seamProperty": "num(445) = 0, so the band's last row IS H1's own bytes, and y446 already lies in PROTECT: no generated residue survives at the y445/y446 boundary, by construction rather than by adjustment. The guarantee is per row against H1's own row and is NOT a claim that H1's rows 445 and 446 are byte-identical to each other.",
       "gates": {
         "pre": "generated and H1 must have an identical solid silhouette (alpha >= 128) across every pixel of rows 425-445",
         "postProtectedBytes": "exactly 0 differing RGBA bytes against H1 inside PROTECT",

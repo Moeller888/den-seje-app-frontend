@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePng } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
@@ -19,6 +19,7 @@ import {
   BAND_Y_TOP, BAND_Y_BOT, BBOX_CONVENTION, H1_SHA256, E0_SHA256, E0_PATH,
   countOf, bboxOf, componentCount, dilate8, maskToPng, pngToMask, loadE0, loadH1Solid,
   buildRegions, verifyRegions, sha256, TOOL, TOOL_VERSION,
+  compareArtifacts, exitCodeFor, readIfExists,
 } from "../../tools/avatar/build-r3-head-edit-masks.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -309,6 +310,81 @@ test("the contract's approved regions agree with the tracked fixtures", () => {
     assert.equal(h.fixtures.masks[key].sha256, SPEC.masks[key].sha256, `${key} sha must match the fixture spec`);
   assert.match(h.fixtures.notRuntime, /NOT runtime masks/);
   assert.match(h.authorisation, /authorise no image request and no claim/);
+});
+
+// ── --check failure semantics ────────────────────────────────────────────────
+// A failed --check must reach the caller as a failure. It used to print "check: FAIL" and then
+// exit 0, so CI would have read a failed verification as success. These run without H1 by
+// driving the comparison and the exit-code mapping directly.
+
+test("exitCodeFor turns anything that is not an explicit success into a non-zero status", () => {
+  assert.equal(exitCodeFor({ ok: true }), 0);
+  assert.equal(exitCodeFor({ ok: false }), 1, "a failed --check must never exit 0");
+  assert.equal(exitCodeFor({}), 1, "a result without ok is a failure, not a success");
+  assert.equal(exitCodeFor(undefined), 1);
+  assert.equal(exitCodeFor(null), 1);
+  assert.equal(exitCodeFor({ ok: "yes" }), 1, "only the boolean true counts as success");
+  assert.equal(exitCodeFor({ ok: 1 }), 1);
+});
+
+test("compareArtifacts reports the tracked fixtures as identical, and writes nothing", () => {
+  const png = { edit: raw("edit"), transition: raw("transition"), protect: raw("protect") };
+  const specText = readFileSync(fixture("spec"), "utf8");
+  const before = ["edit", "transition", "protect", "spec"].map((k) => sha256(readFileSync(fixture(k))));
+  const res = compareArtifacts({ png, specText, repoRoot: REPO });
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.results.map((r) => r.status), ["same", "same", "same", "same"]);
+  assert.equal(exitCodeFor(res), 0);
+  const after = ["edit", "transition", "protect", "spec"].map((k) => sha256(readFileSync(fixture(k))));
+  assert.deepEqual(after, before, "a check may never write");
+});
+
+test("a differing fixture makes compareArtifacts fail, and that failure maps to exit 1", () => {
+  const tampered = Buffer.from(raw("transition"));
+  tampered[tampered.length - 20] ^= 0xff;
+  const png = { edit: raw("edit"), transition: tampered, protect: raw("protect") };
+  const res = compareArtifacts({ png, specText: readFileSync(fixture("spec"), "utf8"), repoRoot: REPO });
+  assert.equal(res.ok, false);
+  assert.deepEqual(res.results.map((r) => r.status), ["same", "differs", "same", "same"]);
+  assert.equal(res.results[1].file, FILES.transition);
+  assert.equal(exitCodeFor(res), 1, "a differing fixture must produce a non-zero exit status");
+});
+
+test("a differing spec, and a missing file, each fail the check too", () => {
+  const png = { edit: raw("edit"), transition: raw("transition"), protect: raw("protect") };
+  const bad = compareArtifacts({ png, specText: readFileSync(fixture("spec"), "utf8") + "\n", repoRoot: REPO });
+  assert.equal(bad.ok, false);
+  assert.equal(bad.results[3].status, "differs");
+  assert.equal(exitCodeFor(bad), 1);
+
+  // an absent file is a failure, not a silently skipped entry
+  const gone = compareArtifacts({
+    png, specText: readFileSync(fixture("spec"), "utf8"), repoRoot: REPO,
+    read: (p) => (p.endsWith(FILES.protect) ? null : readIfExists(p)),
+  });
+  assert.equal(gone.ok, false);
+  assert.equal(gone.results[2].status, "missing");
+  assert.equal(exitCodeFor(gone), 1);
+});
+
+test("the CLI surfaces a refused build as a non-zero exit status", () => {
+  const cli = join(REPO, "tools", "avatar", "build-r3-head-edit-masks.mjs");
+  // a real 1024x1536 RGBA PNG with the wrong identity — the H1 pin must refuse it
+  const wrongHash = spawnSync(process.execPath, [cli, "--h1", join(REPO, E0_PATH), "--check"], { encoding: "utf8" });
+  assert.notEqual(wrongHash.status, 0, "a wrong H1 hash must exit non-zero");
+  assert.match(wrongHash.stderr, /!= pinned/);
+  const noArgs = spawnSync(process.execPath, [cli, "--check"], { encoding: "utf8" });
+  assert.notEqual(noArgs.status, 0, "a missing --h1 must exit non-zero");
+});
+
+test("the CLI derives its exit status from exitCodeFor, and never forces success", () => {
+  // the two facts above only protect the caller if the CLI is actually wired to them
+  const src = readFileSync(join(REPO, "tools", "avatar", "build-r3-head-edit-masks.mjs"), "utf8");
+  const cliBlock = src.slice(src.indexOf("if (process.argv[1] &&"));
+  assert.ok(cliBlock.length > 0, "the CLI entry block must exist");
+  assert.match(cliBlock, /process\.exitCode = exitCodeFor\(result\)/, "the exit status must come from exitCodeFor");
+  assert.ok(!/process\.exit\(0\)/.test(cliBlock), "the CLI must never force a success status");
+  assert.match(cliBlock, /process\.exitCode = 1/, "a thrown error must still exit non-zero");
 });
 
 test("the region builder reproduces the tracked fixtures from the pinned inputs (local only)", (t) => {

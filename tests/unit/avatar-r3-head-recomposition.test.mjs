@@ -38,6 +38,7 @@ function regions() {
   return { edit, transition };
 }
 const px = (buf, x, y) => [buf[idx(x, y) * 4], buf[idx(x, y) * 4 + 1], buf[idx(x, y) * 4 + 2], buf[idx(x, y) * 4 + 3]];
+const setPx = (buf, x, y, [r, g, b, a]) => { const i = idx(x, y) * 4; buf[i] = r; buf[i + 1] = g; buf[i + 2] = b; buf[i + 3] = a; };
 
 test("the tool is the D-133 one and the ramp is the approved one", () => {
   assert.equal(TOOL, "recompose-r3-head-edit");
@@ -128,14 +129,28 @@ test("TRANSITION ramps RGB and keeps H1's alpha byte-identical", () => {
   assert.deepEqual(px(rgba, 4, BAND_Y_BOT).slice(0, 3), [0, 0, 0], "y445 is fully H1");
 });
 
-test("the band's last row IS H1's bytes, so the y445/y446 seam is byte-continuous", () => {
+test("no generated residue survives at the y445/y446 boundary", () => {
+  // The guarantee is per-row: y445 equals H1's OWN y445 because the generated weight there is
+  // 0/20, and y446 equals H1's OWN y446 because that row is already PROTECT. It is NOT a claim
+  // that H1's rows 445 and 446 are byte-identical to each other — so this synthetic H1 makes
+  // them deliberately different. A test on a flat canvas would prove nothing here.
   const h1 = canvas(90, 100, 110, 255), generated = canvas(1, 2, 3, 255);
+  for (let x = 0; x < W; x++) {
+    setPx(h1, x, BAND_Y_BOT, [10, 11, 12, 250]);
+    setPx(h1, x, BAND_Y_BOT + 1, [201, 202, 203, 240]);
+  }
   const { edit, transition } = regions();
   const { rgba } = recompose({ h1Rgba: h1, generatedRgba: generated, edit, transition, width: W, height: H });
   for (let x = 0; x < W; x++) {
-    assert.deepEqual(px(rgba, x, BAND_Y_BOT), px(h1, x, BAND_Y_BOT), "the last band row must equal H1");
-    assert.deepEqual(px(rgba, x, BAND_Y_BOT + 1), px(h1, x, BAND_Y_BOT + 1), "the first protected row must equal H1");
-    assert.deepEqual(px(rgba, x, BAND_Y_BOT), px(rgba, x, BAND_Y_BOT + 1), "no step across the seam");
+    assert.notDeepEqual(px(h1, x, BAND_Y_BOT), px(h1, x, BAND_Y_BOT + 1),
+      "the two H1 rows must differ, or this test proves nothing");
+    assert.deepEqual(px(rgba, x, BAND_Y_BOT), px(h1, x, BAND_Y_BOT),
+      "y445 must equal H1's own y445 — the generated weight there is 0/20");
+    assert.deepEqual(px(rgba, x, BAND_Y_BOT + 1), px(h1, x, BAND_Y_BOT + 1),
+      "y446 must equal H1's own y446 — that row is PROTECT");
+    // and nothing of the generated image reached either row
+    for (const y of [BAND_Y_BOT, BAND_Y_BOT + 1])
+      assert.notDeepEqual(px(rgba, x, y), [1, 2, 3, 255], "no generated pixel may survive at the boundary");
   }
 });
 

@@ -341,6 +341,44 @@ export function buildArtifacts(E0, r, h1Path) {
 export function specPath(repoRoot = REPO) { return join(repoRoot, FIXTURE_DIR, FILES.spec); }
 export function maskPath(key, repoRoot = REPO) { return join(repoRoot, FIXTURE_DIR, FILES[key]); }
 
+// ── check / exit status ──────────────────────────────────────────────────────
+/** Default filesystem reader for compareArtifacts: the bytes, or null when the file is absent. */
+export const readIfExists = (p) => (existsSync(p) ? readFileSync(p) : null);
+
+/**
+ * Compares freshly built artefacts against what is on disk. Writes nothing, ever.
+ *
+ * Filesystem access goes through `read` so the FAILURE semantics can be exercised in CI without
+ * the external H1 — the point being that a mismatch must be reportable as a failure by callers,
+ * not merely logged. Returns { ok, results } where every result is "same" | "differs" | "missing".
+ */
+export function compareArtifacts({ png, specText, repoRoot = REPO, read = readIfExists, log = () => {} }) {
+  const results = [];
+  for (const key of ["edit", "transition", "protect"]) {
+    const current = read(maskPath(key, repoRoot));
+    results.push({ file: FILES[key], status: current === null ? "missing" : (Buffer.from(current).equals(png[key]) ? "same" : "differs") });
+  }
+  const currentSpec = read(specPath(repoRoot));
+  results.push({ file: FILES.spec, status: currentSpec === null ? "missing" : (currentSpec.toString("utf8") === specText ? "same" : "differs") });
+
+  const ok = results.every((rr) => rr.status === "same");
+  for (const rr of results) {
+    const label = rr.status === "same" ? "byte-identical" : rr.status === "missing" ? "MISSING" : "DIFFERS from a fresh build";
+    log(`  ${rr.status === "same" ? "✓" : "✖"} ${rr.file} ${label}`);
+  }
+  log(ok ? "check: PASS — nothing written" : "check: FAIL — nothing written");
+  return { ok, results };
+}
+
+/**
+ * Maps a run() result to a process exit code. A failed --check returns { ok: false } rather than
+ * throwing, so without this the CLI would exit 0 after printing "check: FAIL" and CI would read a
+ * failed verification as success. Anything that is not an explicit ok:true is a failure.
+ */
+export function exitCodeFor(result) {
+  return (result && result.ok === true) ? 0 : 1;
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 function argOf(flag) { const i = process.argv.indexOf(flag); return i > 0 ? process.argv[i + 1] : null; }
 
@@ -354,20 +392,8 @@ export function run({ h1Path, check, repoRoot = REPO, log = console.log } = {}) 
   const specText = JSON.stringify(spec, null, 2) + "\n";
 
   if (check) {
-    let ok = true;
-    for (const key of ["edit", "transition", "protect"]) {
-      const p = maskPath(key, repoRoot);
-      if (!existsSync(p)) { log(`  ✖ missing ${FILES[key]}`); ok = false; continue; }
-      const same = readFileSync(p).equals(png[key]);
-      log(`  ${same ? "✓" : "✖"} ${FILES[key]} ${same ? "byte-identical" : "DIFFERS from a fresh build"}`);
-      if (!same) ok = false;
-    }
-    const sp = specPath(repoRoot);
-    const specSame = existsSync(sp) && readFileSync(sp, "utf8") === specText;
-    log(`  ${specSame ? "✓" : "✖"} ${FILES.spec} ${specSame ? "byte-identical" : "DIFFERS from a fresh build"}`);
-    if (!specSame) ok = false;
-    log(ok ? "check: PASS — nothing written" : "check: FAIL — nothing written");
-    return { ok, spec, regions: r, written: false };
+    const { ok, results } = compareArtifacts({ png, specText, repoRoot, log });
+    return { ok, results, spec, regions: r, written: false };
   }
 
   mkdirSync(dir, { recursive: true });
@@ -381,9 +407,13 @@ export function run({ h1Path, check, repoRoot = REPO, log = console.log } = {}) 
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
-    run({ h1Path: argOf("--h1"), check: process.argv.includes("--check") });
+    const result = run({ h1Path: argOf("--h1"), check: process.argv.includes("--check") });
+    // A failed --check does not throw — it returns { ok: false } — so the CLI must translate that
+    // into a non-zero status itself, or a caller reads "check: FAIL" as success. `process.exitCode`
+    // rather than `process.exit()`, so buffered stdout is flushed before the process ends.
+    process.exitCode = exitCodeFor(result);
   } catch (err) {
     console.error("✖ " + err.message);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
