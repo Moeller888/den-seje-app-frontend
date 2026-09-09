@@ -1,0 +1,134 @@
+{
+  "tool": "build-r3-head-edit-masks",
+  "toolVersion": "1.0.0",
+  "decision": "D-133",
+  "status": "REGION FIXTURES ONLY — NO IMAGE REQUEST AUTHORISED, NO CLAIM CREATED",
+  "canvas": {
+    "width": 1024,
+    "height": 1536,
+    "origin": "top-left"
+  },
+  "bboxConvention": "inclusive-max",
+  "alphaRule": "H1solid := alpha >= 128 (D-071)",
+  "markerSemantics": "The alpha channel carries the region (binary 0/255). The RGB triple is a flat marker colour, metadata rather than image data, and is 0,0,0 wherever alpha is 0. No fixture contains a pixel of the figure.",
+  "inputs": {
+    "headProtectMask": {
+      "path": "tools/avatar/fixtures/fitting-base/head-protect-mask-v1.png",
+      "sha256": "cc9c8b7a68dab60ab5c2914644d28676eefcb29e917a05f7bf4ce44093b737b3",
+      "tracked": true,
+      "px": 124099
+    },
+    "authoringBase": {
+      "filename": "fitting-base.H1.png",
+      "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+      "tracked": false,
+      "storage": "EXTERNAL — passed by --h1 and never copied into the repository (D-127 §2). Only its alpha channel is read.",
+      "readFrom": "an explicit --h1 path supplied at build time"
+    },
+    "targetFigure": "NOT AN INPUT. No difference between H1 and North Star v2 is used as segmentation (D-132 §9)."
+  },
+  "regionRules": {
+    "G1": "( dilate8(E0, 1) ∩ H1solid ∩ { y <= 433 } ) \\ E0",
+    "CORE_BASE": "E0 ∪ G1",
+    "TRANSITION": "H1solid ∩ { 425 <= y <= 445 }  (D-133 candidate B, figure-clipped, not a rectangle)",
+    "EDIT": "CORE_BASE ∪ TRANSITION",
+    "CORE": "CORE_BASE \\ TRANSITION  ( == EDIT \\ TRANSITION )",
+    "PROTECT": "complement(EDIT) over the whole canvas"
+  },
+  "band": {
+    "yTop": 425,
+    "yBot": 445,
+    "rows": 21,
+    "neckLineY": 433
+  },
+  "derived": {
+    "G1": {
+      "px": 445,
+      "bbox": [
+        292,
+        20,
+        731,
+        433
+      ],
+      "neckContourPixel": [
+        475,
+        433
+      ],
+      "headFringePixelsAboveY420": 444,
+      "headFringePixelsAboveBand": 444
+    },
+    "CORE_BASE": {
+      "px": 124544,
+      "bbox": [
+        292,
+        20,
+        732,
+        433
+      ],
+      "components": 1
+    },
+    "CORE": {
+      "px": 123721,
+      "bbox": [
+        292,
+        20,
+        732,
+        424
+      ]
+    }
+  },
+  "masks": {
+    "edit": {
+      "file": "r3-head-edit-v1.png",
+      "marker": "236,72,153",
+      "px": 125423,
+      "bbox": [
+        292,
+        20,
+        732,
+        445
+      ],
+      "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+      "bytes": 8413
+    },
+    "transition": {
+      "file": "r3-head-transition-v1.png",
+      "marker": "250,204,21",
+      "px": 1702,
+      "bbox": [
+        455,
+        425,
+        565,
+        445
+      ],
+      "sha256": "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3",
+      "bytes": 6268
+    },
+    "protect": {
+      "file": "r3-head-protect-v1.png",
+      "marker": "15,23,42",
+      "px": 1447441,
+      "bbox": [
+        0,
+        0,
+        1023,
+        1535
+      ],
+      "sha256": "2ff6b925c2d28eb7849b69e8317021be7ceee17541b3a824bbd1b975fff9a5c2",
+      "bytes": 10883
+    }
+  },
+  "invariants": [
+    "TRANSITION ⊆ EDIT",
+    "CORE ∩ TRANSITION = ∅",
+    "CORE = EDIT \\ TRANSITION",
+    "PROTECT = complement(EDIT); EDIT ∪ PROTECT covers all 1024x1536 pixels exactly",
+    "alpha is strictly binary {0,255} in all three masks",
+    "the same inputs and tool version reproduce every output byte-identically"
+  ],
+  "prohibitions": {
+    "noImageRequest": "D-133 and these fixtures authorise no image request and no claim.",
+    "noRuntimePromotion": "These are authoring fixtures. They are NOT runtime masks and carry no runtime authority.",
+    "noRefit": "A deviation from the approved counts is a hard stop. The regions are never re-fitted to an output."
+  }
+}

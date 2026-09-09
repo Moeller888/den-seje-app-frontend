@@ -28,7 +28,8 @@
       "tracked": false,
       "storagePolicy": "BINDING, per D-127 §2: H1 must NEVER be tracked in git, never published, and never placed under assets/ or any other deployable path. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image.",
       "storageIntended": "D-127 §2's intended home is the external artefact archive outside both clones, alongside the D-121 artefacts.",
-      "storageObserved": "VERIFIED READ-ONLY on 2026-09-08, recorded as an observation and NOT as a claim that the intended location has been reached: the known working copy lives at tools/avatar/build/fitting-base-head-only-review/fitting-base.H1.png, INSIDE the primary clone's working directory. It is untracked and gitignored (.gitignore excludes tools/avatar/build/), so the binding storage policy holds — not tracked, not published, not under assets/ — but the file is NOT yet in the external archive D-127 §2 intends.",
+      "storageObserved": "VERIFIED READ-ONLY on 2026-09-09, correcting the earlier observation recorded under D-132: the canonical, owner-approved H1 IS in the external archive D-127 §2 intends, at DenSejeApp-artefacts\\d-131-fitting-base-v1-adoption\\fitting-base.H1.png — exactly the path fitting-base-spec-v1.json -> storage.externalPath has always named — and refined.raw.png is likewise in d-121-refinement-result\\. The copy under tools/avatar/build/fitting-base-head-only-review/ is a gitignored WORKING/REVIEW copy, not the canonical store. D-127 §2 was satisfied all along and its binding policy was never breached.",
+      "storageCorrectedBy": "D-133 §1. The earlier text stated as a verified observation that H1 was not yet in the external archive; that was wrong. The D-132 register row is left verbatim — the register is append-only — and this field carries the correction.",
       "storageNoMoveAuthorised": "This contract moves, copies and deletes nothing. Relocating the known copy into the external archive is its own owner decision.",
       "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
       "bytes": 1832612,
@@ -322,12 +323,101 @@
       { "id": "GAP-2", "finding": "The mask is strictly binary with no soft edge and no transition ring. Laterally it follows the figure exactly (mask span equals H1 span at y420-432), but its bottom is a hard horizontal cut at y433 — the neck line. The seam would be a straight horizontal line across the neck." }
     ],
     "consequence": "No new mask has been created. Closing either gap needs a separate owner decision.",
+    "resolution": "CLOSED by D-133: GAP-1 by the bounded one-pixel dilation (G1, 445 px) and GAP-2 by transition candidate B (y425-445). See headEditRegions. The head-protect mask itself is unchanged and still byte-identical.",
     "prohibition": "The fitting-base masks are fixtures from the fitting-base work. They are NOT automatically promoted to runtime masks. Any use as a reference or control when producing R3 assets must be documented separately."
   },
 
+
+  "headEditRegions": {
+    "decision": "D-133",
+    "approvedOn": "2026-09-09",
+    "status": "REGIONS APPROVED — FIXTURES TRACKED — NO IMAGE REQUEST AUTHORISED",
+    "bboxConvention": "inclusive-max",
+    "alphaRule": "H1solid := alpha >= 128 (D-071)",
+    "rules": {
+      "G1": "( dilate8(E0, 1) ∩ H1solid ∩ { y <= 433 } ) \\ E0",
+      "CORE_BASE": "E0 ∪ G1",
+      "TRANSITION": "H1solid ∩ { 425 <= y <= 445 } — candidate B, figure-clipped, not a rectangle",
+      "EDIT": "CORE_BASE ∪ TRANSITION",
+      "CORE": "CORE_BASE \\ TRANSITION  ( == EDIT \\ TRANSITION )",
+      "PROTECT": "complement(EDIT) over the whole 1024x1536 canvas"
+    },
+    "measured": {
+      "E0": 124099,
+      "G1": 445,
+      "CORE_BASE": 124544,
+      "TRANSITION": 1702,
+      "EDIT": 125423,
+      "CORE": 123721,
+      "PROTECT": 1447441,
+      "g1NeckContourPixel": [
+        475,
+        433
+      ],
+      "g1HeadFringeAboveY420": 444
+    },
+    "whyBounded": "The bounded dilation and the unbounded { H1solid and y <= 433 } union are measured identical on the pinned inputs (0 differing px). The bounded form is the approved one because it can never reach the neck or the body even if an input later changed.",
+    "whyCandidateB": "yTop 425 is the lowest row whose H1 width reaches round(73 x 1.50) = 110 px; yBot 445 is the midpoint of the measured stable neck column y436-454. The band straddles the neck line y433, so the seam lands inside the constant-width column instead of mid-taper. Candidates A (y429-440) and C (y416-450) were measured and rejected.",
+    "recomposition": {
+      "core": "generated RGBA used directly",
+      "transition": "RGB ramped; alpha = H1's alpha byte-identical, so generated alpha never decides the silhouette",
+      "protect": "H1 RGBA byte-identical",
+      "ramp": "denominator 20; num(y) = 445 - y; out = floor((num * generated + (20 - num) * h1 + 10) / 20) on 8-bit sRGB channels, round-half-up, integer only, no colour correction afterwards",
+      "seamProperty": "num(445) = 0, so the band's last row IS H1's own bytes, and y446 already lies in PROTECT: no generated residue survives at the y445/y446 boundary, by construction rather than by adjustment. The guarantee is per row against H1's own row and is NOT a claim that H1's rows 445 and 446 are byte-identical to each other.",
+      "gates": {
+        "pre": "generated and H1 must have an identical solid silhouette (alpha >= 128) across every pixel of rows 425-445",
+        "postProtectedBytes": "exactly 0 differing RGBA bytes against H1 inside PROTECT",
+        "postTransitionSilhouette": "exactly 0 solid-silhouette deviations inside TRANSITION",
+        "postFormat": "output exactly 1024x1536 RGBA8",
+        "postNoLeak": "no pixel outside EDIT originates from the generated image"
+      },
+      "noRefit": "No automatic warp, repair, region growth or after-the-fact adjustment of any region exists on this path."
+    },
+    "fixtures": {
+      "dir": "tools/avatar/fixtures/r3-head-edit",
+      "spec": "r3-head-edit-mask-spec-v1.json",
+      "builder": "tools/avatar/build-r3-head-edit-masks.mjs",
+      "recompositionTool": "tools/avatar/recompose-r3-head-edit.mjs",
+      "masks": {
+        "edit": {
+          "file": "r3-head-edit-v1.png",
+          "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+          "px": 125423,
+          "bbox": [
+            292,
+            20,
+            732,
+            445
+          ]
+        },
+        "transition": {
+          "file": "r3-head-transition-v1.png",
+          "sha256": "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3",
+          "px": 1702,
+          "bbox": [
+            455,
+            425,
+            565,
+            445
+          ]
+        },
+        "protect": {
+          "file": "r3-head-protect-v1.png",
+          "sha256": "2ff6b925c2d28eb7849b69e8317021be7ceee17541b3a824bbd1b975fff9a5c2",
+          "px": 1447441,
+          "bbox": [
+            0,
+            0,
+            1023,
+            1535
+          ]
+        }
+      },
+      "notRuntime": "These are authoring fixtures. They are NOT runtime masks, carry no runtime authority and are not promoted by D-133."
+    },
+    "authorisation": "D-133 and these fixtures authorise no image request and no claim."
+  },
   "openOwnerDecisions": [
-    "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",
-    "how to close GAP-2 (no transition ring; hard horizontal seam at the neck line y433)",
     "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
     "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
     "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",
@@ -336,6 +426,19 @@
     "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
   ],
 
+
+  "closedOwnerDecisions": [
+    {
+      "decision": "D-133",
+      "was": "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",
+      "resolution": "G1 := ( dilate8(E0,1) ∩ H1solid ∩ { y <= 433 } ) \\ E0 — 445 px, of which 444 are head/edge fringe and exactly one, at (475,433), is neck contour; CORE_BASE := E0 ∪ G1 — 124,544 px, one 8-connected component."
+    },
+    {
+      "decision": "D-133",
+      "was": "how to close GAP-2 (no transition ring; hard horizontal seam at the neck line y433)",
+      "resolution": "TRANSITION := H1solid ∩ { 425 <= y <= 445 } — candidate B, 1,702 px over 21 rows, straddling the neck line y433 and ending inside the stable neck column y436-454."
+    }
+  ],
   "prohibitions": {
     "noImageRequestAuthorised": "D-132 and this contract authorise no image request.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",

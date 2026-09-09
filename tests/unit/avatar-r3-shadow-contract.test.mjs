@@ -92,9 +92,13 @@ test("H1's storage separates the binding policy from the observed location", () 
   assert.match(a.storageIntended, /external/i);
   // The OBSERVED state must not claim the file already sits outside the clones.
   assert.match(a.storageObserved, /VERIFIED READ-ONLY/);
-  assert.match(a.storageObserved, /untracked and gitignored/i);
-  assert.match(a.storageObserved, /INSIDE the primary clone/i);
-  assert.match(a.storageObserved, /NOT yet in the external archive/i);
+  // D-133 §1 corrected this observation: the canonical H1 IS in D-127 §2's external archive,
+  // and the copy inside the clone is a gitignored working/review copy, not the canonical store.
+  assert.match(a.storageObserved, /IS in the external archive/i);
+  assert.match(a.storageObserved, /WORKING[/]REVIEW copy/i);
+  assert.ok(!/NOT yet in the external archive/i.test(a.storageObserved),
+    "the withdrawn D-132 observation must not survive anywhere in this field");
+  assert.match(a.storageCorrectedBy, /D-133/);
   assert.ok(!/\bEXTERNAL — outside both repositories\b/.test(JSON.stringify(a)),
     "the contract must not state as observed fact that H1 lies outside both repositories");
   assert.match(a.storageNoMoveAuthorised, /moves, copies and deletes nothing/);
@@ -390,10 +394,14 @@ test("no layer that is still an OPEN owner decision may appear as settled in the
   }
 });
 
-test("the open owner decisions include both mask gaps, the z values, occlusion and the hairstyles", () => {
+test("the two mask gaps are closed by D-133; the z values, occlusion and hairstyles stay open", () => {
   const joined = C.openOwnerDecisions.join(" | ");
-  assert.match(joined, /GAP-1/);
-  assert.match(joined, /GAP-2/);
+  const closed = C.closedOwnerDecisions.map((d) => d.was).join(" | ");
+  assert.match(closed, /GAP-1/, "GAP-1 is closed, and the record of it must survive");
+  assert.match(closed, /GAP-2/, "GAP-2 is closed, and the record of it must survive");
+  for (const d of C.closedOwnerDecisions) assert.equal(d.decision, "D-133");
+  assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
+  assert.equal(C.openOwnerDecisions.length, 6, "the other six decisions are untouched by D-133");
   assert.match(joined, /VALID_HAIRSTYLES/);
   assert.match(joined, /final z-index values for the three new clothing slots/i);
   assert.match(joined, /R2_COSMETIC_Z/, "the z collision must be an explicit open decision");
