@@ -95,18 +95,13 @@
     },
 
     "zIndices": {
-      "status": "PROVISIONAL — EXAMPLE VALUES, NOT OWNER-APPROVED, NOT RUNTIME VALUES",
-      "binding": false,
-      "mayBeImplemented": false,
-      "inherited": {
-        "values": { "base": 0, "blush": 2, "face": 3, "eyes": 4, "hair": 40 },
-        "note": "These five reproduce the existing R2 internal stack (blush 2, face 3, eyes 4, blink lids 5, hair 40) unchanged. They are carried over, not decided here."
-      },
-      "provisional": {
-        "values": { "tee": 6, "trousers": 7, "shoes": 8, "torso": 20 },
-        "note": "Illustrative only. They express the binding paintOrder above and nothing more. No owner decision has fixed them, and they must not be written into any runtime resolver."
-      },
-      "knownCollision": "The provisional 6 and 8 COLLIDE numerically with the live R2_COSMETIC_Z in js/avatar-layers.js, where the eyes cosmetic (glasses) is 6 and the face cosmetic (mask) is 8. The provisional torso 20 is the C2_LAYER_Z value, NOT the live R2 torso-garment z, which is 1. None of these numbers may be implemented without a separate owner decision that resolves the collision and states how the R3 clothing layers coexist with the existing R2/C2 cosmetic stack."
+      "status": "APPROVED by D-135 — see zModel for the full binding map, its ties and its semantics",
+      "binding": true,
+      "mayBeImplemented": true,
+      "decision": "D-135",
+      "newlyFixedByD135": { "tee": 10, "trousers": 11, "shoes": 12, "torso": 20 },
+      "supersededProvisional": "D-132 recorded tee 6, trousers 7, shoes 8 and torso 20 as PROVISIONAL examples. D-135 replaces 6, 7 and 8 with 10, 11 and 12 because 6 and 8 are already taken INSIDE R3's own map by the eyes cosmetic and the face cosmetic; torso stays at 20. D-132's note that 6 and 8 collide with the live R2_COSMETIC_Z is corrected in zModel.crossStackOverlap — a cross-stack overlap is harmless, because the three stacks never share a DOM.",
+      "seeZModel": "zModel"
     },
 
     "slots": [
@@ -129,6 +124,169 @@
       "c2Assets": "a different render path",
       "otherIdentityCombinations": "keep the existing fallback"
     }
+  },
+
+  "zModel": {
+    "decision": "D-135",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO RUNTIME CONSTANT, RESOLVER, COMPOSITOR OR MANIFEST WIRING IS CREATED",
+    "independence": {
+      "rule": "R3 gets its OWN R3_STACK_Z, R3_COSMETIC_Z and any separate overrides. They must not import, alias or dynamically derive values from R2_STACK_Z, R2_COSMETIC_Z or C2_LAYER_Z.",
+      "sameNumberIsNotInheritance": "Where an R3 number equals an existing R2 number it is INDEPENDENTLY PINNED to the same numeric value — it is not inherited. A later change to an R2 constant must never move an R3 layer.",
+      "notCreatedHere": "D-135 does not create the constants. It fixes what their values must be when they are created."
+    },
+    "slots": [
+      {
+        "slot": "aura",
+        "z": -30,
+        "kind": "cosmetic",
+        "note": "behind the figure"
+      },
+      {
+        "slot": "back",
+        "z": -20,
+        "kind": "cosmetic",
+        "note": "behind the figure"
+      },
+      {
+        "slot": "base",
+        "z": 0,
+        "kind": "mandatory raster",
+        "note": "the technical underlay"
+      },
+      {
+        "slot": "blush",
+        "z": 2,
+        "kind": "mandatory raster",
+        "note": "mix-blend multiply"
+      },
+      {
+        "slot": "face",
+        "z": 3,
+        "kind": "mandatory raster",
+        "note": "the expression slot — see faceSlotSemantics"
+      },
+      {
+        "slot": "eyes",
+        "z": 4,
+        "kind": "mandatory raster",
+        "note": "one logical slot holding two sublayers — see approvedTies"
+      },
+      {
+        "slot": "blink",
+        "z": 5,
+        "kind": "external surface",
+        "note": "the blink engine's lids, stamped by the engine itself"
+      },
+      {
+        "slot": "eyesCosmetic",
+        "z": 6,
+        "kind": "cosmetic",
+        "note": "glasses; below the hair so the fringe covers the upper rim"
+      },
+      {
+        "slot": "faceCosmetic",
+        "z": 8,
+        "kind": "cosmetic",
+        "note": "masks; per-item overrides may raise it",
+        "perItemOverrides": {
+          "panda-mask": 41
+        }
+      },
+      {
+        "slot": "tee",
+        "z": 10,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "trousers",
+        "z": 11,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "shoes",
+        "z": 12,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "torso",
+        "z": 20,
+        "kind": "cosmetic",
+        "note": "garment / equipment; above all three default clothing layers"
+      },
+      {
+        "slot": "hair",
+        "z": 40,
+        "kind": "mandatory raster",
+        "note": "multiply x hair token"
+      },
+      {
+        "slot": "headwear",
+        "z": 45,
+        "kind": "cosmetic",
+        "note": "above the hair"
+      }
+    ],
+    "uniqueness": {
+      "rule": "INDEPENDENTLY SORTED LOGICAL SLOTS must not have unintended z collisions. Approved internal SUBLAYERS of one logical slot MAY share a z, provided their DOM order is explicit and binding.",
+      "notBlanketUniqueness": "This is deliberately NOT a claim that every raster layer has a unique z. A blanket-uniqueness test would be wrong and must not be written: it would fail the approved eyes tie below.",
+      "perItemOverridesAreNotTies": "A per-item override (panda-mask at 41) is an alternative z for the SAME logical slot, chosen per item. It is not a tie and never coexists with that slot's default value."
+    },
+    "approvedTies": [
+      {
+        "slot": "eyes",
+        "z": 4,
+        "sublayers": [
+          "iris",
+          "eyes-fixed"
+        ],
+        "domOrder": "iris is inserted FIRST, eyes-fixed SECOND",
+        "why": "Equal z means DOM order decides, and the fixed highlight must paint on top of the tinted iris. The existing R2 stack emits them in exactly this order, deliberately.",
+        "binding": true
+      }
+    ],
+    "faceSlotSemantics": {
+      "verified": "Verified read-only against js/avatar-expression-engine.js and avatar.html on 2026-09-10.",
+      "finding": "On the decomposed raster path the expression engine does NOT create an overlay: _initOverlay() takes this._overlay = container.querySelector('[data-c2-layer=\"face\"]') with _ownsOverlay = false, and swaps that layer's src in place. The separate .avatar-expr-overlay element, which avatar.html stamps to zIndex 3, exists only on the C2/SVG path, where there is no decomposed face raster.",
+      "conclusion": "exprOverlay is the OPERATIVE REPRESENTATION OF THE SAME LOGICAL FACE SLOT, not a second element at z=3. On the R3 path the expression engine must borrow the decomposed face layer in place, exactly as it does today on R2, so no two elements ever occupy z=3 in one mounted stack and there is no DOM-order tie to pin here.",
+      "requirement": "If a future change ever makes them coexist, their internal DOM order must be fixed explicitly by a new decision before that ships."
+    },
+    "paintOrder": {
+      "bindingBoundaryOrder": "base < tee < trousers < shoes < torso < hair < headwear",
+      "consequences": [
+        "trousers paint over the tee wherever they overlap around the waist",
+        "shoes paint over the trousers wherever they overlap around the ankles",
+        "a torso garment or equipment asset may paint over all three default clothing layers where the asset extends into their areas",
+        "hair paints above every face and clothing layer; headwear above the hair"
+      ],
+      "intentional": "This order is deliberate, not incidental. The overlaps it resolves are the waist, the ankles and a garment that extends past the tee."
+    },
+    "d134StillApplies": {
+      "rule": "The z order NEVER overrides D-134. Every torso or equipment asset remains subject to R3_ARM_HAND_PROTECT(asset).",
+      "explicit": "Painting above the clothing layers does not grant permission to paint over exposed arms or hands. Z order may not be used to bypass the arm/hand protection or an asset-specific intentional-coverage decision, which remains the only way that protection narrows."
+    },
+    "stackSelection": {
+      "semantics": "completeR3Layers ?? completeR2Layers ?? composeC2Layers(...)",
+      "isSemanticsNotSyntax": "That expression states the required semantics. The concrete later syntax may differ.",
+      "resolverContract": "An R3 resolver may return EITHER a complete, validated R3 layer list OR null. It must never return an empty or partial list as success.",
+      "noMixing": "No geometry-bound R2 and R3 layers may be mixed to fill in missing R3 assets. If the required R3 composition is not complete, the WHOLE avatar stack falls back to R2, and then to C2.",
+      "atomicity": "The choice is atomic and per render: one stack is mounted, never a blend of two.",
+      "doesNotWidenReuse": "D-135 does not widen which existing cosmetics or assets are approved for reuse. It fixes stack selection and z semantics only."
+    },
+    "crossStackOverlap": {
+      "permitted": true,
+      "rule": "The same numeric z may appear in the R3, R2 and C2 maps. That is NOT an error and must not be tested as one.",
+      "why": "The three stacks are never mounted as independent avatar stacks at the same time — the renderer mounts exactly one layer list — so their numbers can never meet in one DOM.",
+      "correctionOfAnEarlierNote": "D-132's zIndices note said the provisional 6 and 8 'collide numerically with the live R2_COSMETIC_Z'. That framing was wrong: an R2/R3 cross-stack overlap is harmless. The real defect was INSIDE R3's own map, where 6 and 8 are taken by the eyes cosmetic and the face cosmetic — which is why D-135 moves the clothing to 10, 11 and 12."
+    },
+    "externalSurfaces": {
+      "requirement": "The external expression and blink surfaces must later be driven by the stack that was ACTUALLY mounted, so a stack switch never leaves a stale overlay behind — the same discipline the blink profile already follows on the R2/C2 split, extended to three ways.",
+      "notImplementedHere": "D-135 states the requirement. It does not implement it."
+    },
+    "authorisation": "D-135 authorises no image request and creates or consumes no claim. It creates no runtime constant, resolver, compositor or manifest wiring, no mask, no region and no asset."
   },
 
   "occlusionContract": {
@@ -510,8 +668,6 @@
     }
   },
   "openOwnerDecisions": [
-    "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
-    "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
     "whether blush is part of the first slice",
     "whether the iris is a colour token or its own generated asset",
     "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
@@ -519,6 +675,16 @@
 
 
   "closedOwnerDecisions": [
+    {
+      "decision": "D-135",
+      "was": "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
+      "resolution": "Fixed: tee 10, trousers 11, shoes 12, torso 20, with the whole R3 map pinned in zModel. The provisional 6, 7 and 8 are replaced because 6 and 8 are taken inside R3's own map by the eyes cosmetic and the face cosmetic."
+    },
+    {
+      "decision": "D-135",
+      "was": "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
+      "resolution": "Fixed: R3 gets its own independently pinned R3_STACK_Z and R3_COSMETIC_Z, never imported or aliased from R2/C2, and stack selection is atomic — completeR3Layers ?? completeR2Layers ?? composeC2Layers(...), complete-or-null, with no mixing of geometry-bound R2 and R3 layers. A cross-stack numeric overlap is explicitly permitted, because the three stacks never share a DOM."
+    },
     {
       "decision": "D-134",
       "was": "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",

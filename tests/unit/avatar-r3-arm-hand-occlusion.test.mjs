@@ -203,12 +203,10 @@ test("the arm/hand decision is closed under D-134 and exactly five others stay o
   assert.match(closed[0].resolution, /Y-interval alone is expressly rejected/i);
 
   const open = C.openOwnerDecisions;
-  assert.equal(open.length, 5, "exactly five owner decisions may remain open");
+  assert.equal(open.length, 3, "exactly three owner decisions may remain open");
   const joined = open.join(" | ");
   assert.ok(!/occlusion\/protect contract/.test(joined), "a closed decision may not still be listed as open");
   for (const [label, re] of [
-    ["z-values", /final z-index values for the three new clothing slots/i],
-    ["compositor coexistence", /coexist with the current R2\/C2 cosmetic stack/i],
     ["blush", /whether blush is part of the first slice/i],
     ["iris", /whether the iris is a colour token/i],
     ["hairstyles", /VALID_HAIRSTYLES/],

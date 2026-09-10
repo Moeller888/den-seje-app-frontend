@@ -167,7 +167,6 @@ test("the BINDING layer rule is the relative paint order, and the slot list foll
   const p = C.layerContract.paintOrder;
   assert.equal(p.binding, true);
   assert.match(p.rule, /RELATIVE paint order/);
-  assert.match(p.rule, /Numeric z-index values are NOT part of it/);
   const order = p.bottomToTop;
   assert.equal(new Set(order).size, order.length, "a slot may appear once in the paint order");
   assert.deepEqual(C.layerContract.slots.map((s) => s.slot), order,
@@ -180,27 +179,21 @@ test("the BINDING layer rule is the relative paint order, and the slot list foll
   assert.ok(p.invariants.length >= 4);
 });
 
-test("the numeric z values are provisional, unapproved, and not implementable", () => {
+test("the numeric z values are approved by D-135 and point at the binding map", () => {
   const z = C.layerContract.zIndices;
-  assert.equal(z.binding, false);
-  assert.equal(z.mayBeImplemented, false);
-  assert.match(z.status, /PROVISIONAL/);
-  assert.match(z.status, /NOT OWNER-APPROVED/);
-  assert.match(z.status, /NOT RUNTIME VALUES/);
-  // the three new clothing slots must not carry an approved-looking number anywhere else
+  assert.equal(z.binding, true);
+  assert.equal(z.mayBeImplemented, true);
+  assert.equal(z.decision, "D-135");
+  assert.match(z.status, /APPROVED by D-135/);
+  assert.equal(z.seeZModel, "zModel");
+  // the slot list still carries no bare z: the numbers live in one place, zModel
   for (const s of C.layerContract.slots)
-    assert.ok(!("z" in s), "slot " + s.slot + " must not carry a bare z value that reads as binding");
-  for (const s of ["tee", "trousers", "shoes", "torso"])
-    assert.ok(s in z.provisional.values, s + " must be listed as provisional, not inherited");
-  for (const s of ["base", "blush", "face", "eyes", "hair"])
-    assert.ok(s in z.inherited.values, s + " is carried over from the existing R2 stack");
-  // the known collision with the live stack must be recorded, not discovered later
-  assert.match(z.knownCollision, /R2_COSMETIC_Z/);
-  assert.match(z.knownCollision, /avatar-layers\.js/);
-  assert.match(z.knownCollision, /eyes cosmetic \(glasses\) is 6/);
-  assert.match(z.knownCollision, /face cosmetic \(mask\) is 8/);
-  assert.match(z.knownCollision, /torso-garment z, which is 1/);
-  assert.match(z.knownCollision, /may be implemented without a separate owner decision/);
+    assert.ok(!("z" in s), "slot " + s.slot + " must not carry a bare z value; zModel is the map");
+  assert.deepEqual(z.newlyFixedByD135, { tee: 10, trousers: 11, shoes: 12, torso: 20 });
+  // the provisional record survives, including WHY 6/7/8 were replaced
+  assert.match(z.supersededProvisional, /PROVISIONAL examples/);
+  assert.match(z.supersededProvisional, /already taken INSIDE R3's own map/);
+  assert.match(z.supersededProvisional, /cross-stack overlap is harmless/i);
 });
 
 test("an R3 garment may never paint over exposed arms or hands", () => {
@@ -394,7 +387,7 @@ test("no layer that is still an OPEN owner decision may appear as settled in the
   }
 });
 
-test("the mask gaps are closed by D-133 and the occlusion contract by D-134; the rest stay open", () => {
+test("D-133, D-134 and D-135 close their decisions; blush, iris and hairstyles stay open", () => {
   const joined = C.openOwnerDecisions.join(" | ");
   const closed = C.closedOwnerDecisions.map((d) => d.was).join(" | ");
   assert.match(closed, /GAP-1/, "GAP-1 is closed, and the record of it must survive");
@@ -402,12 +395,10 @@ test("the mask gaps are closed by D-133 and the occlusion contract by D-134; the
   for (const d of C.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
   // D-133 closed the two gaps; D-134 closed the arm/hand occlusion contract. Five remain.
-  assert.equal(C.openOwnerDecisions.length, 5, "only the five still-undecided questions may remain open");
+  assert.equal(C.openOwnerDecisions.length, 3, "only blush, the iris method and the hairstyle contract may remain open");
   assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-134"), "D-134 must be recorded as a closing decision");
   assert.ok(!/occlusion\/protect contract/.test(joined), "the occlusion contract is closed by D-134");
   assert.match(joined, /VALID_HAIRSTYLES/);
-  assert.match(joined, /final z-index values for the three new clothing slots/i);
-  assert.match(joined, /R2_COSMETIC_Z/, "the z collision must be an explicit open decision");
   assert.match(joined, /whether blush is part of the first slice/i);
 });
 
