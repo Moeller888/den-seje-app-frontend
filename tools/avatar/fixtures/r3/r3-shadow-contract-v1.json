@@ -346,6 +346,121 @@
     }
   },
 
+  "hairstyleContract": {
+    "decision": "D-137",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO RESOLVER OR MANIFEST CODE, NO ASSET, NO STORED-DOMAIN CHANGE, NO SUPABASE WRITE",
+    "scope": "The hairstyle SHAPE only. The hair colour token (hairColorTokensFor -> --hair-base) is untouched and is not part of this decision.",
+    "storedDomain": {
+      "source": "the live validate_avatar_identity trigger, read read-only on 2026-09-08",
+      "values": [
+        "default",
+        "braid",
+        "short",
+        "curly",
+        "long",
+        "sidecut",
+        "buzzcut",
+        "tousled",
+        "ponytail",
+        "buzz",
+        "afro"
+      ],
+      "absentIsValid": "The hairstyle key may also be absent entirely, which is valid and means no choice has been made.",
+      "notWidened": "D-137 does NOT widen, narrow or otherwise change the stored domain, and writes nothing to Supabase.",
+      "northstarIsNotStorable": "northstar is an ASSET KEY, not a storable profile value. The live trigger rejects it."
+    },
+    "mapping": {
+      "rule": "An exact match against the table below. There is no fuzzy matching, no prefix rule and no visual-similarity fallback.",
+      "table": [
+        {
+          "profileValue": "(absent)",
+          "r3Hair": "northstar",
+          "why": "no choice has been made, so the default figure's own hair is correct"
+        },
+        {
+          "profileValue": null,
+          "r3Hair": "northstar",
+          "why": "same as absent"
+        },
+        {
+          "profileValue": "default",
+          "r3Hair": "northstar",
+          "why": "the explicit 'no particular style' value"
+        },
+        {
+          "profileValue": "tousled",
+          "r3Hair": "northstar",
+          "why": "the target figure's own hair is the tousled one"
+        },
+        {
+          "profileValue": "short",
+          "r3Hair": "short",
+          "why": "R3 has its own short asset"
+        },
+        {
+          "profileValue": "afro",
+          "r3Hair": "afro",
+          "why": "R3 has its own afro asset"
+        }
+      ],
+      "otherValidValuesReturnNull": {
+        "values": [
+          "braid",
+          "curly",
+          "long",
+          "sidecut",
+          "buzzcut",
+          "ponytail",
+          "buzz"
+        ],
+        "behaviour": "R3 returns null and D-135's atomic fallback applies: R3 -> R2 -> C2.",
+        "why": "R3 has no asset for these styles. Showing northstar instead would show a student the wrong hair, which is exactly what complete-or-null exists to prevent."
+      },
+      "invalidValuesReturnNull": {
+        "behaviour": "Any value outside the stored domain returns null, INCLUDING the literal string 'northstar'.",
+        "whyNorthstarToo": "northstar is an asset key that the live trigger rejects, so a profile can never legitimately hold it. Treating it as a valid request would mean honouring a value the database considers impossible."
+      },
+      "asymmetryIsDeliberate": "ABSENT maps to northstar, but the literal string 'northstar' returns null. That is intentional and must not be 'fixed': absent means no choice was made, while 'northstar' is an impossible stored value. The two are different situations that happen to name the same asset."
+    },
+    "departureFromR2": {
+      "r2Behaviour": "hairSrcForR2 falls back to R2_HAIR_FALLBACK ('northstar') for ANY hairstyle without its own asset, so R2 always renders something.",
+      "r3Behaviour": "R3 refuses instead, for the seven valid styles it has no asset for.",
+      "deliberate": "This is a deliberate departure, and it is the correct reading of D-135's complete-or-null resolver contract and of D-136's rule that an unapproved appearance is never shown. A student whose stored hairstyle is one of those seven sees the R2 avatar, not R3.",
+      "r2IsUnchanged": "R2's own fallback behaviour is NOT changed by this decision."
+    },
+    "measuredImpact": {
+      "measuredOn": "2026-09-08",
+      "method": "read-only aggregate over profiles.avatar_identity->>'hairstyle'; no row-level or personal data was read and nothing was written",
+      "profiles": 33,
+      "distribution": {
+        "(absent)": 29,
+        "default": 2,
+        "short": 1,
+        "buzzcut": 1
+      },
+      "consequence": "Under this mapping 32 of the 33 profiles resolve to an R3 hair (northstar or short) and 1 — the single 'buzzcut' — falls back to R2.",
+      "isAMeasurementNotAGuarantee": "This is a measurement on that date, not a permanent property. The distribution changes as students choose."
+    },
+    "coverage": {
+      "secondAxis": "R3's identity coverage already excludes every body_type x skin_tone pair other than neutral x medium (D-132). The hairstyle is now a SECOND axis on which R3 may decline, and declining always means the whole stack falls back, never a partial render.",
+      "assetsUsed": "The mapping uses exactly the three hair assets already planned: r3-hair-northstar (id 9), r3-hair-afro (id 14) and r3-hair-short (id 15).",
+      "noBudgetChange": "No new asset and no new image call, so the derived image-call budget stays 15-16."
+    },
+    "resolverShape": {
+      "requirement": "The future R3 hair resolver takes the stored value, applies the exact table, and returns either the mapped asset key or null. A null propagates: the R3 layer list is then incomplete and the resolver for the whole stack must return null, per D-135.",
+      "noSilentSubstitution": "It must never substitute a visually similar style, and must never fall back to northstar for a value the table maps to null.",
+      "contractNotImplementation": "D-137 creates no resolver, no manifest entry and no runtime code. It fixes the behaviour that code must have."
+    },
+    "prohibitions": {
+      "noStoredDomainChange": "No hairstyle value is added, removed or migrated, and no Supabase or student data is touched.",
+      "noUiChange": "No hairstyle picker or UI behaviour is changed; D-102's render-path predicate is untouched.",
+      "noR2Change": "R2's manifest, its fallback and its behaviour are unchanged.",
+      "noImageRequestOrClaim": "D-137 authorises no image request and creates or consumes no claim.",
+      "noAssetProduced": "D-137 produces no asset."
+    }
+  },
+
   "occlusionContract": {
     "binding": true,
     "armHandInvariant": "An R3 torso or equipment layer must NEVER unintentionally paint over exposed arms or hands. Whatever the final paint order and z values turn out to be, the visible arm and hand pixels of the approved underlay stay visible unless an approved garment is deliberately authored to cover them.",
@@ -725,12 +840,16 @@
     }
   },
   "openOwnerDecisions": [
-    "whether blush is part of the first slice",
-    "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
+    "whether blush is part of the first slice"
   ],
 
 
   "closedOwnerDecisions": [
+    {
+      "decision": "D-137",
+      "was": "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES",
+      "resolution": "Fixed by an exact mapping table: absent, null, 'default' and 'tousled' resolve to northstar; 'short' and 'afro' to their own assets; the seven other valid stored values (braid, curly, long, sidecut, buzzcut, ponytail, buzz) return null, as does any invalid value INCLUDING the literal 'northstar', which is an asset key the live trigger rejects. A null means the whole stack falls back R3 -> R2 -> C2 rather than showing the wrong hair — a deliberate departure from R2, which always falls back to northstar. Shape only; the hair colour token is untouched. No stored-domain, Supabase, UI or R2 change, and no new asset or image call. See hairstyleContract."
+    },
     {
       "decision": "D-136",
       "was": "whether the iris is a colour token or its own generated asset",
