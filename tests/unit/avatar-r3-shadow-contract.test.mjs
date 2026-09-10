@@ -257,7 +257,7 @@ test("the call budget is DERIVED from assets[].calls, and is a plan rather than 
     min += lo; max += hi;
   }
   assert.ok(min <= max, "the derived budget must not be inverted");
-  assert.equal(min, 14, "the assets must sum to a minimum of exactly 14 calls");
+  assert.equal(min, 15, "D-136 locked the iris to one call, so the minimum is 15");
   assert.equal(max, 16, "the assets must sum to a maximum of exactly 16 calls");
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
@@ -387,16 +387,16 @@ test("no layer that is still an OPEN owner decision may appear as settled in the
   }
 });
 
-test("D-133, D-134 and D-135 close their decisions; blush, iris and hairstyles stay open", () => {
+test("D-133 to D-136 close their decisions; blush and the hairstyle contract stay open", () => {
   const joined = C.openOwnerDecisions.join(" | ");
   const closed = C.closedOwnerDecisions.map((d) => d.was).join(" | ");
   assert.match(closed, /GAP-1/, "GAP-1 is closed, and the record of it must survive");
   assert.match(closed, /GAP-2/, "GAP-2 is closed, and the record of it must survive");
   for (const d of C.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
-  // D-133 closed the two gaps, D-134 the arm/hand occlusion contract, and D-135 the z values
-  // and the R2/C2 coexistence. Three remain: blush, the iris method and the hairstyle contract.
-  assert.equal(C.openOwnerDecisions.length, 3, "only blush, the iris method and the hairstyle contract may remain open");
+  // D-133 closed the two gaps, D-134 the arm/hand occlusion contract, D-135 the z values and
+  // the R2/C2 coexistence, and D-136 the iris method. Two remain: blush and the hairstyles.
+  assert.equal(C.openOwnerDecisions.length, 2, "only blush and the hairstyle contract may remain open");
   assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-134"), "D-134 must be recorded as a closing decision");
   assert.ok(!/occlusion\/protect contract/.test(joined), "the occlusion contract is closed by D-134");
   assert.match(joined, /VALID_HAIRSTYLES/);
