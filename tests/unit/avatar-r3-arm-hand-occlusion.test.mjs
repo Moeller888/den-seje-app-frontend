@@ -194,7 +194,7 @@ test("D-134 authorises no image request and no claim, and releases nothing", () 
   assert.match(row, /D-120 through D-133 are not rewritten/);
 });
 
-test("the arm/hand decision is closed under D-134 and exactly five others stay open", () => {
+test("the arm/hand decision is closed under D-134, and exactly three decisions stay open", () => {
   const closed = C.closedOwnerDecisions.filter((d) => d.decision === "D-134");
   assert.equal(closed.length, 1, "D-134 closes exactly one decision");
   assert.match(closed[0].was, /occlusion\/protect contract/);

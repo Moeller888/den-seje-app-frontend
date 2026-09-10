@@ -100,7 +100,59 @@ test("the approved eyes tie at z=4 pins both its sublayers and their DOM order",
   assert.match(tie.why, /fixed highlight must paint on top/i);
 });
 
+/**
+ * The balanced `{...}` block that follows `startNeedle`. Naive brace matching is safe for the
+ * two blocks used below: neither contains a brace inside a string, a regex or a template.
+ */
+function braceBlock(src, startNeedle, label) {
+  const i = src.indexOf(startNeedle);
+  assert.ok(i >= 0, `${label}: could not find ${startNeedle}`);
+  const start = src.indexOf("{", i);
+  assert.ok(start >= 0, `${label}: no block after ${startNeedle}`);
+  let depth = 0;
+  for (let j = start; j < src.length; j++) {
+    if (src[j] === "{") depth++;
+    else if (src[j] === "}" && --depth === 0) return src.slice(start, j + 1);
+  }
+  throw new Error(`${label}: unbalanced braces after ${startNeedle}`);
+}
+
 test("the face slot at z=3 is one logical slot, verified against the engine", () => {
+  // The contract records a read-only finding about the LIVE expression engine. If that engine
+  // changes, the finding must fail here rather than quietly go stale — so this reads the actual
+  // code, not only the contract's own prose.
+  const engine = readFileSync(join(REPO, "js", "avatar-expression-engine.js"), "utf8");
+  // the DEFINITION, not the call site: the call reads `this._initOverlay();`
+  const initOverlay = braceBlock(engine, "_initOverlay() {", "avatar-expression-engine.js");
+  const r2Branch = braceBlock(initOverlay, "if (this._r2)", "_initOverlay");
+  const afterR2 = initOverlay.slice(initOverlay.indexOf(r2Branch) + r2Branch.length);
+
+  // 1. on the decomposed raster path the engine BORROWS the existing face layer
+  assert.match(r2Branch, /this\._overlay\s*=\s*this\._container\.querySelector\(\s*['"]\[data-c2-layer="face"\]['"]\s*\)/,
+    "the decomposed path must borrow [data-c2-layer=\"face\"]");
+  // 2. and marks it as not owned
+  assert.match(r2Branch, /this\._ownsOverlay\s*=\s*false/, "the borrowed layer must be marked as not owned");
+  // 3. and returns before anything is created
+  assert.match(r2Branch, /\breturn\b/, "the decomposed path must return before the creation path");
+  // 4. so no overlay element is created on that path
+  assert.ok(!/createElement/.test(r2Branch), "the decomposed path must not create an element");
+  assert.ok(!/avatar-expr-overlay/.test(r2Branch), "the decomposed path must not build the C2 overlay");
+
+  // 5. the standalone .avatar-expr-overlay belongs to the OTHER path only
+  assert.match(afterR2, /createElement\(\s*['"]img['"]\s*\)/, "the C2 path creates its own img");
+  assert.match(afterR2, /avatar-expr-overlay/, "the C2 path is the one that owns .avatar-expr-overlay");
+  assert.match(afterR2, /this\._ownsOverlay\s*=\s*true/, "the C2 path owns what it created");
+  // and ownership is claimed nowhere else in the method
+  const falseCount = (initOverlay.match(/_ownsOverlay\s*=\s*false/g) ?? []).length;
+  assert.equal(falseCount, (r2Branch.match(/_ownsOverlay\s*=\s*false/g) ?? []).length,
+    "_ownsOverlay = false may only be set on the decomposed path");
+
+  // 6. the surface stamps that C2-owned overlay to z 3 — the same logical slot, not a second one
+  const surface = readFileSync(join(REPO, "avatar.html"), "utf8");
+  assert.match(surface, /avatar-expr-overlay/, "avatar.html resolves the overlay by that class");
+  assert.match(surface, /exprOverlay\.style\.zIndex\s*=\s*["']3["']/, "avatar.html stamps it to z 3");
+
+  // the contract's recorded finding must still say what the code does
   const f = Z.faceSlotSemantics;
   assert.match(f.verified, /Verified read-only/i);
   assert.match(f.verified, /avatar-expression-engine\.js/);
@@ -112,6 +164,10 @@ test("the face slot at z=3 is one logical slot, verified against the engine", ()
   assert.match(f.requirement, /must be fixed explicitly by a new decision/i);
   // no second face-ish slot may have crept into the map at 3
   assert.equal(Z.slots.filter((s) => s.z === 3).length, 1, "z=3 belongs to exactly one logical slot");
+
+  // R3's own behaviour here is still only a requirement: no R3 runtime code may be demanded
+  assert.match(f.conclusion, /on the R3 path the expression engine must borrow/i,
+    "R3's face handling stays a contract requirement, not an implemented path");
 });
 
 test("R3's maps are independent and may not be imported or derived from R2/C2", () => {
