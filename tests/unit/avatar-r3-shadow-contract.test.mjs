@@ -352,11 +352,14 @@ test("the deterministic operations are only the four with documented precedent",
   for (const op of C.deterministicOperations) assert.ok(op.precedent && op.precedent.length > 0, op.op + " needs a precedent");
 });
 
-test("the first slice is neutral + medium + northstar and needs no difference algorithm", () => {
+test("the first slice is neutral + medium, default hair, and needs no difference algorithm", () => {
   const s = C.firstSlice;
   assert.equal(s.identity.bodyType, "neutral");
   assert.equal(s.identity.skinTone, "medium");
-  assert.equal(s.identity.hairstyle, "northstar");
+  // D-138: the IDENTITY is a storable value; the asset key it resolves to is its own field.
+  // 'northstar' is an asset key that D-137 maps to null, so it may never be an identity value.
+  assert.equal(s.identity.hairstyle, "default");
+  assert.equal(s.resolvedHairAssetKey, "northstar");
   assert.equal(s.equipment, "none");
   assert.match(s.mustNotDependOn, /difference algorithm/);
   assert.deepEqual(s.layers,

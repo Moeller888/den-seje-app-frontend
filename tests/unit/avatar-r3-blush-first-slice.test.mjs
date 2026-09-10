@@ -69,6 +69,59 @@ test("the blush-free first slice may never be mistaken for the product", () => {
   assert.match(C.firstSlice.purpose, /deliberately INCOMPLETE/i);
 });
 
+/**
+ * A reference implementation of D-137's mapping, so the first slice's identity can be checked
+ * against the rule that actually governs it rather than against prose. Not a shipped resolver.
+ */
+function resolveHair(stored) {
+  const H = C.hairstyleContract;
+  if (stored === undefined || stored === null) return "northstar";
+  const row = H.mapping.table.find((r) => r.profileValue === stored);
+  return row ? row.r3Hair : null;
+}
+
+test("the first slice's identity is a value the database can actually store", () => {
+  const stored = C.firstSlice.identity.hairstyle;
+  assert.equal(stored, "default", "the first slice's stored hairstyle is 'default'");
+  assert.ok(C.hairstyleContract.storedDomain.values.includes(stored),
+    "identity.hairstyle must be one of the eleven values the live trigger permits");
+});
+
+test("the asset key is a separate field, and resolving the identity yields it", () => {
+  assert.equal(C.firstSlice.resolvedHairAssetKey, "northstar");
+  assert.equal(resolveHair(C.firstSlice.identity.hairstyle), C.firstSlice.resolvedHairAssetKey,
+    "D-137's mapping must take the first slice's identity to its recorded asset key");
+  assert.notEqual(C.firstSlice.identity.hairstyle, C.firstSlice.resolvedHairAssetKey,
+    "the persistent identity and the internal asset key are two different fields");
+  assert.match(C.firstSlice.identityVsAssetKey, /two DIFFERENT fields/i);
+  assert.match(C.firstSlice.identityVsAssetKey, /never an identity value/i);
+});
+
+test("'northstar' resolves to null, so it could never have been a valid identity", () => {
+  assert.equal(resolveHair("northstar"), null, "the literal asset key is not a storable value");
+  assert.ok(!C.hairstyleContract.storedDomain.values.includes("northstar"));
+  // this is exactly why the first slice had to change: its old identity was unresolvable
+  assert.match(C.blushContract.firstSliceIdentityConsistency.correction, /invalid under D-137's own resolver rule/i);
+  assert.match(C.blushContract.firstSliceIdentityConsistency.identityValue, /'default'/);
+  assert.match(C.blushContract.firstSliceIdentityConsistency.assetKeyValue, /resolvedHairAssetKey/);
+  assert.match(C.blushContract.firstSliceIdentityConsistency.noD137Change, /register row and the stored domain are unchanged/i);
+});
+
+test("no contract field ever uses 'northstar' as a storable hairstyle", () => {
+  // a structural walk, so a future field cannot reintroduce the confusion under a new name
+  const offenders = [];
+  const walk = (n, path = []) => {
+    if (n && typeof n === "object") for (const [k, v] of Object.entries(n)) {
+      if (/hairstyle/i.test(k) && v === "northstar") offenders.push([...path, k].join("."));
+      walk(v, [...path, k]);
+    }
+  };
+  walk(C);
+  assert.deepEqual(offenders, [], "northstar may never appear as a hairstyle identity value");
+  // and the register row must say the same
+  assert.match(d138Row(), /never used as an identity value anywhere/i);
+});
+
 test("D-135 is untouched: blush stays mandatory at z=2 in the finished stack", () => {
   assert.match(B.blushStaysMandatory.rule, /D-135 stands unchanged/i);
   assert.match(B.blushStaysMandatory.rule, /MANDATORY layer of the finished complete R3 stack, at z=2/i);

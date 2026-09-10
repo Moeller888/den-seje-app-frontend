@@ -475,6 +475,12 @@
         "it may never be described as the final complete default composition"
       ]
     },
+    "firstSliceIdentityConsistency": {
+      "correction": "D-138 also corrects an inconsistency in the first slice it was already editing: identity.hairstyle read 'northstar', which D-137 defines as an ASSET KEY that is not in the stored domain and that resolves to null. The first slice was therefore invalid under D-137's own resolver rule.",
+      "identityValue": "identity.hairstyle is now 'default' — a value the live database can store, which D-137 maps to the northstar asset.",
+      "assetKeyValue": "The asset key lives in its own field, firstSlice.resolvedHairAssetKey = 'northstar'.",
+      "noD137Change": "D-137's mapping, its register row and the stored domain are unchanged. This is a consistency fix to the first slice, not a change to the hairstyle contract."
+    },
     "blushStaysMandatory": {
       "rule": "D-135 stands unchanged: blush remains a MANDATORY layer of the finished complete R3 stack, at z=2.",
       "notWeakened": "Excluding blush from the first slice says nothing about the finished stack. A complete R3 stack without blush is not complete."
@@ -777,7 +783,9 @@
   ],
 
   "firstSlice": {
-    "identity": { "bodyType": "neutral", "skinTone": "medium", "hairstyle": "northstar" },
+    "identity": { "bodyType": "neutral", "skinTone": "medium", "hairstyle": "default" },
+    "resolvedHairAssetKey": "northstar",
+    "identityVsAssetKey": "The persistent identity and the internal asset key are two DIFFERENT fields. identity.hairstyle holds a value the live database can actually store; resolvedHairAssetKey holds what D-137's mapping resolves it to. 'northstar' is an asset key only and is never an identity value — under D-137 the literal string resolves to null, so using it as the first slice's identity would have made the first slice unresolvable by its own rule.",
     "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "northstar hair", "tee", "trousers", "shoes"],
     "equipment": "none",
     "excluded": {
