@@ -394,18 +394,20 @@ test("no layer that is still an OPEN owner decision may appear as settled in the
   }
 });
 
-test("the two mask gaps are closed by D-133; the z values, occlusion and hairstyles stay open", () => {
+test("the mask gaps are closed by D-133 and the occlusion contract by D-134; the rest stay open", () => {
   const joined = C.openOwnerDecisions.join(" | ");
   const closed = C.closedOwnerDecisions.map((d) => d.was).join(" | ");
   assert.match(closed, /GAP-1/, "GAP-1 is closed, and the record of it must survive");
   assert.match(closed, /GAP-2/, "GAP-2 is closed, and the record of it must survive");
-  for (const d of C.closedOwnerDecisions) assert.equal(d.decision, "D-133");
+  for (const d of C.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
-  assert.equal(C.openOwnerDecisions.length, 6, "the other six decisions are untouched by D-133");
+  // D-133 closed the two gaps; D-134 closed the arm/hand occlusion contract. Five remain.
+  assert.equal(C.openOwnerDecisions.length, 5, "only the five still-undecided questions may remain open");
+  assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-134"), "D-134 must be recorded as a closing decision");
+  assert.ok(!/occlusion\/protect contract/.test(joined), "the occlusion contract is closed by D-134");
   assert.match(joined, /VALID_HAIRSTYLES/);
   assert.match(joined, /final z-index values for the three new clothing slots/i);
   assert.match(joined, /R2_COSMETIC_Z/, "the z collision must be an explicit open decision");
-  assert.match(joined, /occlusion\/protect contract/i, "the arm\/hand occlusion contract must be an explicit open decision");
   assert.match(joined, /whether blush is part of the first slice/i);
 });
 

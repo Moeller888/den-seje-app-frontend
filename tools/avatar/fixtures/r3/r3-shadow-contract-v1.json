@@ -417,10 +417,101 @@
     },
     "authorisation": "D-133 and these fixtures authorise no image request and no claim."
   },
+
+  "armHandOcclusionContract": {
+    "decision": "D-134",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO REGION COMPUTED, NO MASK FIXTURE PRODUCED, NO IMAGE REQUEST AUTHORISED",
+    "relationToD132": "D-132's occlusionContract stated the invariant and made the pre-registration a precondition. D-134 fills in what that contract IS. It does not rewrite D-132, and it keeps D-132's own allowance that an approved garment MAY be deliberately authored to cover part of an arm or hand.",
+    "regions": {
+      "R3_ARM_HAND_EXPOSED_BASE": "The deterministically identified VISIBLE arm and hand surface of the approved R3 underlay, with the approved default clothing (tee, trousers, shoes) taken into account. It is a property of the approved base figure, not of any particular garment.",
+      "R3_INTENTIONAL_ARM_HAND_COVERAGE": {
+        "arity": "per garment asset",
+        "default": "THE EMPTY SET",
+        "mayBeNonEmpty": "only after a separate owner decision for that one specific garment, naming the asset and the region",
+        "approvedNonEmptyRegions": [],
+        "d134ApprovesNone": "D-134 approves NO non-empty intentional-coverage region for any asset.",
+        "armorKnight": "EMPTY under D-134. It becomes non-empty only if a later, separate decision says so."
+      },
+      "R3_ARM_HAND_PROTECT": "R3_ARM_HAND_PROTECT(asset) := R3_ARM_HAND_EXPOSED_BASE \\ R3_INTENTIONAL_ARM_HAND_COVERAGE(asset). With the default empty coverage this equals R3_ARM_HAND_EXPOSED_BASE, but the rule is written per asset so an approved exception narrows the protected region for that asset alone.",
+      "torsoFamily": {
+        "hardSubsetOfEdit": "r3-torso-occlusion-hard ⊆ r3-torso-edit-allowed",
+        "protectIsComplement": "r3-torso-protect := complement(r3-torso-edit-allowed)",
+        "precedent": "the D-084/D-085 torso mask family; the same hard/edit/protect shape, not a new pattern"
+      }
+    },
+    "measurableRule": {
+      "gates": [
+        "0 finished garment pixels inside R3_ARM_HAND_PROTECT(asset)",
+        "0 hard-mask pixels inside R3_ARM_HAND_PROTECT(asset)",
+        "0 feather / edit-only pixels inside R3_ARM_HAND_PROTECT(asset)"
+      ],
+      "notAnUnconditionalBan": "This is deliberately NOT a blanket prohibition on any garment pixel touching an arm or a hand. A future sleeve or glove that the owner has explicitly approved is expressed as a non-empty R3_INTENTIONAL_ARM_HAND_COVERAGE for that asset, which removes exactly that area from the protected region — and only for that asset. Without such a decision the coverage is empty and the three gates apply to the whole exposed surface."
+    },
+    "armHandIdentification": {
+      "yIntervalIsInsufficient": "A Y-range alone is REJECTED as the identification rule. Torso, clothing and arms occupy many of the same rows, so rows cannot separate them. Any builder that isolates arms by row bounds alone is non-conforming.",
+      "mustUse": [
+        "the approved R3 underlay's alpha",
+        "the approved separate alpha layers for tee, trousers and shoes",
+        "a fixed, pre-registered SPATIAL rule that isolates the left and right outer arm/hand components from the torso",
+        "8-connected component analysis with deterministic left/right hand seeds, or equivalently unambiguous pre-registered run/corridor rules",
+        "existing, reproducible landmarks"
+      ],
+      "mustNotUse": [
+        "colour classification",
+        "a difference against the target figure as segmentation",
+        "a Y-interval alone",
+        "the D-128 fitting-base arm/hand mask as runtime authority",
+        "any threshold or corridor chosen after seeing a candidate result"
+      ],
+      "noAfterTheFactTuning": "Seeds, corridors, tie-break rules and input hashes are fixed BEFORE the first real derivation runs. Choosing them once an output is on screen is the failure mode this clause exists to prevent."
+    },
+    "feather": {
+      "rule": "edit = dilate(hard, at most 4 Master px), clipped to the figure's permitted area — the D-084/D-085 torso precedent, unchanged.",
+      "neverIntoProtect": "Feather may never enter R3_ARM_HAND_PROTECT(asset). Where a blend would land on exposed skin there is no blend at all, exactly as the collar zone is treated in build-r2-torso-occlusion-mask.mjs.",
+      "exceptionIsPerAsset": "A later intentional-coverage region can change this for that one asset only, and only by a separate owner decision.",
+      "noRepair": "No warp, no mask growth, no automatic repair, and no after-the-fact adjustment of any region."
+    },
+    "authorisation": {
+      "derivationMayRunWithoutANewImageAuthorisation": "Once the required approved R3 assets exist AND the deterministic builder is pre-registered with all seeds, corridors, tie-break rules and input hashes, the reproduction run itself may be performed without a further image authorisation. It is a deterministic derivation from approved raster inputs, not a generative call.",
+      "notAcceptance": "That is NOT automatic acceptance and NOT promotion.",
+      "stillRequired": [
+        "every machine gate must pass",
+        "owner visual review is required",
+        "the result may not be used for armour generation or runtime integration before it is approved",
+        "armor-knight's image call still needs separate authorisation and its own one-shot claim"
+      ]
+    },
+    "implementationPrerequisites": {
+      "note": "NOTHING BELOW EXISTS YET. These are the preconditions D-134 registers, not artefacts it produces or verifies. No pixel region has been computed and no mask fixture has been written.",
+      "requiredApprovedAssets": [
+        "the R3 technical underlay",
+        "the approved default tee",
+        "the approved default trousers",
+        "the approved default shoes"
+      ],
+      "plannedRegionNames": [
+        "r3-arm-hand-exposed-base",
+        "r3-torso-occlusion-hard",
+        "r3-torso-edit-allowed",
+        "r3-torso-protect"
+      ],
+      "plannedBuilder": "a deterministic tool, not yet written, whose seeds, corridors, tie-break rules and full input hashes must be pre-registered in its own spec before the first derivation run",
+      "productionOrder": "these land at production step 11 (runtime masks and occlusion), after the garments at steps 8-10 exist",
+      "noneProducedByD134": true
+    },
+    "prohibitions": {
+      "noRegionOrMask": "D-134 creates no mask, no pixel region and no image asset.",
+      "noNonEmptyCoverageApproved": "D-134 approves no non-empty intentional-coverage region for any asset, armor-knight included.",
+      "noArmorKnightRelease": "D-134 does not release armor-knight.",
+      "noImageRequestOrClaim": "D-134 authorises no image request and creates or consumes no claim.",
+      "noOtherDecisionsChanged": "D-134 changes none of the other open owner decisions.",
+      "noRuntimeChange": "D-134 changes no runtime, compositor, manifest, existing asset, mask or golden, and nothing in Supabase or the deploy."
+    }
+  },
   "openOwnerDecisions": [
     "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
     "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
-    "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",
     "whether blush is part of the first slice",
     "whether the iris is a colour token or its own generated asset",
     "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
@@ -428,6 +519,11 @@
 
 
   "closedOwnerDecisions": [
+    {
+      "decision": "D-134",
+      "was": "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",
+      "resolution": "Closed as a CONTRACT. The protected region is R3_ARM_HAND_PROTECT(asset) := R3_ARM_HAND_EXPOSED_BASE \\ R3_INTENTIONAL_ARM_HAND_COVERAGE(asset), whose coverage defaults to the empty set and may only become non-empty by a separate per-garment owner decision — so the rule is not an unconditional ban on future approved sleeves or gloves. Three zero-gates apply (finished garment pixels, hard-mask pixels, feather/edit-only pixels). A Y-interval alone is expressly rejected as the arm/hand identification rule. No region, mask or fixture is produced by D-134, and armor-knight is not released. See armHandOcclusionContract."
+    },
     {
       "decision": "D-133",
       "was": "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",

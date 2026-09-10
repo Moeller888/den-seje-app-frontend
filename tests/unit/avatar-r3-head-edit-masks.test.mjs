@@ -279,14 +279,13 @@ test("D-133 closes both gaps and leaves every other owner decision open", () => 
   const closed = contract.closedOwnerDecisions.map((d) => d.was).join(" | ");
   assert.match(closed, /GAP-1/);
   assert.match(closed, /GAP-2/);
-  for (const d of contract.closedOwnerDecisions) assert.equal(d.decision, "D-133");
+  for (const d of contract.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   const open = contract.openOwnerDecisions;
-  assert.equal(open.length, 6, "exactly the six undecided questions may remain");
+  assert.equal(open.length, 5, "exactly the five still-undecided questions may remain");
   const joined = open.join(" | ");
   for (const [label, re] of [
     ["z-values", /final z-index values for the three new clothing slots/i],
     ["compositor coexistence", /coexist with the current R2\/C2 cosmetic stack/i],
-    ["arm/hand occlusion", /occlusion\/protect contract/i],
     ["blush", /whether blush is part of the first slice/i],
     ["iris", /whether the iris is a colour token/i],
     ["hairstyles", /VALID_HAIRSTYLES/],
