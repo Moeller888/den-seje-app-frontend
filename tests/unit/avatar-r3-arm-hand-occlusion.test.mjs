@@ -194,7 +194,7 @@ test("D-134 authorises no image request and no claim, and releases nothing", () 
   assert.match(row, /D-120 through D-133 are not rewritten/);
 });
 
-test("the arm/hand decision is closed under D-134, and only blush stays open", () => {
+test("the arm/hand decision is closed under D-134; no owner decision remains open", () => {
   const closed = C.closedOwnerDecisions.filter((d) => d.decision === "D-134");
   assert.equal(closed.length, 1, "D-134 closes exactly one decision");
   assert.match(closed[0].was, /occlusion\/protect contract/);
@@ -203,11 +203,10 @@ test("the arm/hand decision is closed under D-134, and only blush stays open", (
   assert.match(closed[0].resolution, /Y-interval alone is expressly rejected/i);
 
   const open = C.openOwnerDecisions;
-  assert.equal(open.length, 1, "only blush may remain open");
+  assert.deepEqual(open, [], "D-138 closed the last one: no owner decision may remain open");
   const joined = open.join(" | ");
   assert.ok(!/occlusion\/protect contract/.test(joined), "a closed decision may not still be listed as open");
   for (const [label, re] of [
-    ["blush", /whether blush is part of the first slice/i],
   ]) assert.match(joined, re, `${label} must still be open`);
 });
 

@@ -281,10 +281,9 @@ test("D-133 closes both gaps and leaves every other owner decision open", () => 
   assert.match(closed, /GAP-2/);
   for (const d of contract.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   const open = contract.openOwnerDecisions;
-  assert.equal(open.length, 1, "only blush may remain open");
+  assert.deepEqual(open, [], "D-138 closed the last one: no owner decision may remain open");
   const joined = open.join(" | ");
   for (const [label, re] of [
-    ["blush", /whether blush is part of the first slice/i],
   ]) assert.match(joined, re, `${label} must still be an open owner decision`);
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
   // D-133 must say so itself

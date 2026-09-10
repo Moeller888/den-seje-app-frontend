@@ -461,6 +461,62 @@
     }
   },
 
+  "blushContract": {
+    "decision": "D-138",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO BLUSH PRODUCED, NO METHOD CHOSEN, NO IMAGE REQUEST OR CLAIM AUTHORISED",
+    "firstSliceMembership": {
+      "decision": "Blush is NOT part of the first slice.",
+      "why": "The first slice is an isolated structural proof of geometry, alpha, layering, eyes, hair and the default clothing. Blush adds a different failure class — a blend mode — and its production path is not yet settled, so including it would couple two open questions inside one proof and make a failure impossible to attribute.",
+      "firstSliceIsDeliberatelyIncomplete": [
+        "the blush-free first slice is NOT completeR3Layers",
+        "it may not be selected by the runtime resolver",
+        "it may not be used for canary, deploy or promotion",
+        "it may never be described as the final complete default composition"
+      ]
+    },
+    "blushStaysMandatory": {
+      "rule": "D-135 stands unchanged: blush remains a MANDATORY layer of the finished complete R3 stack, at z=2.",
+      "notWeakened": "Excluding blush from the first slice says nothing about the finished stack. A complete R3 stack without blush is not complete."
+    },
+    "sequenceAfterTheFirstSlice": {
+      "order": [
+        "the already-fixed construction rule is investigated",
+        "if the construction can be proven in advance, 0 image calls are used",
+        "otherwise blush needs ONE separately authorised image call and its own one-shot claim",
+        "the finished blended composition needs the automatic check AND its own separate owner visual review",
+        "only then may the default stack be called complete and move towards integration"
+      ],
+      "noneAuthorisedHere": "D-138 authorises none of those steps."
+    },
+    "expectedDifference": {
+      "rule": "The blush-free first slice will differ from Northstar Master v2 in the blush-bearing cheek zone. That difference is recorded as a QUALITATIVE, DIAGNOSTIC expectation only.",
+      "machineCheckMay": "The machine check MAY report the difference.",
+      "machineCheckMayNot": [
+        "it may not classify the expected missing blush as geometric or structural drift",
+        "no pixel mask may be invented for it",
+        "no fixed number of pixels may be ignored",
+        "no new tolerance may be set",
+        "no other facial difference may be exempted from checking",
+        "it may not be claimed that the difference can be isolated exactly from the flat reference image"
+      ],
+      "colourFidelityLater": "The actual blended colour fidelity is judged only on the later COMPLETE composition, never on the first slice."
+    },
+    "method": {
+      "unchanged": "Asset 8 stays method 'generated-or-constructed' with calls '0-1'. D-138 chooses no method.",
+      "whyNotChosen": "The contract already states a RULE for this, not an open question: a per-channel multiply construction may be used ONLY if it is documented and proven in advance, otherwise one call. Which branch fires is decided by whether the construction is actually proven — forcing it now would either commit to an unproven construction or spend a call for nothing.",
+      "budget": "The derived image-call budget therefore stays 15-16: 15 if the construction is later proven and approved, 16 if a generative call is later authorised.",
+      "authorisesNothing": "D-138 authorises neither the construction, nor an image call, nor a claim."
+    },
+    "prohibitions": {
+      "noAssetProduced": "D-138 produces no blush asset and no other asset.",
+      "noMethodChosen": "D-138 chooses no production method for blush.",
+      "noImageRequestOrClaim": "D-138 authorises no image request and creates or consumes no claim.",
+      "noRuntimeChange": "D-138 changes no runtime, resolver, manifest, mask, golden, asset, deploy or Supabase state.",
+      "noD135Change": "D-138 changes nothing in D-135: blush keeps z=2 and its mandatory status in the finished stack."
+    }
+  },
+
   "occlusionContract": {
     "binding": true,
     "armHandInvariant": "An R3 torso or equipment layer must NEVER unintentionally paint over exposed arms or hands. Whatever the final paint order and z values turn out to be, the visible arm and hand pixels of the approved underlay stay visible unless an approved garment is deliberately authored to cover them.",
@@ -520,19 +576,20 @@
     "3 neutral face",
     "4 eyes fixed",
     "5 iris",
-    "6 blush",
-    "7 northstar hair",
-    "8 default t-shirt",
-    "9 default trousers",
-    "10 default sneakers",
-    "11 runtime masks and occlusion",
-    "12 complete default composition",
-    "13 automatic check against the reference pair",
-    "14 owner visual review — the main gate",
-    "15 the four other expressions",
-    "16 afro and short",
-    "17 armor-knight",
-    "18 integration, canary, rollback"
+    "6 northstar hair",
+    "7 default t-shirt",
+    "8 default trousers",
+    "9 default sneakers",
+    "10 runtime masks and occlusion",
+    "11 blush-free first-slice composition",
+    "12 automatic check against the reference pair",
+    "13 owner visual review — the first-slice gate",
+    "14 blush",
+    "15 complete default composition, its automatic check and its own owner review",
+    "16 the four other expressions",
+    "17 afro and short",
+    "18 armor-knight",
+    "19 integration, canary, rollback"
   ],
   "productionOrderIds": [
     "contract",
@@ -540,15 +597,16 @@
     "face-neutral",
     "eyes-fixed",
     "iris",
-    "blush",
     "hair-northstar",
     "tee",
     "trousers",
     "shoes",
     "runtime-masks",
-    "default-composition",
+    "first-slice-composition",
     "automatic-check",
     "owner-visual-review",
+    "blush",
+    "default-composition",
     "other-expressions",
     "other-hairstyles",
     "armor-knight",
@@ -556,34 +614,166 @@
   ],
   "productionOrderConstraintsNote": "Machine-readable dependencies over productionOrderIds, which is the same list as productionOrder in the same order. They record WHY the approved order is the order; they do not change it.",
   "productionOrderConstraints": [
-    { "before": "underlay", "after": "face-neutral", "why": "every head layer is drawn onto the approved underlay geometry" },
-    { "before": "underlay", "after": "eyes-fixed", "why": "every head layer is drawn onto the approved underlay geometry" },
-    { "before": "underlay", "after": "iris", "why": "every head layer is drawn onto the approved underlay geometry" },
-    { "before": "underlay", "after": "blush", "why": "every head layer is drawn onto the approved underlay geometry" },
-    { "before": "underlay", "after": "hair-northstar", "why": "the hair is fitted to the approved cranium of the underlay" },
-    { "before": "underlay", "after": "tee", "why": "the default clothing is fitted to the underlay, never the other way round" },
-    { "before": "underlay", "after": "trousers", "why": "the default clothing is fitted to the underlay, never the other way round" },
-    { "before": "underlay", "after": "shoes", "why": "the default clothing is fitted to the underlay, never the other way round" },
-    { "before": "tee", "after": "runtime-masks", "why": "the tee layer's own alpha is the input the runtime masks are derived from" },
-    { "before": "trousers", "after": "runtime-masks", "why": "the garment layers are the input the runtime masks are derived from" },
-    { "before": "shoes", "after": "runtime-masks", "why": "the garment layers are the input the runtime masks are derived from" },
-    { "before": "underlay", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "face-neutral", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "eyes-fixed", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "iris", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "hair-northstar", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "tee", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "trousers", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "shoes", "after": "default-composition", "why": "the default composition needs every layer it composes" },
-    { "before": "runtime-masks", "after": "default-composition", "why": "occlusion has to be settled before the composition can be judged" },
-    { "before": "default-composition", "after": "automatic-check", "why": "there is nothing to check automatically until the composition exists" },
-    { "before": "automatic-check", "after": "owner-visual-review", "why": "the machine check runs first, so the owner reviews something that already passed it" },
-    { "before": "owner-visual-review", "after": "other-expressions", "why": "the main gate decides whether the layered approach works at all" },
-    { "before": "owner-visual-review", "after": "other-hairstyles", "why": "the main gate decides whether the layered approach works at all" },
-    { "before": "owner-visual-review", "after": "armor-knight", "why": "the main gate decides whether the layered approach works at all, and the occlusion contract must be approved before equipment is produced" },
-    { "before": "other-expressions", "after": "integration-canary-rollback", "why": "integration follows the approved assets" },
-    { "before": "other-hairstyles", "after": "integration-canary-rollback", "why": "integration follows the approved assets" },
-    { "before": "armor-knight", "after": "integration-canary-rollback", "why": "integration follows the approved assets" }
+    {
+      "before": "underlay",
+      "after": "face-neutral",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "eyes-fixed",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "iris",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "hair-northstar",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "tee",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "trousers",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "shoes",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "blush",
+      "why": "blush is a head layer and is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "tee",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "trousers",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "shoes",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "underlay",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "face-neutral",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "eyes-fixed",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "iris",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "hair-northstar",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "tee",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "trousers",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "shoes",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "runtime-masks",
+      "after": "first-slice-composition",
+      "why": "occlusion has to be settled before the composition can be judged"
+    },
+    {
+      "before": "first-slice-composition",
+      "after": "automatic-check",
+      "why": "there is nothing to check automatically until the composition exists"
+    },
+    {
+      "before": "automatic-check",
+      "after": "owner-visual-review",
+      "why": "the machine check runs first, so the owner reviews something that already passed it"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "blush",
+      "why": "D-138: blush is produced only AFTER the blush-free first slice has been approved"
+    },
+    {
+      "before": "blush",
+      "after": "default-composition",
+      "why": "D-138: the complete default composition is the one that finally includes blush"
+    },
+    {
+      "before": "first-slice-composition",
+      "after": "default-composition",
+      "why": "the complete composition builds on the approved first slice"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "other-expressions",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "other-hairstyles",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "armor-knight",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "default-composition",
+      "after": "integration-canary-rollback",
+      "why": "D-138: only a stack that is genuinely complete may move towards integration"
+    },
+    {
+      "before": "other-expressions",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    },
+    {
+      "before": "other-hairstyles",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    },
+    {
+      "before": "armor-knight",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    }
   ],
 
   "firstSlice": {
@@ -591,9 +781,10 @@
     "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "northstar hair", "tee", "trousers", "shoes"],
     "equipment": "none",
     "excluded": {
-      "blush": "DELIBERATELY NOT in the first slice. Whether blush belongs to it is an open owner decision, listed in openOwnerDecisions, so it must not appear here as settled."
+      "blush": "DELIBERATELY NOT in the first slice — settled by D-138. Blush is produced only after the blush-free first slice has been approved, and it remains a MANDATORY layer of the finished complete stack at z=2 (D-135)."
     },
-    "purpose": "prove that the layered R3 composition can recreate the target figure satisfactorily",
+    "purpose": "an ISOLATED STRUCTURAL PROOF of geometry, alpha, layering, eyes, hair and the default clothing. It is deliberately INCOMPLETE under D-135.",
+    "isNotCompleteR3Layers": "The blush-free first slice is NOT completeR3Layers. It may not be selected by the runtime resolver, may not be used for canary, deploy or promotion, and may never be described as the final complete default composition.",
     "mustNotDependOn": "any automatic difference algorithm separating existing pixels"
   },
 
@@ -840,11 +1031,15 @@
     }
   },
   "openOwnerDecisions": [
-    "whether blush is part of the first slice"
   ],
 
 
   "closedOwnerDecisions": [
+    {
+      "decision": "D-138",
+      "was": "whether blush is part of the first slice",
+      "resolution": "Fixed: blush is NOT part of the first slice, which is an isolated structural proof of geometry, alpha, layering, eyes, hair and the default clothing — deliberately incomplete, never completeR3Layers, never resolver-selectable, and never usable for canary, deploy or promotion. Blush remains MANDATORY at z=2 in the finished stack (D-135 unchanged) and is produced only after the first-slice gate, with its own automatic check and its own owner review before the stack may be called complete. The expected cheek-zone difference is qualitative diagnostic only, with no invented mask, ignored pixel count or new tolerance. Asset 8 keeps generated-or-constructed / 0-1 and the budget stays 15-16. See blushContract."
+    },
     {
       "decision": "D-137",
       "was": "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES",
