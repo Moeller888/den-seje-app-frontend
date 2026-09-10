@@ -289,6 +289,63 @@
     "authorisation": "D-135 authorises no image request and creates or consumes no claim. It creates no runtime constant, resolver, compositor or manifest wiring, no mask, no region and no asset."
   },
 
+  "irisContract": {
+    "decision": "D-136",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO IRIS MAP PRODUCED, NO RUNTIME CONSTANT CREATED, NO IMAGE REQUEST AUTHORISED",
+    "method": {
+      "binding": "The R3 iris is ONE independently generated ACHROMATIC greyscale/luminance map, multiplied by ONE independently pinned R3 colour token, with the fixed-eyes layer on top in D-135's binding eyes order.",
+      "isOneAssetPlusOneToken": "One visual asset plus one deterministic design token — not two assets, and not a token on its own.",
+      "notFullColour": "It is NOT a full-colour iris asset.",
+      "notProcedural": "It is NOT a procedurally drawn iris.",
+      "assetId": 7,
+      "assetMethod": "generated-luminance-map-plus-token",
+      "plannedCalls": 1,
+      "layerOrder": "The iris sublayer is composited first and the fixed-eyes sublayer second, both on the eyes slot at z=4, exactly as zModel.approvedTies pins it."
+    },
+    "token": {
+      "name": "R3_IRIS_DEFAULT",
+      "value": "#A34A0F",
+      "independentlyPinned": "R3 pins this value for itself. It must never be imported from, aliased to, or dynamically derived from R2_IRIS_DEFAULT — the same discipline zModel.independence applies to the z maps.",
+      "whySameValue": "The same number is chosen because it is already the documented Master-brown DESIGN value in the established R2 precedent. Reusing a documented design value is not using an old R2 asset as a pixel source.",
+      "notMeasuredFromFinishedPixels": "The token is NOT claimed to be derivable from the finished iris pixels of any figure. The displayed colour is a product of BOTH the token AND the map's luminance, so no single rendered pixel yields the token. Any future re-measurement would be its own decision and would have to state its method.",
+      "notCreatedHere": "D-136 does not create the runtime constant. It fixes what its value must be when it is created."
+    },
+    "renderPair": {
+      "rule": "The token alone guarantees nothing about visual colour fidelity. The future luminance map and the token work as ONE render pair, and only their composed result can be judged.",
+      "laterApproval": [
+        "the finished, composed and tinted iris result is what is assessed",
+        "assessed against Northstar Master v2",
+        "after the automatic format and layer checks",
+        "and by owner visual review"
+      ],
+      "noAfterTheFactTolerance": "No tolerance may be invented after the result is seen, and there is no automatic recolour, warp or repair.",
+      "doesNotAuthoriseTheCall": "D-136 does not authorise the later image call and pre-registers no candidate-specific pixel thresholds yet."
+    },
+    "tintSupport": {
+      "noUntintedFallback": "R2's untinted fail-soft rendering is NOT carried over to R3. An untinted greyscale iris map is not the approved R3 appearance and must never be shown.",
+      "incompleteMeansNull": "If the required mask/multiply mechanism is unsupported, or the tinted iris layer cannot be established correctly, the R3 stack is NOT complete and the future R3 resolver must return null.",
+      "fallbackChain": "D-135's atomic fallback then applies: R3 -> R2 -> C2.",
+      "noMixing": "No R3 and R2 eyes layers may be mixed, and no untinted R3 iris map may be displayed.",
+      "contractNotImplementation": "This is contract now, not runtime implementation."
+    },
+    "noEyeColourSystem": {
+      "rule": "D-136 introduces no user-selectable eye colour, no new identity field, no persistence or Supabase field, no additional iris colours and no eye-colour UI.",
+      "scopeOfTheToken": "R3_IRIS_DEFAULT is only the fixed neutral default value.",
+      "separateDecision": "A real EYE_COLOR feature needs its own later owner decision."
+    },
+    "budget": {
+      "effect": "Locking asset 7 to one generative call moves the derived image-call budget from 14-16 to 15-16.",
+      "stillNotAuthorisation": "The budget remains planning, never consent. Every call needs its own owner authorisation and its own one-shot claim."
+    },
+    "prohibitions": {
+      "noAssetProduced": "D-136 produces no iris map and no other asset.",
+      "noImageRequestOrClaim": "D-136 authorises no image request and creates or consumes no claim.",
+      "noRuntimeCode": "D-136 creates no runtime constant, resolver, compositor, manifest wiring or tint implementation.",
+      "noExistingBehaviourChange": "No existing R2 or C2 behaviour is changed."
+    }
+  },
+
   "occlusionContract": {
     "binding": true,
     "armHandInvariant": "An R3 torso or equipment layer must NEVER unintentionally paint over exposed arms or hands. Whatever the final paint order and z values turn out to be, the visible arm and hand pixels of the approved underlay stay visible unless an approved garment is deliberately authored to cover them.",
@@ -314,7 +371,7 @@
     { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
     { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated", "calls": 1 },
     { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
-    { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-or-token", "calls": "0-1" },
+    { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
     { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated", "calls": 1 },
     { "id": 10, "name": "r3-face-curious",        "slot": "face",     "method": "generated", "calls": 1 },
@@ -328,7 +385,7 @@
   ],
 
   "imageCallBudget": {
-    "minimum": 14,
+    "minimum": 15,
     "maximum": 16,
     "isAuthorisation": false,
     "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
@@ -669,12 +726,16 @@
   },
   "openOwnerDecisions": [
     "whether blush is part of the first slice",
-    "whether the iris is a colour token or its own generated asset",
     "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES"
   ],
 
 
   "closedOwnerDecisions": [
+    {
+      "decision": "D-136",
+      "was": "whether the iris is a colour token or its own generated asset",
+      "resolution": "Fixed: one independently generated achromatic luminance map multiplied by one independently pinned R3 token, R3_IRIS_DEFAULT = #A34A0F, with fixed-eyes on top in D-135's order. Asset 7 becomes method generated-luminance-map-plus-token with exactly 1 planned call, so the derived budget moves to 15-16. R2's untinted fail-soft is NOT carried over: missing tint support makes the R3 stack incomplete and the resolver must return null, falling back atomically R3 -> R2 -> C2. No EYE_COLOR system, identity field or persistence is introduced. See irisContract."
+    },
     {
       "decision": "D-135",
       "was": "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",

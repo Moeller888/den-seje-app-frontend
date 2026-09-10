@@ -281,11 +281,10 @@ test("D-133 closes both gaps and leaves every other owner decision open", () => 
   assert.match(closed, /GAP-2/);
   for (const d of contract.closedOwnerDecisions.filter((d) => /GAP-[12]/.test(d.was))) assert.equal(d.decision, "D-133");
   const open = contract.openOwnerDecisions;
-  assert.equal(open.length, 3, "exactly the three still-undecided questions may remain");
+  assert.equal(open.length, 2, "exactly the two still-undecided questions may remain");
   const joined = open.join(" | ");
   for (const [label, re] of [
     ["blush", /whether blush is part of the first slice/i],
-    ["iris", /whether the iris is a colour token/i],
     ["hairstyles", /VALID_HAIRSTYLES/],
   ]) assert.match(joined, re, `${label} must still be an open owner decision`);
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
