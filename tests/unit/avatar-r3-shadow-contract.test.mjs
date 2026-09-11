@@ -52,12 +52,89 @@ test("the schema is the one the tooling expects", () => {
   assert.equal(C.meta.decision, "D-132");
 });
 
-test("no image request is authorised, anywhere in the contract", () => {
+test("no image request is authorised IN GENERAL, and the general flag stays false", () => {
+  // D-139 authorises ONE named call. It does so through authorisedCalls, not by flipping this
+  // boolean: a true here would read as consent to every remaining R3 call, which is precisely the
+  // reading the owner refused. The general prohibitions below therefore still stand as written.
   assert.equal(C.meta.authorisesImageRequest, false);
   assert.equal(C.imageCallBudget.isAuthorisation, false);
   assert.match(C.prohibitions.noImageRequestAuthorised, /authorise no image request/);
   assert.match(C.prohibitions.noAutomaticRepair, /never warped, retried or repaired automatically/);
   assert.match(C.prohibitions.noMaskWork, /creates, changes, derives and promotes no mask/);
+});
+
+test("the ONE authorised call is narrowly scoped, and carries every pin it needs", () => {
+  // The failure mode: an authorisation that says "yes" without saying to what. Each of these fields
+  // is something a wrong call would have to get right by accident.
+  assert.equal(C.authorisedCalls.count, 1);
+  assert.equal(C.authorisedCalls.calls.length, 1);
+  assert.match(C.authorisedCalls.shape, /A LIST, not a boolean/);
+  assert.match(C.meta.authorisationModel, /stays false permanently/);
+
+  const call = C.authorisedCalls.calls[0];
+  assert.equal(call.callId, "D-139-r3-underlay-head-only-v1");
+  assert.equal(call.decision, "D-139");
+  assert.equal(call.endpoint, "https://api.openai.com/v1/images/edits");
+  assert.equal(call.model, "gpt-image-2-2026-04-21");
+  assert.match(call.modelPolicy, /requires a NEW owner decision/);
+  assert.deepEqual(call.parameters, { n: 1, size: "1024x1536", quality: "high", output_format: "png", background: "transparent" });
+  assert.equal(call.outputs.count, 1);
+  assert.equal(call.claim.filename, "D-139.claim.json");
+  for (const hash of [call.prompt.fileSha256, call.prompt.transmittedSha256, call.mask.sha256,
+    call.inputs[0].sha256, call.inputs[1].sha256]) {
+    assert.match(hash, /^[0-9a-f]{64}$/, "every pin must be a FULL sha256, never a prefix");
+  }
+  assert.deepEqual(call.inputOrder, ["Image 1", "Image 2"]);
+  assert.equal(call.inputs[0].sha256, H1_SHA, "Image 1 is H1");
+  assert.equal(call.inputs[1].sha256, TARGET_SHA, "Image 2 is North Star v2");
+  assert.equal(call.inputs[0].maskAppliesToThis, true);
+  assert.equal(call.inputs[1].maskAppliesToThis, false);
+  assert.match(call.inputOrderBinding, /mask to the first image/);
+});
+
+test("the authorised call forbids retry, warp, repair, promotion and any other call", () => {
+  const p = C.authorisedCalls.calls[0].prohibitions;
+  assert.match(p.noRetry, /Exactly one fetch/);
+  assert.match(p.noWarp, /never warped, scaled, nudged, re-registered or aligned/);
+  assert.match(p.noRepair, /never repaired, cleaned up or touched up/);
+  assert.match(p.noPromotion, /promotes nothing/);
+  assert.match(p.noOtherCall, /this call only/);
+  assert.match(p.noRuntimeChange, /No runtime, compositor, manifest, mask, golden, asset, deploy, Supabase/);
+  assert.match(C.authorisedCalls.calls[0].claim.neverReused, /never deleted, reset, renamed or reused/);
+});
+
+test("the API mask is guidance; the byte-identity guarantee is still the recomposition", () => {
+  // The dangerous shortcut this blocks: "we sent a mask, so the body cannot have changed".
+  const mask = C.authorisedCalls.calls[0].mask;
+  assert.match(mask.guidanceOnly, /NOT the guarantee that 0 pixels change/);
+  assert.match(mask.guidanceOnly, /deterministic recomposition/);
+  assert.match(mask.semantics.invertedRelativeToD133, /OPPOSITE/);
+  assert.equal(mask.semantics.editAlpha, 0);
+  assert.equal(mask.semantics.protectAlpha, 255);
+  assert.equal(mask.derivedFrom.decision, "D-133");
+  // and the recomposition it defers to is still the one D-132 wrote down
+  assert.match(C.firstCall.recomposition.contract, /PRE-DEFINED, not after-the-fact repair/);
+});
+
+test("the ears are an owner-visual criterion, measured, and never called a machine gate", () => {
+  const ear = C.authorisedCalls.calls[0].earPreservation;
+  assert.match(ear.classification, /OWNER-VISUAL ACCEPTANCE CRITERION/);
+  assert.match(ear.classification, /NOT a hard machine gate/);
+  assert.equal(ear.measuredReadOnly.inTransition, 0);
+  assert.equal(ear.measuredReadOnly.inProtect, 0);
+  assert.match(ear.measuredReadOnly.inCore, /100%/);
+  assert.match(ear.consequence, /does NOT preserve them byte-identically/);
+  assert.match(ear.whyNotAGateYet, /new, separately approved mask/);
+  assert.match(ear.prohibitedAfterTheFact, /after the output has been seen/);
+  // the absence list it sits beside still does not mention ears, which is why this record exists
+  assert.ok(!/ear/i.test(C.firstCall.gates.hardMachine.headRegion));
+});
+
+test("D-139 spends a budgeted call; it does not enlarge the budget", () => {
+  assert.equal(C.imageCallBudget.minimum, 15);
+  assert.equal(C.imageCallBudget.maximum, 16);
+  assert.match(C.authorisedCalls.budgetUnchanged, /budget is unchanged and is still not consent/);
+  assert.equal(C.assets[0].calls, 1, "the underlay was always a one-call asset");
 });
 
 test("the reference pair is pinned by full sha256, and the target's pin matches the tracked file", () => {

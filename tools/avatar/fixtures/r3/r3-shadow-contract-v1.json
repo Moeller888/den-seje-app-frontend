@@ -8,6 +8,7 @@
     "adoptedOn": "2026-09-08",
     "purpose": "R3 reproduces every geometry-bound raster layer for the approved target figure. It is a separate shadow stack, default OFF, that never modifies R2.",
     "authorisesImageRequest": false,
+    "authorisationModel": "authorisesImageRequest is a GENERAL flag and stays false permanently. It means this contract grants no blanket permission to call an image model, and it must never be flipped to true. A specific call is authorised ONLY by a fully pinned entry in authorisedCalls.calls, which names one call id, one prompt hash, one ordered input list with a hash per input, one model, one mask hash and exactly one output. An entry authorises that call and nothing else — not a repeat of it, not a variant of it, and not any other R3 call.",
     "note": "Nothing in this file authorises a generative call. Each future call needs its own owner authorisation and its own one-shot claim."
   },
 
@@ -1084,11 +1085,169 @@
       "resolution": "TRANSITION := H1solid ∩ { 425 <= y <= 445 } — candidate B, 1,702 px over 21 rows, straddling the neck line y433 and ending inside the stable neck column y436-454."
     }
   ],
+  "authorisedCalls": {
+    "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
+    "count": 1,
+    "budgetUnchanged": "D-139 spends one of the calls the plan already budgeted (assets[0], the R3 base underlay, calls: 1). The 15-16 budget is unchanged and is still not consent.",
+    "calls": [
+      {
+        "callId": "D-139-r3-underlay-head-only-v1",
+        "decision": "D-139",
+        "authorisedOn": "2026-09-11",
+        "asset": "assets[0] — r3-base-neutral-medium, the R3 technical underlay",
+        "scope": "EXACTLY ONE head-only edit of H1, producing the hidden bald, featureless head. Not a new character, not a runtime asset, not a promotion, and not a licence for any further call.",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "endpointType": "images.edits — two ordered image inputs and one mask",
+        "model": "gpt-image-2-2026-04-21",
+        "modelPolicy": "A dated snapshot, pinned. There is NO fallback model. Moving to a newer model requires a NEW owner decision; it is never an implementation detail.",
+        "parameters": {
+          "n": 1,
+          "size": "1024x1536",
+          "quality": "high",
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "omitted": {
+          "input_fidelity": "Deliberately omitted. gpt-image-2 treats inputs at high fidelity automatically and rejects the field (invalid_input_fidelity_model)."
+        },
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt.md",
+          "fileBytes": 6089,
+          "fileSha256": "8a5cb283a4cb5803adf45d8d35e68a0c058a6604ffc9869ec58ea1ee514724f6",
+          "transmittedBytes": 2157,
+          "transmittedSha256": "ca9faa53f4346bbfbaccc106f80345524c5061c45c51bdce2d54c3bbf4caf6a9",
+          "transmittedIs": "the single fenced block of that file, and nothing else",
+          "lineEndings": "LF",
+          "trailingNewlines": 1,
+          "approvedVerbatimOn": "2026-09-11",
+          "noEditorialChange": "Approved verbatim by the owner. No rewording, rewrap, reordering or editorial improvement has been applied, and none may be. A single changed byte breaks the pin and the adapter refuses to send."
+        },
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "inputOrderBinding": "H1 MUST be the first image, because the Images edit endpoint applies the mask to the first image. Sending them in the other order would apply the head mask to the reference figure. The adapter asserts the order on the assembled body, not on intent.",
+        "inputs": [
+          {
+            "role": "Image 1",
+            "name": "fitting-base.H1.png",
+            "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+            "bytes": 1832612,
+            "tracked": false,
+            "storage": "EXTERNAL — D-127 §2. Passed by --h1 or FITTING_BASE_V1_PATH and never copied into the repository.",
+            "binding": "every existing pixel, the body geometry and the drawing style",
+            "maskAppliesToThis": true
+          },
+          {
+            "role": "Image 2",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "bytes": 761394,
+            "tracked": true,
+            "binding": "identity and style reference for head shape, skin tone and line style ONLY. Hair and facial features must NOT be copied into the underlay.",
+            "maskAppliesToThis": false
+          }
+        ],
+        "mask": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-v1.png",
+          "sha256": "28ff1ac00f6972697411ad29c5618f9ede4b5a0a4fd086a41ec0bfb5fe7561fb",
+          "bytes": 10768,
+          "derivedFrom": {
+            "file": "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+            "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+            "decision": "D-133"
+          },
+          "builtBy": "tools/avatar/build-r3-api-mask.mjs — deterministic, reproducible byte-identically, no H1 required",
+          "semantics": {
+            "editAlpha": 0,
+            "protectAlpha": 255,
+            "transparentMeans": "EDITABLE — the model may repaint this pixel",
+            "opaqueMeans": "PROTECTED — the model must leave this pixel alone",
+            "editablePx": 125423,
+            "protectedPx": 1447441,
+            "rgb": "0,0,0 on every pixel — the mask carries no pixel of the figure",
+            "invertedRelativeToD133": "D-133's marker fixtures mean the OPPOSITE by alpha: there 255 marks the region. Sending a D-133 fixture unchanged would hand the model the exact inverse — repaint the body, protect the head."
+          },
+          "guidanceOnly": "MODEL GUIDANCE. This mask is NOT the guarantee that 0 pixels change outside the head. That guarantee is D-133's deterministic recomposition, which copies PROTECT back from H1 byte-identically after the response. A model that ignores the mask changes nothing about the final bytes."
+        },
+        "outputs": {
+          "count": 1,
+          "raw": "tools/avatar/build/r3-underlay/r3-underlay.raw.png",
+          "manifest": "tools/avatar/build/r3-underlay/r3-underlay.request.json",
+          "storage": "The build area is gitignored. The raw result is REVIEW MATERIAL, not an asset: it is not cleaned up, retouched, promoted, committed or given any runtime effect by this call."
+        },
+        "claim": {
+          "filename": "D-139.claim.json",
+          "scope": "per USER and per repository identity, outside both clones and outside temp",
+          "creation": "exclusive create, flag \"wx\", IMMEDIATELY before the single fetch",
+          "spentOn": "ANY outcome — success, HTTP error, transport error, timeout, moderation refusal, parse failure, crash. Existence alone means spent.",
+          "neverReused": "The claim is never deleted, reset, renamed or reused. D-121's and D-129's claims are separate files and are never touched by this call.",
+          "furtherAttempt": "A further attempt requires a NEW owner decision and a NEW claim identity."
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-generate-r3-underlay.mjs",
+          "separateTool": "New and separate. The D-121 and D-129 adapters are neither imported nor modified, so their spent mandates and frozen contracts cannot be weakened from here.",
+          "dryRunByDefault": true,
+          "sendRequiresAll": [
+            "--send",
+            "--owner-approval=D-139",
+            "the D-139 row present exactly once in docs/project-state.md, and D-132 and D-133 present too",
+            "the prompt file and the transmitted block matching both pinned hashes byte-for-byte",
+            "both inputs matching their pinned hashes, in the pinned order",
+            "the API mask matching its pinned hash AND its pixel semantics re-verified against D-133 EDIT",
+            "every preflight gate passing",
+            "the output paths empty",
+            "no claim file existing yet"
+          ],
+          "oneFlagNeverSends": "No single flag sends. A wrong approval value never sends. There is no --force, no --retry, no --claim-path and no --reset-claim."
+        },
+        "earPreservation": {
+          "requirement": "The ears are preserved in the same position, shape and size — owner instruction, 2026-09-11, and a line of the pinned prompt.",
+          "classification": "OWNER-VISUAL ACCEPTANCE CRITERION. It is NOT a hard machine gate.",
+          "measuredReadOnly": {
+            "method": "Two ear envelopes read off H1 and classified against the tracked D-133 fixtures.",
+            "leftEnvelope": [
+              315,
+              265,
+              415,
+              415
+            ],
+            "rightEnvelope": [
+              605,
+              265,
+              705,
+              415
+            ],
+            "leftSolidPx": 8680,
+            "rightSolidPx": 9264,
+            "inCore": "100% of both — 8,680 and 9,264 px",
+            "inTransition": 0,
+            "inProtect": 0,
+            "clearanceToTransitionBandRows": 10
+          },
+          "consequence": "Both ears lie entirely inside CORE, the region the model is allowed to repaint. D-133's recomposition therefore does NOT preserve them byte-identically, and no test in this contract can claim it does.",
+          "whyNotAGateYet": "A byte-identical ear-protect region cannot be carved out of CORE without a new, separately approved mask: 31.1% of the left ear envelope and 34.4% of the right are hair-coloured in H1, so copying H1's ear pixels back would reinstate hair on a head that must be bald and would contradict gates.hardMachine.headRegion.",
+          "prohibitedAfterTheFact": "No ear mask, ear region or ear tolerance may be invented after the output has been seen. Adding one requires its own owner decision, taken before a call.",
+          "blocker": "NOT a blocker for this call. It IS a blocker for ever describing ear preservation as machine-verified. Prompt text is not machine control."
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No loop, no retry, no fallback model, no second attempt on any failure of any kind.",
+          "noWarp": "The output is never warped, scaled, nudged, re-registered or aligned to fit.",
+          "noRepair": "A failing output is never repaired, cleaned up or touched up. The failure is documented and a new call needs new authorisation and a new claim.",
+          "noPromotion": "This call promotes nothing. No runtime asset, manifest, golden, resolver entry, canary or deploy follows from it.",
+          "noRefit": "D-133's regions are never re-fitted to the output. A deviation is a hard stop.",
+          "noOtherCall": "This entry authorises this call only. Blush, iris, hair, expressions, clothing and every other R3 asset remain unauthorised.",
+          "noRuntimeChange": "No runtime, compositor, manifest, mask, golden, asset, deploy, Supabase or student-data change follows from D-139."
+        }
+      }
+    ]
+  },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. SUPERSEDED NARROWLY BY D-139 for exactly one named call: the single entry in authorisedCalls.calls, call id D-139-r3-underlay-head-only-v1. Nothing else is authorised — no repeat of that call, no variant of it, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
-    "noMaskWork": "This contract creates, changes, derives and promotes no mask of any kind."
+    "noMaskWork": "D-132 creates, changes, derives and promotes no mask of any kind. SUPERSEDED NARROWLY BY D-139 in one respect only: D-139 DERIVES one API guidance mask deterministically from D-133's tracked EDIT fixture (tools/avatar/build-r3-api-mask.mjs). No existing mask is changed, no mask is promoted to runtime, and no mask is drawn, fitted or segmented by hand."
   }
 }
