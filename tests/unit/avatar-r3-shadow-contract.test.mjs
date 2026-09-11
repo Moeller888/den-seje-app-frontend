@@ -287,8 +287,11 @@ test("the production order is enforced by its dependencies, not by its length", 
   for (const b of ["tee", "trousers", "shoes"])
     assert.ok(has(b, "runtime-masks"), b + " must precede the runtime masks");
   for (const b of ["underlay", "face-neutral", "eyes-fixed", "hair-northstar", "tee", "trousers", "shoes", "runtime-masks"])
-    assert.ok(has(b, "default-composition"), b + " must precede the default composition");
-  assert.ok(has("default-composition", "automatic-check"), "the composition must precede the automatic check");
+    assert.ok(has(b, "first-slice-composition"), b + " must precede the blush-free first-slice composition");
+  assert.ok(has("first-slice-composition", "automatic-check"), "the composition must precede the automatic check");
+  // D-138 split the two: blush lands between the first-slice gate and the complete composition
+  assert.ok(has("owner-visual-review", "blush"), "blush comes only after the first-slice gate");
+  assert.ok(has("blush", "default-composition"), "the complete composition is the one that includes blush");
   assert.ok(has("automatic-check", "owner-visual-review"), "the automatic check must precede the owner review");
   for (const a of ["other-expressions", "other-hairstyles", "armor-knight"])
     assert.ok(has("owner-visual-review", a), "the owner review must precede " + a);
@@ -349,11 +352,14 @@ test("the deterministic operations are only the four with documented precedent",
   for (const op of C.deterministicOperations) assert.ok(op.precedent && op.precedent.length > 0, op.op + " needs a precedent");
 });
 
-test("the first slice is neutral + medium + northstar and needs no difference algorithm", () => {
+test("the first slice is neutral + medium, default hair, and needs no difference algorithm", () => {
   const s = C.firstSlice;
   assert.equal(s.identity.bodyType, "neutral");
   assert.equal(s.identity.skinTone, "medium");
-  assert.equal(s.identity.hairstyle, "northstar");
+  // D-138: the IDENTITY is a storable value; the asset key it resolves to is its own field.
+  // 'northstar' is an asset key that D-137 maps to null, so it may never be an identity value.
+  assert.equal(s.identity.hairstyle, "default");
+  assert.equal(s.resolvedHairAssetKey, "northstar");
   assert.equal(s.equipment, "none");
   assert.match(s.mustNotDependOn, /difference algorithm/);
   assert.deepEqual(s.layers,
@@ -361,15 +367,15 @@ test("the first slice is neutral + medium + northstar and needs no difference al
     "the first slice is the underlay, the neutral face and eyes, northstar hair and the default clothing");
 });
 
-test("no layer that is still an OPEN owner decision may appear as settled in the first slice", () => {
+test("no layer that is open or explicitly excluded may appear as a first-slice layer", () => {
   const open = C.openOwnerDecisions.join(" | ");
-  // blush is the live case: it must be open, and therefore absent from the first slice
-  assert.match(open, /whether blush is part of the first slice/i,
-    "the blush question must still be recorded as an open owner decision");
-  assert.ok(!C.firstSlice.layers.some((l) => /blush/i.test(l)),
-    "blush must not appear in firstSlice.layers while the question is open");
+  // D-138 closed the blush question; it stays excluded from the first slice all the same
+  assert.ok(!/whether blush is part of the first slice/i.test(open), "the blush question is closed by D-138");
+  assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-138" && /blush/i.test(d.was)),
+    "the blush closure must be recorded");
+  assert.ok(!C.firstSlice.layers.some((l) => /blush/i.test(l)), "blush must not appear in firstSlice.layers");
   assert.match(C.firstSlice.excluded.blush, /DELIBERATELY NOT in the first slice/);
-  assert.match(C.firstSlice.excluded.blush, /open owner decision/i);
+  assert.match(C.firstSlice.excluded.blush, /settled by D-138/i);
   // the register must describe the same first slice, so the two artefacts cannot drift apart:
   // it may only mention blush in order to exclude it.
   const s10 = section(d132Row(), "(10) THE FIRST SLICE", "(11) THE TECHNICAL UNDERLAY");
@@ -377,17 +383,19 @@ test("no layer that is still an OPEN owner decision may appear as settled in the
     "the register's first slice must say in so many words that blush is excluded");
   assert.ok(!/\+ *blush/i.test(s10), "the register must not list blush among the first-slice layers");
 
-  // and the same rule generalised: any slot whose membership of the first slice is still open
-  // must not be listed as one of its layers.
+  // the generalised rule still holds: a slot that is either an OPEN decision or an explicit
+  // exclusion may never be listed as a first-slice layer.
   for (const slot of C.layerContract.paintOrder.bottomToTop) {
     const isOpen = new RegExp("whether " + slot + " is part of the first slice", "i").test(open);
-    if (!isOpen) continue;
+    const isExcluded = Object.prototype.hasOwnProperty.call(C.firstSlice.excluded ?? {}, slot);
+    if (!isOpen && !isExcluded) continue;
     assert.ok(!C.firstSlice.layers.some((l) => new RegExp(slot, "i").test(l)),
-      slot + " is an open first-slice decision and must not be listed as a first-slice layer");
+      slot + " is open or excluded and must not be listed as a first-slice layer");
   }
 });
 
-test("D-133 to D-137 close their decisions; only blush stays open", () => {
+
+test("D-133 to D-138 close every owner decision; none remains open", () => {
   const joined = C.openOwnerDecisions.join(" | ");
   const closed = C.closedOwnerDecisions.map((d) => d.was).join(" | ");
   assert.match(closed, /GAP-1/, "GAP-1 is closed, and the record of it must survive");
@@ -396,10 +404,11 @@ test("D-133 to D-137 close their decisions; only blush stays open", () => {
   assert.ok(!/GAP-1|GAP-2/.test(joined), "a closed gap may not still be listed as open");
   // D-133 closed the two gaps, D-134 the arm/hand occlusion contract, D-135 the z values and the
   // R2/C2 coexistence, D-136 the iris method and D-137 the hairstyles. Only blush remains.
-  assert.equal(C.openOwnerDecisions.length, 1, "only blush may remain open");
+  assert.deepEqual(C.openOwnerDecisions, [], "D-138 closed the last one: none may remain open");
   assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-134"), "D-134 must be recorded as a closing decision");
   assert.ok(!/occlusion\/protect contract/.test(joined), "the occlusion contract is closed by D-134");
-  assert.match(joined, /whether blush is part of the first slice/i);
+  assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-138" && /blush/i.test(d.was)),
+    "blush is closed by D-138, not open");
 });
 
 test("the D-132 row exists in the register exactly once and is not rewritten by anything here", () => {

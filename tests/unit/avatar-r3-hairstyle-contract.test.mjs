@@ -173,7 +173,7 @@ test("nothing is wired yet, and nothing existing is changed", () => {
   assert.match(H.prohibitions.noImageRequestOrClaim, /authorises no image request/i);
 });
 
-test("the hairstyle decision is closed under D-137, leaving only blush open", () => {
+test("the hairstyle decision is closed under D-137; no owner decision remains open", () => {
   const closed = C.closedOwnerDecisions.filter((d) => d.decision === "D-137");
   assert.equal(closed.length, 1, "D-137 closes exactly one decision");
   assert.match(closed[0].was, /VALID_HAIRSTYLES/);
@@ -181,9 +181,8 @@ test("the hairstyle decision is closed under D-137, leaving only blush open", ()
   assert.match(closed[0].resolution, /literal 'northstar'/);
 
   const open = C.openOwnerDecisions;
-  assert.equal(open.length, 1, "only blush may remain open");
-  assert.match(open[0], /whether blush is part of the first slice/i);
-  assert.equal(C.closedOwnerDecisions.length, 7);
+  assert.deepEqual(open, [], "D-138 closed the last one: no owner decision may remain open");
+  assert.equal(C.closedOwnerDecisions.length, 8);
 });
 
 test("D-137 is append-only and rewrites nothing before it", () => {

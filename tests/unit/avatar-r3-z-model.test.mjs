@@ -232,7 +232,7 @@ test("nothing is wired yet: no R3 constants and no three-way selection exist in 
   assert.match(C.layerContract.zIndices.status, /APPROVED by D-135/);
 });
 
-test("the two decisions moved from open to closed, and only blush stays open", () => {
+test("the two decisions moved from open to closed; no owner decision remains open", () => {
   const closed = C.closedOwnerDecisions.filter((d) => d.decision === "D-135");
   assert.equal(closed.length, 2, "D-135 closes exactly two decisions");
   const wasJoined = closed.map((d) => d.was).join(" | ");
@@ -240,11 +240,12 @@ test("the two decisions moved from open to closed, and only blush stays open", (
   assert.match(wasJoined, /coexist with the current R2\/C2 cosmetic stack/i);
 
   const open = C.openOwnerDecisions;
-  assert.equal(open.length, 1, "only blush may remain open");
+  assert.deepEqual(open, [], "D-138 closed the last one: no owner decision may remain open");
   const joined = open.join(" | ");
-  assert.match(joined, /whether blush is part of the first slice/i);
+  assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-138" && /blush/i.test(d.was)),
+    "blush is closed by D-138, not open");
   assert.ok(!/z-index values|cosmetic stack/i.test(joined), "a closed decision may not still be listed as open");
-  assert.equal(C.closedOwnerDecisions.length, 7, "two gaps, occlusion, these two, the iris method and the hairstyles");
+  assert.equal(C.closedOwnerDecisions.length, 8, "two gaps, occlusion, these two, the iris, the hairstyles and blush");
 });
 
 test("D-135 is append-only and rewrites nothing before it", () => {

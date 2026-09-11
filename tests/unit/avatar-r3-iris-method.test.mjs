@@ -162,7 +162,7 @@ test("nothing is wired yet: no R3 iris constant or tint implementation exists", 
   assert.match(I.prohibitions.noImageRequestOrClaim, /authorises no image request and creates or consumes no claim/i);
 });
 
-test("the iris decision is closed under D-136, and only blush stays open", () => {
+test("the iris decision is closed under D-136; no owner decision remains open", () => {
   const closed = C.closedOwnerDecisions.filter((d) => d.decision === "D-136");
   assert.equal(closed.length, 1, "D-136 closes exactly one decision");
   assert.match(closed[0].was, /whether the iris is a colour token/i);
@@ -170,9 +170,10 @@ test("the iris decision is closed under D-136, and only blush stays open", () =>
   assert.match(closed[0].resolution, /15-16/);
 
   const open = C.openOwnerDecisions;
-  assert.equal(open.length, 1, "only blush may remain open");
+  assert.deepEqual(open, [], "D-138 closed the last one: no owner decision may remain open");
   const joined = open.join(" | ");
-  assert.match(joined, /whether blush is part of the first slice/i);
+  assert.ok(C.closedOwnerDecisions.some((d) => d.decision === "D-138" && /blush/i.test(d.was)),
+    "blush is closed by D-138, not open");
   assert.ok(!/iris/i.test(joined), "a closed decision may not still be listed as open");
 });
 
