@@ -215,12 +215,30 @@ test("the authorising rows must be in the register, exactly once each", () => {
 
 test("the claim is D-139's own, and lives outside the repository and outside temp", () => {
   assert.equal(A.CLAIM_FILENAME, "D-139.claim.json");
-  const r = A.resolveClaimPath({ env: { LOCALAPPDATA: "C:\\Users\\x\\AppData\\Local" }, platform: "win32" });
-  assert.equal(r.ok, true);
+  // The synthetic root has to be ABSOLUTE on the platform actually running this: a Windows-shaped
+  // string is a RELATIVE path to POSIX `path`, which would resolve against the working directory —
+  // i.e. inside the repository — and the resolver would then correctly refuse it for the wrong
+  // reason. So each branch is exercised with a root that is absolute where it is evaluated.
+  const r = process.platform === "win32"
+    ? A.resolveClaimPath({ env: { LOCALAPPDATA: "C:\\synthetic\\AppData\\Local" }, platform: "win32" })
+    : A.resolveClaimPath({ env: { XDG_STATE_HOME: "/synthetic/state" }, platform: "linux" });
+  assert.equal(r.ok, true, r.why || "");
   assert.ok(r.path.includes("D-139.claim.json"));
+  assert.ok(r.path.includes(A.REPO_IDENTITY), "the claim is scoped by repository identity, not by clone");
   assert.ok(!r.path.includes("D-121") && !r.path.includes("D-129"),
     "D-121's and D-129's mandates must never be reachable from here");
   assert.equal(A.isInside(r.path, REPO), false);
+  assert.equal(A.isInside(r.path, tmpdir()), false);
+});
+
+test("the claim filename is D-139's on every platform branch, resolvable or not", () => {
+  // Independent of absoluteness: whatever root is offered, the FILE is never another decision's.
+  for (const opts of [{ env: { LOCALAPPDATA: "C:\\x" }, platform: "win32" },
+    { env: { XDG_STATE_HOME: "/x" }, platform: "linux" },
+    { env: {}, platform: "linux", homeDir: "/home/someone" }]) {
+    const r = A.resolveClaimPath(opts);
+    assert.ok(r.path.endsWith(A.CLAIM_FILENAME), "resolved to " + r.path);
+  }
 });
 
 test("a claim inside the repository or inside temp is refused, not used", () => {
