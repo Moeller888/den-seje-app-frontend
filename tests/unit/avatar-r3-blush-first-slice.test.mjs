@@ -193,7 +193,7 @@ test("the expected cheek difference is diagnostic only, with nothing invented", 
   assert.match(e.colourFidelityLater, /never on the first slice/i);
 });
 
-test("the method is deliberately not chosen, and the budget is unchanged at 15-16", () => {
+test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recounted to 16-17", () => {
   const a8 = C.assets.find((a) => a.id === 8);
   assert.equal(a8.name, "r3-blush-multiply");
   assert.equal(a8.method, "generated-or-constructed", "D-138 must not lock the method");
@@ -201,9 +201,11 @@ test("the method is deliberately not chosen, and the budget is unchanged at 15-1
   assert.match(B.method.unchanged, /chooses no method/i);
   assert.match(B.method.whyNotChosen, /already states a RULE/i);
   assert.match(B.method.whyNotChosen, /documented and proven in advance/i);
-  assert.match(B.method.budget, /15-16/);
+  // D-138 RECORDED 15-16, and that historical text is append-only: it is not rewritten here.
+  assert.match(B.method.budget, /15-16/, "the figure D-138 recorded stays as written");
   assert.match(B.method.authorisesNothing, /neither the construction, nor an image call, nor a claim/i);
-  // and the derived budget must genuinely still be 15-16
+  // The DERIVED budget has since moved, and the two must not be confused: D-138 recorded the
+  // figure that was true then; D-142 recounted it after two calls had actually been sent.
   let min = 0, max = 0;
   for (const a of C.assets) {
     if (typeof a.calls === "number") { min += a.calls; max += a.calls; continue; }
@@ -211,10 +213,13 @@ test("the method is deliberately not chosen, and the budget is unchanged at 15-1
     assert.ok(m, a.name + " has an unreadable calls value");
     min += Number(m[1]); max += Number(m[2]);
   }
-  assert.equal(min, 15);
-  assert.equal(max, 16);
-  assert.equal(C.imageCallBudget.minimum, 15);
-  assert.equal(C.imageCallBudget.maximum, 16);
+  assert.equal(min, 16, "assets[0] carries 2 calls after D-142");
+  assert.equal(max, 17);
+  // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
+  // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
+  // assets[0] therefore carries 2 calls and the derived budget is 16-17.
+  assert.equal(C.imageCallBudget.minimum, 16);
+  assert.equal(C.imageCallBudget.maximum, 17);
 });
 
 test("nothing is wired, and the existing blush behaviour is untouched", () => {

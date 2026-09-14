@@ -155,8 +155,11 @@ test("coverage gains a second axis, and the budget is unchanged", () => {
   // the assets it names must actually be the planned ones, and the budget must really be unchanged
   const hairAssets = C.assets.filter((a) => a.slot === "hair").map((a) => a.name).sort();
   assert.deepEqual(hairAssets, ["r3-hair-afro", "r3-hair-northstar", "r3-hair-short"]);
-  assert.equal(C.imageCallBudget.minimum, 15);
-  assert.equal(C.imageCallBudget.maximum, 16);
+  // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
+  // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
+  // assets[0] therefore carries 2 calls and the derived budget is 16-17.
+  assert.equal(C.imageCallBudget.minimum, 16);
+  assert.equal(C.imageCallBudget.maximum, 17);
 });
 
 test("nothing is wired yet, and nothing existing is changed", () => {

@@ -25,8 +25,9 @@ const CONTRACT = JSON.parse(readFileSync(CONTRACT_PATH, "utf8"));
 const P = CONTRACT.preparedCall;
 const REGISTER = readFileSync(join(REPO, "docs", "project-state.md"), "utf8");
 
-test("preparedCall exists and says, in every field, that nothing is authorised", () => {
-  assert.equal(P.status, "PREPARED — NOT AUTHORISED");
+test("preparedCall is superseded, and still authorises nothing", () => {
+  assert.equal(P.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.equal(P.supersededBy, "D-142");
   assert.equal(P.decision, "D-141");
   assert.equal(P.callId, null, "a prepared call has no call id — one is issued by a later decision");
   assert.equal(P.authorises, "nothing");
@@ -67,11 +68,16 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls still holds exactly one entry, and it is D-139's", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 1);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 1);
+test("authorisedCalls holds D-139's permission and the D-142 spent record", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 2);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 2);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
+  // The second entry is a record. It must never be mistaken for a live permission.
+  const rec = CONTRACT.authorisedCalls.calls[1];
+  assert.equal(rec.callId, "D-142-r3-underlay-core-v1");
+  assert.equal(rec.mandateState, "SPENT");
+  assert.equal(rec.neverReuse, true);
 });
 
 test("NO D-141 entry leaked into authorisedCalls", () => {
