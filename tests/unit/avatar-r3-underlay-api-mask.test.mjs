@@ -205,3 +205,118 @@ test("the mask builder sends nothing and creates no claim", () => {
     assert.ok(!src.includes(forbidden), "the mask builder must not contain " + JSON.stringify(forbidden));
   }
 });
+
+// ── D-141 §2: the CORE-only variant ──────────────────────────────────────────────────────────
+//
+// A second fixture with its own pins, derived from the same tracked D-133 regions. The reason it
+// exists: D-139's mask offered the model the very band pre.transition-silhouette requires to be
+// identical. These tests hold the new mask to the same standard as the old one, and — just as
+// importantly — prove the old one did not move.
+
+const CORE_MASK_BUF = readFileSync(join(FIX, M.VARIANTS.core.mask));
+const CORE_SPEC = JSON.parse(readFileSync(join(FIX, M.VARIANTS.core.spec), "utf8"));
+const CORE = decodePng(CORE_MASK_BUF, "CORE API mask");
+const TRANS = decodePng(readFileSync(join(D133, "r3-head-transition-v1.png")), "D-133 TRANSITION");
+
+test("CORE: the variant table matches what D-141 approved", () => {
+  const v = M.VARIANTS.core;
+  assert.equal(v.decision, "D-141");
+  assert.equal(v.editablePx, 123721);
+  assert.equal(v.protectedPx, 1449143);
+  assert.deepEqual([...v.bbox], [292, 20, 732, 424]);
+  assert.equal(v.subtractsTransition, true);
+  assert.equal(v.mask, "r3-underlay-api-mask-core-v1.png");
+});
+
+test("CORE: the tracked mask matches its pin", () => {
+  assert.equal(CORE_MASK_BUF.length, 10703);
+  assert.equal(sha(CORE_MASK_BUF), "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab");
+  assert.equal(CORE_SPEC.mask.sha256, sha(CORE_MASK_BUF));
+  assert.equal(CORE_SPEC.decision, "D-141");
+  assert.equal(CORE_SPEC.variant, "core");
+});
+
+test("CORE: 1024x1536 RGBA8, binary alpha, RGB 0,0,0 everywhere", () => {
+  const h = A.readPngHeader(CORE_MASK_BUF);
+  assert.deepEqual([h.width, h.height, h.bitDepth, h.colourType], [1024, 1536, 8, 6]);
+  let zero = 0, full = 0, other = 0, coloured = 0;
+  for (let i = 0; i < N; i++) {
+    const a = CORE.rgba[i * 4 + 3];
+    if (a === 0) zero++; else if (a === 255) full++; else other++;
+    if (CORE.rgba[i * 4] !== 0 || CORE.rgba[i * 4 + 1] !== 0 || CORE.rgba[i * 4 + 2] !== 0) coloured++;
+  }
+  assert.equal(other, 0);
+  assert.equal(coloured, 0);
+  assert.equal(zero, 123721);
+  assert.equal(full, 1449143);
+  assert.equal(zero + full, N);
+});
+
+test("CORE: editable is exactly EDIT minus TRANSITION, computed independently", () => {
+  let wrong = 0;
+  for (let i = 0; i < N; i++) {
+    const inEdit = EDIT.rgba[i * 4 + 3] >= 128;
+    const inTrans = TRANS.rgba[i * 4 + 3] >= 128;
+    const wantEditable = inEdit && !inTrans;
+    const isEditable = CORE.rgba[i * 4 + 3] === 0;
+    if (wantEditable !== isEditable) wrong++;
+  }
+  assert.equal(wrong, 0, "the mask is not EDIT \ TRANSITION");
+});
+
+test("CORE: it differs from the D-139 mask by exactly the 1,702 band pixels", () => {
+  let diff = 0, diffInBand = 0;
+  for (let i = 0; i < N; i++) {
+    if (MASK.rgba[i * 4 + 3] !== CORE.rgba[i * 4 + 3]) {
+      diff++;
+      if (TRANS.rgba[i * 4 + 3] >= 128) diffInBand++;
+    }
+  }
+  assert.equal(diff, 1702);
+  assert.equal(diffInBand, 1702, "every differing pixel must lie inside TRANSITION");
+  assert.equal(CORE_SPEC.differsFromD139Mask.changedPx, 1702);
+  assert.equal(CORE_SPEC.differsFromD139Mask.allInside, "D-133 TRANSITION");
+});
+
+test("CORE: the band is PROTECTED here and EDITABLE in D-139's mask", () => {
+  // The whole point, sampled at a pixel that is actually in the band.
+  let band = -1;
+  for (let i = 0; i < N && band < 0; i++) if (TRANS.rgba[i * 4 + 3] >= 128) band = i;
+  assert.ok(band >= 0);
+  assert.equal(MASK.rgba[band * 4 + 3], 0, "D-139 told the model it may repaint the band");
+  assert.equal(CORE.rgba[band * 4 + 3], 255, "D-141 tells it not to");
+});
+
+test("CORE: --check reproduces both fixtures byte-identically", () => {
+  const r = M.run({ check: true, variant: "core" });
+  assert.equal(r.variant, "core");
+  assert.equal(r.verdict.ok, true, (r.verdict.problems || []).join("; "));
+  assert.equal(r.reproduction.maskMatches, true);
+  assert.equal(r.reproduction.specMatches, true);
+  assert.equal(r.wrote, false);
+  assert.equal(M.exitCodeFor(r), 0);
+  assert.equal(r.transitionSource.sha256, "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3");
+});
+
+test("CORE: a drifted TRANSITION input is a hard stop, not a refit", () => {
+  const bad = new Uint8Array(N);           // an empty band -> the count check must fire
+  assert.throws(() => M.editableSetFor("core", new Uint8Array(N), bad), /refusing to refit the region/);
+});
+
+test("D-139's mask and spec did NOT move", () => {
+  assert.equal(sha(MASK_BUF), "28ff1ac00f6972697411ad29c5618f9ede4b5a0a4fd086a41ec0bfb5fe7561fb");
+  const r = M.run({ check: true });                       // default variant is still edit
+  assert.equal(r.variant, "edit");
+  assert.equal(r.reproduction.maskMatches, true);
+  assert.equal(r.reproduction.specMatches, true);
+  assert.equal(M.FILES.mask, "r3-underlay-api-mask-v1.png");
+  assert.equal(M.FILES.spec, "r3-underlay-api-mask-spec-v1.json");
+});
+
+test("CORE: still guidance, still not the byte-identity guarantee", () => {
+  assert.match(CORE_SPEC.semantics.guidanceOnly, /MODEL GUIDANCE ONLY/);
+  assert.match(CORE_SPEC.prohibitions.notTheByteIdentityGate, /NOT the guarantee of 0 changed pixels/);
+  assert.match(CORE_SPEC.prohibitions.noRefit, /never re-fitted/);
+  assert.equal(CORE_SPEC.derivedFrom.minus.decision, "D-133");
+  assert.equal(CORE_SPEC.derivedFrom.minus.px, 1702);
+});

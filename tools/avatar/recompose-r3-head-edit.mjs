@@ -69,6 +69,52 @@ export function transitionSilhouetteDiff(h1Rgba, generatedRgba, width = OUT_W, y
   return { count, sample, any: count > 0 };
 }
 
+// ── D-141 §3: pre.join-continuity ────────────────────────────────────────────────────────────
+//
+// pre.transition-silhouette checks rows 425-445. Under D-141's CORE-only API mask those are exactly
+// the rows the model is told NOT to paint, so passing that gate says nothing about the one place
+// generated content actually meets preserved H1 content: the handover from row 424 to row 425.
+// A step there would be invisible to every pre-registered gate. This closes that.
+//
+// The bound is NOT a chosen number and NOT a literal. It is H1's own silhouette discontinuity across
+// the same pair of rows, recomputed from the pinned H1 on every run. With the pinned fixtures it
+// comes out at 4; nothing here asserts that, because asserting it would make the constant the
+// authority instead of the file.
+export const JOIN_TOP = 424;
+export const JOIN_BOT = 425;
+
+/** S(m, y) — the set of x positions where image m is solid in row y. */
+export function rowSolidSet(rgba, y, width = OUT_W) {
+  const s = new Set();
+  for (let x = 0; x < width; x++) if (rgba[(y * width + x) * 4 + 3] >= SOLID_ALPHA) s.add(x);
+  return s;
+}
+
+/** |A △ B| — pixels solid in exactly one of the two rows. */
+export function rowSymmetricDifference(a, b) {
+  let n = 0;
+  for (const x of a) if (!b.has(x)) n++;
+  for (const x of b) if (!a.has(x)) n++;
+  return n;
+}
+
+/**
+ * PRE-GATE: the generated head must land on H1's preserved neck no less continuously than H1's own
+ * contour does across the same handover.
+ *
+ *   observed = |S(generated, JOIN_TOP) △ S(H1, JOIN_BOT)|
+ *   bound    = |S(H1,        JOIN_TOP) △ S(H1, JOIN_BOT)|
+ *   PASS    ⟺ observed <= bound
+ */
+export function joinContinuity(h1Rgba, generatedRgba, width = OUT_W, joinTop = JOIN_TOP, joinBot = JOIN_BOT) {
+  const h1Top = rowSolidSet(h1Rgba, joinTop, width);
+  const h1Bot = rowSolidSet(h1Rgba, joinBot, width);
+  const genTop = rowSolidSet(generatedRgba, joinTop, width);
+  const bound = rowSymmetricDifference(h1Top, h1Bot);          // derived from H1, every run
+  const observed = rowSymmetricDifference(genTop, h1Bot);
+  return { observed, bound, pass: observed <= bound, joinTop, joinBot };
+}
+
 /**
  * The two POST-gates, measured against an ARBITRARY candidate output. Kept separate from
  * recompose() so a composite produced anywhere — including one this tool did not write —
@@ -118,6 +164,15 @@ export function recompose({ h1Rgba, generatedRgba, edit, transition, width = OUT
       { transitionSilhouetteDiffPixels: pre.count });
   }
 
+  // PRE-GATE (D-141) — the handover from generated content to preserved H1 content.
+  const join = joinContinuity(h1Rgba, generatedRgba, width);
+  if (!join.pass) {
+    throw new GateError("pre.join-continuity",
+      `silhouette discontinuity across the y${join.joinTop}/y${join.joinBot} handover is ${join.observed} px, `
+      + `above H1's own ${join.bound} px across the same rows`,
+      { joinObserved: join.observed, joinBound: join.bound, joinTop: join.joinTop, joinBot: join.joinBot });
+  }
+
   const out = Buffer.alloc(n * 4);
   let corePx = 0, transitionPx = 0, protectPx = 0;
   for (let y = 0; y < height; y++) {
@@ -143,7 +198,10 @@ export function recompose({ h1Rgba, generatedRgba, edit, transition, width = OUT
   const post = verifyRecomposed({ outRgba: out, h1Rgba, edit, transition, width, height });
   const report = {
     canvas: [width, height], corePx, transitionPx, protectPx,
-    ...post, preGateSilhouetteDiffPixels: pre.count, outputSha256: sha256(out),
+    ...post, preGateSilhouetteDiffPixels: pre.count,
+    joinContinuity: { observed: join.observed, bound: join.bound, joinTop: join.joinTop, joinBot: join.joinBot,
+      boundSource: "derived from H1 at run time, never a literal" },
+    outputSha256: sha256(out),
   };
   if (post.protectedDiffBytes !== 0)
     throw new GateError("post.protected-bytes", `${post.protectedDiffBytes} differing RGBA byte(s) in ${post.protectedDiffPixels} protected pixel(s); first: ${JSON.stringify(post.protectedDiffSample)}`, report);
