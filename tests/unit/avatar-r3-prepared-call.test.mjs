@@ -124,12 +124,27 @@ test("checking authorisation performs no network call and creates no claim", () 
   // and nothing in this file can reach the network: no fetch is imported, called or stubbed
   const src = readFileSync(join(HERE, "avatar-r3-prepared-call.test.mjs"), "utf8");
   assert.ok(!/D139\.performSingleRequest\s*\(/.test(src), "this suite must not exercise the send path");
-  assert.ok(!/fetch\s*\(/.test(src), "this suite must not call fetch");
+  // A CALL to fetch, not a mention of the name: another test in this file lists "fetch(" as a
+  // forbidden substring to look for in adapters, and that literal must not trip this check.
+  assert.ok(!/[^"'\w]fetch\s*\(/.test(src), "this suite must not call fetch");
 });
 
-test("D-141 implements no new adapter — no such file is added", () => {
-  for (const f of ["openai-generate-r3-underlay-v2.mjs", "openai-generate-r3-core.mjs", "openai-generate-r3-underlay-core.mjs"]) {
-    assert.equal(existsSync(join(REPO, "tools", "avatar", f)), false, "D-141 must not add a sending adapter: " + f);
+test("no adapter for the prepared call can send", () => {
+  // This began as "no such file exists", a proxy for the property that actually matters: while
+  // preparedCall is unauthorised, NO adapter targeting the prepared CORE call may carry a send
+  // path. A preparation adapter may now exist — it does — so the check tests the property
+  // directly, which also catches a send path being added to a file that is allowed to exist.
+  const dir = join(REPO, "tools", "avatar");
+  const candidates = ["openai-generate-r3-underlay-v2.mjs", "openai-generate-r3-core.mjs",
+    "openai-generate-r3-underlay-core.mjs"];
+  for (const f of candidates) {
+    const p = join(dir, f);
+    if (!existsSync(p)) continue;
+    const code = readFileSync(p, "utf8").split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+    for (const forbidden of ["fetch(", "FormData", "OPENAI_API_KEY", "Authorization", '"wx"', "createClaim", "writeFileSync"]) {
+      assert.ok(!code.includes(forbidden),
+        f + " must carry no send path while preparedCall is unauthorised, but contains " + JSON.stringify(forbidden));
+    }
   }
   // the D-139 adapter is unchanged: it still pins its own call id and its own mask
   assert.equal(D139.CALL_ID, "D-139-r3-underlay-head-only-v1");
