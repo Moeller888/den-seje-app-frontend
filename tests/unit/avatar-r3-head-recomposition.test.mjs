@@ -13,7 +13,8 @@ import {
   RAMP, generatedWeightNumerator, blendChannel, recompose, verifyRecomposed,
   transitionSilhouetteDiff, TOOL, TOOL_VERSION, DECISION,
 } from "../../tools/avatar/recompose-r3-head-edit.mjs";
-import { SOLID_ALPHA, BAND_Y_TOP, BAND_Y_BOT } from "../../tools/avatar/build-r3-head-edit-masks.mjs";
+import * as R from "../../tools/avatar/recompose-r3-head-edit.mjs";
+import { SOLID_ALPHA, BAND_Y_TOP, BAND_Y_BOT, OUT_W, OUT_H } from "../../tools/avatar/build-r3-head-edit-masks.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -227,4 +228,64 @@ test("the tool composes and cannot generate: no model, no network, no image call
   for (const forbidden of ["openai", "fetch(", "https://", "node:http", "api_key", "apiKey"])
     assert.ok(!src.toLowerCase().includes(forbidden.toLowerCase()), `the recomposition tool must not contain ${forbidden}`);
   assert.match(src, /It composes; it never generates/);
+});
+
+// ── D-141: the new PRE-gate sits beside the existing ones, and changes none of them ──────────
+
+test("pre.join-continuity is exported and pre-registered at rows 424/425", () => {
+  assert.equal(R.JOIN_TOP, 424);
+  assert.equal(R.JOIN_BOT, 425);
+  assert.equal(typeof R.joinContinuity, "function");
+  assert.equal(typeof R.rowSolidSet, "function");
+  assert.equal(typeof R.rowSymmetricDifference, "function");
+});
+
+test("D-141 changed none of D-133's rules", () => {
+  assert.equal(R.RAMP.yTop, 425);
+  assert.equal(R.RAMP.yBot, 445);
+  assert.equal(R.RAMP.denominator, 20);
+  assert.equal(R.generatedWeightNumerator(425), 20);
+  assert.equal(R.generatedWeightNumerator(445), 0);
+  assert.equal(R.generatedWeightNumerator(435), 10);
+  assert.equal(typeof R.transitionSilhouetteDiff, "function");
+  assert.equal(typeof R.verifyRecomposed, "function");
+});
+
+test("the existing pre-gate still fires first, before the join gate", () => {
+  // A candidate that breaks BOTH must be reported as the transition failure, not the join one:
+  // the older, stricter gate keeps precedence.
+  const n = OUT_W * OUT_H;
+  const h1 = Buffer.alloc(n * 4), gen = Buffer.alloc(n * 4);
+  for (let x = 400; x < 500; x++) {
+    h1[(424 * OUT_W + x) * 4 + 3] = 255;
+    h1[(430 * OUT_W + x) * 4 + 3] = 255;   // inside the band: generated leaves it transparent
+  }
+  for (let x = 700; x < 800; x++) gen[(424 * OUT_W + x) * 4 + 3] = 255;
+  const edit = new Uint8Array(n), transition = new Uint8Array(n);
+  for (let x = 400; x < 500; x++) { edit[430 * OUT_W + x] = 1; transition[430 * OUT_W + x] = 1; edit[424 * OUT_W + x] = 1; }
+  for (let x = 700; x < 800; x++) edit[424 * OUT_W + x] = 1;
+  let err = null;
+  try { R.recompose({ h1Rgba: h1, generatedRgba: gen, edit, transition }); } catch (e) { err = e; }
+  assert.ok(err);
+  assert.equal(err.gate, "pre.transition-silhouette", "the existing gate keeps precedence");
+});
+
+test("a passing recomposition reports the join measurement", () => {
+  const n = OUT_W * OUT_H;
+  const h1 = Buffer.alloc(n * 4), gen = Buffer.alloc(n * 4);
+  for (let y = 420; y <= 450; y++) for (let x = 400; x < 500; x++) {
+    h1[(y * OUT_W + x) * 4 + 3] = 255; h1[(y * OUT_W + x) * 4] = 200;
+    gen[(y * OUT_W + x) * 4 + 3] = 255; gen[(y * OUT_W + x) * 4] = 100;
+  }
+  const edit = new Uint8Array(n), transition = new Uint8Array(n);
+  for (let y = 420; y <= 445; y++) for (let x = 400; x < 500; x++) {
+    edit[y * OUT_W + x] = 1;
+    if (y >= 425) transition[y * OUT_W + x] = 1;
+  }
+  const { report } = R.recompose({ h1Rgba: h1, generatedRgba: gen, edit, transition });
+  assert.equal(report.joinContinuity.joinTop, 424);
+  assert.equal(report.joinContinuity.joinBot, 425);
+  assert.equal(report.joinContinuity.observed, 0, "identical rows give a zero step");
+  assert.equal(report.joinContinuity.bound, 0, "H1's own rows are identical here too");
+  assert.match(report.joinContinuity.boundSource, /derived from H1 at run time, never a literal/);
 });

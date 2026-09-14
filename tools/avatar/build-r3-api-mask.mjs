@@ -1,7 +1,15 @@
-// build-r3-api-mask — D-139 §3.
+// build-r3-api-mask — D-139 §3 and D-141 §2.
 //
-// Derives the ONE API guidance mask for the R3 technical-underlay head-only call, deterministically
-// and from a single tracked input: D-133's EDIT region fixture.
+// Derives the API guidance masks for the R3 technical-underlay head-only call, deterministically and
+// from D-133's own tracked region fixtures. Two variants, two separate fixtures, separate pins:
+//
+//   --variant=edit  D-139: editable = D-133 EDIT.                    Shipped and left exactly as it is.
+//   --variant=core  D-141: editable = D-133 CORE = EDIT \ TRANSITION.
+//
+// The core variant exists because D-139 offered the model the very rows pre.transition-silhouette
+// requires to be identical. Subtracting the band brings the instruction in line with the gate.
+// NOTHING in D-133 differs between the variants: the regions, the ramp, the gates and noRefit are
+// untouched, and only which region the API mask marks editable changes.
 //
 // WHY A SEPARATE MASK EXISTS AT ALL. D-133's fixtures are MARKER masks: their alpha means "this
 // pixel belongs to the region", and the RGB triple is a flat label colour. The Images edit endpoint
@@ -25,8 +33,10 @@
 // a fresh clone with no external file, and CI can verify every byte it produces.
 //
 // Usage:
-//   node tools/avatar/build-r3-api-mask.mjs           write the fixture and its spec
-//   node tools/avatar/build-r3-api-mask.mjs --check   verify only, write nothing
+//   node tools/avatar/build-r3-api-mask.mjs                          write the D-139 EDIT fixture
+//   node tools/avatar/build-r3-api-mask.mjs --check                  verify only, write nothing
+//   node tools/avatar/build-r3-api-mask.mjs --variant=core           write the D-141 CORE fixture
+//   node tools/avatar/build-r3-api-mask.mjs --variant=core --check   verify only, write nothing
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -61,10 +71,63 @@ export const EXPECT = Object.freeze({
   editBbox: Object.freeze([292, 20, 732, 445]),
 });
 
+/**
+ * The SECOND tracked input, read only by the CORE variant. D-141 subtracts D-133's TRANSITION band
+ * from EDIT, so the model is never told it may repaint the rows pre.transition-silhouette requires
+ * to be identical.
+ */
+export const TRANSITION_SOURCE = Object.freeze({
+  path: join("tools", "avatar", "fixtures", "r3-head-edit", "r3-head-transition-v1.png"),
+  sha256: "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3",
+  marker: Object.freeze([250, 204, 21]),
+  px: 1702,
+  decision: "D-133",
+});
+
+/**
+ * The two API masks this tool can build. They are separate fixtures with separate pins; building
+ * one never touches the other. NOTHING in D-133 differs between them — only which region the API
+ * mask marks editable.
+ *
+ *   edit  D-139: editable = D-133 EDIT. Shipped, spent, and left exactly as it is.
+ *   core  D-141: editable = D-133 CORE = EDIT \ TRANSITION.
+ */
+export const VARIANTS = Object.freeze({
+  edit: Object.freeze({
+    id: "edit",
+    decision: "D-139",
+    editableRegion: "D-133 EDIT",
+    subtractsTransition: false,
+    editablePx: 125423,
+    protectedPx: 1447441,
+    bbox: Object.freeze([292, 20, 732, 445]),
+    mask: "r3-underlay-api-mask-v1.png",
+    spec: "r3-underlay-api-mask-spec-v1.json",
+  }),
+  core: Object.freeze({
+    id: "core",
+    decision: "D-141",
+    editableRegion: "D-133 CORE = EDIT \\ TRANSITION",
+    subtractsTransition: true,
+    editablePx: 123721,
+    protectedPx: 1449143,
+    bbox: Object.freeze([292, 20, 732, 424]),
+    mask: "r3-underlay-api-mask-core-v1.png",
+    spec: "r3-underlay-api-mask-core-spec-v1.json",
+  }),
+});
+
+export function variantOf(id) {
+  const v = VARIANTS[id || "edit"];
+  if (!v) throw new Error("unknown mask variant: " + id);
+  return v;
+}
+
 export const FIXTURE_DIR = join("tools", "avatar", "fixtures", "r3-underlay");
+/** The D-139 names, kept as the default so existing callers and pins are unaffected. */
 export const FILES = Object.freeze({
-  mask: "r3-underlay-api-mask-v1.png",
-  spec: "r3-underlay-api-mask-spec-v1.json",
+  mask: VARIANTS.edit.mask,
+  spec: VARIANTS.edit.spec,
 });
 
 /** The direction, written down once so a test can assert it rather than re-deriving it. */
@@ -107,6 +170,51 @@ export function loadEditRegion(buf, label) {
   return { set, px };
 }
 
+/** Reads the TRANSITION fixture the same strict way, so a drifted band is a hard stop too. */
+export function loadTransitionRegion(buf, label) {
+  const img = decodePng(buf, label || "TRANSITION fixture");
+  if (img.w !== OUT_W || img.h !== OUT_H) {
+    throw new Error(`${label}: ${img.w}x${img.h}, expected ${OUT_W}x${OUT_H}`);
+  }
+  const set = new Uint8Array(N);
+  let px = 0;
+  for (let i = 0; i < N; i++) {
+    const a = img.rgba[i * 4 + 3];
+    if (a !== 0 && a !== 255) throw new Error(`${label}: alpha ${a} is not binary`);
+    if (a === 0) continue;
+    if (img.rgba[i * 4] !== TRANSITION_SOURCE.marker[0] || img.rgba[i * 4 + 1] !== TRANSITION_SOURCE.marker[1]
+      || img.rgba[i * 4 + 2] !== TRANSITION_SOURCE.marker[2]) {
+      throw new Error(`${label}: marker colour is not constant inside the region`);
+    }
+    set[i] = 1;
+    px++;
+  }
+  if (px !== TRANSITION_SOURCE.px) {
+    throw new Error(`${label}: ${px} px, expected ${TRANSITION_SOURCE.px} — refusing to refit the region`);
+  }
+  return { set, px };
+}
+
+/**
+ * The editable region for a variant. Pure set algebra over D-133's own fixtures — this tool draws
+ * no geometry, fits nothing, and never re-derives a region from an output.
+ */
+export function editableSetFor(variant, editSet, transitionSet) {
+  const v = typeof variant === "string" ? variantOf(variant) : (variant || VARIANTS.edit);
+  if (!editSet || editSet.length !== N) throw new Error("editableSetFor needs a full-canvas EDIT set");
+  if (!v.subtractsTransition) return editSet;
+  if (!transitionSet || transitionSet.length !== N) {
+    throw new Error("the " + v.id + " variant needs the TRANSITION set");
+  }
+  const out = new Uint8Array(N);
+  let px = 0;
+  for (let i = 0; i < N; i++) if (editSet[i] && !transitionSet[i]) { out[i] = 1; px++; }
+  if (px !== v.editablePx) {
+    throw new Error(`${v.id}: ${px} editable px, expected ${v.editablePx} — refusing to refit the region`);
+  }
+  return out;
+}
+
 /** The whole transformation: one inversion, no geometry of its own. */
 export function buildApiMask(editSet) {
   if (!editSet || editSet.length !== N) throw new Error("buildApiMask needs a full-canvas region set");
@@ -115,8 +223,13 @@ export function buildApiMask(editSet) {
   return rgba;
 }
 
-/** Every gate D-139 names, checked on the pixels rather than on the intent. */
-export function verifyApiMask(rgba, editSet) {
+/**
+ * Every gate the decision names, checked on the pixels rather than on the intent. `variant` selects
+ * the expected counts; it defaults to the D-139 EDIT variant so existing callers are unaffected.
+ */
+export function verifyApiMask(rgba, editSet, variant) {
+  const V = typeof variant === "string" ? variantOf(variant) : (variant || VARIANTS.edit);
+  const EXPECT = { editPx: V.editablePx, protectPx: V.protectedPx, canvasPx: N };
   const problems = [];
   if (!Buffer.isBuffer(rgba) || rgba.length !== N * 4) {
     return { ok: false, problems: ["the mask buffer is not a full 1024x1536 RGBA canvas"], counts: null };
@@ -139,8 +252,8 @@ export function verifyApiMask(rgba, editSet) {
   if (protectedPx !== EXPECT.protectPx) problems.push(`${protectedPx} protected px, expected ${EXPECT.protectPx}`);
   if (editable + protectedPx !== EXPECT.canvasPx) problems.push("editable + protected does not cover the canvas exactly");
   if (editSet) {
-    if (wrongInEdit !== 0) problems.push(`${wrongInEdit} px inside D-133 EDIT are not transparent — the mask is inverted or misaligned`);
-    if (wrongOutside !== 0) problems.push(`${wrongOutside} px outside D-133 EDIT are not opaque — the mask is inverted or misaligned`);
+    if (wrongInEdit !== 0) problems.push(`${wrongInEdit} px inside ${V.editableRegion} are not transparent — the mask is inverted or misaligned`);
+    if (wrongOutside !== 0) problems.push(`${wrongOutside} px outside ${V.editableRegion} are not opaque — the mask is inverted or misaligned`);
   }
   return { ok: problems.length === 0, problems, counts: { editable, protected: protectedPx, nonBinary, colouredPx } };
 }
@@ -154,25 +267,76 @@ export function pngHeader(buf) {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20), bitDepth: buf[24], colourType: buf[25] };
 }
 
-export function specFor(maskBytes, sourceSha) {
+/**
+ * The spec beside a mask. The `edit` branch reproduces D-139's tracked spec BYTE FOR BYTE — its
+ * fields, its order and its wording are frozen, because that fixture is pinned and must not drift.
+ * The `core` branch is a new document for a new fixture, and says what it subtracts.
+ */
+export function specFor(maskBytes, sourceSha, variant, transitionSha) {
+  const V = typeof variant === "string" ? variantOf(variant) : (variant || VARIANTS.edit);
+
+  if (!V.subtractsTransition) {
+    // ── D-139, frozen. Do not reword, reorder or extend: the fixture hash depends on every byte.
+    return {
+      tool: TOOL,
+      toolVersion: TOOL_VERSION,
+      decision: DECISION,
+      status: "API GUIDANCE MASK ONLY — NO IMAGE REQUEST SENT, NO CLAIM CREATED BY THIS TOOL",
+      canvas: { width: OUT_W, height: OUT_H, origin: "top-left" },
+      derivedFrom: { path: SOURCE.path.split("\\").join("/"), sha256: sourceSha, decision: SOURCE.decision, px: SOURCE.px },
+      semantics: SEMANTICS,
+      counts: { editablePx: EXPECT.editPx, protectedPx: EXPECT.protectPx, canvasPx: EXPECT.canvasPx },
+      editBbox: EXPECT.editBbox,
+      bboxConvention: "inclusive-max",
+      mask: { file: FILES.mask, bytes: maskBytes.length, sha256: sha(maskBytes), png: pngHeader(maskBytes) },
+      invariants: [
+        "alpha is strictly binary {0,255}",
+        "alpha = 0 on exactly the D-133 EDIT region, and nowhere else",
+        "alpha = 255 on exactly the D-133 PROTECT region, and nowhere else",
+        "RGB = 0,0,0 on every pixel; the mask contains no pixel of the figure",
+        "the same input and tool version reproduce every output byte-identically",
+      ],
+      prohibitions: {
+        notTheByteIdentityGate: "This mask is model guidance. It is NOT the guarantee of 0 changed pixels "
+          + "outside the head — that guarantee is D-133's deterministic recomposition, which copies PROTECT "
+          + "back from H1 byte-identically.",
+        noRuntimePromotion: "An authoring fixture. It is NOT a runtime mask and carries no runtime authority.",
+        noRefit: "A deviation from D-133's approved counts is a hard stop. The region is never re-fitted.",
+      },
+    };
+  }
+
   return {
     tool: TOOL,
     toolVersion: TOOL_VERSION,
-    decision: DECISION,
+    decision: V.decision,
+    variant: V.id,
+    editableRegion: V.editableRegion,
     status: "API GUIDANCE MASK ONLY — NO IMAGE REQUEST SENT, NO CLAIM CREATED BY THIS TOOL",
     canvas: { width: OUT_W, height: OUT_H, origin: "top-left" },
-    derivedFrom: { path: SOURCE.path.split("\\").join("/"), sha256: sourceSha, decision: SOURCE.decision, px: SOURCE.px },
+    derivedFrom: {
+      path: SOURCE.path.split("\\").join("/"), sha256: sourceSha, decision: SOURCE.decision, px: SOURCE.px,
+      minus: { path: TRANSITION_SOURCE.path.split("\\").join("/"), sha256: transitionSha,
+        decision: TRANSITION_SOURCE.decision, px: TRANSITION_SOURCE.px },
+    },
     semantics: SEMANTICS,
-    counts: { editablePx: EXPECT.editPx, protectedPx: EXPECT.protectPx, canvasPx: EXPECT.canvasPx },
-    editBbox: EXPECT.editBbox,
+    counts: { editablePx: V.editablePx, protectedPx: V.protectedPx, canvasPx: N },
+    editBbox: V.bbox,
     bboxConvention: "inclusive-max",
-    mask: { file: FILES.mask, bytes: maskBytes.length, sha256: sha(maskBytes), png: pngHeader(maskBytes) },
+    mask: { file: V.mask, bytes: maskBytes.length, sha256: sha(maskBytes), png: pngHeader(maskBytes) },
+    differsFromD139Mask: {
+      file: VARIANTS.edit.mask,
+      changedPx: TRANSITION_SOURCE.px,
+      allInside: "D-133 TRANSITION",
+      why: "the band pre.transition-silhouette requires to be identical is no longer offered to the model as editable",
+    },
     invariants: [
       "alpha is strictly binary {0,255}",
-      "alpha = 0 on exactly the D-133 EDIT region, and nowhere else",
-      "alpha = 255 on exactly the D-133 PROTECT region, and nowhere else",
+      "alpha = 0 on exactly the D-133 CORE region (EDIT minus TRANSITION), and nowhere else",
+      "alpha = 255 everywhere else, and nowhere else",
       "RGB = 0,0,0 on every pixel; the mask contains no pixel of the figure",
-      "the same input and tool version reproduce every output byte-identically",
+      "it differs from the D-139 mask by exactly the 1702 TRANSITION pixels",
+      "the same inputs and tool version reproduce every output byte-identically",
     ],
     prohibitions: {
       notTheByteIdentityGate: "This mask is model guidance. It is NOT the guarantee of 0 changed pixels "
@@ -196,6 +360,7 @@ export function run(opts) {
   const o = opts || {};
   const repoRoot = o.repoRoot || REPO;
   const check = o.check === true;
+  const V = variantOf(o.variant);
   const srcPath = join(repoRoot, SOURCE.path);
   if (!existsSync(srcPath)) throw new Error("missing tracked input: " + SOURCE.path);
   const srcBuf = readFileSync(srcPath);
@@ -204,16 +369,31 @@ export function run(opts) {
     throw new Error(`${SOURCE.path}: sha ${srcSha}, expected ${SOURCE.sha256} — refusing to build from a drifted input`);
   }
 
-  const { set } = loadEditRegion(srcBuf, SOURCE.path);
+  const { set: editSet } = loadEditRegion(srcBuf, SOURCE.path);
+
+  let transSet = null;
+  let transSha = null;
+  if (V.subtractsTransition) {
+    const tPath = join(repoRoot, TRANSITION_SOURCE.path);
+    if (!existsSync(tPath)) throw new Error("missing tracked input: " + TRANSITION_SOURCE.path);
+    const tBuf = readFileSync(tPath);
+    transSha = sha(tBuf);
+    if (transSha !== TRANSITION_SOURCE.sha256) {
+      throw new Error(`${TRANSITION_SOURCE.path}: sha ${transSha}, expected ${TRANSITION_SOURCE.sha256} — refusing to build from a drifted input`);
+    }
+    transSet = loadTransitionRegion(tBuf, TRANSITION_SOURCE.path).set;
+  }
+
+  const set = editableSetFor(V, editSet, transSet);
   const rgba = buildApiMask(set);
-  const verdict = verifyApiMask(rgba, set);
+  const verdict = verifyApiMask(rgba, set, V);
   const png = encodePngRGBA(OUT_W, OUT_H, rgba);
-  const spec = specFor(png, srcSha);
+  const spec = specFor(png, srcSha, V, transSha);
   const specText = JSON.stringify(spec, null, 2) + "\n";
 
   const dir = join(repoRoot, FIXTURE_DIR);
-  const maskPath = join(dir, FILES.mask);
-  const specPath = join(dir, FILES.spec);
+  const maskPath = join(dir, V.mask);
+  const specPath = join(dir, V.spec);
   const existingMask = readIfExists(maskPath);
   const existingSpec = readIfExists(specPath);
   const maskMatches = existingMask !== null && existingMask.equals(png);
@@ -226,8 +406,9 @@ export function run(opts) {
   }
 
   return {
-    check, verdict, spec,
+    check, verdict, spec, variant: V.id,
     source: { path: SOURCE.path, sha256: srcSha },
+    transitionSource: V.subtractsTransition ? { path: TRANSITION_SOURCE.path, sha256: transSha } : null,
     mask: { path: maskPath, bytes: png.length, sha256: sha(png) },
     reproduction: { maskExisted: existingMask !== null, maskMatches, specExisted: existingSpec !== null, specMatches },
     wrote: !check && verdict.ok,
@@ -247,11 +428,15 @@ export function exitCodeFor(result) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     const check = process.argv.includes("--check");
-    const result = run({ check });
-    console.log(TOOL + " " + TOOL_VERSION + " — " + DECISION);
+    const vflag = process.argv.find((a) => a.startsWith("--variant="));
+    const variant = vflag ? vflag.slice("--variant=".length) : "edit";
+    const result = run({ check, variant });
+    const V = variantOf(result.variant);
+    console.log(TOOL + " " + TOOL_VERSION + " — " + V.decision + "   variant: " + V.id);
+    console.log("  editable : " + V.editableRegion);
     console.log("  source   : " + result.source.path);
     console.log("             " + result.source.sha256 + "   [" + SOURCE.decision + "]");
-    console.log("  direction: alpha 0 = EDITABLE (D-133 EDIT) · alpha 255 = PROTECTED (D-133 PROTECT)");
+    console.log("  direction: alpha 0 = EDITABLE (" + V.editableRegion + ") · alpha 255 = PROTECTED (everything else)");
     console.log("             this is the ALPHA-INVERSE of D-133's marker fixtures");
     const c = result.verdict.counts;
     if (c) console.log("  counts   : editable " + c.editable + "  protected " + c.protected +
@@ -275,7 +460,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       }
       console.log("  wrote    : nothing (--check)");
     } else {
-      console.log("  wrote    : " + (result.wrote ? FIXTURE_DIR.split("\\").join("/") + "/{" + FILES.mask + "," + FILES.spec + "}" : "nothing"));
+      console.log("  wrote    : " + (result.wrote ? FIXTURE_DIR.split("\\").join("/") + "/{" + V.mask + "," + V.spec + "}" : "nothing"));
     }
     console.log("\n  This tool sends nothing and creates no claim. The mask is model guidance only;");
     console.log("  D-133's recomposition is what keeps everything outside the head byte-identical.");

@@ -153,3 +153,108 @@ test("an extra trailing newline inside the block is refused", () => {
 test("the prompt file authorises nothing on its own", () => {
   assert.match(MD, /Nothing in this file authorises a call/);
 });
+
+// ── D-141 §7: the prepared v2 prompt ─────────────────────────────────────────────────────────
+//
+// A new fixture, pinned the same way. The four changes from D-139's text each target the measured
+// failure: the model shrank the neck along with the cranium, and nothing in the prompt said the
+// neck had to stay. D-139's prompt is untouched, and one test holds it to that.
+
+const V2_PATH = join(REPO, "tools", "avatar", "fixtures", "r3-underlay", "r3-underlay-prompt-v2.md");
+const V2_RAW = readFileSync(V2_PATH);
+const V2_MD = V2_RAW.toString("utf8");
+/**
+ * v2 is extracted here with the documented rule, NOT with A.extractPrompt: that function is pinned
+ * to D-139's section markers (it requires "CHANGE ONLY THE HEAD:", which v2 deliberately replaces),
+ * and D-141 implements no adapter of its own. The rule is the same either way: the single fenced
+ * block, LF endings, exactly one trailing newline.
+ */
+function extractFenced(md) {
+  if (md.includes("\r")) return { ok: false, why: "the file contains CR" };
+  const lines = md.split("\n");
+  const fences = [];
+  for (let i = 0; i < lines.length; i++) if (lines[i].trimEnd() === "```") fences.push(i);
+  if (fences.length !== 2) return { ok: false, why: "expected exactly 2 fences, found " + fences.length };
+  return { ok: true, prompt: lines.slice(fences[0] + 1, fences[1]).join("\n").replace(/\s+$/, "") + "\n" };
+}
+const V2 = extractFenced(V2_MD);
+
+test("v2: the wrapper file matches its pin", () => {
+  assert.equal(V2_RAW.length, 6242);
+  assert.equal(sha(V2_RAW), "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141");
+});
+
+test("v2: LF only, one fenced block, exactly one trailing newline", () => {
+  assert.ok(!V2_MD.includes("\r"), "the file must be LF-only");
+  assert.equal(V2_MD.split("\n").filter((l) => l.trimEnd() === "```").length, 2);
+  assert.ok(V2.ok, V2.why || "extraction failed");
+  assert.ok(V2.prompt.endsWith("\n"));
+  assert.ok(!V2.prompt.endsWith("\n\n"));
+});
+
+test("v2: the transmitted text matches its pin", () => {
+  const buf = Buffer.from(V2.prompt, "utf8");
+  assert.equal(buf.length, 2731);
+  assert.equal(sha(buf), "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693");
+});
+
+test("v2: the four changes that target the measured failure are all present", () => {
+  const p = V2.prompt;
+  assert.match(p, /CHANGE ONLY THE HEAD ABOVE THE NECK:/, "(a) the head is bounded at the neck");
+  assert.match(p, /Its width, its outline and both of its sides must be identical to Image 1/, "(b) the neck is pinned");
+  assert.match(p, /Do not\s+make the neck longer, shorter, narrower or wider\./);
+  assert.match(p, /WHERE THE HEAD MEETS THE NECK:/, "(c) the join is addressed");
+  assert.match(p, /ABOVE THE JAW ONLY/, "(d) what gets smaller is bounded");
+  assert.match(p, /The neck does not become smaller\./);
+});
+
+test("v2: the join instruction asks for a taper, not a single-row step", () => {
+  const p = V2.prompt;
+  assert.match(p, /widen out to meet the neck at exactly the width the neck has in Image 1/);
+  assert.match(p, /no step, no notch and no change of width/);
+  assert.match(p, /Do not put the\s+change of width into a single row\./);
+});
+
+test("v2: everything the owner approved for D-139 is carried over unchanged", () => {
+  const p = V2.prompt;
+  assert.equal(p.split("\n")[0], A.PROMPT_FIRST_LINE);
+  assert.match(p, /Image 2 is a reference for HEAD SHAPE, SKIN TONE and LINE STYLE ONLY/);
+  assert.match(p, /Do not copy its hair/);
+  assert.match(p, /Do\s+not copy its face/);
+  assert.ok(p.includes("- The ears, in the same position, shape and size."), "the ears line is the owner's instruction");
+  for (const absent of ["No eyes", "no irises", "no pupils", "no eyebrows", "no nose", "no mouth"]) {
+    assert.ok(p.includes(absent), "the absence list must survive: " + absent);
+  }
+  assert.match(p, /No background\. The background must be fully transparent\./);
+  assert.match(p, /1024 x 1536 pixels, PNG, with a transparent background/);
+  assert.match(p, /One image only\./);
+});
+
+test("v2: it still does not ask for the same head size", () => {
+  assert.ok(!/same head size/i.test(V2.prompt));
+  assert.match(CONTRACT.firstCall.gates.notCompared, /must NOT be compared directly with H1/);
+});
+
+test("v2: the file authorises nothing and says a call can still fail", () => {
+  assert.match(V2_MD, /Nothing in this file authorises a call/);
+  assert.match(V2_MD, /A next call\s+can still fail/);
+  assert.match(V2_MD, /requires a separate owner-visual review/);
+});
+
+test("D-139's prompt is untouched by D-141", () => {
+  assert.equal(RAW.length, A.PROMPT_FILE.bytes);
+  assert.equal(sha(RAW), A.PROMPT_FILE.sha256);
+  assert.equal(sha(RAW), "8a5cb283a4cb5803adf45d8d35e68a0c058a6604ffc9869ec58ea1ee514724f6");
+  assert.notEqual(sha(V2_RAW), sha(RAW), "the two prompts are different files");
+  // the D-139 adapter still points at the D-139 prompt, not the prepared one
+  assert.equal(A.PROMPT_FILE.name, "r3-underlay-prompt.md");
+});
+
+test("the register records both prompt hashes", () => {
+  const row = readFileSync(join(REPO, "docs", "project-state.md"), "utf8")
+    .split("\n").filter((l) => l.startsWith("| **D-141** |"))[0];
+  assert.ok(row, "the D-141 row must exist");
+  assert.ok(row.includes("8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141"), "the file hash");
+  assert.ok(row.includes("76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693"), "the transmitted hash");
+  assert.ok(row.includes("2.731 B"), "the transmitted byte count");
+});

@@ -1243,11 +1243,89 @@
       }
     ]
   },
+  "joinContinuityGate": {
+    "gate": "pre.join-continuity",
+    "decision": "D-141",
+    "runsBefore": "recomposition",
+    "onFailure": "no recomposed output is written; no warp, repair or refit follows",
+    "solidPixel": "alpha >= 128 (D-071)",
+    "rowSet": "S(m,y) = the set of x positions where image m is solid in row y",
+    "joinTop": 424,
+    "joinBot": 425,
+    "observed": "|S(generated,424) symdiff S(H1,425)|",
+    "bound": "|S(H1,424) symdiff S(H1,425)|",
+    "pass": "observed <= bound",
+    "boundValueWithPinnedH1": 4,
+    "boundDerivation": "computed at run time from the pinned H1 file and the exact row pair. The implementation MUST NOT carry it as a literal.",
+    "boundCharacter": "an objectively H1-derived, pre-registered tolerance with no freely chosen number. It is not candidate-dependent and was not chosen after seeing any future output.",
+    "crossCheck": "Northstar Master v2 yields the same value, 4, across the same row pair",
+    "whyItExists": "pre.transition-silhouette checks rows 425-445. Under the D-141 CORE-only API mask those are exactly the rows the model is told not to paint, so passing it says nothing about the one place generated content meets preserved H1 content: the y424/y425 handover. A step there would otherwise be invisible to every pre-registered gate.",
+    "historicalDiagnosticOnly": {
+      "subject": "the D-139 output",
+      "observed": 33,
+      "bound": 4,
+      "result": "FAIL",
+      "note": "recorded as history. It must never be used to set the bound.",
+      "mayNotReclassify": "This gate must never be used to reclassify, re-judge or promote the D-139 output. That output stays rejected under pre.transition-silhouette (644 px). D-133 noRefit stands."
+    },
+    "proves": "silhouette continuity across the y424/y425 handover, and nothing else",
+    "doesNotProve": [
+      "continuity of RGB or skin tone",
+      "equal outline stroke",
+      "absence of a visible seam",
+      "visual quality",
+      "that the API mask was followed byte-identically"
+    ],
+    "ownerVisualReviewRequired": true,
+    "ownerVisualReviewMustShow": {
+      "subject": "the head/neck join",
+      "scales": [
+        "1:1",
+        "52x78",
+        "110x165",
+        "100x150",
+        "180x270"
+      ],
+      "backgrounds": [
+        "light",
+        "the real dark avatar gradient",
+        "checkerboard"
+      ],
+      "sideBySide": [
+        "H1",
+        "the raw output",
+        "the recomposed output"
+      ]
+    },
+    "noAutomaticTolerance": "no RGB tolerance and no after-the-fact ignore mask is authorised"
+  },
+  "preparedCall": {
+    "status": "PREPARED — NOT AUTHORISED",
+    "decision": "D-141",
+    "callId": null,
+    "authorises": "nothing",
+    "prepares": [
+      "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-core-v1.png",
+      "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt-v2.md",
+      "pre.join-continuity in tools/avatar/recompose-r3-head-edit.mjs"
+    ],
+    "adapterContract": "Any adapter that reads this block MUST refuse --send while status is 'PREPARED — NOT AUTHORISED', regardless of any other flag or approval value, and MUST NOT create a claim.",
+    "requiresBeforeAnySend": [
+      "a separate, explicit owner decision",
+      "a new call id",
+      "a new exclusive-create claim file",
+      "a new or extended adapter, itself owner-approved"
+    ],
+    "notAnAuthorisedCall": "This entry must never be moved into, merged with, or read as an entry of authorisedCalls.",
+    "authorisedCallsUnchanged": "authorisedCalls still holds exactly one entry, D-139-r3-underlay-head-only-v1, whose mandate is SPENT.",
+    "noAdapterImplemented": "D-141 implements no new sending adapter. The existing D-139 adapter is pinned to its own call id and is neither imported, extended nor modified.",
+    "oneCallCanStillFail": "Even with the correct mask and the correct prompt, a next call can fail: the model is not guaranteed to follow the mask pixel-precisely. D-141 buys a better chance, not a guarantee."
+  },
   "prohibitions": {
     "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. SUPERSEDED NARROWLY BY D-139 for exactly one named call: the single entry in authorisedCalls.calls, call id D-139-r3-underlay-head-only-v1. Nothing else is authorised — no repeat of that call, no variant of it, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
-    "noMaskWork": "D-132 creates, changes, derives and promotes no mask of any kind. SUPERSEDED NARROWLY BY D-139 in one respect only: D-139 DERIVES one API guidance mask deterministically from D-133's tracked EDIT fixture (tools/avatar/build-r3-api-mask.mjs). No existing mask is changed, no mask is promoted to runtime, and no mask is drawn, fitted or segmented by hand."
+    "noMaskWork": "D-132 creates, changes, derives and promotes no mask of any kind. SUPERSEDED NARROWLY BY D-139 in one respect only: D-139 DERIVES one API guidance mask deterministically from D-133's tracked EDIT fixture (tools/avatar/build-r3-api-mask.mjs). SUPERSEDED AGAIN, equally narrowly, BY D-141, which derives a SECOND API guidance mask from the same tracked fixtures as EDIT minus TRANSITION. Both are separate fixtures with separate pins. No existing mask is changed, no mask is promoted to runtime, and no mask is drawn, fitted or segmented by hand."
   }
 }

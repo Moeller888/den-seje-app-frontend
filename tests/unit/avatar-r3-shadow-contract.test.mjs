@@ -498,3 +498,72 @@ test("the D-132 row exists in the register exactly once and is not rewritten by 
   assert.match(row, /R3/);
   assert.match(row, /no image request/i);
 });
+
+// ── D-141: a supplementary gate and a prepared, unauthorised call ────────────────────────────
+
+test("D-141 adds a join gate without touching D-133 or D-139", () => {
+  const g = C.joinContinuityGate;
+  assert.equal(g.gate, "pre.join-continuity");
+  assert.equal(g.decision, "D-141");
+  assert.equal(g.runsBefore, "recomposition");
+  assert.equal(g.joinTop, 424);
+  assert.equal(g.joinBot, 425);
+  assert.equal(g.pass, "observed <= bound");
+  assert.match(g.onFailure, /no recomposed output is written/);
+  // D-133's own contract is untouched
+  assert.match(C.firstCall.recomposition.contract, /PRE-DEFINED, not after-the-fact repair/);
+  assert.match(C.firstCall.gates.noNewTolerances, /the requirement is 0 differing pixels, not a tolerance/);
+  // D-139's authorised call is untouched
+  assert.equal(C.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
+  assert.equal(C.authorisedCalls.calls[0].mask.sha256, "28ff1ac00f6972697411ad29c5618f9ede4b5a0a4fd086a41ec0bfb5fe7561fb");
+});
+
+test("the join bound is H1-derived, never a literal, and is named as a tolerance", () => {
+  const g = C.joinContinuityGate;
+  assert.equal(g.boundValueWithPinnedH1, 4);
+  assert.match(g.boundDerivation, /computed at run time from the pinned H1 file/);
+  assert.match(g.boundDerivation, /MUST NOT carry it as a literal/);
+  assert.match(g.boundCharacter, /objectively H1-derived, pre-registered tolerance with no freely chosen number/);
+  assert.match(g.crossCheck, /Northstar Master v2 yields the same value, 4/);
+});
+
+test("the join gate is explicit about its own limits", () => {
+  const g = C.joinContinuityGate;
+  assert.match(g.proves, /and nothing else/);
+  assert.ok(g.doesNotProve.includes("absence of a visible seam"));
+  assert.ok(g.doesNotProve.includes("that the API mask was followed byte-identically"));
+  assert.equal(g.ownerVisualReviewRequired, true);
+  assert.match(g.whyItExists, /invisible to every pre-registered gate/);
+});
+
+test("the D-139 output may not be reclassified by the new gate", () => {
+  const h = C.joinContinuityGate.historicalDiagnosticOnly;
+  assert.equal(h.observed, 33);
+  assert.equal(h.result, "FAIL");
+  assert.match(h.mayNotReclassify, /never be used to reclassify, re-judge or promote/);
+  assert.match(h.mayNotReclassify, /noRefit stands/);
+});
+
+test("preparedCall authorises nothing, and authorisedCalls is unchanged", () => {
+  assert.equal(C.preparedCall.status, "PREPARED — NOT AUTHORISED");
+  assert.equal(C.preparedCall.callId, null);
+  assert.equal(C.preparedCall.authorises, "nothing");
+  assert.equal(C.authorisedCalls.count, 1);
+  assert.equal(C.authorisedCalls.calls.length, 1);
+  assert.ok(!C.authorisedCalls.calls.some((x) => x.decision === "D-141"));
+  assert.equal(C.meta.authorisesImageRequest, false);
+});
+
+test("D-141's mask derivation is recorded as a second narrow supersession, not a new licence", () => {
+  assert.match(C.prohibitions.noMaskWork, /creates, changes, derives and promotes no mask/);
+  assert.match(C.prohibitions.noMaskWork, /SUPERSEDED AGAIN, equally narrowly, BY D-141/);
+  assert.match(C.prohibitions.noMaskWork, /EDIT minus TRANSITION/);
+  assert.match(C.prohibitions.noMaskWork, /no mask is promoted to runtime/);
+});
+
+test("the D-141 row exists exactly once, with the owner's decision date", () => {
+  const rows = readFileSync(REGISTER_PATH, "utf8").split("\n").filter((l) => l.startsWith("| **D-141** |"));
+  assert.equal(rows.length, 1);
+  assert.match(rows[0], /\(2026-09-14\)/);
+  assert.match(rows[0], /autoriserer INTET billedkald/);
+});
