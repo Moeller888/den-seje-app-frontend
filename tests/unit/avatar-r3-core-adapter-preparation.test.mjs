@@ -76,8 +76,7 @@ test("the refusal grounds are evaluated, and losing one changes nothing", () => 
   assert.equal(r.fetchCalled, false);
   assert.deepEqual(r.grounds.slice().sort(), [C.REFUSAL.CONTRACT, C.REFUSAL.STRUCTURAL].sort());
   const byGround = Object.fromEntries(r.refusals.map((x) => [x.ground, x.detail]));
-  assert.match(byGround[C.REFUSAL.CONTRACT], /SUPERSEDED BY D-142; ITS PREPARATION REALISED BY D-143/);
-  assert.match(byGround[C.REFUSAL.CONTRACT], /STILL NOT A PERMISSION/);
+  assert.match(byGround[C.REFUSAL.CONTRACT], /SUPERSEDED BY D-142 — STILL NOT A PERMISSION/);
   assert.match(byGround[C.REFUSAL.CONTRACT], /only recognises the prepared, unauthorised state/);
   assert.match(byGround[C.REFUSAL.STRUCTURAL], /no send path is implemented/);
   // the entry that silenced ground 2 must be a spent record, never a live permission

@@ -178,13 +178,24 @@ test("SEMANTIC: the classifier reads the fields, not the position in the list", 
     "dropping noRetry must be visible, so the real entry's noRetry is doing the work");
 });
 
-test("SEMANTIC: D-141's preparedCall block no longer claims the list holds one entry", () => {
+test("SEMANTIC: D-141's preparedCall block is historical, and is not rewritten for D-143", () => {
+  // This block belongs to D-141 and was last written by D-142. D-143 does NOT update it: the
+  // owner's rule is that D-141/D-142 history is never rewritten to describe a later decision.
+  // Its enumeration is therefore deliberately AS OF D-142 — two entries, neither of them D-141's —
+  // and it must not be read as a statement about the list today.
   const t = C.preparedCall.authorisedCallsUnchanged;
-  assert.ok(!/holds exactly one entry/.test(t), "the stale singular claim must be gone here too");
-  assert.match(t, /Unchanged BY D-141/, "the key name means unchanged by D-141, and the text must say so");
-  assert.match(t, /THREE entries/);
-  for (const e of C.authorisedCalls.calls) assert.ok(t.includes(e.callId), "it must name " + e.callId);
+  assert.ok(!/holds exactly one entry/.test(t), "the stale singular claim D-142 fixed must stay gone");
+  assert.match(t, /Unchanged BY D-141/, "the key name means unchanged by D-141, and the text says so");
+  assert.match(t, /TWO entries/, "as of D-142, and not restated for D-143");
+  assert.ok(!/D-143/.test(t), "a historical block must not be rewritten to mention D-143");
   assert.ok(!C.authorisedCalls.calls.some((e) => e.decision === "D-141"), "and D-141 still has no entry");
+
+  // The CURRENT state of the list lives in the general prohibition, which IS kept up to date.
+  const live = C.prohibitions.noImageRequestAuthorised;
+  assert.match(live, /THREE entries/);
+  for (const e of C.authorisedCalls.calls) {
+    assert.ok(live.includes(e.callId), "the current prohibition must name " + e.callId);
+  }
 });
 
 test("the authorised-call list carries D-139's call, a spent record and one live permission", () => {
@@ -686,17 +697,11 @@ test("the D-139 output may not be reclassified by the new gate", () => {
   assert.match(h.mayNotReclassify, /noRefit stands/);
 });
 
-test("preparedCall is superseded and realised WITHOUT becoming a permission", () => {
-  // Two dangerous readings, both refused here. Superseding a refusal grants nothing; and neither
-  // does having its preparation realised by D-143 — the permission lives in the D-143 ENTRY, and
-  // this block still has no call id, no send path and nothing to exercise.
-  assert.equal(C.preparedCall.status, "SUPERSEDED BY D-142; ITS PREPARATION REALISED BY D-143 — STILL NOT A PERMISSION");
+test("preparedCall is superseded WITHOUT becoming a permission", () => {
+  // D-142 superseded it. The dangerous reading is that superseding a refusal grants something —
+  // it does not: there is no send path, and the D-142 entry is a spent record.
+  assert.equal(C.preparedCall.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
   assert.equal(C.preparedCall.supersededBy, "D-142");
-  assert.equal(C.preparedCall.realisedBy, "D-143");
-  assert.equal(C.preparedCall.realisedOn, "2026-09-15");
-  assert.match(C.preparedCall.realisationNote, /still authorises nothing/);
-  assert.match(C.preparedCall.realisationNote, /never be moved into or read as an entry of authorisedCalls/);
-  assert.match(C.preparedCall.realisationNote, /cannot be exercised until a send adapter exists in origin\/main/);
   assert.equal(C.preparedCall.callId, null, "it never acquired a call id");
   assert.equal(C.preparedCall.authorises, "nothing");
   assert.match(C.preparedCall.supersessionNote, /creates NO active send permission/);
@@ -829,8 +834,16 @@ test("D-143 describes its own history honestly", () => {
 test("D-143 delivers NO send path, and does not touch either existing adapter", () => {
   const a = d143().adapter;
   assert.match(a.file, /NOT YET IMPLEMENTED/);
-  assert.match(a.notInThisRepositoryYet, /No adapter in origin\/main can send/);
+  // The claim has to be exact: the CORE preparation adapter cannot send and D-143 adds no send
+  // path — but the D-139 adapter DOES contain send code, and the contract must not deny it. It is
+  // harmless here because it is pinned to its own call id and its own mandate is already spent.
+  assert.match(a.notInThisRepositoryYet, /CORE preparation adapter still cannot send/);
+  assert.match(a.notInThisRepositoryYet, /D-143 adds no new send path/);
   assert.match(a.notInThisRepositoryYet, /does not change it by one byte/);
+  assert.match(a.notInThisRepositoryYet, /D-139 adapter DOES contain send code and that is not denied/);
+  assert.match(a.notInThisRepositoryYet, /pinned to its own call id/);
+  assert.ok(!/No adapter in origin\/main can send/.test(a.notInThisRepositoryYet),
+    "the over-broad claim must be gone");
   assert.match(a.d139AdapterUntouched, /neither imports, extends nor modifies it/);
 
   // and that is checked against the files, not only asserted in prose
@@ -946,4 +959,117 @@ test("the D-143 row exists exactly once, and carries the decision's own pins", (
   for (const d of ["D-139", "D-140", "D-141", "D-142"]) {
     assert.equal(REG_TEXT.split("\n").filter((l) => l.startsWith("| **" + d + "** |")).length, 1, d + " stays a single row");
   }
+});
+
+// ── D-143 adds ONE authorisation and rewrites nothing that came before ───────────────────────
+//
+// The pins below are of the PR's base, 6b9777121f03a3b86575df77c572d20bf6482065, taken before
+// D-143 was written. They exist because a later decision is exactly when history is most likely
+// to get quietly "tidied up" to match it. sha256 of the canonical JSON is used so that a single
+// changed byte anywhere inside a block fails, including a reordered or added key.
+
+const BASE_COMMIT = "6b9777121f03a3b86575df77c572d20bf6482065";
+const BASE_PINS = {
+  preparedCall: "ee531f9d8e11f121a5c898be94c8c1282db6ebf26dd83ed08ed4bf4349e16caa",
+  d139Entry: "a1d393378b97d1fa99f880c23afeca52f9c4e9d5e646dd629e888c307377c930",
+  d142Entry: "9412797e1665a938c84230a2219657887e1c55f2631440ff98582e8072fdcde0",
+  rows: {
+    "D-139": "a8d0afb3ed8251c6f8acf361515019c5805e43f55e8ab93fcbdd5a0a53ce3c3f",
+    "D-140": "405d30518960d2f9268238094fe1f6f5e56922b195fbd354135cfc618cd75e2c",
+    "D-141": "4eb2e49275f097b4399ee723c66471bebb256e2b822793b430a119fd67d5c4f8",
+    "D-142": "e13529d431055286431d24e13b77c82be6c4f0c0b38cd8e76e8a37a08e127185",
+  },
+};
+const canon = (v) => sha256(JSON.stringify(v));
+
+test("PROOF 1: preparedCall is byte-identical to the base and says nothing about D-143", () => {
+  // D-141's prepared-call block belongs to D-141, last written by D-142. D-143 reuses what it
+  // prepared, and records that reuse in ITS OWN row and entry — never by editing this block.
+  assert.equal(canon(C.preparedCall), BASE_PINS.preparedCall,
+    "preparedCall must be unchanged from " + BASE_COMMIT);
+  assert.equal(C.preparedCall.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.deepEqual(Object.keys(C.preparedCall), [
+    "status", "supersededBy", "supersededOn", "supersessionNote", "decision", "callId",
+    "authorises", "prepares", "adapterContract", "requiresBeforeAnySend", "notAnAuthorisedCall",
+    "authorisedCallsUnchanged", "noAdapterImplemented", "oneCallCanStillFail",
+  ], "no key added, removed or reordered");
+  for (const gone of ["realisedBy", "realisedOn", "realisationNote"]) {
+    assert.ok(!(gone in C.preparedCall), gone + " must not exist: it would rewrite D-141 for D-143");
+  }
+  assert.ok(!/D-143/.test(JSON.stringify(C.preparedCall)),
+    "a historical block must not mention a later decision at all");
+  assert.equal(C.preparedCall.callId, null);
+  assert.equal(C.preparedCall.authorises, "nothing");
+});
+
+test("PROOF 2: D-143's own entry names the reused, pinned D-141 artefacts", () => {
+  // Every artefact preparedCall lists as prepared must reappear, by hash, inside D-143's entry —
+  // so the reuse is provable from D-143's side without touching D-141's block.
+  const e = C.authorisedCalls.calls.find((x) => x.decision === "D-143");
+  assert.ok(e, "D-143 must have its own entry");
+  const prepared = C.preparedCall.prepares;
+  assert.equal(prepared.length, 3);
+
+  // (a) the CORE API mask D-141 prepared
+  assert.ok(prepared.includes(e.mask.file), "the entry must use the prepared CORE mask, not another");
+  assert.equal(e.mask.decision, "D-141", "and credit D-141 for it");
+  assert.equal(e.mask.sha256, "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab");
+  assert.equal(e.mask.bytes, 10703);
+
+  // (b) prompt v2, which D-141 prepared
+  assert.ok(prepared.includes(e.prompt.file), "the entry must use the prepared prompt v2");
+  assert.equal(e.prompt.preparedBy, "D-141");
+  assert.equal(e.prompt.fileSha256, "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141");
+  assert.equal(e.prompt.transmittedSha256, "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693");
+
+  // (c) pre.join-continuity, D-141's gate, is mandatory in D-143's own acceptance pipeline
+  const joinPrepared = prepared.find((p) => p.startsWith("pre.join-continuity"));
+  assert.ok(joinPrepared, "D-141 prepared the join gate");
+  const gates = e.acceptance.machineGatesMandatory.join(" | ");
+  assert.match(gates, /pre\.join-continuity/);
+  assert.match(gates, /\(D-141\)/, "and D-143 credits D-141 for it");
+  assert.match(gates, /derived from H1 at run time, never a literal/);
+
+  // the reuse is recorded in D-143's register row too, not in D-141's
+  const REG_TEXT = readFileSync(REGISTER_PATH, "utf8");
+  const row = REG_TEXT.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.ok(row, "the D-143 row must exist");
+  assert.match(row, /556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab/);
+  assert.match(row, /76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693/);
+  assert.match(row, /pre\.join-continuity/);
+});
+
+test("PROOF 3: D-143 adds exactly one authorisation and changes no earlier decision's meaning", () => {
+  // exactly one new entry, and it is D-143's
+  assert.equal(C.authorisedCalls.calls.length, 3);
+  assert.equal(C.authorisedCalls.count, 3);
+  const byDecision = C.authorisedCalls.calls.map((x) => x.decision);
+  assert.deepEqual(byDecision, ["D-139", "D-142", "D-143"]);
+  assert.equal(byDecision.filter((d) => d === "D-143").length, 1, "exactly ONE new authorisation");
+
+  // the two entries that were already there are byte-identical to the base
+  assert.equal(canon(C.authorisedCalls.calls[0]), BASE_PINS.d139Entry, "D-139's entry is untouched");
+  assert.equal(canon(C.authorisedCalls.calls[1]), BASE_PINS.d142Entry, "D-142's entry is untouched");
+
+  // and so are the register rows of every decision that precedes it
+  const REG_TEXT = readFileSync(REGISTER_PATH, "utf8").split("\n");
+  for (const [id, pin] of Object.entries(BASE_PINS.rows)) {
+    const rows = REG_TEXT.filter((l) => l.startsWith("| **" + id + "** |"));
+    assert.equal(rows.length, 1, id + " must still be exactly one row");
+    assert.equal(sha256(rows[0]), pin, id + "'s row must be byte-identical to " + BASE_COMMIT);
+  }
+
+  // D-142 keeps its meaning: spent, unknown, never reused — and D-143 takes a different identity
+  const spent = C.authorisedCalls.calls[1];
+  assert.equal(spent.mandateState, "SPENT");
+  assert.equal(spent.outcome, "UNKNOWN");
+  assert.equal(spent.neverReuse, true);
+  const live = C.authorisedCalls.calls[2];
+  assert.notEqual(live.callId, spent.callId);
+  assert.notEqual(live.claim.filename, "D-142.claim.json");
+  assert.equal(live.claim.filename, "D-143.claim.json");
+
+  // and nothing global was loosened on the way
+  assert.equal(C.meta.authorisesImageRequest, false);
+  assert.equal(C.imageCallBudget.isAuthorisation, false);
 });

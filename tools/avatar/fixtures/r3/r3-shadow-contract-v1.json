@@ -1431,7 +1431,7 @@
         },
         "adapter": {
           "file": "NOT YET IMPLEMENTED — a new, separate file to be added by the follow-up PR B",
-          "notInThisRepositoryYet": "No adapter in origin/main can send. tools/avatar/openai-generate-r3-underlay-core.mjs is a PREPARATION adapter with no fetch, no request body, no credential and no claim creation, and D-143 does not change it by one byte.",
+          "notInThisRepositoryYet": "The CORE preparation adapter still cannot send, and D-143 adds no new send path. tools/avatar/openai-generate-r3-underlay-core.mjs has no fetch, no request body, no credential and no claim creation, and D-143 does not change it by one byte. The D-139 adapter DOES contain send code and that is not denied here: it is pinned to its own call id, D-139-r3-underlay-head-only-v1, so it cannot make this call, and its own mandate is already SPENT. Nothing in origin/main can send D-143's call.",
           "d139AdapterUntouched": "tools/avatar/openai-generate-r3-underlay.mjs keeps its own send path and its own pinned call id. D-143 neither imports, extends nor modifies it, and its spent claim is never touched.",
           "ownRequiredDecisions": "The future send adapter carries its OWN REQUIRED_DECISIONS, at least D-132, D-133, D-139, D-140, D-141, D-142 and D-143. It must not borrow the preparation adapter's list, and the preparation adapter's list must not be extended.",
           "sendFunctionNotExported": "The irreversible send function must not be exported, so no test can import it. Its behaviour is proven by running the real CLI inside an isolated sandbox.",
@@ -1542,10 +1542,7 @@
     "noAutomaticTolerance": "no RGB tolerance and no after-the-fact ignore mask is authorised"
   },
   "preparedCall": {
-    "status": "SUPERSEDED BY D-142; ITS PREPARATION REALISED BY D-143 — STILL NOT A PERMISSION",
-    "realisedBy": "D-143",
-    "realisedOn": "2026-09-15",
-    "realisationNote": "D-141 prepared the CORE mask, prompt v2 and pre.join-continuity. D-143 is the owner decision that authorises a call using exactly that preparation, so this block's purpose is now realised. That changes nothing about this block itself: it still authorises nothing, it still has no call id, and it must never be moved into or read as an entry of authorisedCalls. The permission lives in the D-143 entry there, and even that cannot be exercised until a send adapter exists in origin/main and a separate owner instruction runs it.",
+    "status": "SUPERSEDED BY D-142 — STILL NOT A PERMISSION",
     "supersededBy": "D-142",
     "supersededOn": "2026-09-14",
     "supersessionNote": "D-141 prepared this call. D-142 records that the attempt happened and that its mandate is SPENT with an unknown outcome. Superseding this block creates NO active send permission: there is no send path in the merged adapter, and the D-142 entry in authorisedCalls is a record, not a licence. A new attempt needs its own decision, call id and claim identity.",
@@ -1565,7 +1562,7 @@
       "a new or extended adapter, itself owner-approved"
     ],
     "notAnAuthorisedCall": "This entry must never be moved into, merged with, or read as an entry of authorisedCalls.",
-    "authorisedCallsUnchanged": "Unchanged BY D-141: D-141 added nothing to authorisedCalls, and this block never acquired an entry there. The list now holds THREE entries, and none of them is D-141's — D-139-r3-underlay-head-only-v1, whose mandate is SPENT; D-142-r3-underlay-core-v1, an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true, which was never a permission at all; and D-143-r3-underlay-core-v2, the active unspent permission, which belongs to D-143 and not to this block.",
+    "authorisedCallsUnchanged": "Unchanged BY D-141: D-141 added nothing to authorisedCalls, and this block never acquired an entry there. The list now holds TWO entries, and neither is D-141's — D-139-r3-underlay-head-only-v1, whose mandate is SPENT, and D-142-r3-underlay-core-v1, an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true, which was never a permission at all.",
     "noAdapterImplemented": "D-141 implements no new sending adapter. The existing D-139 adapter is pinned to its own call id and is neither imported, extended nor modified.",
     "oneCallCanStillFail": "Even with the correct mask and the correct prompt, a next call can fail: the model is not guaranteed to follow the mask pixel-precisely. D-141 buys a better chance, not a guarantee."
   },

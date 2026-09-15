@@ -26,9 +26,7 @@ const P = CONTRACT.preparedCall;
 const REGISTER = readFileSync(join(REPO, "docs", "project-state.md"), "utf8");
 
 test("preparedCall is superseded, and still authorises nothing", () => {
-  assert.equal(P.status, "SUPERSEDED BY D-142; ITS PREPARATION REALISED BY D-143 — STILL NOT A PERMISSION");
-  assert.equal(P.realisedBy, "D-143", "D-143 authorises a call that uses this preparation");
-  assert.match(P.realisationNote, /still authorises nothing/);
+  assert.equal(P.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
   assert.equal(P.supersededBy, "D-142");
   assert.equal(P.decision, "D-141");
   assert.equal(P.callId, null, "a prepared call has no call id — one is issued by a later decision");
