@@ -543,7 +543,7 @@
   },
 
   "assets": [
-    { "id": 1,  "name": "r3-base-neutral-medium", "slot": "base",     "method": "generated", "calls": 1 },
+    { "id": 1,  "name": "r3-base-neutral-medium", "slot": "base",     "method": "generated", "calls": 2 },
     { "id": 2,  "name": "r3-tee-default",         "slot": "tee",      "method": "generated", "calls": 1 },
     { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
     { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
@@ -563,9 +563,10 @@
   ],
 
   "imageCallBudget": {
-    "minimum": 15,
-    "maximum": 16,
+    "minimum": 16,
+    "maximum": 17,
     "isAuthorisation": false,
+    "countingRule": "Every image call ACTUALLY SENT counts, including one whose output was rejected and one sent by accident. D-139 was sent and its output rejected; the D-142 attempt was sent during an incident with an unknown outcome. Both count, so assets[0].calls is 2 and the derived budget is 16-17. Adopted by D-142.",
     "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
     "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
   },
@@ -1087,8 +1088,9 @@
   ],
   "authorisedCalls": {
     "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
-    "count": 1,
-    "budgetUnchanged": "D-139 spends one of the calls the plan already budgeted (assets[0], the R3 base underlay, calls: 1). The 15-16 budget is unchanged and is still not consent.",
+    "count": 2,
+    "budgetAccounting": "assets[0] now carries 2 calls: D-139, sent with its output rejected, and the D-142 attempt, sent during an incident with an unknown outcome. The derived budget is 16-17. Budget numbers remain planning, never consent.",
+    "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
     "calls": [
       {
         "callId": "D-139-r3-underlay-head-only-v1",
@@ -1240,6 +1242,66 @@
           "noOtherCall": "This entry authorises this call only. Blush, iris, hair, expressions, clothing and every other R3 asset remain unauthorised.",
           "noRuntimeChange": "No runtime, compositor, manifest, mask, golden, asset, deploy, Supabase or student-data change follows from D-139."
         }
+      },
+      {
+        "callId": "D-142-r3-underlay-core-v1",
+        "decision": "D-142",
+        "decidedOn": "2026-09-14",
+        "status": "SPENT — CONSUMED BY AN INCIDENT, NOT BY AN INTENDED RUN",
+        "mandateState": "SPENT",
+        "outcome": "UNKNOWN",
+        "neverReuse": true,
+        "notAnActivePermission": "This entry is a RECORD, not a permission. Its mandate is spent and its outcome unknown. No adapter may read it as authorisation to send, and no future call may reuse this call id or this claim identity. It exists so the register tells the truth about what was attempted.",
+        "producedNoOutput": "No raw output, no request manifest and no recomposed result exist. No gate was ever run on a D-142 result. Nothing was promoted, and the D-139 output is not reclassified by any of this.",
+        "incident": {
+          "when": "2026-09-14T16:33:10.436Z",
+          "claimFile": "D-142.claim.json",
+          "claimSha256": "004c3116f2392ad872fef28143a0dfa11a924f6b8cefcecd7e2dda407448a9d6",
+          "claimBytes": 1776,
+          "claimStatus": "SPENT_BEFORE_FETCH",
+          "cause": "A unit test called the send function directly in the test process with send:true and the correct owner approval. The adapter takes no claimPath, no outDir and no fetchImpl, so it fell back to the real user identity, the real API key and the real globalThis.fetch. The D-142 register row and authorisation existed only as UNCOMMITTED files in a worktree, and the adapter read the working tree rather than origin/main.",
+          "claimPreserved": "The claim file is untouched and stays untouched. It is never deleted, reset, renamed or restored."
+        },
+        "evidence": {
+          "proven": [
+            "the claim was created at 2026-09-14T16:33:10.436Z",
+            "the adapterSha256 recorded in the claim identifies the exact code version that ran",
+            "between createClaim and the single fetch there is no branch, no I/O and no early return",
+            "globalThis.fetch was entered exactly once: finish(), which is reachable only after the fetch, set sent:true"
+          ],
+          "unknown": [
+            "the HTTP status",
+            "the request id",
+            "the usage and whether the call was billed"
+          ],
+          "likely": "the request reached the API and was billed as one gpt-image-2 image edit: the body was valid, the key real, the endpoint correct and the machine had connectivity",
+          "whyUnknown": "finish() wrote a manifest carrying the status, request id and usage, but a later test's cleanup removed the output directory on the production path before the incident was noticed. No copy survives.",
+          "absenceIsNotProof": "The missing manifest is NOT evidence that no request was sent."
+        },
+        "attemptedPins": {
+          "note": "Recorded so the incident is auditable. These are what the spent attempt would have sent; they authorise nothing.",
+          "endpoint": "https://api.openai.com/v1/images/edits",
+          "model": "gpt-image-2-2026-04-21",
+          "parameters": {
+            "n": 1,
+            "size": "1024x1536",
+            "quality": "high",
+            "output_format": "png",
+            "background": "transparent"
+          },
+          "promptFileSha256": "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141",
+          "promptTransmittedSha256": "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693",
+          "maskSha256": "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab",
+          "image1Sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+          "image2Sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+        },
+        "prohibitions": {
+          "noFurtherAttempt": "D-142 authorises no further attempt. A new underlay call requires its own owner decision with its own number, its own call id and its own claim identity.",
+          "noClaimReset": "D-142.claim.json is never deleted, reset, renamed or restored. Nothing in this repository may do so.",
+          "noSendPathHere": "The merged CORE adapter has no send path and does not gain one from this decision.",
+          "noReclassifyD139": "The D-139 output stays rejected under pre.transition-silhouette at 644 px. Its join measurement of 33 is historical diagnostic only, and D-133 noRefit stands.",
+          "noPromotion": "Nothing is promoted. No runtime, compositor, resolver, manifest, mask, golden, asset, deploy or Supabase change follows."
+        }
       }
     ]
   },
@@ -1300,7 +1362,10 @@
     "noAutomaticTolerance": "no RGB tolerance and no after-the-fact ignore mask is authorised"
   },
   "preparedCall": {
-    "status": "PREPARED — NOT AUTHORISED",
+    "status": "SUPERSEDED BY D-142 — STILL NOT A PERMISSION",
+    "supersededBy": "D-142",
+    "supersededOn": "2026-09-14",
+    "supersessionNote": "D-141 prepared this call. D-142 records that the attempt happened and that its mandate is SPENT with an unknown outcome. Superseding this block creates NO active send permission: there is no send path in the merged adapter, and the D-142 entry in authorisedCalls is a record, not a licence. A new attempt needs its own decision, call id and claim identity.",
     "decision": "D-141",
     "callId": null,
     "authorises": "nothing",
@@ -1317,12 +1382,42 @@
       "a new or extended adapter, itself owner-approved"
     ],
     "notAnAuthorisedCall": "This entry must never be moved into, merged with, or read as an entry of authorisedCalls.",
-    "authorisedCallsUnchanged": "authorisedCalls still holds exactly one entry, D-139-r3-underlay-head-only-v1, whose mandate is SPENT.",
+    "authorisedCallsUnchanged": "Unchanged BY D-141: D-141 added nothing to authorisedCalls, and this block never acquired an entry there. The list now holds TWO entries, and neither is D-141's — D-139-r3-underlay-head-only-v1, whose mandate is SPENT, and D-142-r3-underlay-core-v1, an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true, which was never a permission at all.",
     "noAdapterImplemented": "D-141 implements no new sending adapter. The existing D-139 adapter is pinned to its own call id and is neither imported, extended nor modified.",
     "oneCallCanStillFail": "Even with the correct mask and the correct prompt, a next call can fail: the model is not guaranteed to follow the mask pixel-precisely. D-141 buys a better chance, not a guarantee."
   },
+  "futureSendAuthorisationRule": {
+    "decision": "D-142",
+    "adoptedOn": "2026-09-14",
+    "appliesTo": "every FUTURE adapter that can call fetch for an image request",
+    "rule": "A send is authorised only by the exact decision row and authorisation entry present in origin/main. A row in the working tree, on a local branch, or in an isolated worktree is NOT sufficient, even when its text and hashes match the contract.",
+    "whyItExists": "The D-142 incident: the decision row and the authorisation entry existed only as uncommitted files in a worktree, and the adapter read the working tree. Under this rule that attempt would have been refused before the claim and before the fetch.",
+    "theFunctionThatCanFetchMustCheckItself": "The verification belongs inside the function that can call fetch, not in a CLI, a wrapper or a caller. It must resolve origin/main itself, read the decision row and the authorisation entry from that ref, and compare the exact call id and every pin against its own constants, BEFORE the claim is created.",
+    "mustNotAccept": [
+      "a caller-supplied git ref",
+      "caller-supplied register content",
+      "a caller-supplied contract object",
+      "a caller-supplied preflight result"
+    ],
+    "refuseBeforeClaimAndFetch": [
+      "git is unavailable, or the directory is not a git repository",
+      "origin/main cannot be resolved",
+      "a required blob is missing from origin/main",
+      "the decision row is not present exactly once in the origin/main register",
+      "the origin/main contract does not authorise the exact call id",
+      "any pin in the origin/main entry differs from the adapter's own constants",
+      "any blob's SHA-256 differs from the adapter's pin",
+      "the working tree diverges from origin/main for the register, the contract, the prompt or the mask"
+    ],
+    "payloadComesFromOriginMain": "What is sent must be the merged bytes: the prompt, the mask and the tracked reference image are read from origin/main blobs, not from the working tree. An external input that cannot live in git — the authoring base under D-127 §2 — stays pinned by full SHA-256 alone.",
+    "recordTheRef": "The origin/main commit SHA that authorised the call is written into the claim and the manifest, so the audit trail names exactly which commit permitted it.",
+    "noFetchDuringVerification": "The verification reads the local remote-tracking ref. It performs no network operation of its own; the only network call is the one authorised request.",
+    "testPlanCorrection": "A divergence test and a payload-inspection test cannot be the same test. When the working tree diverges from origin/main the function refuses BEFORE the fetch, so no mock fetch is entered and no request body exists to inspect. Payload provenance must be proven in a scenario where the working tree and origin/main agree, and the divergence scenario must assert only the refusal, with zero fetches and no claim.",
+    "implementationDeferred": "No send path is implemented by D-142. If a later decision authorises a new image call, that decision implements and tests this rule in a fully isolated sandbox: a temporary clone whose own origin/main is arranged for the scenario, a temporary user identity supplied through the environment, and a mocked fetch. No test may use the owner's real API key, claim path or output path.",
+    "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
+  },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. SUPERSEDED NARROWLY BY D-139 for exactly one named call: the single entry in authorisedCalls.calls, call id D-139-r3-underlay-head-only-v1. Nothing else is authorised — no repeat of that call, no variant of it, and no other call in the R3 plan.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds TWO entries, and neither grants an unused send permission. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 is the only entry that was ever a permission: D-139 superseded the general rule NARROWLY, for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 was NEVER a permission. It is an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. Nothing else is authorised — no repeat of D-139's call, no variant of it, no reuse of D-142's call id or claim identity, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",

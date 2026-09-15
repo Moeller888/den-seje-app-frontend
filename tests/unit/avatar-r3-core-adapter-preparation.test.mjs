@@ -65,15 +65,26 @@ test("attemptSend never sends, and reports it in every field", () => {
   assert.equal(r.outputWritten, false);
 });
 
-test("all three refusal grounds are evaluated and reported", () => {
+test("the refusal grounds are evaluated, and losing one changes nothing", () => {
+  // D-142 changed the contract under this adapter: authorisedCalls now carries an entry for this
+  // call id, so ground 2 no longer fires. That entry is a SPENT record of the incident, not a
+  // permission — and the difference does not matter here, because ground 3 is unconditional and
+  // this file has no send path either way.
   const r = C.attemptSend({ contract: CONTRACT });
-  assert.deepEqual(r.grounds.slice().sort(), [
-    C.REFUSAL.AUTHORISATION, C.REFUSAL.CONTRACT, C.REFUSAL.STRUCTURAL,
-  ].sort());
+  assert.equal(r.sent, false);
+  assert.equal(r.allowed, false);
+  assert.equal(r.fetchCalled, false);
+  assert.deepEqual(r.grounds.slice().sort(), [C.REFUSAL.CONTRACT, C.REFUSAL.STRUCTURAL].sort());
   const byGround = Object.fromEntries(r.refusals.map((x) => [x.ground, x.detail]));
-  assert.match(byGround[C.REFUSAL.CONTRACT], /PREPARED — NOT AUTHORISED/);
-  assert.match(byGround[C.REFUSAL.AUTHORISATION], /0 entries for D-142-r3-underlay-core-v1/);
+  assert.match(byGround[C.REFUSAL.CONTRACT], /SUPERSEDED BY D-142 — STILL NOT A PERMISSION/);
+  assert.match(byGround[C.REFUSAL.CONTRACT], /only recognises the prepared, unauthorised state/);
   assert.match(byGround[C.REFUSAL.STRUCTURAL], /no send path is implemented/);
+  // the entry that silenced ground 2 must be a spent record, never a live permission
+  const match = CONTRACT.authorisedCalls.calls.filter((x) => x.callId === C.PROPOSED.callId);
+  assert.equal(match.length, 1);
+  assert.equal(match[0].mandateState, "SPENT");
+  assert.equal(match[0].outcome, "UNKNOWN");
+  assert.equal(match[0].neverReuse, true);
 });
 
 test("THE STRUCTURAL GROUND HOLDS EVEN IF A CONTRACT SATISFIED THE OTHER TWO", () => {
@@ -120,14 +131,16 @@ test("the CLI refuses --send with any accompanying flags, and exits non-zero", (
   }
 });
 
-test("running the CLI creates no claim and no output", () => {
+test("running the CLI changes nothing about the claim or the output", () => {
+  // This asserts INVARIANCE, not absence. D-142's claim was created during the 2026-09-14 incident
+  // and is SPENT; the register records it, and nothing in this suite may delete, reset or assert it
+  // away. Whatever its state is when this test starts, it must be identical when the test ends.
   const claim = C.proposedClaimPath({ repoRoot: REPO });
   const claimBefore = claim.ok ? existsSync(claim.path) : null;
   const outBefore = existsSync(C.OUT);
   spawnSync(process.execPath, [ADAPTER, "--send", "--owner-approval=D-142"], { encoding: "utf8" });
-  assert.equal(claim.ok ? existsSync(claim.path) : null, claimBefore, "no claim may appear");
-  assert.equal(existsSync(C.OUT), outBefore, "no output directory may appear");
-  if (claim.ok) assert.equal(existsSync(claim.path), false, "the proposed claim must not exist at all yet");
+  assert.equal(claim.ok ? existsSync(claim.path) : null, claimBefore, "the claim's existence must be unchanged");
+  assert.equal(existsSync(C.OUT), outBefore, "no output directory may appear or disappear");
 });
 
 // ── 3 · the proposal is a proposal ───────────────────────────────────────────────────────────
@@ -137,11 +150,17 @@ test("the call id and claim identity are proposed, not decided", () => {
   assert.equal(C.PROPOSED.callId, "D-142-r3-underlay-core-v1");
   assert.equal(C.PROPOSED.claimFilename, "D-142.claim.json");
   assert.match(C.PROPOSED.status, /PROPOSAL ONLY/);
-  // D-142 must not exist anywhere yet
+  // The adapter's own constants still read as a proposal. The register has since overtaken them:
+  // D-142 is decided, and it decided that this call id and this claim identity are SPENT. The
+  // proposal is therefore dead, not pending — and neither fact gives this file anything to act on.
   const register = readFileSync(join(REPO, "docs", "project-state.md"), "utf8");
-  assert.equal(register.split("\n").filter((l) => l.startsWith("| **D-142** |")).length, 0,
-    "D-142 must not be a register row — it is not decided");
-  assert.ok(!CONTRACT.authorisedCalls.calls.some((c) => c.callId === C.PROPOSED.callId));
+  const rows = register.split("\n").filter((l) => l.startsWith("| **D-142** |"));
+  assert.equal(rows.length, 1, "D-142 must be exactly one register row");
+  assert.match(rows[0], /MANDAT BRUGT VED HÆNDELSE/, "and that row records the incident");
+  const rec = CONTRACT.authorisedCalls.calls.find((c) => c.callId === C.PROPOSED.callId);
+  assert.ok(rec, "the call id appears in the contract only as the incident record");
+  assert.equal(rec.mandateState, "SPENT");
+  assert.equal(rec.neverReuse, true);
 });
 
 test("D-139's call id and claim are never reused", () => {
@@ -323,5 +342,8 @@ test("preflight refuses cleanly when H1 is absent, as it is in CI", () => {
 test("preflight requires every decision this preparation rests on", () => {
   assert.deepEqual([...C.REQUIRED_DECISIONS], ["D-132", "D-133", "D-139", "D-140", "D-141"]);
   for (const id of C.REQUIRED_DECISIONS) assert.equal(C.decisionExists(id).found, true, id + " must be in the register");
-  assert.equal(C.decisionExists("D-142").found, false, "D-142 is not decided");
+  // D-142 is now decided — as an incident record. Being in the register is not a send permission,
+  // and this adapter has no send path for one to attach to.
+  assert.equal(C.decisionExists("D-142").found, true, "D-142 is a register row");
+  assert.ok(!C.REQUIRED_DECISIONS.includes("D-142"), "it is not a precondition of this preparation");
 });

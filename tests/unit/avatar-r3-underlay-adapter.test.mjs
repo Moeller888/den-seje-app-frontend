@@ -135,8 +135,11 @@ test("the contract authorises exactly one call, by id, and every pin matches the
   const v = A.verifyAuthorisation(CONTRACT);
   assert.equal(v.ok, true, v.problems.join("; "));
   assert.equal(v.call.callId, A.CALL_ID);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 1);
-  assert.equal(CONTRACT.authorisedCalls.count, 1);
+  // D-142 added a second entry, a spent record. D-139's own entry must still verify, and the
+  // adapter must still match on its OWN call id rather than on being the only entry present.
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 2);
+  assert.equal(CONTRACT.authorisedCalls.count, 2);
+  assert.equal(CONTRACT.authorisedCalls.calls.filter((x) => x.callId === A.CALL_ID).length, 1);
 });
 
 test("the authorisation is NOT a global boolean", () => {

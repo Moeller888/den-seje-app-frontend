@@ -63,11 +63,115 @@ test("no image request is authorised IN GENERAL, and the general flag stays fals
   assert.match(C.prohibitions.noMaskWork, /creates, changes, derives and promotes no mask/);
 });
 
-test("the ONE authorised call is narrowly scoped, and carries every pin it needs", () => {
+// ── the prose about authorisedCalls must agree with authorisedCalls ──────────────────────────
+//
+// This is the check that was missing when D-142 added a second entry: prohibitions.noImageRequestAuthorised
+// went on calling D-139 "the single entry in authorisedCalls.calls" while the list held two. A prose
+// claim about a data structure is only as good as a test that reads both and compares them.
+
+/**
+ * Classifies one authorisedCalls entry WITHOUT looking at its position or at the list's length.
+ * An entry is a RECORD — never something an adapter may act on — as soon as it says so in its own
+ * fields. This is the rule the contract states, expressed once, so the tests below cannot drift
+ * from it by reading calls[0] and assuming.
+ */
+function classifyEntry(e) {
+  const spentRecord = e.mandateState === "SPENT" || e.neverReuse === true;
+  return {
+    callId: e.callId,
+    spentRecord,
+    everWasAPermission: !spentRecord,
+    // even an entry that WAS a permission grants nothing further once its one call is made: it
+    // authorises a single output, forbids a retry, and demands a new decision and a new claim.
+    grantsAFurtherCall: !spentRecord
+      && !(e.prohibitions && /Exactly one fetch/.test(e.prohibitions.noRetry || ""))
+      && !(e.claim && /NEW owner decision/.test(e.claim.furtherAttempt || "")),
+  };
+}
+
+test("SEMANTIC: the general prohibition describes the list that actually exists", () => {
+  const calls = C.authorisedCalls.calls;
+  const text = C.prohibitions.noImageRequestAuthorised;
+
+  // 1 · the prose must not make a claim about the list's size that the list contradicts
+  assert.ok(!/single entry in authorisedCalls/.test(text), "the stale singular claim must be gone");
+  assert.ok(!/holds exactly one entry/.test(text));
+  assert.ok(!/the only entry in authorisedCalls/.test(text));
+
+  // 2 · it must name EVERY entry that exists, so adding an entry silently cannot leave it stale
+  for (const e of calls) {
+    assert.ok(text.includes(e.callId), "the prohibition must name " + e.callId);
+  }
+  // and it must not name a call id that is not in the list
+  for (const id of text.match(/D-1[0-9]{2}-[a-z0-9-]+/g) || []) {
+    assert.ok(calls.some((e) => e.callId === id), "the prohibition names an entry that does not exist: " + id);
+  }
+
+  // 3 · it must tell the reader to match by id and fields rather than by length
+  assert.match(text, /never by the length of the list/);
+  assert.match(C.authorisedCalls.shape, /Read authorisedCalls\.calls and match on callId/);
+});
+
+test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permission", () => {
+  const classified = C.authorisedCalls.calls.map(classifyEntry);
+  assert.equal(classified.length, 2);
+
+  const record = classified.find((x) => x.callId === "D-142-r3-underlay-core-v1");
+  assert.ok(record, "the D-142 entry must be present");
+  assert.equal(record.spentRecord, true, "mandateState SPENT and neverReuse make it a record");
+  assert.equal(record.everWasAPermission, false, "it was never a permission");
+  assert.equal(record.grantsAFurtherCall, false);
+
+  // The contract must say so in words too, at the entry and at the list.
+  const d142 = C.authorisedCalls.calls.find((e) => e.callId === "D-142-r3-underlay-core-v1");
+  assert.match(d142.notAnActivePermission, /RECORD, not a permission/);
+  assert.match(d142.notAnActivePermission, /No adapter may read it as authorisation to send/);
+  assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /not automatically a permission/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /never counts as an active send permission/);
+
+  // NOT ONE of the two entries leaves an unused call available — D-139's was made, and D-142's
+  // was never a permission. The list therefore grants nothing an adapter could act on today.
+  assert.equal(classified.filter((x) => x.grantsAFurtherCall).length, 0);
+  const d139 = C.authorisedCalls.calls.find((e) => e.callId === "D-139-r3-underlay-head-only-v1");
+  assert.match(d139.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(d139.claim.furtherAttempt, /NEW owner decision and a NEW claim identity/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /neither grants an unused send permission/);
+});
+
+test("SEMANTIC: the classifier reads the fields, not the position in the list", () => {
+  // Non-vacuity. If classifyEntry were really keyed on "calls[1] is the record", these would pass
+  // wrongly; keyed on the fields, marking D-139's entry spent must flip it, and stripping D-142's
+  // markers must flip it back.
+  const [d139, d142] = C.authorisedCalls.calls;
+  assert.equal(classifyEntry(d139).spentRecord, false, "as written, D-139's entry carries no spent marker");
+  assert.equal(classifyEntry({ ...d139, mandateState: "SPENT" }).spentRecord, true);
+  assert.equal(classifyEntry({ ...d139, neverReuse: true }).spentRecord, true);
+  const stripped = { ...d142 };
+  delete stripped.mandateState;
+  delete stripped.neverReuse;
+  assert.equal(classifyEntry(stripped).spentRecord, false, "the two markers are what make it a record");
+});
+
+test("SEMANTIC: D-141's preparedCall block no longer claims the list holds one entry", () => {
+  const t = C.preparedCall.authorisedCallsUnchanged;
+  assert.ok(!/holds exactly one entry/.test(t), "the stale singular claim must be gone here too");
+  assert.match(t, /Unchanged BY D-141/, "the key name means unchanged by D-141, and the text must say so");
+  assert.match(t, /TWO entries/);
+  for (const e of C.authorisedCalls.calls) assert.ok(t.includes(e.callId), "it must name " + e.callId);
+  assert.ok(!C.authorisedCalls.calls.some((e) => e.decision === "D-141"), "and D-141 still has no entry");
+});
+
+test("the authorised-call list carries one permission and one spent record", () => {
   // The failure mode: an authorisation that says "yes" without saying to what. Each of these fields
   // is something a wrong call would have to get right by accident.
-  assert.equal(C.authorisedCalls.count, 1);
-  assert.equal(C.authorisedCalls.calls.length, 1);
+  // D-142 added a SECOND entry, and it is deliberately NOT a permission: a record of an attempt
+  // whose mandate is spent and whose outcome is unknown. Membership of this list is not consent.
+  assert.equal(C.authorisedCalls.count, 2);
+  assert.equal(C.authorisedCalls.calls.length, 2);
+  assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /a SPENT entry with neverReuse is a RECORD/);
+  const spent = C.authorisedCalls.calls.filter((x) => x.mandateState === "SPENT");
+  assert.equal(spent.length, 1, "exactly one entry is a spent record");
+  assert.equal(spent[0].callId, "D-142-r3-underlay-core-v1");
   assert.match(C.authorisedCalls.shape, /A LIST, not a boolean/);
   assert.match(C.meta.authorisationModel, /stays false permanently/);
 
@@ -130,11 +234,17 @@ test("the ears are an owner-visual criterion, measured, and never called a machi
   assert.ok(!/ear/i.test(C.firstCall.gates.hardMachine.headRegion));
 });
 
-test("D-139 spends a budgeted call; it does not enlarge the budget", () => {
-  assert.equal(C.imageCallBudget.minimum, 15);
-  assert.equal(C.imageCallBudget.maximum, 16);
-  assert.match(C.authorisedCalls.budgetUnchanged, /budget is unchanged and is still not consent/);
-  assert.equal(C.assets[0].calls, 1, "the underlay was always a one-call asset");
+test("the budget counts every call actually sent, including the D-142 incident", () => {
+  // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
+  // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
+  // assets[0] therefore carries 2 calls and the derived budget is 16-17.
+  assert.equal(C.imageCallBudget.minimum, 16);
+  assert.equal(C.imageCallBudget.maximum, 17);
+  assert.equal(C.assets[0].calls, 2, "D-139 and the D-142 attempt both count");
+  assert.match(C.imageCallBudget.countingRule, /ACTUALLY SENT/);
+  assert.match(C.imageCallBudget.countingRule, /sent by accident/);
+  assert.match(C.authorisedCalls.budgetAccounting, /planning, never consent/);
+  assert.equal(C.imageCallBudget.isAuthorisation, false, "a bigger budget is still not permission");
 });
 
 test("the reference pair is pinned by full sha256, and the target's pin matches the tracked file", () => {
@@ -334,8 +444,8 @@ test("the call budget is DERIVED from assets[].calls, and is a plan rather than 
     min += lo; max += hi;
   }
   assert.ok(min <= max, "the derived budget must not be inverted");
-  assert.equal(min, 15, "D-136 locked the iris to one call, so the minimum is 15");
-  assert.equal(max, 16, "the assets must sum to a maximum of exactly 16 calls");
+  assert.equal(min, 16, "D-142 made assets[0] a two-call asset, so the minimum is 16");
+  assert.equal(max, 17, "the assets must sum to a maximum of exactly 17 calls");
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);
@@ -544,14 +654,49 @@ test("the D-139 output may not be reclassified by the new gate", () => {
   assert.match(h.mayNotReclassify, /noRefit stands/);
 });
 
-test("preparedCall authorises nothing, and authorisedCalls is unchanged", () => {
-  assert.equal(C.preparedCall.status, "PREPARED — NOT AUTHORISED");
-  assert.equal(C.preparedCall.callId, null);
+test("preparedCall is superseded WITHOUT becoming a permission", () => {
+  // D-142 superseded it. The dangerous reading is that superseding a refusal grants something —
+  // it does not: there is no send path, and the D-142 entry is a spent record.
+  assert.equal(C.preparedCall.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.equal(C.preparedCall.supersededBy, "D-142");
+  assert.equal(C.preparedCall.callId, null, "it never acquired a call id");
   assert.equal(C.preparedCall.authorises, "nothing");
-  assert.equal(C.authorisedCalls.count, 1);
-  assert.equal(C.authorisedCalls.calls.length, 1);
+  assert.match(C.preparedCall.supersessionNote, /creates NO active send permission/);
   assert.ok(!C.authorisedCalls.calls.some((x) => x.decision === "D-141"));
   assert.equal(C.meta.authorisesImageRequest, false);
+});
+
+test("the D-142 entry is a record of an incident, not an authorisation", () => {
+  const rec = C.authorisedCalls.calls.find((x) => x.decision === "D-142");
+  assert.ok(rec, "the incident must be recorded");
+  assert.equal(rec.mandateState, "SPENT");
+  assert.equal(rec.outcome, "UNKNOWN");
+  assert.equal(rec.neverReuse, true);
+  assert.match(rec.notAnActivePermission, /RECORD, not a permission/);
+  assert.match(rec.producedNoOutput, /No raw output, no request manifest/);
+  assert.equal(rec.incident.claimSha256, "004c3116f2392ad872fef28143a0dfa11a924f6b8cefcecd7e2dda407448a9d6");
+  assert.equal(rec.incident.when, "2026-09-14T16:33:10.436Z");
+  assert.match(rec.evidence.absenceIsNotProof, /NOT evidence that no request was sent/);
+  assert.match(rec.prohibitions.noClaimReset, /never deleted, reset, renamed or restored/);
+  assert.match(rec.prohibitions.noFurtherAttempt, /its own owner decision/);
+});
+
+test("the binding rule for future sends is recorded, and its implementation is deferred", () => {
+  const r = C.futureSendAuthorisationRule;
+  assert.equal(r.decision, "D-142");
+  assert.match(r.rule, /only by the exact decision row and authorisation entry present in origin\/main/);
+  assert.match(r.rule, /NOT sufficient/);
+  assert.match(r.theFunctionThatCanFetchMustCheckItself, /BEFORE the claim is created/);
+  assert.deepEqual(r.mustNotAccept, [
+    "a caller-supplied git ref",
+    "caller-supplied register content",
+    "a caller-supplied contract object",
+    "a caller-supplied preflight result",
+  ]);
+  assert.ok(r.refuseBeforeClaimAndFetch.length >= 8);
+  assert.match(r.implementationDeferred, /No send path is implemented by D-142/);
+  assert.match(r.testPlanCorrection, /cannot be the same test/);
+  assert.match(r.noTestContextGuard, /deliberately NOT introduced now/);
 });
 
 test("D-141's mask derivation is recorded as a second narrow supersession, not a new licence", () => {
