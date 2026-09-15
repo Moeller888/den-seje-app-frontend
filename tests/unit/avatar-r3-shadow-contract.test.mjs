@@ -77,15 +77,20 @@ test("no image request is authorised IN GENERAL, and the general flag stays fals
  */
 function classifyEntry(e) {
   const spentRecord = e.mandateState === "SPENT" || e.neverReuse === true;
+  const boundToOneCall = /Exactly one fetch/.test((e.prohibitions && e.prohibitions.noRetry) || "")
+    && /NEW owner decision/.test((e.claim && e.claim.furtherAttempt) || "");
   return {
     callId: e.callId,
     spentRecord,
     everWasAPermission: !spentRecord,
-    // even an entry that WAS a permission grants nothing further once its one call is made: it
-    // authorises a single output, forbids a retry, and demands a new decision and a new claim.
-    grantsAFurtherCall: !spentRecord
-      && !(e.prohibitions && /Exactly one fetch/.test(e.prohibitions.noRetry || ""))
-      && !(e.claim && /NEW owner decision/.test(e.claim.furtherAttempt || "")),
+    // Whether an entry still has its call available is its OWN question, answered only by an
+    // explicit mandateState. Silence is not consent: D-139's entry predates the field and its
+    // call was made, so an absent mandateState must never read as "unspent".
+    hasAnUnusedCall: e.mandateState === "UNSPENT",
+    // Separately: no entry — spent, unspent or silent — ever authorises a SECOND call. A spent
+    // record authorises nothing at all, so it cannot authorise a second one either; a live entry
+    // has to say so itself, with noRetry and a furtherAttempt clause.
+    authorisesASecondCall: !spentRecord && !boundToOneCall,
   };
 }
 
@@ -114,13 +119,13 @@ test("SEMANTIC: the general prohibition describes the list that actually exists"
 
 test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permission", () => {
   const classified = C.authorisedCalls.calls.map(classifyEntry);
-  assert.equal(classified.length, 2);
+  assert.equal(classified.length, 3);
 
   const record = classified.find((x) => x.callId === "D-142-r3-underlay-core-v1");
   assert.ok(record, "the D-142 entry must be present");
   assert.equal(record.spentRecord, true, "mandateState SPENT and neverReuse make it a record");
   assert.equal(record.everWasAPermission, false, "it was never a permission");
-  assert.equal(record.grantsAFurtherCall, false);
+  assert.equal(record.authorisesASecondCall, false);
 
   // The contract must say so in words too, at the entry and at the list.
   const d142 = C.authorisedCalls.calls.find((e) => e.callId === "D-142-r3-underlay-core-v1");
@@ -129,13 +134,29 @@ test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permis
   assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /not automatically a permission/);
   assert.match(C.prohibitions.noImageRequestAuthorised, /never counts as an active send permission/);
 
-  // NOT ONE of the two entries leaves an unused call available — D-139's was made, and D-142's
-  // was never a permission. The list therefore grants nothing an adapter could act on today.
-  assert.equal(classified.filter((x) => x.grantsAFurtherCall).length, 0);
+  // EXACTLY ONE entry still has its call available, and it is D-143's. D-139's was made and
+  // D-142's was never a permission, so neither of them leaves anything an adapter could act on.
+  const unused = classified.filter((x) => x.hasAnUnusedCall);
+  assert.equal(unused.length, 1, "exactly one live permission");
+  assert.equal(unused[0].callId, "D-143-r3-underlay-core-v2");
+  assert.equal(record.hasAnUnusedCall, false, "a spent record never has an unused call");
+  const d139c = classified.find((x) => x.callId === "D-139-r3-underlay-head-only-v1");
+  assert.equal(d139c.hasAnUnusedCall, false, "an absent mandateState must not read as unspent");
+
+  // And NO entry — not even the live one — authorises a second call.
+  assert.equal(classified.filter((x) => x.authorisesASecondCall).length, 0);
   const d139 = C.authorisedCalls.calls.find((e) => e.callId === "D-139-r3-underlay-head-only-v1");
   assert.match(d139.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d139.claim.furtherAttempt, /NEW owner decision and a NEW claim identity/);
-  assert.match(C.prohibitions.noImageRequestAuthorised, /neither grants an unused send permission/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /THREE entries/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /ONE ACTIVE, UNSPENT permission/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /not exercisable today/);
+  // ...and it must say WHY precisely. "No adapter can send" is false — the D-139 adapter contains
+  // send code. The true statement is that no adapter is pinned and authorised to send THIS call.
+  assert.match(C.prohibitions.noImageRequestAuthorised,
+    /no adapter in origin\/main is pinned and authorised to send D-143-r3-underlay-core-v2/);
+  assert.match(C.prohibitions.noImageRequestAuthorised,
+    /execution additionally requires its own owner instruction/);
 });
 
 test("SEMANTIC: the classifier reads the fields, not the position in the list", () => {
@@ -150,24 +171,46 @@ test("SEMANTIC: the classifier reads the fields, not the position in the list", 
   delete stripped.mandateState;
   delete stripped.neverReuse;
   assert.equal(classifyEntry(stripped).spentRecord, false, "the two markers are what make it a record");
+
+  // The same for the live permission: it is live because it SAYS mandateState UNSPENT, and it is
+  // bound to one call because it SAYS noRetry and furtherAttempt. Remove either, and the answer
+  // changes — so neither conclusion is an artefact of the entry's position.
+  const d143e = C.authorisedCalls.calls.find((e) => e.decision === "D-143");
+  assert.equal(classifyEntry(d143e).hasAnUnusedCall, true);
+  assert.equal(classifyEntry(d143e).authorisesASecondCall, false);
+  assert.equal(classifyEntry({ ...d143e, mandateState: "SPENT" }).hasAnUnusedCall, false);
+  const unbound = { ...d143e, prohibitions: { ...d143e.prohibitions, noRetry: "" } };
+  assert.equal(classifyEntry(unbound).authorisesASecondCall, true,
+    "dropping noRetry must be visible, so the real entry's noRetry is doing the work");
 });
 
-test("SEMANTIC: D-141's preparedCall block no longer claims the list holds one entry", () => {
+test("SEMANTIC: D-141's preparedCall block is historical, and is not rewritten for D-143", () => {
+  // This block belongs to D-141 and was last written by D-142. D-143 does NOT update it: the
+  // owner's rule is that D-141/D-142 history is never rewritten to describe a later decision.
+  // Its enumeration is therefore deliberately AS OF D-142 — two entries, neither of them D-141's —
+  // and it must not be read as a statement about the list today.
   const t = C.preparedCall.authorisedCallsUnchanged;
-  assert.ok(!/holds exactly one entry/.test(t), "the stale singular claim must be gone here too");
-  assert.match(t, /Unchanged BY D-141/, "the key name means unchanged by D-141, and the text must say so");
-  assert.match(t, /TWO entries/);
-  for (const e of C.authorisedCalls.calls) assert.ok(t.includes(e.callId), "it must name " + e.callId);
+  assert.ok(!/holds exactly one entry/.test(t), "the stale singular claim D-142 fixed must stay gone");
+  assert.match(t, /Unchanged BY D-141/, "the key name means unchanged by D-141, and the text says so");
+  assert.match(t, /TWO entries/, "as of D-142, and not restated for D-143");
+  assert.ok(!/D-143/.test(t), "a historical block must not be rewritten to mention D-143");
   assert.ok(!C.authorisedCalls.calls.some((e) => e.decision === "D-141"), "and D-141 still has no entry");
+
+  // The CURRENT state of the list lives in the general prohibition, which IS kept up to date.
+  const live = C.prohibitions.noImageRequestAuthorised;
+  assert.match(live, /THREE entries/);
+  for (const e of C.authorisedCalls.calls) {
+    assert.ok(live.includes(e.callId), "the current prohibition must name " + e.callId);
+  }
 });
 
-test("the authorised-call list carries one permission and one spent record", () => {
+test("the authorised-call list carries D-139's call, a spent record and one live permission", () => {
   // The failure mode: an authorisation that says "yes" without saying to what. Each of these fields
   // is something a wrong call would have to get right by accident.
   // D-142 added a SECOND entry, and it is deliberately NOT a permission: a record of an attempt
   // whose mandate is spent and whose outcome is unknown. Membership of this list is not consent.
-  assert.equal(C.authorisedCalls.count, 2);
-  assert.equal(C.authorisedCalls.calls.length, 2);
+  assert.equal(C.authorisedCalls.count, 3);
+  assert.equal(C.authorisedCalls.calls.length, 3);
   assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /a SPENT entry with neverReuse is a RECORD/);
   const spent = C.authorisedCalls.calls.filter((x) => x.mandateState === "SPENT");
   assert.equal(spent.length, 1, "exactly one entry is a spent record");
@@ -234,17 +277,23 @@ test("the ears are an owner-visual criterion, measured, and never called a machi
   assert.ok(!/ear/i.test(C.firstCall.gates.hardMachine.headRegion));
 });
 
-test("the budget counts every call actually sent, including the D-142 incident", () => {
-  // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
-  // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
-  // assets[0] therefore carries 2 calls and the derived budget is 16-17.
-  assert.equal(C.imageCallBudget.minimum, 16);
-  assert.equal(C.imageCallBudget.maximum, 17);
-  assert.equal(C.assets[0].calls, 2, "D-139 and the D-142 attempt both count");
+test("the budget keeps PLANNED capacity and ACTUALLY SENT calls apart", () => {
+  // The trap D-143 has to avoid: raising a number in a JSON file is neither a claim that the call
+  // was made nor permission to make it. The contract therefore carries both figures, and they
+  // differ on purpose until a D-143 run actually happens.
+  assert.equal(C.imageCallBudget.minimum, 17);
+  assert.equal(C.imageCallBudget.maximum, 18);
+  assert.equal(C.assets[0].calls, 3, "assets[].calls is PLANNED capacity");
+  assert.equal(C.imageCallBudget.callsActuallySentSoFar.underlay, 2, "D-139 and the D-142 attempt");
+  assert.equal(C.imageCallBudget.callsPlannedAndAuthorised.underlay, 3, "plus the one D-143 authorises");
+  assert.equal(C.imageCallBudget.callsPlannedAndAuthorised.derivedBudget, "17-18");
+  assert.match(C.imageCallBudget.callsActuallySentSoFar.note, /has not been sent/);
+  assert.match(C.imageCallBudget.doNotConfuseTheTwo, /NOT permission to make it/);
   assert.match(C.imageCallBudget.countingRule, /ACTUALLY SENT/);
   assert.match(C.imageCallBudget.countingRule, /sent by accident/);
   assert.match(C.authorisedCalls.budgetAccounting, /planning, never consent/);
   assert.equal(C.imageCallBudget.isAuthorisation, false, "a bigger budget is still not permission");
+  assert.equal(C.meta.authorisesImageRequest, false);
 });
 
 test("the reference pair is pinned by full sha256, and the target's pin matches the tracked file", () => {
@@ -444,8 +493,8 @@ test("the call budget is DERIVED from assets[].calls, and is a plan rather than 
     min += lo; max += hi;
   }
   assert.ok(min <= max, "the derived budget must not be inverted");
-  assert.equal(min, 16, "D-142 made assets[0] a two-call asset, so the minimum is 16");
-  assert.equal(max, 17, "the assets must sum to a maximum of exactly 17 calls");
+  assert.equal(min, 17, "D-143 made assets[0] a three-call asset, so the minimum is 17");
+  assert.equal(max, 18, "the assets must sum to a maximum of exactly 18 calls");
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);
@@ -711,4 +760,375 @@ test("the D-141 row exists exactly once, with the owner's decision date", () => 
   assert.equal(rows.length, 1);
   assert.match(rows[0], /\(2026-09-14\)/);
   assert.match(rows[0], /autoriserer INTET billedkald/);
+});
+
+// ── D-143: one authorised call, and nothing in this repository that can make it ──────────────
+
+const D143_ID = "D-143-r3-underlay-core-v2";
+const d143 = () => C.authorisedCalls.calls.find((e) => e.callId === D143_ID);
+
+test("D-143 authorises exactly one call, by id, with every pin it needs", () => {
+  const e = d143();
+  assert.ok(e, "D-143 must have an entry");
+  assert.equal(e.decision, "D-143");
+  assert.equal(e.authorisedOn, "2026-09-15");
+  assert.equal(e.mandateState, "UNSPENT");
+  assert.equal(e.outcome, "NOT YET ATTEMPTED");
+  assert.equal(e.endpoint, "https://api.openai.com/v1/images/edits");
+  assert.equal(e.model, "gpt-image-2-2026-04-21");
+  assert.deepEqual(e.parameters, { n: 1, size: "1024x1536", quality: "high", output_format: "png", background: "transparent" });
+  assert.equal(e.omitted.input_fidelity.includes("invalid_input_fidelity_model"), true);
+  assert.equal(e.outputs.count, 1);
+  assert.deepEqual(e.inputOrder, ["Image 1", "Image 2"]);
+  assert.match(e.inputOrderBinding, /H1 MUST be the first image/);
+});
+
+test("D-143's pins are byte-identical to the D-141 preparation and the D-139 reference pair", () => {
+  const e = d143();
+  // The prompt and mask D-141 prepared, unchanged.
+  assert.equal(e.prompt.fileSha256, "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141");
+  assert.equal(e.prompt.fileBytes, 6242);
+  assert.equal(e.prompt.transmittedSha256, "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693");
+  assert.equal(e.prompt.transmittedBytes, 2731);
+  assert.equal(e.prompt.preparedBy, "D-141");
+  assert.equal(e.mask.sha256, "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab");
+  assert.equal(e.mask.bytes, 10703);
+  assert.equal(e.mask.decision, "D-141");
+  assert.equal(e.mask.semantics.bandEditablePx, 0, "the CORE mask offers the band to nobody");
+  assert.equal(e.mask.semantics.editablePx, 123721);
+  assert.equal(e.mask.semantics.protectedPx, 1449143);
+  // The same reference pair D-139 used, by hash.
+  const d139 = C.authorisedCalls.calls.find((x) => x.callId === "D-139-r3-underlay-head-only-v1");
+  assert.equal(e.inputs[0].sha256, d139.inputs[0].sha256, "same H1");
+  assert.equal(e.inputs[1].sha256, d139.inputs[1].sha256, "same Northstar");
+  assert.equal(e.inputs[0].tracked, false, "H1 is external and pinned by hash alone");
+  assert.equal(e.model, d139.model, "same pinned snapshot; no fallback model");
+  assert.deepEqual(e.parameters, d139.parameters);
+  // and D-139's own mask is on the never-send list
+  assert.ok(e.neverSentMasks.files.includes("r3-underlay-api-mask-v1.png"));
+  assert.match(e.mask.whyNotD139sMask, /must never be sent again/);
+  // The exclusion must rest on the mask's own terms, NOT on a causal claim. D-140 records that the
+  // cause of the 644 px deviation is undetermined, so this contract may not settle it in passing.
+  assert.match(e.mask.whyNotD139sMask, /Whether the editable transition band was the whole cause, part of the cause, or not a cause/);
+  assert.match(e.mask.whyNotD139sMask, /NOT established/);
+  assert.match(e.mask.whyNotD139sMask, /D-140 records[\s\S]*the cause is undetermined/);
+  assert.match(e.mask.whyNotD139sMask, /excluded on its own terms/);
+  assert.ok(!/which is exactly what pre\.transition-silhouette then failed on/.test(e.mask.whyNotD139sMask),
+    "the mask must not be asserted as the established cause");
+});
+
+test("D-143's identity is new, and D-142's is never reused", () => {
+  const e = d143();
+  assert.equal(e.claim.filename, "D-143.claim.json");
+  const spent = C.authorisedCalls.calls.find((x) => x.decision === "D-142");
+  assert.notEqual(e.callId, spent.callId);
+  assert.notEqual(e.claim.filename, spent.claim ? spent.claim.filename : "D-142.claim.json");
+  assert.equal(spent.mandateState, "SPENT", "and D-142 stays spent");
+  assert.equal(spent.outcome, "UNKNOWN", "and its outcome is not reclassified");
+  assert.match(e.history.notAReuseOfD142, /never reuses D-142's mandate, call id or claim identity/);
+  assert.match(e.claim.notCreatedByThisDecision, /does NOT create this claim/);
+  assert.match(e.prohibitions.noClaimReset, /never deleted, reset, renamed or restored/);
+});
+
+test("D-143 describes its own history honestly", () => {
+  const h = d143().history;
+  assert.match(h.payloadIsByteIdentical, /BYTE-IDENTICAL to the payload that was probably sent/);
+  assert.match(h.payloadIsByteIdentical, /NEW AUTHORISED SEND of the same frozen request/);
+  assert.match(h.firstObservableAttempt, /first OBSERVABLE attempt/);
+  assert.match(h.firstObservableAttempt, /not necessarily the first time the request is sent/);
+  assert.match(h.d142StaysUnknown, /stays UNKNOWN/);
+  assert.match(h.d142StaysUnknown, /not reclassified/);
+  assert.match(h.whatThisMeansForD141, /remains UNTESTED in practice/);
+  // and the framings that would launder the history are named and forbidden
+  assert.match(h.forbiddenFramings, /never be described as a first-time call/);
+  assert.match(h.forbiddenFramings, /resumption or retry of D-142/);
+  assert.match(h.forbiddenFramings, /reuse of an earlier mandate/);
+});
+
+test("D-143 delivers NO send path, and does not touch either existing adapter", () => {
+  const a = d143().adapter;
+  assert.match(a.file, /NOT YET IMPLEMENTED/);
+  // The claim has to be exact: the CORE preparation adapter cannot send and D-143 adds no send
+  // path — but the D-139 adapter DOES contain send code, and the contract must not deny it. It is
+  // harmless here because it is pinned to its own call id and its own mandate is already spent.
+  assert.match(a.notInThisRepositoryYet, /CORE preparation adapter still cannot send/);
+  assert.match(a.notInThisRepositoryYet, /D-143 adds no new send path/);
+  assert.match(a.notInThisRepositoryYet, /does not change it by one byte/);
+  assert.match(a.notInThisRepositoryYet, /D-139 adapter DOES contain send code and that is not denied/);
+  assert.match(a.notInThisRepositoryYet, /pinned to its own call id/);
+  assert.ok(!/No adapter in origin\/main can send/.test(a.notInThisRepositoryYet),
+    "the over-broad claim must be gone");
+  assert.match(a.d139AdapterUntouched, /neither imports, extends nor modifies it/);
+
+  // and that is checked against the files, not only asserted in prose
+  const core = readFileSync(join(REPO, "tools", "avatar", "openai-generate-r3-underlay-core.mjs"), "utf8");
+  const code = core.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+  for (const forbidden of ["FormData", "OPENAI_API_KEY", "Authorization", "openSync", "createClaim", '"wx"']) {
+    assert.ok(!code.includes(forbidden), "the preparation adapter must still not contain " + JSON.stringify(forbidden));
+  }
+  assert.ok(!/[^"'\w]fetch\s*\(/.test(code), "the preparation adapter must still contain no fetch call");
+  // its own decision list must NOT have been extended — the send adapter carries its own
+  assert.match(core, /REQUIRED_DECISIONS = Object\.freeze\(\["D-132", "D-133", "D-139", "D-140", "D-141"\]\)/);
+  assert.match(a.ownRequiredDecisions, /at least D-132, D-133, D-139, D-140, D-141, D-142 and D-143/);
+  assert.match(a.ownRequiredDecisions, /preparation adapter's list must not be extended/);
+});
+
+test("D-143's send path must verify ITSELF in origin/main before the claim", () => {
+  const a = d143().adapter;
+  const req = a.sendRequiresAll.join(" | ");
+  assert.match(req, /HEAD equal to the local origin\/main commit used as the authorisation basis/);
+  assert.match(req, /byte-identical to its blob there/);
+  assert.match(req, /present in origin\/main/);
+  assert.match(req, /present exactly once in the origin\/main register/);
+  assert.match(req, /present exactly once in the origin\/main contract, active and unspent/);
+  assert.match(req, /byte-identical between the working tree and origin\/main/);
+  assert.match(req, /no D-143 claim file existing yet/);
+  assert.match(a.refuseBeforeClaimAndFetch, /BEFORE the claim is created and before the fetch/);
+  assert.match(a.refuseBeforeClaimAndFetch, /locally-present or uncommitted send adapter can therefore never use/);
+  assert.deepEqual(a.mustNotAccept, [
+    "a caller-supplied git ref",
+    "caller-supplied register content",
+    "a caller-supplied contract object",
+    "a caller-supplied preflight result",
+  ]);
+  assert.equal(d143().claim.recordsTheRef.includes("written into the claim and into the manifest"), true);
+  // it obeys D-142's rule rather than inventing its own
+  assert.equal(C.futureSendAuthorisationRule.decision, "D-142");
+});
+
+test("D-143's send path takes no test hook, and its send function is not exported", () => {
+  const a = d143().adapter;
+  assert.match(a.noTestHooks, /NO test injection point of any kind/);
+  for (const hook of ["fetch module", "fetch implementation", "claim path", "output directory", "git ref"]) {
+    assert.ok(a.noTestHooks.includes(hook), "the prohibition must name " + hook);
+  }
+  assert.match(a.noTestHooks, /mocked from OUTSIDE by the Node process/);
+  assert.match(a.sendFunctionNotExported, /must not be exported, so no test can import it/);
+  assert.match(a.sendFunctionNotExported, /running the real CLI inside an isolated sandbox/);
+  assert.match(a.oneFlagNeverSends, /No single flag sends/);
+});
+
+test("D-143 keeps a manifest for every outcome, and nothing may delete it", () => {
+  const o = d143().outputs;
+  assert.match(o.manifestOnEveryOutcome, /EVERY outcome after the claim and the fetch/);
+  for (const stage of ["transport error", "HTTP error", "parse failure", "decode failure", "success"]) {
+    assert.ok(o.manifestOnEveryOutcome.includes(stage), "the manifest rule must cover " + stage);
+  }
+  assert.match(o.manifestOnEveryOutcome, /origin\/main commit SHA/);
+  assert.match(o.neverDeleted, /No production or test code may delete the output directory or the manifest/);
+  assert.match(o.crashLeavesUnknown, /reported as UNKNOWN/);
+  assert.match(o.crashLeavesUnknown, /never lead to a retry/);
+  assert.equal(o.raw, "tools/avatar/build/r3-underlay-core/r3-underlay-core.raw.png");
+  assert.equal(o.manifest, "tools/avatar/build/r3-underlay-core/r3-underlay-core.request.json");
+});
+
+test("D-143 is exactly one attempt, with every gate and the owner review still mandatory", () => {
+  const e = d143();
+  assert.match(e.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(e.prohibitions.noRetry, /No loop, no retry, no fallback model/);
+  assert.match(e.prohibitions.noWarp, /never warped, scaled, nudged, re-registered or aligned/);
+  assert.match(e.prohibitions.noRepair, /never repaired, cleaned up or touched up/);
+  assert.match(e.prohibitions.noRefit, /never re-fitted to the output/);
+  assert.match(e.prohibitions.noPromotion, /promotes nothing/);
+  assert.match(e.prohibitions.noReclassifyD139, /stays rejected under pre\.transition-silhouette at 644 px/);
+  assert.match(e.prohibitions.noRuntimeChange, /No runtime, compositor, resolver, manifest, mask, golden, asset, deploy, Supabase/);
+  assert.match(e.claim.spentOn, /Existence alone means spent/);
+  assert.match(e.claim.creation, /exclusive create, flag/);
+
+  assert.equal(e.acceptance.machineGatesMandatory.length, 5);
+  const gates = e.acceptance.machineGatesMandatory.join(" | ");
+  for (const g of ["pre.transition-silhouette", "pre.join-continuity", "post.protected-bytes",
+    "post.transition-silhouette", "post.coverage"]) {
+    assert.ok(gates.includes(g), "gate missing: " + g);
+  }
+  assert.match(gates, /derived from H1 at run time, never a literal/);
+  assert.match(e.acceptance.ownerVisualReviewMandatory, /machine gates do not substitute for it/);
+  for (const size of ["1:1", "52x78", "110x165", "100x150", "180x270"]) {
+    assert.ok(e.acceptance.ownerVisualReviewMandatory.includes(size), "review scale missing: " + size);
+  }
+  assert.match(e.acceptance.onFailure, /hard stop/);
+});
+
+test("the D-143 row exists exactly once, and carries the decision's own pins", () => {
+  const REG_TEXT = readFileSync(REGISTER_PATH, "utf8");
+  const rows = REG_TEXT.split("\n").filter((l) => l.startsWith("| **D-143** |"));
+  assert.equal(rows.length, 1, "exactly one D-143 row");
+  const row = rows[0];
+  assert.match(row, /OWNER DECISION/);
+  assert.match(row, /D-143-r3-underlay-core-v2/);
+  assert.match(row, /D-143\.claim\.json/);
+  assert.match(row, /gpt-image-2-2026-04-21/);
+  for (const pin of [
+    "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693",
+    "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab",
+    "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+    "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+  ]) assert.ok(row.includes(pin), "the row must pin " + pin.slice(0, 12));
+  assert.equal(row.includes("(2026-09-15) |"), true);
+  // the honest history, in the permanent record
+  assert.match(row, /ikke genbrug/);
+  assert.match(row, /byte-identisk/);
+  assert.match(row, /ikke nødvendigvis første gang requesten sendes/);
+  // and the earlier rows are not rewritten
+  for (const d of ["D-139", "D-140", "D-141", "D-142"]) {
+    assert.equal(REG_TEXT.split("\n").filter((l) => l.startsWith("| **" + d + "** |")).length, 1, d + " stays a single row");
+  }
+});
+
+// ── D-143 adds ONE authorisation and rewrites nothing that came before ───────────────────────
+//
+// The pins below are of the PR's base, 6b9777121f03a3b86575df77c572d20bf6482065, taken before
+// D-143 was written. They exist because a later decision is exactly when history is most likely
+// to get quietly "tidied up" to match it. sha256 of the canonical JSON is used so that a single
+// changed byte anywhere inside a block fails, including a reordered or added key.
+
+const BASE_COMMIT = "6b9777121f03a3b86575df77c572d20bf6482065";
+const BASE_PINS = {
+  preparedCall: "ee531f9d8e11f121a5c898be94c8c1282db6ebf26dd83ed08ed4bf4349e16caa",
+  d139Entry: "a1d393378b97d1fa99f880c23afeca52f9c4e9d5e646dd629e888c307377c930",
+  d142Entry: "9412797e1665a938c84230a2219657887e1c55f2631440ff98582e8072fdcde0",
+  rows: {
+    "D-139": "a8d0afb3ed8251c6f8acf361515019c5805e43f55e8ab93fcbdd5a0a53ce3c3f",
+    "D-140": "405d30518960d2f9268238094fe1f6f5e56922b195fbd354135cfc618cd75e2c",
+    "D-141": "4eb2e49275f097b4399ee723c66471bebb256e2b822793b430a119fd67d5c4f8",
+    "D-142": "e13529d431055286431d24e13b77c82be6c4f0c0b38cd8e76e8a37a08e127185",
+  },
+};
+const canon = (v) => sha256(JSON.stringify(v));
+
+test("PROOF 1: preparedCall is byte-identical to the base and says nothing about D-143", () => {
+  // D-141's prepared-call block belongs to D-141, last written by D-142. D-143 reuses what it
+  // prepared, and records that reuse in ITS OWN row and entry — never by editing this block.
+  assert.equal(canon(C.preparedCall), BASE_PINS.preparedCall,
+    "preparedCall must be unchanged from " + BASE_COMMIT);
+  assert.equal(C.preparedCall.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.deepEqual(Object.keys(C.preparedCall), [
+    "status", "supersededBy", "supersededOn", "supersessionNote", "decision", "callId",
+    "authorises", "prepares", "adapterContract", "requiresBeforeAnySend", "notAnAuthorisedCall",
+    "authorisedCallsUnchanged", "noAdapterImplemented", "oneCallCanStillFail",
+  ], "no key added, removed or reordered");
+  for (const gone of ["realisedBy", "realisedOn", "realisationNote"]) {
+    assert.ok(!(gone in C.preparedCall), gone + " must not exist: it would rewrite D-141 for D-143");
+  }
+  assert.ok(!/D-143/.test(JSON.stringify(C.preparedCall)),
+    "a historical block must not mention a later decision at all");
+  assert.equal(C.preparedCall.callId, null);
+  assert.equal(C.preparedCall.authorises, "nothing");
+});
+
+test("PROOF 2: D-143's own entry names the reused, pinned D-141 artefacts", () => {
+  // Every artefact preparedCall lists as prepared must reappear, by hash, inside D-143's entry —
+  // so the reuse is provable from D-143's side without touching D-141's block.
+  const e = C.authorisedCalls.calls.find((x) => x.decision === "D-143");
+  assert.ok(e, "D-143 must have its own entry");
+  const prepared = C.preparedCall.prepares;
+  assert.equal(prepared.length, 3);
+
+  // (a) the CORE API mask D-141 prepared
+  assert.ok(prepared.includes(e.mask.file), "the entry must use the prepared CORE mask, not another");
+  assert.equal(e.mask.decision, "D-141", "and credit D-141 for it");
+  assert.equal(e.mask.sha256, "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab");
+  assert.equal(e.mask.bytes, 10703);
+
+  // (b) prompt v2, which D-141 prepared
+  assert.ok(prepared.includes(e.prompt.file), "the entry must use the prepared prompt v2");
+  assert.equal(e.prompt.preparedBy, "D-141");
+  assert.equal(e.prompt.fileSha256, "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141");
+  assert.equal(e.prompt.transmittedSha256, "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693");
+
+  // (c) pre.join-continuity, D-141's gate, is mandatory in D-143's own acceptance pipeline
+  const joinPrepared = prepared.find((p) => p.startsWith("pre.join-continuity"));
+  assert.ok(joinPrepared, "D-141 prepared the join gate");
+  const gates = e.acceptance.machineGatesMandatory.join(" | ");
+  assert.match(gates, /pre\.join-continuity/);
+  assert.match(gates, /\(D-141\)/, "and D-143 credits D-141 for it");
+  assert.match(gates, /derived from H1 at run time, never a literal/);
+
+  // the reuse is recorded in D-143's register row too, not in D-141's
+  const REG_TEXT = readFileSync(REGISTER_PATH, "utf8");
+  const row = REG_TEXT.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.ok(row, "the D-143 row must exist");
+  assert.match(row, /556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab/);
+  assert.match(row, /76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693/);
+  assert.match(row, /pre\.join-continuity/);
+});
+
+test("PROOF 3: D-143 adds exactly one authorisation and changes no earlier decision's meaning", () => {
+  // exactly one new entry, and it is D-143's
+  assert.equal(C.authorisedCalls.calls.length, 3);
+  assert.equal(C.authorisedCalls.count, 3);
+  const byDecision = C.authorisedCalls.calls.map((x) => x.decision);
+  assert.deepEqual(byDecision, ["D-139", "D-142", "D-143"]);
+  assert.equal(byDecision.filter((d) => d === "D-143").length, 1, "exactly ONE new authorisation");
+
+  // the two entries that were already there are byte-identical to the base
+  assert.equal(canon(C.authorisedCalls.calls[0]), BASE_PINS.d139Entry, "D-139's entry is untouched");
+  assert.equal(canon(C.authorisedCalls.calls[1]), BASE_PINS.d142Entry, "D-142's entry is untouched");
+
+  // and so are the register rows of every decision that precedes it
+  const REG_TEXT = readFileSync(REGISTER_PATH, "utf8").split("\n");
+  for (const [id, pin] of Object.entries(BASE_PINS.rows)) {
+    const rows = REG_TEXT.filter((l) => l.startsWith("| **" + id + "** |"));
+    assert.equal(rows.length, 1, id + " must still be exactly one row");
+    assert.equal(sha256(rows[0]), pin, id + "'s row must be byte-identical to " + BASE_COMMIT);
+  }
+
+  // D-142 keeps its meaning: spent, unknown, never reused — and D-143 takes a different identity
+  const spent = C.authorisedCalls.calls[1];
+  assert.equal(spent.mandateState, "SPENT");
+  assert.equal(spent.outcome, "UNKNOWN");
+  assert.equal(spent.neverReuse, true);
+  const live = C.authorisedCalls.calls[2];
+  assert.notEqual(live.callId, spent.callId);
+  assert.notEqual(live.claim.filename, "D-142.claim.json");
+  assert.equal(live.claim.filename, "D-143.claim.json");
+
+  // and nothing global was loosened on the way
+  assert.equal(C.meta.authorisesImageRequest, false);
+  assert.equal(C.imageCallBudget.isAuthorisation, false);
+});
+
+test("PROOF 4: no text claims that sending is impossible IN GENERAL", () => {
+  // Two separate facts, easy to collapse into one false sentence:
+  //   (a) the CORE preparation adapter cannot send, and this PR adds no new send path;
+  //   (b) the D-139 adapter DOES contain send code — it is simply pinned to its own call id and
+  //       its own mandate is already spent.
+  // Every claim in the contract and the register must be of the precise form: no adapter is
+  // pinned and authorised to send D-143's call.
+  const contract = readFileSync(CONTRACT_PATH, "utf8");
+  const register = readFileSync(REGISTER_PATH, "utf8");
+  const both = contract + "\n" + register;
+  for (const overBroad of [
+    /no adapter in origin\/main can send(?!\s+D-143)/i,
+    /nothing in the repository (is )?able to send/i,
+    /no adapter in the repository can send/i,
+    /Ingen adapter i `?origin\/main`? kan sende/i,
+  ]) {
+    assert.ok(!overBroad.test(both), "an over-broad cannot-send claim survives: " + overBroad);
+  }
+
+  // and the D-139 adapter's send code is acknowledged rather than denied
+  const e = C.authorisedCalls.calls.find((x) => x.decision === "D-143");
+  assert.match(e.adapter.notInThisRepositoryYet, /D-139 adapter DOES contain send code and that is not denied/);
+  assert.match(e.adapter.notInThisRepositoryYet, /Nothing in origin\/main can send D-143's call/);
+  assert.match(e.adapter.d139AdapterUntouched, /neither imports, extends nor modifies it/);
+  const row = register.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.match(row, /\*\*har send-kode\*\*/, "the register row must acknowledge D-139's send code");
+  assert.match(row, /kan derfor ikke udføre D-143's kald/);
+});
+
+test("PROOF 5: the register row does not settle the cause of D-139's band failure either", () => {
+  const register = readFileSync(REGISTER_PATH, "utf8");
+  const row = register.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.match(row, /IKKE fastslået/, "the row must say the cause is undetermined");
+  assert.match(row, /hele årsagen, en del af årsagen eller slet ikke en årsag/);
+  assert.match(row, /D-140 fastslår udtrykkeligt, at årsagen er uafgjort/);
+  assert.match(row, /på sine egne præmisser/, "the mask is excluded on its own terms");
+  assert.ok(!/hvilket er præcis det, `pre\.transition-silhouette` derefter fejlede/.test(row),
+    "the causal claim must be gone from the register row too");
+
+  // and D-140's own row still says it, unchanged — this PR did not weaken that finding
+  const d140 = register.split("\n").filter((l) => l.startsWith("| **D-140** |"))[0];
+  assert.match(d140, /Om det er den fulde eller delvise årsag til båndafvigelsen er ikke fastslået her/);
+  assert.equal(sha256(d140), BASE_PINS.rows["D-140"], "D-140's row is byte-identical to the base");
 });

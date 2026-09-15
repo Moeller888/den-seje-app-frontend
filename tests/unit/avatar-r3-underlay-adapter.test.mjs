@@ -135,10 +135,12 @@ test("the contract authorises exactly one call, by id, and every pin matches the
   const v = A.verifyAuthorisation(CONTRACT);
   assert.equal(v.ok, true, v.problems.join("; "));
   assert.equal(v.call.callId, A.CALL_ID);
-  // D-142 added a second entry, a spent record. D-139's own entry must still verify, and the
-  // adapter must still match on its OWN call id rather than on being the only entry present.
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 2);
-  assert.equal(CONTRACT.authorisedCalls.count, 2);
+  // D-142 added a spent record and D-143 a live permission for a DIFFERENT call. D-139's own
+  // entry must still verify, and the adapter must still match on its OWN call id rather than on
+  // being the only entry present — a D-143 permission must never make this adapter sendable.
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 3);
+  assert.equal(CONTRACT.authorisedCalls.count, 3);
+  assert.equal(A.verifyAuthorisation(CONTRACT).call.decision, "D-139", "it matches D-139's entry, not D-143's");
   assert.equal(CONTRACT.authorisedCalls.calls.filter((x) => x.callId === A.CALL_ID).length, 1);
 });
 

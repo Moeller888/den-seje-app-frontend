@@ -146,8 +146,8 @@ test("the image-call budget is derived arithmetically and is now 15-16", () => {
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
-  assert.equal(min, 16, "the iris is still one call; assets[0] now carries two");
-  assert.equal(max, 17);
+  assert.equal(min, 17, "the iris is still one call; assets[0] now carries three PLANNED calls");
+  assert.equal(max, 18);
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);
