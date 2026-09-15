@@ -151,6 +151,12 @@ test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permis
   assert.match(C.prohibitions.noImageRequestAuthorised, /THREE entries/);
   assert.match(C.prohibitions.noImageRequestAuthorised, /ONE ACTIVE, UNSPENT permission/);
   assert.match(C.prohibitions.noImageRequestAuthorised, /not exercisable today/);
+  // ...and it must say WHY precisely. "No adapter can send" is false — the D-139 adapter contains
+  // send code. The true statement is that no adapter is pinned and authorised to send THIS call.
+  assert.match(C.prohibitions.noImageRequestAuthorised,
+    /no adapter in origin\/main is pinned and authorised to send D-143-r3-underlay-core-v2/);
+  assert.match(C.prohibitions.noImageRequestAuthorised,
+    /execution additionally requires its own owner instruction/);
 });
 
 test("SEMANTIC: the classifier reads the fields, not the position in the list", () => {
@@ -801,6 +807,14 @@ test("D-143's pins are byte-identical to the D-141 preparation and the D-139 ref
   // and D-139's own mask is on the never-send list
   assert.ok(e.neverSentMasks.files.includes("r3-underlay-api-mask-v1.png"));
   assert.match(e.mask.whyNotD139sMask, /must never be sent again/);
+  // The exclusion must rest on the mask's own terms, NOT on a causal claim. D-140 records that the
+  // cause of the 644 px deviation is undetermined, so this contract may not settle it in passing.
+  assert.match(e.mask.whyNotD139sMask, /Whether the editable transition band was the whole cause, part of the cause, or not a cause/);
+  assert.match(e.mask.whyNotD139sMask, /NOT established/);
+  assert.match(e.mask.whyNotD139sMask, /D-140 records[\s\S]*the cause is undetermined/);
+  assert.match(e.mask.whyNotD139sMask, /excluded on its own terms/);
+  assert.ok(!/which is exactly what pre\.transition-silhouette then failed on/.test(e.mask.whyNotD139sMask),
+    "the mask must not be asserted as the established cause");
 });
 
 test("D-143's identity is new, and D-142's is never reused", () => {
@@ -1072,4 +1086,49 @@ test("PROOF 3: D-143 adds exactly one authorisation and changes no earlier decis
   // and nothing global was loosened on the way
   assert.equal(C.meta.authorisesImageRequest, false);
   assert.equal(C.imageCallBudget.isAuthorisation, false);
+});
+
+test("PROOF 4: no text claims that sending is impossible IN GENERAL", () => {
+  // Two separate facts, easy to collapse into one false sentence:
+  //   (a) the CORE preparation adapter cannot send, and this PR adds no new send path;
+  //   (b) the D-139 adapter DOES contain send code — it is simply pinned to its own call id and
+  //       its own mandate is already spent.
+  // Every claim in the contract and the register must be of the precise form: no adapter is
+  // pinned and authorised to send D-143's call.
+  const contract = readFileSync(CONTRACT_PATH, "utf8");
+  const register = readFileSync(REGISTER_PATH, "utf8");
+  const both = contract + "\n" + register;
+  for (const overBroad of [
+    /no adapter in origin\/main can send(?!\s+D-143)/i,
+    /nothing in the repository (is )?able to send/i,
+    /no adapter in the repository can send/i,
+    /Ingen adapter i `?origin\/main`? kan sende/i,
+  ]) {
+    assert.ok(!overBroad.test(both), "an over-broad cannot-send claim survives: " + overBroad);
+  }
+
+  // and the D-139 adapter's send code is acknowledged rather than denied
+  const e = C.authorisedCalls.calls.find((x) => x.decision === "D-143");
+  assert.match(e.adapter.notInThisRepositoryYet, /D-139 adapter DOES contain send code and that is not denied/);
+  assert.match(e.adapter.notInThisRepositoryYet, /Nothing in origin\/main can send D-143's call/);
+  assert.match(e.adapter.d139AdapterUntouched, /neither imports, extends nor modifies it/);
+  const row = register.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.match(row, /\*\*har send-kode\*\*/, "the register row must acknowledge D-139's send code");
+  assert.match(row, /kan derfor ikke udføre D-143's kald/);
+});
+
+test("PROOF 5: the register row does not settle the cause of D-139's band failure either", () => {
+  const register = readFileSync(REGISTER_PATH, "utf8");
+  const row = register.split("\n").filter((l) => l.startsWith("| **D-143** |"))[0];
+  assert.match(row, /IKKE fastslået/, "the row must say the cause is undetermined");
+  assert.match(row, /hele årsagen, en del af årsagen eller slet ikke en årsag/);
+  assert.match(row, /D-140 fastslår udtrykkeligt, at årsagen er uafgjort/);
+  assert.match(row, /på sine egne præmisser/, "the mask is excluded on its own terms");
+  assert.ok(!/hvilket er præcis det, `pre\.transition-silhouette` derefter fejlede/.test(row),
+    "the causal claim must be gone from the register row too");
+
+  // and D-140's own row still says it, unchanged — this PR did not weaken that finding
+  const d140 = register.split("\n").filter((l) => l.startsWith("| **D-140** |"))[0];
+  assert.match(d140, /Om det er den fulde eller delvise årsag til båndafvigelsen er ikke fastslået her/);
+  assert.equal(sha256(d140), BASE_PINS.rows["D-140"], "D-140's row is byte-identical to the base");
 });
