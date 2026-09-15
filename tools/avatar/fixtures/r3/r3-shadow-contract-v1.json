@@ -1382,7 +1382,7 @@
       "a new or extended adapter, itself owner-approved"
     ],
     "notAnAuthorisedCall": "This entry must never be moved into, merged with, or read as an entry of authorisedCalls.",
-    "authorisedCallsUnchanged": "authorisedCalls still holds exactly one entry, D-139-r3-underlay-head-only-v1, whose mandate is SPENT.",
+    "authorisedCallsUnchanged": "Unchanged BY D-141: D-141 added nothing to authorisedCalls, and this block never acquired an entry there. The list now holds TWO entries, and neither is D-141's — D-139-r3-underlay-head-only-v1, whose mandate is SPENT, and D-142-r3-underlay-core-v1, an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true, which was never a permission at all.",
     "noAdapterImplemented": "D-141 implements no new sending adapter. The existing D-139 adapter is pinned to its own call id and is neither imported, extended nor modified.",
     "oneCallCanStillFail": "Even with the correct mask and the correct prompt, a next call can fail: the model is not guaranteed to follow the mask pixel-precisely. D-141 buys a better chance, not a guarantee."
   },
@@ -1417,7 +1417,7 @@
     "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
   },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. SUPERSEDED NARROWLY BY D-139 for exactly one named call: the single entry in authorisedCalls.calls, call id D-139-r3-underlay-head-only-v1. Nothing else is authorised — no repeat of that call, no variant of it, and no other call in the R3 plan.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds TWO entries, and neither grants an unused send permission. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 is the only entry that was ever a permission: D-139 superseded the general rule NARROWLY, for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 was NEVER a permission. It is an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. Nothing else is authorised — no repeat of D-139's call, no variant of it, no reuse of D-142's call id or claim identity, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
