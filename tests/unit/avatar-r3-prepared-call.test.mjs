@@ -26,7 +26,9 @@ const P = CONTRACT.preparedCall;
 const REGISTER = readFileSync(join(REPO, "docs", "project-state.md"), "utf8");
 
 test("preparedCall is superseded, and still authorises nothing", () => {
-  assert.equal(P.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.equal(P.status, "SUPERSEDED BY D-142; ITS PREPARATION REALISED BY D-143 — STILL NOT A PERMISSION");
+  assert.equal(P.realisedBy, "D-143", "D-143 authorises a call that uses this preparation");
+  assert.match(P.realisationNote, /still authorises nothing/);
   assert.equal(P.supersededBy, "D-142");
   assert.equal(P.decision, "D-141");
   assert.equal(P.callId, null, "a prepared call has no call id — one is issued by a later decision");
@@ -68,9 +70,9 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's permission and the D-142 spent record", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 2);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 2);
+test("authorisedCalls holds D-139's call, the D-142 record and the D-143 permission", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 3);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 3);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -78,6 +80,13 @@ test("authorisedCalls holds D-139's permission and the D-142 spent record", () =
   assert.equal(rec.callId, "D-142-r3-underlay-core-v1");
   assert.equal(rec.mandateState, "SPENT");
   assert.equal(rec.neverReuse, true);
+  // The third is the one live permission — and this block is still not it.
+  const live = CONTRACT.authorisedCalls.calls[2];
+  assert.equal(live.callId, "D-143-r3-underlay-core-v2");
+  assert.equal(live.mandateState, "UNSPENT");
+  assert.equal(live.decision, "D-143");
+  assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
+    "D-141 still has no entry of its own");
 });
 
 test("NO D-141 entry leaked into authorisedCalls", () => {

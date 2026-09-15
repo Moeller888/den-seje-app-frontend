@@ -158,8 +158,11 @@ test("coverage gains a second axis, and the budget is unchanged", () => {
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
-  assert.equal(C.imageCallBudget.minimum, 16);
-  assert.equal(C.imageCallBudget.maximum, 17);
+  // D-143 authorises ONE further underlay call, so assets[0] carries 3 PLANNED calls and the
+  // derived budget is 17-18. Planned capacity is not a claim that the call was made: the
+  // actually-sent figure is still 2 (D-139 and the D-142 attempt).
+  assert.equal(C.imageCallBudget.minimum, 17);
+  assert.equal(C.imageCallBudget.maximum, 18);
 });
 
 test("nothing is wired yet, and nothing existing is changed", () => {
