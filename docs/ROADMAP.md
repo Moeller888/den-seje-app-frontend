@@ -473,6 +473,11 @@ _Last reviewed: 2026-07-01._
   `test` check is preserved in every mode. Live-backend/concurrency split deferred.
   **Live on main since `17d0574` (2026-07-23).** The two fast paths are **docs** (only `docs/**`)
   and **avatar-tool** (only `tools/avatar/**` + `docs/**`); everything else stays full.
+  **D-144 (2026-09-15):** a third fast path **unit-only** (only `tests/unit/**` +
+  `docs/**`), and `tests/unit/**` is also allowed inside **avatar-tool**; `tests/unit/**` can never
+  make a runtime-affecting PR fast, paths with empty/`.`/`..` segments now fail closed to full, and
+  the `unit` job still runs the unit suite on every PR. Step 2 (PR smoke) is undecided — if adopted,
+  it must run against the PR's Cloudflare preview, not live `lærlig.dk`. See `docs/project-state.md`.
   **Fully proven end-to-end (2026-07-24):** docs-mode (PR #107, required `test` green in ~8 s,
   Playwright skipped) · avatar-tool-mode (PR #108, real `node --check` of 1 file, Playwright
   skipped) · full-mode (PR #106/#109, whole Playwright suite, 365 passed) · every push to main ran
