@@ -5,6 +5,7 @@
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
+import { readRequiredSecret, derivedPassword } from "./test-credentials.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -34,9 +35,22 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const CONFIGURED_BASE_URL = (process.env.PROD_BASE_URL ?? "").trim();
 export const PROD = (CONFIGURED_BASE_URL || "https://xn--lrlig-sra.dk").replace(/\/+$/, "");
 
+/**
+ * Test-account credentials. The e-mail addresses are public test identifiers and keep their
+ * defaults; passwords have NO default and are read from .env / GitHub Actions secrets through
+ * tests/test-credentials.mjs, which throws when one is missing or blank. A password that used to be
+ * written here was readable in the public repository and was reset onto the live account by every
+ * CI run, so a fallback value is exactly what must not exist.
+ */
 export const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL    ?? "teacher-test@hotmail.com";
-export const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";
+export const TEACHER_PASSWORD = readRequiredSecret("TEST_TEACHER_PASSWORD");
 export const STUDENT2_EMAIL   = process.env.TEST_STUDENT2_EMAIL   ?? "student-teacher-test@hotmail.com";
+export const STUDENT2_PASSWORD = readRequiredSecret("TEST_STUDENT2_PASSWORD");
+
+/** Temporary passwords set by the password-change specs, derived from each account's own secret. */
+export const STUDENT_TEMP_PASSWORD        = derivedPassword("STUDENT_TEMP_PASSWORD");
+export const STUDENT2_FRESH_TEMP_PASSWORD = derivedPassword("STUDENT2_FRESH_TEMP_PASSWORD");
+export const STUDENT2_NEW_PASSWORD        = derivedPassword("STUDENT2_NEW_PASSWORD");
 
 /**
  * Log in as the test teacher and wait for teacher.html to load.
