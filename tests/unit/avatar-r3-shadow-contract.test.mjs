@@ -1132,3 +1132,114 @@ test("PROOF 5: the register row does not settle the cause of D-139's band failur
   assert.match(d140, /Om det er den fulde eller delvise årsag til båndafvigelsen er ikke fastslået her/);
   assert.equal(sha256(d140), BASE_PINS.rows["D-140"], "D-140's row is byte-identical to the base");
 });
+
+// ── D-145 records the implementation APPEND-ONLY and rewrites nothing that came before ────────
+//
+// D-143's authorisation entry is the historical snapshot of what was authorised. D-145 does not edit
+// it to say "implemented"; it adds adapterImplementations beside it. The pins below are of the
+// merged state, 39cbdaaaff58d7961c144e9d44d801131b6b7f4e, and of the D-145 entry as decided, so a
+// later decision cannot quietly tidy either of them.
+
+const D145_BASE_COMMIT = "39cbdaaaff58d7961c144e9d44d801131b6b7f4e";
+const D145_PINS = {
+  d143Entry: "6ca1754aedd8351349ab725e063190c6f265af16f79cde4fad86ad6a2c16ef6d",
+  d143Row: "3bb664ce0c0ffd675c1b1aa5d477e5be91fffddd8c1c451d8cbb03d4285d2e8d",
+  d144Row: "e5706b11e66915855ef371cfde0a054c91850522c90d10d1709d380ddbdfd8cb",
+  prohibitions: "4b9fadcc85ec4e9f7dfbdee8f94084e2fc99ad43fa42f9c67fa8801babcd8218",
+  d145Entry: "53b144c02ea9d6bc5f5fa9ce22652dcff4a3f1fc56c3b84c3a39cb95f95e3de6",
+  d145Row: "e61ed27370b2ad0860585f116b97aa14d72e1062686a0dedc6bca6af9860f551",
+};
+const D145_ADAPTER = "tools/avatar/openai-send-r3-underlay-core-d143.mjs";
+const d145Entry = () => (C.adapterImplementations && Array.isArray(C.adapterImplementations.entries)
+  ? C.adapterImplementations.entries.filter((e) => e && e.decision === "D-145") : []);
+
+test("D-145 PROOF: the D-143 authorisation snapshot, its row and the prohibitions are untouched", () => {
+  assert.equal(D145_BASE_COMMIT.length, 40);
+  assert.equal(canon(d143()), D145_PINS.d143Entry, "the D-143 entry is its merged snapshot, byte for byte");
+  assert.equal(canon(C.prohibitions), D145_PINS.prohibitions, "the prohibitions are not rewritten to match the implementation");
+  const lines = readFileSync(REGISTER_PATH, "utf8").split("\n");
+  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-143** |"))), D145_PINS.d143Row, "the D-143 row is not rewritten");
+  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-144** |"))), D145_PINS.d144Row, "the D-144 row is not rewritten");
+  // the snapshot still says what it said on the day of authorisation — D-145 reads it, it does not edit it
+  assert.match(d143().status, /NO SEND PATH EXISTS YET/);
+  assert.match(d143().adapter.file, /NOT YET IMPLEMENTED/);
+  assert.equal(d143().mandateState, "UNSPENT");
+  assert.equal(d143().outcome, "NOT YET ATTEMPTED");
+});
+
+test("D-145: exactly one implementation entry for D-143's call, with every binding field", () => {
+  const block = C.adapterImplementations;
+  assert.equal(block.decision, "D-145");
+  assert.equal(block.isAuthorisation, false, "an implementation record is never an authorisation");
+  assert.match(block.shape, /APPEND-ONLY/);
+  assert.match(block.relationToAuthorisedCalls, /HISTORICAL AUTHORISATION SNAPSHOT/);
+  assert.match(block.relationToAuthorisedCalls, /Nothing in this list authorises, widens, repeats or replaces a call/);
+  const entries = d145Entry();
+  assert.equal(entries.length, 1, "exactly one D-145 entry");
+  assert.equal(block.entries.filter((e) => e && e.callId === "D-143-r3-underlay-core-v2").length, 1, "one implementation per call");
+  const e = entries[0];
+  assert.equal(e.callId, "D-143-r3-underlay-core-v2");
+  assert.equal(e.authorisedBy, "D-143");
+  assert.equal(e.adapter.file, D145_ADAPTER);
+  assert.equal(e.adapter.status, "IMPLEMENTED — NOT EXECUTED");
+  assert.equal(e.adapter.ownerApproval, "D-143");
+  assert.equal(e.adapter.ownerApprovalFlag, "--owner-approval=D-143");
+  assert.match(e.adapter.ownerApprovalMeaning, /NOT by itself an instruction to send/);
+  assert.equal(e.mandateState, "UNSPENT");
+  assert.equal(e.outcome, "NOT YET ATTEMPTED");
+  assert.equal(e.mergeIsNotAnInstruction, true);
+  assert.equal(e.executionRequiresSeparateOwnerInstruction, true);
+  assert.equal(e.claimExists, false);
+  assert.equal(e.testCoverage.fullCiCoverage, false, "CI coverage is not claimed to be full");
+  assert.match(e.testCoverage.manualMergePrerequisite, /manual merge prerequisite/);
+  assert.match(e.testCoverage.ci, /^24 tests without H1/);
+  // the hardening rule, and the legacy exception held to its own terms
+  assert.match(e.testSafetyHardening, /may not read, check, write or delete a real claim or output path/);
+  assert.match(e.testSafetyHardening, /NARROW, machine-readable READ-ONLY exception for seven named constructs/);
+  assert.match(e.testSafetyHardening, /bound to file, rule, construct and count/);
+  assert.match(e.testSafetyHardening, /lapses automatically when its construct is removed/);
+  assert.match(e.testSafetyHardening, /not a precedent and may not be widened without a new owner decision/);
+  assert.match(e.testSafetyHardening, /D-139 production adapter is unchanged/);
+  // it implements a call that exists and is still the one live permission — it does not create one
+  const authorised = C.authorisedCalls.calls.filter((c) => c.callId === e.callId);
+  assert.equal(authorised.length, 1);
+  assert.equal(authorised[0].decision, e.authorisedBy);
+  // no adapter SHA-256 is pinned (D-145 §3)
+  for (const k of Object.keys(e.adapter)) assert.ok(!/^(adapter)?sha-?256$/i.test(k), "no adapter hash field: " + k);
+  assert.match(e.adapter.noAdapterSha256, /origin\/main commit SHA/);
+  const adapterPath = join(REPO, ...D145_ADAPTER.split("/"));
+  assert.ok(existsSync(adapterPath), "the named adapter exists in this tree");
+  assert.ok(!readFileSync(CONTRACT_PATH, "utf8").includes(sha256(readFileSync(adapterPath))), "the adapter's hash is not in the contract");
+  // the snapshot statements it names exist, verbatim, where it says they are
+  assert.deepEqual(e.snapshotStatementsReadAsOfAuthorisation, [
+    "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].status",
+    "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.file",
+    "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet",
+    "prohibitions.noImageRequestAuthorised",
+  ]);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /not exercisable today/);
+  assert.match(e.snapshotNote, /still NOT executed, the mandate is still UNSPENT/);
+  assert.equal(canon(e), D145_PINS.d145Entry, "the D-145 entry is pinned as decided");
+});
+
+test("D-145: the register row exists once, directly after D-144, and says what the contract says", () => {
+  const lines = readFileSync(REGISTER_PATH, "utf8").split("\n");
+  const at = (id) => lines.findIndex((l) => l.startsWith("| **" + id + "** |"));
+  assert.equal(lines.filter((l) => l.startsWith("| **D-145** |")).length, 1, "exactly one D-145 row");
+  assert.equal(at("D-145"), at("D-144") + 1, "appended directly after D-144");
+  const row = lines[at("D-145")];
+  for (const needle of ["--owner-approval=D-143", "ikke i sig selv en instruktion om at sende billedkaldet", "adapterImplementations",
+    "D-143-r3-underlay-core-v2", D145_ADAPTER, "IMPLEMENTED — NOT EXECUTED", "UNSPENT", "NOT YET ATTEMPTED",
+    "Ingen adapter-SHA pinnes i kontrakten", D145_PINS.d143Entry, "MERGE ER IKKE UDFØRELSE",
+    "`D-143.claim.json` findes fortsat ikke", "CI **24**", "De 8 positive mock-send-tests kræver H1",
+    "manuel merge-forudsætning", "D-139-produktionsadapteren ændres ikke", "D-120 til D-144 omskrives ikke",
+    // the hardening rule, and the exception held to its own terms
+    "En unit-test må ikke læse, kontrollere, skrive eller slette en rigtig claim- eller outputsti",
+    "snæver, maskinlæsbar READ-ONLY-undtagelse", "syv navngivne konstruktioner",
+    "bortfalder automatisk", "ikke præcedens og må ikke udvides uden en ny ejerbeslutning"]) {
+    assert.ok(row.includes(needle), "the D-145 row must carry " + JSON.stringify(needle));
+  }
+  assert.equal(sha256(row), D145_PINS.d145Row, "the D-145 row is pinned as decided");
+  assert.ok(row.endsWith("(2026-09-15) |"));
+  assert.ok(!/[ÃÂ]\S|�/.test(row), "no mojibake in the Danish row");
+});

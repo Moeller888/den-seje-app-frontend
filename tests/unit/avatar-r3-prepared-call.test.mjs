@@ -128,12 +128,24 @@ test("the real D-139 authorisation function refuses unknown decisions and call i
 });
 
 test("checking authorisation performs no network call and creates no claim", () => {
-  const claim = D139.resolveClaimPath({ repoRoot: REPO });
-  const before = claim.ok ? existsSync(claim.path) : null;
-  D139.verifyAuthorisation(CONTRACT);
-  D139.verifyAuthorisation({ authorisedCalls: { calls: [] } });
-  const after = claim.ok ? existsSync(claim.path) : null;
-  assert.equal(after, before, "the claim's existence must be unchanged by an authorisation check");
+  // D-145: this used to resolve the REAL per-user claim path and check its existence before and
+  // after. Looking at a production claim is what D-143 §8 forbids, and the property is stronger
+  // when it is structural: verifyAuthorisation is a pure function of the object it is handed, so it
+  // cannot touch a claim, a file or the network whatever the state of the machine.
+  const adapterSrc = readFileSync(join(REPO, "tools", "avatar", "openai-generate-r3-underlay.mjs"), "utf8");
+  const start = adapterSrc.indexOf("export function verifyAuthorisation(");
+  assert.ok(start > 0, "verifyAuthorisation must be found in the adapter");
+  const body = adapterSrc.slice(start, adapterSrc.indexOf("\n}\n", start));
+  for (const forbidden of ["existsSync", "readFileSync", "writeFileSync", "openSync", "mkdirSync", "statSync",
+    "renameSync", "resolveClaimPath", "claimState", "createClaim", "spawn", "process.env", "fetch"]) {
+    assert.ok(!body.includes(forbidden), "verifyAuthorisation must not contain " + JSON.stringify(forbidden));
+  }
+  const called = new Set([...body.matchAll(/\b([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]));
+  assert.deepEqual([...called].sort(), ["eq", "filter", "for", "if", "isArray", "join", "map", "push", "stringify", "verifyAuthorisation"],
+    "only pure helpers may be called from verifyAuthorisation");
+  // and it still decides correctly, on objects alone
+  assert.equal(D139.verifyAuthorisation(CONTRACT).ok, true);
+  assert.equal(D139.verifyAuthorisation({ authorisedCalls: { calls: [] } }).ok, false);
   // and nothing in this file can reach the network: no fetch is imported, called or stubbed
   const src = readFileSync(join(HERE, "avatar-r3-prepared-call.test.mjs"), "utf8");
   assert.ok(!/D139\.performSingleRequest\s*\(/.test(src), "this suite must not exercise the send path");
@@ -175,4 +187,26 @@ test("the register row says the same thing the contract does", () => {
   assert.match(row, /implementerer ingen ny afsendelsesadapter/);
   assert.match(row, /\(2026-09-14\)/, "the owner-approved decision date");
   assert.ok(!/GODKENDELSESDATO/.test(row), "the draft placeholder must be gone");
+});
+
+test("D-145: the implemented send adapter belongs to D-143's call, not to the prepared or spent call", () => {
+  // preparedCall stays what D-142 made it; the D-145 implementation is recorded beside D-143's
+  // authorisation and gives the prepared call — and D-142's spent identity — nothing to act on.
+  assert.equal(P.status, "SUPERSEDED BY D-142 — STILL NOT A PERMISSION");
+  assert.equal(P.callId, null);
+  const impl = CONTRACT.adapterImplementations.entries;
+  assert.equal(impl.length, 1);
+  assert.equal(impl[0].decision, "D-145");
+  assert.equal(impl[0].callId, "D-143-r3-underlay-core-v2");
+  assert.notEqual(impl[0].callId, "D-142-r3-underlay-core-v1");
+  const file = join(REPO, ...impl[0].adapter.file.split("/"));
+  assert.ok(existsSync(file), "the implementation names a file that exists");
+  const code = readFileSync(file, "utf8").split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
+  assert.match(code, /const CALL_ID = "D-143-r3-underlay-core-v2";/);
+  assert.match(code, /const CLAIM_FILENAME = "D-143\.claim\.json";/);
+  assert.ok(!code.includes("D-142-r3-underlay-core-v1") || /NEVER_REUSE_CALL_IDS = Object\.freeze\(\[[^\]]*"D-142-r3-underlay-core-v1"/.test(code),
+    "D-142's call id may appear only on the never-reuse list");
+  assert.ok(!code.includes("D-142.claim.json"), "the send adapter never names D-142's claim");
+  // the CORE preparation adapter is still the one that cannot send, unchanged in role
+  assert.notEqual(impl[0].adapter.file, "tools/avatar/openai-generate-r3-underlay-core.mjs");
 });

@@ -1602,5 +1602,52 @@
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
     "noMaskWork": "D-132 creates, changes, derives and promotes no mask of any kind. SUPERSEDED NARROWLY BY D-139 in one respect only: D-139 DERIVES one API guidance mask deterministically from D-133's tracked EDIT fixture (tools/avatar/build-r3-api-mask.mjs). SUPERSEDED AGAIN, equally narrowly, BY D-141, which derives a SECOND API guidance mask from the same tracked fixtures as EDIT minus TRANSITION. Both are separate fixtures with separate pins. No existing mask is changed, no mask is promoted to runtime, and no mask is drawn, fitted or segmented by hand."
+  },
+  "adapterImplementations": {
+    "decision": "D-145",
+    "adoptedOn": "2026-09-15",
+    "isAuthorisation": false,
+    "shape": "An APPEND-ONLY list. Read adapterImplementations.entries and match on callId AND decision. Each entry records that the send adapter for ONE call id in authorisedCalls.calls has been implemented. An entry is never edited once merged; a later state is recorded by a later decision as a NEW entry.",
+    "relationToAuthorisedCalls": "An authorisedCalls entry is the HISTORICAL AUTHORISATION SNAPSHOT of its own decision and is never edited to record an implementation. Statements inside such a snapshot about the adapter, or about its absence, describe the state on the day of authorisation. The implementation state of a call is read from THIS list. Nothing in this list authorises, widens, repeats or replaces a call.",
+    "entries": [
+      {
+        "decision": "D-145",
+        "callId": "D-143-r3-underlay-core-v2",
+        "authorisedBy": "D-143",
+        "implementedOn": "2026-09-15",
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-underlay-core-d143.mjs",
+          "status": "IMPLEMENTED — NOT EXECUTED",
+          "ownerApproval": "D-143",
+          "ownerApprovalFlag": "--owner-approval=D-143",
+          "ownerApprovalMeaning": "A necessary mechanical safety confirmation. It is NOT by itself an instruction to send the image call.",
+          "noAdapterSha256": "No adapter SHA-256 is pinned in this contract. The executed code version is identified by the origin/main commit SHA and by the adapter's computed SHA-256, both written into the claim and the manifest.",
+          "requiresFromOriginMain": [
+            "the D-143 authorisedCalls entry, canonically identical to its merged snapshot",
+            "exactly one valid D-145 entry in adapterImplementations.entries",
+            "the D-132, D-133, D-139, D-140, D-141, D-142, D-143 and D-145 register rows, each present exactly once"
+          ],
+          "refusesBeforeClaimAndFetch": "If the D-143 entry is missing or differs from its snapshot, or if the D-145 entry is missing, duplicated or differs in any pinned field, the adapter refuses before the claim is created and before the fetch."
+        },
+        "mandateState": "UNSPENT",
+        "outcome": "NOT YET ATTEMPTED",
+        "mergeIsNotAnInstruction": true,
+        "executionRequiresSeparateOwnerInstruction": true,
+        "claimExists": false,
+        "snapshotStatementsReadAsOfAuthorisation": [
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].status",
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.file",
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet",
+          "prohibitions.noImageRequestAuthorised"
+        ],
+        "snapshotNote": "Those statements say that no send path exists and that no adapter in origin/main is pinned for this call. They were true when D-143 was merged and are left verbatim. Once this entry is in origin/main, the adapter named above IS pinned for the call; the call is still NOT executed, the mandate is still UNSPENT, and running it still requires a separate, explicit owner instruction.",
+        "testCoverage": {
+          "ci": "24 tests without H1: static checks of the adapter, the tests/ guard and its exception list, the sandbox isolation proof and every refusal before the claim.",
+          "manualMergePrerequisite": "The 8 positive mock-send scenarios need the external H1 (D-127 §2) and run only locally, in the isolated sandbox. They are a manual merge prerequisite.",
+          "fullCiCoverage": false
+        },
+        "testSafetyHardening": "New and changed adapter tests are fully isolated: an explicit allowlist environment, a sandbox identity and sandbox paths. A unit test may not read, check, write or delete a real claim or output path. The D-139 adapter test, the CORE preparation test and the prepared-call test are hardened to that rule, and the guard in the D-143 test file enforces it for every adapter test. Two legacy suites — the D-129 fitting-base test and the D-121 North Star refinement test — carry a NARROW, machine-readable READ-ONLY exception for seven named constructs, bound to file, rule, construct and count. No exception can cover send: true, a real network call, reading the key, or writing, deleting or moving a real claim or output, and it lapses automatically when its construct is removed. It is not a precedent and may not be widened without a new owner decision. The D-139 production adapter is unchanged."
+      }
+    ]
   }
 }
