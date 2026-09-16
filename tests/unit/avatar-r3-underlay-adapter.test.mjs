@@ -238,10 +238,12 @@ test("the claim is D-139's own, and lives outside the repository and outside tem
 
 test("the claim filename is D-139's on every platform branch, resolvable or not", () => {
   // Independent of absoluteness: whatever root is offered, the FILE is never another decision's.
-  for (const opts of [{ env: { LOCALAPPDATA: "C:\\x" }, platform: "win32" },
-    { env: { XDG_STATE_HOME: "/x" }, platform: "linux" },
-    { env: {}, platform: "linux", homeDir: "/home/someone" }]) {
-    const r = A.resolveClaimPath(opts);
+  // each environment is written out at the call site, so the injection is visible to the guard
+  for (const r of [
+    A.resolveClaimPath({ env: { LOCALAPPDATA: "C:\\x" }, platform: "win32" }),
+    A.resolveClaimPath({ env: { XDG_STATE_HOME: "/x" }, platform: "linux" }),
+    A.resolveClaimPath({ env: {}, platform: "linux", homeDir: "/home/someone" }),
+  ]) {
     assert.ok(r.path.endsWith(A.CLAIM_FILENAME), "resolved to " + r.path);
   }
 });
@@ -297,13 +299,13 @@ test("the claim never records a secret", () => {
 
 // ── the refusals that happen BEFORE the fetch ────────────────────────────────────────────────
 
-async function attempt(over, opts) {
+async function attempt(over) {
   const dir = tmp();
   let calls = 0;
   const fetchImpl = async () => { calls += 1; return okResponse(fakePngHeader()); };
   const result = await A.performSingleRequest({
     pf: fakePreflight(over), fetchImpl, apiKey: "test-key",
-    outDir: join(dir, "out"), claimPath: join(dir, "D-139.claim.json"), ...(opts || {}),
+    outDir: join(dir, "out"), claimPath: join(dir, "D-139.claim.json"),
   });
   return { result, calls, dir };
 }
@@ -548,12 +550,144 @@ test("the real preflight refuses cleanly when H1 is absent, as it is in CI", () 
   assert.equal(existsSync(join(dir, "c.json")), false, "a failed preflight creates nothing");
 });
 
-test("running this suite creates no claim and no output anywhere real", () => {
-  const real = A.outputPaths();
-  assert.ok(!existsSync(real.raw), "no real output may exist after the tests");
-  assert.ok(!existsSync(real.manifest), "no real manifest may exist after the tests");
-  const claim = A.resolveClaimPath({ repoRoot: REPO });
-  if (claim.ok) assert.equal(existsSync(claim.path), false, "the real mandate must still be unspent");
+// ── D-145: this suite never reaches a real claim, output, key or fetch — proven statically ─────
+//
+// The test that used to stand here looked at the REAL claim and output paths to show nothing had
+// happened there. That is exactly what D-143 §8 forbids, and after D-139's call was made it could
+// not even pass on the owner's machine. It is replaced by a property that needs no real path: every
+// in-process call to performSingleRequest names its own fetch, claim path, output directory and a
+// literal dummy key, so the adapter's fallbacks to the real environment are unreachable from here.
+
+/** Source with the CONTENTS of strings, template literals, regex literals and comments blanked,
+ *  preserving length and newlines, so structure can be read without matching text inside them. */
+function blankLiterals(src) {
+  const out = src.split("");
+  const n = src.length;
+  const blank = (a, b) => { for (let k = a; k < b && k < n; k++) if (out[k] !== "\n") out[k] = " "; };
+  let i = 0;
+  let last = "";
+  while (i < n) {
+    const ch = src[i];
+    const nx = src[i + 1];
+    if (ch === "/" && nx === "/") { const e = src.indexOf("\n", i); const end = e < 0 ? n : e; blank(i, end); i = end; continue; }
+    if (ch === "/" && nx === "*") { const e = src.indexOf("*/", i + 2); const end = e < 0 ? n : e + 2; blank(i, end); i = end; continue; }
+    if (ch === "\"" || ch === "'" || ch === "`") {
+      let j = i + 1;
+      while (j < n && src[j] !== ch) j += src[j] === "\\" ? 2 : 1;
+      blank(i + 1, j); i = j + 1; last = ch; continue;
+    }
+    if (ch === "/" && (last === "" || "(,=:[!&|?{};+-*%<>~^".includes(last))) {
+      let j = i + 1;
+      let inClass = false;
+      while (j < n && src[j] !== "\n") {
+        const c = src[j];
+        if (c === "\\") { j += 2; continue; }
+        if (c === "[") inClass = true; else if (c === "]") inClass = false; else if (c === "/" && !inClass) break;
+        j++;
+      }
+      blank(i + 1, j); i = j + 1; last = "/"; continue;
+    }
+    if (!/\s/.test(ch)) last = ch;
+    i++;
+  }
+  return out.join("");
+}
+
+/** Every call `fnName(...)` in src, with the raw and blanked text of its top-level properties. */
+function callProperties(src, fnName) {
+  const b = blankLiterals(src);
+  const re = new RegExp("\\b" + fnName + "\\s*\\(", "g");
+  const calls = [];
+  let m;
+  while ((m = re.exec(b))) {
+    const start = m.index + m[0].length;
+    let depth = 1;
+    let j = start;
+    while (j < b.length && depth > 0) {
+      if ("({[".includes(b[j])) depth++; else if (")}]".includes(b[j])) depth--;
+      j++;
+    }
+    const argB = b.slice(start, j - 1);
+    const lead = argB.length - argB.trimStart().length;
+    const line = b.slice(0, m.index).split("\n").length;
+    if (!argB.trim().startsWith("{") || !argB.trim().endsWith("}")) { calls.push({ line, objectLiteral: false, props: [] }); continue; }
+    const open = start + lead + 1;
+    const close = start + argB.trimEnd().length - 1;
+    const props = [];
+    let d = 0;
+    let cur = open;
+    for (let k = open; k <= close; k++) {
+      const c = k === close ? "," : b[k];
+      if ("({[".includes(c)) d++; else if (")}]".includes(c)) d--;
+      else if (c === "," && d === 0) {
+        const rawP = src.slice(cur, k).trim();
+        const blP = b.slice(cur, k).trim();
+        if (blP !== "") {
+          const colon = blP.search(/:/);
+          const key = colon < 0 ? blP : blP.slice(0, colon).trim();
+          props.push({ key, raw: colon < 0 ? rawP : rawP.slice(colon + 1).trim(), blank: colon < 0 ? blP : blP.slice(colon + 1).trim() });
+        }
+        cur = k + 1;
+      }
+    }
+    calls.push({ line, objectLiteral: true, props });
+  }
+  return calls;
+}
+
+/** Why one in-process send call could reach the real environment, or [] when every injection is explicit. */
+function unsafeSendCall(call, src) {
+  if (!call.objectLiteral) return ["the argument is not an object literal, so its injections cannot be proven"];
+  const problems = [];
+  const byKey = new Map(call.props.map((p) => [p.key, p]));
+  for (const p of call.props) if (p.key.startsWith("...")) problems.push("a spread can override an injection");
+  for (const key of ["fetchImpl", "claimPath", "outDir", "apiKey"]) if (!byKey.has(key)) problems.push("no explicit " + key);
+  const real = /process\.env|resolveClaimPath|proposedClaimPath|outputPaths|homedir|LOCALAPPDATA|XDG_STATE_HOME|\bOUT\b/;
+  const f = byKey.get("fetchImpl");
+  if (f && (/^(globalThis\.)?fetch$/.test(f.blank) || real.test(f.blank))) problems.push("fetchImpl is the real fetch");
+  for (const key of ["claimPath", "outDir"]) {
+    const p = byKey.get(key);
+    if (p && real.test(p.blank)) problems.push(key + " is derived from the real environment");
+  }
+  const k = byKey.get("apiKey");
+  if (k) {
+    const literal = /^(["'`])[^"'`]*\1$/.test(k.raw);
+    const constant = /^[A-Za-z_$][\w$]*$/.test(k.raw)
+      && new RegExp("\\bconst\\s+" + k.raw + "\\s*=\\s*[\"'`][^\"'`]*[\"'`]").test(src);
+    if (!literal && !constant) problems.push("apiKey is not a literal dummy value");
+  }
+  return problems;
+}
+
+test("every in-process performSingleRequest call injects fetch, claim path, output directory and a dummy key", () => {
+  const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  const calls = callProperties(self, "performSingleRequest");
+  assert.ok(calls.length >= 8, "the check must see this suite's send calls, found " + calls.length);
+  const offenders = calls.map((c) => [c.line, unsafeSendCall(c, self)]).filter(([, p]) => p.length > 0);
+  assert.deepEqual(offenders, [], "every send call must inject all four");
+  // and nothing here resolves the real claim or output location without injected inputs
+  const b = blankLiterals(self);
+  assert.ok(!/\boutputPaths\s*\(\s*\)/.test(b), "no call resolves the real output directory");
+  assert.ok(!/\bresolveClaimPath\s*\(\s*\{\s*repoRoot\s*:\s*REPO\s*\}\s*\)/.test(b), "no call resolves the real claim path");
+  assert.ok(!/\bclaimState\s*\(\s*(A\.)?resolveClaimPath/.test(b), "no call inspects the real claim");
+
+  // non-vacuity: the rule rejects each way a call could fall back to the real environment
+  const q = "\"";
+  const bad = [
+    "A.performSingleRequest({ pf, apiKey: " + q + "k" + q + ", outDir: o, claimPath: c });",
+    "A.performSingleRequest({ pf, fetchImpl: fetch, apiKey: " + q + "k" + q + ", outDir: o, claimPath: c });",
+    "A.performSingleRequest({ pf, fetchImpl: f, apiKey: process.env.KEY, outDir: o, claimPath: c });",
+    "A.performSingleRequest({ pf, fetchImpl: f, apiKey: " + q + "k" + q + ", outDir: A.OUT, claimPath: c });",
+    "A.performSingleRequest({ pf, fetchImpl: f, apiKey: " + q + "k" + q + ", outDir: o, claimPath: A.resolveClaimPath().path });",
+    "A.performSingleRequest({ pf, fetchImpl: f, apiKey: " + q + "k" + q + ", outDir: o, claimPath: c, ...opts });",
+    "A.performSingleRequest(options);",
+  ];
+  for (const s of bad) {
+    const [c] = callProperties(s, "performSingleRequest");
+    assert.ok(unsafeSendCall(c, s).length > 0, "must be rejected: " + s);
+  }
+  const good = "A.performSingleRequest({ pf, fetchImpl: async () => ({ status: 1 }), apiKey: " + q + "k" + q + ", outDir: join(d, " + q + "o" + q + "), claimPath });";
+  assert.deepEqual(unsafeSendCall(callProperties(good, "performSingleRequest")[0], good), []);
 });
 
 test("the scratch directory is cleaned up", () => {

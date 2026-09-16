@@ -9,10 +9,10 @@
 // to reach it with.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { readFileSync, existsSync, mkdtempSync, mkdirSync, readdirSync, statSync, copyFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import * as C from "../../tools/avatar/openai-generate-r3-underlay-core.mjs";
@@ -27,6 +27,9 @@ const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join
 const CONTRACT = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "r3", "r3-shadow-contract-v1.json"), "utf8"));
 const FIX = join(REPO, "tools", "avatar", "fixtures", "r3-underlay");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
+/** Where the adapter WOULD write, as a repository-relative path. Compared as a string; never opened. */
+const OUT_RELATIVE = "tools/avatar/build/r3-underlay-core";
+assert.equal(relative(REPO, C.OUT).split(sep).join("/"), OUT_RELATIVE);
 
 // ── 1 · there is no send path, structurally ──────────────────────────────────────────────────
 
@@ -114,33 +117,127 @@ test("sendGate cannot return allowed:true for any contract shape", () => {
   }
 });
 
-test("the CLI refuses --send with any accompanying flags, and exits non-zero", () => {
-  // Run the real CLI in a child process, offline. It has no fetch, so this cannot reach the network.
-  const flagSets = [
-    ["--send"],
-    ["--send", "--owner-approval=D-142"],
-    ["--send", "--owner-approval=D-141"],
-    ["--send", "--force", "--yes", "--owner-approval=D-142-r3-underlay-core-v1"],
-    ["--send", "--plan"],
-  ];
-  for (const flags of flagSets) {
-    const r = spawnSync(process.execPath, [ADAPTER, ...flags], { encoding: "utf8", env: { ...process.env, OPENAI_API_KEY: "" } });
-    assert.equal(r.status, 1, "exit code must be non-zero for " + flags.join(" "));
-    assert.match(r.stdout, /--send WAS REQUESTED AND IS REFUSED/, "for " + flags.join(" "));
-    assert.match(r.stdout, /sent: false {3}fetch called: false {3}claim created: false {3}output written: false/);
+// ── D-145: the CLI is exercised in a SANDBOX, never against the real user identity ────────────
+//
+// These two tests used to run the CLI with `...process.env` and then look at the REAL D-142 claim
+// path and the REAL output directory to show that nothing had appeared there. D-143 §8 forbids a
+// test from reading, listing or checking absence on a production path — the D-142 incident began
+// with a test that reached the real environment. The property is unchanged and is now proven where
+// it can be proven safely: an explicit allowlist environment whose LOCALAPPDATA, XDG_STATE_HOME and
+// TEMP/TMP/TMPDIR are sandbox directories, and — for the invariance test — a sandbox COPY of the
+// repository, so the claim location and the output directory the CLI computes are both inside it.
+
+/** Only these names are passed through from this process. No key, no user identity, no real paths. */
+const SYSTEM_ENV = new Set(["SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "PATH",
+  "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE", "OS"]);
+
+/** A throwaway user identity: every path the adapter can resolve lands inside `root`. */
+function isolated(root) {
+  const env = {};
+  for (const k of Object.keys(process.env)) if (SYSTEM_ENV.has(k.toUpperCase())) env[k] = process.env[k];
+  const state = join(root, "state");
+  const temp = join(root, "temp");
+  const home = join(root, "home");
+  for (const d of [state, temp, home]) mkdirSync(d, { recursive: true });
+  Object.assign(env, { LOCALAPPDATA: state, XDG_STATE_HOME: state, TEMP: temp, TMP: temp, TMPDIR: temp,
+    HOME: home, USERPROFILE: home, OPENAI_API_KEY: "" });
+  // Windows copies these from the parent when a child's environment lacks them, so they are explicit.
+  if (process.platform === "win32") {
+    Object.assign(env, { HOMEDRIVE: home.slice(0, 2), HOMEPATH: home.slice(2), LOGONSERVER: "\\\\r3-core-sandbox",
+      USERDOMAIN: "r3-core-sandbox", USERNAME: "r3-core-sandbox" });
   }
+  return { env, state, temp, home };
+}
+
+/** The files the CLI reads, copied into a sandbox repository so its REPO and OUT are sandboxed. */
+const CLI_INPUTS = [
+  "tools/avatar/openai-generate-r3-underlay-core.mjs",
+  "tools/avatar/build-r2-torso-occlusion-mask.mjs",
+  "tools/avatar/fetch-dwebp.mjs",
+  "tools/avatar/fixtures/r3/r3-shadow-contract-v1.json",
+  "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-core-v1.png",
+  "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt-v2.md",
+  "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+  "tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png",
+  "assets/avatar/reference/Northstar Master v2.png",
+  "docs/project-state.md",
+];
+
+function sandboxRepo(root) {
+  const repo = join(root, "repo");
+  for (const rel of CLI_INPUTS) {
+    const dst = join(repo, ...rel.split("/"));
+    mkdirSync(dirname(dst), { recursive: true });
+    copyFileSync(join(REPO, ...rel.split("/")), dst);
+  }
+  return repo;
+}
+
+/** Everything under `dir`, as relative paths — a listing that proves a directory did not change. */
+function listing(dir) {
+  if (!existsSync(dir)) return [];
+  const out = [];
+  const walk = (d, prefix) => {
+    for (const name of readdirSync(d).sort()) {
+      const p = join(d, name);
+      out.push(prefix + name);
+      if (statSync(p).isDirectory()) walk(p, prefix + name + "/");
+    }
+  };
+  walk(dir, "");
+  return out;
+}
+
+test("the CLI refuses --send with any accompanying flags, and exits non-zero", () => {
+  // Run the real CLI in a child process, offline, with a sandbox identity. It has no fetch, so this
+  // cannot reach the network, and its claim location resolves inside the sandbox rather than at the
+  // real per-user path.
+  const root = mkdtempSync(join(tmpdir(), "d145-core-cli-"));
+  try {
+    const iso = isolated(root);
+    const flagSets = [
+      ["--send"],
+      ["--send", "--owner-approval=D-142"],
+      ["--send", "--owner-approval=D-141"],
+      ["--send", "--force", "--yes", "--owner-approval=D-142-r3-underlay-core-v1"],
+      ["--send", "--plan"],
+    ];
+    for (const flags of flagSets) {
+      const r = spawnSync(process.execPath, [ADAPTER, ...flags], { encoding: "utf8", env: iso.env });
+      assert.equal(r.status, 1, "exit code must be non-zero for " + flags.join(" "));
+      assert.match(r.stdout, /--send WAS REQUESTED AND IS REFUSED/, "for " + flags.join(" "));
+      assert.match(r.stdout, /sent: false {3}fetch called: false {3}claim created: false {3}output written: false/);
+    }
+    assert.deepEqual(listing(iso.state), [], "the sandbox claim location stays empty");
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
 test("running the CLI changes nothing about the claim or the output", () => {
-  // This asserts INVARIANCE, not absence. D-142's claim was created during the 2026-09-14 incident
-  // and is SPENT; the register records it, and nothing in this suite may delete, reset or assert it
-  // away. Whatever its state is when this test starts, it must be identical when the test ends.
-  const claim = C.proposedClaimPath({ repoRoot: REPO });
-  const claimBefore = claim.ok ? existsSync(claim.path) : null;
-  const outBefore = existsSync(C.OUT);
-  spawnSync(process.execPath, [ADAPTER, "--send", "--owner-approval=D-142"], { encoding: "utf8" });
-  assert.equal(claim.ok ? existsSync(claim.path) : null, claimBefore, "the claim's existence must be unchanged");
-  assert.equal(existsSync(C.OUT), outBefore, "no output directory may appear or disappear");
+  // INVARIANCE, not absence — the original property. The claim location and the output directory
+  // are the ones the CLI itself computes, but inside a sandbox copy of the repository, so the real
+  // D-142 claim (SPENT since the 2026-09-14 incident) and the real build area are never touched.
+  const root = mkdtempSync(join(tmpdir(), "d145-core-run-"));
+  try {
+    const iso = isolated(root);
+    const repo = sandboxRepo(root);
+    const adapter = join(repo, "tools", "avatar", "openai-generate-r3-underlay-core.mjs");
+    const claim = C.proposedClaimPath({ env: iso.env, platform: process.platform, tmpDir: iso.temp,
+      homeDir: iso.home, repoRoot: repo });
+    assert.equal(claim.ok, true, claim.why || "");
+    assert.ok(claim.path.startsWith(iso.state), "the sandbox claim path stays in the sandbox: " + claim.path);
+    const sandboxOut = join(repo, ...OUT_RELATIVE.split("/"));
+
+    const claimBefore = existsSync(claim.path);
+    const outBefore = existsSync(sandboxOut);
+    const stateBefore = listing(iso.state);
+    const repoBefore = listing(join(repo, "tools", "avatar", "build"));
+    const r = spawnSync(process.execPath, [adapter, "--send", "--owner-approval=D-142"], { encoding: "utf8", env: iso.env });
+    assert.equal(r.status, 1, "the sandboxed CLI must still refuse");
+    assert.equal(existsSync(claim.path), claimBefore, "the claim's existence must be unchanged");
+    assert.equal(existsSync(sandboxOut), outBefore, "no output directory may appear or disappear");
+    assert.deepEqual(listing(iso.state), stateBefore, "nothing may appear in the claim location");
+    assert.deepEqual(listing(join(repo, "tools", "avatar", "build")), repoBefore, "nothing may appear in the build area");
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
 // ── 3 · the proposal is a proposal ───────────────────────────────────────────────────────────
@@ -168,7 +265,10 @@ test("D-139's call id and claim are never reused", () => {
   assert.equal(C.NEVER_REUSE.claimFilename, "D-139.claim.json");
   assert.notEqual(C.PROPOSED.callId, C.NEVER_REUSE.callId);
   assert.notEqual(C.PROPOSED.claimFilename, C.NEVER_REUSE.claimFilename);
-  const claim = C.proposedClaimPath({ repoRoot: REPO });
+  // resolved against a SYNTHETIC identity: the real per-user claim location is never computed (D-145)
+  const claim = C.proposedClaimPath({ repoRoot: REPO,
+    env: { LOCALAPPDATA: "C:\\synthetic\\AppData\\Local", XDG_STATE_HOME: "/synthetic/state" },
+    platform: process.platform, tmpDir: "/synthetic/tmp", homeDir: "/synthetic/home" });
   if (claim.ok) {
     assert.ok(claim.path.includes("D-142.claim.json"));
     assert.ok(!claim.path.includes("D-139"), "the proposed claim path must not point at D-139's");
