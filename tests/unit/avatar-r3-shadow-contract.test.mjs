@@ -17,6 +17,8 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { preClosureContract, PRE_CLOSURE_CONTRACT_CANONICAL_SHA256, PRE_CLOSURE_D143_ENTRY_CANONICAL_SHA256,
+  D147_ADDED_D143_KEYS, D147_ADDED_D145_KEYS } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -134,11 +136,13 @@ test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permis
   assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /not automatically a permission/);
   assert.match(C.prohibitions.noImageRequestAuthorised, /never counts as an active send permission/);
 
-  // EXACTLY ONE entry still has its call available, and it is D-143's. D-139's was made and
-  // D-142's was never a permission, so neither of them leaves anything an adapter could act on.
+  // Since D-147 NO entry has its call available. D-139's was made, D-142's was never a permission,
+  // and D-143's was sent once and is closed in place — so nothing is left an adapter could act on.
   const unused = classified.filter((x) => x.hasAnUnusedCall);
-  assert.equal(unused.length, 1, "exactly one live permission");
-  assert.equal(unused[0].callId, "D-143-r3-underlay-core-v2");
+  assert.equal(unused.length, 0, "no live permission remains");
+  const closed = classified.find((x) => x.callId === "D-143-r3-underlay-core-v2");
+  assert.equal(closed.spentRecord, true, "D-143 is a spent record since D-147");
+  assert.equal(closed.authorisesASecondCall, false);
   assert.equal(record.hasAnUnusedCall, false, "a spent record never has an unused call");
   const d139c = classified.find((x) => x.callId === "D-139-r3-underlay-head-only-v1");
   assert.equal(d139c.hasAnUnusedCall, false, "an absent mandateState must not read as unspent");
@@ -149,14 +153,10 @@ test("SEMANTIC: a SPENT/neverReuse entry does not count as an active send permis
   assert.match(d139.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d139.claim.furtherAttempt, /NEW owner decision and a NEW claim identity/);
   assert.match(C.prohibitions.noImageRequestAuthorised, /THREE entries/);
-  assert.match(C.prohibitions.noImageRequestAuthorised, /ONE ACTIVE, UNSPENT permission/);
-  assert.match(C.prohibitions.noImageRequestAuthorised, /not exercisable today/);
-  // ...and it must say WHY precisely. "No adapter can send" is false — the D-139 adapter contains
-  // send code. The true statement is that no adapter is pinned and authorised to send THIS call.
-  assert.match(C.prohibitions.noImageRequestAuthorised,
-    /no adapter in origin\/main is pinned and authorised to send D-143-r3-underlay-core-v2/);
-  assert.match(C.prohibitions.noImageRequestAuthorised,
-    /execution additionally requires its own owner instruction/);
+  // D-147: the prose says what the fields say — D-143 is a record, and no entry is a permission.
+  assert.match(C.prohibitions.noImageRequestAuthorised, /D-143-r3-underlay-core-v2 — NO LONGER a permission/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /D-147 records its outcome/);
+  assert.match(C.prohibitions.noImageRequestAuthorised, /No entry in this list is an active send permission/);
 });
 
 test("SEMANTIC: the classifier reads the fields, not the position in the list", () => {
@@ -172,14 +172,17 @@ test("SEMANTIC: the classifier reads the fields, not the position in the list", 
   delete stripped.neverReuse;
   assert.equal(classifyEntry(stripped).spentRecord, false, "the two markers are what make it a record");
 
-  // The same for the live permission: it is live because it SAYS mandateState UNSPENT, and it is
-  // bound to one call because it SAYS noRetry and furtherAttempt. Remove either, and the answer
-  // changes — so neither conclusion is an artefact of the entry's position.
+  // The same for D-143: since D-147 it is a record because it SAYS mandateState SPENT and neverReuse.
+  // Restore the pre-closure markers and it reads as live again; it is bound to one call because it
+  // SAYS noRetry and furtherAttempt. So neither conclusion is an artefact of the entry's position.
   const d143e = C.authorisedCalls.calls.find((e) => e.decision === "D-143");
-  assert.equal(classifyEntry(d143e).hasAnUnusedCall, true);
-  assert.equal(classifyEntry(d143e).authorisesASecondCall, false);
-  assert.equal(classifyEntry({ ...d143e, mandateState: "SPENT" }).hasAnUnusedCall, false);
-  const unbound = { ...d143e, prohibitions: { ...d143e.prohibitions, noRetry: "" } };
+  assert.equal(classifyEntry(d143e).hasAnUnusedCall, false);
+  assert.equal(classifyEntry(d143e).spentRecord, true);
+  const reopened = { ...d143e, mandateState: "UNSPENT" };
+  delete reopened.neverReuse;
+  assert.equal(classifyEntry(reopened).hasAnUnusedCall, true, "the fields, not the position, decide");
+  assert.equal(classifyEntry(reopened).authorisesASecondCall, false);
+  const unbound = { ...reopened, prohibitions: { ...reopened.prohibitions, noRetry: "" } };
   assert.equal(classifyEntry(unbound).authorisesASecondCall, true,
     "dropping noRetry must be visible, so the real entry's noRetry is doing the work");
 });
@@ -204,7 +207,7 @@ test("SEMANTIC: D-141's preparedCall block is historical, and is not rewritten f
   }
 });
 
-test("the authorised-call list carries D-139's call, a spent record and one live permission", () => {
+test("the authorised-call list carries D-139's call and two spent records, D-142's and D-143's", () => {
   // The failure mode: an authorisation that says "yes" without saying to what. Each of these fields
   // is something a wrong call would have to get right by accident.
   // D-142 added a SECOND entry, and it is deliberately NOT a permission: a record of an attempt
@@ -213,8 +216,8 @@ test("the authorised-call list carries D-139's call, a spent record and one live
   assert.equal(C.authorisedCalls.calls.length, 3);
   assert.match(C.authorisedCalls.entriesAreNotAllPermissions, /a SPENT entry with neverReuse is a RECORD/);
   const spent = C.authorisedCalls.calls.filter((x) => x.mandateState === "SPENT");
-  assert.equal(spent.length, 1, "exactly one entry is a spent record");
-  assert.equal(spent[0].callId, "D-142-r3-underlay-core-v1");
+  assert.deepEqual(spent.map((x) => x.callId), ["D-142-r3-underlay-core-v1", "D-143-r3-underlay-core-v2"],
+    "D-142's record and, since D-147, D-143's");
   assert.match(C.authorisedCalls.shape, /A LIST, not a boolean/);
   assert.match(C.meta.authorisationModel, /stays false permanently/);
 
@@ -278,16 +281,16 @@ test("the ears are an owner-visual criterion, measured, and never called a machi
 });
 
 test("the budget keeps PLANNED capacity and ACTUALLY SENT calls apart", () => {
-  // The trap D-143 has to avoid: raising a number in a JSON file is neither a claim that the call
-  // was made nor permission to make it. The contract therefore carries both figures, and they
-  // differ on purpose until a D-143 run actually happens.
+  // The trap D-143 had to avoid: raising a number in a JSON file is neither a claim that the call
+  // was made nor permission to make it. The contract therefore carries both figures. They differed
+  // until D-143's call was made; D-147 counts that send, so both are 3 now.
   assert.equal(C.imageCallBudget.minimum, 17);
   assert.equal(C.imageCallBudget.maximum, 18);
   assert.equal(C.assets[0].calls, 3, "assets[].calls is PLANNED capacity");
-  assert.equal(C.imageCallBudget.callsActuallySentSoFar.underlay, 2, "D-139 and the D-142 attempt");
-  assert.equal(C.imageCallBudget.callsPlannedAndAuthorised.underlay, 3, "plus the one D-143 authorises");
+  assert.equal(C.imageCallBudget.callsActuallySentSoFar.underlay, 3, "D-139, the D-142 attempt and D-143's send");
+  assert.equal(C.imageCallBudget.callsPlannedAndAuthorised.underlay, 3, "including the one D-143 authorised");
   assert.equal(C.imageCallBudget.callsPlannedAndAuthorised.derivedBudget, "17-18");
-  assert.match(C.imageCallBudget.callsActuallySentSoFar.note, /has not been sent/);
+  assert.match(C.imageCallBudget.callsActuallySentSoFar.note, /D-143's single send is counted here since D-147/);
   assert.match(C.imageCallBudget.doNotConfuseTheTwo, /NOT permission to make it/);
   assert.match(C.imageCallBudget.countingRule, /ACTUALLY SENT/);
   assert.match(C.imageCallBudget.countingRule, /sent by accident/);
@@ -767,13 +770,13 @@ test("the D-141 row exists exactly once, with the owner's decision date", () => 
 const D143_ID = "D-143-r3-underlay-core-v2";
 const d143 = () => C.authorisedCalls.calls.find((e) => e.callId === D143_ID);
 
-test("D-143 authorises exactly one call, by id, with every pin it needs", () => {
+test("D-143 authorised exactly one call, by id, with every pin it needs — and it is spent", () => {
   const e = d143();
   assert.ok(e, "D-143 must have an entry");
   assert.equal(e.decision, "D-143");
   assert.equal(e.authorisedOn, "2026-09-15");
-  assert.equal(e.mandateState, "UNSPENT");
-  assert.equal(e.outcome, "NOT YET ATTEMPTED");
+  assert.equal(e.mandateState, "SPENT", "closed by D-147");
+  assert.match(e.outcome, /^SENT ONCE — HTTP 200 — RAW RECEIVED — CANDIDATE REJECTED/);
   assert.equal(e.endpoint, "https://api.openai.com/v1/images/edits");
   assert.equal(e.model, "gpt-image-2-2026-04-21");
   assert.deepEqual(e.parameters, { n: 1, size: "1024x1536", quality: "high", output_format: "png", background: "transparent" });
@@ -1153,28 +1156,36 @@ const D145_ADAPTER = "tools/avatar/openai-send-r3-underlay-core-d143.mjs";
 const d145Entry = () => (C.adapterImplementations && Array.isArray(C.adapterImplementations.entries)
   ? C.adapterImplementations.entries.filter((e) => e && e.decision === "D-145") : []);
 
-test("D-145 PROOF: the D-143 authorisation snapshot, its row and the prohibitions are untouched", () => {
+// D-147 closes the D-143 and D-145 entries in place and rewrites prohibitions.noImageRequestAuthorised.
+// The D-145 proofs below are therefore read from preClosureContract(C): the live contract with exactly
+// D-147's fields reversed. The D-147 section proves that reversal reproduces the merged contract, so these
+// pins still bind the history they were written for.
+const PRE = preClosureContract(C);
+const preD143 = () => PRE.authorisedCalls.calls.find((e) => e.callId === D143_ID);
+
+test("D-145 PROOF: the D-143 authorisation snapshot, its row and the prohibitions were untouched by D-145", () => {
   assert.equal(D145_BASE_COMMIT.length, 40);
-  assert.equal(canon(d143()), D145_PINS.d143Entry, "the D-143 entry is its merged snapshot, byte for byte");
-  assert.equal(canon(C.prohibitions), D145_PINS.prohibitions, "the prohibitions are not rewritten to match the implementation");
+  assert.equal(canon(preD143()), D145_PINS.d143Entry, "the D-143 entry was its merged snapshot, byte for byte");
+  assert.equal(canon(PRE.prohibitions), D145_PINS.prohibitions, "D-145 did not rewrite the prohibitions to match the implementation");
   const lines = readFileSync(REGISTER_PATH, "utf8").split("\n");
   assert.equal(sha256(lines.find((l) => l.startsWith("| **D-143** |"))), D145_PINS.d143Row, "the D-143 row is not rewritten");
   assert.equal(sha256(lines.find((l) => l.startsWith("| **D-144** |"))), D145_PINS.d144Row, "the D-144 row is not rewritten");
-  // the snapshot still says what it said on the day of authorisation — D-145 reads it, it does not edit it
-  assert.match(d143().status, /NO SEND PATH EXISTS YET/);
-  assert.match(d143().adapter.file, /NOT YET IMPLEMENTED/);
-  assert.equal(d143().mandateState, "UNSPENT");
-  assert.equal(d143().outcome, "NOT YET ATTEMPTED");
+  // before D-147 the snapshot said what it said on the day of authorisation — D-145 read it, it did not edit it
+  assert.match(preD143().status, /NO SEND PATH EXISTS YET/);
+  assert.match(preD143().adapter.file, /NOT YET IMPLEMENTED/);
+  assert.equal(preD143().mandateState, "UNSPENT");
+  assert.equal(preD143().outcome, "NOT YET ATTEMPTED");
 });
 
-test("D-145: exactly one implementation entry for D-143's call, with every binding field", () => {
-  const block = C.adapterImplementations;
+test("D-145: exactly one implementation entry for D-143's call, with every binding field as decided", () => {
+  const block = PRE.adapterImplementations;
   assert.equal(block.decision, "D-145");
   assert.equal(block.isAuthorisation, false, "an implementation record is never an authorisation");
   assert.match(block.shape, /APPEND-ONLY/);
   assert.match(block.relationToAuthorisedCalls, /HISTORICAL AUTHORISATION SNAPSHOT/);
   assert.match(block.relationToAuthorisedCalls, /Nothing in this list authorises, widens, repeats or replaces a call/);
-  const entries = d145Entry();
+  const entries = block.entries.filter((e) => e && e.decision === "D-145");
+  assert.equal(d145Entry().length, 1, "exactly one live D-145 entry");
   assert.equal(entries.length, 1, "exactly one D-145 entry");
   assert.equal(block.entries.filter((e) => e && e.callId === "D-143-r3-underlay-core-v2").length, 1, "one implementation per call");
   const e = entries[0];
@@ -1200,7 +1211,7 @@ test("D-145: exactly one implementation entry for D-143's call, with every bindi
   assert.match(e.testSafetyHardening, /lapses automatically when its construct is removed/);
   assert.match(e.testSafetyHardening, /not a precedent and may not be widened without a new owner decision/);
   assert.match(e.testSafetyHardening, /D-139 production adapter is unchanged/);
-  // it implements a call that exists and is still the one live permission — it does not create one
+  // it implements a call that exists — it does not create one
   const authorised = C.authorisedCalls.calls.filter((c) => c.callId === e.callId);
   assert.equal(authorised.length, 1);
   assert.equal(authorised[0].decision, e.authorisedBy);
@@ -1217,7 +1228,7 @@ test("D-145: exactly one implementation entry for D-143's call, with every bindi
     "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet",
     "prohibitions.noImageRequestAuthorised",
   ]);
-  assert.match(C.prohibitions.noImageRequestAuthorised, /not exercisable today/);
+  assert.match(PRE.prohibitions.noImageRequestAuthorised, /not exercisable today/);
   assert.match(e.snapshotNote, /still NOT executed, the mandate is still UNSPENT/);
   assert.equal(canon(e), D145_PINS.d145Entry, "the D-145 entry is pinned as decided");
 });
@@ -1242,4 +1253,165 @@ test("D-145: the register row exists once, directly after D-144, and says what t
   assert.equal(sha256(row), D145_PINS.d145Row, "the D-145 row is pinned as decided");
   assert.ok(row.endsWith("(2026-09-15) |"));
   assert.ok(!/[ÃÂ]\S|�/.test(row), "no mojibake in the Danish row");
+});
+
+// ── D-147: D-143's spent mandate is closed in place, and nothing else changes ───────────────────
+//
+// D-143's one call was made: HTTP 200, raw received, candidate rejected by pre.transition-silhouette,
+// nothing promoted. D-147 records that and closes the D-143 and D-145 entries IN PLACE, because an
+// append-only outcome record would leave an entry that, read alone, still says UNSPENT.
+
+const D147_REQUEST_ID = "req_fdbd7c5e8e71497d9b95482cf25eb8cb";
+const D147_RAW_SHA = "14afd5e33915a28905af114ce82ae2c7de3f81517813f13bb04547a600c5d489";
+const D147_MANIFEST_SHA = "0dcf4590c6f44695a97ddd8d5735d19d7a12e7f996d2ae8e7ea6e6df2d184e1b";
+const D147_CLAIM_SHA = "99865945e3bf8fe5146c87899f8c891366433dbf6b5e2d0b94c5a311b20bd65f";
+/** sha256 of the D-145 adapter as it ran; recorded in the D-143 claim and manifest. */
+const D147_EXECUTED_ADAPTER_SHA = "e8b77f8f39ebf2949a2e9b3c1bdbb6181744b802ef42a6f2af27b8b54a65cd3d";
+/** sha256 of every decision row up to and including D-145, joined by "\n", at 3f62932325ce4f00c9b9bfaa64e4b321bf3f4889. */
+const D147_ROWS_UP_TO_D145_SHA = "43c25794400613e3d386fbc0eca667839fa5f6912422c21a0367198801c0dacb";
+const decisionRows = (text) => text.split("\n").filter((l) => /^\| \*\*D-\d{3}\*\* \|/.test(l));
+const rowNumber = (l) => Number(l.match(/^\| \*\*D-(\d{3})\*\*/)[1]);
+
+test("D-147 SCOPE: reversing exactly D-147's fields reproduces the merged contract", () => {
+  assert.notEqual(canon(C), PRE_CLOSURE_CONTRACT_CANONICAL_SHA256, "the live contract is closed");
+  assert.equal(canon(PRE), PRE_CLOSURE_CONTRACT_CANONICAL_SHA256,
+    "D-147 changed only the D-143 and D-145 outcome fields, the budget and the general prohibition");
+  assert.equal(canon(preD143()), PRE_CLOSURE_D143_ENTRY_CANONICAL_SHA256);
+  for (const k of D147_ADDED_D143_KEYS) assert.ok(k in d143(), "D-147 added " + k + " to the D-143 entry");
+  for (const k of D147_ADDED_D145_KEYS) assert.ok(k in d145Entry()[0], "D-147 added " + k + " to the D-145 entry");
+});
+
+test("D-147: the live D-143 entry is a closed record of one send", () => {
+  const e = d143();
+  assert.equal(e.status, "SPENT — SENT ONCE, HTTP 200, RAW RECEIVED, CANDIDATE REJECTED, NOTHING PROMOTED");
+  assert.equal(e.mandateState, "SPENT");
+  assert.equal(e.neverReuse, true);
+  assert.equal(e.notAnActivePermission, true);
+  assert.equal(classifyEntry(e).spentRecord, true);
+  assert.equal(classifyEntry(e).hasAnUnusedCall, false);
+  assert.equal(e.closure.closedBy, "D-147");
+  assert.equal(e.closure.snapshotCanonicalSha256BeforeClosure, PRE_CLOSURE_D143_ENTRY_CANONICAL_SHA256);
+  assert.match(e.closure.neverReused, /NEW owner decision, a NEW call id and a NEW claim identity/);
+  const x = e.execution;
+  assert.equal(x.originMainSha, "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889");
+  assert.deepEqual(x.request, { sentOnce: true, fetches: 1, retries: 0, httpStatus: 200, requestId: D147_REQUEST_ID,
+    startedAt: "2026-09-16T09:08:37.309Z", finishedAt: "2026-09-16T09:10:26.663Z" });
+  assert.equal(x.claim.file, "D-143.claim.json");
+  assert.equal(x.claim.sha256, D147_CLAIM_SHA);
+  assert.equal(x.claim.mandate, "SPENT");
+  assert.equal(x.claim.createdBeforeFetch, true);
+  assert.equal(x.raw.sha256, D147_RAW_SHA);
+  assert.equal(x.raw.bytes, 1150862);
+  assert.equal(x.raw.received, true);
+  assert.equal(x.raw.isAnApprovedCandidate, false, "the raw output is never an approved candidate");
+  assert.equal(x.manifest.sha256, D147_MANIFEST_SHA);
+  assert.equal(x.manifest.completed, true);
+  assert.equal(x.candidate.result, "REJECTED — NO CANDIDATE FILE WAS WRITTEN");
+  assert.equal(x.candidate.gate, "pre.transition-silhouette");
+  assert.deepEqual([x.candidate.bound, x.candidate.observed, x.candidate.narrower, x.candidate.wider], [0, 210, 157, 53]);
+  assert.deepEqual([x.candidate.referenceJoinContinuity.observed, x.candidate.referenceJoinContinuity.bound], [37, 4]);
+  assert.equal(x.promotion, "NONE");
+  assert.equal(x.runtime, "UNCHANGED");
+});
+
+test("D-147: the live D-145 entry records exactly one execution and a spent mandate", () => {
+  const entries = d145Entry();
+  assert.equal(entries.length, 1);
+  const e = entries[0];
+  assert.equal(e.adapter.status, "IMPLEMENTED — EXECUTED ONCE — SPENT");
+  assert.equal(e.adapter.file, D145_ADAPTER, "the same adapter, unchanged");
+  assert.equal(e.mandateState, "SPENT");
+  assert.equal(e.claimExists, true);
+  assert.equal(e.neverReuse, true);
+  assert.equal(e.closedBy, "D-147");
+  assert.match(e.outcome, /RECORDED IN THE D-143 ENTRY/);
+  assert.match(e.snapshotNote, /run exactly once/);
+  assert.match(e.snapshotNote, /may never send this call id again/);
+});
+
+test("D-147: no live field or text describes D-143 as unspent, unsent or active", () => {
+  // structurally
+  for (const e of C.authorisedCalls.calls) assert.notEqual(e.mandateState, "UNSPENT", e.callId + " must not be UNSPENT");
+  assert.equal(C.authorisedCalls.calls.map(classifyEntry).filter((x) => x.hasAnUnusedCall).length, 0);
+  for (const e of C.adapterImplementations.entries) {
+    assert.notEqual(e.mandateState, "UNSPENT");
+    assert.notEqual(e.claimExists, false);
+  }
+  // and in every string anywhere in the contract
+  const stale = [/\bUNSPENT\b/, /NOT YET SENT/, /NOT YET ATTEMPTED/, /not yet sent/i, /has not been sent/i, /NOT EXECUTED/,
+    /not exercisable today/i, /ONE ACTIVE/, /live permission/i, /authorises but that has not/, /IKKE SENDT/, /UBRUGT/i];
+  const hits = [];
+  const walk = (v, path) => {
+    if (typeof v === "string") { for (const re of stale) if (re.test(v)) hits.push(path + " ~ " + re); return; }
+    if (Array.isArray(v)) { v.forEach((x, i) => walk(x, path + "[" + i + "]")); return; }
+    if (v && typeof v === "object") for (const k of Object.keys(v)) walk(v[k], path + "." + k);
+  };
+  walk(C, "$");
+  assert.deepEqual(hits, [], "stale D-143 state survives in the live contract");
+  // non-vacuity: the same sweep finds the pre-closure wording
+  const preHits = [];
+  const walkPre = (v) => {
+    if (typeof v === "string") { for (const re of stale) if (re.test(v)) preHits.push(re); return; }
+    if (Array.isArray(v)) { v.forEach(walkPre); return; }
+    if (v && typeof v === "object") for (const k of Object.keys(v)) walkPre(v[k]);
+  };
+  walkPre(PRE);
+  assert.ok(preHits.length >= 6, "the sweep must detect the pre-closure wording");
+});
+
+test("D-147: the budget counts D-143's send exactly once", () => {
+  const sent = C.imageCallBudget.callsActuallySentSoFar;
+  assert.equal(sent.underlay, 3);
+  assert.equal(sent.which.length, 3);
+  for (const id of ["D-139", "D-142", "D-143"]) {
+    assert.equal(sent.which.filter((w) => w.startsWith(id + " ")).length, 1, id + " is counted exactly once");
+  }
+  assert.match(sent.which.find((w) => w.startsWith("D-143 ")), /candidate rejected by pre\.transition-silhouette, nothing promoted \(recorded by D-147\)/);
+  assert.equal(C.imageCallBudget.minimum, 17);
+  assert.equal(C.imageCallBudget.maximum, 18);
+  assert.equal(C.imageCallBudget.isAuthorisation, false);
+});
+
+test("D-147: exactly one register row, after D-145, with every earlier row unchanged", () => {
+  const text = readFileSync(REGISTER_PATH, "utf8");
+  const rows = decisionRows(text);
+  const d147 = rows.filter((l) => l.startsWith("| **D-147** |"));
+  assert.equal(d147.length, 1, "exactly one D-147 row");
+  const lines = text.split("\n");
+  const at = (id) => lines.findIndex((l) => l.startsWith("| **" + id + "** |"));
+  assert.ok(at("D-147") > at("D-145"), "after D-145");
+  const between = lines.slice(at("D-145") + 1, at("D-147")).filter((l) => /^\| \*\*D-\d{3}\*\* \|/.test(l));
+  assert.ok(between.every((l) => l.startsWith("| **D-146** |")), "only D-146 may sit between D-145 and D-147");
+  // append-only: every row up to D-145 is byte-identical to the merged register
+  assert.equal(sha256(rows.filter((l) => rowNumber(l) <= 145).join("\n")), D147_ROWS_UP_TO_D145_SHA);
+  const row = d147[0];
+  for (const needle of ["D-143-r3-underlay-core-v2", "HTTP **200**", D147_REQUEST_ID, D147_RAW_SHA, D147_MANIFEST_SHA, D147_CLAIM_SHA,
+    "1150862 B", "`pre.transition-silhouette`", "**210**", "bound **0**", "157 smallere, 53 bredere", "37 mod bound 4",
+    "Ingen kandidatfil", "Intet blev promoveret", "`SPENT`", PRE_CLOSURE_D143_ENTRY_CANONICAL_SHA256,
+    "IMPLEMENTED — EXECUTED ONCE — SPENT", "`imageCallBudget.callsActuallySentSoFar.underlay` bliver **3**",
+    "autoriserer INTET billedkald, intet D-148-kald, ingen adapter og ingen ændring af G1V3",
+    "D-143 kan aldrig genbruges", "ny, særskilt ejerbeslutning med nyt call-id og ny claim-identitet",
+    "var snapshots før udførelsen", "(2026-09-17) |"]) {
+    assert.ok(row.includes(needle), "the D-147 row must carry " + JSON.stringify(needle));
+  }
+  assert.ok(!/[ÃÂ]\S|\uFFFD/.test(row), "no mojibake in the Danish row");
+});
+
+test("D-147: the executed adapter and D-143's pinned inputs are byte-identical to what ran", () => {
+  assert.equal(sha256(readFileSync(join(REPO, ...D145_ADAPTER.split("/")))), D147_EXECUTED_ADAPTER_SHA,
+    "the D-145 adapter is unchanged since it ran");
+  const e = d143();
+  const pinned = [
+    [e.prompt.file, e.prompt.fileSha256],
+    [e.mask.file, e.mask.sha256],
+    ["assets/avatar/reference/Northstar Master v2.png", e.inputs[1].sha256],
+    ["tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png", "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156"],
+    ["tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png", "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3"],
+  ];
+  for (const [rel, want] of pinned) assert.equal(sha256(readFileSync(join(REPO, ...rel.split("/")))), want, rel + " is byte-identical");
+  // D-147 prepares nothing for a later call
+  assert.ok(!existsSync(join(REPO, "tools", "avatar", "fixtures", "r3-underlay-g1v3")), "no G1V3 fixtures exist");
+  assert.equal(C.authorisedCalls.calls.length, 3, "no new authorisation");
+  assert.equal(C.adapterImplementations.entries.length, 1, "no new implementation entry");
+  assert.ok(!/D-148/.test(JSON.stringify(C)), "the contract says nothing about D-148");
 });
