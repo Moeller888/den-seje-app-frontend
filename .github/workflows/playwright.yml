@@ -187,6 +187,12 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
       TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      # Teacher-flow passwords. Required, with no default anywhere in the repository: an unset
+      # secret stops global-setup (tests/test-credentials.mjs) instead of falling back to a value
+      # that anyone can read in this public repository. Set them to the values the accounts already
+      # have; rotating them is a separate, explicitly authorised step.
+      TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
+      TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
       # Where the E2E suite points. A repository VARIABLE, not a secret — a hostname is not
       # sensitive, and a variable stays visible and auditable in the repo settings.
       # UNSET IS SAFE: the reference resolves to an empty string, and tests/helpers.ts treats
@@ -331,12 +337,15 @@ jobs:
     - name: Run Playwright tests
       if: steps.mode.outputs.mode == 'full'
       run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ steps.mode.outputs.mode == 'full' && !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+    # ── No report artifact (containment) ──────────────────────────────────────
+    # The Playwright HTML report and the traces inside it record typed values verbatim — a fill step
+    # is titled `Fill "<value>"`, and a trace keeps call parameters and network bodies — and the
+    # artifacts of a public repository can be downloaded by anyone signed in to GitHub. Every report
+    # uploaded so far therefore published the test-account passwords. Until the suite stops putting
+    # credentials into the report at all (a separate piece of work), nothing is uploaded: a failure
+    # is diagnosed from the job log and reproduced locally, where the report stays on the machine.
+    # Re-adding an upload step here requires the guard in tests/unit/credential-hygiene.test.mjs to
+    # be satisfied.
 
     # ── Completion summary line ───────────────────────────────────────────────
     - name: Summarise completion

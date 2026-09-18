@@ -1,8 +1,19 @@
 import { createClient } from './node_modules/@supabase/supabase-js/dist/index.mjs';
 
+// Credentials come from the environment, never from this file. The service-role key bypasses Row
+// Level Security entirely, and this repository is public: a key written here is a key published.
+// Run as: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node fetch_legacy.mjs
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in the environment.');
+  process.exit(1);
+}
+
 const supabase = createClient(
-  'https://tjzbehwfagiwpwodsgwg.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTY4Nzk5NCwiZXhwIjoyMDg3MjYzOTk0fQ.g6GB4_FdVu8_z375bj9U_TXf3gIJYsM0p8x6aNagt2A',
+  supabaseUrl,
+  serviceRoleKey,
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
