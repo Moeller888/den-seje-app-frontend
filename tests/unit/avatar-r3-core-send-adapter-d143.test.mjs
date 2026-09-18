@@ -23,6 +23,13 @@
 // H1 is external (D-127 §2). The positive send scenarios need a byte-exact copy, taken from
 // FITTING_BASE_V1_PATH into the sandbox; without it they are skipped. Every refusal scenario runs
 // without H1, because every refusal before the H1 check is reached first.
+//
+// D-147. D-143's one call was made, and D-147 closed the D-143 and D-145 entries in the live contract.
+// Every sandbox origin below therefore reproduces the HISTORICAL, pre-execution state: the contract is
+// preClosureContract() of the live one — required to be canonically identical to the merged contract of
+// 3f62932325ce4f00c9b9bfaa64e4b321bf3f4889 — and the register is the live one without its D-147 row. That
+// historical state exists only inside the sandbox; it is never written anywhere else. A separate test runs
+// the adapter against the LIVE tree and proves that it now refuses before the claim and the fetch.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, readdirSync, statSync,
@@ -33,6 +40,7 @@ import { deflateSync } from "node:zlib";
 import { join, dirname, relative, isAbsolute, resolve, basename, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
+import { preClosureContract, PRE_CLOSURE_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -50,7 +58,9 @@ const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const EDIT_REL = "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png";
 const TRANSITION_REL = "tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png";
 const TRACKED = [ADAPTER_REL, REGISTER_REL, CONTRACT_REL, PROMPT_REL, MASK_REL, NORTHSTAR_REL, EDIT_REL, TRANSITION_REL];
-const CONTRACT = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+const LIVE_CONTRACT = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+/** The contract as merged before D-147 closed D-143 — the state the adapter was written and run against. */
+const CONTRACT = preClosureContract(LIVE_CONTRACT);
 const D143 = CONTRACT.authorisedCalls.calls.find((e) => e.callId === "D-143-r3-underlay-core-v2");
 const D145 = CONTRACT.adapterImplementations.entries.find((e) => e.decision === "D-145" && e.callId === "D-143-r3-underlay-core-v2");
 /** sha256(JSON.stringify(entry)) of the D-143 authorisation entry as merged in PR #256. */
@@ -130,7 +140,13 @@ test("the adapter's pins are the D-143 contract entry's pins", () => {
   assert.equal(lit(/const IMPLEMENTATION_STATUS = "([^"]+)"/), D145.adapter.status);
   assert.equal(D145.adapter.file, ADAPTER_REL);
   assert.equal(lit(/const D143_ENTRY_CANONICAL_SHA256 = "([0-9a-f]{64})"/), D143_ENTRY_SNAPSHOT);
-  assert.equal(sha256(JSON.stringify(D143)), D143_ENTRY_SNAPSHOT, "the D-143 entry in this tree is its merged snapshot");
+  assert.equal(sha256(JSON.stringify(D143)), D143_ENTRY_SNAPSHOT, "the reconstructed D-143 entry is its merged snapshot");
+  assert.equal(sha256(JSON.stringify(CONTRACT)), PRE_CLOSURE_CONTRACT_CANONICAL_SHA256, "the reconstruction is the merged contract");
+  // and the LIVE entry is not: D-147 closed it, so the adapter's snapshot pin can no longer be met
+  const live = LIVE_CONTRACT.authorisedCalls.calls.find((e) => e.callId === "D-143-r3-underlay-core-v2");
+  assert.notEqual(sha256(JSON.stringify(live)), D143_ENTRY_SNAPSHOT, "the live D-143 entry is closed");
+  assert.equal(live.mandateState, "SPENT");
+  assert.equal(live.neverReuse, true);
   // no adapter SHA-256 is pinned in the contract, in any form
   assert.ok(!readFileSync(repoFile(CONTRACT_REL), "utf8").includes(sha256(readFileSync(repoFile(ADAPTER_REL)))));
   for (const k of Object.keys(D145.adapter)) assert.ok(!/^(adapter)?sha-?256$/i.test(k), "no adapter hash field: " + k);
@@ -817,7 +833,7 @@ function origin(name, opts) {
     if ((o.omit || []).includes(rel)) continue;
     const dst = join(seed, ...rel.split("/"));
     mkdirSync(dirname(dst), { recursive: true });
-    copyFileSync(repoFile(rel), dst);
+    writeFileSync(dst, historicBytes(rel));
   }
   for (const [rel, buf] of Object.entries(o.replace || {})) writeFileSync(join(seed, ...rel.split("/")), buf);
   sgit(seed, ["add", "-A"]);
@@ -876,9 +892,16 @@ function assertRefused(r, sc, stage, opts) {
 }
 
 const repoBytes = (rel) => readFileSync(repoFile(rel));
+const withoutRow = (text, id) => text.split("\n").filter((l) => !l.startsWith("| **" + id + "** |")).join("\n");
+/** The pre-D-147 bytes of a tracked input: the reconstructed contract, the register without D-147's row, else the file. */
+function historicBytes(rel) {
+  if (rel === CONTRACT_REL) return Buffer.from(JSON.stringify(CONTRACT, null, 2) + "\n");
+  if (rel === REGISTER_REL) return Buffer.from(withoutRow(repoBytes(REGISTER_REL).toString("utf8"), "D-147"));
+  return repoBytes(rel);
+}
 const plusOneByte = (buf) => Buffer.concat([buf, Buffer.from([0x0a])]);
-const contractWith = (fn) => { const c = JSON.parse(repoBytes(CONTRACT_REL).toString("utf8")); fn(c); return Buffer.from(JSON.stringify(c, null, 2) + "\n"); };
-const registerWithout = (id) => Buffer.from(repoBytes(REGISTER_REL).toString("utf8").split("\n").filter((l) => !l.startsWith("| **" + id + "** |")).join("\n"));
+const contractWith = (fn) => { const c = JSON.parse(historicBytes(CONTRACT_REL).toString("utf8")); fn(c); return Buffer.from(JSON.stringify(c, null, 2) + "\n"); };
+const registerWithout = (id) => Buffer.from(withoutRow(historicBytes(REGISTER_REL).toString("utf8"), id));
 const withoutD143Entry = () => contractWith((c) => { c.authorisedCalls.calls = c.authorisedCalls.calls.filter((e) => e.callId !== "D-143-r3-underlay-core-v2"); });
 const SEND = ["--send", APPROVAL];
 
@@ -947,8 +970,8 @@ test("REFUSED: a local or uncommitted authorisation never counts", () => {
   assertRefused(runAdapter(b, SEND), b, "authorisation");
   // the authorisation present in the working tree only, uncommitted
   const c = scenario(bare);
-  writeFileSync(join(c.clone, ...CONTRACT_REL.split("/")), repoBytes(CONTRACT_REL));
-  writeFileSync(join(c.clone, ...REGISTER_REL.split("/")), repoBytes(REGISTER_REL));
+  writeFileSync(join(c.clone, ...CONTRACT_REL.split("/")), historicBytes(CONTRACT_REL));
+  writeFileSync(join(c.clone, ...REGISTER_REL.split("/")), historicBytes(REGISTER_REL));
   assertRefused(runAdapter(c, SEND), c, "blob-divergence");
   // the authorisation committed locally on main, not in origin/main
   sgit(c.clone, ["commit", "-q", "-am", "local authorisation"]);
@@ -1039,6 +1062,20 @@ test("REFUSED: the D-145 implementation entry missing, duplicated or different, 
   assert.match(r.out, /not its merged snapshot/);
   const noRow = scenario(origin("no-d145-row", { replace: { [REGISTER_REL]: registerWithout("D-145") } }));
   assertRefused(runAdapter(noRow, SEND), noRow, "register");
+});
+
+test("REFUSED (D-147): the LIVE tree — D-143 closed — refuses before the claim and the fetch", () => {
+  // The live contract and register, exactly as they stand in this tree, as the sandbox's origin/main.
+  // Dummy key, mock fetch, sandbox identity and sandbox paths, as for every other scenario.
+  const live = { [CONTRACT_REL]: repoBytes(CONTRACT_REL), [REGISTER_REL]: repoBytes(REGISTER_REL) };
+  const sc = scenario(origin("live-d147-closed", { replace: live }));
+  for (const args of [SEND, []]) {
+    const r = runAdapter(sc, args);
+    assertRefused(r, sc, "authorisation");
+    assert.match(r.out, /not its merged snapshot/);
+    assert.match(r.out, /mandateState: "SPENT", expected "UNSPENT"/);
+    assert.match(r.out, /the entry is marked neverReuse/);
+  }
 });
 
 test("REFUSED: a wrong, missing, partial or duplicated owner approval, and any unknown flag", () => {

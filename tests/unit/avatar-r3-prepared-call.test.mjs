@@ -68,7 +68,7 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record and the D-143 permission", () => {
+test("authorisedCalls holds D-139's call, the D-142 record and the closed D-143 record", () => {
   assert.equal(CONTRACT.authorisedCalls.count, 3);
   assert.equal(CONTRACT.authorisedCalls.calls.length, 3);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
@@ -78,11 +78,12 @@ test("authorisedCalls holds D-139's call, the D-142 record and the D-143 permiss
   assert.equal(rec.callId, "D-142-r3-underlay-core-v1");
   assert.equal(rec.mandateState, "SPENT");
   assert.equal(rec.neverReuse, true);
-  // The third is the one live permission — and this block is still not it.
-  const live = CONTRACT.authorisedCalls.calls[2];
-  assert.equal(live.callId, "D-143-r3-underlay-core-v2");
-  assert.equal(live.mandateState, "UNSPENT");
-  assert.equal(live.decision, "D-143");
+  // The third was D-143's permission. Its one call was made, and D-147 closed it: a record too.
+  const closed = CONTRACT.authorisedCalls.calls[2];
+  assert.equal(closed.callId, "D-143-r3-underlay-core-v2");
+  assert.equal(closed.mandateState, "SPENT");
+  assert.equal(closed.neverReuse, true);
+  assert.equal(closed.decision, "D-143");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });

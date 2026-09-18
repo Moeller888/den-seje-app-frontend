@@ -567,9 +567,9 @@
     "maximum": 18,
     "isAuthorisation": false,
     "countingRule": "Every image call ACTUALLY SENT counts, including one whose output was rejected and one sent by accident. D-139 was sent and its output rejected; the D-142 attempt was sent during an incident with an unknown outcome. Adopted by D-142, unchanged by D-143.",
-    "callsActuallySentSoFar": {"underlay":2,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN"],"note":"An OBSERVATION of what has left this machine. D-143 has not been sent and is not counted here."},
-    "callsPlannedAndAuthorised": {"underlay":3,"why":"D-143 authorises exactly one further underlay call. assets[0].calls is PLANNED capacity, so it moves to 3 when the authorisation is merged, not when the call is made.","derivedBudget":"17-18"},
-    "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. After a completed D-143 run the actually-sent figure becomes 3 as well; until then the two numbers differ on purpose.",
+    "callsActuallySentSoFar": {"underlay":3,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147."},
+    "callsPlannedAndAuthorised": {"underlay":3,"why":"D-143 authorised exactly one further underlay call, and that call has been made (recorded by D-147). assets[0].calls is PLANNED capacity; it moved to 3 when the authorisation was merged, not when the call was made.","derivedBudget":"17-18"},
+    "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. D-143's call has been made (recorded by D-147), so the actually-sent figure is 3 as well and the two numbers now agree. Their agreement authorises nothing either.",
     "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
     "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
   },
@@ -1092,7 +1092,7 @@
   "authorisedCalls": {
     "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
     "count": 3,
-    "budgetAccounting": "assets[0] carries 3 PLANNED calls after D-143: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; and the one call D-143 authorises but that has not been sent. The derived budget is 17-18. Budget numbers remain planning, never consent.",
+    "budgetAccounting": "assets[0] carries 3 PLANNED calls after D-143: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; and D-143's one call, sent once with its candidate rejected (recorded by D-147). The derived budget is 17-18. Budget numbers remain planning, never consent.",
     "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
     "calls": [
       {
@@ -1310,9 +1310,68 @@
         "callId": "D-143-r3-underlay-core-v2",
         "decision": "D-143",
         "authorisedOn": "2026-09-15",
-        "status": "AUTHORISED — ONE CALL, NOT YET SENT, AND NO SEND PATH EXISTS YET",
-        "mandateState": "UNSPENT",
-        "outcome": "NOT YET ATTEMPTED",
+        "status": "SPENT — SENT ONCE, HTTP 200, RAW RECEIVED, CANDIDATE REJECTED, NOTHING PROMOTED",
+        "mandateState": "SPENT",
+        "outcome": "SENT ONCE — HTTP 200 — RAW RECEIVED — CANDIDATE REJECTED BY pre.transition-silhouette BEFORE ANY CANDIDATE FILE WAS WRITTEN — NOTHING PROMOTED",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "closure": {
+          "closedBy": "D-147",
+          "closedOn": "2026-09-17",
+          "what": "D-147 closes this entry IN PLACE, so that no isolated read of it can find an active permission. It changed status, mandateState and outcome, and added neverReuse, notAnActivePermission, closure and execution. Every other field is the D-143 authorisation snapshot, verbatim.",
+          "snapshotCanonicalSha256BeforeClosure": "6ca1754aedd8351349ab725e063190c6f265af16f79cde4fad86ad6a2c16ef6d",
+          "neverReused": "D-143's mandate, the call id D-143-r3-underlay-core-v2 and the claim identity D-143.claim.json are consumed. A further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity."
+        },
+        "execution": {
+          "sentBy": "tools/avatar/openai-send-r3-underlay-core-d143.mjs, the D-145 adapter, after a separate owner instruction",
+          "originMainSha": "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889",
+          "request": {
+            "sentOnce": true,
+            "fetches": 1,
+            "retries": 0,
+            "httpStatus": 200,
+            "requestId": "req_fdbd7c5e8e71497d9b95482cf25eb8cb",
+            "startedAt": "2026-09-16T09:08:37.309Z",
+            "finishedAt": "2026-09-16T09:10:26.663Z"
+          },
+          "claim": {
+            "file": "D-143.claim.json",
+            "sha256": "99865945e3bf8fe5146c87899f8c891366433dbf6b5e2d0b94c5a311b20bd65f",
+            "bytes": 1427,
+            "status": "SPENT_BEFORE_FETCH",
+            "mandate": "SPENT",
+            "createdBeforeFetch": true,
+            "preserved": "The claim file is untouched and stays untouched. It is never deleted, moved, renamed, reset or reused."
+          },
+          "raw": {
+            "file": "tools/avatar/build/r3-underlay-core/r3-underlay-core.raw.png",
+            "bytes": 1150862,
+            "sha256": "14afd5e33915a28905af114ce82ae2c7de3f81517813f13bb04547a600c5d489",
+            "received": true,
+            "isAnApprovedCandidate": false
+          },
+          "manifest": {
+            "file": "tools/avatar/build/r3-underlay-core/r3-underlay-core.request.json",
+            "sha256": "0dcf4590c6f44695a97ddd8d5735d19d7a12e7f996d2ae8e7ea6e6df2d184e1b",
+            "completed": true
+          },
+          "candidate": {
+            "result": "REJECTED — NO CANDIDATE FILE WAS WRITTEN",
+            "gate": "pre.transition-silhouette",
+            "bound": 0,
+            "observed": 210,
+            "narrower": 157,
+            "wider": 53,
+            "referenceJoinContinuity": {
+              "gate": "pre.join-continuity",
+              "observed": 37,
+              "bound": 4,
+              "note": "Measured on the raw output for reference. The recomposition stops at its first failing gate, so this measurement was not the reason for the rejection."
+            }
+          },
+          "promotion": "NONE",
+          "runtime": "UNCHANGED"
+        },
         "asset": "assets[0] — r3-base-neutral-medium, the R3 technical underlay",
         "scope": "EXACTLY ONE CORE-only head edit of H1, producing the hidden bald, featureless head. Not a new character, not a runtime asset, not a promotion, and not a licence for any further call.",
         "history": {
@@ -1597,7 +1656,7 @@
     "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
   },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds THREE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — the ONE ACTIVE, UNSPENT permission: SUPERSEDED NARROWLY BY D-143 for exactly one further CORE-only underlay call, not yet sent. It is not exercisable today because no adapter in origin/main is pinned and authorised to send D-143-r3-underlay-core-v2, and execution additionally requires its own owner instruction. Nothing else is authorised — no repeat of D-139's call, no reuse of D-142's call id or claim identity, no second D-143 call, and no other call in the R3 plan.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds THREE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's or D-143's call id or claim identity, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
@@ -1617,7 +1676,7 @@
         "implementedOn": "2026-09-15",
         "adapter": {
           "file": "tools/avatar/openai-send-r3-underlay-core-d143.mjs",
-          "status": "IMPLEMENTED — NOT EXECUTED",
+          "status": "IMPLEMENTED — EXECUTED ONCE — SPENT",
           "ownerApproval": "D-143",
           "ownerApprovalFlag": "--owner-approval=D-143",
           "ownerApprovalMeaning": "A necessary mechanical safety confirmation. It is NOT by itself an instruction to send the image call.",
@@ -1629,18 +1688,18 @@
           ],
           "refusesBeforeClaimAndFetch": "If the D-143 entry is missing or differs from its snapshot, or if the D-145 entry is missing, duplicated or differs in any pinned field, the adapter refuses before the claim is created and before the fetch."
         },
-        "mandateState": "UNSPENT",
-        "outcome": "NOT YET ATTEMPTED",
+        "mandateState": "SPENT",
+        "outcome": "EXECUTED ONCE — THE OUTCOME IS RECORDED IN THE D-143 ENTRY OF authorisedCalls",
+        "neverReuse": true,
+        "closedBy": "D-147",
         "mergeIsNotAnInstruction": true,
         "executionRequiresSeparateOwnerInstruction": true,
-        "claimExists": false,
+        "claimExists": true,
         "snapshotStatementsReadAsOfAuthorisation": [
-          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].status",
           "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.file",
-          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet",
-          "prohibitions.noImageRequestAuthorised"
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet"
         ],
-        "snapshotNote": "Those statements say that no send path exists and that no adapter in origin/main is pinned for this call. They were true when D-143 was merged and are left verbatim. Once this entry is in origin/main, the adapter named above IS pinned for the call; the call is still NOT executed, the mandate is still UNSPENT, and running it still requires a separate, explicit owner instruction.",
+        "snapshotNote": "Those statements say that no send path exists and that no adapter in origin/main is pinned for this call. They were true when D-143 was merged and are left verbatim. D-143's status and prohibitions.noImageRequestAuthorised were read the same way until D-147 closed them. This entry pinned the adapter named above, and the adapter was run exactly once, on 2026-09-16, after a separate owner instruction. The mandate is SPENT, D-143.claim.json exists, the outcome is recorded in the D-143 entry, and the adapter may never send this call id again: it refuses before the claim and the fetch, because the D-143 entry is no longer its snapshot.",
         "testCoverage": {
           "ci": "24 tests without H1: static checks of the adapter, the tests/ guard and its exception list, the sandbox isolation proof and every refusal before the claim.",
           "manualMergePrerequisite": "The 8 positive mock-send scenarios need the external H1 (D-127 §2) and run only locally, in the isolated sandbox. They are a manual merge prerequisite.",
