@@ -15,6 +15,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { publishableKey } from "../_shared/supabase-keys.ts";
 import { withObservability } from "../_shared/monitoring.ts";
 import { createAiService } from "../_shared/ai/index.ts";
 
@@ -33,7 +34,7 @@ serve(withObservability("grade-answer", async (req, ctx) => {
     // ── Auth (advisory endpoint still requires an authenticated caller) ────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      publishableKey(),
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();

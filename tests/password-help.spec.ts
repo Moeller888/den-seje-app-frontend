@@ -34,7 +34,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail } from './helpers.js';
+import { findAuthUserByEmail, PUBLIC_API_KEY } from './helpers.js';
 import {
   createRestoreState,
   captureOriginal,
@@ -51,9 +51,9 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const SUPABASE_URL              = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Public anon key — already in the deployed frontend JS, not a secret.
-const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc';
+// The project's public API key, shared with every other spec via tests/helpers.ts so the
+// publishable-key switch happens in ONE place. Overridable with SUPABASE_PUBLISHABLE_KEY.
+const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const FN_URL = `${SUPABASE_URL}/functions/v1/request-password-help`;

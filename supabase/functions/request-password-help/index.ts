@@ -26,6 +26,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withObservability } from "../_shared/monitoring.ts";
+import { optionalPublishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { createHandler } from "./handler.ts";
 import { routeHelpRequest } from "./route.ts";
 import { runStudentPipeline } from "./student-pipeline.ts";
@@ -33,8 +34,12 @@ import type { MailResult, ReserveResult } from "./student-pipeline.ts";
 import { assertFinalizedExactlyOne, parseReserveResult } from "./adapters.ts";
 
 const SUPABASE_URL              = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SUPABASE_ANON_KEY         = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+// Resolved through the shared module, which prefers SUPABASE_SECRET_KEYS["default"] and falls back
+// to the legacy variable only while no bundle is configured. Module scope, like the other
+// functions that resolve eagerly: a missing key must stop the function booting, not surface as a
+// confusing failure on the first request.
+const SUPABASE_SERVICE_ROLE_KEY = serviceKey();
+const SUPABASE_ANON_KEY         = optionalPublishableKey();
 
 // Server-side only. Never returned, never logged, never sent to the browser.
 const RESEND_API_KEY    = Deno.env.get("RESEND_API_KEY") ?? "";

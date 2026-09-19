@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { optionalPublishableKey } from "../_shared/supabase-keys.ts";
 import { getServiceClient } from "./supabase.ts";
 import { runGenerationPipeline } from "./pipeline.ts";
 import {
@@ -50,7 +51,7 @@ async function requireSuperAdmin(req: Request): Promise<Response | null> {
   }
 
   const url = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const anonKey = optionalPublishableKey();
 
   if (!url || !anonKey) {
     return new Response(JSON.stringify({ error: "Server misconfigured" }), {

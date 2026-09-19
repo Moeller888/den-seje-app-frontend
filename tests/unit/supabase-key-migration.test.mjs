@@ -1,13 +1,15 @@
 // Guards for the move off the legacy Supabase keys (runs in CI, offline, source-only).
 //
-// The legacy `service_role` key was exposed and will be deactivated; the legacy `anon` key is
-// deactivated together with it unless the dashboard offers separate switches. These tests keep the
-// codebase in the state that makes that deactivation survivable:
-//   1. no Edge Function reads the legacy service-role variable directly — they all go through the
-//      shared resolver, which prefers the new key and falls back to the legacy one;
-//   2. the resolver keeps that preference order, so the migration stays reversible;
-//   3. no browser-served file and no spec carries a legacy anon key any more;
-//   4. no secret key may ever appear in client code, a spec, a workflow or the build output.
+// The legacy `service_role` key was exposed and will be deactivated; the legacy `anon` key goes
+// with it, because the Management API deactivates the pair with a single `enabled` flag. These
+// tests keep the codebase in the state that makes that deactivation survivable:
+//   1. no Edge Function reads EITHER legacy variable directly — privileged clients go through
+//      serviceKey()/optionalServiceKey(), public ones through publishableKey()/
+//      optionalPublishableKey(), and both prefer the new bundle over the legacy key;
+//   2. the resolver keeps that preference order for both halves, so the migration stays reversible;
+//   3. the legacy fallback exists in the shared resolver and nowhere else;
+//   4. no browser-served file and no spec carries a legacy anon key any more;
+//   5. no secret key may ever appear in client code, a spec, a workflow or the build output.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
@@ -61,7 +63,11 @@ test("the resolver prefers the new key and falls back, so the migration is rever
 
 test("a present but broken key bundle is refused instead of falling back to the retired key", () => {
   const src = read(RESOLVER);
-  const selection = src.slice(src.indexOf("export function selectSecretKey"), src.indexOf("let sourceLogged"));
+  // Ends at the publishable half, which now follows it. Anchored on a marker that exists: a
+  // missing anchor would make indexOf return -1 and silently slice the whole file instead.
+  const end = src.indexOf("export const DEFAULT_PUBLISHABLE_KEY_NAME");
+  assert.ok(end > 0, "the secret half must be delimited by the publishable half that follows it");
+  const selection = src.slice(src.indexOf("export function selectSecretKey"), end);
   assert.match(selection, /not valid JSON/, "an unparseable bundle must throw");
   assert.match(selection, /no usable key named/, "a missing key name must throw");
   // The legacy fallback must live OUTSIDE the branch that handles a present bundle, so a broken
@@ -82,7 +88,10 @@ test("the resolver logs which source it chose, and never the key itself", () => 
   assert.match(logs[0], /source=\$\{source\}/, "the line must report the source");
   assert.ok(!/key|secret|token/i.test(logs[0].replace("supabase-keys", "")), "no key material may be logged");
   assert.match(src, /\[supabase-keys\] source=/, "the log line must be greppable in the function logs");
-  assert.match(src, /let sourceLogged = false/, "it must log once per isolate, not per request");
+  // Once per SOURCE per isolate, not per request — and not a single flag: a function that resolves
+  // both the privileged and the public key must get a line for each, not have the second swallowed.
+  assert.match(src, /const loggedSources = new Set/, "it must remember which sources it already logged");
+  assert.match(src, /if \(loggedSources\.has\(source\)\) return;/, "a source already logged must not log again");
   // The diagnostic helper must never throw: it is used to inspect a broken deployment.
   const diagnostic = src.slice(src.indexOf("export function serviceKeySource"));
   assert.match(diagnostic, /try \{/, "serviceKeySource must swallow the configuration error");
@@ -139,4 +148,92 @@ test("no secret key may appear in client code, specs, workflows or build output"
     walk(dist);
     assert.deepEqual(hits, [], "the published bundle must never contain a secret key");
   }
+});
+
+// ── The PUBLIC half of the same migration ────────────────────────────────────────────────────
+// The legacy pair (anon + service_role) is deactivated together — the Management API exposes one
+// `enabled` flag for both — so a function still reading SUPABASE_ANON_KEY breaks at the same
+// moment as one still reading SUPABASE_SERVICE_ROLE_KEY. These guards hold both halves to the
+// same rule, and they check the CONTRACT (which variable is read, by whom) rather than wording.
+
+test("no production function reads a legacy key variable directly — only the resolver does", () => {
+  const offenders = [];
+  for (const file of functionSources()) {
+    const src = read(file);
+    for (const variable of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ANON_KEY"]) {
+      if (new RegExp(`Deno\.env\.get\(\s*["']${variable}["']\s*\)`).test(src)) {
+        offenders.push(`${file}: reads ${variable} directly`);
+      }
+    }
+  }
+  assert.deepEqual(offenders, [], "a direct read survives the deactivation only by accident");
+});
+
+test("every public Edge Function client comes from the publishable resolver", () => {
+  const usesResolver = [];
+  for (const file of functionSources()) {
+    const src = read(file);
+    if (/\b(publishableKey|optionalPublishableKey)\s*\(/.test(src)) {
+      assert.match(
+        src,
+        /from\s+["'][^"']*_shared\/supabase-keys\.ts["']/,
+        `${file} uses the publishable resolver without importing it`,
+      );
+      usesResolver.push(file);
+    }
+  }
+  // Every function that builds a user-scoped client must now get its key from the resolver. The
+  // count is asserted to be non-trivial so the test cannot pass by finding nothing at all.
+  assert.ok(usesResolver.length >= 9, `expected the public half to be migrated, found ${usesResolver.length}`);
+});
+
+test("the legacy fallback lives ONLY in the shared resolver", () => {
+  const offenders = [];
+  for (const file of functionSources()) {
+    const src = read(file);
+    // A local `?? Deno.env.get("SUPABASE_…")`-style fallback would re-introduce exactly the
+    // scattered behaviour the resolver exists to remove.
+    if (/\?\?\s*Deno\.env\.get\(\s*["']SUPABASE_(ANON_KEY|SERVICE_ROLE_KEY)["']/.test(src)) {
+      offenders.push(`${file}: local fallback to a legacy key`);
+    }
+  }
+  assert.deepEqual(offenders, []);
+
+  const resolver = read(RESOLVER);
+  assert.match(resolver, /source:\s*"legacy-service-role"/, "the privileged fallback belongs here");
+  assert.match(resolver, /source:\s*"legacy-anon"/, "and so does the public one");
+});
+
+test("the publishable resolver prefers the bundle and refuses a broken one", () => {
+  const src = read(RESOLVER);
+  const selection = src.slice(
+    src.indexOf("export function selectPublishableKey"),
+    src.indexOf("// Verification aid"),
+  );
+  assert.ok(selection.length > 0, "selectPublishableKey must exist and be separately testable");
+
+  const newAt = selection.indexOf("SUPABASE_PUBLISHABLE_KEYS");
+  assert.ok(newAt !== -1, "the new bundle must be handled");
+  assert.match(selection, /not valid JSON/, "an unparseable bundle must throw");
+  assert.match(selection, /no usable key named/, "a missing key name must throw");
+
+  // The fallback must sit OUTSIDE the present-bundle branch, so a broken bundle can never reach it.
+  const branchStart = selection.indexOf("if (bundlePresent)");
+  const branchEnd = selection.indexOf("// No bundle at all");
+  assert.ok(branchStart !== -1 && branchEnd > branchStart, "the two regions must be identifiable");
+  assert.ok(
+    !/source:\s*"legacy-anon"/.test(selection.slice(branchStart, branchEnd)),
+    "a present bundle must never yield the legacy anon key",
+  );
+  assert.match(selection.slice(branchEnd), /source:\s*"legacy-anon"/, "the fallback belongs to the no-bundle case");
+});
+
+test("both halves read only the four documented environment variables", () => {
+  const resolver = read(RESOLVER);
+  const vars = [...resolver.matchAll(/Deno\.env\.get\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1]);
+  assert.deepEqual(
+    [...new Set(vars)].sort(),
+    ["SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY"],
+    "no invented variable names",
+  );
 });
