@@ -111,11 +111,58 @@ serve(async (req) => {
       .eq("id", instance_id)
       .maybeSingle();
 
-    if (instanceError || !instance) {
-      throw new Error("Instance not found");
+    // A failed READ is an error; a missing row is handled together with "not yours" below, so the
+    // two are indistinguishable to the caller.
+    if (instanceError) {
+      console.error("INSTANCE LOOKUP ERROR:", instanceError);
+      throw instanceError;
     }
 
-    const student_id = instance.student_id;
+    const student_id = instance?.student_id ?? null;
+
+    // 🔐 OWNERSHIP CHECK — being a teacher is not the same as being THIS student's teacher.
+    //
+    // The role check above only proves the caller is some teacher. Without this, any teacher could
+    // grade any student's answer by sending another teacher's instance id — and the id is not a
+    // secret: the "Teachers can read question_instances" RLS policy lets every teacher SELECT
+    // every row, so the ids are enumerable rather than guessable. Obscurity was never the control.
+    //
+    // The relation is the canonical one, profiles.teacher_id, read with the SERVICE client so RLS
+    // cannot shape the answer. The teacher side of the comparison is `user.id` from the verified
+    // JWT — never a value from the request body.
+    //
+    // super_admin is exempt, which preserves the contract this function already has: it is the
+    // operations role (docs/ARCHITECTURE.md), it has no teacher_id relation to any student, and it
+    // was already permitted to review before this change.
+    let ownsStudent = callerProfile.role === "super_admin";
+
+    if (!ownsStudent && student_id) {
+      const { data: ownedStudent, error: ownershipError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", student_id)
+        .eq("teacher_id", user.id)
+        .eq("role", "student")
+        .maybeSingle();
+
+      if (ownershipError) {
+        console.error("OWNERSHIP LOOKUP ERROR:", ownershipError);
+        throw ownershipError;
+      }
+
+      ownsStudent = !!ownedStudent;
+    }
+
+    // One response for three different causes — unknown instance, another teacher's student, and a
+    // student with no teacher relation — so the endpoint cannot be used to enumerate either
+    // instances or students. NOTHING has been written at this point: the only database work so far
+    // is the two reads above.
+    if (!ownsStudent) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: corsHeaders
+      });
+    }
 
     // 🔁 RPC (gem vurdering)
     const { error: rpcError } = await supabase.rpc("review_answer", {
