@@ -10,7 +10,7 @@
 //   4. no secret key may ever appear in client code, a spec, a workflow or the build output.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -123,10 +123,20 @@ test("no secret key may appear in client code, specs, workflows or build output"
   const offenders = files.filter((f) => /\bsb_secret_[A-Za-z0-9_-]{6,}/.test(read(f)));
   assert.deepEqual(offenders, [], "a secret key belongs in an environment variable, never in a tracked file");
   // The build output is generated, so it is checked when present rather than required to exist.
+  // Walked with fs rather than `git grep`, which exits non-zero when it finds NOTHING — the very
+  // case this assertion wants, and one that would otherwise throw instead of passing.
   const dist = join(REPO, "dist-cloudflare");
   if (existsSync(dist)) {
-    const hits = execFileSync("git", ["grep", "-l", "-I", "-e", "sb_secret_", "--no-index", "--", "dist-cloudflare"], { cwd: REPO, encoding: "utf8" })
-      .split("\n").filter(Boolean);
+    const hits = [];
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) { walk(path); continue; }
+        if (!entry.isFile() || !/\.(js|mjs|cjs|html|json|css|map|txt)$/.test(entry.name)) continue;
+        if (/\bsb_secret_[A-Za-z0-9_-]{6,}/.test(readFileSync(path, "utf8"))) hits.push(path);
+      }
+    };
+    walk(dist);
     assert.deepEqual(hits, [], "the published bundle must never contain a secret key");
   }
 });
