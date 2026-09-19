@@ -1,3 +1,4 @@
+import { serviceKey as resolveServiceKey } from "../_shared/supabase-keys.ts";
 // HTTP client for the avatar-asset-onboarding Edge Function.
 // Used by the ingestion pipeline to persist the validated asset record.
 
@@ -22,7 +23,7 @@ export async function callOnboardingSubmit(
   storagePath: string | null,
 ): Promise<OnboardingSubmitResult> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = resolveServiceKey();
 
   if (!supabaseUrl || supabaseUrl.trim() === "") {
     throw new Error("SUPABASE_URL is not set — cannot locate avatar-asset-onboarding");

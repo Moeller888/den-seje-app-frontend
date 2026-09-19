@@ -17,6 +17,7 @@ import {
   STUDENT2_FRESH_TEMP_PASSWORD,
   STUDENT2_NEW_PASSWORD,
   findAuthUserByEmail,
+  PUBLIC_API_KEY,
 } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,8 +26,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const SUPABASE_URL              = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqemJlaHdmYWdpd3B3b2RzZ3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc5OTQsImV4cCI6MjA4NzI2Mzk5NH0.BzepnYLe6Khzqx9vTL3Ifa_zMRgjoGQ9Lw5seaoKMMc";
+const SUPABASE_ANON_KEY = PUBLIC_API_KEY;
 
 // Main test student — NOT owned by teacher-test@hotmail.com
 const MAIN_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;

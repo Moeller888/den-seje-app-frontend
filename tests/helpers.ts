@@ -47,6 +47,17 @@ export const TEACHER_PASSWORD = readRequiredSecret("TEST_TEACHER_PASSWORD");
 export const STUDENT2_EMAIL   = process.env.TEST_STUDENT2_EMAIL   ?? "student-teacher-test@hotmail.com";
 export const STUDENT2_PASSWORD = readRequiredSecret("TEST_STUDENT2_PASSWORD");
 
+/**
+ * THE PUBLIC API KEY THE SUITE SENDS AS `apikey`.
+ *
+ * Public by design: it is the same low-privilege credential the browser ships, and Row Level
+ * Security governs what it can reach. It lives here rather than in eleven specs so the project can
+ * move from the legacy `anon` key to the publishable key in one edit. `SUPABASE_PUBLISHABLE_KEY`
+ * overrides it, which is what makes the switch reversible without touching a spec.
+ */
+export const PUBLIC_API_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY ?? "").trim()
+  || "sb_publishable_tktBmM5vnUD2qW98EVQOeA_MyZJfF-C";
+
 /** Temporary passwords set by the password-change specs, derived from each account's own secret. */
 export const STUDENT_TEMP_PASSWORD        = derivedPassword("STUDENT_TEMP_PASSWORD");
 export const STUDENT2_FRESH_TEMP_PASSWORD = derivedPassword("STUDENT2_FRESH_TEMP_PASSWORD");
