@@ -39,9 +39,28 @@ function withoutManifestEntry(slot, key, fn) {
   try { return fn(); } finally { R2_MANIFEST[slot][key] = saved; }
 }
 
-test("safety: AVATAR_R2 stays false (C2 is production default)", () => {
-  assert.equal(AVATAR_R2, false);
-  assert.equal(isAvatarR2(), false); // no localStorage in node → flag alone decides
+// D-101 activation contract. The old guard asserted the flag stayed false; the owner has since
+// activated R2 deliberately, so the guard now pins the ROLLBACK semantics instead — that is the
+// part which must not regress silently.
+test("activation contract (D-101): R2 is the default, and only \"0\" opts out", () => {
+  assert.equal(AVATAR_R2, true);
+  assert.equal(isAvatarR2(), true);            // no localStorage in node → the default decides
+
+  const withStorage = (value, fn) => {
+    const saved = globalThis.localStorage;
+    globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? value : null) };
+    try { return fn(); } finally { globalThis.localStorage = saved; }
+  };
+
+  assert.equal(withStorage("0", isAvatarR2), false);   // explicit opt-out → C2 (per-browser rollback)
+  assert.equal(withStorage("1", isAvatarR2), true);    // legacy pilot key is INERT, not a pin
+  assert.equal(withStorage("", isAvatarR2), true);     // malformed → the default
+  assert.equal(withStorage("yes", isAvatarR2), true);  // malformed → the default
+  assert.equal(withStorage(null, isAvatarR2), true);   // absent → the default
+
+  const saved = globalThis.localStorage;                // unreadable storage must not throw
+  globalThis.localStorage = { getItem() { throw new Error("blocked"); } };
+  try { assert.equal(isAvatarR2(), true); } finally { globalThis.localStorage = saved; }
 });
 
 test("U1: the iris default is the measured Master-brown", () => {
@@ -166,8 +185,22 @@ test("cosmetic slot-gate: aura/back/headwear/eyes/face pass (D-081); an unsuppor
   assert.equal(layers.filter((l) => l.marker === "face").length, 1, "exactly one internal 'face' layer");
 });
 
-test("engine gate with flag OFF: C2 behaviour unchanged (both engines allowed)", () => {
-  assert.equal(r2ExpressionOverlayAllowedFor(NEUTRAL_MEDIUM), true);
+// D-101: the C2 engine gate is now reached by opting out, not by the flag being off.
+test("engine gate when opted out (\"0\"): C2 behaviour unchanged (both engines allowed)", () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
+    assert.equal(r2ExpressionOverlayAllowedFor(NEUTRAL_MEDIUM), true);
+    assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true);
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
+});
+
+// On the DEFAULT path the raster face owns the expression, so the SVG overlay must stay off —
+// blink stays allowed on both paths (PR D).
+test("engine gate on the default R2 path: expression overlay OFF, blink still allowed", () => {
+  assert.equal(r2ExpressionOverlayAllowedFor(NEUTRAL_MEDIUM), false);
   assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true);
 });
 

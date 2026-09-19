@@ -42,7 +42,9 @@ async function loginAndWait(page: any) {
   // Submit the form — keyboard Enter is reliable across desktop+mobile contexts
   await page.locator('#loginBtn').click();
   // Wait for redirect to index.html (more reliable than element visibility)
-  // 20s timeout: Vercel Edge Function cold starts can add 5-15s latency in a long suite
+  // 20s timeout: a cold backend can add many seconds of latency in a long suite. The value was
+  // calibrated on the previous host; it is left unchanged because re-tightening it needs its own
+  // measurement against the live stack, not a guess.
   await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
   // Wait for question to be fully loaded (state machine at AWAITING_ANSWER)
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 20000 });

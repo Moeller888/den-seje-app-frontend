@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
+import { missingSecrets, readRequiredSecret } from "./test-credentials.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -13,10 +14,12 @@ const TEST_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const TEST_STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
 
 // ── Section 97: Teacher test account constants ────────────────────────────────
-// Can be overridden via .env: TEST_TEACHER_EMAIL, TEST_TEACHER_PASSWORD,
-// TEST_STUDENT2_EMAIL. Defaults are used if not set.
+// The e-mail addresses can be overridden via .env (TEST_TEACHER_EMAIL, TEST_STUDENT2_EMAIL) and
+// default to the public test identifiers. The passwords (TEST_TEACHER_PASSWORD,
+// TEST_STUDENT2_PASSWORD) have NO default: they are required secrets, checked up front in
+// globalSetup() and read through tests/test-credentials.mjs. Behaviour is otherwise unchanged —
+// the value written to an existing account is whatever the secret holds, exactly as before.
 const TEST_TEACHER_EMAIL   = process.env.TEST_TEACHER_EMAIL   ?? "teacher-test@hotmail.com";
-const TEST_TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";
 const TEST_STUDENT2_EMAIL  = process.env.TEST_STUDENT2_EMAIL  ?? "student-teacher-test@hotmail.com";
 
 // ── Section 133: Question Pool Health Check ──────────────────────────────────
@@ -200,6 +203,9 @@ async function checkQuestionPoolHealth(supabase: any): Promise<void> {
 // Idempotent: safe to run on every test suite invocation.
 
 async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
+  const TEST_TEACHER_PASSWORD  = readRequiredSecret("TEST_TEACHER_PASSWORD");
+  const TEST_STUDENT2_PASSWORD = readRequiredSecret("TEST_STUDENT2_PASSWORD");
+
   const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
   if (listError) {
     throw new Error(`teacher-setup: listUsers failed — ${listError.message}`);
@@ -252,7 +258,7 @@ async function ensureTeacherTestAccounts(supabase: any): Promise<void> {
   if (!student2User) {
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
       email: TEST_STUDENT2_EMAIL,
-      password: "TestStudent2026!",
+      password: TEST_STUDENT2_PASSWORD,
       email_confirm: true,
     });
     if (createErr) {
@@ -318,6 +324,16 @@ export default async function globalSetup() {
   if (!process.env.TEST_STUDENT_EMAIL || !process.env.TEST_STUDENT_PASSWORD) {
     throw new Error(
       "global-setup: TEST_STUDENT_EMAIL or TEST_STUDENT_PASSWORD missing in .env (see .env.example)"
+    );
+  }
+
+  // Every required secret, named at once, before any account or row is touched. There are no
+  // fallback passwords any more: a missing secret stops the run instead of writing a value that is
+  // readable in the public repository onto a live account.
+  const missing = missingSecrets();
+  if (missing.length > 0) {
+    throw new Error(
+      `global-setup: required secret(s) missing or empty: ${missing.join(", ")} (see .env.example)`
     );
   }
 

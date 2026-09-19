@@ -78,7 +78,7 @@ const resolve = (x) => x;
 const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 const hasR2 = (root) => srcsOf(root).some((s) => s.includes("avatar-r2/"));
 
-test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
+test("activation contract (D-101): AVATAR_R2 is the default-on switch", () => { assert.equal(AVATAR_R2, true); });
 
 test("the fallback still covers every slot without R2 support", () => {
   // D-083 added no slot; D-090 later added `torso` (per item). neck/body remain slot-gated and are
@@ -222,18 +222,25 @@ test("fail-soft: junk cosmetics never force C2 and never throw", async () => {
   }));
 });
 
-test("C2 default (no opt-in) is unchanged: torso items render, no R2, no observability event", async () => {
+// D-101: R2 is the default, so this pins the OPTED-OUT browser instead of the old no-opt-in one.
+test("opted out (\"0\") is unchanged: torso items render, no R2, no observability event", async () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
   const events = await withEvents(async () => {
     await withDom(async (root) => {
-      // BOTH torso items: the wired one must not sneak an R2 layer into a browser that never opted
-      // in, and the unwired one must render exactly as it always did.
+      // BOTH torso items: the wired one must not sneak an R2 layer into a browser that opted out,
+      // and the unwired one must render exactly as it always did.
       for (const item of [UNWIRED_TORSO, ARMOR]) {
         const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics: c2CosmeticLayers({ torso: item }, resolve), surface: "quiz" });
         assert.equal(rp, "c2");
         assert.ok(srcsOf(root).includes(item), item);
-        assert.ok(!hasR2(root), "no R2 asset may appear without the opt-in");
+        assert.ok(!hasR2(root), "no R2 asset may appear in an opted-out browser");
       }
     });
   });
-  assert.equal(events.length, 0, "a non-opted-in browser stays completely silent");
+  assert.equal(events.length, 0, "an opted-out browser stays completely silent");
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
 });

@@ -1,0 +1,34 @@
+A single isolated HAIR LAYER for a 2D game avatar, drawn as flat vector-style character art.
+
+SUBJECT: {{DESC}}.
+
+THIS IS A HAIR LAYER ONLY. Draw ONLY the hair. There must be NO head, NO face, NO eyes,
+NO ears, NO skin, NO neck, NO shoulders, NO body, NO clothing, NO accessories and NO
+background anywhere in the image. Everything that is not hair must be fully transparent.
+
+COLOUR: draw the hair in NEUTRAL GREYSCALE only — white, greys and near-black. Absolutely no
+hue, no brown, no blonde, no black-with-a-colour-cast. The artwork is a luminance map that is
+tinted later, so any colour in it would be a defect. Use value alone to describe form:
+lighter where light catches the top of the mass, darker in the depth of the strands.
+
+STYLE: clean 2D character art with a confident dark outline of even weight, large simple
+shapes, and flat cel shading in a small number of value steps. Soft, friendly, readable.
+No photorealism, no 3D render, no gradients-as-texture, no painterly rendering, no noise.
+
+SIZE AND PLACEMENT IN THE FRAME — this is critical and the most common mistake:
+The hair is SMALL within a mostly EMPTY canvas. It is a wig lying in a large empty space,
+not a composition that fills the picture.
+- the hair occupies only about {{WIDTH_PCT}}% of the image WIDTH — the rest of the width is empty
+- it is centred left-to-right
+- its topmost point begins about {{TOP_PCT}}% of the way down from the top edge
+- CRITICAL: the hair SITS ON TOP OF an invisible head and has VOLUME ABOVE the skull.
+  The bald skull's crown is 13% down. The hair must rise WELL ABOVE that line, not start at
+  it. Hair drawn level with the crown reads as a swim cap, not as hair.
+- its lowest point reaches only about {{LOW_PCT}}% of the way down the image
+- the entire bottom {{EMPTY_PCT}}% of the canvas is COMPLETELY EMPTY and transparent
+
+Do NOT scale the hair up to fill the frame. Do NOT crop it to the edges. Generous empty
+transparent margins on all four sides are correct and required.
+
+The mass must be one connected shape — no detached specks or floating fragments.
+No frames, no captions, no drop shadows.

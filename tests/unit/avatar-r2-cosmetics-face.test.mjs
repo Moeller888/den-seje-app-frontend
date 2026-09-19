@@ -40,7 +40,7 @@ const resolve = (x) => x;
 const layerBy = (root, m) => root.children.filter((c) => c.attrs["data-c2-layer"] === m);
 const srcsOf = (root) => root.children.map((c) => c.src).filter(Boolean);
 
-test("safety: AVATAR_R2 stays false", () => { assert.equal(AVATAR_R2, false); });
+test("activation contract (D-101): AVATAR_R2 is the default-on switch", () => { assert.equal(AVATAR_R2, true); });
 
 test("face is an R2-supported cosmetic slot (D-081); neck/body still are NOT", () => {
   assert.deepEqual(R2_SUPPORTED_COSMETIC_SLOTS, ["aura", "back", "headwear", "eyes", "face", "torso"]);   // torso added by D-090
@@ -158,12 +158,19 @@ test("C2 path unchanged: forceC2 renders the mask as C2 with no R2 leak and no R
   }));
 });
 
-test("default C2 mount (no opt-in) is unaffected — mask renders on C2", async () => {
-  await withDom(async (root) => {
-    const cosmetics = c2CosmeticLayers({ face: NINJA }, resolve);
-    const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics }); // no opt-in → C2
-    assert.equal(rp, "c2");
-    assert.ok(!srcsOf(root).some((s) => s.includes("avatar-r2")));
-    assert.ok(srcsOf(root).includes(NINJA));
-  });
+// D-101: R2 is the default, so the C2 mount is reached by opting out ("0").
+test("opted-out C2 mount is unaffected — mask renders on C2", async () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
+    await withDom(async (root) => {
+      const cosmetics = c2CosmeticLayers({ face: NINJA }, resolve);
+      const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics });
+      assert.equal(rp, "c2");
+      assert.ok(!srcsOf(root).some((s) => s.includes("avatar-r2")));
+      assert.ok(srcsOf(root).includes(NINJA));
+    });
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
 });

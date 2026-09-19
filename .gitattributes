@@ -1,0 +1,44 @@
+# Line endings — pin the repository to what it ALREADY is.
+# =============================================================================================
+# WHY THIS FILE EXISTS
+# `core.autocrlf = true` was in effect with no attributes file, which means git decides per
+# checkout, by content heuristic, whether to write LF or CRLF into the working tree. Every git
+# operation printed "LF will be replaced by CRLF the next time Git touches it", and that is not
+# a warning about the past — it is a statement of intent about the next checkout, merge or
+# `stash pop`.
+#
+# That intent is the hazard. Tools in tools/avatar/ write their outputs with LF, and several of
+# them are byte-exact: SHA-256 pins on assets and fixtures, golden comparisons, and tests that
+# assert one file reproduces another byte for byte. When git re-materialises a tracked text file
+# as CRLF, those comparisons fail LOCALLY while CI — which runs on Linux and never converts —
+# stays green. A failure that only one machine can see, caused by a git setting rather than by
+# the code, is the most expensive kind to diagnose.
+#
+# WHAT THIS CHANGES TODAY: NOTHING.
+# Measured before writing this file: all 2 793 tracked text blobs are already LF (`git ls-files
+# --eol` reports i/lf for every one; 132 are binary, 13 are empty). Normalisation therefore
+# rewrites no blob — there is nothing to convert. The only effect is on FUTURE checkouts, which
+# now write LF instead of CRLF. This file describes the existing state so it stops drifting; it
+# is not a migration.
+#
+# The .cmd shims under node_modules/.bin are deliberately left under the rule below rather than
+# pinned to CRLF. They are LF today and work; forcing them to CRLF would be a behaviour change,
+# not a preservation, and it is not what this file is for.
+
+# Everything git detects as text is stored and checked out with LF. `text=auto` keeps the
+# content detection, so binary files are still left alone even without an explicit rule below.
+* text=auto eol=lf
+
+# The avatar pipeline is byte-exact: assets are SHA-pinned and compared as bytes. These are
+# named explicitly so no future heuristic can decide one of them is text and "fix" its newlines.
+*.png   binary
+*.webp  binary
+*.wav   binary
+*.docx  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+
+# Two reference files carry no extension and are binary artwork.
+assets/avatar/reference/Northstar* binary

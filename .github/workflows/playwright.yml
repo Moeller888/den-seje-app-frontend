@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main, master ]
 
-# Concurrency is PER-JOB on `test` (see below), not workflow-level, so docs/avatar-tool
+# Concurrency is PER-JOB on `test` (see below), not workflow-level, so docs/unit-only/avatar-tool
 # fast runs get an isolated `ci-fast-<run_id>` group and never queue behind the shared
 # Supabase lock. full-mode and every fail-closed fallback take `e2e-shared-supabase`,
 # preserving serialization with update-avatar-goldens.yml (both mutate the same shared
@@ -80,9 +80,11 @@ jobs:
                 mode = mod.classify(files);
                 reason = mode === 'docs'
                   ? 'docs — Playwright not required; documentation checks only'
+                  : mode === 'unit-only'
+                  ? 'unit-only — Playwright not required; only tests/unit/** (+ docs/**) changed, the unit job runs the unit suite'
                   : mode === 'avatar-tool'
                   ? 'avatar-tool — Playwright not required; standalone tool checks only'
-                  : 'full — changes outside docs/** and tools/avatar/** require the full suite';
+                  : 'full — changes outside docs/**, tests/unit/** and tools/avatar/** require the full suite';
               }
             }
           } catch (err) {
@@ -91,7 +93,7 @@ jobs:
             files = [];
             reason = 'full — classifier error, failing closed';
           }
-          if (mode !== 'docs' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
+          if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
 
           // Encode the changed-files payload; if it exceeds the job-output cap, fail closed to
           // full + shared and drop the payload (full does not need the list).
@@ -117,6 +119,8 @@ jobs:
           const lockClass = group === 'e2e-shared-supabase' ? 'shared Supabase lock' : 'isolated fast run';
           const checks = mode === 'docs'
             ? 'classifier unit tests, git diff --check, mojibake scan'
+            : mode === 'unit-only'
+            ? 'classifier unit tests, git diff --check, mojibake scan (the unit suite runs in the unit job)'
             : mode === 'avatar-tool'
             ? 'classifier unit tests, git diff --check, mojibake scan, node --check on changed tools/avatar scripts'
             : 'classifier unit tests, npm ci, Playwright browser install, global setup, full Playwright suite';
@@ -160,15 +164,15 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     # The ACTUAL job lock — does NOT trust the classify concurrency_group output alone. A fast
-    # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/avatar-tool, and
-    # it is derived from the trusted github.run_id. Every other state (classify
+    # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/unit-only/avatar-tool,
+    # and it is derived from the trusted github.run_id. Every other state (classify
     # failure/cancelled/skipped, missing/invalid/full mode, partial outputs) → the shared lock.
     # Mirrors jobLockGroup() in .github/ci/classify-changes.mjs.
     concurrency:
       group: >-
         ${{
           (needs.classify.result == 'success'
-            && (needs.classify.outputs.mode == 'docs' || needs.classify.outputs.mode == 'avatar-tool'))
+            && (needs.classify.outputs.mode == 'docs' || needs.classify.outputs.mode == 'unit-only' || needs.classify.outputs.mode == 'avatar-tool'))
           && format('ci-fast-{0}', github.run_id)
           || 'e2e-shared-supabase'
         }}
@@ -183,6 +187,12 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
       TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      # Teacher-flow passwords. Required, with no default anywhere in the repository: an unset
+      # secret stops global-setup (tests/test-credentials.mjs) instead of falling back to a value
+      # that anyone can read in this public repository. Set them to the values the accounts already
+      # have; rotating them is a separate, explicitly authorised step.
+      TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
+      TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
       # Where the E2E suite points. A repository VARIABLE, not a secret — a hostname is not
       # sensitive, and a variable stays visible and auditable in the repo settings.
       # UNSET IS SAFE: the reference resolves to an empty string, and tests/helpers.ts treats
@@ -214,7 +224,7 @@ jobs:
           const mod = await import(pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href);
 
           const raw = process.env.CLASSIFY_MODE || '';
-          const mode = (raw === 'docs' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';
+          const mode = (raw === 'docs' || raw === 'unit-only' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';
           const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
 
           if (mode === 'full') {
@@ -226,7 +236,7 @@ jobs:
             return;
           }
 
-          // Fast mode (docs/avatar-tool): the payload MUST be present, decodable, and valid.
+          // Fast mode (docs/unit-only/avatar-tool): the payload MUST be present, decodable, and valid.
           // Any failure fails the check clearly — never escalate to the full suite here, because
           // this job already holds the fast lock (running full unlocked is the exact thing to avoid).
           const b64 = process.env.CHANGED_FILES_B64 || '';
@@ -254,12 +264,12 @@ jobs:
 
     # Classifier + concurrency unit tests — run in EVERY mode.
     - name: Classifier unit tests
-      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'full'
       run: node --test tests/unit/ci-classify-changes.test.mjs
 
-    # ── Fast checks (docs + avatar-tool) ──────────────────────────────────────
+    # ── Fast checks (docs + unit-only + avatar-tool) ──────────────────────────
     - name: Fast checks — whitespace + mojibake
-      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'avatar-tool'
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool'
       env:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -327,12 +337,15 @@ jobs:
     - name: Run Playwright tests
       if: steps.mode.outputs.mode == 'full'
       run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ steps.mode.outputs.mode == 'full' && !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+    # ── No report artifact (containment) ──────────────────────────────────────
+    # The Playwright HTML report and the traces inside it record typed values verbatim — a fill step
+    # is titled `Fill "<value>"`, and a trace keeps call parameters and network bodies — and the
+    # artifacts of a public repository can be downloaded by anyone signed in to GitHub. Every report
+    # uploaded so far therefore published the test-account passwords. Until the suite stops putting
+    # credentials into the report at all (a separate piece of work), nothing is uploaded: a failure
+    # is diagnosed from the job log and reproduced locally, where the report stays on the machine.
+    # Re-adding an upload step here requires the guard in tests/unit/credential-hygiene.test.mjs to
+    # be satisfied.
 
     # ── Completion summary line ───────────────────────────────────────────────
     - name: Summarise completion
@@ -343,6 +356,7 @@ jobs:
         set -euo pipefail
         case "${MODE:-full}" in
           docs)        echo "docs fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
+          unit-only)   echo "unit-only fast checks completed (unit suite: see the unit job)" >> "$GITHUB_STEP_SUMMARY" ;;
           avatar-tool) echo "avatar-tool fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
           *)           echo "full Playwright suite completed" >> "$GITHUB_STEP_SUMMARY" ;;
         esac

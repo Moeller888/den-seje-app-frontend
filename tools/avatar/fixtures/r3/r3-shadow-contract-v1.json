@@ -1,0 +1,1712 @@
+{
+  "meta": {
+    "title": "R3 shadow stack — the binding contract",
+    "schema": "r3-shadow-contract",
+    "schemaVersion": 1,
+    "status": "CONTRACT ONLY — NO ASSET PRODUCED, NO IMAGE REQUEST AUTHORISED",
+    "decision": "D-132",
+    "adoptedOn": "2026-09-08",
+    "purpose": "R3 reproduces every geometry-bound raster layer for the approved target figure. It is a separate shadow stack, default OFF, that never modifies R2.",
+    "authorisesImageRequest": false,
+    "authorisationModel": "authorisesImageRequest is a GENERAL flag and stays false permanently. It means this contract grants no blanket permission to call an image model, and it must never be flipped to true. A specific call is authorised ONLY by a fully pinned entry in authorisedCalls.calls, which names one call id, one prompt hash, one ordered input list with a hash per input, one model, one mask hash and exactly one output. An entry authorises that call and nothing else — not a repeat of it, not a variant of it, and not any other R3 call.",
+    "note": "Nothing in this file authorises a generative call. Each future call needs its own owner authorisation and its own one-shot claim."
+  },
+
+  "referencePair": {
+    "targetFigure": {
+      "role": "THE CLOTHED TARGET FIGURE — the desired default appearance, identity and visible geometry",
+      "path": "assets/avatar/reference/Northstar Master v2.png",
+      "tracked": true,
+      "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+      "bytes": 761394,
+      "width": 1024,
+      "height": 1536,
+      "measuredAnchors": { "top": 20, "sole": 1488, "figureHeight": 1469, "left": 292, "right": 732, "axisX": 512.13, "inkArea": 384270 }
+    },
+    "authoringBase": {
+      "role": "THE INTERNAL GARMENT-AUTHORING / FITTING BASE — tight neutral top, shorts, bare legs and feet",
+      "filename": "fitting-base.H1.png",
+      "tracked": false,
+      "storagePolicy": "BINDING, per D-127 §2: H1 must NEVER be tracked in git, never published, and never placed under assets/ or any other deployable path. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image.",
+      "storageIntended": "D-127 §2's intended home is the external artefact archive outside both clones, alongside the D-121 artefacts.",
+      "storageObserved": "VERIFIED READ-ONLY on 2026-09-09, correcting the earlier observation recorded under D-132: the canonical, owner-approved H1 IS in the external archive D-127 §2 intends, at DenSejeApp-artefacts\\d-131-fitting-base-v1-adoption\\fitting-base.H1.png — exactly the path fitting-base-spec-v1.json -> storage.externalPath has always named — and refined.raw.png is likewise in d-121-refinement-result\\. The copy under tools/avatar/build/fitting-base-head-only-review/ is a gitignored WORKING/REVIEW copy, not the canonical store. D-127 §2 was satisfied all along and its binding policy was never breached.",
+      "storageCorrectedBy": "D-133 §1. The earlier text stated as a verified observation that H1 was not yet in the external archive; that was wrong. The D-132 register row is left verbatim — the register is append-only — and this field carries the correction.",
+      "storageNoMoveAuthorised": "This contract moves, copies and deletes nothing. Relocating the known copy into the external archive is its own owner decision.",
+      "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+      "bytes": 1832612,
+      "width": 1024,
+      "height": 1536,
+      "measuredAnchors": { "top": 20, "sole": 1487, "figureHeight": 1468, "left": 292, "right": 732, "axisX": 512.0, "inkArea": 359658 },
+      "notAnatomicalGroundTruth": "H1 does not reconstruct the body hidden under the target figure's clothing. It is an authoring model, never ground truth."
+    },
+    "rawProvenance": {
+      "role": "RAW PROVENANCE of the target figure — the unretouched D-121 output",
+      "filename": "refined.raw.png",
+      "tracked": false,
+      "sha256": "fa4c705e05b7832c1308f15dcecb28a47ec61416c91486a3930de3b4eaf854c1",
+      "bytes": 1328092,
+      "relationToTarget": "Geometrically identical to the target: 0 differing silhouette pixels, 0 differing pixels inside the solid figure, identical global anchors. The two differ ONLY in transparent and semi-transparent edge pixels (soft-alpha pixel count 27195 -> 6910).",
+      "softAlphaDefinition": "soft-alpha pixel = 0 < alpha < 128, i.e. a pixel that is neither fully transparent nor solid under the D-071 convention (solid = alpha >= 128). Both counts above are measured with exactly this definition over the full 1024x1536 canvas.",
+      "softAlphaStatus": "PROVENANCE / CLEANUP EVIDENCE ONLY. The 27195 -> 6910 figure documents the alpha cleanup between refined.raw.png and the tracked target. It is NOT a new universal R3 acceptance threshold, it gates nothing, and no R3 asset is required to reach any particular soft-alpha count."
+    },
+    "pairEvidence": {
+      "headBytesDifferingInsideHeadProtectMask": 0,
+      "globalDeltas": { "top": 0, "sole": -1, "figureHeight": -1, "left": 0, "right": 0, "axisX": -0.13 },
+      "armEdgeDeltaRange": "-2..+1 px across rows 645, 700, 760, 820, 880, 940",
+      "statement": "All stable and reproducibly measurable global, head and arm anchors agree. No material geometric drift has been demonstrated.",
+      "notClaimed": "This is NOT a claim that the whole body's anatomy is identical, nor that all body proportions are preserved within 1-2 px. That cannot be proven under different clothing.",
+      "crotchProxy": {
+        "measuredDeltaPx": "approximately 12",
+        "what": "The measured crotch proxy differs by about 12 px between the target figure and H1.",
+        "nature": "Clothing-sensitive and anatomically ambiguous: the target wears trousers and H1 wears shorts, so the proxy does not locate the same landmark on both images.",
+        "status": "DIAGNOSTIC ONLY",
+        "isHardGate": false,
+        "isEvidenceOfMaterialDrift": false,
+        "triggers": "nothing — it must not trigger generation, warp, repair or promotion",
+        "noTolerance": "No tolerance is defined for it. It is reported, never gated."
+      }
+    }
+  },
+
+  "architecture": {
+    "name": "R3 shadow",
+    "defaultEnabled": false,
+    "optIn": "explicit local opt-in only, never a cohort or percentage",
+    "fallbackChain": ["R3", "R2", "C2"],
+    "r2Guarantee": "R2 stays active and byte-identical. No existing R2 file is overwritten or modified.",
+    "rollback": "a single controlled switch; no data migration; no Supabase or student-data change",
+    "identityCoverage": { "bodyType": "neutral", "skinTone": "medium", "note": "Coverage is NOT widened in this migration. The other five body_type x skin_tone combinations keep the existing fallback. Widening needs its own decision." }
+  },
+
+  "layerContract": {
+    "canvas": { "master": [1024, 1536], "served": [512, 768] },
+    "alphaRule": "solid = alpha >= 128 (D-071 convention)",
+    "background": "fully transparent; no background, no shadow, no glow",
+
+    "paintOrder": {
+      "binding": true,
+      "rule": "The BINDING part of this layer contract is the RELATIVE paint order below, bottom to top. Numeric z-index values are NOT part of it — see zIndices, which are provisional and unapproved.",
+      "bottomToTop": ["base", "blush", "face", "eyes", "tee", "trousers", "shoes", "torso", "hair"],
+      "invariants": [
+        "the technical underlay is the bottom layer of the figure",
+        "the three default clothing layers paint above the underlay",
+        "a cosmetic torso garment paints above the default tee, because the tee is now its own layer instead of being baked into the base",
+        "hair paints above every face layer and every clothing layer"
+      ]
+    },
+
+    "zIndices": {
+      "status": "APPROVED by D-135 — see zModel for the full binding map, its ties and its semantics",
+      "binding": true,
+      "mayBeImplemented": true,
+      "decision": "D-135",
+      "newlyFixedByD135": { "tee": 10, "trousers": 11, "shoes": 12, "torso": 20 },
+      "supersededProvisional": "D-132 recorded tee 6, trousers 7, shoes 8 and torso 20 as PROVISIONAL examples. D-135 replaces 6, 7 and 8 with 10, 11 and 12 because 6 and 8 are already taken INSIDE R3's own map by the eyes cosmetic and the face cosmetic; torso stays at 20. D-132's note that 6 and 8 collide with the live R2_COSMETIC_Z is corrected in zModel.crossStackOverlap — a cross-stack overlap is harmless, because the three stacks never share a DOM.",
+      "seeZModel": "zModel"
+    },
+
+    "slots": [
+      { "slot": "base",     "newInR3": false, "content": "technical underlay: tight neutral top, shorts, bare legs and feet, BALD, BLANK FACE" },
+      { "slot": "blush",    "newInR3": false, "blend": "multiply" },
+      { "slot": "face",     "newInR3": false },
+      { "slot": "eyes",     "newInR3": false, "note": "iris multiply x token, fixed on top" },
+      { "slot": "tee",      "newInR3": true,  "content": "grey default t-shirt" },
+      { "slot": "trousers", "newInR3": true,  "content": "blue default trousers" },
+      { "slot": "shoes",    "newInR3": true,  "content": "grey default sneakers" },
+      { "slot": "torso",    "newInR3": false, "note": "cosmetic garment; must occlude the tee layer" },
+      { "slot": "hair",     "newInR3": false, "blend": "multiply x hair token" }
+    ],
+    "newSlotsRationale": "R2 bakes the t-shirt, trousers and sneakers into its base layer. R3 makes them separate layers, so the default outfit becomes removable and the occlusion contract changes from 'garment occludes a baked tee' to 'garment occludes a separate tee layer'.",
+    "excludedFromReproduction": {
+      "eyelid": "CSS ellipse, no raster asset",
+      "aura": "no R2 product asset exists",
+      "back": "no R2 product asset exists",
+      "headwear": "no R2 product asset exists",
+      "c2Assets": "a different render path",
+      "otherIdentityCombinations": "keep the existing fallback"
+    }
+  },
+
+  "zModel": {
+    "decision": "D-135",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO RUNTIME CONSTANT, RESOLVER, COMPOSITOR OR MANIFEST WIRING IS CREATED",
+    "independence": {
+      "rule": "R3 gets its OWN R3_STACK_Z, R3_COSMETIC_Z and any separate overrides. They must not import, alias or dynamically derive values from R2_STACK_Z, R2_COSMETIC_Z or C2_LAYER_Z.",
+      "sameNumberIsNotInheritance": "Where an R3 number equals an existing R2 number it is INDEPENDENTLY PINNED to the same numeric value — it is not inherited. A later change to an R2 constant must never move an R3 layer.",
+      "notCreatedHere": "D-135 does not create the constants. It fixes what their values must be when they are created."
+    },
+    "slots": [
+      {
+        "slot": "aura",
+        "z": -30,
+        "kind": "cosmetic",
+        "note": "behind the figure"
+      },
+      {
+        "slot": "back",
+        "z": -20,
+        "kind": "cosmetic",
+        "note": "behind the figure"
+      },
+      {
+        "slot": "base",
+        "z": 0,
+        "kind": "mandatory raster",
+        "note": "the technical underlay"
+      },
+      {
+        "slot": "blush",
+        "z": 2,
+        "kind": "mandatory raster",
+        "note": "mix-blend multiply"
+      },
+      {
+        "slot": "face",
+        "z": 3,
+        "kind": "mandatory raster",
+        "note": "the expression slot — see faceSlotSemantics"
+      },
+      {
+        "slot": "eyes",
+        "z": 4,
+        "kind": "mandatory raster",
+        "note": "one logical slot holding two sublayers — see approvedTies"
+      },
+      {
+        "slot": "blink",
+        "z": 5,
+        "kind": "external surface",
+        "note": "the blink engine's lids, stamped by the engine itself"
+      },
+      {
+        "slot": "eyesCosmetic",
+        "z": 6,
+        "kind": "cosmetic",
+        "note": "glasses; below the hair so the fringe covers the upper rim"
+      },
+      {
+        "slot": "faceCosmetic",
+        "z": 8,
+        "kind": "cosmetic",
+        "note": "masks; per-item overrides may raise it",
+        "perItemOverrides": {
+          "panda-mask": 41
+        }
+      },
+      {
+        "slot": "tee",
+        "z": 10,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "trousers",
+        "z": 11,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "shoes",
+        "z": 12,
+        "kind": "mandatory raster",
+        "note": "NEW in R3"
+      },
+      {
+        "slot": "torso",
+        "z": 20,
+        "kind": "cosmetic",
+        "note": "garment / equipment; above all three default clothing layers"
+      },
+      {
+        "slot": "hair",
+        "z": 40,
+        "kind": "mandatory raster",
+        "note": "multiply x hair token"
+      },
+      {
+        "slot": "headwear",
+        "z": 45,
+        "kind": "cosmetic",
+        "note": "above the hair"
+      }
+    ],
+    "uniqueness": {
+      "rule": "INDEPENDENTLY SORTED LOGICAL SLOTS must not have unintended z collisions. Approved internal SUBLAYERS of one logical slot MAY share a z, provided their DOM order is explicit and binding.",
+      "notBlanketUniqueness": "This is deliberately NOT a claim that every raster layer has a unique z. A blanket-uniqueness test would be wrong and must not be written: it would fail the approved eyes tie below.",
+      "perItemOverridesAreNotTies": "A per-item override (panda-mask at 41) is an alternative z for the SAME logical slot, chosen per item. It is not a tie and never coexists with that slot's default value."
+    },
+    "approvedTies": [
+      {
+        "slot": "eyes",
+        "z": 4,
+        "sublayers": [
+          "iris",
+          "eyes-fixed"
+        ],
+        "domOrder": "iris is inserted FIRST, eyes-fixed SECOND",
+        "why": "Equal z means DOM order decides, and the fixed highlight must paint on top of the tinted iris. The existing R2 stack emits them in exactly this order, deliberately.",
+        "binding": true
+      }
+    ],
+    "faceSlotSemantics": {
+      "verified": "Verified read-only against js/avatar-expression-engine.js and avatar.html on 2026-09-10.",
+      "finding": "On the decomposed raster path the expression engine does NOT create an overlay: _initOverlay() takes this._overlay = container.querySelector('[data-c2-layer=\"face\"]') with _ownsOverlay = false, and swaps that layer's src in place. The separate .avatar-expr-overlay element, which avatar.html stamps to zIndex 3, exists only on the C2/SVG path, where there is no decomposed face raster.",
+      "conclusion": "exprOverlay is the OPERATIVE REPRESENTATION OF THE SAME LOGICAL FACE SLOT, not a second element at z=3. On the R3 path the expression engine must borrow the decomposed face layer in place, exactly as it does today on R2, so no two elements ever occupy z=3 in one mounted stack and there is no DOM-order tie to pin here.",
+      "requirement": "If a future change ever makes them coexist, their internal DOM order must be fixed explicitly by a new decision before that ships."
+    },
+    "paintOrder": {
+      "bindingBoundaryOrder": "base < tee < trousers < shoes < torso < hair < headwear",
+      "consequences": [
+        "trousers paint over the tee wherever they overlap around the waist",
+        "shoes paint over the trousers wherever they overlap around the ankles",
+        "a torso garment or equipment asset may paint over all three default clothing layers where the asset extends into their areas",
+        "hair paints above every face and clothing layer; headwear above the hair"
+      ],
+      "intentional": "This order is deliberate, not incidental. The overlaps it resolves are the waist, the ankles and a garment that extends past the tee."
+    },
+    "d134StillApplies": {
+      "rule": "The z order NEVER overrides D-134. Every torso or equipment asset remains subject to R3_ARM_HAND_PROTECT(asset).",
+      "explicit": "Painting above the clothing layers does not grant permission to paint over exposed arms or hands. Z order may not be used to bypass the arm/hand protection or an asset-specific intentional-coverage decision, which remains the only way that protection narrows."
+    },
+    "stackSelection": {
+      "semantics": "completeR3Layers ?? completeR2Layers ?? composeC2Layers(...)",
+      "isSemanticsNotSyntax": "That expression states the required semantics. The concrete later syntax may differ.",
+      "resolverContract": "An R3 resolver may return EITHER a complete, validated R3 layer list OR null. It must never return an empty or partial list as success.",
+      "noMixing": "No geometry-bound R2 and R3 layers may be mixed to fill in missing R3 assets. If the required R3 composition is not complete, the WHOLE avatar stack falls back to R2, and then to C2.",
+      "atomicity": "The choice is atomic and per render: one stack is mounted, never a blend of two.",
+      "doesNotWidenReuse": "D-135 does not widen which existing cosmetics or assets are approved for reuse. It fixes stack selection and z semantics only."
+    },
+    "crossStackOverlap": {
+      "permitted": true,
+      "rule": "The same numeric z may appear in the R3, R2 and C2 maps. That is NOT an error and must not be tested as one.",
+      "why": "The three stacks are never mounted as independent avatar stacks at the same time — the renderer mounts exactly one layer list — so their numbers can never meet in one DOM.",
+      "correctionOfAnEarlierNote": "D-132's zIndices note said the provisional 6 and 8 'collide numerically with the live R2_COSMETIC_Z'. That framing was wrong: an R2/R3 cross-stack overlap is harmless. The real defect was INSIDE R3's own map, where 6 and 8 are taken by the eyes cosmetic and the face cosmetic — which is why D-135 moves the clothing to 10, 11 and 12."
+    },
+    "externalSurfaces": {
+      "requirement": "The external expression and blink surfaces must later be driven by the stack that was ACTUALLY mounted, so a stack switch never leaves a stale overlay behind — the same discipline the blink profile already follows on the R2/C2 split, extended to three ways.",
+      "notImplementedHere": "D-135 states the requirement. It does not implement it."
+    },
+    "authorisation": "D-135 authorises no image request and creates or consumes no claim. It creates no runtime constant, resolver, compositor or manifest wiring, no mask, no region and no asset."
+  },
+
+  "irisContract": {
+    "decision": "D-136",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO IRIS MAP PRODUCED, NO RUNTIME CONSTANT CREATED, NO IMAGE REQUEST AUTHORISED",
+    "method": {
+      "binding": "The R3 iris is ONE independently generated ACHROMATIC greyscale/luminance map, multiplied by ONE independently pinned R3 colour token, with the fixed-eyes layer on top in D-135's binding eyes order.",
+      "isOneAssetPlusOneToken": "One visual asset plus one deterministic design token — not two assets, and not a token on its own.",
+      "notFullColour": "It is NOT a full-colour iris asset.",
+      "notProcedural": "It is NOT a procedurally drawn iris.",
+      "assetId": 7,
+      "assetMethod": "generated-luminance-map-plus-token",
+      "plannedCalls": 1,
+      "layerOrder": "The iris sublayer is composited first and the fixed-eyes sublayer second, both on the eyes slot at z=4, exactly as zModel.approvedTies pins it."
+    },
+    "token": {
+      "name": "R3_IRIS_DEFAULT",
+      "value": "#A34A0F",
+      "independentlyPinned": "R3 pins this value for itself. It must never be imported from, aliased to, or dynamically derived from R2_IRIS_DEFAULT — the same discipline zModel.independence applies to the z maps.",
+      "whySameValue": "The same number is chosen because it is already the documented Master-brown DESIGN value in the established R2 precedent. Reusing a documented design value is not using an old R2 asset as a pixel source.",
+      "notMeasuredFromFinishedPixels": "The token is NOT claimed to be derivable from the finished iris pixels of any figure. The displayed colour is a product of BOTH the token AND the map's luminance, so no single rendered pixel yields the token. Any future re-measurement would be its own decision and would have to state its method.",
+      "notCreatedHere": "D-136 does not create the runtime constant. It fixes what its value must be when it is created."
+    },
+    "renderPair": {
+      "rule": "The token alone guarantees nothing about visual colour fidelity. The future luminance map and the token work as ONE render pair, and only their composed result can be judged.",
+      "laterApproval": [
+        "the finished, composed and tinted iris result is what is assessed",
+        "assessed against Northstar Master v2",
+        "after the automatic format and layer checks",
+        "and by owner visual review"
+      ],
+      "noAfterTheFactTolerance": "No tolerance may be invented after the result is seen, and there is no automatic recolour, warp or repair.",
+      "doesNotAuthoriseTheCall": "D-136 does not authorise the later image call and pre-registers no candidate-specific pixel thresholds yet."
+    },
+    "tintSupport": {
+      "noUntintedFallback": "R2's untinted fail-soft rendering is NOT carried over to R3. An untinted greyscale iris map is not the approved R3 appearance and must never be shown.",
+      "incompleteMeansNull": "If the required mask/multiply mechanism is unsupported, or the tinted iris layer cannot be established correctly, the R3 stack is NOT complete and the future R3 resolver must return null.",
+      "fallbackChain": "D-135's atomic fallback then applies: R3 -> R2 -> C2.",
+      "noMixing": "No R3 and R2 eyes layers may be mixed, and no untinted R3 iris map may be displayed.",
+      "contractNotImplementation": "This is contract now, not runtime implementation."
+    },
+    "noEyeColourSystem": {
+      "rule": "D-136 introduces no user-selectable eye colour, no new identity field, no persistence or Supabase field, no additional iris colours and no eye-colour UI.",
+      "scopeOfTheToken": "R3_IRIS_DEFAULT is only the fixed neutral default value.",
+      "separateDecision": "A real EYE_COLOR feature needs its own later owner decision."
+    },
+    "budget": {
+      "effect": "Locking asset 7 to one generative call moves the derived image-call budget from 14-16 to 15-16.",
+      "stillNotAuthorisation": "The budget remains planning, never consent. Every call needs its own owner authorisation and its own one-shot claim."
+    },
+    "prohibitions": {
+      "noAssetProduced": "D-136 produces no iris map and no other asset.",
+      "noImageRequestOrClaim": "D-136 authorises no image request and creates or consumes no claim.",
+      "noRuntimeCode": "D-136 creates no runtime constant, resolver, compositor, manifest wiring or tint implementation.",
+      "noExistingBehaviourChange": "No existing R2 or C2 behaviour is changed."
+    }
+  },
+
+  "hairstyleContract": {
+    "decision": "D-137",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO RESOLVER OR MANIFEST CODE, NO ASSET, NO STORED-DOMAIN CHANGE, NO SUPABASE WRITE",
+    "scope": "The hairstyle SHAPE only. The hair colour token (hairColorTokensFor -> --hair-base) is untouched and is not part of this decision.",
+    "storedDomain": {
+      "source": "the live validate_avatar_identity trigger, read read-only on 2026-09-08",
+      "values": [
+        "default",
+        "braid",
+        "short",
+        "curly",
+        "long",
+        "sidecut",
+        "buzzcut",
+        "tousled",
+        "ponytail",
+        "buzz",
+        "afro"
+      ],
+      "absentIsValid": "The hairstyle key may also be absent entirely, which is valid and means no choice has been made.",
+      "notWidened": "D-137 does NOT widen, narrow or otherwise change the stored domain, and writes nothing to Supabase.",
+      "northstarIsNotStorable": "northstar is an ASSET KEY, not a storable profile value. The live trigger rejects it."
+    },
+    "mapping": {
+      "rule": "An exact match against the table below. There is no fuzzy matching, no prefix rule and no visual-similarity fallback.",
+      "table": [
+        {
+          "profileValue": "(absent)",
+          "r3Hair": "northstar",
+          "why": "no choice has been made, so the default figure's own hair is correct"
+        },
+        {
+          "profileValue": null,
+          "r3Hair": "northstar",
+          "why": "same as absent"
+        },
+        {
+          "profileValue": "default",
+          "r3Hair": "northstar",
+          "why": "the explicit 'no particular style' value"
+        },
+        {
+          "profileValue": "tousled",
+          "r3Hair": "northstar",
+          "why": "the target figure's own hair is the tousled one"
+        },
+        {
+          "profileValue": "short",
+          "r3Hair": "short",
+          "why": "R3 has its own short asset"
+        },
+        {
+          "profileValue": "afro",
+          "r3Hair": "afro",
+          "why": "R3 has its own afro asset"
+        }
+      ],
+      "otherValidValuesReturnNull": {
+        "values": [
+          "braid",
+          "curly",
+          "long",
+          "sidecut",
+          "buzzcut",
+          "ponytail",
+          "buzz"
+        ],
+        "behaviour": "R3 returns null and D-135's atomic fallback applies: R3 -> R2 -> C2.",
+        "why": "R3 has no asset for these styles. Showing northstar instead would show a student the wrong hair, which is exactly what complete-or-null exists to prevent."
+      },
+      "invalidValuesReturnNull": {
+        "behaviour": "Any value outside the stored domain returns null, INCLUDING the literal string 'northstar'.",
+        "whyNorthstarToo": "northstar is an asset key that the live trigger rejects, so a profile can never legitimately hold it. Treating it as a valid request would mean honouring a value the database considers impossible."
+      },
+      "asymmetryIsDeliberate": "ABSENT maps to northstar, but the literal string 'northstar' returns null. That is intentional and must not be 'fixed': absent means no choice was made, while 'northstar' is an impossible stored value. The two are different situations that happen to name the same asset."
+    },
+    "departureFromR2": {
+      "r2Behaviour": "hairSrcForR2 falls back to R2_HAIR_FALLBACK ('northstar') for ANY hairstyle without its own asset, so R2 always renders something.",
+      "r3Behaviour": "R3 refuses instead, for the seven valid styles it has no asset for.",
+      "deliberate": "This is a deliberate departure, and it is the correct reading of D-135's complete-or-null resolver contract and of D-136's rule that an unapproved appearance is never shown. A student whose stored hairstyle is one of those seven sees the R2 avatar, not R3.",
+      "r2IsUnchanged": "R2's own fallback behaviour is NOT changed by this decision."
+    },
+    "measuredImpact": {
+      "measuredOn": "2026-09-08",
+      "method": "read-only aggregate over profiles.avatar_identity->>'hairstyle'; no row-level or personal data was read and nothing was written",
+      "profiles": 33,
+      "distribution": {
+        "(absent)": 29,
+        "default": 2,
+        "short": 1,
+        "buzzcut": 1
+      },
+      "consequence": "Under this mapping 32 of the 33 profiles resolve to an R3 hair (northstar or short) and 1 — the single 'buzzcut' — falls back to R2.",
+      "isAMeasurementNotAGuarantee": "This is a measurement on that date, not a permanent property. The distribution changes as students choose."
+    },
+    "coverage": {
+      "secondAxis": "R3's identity coverage already excludes every body_type x skin_tone pair other than neutral x medium (D-132). The hairstyle is now a SECOND axis on which R3 may decline, and declining always means the whole stack falls back, never a partial render.",
+      "assetsUsed": "The mapping uses exactly the three hair assets already planned: r3-hair-northstar (id 9), r3-hair-afro (id 14) and r3-hair-short (id 15).",
+      "noBudgetChange": "No new asset and no new image call, so the derived image-call budget stays 15-16."
+    },
+    "resolverShape": {
+      "requirement": "The future R3 hair resolver takes the stored value, applies the exact table, and returns either the mapped asset key or null. A null propagates: the R3 layer list is then incomplete and the resolver for the whole stack must return null, per D-135.",
+      "noSilentSubstitution": "It must never substitute a visually similar style, and must never fall back to northstar for a value the table maps to null.",
+      "contractNotImplementation": "D-137 creates no resolver, no manifest entry and no runtime code. It fixes the behaviour that code must have."
+    },
+    "prohibitions": {
+      "noStoredDomainChange": "No hairstyle value is added, removed or migrated, and no Supabase or student data is touched.",
+      "noUiChange": "No hairstyle picker or UI behaviour is changed; D-102's render-path predicate is untouched.",
+      "noR2Change": "R2's manifest, its fallback and its behaviour are unchanged.",
+      "noImageRequestOrClaim": "D-137 authorises no image request and creates or consumes no claim.",
+      "noAssetProduced": "D-137 produces no asset."
+    }
+  },
+
+  "blushContract": {
+    "decision": "D-138",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO BLUSH PRODUCED, NO METHOD CHOSEN, NO IMAGE REQUEST OR CLAIM AUTHORISED",
+    "firstSliceMembership": {
+      "decision": "Blush is NOT part of the first slice.",
+      "why": "The first slice is an isolated structural proof of geometry, alpha, layering, eyes, hair and the default clothing. Blush adds a different failure class — a blend mode — and its production path is not yet settled, so including it would couple two open questions inside one proof and make a failure impossible to attribute.",
+      "firstSliceIsDeliberatelyIncomplete": [
+        "the blush-free first slice is NOT completeR3Layers",
+        "it may not be selected by the runtime resolver",
+        "it may not be used for canary, deploy or promotion",
+        "it may never be described as the final complete default composition"
+      ]
+    },
+    "firstSliceIdentityConsistency": {
+      "correction": "D-138 also corrects an inconsistency in the first slice it was already editing: identity.hairstyle read 'northstar', which D-137 defines as an ASSET KEY that is not in the stored domain and that resolves to null. The first slice was therefore invalid under D-137's own resolver rule.",
+      "identityValue": "identity.hairstyle is now 'default' — a value the live database can store, which D-137 maps to the northstar asset.",
+      "assetKeyValue": "The asset key lives in its own field, firstSlice.resolvedHairAssetKey = 'northstar'.",
+      "noD137Change": "D-137's mapping, its register row and the stored domain are unchanged. This is a consistency fix to the first slice, not a change to the hairstyle contract."
+    },
+    "blushStaysMandatory": {
+      "rule": "D-135 stands unchanged: blush remains a MANDATORY layer of the finished complete R3 stack, at z=2.",
+      "notWeakened": "Excluding blush from the first slice says nothing about the finished stack. A complete R3 stack without blush is not complete."
+    },
+    "sequenceAfterTheFirstSlice": {
+      "order": [
+        "the already-fixed construction rule is investigated",
+        "if the construction can be proven in advance, 0 image calls are used",
+        "otherwise blush needs ONE separately authorised image call and its own one-shot claim",
+        "the finished blended composition needs the automatic check AND its own separate owner visual review",
+        "only then may the default stack be called complete and move towards integration"
+      ],
+      "noneAuthorisedHere": "D-138 authorises none of those steps."
+    },
+    "expectedDifference": {
+      "rule": "The blush-free first slice will differ from Northstar Master v2 in the blush-bearing cheek zone. That difference is recorded as a QUALITATIVE, DIAGNOSTIC expectation only.",
+      "machineCheckMay": "The machine check MAY report the difference.",
+      "machineCheckMayNot": [
+        "it may not classify the expected missing blush as geometric or structural drift",
+        "no pixel mask may be invented for it",
+        "no fixed number of pixels may be ignored",
+        "no new tolerance may be set",
+        "no other facial difference may be exempted from checking",
+        "it may not be claimed that the difference can be isolated exactly from the flat reference image"
+      ],
+      "colourFidelityLater": "The actual blended colour fidelity is judged only on the later COMPLETE composition, never on the first slice."
+    },
+    "method": {
+      "unchanged": "Asset 8 stays method 'generated-or-constructed' with calls '0-1'. D-138 chooses no method.",
+      "whyNotChosen": "The contract already states a RULE for this, not an open question: a per-channel multiply construction may be used ONLY if it is documented and proven in advance, otherwise one call. Which branch fires is decided by whether the construction is actually proven — forcing it now would either commit to an unproven construction or spend a call for nothing.",
+      "budget": "The derived image-call budget therefore stays 15-16: 15 if the construction is later proven and approved, 16 if a generative call is later authorised.",
+      "authorisesNothing": "D-138 authorises neither the construction, nor an image call, nor a claim."
+    },
+    "prohibitions": {
+      "noAssetProduced": "D-138 produces no blush asset and no other asset.",
+      "noMethodChosen": "D-138 chooses no production method for blush.",
+      "noImageRequestOrClaim": "D-138 authorises no image request and creates or consumes no claim.",
+      "noRuntimeChange": "D-138 changes no runtime, resolver, manifest, mask, golden, asset, deploy or Supabase state.",
+      "noD135Change": "D-138 changes nothing in D-135: blush keeps z=2 and its mandatory status in the finished stack."
+    }
+  },
+
+  "occlusionContract": {
+    "binding": true,
+    "armHandInvariant": "An R3 torso or equipment layer must NEVER unintentionally paint over exposed arms or hands. Whatever the final paint order and z values turn out to be, the visible arm and hand pixels of the approved underlay stay visible unless an approved garment is deliberately authored to cover them.",
+    "whyItChanged": "In R2 the torso garment sits immediately above the base and its artwork is authored against that exact baked silhouette. In R3 the torso garment sits above a separate tee layer, so it passes over more of the body and arm/hand exposure is no longer protected by its low position alone.",
+    "prerequisite": "The R3 occlusion/protect contract — which regions a torso or equipment layer MAY cover, and which arm and hand regions it MAY NOT — must be PRE-REGISTERED and owner-approved BEFORE armor-knight or any other torso equipment is produced or integrated. It is a precondition of that work, never a check applied afterwards.",
+    "fittingBaseMaskIsNotRuntime": "The existing fitting-base arm/hand protect mask is a fitting-base FIXTURE. It is NOT automatically an R3 runtime mask and carries no runtime authority. Any use of it as a reference or control when producing R3 assets must be documented and approved separately.",
+    "authorisation": "This clause is contract text only. It authorises no mask to be created, changed, derived or promoted, and no image call."
+  },
+
+  "pixelSourcePolicy": {
+    "oldR2AssetsMayBe": ["functional reference", "inventory of required layers and states", "visual inspiration", "documentation of existing behaviour", "fallback and rollback"],
+    "oldR2AssetsMayNotBe": ["a pixel source", "a geometric authority", "a basis for automatic warp", "an argument for keeping the old proportions", "a permanent mixture of R2 and R3 geometry"],
+    "differenceAnalysisMayBe": ["locating approximate garment regions", "coverage checking", "visualising differences", "detecting leakage outside an intended region", "validating a finished R3 composition against the target"],
+    "differenceAnalysisMayNotBe": ["a finished garment mask", "a finished alpha layer", "automatic segmentation", "a pixel source for the tee, trousers or shoes", "evidence that the layers are cleanly separable"],
+    "why": "A difference shows that pixels differ, not which garment they belong to. Measured read-only, the difference between the target and H1 forms ONE DOMINANT CONNECTED REGION running from the neck to the feet, plus many small scattered components. That one region mixes t-shirt, trousers, shoes, skin, body contour, alpha antialiasing and generative variation together, so it separates nothing. A flat composite also cannot be inverted into overlapping layers: hair hides the cranium, the iris sits inside the eyes, blush is a blend mode, and pixels beneath the upper layers do not exist in the flat image.",
+    "whyNoExactFigure": "No exact pixel or component count is recorded here. The earlier figures were measured without pinning the difference metric, the alpha and colour thresholds or the 4- versus 8-connectivity, so they are not independently reproducible. The qualitative conclusion above is what this contract binds, and it is stable under every definition measured. If a numeric diagnostic is ever recorded, it must state metric, alpha threshold, colour threshold and connectivity in full."
+  },
+
+  "assets": [
+    { "id": 1,  "name": "r3-base-neutral-medium", "slot": "base",     "method": "generated", "calls": 3 },
+    { "id": 2,  "name": "r3-tee-default",         "slot": "tee",      "method": "generated", "calls": 1 },
+    { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
+    { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
+    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
+    { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
+    { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
+    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 10, "name": "r3-face-curious",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 11, "name": "r3-face-determined",     "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 12, "name": "r3-face-focused",        "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 13, "name": "r3-face-proud",          "slot": "face",     "method": "generated", "calls": 1 },
+    { "id": 14, "name": "r3-hair-afro",           "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 15, "name": "r3-hair-short",          "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 16, "name": "r3-torso-armor-knight",  "slot": "torso",    "method": "generated", "calls": 1 },
+    { "id": 17, "name": "r3 runtime masks + mask spec", "slot": "fixtures", "method": "deterministic", "calls": 0 }
+  ],
+
+  "imageCallBudget": {
+    "minimum": 17,
+    "maximum": 18,
+    "isAuthorisation": false,
+    "countingRule": "Every image call ACTUALLY SENT counts, including one whose output was rejected and one sent by accident. D-139 was sent and its output rejected; the D-142 attempt was sent during an incident with an unknown outcome. Adopted by D-142, unchanged by D-143.",
+    "callsActuallySentSoFar": {"underlay":3,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147."},
+    "callsPlannedAndAuthorised": {"underlay":3,"why":"D-143 authorised exactly one further underlay call, and that call has been made (recorded by D-147). assets[0].calls is PLANNED capacity; it moved to 3 when the authorisation was merged, not when the call was made.","derivedBudget":"17-18"},
+    "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. D-143's call has been made (recorded by D-147), so the actually-sent figure is 3 as well and the two numbers now agree. Their agreement authorises nothing either.",
+    "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
+    "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
+  },
+
+  "deterministicOperations": [
+    { "op": "master -> served 512x768", "how": "downscaleHalf + cwebp -lossless -exact -z 9, verified by decoding", "precedent": "the established promotion path for every R2 asset" },
+    { "op": "runtime masks from approved layers", "how": "the tee layer's own alpha IS the tee region, so the D-085 colour classification is not needed", "precedent": "build-r2-torso-occlusion-mask.mjs, 34 gates" },
+    { "op": "colour tokens for hair and iris", "how": "one greyscale asset x a colour token", "precedent": "R2 already contracts hair and iris as multiply x token" },
+    { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" }
+  ],
+
+  "productionOrder": [
+    "1 R3 geometry and layer contract",
+    "2 technical underlay",
+    "3 neutral face",
+    "4 eyes fixed",
+    "5 iris",
+    "6 northstar hair",
+    "7 default t-shirt",
+    "8 default trousers",
+    "9 default sneakers",
+    "10 runtime masks and occlusion",
+    "11 blush-free first-slice composition",
+    "12 automatic check against the reference pair",
+    "13 owner visual review — the first-slice gate",
+    "14 blush",
+    "15 complete default composition, its automatic check and its own owner review",
+    "16 the four other expressions",
+    "17 afro and short",
+    "18 armor-knight",
+    "19 integration, canary, rollback"
+  ],
+  "productionOrderIds": [
+    "contract",
+    "underlay",
+    "face-neutral",
+    "eyes-fixed",
+    "iris",
+    "hair-northstar",
+    "tee",
+    "trousers",
+    "shoes",
+    "runtime-masks",
+    "first-slice-composition",
+    "automatic-check",
+    "owner-visual-review",
+    "blush",
+    "default-composition",
+    "other-expressions",
+    "other-hairstyles",
+    "armor-knight",
+    "integration-canary-rollback"
+  ],
+  "productionOrderConstraintsNote": "Machine-readable dependencies over productionOrderIds, which is the same list as productionOrder in the same order. They record WHY the approved order is the order; they do not change it.",
+  "productionOrderConstraints": [
+    {
+      "before": "underlay",
+      "after": "face-neutral",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "eyes-fixed",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "iris",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "hair-northstar",
+      "why": "every head layer is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "underlay",
+      "after": "tee",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "trousers",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "shoes",
+      "why": "the default clothing is fitted to the underlay, never the other way round"
+    },
+    {
+      "before": "underlay",
+      "after": "blush",
+      "why": "blush is a head layer and is drawn onto the approved underlay geometry"
+    },
+    {
+      "before": "tee",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "trousers",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "shoes",
+      "after": "runtime-masks",
+      "why": "the garment layers are the input the runtime masks are derived from"
+    },
+    {
+      "before": "underlay",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "face-neutral",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "eyes-fixed",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "iris",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "hair-northstar",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "tee",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "trousers",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "shoes",
+      "after": "first-slice-composition",
+      "why": "the blush-free first slice needs every layer it composes"
+    },
+    {
+      "before": "runtime-masks",
+      "after": "first-slice-composition",
+      "why": "occlusion has to be settled before the composition can be judged"
+    },
+    {
+      "before": "first-slice-composition",
+      "after": "automatic-check",
+      "why": "there is nothing to check automatically until the composition exists"
+    },
+    {
+      "before": "automatic-check",
+      "after": "owner-visual-review",
+      "why": "the machine check runs first, so the owner reviews something that already passed it"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "blush",
+      "why": "D-138: blush is produced only AFTER the blush-free first slice has been approved"
+    },
+    {
+      "before": "blush",
+      "after": "default-composition",
+      "why": "D-138: the complete default composition is the one that finally includes blush"
+    },
+    {
+      "before": "first-slice-composition",
+      "after": "default-composition",
+      "why": "the complete composition builds on the approved first slice"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "other-expressions",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "other-hairstyles",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "owner-visual-review",
+      "after": "armor-knight",
+      "why": "the first-slice gate decides whether the layered approach works at all"
+    },
+    {
+      "before": "default-composition",
+      "after": "integration-canary-rollback",
+      "why": "D-138: only a stack that is genuinely complete may move towards integration"
+    },
+    {
+      "before": "other-expressions",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    },
+    {
+      "before": "other-hairstyles",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    },
+    {
+      "before": "armor-knight",
+      "after": "integration-canary-rollback",
+      "why": "integration follows the approved assets"
+    }
+  ],
+
+  "firstSlice": {
+    "identity": { "bodyType": "neutral", "skinTone": "medium", "hairstyle": "default" },
+    "resolvedHairAssetKey": "northstar",
+    "identityVsAssetKey": "The persistent identity and the internal asset key are two DIFFERENT fields. identity.hairstyle holds a value the live database can actually store; resolvedHairAssetKey holds what D-137's mapping resolves it to. 'northstar' is an asset key only and is never an identity value — under D-137 the literal string resolves to null, so using it as the first slice's identity would have made the first slice unresolvable by its own rule.",
+    "layers": ["technical underlay", "neutral face", "eyes fixed", "iris", "northstar hair", "tee", "trousers", "shoes"],
+    "equipment": "none",
+    "excluded": {
+      "blush": "DELIBERATELY NOT in the first slice — settled by D-138. Blush is produced only after the blush-free first slice has been approved, and it remains a MANDATORY layer of the finished complete stack at z=2 (D-135)."
+    },
+    "purpose": "an ISOLATED STRUCTURAL PROOF of geometry, alpha, layering, eyes, hair and the default clothing. It is deliberately INCOMPLETE under D-135.",
+    "isNotCompleteR3Layers": "The blush-free first slice is NOT completeR3Layers. It may not be selected by the runtime resolver, may not be used for canary, deploy or promotion, and may never be described as the final complete default composition.",
+    "mustNotDependOn": "any automatic difference algorithm separating existing pixels"
+  },
+
+  "firstCall": {
+    "name": "technical underlay",
+    "scope": "HEAD-ONLY EDIT of H1",
+    "rationale": "H1's body is already the approved authoring base — tight top, shorts, bare legs and feet, approved global anchors, approved arms and hands. Regenerating it would introduce new drift for no reason. Only the hidden bald cranium and blank face are missing.",
+    "inputs": {
+      "image1": { "file": "fitting-base.H1.png", "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4", "binding": "every existing pixel, the body geometry and the drawing style" },
+      "image2": { "file": "assets/avatar/reference/Northstar Master v2.png", "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "binding": "identity and style reference for head shape, skin tone and line style ONLY. Hair and facial features must NOT be copied into the underlay." }
+    },
+    "modelMayProduce": "only the hidden bald, featureless head",
+    "recomposition": {
+      "contract": "PRE-DEFINED, not after-the-fact repair",
+      "rules": [
+        "the generated candidate is used ONLY inside the pre-approved head edit region",
+        "H1 is reinstated byte-identically everywhere outside that region",
+        "a protected transition ring at the neck and head contour stays byte-identical where needed to prevent a seam",
+        "no generated pixel outside the permitted head region survives recomposition"
+      ]
+    },
+    "gates": {
+      "hardMachine": {
+        "format": "exactly 1024x1536, RGBA, bit depth 8, colour type 6",
+        "protectedBody": "exactly 0 differing RGBA bytes outside the approved head edit region after recomposition — H1's arms, hands, torso, top, shorts, legs and feet byte-identical",
+        "protectedTransition": "exactly 0 differing bytes in the pre-registered neck/transition ring",
+        "background": "alpha = 0 for every pixel outside the permitted figure/head envelope; no background, no shadow, no glow, no stray pixels, no unintended components",
+        "headRegion": "no hair remains, no eyes, no iris, no brows, no nose, no mouth, no texture, symbols or accessories",
+        "provenance": "pinned prompt, pinned inputs, pinned mask and mask semantics, documented recomposition, separate claim, full output hash and request id"
+      },
+      "ownerVisual": [
+        "the cranium shape is credible",
+        "the head visually belongs to the same figure",
+        "skin tone and line style match the reference pair",
+        "the head/neck transition is natural",
+        "no hair or facial residue",
+        "no strange anatomy"
+      ],
+      "notCompared": "The figure's global top and total height must NOT be compared directly with H1: removing the hair legitimately changes the topmost pixel. The body region is required to be byte-identical instead.",
+      "noNewTolerances": "No tolerance is set for ground contact, centre axis, body, hands, legs or feet in this call. After deterministic recomposition those regions must be byte-identical to H1 — the requirement is 0 differing pixels, not a tolerance.",
+      "sizeBudget": {
+        "applies": false,
+        "finding": "SIZE_BUDGET_BYTES = 50 KB is defined in promote-r2-torso-asset.mjs and enforced only there and in avatar-r2-torso-asset-promotion.test.mjs, both on the TORSO asset (D-084 §5). The currently active runtime base body-neutral-medium-v2.webp is 67,174 B and already exceeds it. The constant is therefore not a base-layer gate and must not block the R3 underlay. File size is reported, not gated."
+      }
+    }
+  },
+
+  "headMaskSuitability": {
+    "checkedReadOnly": true,
+    "mask": { "path": "tools/avatar/fixtures/fitting-base/head-protect-mask-v1.png", "sha256": "cc9c8b7a68dab60ab5c2914644d28676eefcb29e917a05f7bf4ce44093b737b3", "bytes": 8368 },
+    "semantics": { "alphaValues": [0, 255], "binary": true, "markerRGB": "236,72,153 (a marker colour, not data)", "editRegion": "alpha = 255", "protected": "alpha = 0" },
+    "geometry": { "px": 124099, "bbox": [292, 20, 732, 433], "components": 1 },
+    "coverage": { "h1SolidInside": 124099, "h1SolidOutside": 235559, "targetSolidInside": 124099 },
+    "verdict": "USABLE AS THE EDIT REGION, BUT NOT ON ITS OWN — two documented gaps block the first image call.",
+    "gaps": [
+      { "id": "GAP-1", "finding": "445 H1 solid pixels above y433 fall OUTSIDE the mask, spread thinly over 283 rows from y20 to y433, at most 10 px in any row. All 445 differ from the target, and the target has 0 such pixels — so they are H1's own generated head fringe, not the pasted head. Protecting everything outside the mask byte-identically would let them survive as stray hair on a bald head." },
+      { "id": "GAP-2", "finding": "The mask is strictly binary with no soft edge and no transition ring. Laterally it follows the figure exactly (mask span equals H1 span at y420-432), but its bottom is a hard horizontal cut at y433 — the neck line. The seam would be a straight horizontal line across the neck." }
+    ],
+    "consequence": "No new mask has been created. Closing either gap needs a separate owner decision.",
+    "resolution": "CLOSED by D-133: GAP-1 by the bounded one-pixel dilation (G1, 445 px) and GAP-2 by transition candidate B (y425-445). See headEditRegions. The head-protect mask itself is unchanged and still byte-identical.",
+    "prohibition": "The fitting-base masks are fixtures from the fitting-base work. They are NOT automatically promoted to runtime masks. Any use as a reference or control when producing R3 assets must be documented separately."
+  },
+
+
+  "headEditRegions": {
+    "decision": "D-133",
+    "approvedOn": "2026-09-09",
+    "status": "REGIONS APPROVED — FIXTURES TRACKED — NO IMAGE REQUEST AUTHORISED",
+    "bboxConvention": "inclusive-max",
+    "alphaRule": "H1solid := alpha >= 128 (D-071)",
+    "rules": {
+      "G1": "( dilate8(E0, 1) ∩ H1solid ∩ { y <= 433 } ) \\ E0",
+      "CORE_BASE": "E0 ∪ G1",
+      "TRANSITION": "H1solid ∩ { 425 <= y <= 445 } — candidate B, figure-clipped, not a rectangle",
+      "EDIT": "CORE_BASE ∪ TRANSITION",
+      "CORE": "CORE_BASE \\ TRANSITION  ( == EDIT \\ TRANSITION )",
+      "PROTECT": "complement(EDIT) over the whole 1024x1536 canvas"
+    },
+    "measured": {
+      "E0": 124099,
+      "G1": 445,
+      "CORE_BASE": 124544,
+      "TRANSITION": 1702,
+      "EDIT": 125423,
+      "CORE": 123721,
+      "PROTECT": 1447441,
+      "g1NeckContourPixel": [
+        475,
+        433
+      ],
+      "g1HeadFringeAboveY420": 444
+    },
+    "whyBounded": "The bounded dilation and the unbounded { H1solid and y <= 433 } union are measured identical on the pinned inputs (0 differing px). The bounded form is the approved one because it can never reach the neck or the body even if an input later changed.",
+    "whyCandidateB": "yTop 425 is the lowest row whose H1 width reaches round(73 x 1.50) = 110 px; yBot 445 is the midpoint of the measured stable neck column y436-454. The band straddles the neck line y433, so the seam lands inside the constant-width column instead of mid-taper. Candidates A (y429-440) and C (y416-450) were measured and rejected.",
+    "recomposition": {
+      "core": "generated RGBA used directly",
+      "transition": "RGB ramped; alpha = H1's alpha byte-identical, so generated alpha never decides the silhouette",
+      "protect": "H1 RGBA byte-identical",
+      "ramp": "denominator 20; num(y) = 445 - y; out = floor((num * generated + (20 - num) * h1 + 10) / 20) on 8-bit sRGB channels, round-half-up, integer only, no colour correction afterwards",
+      "seamProperty": "num(445) = 0, so the band's last row IS H1's own bytes, and y446 already lies in PROTECT: no generated residue survives at the y445/y446 boundary, by construction rather than by adjustment. The guarantee is per row against H1's own row and is NOT a claim that H1's rows 445 and 446 are byte-identical to each other.",
+      "gates": {
+        "pre": "generated and H1 must have an identical solid silhouette (alpha >= 128) across every pixel of rows 425-445",
+        "postProtectedBytes": "exactly 0 differing RGBA bytes against H1 inside PROTECT",
+        "postTransitionSilhouette": "exactly 0 solid-silhouette deviations inside TRANSITION",
+        "postFormat": "output exactly 1024x1536 RGBA8",
+        "postNoLeak": "no pixel outside EDIT originates from the generated image"
+      },
+      "noRefit": "No automatic warp, repair, region growth or after-the-fact adjustment of any region exists on this path."
+    },
+    "fixtures": {
+      "dir": "tools/avatar/fixtures/r3-head-edit",
+      "spec": "r3-head-edit-mask-spec-v1.json",
+      "builder": "tools/avatar/build-r3-head-edit-masks.mjs",
+      "recompositionTool": "tools/avatar/recompose-r3-head-edit.mjs",
+      "masks": {
+        "edit": {
+          "file": "r3-head-edit-v1.png",
+          "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+          "px": 125423,
+          "bbox": [
+            292,
+            20,
+            732,
+            445
+          ]
+        },
+        "transition": {
+          "file": "r3-head-transition-v1.png",
+          "sha256": "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3",
+          "px": 1702,
+          "bbox": [
+            455,
+            425,
+            565,
+            445
+          ]
+        },
+        "protect": {
+          "file": "r3-head-protect-v1.png",
+          "sha256": "2ff6b925c2d28eb7849b69e8317021be7ceee17541b3a824bbd1b975fff9a5c2",
+          "px": 1447441,
+          "bbox": [
+            0,
+            0,
+            1023,
+            1535
+          ]
+        }
+      },
+      "notRuntime": "These are authoring fixtures. They are NOT runtime masks, carry no runtime authority and are not promoted by D-133."
+    },
+    "authorisation": "D-133 and these fixtures authorise no image request and no claim."
+  },
+
+  "armHandOcclusionContract": {
+    "decision": "D-134",
+    "adoptedOn": "2026-09-10",
+    "status": "CONTRACT ONLY — NO REGION COMPUTED, NO MASK FIXTURE PRODUCED, NO IMAGE REQUEST AUTHORISED",
+    "relationToD132": "D-132's occlusionContract stated the invariant and made the pre-registration a precondition. D-134 fills in what that contract IS. It does not rewrite D-132, and it keeps D-132's own allowance that an approved garment MAY be deliberately authored to cover part of an arm or hand.",
+    "regions": {
+      "R3_ARM_HAND_EXPOSED_BASE": "The deterministically identified VISIBLE arm and hand surface of the approved R3 underlay, with the approved default clothing (tee, trousers, shoes) taken into account. It is a property of the approved base figure, not of any particular garment.",
+      "R3_INTENTIONAL_ARM_HAND_COVERAGE": {
+        "arity": "per garment asset",
+        "default": "THE EMPTY SET",
+        "mayBeNonEmpty": "only after a separate owner decision for that one specific garment, naming the asset and the region",
+        "approvedNonEmptyRegions": [],
+        "d134ApprovesNone": "D-134 approves NO non-empty intentional-coverage region for any asset.",
+        "armorKnight": "EMPTY under D-134. It becomes non-empty only if a later, separate decision says so."
+      },
+      "R3_ARM_HAND_PROTECT": "R3_ARM_HAND_PROTECT(asset) := R3_ARM_HAND_EXPOSED_BASE \\ R3_INTENTIONAL_ARM_HAND_COVERAGE(asset). With the default empty coverage this equals R3_ARM_HAND_EXPOSED_BASE, but the rule is written per asset so an approved exception narrows the protected region for that asset alone.",
+      "torsoFamily": {
+        "hardSubsetOfEdit": "r3-torso-occlusion-hard ⊆ r3-torso-edit-allowed",
+        "protectIsComplement": "r3-torso-protect := complement(r3-torso-edit-allowed)",
+        "precedent": "the D-084/D-085 torso mask family; the same hard/edit/protect shape, not a new pattern"
+      }
+    },
+    "measurableRule": {
+      "gates": [
+        "0 finished garment pixels inside R3_ARM_HAND_PROTECT(asset)",
+        "0 hard-mask pixels inside R3_ARM_HAND_PROTECT(asset)",
+        "0 feather / edit-only pixels inside R3_ARM_HAND_PROTECT(asset)"
+      ],
+      "notAnUnconditionalBan": "This is deliberately NOT a blanket prohibition on any garment pixel touching an arm or a hand. A future sleeve or glove that the owner has explicitly approved is expressed as a non-empty R3_INTENTIONAL_ARM_HAND_COVERAGE for that asset, which removes exactly that area from the protected region — and only for that asset. Without such a decision the coverage is empty and the three gates apply to the whole exposed surface."
+    },
+    "armHandIdentification": {
+      "yIntervalIsInsufficient": "A Y-range alone is REJECTED as the identification rule. Torso, clothing and arms occupy many of the same rows, so rows cannot separate them. Any builder that isolates arms by row bounds alone is non-conforming.",
+      "mustUse": [
+        "the approved R3 underlay's alpha",
+        "the approved separate alpha layers for tee, trousers and shoes",
+        "a fixed, pre-registered SPATIAL rule that isolates the left and right outer arm/hand components from the torso",
+        "8-connected component analysis with deterministic left/right hand seeds, or equivalently unambiguous pre-registered run/corridor rules",
+        "existing, reproducible landmarks"
+      ],
+      "mustNotUse": [
+        "colour classification",
+        "a difference against the target figure as segmentation",
+        "a Y-interval alone",
+        "the D-128 fitting-base arm/hand mask as runtime authority",
+        "any threshold or corridor chosen after seeing a candidate result"
+      ],
+      "noAfterTheFactTuning": "Seeds, corridors, tie-break rules and input hashes are fixed BEFORE the first real derivation runs. Choosing them once an output is on screen is the failure mode this clause exists to prevent."
+    },
+    "feather": {
+      "rule": "edit = dilate(hard, at most 4 Master px), clipped to the figure's permitted area — the D-084/D-085 torso precedent, unchanged.",
+      "neverIntoProtect": "Feather may never enter R3_ARM_HAND_PROTECT(asset). Where a blend would land on exposed skin there is no blend at all, exactly as the collar zone is treated in build-r2-torso-occlusion-mask.mjs.",
+      "exceptionIsPerAsset": "A later intentional-coverage region can change this for that one asset only, and only by a separate owner decision.",
+      "noRepair": "No warp, no mask growth, no automatic repair, and no after-the-fact adjustment of any region."
+    },
+    "authorisation": {
+      "derivationMayRunWithoutANewImageAuthorisation": "Once the required approved R3 assets exist AND the deterministic builder is pre-registered with all seeds, corridors, tie-break rules and input hashes, the reproduction run itself may be performed without a further image authorisation. It is a deterministic derivation from approved raster inputs, not a generative call.",
+      "notAcceptance": "That is NOT automatic acceptance and NOT promotion.",
+      "stillRequired": [
+        "every machine gate must pass",
+        "owner visual review is required",
+        "the result may not be used for armour generation or runtime integration before it is approved",
+        "armor-knight's image call still needs separate authorisation and its own one-shot claim"
+      ]
+    },
+    "implementationPrerequisites": {
+      "note": "NOTHING BELOW EXISTS YET. These are the preconditions D-134 registers, not artefacts it produces or verifies. No pixel region has been computed and no mask fixture has been written.",
+      "requiredApprovedAssets": [
+        "the R3 technical underlay",
+        "the approved default tee",
+        "the approved default trousers",
+        "the approved default shoes"
+      ],
+      "plannedRegionNames": [
+        "r3-arm-hand-exposed-base",
+        "r3-torso-occlusion-hard",
+        "r3-torso-edit-allowed",
+        "r3-torso-protect"
+      ],
+      "plannedBuilder": "a deterministic tool, not yet written, whose seeds, corridors, tie-break rules and full input hashes must be pre-registered in its own spec before the first derivation run",
+      "productionOrder": "these land at production step 11 (runtime masks and occlusion), after the garments at steps 8-10 exist",
+      "noneProducedByD134": true
+    },
+    "prohibitions": {
+      "noRegionOrMask": "D-134 creates no mask, no pixel region and no image asset.",
+      "noNonEmptyCoverageApproved": "D-134 approves no non-empty intentional-coverage region for any asset, armor-knight included.",
+      "noArmorKnightRelease": "D-134 does not release armor-knight.",
+      "noImageRequestOrClaim": "D-134 authorises no image request and creates or consumes no claim.",
+      "noOtherDecisionsChanged": "D-134 changes none of the other open owner decisions.",
+      "noRuntimeChange": "D-134 changes no runtime, compositor, manifest, existing asset, mask or golden, and nothing in Supabase or the deploy."
+    }
+  },
+  "openOwnerDecisions": [
+  ],
+
+
+  "closedOwnerDecisions": [
+    {
+      "decision": "D-138",
+      "was": "whether blush is part of the first slice",
+      "resolution": "Fixed: blush is NOT part of the first slice, which is an isolated structural proof of geometry, alpha, layering, eyes, hair and the default clothing — deliberately incomplete, never completeR3Layers, never resolver-selectable, and never usable for canary, deploy or promotion. Blush remains MANDATORY at z=2 in the finished stack (D-135 unchanged) and is produced only after the first-slice gate, with its own automatic check and its own owner review before the stack may be called complete. The expected cheek-zone difference is qualitative diagnostic only, with no invented mask, ignored pixel count or new tolerance. Asset 8 keeps generated-or-constructed / 0-1 and the budget stays 15-16. See blushContract."
+    },
+    {
+      "decision": "D-137",
+      "was": "the hairstyle contract: VALID_HAIRSTYLES and C2_HAIRSTYLES share only short, curly and long; afro is in the R2 manifest and in C2_HAIRSTYLES but not in VALID_HAIRSTYLES",
+      "resolution": "Fixed by an exact mapping table: absent, null, 'default' and 'tousled' resolve to northstar; 'short' and 'afro' to their own assets; the seven other valid stored values (braid, curly, long, sidecut, buzzcut, ponytail, buzz) return null, as does any invalid value INCLUDING the literal 'northstar', which is an asset key the live trigger rejects. A null means the whole stack falls back R3 -> R2 -> C2 rather than showing the wrong hair — a deliberate departure from R2, which always falls back to northstar. Shape only; the hair colour token is untouched. No stored-domain, Supabase, UI or R2 change, and no new asset or image call. See hairstyleContract."
+    },
+    {
+      "decision": "D-136",
+      "was": "whether the iris is a colour token or its own generated asset",
+      "resolution": "Fixed: one independently generated achromatic luminance map multiplied by one independently pinned R3 token, R3_IRIS_DEFAULT = #A34A0F, with fixed-eyes on top in D-135's order. Asset 7 becomes method generated-luminance-map-plus-token with exactly 1 planned call, so the derived budget moves to 15-16. R2's untinted fail-soft is NOT carried over: missing tint support makes the R3 stack incomplete and the resolver must return null, falling back atomically R3 -> R2 -> C2. No EYE_COLOR system, identity field or persistence is introduced. See irisContract."
+    },
+    {
+      "decision": "D-135",
+      "was": "the final z-index values for the three new clothing slots tee, trousers and shoes — the provisional 6, 7 and 8 are examples only and are not approved",
+      "resolution": "Fixed: tee 10, trousers 11, shoes 12, torso 20, with the whole R3 map pinned in zModel. The provisional 6, 7 and 8 are replaced because 6 and 8 are taken inside R3's own map by the eyes cosmetic and the face cosmetic."
+    },
+    {
+      "decision": "D-135",
+      "was": "how the R3 clothing layers coexist with the current R2/C2 cosmetic stack, given that the provisional 6 and 8 collide numerically with the live R2_COSMETIC_Z (eyes cosmetic 6, face cosmetic 8) and that the provisional torso 20 is the C2 value rather than the live R2 torso-garment z of 1 — none of these numbers may be implemented before that decision",
+      "resolution": "Fixed: R3 gets its own independently pinned R3_STACK_Z and R3_COSMETIC_Z, never imported or aliased from R2/C2, and stack selection is atomic — completeR3Layers ?? completeR2Layers ?? composeC2Layers(...), complete-or-null, with no mixing of geometry-bound R2 and R3 layers. A cross-stack numeric overlap is explicitly permitted, because the three stacks never share a DOM."
+    },
+    {
+      "decision": "D-134",
+      "was": "the R3 occlusion/protect contract that keeps exposed arms and hands clear of a torso or equipment layer, which must be pre-registered and approved before armor-knight is produced",
+      "resolution": "Closed as a CONTRACT. The protected region is R3_ARM_HAND_PROTECT(asset) := R3_ARM_HAND_EXPOSED_BASE \\ R3_INTENTIONAL_ARM_HAND_COVERAGE(asset), whose coverage defaults to the empty set and may only become non-empty by a separate per-garment owner decision — so the rule is not an unconditional ban on future approved sleeves or gloves. Three zero-gates apply (finished garment pixels, hard-mask pixels, feather/edit-only pixels). A Y-interval alone is expressly rejected as the arm/hand identification rule. No region, mask or fixture is produced by D-134, and armor-knight is not released. See armHandOcclusionContract."
+    },
+    {
+      "decision": "D-133",
+      "was": "how to close GAP-1 (445 stray H1 head-fringe pixels outside the mask)",
+      "resolution": "G1 := ( dilate8(E0,1) ∩ H1solid ∩ { y <= 433 } ) \\ E0 — 445 px, of which 444 are head/edge fringe and exactly one, at (475,433), is neck contour; CORE_BASE := E0 ∪ G1 — 124,544 px, one 8-connected component."
+    },
+    {
+      "decision": "D-133",
+      "was": "how to close GAP-2 (no transition ring; hard horizontal seam at the neck line y433)",
+      "resolution": "TRANSITION := H1solid ∩ { 425 <= y <= 445 } — candidate B, 1,702 px over 21 rows, straddling the neck line y433 and ending inside the stable neck column y436-454."
+    }
+  ],
+  "authorisedCalls": {
+    "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
+    "count": 3,
+    "budgetAccounting": "assets[0] carries 3 PLANNED calls after D-143: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; and D-143's one call, sent once with its candidate rejected (recorded by D-147). The derived budget is 17-18. Budget numbers remain planning, never consent.",
+    "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
+    "calls": [
+      {
+        "callId": "D-139-r3-underlay-head-only-v1",
+        "decision": "D-139",
+        "authorisedOn": "2026-09-11",
+        "asset": "assets[0] — r3-base-neutral-medium, the R3 technical underlay",
+        "scope": "EXACTLY ONE head-only edit of H1, producing the hidden bald, featureless head. Not a new character, not a runtime asset, not a promotion, and not a licence for any further call.",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "endpointType": "images.edits — two ordered image inputs and one mask",
+        "model": "gpt-image-2-2026-04-21",
+        "modelPolicy": "A dated snapshot, pinned. There is NO fallback model. Moving to a newer model requires a NEW owner decision; it is never an implementation detail.",
+        "parameters": {
+          "n": 1,
+          "size": "1024x1536",
+          "quality": "high",
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "omitted": {
+          "input_fidelity": "Deliberately omitted. gpt-image-2 treats inputs at high fidelity automatically and rejects the field (invalid_input_fidelity_model)."
+        },
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt.md",
+          "fileBytes": 6089,
+          "fileSha256": "8a5cb283a4cb5803adf45d8d35e68a0c058a6604ffc9869ec58ea1ee514724f6",
+          "transmittedBytes": 2157,
+          "transmittedSha256": "ca9faa53f4346bbfbaccc106f80345524c5061c45c51bdce2d54c3bbf4caf6a9",
+          "transmittedIs": "the single fenced block of that file, and nothing else",
+          "lineEndings": "LF",
+          "trailingNewlines": 1,
+          "approvedVerbatimOn": "2026-09-11",
+          "noEditorialChange": "Approved verbatim by the owner. No rewording, rewrap, reordering or editorial improvement has been applied, and none may be. A single changed byte breaks the pin and the adapter refuses to send."
+        },
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "inputOrderBinding": "H1 MUST be the first image, because the Images edit endpoint applies the mask to the first image. Sending them in the other order would apply the head mask to the reference figure. The adapter asserts the order on the assembled body, not on intent.",
+        "inputs": [
+          {
+            "role": "Image 1",
+            "name": "fitting-base.H1.png",
+            "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+            "bytes": 1832612,
+            "tracked": false,
+            "storage": "EXTERNAL — D-127 §2. Passed by --h1 or FITTING_BASE_V1_PATH and never copied into the repository.",
+            "binding": "every existing pixel, the body geometry and the drawing style",
+            "maskAppliesToThis": true
+          },
+          {
+            "role": "Image 2",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "bytes": 761394,
+            "tracked": true,
+            "binding": "identity and style reference for head shape, skin tone and line style ONLY. Hair and facial features must NOT be copied into the underlay.",
+            "maskAppliesToThis": false
+          }
+        ],
+        "mask": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-v1.png",
+          "sha256": "28ff1ac00f6972697411ad29c5618f9ede4b5a0a4fd086a41ec0bfb5fe7561fb",
+          "bytes": 10768,
+          "derivedFrom": {
+            "file": "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+            "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+            "decision": "D-133"
+          },
+          "builtBy": "tools/avatar/build-r3-api-mask.mjs — deterministic, reproducible byte-identically, no H1 required",
+          "semantics": {
+            "editAlpha": 0,
+            "protectAlpha": 255,
+            "transparentMeans": "EDITABLE — the model may repaint this pixel",
+            "opaqueMeans": "PROTECTED — the model must leave this pixel alone",
+            "editablePx": 125423,
+            "protectedPx": 1447441,
+            "rgb": "0,0,0 on every pixel — the mask carries no pixel of the figure",
+            "invertedRelativeToD133": "D-133's marker fixtures mean the OPPOSITE by alpha: there 255 marks the region. Sending a D-133 fixture unchanged would hand the model the exact inverse — repaint the body, protect the head."
+          },
+          "guidanceOnly": "MODEL GUIDANCE. This mask is NOT the guarantee that 0 pixels change outside the head. That guarantee is D-133's deterministic recomposition, which copies PROTECT back from H1 byte-identically after the response. A model that ignores the mask changes nothing about the final bytes."
+        },
+        "outputs": {
+          "count": 1,
+          "raw": "tools/avatar/build/r3-underlay/r3-underlay.raw.png",
+          "manifest": "tools/avatar/build/r3-underlay/r3-underlay.request.json",
+          "storage": "The build area is gitignored. The raw result is REVIEW MATERIAL, not an asset: it is not cleaned up, retouched, promoted, committed or given any runtime effect by this call."
+        },
+        "claim": {
+          "filename": "D-139.claim.json",
+          "scope": "per USER and per repository identity, outside both clones and outside temp",
+          "creation": "exclusive create, flag \"wx\", IMMEDIATELY before the single fetch",
+          "spentOn": "ANY outcome — success, HTTP error, transport error, timeout, moderation refusal, parse failure, crash. Existence alone means spent.",
+          "neverReused": "The claim is never deleted, reset, renamed or reused. D-121's and D-129's claims are separate files and are never touched by this call.",
+          "furtherAttempt": "A further attempt requires a NEW owner decision and a NEW claim identity."
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-generate-r3-underlay.mjs",
+          "separateTool": "New and separate. The D-121 and D-129 adapters are neither imported nor modified, so their spent mandates and frozen contracts cannot be weakened from here.",
+          "dryRunByDefault": true,
+          "sendRequiresAll": [
+            "--send",
+            "--owner-approval=D-139",
+            "the D-139 row present exactly once in docs/project-state.md, and D-132 and D-133 present too",
+            "the prompt file and the transmitted block matching both pinned hashes byte-for-byte",
+            "both inputs matching their pinned hashes, in the pinned order",
+            "the API mask matching its pinned hash AND its pixel semantics re-verified against D-133 EDIT",
+            "every preflight gate passing",
+            "the output paths empty",
+            "no claim file existing yet"
+          ],
+          "oneFlagNeverSends": "No single flag sends. A wrong approval value never sends. There is no --force, no --retry, no --claim-path and no --reset-claim."
+        },
+        "earPreservation": {
+          "requirement": "The ears are preserved in the same position, shape and size — owner instruction, 2026-09-11, and a line of the pinned prompt.",
+          "classification": "OWNER-VISUAL ACCEPTANCE CRITERION. It is NOT a hard machine gate.",
+          "measuredReadOnly": {
+            "method": "Two ear envelopes read off H1 and classified against the tracked D-133 fixtures.",
+            "leftEnvelope": [
+              315,
+              265,
+              415,
+              415
+            ],
+            "rightEnvelope": [
+              605,
+              265,
+              705,
+              415
+            ],
+            "leftSolidPx": 8680,
+            "rightSolidPx": 9264,
+            "inCore": "100% of both — 8,680 and 9,264 px",
+            "inTransition": 0,
+            "inProtect": 0,
+            "clearanceToTransitionBandRows": 10
+          },
+          "consequence": "Both ears lie entirely inside CORE, the region the model is allowed to repaint. D-133's recomposition therefore does NOT preserve them byte-identically, and no test in this contract can claim it does.",
+          "whyNotAGateYet": "A byte-identical ear-protect region cannot be carved out of CORE without a new, separately approved mask: 31.1% of the left ear envelope and 34.4% of the right are hair-coloured in H1, so copying H1's ear pixels back would reinstate hair on a head that must be bald and would contradict gates.hardMachine.headRegion.",
+          "prohibitedAfterTheFact": "No ear mask, ear region or ear tolerance may be invented after the output has been seen. Adding one requires its own owner decision, taken before a call.",
+          "blocker": "NOT a blocker for this call. It IS a blocker for ever describing ear preservation as machine-verified. Prompt text is not machine control."
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No loop, no retry, no fallback model, no second attempt on any failure of any kind.",
+          "noWarp": "The output is never warped, scaled, nudged, re-registered or aligned to fit.",
+          "noRepair": "A failing output is never repaired, cleaned up or touched up. The failure is documented and a new call needs new authorisation and a new claim.",
+          "noPromotion": "This call promotes nothing. No runtime asset, manifest, golden, resolver entry, canary or deploy follows from it.",
+          "noRefit": "D-133's regions are never re-fitted to the output. A deviation is a hard stop.",
+          "noOtherCall": "This entry authorises this call only. Blush, iris, hair, expressions, clothing and every other R3 asset remain unauthorised.",
+          "noRuntimeChange": "No runtime, compositor, manifest, mask, golden, asset, deploy, Supabase or student-data change follows from D-139."
+        }
+      },
+      {
+        "callId": "D-142-r3-underlay-core-v1",
+        "decision": "D-142",
+        "decidedOn": "2026-09-14",
+        "status": "SPENT — CONSUMED BY AN INCIDENT, NOT BY AN INTENDED RUN",
+        "mandateState": "SPENT",
+        "outcome": "UNKNOWN",
+        "neverReuse": true,
+        "notAnActivePermission": "This entry is a RECORD, not a permission. Its mandate is spent and its outcome unknown. No adapter may read it as authorisation to send, and no future call may reuse this call id or this claim identity. It exists so the register tells the truth about what was attempted.",
+        "producedNoOutput": "No raw output, no request manifest and no recomposed result exist. No gate was ever run on a D-142 result. Nothing was promoted, and the D-139 output is not reclassified by any of this.",
+        "incident": {
+          "when": "2026-09-14T16:33:10.436Z",
+          "claimFile": "D-142.claim.json",
+          "claimSha256": "004c3116f2392ad872fef28143a0dfa11a924f6b8cefcecd7e2dda407448a9d6",
+          "claimBytes": 1776,
+          "claimStatus": "SPENT_BEFORE_FETCH",
+          "cause": "A unit test called the send function directly in the test process with send:true and the correct owner approval. The adapter takes no claimPath, no outDir and no fetchImpl, so it fell back to the real user identity, the real API key and the real globalThis.fetch. The D-142 register row and authorisation existed only as UNCOMMITTED files in a worktree, and the adapter read the working tree rather than origin/main.",
+          "claimPreserved": "The claim file is untouched and stays untouched. It is never deleted, reset, renamed or restored."
+        },
+        "evidence": {
+          "proven": [
+            "the claim was created at 2026-09-14T16:33:10.436Z",
+            "the adapterSha256 recorded in the claim identifies the exact code version that ran",
+            "between createClaim and the single fetch there is no branch, no I/O and no early return",
+            "globalThis.fetch was entered exactly once: finish(), which is reachable only after the fetch, set sent:true"
+          ],
+          "unknown": [
+            "the HTTP status",
+            "the request id",
+            "the usage and whether the call was billed"
+          ],
+          "likely": "the request reached the API and was billed as one gpt-image-2 image edit: the body was valid, the key real, the endpoint correct and the machine had connectivity",
+          "whyUnknown": "finish() wrote a manifest carrying the status, request id and usage, but a later test's cleanup removed the output directory on the production path before the incident was noticed. No copy survives.",
+          "absenceIsNotProof": "The missing manifest is NOT evidence that no request was sent."
+        },
+        "attemptedPins": {
+          "note": "Recorded so the incident is auditable. These are what the spent attempt would have sent; they authorise nothing.",
+          "endpoint": "https://api.openai.com/v1/images/edits",
+          "model": "gpt-image-2-2026-04-21",
+          "parameters": {
+            "n": 1,
+            "size": "1024x1536",
+            "quality": "high",
+            "output_format": "png",
+            "background": "transparent"
+          },
+          "promptFileSha256": "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141",
+          "promptTransmittedSha256": "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693",
+          "maskSha256": "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab",
+          "image1Sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+          "image2Sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+        },
+        "prohibitions": {
+          "noFurtherAttempt": "D-142 authorises no further attempt. A new underlay call requires its own owner decision with its own number, its own call id and its own claim identity.",
+          "noClaimReset": "D-142.claim.json is never deleted, reset, renamed or restored. Nothing in this repository may do so.",
+          "noSendPathHere": "The merged CORE adapter has no send path and does not gain one from this decision.",
+          "noReclassifyD139": "The D-139 output stays rejected under pre.transition-silhouette at 644 px. Its join measurement of 33 is historical diagnostic only, and D-133 noRefit stands.",
+          "noPromotion": "Nothing is promoted. No runtime, compositor, resolver, manifest, mask, golden, asset, deploy or Supabase change follows."
+        }
+      },
+      {
+        "callId": "D-143-r3-underlay-core-v2",
+        "decision": "D-143",
+        "authorisedOn": "2026-09-15",
+        "status": "SPENT — SENT ONCE, HTTP 200, RAW RECEIVED, CANDIDATE REJECTED, NOTHING PROMOTED",
+        "mandateState": "SPENT",
+        "outcome": "SENT ONCE — HTTP 200 — RAW RECEIVED — CANDIDATE REJECTED BY pre.transition-silhouette BEFORE ANY CANDIDATE FILE WAS WRITTEN — NOTHING PROMOTED",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "closure": {
+          "closedBy": "D-147",
+          "closedOn": "2026-09-17",
+          "what": "D-147 closes this entry IN PLACE, so that no isolated read of it can find an active permission. It changed status, mandateState and outcome, and added neverReuse, notAnActivePermission, closure and execution. Every other field is the D-143 authorisation snapshot, verbatim.",
+          "snapshotCanonicalSha256BeforeClosure": "6ca1754aedd8351349ab725e063190c6f265af16f79cde4fad86ad6a2c16ef6d",
+          "neverReused": "D-143's mandate, the call id D-143-r3-underlay-core-v2 and the claim identity D-143.claim.json are consumed. A further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity."
+        },
+        "execution": {
+          "sentBy": "tools/avatar/openai-send-r3-underlay-core-d143.mjs, the D-145 adapter, after a separate owner instruction",
+          "originMainSha": "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889",
+          "request": {
+            "sentOnce": true,
+            "fetches": 1,
+            "retries": 0,
+            "httpStatus": 200,
+            "requestId": "req_fdbd7c5e8e71497d9b95482cf25eb8cb",
+            "startedAt": "2026-09-16T09:08:37.309Z",
+            "finishedAt": "2026-09-16T09:10:26.663Z"
+          },
+          "claim": {
+            "file": "D-143.claim.json",
+            "sha256": "99865945e3bf8fe5146c87899f8c891366433dbf6b5e2d0b94c5a311b20bd65f",
+            "bytes": 1427,
+            "status": "SPENT_BEFORE_FETCH",
+            "mandate": "SPENT",
+            "createdBeforeFetch": true,
+            "preserved": "The claim file is untouched and stays untouched. It is never deleted, moved, renamed, reset or reused."
+          },
+          "raw": {
+            "file": "tools/avatar/build/r3-underlay-core/r3-underlay-core.raw.png",
+            "bytes": 1150862,
+            "sha256": "14afd5e33915a28905af114ce82ae2c7de3f81517813f13bb04547a600c5d489",
+            "received": true,
+            "isAnApprovedCandidate": false
+          },
+          "manifest": {
+            "file": "tools/avatar/build/r3-underlay-core/r3-underlay-core.request.json",
+            "sha256": "0dcf4590c6f44695a97ddd8d5735d19d7a12e7f996d2ae8e7ea6e6df2d184e1b",
+            "completed": true
+          },
+          "candidate": {
+            "result": "REJECTED — NO CANDIDATE FILE WAS WRITTEN",
+            "gate": "pre.transition-silhouette",
+            "bound": 0,
+            "observed": 210,
+            "narrower": 157,
+            "wider": 53,
+            "referenceJoinContinuity": {
+              "gate": "pre.join-continuity",
+              "observed": 37,
+              "bound": 4,
+              "note": "Measured on the raw output for reference. The recomposition stops at its first failing gate, so this measurement was not the reason for the rejection."
+            }
+          },
+          "promotion": "NONE",
+          "runtime": "UNCHANGED"
+        },
+        "asset": "assets[0] — r3-base-neutral-medium, the R3 technical underlay",
+        "scope": "EXACTLY ONE CORE-only head edit of H1, producing the hidden bald, featureless head. Not a new character, not a runtime asset, not a promotion, and not a licence for any further call.",
+        "history": {
+          "notAReuseOfD142": "D-143 never reuses D-142's mandate, call id or claim identity. D-142 is SPENT, its call id and claim identity are consumed, and D-142.claim.json is never deleted, reset, renamed or restored.",
+          "isANewAuthorisedCall": "D-143 is a new authorised call, resting on its own decision row and its own authorisation entry in origin/main.",
+          "payloadIsByteIdentical": "The request payload is BYTE-IDENTICAL to the payload that was probably sent during the D-142 incident: the same transmitted prompt (2731 B, 76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693), the same CORE mask, the same H1, the same Northstar reference, the same model and the same parameters. D-143 is therefore a NEW AUTHORISED SEND of the same frozen request.",
+          "firstObservableAttempt": "It is the first OBSERVABLE attempt with the D-141 configuration — but not necessarily the first time the request is sent.",
+          "d142StaysUnknown": "D-142's outcome stays UNKNOWN and D-142 is not reclassified by this decision or by anything that follows from it. Absence of a manifest is not evidence that no request was sent.",
+          "whatThisMeansForD141": "D-141's hypothesis — that the CORE mask and prompt v2 fix D-139's head/neck failure — remains UNTESTED in practice, because the answer to the probably-sent attempt was lost. images.edits returns the image in the response body and does not store it, so that outcome cannot be recovered from the API.",
+          "forbiddenFramings": "D-143 must never be described as a first-time call, as a resumption or retry of D-142, or as reuse of an earlier mandate."
+        },
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "endpointType": "images.edits — two ordered image inputs and one mask",
+        "model": "gpt-image-2-2026-04-21",
+        "modelPolicy": "A dated snapshot, pinned. There is NO fallback model. Moving to a newer model requires a NEW owner decision; it is never an implementation detail.",
+        "parameters": {
+          "n": 1,
+          "size": "1024x1536",
+          "quality": "high",
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "omitted": {
+          "input_fidelity": "Deliberately omitted. gpt-image-2 treats inputs at high fidelity automatically and rejects the field (invalid_input_fidelity_model)."
+        },
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt-v2.md",
+          "fileBytes": 6242,
+          "fileSha256": "8a4e817f0a9171968211a2b4c90dff3d6507ca9dc6f3e73b5edc2bf9bc9ec141",
+          "transmittedBytes": 2731,
+          "transmittedSha256": "76cf56fb408bb65d7458645095469aa9c38c8731d4f9db23872edb30954aa693",
+          "transmittedIs": "the single fenced block of that file, and nothing else",
+          "lineEndings": "LF",
+          "preparedBy": "D-141",
+          "noEditorialChange": "Frozen. No rewording, rewrap, reordering or editorial improvement may be applied. A single changed byte breaks the pin and the send must be refused."
+        },
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "inputOrderBinding": "H1 MUST be the first image, because the Images edit endpoint applies the mask to the first image. Sending them in the other order would apply the head mask to the reference figure. The adapter asserts the order on the assembled body, not on intent.",
+        "inputs": [
+          {
+            "role": "Image 1",
+            "name": "fitting-base.H1.png",
+            "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+            "bytes": 1832612,
+            "tracked": false,
+            "storage": "EXTERNAL — D-127 §2. Passed by --h1 or FITTING_BASE_V1_PATH and never copied into the repository. It cannot live in git, so it is pinned by full SHA-256 alone.",
+            "binding": "every existing pixel, the body geometry and the drawing style",
+            "maskAppliesToThis": true
+          },
+          {
+            "role": "Image 2",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "bytes": 761394,
+            "tracked": true,
+            "binding": "identity and style reference for head shape, skin tone and line style ONLY. Hair and facial features must NOT be copied into the underlay.",
+            "maskAppliesToThis": false
+          }
+        ],
+        "mask": {
+          "file": "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-core-v1.png",
+          "sha256": "556fb973d6dd623828e4aab42d804bf05ab1df67c037498423afd607cec55dab",
+          "bytes": 10703,
+          "decision": "D-141",
+          "derivedFrom": {
+            "rule": "D-133 CORE = EDIT minus TRANSITION",
+            "editFixture": "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+            "transitionFixture": "tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png"
+          },
+          "builtBy": "tools/avatar/build-r3-api-mask.mjs --variant=core — deterministic, reproducible byte-identically, no H1 required",
+          "semantics": {
+            "editAlpha": 0,
+            "protectAlpha": 255,
+            "transparentMeans": "EDITABLE — the model may repaint this pixel",
+            "opaqueMeans": "PROTECTED — the model must leave this pixel alone",
+            "editablePx": 123721,
+            "protectedPx": 1449143,
+            "bandEditablePx": 0,
+            "rgb": "0,0,0 on every pixel — the mask carries no pixel of the figure",
+            "reVerifiedReadOnly": "Re-derived from the tracked D-133 fixtures on 2026-09-15: editable 123721, protected 1449143, nonBinary 0, coloured 0, bandEditable 0."
+          },
+          "whyNotD139sMask": "D-139's API mask offered the TRANSITION band as editable. D-139's returned output subsequently failed pre.transition-silhouette at 644 px. Whether the editable transition band was the whole cause, part of the cause, or not a cause of that deviation is NOT established: D-140 records explicitly that the cause is undetermined, naming D-139's prompt, which demanded a cranium smaller than the haired silhouette, as another candidate. The mask is excluded on its own terms — it contradicts D-133 by offering a region the band gate requires to be untouched — not because it has been shown to be the cause. That mask must never be sent again.",
+          "guidanceOnly": "MODEL GUIDANCE. This mask is NOT the guarantee that 0 pixels change outside the head — that guarantee is D-133's deterministic recomposition — and it does NOT guarantee any gate will pass. D-139 showed the model regenerating 76.68% of PROTECT despite an explicit mask."
+        },
+        "neverSentMasks": {
+          "files": [
+            "r3-head-edit-v1.png",
+            "r3-head-transition-v1.png",
+            "r3-head-protect-v1.png",
+            "r3-underlay-api-mask-v1.png"
+          ],
+          "why": "D-133's marker fixtures mean the OPPOSITE by alpha, and D-139's API mask marks the TRANSITION band editable."
+        },
+        "outputs": {
+          "count": 1,
+          "raw": "tools/avatar/build/r3-underlay-core/r3-underlay-core.raw.png",
+          "manifest": "tools/avatar/build/r3-underlay-core/r3-underlay-core.request.json",
+          "storage": "The build area is gitignored. The raw result is REVIEW MATERIAL, not an asset: it is not cleaned up, retouched, promoted, committed or given any runtime effect by this call.",
+          "manifestOnEveryOutcome": "A request manifest is written for EVERY outcome after the claim and the fetch — transport error, unusable response, unreadable body, HTTP error, parse failure, invalid payload, decode failure and success. It records the origin/main commit SHA, the claim path, the number of fetches, the stage, the reason, mandate SPENT and retried false, plus HTTP status, request id and usage where they exist.",
+          "neverDeleted": "No production or test code may delete the output directory or the manifest. A test's cleanup removed D-142's manifest before the incident was discovered; that must never happen again.",
+          "crashLeavesUnknown": "A crash can still leave the claim SPENT without a complete manifest. That is reported as UNKNOWN and must never lead to a retry, a claim reset or another call without a new owner decision."
+        },
+        "claim": {
+          "filename": "D-143.claim.json",
+          "scope": "per USER and per repository identity, outside both clones and outside temp",
+          "creation": "exclusive create, flag \"wx\", IMMEDIATELY before the single fetch",
+          "spentOn": "ANY outcome — success, HTTP error, transport error, timeout, moderation refusal, parse failure, crash. Existence alone means spent.",
+          "recordsTheRef": "The origin/main commit SHA that authorised the call is written into the claim and into the manifest.",
+          "neverReused": "The claim is never deleted, reset, renamed or reused. The D-121, D-129, D-139 and D-142 claims are separate files and are never touched by this call.",
+          "furtherAttempt": "A further attempt requires a NEW owner decision and a NEW claim identity.",
+          "notCreatedByThisDecision": "D-143 does NOT create this claim. It names the identity the future send path must use exactly once."
+        },
+        "adapter": {
+          "file": "NOT YET IMPLEMENTED — a new, separate file to be added by the follow-up PR B",
+          "notInThisRepositoryYet": "The CORE preparation adapter still cannot send, and D-143 adds no new send path. tools/avatar/openai-generate-r3-underlay-core.mjs has no fetch, no request body, no credential and no claim creation, and D-143 does not change it by one byte. The D-139 adapter DOES contain send code and that is not denied here: it is pinned to its own call id, D-139-r3-underlay-head-only-v1, so it cannot make this call, and its own mandate is already SPENT. Nothing in origin/main can send D-143's call.",
+          "d139AdapterUntouched": "tools/avatar/openai-generate-r3-underlay.mjs keeps its own send path and its own pinned call id. D-143 neither imports, extends nor modifies it, and its spent claim is never touched.",
+          "ownRequiredDecisions": "The future send adapter carries its OWN REQUIRED_DECISIONS, at least D-132, D-133, D-139, D-140, D-141, D-142 and D-143. It must not borrow the preparation adapter's list, and the preparation adapter's list must not be extended.",
+          "sendFunctionNotExported": "The irreversible send function must not be exported, so no test can import it. Its behaviour is proven by running the real CLI inside an isolated sandbox.",
+          "noTestHooks": "The production adapter takes NO test injection point of any kind: no fetch module, no fetch implementation, no claim path, no output directory, no git ref, no test environment hook. globalThis.fetch is mocked from OUTSIDE by the Node process in the sandbox, and the adapter knows nothing about it.",
+          "sendRequiresAll": [
+            "--send and the exact owner-approval value",
+            "HEAD equal to the local origin/main commit used as the authorisation basis",
+            "the send adapter's own file present in origin/main and byte-identical to its blob there",
+            "the D-143 row present exactly once in the origin/main register, and D-132, D-133, D-139, D-140, D-141 and D-142 present too",
+            "this authorisation entry present exactly once in the origin/main contract, active and unspent",
+            "every pin in the origin/main entry equal to the adapter's own constants",
+            "the prompt, the CORE mask and the Northstar reference byte-identical between the working tree and origin/main",
+            "the transmitted prompt block matching its own pin",
+            "the CORE mask matching its pin AND its pixel semantics re-verified against D-133 EDIT minus TRANSITION",
+            "H1 supplied explicitly and matching its pinned SHA-256",
+            "the output paths empty",
+            "no D-143 claim file existing yet"
+          ],
+          "refuseBeforeClaimAndFetch": "Every one of those is checked BEFORE the claim is created and before the fetch. A missing, unreadable or diverging origin/main is refused there. A locally-present or uncommitted send adapter can therefore never use this already-merged authorisation.",
+          "mustNotAccept": [
+            "a caller-supplied git ref",
+            "caller-supplied register content",
+            "a caller-supplied contract object",
+            "a caller-supplied preflight result"
+          ],
+          "oneFlagNeverSends": "No single flag sends. A wrong approval value never sends. There is no --force, no --retry, no --claim-path and no --reset-claim."
+        },
+        "acceptance": {
+          "machineGatesMandatory": [
+            "pre.transition-silhouette — identical solid silhouette across rows 425-445 (D-133)",
+            "pre.join-continuity — |S(generated,424) symdiff S(H1,425)| <= |S(H1,424) symdiff S(H1,425)|, the bound derived from H1 at run time, never a literal (D-141)",
+            "post.protected-bytes — exactly 0 differing RGBA bytes against H1 inside PROTECT (D-133)",
+            "post.transition-silhouette — exactly 0 solid-silhouette deviations inside TRANSITION (D-133)",
+            "post.coverage — CORE + TRANSITION + PROTECT cover the canvas exactly (D-133)"
+          ],
+          "ownerVisualReviewMandatory": "After every machine gate is green: the head/neck join at 1:1, 52x78, 110x165, 100x150 and 180x270, on light, on the real dark avatar gradient and on checkerboard, with H1, the raw output and the recomposed output side by side. The machine gates do not substitute for it.",
+          "onFailure": "A failing gate is a hard stop. No warp, no repair, no refit, no retry and no new call follow from it.",
+          "noPromotion": "This call promotes nothing. No runtime asset, manifest, golden, resolver entry, canary or deploy follows from it."
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No loop, no retry, no fallback model, no second attempt on any failure of any kind.",
+          "noWarp": "The output is never warped, scaled, nudged, re-registered or aligned to fit.",
+          "noRepair": "A failing output is never repaired, cleaned up or touched up. The failure is documented and a new call needs new authorisation and a new claim.",
+          "noPromotion": "This call promotes nothing. No runtime asset, manifest, golden, resolver entry, canary or deploy follows from it.",
+          "noRefit": "D-133's regions are never re-fitted to the output. A deviation is a hard stop.",
+          "noOtherCall": "This entry authorises this call only. Blush, iris, hair, expressions, clothing and every other R3 asset remain unauthorised.",
+          "noClaimReset": "D-142.claim.json is never deleted, reset, renamed or restored, and neither is any other claim. Nothing in this repository may do so.",
+          "noReclassifyD139": "The D-139 output stays rejected under pre.transition-silhouette at 644 px. Its join measurement of 33 is historical diagnostic only, and D-133 noRefit stands.",
+          "noRuntimeChange": "No runtime, compositor, resolver, manifest, mask, golden, asset, deploy, Supabase or student-data change follows from D-143."
+        }
+      }
+    ]
+  },
+  "joinContinuityGate": {
+    "gate": "pre.join-continuity",
+    "decision": "D-141",
+    "runsBefore": "recomposition",
+    "onFailure": "no recomposed output is written; no warp, repair or refit follows",
+    "solidPixel": "alpha >= 128 (D-071)",
+    "rowSet": "S(m,y) = the set of x positions where image m is solid in row y",
+    "joinTop": 424,
+    "joinBot": 425,
+    "observed": "|S(generated,424) symdiff S(H1,425)|",
+    "bound": "|S(H1,424) symdiff S(H1,425)|",
+    "pass": "observed <= bound",
+    "boundValueWithPinnedH1": 4,
+    "boundDerivation": "computed at run time from the pinned H1 file and the exact row pair. The implementation MUST NOT carry it as a literal.",
+    "boundCharacter": "an objectively H1-derived, pre-registered tolerance with no freely chosen number. It is not candidate-dependent and was not chosen after seeing any future output.",
+    "crossCheck": "Northstar Master v2 yields the same value, 4, across the same row pair",
+    "whyItExists": "pre.transition-silhouette checks rows 425-445. Under the D-141 CORE-only API mask those are exactly the rows the model is told not to paint, so passing it says nothing about the one place generated content meets preserved H1 content: the y424/y425 handover. A step there would otherwise be invisible to every pre-registered gate.",
+    "historicalDiagnosticOnly": {
+      "subject": "the D-139 output",
+      "observed": 33,
+      "bound": 4,
+      "result": "FAIL",
+      "note": "recorded as history. It must never be used to set the bound.",
+      "mayNotReclassify": "This gate must never be used to reclassify, re-judge or promote the D-139 output. That output stays rejected under pre.transition-silhouette (644 px). D-133 noRefit stands."
+    },
+    "proves": "silhouette continuity across the y424/y425 handover, and nothing else",
+    "doesNotProve": [
+      "continuity of RGB or skin tone",
+      "equal outline stroke",
+      "absence of a visible seam",
+      "visual quality",
+      "that the API mask was followed byte-identically"
+    ],
+    "ownerVisualReviewRequired": true,
+    "ownerVisualReviewMustShow": {
+      "subject": "the head/neck join",
+      "scales": [
+        "1:1",
+        "52x78",
+        "110x165",
+        "100x150",
+        "180x270"
+      ],
+      "backgrounds": [
+        "light",
+        "the real dark avatar gradient",
+        "checkerboard"
+      ],
+      "sideBySide": [
+        "H1",
+        "the raw output",
+        "the recomposed output"
+      ]
+    },
+    "noAutomaticTolerance": "no RGB tolerance and no after-the-fact ignore mask is authorised"
+  },
+  "preparedCall": {
+    "status": "SUPERSEDED BY D-142 — STILL NOT A PERMISSION",
+    "supersededBy": "D-142",
+    "supersededOn": "2026-09-14",
+    "supersessionNote": "D-141 prepared this call. D-142 records that the attempt happened and that its mandate is SPENT with an unknown outcome. Superseding this block creates NO active send permission: there is no send path in the merged adapter, and the D-142 entry in authorisedCalls is a record, not a licence. A new attempt needs its own decision, call id and claim identity.",
+    "decision": "D-141",
+    "callId": null,
+    "authorises": "nothing",
+    "prepares": [
+      "tools/avatar/fixtures/r3-underlay/r3-underlay-api-mask-core-v1.png",
+      "tools/avatar/fixtures/r3-underlay/r3-underlay-prompt-v2.md",
+      "pre.join-continuity in tools/avatar/recompose-r3-head-edit.mjs"
+    ],
+    "adapterContract": "Any adapter that reads this block MUST refuse --send while status is 'PREPARED — NOT AUTHORISED', regardless of any other flag or approval value, and MUST NOT create a claim.",
+    "requiresBeforeAnySend": [
+      "a separate, explicit owner decision",
+      "a new call id",
+      "a new exclusive-create claim file",
+      "a new or extended adapter, itself owner-approved"
+    ],
+    "notAnAuthorisedCall": "This entry must never be moved into, merged with, or read as an entry of authorisedCalls.",
+    "authorisedCallsUnchanged": "Unchanged BY D-141: D-141 added nothing to authorisedCalls, and this block never acquired an entry there. The list now holds TWO entries, and neither is D-141's — D-139-r3-underlay-head-only-v1, whose mandate is SPENT, and D-142-r3-underlay-core-v1, an incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true, which was never a permission at all.",
+    "noAdapterImplemented": "D-141 implements no new sending adapter. The existing D-139 adapter is pinned to its own call id and is neither imported, extended nor modified.",
+    "oneCallCanStillFail": "Even with the correct mask and the correct prompt, a next call can fail: the model is not guaranteed to follow the mask pixel-precisely. D-141 buys a better chance, not a guarantee."
+  },
+  "futureSendAuthorisationRule": {
+    "decision": "D-142",
+    "adoptedOn": "2026-09-14",
+    "appliesTo": "every FUTURE adapter that can call fetch for an image request",
+    "rule": "A send is authorised only by the exact decision row and authorisation entry present in origin/main. A row in the working tree, on a local branch, or in an isolated worktree is NOT sufficient, even when its text and hashes match the contract.",
+    "whyItExists": "The D-142 incident: the decision row and the authorisation entry existed only as uncommitted files in a worktree, and the adapter read the working tree. Under this rule that attempt would have been refused before the claim and before the fetch.",
+    "theFunctionThatCanFetchMustCheckItself": "The verification belongs inside the function that can call fetch, not in a CLI, a wrapper or a caller. It must resolve origin/main itself, read the decision row and the authorisation entry from that ref, and compare the exact call id and every pin against its own constants, BEFORE the claim is created.",
+    "mustNotAccept": [
+      "a caller-supplied git ref",
+      "caller-supplied register content",
+      "a caller-supplied contract object",
+      "a caller-supplied preflight result"
+    ],
+    "refuseBeforeClaimAndFetch": [
+      "git is unavailable, or the directory is not a git repository",
+      "origin/main cannot be resolved",
+      "a required blob is missing from origin/main",
+      "the decision row is not present exactly once in the origin/main register",
+      "the origin/main contract does not authorise the exact call id",
+      "any pin in the origin/main entry differs from the adapter's own constants",
+      "any blob's SHA-256 differs from the adapter's pin",
+      "the working tree diverges from origin/main for the register, the contract, the prompt or the mask"
+    ],
+    "payloadComesFromOriginMain": "What is sent must be the merged bytes: the prompt, the mask and the tracked reference image are read from origin/main blobs, not from the working tree. An external input that cannot live in git — the authoring base under D-127 §2 — stays pinned by full SHA-256 alone.",
+    "recordTheRef": "The origin/main commit SHA that authorised the call is written into the claim and the manifest, so the audit trail names exactly which commit permitted it.",
+    "noFetchDuringVerification": "The verification reads the local remote-tracking ref. It performs no network operation of its own; the only network call is the one authorised request.",
+    "testPlanCorrection": "A divergence test and a payload-inspection test cannot be the same test. When the working tree diverges from origin/main the function refuses BEFORE the fetch, so no mock fetch is entered and no request body exists to inspect. Payload provenance must be proven in a scenario where the working tree and origin/main agree, and the divergence scenario must assert only the refusal, with zero fetches and no claim.",
+    "implementationDeferred": "No send path is implemented by D-142. If a later decision authorises a new image call, that decision implements and tests this rule in a fully isolated sandbox: a temporary clone whose own origin/main is arranged for the scenario, a temporary user identity supplied through the environment, and a mocked fetch. No test may use the owner's real API key, claim path or output path.",
+    "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
+  },
+  "prohibitions": {
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds THREE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's or D-143's call id or claim identity, and no other call in the R3 plan.",
+    "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
+    "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
+    "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
+    "noMaskWork": "D-132 creates, changes, derives and promotes no mask of any kind. SUPERSEDED NARROWLY BY D-139 in one respect only: D-139 DERIVES one API guidance mask deterministically from D-133's tracked EDIT fixture (tools/avatar/build-r3-api-mask.mjs). SUPERSEDED AGAIN, equally narrowly, BY D-141, which derives a SECOND API guidance mask from the same tracked fixtures as EDIT minus TRANSITION. Both are separate fixtures with separate pins. No existing mask is changed, no mask is promoted to runtime, and no mask is drawn, fitted or segmented by hand."
+  },
+  "adapterImplementations": {
+    "decision": "D-145",
+    "adoptedOn": "2026-09-15",
+    "isAuthorisation": false,
+    "shape": "An APPEND-ONLY list. Read adapterImplementations.entries and match on callId AND decision. Each entry records that the send adapter for ONE call id in authorisedCalls.calls has been implemented. An entry is never edited once merged; a later state is recorded by a later decision as a NEW entry.",
+    "relationToAuthorisedCalls": "An authorisedCalls entry is the HISTORICAL AUTHORISATION SNAPSHOT of its own decision and is never edited to record an implementation. Statements inside such a snapshot about the adapter, or about its absence, describe the state on the day of authorisation. The implementation state of a call is read from THIS list. Nothing in this list authorises, widens, repeats or replaces a call.",
+    "entries": [
+      {
+        "decision": "D-145",
+        "callId": "D-143-r3-underlay-core-v2",
+        "authorisedBy": "D-143",
+        "implementedOn": "2026-09-15",
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-underlay-core-d143.mjs",
+          "status": "IMPLEMENTED — EXECUTED ONCE — SPENT",
+          "ownerApproval": "D-143",
+          "ownerApprovalFlag": "--owner-approval=D-143",
+          "ownerApprovalMeaning": "A necessary mechanical safety confirmation. It is NOT by itself an instruction to send the image call.",
+          "noAdapterSha256": "No adapter SHA-256 is pinned in this contract. The executed code version is identified by the origin/main commit SHA and by the adapter's computed SHA-256, both written into the claim and the manifest.",
+          "requiresFromOriginMain": [
+            "the D-143 authorisedCalls entry, canonically identical to its merged snapshot",
+            "exactly one valid D-145 entry in adapterImplementations.entries",
+            "the D-132, D-133, D-139, D-140, D-141, D-142, D-143 and D-145 register rows, each present exactly once"
+          ],
+          "refusesBeforeClaimAndFetch": "If the D-143 entry is missing or differs from its snapshot, or if the D-145 entry is missing, duplicated or differs in any pinned field, the adapter refuses before the claim is created and before the fetch."
+        },
+        "mandateState": "SPENT",
+        "outcome": "EXECUTED ONCE — THE OUTCOME IS RECORDED IN THE D-143 ENTRY OF authorisedCalls",
+        "neverReuse": true,
+        "closedBy": "D-147",
+        "mergeIsNotAnInstruction": true,
+        "executionRequiresSeparateOwnerInstruction": true,
+        "claimExists": true,
+        "snapshotStatementsReadAsOfAuthorisation": [
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.file",
+          "authorisedCalls.calls[callId=D-143-r3-underlay-core-v2].adapter.notInThisRepositoryYet"
+        ],
+        "snapshotNote": "Those statements say that no send path exists and that no adapter in origin/main is pinned for this call. They were true when D-143 was merged and are left verbatim. D-143's status and prohibitions.noImageRequestAuthorised were read the same way until D-147 closed them. This entry pinned the adapter named above, and the adapter was run exactly once, on 2026-09-16, after a separate owner instruction. The mandate is SPENT, D-143.claim.json exists, the outcome is recorded in the D-143 entry, and the adapter may never send this call id again: it refuses before the claim and the fetch, because the D-143 entry is no longer its snapshot.",
+        "testCoverage": {
+          "ci": "24 tests without H1: static checks of the adapter, the tests/ guard and its exception list, the sandbox isolation proof and every refusal before the claim.",
+          "manualMergePrerequisite": "The 8 positive mock-send scenarios need the external H1 (D-127 §2) and run only locally, in the isolated sandbox. They are a manual merge prerequisite.",
+          "fullCiCoverage": false
+        },
+        "testSafetyHardening": "New and changed adapter tests are fully isolated: an explicit allowlist environment, a sandbox identity and sandbox paths. A unit test may not read, check, write or delete a real claim or output path. The D-139 adapter test, the CORE preparation test and the prepared-call test are hardened to that rule, and the guard in the D-143 test file enforces it for every adapter test. Two legacy suites — the D-129 fitting-base test and the D-121 North Star refinement test — carry a NARROW, machine-readable READ-ONLY exception for seven named constructs, bound to file, rule, construct and count. No exception can cover send: true, a real network call, reading the key, or writing, deleting or moving a real claim or output, and it lapses automatically when its construct is removed. It is not a precedent and may not be widened without a new owner decision. The D-139 production adapter is unchanged."
+      }
+    ]
+  }
+}

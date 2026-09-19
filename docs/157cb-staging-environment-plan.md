@@ -2,6 +2,13 @@
 
 Status: **PLAN — partially executable now.** No production code/config/secrets changed by this doc.
 Date: 2026-06-30. Owner: project owner (solo).
+
+> **HOSTING NOTE — 2026-09-08.** This plan predates the host migration and names **Vercel previews**
+> throughout. **Vercel is no longer a deploy target**; production runs on Cloudflare Workers at
+> `https://lærlig.dk`. The staging *reasoning* still stands — a non-production frontend target plus
+> a non-production Supabase — but wherever this document says "Vercel preview", read "a preview
+> deployment on the current host". Do not create Vercel resources from this plan.
+> Canonical hosting: [`HOSTING.md`](./HOSTING.md).
 Gates: **prerequisite for 157D→157T and for live observability validation (157B/157C Part B).**
 Builds on: [OBSERVABILITY.md](./OBSERVABILITY.md), [ARCHITECTURE.md](./ARCHITECTURE.md),
 [ROADMAP.md](./ROADMAP.md), `project-state.md` D-006 (Supabase Branching endorsed over free staging).

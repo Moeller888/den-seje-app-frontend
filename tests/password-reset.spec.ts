@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { findAuthUserByEmail, PROD } from './helpers.js';
+import { findAuthUserByEmail, PROD, STUDENT_TEMP_PASSWORD } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -21,7 +21,9 @@ const SUPABASE_ANON_KEY =
 
 const STUDENT_EMAIL   = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS    = process.env.TEST_STUDENT_PASSWORD!;
-const TEMP_PASS       = 'TempPass2026!';
+// Derived from TEST_STUDENT_PASSWORD (tests/test-credentials.mjs): never a literal, because tests 6-8
+// leave it on the live account until afterAll restores the original.
+const TEMP_PASS       = STUDENT_TEMP_PASSWORD;
 
 let adminClient: ReturnType<typeof createClient>;
 let studentId: string;

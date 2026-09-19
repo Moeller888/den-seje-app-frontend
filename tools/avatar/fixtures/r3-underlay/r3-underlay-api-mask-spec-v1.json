@@ -1,0 +1,62 @@
+{
+  "tool": "build-r3-api-mask",
+  "toolVersion": "1.0.0",
+  "decision": "D-139",
+  "status": "API GUIDANCE MASK ONLY — NO IMAGE REQUEST SENT, NO CLAIM CREATED BY THIS TOOL",
+  "canvas": {
+    "width": 1024,
+    "height": 1536,
+    "origin": "top-left"
+  },
+  "derivedFrom": {
+    "path": "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+    "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+    "decision": "D-133",
+    "px": 125423
+  },
+  "semantics": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "transparentMeans": "EDITABLE — the model may repaint this pixel",
+    "opaqueMeans": "PROTECTED — the model must leave this pixel alone",
+    "editAlpha": 0,
+    "protectAlpha": 255,
+    "rgb": "0,0,0 on every pixel, transparent and opaque alike — the mask carries no pixel of the figure",
+    "invertedRelativeToD133": "D-133's marker fixtures use the OPPOSITE convention: alpha 255 marks the region. This file is their alpha-inverse, restricted to the EDIT region.",
+    "guidanceOnly": "MODEL GUIDANCE ONLY. The guarantee that nothing outside the head changes comes from D-133's deterministic recomposition copying PROTECT back from H1 byte-identically — never from this mask."
+  },
+  "counts": {
+    "editablePx": 125423,
+    "protectedPx": 1447441,
+    "canvasPx": 1572864
+  },
+  "editBbox": [
+    292,
+    20,
+    732,
+    445
+  ],
+  "bboxConvention": "inclusive-max",
+  "mask": {
+    "file": "r3-underlay-api-mask-v1.png",
+    "bytes": 10768,
+    "sha256": "28ff1ac00f6972697411ad29c5618f9ede4b5a0a4fd086a41ec0bfb5fe7561fb",
+    "png": {
+      "width": 1024,
+      "height": 1536,
+      "bitDepth": 8,
+      "colourType": 6
+    }
+  },
+  "invariants": [
+    "alpha is strictly binary {0,255}",
+    "alpha = 0 on exactly the D-133 EDIT region, and nowhere else",
+    "alpha = 255 on exactly the D-133 PROTECT region, and nowhere else",
+    "RGB = 0,0,0 on every pixel; the mask contains no pixel of the figure",
+    "the same input and tool version reproduce every output byte-identically"
+  ],
+  "prohibitions": {
+    "notTheByteIdentityGate": "This mask is model guidance. It is NOT the guarantee of 0 changed pixels outside the head — that guarantee is D-133's deterministic recomposition, which copies PROTECT back from H1 byte-identically.",
+    "noRuntimePromotion": "An authoring fixture. It is NOT a runtime mask and carries no runtime authority.",
+    "noRefit": "A deviation from D-133's approved counts is a hard stop. The region is never re-fitted."
+  }
+}

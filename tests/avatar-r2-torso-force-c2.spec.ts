@@ -10,7 +10,7 @@
 // and no R2 layer; R2-supported items equipped alongside it come along to C2; removing it restores
 // R2 (the fallback is scoped to what is equipped, not sticky); the observability event carries the
 // DISTINCT reason `unsupported_cosmetic_equipped`; without opt-in nothing changes and no event is
-// emitted; the shop stays uniform C2 (D-077). AVATAR_R2 stays false; R2 is per-browser opt-in.
+// emitted; the shop stays uniform C2 (D-077). AVATAR_R2 is true (D-101); the C2 cases opt out with "0".
 // No golden: this fix changes WHICH path renders, not how the C2 avatar looks (the C2 render is
 // byte-unchanged), so no new baseline is introduced.
 import { test, expect, Route } from "@playwright/test";
@@ -101,7 +101,7 @@ async function open(browser: any, url: string, equipped: Record<string, string>,
     (window as any).__AVATAR_TEST__ = true;
     localStorage.setItem(k, JSON.stringify(s));
     localStorage.setItem("avatar_v2", "1");
-    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.removeItem("avatar_r2");
+    if (opt) localStorage.setItem("avatar_r2", "1"); else localStorage.setItem("avatar_r2", "0");
   }, [`sb-${REF}-auth-token`, SESSION, optIn]);
   const page = await ctx.newPage();
   const raw: any[] = [];

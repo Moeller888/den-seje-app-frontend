@@ -152,6 +152,6 @@
     "torsoSupported": false,
     "d083FallbackPresent": true,
     "manifestRegistered": false,
-    "note": "A3.1 promotes the asset only. R2_MANIFEST lives in js/avatar-layers.js and is NOT edited here; registration + wiring are A3.2. The runtime still uses the D-083 whole-avatar C2 fallback for this item."
+    "note": "A3.1 promotes the asset only. R2_MANIFEST lives in js/avatar-layers.js and is NOT edited here; registration + wiring are A3.2 (done later, by D-090). Every sibling field is a record of promotion time, not of the present: manifestRegistered means A3.1 itself registered nothing, and avatarR2/torsoSupported are the render state READ from js/avatar-layers.js as it stood then."
   }
 }

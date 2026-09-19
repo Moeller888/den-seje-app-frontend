@@ -9,7 +9,7 @@ CODEBASE OVERVIEW
 "Den Seje App" is a Danish educational platform where students answer questions to earn XP and coins, and teachers manage students and content.
 
 **Stack:**
-- Frontend: Vanilla JS + HTML pages, no build step, deployed to Vercel (`den-seje-app-frontend/` is the Vercel root)
+- Frontend: Vanilla JS + HTML pages, no build step, deployed to Cloudflare Workers (Static Assets) — live on `https://lærlig.dk`. `tools/cloudflare-build-static.mjs` copies an explicit allowlist into the deployed bundle; see `docs/HOSTING.md`
 - Backend: Supabase (hosted) with Deno Edge Functions (`supabase/functions/`)
 - Tests: Playwright E2E, run against the live production URL
 
@@ -88,10 +88,12 @@ Deploy all functions:
 supabase functions deploy
 ```
 
-Push database migrations:
-```
-supabase db push
-```
+Apply a database migration — **`supabase db push` is FORBIDDEN** (D-110):
+The repo migration files and the live version ledger have drifted, so `db push` fails and
+`--include-all` would re-apply migrations that are already live. Migrations go through the
+Management API / Supabase plugin (`apply_migration`), and **only** with a separate owner
+authorisation for that specific migration. Read `docs/migration-workflow-policy.md` first.
+`supabase migration list --linked` is read-only and allowed.
 
 ----------------------------------------
 ARCHITECTURE
@@ -134,12 +136,12 @@ Invalid transitions are blocked and logged. Never bypass this machine.
 - RLS enforces authorization; Edge Functions always forward the user's JWT
 
 **Deployment:**
-- Frontend: edit files in `den-seje-app-frontend/`, commit and push from the root `.git` — Vercel auto-deploys
+- Frontend: edit files in `den-seje-app-frontend/`, commit and push from the root `.git` — Cloudflare auto-deploys on merge to `main`
 - Backend: `supabase functions deploy <name>` — functions are deployed independently from frontend
 
 **Tests** (`tests/`):
 - `example.spec.ts` — full student flow: login → question loads → answer → feedback → next question, no-questions state
-- Tests run against `https://den-seje-app-frontend.vercel.app` (production), not localhost
+- Tests run against live production, not localhost. The target is defined once, as `PROD` in `tests/helpers.ts`, and is overridable via the `PROD_BASE_URL` repository variable — never hardcode it in a spec
 - Playwright config: 3 browsers (Chromium, Firefox, WebKit), 1 worker, no parallelism
 
 ----------------------------------------
@@ -387,3 +389,36 @@ EXECUTION SCOPE CLARIFICATION
 - Every task must have a clear "done" condition
 - For tests: ALL tests must pass
 - Do NOT stop early
+
+========================================
+WORKING TREE INTEGRITY
+========================================
+
+47. BRUGERENS ARBEJDSÆNDRINGER MÅ ALDRIG KASSERES
+
+- Eksisterende ændringer i working tree tilhører brugeren og må aldrig kasseres
+  som "støj". Brug aldrig `git checkout --`, `git restore`, `git reset`,
+  `git clean`, stash eller tilsvarende til at fjerne CRLF/LF-afvigelser eller
+  andre uventede ændringer uden en særskilt, eksplicit brugerautorisation, der
+  navngiver BÅDE filen OG handlingen.
+- Hvis en fil kun afviger i linjeskift, skal den efterlades urørt og rapporteres
+  som sådan.
+- En ren eller tom normaliseret `git diff` er IKKE bevis for, at
+  working-tree-bytes er uvigtige.
+- Kontrollér status, rå bytes, linjeskift og hashes read-only - men
+  "normalisér" ikke filen.
+- En autorisation til at ændre ÉN bestemt fil udvider sig ikke til andre filer
+  eller til generel oprydning.
+- Hvis en eksisterende ændring blokerer arbejdet: STOP og spørg. Vælg aldrig på
+  brugerens vegne.
+
+48. EN GODKENDELSE GÆLDER KUN DE NAVNGIVNE HANDLINGER
+
+- En godkendelse gælder kun de konkret navngivne handlinger.
+- Tilladelse til at rette en fil omfatter ikke automatisk branchoprettelse,
+  commit, push, PR, CI-rerun, merge, branchsletning, skift af branch eller
+  synkronisering af andre kloner.
+- Tilladelse til at merge omfatter ikke sletning af branchen eller pull i andre
+  kloner.
+- Enhver yderligere mutation kræver særskilt, eksplicit autorisation.
+- Er du i tvivl om, hvorvidt en handling er dækket: STOP og spørg.

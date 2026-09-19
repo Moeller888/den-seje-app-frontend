@@ -87,11 +87,25 @@ test("R2 tone map: medium is the raster-measured #FEC183 (not the C2 #EDB888)", 
 
 // ── blinkConfigFor: the central per-surface decision ─────────────────────────
 
-test("flag off: blink allowed with the C2 profile (production default)", () => {
-  assert.deepEqual(blinkConfigFor(NEUTRAL_MEDIUM), { allowed: true, mode: "c2", skinTone: "medium" });
+// D-101: R2 is the default, so the C2 profile is what an OPTED-OUT browser gets. The assertions
+// are unchanged — only the way the C2 path is selected is now explicit.
+test("opted out (\"0\"): blink allowed with the C2 profile", () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
+    assert.deepEqual(blinkConfigFor(NEUTRAL_MEDIUM), { allowed: true, mode: "c2", skinTone: "medium" });
+    assert.deepEqual(blinkConfigFor({ body_type: "neutral", skin_tone: "dark" }),
+      { allowed: true, mode: "c2", skinTone: "dark" });
+    assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true);
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
+});
+
+// On the DEFAULT path an identity the manifest does not cover still blinks with the C2 profile.
+test("default (R2 on): an unsupported identity still blinks with the C2 profile", () => {
   assert.deepEqual(blinkConfigFor({ body_type: "neutral", skin_tone: "dark" }),
     { allowed: true, mode: "c2", skinTone: "dark" });
-  assert.equal(r2BlinkAllowedFor(NEUTRAL_MEDIUM), true);
 });
 
 test("opt-in + supported identity: R2 profile; expression stays OFF", () => {

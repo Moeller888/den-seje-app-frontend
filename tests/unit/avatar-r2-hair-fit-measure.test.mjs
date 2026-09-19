@@ -1,0 +1,313 @@
+// ── D-102: the geometry behind the R2 hair-identity audit ────────────────────────────────────
+// docs/167a-r2-hair-identity-audit.md recommends a decision from measured numbers. A number that
+// nothing verifies is a number that can rot: the SVG path-crossing maths could regress, a hair
+// asset could be re-authored, or an eighth hairstyle could be added to the runtime — and the
+// audit would keep quoting figures that no longer describe what ships.
+//
+// These tests pin exactly that. They exercise the PURE geometry only (SVG path data + repo
+// constants), never the raster half of the tool, so they run in CI like the rest of the suite.
+//
+// Run: npm run test:unit
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import {
+  parseSubpaths, columnSpans, measureC2Style, C2_STYLES, C2_HEAD, K,
+} from "../../tools/avatar/measure-r2-hair-fit.mjs";
+import { STYLE_TARGETS } from "../../tools/avatar/check-r2-hair-candidate.mjs";
+// The hair sentinels below call the resolver rather than reading its source: the audit's own
+// lesson is that inspecting the code is not the same as measuring what it does.
+import {
+  hairSrcForR2, R2_MANIFEST, AVATAR_R2, isAvatarR2, isAvatarR2ActiveFor, r2StackSrcsFor,
+} from "../../js/avatar-layers.js";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const REPO = join(HERE, "..", "..");
+const LAYERS = readFileSync(join(REPO, "js", "avatar-layers.js"), "utf8");
+
+// The audit's §3.3 table, at the face-centre column x=80. Re-authoring a hair asset must break
+// this and force the document to be re-derived rather than silently drift away from the art.
+const CENTRE_HAIRLINE = {
+  short: 33.0, tousled: 33.0, curly: 35.0, long: 31.0, ponytail: 37.0, buzz: 34.0, afro: 36.0,
+};
+
+test("the column-crossing maths is exact, not sampled", () => {
+  // A parabola whose crossing is analytically known: p0=(0,0) c=(10,20) p1=(20,0) gives
+  // x(t)=20t, so x=10 is exactly t=0.5 and y=2*0.5*0.5*20=10. The implicit close runs along y=0.
+  const subs = parseSubpaths("M 0 0 Q 10 20 20 0 Z");
+  const spans = columnSpans(subs, 10);
+  assert.equal(spans.length, 1, "one filled span at the apex column");
+  const [top, bottom] = spans[0];
+  assert.ok(Math.abs(top - 0) < 1e-9, `span top ${top} should be exactly 0`);
+  assert.ok(Math.abs(bottom - 10) < 1e-9, `span bottom ${bottom} should be exactly 10`);
+});
+
+test("a straight-line path crosses where arithmetic says it does", () => {
+  const subs = parseSubpaths("M 0 0 L 20 20 L 20 0 Z");
+  const spans = columnSpans(subs, 10);
+  assert.equal(spans.length, 1);
+  assert.ok(Math.abs(spans[0][0] - 0) < 1e-9);
+  assert.ok(Math.abs(spans[0][1] - 10) < 1e-9);
+});
+
+test("all seven C2 hair assets parse and put a hairline on the forehead", () => {
+  for (const style of C2_STYLES) {
+    const m = measureC2Style(style);
+    const centre = m.cols.find((c) => c.c2x === 80);
+    assert.ok(centre, `${style}: no centre column`);
+    assert.ok(centre.crown !== null && centre.hairline !== null, `${style}: centre column is empty`);
+    assert.ok(centre.crown < centre.hairline, `${style}: crown must sit above the hairline`);
+    // The hairline must stay above the C2 eye anchor — the 155D authoring rule "eyes never covered".
+    assert.ok(centre.hairline < C2_HEAD.eyeCy,
+      `${style}: hairline ${centre.hairline} is at or below the eye anchor ${C2_HEAD.eyeCy}`);
+  }
+});
+
+test("the audit's centre-column hairlines still describe the assets", () => {
+  for (const style of C2_STYLES) {
+    const centre = measureC2Style(style).cols.find((c) => c.c2x === 80);
+    const expected = CENTRE_HAIRLINE[style];
+    assert.ok(Math.abs(centre.hairline - expected) < 0.05,
+      `${style}: centre hairline is ${centre.hairline.toFixed(2)}, the audit says ${expected} — ` +
+      "if the asset changed on purpose, re-run npm run avatar:r2-hair-fit and update D-102");
+  }
+});
+
+test("exactly two styles drape below the head, and the audit says which", () => {
+  const drapes = C2_STYLES.filter((s) => measureC2Style(s).drapes).sort();
+  assert.deepEqual(drapes, ["long", "ponytail"],
+    "§6 flags long/ponytail as the two styles whose fit also depends on the shoulder line");
+});
+
+test("the measured style set is the runtime's selectable set", () => {
+  // An eighth hairstyle in the runtime means the audit covers 7 of 8 and must be re-run.
+  const m = /export const C2_HAIRSTYLES = \[([^\]]+)\]/.exec(LAYERS);
+  assert.ok(m, "C2_HAIRSTYLES not found in js/avatar-layers.js");
+  const runtime = m[1].split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+  assert.deepEqual([...C2_STYLES].sort(), [...runtime].sort(),
+    "the runtime hairstyle set changed — re-run the measurement before trusting D-102");
+});
+
+test("the C2 head contract the assets were authored against is unchanged", () => {
+  // Every number in the audit is a delta against this contract; if the C2 geometry moves, the
+  // deltas are meaningless. The contract lives as the locked comment above BODY_SRCS_C2.
+  assert.match(LAYERS, /head cx=80 cy=50 r=30/,
+    "the locked C2 head contract moved — the audit's deltas no longer mean anything");
+  assert.deepEqual(C2_HEAD, { cx: 80, cy: 50, r: 30, eyeCy: 47 });
+});
+
+test("the canvas conversion matches the served R2 dimensions", () => {
+  // 512x768 served -> the 160x240 C2 canvas. Both paths must be quoted in the same units or the
+  // whole comparison is off by a factor.
+  assert.equal(K, 0.3125);
+  assert.match(LAYERS, /R2_SERVED = \{ width: 512, height: 768 \}/,
+    "the served R2 size changed — the audit's C2-canvas conversion is stale");
+});
+
+// This sentinel used to assert the opposite — that hairSrcForR2 ignored the identity handed to it,
+// which was the defect the audit exists for. It fired on 2026-08-29 exactly as designed when the
+// resolver was made style-aware (D-114), so it now guards the NEW contract instead of the old gap.
+// Behaviour, not source text: the audit's own lesson is that reading the code is not the same as
+// measuring what it does.
+test("hairSrcForR2 resolves the identity's style when that style has an asset", () => {
+  assert.equal(hairSrcForR2({ hairstyle: "afro" }), "/assets/avatar-r2/hair/hair-afro-v1.webp");
+  assert.equal(hairSrcForR2({ hairstyle: "short" }), "/assets/avatar-r2/hair/hair-short-v1.webp");
+});
+
+test("a style with NO R2 asset falls back to northstar, and does NOT drop the avatar to C2", () => {
+  // The load-bearing half. Hair is a mandatory layer, so returning null here would take the WHOLE
+  // avatar to C2 (r2StackSrcsFor) for every student whose style has no artwork yet — a rollback of
+  // D-101 delivered by a resolver. Five of the seven styles are in exactly that position today.
+  //
+  // `short` LEFT this list on 2026-08-31 (D-119) when its asset was promoted. That is the only
+  // behavioural change in that PR, and it is the change the promotion exists to make: this list is
+  // the register of what is still un-produced, so a style must be removed from it deliberately.
+  //
+  // The legacy 155F aliases stay here even though `default` and `braid` ALIAS to `short` and
+  // `ponytail` on the C2 path. R2 resolves the RAW stored value against the manifest — there is no
+  // alias table on this path — so `default` still means northstar, not the new short asset. If that
+  // ever changes it must be a decision, not a side effect of promoting artwork.
+  const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
+  for (const style of ["tousled", "curly", "long", "ponytail", "buzz",
+                       "default", "braid", "sidecut", "buzzcut"]) {
+    assert.equal(hairSrcForR2({ hairstyle: style }), NORTHSTAR, `${style} must still render northstar`);
+  }
+});
+
+test("a hairstyle value from the database cannot reach an inherited property", () => {
+  // `hairstyle` is stored data. A bare `R2_MANIFEST.hair[value]` lookup would resolve "constructor"
+  // to Function rather than to a registered asset.
+  const NORTHSTAR = "/assets/avatar-r2/hair/hair-northstar-v1.webp";
+  for (const junk of ["constructor", "__proto__", "toString", "", "northstar-v1", 42, null, undefined]) {
+    assert.equal(hairSrcForR2({ hairstyle: junk }), NORTHSTAR, `${String(junk)} must fall back`);
+  }
+  for (const junk of [null, undefined, "x", 7, {}]) {
+    assert.equal(hairSrcForR2(junk), NORTHSTAR, "a malformed identity must fall back");
+  }
+});
+
+test("northstar stays registered — it is the fallback the whole R2 path leans on", () => {
+  assert.ok(Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, "northstar"),
+    "removing northstar would drop every un-produced style's avatar to C2");
+});
+
+// ── the approved afro asset is UNTOUCHED by the D-115 gate work ───────────────────────────────
+// D-115 changed WHICH image the acceptance gates measure and widened `no-floating-islands` to
+// eight neighbours. Neither is allowed to rewrite artwork the owner already signed off, and the
+// only way to prove that is to pin the bytes. This is deliberately a plain hash of the tracked
+// file, so it runs in CI and does not depend on the vendored libwebp binaries.
+test("the owner-approved afro asset is byte-for-byte unchanged", () => {
+  const asset = join(REPO, "assets", "avatar-r2", "hair", "hair-afro-v1.webp");
+  const buf = readFileSync(asset);
+  assert.equal(buf.length, 36356, "the afro asset changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "675f8f951c65266c75cc661163219a7958b612b0d45ec9471655f0bebf9eb09a",
+    "the afro asset was rebuilt or re-encoded — the owner approved THESE bytes (D-114)");
+});
+
+test("the approved afro CANDIDATE fixtures are unchanged too", () => {
+  // The cleaned PNG is what the owner actually reviewed at render scale; the original is its
+  // provenance. clean-r2-hair-alpha.mjs changed version in D-115, so pinning these proves the
+  // change was to a postcondition and not to a pixel.
+  const fix = (f) => createHash("sha256")
+    .update(readFileSync(join(REPO, "tools", "avatar", "fixtures", "r2-hair", f))).digest("hex");
+  assert.equal(fix("afro-original.png"),
+    "14a037a044ddcd05df328cc47a4a92fda4bbcdb8f9bb9122b10b7fceaa9c2b3e");
+  assert.equal(fix("afro-cleaned.png"),
+    "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd");
+});
+
+// ── the approved SHORT asset, and the source it was built from (D-119) ───────────────────────
+// The owner approved a specific 512×768 WebP mounted on the real avatar, quoted by SHA. Pinning
+// the bytes is what makes that approval mean something later: a re-encode, a pipeline tweak or a
+// well-meant "optimisation" all change these hashes and fail here rather than silently shipping
+// artwork nobody signed off.
+test("the owner-approved short asset is byte-for-byte the reviewed one", () => {
+  const buf = readFileSync(join(REPO, "assets", "avatar-r2", "hair", "hair-short-v1.webp"));
+  assert.equal(buf.length, 14874, "the short asset changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
+    "the short asset was rebuilt or re-encoded — the owner approved THESE bytes (D-119)");
+});
+
+// ── WHAT A REAL USER GETS, not what a constant says (D-119 §4) ───────────────────────────────
+// The first version of this promotion claimed it was "dormant in production because AVATAR_R2 is
+// false". AVATAR_R2 is TRUE and has been the default since D-101. The claim came from trusting a
+// stale note instead of reading the switch, and it understated the effect of merging. These tests
+// exist so that story cannot repeat: the render path is now asserted, not described.
+test("R2 is the DEFAULT render path — the switch is on and only \"0\" opts out", () => {
+  assert.equal(AVATAR_R2, true,
+    "AVATAR_R2 flipped. Every D-119 claim about what a merge does is now wrong — re-read the entry.");
+  assert.equal(isAvatarR2(), true, "a browser that never set the key must get R2");
+
+  // The opt-out is deliberately asymmetric (only the exact string "0"), so a stale pilot key
+  // cannot pin a browser to R2 against a global rollback. Proven, not restated.
+  const real = globalThis.localStorage;
+  try {
+    for (const [value, expected] of [["0", false], ["1", true], ["", true], ["true", true]]) {
+      globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? value : null) };
+      assert.equal(isAvatarR2(), expected, `avatar_r2="${value}" resolved the wrong way`);
+    }
+  } finally {
+    if (real === undefined) delete globalThis.localStorage; else globalThis.localStorage = real;
+  }
+});
+
+test("a real identity storing `short` gets the SHORT asset through the FULL R2 stack", () => {
+  // The behavioural claim the PR now makes: on deploy, this student sees the approved artwork.
+  // Asserting hairSrcForR2 alone would not prove it — the stack has to resolve as a whole, or
+  // r2StackSrcsFor returns null and the WHOLE avatar drops to C2 (D-083).
+  const id = { v: 1, body_type: "neutral", skin_tone: "medium", hairstyle: "short", hair_color: "brown" };
+  const stack = r2StackSrcsFor(id);
+
+  assert.notEqual(stack, null, "the stack must resolve, or the whole avatar falls to C2");
+  assert.equal(isAvatarR2ActiveFor(id), true, "this identity must render on R2, not C2");
+  assert.equal(stack.hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+  assert.notEqual(stack.hair, "/assets/avatar-r2/hair/hair-northstar-v1.webp",
+    "the fallback is still being served — the promotion did not take effect");
+  for (const key of ["base", "blush", "face", "eyesIris", "eyesFixed", "hair"]) {
+    assert.ok(stack[key], `the mandatory ${key} layer is missing — partial stacks must never render`);
+  }
+});
+
+test("an identity with absent fields ALSO lands on R2 short — the defaults are neutral/medium", () => {
+  // Why this is separate: the DB does not guarantee skin_tone, and the resolvers default absent or
+  // invalid fields to neutral/medium. So "no skin_tone stored" is not an edge case that stays on
+  // C2 — it is a normal student who gets the new asset too.
+  const id = { v: 1, body_type: "neutral", hairstyle: "short" };
+  assert.equal(isAvatarR2ActiveFor(id), true);
+  assert.equal(r2StackSrcsFor(id).hair, "/assets/avatar-r2/hair/hair-short-v1.webp");
+});
+
+test("an identity the raster set does NOT cover still falls to C2, short or not", () => {
+  // The other half: promoting artwork must not drag an unsupported identity onto R2. U2 covers
+  // only neutral × medium; everything else keeps the untouched C2/SVG path.
+  for (const id of [
+    { v: 1, body_type: "male", skin_tone: "medium", hairstyle: "short" },
+    { v: 1, body_type: "neutral", skin_tone: "dark", hairstyle: "short" },
+  ]) {
+    assert.equal(r2StackSrcsFor(id), null, "an uncovered identity must not resolve an R2 stack");
+    assert.equal(isAvatarR2ActiveFor(id), false, "an uncovered identity must render C2");
+  }
+});
+
+test("the short candidate's authoring source is tracked and unchanged", () => {
+  // Rounds 1–4 lost their prompts and raw responses with a deleted worktree (D-111 §9) because the
+  // only copies lived in gitignored scratch. The 1024×1536 authoring PNG this asset was built from
+  // is therefore tracked, so the approved artwork can be rebuilt from a fresh clone rather than
+  // from luck. It is the INPUT to the runtime-asset pipeline, which is what fixtures/ is for.
+  const buf = readFileSync(join(REPO, "tools", "avatar", "fixtures", "r2-hair", "short-crop-authoring.png"));
+  assert.equal(buf.length, 101088, "the tracked short source changed size");
+  assert.equal(createHash("sha256").update(buf).digest("hex"),
+    "ce789b496fab41c7bbb0228bae91edec22649c2782bff1c7bdde68f46d84683c",
+    "the tracked short source changed — it is the provenance of the approved asset");
+});
+
+// ── STYLE_TARGETS is the ARTWORK's own measurement, not a hand-typed table (D-116) ────────────
+// The acceptance gate judges every candidate against these four numbers per style. If they can
+// drift from the C2 assets, the gate slowly starts enforcing a shape nobody authored. So they are
+// re-derived here from the same tool and the same exact path crossings that produced them, and
+// required to match. Change an SVG and this test fails until the table is updated deliberately.
+test("every STYLE_TARGETS number is re-derived from the C2 path data and matches", () => {
+  for (const style of C2_STYLES) {
+    const m = measureC2Style(style);
+    const t = STYLE_TARGETS[style];
+    assert.ok(t, `${style} missing from STYLE_TARGETS`);
+    assert.equal(t.xLo, m.xSpan.x0, `${style} xLo drifted from the artwork`);
+    assert.equal(t.xHi, m.xSpan.x1, `${style} xHi drifted from the artwork`);
+    assert.equal(t.lowestY, m.lowestY, `${style} lowestY drifted from the artwork`);
+    assert.equal(t.highestY, Math.round(m.highestY * 100) / 100, `${style} highestY drifted from the artwork`);
+    assert.equal(t.drapes, m.drapes, `${style} drapes flag drifted from the artwork`);
+  }
+});
+
+test("highestY is the mirror of lowestY — same scan, same crossings, opposite extreme", () => {
+  // The top was simply never computed. This pins that it is the SAME measurement as the bottom,
+  // so no second, looser notion of "how tall is this style" can appear later.
+  for (const style of C2_STYLES) {
+    const m = measureC2Style(style);
+    assert.ok(m.highestY < m.lowestY, `${style}: top must be above bottom`);
+    assert.ok(Number.isFinite(m.highestY), `${style}: highestY not measured`);
+    // every measured column top must be at or below the style's overall crown
+    for (const c of m.cols) {
+      if (c.crown === null) continue;
+      assert.ok(c.crown >= m.highestY - 1e-9,
+        `${style}: column crown ${c.crown} sits above the overall highest ${m.highestY}`);
+    }
+  }
+});
+
+test("the seven crowns are ordered as the styles look, buzz flattest and afro tallest", () => {
+  // A sanity check on the numbers themselves: if a future edit inverted the sign or mixed up the
+  // axis, this ordering breaks long before a candidate is judged against a nonsense bound.
+  const top = (s) => STYLE_TARGETS[s].highestY;
+  assert.ok(top("buzz") > top("short"), "buzz must be flatter than short");
+  assert.ok(top("short") > top("ponytail"), "short must be flatter than ponytail");
+  assert.ok(top("ponytail") > top("long"), "ponytail must be flatter than long");
+  assert.ok(top("long") > top("curly"), "long must be flatter than curly");
+  assert.ok(top("curly") > top("tousled"), "curly must be flatter than tousled");
+  assert.ok(top("tousled") > top("afro"), "tousled must be flatter than afro");
+});

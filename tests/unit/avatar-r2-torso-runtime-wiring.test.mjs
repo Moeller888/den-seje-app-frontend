@@ -275,20 +275,29 @@ test("the observability vocabulary is unchanged — no new reason was needed", a
 
 // ── boundaries ───────────────────────────────────────────────────────────────────────────────
 
-test("no opt-in means no R2 and no events, armour or not", async () => {
-  const events = await withEvents(async () => {
-    await withDom(async (root) => {
-      const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics: c2CosmeticLayers({ torso: ARMOR }, resolve), surface: "quiz" });
-      assert.equal(rp, "c2");
-      assert.ok(srcsOf(root).includes(ARMOR));
-      assert.ok(!hasR2(root));
+// D-101: R2 is the default, so "no R2 and no events" is now what an OPTED-OUT browser gets.
+// The observability event stays gated on the explicit pilot opt-in ("1"), so an opted-out
+// browser must still be completely silent.
+test("opted out (\"0\") means no R2 and no events, armour or not", async () => {
+  const saved = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k === "avatar_r2" ? "0" : null) };
+  try {
+    const events = await withEvents(async () => {
+      await withDom(async (root) => {
+        const rp = await mountC2Avatar(root, NM, { layerClass: "avatar-layer", cosmetics: c2CosmeticLayers({ torso: ARMOR }, resolve), surface: "quiz" });
+        assert.equal(rp, "c2");
+        assert.ok(srcsOf(root).includes(ARMOR));
+        assert.ok(!hasR2(root));
+      });
     });
-  });
-  assert.equal(events.length, 0);
+    assert.equal(events.length, 0);
+  } finally {
+    if (saved === undefined) delete globalThis.localStorage; else globalThis.localStorage = saved;
+  }
 });
 
-test("AVATAR_R2 stays false — this wires a slot, it does not activate the render path", () => {
-  assert.equal(AVATAR_R2, false);
+test("this wires a slot; the render path is activated separately (D-101)", () => {
+  assert.equal(AVATAR_R2, true);
 });
 
 test("the shop preview contract is untouched by this change", () => {

@@ -23,7 +23,21 @@
 export const BINARY_DEPENDENT = Object.freeze([
   "avatar-r2-torso-asset-promotion.test.mjs",   // 7 tests: encode/decode the tracked WebP asset
   "avatar-r2-torso-occlusion-mask.test.mjs",    // 5 tests: decode the base, rebuild + compare masks
+  "avatar-r2-hair-runtime-asset.test.mjs",      // 16 tests: D-115 gates on decoded runtime pixels
 ]);
+
+// WHY THE THIRD ENTRY (D-115). The hair acceptance gates now measure the DECODED 512x768 asset,
+// which means producing it — cwebp then dwebp — before anything can be judged. That is inherently
+// binary-dependent and cannot be otherwise without giving up the thing the decision bought: gates
+// that read the image a student sees rather than an intermediate.
+//
+// It does NOT shrink what CI enforces, because the structural claims are proven twice. Every
+// connectivity rule, every gate direction and the "are we measuring the runtime image?"
+// counterfactual are also asserted on synthetic fixtures in avatar-r2-hair-candidate-check.test.mjs
+// and avatar-r2-hair-alpha-guards.test.mjs, both of which run in CI. The excluded file adds the
+// REAL pixels on top: the shipped afro, the codec round-trip, and the Short candidate. The afro
+// asset's own SHA pin deliberately lives in avatar-r2-hair-fit-measure.test.mjs, which is a plain
+// hash of a tracked file and therefore runs in CI.
 
 // Markers that mean "this file actually drives a vendored binary", used by the guard test.
 // `decodePng` / `encodePngRGBA` are pure JS and deliberately NOT on this list — importing a tool

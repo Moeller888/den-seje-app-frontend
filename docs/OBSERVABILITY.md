@@ -94,7 +94,7 @@ monitoring off. Activation always requires **flag ON + DSN present**.
 2. In `js/sentry.js`: set `const SENTRY_DSN = "<browser-dsn>";` and `export const ENABLE_SENTRY = true;`.
 3. Set the release (§6): add `<meta name="app-release" content="den-seje-app@<git-sha>">` to the
    `<head>` of the served HTML pages (or update `SENTRY_RELEASE`).
-4. Deploy to a **staging Vercel deployment** (preview), not production.
+4. Deploy to a **staging preview deployment**, not production.
 
 ### 4b. Edge (157C)
 1. Create the Sentry **edge** project; copy its **DSN**.
@@ -109,13 +109,13 @@ monitoring off. Activation always requires **flag ON + DSN present**.
 3. Deploy the functions to be tested (§5): `supabase functions deploy get-reviewed-answers` (plus any
    others migrated to `withObservability`).
 
-**Secret hygiene:** DSNs and secrets are configured via Vercel env / Supabase secrets / the code DSN
+**Secret hygiene:** DSNs and secrets are configured via the host's environment settings / Supabase secrets / the code DSN
 constant — never printed to logs, never echoed, never committed (`.env*` is gitignored). The Edge DSN
 is a Supabase **secret**; the browser DSN is public by design (like the anon key).
 
 ## 5. Deployment
 
-- **Frontend:** Vercel auto-deploys `main`. For staging, use a **preview deployment** (a branch /
+- **Frontend:** Cloudflare auto-deploys `main`. For staging, use a **preview deployment** (a branch /
   preview URL) with the flag on, so production stays default-off.
 - **Edge:** `supabase functions deploy <name>` deploys independently. The repo has **16 functions**;
   only `get-reviewed-answers` is wired to `withObservability` today (reference). Deploy only what you
@@ -192,14 +192,14 @@ Frontend (generates id)  →  Edge (reuses inbound x-request-id)  →  DB / logs
 > **Policy (owner, 2026-06-30): no external service is activated or validated against production.**
 > Live validation needs a non-production target. Per **157CC**, that target (157CB) is a **future
 > infrastructure milestone, not an immediate blocker** — and a **free local Supabase stack**
-> (`supabase start`, Docker — no Pro) + a **free Vercel preview** can serve as the zero-cost interim
+> (`supabase start`, Docker — no Pro) + a **free frontend preview** can serve as the zero-cost interim
 > validation target, deferring the **paid hosted branch** to pre-launch. See [ROADMAP.md](./ROADMAP.md)
 > and [157cb-staging-environment-plan.md](./157cb-staging-environment-plan.md).
 
 Full live validation (157CA Tasks 5–8, 10) is **blocked** until 157CB provides:
 1. **A Sentry account + the two projects** (§2) → real DSN(s). (Owner creates these.)
 2. **A non-production staging target:** a Supabase **Pro branch** (per `project-state.md` D-006)
-   **and** a Vercel **preview** deployment, with its own config/secrets — so flags can be turned
+   **and** a frontend **preview** deployment, with its own config/secrets — so flags can be turned
    **on** without touching production.
 3. **Deploy credentials scoped to staging** (Supabase CLI login / access token, or scoped MCP to the
    **staging** project — **never** the production ref `tjzbehwfagiwpwodsgwg`).

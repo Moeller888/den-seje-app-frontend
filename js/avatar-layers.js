@@ -299,25 +299,44 @@ export function baseLayersForC2(identity) {
 // the r2 manifest + resolvers live ALONGSIDE the existing C2/SVG resolvers (unchanged).
 // Phase-1 (D-040 "Master-as-is") is active: `R2_MANIFEST.base` holds the baked base as a
 // **temporary PNG preview** (WebP = production target). The render (mountC2Avatar) consults
-// these ONLY when `AVATAR_R2` is true (default false → C2/SVG path, byte-for-byte).
+// these ONLY when `AVATAR_R2` is true — the default since D-101. A browser opted out with
+// `localStorage.avatar_r2 = "0"`, or any identity the manifest does not cover, still takes the
+// untouched C2/SVG path, byte-for-byte.
 //
 // Guardrail (docs/167a-architecture-preservation-report.md): 167A is an ASSET migration.
 // This block adds resolvers + a manifest; identity model, z-model, engines, render entry
 // point and existing public interfaces are untouched.
 
-// Master raster render switch — DEFAULT OFF. `AVATAR_R2` stays false in production; the C2/SVG path
-// is the untouched fallback. `isAvatarR2()` also honours a per-browser OPT-IN override
-// (`localStorage.avatar_r2 = "1"`) — the mechanism for the small Phase-1 PILOT (167A), mirroring
-// `AVATAR_V2`. No cohort/DB targeting; enabled per browser only. Pilot selection criteria +
-// enable/disable steps: docs/167a-phase1-pilot-rollout.md.
-export const AVATAR_R2 = false;
+// Master raster render switch — DEFAULT ON since D-101 (2026-08-08). The owner ended the 167A
+// pilot by decision and accepted the current R2 build after a manual check; the remaining §9
+// exposure was WAIVED, not passed (docs/167a-phase1-pilot-rollout.md §16). R2 is now the default
+// render for every browser; no opt-in is required.
+//
+// ROLLBACK, two levels, both without a database or user-record change:
+//   1. PER BROWSER  — `localStorage.avatar_r2 = "0"` → that browser renders C2. Survives reloads;
+//                     clear the key to return to the default.
+//   2. GLOBAL       — set `AVATAR_R2 = false` below and redeploy → every browser renders C2,
+//                     including ones carrying a stale key (see below).
+//
+// KEY SEMANTICS ARE DELIBERATELY ASYMMETRIC. Only the exact string "0" is honoured, and only ever
+// to force C2. The legacy Phase-1 pilot value "1" is now INERT: it falls through to the default
+// like any other value. That is what makes the global rollback absolute — a pilot browser cannot
+// pin itself to R2 while the flag says C2 (activation contract: no stale local state may hold a
+// user on an outdated variant). Missing, empty, malformed or unreadable storage also falls
+// through to the default, so the choice is deterministic and this never throws.
+//
+// This switch decides ELIGIBILITY only. `isAvatarR2ActiveFor()` still requires the complete
+// manifest stack to resolve, and `mountC2Avatar` still runs the D-062 atomic asset gate — an
+// unsupported identity (anything but neutral × medium) or a failed mandatory layer renders the
+// complete C2 avatar exactly as before.
+export const AVATAR_R2 = true;
 export function isAvatarR2() {
-  if (AVATAR_R2) return true;
   try {
-    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_r2") === "1";
+    if (typeof localStorage !== "undefined" && localStorage.getItem("avatar_r2") === "0") return false;
   } catch (_e) {
-    return false;
+    // storage blocked/unavailable → fall through to the default; never throw
   }
+  return AVATAR_R2;
 }
 
 // Served raster root + canonical served dimensions (ADR-163D: 1024×1536 master → 512×768).
@@ -356,7 +375,18 @@ export const R2_MANIFEST = {
   eyesIris: { "neutral": 1 },     // eyes/eyes-neutral-iris-v1.webp (z4, multiply × iris token)
   eyesFixed:{ "neutral": 1 },     // eyes/eyes-neutral-fixed-v1.webp (z4)
   eyelid:   {},                   // Option A countersigned: CSS-ellipse lid — no raster asset
-  hair:     { "northstar": 1 },   // hair/hair-northstar-v1.webp (z40, multiply × hair token)
+  // Keyed by the identity's hairstyle, plus "northstar" — the generic hair every R2 render used
+  // before any per-style asset existed, and still the fallback for a style with no asset of its
+  // own (see hairSrcForR2). "afro" is the first per-style R2 asset: owner-approved at real render
+  // scale 2026-08-29, produced by the runtime-asset path (downscaleHalf → cwebp -lossless -exact
+  // -z 9), decoded byte-identical to its 512×768 reference.
+  // "short" is the second, owner-approved at real render scale 2026-08-31 (D-119) on the same
+  // path. This registration is LIVE, not dormant: `AVATAR_R2` is true (default ON since D-101),
+  // so on deploy a student whose stored `hairstyle` is exactly "short" renders this asset on the
+  // next load. The five styles that still have no asset keep resolving to `northstar`, the
+  // hairstyle picker stays hidden on the R2 path (avatar.html's hairstyleShapesSupported() reads
+  // the render path, never this manifest), and no stored identity is changed by adding a key.
+  hair:     { "northstar": 1, "afro": 1, "short": 1 }, // hair/hair-{key}-v{n}.webp (z40, multiply × hair token)
   // COSMETIC garments keyed by the CATALOG ITEM (D-090). Unlike every entry above — which is part of
   // the mandatory figure — this registers a shop item's R2-SPECIFIC artwork: torso/armor-knight-r2-v1
   // .webp, the Ridderdragt re-authored for the R2 silhouette (A2, accepted D-088; promoted D-089,
@@ -421,9 +451,30 @@ export function blushSrcForR2() {
   return e ? r2Path("face", "face-blush-multiply", e) : null;
 }
 
+// The R2 hair the identity's style resolves to, or the generic `northstar` when that style has no
+// asset of its own. Mirrors hairSrcForC2's shape: a table lookup with a default, defensive about a
+// null or non-object identity.
+//
+// WHY northstar AND NOT null. Hair is a MANDATORY layer, so returning null drops the WHOLE avatar
+// to C2 (r2StackSrcsFor). With one per-style asset registered that would take every student whose
+// hairstyle is not `afro` off the R2 path entirely — a rollback of D-101 delivered by a resolver.
+// Falling back to northstar keeps today's render exactly as it is for those students and changes
+// the picture only for the style that actually has artwork. Once all seven styles are produced,
+// switching this fallback to null is the honest end state and a separate decision.
+//
+// hasOwnProperty, not a bare lookup: `hairstyle` comes from the database, and a value like
+// "constructor" would otherwise resolve to an inherited property rather than a registered asset.
+export const R2_HAIR_FALLBACK = "northstar";
+
 export function hairSrcForR2(identity) {
-  const e = r2Entry(R2_MANIFEST.hair["northstar"]);
-  return e ? r2Path("hair", "hair-northstar", e) : null;
+  const hairstyle = (identity && typeof identity === "object") ? identity.hairstyle : null;
+  const key = (typeof hairstyle === "string" &&
+               Object.prototype.hasOwnProperty.call(R2_MANIFEST.hair, hairstyle) &&
+               r2Entry(R2_MANIFEST.hair[hairstyle]))
+    ? hairstyle
+    : R2_HAIR_FALLBACK;
+  const e = r2Entry(R2_MANIFEST.hair[key]);
+  return e ? r2Path("hair", "hair-" + key, e) : null;
 }
 
 // Torso GARMENT resolver (D-090). Keyed by the catalog item's stable asset basename — the same key
@@ -473,7 +524,7 @@ export function r2StackSrcsFor(identity) {
 // Whether the raster stack is the ACTIVE render for this identity (AVATAR_R2 on AND
 // the complete decomposed stack resolves). Engine gate anchor: the face is the raster
 // face layer, so SVG overlays must not render on top. The C2/SVG path (this = false)
-// is unchanged. Default AVATAR_R2 false → always false in production.
+// is unchanged, and is still what an unsupported identity or an opted-out browser renders.
 export function isAvatarR2ActiveFor(identity) {
   return isAvatarR2() && !!r2StackSrcsFor(identity);
 }

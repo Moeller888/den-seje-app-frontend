@@ -90,7 +90,13 @@ test.beforeEach(async ({ page }) => {
   // C2 render is exercised in TEST ONLY via a localStorage override; the global
   // AVATAR_V2 flag in js/avatar-layers.js stays false. addInitScript runs before
   // any page script on every navigation, so isAvatarV2() returns true in-test.
-  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+  // D-101: R2 is now the DEFAULT render. This spec asserts C2-only behaviour (see the file
+  // header), so it pins itself to C2 through the supported per-browser opt-out instead of
+  // relying on a global default. addInitScript runs before any page script on every
+  // navigation, so the choice is made before the avatar mounts. No assertion or golden changes.
+  await page.addInitScript(() => {
+    try { localStorage.setItem("avatar_v2", "1"); localStorage.setItem("avatar_r2", "0"); } catch (e) {}
+  });
 });
 
 test.afterAll(async () => {

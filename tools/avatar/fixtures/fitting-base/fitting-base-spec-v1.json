@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "title": "North Star v2 fitting base v1 — the binding specification",
+    "status": "OWNER-APPROVED UNDER D-131",
+    "role": "INTERNAL GARMENT-AUTHORING REFERENCE",
+    "approvedOn": "2026-09-07",
+    "identityControl": "The approval is bound to the sha256 below. A file that satisfies every numeric gate but differs by one byte is NOT this approved fitting base, and needs a new owner approval.",
+    "noImageCall": "D-131 made no image call. The artwork comes from the single authorised D-129 call; D-129's claim remains SPENT and untouched."
+  },
+  "storage": {
+    "trackedInRepository": false,
+    "rule": "D-127 §2 — an approved fitting base is stored OUTSIDE both repositories, never in the repository and never under assets/.",
+    "why": "assets/ is inside the Cloudflare deploy allowlist (listDir() recurses; ASSET_DIRS includes assets with .png), and the GitHub repository is public. Tracking the image would publish a drawn child figure in close-fitting clothing on two independent public surfaces. D-131 leaves that rule intact.",
+    "externalPath": "C:\\Users\\Bruger\\Documents\\DenSejeApp-artefacts\\d-131-fitting-base-v1-adoption\\fitting-base.H1.png",
+    "externalPathEnvVar": "FITTING_BASE_V1_PATH",
+    "reproducibleFromFreshClone": false,
+    "reproducibilityNote": "D-127 §2 accepted this explicitly. The checker therefore SKIPS when the image is absent (a fresh clone, CI) and verifies fully when it is present. Use --require to turn absence into a failure."
+  },
+  "file": {
+    "name": "fitting-base.H1.png",
+    "bytes": 1832612,
+    "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+    "width": 1024,
+    "height": 1536,
+    "bitDepth": 8,
+    "colourType": 6,
+    "servedName": "fitting-base.H1.512x768.png",
+    "servedBytes": 194330,
+    "servedSha256": "d08f7716dae5be2f875217f039ef7a2ac00a8bdf41ffd6d7f485c78df7b34b22"
+  },
+  "provenance": {
+    "source": "D-129 raw — the output of the single authorised image call",
+    "rawSha256": "cf99432b2bfb463a8126b35ddaaf93f632ddd63ffdcfe47652b83f38855d4563",
+    "rawBytes": 1293055,
+    "requestId": "req_ed1c5272be34491e8d25efef5be19431",
+    "model": "gpt-image-2-2026-04-21",
+    "northStarV2Sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "northStarV2Bytes": 761394,
+    "headMask": "head-protect-mask-v1.png",
+    "headMaskSha256": "cc9c8b7a68dab60ab5c2914644d28676eefcb29e917a05f7bf4ce44093b737b3",
+    "d129ClaimSha256": "f9f15bf7ee77df20fc558821b06831a71ffe98dd1481753ada9425b3df59c477",
+    "d129ClaimStatus": "SPENT",
+    "construction": [
+      "H0: copy North Star v2's RGBA bytes byte-exact wherever the approved head protect mask has alpha > 0 — 124,099 pixels. Everything else stays the D-129 candidate's own: neck, shoulders, upper arms, forearms, hands, torso, shorts, legs, feet.",
+      "H1: apply the project's documented orphan-soft cleanup outside the head zone — clear a pixel with 0 < alpha < 128 that has no orthogonal neighbour at alpha >= 128. 20,191 pixels cleared, 0 kept because inside the head zone. No RGB painting, no redrawing, no interpolation, no generative fill.",
+      "Rebuilding H0 and H1 from the same inputs gives byte-identical output."
+    ],
+    "clearedByAlphaBand": { "1-7": 20068, "8-15": 114, "16-23": 6, "24-39": 3, "40-63": 0, "64-95": 0, "96-127": 0 },
+    "headPixelsPasted": 124099,
+    "orphanSoftCleared": 20191
+  },
+  "geometry": {
+    "centreAxis": 511,
+    "figureHeight": 1469,
+    "neckLineY": 433,
+    "leftRightAsymmetryPct": 2.75,
+    "asymmetryDefinition": "mirror mismatch about the centre axis, divided by 2 × ink; North Star v2 measures 2.60 % under the same definition",
+    "asymmetryThresholdPct": 3.0
+  },
+  "gates": {
+    "headProtectDifferingBytes": 0,
+    "headSilhouetteDeviation": 0,
+    "opaqueComponents": 1,
+    "maxSpecks": 0,
+    "transparentCorners": true,
+    "pixelsOutsideEnvelope": 0,
+    "orphanSoftAuthoring": 0,
+    "orphanSoftAuthoringBudget": 64,
+    "orphanSoftServed": 10,
+    "orphanSoftServedBudget": 16,
+    "orphanSoftServedNote": "North Star v2 itself measures 10 under the same method.",
+    "renderSizes": [
+      { "size": "180x270", "orphanSoft": 13 },
+      { "size": "112x168", "orphanSoft": 10 },
+      { "size": "72x108", "orphanSoft": 7 },
+      { "size": "52x78", "orphanSoft": 8 }
+    ],
+    "renderSizeNote": "RENDER_SIZES are D-071's four sizes. The counts are recorded as measured; no budget is defined for them and none is invented here."
+  },
+  "handException": {
+    "scope": "THE INTERNAL FITTING BASE ONLY",
+    "correctsAppendOnly": "D-126 §4 previously required 'the same hands'.",
+    "accepted": "H1's own hands are accepted even though they are not pixel-identical with North Star v2.",
+    "handIoUvsV2": { "left": 0.9477, "right": 0.9602 },
+    "maxContourDeltaPx": { "left": 2, "leftAtY": 645, "right": 2, "rightAtY": 643 },
+    "handAreaPx": { "v2Left": 5479, "v2Right": 5232, "h1Left": 5688, "h1Right": 5188 },
+    "grounds": [
+      "the maximum contour delta is 2 px at 1024×1536, which corresponds to at most about 1 px at 512×768",
+      "fingertips differ by at most 1 px",
+      "pose, anatomy, expression and drawing style are visually compatible",
+      "using the pixel-identical v2 arms produced clearly unacceptable joins on both upper arms",
+      "H1 has continuous shoulders, arms, wrists and hands with no visible joins"
+    ],
+    "notExtendedTo": "North Star v2's original hands remain the authoritative visual identity in runtime. Future garments must still be validated mounted on the actual runtime avatar before any promotion."
+  },
+  "armHandProtectMask": {
+    "applied": false,
+    "file": "arm-hand-protect-mask-v1.png",
+    "sha256": "2dda9904717381fde9bdd5556b79c83a00b4a3b9e5c6cb9bffeca3f13e6c2264",
+    "measuredDifferingBytesVsV2": 103702,
+    "statement": "The D-128 arm/hand protect mask is NOT applied to the fitting base. Its difference against North Star v2 is measured and recorded above. This is NOT a passed gate — it is the deliberate consequence of D-131's bounded hand exception, and it must never be reported as a pass."
+  },
+  "prohibitions": {
+    "notARuntimeReplacement": "This file may NOT be used as a runtime replacement for North Star v2, as a new runtime avatar, as a production render, or to change the live avatar's hands, arms or base — not without a new, separate owner decision.",
+    "notPromotionLicence": "Approval of this fitting base is not licence to promote any future garment built on it.",
+    "noAssetsDirectory": "It may not be copied under assets/ or tracked in either repository — D-127 §2, left intact by D-131."
+  }
+}

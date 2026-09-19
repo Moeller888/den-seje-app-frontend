@@ -1,12 +1,21 @@
 // ── Job status machine ────────────────────────────────────────────────────────
 
+// Mirrors the generation_jobs_status_valid CHECK constraint. A value legal in
+// the database but missing here is not a cosmetic gap: GET /status returns the
+// row as a GenerationJobRecord, so the declared type would be a lie about what
+// the endpoint can emit.
 export type GenerationJobStatus =
   | "pending"
   | "generating"
   | "pending_manual_review"
   | "complete"
   | "failed_retryable"
-  | "failed_permanent";
+  | "failed_permanent"
+  // Terminal and administrative: an operator closed the job. Distinct from
+  // failed_permanent, which is the pipeline's own verdict. Nothing retries or
+  // claims a cancelled job — /retry requires failed_retryable, and
+  // claim_generation_job requires pending.
+  | "cancelled";
 
 export type EventOutcome = "started" | "passed" | "failed" | "skipped" | "warning";
 

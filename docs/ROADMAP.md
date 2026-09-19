@@ -8,13 +8,34 @@ _Last reviewed: 2026-07-01._
 > decisions D-001…D-041) and a newer **Platform / services track** (Section 157A audit → 157B+).
 > They share the same one-section-at-a-time discipline ([CLAUDE_WORKFLOW.md](./CLAUDE_WORKFLOW.md)).
 > The avatar decision register lives in `docs/project-state.md`; this file gives the cross-track view.
+>
+> **A third track opened 2026-08-08: the public website / landing page ("Lærlig").** It is
+> deliberately independent of the avatar and platform tracks and touches no app code. Canonical:
+> [LANDING.md](./LANDING.md).
+
+---
+
+## Public website / landing track — Model A implemented, NOT deployed (2026-08-08)
+
+- **Owner decision: Model A.** A new public front page `landing.html` was added and `/` now
+  rewrites to it. **The quiz did not move:** `index.html`, `app.js`, `js/login.js`, every auth
+  guard and every role redirect are unchanged, and `/index.html` still serves the quiz.
+- **Brand:** the landing page says **Lærlig**; the app still says "DEN SEJE APP". The brand
+  transition is an accepted, documented phase-1 condition — not an oversight.
+- **Honest by construction:** no AI claims (no AI service is implemented), no prices, no invented
+  contact details, and **no images at all** — no approved marketing screenshots exist yet, and
+  avatar reference art must not stand in for a live avatar the user does not get.
+- **`AVATAR_R2` stays `false`.** No avatar asset, manifest or feature flag was touched.
+- **Not deployed.** Pre-launch `noindex, nofollow`; no domain, no DNS, no Supabase redirect-URL
+  change. Blocked on the Cloudflare host switch (see [HOSTING.md](./HOSTING.md)).
 
 ---
 
 ## Current status (2026-06-30)
 
 - **Production:** Supabase project `den-seje-app` (`tjzbehwfagiwpwodsgwg`, eu-west-1, Pro);
-  frontend live on Vercel, auto-deploy from `main`.
+  frontend live on **Cloudflare Workers** at `https://lærlig.dk`, auto-deploy on merge to `main`.
+  Canonical: [`HOSTING.md`](./HOSTING.md).
 - **Avatar:** `AVATAR_V2 = true` is **live** (commit `52f8365`, 2026-06-25) — but rendering **flat
   placeholder SVGs**, not the Northstar Master raster. Master production + wiring is planned
   (`docs/167a-master-asset-raster-wiring-plan.md`), not executed.
@@ -332,6 +353,48 @@ _Last reviewed: 2026-07-01._
   1,049 target, and the 6-component fabric underlayer. **This supersedes only D-097 §7's "needs ~10 px
   of new plate artwork"; the rest of D-097 stands.** No artwork, asset, mask or runtime change;
   `AVATAR_R2` `false`. Unit 369/369 (CI 315). See `docs/project-state.md` (D-098).
+  **▶ Pilot Wave 1 participant #2 ONBOARDED — Wave 1 is 2 of target 3 (2026-08-08, D-099).** The §8
+  persistent-browser gate was executed manually, owner-witnessed, in a normal persistent Chrome profile
+  on desktop: `renderPath=r2` with the complete six-layer stack on avatar/hub/quiz, no mixed stack, no
+  broken layers, the opt-in **survived a full browser close-and-reopen**, and opt-out was demonstrated
+  and then restored. **No new account was created** — the documented `tests/global-setup.ts` §97
+  mechanism already provisions an eligible internal test student, so a third would have been a redundant
+  parallel path. **Two early attempts ran against the wrong account and were caught by measurement, not
+  by eye:** an R2 render on a null identity is pixel-identical to a correct one, because the base
+  resolver falls back to `neutral`/`medium` — identity is now verified before a render counts as gate
+  evidence. Separate pre-existing observation, not R2-specific and not fixed here: `avatar.html` renders
+  a default avatar on a dead session because `loadAll()` ignores the profile query error. **§9 exposure
+  (7 days, ≥3 sessions) is not met for either participant**, so no §13 classification is available yet.
+  Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2` stays `false`**; Wave 2 stays
+  `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-099).
+  **▶ OWNER DECISION — Wave 1's participant target reduced 3 → 2, and thereby MET (2026-08-08, D-100).**
+  **No third participant will be onboarded.** Both onboarding runs are complete and independently
+  evidenced (D-078, D-099), and a third comparable **internal test account** — same `neutral-medium`
+  identity, same empty cosmetic set, same browser type — is not expected to add material new evidence.
+  Permitted by the document as written: §7 sets a *target* 3 with only the **maximum 5** gated on a new
+  owner decision, and §13 specifies no participant count at all. **This does not close or classify Wave 1
+  and does not waive §9:** status stays `PILOT_WAVE_1_IN_PROGRESS` **on exposure, not headcount** — 7
+  calendar days, ≥3 real sessions per participant, ≥1 observed session each on quiz/hub/avatar, plus §10's
+  requirement for active observation rather than mere absence of error reports. **Earliest possible close
+  2026-08-15.** The evidence Wave 1 still lacks is **cosmetics**, which its §2 cohort structurally cannot
+  supply — that is Wave 2's job (D-093). Docs-only; **no code/runtime/asset/user-data change; `AVATAR_R2`
+  stays `false`**; Wave 2 untouched, still `DEFINED — NOT STARTED`. See `docs/project-state.md` (D-100).
+  **▶ OWNER DECISION — the R2 pilot is DISCONTINUED (not passed) and R2 is now the DEFAULT render
+  (2026-08-08, D-101).** Status **`PILOT_DISCONTINUED_BY_OWNER`**; `AVATAR_R2` `false` → **`true`**.
+  The owner ended the pilot on grounds of time, checked the current R2 build themselves and accepted
+  its function and visual result. **This is not a pass: no §13 classification was reached, and the
+  remaining §9 exposure was WAIVED, not satisfied** — §9's text is unchanged, it was overridden by
+  decision rather than edited into compliance. **No pilot data was invented or back-dated, and no
+  earlier FAIL/PAUSED/CONDITIONAL result was rewritten to PASS.** What the pilot did establish stands:
+  two genuine §8 onboarding runs (D-078, D-099) — point-in-time checks, not longitudinal use. **What it
+  never established:** no sustained real use, and **no cosmetic was ever observed by a pilot user**, so
+  the Ridderdragt and the re-seated slots reach production unobserved. Mechanism: `isAvatarR2()` now
+  honours only `'0'` (force C2); the legacy `'1'` is **inert**, which is what makes the global rollback
+  absolute. Measured blast radius (28 students): **23 on R2**, 5 stay C2; all 23 get the North Star hair
+  because R2 ignores the 7 selectable hairstyles (1 had a non-default style stored). Rollback: per
+  browser `'0'`, globally flip the flag — no DB or user-record change. **No asset, manifest, design,
+  Supabase, migration or golden-baseline change; Wave 2 still `DEFINED — NOT STARTED`.** See
+  `docs/project-state.md` (D-101) and `167a-phase1-pilot-rollout.md` §16.
   **▶ A3.2 ACCEPTED — option A is COMPLETE (2026-08-02, D-091).** Status **`A3.2_ACCEPTED`**. The
   owner reviewed the 11-file runtime set and accepted it: the collar covers the base tee's ring, no
   skin is painted over, the arms stay bare, no dark shoulder wedges, belt at the waist, skirt above
@@ -410,6 +473,11 @@ _Last reviewed: 2026-07-01._
   `test` check is preserved in every mode. Live-backend/concurrency split deferred.
   **Live on main since `17d0574` (2026-07-23).** The two fast paths are **docs** (only `docs/**`)
   and **avatar-tool** (only `tools/avatar/**` + `docs/**`); everything else stays full.
+  **D-144 (2026-09-15):** a third fast path **unit-only** (only `tests/unit/**` +
+  `docs/**`), and `tests/unit/**` is also allowed inside **avatar-tool**; `tests/unit/**` can never
+  make a runtime-affecting PR fast, paths with empty/`.`/`..` segments now fail closed to full, and
+  the `unit` job still runs the unit suite on every PR. Step 2 (PR smoke) is undecided — if adopted,
+  it must run against the PR's Cloudflare preview, not live `lærlig.dk`. See `docs/project-state.md`.
   **Fully proven end-to-end (2026-07-24):** docs-mode (PR #107, required `test` green in ~8 s,
   Playwright skipped) · avatar-tool-mode (PR #108, real `node --check` of 1 file, Playwright
   skipped) · full-mode (PR #106/#109, whole Playwright suite, 365 passed) · every push to main ran
@@ -447,11 +515,15 @@ _Last reviewed: 2026-07-01._
   Asset-only Worker built from an explicit allowlist (`tools/cloudflare-build-static.mjs`), with the
   explicit-`.html` routing contract preserved. **Prepared, not activated** — DNS, custom domain and
   the Supabase redirect-URL list are unchanged. Canonical: [`HOSTING.md`](./HOSTING.md).
+  > **SUPERSEDED — the host switch is complete.** Cloudflare now serves production at
+  > `https://lærlig.dk`; the "not activated" wording above describes only what those two PRs shipped.
 - **E2E target defined once, overridable via `PROD_BASE_URL`** — commit `baae8f7` (PR #166). All 21
   specs had hardcoded the Vercel address; they now import `PROD` from `tests/helpers.ts`, and CI
   points it at the Cloudflare host through a repository variable. The default is deliberately still
   the Vercel address — moving the host is its own decision. Guarded by
   `tests/unit/e2e-base-url.test.mjs`.
+  > **SUPERSEDED (PR #242).** The default is now the live host, and the guard's host pattern was
+  > widened so it keeps detecting a hardcoded origin after the move.
 - **`placement-e2e` made retry-safe** — commit `dbcd19d` (PR #170). The five placement tests are a
   chain (test 2 writes `placement_band`, tests 3-5 depend on it), but Playwright restarts the worker
   after a failure, so `beforeAll` re-ran and cleared exactly that state — meaning retries of tests
@@ -494,7 +566,7 @@ _Last reviewed: 2026-07-01._
   for live activation/validation** (turning flags on, sending real data), not to *build* the
   remaining sections. Privileged/paid steps are owner-only.
   - **Zero-cost interim (recommended, not required now):** much live validation can later run on a
-    **free local Supabase stack** (`supabase start`, Docker — no Pro) + a **free Vercel preview**,
+    **free local Supabase stack** (`supabase start`, Docker — no Pro) + a **free preview deployment on the current host**,
     deferring the **paid hosted branch** to pre-production rollout. This keeps staging on the roadmap
     without recurring cost until launch.
 
@@ -512,7 +584,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157D PostHog **module** (+ consent gate) | requires 157CB | none to build | **SOFT GATE** | Same pattern as 157B — a flagged `js/analytics.js` builds + static-validates with no infra. |
 | 157E analytics **events** | requires 157CB | 157D module | **SOFT GATE** | Code instrumentation, default-off. |
 | 157F Cloudinary **spec** | — | none | **UNGATED** | Pure specification. |
-| 157G Cloudinary **integration** | — | a (free) Cloudinary account for go-live | **SOFT GATE** | Build read-path/transform behind a flag; needs no Supabase Pro branch (frontend/Vercel-preview testable). |
+| 157G Cloudinary **integration** | — | a (free) Cloudinary account for go-live | **SOFT GATE** | Build read-path/transform behind a flag; needs no Supabase Pro branch (testable on a frontend preview deployment). |
 | 157H OCR **spec** | — | none | **UNGATED** | Pure specification. |
 | 157I OCR **implementation** | requires 157CB (implied) | none | **SOFT GATE** | In-browser Tesseract wasm; no secret/server/backend — even activation is zero-cost client-side. |
 | 157J Ollama reachability **decision** | gate | none | **UNGATED** | A decision/spec. |
@@ -548,7 +620,7 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157B** ✅ | Sentry error reporting — frontend wiring (`js/sentry.js`) — **done, default-off** | frontend-only | done |
 | **157C** ✅ | Sentry — Edge observability foundation (`_shared/monitoring.ts`) — **done, default-off** | Edge | done |
 | **157CA** ✅ | Observability docs + static validation; 2 Sentry projects decided | docs | done |
-| **157CB** 🗓️ | Dedicated staging environment (Supabase branch + Vercel preview) | infra | **FUTURE INFRA** (not a blocker) |
+| **157CB** 🗓️ | Dedicated staging environment (Supabase branch + frontend preview) | infra | **FUTURE INFRA** (not a blocker) |
 | **Live obs. validation** | 157B/157C/157CA Part B checklists incl. PII-against-real-events | staging | **HARD GATE** |
 | **157D** ✅ | PostHog `js/analytics.js` module + GDPR consent gate — **done, default-off, consent-gated, unwired** | frontend-only | **SOFT** (done) |
 | **157E** ✅ | Core analytics events (login, question shown/answered, item purchased) + GDPR consent banner — **done, default-off, double-gated** | frontend-only | **SOFT** (done) |
@@ -731,7 +803,7 @@ production**; activation waits for a staging target (free local stack at first; 
     validation (HARD GATE), 157L/157M AI-grade activation, 157T production-readiness sign-off.
 
 > Activation of anything built above happens **after** a staging target exists — first the free local
-> Supabase stack + Vercel preview, then a paid hosted branch only at pre-launch. Building now does not
+> Supabase stack + a frontend preview, then a paid hosted branch only at pre-launch. Building now does not
 > incur cost; only running a hosted non-prod backend does.
 
 ## Status table

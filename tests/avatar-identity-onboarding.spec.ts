@@ -13,15 +13,13 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, TEACHER_EMAIL, TEACHER_PASSWORD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
-const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL ?? "teacher-test@hotmail.com";
-const TEACHER_PASSWORD = process.env.TEST_TEACHER_PASSWORD ?? "TestTeacher2026!";
 const SUPABASE_URL  = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -64,7 +62,13 @@ test.afterAll(async () => {
 test.beforeEach(async ({ page }) => {
   // C2 render exercised in TEST ONLY via a localStorage override; the global
   // AVATAR_V2 flag stays false. Runs before any page script on every navigation.
-  await page.addInitScript(() => { try { localStorage.setItem("avatar_v2", "1"); } catch (e) {} });
+  // D-101: R2 is now the DEFAULT render. This spec asserts C2-only behaviour (see the file
+  // header), so it pins itself to C2 through the supported per-browser opt-out instead of
+  // relying on a global default. addInitScript runs before any page script on every
+  // navigation, so the choice is made before the avatar mounts. No assertion or golden changes.
+  await page.addInitScript(() => {
+    try { localStorage.setItem("avatar_v2", "1"); localStorage.setItem("avatar_r2", "0"); } catch (e) {}
+  });
 });
 
 async function setIdentity(identity: any) {

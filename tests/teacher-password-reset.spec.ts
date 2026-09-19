@@ -13,6 +13,9 @@ import {
   TEACHER_EMAIL,
   TEACHER_PASSWORD,
   STUDENT2_EMAIL,
+  STUDENT2_PASSWORD,
+  STUDENT2_FRESH_TEMP_PASSWORD,
+  STUDENT2_NEW_PASSWORD,
   findAuthUserByEmail,
 } from "./helpers.js";
 
@@ -29,8 +32,8 @@ const SUPABASE_ANON_KEY =
 const MAIN_STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL!;
 const MAIN_STUDENT_PASS  = process.env.TEST_STUDENT_PASSWORD!;
 
-// student2's original password (set by global-setup)
-const STUDENT2_ORIGINAL_PASS = "TestStudent2026!";
+// student2's original password: TEST_STUDENT2_PASSWORD, which global-setup sets on every run
+const STUDENT2_ORIGINAL_PASS = STUDENT2_PASSWORD;
 
 let adminClient: ReturnType<typeof createClient>;
 let teacherClient: ReturnType<typeof createClient>;
@@ -171,8 +174,9 @@ test("7. Student can choose new password via forced-change flow", async ({ brows
 
   // Set up a fresh known temp password via admin API so this test is
   // self-contained and not dependent on test 1's temporaryPassword value.
-  const FRESH_TEMP = "FreshTemp2026!";
-  const NEW_PASS   = "NewPassword2026!";
+  // Both are derived from TEST_STUDENT2_PASSWORD (tests/test-credentials.mjs), never literals.
+  const FRESH_TEMP = STUDENT2_FRESH_TEMP_PASSWORD;
+  const NEW_PASS   = STUDENT2_NEW_PASSWORD;
 
   await adminClient.auth.admin.updateUserById(student2Id, { password: FRESH_TEMP });
   await adminClient.from("profiles")

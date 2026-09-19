@@ -23,6 +23,10 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TEST_STUDENT_EMAIL:        ${{ secrets.TEST_STUDENT_EMAIL }}
       TEST_STUDENT_PASSWORD:     ${{ secrets.TEST_STUDENT_PASSWORD }}
+      # global-setup provisions the teacher-flow accounts here too, and their passwords are
+      # required secrets with no default (tests/test-credentials.mjs).
+      TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
+      TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

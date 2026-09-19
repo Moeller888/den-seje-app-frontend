@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Om Lærlig</title>
+  <meta name="description" content="Lærlig bygges i Danmark til danske skoler og er i pilotdrift med et mindre antal klasser.">
+
+  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE, and now the only one. /om-laerlig.html
+       used to serve this document too; it is a permanent 301 to the clean route today, so
+       there is one preferred URL per public page. The tag stays as defence in depth and
+       names the same URL sitemap.xml lists. Derived from the routing table in
+       tools/cloudflare-build-static.mjs and verified against it on every build. -->
+  <link rel="canonical" href="https://lærlig.dk/om-laerlig">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Spring til indhold</a>
+
+  <div id="top-sentinel" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <div class="shell header-inner">
+      <a class="wordmark" href="/">
+        <span class="wordmark-text">Lærlig</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Primær">
+        <a href="/produktet">Produktet</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/elev-og-laerer">For elev &amp; lærer</a>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="login-link" href="login.html">Log ind</a>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-mobile" aria-label="Åbn menu">
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
+      <a href="/produktet">Produktet</a>
+      <a href="/saadan-virker-det">Sådan virker det</a>
+      <a href="/elev-og-laerer">For elev &amp; lærer</a>
+      <a href="/til-skoler">Til skoler</a>
+      <a href="/priser">Priser</a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <section class="page-hero" aria-labelledby="page-title">
+      <div class="ambient" aria-hidden="true">
+        <span class="ambient-a"></span>
+      </div>
+      <div class="grid-veil" aria-hidden="true"></div>
+
+      <div class="shell page-hero-inner">
+        <p class="eyebrow">Om Lærlig</p>
+        <h1 id="page-title">Lærlig er i pilotdrift.</h1>
+        <p class="lede">
+          Lærlig bygges i Danmark til danske skoler og bliver lige nu afprøvet med et mindre
+          antal klasser.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="hvorfor-title">
+      <div class="shell shell-narrow">
+        <h2 id="hvorfor-title">Hvorfor Lærlig findes</h2>
+        <p class="lede">
+          Elever i samme klasse er ikke lige langt. Alligevel får de ofte de samme opgaver på
+          samme tid — og det, der driller, bliver let glemt, fordi der skal nås noget nyt.
+        </p>
+        <p class="lede">
+          Lærlig prøver at gøre noget ved netop det: bruge elevens egne svar til at vælge, hvad
+          der giver mening at spørge om næste gang, og lade det svære komme igen i stedet for at
+          lade det ligge.
+        </p>
+      </div>
+    </section>
+
+    <section class="section section-alt" aria-labelledby="vigtigt-title">
+      <div class="shell shell-narrow">
+        <h2 id="vigtigt-title">Hvad der er vigtigt for os</h2>
+        <ul class="ticks" role="list">
+          <li>At læreren beholder det faglige ansvar. Lærlig hjælper, den overtager ikke.</li>
+          <li>At Lærlig ikke lader som om, den ved noget, den ikke kan vide.</li>
+          <li>At der bygges én ting ad gangen. Lærlig er et lille, selvstændigt drevet produkt, og stabilitet vejer tungere end hastighed.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-text">Lærlig</span>
+        <p>Læring, der tilpasser sig eleven.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Sidefod: produktet">
+        <h2 class="footer-head">Produktet</h2>
+        <a href="/produktet">Hvad Lærlig er</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/elev-og-laerer">For elev &amp; lærer</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: skoler">
+        <h2 class="footer-head">Skoler</h2>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+        <a href="/om-laerlig">Om Lærlig</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: adgang">
+        <h2 class="footer-head">Adgang</h2>
+        <a href="login.html">Log ind</a>
+        <a href="mailto:kontakt@lærlig.dk">Skriv til os</a>
+      </nav>
+    </div>
+
+    <div class="shell footer-base">
+      <p>Lærlig er i pilotdrift.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js" defer></script>
+</body>
+</html>
