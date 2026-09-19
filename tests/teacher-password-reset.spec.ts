@@ -16,7 +16,9 @@ import {
   STUDENT2_PASSWORD,
   STUDENT2_FRESH_TEMP_PASSWORD,
   STUDENT2_NEW_PASSWORD,
-  findAuthUserByEmail,, PUBLIC_API_KEY } from "./helpers.js";
+  findAuthUserByEmail,
+  PUBLIC_API_KEY,
+} from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });

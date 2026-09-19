@@ -22,7 +22,9 @@ import {
   TEACHER_EMAIL,
   TEACHER_PASSWORD,
   STUDENT2_EMAIL,
-  findAuthUserByEmail,, PUBLIC_API_KEY } from "./helpers.js";
+  findAuthUserByEmail,
+  PUBLIC_API_KEY,
+} from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
