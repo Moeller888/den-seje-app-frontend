@@ -45,6 +45,47 @@ serve(async (req) => {
       });
     }
 
+    // 🔥 SERVICE ROLE
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      serviceKey()
+    );
+
+    // 🔐 ROLE CHECK — must come BEFORE the instance lookup, the RPC and the XP write.
+    //
+    // The identity is `user.id`, taken from the verified JWT above. It is NEVER taken from the
+    // request body: a caller who could supply their own teacher id would be asserting their own
+    // authority, which is not authorisation at all.
+    //
+    // The role is read with the SERVICE client on purpose. Reading it through the caller's own
+    // client would put the answer behind RLS policies the caller may influence; the service client
+    // bypasses RLS, so the row that comes back is the row as it actually is.
+    //
+    // This restores a check that exists in the deployed function but had never been committed to
+    // this repository. The database-side lockdown in
+    // supabase/migrations/20260919000000_review_answer_execute_lockdown.sql is the second layer:
+    // this one gives the caller a correct status code, that one holds even if this code is
+    // bypassed entirely.
+    const { data: callerProfile, error: callerProfileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // A failed lookup is not "not a teacher" — it is an unknown answer, and an unknown answer must
+    // never be treated as permission.
+    if (callerProfileError) {
+      console.error("ROLE LOOKUP ERROR:", callerProfileError);
+      throw callerProfileError;
+    }
+
+    if (!callerProfile || (callerProfile.role !== "teacher" && callerProfile.role !== "super_admin")) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: corsHeaders
+      });
+    }
+
     const body = await req.json().catch(() => null);
 
     if (!body) {
@@ -62,12 +103,6 @@ serve(async (req) => {
         { status: 400, headers: corsHeaders }
       );
     }
-
-    // 🔥 SERVICE ROLE
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      serviceKey()
-    );
 
     // 🔍 find student_id
     const { data: instance, error: instanceError } = await supabase
