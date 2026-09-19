@@ -163,11 +163,15 @@ async function clearRowsForStudent(id: string): Promise<void> {
 // 'reserved' is therefore treated as in-progress and never satisfies a barrier — the logic
 // lives in tests/support/completion-barrier.ts and is unit-tested there.
 
-// Statuses a LIVE test is allowed to end on. 'notified' and 'mail_failed' are deliberately
-// absent: every student call in this spec runs inside a seeded cooldown or against a student
-// with no teacher, so the decision can never be 'reserved' and no mail can ever be attempted.
-// If one appears anyway, the barrier waits for it to reach a terminal status and then fails
-// loudly — a mail-capable path in a live test is a safety defect, not a flake.
+// Statuses a LIVE call in this spec is allowed to PRODUCE. 'notified' and 'mail_failed' are
+// deliberately absent: every student call here runs inside a seeded cooldown or against a student
+// with no teacher, so no mail can ever be attempted. If one appears anyway, the barrier waits for
+// it to reach a terminal status and then fails loudly — a mail-capable path in a live test is a
+// safety defect, not a flake.
+//
+// This applies ONLY to rows the call under test produced. The seeded 'notified' rows that put the
+// student inside the cooldown are handed to the barrier as its baseline and are never judged by
+// this list, so no call site needs to widen it just to tolerate its own setup.
 const SAFE_TERMINAL: readonly string[] = ['suppressed_cooldown', 'suppressed_daily_cap', 'no_teacher', 'teacher_no_email'];
 
 function barrierDeps(): BarrierDeps {
@@ -178,18 +182,30 @@ function barrierDeps(): BarrierDeps {
   };
 }
 
+// `baselineIds` are the ids that existed BEFORE the call being measured. Everything else the
+// barrier sees is that call's own work. Returns the FULL row set, so assertions about the table
+// as a whole keep their meaning.
 async function awaitSettledRows(
-  expectedCount: number,
+  baselineIds: readonly string[],
+  expectedNew: number,
   label: string,
   allowedTerminal: readonly string[] = SAFE_TERMINAL,
 ): Promise<any[]> {
   return awaitSettled(barrierDeps(), {
-    expectedCount,
+    baselineIds,
+    expectedNew,
     allowedTerminal,
     timeoutMs: ROW_TIMEOUT_MS,
     pollMs: 500,
     label,
   }) as Promise<any[]>;
+}
+
+// Snapshot of the ids present right now — the reference the barrier measures the next call
+// against. Read via the primary key, never a count, so rows left behind by an earlier test in the
+// serial chain can never be mistaken for this call's outcome.
+async function baselineIdsForStudent(): Promise<string[]> {
+  return (await rowsForStudent(studentId)).map((r) => r.id);
 }
 
 // Calls with the student address and does not return until that request's row exists AND has
@@ -198,9 +214,9 @@ async function callHelpForStudentAndSettle(
   label: string,
   allowedTerminal: readonly string[] = SAFE_TERMINAL,
 ): Promise<{ res: HelpResponse; rows: any[] }> {
-  const before = (await rowsForStudent(studentId)).length;
+  const baselineIds = await baselineIdsForStudent();
   const res = await callHelp(STUDENT_EMAIL);
-  const rows = await awaitSettledRows(before + 1, label, allowedTerminal);
+  const rows = await awaitSettledRows(baselineIds, 1, label, allowedTerminal);
   return { res, rows };
 }
 
@@ -296,10 +312,10 @@ test('1. valid student request is accepted and recorded', async () => {
   // that from a suppressed outcome without putting a real mail in anyone's inbox.
   await seedCooldown(studentId, capturedTeacherId());
 
-  // The seeded row is 'notified' by construction, so it must be allowed here — exactly as in the
-  // anti-enumeration test. SAFE_TERMINAL cannot cover it: it exists to catch a LIVE call that
-  // reached the mail path, and widening it would blind every other test to that defect.
-  const { res, rows } = await callHelpForStudentAndSettle('test 1', ['notified', 'suppressed_cooldown']);
+  // The seeded row is part of the barrier's baseline, so this call is judged on the one row IT
+  // produces. 'notified' stays disallowed here: if this call reached the mail path, that is a
+  // safety defect and must fail.
+  const { res, rows } = await callHelpForStudentAndSettle('test 1');
   expect(res.status).toBe(200);
 
   expect(rows.length, 'the request must leave an audit row').toBe(2);
@@ -374,9 +390,7 @@ test('6. a request inside the cooldown is suppressed and sends no mail', async (
   await clearRowsForStudent(studentId);
   await seedCooldown(studentId, capturedTeacherId());
 
-  // Same as test 1: the seeded cooldown row is 'notified', so the barrier must accept it
-  // alongside the 'suppressed_cooldown' this call produces.
-  const { rows } = await callHelpForStudentAndSettle('test 6', ['notified', 'suppressed_cooldown']);
+  const { rows } = await callHelpForStudentAndSettle('test 6');
 
   expect(rows.length).toBe(2);
   expect(rows[0].status).toBe('suppressed_cooldown');
@@ -402,6 +416,9 @@ test('ANTI-ENUMERATION: latency must not distinguish a real account from an unkn
   await clearRowsForStudent(studentId);
   await seedCooldown(studentId, capturedTeacherId());
 
+  // Captured after seeding: the seeded row is the reference, not an outcome of the calls below.
+  const baselineIds = await baselineIdsForStudent();
+
   const N = 7;
   const knownMs: number[] = [];
   const unknownMs: number[] = [];
@@ -416,7 +433,9 @@ test('ANTI-ENUMERATION: latency must not distinguish a real account from an unkn
 
   // Barrier: all N background writes must land before this test may finish, or they would race
   // afterAll's cleanup and survive it.
-  const settled = await awaitSettledRows(1 + N, 'anti-enumeration barrier', ['notified', 'suppressed_cooldown']);
+  // Only the N rows these calls produced are judged, so 'notified' is disallowed: the seeded row
+  // is baseline, and a NEW 'notified' would mean a real mail went out.
+  const settled = await awaitSettledRows(baselineIds, N, 'anti-enumeration barrier');
   expect(settled.filter((r) => r.status === 'suppressed_cooldown').length,
     `all ${N} known calls must be suppressed`).toBe(N);
   expect(settled.filter((r) => r.status === 'notified').length,
