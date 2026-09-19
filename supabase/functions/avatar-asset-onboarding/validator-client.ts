@@ -1,10 +1,11 @@
 import type { ValidatorResponse } from "./types.ts";
+import { serviceKey as resolveServiceKey } from "../_shared/supabase-keys.ts";
 
 export async function callValidator(
   metadata: Record<string, unknown>,
 ): Promise<ValidatorResponse> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = resolveServiceKey();
 
   if (!supabaseUrl || supabaseUrl.trim() === "") {
     throw new Error("SUPABASE_URL is not set — cannot locate avatar-asset-validator");

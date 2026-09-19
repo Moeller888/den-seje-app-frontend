@@ -1,10 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { optionalServiceKey } from "../_shared/supabase-keys.ts";
 
 export type SupabaseClient = ReturnType<typeof createClient>;
 
 export function getServiceClient(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const key = optionalServiceKey();
 
   if (!url || url.trim() === "") {
     throw new Error("SUPABASE_URL environment variable is not set");
