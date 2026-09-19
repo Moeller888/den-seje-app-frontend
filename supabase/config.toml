@@ -496,3 +496,26 @@ entrypoint = "./functions/avatar-asset-onboarding/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/avatar-ingestion/index.ts"
+
+# The three blocks below record the verify_jwt setting these functions ALREADY have in
+# production. Without an explicit block the CLI falls back to its own default on deploy, which
+# would silently flip the platform-level JWT check — a change to who may reach the function, made
+# as a side effect of an unrelated deploy. Written down so a deploy cannot change it by accident.
+
+# Live: verify_jwt = true. The function also performs its own auth check.
+[functions.avatar-generation]
+enabled = true
+verify_jwt = true
+
+# Live: verify_jwt = true. Called from login.html by a signed-OUT user, which works because the
+# browser sends the project's public API key as the bearer token; the function then does its own
+# role routing. Flipping this to false would widen who can reach it.
+[functions.request-password-help]
+enabled = true
+verify_jwt = true
+
+# Live: verify_jwt = false. Authorisation is enforced inside the function, which re-checks
+# profiles.teacher_id server-side on every call.
+[functions.reset-student-password]
+enabled = true
+verify_jwt = false
