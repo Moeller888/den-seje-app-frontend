@@ -296,7 +296,10 @@ test('1. valid student request is accepted and recorded', async () => {
   // that from a suppressed outcome without putting a real mail in anyone's inbox.
   await seedCooldown(studentId, capturedTeacherId());
 
-  const { res, rows } = await callHelpForStudentAndSettle('test 1');
+  // The seeded row is 'notified' by construction, so it must be allowed here — exactly as in the
+  // anti-enumeration test. SAFE_TERMINAL cannot cover it: it exists to catch a LIVE call that
+  // reached the mail path, and widening it would blind every other test to that defect.
+  const { res, rows } = await callHelpForStudentAndSettle('test 1', ['notified', 'suppressed_cooldown']);
   expect(res.status).toBe(200);
 
   expect(rows.length, 'the request must leave an audit row').toBe(2);
@@ -371,7 +374,9 @@ test('6. a request inside the cooldown is suppressed and sends no mail', async (
   await clearRowsForStudent(studentId);
   await seedCooldown(studentId, capturedTeacherId());
 
-  const { rows } = await callHelpForStudentAndSettle('test 6');
+  // Same as test 1: the seeded cooldown row is 'notified', so the barrier must accept it
+  // alongside the 'suppressed_cooldown' this call produces.
+  const { rows } = await callHelpForStudentAndSettle('test 6', ['notified', 'suppressed_cooldown']);
 
   expect(rows.length).toBe(2);
   expect(rows[0].status).toBe('suppressed_cooldown');
