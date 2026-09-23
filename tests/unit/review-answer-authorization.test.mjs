@@ -206,12 +206,31 @@ test("no later migration re-opens EXECUTE on review_answer", () => {
     "a later migration must not re-open direct EXECUTE, individually or via a blanket grant");
 });
 
-test("the lockdown migration sorts after every migration that exists today", () => {
+test("the lockdown migration sorts after every migration that touches review_answer", () => {
+  // Originally written as "sorts after every migration that exists today", comparing against the
+  // last file in the whole directory. That encoded "no migration has been added since" rather than
+  // the property it describes, so it had to fail on the next unrelated migration — as it did.
+  //
+  // The contract is that nothing can override the lockdown, and only a migration that touches
+  // review_answer could. Scoping the comparison to those files states that directly and keeps
+  // holding as the tree grows. Breadth is not lost: the test above scans EVERY other migration for
+  // a re-opening grant, individually or blanket.
+  // "Touches" means in executable SQL. A migration that only NAMES review_answer in a comment —
+  // to record that it leaves the lockdown alone — does not touch it and must not count here.
+  const executable = (body) => body
+    .split(/\r?\n/)
+    .filter((line) => !line.trim().startsWith("--"))
+    .join("\n");
   const dir = join(REPO, "supabase", "migrations");
-  const timestamped = readdirSync(dir).filter((n) => /^\d{14}_.*\.sql$/.test(n)).sort();
+  const touching = readdirSync(dir)
+    .filter((n) => /^\d{14}_.*\.sql$/.test(n))
+    .filter((n) => /review_answer/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    .sort();
+  assert.ok(touching.includes("20260919000000_review_answer_execute_lockdown.sql"),
+    "the lockdown migration must be present in the tree");
   assert.equal(
-    timestamped[timestamped.length - 1],
+    touching[touching.length - 1],
     "20260919000000_review_answer_execute_lockdown.sql",
-    "the lockdown must apply last, so nothing already in the tree can override it",
+    "the lockdown must apply last among them, so nothing in the tree can override it",
   );
 });
