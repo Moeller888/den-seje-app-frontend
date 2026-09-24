@@ -202,20 +202,26 @@ test("only the one function and the one view are touched", () => {
   assert.deepEqual([...new Set(views)], ["teacher_student_overview"]);
 });
 
-test("the migration sorts after every migration that touches either object", () => {
-  // Not "last file in the directory": that would encode "nothing has been added since".
+test("the migration sorts after every migration that touches teacher_student_overview", () => {
+  // Originally scoped to "teacher_student_overview OR get_student_overview". The function is a
+  // living object that later migrations may legitimately extend — 20260927000000 folds the
+  // student_mastery_status fields into it — so including it made this guard assert "nothing has
+  // touched the function since", which is not the property it names.
+  // What must hold is that nothing re-creates the VIEW after it was dropped. That is scoped to
+  // the view alone; the function's own contract is pinned by the tests above and by the
+  // superseding migration's own suite.
   const dir = join(REPO, "supabase", "migrations");
   const executable = (body) => body
     .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
-    .filter((n) => /teacher_student_overview|get_student_overview/i.test(
+    .filter((n) => /teacher_student_overview/i.test(
       executable(readFileSync(join(dir, n), "utf8"))))
     .sort();
   assert.ok(touching.includes("20260926000000_teacher_student_overview_to_rpc.sql"));
   assert.equal(touching[touching.length - 1],
     "20260926000000_teacher_student_overview_to_rpc.sql",
-    "it must apply last among them");
+    "it must apply last among the migrations touching the view");
 });
 
 test("no later migration recreates the view or re-opens EXECUTE", () => {
@@ -255,8 +261,12 @@ test("the consumer treats the RPC result as a set, with a length check before in
   assert.match(src,
     /Array\.isArray\(overviewRows\) && overviewRows\.length > 0 \? overviewRows\[0\] : null/,
     "arrays are not data — length must be checked before [0]");
-  assert.match(src, /if \(!overview \|\| !mastery\)/,
-    "the existing not-found guard must still cover a null overview");
+  // The guard was "!overview || !mastery" while the page still made a second fetch to
+  // student_mastery_status. 20260927000000 folded those fields into this RPC and removed that
+  // fetch, so the second operand no longer exists. What must stay true is that a null overview —
+  // which is what a foreign or unknown pupil yields — still short-circuits to the not-found path.
+  assert.match(src, /if \(!overview\b[^)]*\) \{/,
+    "the not-found guard must still cover a null overview");
 });
 
 test("no other file in the tree reads the view", () => {

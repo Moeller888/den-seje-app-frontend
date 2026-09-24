@@ -266,17 +266,14 @@ async function fetchStudent() {
   // the pupil only when they belong to this teacher (or the caller is super_admin), so the
   // .eq("teacher_id", …) filter this call used to carry is no longer the thing scoping it.
   // Returns a set: zero rows for an unknown pupil and for another teacher's pupil alike.
+  // One authorised server boundary for this pupil. The RPC now also carries the three mastery
+  // fields that student_mastery_status used to serve; that view was readable by anon and by every
+  // signed-in user, so it was removed rather than narrowed.
   const { data: overviewRows } = await supabase
     .rpc("get_student_overview", { p_student_id: studentId });
 
   const overview =
     Array.isArray(overviewRows) && overviewRows.length > 0 ? overviewRows[0] : null;
-
-  const { data: mastery } = await supabase
-    .from("student_mastery_status")
-    .select("*")
-    .eq("student_id", studentId)
-    .single();
 
   const { data: profileData } = await supabase
     .from("profiles")
@@ -284,12 +281,12 @@ async function fetchStudent() {
     .eq("id", studentId)
     .maybeSingle();
 
-  if (!overview || !mastery) {
+  if (!overview) {
     document.getElementById("studentInfo").textContent = "Elev ikke fundet.";
     return;
   }
 
-  renderStudent(overview, mastery, profileData ?? {});
+  renderStudent(overview, profileData ?? {});
   renderBandPanel(profileData ?? {});
   setupDomainEditor(profileData?.active_domains ?? null);
   setupPasswordResetPanel();
@@ -478,7 +475,9 @@ async function fetchQuestionInstances() {
 // RENDER STUDENT
 // ========================
 
-function renderStudent(student, mastery, profileData) {
+// `student` is one row from get_student_overview: email, xp, level, plus the three mastery
+// fields that used to come from the separate student_mastery_status view.
+function renderStudent(student, profileData) {
 
   const container = document.getElementById("studentInfo");
 
@@ -496,9 +495,9 @@ function renderStudent(student, mastery, profileData) {
 
     <hr>
 
-    <p><strong>Korrekt svarprocent (seneste):</strong> ${mastery.correct_ratio ?? 0}%</p>
-    <p><strong>Total korrekte:</strong> ${mastery.total_correct_answers ?? 0}</p>
-    <p><strong>Forsøg i alt:</strong> ${mastery.total_attempts ?? 0}</p>
+    <p><strong>Korrekt svarprocent (seneste):</strong> ${student.correct_ratio ?? 0}%</p>
+    <p><strong>Total korrekte:</strong> ${student.total_correct_answers ?? 0}</p>
+    <p><strong>Forsøg i alt:</strong> ${student.total_attempts ?? 0}</p>
   `;
 }
 
