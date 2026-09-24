@@ -261,12 +261,16 @@ function setupPasswordResetPanel() {
 
 async function fetchStudent() {
 
-  const { data: overview } = await supabase
-    .from("teacher_student_overview")
-    .select("*")
-    .eq("student_id", studentId)
-    .eq("teacher_id", teacherId)
-    .single();
+  // get_student_overview replaces the teacher_student_overview view, which was readable by
+  // anon and by every signed-in user. The RPC checks the caller's role server-side and returns
+  // the pupil only when they belong to this teacher (or the caller is super_admin), so the
+  // .eq("teacher_id", …) filter this call used to carry is no longer the thing scoping it.
+  // Returns a set: zero rows for an unknown pupil and for another teacher's pupil alike.
+  const { data: overviewRows } = await supabase
+    .rpc("get_student_overview", { p_student_id: studentId });
+
+  const overview =
+    Array.isArray(overviewRows) && overviewRows.length > 0 ? overviewRows[0] : null;
 
   const { data: mastery } = await supabase
     .from("student_mastery_status")

@@ -219,6 +219,14 @@ test("the teacher surfaces already scope their queries to their own pupils", () 
     "teacher.js must resolve its own pupils before reading their instances");
   assert.match(teacher, /\.in\("student_id", studentIds\)/,
     "and then filter instances to that set");
-  assert.match(detail, /\.eq\("teacher_id", teacherId\)/,
-    "student-detail.js must validate the pupil belongs to the teacher");
+  // student-detail.js used to carry its own `.eq("teacher_id", teacherId)` filter. That moved
+  // server-side when teacher_student_overview was replaced by get_student_overview, which checks
+  // the caller's role and the profiles.teacher_id relation inside a SECURITY DEFINER function.
+  // The property this test names still holds, and holds more strongly: the scoping is no longer
+  // a client filter a caller could drop. What must stay true is that the page resolves the pupil
+  // through that authorising call rather than reading a pupil-wide source directly.
+  assert.match(detail, /\.rpc\("get_student_overview", \{ p_student_id: studentId \}\)/,
+    "student-detail.js must resolve the pupil through the authorising RPC");
+  assert.ok(!/\.from\("teacher_student_overview"\)/.test(detail),
+    "the unscoped view must not come back");
 });
