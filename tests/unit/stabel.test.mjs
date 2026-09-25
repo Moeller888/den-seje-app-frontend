@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { placePlate, PERFECT_PX } from "../../js/stabel-logic.js";
+import { placePlate, PERFECT_PX, PERFECT_UNIT, grownSize, sweepSpeed, GROW_STEP, MAX_SIZE } from "../../js/stabel-logic.js";
 
 const base = { x: 56, w: 168 };
 
@@ -40,4 +40,31 @@ test("touching at an edge is a miss, and bad sizes never throw", () => {
   assert.equal(placePlate({ x: 224, w: 168 }, base).hit, false);
   assert.equal(placePlate({ x: 10, w: 0 }, base).hit, false);
   assert.equal(placePlate(null, base).hit, false);
+});
+
+test("in world units a drop within PERFECT_UNIT snaps to the plate below", () => {
+  const unit = { x: -0.5, w: 1 };
+  const placed = placePlate({ x: -0.5 + PERFECT_UNIT / 2, w: 1 }, unit, PERFECT_UNIT);
+  assert.equal(placed.perfect, true);
+  assert.deepEqual(placed.plate, unit);
+  const off = placePlate({ x: -0.5 + 0.2, w: 1 }, unit, PERFECT_UNIT);
+  assert.equal(off.perfect, false);
+  assert.ok(Math.abs(off.plate.w - 0.8) < 1e-9);
+});
+
+test("only every third perfect in a row grows the plate, and never past MAX_SIZE", () => {
+  assert.equal(grownSize(1, 0.5), 0.5);
+  assert.equal(grownSize(2, 0.5), 0.5);
+  assert.ok(Math.abs(grownSize(3, 0.5) - (0.5 + GROW_STEP)) < 1e-9);
+  assert.equal(grownSize(6, 1.05), MAX_SIZE);
+  assert.equal(grownSize(0, 0.5), 0.5);
+  assert.equal(grownSize(3, 0), 0);
+  assert.equal(grownSize(3, NaN), 0);
+});
+
+test("the sweep speeds up with the tower and levels off at 50 plates", () => {
+  assert.equal(sweepSpeed(0), 1.85);
+  assert.ok(sweepSpeed(10) > sweepSpeed(0));
+  assert.equal(sweepSpeed(50), sweepSpeed(80));
+  assert.equal(sweepSpeed(NaN), 1.85);
 });

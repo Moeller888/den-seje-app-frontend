@@ -119,7 +119,6 @@
       font-size: 14px;
       font-weight: bold;
       color: var(--text-bright);
-      margin-bottom: 8px;
     }
 
     .stabel-arena {
@@ -128,34 +127,50 @@
       background:
         radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
         var(--bg-panel);
-      padding: 12px 8px 16px;
+      padding: 0;
+      overflow: hidden;
       touch-action: manipulation;
       cursor: pointer;
     }
 
-    .stabel-track {
+    .stabel-stage {
       position: relative;
-      width: 280px;
+      width: 100%;
       height: 420px;
-      margin: 0 auto;
       overflow: hidden;
     }
-
-    .plate {
+    .stabel-stage canvas {
       position: absolute;
-      height: 26px;
-      border-radius: 7px;
-      background: color-mix(in srgb, var(--accent) 72%, #141414);
-      border: 2px solid color-mix(in srgb, var(--accent) 35%, white);
-      box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 40%, black);
+      inset: 0;
+      display: block;
     }
-    .plate.is-base { opacity: 0.85; }
-    .plate.is-mover {
-      background: color-mix(in srgb, var(--accent) 45%, white);
+
+    .stabel-hud {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
     }
-    .plate.is-perfect {
-      box-shadow: 0 0 0 2px var(--text-bright);
+    .stabel-combo {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
     }
+
+    .stabel-mute {
+      min-height: 44px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .stabel-mute:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .stabel-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .stabel-hero {
       font-size: 28px;
@@ -169,10 +184,7 @@
     }
 
     @media (max-width: 420px) {
-      .stabel-track { transform: scale(0.92); transform-origin: top center; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .plate.is-perfect { box-shadow: none; border-color: var(--text-bright); }
+      .stabel-stage { height: 380px; }
     }
   </style>
 </head>
@@ -181,19 +193,24 @@
   <div class="stabel-topbar">
     <a class="stabel-back" href="spil.html">← Spil</a>
     <div class="stabel-title">Stabel</div>
-    <span aria-hidden="true"></span>
+    <button type="button" class="stabel-mute" id="stabel-mute" aria-pressed="false">Lyd til</button>
   </div>
 
   <section id="stabel-intro">
-    <p class="stabel-lead" id="stabel-lead">En plade glider frem og tilbage. Klik, når den ligger over den under. Det, der stikker ud, skæres fra. Rammer du forbi, stopper tårnet. Ingen mønter — det er håndelaget.</p>
+    <p class="stabel-lead" id="stabel-lead">En plade glider frem og tilbage. Klik, når den ligger over den under. Det, der stikker ud, skæres fra. Rammer du præcist, bliver det perfekt, og tre perfekte i træk gør pladen lidt større igen. Rammer du forbi, stopper tårnet. Ingen mønter — det er håndelaget.</p>
     <p class="stabel-note" id="stabel-best"></p>
     <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-start">Start</button>
   </section>
 
   <section id="stabel-play" hidden>
-    <div class="stabel-score" id="stabel-score" aria-live="polite">0 plader</div>
+    <div class="stabel-hud">
+      <div class="stabel-score" id="stabel-score" aria-live="polite">0 plader</div>
+      <div class="stabel-combo" id="stabel-combo" aria-live="polite"></div>
+    </div>
     <div class="stabel-arena" id="stabel-arena" role="application" aria-label="Stabel. Klik for at slippe pladen.">
-      <div class="stabel-track" id="stabel-track"></div>
+      <div class="stabel-stage">
+        <canvas id="stabel-canvas" aria-hidden="true"></canvas>
+      </div>
     </div>
     <div class="stabel-actions">
       <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-drop">Slip pladen</button>
