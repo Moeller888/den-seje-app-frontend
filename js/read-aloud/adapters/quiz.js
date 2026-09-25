@@ -11,6 +11,11 @@ function readAloud() {
   return _ra;
 }
 
+/** Stop anything the shared service is speaking. Never throws. */
+export function stopReadAloud() {
+  try { readAloud().stop(); } catch (_e) { /* fail-soft */ }
+}
+
 /**
  * Attach a read-aloud control for `text` to `container`. No-op when unavailable.
  * @param {HTMLElement} container

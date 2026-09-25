@@ -227,7 +227,7 @@ test("D-144 #5: tools/avatar/** + docs/** + tests/unit/** → avatar-tool", () =
 
 // 6. js/** + tests/unit/** → full
 test("D-144 #6: js/** + tests/unit/** → full", () => {
-  assert.equal(classify(["js/kamp.js", "tests/unit/kamp.test.mjs"]), "full");
+  assert.equal(classify(["js/stabel.js", "tests/unit/stabel.test.mjs"]), "full");
   assert.equal(classify(["tests/unit/a.test.mjs", "docs/a.md", "js/app.js"]), "full");
   assert.equal(classify(["tools/avatar/x.mjs", "tests/unit/a.test.mjs", "js/x.js"]), "full");
 });
@@ -235,7 +235,7 @@ test("D-144 #6: js/** + tests/unit/** → full", () => {
 // 7. HTML at the repository root + tests/unit/** → full
 test("D-144 #7: root HTML + tests/unit/** → full", () => {
   assert.equal(classify(["hub.html", "tests/unit/a.test.mjs"]), "full");
-  assert.equal(classify(["kamp.html", "tests/unit/kamp.test.mjs", "docs/a.md"]), "full");
+  assert.equal(classify(["stabel.html", "tests/unit/stabel.test.mjs", "docs/a.md"]), "full");
   assert.equal(classify(["app.js", "tests/unit/a.test.mjs"]), "full");
   assert.equal(classify(["style.css", "tests/unit/a.test.mjs"]), "full");
 });
@@ -331,7 +331,7 @@ const PAYLOAD_CORPUS = [
   ["tools/avatar/x.mjs", "docs/a.md"],
   ["tools/avatar/x.mjs", "tests/unit/a.test.mjs"],
   ["tools/avatar/x.mjs", "docs/a.md", "tests/unit/a.test.mjs"],
-  ["js/kamp.js", "tests/unit/kamp.test.mjs"],
+  ["js/stabel.js", "tests/unit/stabel.test.mjs"],
   ["hub.html", "tests/unit/a.test.mjs"],
   ["tests/example.spec.ts"],
   ["tests/example.spec.ts", "tests/unit/a.test.mjs"],
