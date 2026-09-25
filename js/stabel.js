@@ -1,5 +1,6 @@
 // Stabel page. Click or tap drops the moving plate onto the tower.
-// No XP and no coins — a miss is not a wrong answer, and chance must not pay out.
+// A finished round pays 1 coin per plate via the claim_stabel_reward RPC. The server caps it at
+// 50 coins per day, because the plate count is reported by this page and can be forged. No XP.
 // The tower is drawn isometrically on a canvas (PRISMA look): plates slide along
 // alternating axes, the overhang falls off, perfect drops chain into a combo.
 
@@ -122,6 +123,7 @@ const state = {
   last: 0,
   raf: 0,
   fallTimer: 0,
+  round: 0,
   reduced: false,
   palette: { hue: 212, bright: "#ffffff", dim: "#9aa0b4" },
   canvas: null,
@@ -458,6 +460,7 @@ function fail() {
   paintScore();
   writeBest(state.plates);
   paintBest();
+  claimCoins(state.plates, state.round);
   clearTimeout(state.fallTimer);
   state.fallTimer = setTimeout(showOver, state.reduced ? 0 : FALL_MS);
 }
@@ -538,8 +541,40 @@ function frame(now) {
   state.raf = requestAnimationFrame(frame);
 }
 
+// Pays the finished round once. The round number guards against a slow reply
+// landing on a newer round's end screen.
+async function claimCoins(plates, round) {
+  const el = $("stabel-coins");
+  const paint = (text) => { if (el && state.round === round) el.textContent = text; };
+  if (!Number.isFinite(plates) || plates <= 0) {
+    paint("Ingen plader — ingen mønter denne gang.");
+    return;
+  }
+  paint("Gemmer dine mønter …");
+  try {
+    const { data, error } = await supabase.rpc("claim_stabel_reward", { p_plates: Math.floor(plates) });
+    if (error) throw error;
+    const result = data && typeof data === "object" ? data : null;
+    const coins = Number(result?.coins);
+    const today = Number(result?.today);
+    const cap = Number(result?.cap);
+    if (result?.status !== "ok" || ![coins, today, cap].every(Number.isFinite)) {
+      throw new Error("Uventet svar fra claim_stabel_reward");
+    }
+    if (coins > 0) {
+      paint("+" + coins + (coins === 1 ? " mønt" : " mønter") + ". I dag fra Stabel: " + today + " af " + cap + ".");
+    } else {
+      paint("Dagens " + cap + " mønter fra Stabel er brugt. Kom igen i morgen.");
+    }
+  } catch (err) {
+    console.error("[stabel] claim_stabel_reward failed", err);
+    paint("Mønterne kunne ikke gemmes. Prøv igen senere.");
+  }
+}
+
 function startRound() {
   stopReadAloud();
+  state.round += 1;
   unlockAudio();
   clearTimeout(state.fallTimer);
   state.fallTimer = 0;
