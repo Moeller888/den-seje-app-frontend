@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spil – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .spil-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .spil-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 18px;
+    }
+
+    .spil-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .spil-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .spil-back:focus-visible,
+    .spil-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .spil-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+      letter-spacing: 0.2px;
+    }
+
+    .spil-lead {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    .spil-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spil-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "kicker go"
+        "name go"
+        "line go";
+      gap: 2px 12px;
+      align-items: center;
+      min-height: 88px;
+      padding: 16px 16px 14px;
+      text-decoration: none;
+      color: inherit;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .spil-card:hover {
+      border-color: var(--accent);
+      background: var(--btn-bg-hover);
+    }
+
+    .spil-kicker {
+      grid-area: kicker;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .spil-name {
+      grid-area: name;
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+    .spil-line {
+      grid-area: line;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .spil-go {
+      grid-area: go;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+<div class="spil-shell">
+  <div class="spil-topbar">
+    <a class="spil-back" href="hub.html">← Hub</a>
+    <div class="spil-title">Spil</div>
+    <span aria-hidden="true"></span>
+  </div>
+
+  <p class="spil-lead">Vælg, hvad du vil spille.</p>
+
+  <nav class="spil-list" aria-label="Spil">
+    <a class="spil-card" href="index.html">
+      <span class="spil-kicker">Hver dag</span>
+      <span class="spil-name">Quiz</span>
+      <span class="spil-line">Spørgsmål fra pensum. Rigtige svar giver XP og mønter.</span>
+      <span class="spil-go">Spil →</span>
+    </a>
+    <a class="spil-card" href="kamp.html">
+      <span class="spil-kicker">Dagligt raid</span>
+      <span class="spil-name">Videnkamp</span>
+      <span class="spil-line">Syv slag mod dagens gåde. Rigtige svar tæller som i quizzen.</span>
+      <span class="spil-go">Træd ind →</span>
+    </a>
+  </nav>
+</div>
+<script type="module" src="js/spil.js"></script>
+</body>
+</html>
