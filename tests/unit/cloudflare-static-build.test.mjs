@@ -448,7 +448,7 @@ test("no internal .html address is redirected - the app keeps every one of its U
     assert.ok(!redirected.includes(file), `${file} is an internal surface and must not be redirected`);
   }
   // Named explicitly, so a silent reclassification is loud here too.
-  for (const file of ["index.html", "login.html", "reset-password.html", "hub.html", "kamp.html", "spil.html", "shop.html",
+  for (const file of ["index.html", "login.html", "reset-password.html", "hub.html", "spil.html", "stabel.html", "shop.html",
                       "avatar.html", "collection.html", "themes.html", "leaderboard.html",
                       "achievements.html", "teacher.html", "student-detail.html", "admin.html",
                       "docs.html", "404.html"]) {
@@ -769,7 +769,7 @@ test("no internal surface appears in the sitemap - not as a file, not as a route
     assert.ok(!paths.includes("/" + page.replace(/\.html$/, "")), `the sitemap lists /${page}`);
   }
   // Named explicitly, so a silent removal from INTERNAL_HTML stays loud here too.
-  for (const surface of ["index", "login", "reset-password", "hub", "kamp", "spil", "shop", "avatar", "collection",
+  for (const surface of ["index", "login", "reset-password", "hub", "spil", "stabel", "shop", "avatar", "collection",
                          "themes", "leaderboard", "achievements", "teacher", "student-detail",
                          "admin", "docs", "404"]) {
     assert.ok(!xml.includes(surface), `the sitemap mentions the internal surface ${surface}`);

@@ -29,8 +29,9 @@ A provider-abstracted read-aloud service (consistent with the OCR/AI layers), **
 | `index.js` | `createReadAloud()` facade → `isAvailable()`/`speak()`/`stop()`. Order: prerecorded → web speech. |
 | `adapters/quiz.js` | `attachReadAloudControl(container, text)` — question "🔊 Læs op" button. Plus `attachOptionReadAloudControl(row, text)` — per-MC-option "🔊" button (reads one option). Both no-op when disabled. |
 
-**Wiring:** `app.js` calls `attachReadAloudControl(questionElement, question.content.question)` right
-after the question text is set. For **MC** questions each option renders as a row `[answer button][🔊]`
+**Wiring:** every text-based student task uses this adapter, not a second speaker.
+`app.js` calls `attachReadAloudControl(questionElement, question.content.question)` right
+after the question text is set, including the placement round. For **MC** questions each option renders as a row `[answer button][🔊]`
 and `app.js` calls `attachOptionReadAloudControl(row, option)` — the 🔊 is a **separate sibling** of the
 answer button (never nested; `stopPropagation`/`preventDefault`), so it reads only that option and can
 never submit the answer (commit `eb6d5fc`, 2026-07-03). Only MC gets per-option 🔊; text/number/open
@@ -77,3 +78,7 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
   immediately and a Danish (`da-DK`) voice is preferred when available (fail-soft to the default voice).
   Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.
+- **Rule:** any new text-based student task (question, option, prompt) gets
+  `attachReadAloudControl` on the prompt and `attachOptionReadAloudControl` on each
+  multiple-choice option. The 🔊 stays a sibling of the answer control, so it can never submit.
+  Call `stopReadAloud()` when the task moves to the next text. No new TTS service.

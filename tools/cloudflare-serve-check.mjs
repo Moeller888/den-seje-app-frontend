@@ -79,7 +79,7 @@ const PUBLIC_ROUTES = [
 // The clean routes serve; their legacy .html twins are asserted separately, as redirects.
 const MUST_SERVE = [
   ...PUBLIC_ROUTES.map(([route]) => route),
-  "/index.html", "/login.html", "/hub.html", "/kamp.html", "/spil.html", "/teacher.html", "/admin.html", "/shop.html",
+  "/index.html", "/login.html", "/hub.html", "/spil.html", "/stabel.html", "/teacher.html", "/admin.html", "/shop.html",
   "/student-detail.html", "/student-detail.html?id=test", "/avatar.html",
   "/achievements.html", "/collection.html", "/leaderboard.html", "/themes.html", "/reset-password.html",
   "/docs.html", "/404.html", "/sitemap.xml",
@@ -180,7 +180,7 @@ server.listen(0, "127.0.0.1", async () => {
   }
 
   console.log("\nINTERNAL .html IS UNTOUCHED — direct 200, never redirected:");
-  for (const p of ["/index.html", "/login.html", "/reset-password.html", "/hub.html", "/kamp.html", "/spil.html", "/shop.html",
+  for (const p of ["/index.html", "/login.html", "/reset-password.html", "/hub.html", "/spil.html", "/stabel.html", "/shop.html",
                    "/avatar.html", "/collection.html", "/themes.html", "/leaderboard.html",
                    "/achievements.html", "/teacher.html", "/student-detail.html", "/admin.html",
                    "/docs.html", "/404.html"]) {
@@ -236,7 +236,7 @@ server.listen(0, "127.0.0.1", async () => {
       console.log(`  ${ok ? "OK  " : "FAIL"} ${route.padEnd(20)} canonical ${String(a.href ?? "(" + a.count + " tags)").padEnd(34)} | ${file} ${legacy.status} -> ${legacy.location}`);
     }
     // …and no internal surface may declare one at all.
-    for (const p of ["/index.html", "/login.html", "/hub.html", "/kamp.html", "/spil.html", "/teacher.html", "/admin.html",
+    for (const p of ["/index.html", "/login.html", "/hub.html", "/spil.html", "/stabel.html", "/teacher.html", "/admin.html",
                      "/docs.html", "/404.html"]) {
       const { count } = canonicalOf((await get(p)).body);
       const ok = count === 0;

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stabel – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .stabel-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stabel-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 12px;
+    }
+
+    .stabel-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .stabel-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .stabel-back:focus-visible,
+    .stabel-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .stabel-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .stabel-lead {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 8px 0 12px;
+    }
+    .stabel-lead .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      min-height: 44px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .stabel-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.2em;
+      margin-bottom: 14px;
+    }
+
+    .stabel-cta {
+      min-height: 48px;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .stabel-cta:hover { background: var(--btn-bg-hover); }
+    .stabel-cta--primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .stabel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .stabel-score {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+    }
+
+    .stabel-arena {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+        var(--bg-panel);
+      padding: 12px 8px 16px;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .stabel-track {
+      position: relative;
+      width: 280px;
+      height: 420px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .plate {
+      position: absolute;
+      height: 26px;
+      border-radius: 7px;
+      background: color-mix(in srgb, var(--accent) 72%, #141414);
+      border: 2px solid color-mix(in srgb, var(--accent) 35%, white);
+      box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 40%, black);
+    }
+    .plate.is-base { opacity: 0.85; }
+    .plate.is-mover {
+      background: color-mix(in srgb, var(--accent) 45%, white);
+    }
+    .plate.is-perfect {
+      box-shadow: 0 0 0 2px var(--text-bright);
+    }
+
+    .stabel-hero {
+      font-size: 28px;
+      color: var(--text-bright);
+      margin: 12px 0 8px;
+    }
+    .stabel-over-line {
+      font-size: 16px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .stabel-track { transform: scale(0.92); transform-origin: top center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .plate.is-perfect { box-shadow: none; border-color: var(--text-bright); }
+    }
+  </style>
+</head>
+<body>
+<div class="stabel-shell" id="stabel-root" data-screen="intro">
+  <div class="stabel-topbar">
+    <a class="stabel-back" href="spil.html">← Spil</a>
+    <div class="stabel-title">Stabel</div>
+    <span aria-hidden="true"></span>
+  </div>
+
+  <section id="stabel-intro">
+    <p class="stabel-lead" id="stabel-lead">En plade glider frem og tilbage. Klik, når den ligger over den under. Det, der stikker ud, skæres fra. Rammer du forbi, stopper tårnet. Ingen mønter — det er håndelaget.</p>
+    <p class="stabel-note" id="stabel-best"></p>
+    <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-start">Start</button>
+  </section>
+
+  <section id="stabel-play" hidden>
+    <div class="stabel-score" id="stabel-score" aria-live="polite">0 plader</div>
+    <div class="stabel-arena" id="stabel-arena" role="application" aria-label="Stabel. Klik for at slippe pladen.">
+      <div class="stabel-track" id="stabel-track"></div>
+    </div>
+    <div class="stabel-actions">
+      <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-drop">Slip pladen</button>
+    </div>
+  </section>
+
+  <section id="stabel-over" hidden>
+    <h2 class="stabel-hero" id="stabel-over-title">Tårnet står</h2>
+    <p class="stabel-over-line" id="stabel-over-line"></p>
+    <p class="stabel-note" id="stabel-best-over"></p>
+    <div class="stabel-actions">
+      <button type="button" class="stabel-cta stabel-cta--primary" id="stabel-again">Igen</button>
+      <a class="stabel-cta stabel-back" href="spil.html">Tilbage til menuen</a>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/stabel.js"></script>
+</body>
+</html>

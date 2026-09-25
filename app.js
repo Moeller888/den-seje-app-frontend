@@ -10,7 +10,7 @@ import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
-import { attachReadAloudControl, attachOptionReadAloudControl } from "./js/read-aloud/adapters/quiz.js";
+import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
 import { installFlagDiagnostics } from "./js/flags.js";
 
 window.__sb = supabase;
@@ -362,7 +362,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         progressBar.style.width = ((i / total) * 100) + "%";
         countEl.textContent = (i + 1) + " / " + total;
+        stopReadAloud();
         questionEl.textContent = questionText;
+        attachReadAloudControl(questionEl, questionText);
 
         let options = q?.content?.options ?? [];
         if (!Array.isArray(options) || options.length < 2) continue;
@@ -374,6 +376,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const wasCorrect = await new Promise((resolveAnswer) => {
           options.forEach((opt) => {
+            const row = document.createElement("div");
+            row.className = "option-row";
             const btn = document.createElement("button");
             btn.className = "placement-option-btn";
             btn.textContent = opt;
@@ -383,7 +387,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               btn.classList.add(isCorrect ? "placement-correct" : "placement-incorrect");
               setTimeout(() => resolveAnswer(isCorrect), 500);
             };
-            optionsEl.appendChild(btn);
+            row.appendChild(btn);
+            attachOptionReadAloudControl(row, typeof opt === "string" ? opt : "");
+            optionsEl.appendChild(row);
           });
         });
 
@@ -398,6 +404,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       logEvent("PLACEMENT_COMPLETE", { score: responses.filter(r => r.correct).reduce((s, r) => s + r.band, 0), band });
 
+      stopReadAloud();
       questionEl.textContent = "Klar! Vi starter dig det rigtige sted.";
       optionsEl.innerHTML = "";
       countEl.textContent = "";
@@ -1124,6 +1131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadAndRenderQuestion() {
     // Clean up reflection state if active from previous question
+    stopReadAloud();
     optionsContainer.style.display = "";
     reviewFeedback.textContent = "";
     reviewFeedback.classList.remove("visible");
