@@ -175,18 +175,23 @@ test("the migration is re-runnable", () => {
     "each created policy is preceded by a conditional drop, so re-applying converges");
 });
 
-test("the migration sorts after every migration that touches question_instances", () => {
-  // Originally "sorts after every migration already in the tree", compared against the last file
-  // in the whole directory. That encoded "nothing has been added since" rather than the property
-  // it describes, so it had to fail on the next unrelated migration — and it did.
-  // What matters is that nothing which touches this table can override it. "Touches" means in
-  // executable SQL: a migration that only names the table in a comment does not.
+test("the migration sorts after every migration that changes a question_instances policy", () => {
+  // This guard has been narrowed twice, each time for the same reason: it kept asserting
+  // "nothing has happened since" instead of the property it names.
+  //   v1  compared against the last file in the whole directory — broke on any new migration.
+  //   v2  compared against any migration mentioning question_instances in executable SQL —
+  //       broke on 20260928000000, which merely ADDs a column and touches no policy at all.
+  // The property is about the read SCOPE, so the comparison belongs to migrations that create or
+  // drop a POLICY on this table. A column addition, an index, or a function that reads the table
+  // cannot re-broaden who may select from it.
   const dir = join(REPO, "supabase", "migrations");
   const executable = (body) => body
     .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+  const touchesPolicy = (body) =>
+    /(CREATE|DROP|ALTER)\s+POLICY[\s\S]{0,400}ON public\.question_instances/i.test(body);
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
-    .filter((n) => /question_instances/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => touchesPolicy(executable(readFileSync(join(dir, n), "utf8"))))
     .sort();
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");

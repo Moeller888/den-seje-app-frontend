@@ -306,6 +306,89 @@ serve(async (req) => {
       }
     }
 
+    // 🔁 3. REPEAT — last resort, only once the unserved pool is genuinely empty.
+    //
+    // request_repeat_question reopens one already answered auto-graded instance: incorrect
+    // answers first, oldest first. It re-verifies server-side that no unserved question remains
+    // and that the pupil has no open question, so this cannot be used to skip ahead to repeats
+    // or to open a second question. It returns null when a repeat is not warranted.
+    //
+    // Reopening bumps question_instances.repeat_count, which is what makes
+    // process_question_attempt award the reduced amount for the re-answer.
+    if (!inserted) {
+      const { data: repeatId, error: repeatError } = await supabase.rpc(
+        "request_repeat_question",
+        { p_grade: selectedGrade, p_domains: activeDomains }
+      );
+
+      if (repeatError) throw repeatError;
+
+      if (repeatId) {
+        const { data: repeatRows, error: repeatFetchError } = await supabase
+          .from("question_instances")
+          .select(`
+            id,
+            questions (
+              content,
+              answer_format,
+              answer_type,
+              metadata,
+              is_active
+            )
+          `)
+          .eq("id", repeatId)
+          .eq("student_id", student_id)
+          .limit(1);
+
+        if (repeatFetchError) throw repeatFetchError;
+
+        const repeatRow = Array.isArray(repeatRows) && repeatRows.length > 0
+          ? repeatRows[0]
+          : null;
+
+        if (repeatRow) {
+          // PostgREST returns a to-one embed as an object, but supabase-js types it as an array.
+          // Normalise both shapes rather than indexing blindly.
+          const embedded: unknown = repeatRow.questions;
+          const rq = (Array.isArray(embedded) ? embedded[0] : embedded) as {
+            content: unknown;
+            answer_format: string | null;
+            answer_type: string | null;
+            metadata: unknown;
+            is_active: boolean | null;
+          } | null | undefined;
+
+          if (rq && rq.is_active !== false) {
+            try {
+              const format = mapAnswerFormat(rq.answer_format);
+              const normalized = normalizeContent(rq.content, format);
+
+              return new Response(
+                JSON.stringify({
+                  question_instance_id: repeatRow.id,
+                  content: normalized,
+                  answer_format: format,
+                  answer_type: rq.answer_type || "short",
+                  metadata: rq.metadata ?? null,
+                  wave_phase: wavePhase,
+                  is_repeat: true,
+                }),
+                {
+                  headers: { ...corsHeaders, "Content-Type": "application/json" },
+                  status: 200,
+                }
+              );
+            } catch (e) {
+              // Bad content on the repeat candidate: fall through to no_questions rather than
+              // serving something the client cannot render. The instance stays reopened, and the
+              // DUE step picks it up next time under the same guard.
+              console.error("Skipping repeat instance with bad content:", repeatRow.id, e);
+            }
+          }
+        }
+      }
+    }
+
     if (!inserted) {
       return new Response(
         JSON.stringify({ step: "no_questions" }),
