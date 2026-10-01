@@ -7,6 +7,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Subjects (fag). English questions use learning_objective = "english";
+// every other domain is history. Must match teacher.js ALL_DOMAINS.
+const ENGLISH_DOMAIN = "english";
+const HISTORY_DOMAINS = [
+  "prehistoric_denmark",
+  "vikings",
+  "middle_ages",
+  "reformation_monarchy",
+  "enlightenment",
+  "revolutions_democracy",
+  "industrialisation",
+  "world_war_1",
+  "world_war_2",
+  "cold_war",
+  "democracy_power",
+];
+
 function mapAnswerFormat(format: string | null) {
   if (!format) return "mc";
   if (format.startsWith("mc")) return "mc";
@@ -185,9 +202,26 @@ serve(async (req) => {
         ? (profileData.active_domains as string[])
         : null;
 
+    // Subject chosen by the student on spil.html. Missing/unknown = "historie"
+    // (backwards compatible with clients that do not send a subject).
+    const subject: "historie" | "engelsk" = body?.subject === "engelsk" ? "engelsk" : "historie";
+
+    // Effective domain filter for this subject:
+    //   engelsk  → only English questions (teacher history filter does not apply)
+    //   historie → teacher filter minus English, or all history domains when unfiltered
+    let subjectDomains: string[];
+    if (subject === "engelsk") {
+      subjectDomains = [ENGLISH_DOMAIN];
+    } else {
+      const assignedHistory = activeDomains !== null
+        ? activeDomains.filter((d) => d !== ENGLISH_DOMAIN)
+        : [];
+      subjectDomains = assignedHistory.length > 0 ? assignedHistory : HISTORY_DOMAINS;
+    }
+
     console.log("WAVE:", { wavePhase, lastMisconceptionType });
     console.log("GRADE:", { selectedGrade, currentDifficultyBand });
-    console.log("DOMAINS:", { activeDomains });
+    console.log("DOMAINS:", { activeDomains, subject, subjectDomains });
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
@@ -216,6 +250,9 @@ serve(async (req) => {
     // but within the due pool we prefer wave-appropriate questions first.
     // No band filter for due instances (already committed, grade filter does not apply).
     // is_active=false questions are excluded — inactive questions must not be delivered.
+    // Not filtered by subject: idx_one_open_question allows only ONE unanswered instance per
+    // student, so hiding an open instance from the other subject would block every new insert
+    // and dead-end the student at no_questions. The open question is finished first.
     const sortedDue = sortByWave(
       (dueInstances || []).filter(i => i.questions && i.questions.is_active !== false),
       wavePhase,
@@ -257,7 +294,7 @@ serve(async (req) => {
       "get_unserved_questions",
       {
         p_grade:   selectedGrade,
-        p_domains: activeDomains,
+        p_domains: subjectDomains,
       }
     );
 
