@@ -175,18 +175,57 @@ test("the migration is re-runnable", () => {
     "each created policy is preceded by a conditional drop, so re-applying converges");
 });
 
+// Executable SQL that can change WHO MAY READ question_instances rows:
+//   * policies on the table (CREATE / ALTER / DROP POLICY ... ON question_instances)
+//   * row level security on the table (ALTER TABLE question_instances ... ROW LEVEL SECURITY)
+//   * table privileges (GRANT / REVOKE ... ON question_instances)
+//   * any READ of the table (SELECT ... FROM / JOIN question_instances) — a SECURITY DEFINER
+//     function that reads rows bypasses RLS and is just as much a read-scope change
+// A pure write (DELETE FROM / UPDATE / INSERT INTO) cannot widen who reads rows, so it does not
+// count. Comment lines never count.
+const executableSql = (body) => body
+  .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+const QI = String.raw`(?:public\.)?question_instances\b`;
+const READ_SCOPE_PATTERNS = [
+  new RegExp(String.raw`\b(?:CREATE|ALTER|DROP)\s+POLICY\b[\s\S]*?\bON\s+${QI}`, "i"),
+  new RegExp(String.raw`\bALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?${QI}[^;]*\bROW\s+LEVEL\s+SECURITY\b`, "i"),
+  new RegExp(String.raw`\b(?:GRANT|REVOKE)\b[^;]*\bON\s+(?:TABLE\s+)?${QI}`, "i"),
+  new RegExp(String.raw`(?<!\bDELETE\s+)\bFROM\s+${QI}`, "i"),
+  new RegExp(String.raw`\bJOIN\s+${QI}`, "i"),
+];
+const touchesReadScope = (body) => {
+  const sqlText = executableSql(body);
+  return READ_SCOPE_PATTERNS.some((re) => re.test(sqlText));
+};
+
+test("the read-scope classifier catches access changes and ignores pure writes", () => {
+  // Must be caught: every way a later migration could widen who reads the rows.
+  assert.ok(touchesReadScope(
+    "CREATE POLICY \"x\" ON public.question_instances FOR SELECT TO authenticated USING (true);"));
+  assert.ok(touchesReadScope("DROP POLICY IF EXISTS \"x\" ON public.question_instances;"));
+  assert.ok(touchesReadScope("ALTER TABLE public.question_instances DISABLE ROW LEVEL SECURITY;"));
+  assert.ok(touchesReadScope("GRANT SELECT ON public.question_instances TO anon;"));
+  assert.ok(touchesReadScope(
+    "CREATE FUNCTION f() RETURNS SETOF record SECURITY DEFINER AS $$ SELECT * FROM public.question_instances $$;"));
+  assert.ok(touchesReadScope("SELECT 1 FROM profiles p JOIN question_instances qi ON qi.student_id = p.id;"));
+  // Must NOT be caught: writes, and the name inside a comment.
+  assert.equal(touchesReadScope(
+    "DELETE FROM public.question_instances qi USING public.questions q WHERE qi.question_id = q.id;"), false);
+  assert.equal(touchesReadScope("-- SELECT * FROM public.question_instances"), false);
+});
+
 test("the migration sorts after every migration that touches question_instances", () => {
   // Originally "sorts after every migration already in the tree", compared against the last file
   // in the whole directory. That encoded "nothing has been added since" rather than the property
   // it describes, so it had to fail on the next unrelated migration — and it did.
-  // What matters is that nothing which touches this table can override it. "Touches" means in
-  // executable SQL: a migration that only names the table in a comment does not.
+  // It was then narrowed to "names the table in executable SQL", which failed on the next
+  // unrelated migration too: release_open_question_outside (2026-10-01) only DELETEs a caller's
+  // own open row and cannot widen reads. What matters is that nothing which can change the READ
+  // scope of this table sorts after it — see touchesReadScope above.
   const dir = join(REPO, "supabase", "migrations");
-  const executable = (body) => body
-    .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
-    .filter((n) => /question_instances/i.test(executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => touchesReadScope(readFileSync(join(dir, n), "utf8")))
     .sort();
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");
