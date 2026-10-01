@@ -201,6 +201,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   let placementBand = null;  // one-time assessment result, never overwritten
   let persistedBand = null;  // earned level, updated every 10 questions
   let activeDomains = null;  // teacher-assigned domain filter (null = all domains)
+
+  // Subject (fag) chosen on spil.html via ?fag=historie|engelsk. Unknown/missing = historie.
+  const SUBJECT_LABEL = { engelsk: "Engelsk" };
+  const fagParam = new URLSearchParams(window.location.search).get("fag");
+  const currentSubject = fagParam === "engelsk" ? "engelsk" : "historie";
   let diffConsecutiveCorrect = 0;
   let diffConsecutiveIncorrect = 0;
 
@@ -276,6 +281,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .eq("is_active", true)
         .eq("answer_format", "mc")
         .eq("difficulty_band", band)
+        .neq("learning_objective", "english") // placement measures history level only
         .or(`target_grade.lte.${grade},target_grade.is.null`)
         .limit(count * 5);
 
@@ -430,6 +436,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     world_war_2:           "2. Verdenskrig",
     cold_war:              "Den Kolde Krig",
     democracy_power:       "Demokrati & Magt",
+    english:               "Engelsk",
   };
 
   async function loadActiveDomains() {
@@ -446,7 +453,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const text = document.getElementById("domain-focus-text");
     if (!bar || !text) return;
 
-    if (activeDomains !== null) {
+    if (currentSubject === "engelsk") {
+      // Teacher's history learning journey does not apply to English.
+      text.textContent = "Fag: " + SUBJECT_LABEL.engelsk;
+      bar.style.display = "block";
+    } else if (activeDomains !== null) {
       const names = activeDomains.map(d => DOMAIN_LABEL[d] ?? d).join("  ·  ");
       text.textContent = "Læringsrejse: " + names;
       bar.style.display = "block";
@@ -980,12 +991,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let { data, error } = await supabase.functions.invoke(
       "get-next-question",
-      { body: { session_context: sessionContext, selected_grade: selectedGrade, current_difficulty_band: currentDifficultyBand } }
+      { body: { session_context: sessionContext, selected_grade: selectedGrade, current_difficulty_band: currentDifficultyBand, subject: currentSubject } }
     );
 
     if (error) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      ({ data, error } = await supabase.functions.invoke("get-next-question", { body: {} }));
+      ({ data, error } = await supabase.functions.invoke("get-next-question", { body: { subject: currentSubject } }));
     }
 
     console.log("RAW RESPONSE:", data, error);
@@ -1162,7 +1173,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       feedback.className = "";
       optionsContainer.innerHTML = "";
 
-      if (activeDomains !== null) {
+      if (currentSubject === "engelsk") {
+        questionElement.textContent = "🎉 Du har klaret alle engelskopgaverne lige nu";
+        const sub = document.createElement("p");
+        sub.id = "no-questions-sub";
+        sub.textContent = "Prøv historie på Spil-siden, eller kom tilbage senere.";
+        optionsContainer.appendChild(sub);
+      } else if (activeDomains !== null) {
         const domainNames = activeDomains.map(d => DOMAIN_LABEL[d] ?? d).join(", ");
         questionElement.textContent = "Du har ingen flere spørgsmål i det tildelte emne.";
         const sub = document.createElement("p");
