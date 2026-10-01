@@ -223,6 +223,21 @@ serve(async (req) => {
     console.log("GRADE:", { selectedGrade, currentDifficultyBand });
     console.log("DOMAINS:", { activeDomains, subject, subjectDomains });
 
+    // Fagskift: idx_one_open_question allows only ONE unanswered instance per student. If that
+    // open instance belongs to the OTHER subject (and holds no saved answer), release it so the
+    // student gets the chosen subject from the first question. Subject-level domains are passed —
+    // not the teacher filter — so only a subject switch releases. Missing RPC = loud 500.
+    const releaseDomains = subject === "engelsk" ? [ENGLISH_DOMAIN] : HISTORY_DOMAINS;
+    const { data: releasedCount, error: releaseError } = await supabase.rpc(
+      "release_open_question_outside",
+      { p_domains: releaseDomains }
+    );
+
+    if (releaseError) throw releaseError;
+    if (typeof releasedCount === "number" && releasedCount > 0) {
+      console.log("RELEASED_OPEN_QUESTION:", { subject, releasedCount });
+    }
+
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
     const { data: dueInstances, error: dueError } = await supabase
@@ -250,9 +265,9 @@ serve(async (req) => {
     // but within the due pool we prefer wave-appropriate questions first.
     // No band filter for due instances (already committed, grade filter does not apply).
     // is_active=false questions are excluded — inactive questions must not be delivered.
-    // Not filtered by subject: idx_one_open_question allows only ONE unanswered instance per
-    // student, so hiding an open instance from the other subject would block every new insert
-    // and dead-end the student at no_questions. The open question is finished first.
+    // Not filtered by subject here: an open instance from the other subject was already released
+    // above. Any remaining open instance (same subject, or a long answer awaiting the teacher)
+    // must be served — hiding it would block every new insert and dead-end at no_questions.
     const sortedDue = sortByWave(
       (dueInstances || []).filter(i => i.questions && i.questions.is_active !== false),
       wavePhase,
