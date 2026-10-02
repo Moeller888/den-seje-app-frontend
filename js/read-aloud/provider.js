@@ -12,6 +12,8 @@
  * @property {string} text
  * @property {string|null} clipKey   // stable key for a pre-recorded clip
  * @property {string} lang           // e.g. "da-DK"
+ * @property {{text:string, lang:string}[]} [segments]  // optional language runs; a provider
+ *           that can switch voices reads these in order, else it reads `text`
  */
 
 /**

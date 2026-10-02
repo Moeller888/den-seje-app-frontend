@@ -1121,7 +1121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const row = document.createElement("div");
         row.className = "option-row";
         row.appendChild(btn);
-        attachOptionReadAloudControl(row, option);
+        attachOptionReadAloudControl(row, option, { subject: currentSubject, question: content.question, options });
         optionsContainer.appendChild(row);
       } else {
         optionsContainer.appendChild(btn);
@@ -1198,7 +1198,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     questionElement.textContent = question.content.question;
     // 157O: optional read-aloud control — no-op when ENABLE_READ_ALOUD is off; fail-soft.
-    attachReadAloudControl(questionElement, question.content.question);
+    attachReadAloudControl(questionElement, question.content.question, { subject: currentSubject });
     feedback.textContent = "";
     feedback.className = "";
     questionShownAt = Date.now();
