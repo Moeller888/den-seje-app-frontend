@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const MIGRATION = "supabase/migrations/20260928000000_quiz_repeat_when_pool_exhausted.sql";
+const MIGRATION = "supabase/migrations/20261002000000_quiz_repeat_when_pool_exhausted.sql";
 const EDGE = "supabase/functions/get-next-question/index.ts";
 const sql = () => readFileSync(join(REPO, MIGRATION), "utf8");
 // Assertions run against EXECUTABLE SQL: the comments quote the old behaviour and name the things
@@ -230,19 +230,80 @@ test("no RLS policy, table, index, view or data change", () => {
   const s = stmts();
   for (const stmt of ["CREATE POLICY", "DROP POLICY", "ALTER POLICY", "CREATE TABLE",
                       "DROP TABLE", "CREATE INDEX", "DROP INDEX", "CREATE VIEW", "DROP VIEW",
-                      "INSERT INTO", "DELETE FROM", "TRUNCATE"]) {
+                      "INSERT INTO", "TRUNCATE"]) {
     assert.ok(!s.includes(stmt), `the migration must not contain ${stmt.trim()}`);
   }
+  // The single DELETE is the fagskift release carried over from 20261001100000, inside that
+  // function — never a data fix at migration level.
+  const deletes = [...s.matchAll(/DELETE FROM/g)];
+  assert.equal(deletes.length, 1, "exactly one DELETE, the one inside the release function");
+  const relAt = s.indexOf("CREATE OR REPLACE FUNCTION public.release_open_question_outside");
+  assert.ok(relAt !== -1 && deletes[0].index > relAt && deletes[0].index < s.indexOf("$function$;", relAt),
+    "the DELETE must sit inside release_open_question_outside");
   // the only UPDATE statements are inside the two functions, against question_instances
   // and student_progress — never a bulk data fix.
   assert.ok(!/UPDATE public\.question_instances\s+SET[^;]*WHERE student_id = v_uid;\s*$/m.test(s));
   assert.ok(!s.includes("get_unserved_questions"), "the existing selection RPC stays untouched");
 });
 
-test("only the two intended functions are defined", () => {
+test("only the three intended functions are defined", () => {
   const fns = [...stmts().matchAll(/FUNCTION public\.(\w+)/g)].map((m) => m[1]);
   assert.deepEqual([...new Set(fns)].sort(),
-    ["process_question_attempt", "request_repeat_question"]);
+    ["process_question_attempt", "release_open_question_outside", "request_repeat_question"]);
+});
+
+// ── Fagskift (release_open_question_outside) ─────────────────────────────────
+// A reopened repeat is answered = false with user_answer NULL — exactly what the fagskift release
+// deletes. Deleted, the question would count as unserved and come back as a first attempt with
+// the full award. These pin that a repeat is closed again instead, and nothing else changes.
+
+const releaseBlock = () => {
+  const s = stmts();
+  const at = s.indexOf("CREATE OR REPLACE FUNCTION public.release_open_question_outside");
+  assert.ok(at !== -1, "the release function is redefined here");
+  return s.slice(at, s.indexOf("$function$;", at));
+};
+
+test("fagskift closes an open repeat instead of deleting it", () => {
+  const b = releaseBlock();
+  const upd = b.slice(b.indexOf("UPDATE public.question_instances"), b.indexOf("GET DIAGNOSTICS v_closed"));
+  assert.match(upd, /SET\s+answered\s+= true,\s*\n\s*answered_at = now\(\)/);
+  assert.match(upd, /AND\s+qi\.repeat_count > 0/, "only repeats are closed");
+  assert.ok(!/repeat_count\s*=/.test(upd.slice(0, upd.indexOf("FROM"))),
+    "closing must not reset repeat_count — that would restore the full award");
+  assert.match(upd, /AND\s+qi\.answered\s+= false/);
+  assert.match(upd, /AND\s+qi\.user_answer IS NULL/);
+});
+
+test("fagskift still deletes a fresh open question, and only a fresh one", () => {
+  const b = releaseBlock();
+  const del = b.slice(b.indexOf("DELETE FROM public.question_instances"), b.indexOf("GET DIAGNOSTICS v_deleted"));
+  assert.match(del, /AND\s+qi\.repeat_count = 0/, "a repeat must never reach the DELETE");
+  assert.match(del, /AND\s+qi\.answered\s+= false/);
+  assert.match(del, /AND\s+qi\.user_answer IS NULL/);
+});
+
+test("both release paths keep 20261001100000's subject and ownership predicate", () => {
+  const b = releaseBlock();
+  const subject = /AND\s+\(q\.learning_objective IS NULL OR NOT \(q\.learning_objective = ANY \(p_domains\)\)\);/g;
+  assert.equal([...b.matchAll(subject)].length, 2, "UPDATE and DELETE use the same subject test");
+  assert.equal([...b.matchAll(/AND\s+qi\.student_id\s+= v_user_id/g)].length, 2,
+    "both paths are limited to the caller's own rows");
+});
+
+test("the release function keeps its contract from 20261001100000", () => {
+  const b = releaseBlock();
+  assert.match(b, /RETURNS integer/);
+  assert.match(b, /SECURITY DEFINER/);
+  assert.match(b, /SET search_path TO 'public'/);
+  assert.match(b, /v_user_id UUID := auth\.uid\(\);/);
+  assert.match(b, /RAISE EXCEPTION 'not_authenticated'/);
+  assert.match(b, /RAISE EXCEPTION 'invalid_domains'/);
+  assert.match(b, /RETURN v_closed \+ v_deleted;/, "still the number of rows released");
+  const s = stmts();
+  assert.match(s, /REVOKE ALL ON FUNCTION public\.release_open_question_outside\(text\[\]\) FROM PUBLIC;/);
+  assert.match(s, /REVOKE ALL ON FUNCTION public\.release_open_question_outside\(text\[\]\) FROM anon;/);
+  assert.match(s, /GRANT EXECUTE ON FUNCTION public\.release_open_question_outside\(text\[\]\) TO authenticated;/);
 });
 
 test("the migration sorts after every migration that touches these objects", () => {
@@ -251,12 +312,22 @@ test("the migration sorts after every migration that touches these objects", () 
     .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
-    .filter((n) => /process_question_attempt|request_repeat_question|repeat_count/i.test(
+    .filter((n) => /process_question_attempt|request_repeat_question|repeat_count|release_open_question_outside/i.test(
       executable(readFileSync(join(dir, n), "utf8"))))
     .sort();
-  assert.ok(touching.includes("20260928000000_quiz_repeat_when_pool_exhausted.sql"));
+  assert.ok(touching.includes("20261001100000_release_open_question_outside.sql"),
+    "the fagskift migration this one overrides must be in the tree");
+  assert.ok(touching.includes("20261002000000_quiz_repeat_when_pool_exhausted.sql"));
   assert.equal(touching[touching.length - 1],
-    "20260928000000_quiz_repeat_when_pool_exhausted.sql", "it must apply last among them");
+    "20261002000000_quiz_repeat_when_pool_exhausted.sql", "it must apply last among them");
+});
+
+test("the migration version is not shared with any other migration", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  const version = "20261002000000";
+  const same = readdirSync(dir).filter((n) => n.startsWith(`${version}_`));
+  assert.deepEqual(same, ["20261002000000_quiz_repeat_when_pool_exhausted.sql"],
+    "two files with one version collide in the migration ledger");
 });
 
 // ── The Edge Function ────────────────────────────────────────────────────────
@@ -276,8 +347,18 @@ test("the Edge Function only attempts a repeat when nothing was inserted", () =>
   const s = edge();
   assert.match(s, /if \(!inserted\) \{[\s\S]{0,600}request_repeat_question/,
     "the repeat path must be gated on the new-question path having failed");
-  assert.match(s, /\{ p_grade: selectedGrade, p_domains: activeDomains \}/,
-    "the same grade and domain scope as the unserved query");
+  assert.match(s, /\{ p_grade: selectedGrade, p_domains: subjectDomains \}/,
+    "the same grade and subject scope as the unserved query");
+  assert.ok(!/request_repeat_question",\s*\{[^}]*activeDomains/.test(s),
+    "the teacher filter alone ignores the chosen subject — a historie pupil could get English");
+});
+
+test("the fagskift release still runs before the due step", () => {
+  const s = edge();
+  const release = s.indexOf('"release_open_question_outside"');
+  const due     = s.indexOf("1. DUE QUESTIONS");
+  assert.ok(release !== -1 && due !== -1 && release < due,
+    "a repeat from the other subject must be closed before the due step could serve it");
 });
 
 test("the repeat response is marked, and errors are not swallowed", () => {

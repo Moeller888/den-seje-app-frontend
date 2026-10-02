@@ -58,6 +58,15 @@
 -- prompted this has 319 incorrect answers out of 490, so there is ample material where repetition
 -- is pedagogically useful rather than merely filler.
 --
+-- FAGSKIFT MUST NOT ERASE A REPEAT
+-- release_open_question_outside (20261001100000) frees the pupil's open question on a subject
+-- switch by DELETING it — safe for a fresh question, which simply becomes unserved again. A
+-- reopened repeat looks exactly like such a row (answered = false, user_answer IS NULL), so it
+-- would be deleted too; the question would then count as unserved and be served as NEW, with the
+-- full award — the farming hole this migration exists to keep shut. Section 4 therefore closes a
+-- repeat again instead of deleting it. This file sorts after 20261001100000 so that definition
+-- is the one that wins.
+--
 -- WHAT THIS MIGRATION DOES NOT DO
 -- No RLS policy is added, removed or altered. No view, index or other table is changed. No data
 -- is modified: the backfill of repeat_count is the column default, 0, which is correct for every
@@ -69,7 +78,7 @@ ALTER TABLE public.question_instances
 
 COMMENT ON COLUMN public.question_instances.repeat_count IS
   'Times this instance has been re-served after being answered. 0 = never repeated. '
-  'Drives the reduced award in process_question_attempt; see 20260928000000.';
+  'Drives the reduced award in process_question_attempt; see 20261002000000.';
 
 -- ── 2. The fallback: reset one answered instance, but only if the pool is empty ──
 CREATE OR REPLACE FUNCTION public.request_repeat_question(
@@ -289,3 +298,64 @@ BEGIN
 
 END;
 $$;
+
+-- ── 4. Fagskift closes a repeat instead of deleting it ───────────────────────
+-- Identical to 20261001100000 — signature, search_path, exceptions, privileges and the return
+-- value (rows released, 0 or 1) — except that an open REPEAT (repeat_count > 0) outside the
+-- chosen subject is closed again rather than deleted. Closing keeps the row, so the question can
+-- never count as unserved and be served again as a first attempt; repeat_count keeps its value;
+-- and answered_at = now() puts it at the back of the oldest-first repeat order. A fresh open
+-- question (repeat_count = 0) is still deleted, exactly as before.
+CREATE OR REPLACE FUNCTION public.release_open_question_outside(p_domains text[])
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_closed  INTEGER;
+  v_deleted INTEGER;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'not_authenticated';
+  END IF;
+
+  IF p_domains IS NULL OR array_length(p_domains, 1) IS NULL THEN
+    RAISE EXCEPTION 'invalid_domains';
+  END IF;
+
+  UPDATE public.question_instances qi
+  SET    answered    = true,
+         answered_at = now()
+  FROM   public.questions q
+  WHERE  qi.question_id  = q.id
+    AND  qi.student_id   = v_user_id
+    AND  qi.answered     = false
+    AND  qi.user_answer IS NULL
+    AND  qi.repeat_count > 0
+    AND  (q.learning_objective IS NULL OR NOT (q.learning_objective = ANY (p_domains)));
+
+  GET DIAGNOSTICS v_closed = ROW_COUNT;
+
+  DELETE FROM public.question_instances qi
+  USING  public.questions q
+  WHERE  qi.question_id  = q.id
+    AND  qi.student_id   = v_user_id
+    AND  qi.answered     = false
+    AND  qi.user_answer IS NULL
+    AND  qi.repeat_count = 0
+    AND  (q.learning_objective IS NULL OR NOT (q.learning_objective = ANY (p_domains)));
+
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+
+  RETURN v_closed + v_deleted;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.release_open_question_outside(text[]) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.release_open_question_outside(text[]) FROM anon;
+GRANT EXECUTE ON FUNCTION public.release_open_question_outside(text[]) TO authenticated;
+
+COMMENT ON FUNCTION public.release_open_question_outside(text[]) IS
+  'Fagskift: frigiver kalderens åbne, ubesvarede instance uden gemt svar, hvis spørgsmålet ligger uden for p_domains. Et nyt spørgsmål slettes; et gensyn (repeat_count > 0) lukkes igen i stedet, så det aldrig kan serveres som nyt med fuld belønning. Returnerer antal frigivne rækker (0 eller 1).';

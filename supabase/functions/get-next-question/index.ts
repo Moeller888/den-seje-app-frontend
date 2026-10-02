@@ -367,10 +367,13 @@ serve(async (req) => {
     //
     // Reopening bumps question_instances.repeat_count, which is what makes
     // process_question_attempt award the reduced amount for the re-answer.
+    //
+    // Same subject scope as get_unserved_questions above: a pupil in historie must not be handed
+    // an English repeat, and "the pool is empty" must mean empty for the chosen subject.
     if (!inserted) {
       const { data: repeatId, error: repeatError } = await supabase.rpc(
         "request_repeat_question",
-        { p_grade: selectedGrade, p_domains: activeDomains }
+        { p_grade: selectedGrade, p_domains: subjectDomains }
       );
 
       if (repeatError) throw repeatError;
