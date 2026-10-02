@@ -214,6 +214,17 @@ test("the read-scope classifier catches access changes and ignores pure writes",
   assert.equal(touchesReadScope("-- SELECT * FROM public.question_instances"), false);
 });
 
+// Later migrations that READ question_instances inside SECURITY DEFINER functions and were
+// reviewed as not widening who may read rows. Each entry names the file and why. The exception
+// covers reads only: an entry may never touch a policy, row level security or table privileges.
+const REVIEWED_LATER_READERS = {
+  "20261002000000_quiz_repeat_when_pool_exhausted.sql":
+    "request_repeat_question and release_open_question_outside read only the caller's own rows " +
+    "(auth.uid()) and return an id / a count; process_question_attempt reads one instance " +
+    "matched on both id and student_id and returns only its status — the same reads the " +
+    "production function already makes. No row data reaches a caller who could not already read it.",
+};
+
 test("the migration sorts after every migration that touches question_instances", () => {
   // Originally "sorts after every migration already in the tree", compared against the last file
   // in the whole directory. That encoded "nothing has been added since" rather than the property
@@ -222,16 +233,40 @@ test("the migration sorts after every migration that touches question_instances"
   // unrelated migration too: release_open_question_outside (2026-10-01) only DELETEs a caller's
   // own open row and cannot widen reads. What matters is that nothing which can change the READ
   // scope of this table sorts after it — see touchesReadScope above.
+  //
+  // A later migration that reads the table is still caught. It may sort after this one only by
+  // being named in REVIEWED_LATER_READERS above — a deliberate, reviewed decision, never a
+  // loosened pattern.
   const dir = join(REPO, "supabase", "migrations");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => touchesReadScope(readFileSync(join(dir, n), "utf8")))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_READERS, n))
     .sort();
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");
   assert.equal(touching[touching.length - 1],
     "20260923000000_question_instances_teacher_read_scope.sql",
     "it must apply last among them, so nothing in the tree can re-broaden the scope");
+});
+
+test("reviewed later readers are exactly the named files, and change reads only", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_READERS),
+    ["20261002000000_quiz_repeat_when_pool_exhausted.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
+    const body = readFileSync(join(dir, name), "utf8");
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    assert.ok(touchesReadScope(body),
+      `${name} no longer reads the table — remove the stale exception`);
+    const sqlText = executableSql(body);
+    for (const re of ACCESS_PATTERNS) {
+      assert.ok(!re.test(sqlText),
+        `${name} changes a policy, RLS or table privilege — the exception does not cover that`);
+    }
+  }
 });
 
 test("no later migration re-broadens the read scope", () => {
