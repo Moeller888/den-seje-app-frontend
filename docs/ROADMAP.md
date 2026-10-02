@@ -655,11 +655,22 @@ belønning); de hører til Spil-menuen (jf. Husk) og planlægges særskilt.
 autoritativ tekst-evaluator `_shared/answer-evaluation.ts` (eksakt match + `accepted_answers`,
 substring-reglen fjernet); `js/answer-options.js` (kun `mc` udfyldes til fire svarmuligheder —
 sandt/falsk kan aldrig få tilfældige årstal); unit-tests. `process-event` skal redeployes, før
-tekst-rettelsen virker i prod (særskilt ejergodkendelse).
+tekst-rettelsen virker i prod (særskilt ejergodkendelse). ✅ `process-event` v28 live 2026-10-02.
+
+**Fase 1 — Stav til (frontend):** `js/answer-input.js` vælger renderer ud fra `answer_format` (+
+`answer_type` for tekst) og bygger stav til-feltet: ét `<input type="text">` uden stavekontrol,
+autokorrektur, automatisk stort bogstav og autoudfyldning; Enter og knappen sender den rå tekst til
+den eksisterende `submitAnswer`; tomt svar sendes ikke. `answer_type = "long"` beholder textarea +
+lærerkø uændret. Et ukendt format giver nu en synlig fejl i stedet for svarknapper. Ingen aktive
+spørgsmål endnu — de første kommer som særskilt D-110-migration.
+
+_Teknisk gæld:_ `get-next-question` (`mapAnswerFormat`) oversætter stadig et ukendt eller manglende
+`answer_format` til `"mc"` på serveren, så klientens fejltilstand nås først, når den fallback
+fjernes (kræver Edge-deploy). Ingen aktive spørgsmål rammer den i dag (alle er `mc`).
 
 | # | Opgaveform | Stimulus | Interaktion (`answer_format`) | Server-evaluator | Belønningsvej | Fase | Størrelse |
 |---|---|---|---|---|---|---|---|
-| 1 | **Stav til / short text** | tekst (evt. oplæsning) | `text` — ét kort felt | eksakt tekst + `accepted_answers` ✅ | `process_text_answer` | **1 (første vertikale)** | S |
+| 1 | **Stav til / short text** | tekst (evt. oplæsning) | `text` — ét kort felt ✅ | eksakt tekst + `accepted_answers` ✅ | `process_text_answer` | **1 (første vertikale)** — renderer bygget, afventer indhold | S |
 | 2 | **Sandt/falsk** | tekst | `true_false` — to valg, aldrig udfyldt | eksakt valgmulighed | `process_question_attempt` | 1 | S |
 | 3 | **Tal/årstal** | tekst | `number` (renderer findes) | numerisk lighed (heltal; decimalkomma) | `process_question_attempt` | 1 | S |
 | 4 | **Udfyld hul** | sætning med hul | `cloze` — felt(er) i sætningen | eksakt pr. hul, alle huller rigtige | `process_text_answer` | 2 | S–M |
@@ -874,7 +885,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Kløft (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-02) | Timingspil porteret fra Nord-minigames (`src/game/kloeft-engine.ts`). Et skår falder ned gennem en skakt; klik når det er ud for kløften i væggen (midterste tredjedel = perfekt). Kløften bliver smallere og skåret hurtigere for hvert skår. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_kloeft_best`). `kloeft.html` + `js/kloeft.js` + `js/kloeft-logic.js`. |
 | Hop (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-02) | Platformspil porteret fra Nord-minigames (`src/game/hop-engine.ts`). Figuren løber selv; klik/mellemrum/pil op for at hoppe over huller og klodser. Tidligt hop (0,7–1,9 enheder før forhindringen) = perfekt. Farten stiger med scoren. Banen er deterministisk pr. runde (seed = rundetæller i browseren); en unit-test søger og beviser, at banen kan gennemføres. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_hop_best`). `hop.html` + `js/hop.js` + `js/hop-logic.js`. |
 | Brud (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-02) | Breakout porteret fra Nord-minigames (`src/game/brud-engine.ts`). Pladen styres med mus/finger eller pil/A-D; klik/mellemrum skyder. En klods ramt direkte fra pladen (ingen væg imellem) = perfekt; ryddet mur → ny mur og hurtigere bold. Kører i en fast verden på 360×420, der skaleres ind i canvas, så en ændring af vinduets størrelse ikke flytter klodserne. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_brud_best`). `brud.html` + `js/brud.js` + `js/brud-logic.js`. Med Brud er alle Nord-minigames porteret undtagen Drej og Vig (ejerbeslutning). |
-| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; virker først i prod efter `process-event`-redeploy (særskilt godkendelse). Første vertikale form: **stav til**. |
+| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`), ingen aktive spørgsmål endnu. |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 
