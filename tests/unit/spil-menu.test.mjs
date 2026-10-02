@@ -22,10 +22,12 @@ test("spil.html har quiz og Stabel, ikke Videnkamp", () => {
   assert.match(page, /href="index\.html"/);
   assert.match(page, /href="stabel\.html"/);
   assert.match(page, /href="husk\.html"/);
+  assert.match(page, /href="naal\.html"/);
   assert.match(page, /href="hub\.html"/);
   assert.match(page, />Quiz</);
   assert.match(page, />Stabel</);
   assert.match(page, />Husk</);
+  assert.match(page, />Nål</);
   assert.equal(page.includes("kamp.html"), false);
   assert.equal(page.includes("Videnkamp"), false);
 });
@@ -36,4 +38,5 @@ test("quizzen og spillene sender tilbage til menuen", () => {
   assert.match(quiz, /window\.location\.href\s*=\s*"spil\.html"/);
   assert.match(read("stabel.html"), /href="spil\.html"/);
   assert.match(read("husk.html"), /href="spil\.html"/);
+  assert.match(read("naal.html"), /href="spil\.html"/);
 });

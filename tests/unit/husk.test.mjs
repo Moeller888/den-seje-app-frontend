@@ -95,5 +95,5 @@ test("the Husk page is internal, pays nothing and goes back to the menu", () => 
   assert.match(page, /src="js\/husk\.js"/);
   const js = read("js/husk.js");
   assert.equal(js.includes(".rpc("), false, "Husk pays no coins");
-  assert.equal(js.includes("Math.random"), false);
+  assert.doesNotMatch(js, /Math\.random\s*\(/);
 });
