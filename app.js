@@ -8,6 +8,7 @@ import { PresenceEngine } from "./js/avatar-presence-engine.js";
 import { BlinkEngine } from "./js/avatar-blink-engine.js";
 import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
+import { prepareChoiceOptions } from "./js/answer-options.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -132,20 +133,6 @@ async function checkAuthAndRole() {
   }
 
   return true;
-}
-
-// 🔥 Sikrer altid 4 svar
-function ensureFourOptions(options) {
-  const pool = ["1939","1940","1941","1942","1943","1944","1945","1946"];
-
-  const unique = new Set(options);
-
-  while (unique.size < 4) {
-    const random = pool[Math.floor(Math.random() * pool.length)];
-    unique.add(random);
-  }
-
-  return Array.from(unique).sort(() => Math.random() - 0.5);
 }
 
 window.addEventListener("pageshow", async (event) => {
@@ -1067,7 +1054,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (format.includes("mc")) {
-      options = ensureFourOptions(options);
+      // Padding to four options applies to answer_format "mc" only — a two-choice format
+      // (true/false) must never get random years added. See js/answer-options.js.
+      options = prepareChoiceOptions(options, format);
     }
 
     if (format.includes("number")) {

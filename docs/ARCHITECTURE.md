@@ -194,13 +194,55 @@ submitAnswer() [app.js]
         └─ auth (user JWT) → fetch instance + question meta (.maybeSingle)
              ├─ answer_type == "long"      → PATH 1: validate ≥20 words, save user_answer,
              │                                 return {status:"pending"}   (→ TEACHER REVIEW)
-             ├─ answer_format includes text → PATH 2: process_text_answer RPC (CAS-guarded)
+             ├─ answer_format includes text → PATH 2: isTextAnswerCorrect (exact, _shared/answer-evaluation.ts)
+             │                                 → process_text_answer RPC (CAS-guarded)
              └─ else (MC / number)         → PATH 3: process_question_attempt RPC
         → response: { status, correct_answer, review_text?, misconception_type? }
 ```
 This is the single most important integration boundary in the system: **AI grading, OCR, and
 speech-to-text all attach here** (PATH 1 / pre-submit), and must preserve this response shape
 (see §13 and [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
+
+### Question Interaction model (opgaveformer) — foundation, 2026-10-02
+
+The binding model every new task form is built on. Plan and order: [ROADMAP.md → Opgaveformer](./ROADMAP.md#opgaveformer--question-interaction-track).
+
+A question has three independent parts:
+
+| Part | What it is | Where it lives | Examples |
+|---|---|---|---|
+| **Stimulus** | What the pupil reads, sees or hears *before* answering | `questions.content` (question text today; typed stimulus such as a source excerpt, image or audio clip added per form) | plain text · kildeuddrag · billede · lydklip/oplæsning · kort |
+| **Interaction** (response type) | *How* the pupil answers | `questions.answer_format` (+ `answer_type` for long answers) | choose one · choose many · type a word · type a number · order · match · categorise · point on a map · long text |
+| **Evaluator** | The rule that decides correct/incorrect | server only — `supabase/functions/_shared/answer-evaluation.ts`, called by `process-event` | exact option · exact text + `accepted_answers` · numeric equality · set/sequence equality · teacher review |
+
+Rules (binding):
+
+1. **Stimulus is separate from the answer form.** Any stimulus can be combined with any
+   interaction (a source excerpt + multiple choice, an audio clip + typed text = diktat). A new
+   stimulus never requires a new evaluator, and a new interaction never requires a new stimulus.
+2. **The frontend renderer is chosen by the interaction type** (`answer_format`) in
+   `renderOptions()` (`app.js`), one renderer per interaction. A format the client does not know
+   must fail loud (visible error state, never a dead state) — and such questions stay
+   `is_active = false` until their renderer AND evaluator are live.
+3. **The server evaluator is authoritative.** The client sends only the raw answer; it never
+   decides or reports correctness. Evaluators are pure, deterministic functions in
+   `_shared/answer-evaluation.ts`, unit-tested from `tests/unit/` (the module is imported by both).
+   No fuzzy matching and no AI in the reward decision (AI stays advisory, [AI_GUIDELINES.md](./AI_GUIDELINES.md)).
+4. **No task form invents its own reward path.** Every interaction ends in one of the existing
+   CAS-guarded award paths: `process_question_attempt` (option/number), `process_text_answer`
+   (server-evaluated, `p_is_correct` computed by the evaluator), or teacher review (`answer_type = "long"`).
+   Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
+   the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
+
+Short typed answers (the first evaluator, `isTextAnswerCorrect`): correct **only** if the answer
+equals the correct answer or one of the question's explicit `content.accepted_answers` after
+normalisation — NFC Unicode normalisation, typographic apostrophes → `'`, locale-independent
+lower-casing, whitespace trimmed and collapsed, sentence punctuation stripped at the ends only.
+Letters are never removed or transliterated (æ ≠ ae). No substring/prefix match ("app" ≠ "apple").
+
+Choice options (`js/answer-options.js`): only `answer_format = "mc"` is padded to four options
+(legacy WWII-year pool — a no-op for every active question, which all have four). Any other choice
+format — e.g. a two-choice true/false — is shown exactly as authored and is never padded.
 
 ## 7. Adaptive learning engine
 

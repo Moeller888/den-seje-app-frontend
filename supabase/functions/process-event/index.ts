@@ -1,28 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { publishableKey } from "../_shared/supabase-keys.ts";
+import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Content-Type": "application/json"
-}
-
-function normalize(str: string) {
-  return (str || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[.,!?]/g, "")
-    .replace(/\s+/g, " ")
-}
-
-function isTextCorrect(user: string, correct: string) {
-  const u = normalize(user)
-  const c = normalize(correct)
-  if (!u || !c) return false
-  if (u === c) return true
-  if (u.includes(c) || c.includes(u)) return true
-  return false
 }
 
 function countWords(text: string) {
@@ -163,7 +147,9 @@ serve(async (req) => {
     // ── PATH 2: Short text → atomic process_text_answer RPC ─────────────────
     if (format.includes("text")) {
 
-      const isCorrect = isTextCorrect(answer, correct_answer)
+      // Exact match after normalisation against the correct answer or an explicit
+      // accepted_answers variant — never a substring or fuzzy match (_shared/answer-evaluation.ts).
+      const isCorrect = isTextAnswerCorrect(answer, correct_answer, questionContent?.accepted_answers)
       console.log("FLOW: SHORT TEXT →", isCorrect ? "correct" : "incorrect")
 
       // process_text_answer: atomically sets answered=true, was_correct,
