@@ -103,3 +103,27 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
   `attachReadAloudControl` on the prompt and `attachOptionReadAloudControl` on each
   multiple-choice option. The 🔊 stays a sibling of the answer control, so it can never submit.
   Call `stopReadAloud()` when the task moves to the next text. No new TTS service.
+
+## 6. Parked option — pre-generated neural clips (owner decision 2026-10-02)
+
+**Status: PARKED (not decided, not started).** Kept as the candidate fix if on-device voices prove
+too weak for the pilot.
+
+**Why it came up (measured 2026-10-02, owner's own machine):**
+- Chrome on Windows exposes only one Danish voice, *Microsoft Helle* (old, robotic); there is no
+  "Google dansk" on desktop Chrome. English sounds fluent (Google UK English, cloud voice).
+- The Danish→English switch has an audible pause (~0.5 s measured before the Google voice starts;
+  cloud fetch per utterance, inside the browser — not fixable in our code).
+- **Edge** (neural Christel/Jeppe + neural English) sounds much better and its switch pause is
+  acceptable — owner verdict: good enough for now. Chromebooks/iPads still depend on their own voices.
+
+**The option:** produce the read-aloud audio offline with a neural TTS voice and serve it as static
+clips through the existing pre-recorded provider (`manifest.js`, key = `hashKey(text)`). A
+multilingual neural voice can read a mixed Danish/English sentence as **one** clip — no switch pause,
+same quality on every device. Web Speech stays the fallback.
+
+**Before it can start (owner gates):**
+1. Owner approval to send question text (never student data) once to an external TTS service
+   (e.g. Azure) — this changes the 157N decision ("no third-party service") and must be recorded.
+2. Scope analysis first: number of questions + options, total size vs Cloudflare static-asset
+   limits, cost vs free quotas, and whether a voice reads Danish *and* English naturally in one clip.
