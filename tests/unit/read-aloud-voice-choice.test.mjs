@@ -86,6 +86,32 @@ test("no Danish voice / voices not loaded → default voice, still speaks", asyn
   assert.equal(spoken[0].voice, undefined);
 });
 
+test("Chrome first click: voices are requested at creation, so the first speak gets the best voice", async () => {
+  // Chrome returns [] from the first getVoices() call and only then starts loading.
+  const voices = [
+    v("Microsoft Helle - Danish (Denmark)", "da-DK"),
+    v("Google dansk", "da-DK"),
+  ];
+  const spoken = installSpeech(voices);
+  let calls = 0;
+  window.speechSynthesis.getVoices = () => (calls++ === 0 ? [] : voices);
+
+  const provider = createWebSpeechProvider(); // 🔊 button render
+  assert.equal(calls, 1, "voice loading must start before the first click");
+  await provider.speak({ text: "Hej" });      // first click
+  assert.equal(spoken[0].voice.name, "Google dansk");
+});
+
+test("voice warm-up is fail-soft when getVoices throws or is missing", async () => {
+  installSpeech([]);
+  window.speechSynthesis.getVoices = () => { throw new Error("boom"); };
+  assert.doesNotThrow(() => createWebSpeechProvider());
+  delete window.speechSynthesis.getVoices;
+  assert.doesNotThrow(() => createWebSpeechProvider());
+  delete globalThis.window;
+  assert.doesNotThrow(() => createWebSpeechProvider());
+});
+
 test("malformed voice entries never throw", async () => {
   const spoken = installSpeech([null, {}, { lang: 42 }, v("Google dansk", "da-DK")]);
   assert.equal(await createWebSpeechProvider().speak({ text: "Hej" }), true);

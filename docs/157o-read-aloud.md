@@ -82,6 +82,9 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
   which on Windows was often the robotic "Microsoft Helle". Note: Edge "Online (Natural)" and
   "Google" voices are synthesised by the browser vendor's cloud (the browser sends the question
   text; no student data, nothing from our code). Tests: `tests/unit/read-aloud-voice-choice.test.mjs`.
+  The voice list is requested when the provider is created (i.e. when the 🔊 button renders),
+  because Chrome only starts loading voices on the first `getVoices()` call and returns `[]`
+  until then — otherwise the first click on a page fell back to the default voice.
   Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.
 - **Rule:** any new text-based student task (question, option, prompt) gets
