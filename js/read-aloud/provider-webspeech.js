@@ -6,10 +6,37 @@
 
 const PROVIDER_ID = "webspeech";
 
+// Quality tier of a voice, judged from its name/voiceURI (higher = more natural).
+// Browsers expose neural voices next to old robotic ones under the same language,
+// so the first Danish voice in the list is often the worst one (e.g. "Microsoft
+// Helle" on Windows). Known tiers:
+//   4 — "Natural": Edge neural voices ("Microsoft Christel Online (Natural)").
+//   3 — "Premium": Apple premium voices.
+//   2 — "Enhanced": Apple enhanced voices.
+//   1 — "Google": Chrome's Google voices ("Google dansk").
+//   0 — anything else (device default quality).
+// Deterministic: same voice → same tier. Never throws.
+function voiceQuality(v) {
+  try {
+    const name = v && typeof v.name === "string" ? v.name : "";
+    const uri = v && typeof v.voiceURI === "string" ? v.voiceURI : "";
+    const id = (name + " " + uri).toLowerCase();
+    if (id.indexOf("natural") !== -1) return 4;
+    if (id.indexOf("premium") !== -1) return 3;
+    if (id.indexOf("enhanced") !== -1) return 2;
+    if (id.indexOf("google") !== -1) return 1;
+    return 0;
+  } catch (_e) {
+    return 0;
+  }
+}
+
 // Pick a Danish voice from the synth's list, preferring an exact match to `lang`
-// (e.g. "da-DK"), then any Danish voice ("da*"). Returns null when voices are not
-// yet loaded or none is Danish — the caller then speaks with `utterance.lang` only,
-// so read-aloud still works (browser default voice). Never throws.
+// (e.g. "da-DK"), then any Danish voice ("da*"). Within each of those groups the
+// most natural voice wins (voiceQuality); ties keep the browser's list order.
+// Returns null when voices are not yet loaded or none is Danish — the caller then
+// speaks with `utterance.lang` only, so read-aloud still works (browser default
+// voice). Never throws.
 function pickDanishVoice(lang) {
   try {
     if (typeof window === "undefined" || !window.speechSynthesis ||
@@ -18,12 +45,15 @@ function pickDanishVoice(lang) {
     if (!Array.isArray(voices) || voices.length === 0) return null; // not loaded yet → no hard fail
     const want = (typeof lang === "string" && lang ? lang : "da-DK").toLowerCase();
     let exact = null;
+    let exactQ = -1;
     let danish = null;
+    let danishQ = -1;
     for (const v of voices) {
       const vlang = (v && typeof v.lang === "string" ? v.lang : "").toLowerCase();
       if (vlang.length === 0) continue;
-      if (exact === null && vlang === want) exact = v;
-      if (danish === null && vlang.indexOf("da") === 0) danish = v;
+      const q = voiceQuality(v);
+      if (vlang === want && q > exactQ) { exact = v; exactQ = q; }
+      if (vlang.indexOf("da") === 0 && q > danishQ) { danish = v; danishQ = q; }
     }
     return exact || danish || null;
   } catch (_e) {
