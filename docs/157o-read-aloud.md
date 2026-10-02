@@ -76,6 +76,12 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
 - **No live TTS service** (decided against).
 - **Activated (Web Speech)** — the flag is `true` in prod (`52e7a04`, 2026-07-03); Web Speech works
   immediately and a Danish (`da-DK`) voice is preferred when available (fail-soft to the default voice).
+  Among the device's Danish voices the **most natural** one is chosen (2026-10-02): Edge neural
+  "Natural" (Christel/Jeppe) > Apple "Premium" > Apple "Enhanced" > Chrome "Google dansk" > anything
+  else; ties keep the browser's list order. Before this, the first Danish voice in the list won,
+  which on Windows was often the robotic "Microsoft Helle". Note: Edge "Online (Natural)" and
+  "Google" voices are synthesised by the browser vendor's cloud (the browser sends the question
+  text; no student data, nothing from our code). Tests: `tests/unit/read-aloud-voice-choice.test.mjs`.
   Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.
 - **Rule:** any new text-based student task (question, option, prompt) gets
