@@ -61,7 +61,21 @@ function pickDanishVoice(lang) {
   }
 }
 
+// Start loading the device's voice list ahead of the first click. Chrome only begins
+// loading voices on the first getVoices() call and returns [] until they arrive, so
+// without this the first "🔊" click of a page always got the default (robotic) voice.
+// The provider is created when the 🔊 button renders, so the list is ready by the time
+// the student clicks. Fire-and-forget; never throws.
+function warmVoices() {
+  try {
+    if (typeof window === "undefined" || !window.speechSynthesis ||
+        typeof window.speechSynthesis.getVoices !== "function") return;
+    window.speechSynthesis.getVoices();
+  } catch (_e) { /* fail-soft: speak() still works with the default voice */ }
+}
+
 export function createWebSpeechProvider() {
+  warmVoices();
   return {
     id: PROVIDER_ID,
 
