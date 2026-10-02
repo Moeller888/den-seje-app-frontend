@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nål – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .naal-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .naal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 12px;
+    }
+
+    .naal-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .naal-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .naal-back:focus-visible,
+    .naal-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .naal-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .naal-lead {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 8px 0 12px;
+    }
+    .naal-lead .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      min-height: 44px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .naal-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.2em;
+      margin-bottom: 14px;
+    }
+
+    .naal-cta {
+      min-height: 48px;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .naal-cta:hover { background: var(--btn-bg-hover); }
+    .naal-cta--primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .naal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .naal-score {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .naal-arena {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+        var(--bg-panel);
+      padding: 0;
+      overflow: hidden;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .naal-stage {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      overflow: hidden;
+    }
+    .naal-stage canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .naal-hud {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .naal-combo {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .naal-mute {
+      min-height: 44px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .naal-mute:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .naal-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .naal-hero {
+      font-size: 28px;
+      color: var(--text-bright);
+      margin: 12px 0 8px;
+    }
+    .naal-over-line {
+      font-size: 16px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .naal-stage { height: 380px; }
+    }
+  </style>
+</head>
+<body>
+<div class="naal-shell" id="naal-root" data-screen="intro">
+  <div class="naal-topbar">
+    <a class="naal-back" href="spil.html">← Spil</a>
+    <div class="naal-title">Nål</div>
+    <button type="button" class="naal-mute" id="naal-mute" aria-pressed="false">Lyd til</button>
+  </div>
+
+  <section id="naal-intro">
+    <p class="naal-lead" id="naal-lead">En nål drejer rundt i en skive. Foran den lyser en bue. Klik, mens nålen er inde i buen. Rammer du midten af buen, er det perfekt. Klikker du uden for buen, eller lader du nålen løbe hele vejen gennem buen uden at klikke, er runden slut. For hver bue bliver den næste lidt kortere og nålen lidt hurtigere, og en gang imellem vender den om. Nål giver ingen mønter.</p>
+    <p class="naal-note" id="naal-best"></p>
+    <button type="button" class="naal-cta naal-cta--primary" id="naal-start">Start</button>
+  </section>
+
+  <section id="naal-play" hidden>
+    <div class="naal-hud">
+      <div class="naal-score" id="naal-score" aria-live="polite">0 buer</div>
+      <div class="naal-combo" id="naal-combo" aria-live="polite"></div>
+    </div>
+    <div class="naal-arena" id="naal-arena" role="application" aria-label="Nål. Klik, mens nålen er i buen.">
+      <div class="naal-stage">
+        <canvas id="naal-canvas" aria-hidden="true"></canvas>
+      </div>
+    </div>
+    <div class="naal-actions">
+      <button type="button" class="naal-cta naal-cta--primary" id="naal-drop">Stik</button>
+    </div>
+  </section>
+
+  <section id="naal-over" hidden>
+    <h2 class="naal-hero" id="naal-over-title">Nålen slap forbi</h2>
+    <p class="naal-over-line" id="naal-over-line"></p>
+    <p class="naal-note" id="naal-best-over"></p>
+    <div class="naal-actions">
+      <button type="button" class="naal-cta naal-cta--primary" id="naal-again">Igen</button>
+      <a class="naal-cta naal-back" href="spil.html">Tilbage til menuen</a>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/naal.js"></script>
+</body>
+</html>
