@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Husk – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .husk-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .husk-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 12px;
+    }
+
+    .husk-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .husk-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .husk-back:focus-visible,
+    .husk-cta:focus-visible,
+    .husk-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .husk-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .husk-lead {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 8px 0 12px;
+    }
+    .husk-lead .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      min-height: 44px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .husk-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.2em;
+      margin-bottom: 14px;
+    }
+
+    .husk-cta {
+      min-height: 48px;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .husk-cta:hover { background: var(--btn-bg-hover); }
+    .husk-cta--primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .husk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .husk-mute {
+      min-height: 44px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .husk-mute:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .husk-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .husk-hud {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .husk-score {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+    .husk-misses {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-dim);
+    }
+    .husk-misses[data-warn="true"] { color: var(--accent); }
+    .husk-status {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.3em;
+      margin-bottom: 8px;
+    }
+
+    .husk-arena {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 60%),
+        var(--bg-panel);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    .husk-board {
+      --cols: 4;
+      display: grid;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      max-width: calc(var(--cols) * 84px);
+    }
+
+    .husk-tile {
+      aspect-ratio: 1;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-family: inherit;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 160ms ease-out, border-color 160ms ease-out, background 160ms ease-out;
+    }
+    .husk-tile:hover { background: var(--btn-bg-hover); }
+    .husk-tile[data-state="open"] {
+      color: var(--text-bright);
+      border-color: var(--text-bright);
+      transform: scale(1.04);
+    }
+    .husk-tile[data-state="matched"] {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+      cursor: default;
+    }
+    .husk-tile svg { width: 62%; height: 62%; display: block; }
+    .husk-back-mark {
+      width: 9px;
+      height: 9px;
+      border: 1.5px solid currentColor;
+      transform: rotate(45deg);
+    }
+    .husk-board[data-locked="true"] .husk-tile { cursor: default; }
+
+    .husk-hero {
+      font-size: 28px;
+      color: var(--text-bright);
+      margin: 12px 0 8px;
+    }
+    .husk-over-line {
+      font-size: 16px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .husk-tile { transition: none; }
+      .husk-tile[data-state="open"] { transform: none; }
+    }
+
+    @media (max-width: 420px) {
+      .husk-arena { padding: 10px; }
+      .husk-board { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+<div class="husk-shell" id="husk-root" data-screen="intro">
+  <div class="husk-topbar">
+    <a class="husk-back" href="spil.html">← Spil</a>
+    <div class="husk-title">Husk</div>
+    <button type="button" class="husk-mute" id="husk-mute" aria-pressed="false">Lyd til</button>
+  </div>
+
+  <section id="husk-intro">
+    <p class="husk-lead" id="husk-lead">Vend to felter. Er de ens, bliver de liggende. Er de forskellige, vender de om igen, og det tæller som en fejl. Find alle par, så får du et større bræt: først 12 felter, så 16 og så 20. Du må lave lige så mange fejl på et bræt, som der er par. Finder du et par uden en eneste fejl på brættet, er det perfekt. Husk giver ingen mønter.</p>
+    <p class="husk-note" id="husk-best"></p>
+    <button type="button" class="husk-cta husk-cta--primary" id="husk-start">Start</button>
+  </section>
+
+  <section id="husk-play" hidden>
+    <div class="husk-hud">
+      <div class="husk-score" id="husk-score" aria-live="polite">0 par</div>
+      <div class="husk-misses" id="husk-misses">Fejl 0/6</div>
+    </div>
+    <p class="husk-status" id="husk-status" aria-live="polite"></p>
+    <div class="husk-arena">
+      <div class="husk-board" id="husk-board" role="group" aria-label="Husk-brættet"></div>
+    </div>
+  </section>
+
+  <section id="husk-over" hidden>
+    <h2 class="husk-hero" id="husk-over-title">For mange fejl</h2>
+    <p class="husk-over-line" id="husk-over-line"></p>
+    <p class="husk-note" id="husk-best-over"></p>
+    <div class="husk-actions">
+      <button type="button" class="husk-cta husk-cta--primary" id="husk-again">Igen</button>
+      <a class="husk-cta husk-back" href="spil.html">Tilbage til menuen</a>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/husk.js"></script>
+</body>
+</html>

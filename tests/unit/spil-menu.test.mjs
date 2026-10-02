@@ -1,4 +1,4 @@
-// The Spil menu is the entrance to the quiz and to Stabel.
+// The Spil menu is the entrance to the quiz and to the games.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,16 +21,19 @@ test("spil.html har quiz og Stabel, ikke Videnkamp", () => {
   assert.match(page, /noindex/);
   assert.match(page, /href="index\.html"/);
   assert.match(page, /href="stabel\.html"/);
+  assert.match(page, /href="husk\.html"/);
   assert.match(page, /href="hub\.html"/);
   assert.match(page, />Quiz</);
   assert.match(page, />Stabel</);
+  assert.match(page, />Husk</);
   assert.equal(page.includes("kamp.html"), false);
   assert.equal(page.includes("Videnkamp"), false);
 });
 
-test("quizzen og Stabel sender tilbage til menuen", () => {
+test("quizzen og spillene sender tilbage til menuen", () => {
   const quiz = read("index.html");
   assert.match(quiz, /id="menu-btn"[^>]*>[^<]*Spil/);
   assert.match(quiz, /window\.location\.href\s*=\s*"spil\.html"/);
   assert.match(read("stabel.html"), /href="spil\.html"/);
+  assert.match(read("husk.html"), /href="spil\.html"/);
 });
