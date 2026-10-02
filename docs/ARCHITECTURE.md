@@ -240,6 +240,16 @@ normalisation — NFC Unicode normalisation, typographic apostrophes → `'`, lo
 lower-casing, whitespace trimmed and collapsed, sentence punctuation stripped at the ends only.
 Letters are never removed or transliterated (æ ≠ ae). No substring/prefix match ("app" ≠ "apple").
 
+Renderer selection (`js/answer-input.js` → `resolveAnswerRenderer`, used by `renderOptions()`):
+`content.force_text` → textarea · `number` → number field · `text` + `answer_type = "long"` →
+textarea + teacher queue · `text` otherwise → **short text (stav til)** · `mc` → option buttons ·
+anything else → visible error with a way out, never option buttons. The short-text field is one
+`<input type="text">` with `spellcheck="false"`, `autocorrect="off"`, `autocapitalize="none"` and
+`autocomplete="off"`; Enter or the button hands the raw text to `submitAnswer` (no client-side
+normalisation), and a blank answer is not sent. Known debt: `get-next-question` still maps an
+unknown `answer_format` to `"mc"` server-side, so the client error state is reached only once that
+fallback is removed.
+
 Choice options (`js/answer-options.js`): only `answer_format = "mc"` is padded to four options
 (legacy WWII-year pool — a no-op for every active question, which all have four). Any other choice
 format — e.g. a two-choice true/false — is shown exactly as authored and is never padded.

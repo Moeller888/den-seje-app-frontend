@@ -9,6 +9,7 @@ import { BlinkEngine } from "./js/avatar-blink-engine.js";
 import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
+import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer } from "./js/answer-input.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -1015,11 +1016,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     return parsed;
   }
 
+  // Returns true when an answer control was rendered, false for an interaction type this client
+  // cannot show (loadAndRenderQuestion then leaves the question in a visible error state).
   function renderOptions(question) {
     optionsContainer.innerHTML = "";
 
     const format = (question.answer_format || "").toLowerCase();
     const content = question.content;
+    // One renderer per interaction type — see js/answer-input.js for the selection order.
+    const renderer = resolveAnswerRenderer(question);
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });
@@ -1028,7 +1033,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!Array.isArray(options)) options = [];
 
-    if (content.force_text === true) {
+    if (renderer === ANSWER_RENDERERS.FORCE_TEXT) {
       const textarea = document.createElement("textarea");
 
       const btn = document.createElement("button");
@@ -1050,7 +1055,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       optionsContainer.appendChild(btn);
       // 157I: optional OCR "scan text" control — no-op when ENABLE_OCR is off; fail-soft.
       attachOcrControl(textarea, optionsContainer);
-      return;
+      return true;
     }
 
     if (format.includes("mc")) {
@@ -1059,7 +1064,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       options = prepareChoiceOptions(options, format);
     }
 
-    if (format.includes("number")) {
+    if (renderer === ANSWER_RENDERERS.NUMBER) {
       const input = document.createElement("input");
       input.type = "text";
 
@@ -1080,10 +1085,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       optionsContainer.appendChild(input);
       optionsContainer.appendChild(btn);
-      return;
+      return true;
     }
 
-    if (format === "text") {
+    if (renderer === ANSWER_RENDERERS.SHORT_TEXT) {
+      // "Stav til": one-line input with spellcheck/autocorrect/autocapitalize/autocomplete off.
+      // The raw text goes to submitAnswer unchanged; the server evaluator decides correctness.
+      const { input, button, hint } = buildShortTextAnswer(document, {
+        onSubmit: submitAnswer,
+        describedBy: questionElement.id,
+      });
+      optionsContainer.appendChild(input);
+      optionsContainer.appendChild(hint);
+      optionsContainer.appendChild(button);
+      input.focus();
+      return true;
+    }
+
+    if (renderer === ANSWER_RENDERERS.LONG_TEXT) {
       const textarea = document.createElement("textarea");
 
       const btn = document.createElement("button");
@@ -1105,7 +1124,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       optionsContainer.appendChild(btn);
       // 157I: optional OCR "scan text" control — no-op when ENABLE_OCR is off; fail-soft.
       attachOcrControl(textarea, optionsContainer);
-      return;
+      return true;
+    }
+
+    if (renderer === ANSWER_RENDERERS.UNSUPPORTED) {
+      // An interaction type this client has no renderer for must fail loud — never fall through
+      // to option buttons (ARCHITECTURE.md → Question Interaction model, rule 2).
+      logError("UNSUPPORTED_ANSWER_FORMAT", { format, answer_type: question.answer_type ?? null });
+      const msg = document.createElement("p");
+      msg.id = "unsupported-format";
+      msg.className = "feedback-error";
+      msg.setAttribute("role", "alert");
+      msg.textContent = "⚠️ Denne opgavetype kan ikke vises endnu.";
+      optionsContainer.appendChild(msg);
+
+      const hubBtn = document.createElement("button");
+      hubBtn.id = "go-hub-btn";
+      hubBtn.textContent = "Gå til hub";
+      hubBtn.className = "submit-btn";
+      hubBtn.onclick = () => { window.location.href = "hub.html"; };
+      optionsContainer.appendChild(hubBtn);
+      return false;
     }
 
     const isMc = format.includes("mc");
@@ -1127,6 +1166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         optionsContainer.appendChild(btn);
       }
     });
+    return true;
   }
 
   async function loadAndRenderQuestion() {
@@ -1203,7 +1243,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     feedback.className = "";
     questionShownAt = Date.now();
 
-    renderOptions(question);
+    if (!renderOptions(question)) {
+      // Unsupported interaction type: same exit as the load-error path above — the state machine
+      // is reset to IDLE (no answer control means AWAITING_ANSWER would be a dead state), the
+      // question is marked as an error, and the pupil has a visible way out.
+      uiState = "IDLE";
+      questionElement.dataset.state = "error";
+      return;
+    }
 
     setUIState(UI_STATES.AWAITING_ANSWER);
   }
