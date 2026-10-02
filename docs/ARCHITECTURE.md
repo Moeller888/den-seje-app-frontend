@@ -234,6 +234,16 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
+Privileged award RPC: `process_text_answer` takes the verdict (`p_is_correct`) and the pupil
+(`p_user_id`) as parameters, so it must be reachable only from the backend. `process-event` calls it
+through a separate admin client (`process-event/text-answer-rpc.ts`: the shared resolver's backend
+key, no pupil `Authorization` header, no session), after authenticating the pupil and reading the
+instance with the pupil's own client and checking `student_id = user.id` (403 otherwise).
+`p_user_id` is the verified `user.id` and `p_is_correct` the evaluator's result — never request
+fields. A key-configuration error fails that path with a 500; it never falls back to the user
+client. Everything else in `process-event` stays user-scoped. Revoking EXECUTE from PUBLIC, `anon`
+and `authenticated` is a separate D-110 migration, applied after this code is live.
+
 Short typed answers (the first evaluator, `isTextAnswerCorrect`): correct **only** if the answer
 equals the correct answer or one of the question's explicit `content.accepted_answers` after
 normalisation — NFC Unicode normalisation, typographic apostrophes → `'`, locale-independent
