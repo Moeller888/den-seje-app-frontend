@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brud – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .brud-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brud-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 12px;
+    }
+
+    .brud-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .brud-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .brud-back:focus-visible,
+    .brud-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .brud-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .brud-lead {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 8px 0 12px;
+    }
+    .brud-lead .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      min-height: 44px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .brud-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.2em;
+      margin-bottom: 14px;
+    }
+
+    .brud-cta {
+      min-height: 48px;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .brud-cta:hover { background: var(--btn-bg-hover); }
+    .brud-cta:disabled { opacity: 0.5; cursor: default; }
+    .brud-cta--primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .brud-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .brud-score {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .brud-arena {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+        var(--bg-panel);
+      padding: 0;
+      overflow: hidden;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    .brud-stage {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      overflow: hidden;
+    }
+    .brud-stage canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .brud-hud {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .brud-combo {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .brud-mute {
+      min-height: 44px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .brud-mute:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .brud-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .brud-hero {
+      font-size: 28px;
+      color: var(--text-bright);
+      margin: 12px 0 8px;
+    }
+    .brud-over-line {
+      font-size: 16px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .brud-stage { height: 380px; }
+    }
+  </style>
+</head>
+<body>
+<div class="brud-shell" id="brud-root" data-screen="intro">
+  <div class="brud-topbar">
+    <a class="brud-back" href="spil.html">← Spil</a>
+    <div class="brud-title">Brud</div>
+    <button type="button" class="brud-mute" id="brud-mute" aria-pressed="false">Lyd til</button>
+  </div>
+
+  <section id="brud-intro">
+    <p class="brud-lead" id="brud-lead">Hold bolden oppe med pladen, og knus klodserne. Styr pladen ved at trække eller bevæge musen hen over spillet, eller med piletasterne. Klik eller tryk på mellemrum for at skyde bolden af sted. Rammer bolden en klods direkte fra pladen, uden at røre væggen først, er det perfekt. Er alle klodser knust, kommer der en ny mur, og bolden bliver hurtigere. Slipper bolden forbi pladen, er runden slut. Brud giver ingen mønter.</p>
+    <p class="brud-note" id="brud-best"></p>
+    <button type="button" class="brud-cta brud-cta--primary" id="brud-start">Start</button>
+  </section>
+
+  <section id="brud-play" hidden>
+    <div class="brud-hud">
+      <div class="brud-score" id="brud-score" aria-live="polite">0 klodser</div>
+      <div class="brud-combo" id="brud-combo" aria-live="polite"></div>
+    </div>
+    <div class="brud-arena" id="brud-arena" role="application" aria-label="Brud. Styr pladen med musen, fingeren eller piletasterne.">
+      <div class="brud-stage">
+        <canvas id="brud-canvas" aria-hidden="true"></canvas>
+      </div>
+    </div>
+    <div class="brud-actions">
+      <button type="button" class="brud-cta brud-cta--primary" id="brud-drop">Skyd</button>
+    </div>
+  </section>
+
+  <section id="brud-over" hidden>
+    <h2 class="brud-hero" id="brud-over-title">Bolden slap ud</h2>
+    <p class="brud-over-line" id="brud-over-line"></p>
+    <p class="brud-note" id="brud-best-over"></p>
+    <div class="brud-actions">
+      <button type="button" class="brud-cta brud-cta--primary" id="brud-again">Igen</button>
+      <a class="brud-cta brud-back" href="spil.html">Tilbage til menuen</a>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/brud.js"></script>
+</body>
+</html>
