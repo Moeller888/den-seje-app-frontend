@@ -21,4 +21,5 @@ test("quiz and placement read the prompt and each option", () => {
   assert.match(quiz, /attachReadAloudControl\(questionEl, questionText\)/);
   assert.match(read("js/stabel.js"), /attachReadAloudControl\(/);
   assert.equal(read("js/stabel.js").includes("kamp"), false);
+  assert.match(read("js/husk.js"), /attachReadAloudControl\(/);
 });
