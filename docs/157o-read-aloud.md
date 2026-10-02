@@ -85,6 +85,18 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
   The voice list is requested when the provider is created (i.e. when the 🔊 button renders),
   because Chrome only starts loading voices on the first `getVoices()` call and returns `[]`
   until then — otherwise the first click on a page fell back to the default voice.
+- **Danish/English switching (English subject, 2026-10-02).** English questions mix both
+  languages ("Hvad betyder 'sun'?", options like "mum og dad"). `js/read-aloud/lang-segments.js`
+  splits the text into language runs (`da-DK` / `en-GB`); Web Speech queues one utterance per run,
+  each with the most natural voice of its language (English falls back to any `en*` voice, never
+  to a Danish one). Only when the quiz passes `{ subject: "engelsk" }` (question: `segmentQuestion`;
+  MC option: `segmentOption` with the question and all options) — every other subject is read in
+  Danish exactly as before. Rule-based and deterministic (no network/model): quotes, apostrophes,
+  "på engelsk"/"betyder" frames, small DA/EN word lists, æ/ø/å and contractions; one-word options
+  keep their group's language (false friends like "kylling", "leg"); punctuation never becomes a
+  run of its own. Checked by hand against all 1,090 English questions; a wrong guess only changes
+  the voice. Tests: `tests/unit/read-aloud-lang-segments.test.mjs` (incl. a no-text-lost invariant
+  over the whole English corpus). New question patterns may need a word-list/frame rule here.
   Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.
 - **Rule:** any new text-based student task (question, option, prompt) gets

@@ -31,13 +31,13 @@ function voiceQuality(v) {
   }
 }
 
-// Pick a Danish voice from the synth's list, preferring an exact match to `lang`
-// (e.g. "da-DK"), then any Danish voice ("da*"). Within each of those groups the
-// most natural voice wins (voiceQuality); ties keep the browser's list order.
-// Returns null when voices are not yet loaded or none is Danish — the caller then
-// speaks with `utterance.lang` only, so read-aloud still works (browser default
-// voice). Never throws.
-function pickDanishVoice(lang) {
+// Pick a voice for `lang` from the synth's list, preferring an exact match (e.g.
+// "da-DK", "en-GB"), then any voice of the same language ("da*", "en*"). Within each
+// of those groups the most natural voice wins (voiceQuality); ties keep the browser's
+// list order. Returns null when voices are not yet loaded or none matches the
+// language — the caller then speaks with `utterance.lang` only, so read-aloud still
+// works (browser default voice). Never picks a voice of another language. Never throws.
+function pickVoice(lang) {
   try {
     if (typeof window === "undefined" || !window.speechSynthesis ||
         typeof window.speechSynthesis.getVoices !== "function") return null;
@@ -46,16 +46,17 @@ function pickDanishVoice(lang) {
     const want = (typeof lang === "string" && lang ? lang : "da-DK").toLowerCase();
     let exact = null;
     let exactQ = -1;
-    let danish = null;
-    let danishQ = -1;
+    const base = want.split("-")[0];
+    let same = null;
+    let sameQ = -1;
     for (const v of voices) {
-      const vlang = (v && typeof v.lang === "string" ? v.lang : "").toLowerCase();
+      const vlang = (v && typeof v.lang === "string" ? v.lang : "").toLowerCase().replace("_", "-");
       if (vlang.length === 0) continue;
       const q = voiceQuality(v);
       if (vlang === want && q > exactQ) { exact = v; exactQ = q; }
-      if (vlang.indexOf("da") === 0 && q > danishQ) { danish = v; danishQ = q; }
+      if (vlang.split("-")[0] === base && q > sameQ) { same = v; sameQ = q; }
     }
-    return exact || danish || null;
+    return exact || same || null;
   } catch (_e) {
     return null;
   }
@@ -93,13 +94,22 @@ export function createWebSpeechProvider() {
       try {
         if (!this.isSupported()) return false;
         const text = req && typeof req.text === "string" ? req.text : "";
-        if (text.trim().length === 0) return false;
+        const lang = (req && typeof req.lang === "string" && req.lang) ? req.lang : "da-DK";
+        // Language runs (English subject): each run gets its own voice; speechSynthesis
+        // queues them, so they play in order. Without runs the whole text is one run.
+        const runs = req && Array.isArray(req.segments)
+          ? req.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0)
+          : [];
+        const parts = runs.length > 0 ? runs : [{ text, lang }];
+        if (parts.every((p) => p.text.trim().length === 0)) return false;
         window.speechSynthesis.cancel(); // stop anything in progress
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = (req && typeof req.lang === "string" && req.lang) ? req.lang : "da-DK";
-        const voice = pickDanishVoice(u.lang); // prefer a Danish voice when one is available
-        if (voice) u.voice = voice;            // else fall back to the browser default voice
-        window.speechSynthesis.speak(u);
+        for (const p of parts) {
+          const u = new SpeechSynthesisUtterance(p.text);
+          u.lang = (typeof p.lang === "string" && p.lang) ? p.lang : lang;
+          const voice = pickVoice(u.lang); // prefer the most natural voice of that language
+          if (voice) u.voice = voice;      // else fall back to the browser default voice
+          window.speechSynthesis.speak(u);
+        }
         return true;
       } catch (_e) {
         return false;
