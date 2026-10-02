@@ -640,6 +640,49 @@ needs staging to implement · FUTURE = activation/rollout only needs staging).
 | **157S** ✅ | Default-off/fail-soft unit tests via built-in `node --test` + `deno test` (21 tests, no new framework) — **done** | tests | **SOFT** (done) |
 | 157T | Production-readiness review + secret-rotation checklist | ops | **FUTURE INFRA** |
 
+### Opgaveformer — Question Interaction track
+
+_Ejerbeslutning 2026-10-02:_ quizzen skal have mange forskellige opgaveformer, ikke kun multiple
+choice. I dag er alle 2099 aktive spørgsmål multiple choice. Den bindende arkitekturmodel —
+**stimulus adskilt fra svarform, frontend-renderer valgt efter interaktionstype, server-evaluator
+autoritativ, ingen opgaveform med egen belønningsvej** — står i
+[ARCHITECTURE.md → Question Interaction model](./ARCHITECTURE.md#question-interaction-model-opgaveformer--foundation-2026-10-02).
+
+Spilletilstande som memory/flashcards er ikke en opgaveform (ét spørgsmål → ét svar → én
+belønning); de hører til Spil-menuen (jf. Husk) og planlægges særskilt.
+
+**Fase 0 — Foundation ✅ (ingen DB-ændring, ingen deploy):** arkitekturmodellen dokumenteret;
+autoritativ tekst-evaluator `_shared/answer-evaluation.ts` (eksakt match + `accepted_answers`,
+substring-reglen fjernet); `js/answer-options.js` (kun `mc` udfyldes til fire svarmuligheder —
+sandt/falsk kan aldrig få tilfældige årstal); unit-tests. `process-event` skal redeployes, før
+tekst-rettelsen virker i prod (særskilt ejergodkendelse).
+
+| # | Opgaveform | Stimulus | Interaktion (`answer_format`) | Server-evaluator | Belønningsvej | Fase | Størrelse |
+|---|---|---|---|---|---|---|---|
+| 1 | **Stav til / short text** | tekst (evt. oplæsning) | `text` — ét kort felt | eksakt tekst + `accepted_answers` ✅ | `process_text_answer` | **1 (første vertikale)** | S |
+| 2 | **Sandt/falsk** | tekst | `true_false` — to valg, aldrig udfyldt | eksakt valgmulighed | `process_question_attempt` | 1 | S |
+| 3 | **Tal/årstal** | tekst | `number` (renderer findes) | numerisk lighed (heltal; decimalkomma) | `process_question_attempt` | 1 | S |
+| 4 | **Udfyld hul** | sætning med hul | `cloze` — felt(er) i sætningen | eksakt pr. hul, alle huller rigtige | `process_text_answer` | 2 | S–M |
+| 5 | **Kilde + spørgsmål** | kildeuddrag (tekst/billede) | enhver eksisterende | den valgte interaktions | uændret | 2 | S |
+| 6 | **Billede + svar** | billede (Storage, evt. Cloudinary-flag) | enhver eksisterende | den valgte interaktions | uændret | 2 | S–M |
+| 7 | **Lytteopgave** | lyd (forudgenereret klip / Web Speech) | enhver eksisterende | den valgte interaktions | uændret | 2 | M |
+| 8 | **Diktat** | lyd | `text` | eksakt tekst + `accepted_answers` | `process_text_answer` | 2 | M (kræver 1 + 7) |
+| 9 | **Multi-select** | tekst | `multi_select` — vælg alle rigtige | mængde-lighed (alle og kun de rigtige) | `process_text_answer` | 3 | M |
+| 10 | **Find fejlen** | sætning/tekst | `find_error` — vælg det forkerte ord | eksakt position | `process_text_answer` | 3 | M |
+| 11 | **Byg sætning** | ordbrikker | `build_sentence` — træk/tryk i rækkefølge | sekvens-lighed mod tilladte rækkefølger | `process_text_answer` | 3 | M |
+| 12 | **Rækkefølge/tidslinje** | begivenheder | `order` — træk og slip (touch + tastatur) | sekvens-lighed | `process_text_answer` | 3 | M–L |
+| 13 | **Match par** | to kolonner | `match` — træk og slip | par-mængde-lighed | `process_text_answer` | 3 | M–L |
+| 14 | **Kategorisering** | elementer + kategorier | `categorize` — træk i kurve | afbildnings-lighed | `process_text_answer` | 3 | M–L |
+| 15 | **Hotspot/kort** | billede/kort med navngivne områder | `hotspot` — klik på stedet | punkt inden for navngivet område | `process_text_answer` | 4 | L |
+| 16 | **Langt lærersvar** | tekst/kilde | `answer_type = "long"` (findes) | lærervurdering (`review-answer`) | lærerkø → `TEXT_APPROVED` | findes (ingen aktive spørgsmål) | — |
+
+Regler for hver ny form: én PR pr. form (renderer + evaluator + unit-tests + e2e); spørgsmålene
+forbliver `is_active = false`, indtil renderer og evaluator er live i prod; indhold kommer som
+særskilt migration (D-110). Binær scoring — ingen delpoint — så XP, mønter og spaced repetition er
+uændrede. "Belønningsvej `process_text_answer`" for ikke-tekst-former betyder: serveren evaluerer
+det strukturerede svar og kalder den eksisterende CAS-sikrede RPC med `p_is_correct` — der laves
+ingen ny belønnings-RPC pr. form.
+
 ### Avatar / art track (from 167A)
 
 > **Guardrail (binding):** **167A replaces artwork assets only — it is NOT an avatar rewrite.** The
@@ -828,6 +871,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Stabel (Spil-menuen) | 🟡 **Mønter bygget — migration afventer ejerens godkendelse** (2026-09-25) | **Ejerbeslutning 2026-09-25 omgør "Stabel giver ingen mønter":** en afsluttet runde giver **1 mønt pr. plade, højst 50 mønter pr. elev pr. dag** (dansk døgn, Europe/Copenhagen). Pladeantallet rapporteres af browseren og kan forfalskes; loftet i `claim_stabel_reward` (SECURITY DEFINER, kun `role = student`) er forsvaret, ikke scoren. Ledger: `stabel_daily_rewards` (RLS uden policies, ingen tabelrettigheder til anon/authenticated). Migration `20260928000000_stabel_reward.sql`, runtime-testet på PGlite. Ingen XP. Udseende: PRISMA-isometrisk canvas (PR #273). |
 | Husk (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-02) | Hukommelsesspil porteret fra Nord-minigames (Grok-workspace, `src/components/husk/`). **Ejerbeslutning 2026-10-02:** de nye spil giver **ingen mønter og ingen XP** — kun lokal rekord (`dsj_husk_best`); mønter er en senere, særskilt opgave med egen migration. Brættet vokser 12 → 16 → 20 felter (6/8/10 par, én tilladt fejl pr. par). Deterministisk blanding (seed = rundetæller i browseren, ingen `Math.random`). `husk.html` + `js/husk.js` + `js/husk-logic.js`. Drej og Vig porteres ikke. |
 | Nål (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-02) | Timingspil porteret fra Nord-minigames (`src/game/naal-engine.ts`). En nål drejer rundt; klik mens den er i buen (midterste femtedel = perfekt). Hvert ramt bue gør den næste kortere og nålen hurtigere; hver 7. vender den. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_naal_best`). Canvas i temaets farver. `naal.html` + `js/naal.js` + `js/naal-logic.js`. |
+| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; virker først i prod efter `process-event`-redeploy (særskilt godkendelse). Første vertikale form: **stav til**. |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 
