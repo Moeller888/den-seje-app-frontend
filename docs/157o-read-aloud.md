@@ -76,9 +76,54 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
 - **No live TTS service** (decided against).
 - **Activated (Web Speech)** — the flag is `true` in prod (`52e7a04`, 2026-07-03); Web Speech works
   immediately and a Danish (`da-DK`) voice is preferred when available (fail-soft to the default voice).
+  Among the device's Danish voices the **most natural** one is chosen (2026-10-02): Edge neural
+  "Natural" (Christel/Jeppe) > Apple "Premium" > Apple "Enhanced" > Chrome "Google dansk" > anything
+  else; ties keep the browser's list order. Before this, the first Danish voice in the list won,
+  which on Windows was often the robotic "Microsoft Helle". Note: Edge "Online (Natural)" and
+  "Google" voices are synthesised by the browser vendor's cloud (the browser sends the question
+  text; no student data, nothing from our code). Tests: `tests/unit/read-aloud-voice-choice.test.mjs`.
+  The voice list is requested when the provider is created (i.e. when the 🔊 button renders),
+  because Chrome only starts loading voices on the first `getVoices()` call and returns `[]`
+  until then — otherwise the first click on a page fell back to the default voice.
+- **Danish/English switching (English subject, 2026-10-02).** English questions mix both
+  languages ("Hvad betyder 'sun'?", options like "mum og dad"). `js/read-aloud/lang-segments.js`
+  splits the text into language runs (`da-DK` / `en-GB`); Web Speech queues one utterance per run,
+  each with the most natural voice of its language (English falls back to any `en*` voice, never
+  to a Danish one). Only when the quiz passes `{ subject: "engelsk" }` (question: `segmentQuestion`;
+  MC option: `segmentOption` with the question and all options) — every other subject is read in
+  Danish exactly as before. Rule-based and deterministic (no network/model): quotes, apostrophes,
+  "på engelsk"/"betyder" frames, small DA/EN word lists, æ/ø/å and contractions; one-word options
+  keep their group's language (false friends like "kylling", "leg"); punctuation never becomes a
+  run of its own. Checked by hand against all 1,090 English questions; a wrong guess only changes
+  the voice. Tests: `tests/unit/read-aloud-lang-segments.test.mjs` (incl. a no-text-lost invariant
+  over the whole English corpus). New question patterns may need a word-list/frame rule here.
   Piper clips remain a future quality upgrade; adding them needs no further activation.
 - Styling of the control is minimal; CSS polish is a follow-up.
 - **Rule:** any new text-based student task (question, option, prompt) gets
   `attachReadAloudControl` on the prompt and `attachOptionReadAloudControl` on each
   multiple-choice option. The 🔊 stays a sibling of the answer control, so it can never submit.
   Call `stopReadAloud()` when the task moves to the next text. No new TTS service.
+
+## 6. Parked option — pre-generated neural clips (owner decision 2026-10-02)
+
+**Status: PARKED (not decided, not started).** Kept as the candidate fix if on-device voices prove
+too weak for the pilot.
+
+**Why it came up (measured 2026-10-02, owner's own machine):**
+- Chrome on Windows exposes only one Danish voice, *Microsoft Helle* (old, robotic); there is no
+  "Google dansk" on desktop Chrome. English sounds fluent (Google UK English, cloud voice).
+- The Danish→English switch has an audible pause (~0.5 s measured before the Google voice starts;
+  cloud fetch per utterance, inside the browser — not fixable in our code).
+- **Edge** (neural Christel/Jeppe + neural English) sounds much better and its switch pause is
+  acceptable — owner verdict: good enough for now. Chromebooks/iPads still depend on their own voices.
+
+**The option:** produce the read-aloud audio offline with a neural TTS voice and serve it as static
+clips through the existing pre-recorded provider (`manifest.js`, key = `hashKey(text)`). A
+multilingual neural voice can read a mixed Danish/English sentence as **one** clip — no switch pause,
+same quality on every device. Web Speech stays the fallback.
+
+**Before it can start (owner gates):**
+1. Owner approval to send question text (never student data) once to an external TTS service
+   (e.g. Azure) — this changes the 157N decision ("no third-party service") and must be recorded.
+2. Scope analysis first: number of questions + options, total size vs Cloudflare static-asset
+   limits, cost vs free quotas, and whether a voice reads Danish *and* English naturally in one clip.

@@ -53,18 +53,25 @@ export function createReadAloud(config) {
      * Speak text. Tries pre-recorded clip first, then on-device speech. Returns true
      * if any provider produced audio. No-op (false) when disabled. Never throws.
      * @param {string} text
-     * @param {{clipKey?:string, lang?:string}} [opts]
+     * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[]}} [opts]
+     *        `segments` — read the text as language runs, each with its own voice
+     *        (English subject: Danish frame + English words). Invalid runs are dropped.
      * @returns {Promise<boolean>}
      */
     async speak(text, opts) {
       try {
         if (!enabled) return false;
         const o = opts && typeof opts === "object" ? opts : {};
+        const segments = Array.isArray(o.segments)
+          ? o.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0 &&
+              typeof s.lang === "string" && s.lang.length > 0)
+          : [];
         const req = {
           text: typeof text === "string" ? text : "",
           clipKey: o.clipKey || hashKey(text),
           lang: o.lang || "da-DK",
         };
+        if (segments.length > 0) req.segments = segments;
         for (const p of providers()) {
           try {
             if (!p.isSupported()) continue;
