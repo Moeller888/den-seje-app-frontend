@@ -11,7 +11,7 @@
 //
 // 2. THE HERO DEMO. The markup ships in its FINISHED state (answer chosen, XP awarded, next step
 //    shown). Only when motion is welcome does this script rewind it and play it forward once:
-//    pick → confirm → +2 XP / +2 mønter → næste skridt. Without JavaScript, with reduced motion,
+//    pick → confirm → +10 XP / +5 mønter → næste skridt. Without JavaScript, with reduced motion,
 //    or if anything here fails, the finished state is what the visitor sees. Deterministic: fixed
 //    timings, fixed values, no randomness.
 //
@@ -69,10 +69,12 @@ function startDemo(done) {
   const bar = demo.querySelector("[data-demo-xpbar]");
   if (!pick || !feedback || !gain || !next || !coins || !xp || !bar) return false;
 
-  // Rewind to the moment before the student answers. Level 4 spans 225–350 XP, so 312 XP is
-  // 87/125 = .696 of the bar, and the +2 XP of a correct answer brings it to 314 = .712.
+  // Rewind to the moment before the student answers. The reward is the server's for a FIRST
+  // correct answer — +10 XP, +5 coins (process_question_attempt) — not js/progression.js's stale
+  // MC_CORRECT. Level 4 spans 225–350 XP (getXPProgressInLevel), so 312 XP is 87/125 = .696 of the
+  // bar and 322 XP is 97/125 = .776, still level 4. Coins end at 148, so they start at 143.
   demo.classList.add("is-playing");
-  coins.textContent = "146";
+  coins.textContent = "143";
   xp.textContent = "312";
   bar.style.setProperty("--p", ".696");
 
@@ -82,8 +84,8 @@ function startDemo(done) {
     [2000, () => {
       gain.classList.add("is-shown");
       coins.textContent = "148";
-      xp.textContent = "314";
-      bar.style.setProperty("--p", ".712");
+      xp.textContent = "322";
+      bar.style.setProperty("--p", ".776");
     }],
     [2900, () => { next.classList.add("is-shown"); done(); }],
   ];

@@ -78,8 +78,11 @@
          backend; the slice is static markup that js/forside.js plays once.
          The markup ships in its FINAL state, so without JavaScript (or with reduced motion)
          the visitor sees the finished moment rather than an empty or half-played demo.
-         The numbers are the product's real ones: a correct multiple-choice answer is +2 XP and
-         +2 coins (js/progression.js MC_CORRECT), and level 4 spans 225–350 XP. -->
+         The numbers are the product's real ones. The reward is the SERVER's for a first correct
+         answer — +10 XP and +5 coins (process_question_attempt, migration 20261002000000) — not the
+         stale MC_CORRECT constants in js/progression.js. The level math is js/progression.js
+         getXPProgressInLevel, which the quiz uses for its bar: level 4 spans 225–350 XP, so
+         312 → 322 XP moves the bar from 87/125 = .696 to 97/125 = .776, still level 4. -->
     <section class="hero fs-hero" aria-labelledby="hero-title">
       <div class="shell fs-hero-grid">
         <div class="fs-hero-copy">
@@ -110,9 +113,9 @@
               <div class="fs-identity">
                 <div class="fs-level-row">
                   <span class="fs-level">Niveau <b>4</b></span>
-                  <span class="fs-xp-label"><span data-demo-xp>314</span> XP</span>
+                  <span class="fs-xp-label"><span data-demo-xp>322</span> XP</span>
                 </div>
-                <div class="fs-xp"><span class="fs-xp-fill" data-demo-xpbar style="--p: .712"></span></div>
+                <div class="fs-xp"><span class="fs-xp-fill" data-demo-xpbar style="--p: .776"></span></div>
               </div>
 
               <div class="fs-card">
@@ -127,7 +130,7 @@
                 <li>5</li>
               </ul>
 
-              <p class="fs-gain" data-demo-gain><span class="fs-gain-xp">+2 XP</span><span class="fs-gain-coin">+2 mønter</span></p>
+              <p class="fs-gain" data-demo-gain><span class="fs-gain-xp">+10 XP</span><span class="fs-gain-coin">+5 mønter</span></p>
             </div>
 
             <div class="fs-next">

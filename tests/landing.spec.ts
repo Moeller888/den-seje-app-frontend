@@ -849,7 +849,7 @@ test("prefers-reduced-motion removes transitions, the button lift and the demo",
   // The demo never plays: the finished moment is shown, still.
   await page.waitForSelector("html[data-forside-ready]");
   await expect(page.locator("[data-demo]")).not.toHaveClass(/is-playing/);
-  await expect(page.locator("[data-demo-xp]")).toHaveText("314");
+  await expect(page.locator("[data-demo-xp]")).toHaveText("322");
 
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
   await ctx.close();
@@ -865,8 +865,46 @@ test("without reduced motion the buttons keep their transition and the demo play
   // Rewound to before the answer, then played forward to the same finished state the markup ships.
   await expect(page.locator("[data-demo]")).toHaveClass(/is-playing/);
   await page.waitForSelector("html[data-forside-ready]");
-  await expect(page.locator("[data-demo-xp]")).toHaveText("314");
+  await expect(page.locator("[data-demo-xp]")).toHaveText("322");
   await expect(page.locator("[data-demo-coins]")).toHaveText("148");
   await expect(page.locator(".fs-next")).toHaveClass(/is-shown/);
   await ctx.close();
+});
+
+// The hero demo shows a real moment, so its numbers are held to their sources rather than to
+// literals. The reward is the SERVER's for a FIRST correct answer — the last migration that
+// (re)defines process_question_attempt, its non-repeat branch (`v_xp := N; v_coins := M;`; the
+// repeat branch sets XP alone). js/progression.js's MC_CORRECT constants are stale and are not the
+// source. The bar is the quiz's own level math, getXPProgressInLevel, run in the page itself.
+test("the hero demo's reward and XP bar match the server reward and the quiz's level math", async ({ page }) => {
+  const dir = path.join(ROOT, "supabase", "migrations");
+  const defining = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()
+    .filter((f) => fs.readFileSync(path.join(dir, f), "utf8").includes("FUNCTION public.process_question_attempt"));
+  expect(defining.length, "no migration defines process_question_attempt").toBeGreaterThan(0);
+  const sql = fs.readFileSync(path.join(dir, defining[defining.length - 1]), "utf8");
+  const m = sql.match(/v_xp\s*:=\s*(\d+);\s*v_coins\s*:=\s*(\d+);/);
+  expect(m, "the first-correct reward branch was not found").not.toBeNull();
+  const [xpReward, coinReward] = [Number(m![1]), Number(m![2])];
+
+  await openLanding(page);
+  await page.waitForSelector("html[data-forside-ready]");
+  await expect(page.locator(".fs-gain-xp")).toHaveText(`+${xpReward} XP`);
+  await expect(page.locator(".fs-gain-coin")).toHaveText(`+${coinReward} mønter`);
+
+  // The finished state is 322 XP. The bar must be exactly what the quiz would draw for it, the
+  // level must not change, and the start values the demo rewinds to must be end minus reward.
+  const endXp = Number(await page.locator("[data-demo-xp]").innerText());
+  const endCoins = Number(await page.locator("[data-demo-coins]").innerText());
+  const shown = await page.locator("[data-demo-xpbar]").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--p").trim());
+  const math = await page.evaluate(async ([end, reward]) => {
+    const p = await import("/js/progression.js");
+    return { after: p.getXPProgressInLevel(end), before: p.getXPProgressInLevel(end - reward) };
+  }, [endXp, xpReward]);
+  expect(math.after.level, "the demo must not cross a level").toBe(math.before.level);
+  expect(Number(shown)).toBeCloseTo(math.after.progress, 3);
+  const src = fs.readFileSync(path.join(ROOT, "js", "forside.js"), "utf8");
+  expect(src).toContain(`xp.textContent = "${endXp - xpReward}"`);
+  expect(src).toContain(`coins.textContent = "${endCoins - coinReward}"`);
+  expect(src).toContain(`bar.style.setProperty("--p", ".${Math.round(math.before.progress * 1000)}")`);
+  expect(Number((await page.locator(".fs-hero .fs-level b").innerText()).trim())).toBe(math.after.level);
 });

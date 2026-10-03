@@ -811,7 +811,10 @@
   gap: clamp(32px, 6vw, 96px);
   align-items: start;
 }
-.fs-trust h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; max-width: 12ch; }
+/* 16ch, not 12: at 12ch "Det, skolen kan" could never share a line, so the balanced wrap left
+   "Det," alone at every width. 16ch fits it, keeping the heading to two lines without letting the
+   column run wide; the grid column still caps it on narrow desktops. */
+.fs-trust h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; max-width: 16ch; }
 
 .fs-principles {
   list-style: none;
