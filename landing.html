@@ -6,7 +6,7 @@
 
   <title>Lærlig — læring, der tilpasser sig eleven</title>
   <meta name="description"
-        content="Lærlig er en dansk læringsplatform til folkeskolen. Korte spørgsmålsforløb, feedback der forklarer, og en lærer der har det sidste ord.">
+        content="Lærlig er en dansk læringsplatform til folkeskolen. Lærlig tilpasser næste skridt til den enkelte elev — mens læreren bevarer overblikket.">
 
   <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE, and now the only one. /landing.html
        used to serve this document too; it is a permanent 301 to the clean route today, so
@@ -17,11 +17,14 @@
 
   <!-- Design tokens are shared with the app so the site stays in the same product family.
        The public pages deliberately do NOT read the student's saved theme: they always render
-       the default navy identity, so the brand surface is deterministic for every visitor. -->
+       the default navy identity, so the brand surface is deterministic for every visitor.
+       css/forside.css is loaded by THIS page only; the six information pages keep landing.css
+       alone and are unaffected by the front-page redesign. -->
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/forside.css">
 </head>
-<body>
+<body class="forside">
 
   <a class="skip-link" href="#main">Spring til indhold</a>
 
@@ -68,34 +71,325 @@
 
   <main id="main">
 
-    <!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="ambient" aria-hidden="true">
-        <span class="ambient-a"></span>
-        <span class="ambient-b"></span>
+    <!-- ══ 1. HERO ═══════════════════════════════════════════════════════════
+         Left: the promise. Right: a slice of the real product — the quiz's own topbar,
+         level/XP strip, task card and answer options, with the live default avatar mounted
+         by the shared render path (js/forside.js → mountC2Avatar). Nothing here talks to a
+         backend; the slice is static markup that js/forside.js plays once.
+         The markup ships in its FINAL state, so without JavaScript (or with reduced motion)
+         the visitor sees the finished moment rather than an empty or half-played demo.
+         The numbers are the product's real ones: a correct multiple-choice answer is +2 XP and
+         +2 coins (js/progression.js MC_CORRECT), and level 4 spans 225–350 XP. -->
+    <section class="hero fs-hero" aria-labelledby="hero-title">
+      <div class="shell fs-hero-grid">
+        <div class="fs-hero-copy">
+          <p class="eyebrow fs-eyebrow">Til danske skoler</p>
+
+          <h1 id="hero-title">Læring, der tilpasser sig eleven.</h1>
+
+          <p class="fs-hero-sub">
+            Lærlig tilpasser næste skridt til den enkelte elev — mens læreren bevarer overblikket.
+          </p>
+
+          <div class="fs-actions">
+            <a class="fs-btn fs-btn-primary" href="#naeste-skridt">Se hvordan Lærlig virker</a>
+            <a class="fs-btn fs-btn-quiet" href="login.html">Log ind</a>
+          </div>
+        </div>
+
+        <figure class="fs-demo" aria-labelledby="demo-caption" data-demo>
+          <div class="fs-demo-stage" aria-hidden="true">
+            <div class="fs-avatar fs-avatar-hero" data-fs-avatar></div>
+
+            <div class="fs-shell">
+              <div class="fs-topbar">
+                <span class="fs-topic">Brøker</span>
+                <span class="fs-coins"><span class="fs-coin"></span><span data-demo-coins>148</span></span>
+              </div>
+
+              <div class="fs-identity">
+                <div class="fs-level-row">
+                  <span class="fs-level">Niveau <b>4</b></span>
+                  <span class="fs-xp-label"><span data-demo-xp>314</span> XP</span>
+                </div>
+                <div class="fs-xp"><span class="fs-xp-fill" data-demo-xpbar style="--p: .712"></span></div>
+              </div>
+
+              <div class="fs-card">
+                <p class="fs-task">Hvad er 3/4 af 20?</p>
+                <p class="fs-feedback" data-demo-feedback>Rigtigt. 20 delt i 4 er 5 — og 3 gange 5 er 15.</p>
+              </div>
+
+              <ul class="fs-options">
+                <li>12</li>
+                <li class="is-correct" data-demo-pick>15</li>
+                <li>16</li>
+                <li>5</li>
+              </ul>
+
+              <p class="fs-gain" data-demo-gain><span class="fs-gain-xp">+2 XP</span><span class="fs-gain-coin">+2 mønter</span></p>
+            </div>
+
+            <div class="fs-next">
+              <span class="fs-next-label">Næste skridt</span>
+              <span class="fs-next-text">Noget nyt nu. Den her kommer igen i morgen.</span>
+            </div>
+          </div>
+          <figcaption id="demo-caption" class="fs-demo-caption">
+            Sådan ser det ud for eleven: én opgave ad gangen, svar med det samme — og fremgangen lige over.
+          </figcaption>
+        </figure>
       </div>
-      <div class="grid-veil" aria-hidden="true"></div>
+    </section>
 
-      <div class="shell hero-inner">
-        <p class="eyebrow">Til danske skoler</p>
+    <!-- ══ 2. PREMISSEN ══════════════════════════════════════════════════════
+         The scene change. A light surface, the biggest type on the page, and 24 markers —
+         one per student — each standing at its own height. The heights are written into the
+         markup: deterministic, no randomness. -->
+    <section class="fs-scene fs-premise" aria-labelledby="premise-title">
+      <div class="shell fs-premise-grid">
+        <h2 id="premise-title" class="fs-statement">
+          <span>24 elever.</span>
+          <span>24 forskellige udgangspunkter.</span>
+        </h2>
 
-        <h1 id="hero-title">Læring, der tilpasser sig eleven.</h1>
+        <div class="fs-class" aria-hidden="true">
+          <span style="--h:.62"></span><span style="--h:.34"></span><span style="--h:.81"></span><span style="--h:.47"></span><span style="--h:.55"></span><span style="--h:.28"></span>
+          <span style="--h:.73"></span><span style="--h:.41"></span><span style="--h:.66"></span><span style="--h:.90"></span><span style="--h:.37"></span><span style="--h:.58"></span>
+          <span style="--h:.22"></span><span style="--h:.69"></span><span style="--h:.51"></span><span style="--h:.44"></span><span style="--h:.77"></span><span style="--h:.31"></span>
+          <span style="--h:.85"></span><span style="--h:.49"></span><span style="--h:.60"></span><span style="--h:.26"></span><span style="--h:.71"></span><span style="--h:.53"></span>
+        </div>
 
-        <p class="hero-sub">
-          Eleven svarer. Lærlig bruger svarene til at vælge, hvad der giver mening at spørge om
-          næste gang.
-        </p>
+        <p class="fs-question">Hvorfor skulle deres næste skridt være det samme?</p>
+      </div>
+    </section>
 
-        <a class="cta-portal" href="login.html">
-          <span class="cta-label">Vi lærer!</span>
-          <span class="cta-arrow" aria-hidden="true">→</span>
-        </a>
+    <!-- ══ 3. SÅDAN TILPASSER LÆRLIG ═════════════════════════════════════════
+         One story, read left to right: the same task → what each student shows → two
+         different next steps. It is a real sequence, so the stages are an ordered list.
+         The behaviour described is the documented one (produktet / saadan-virker-det):
+         right → back the next day; wrong → explanation, back after a few minutes. -->
+    <section class="fs-scene fs-adapt" id="naeste-skridt" aria-labelledby="adapt-title">
+      <div class="shell">
+        <div class="fs-head">
+          <h2 id="adapt-title">Samme opgave. To forskellige næste skridt.</h2>
+          <p class="fs-lede">
+            Sofie og Malik går i samme klasse og får den samme opgave. Det, de viser, afgør, hvad
+            der kommer bagefter.
+          </p>
+        </div>
 
-        <p class="hero-meta">
-          <a href="/saadan-virker-det">Sådan virker det</a>
-          <span class="dot" aria-hidden="true">·</span>
-          <a href="/til-skoler">Til skoler</a>
-        </p>
+        <ol class="fs-flow">
+          <li class="fs-stage fs-stage-work">
+            <h3 class="fs-stage-name">Eleven arbejder</h3>
+            <div class="fs-mini-card">
+              <span class="fs-topic">Brøker</span>
+              <p>Hvad er 3/4 af 20?</p>
+            </div>
+          </li>
+
+          <li class="fs-stage fs-stage-see">
+            <h3 class="fs-stage-name">Lærlig ser, hvad eleven viser</h3>
+            <div class="fs-lane fs-lane-a">
+              <span class="fs-who">Sofie svarer</span>
+              <p><span class="fs-answer is-right">15</span>Rigtigt. Hun kan det.</p>
+            </div>
+            <div class="fs-lane fs-lane-b">
+              <span class="fs-who">Malik svarer</span>
+              <p><span class="fs-answer is-wrong">5</span>Forkert. Han har delt med 4 — men ikke taget de 3 dele med.</p>
+            </div>
+          </li>
+
+          <li class="fs-stage fs-stage-next">
+            <h3 class="fs-stage-name">Næste skridt tilpasses</h3>
+            <div class="fs-lane fs-lane-a">
+              <span class="fs-who">Sofie</span>
+              <p>Går videre til noget nyt. Brøken kommer igen i morgen, så den bliver siddende.</p>
+            </div>
+            <div class="fs-lane fs-lane-b">
+              <span class="fs-who">Malik</span>
+              <p>Får en kort forklaring nu. Samme slags opgave kommer igen om få minutter.</p>
+            </div>
+          </li>
+        </ol>
+
+        <p class="fs-maxim">Kan eleven det, går Lærlig videre. Driller det, kommer det igen.</p>
+      </div>
+    </section>
+
+    <!-- ══ 4. DET SVÆRE KOMMER IGEN ══════════════════════════════════════════
+         Two tracks over the same days: the class moves on through its topics, while the
+         thing Malik struggled with keeps coming back to him until it sits. -->
+    <section class="fs-scene fs-return" aria-labelledby="return-title">
+      <div class="shell fs-return-grid">
+        <div class="fs-return-copy">
+          <h2 id="return-title" class="fs-big">Det svære kommer igen.</h2>
+          <p class="fs-lede">
+            Klassen går videre. Det betyder ikke, at det, eleven kæmpede med, bare forsvinder.
+          </p>
+          <p class="fs-body">
+            Svarer eleven forkert, kommer opgaven tilbage efter få minutter — med en forklaring.
+            Svarer eleven rigtigt, dukker den op igen dagen efter. Sådan bliver det siddende,
+            uden at eleven bruger tid på det, hun allerede kan.
+          </p>
+        </div>
+
+        <div class="fs-tracks" role="img"
+             aria-label="Tidslinje. Klassen går fra brøker til procent til ligninger. Imens kommer Maliks brøkopgave igen: forkert mandag klokken 9.02, rigtigt klokken 9.09 og rigtigt igen tirsdag.">
+          <div class="fs-track fs-track-class">
+            <span class="fs-track-name">Klassen</span>
+            <ol class="fs-track-line">
+              <li><b>Mandag</b><span>Brøker</span></li>
+              <li><b>Tirsdag</b><span>Procent</span></li>
+              <li><b>Onsdag</b><span>Ligninger</span></li>
+            </ol>
+          </div>
+          <div class="fs-track fs-track-student">
+            <span class="fs-track-name">Malik</span>
+            <ol class="fs-track-line">
+              <li class="is-wrong"><b>Man. 9.02</b><span>Forkert. Han får en forklaring.</span></li>
+              <li class="is-right"><b>Man. 9.09</b><span>Den kommer igen. Rigtigt.</span></li>
+              <li class="is-right"><b>Tirsdag</b><span>Igen. Stadig rigtigt.</span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 5. ELEVEN ═════════════════════════════════════════════════════════
+         The avatar carries real visual weight here: the same live default figure, large. -->
+    <section class="fs-scene fs-student" aria-labelledby="student-title">
+      <div class="shell fs-student-grid">
+        <div class="fs-student-figure">
+          <div class="fs-avatar fs-avatar-large" data-fs-avatar></div>
+          <div class="fs-chip fs-chip-level" aria-hidden="true">
+            <span class="fs-level">Niveau <b>4</b></span>
+            <span class="fs-xp"><span class="fs-xp-fill" style="--p: .712"></span></span>
+          </div>
+          <div class="fs-chip fs-chip-coins" aria-hidden="true">
+            <span class="fs-coin"></span>148 mønter
+          </div>
+        </div>
+
+        <div class="fs-student-copy">
+          <p class="fs-kicker">For eleven</p>
+          <h2 id="student-title" class="fs-big">Du kan se, at det rykker.</h2>
+          <p class="fs-lede">
+            Korte forløb, svar med det samme og en fremgang, eleven selv kan følge.
+          </p>
+
+          <figure class="fs-feedback-example">
+            <blockquote>
+              <p>Ikke helt. 3/4 af 20 betyder: Del 20 i 4 lige store dele, og tag 3 af dem.</p>
+            </blockquote>
+            <figcaption>Et forkert svar skal hjælpe eleven videre — ikke bare give et rødt kryds.</figcaption>
+          </figure>
+
+          <p class="fs-body">
+            XP og mønter følger faste regler, og figuren former eleven selv. Det er ikke pointen.
+            Det gør det bare lettere at komme tilbage i morgen.
+          </p>
+
+          <ul class="fs-types" aria-label="Opgavetyper i Lærlig">
+            <li>Vælg et svar</li>
+            <li>Skriv et tal eller et ord</li>
+            <li>Skriv et længere svar</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 6. LÆREREN ════════════════════════════════════════════════════════
+         A different surface — light and calm, the desk rather than the game — but the same
+         product: the status labels in the panel are the teacher dashboard's own. -->
+    <section class="fs-scene fs-teacher" aria-labelledby="teacher-title">
+      <div class="shell fs-teacher-grid">
+        <div class="fs-teacher-copy">
+          <p class="fs-kicker">For læreren</p>
+          <h2 id="teacher-title" class="fs-big">Læreren bestemmer.</h2>
+          <ul class="fs-points">
+            <li>Du ser hele klassen — og den enkelte elev.</li>
+            <li>Lange, skrevne svar lander hos dig. Lærlig retter dem ikke selv.</li>
+            <li>Du giver XP for de svar efter din egen faglige vurdering.</li>
+            <li>Det faglige ansvar bliver hos dig. Intet tilsidesætter din vurdering i det stille.</li>
+          </ul>
+        </div>
+
+        <div class="fs-desk" aria-hidden="true">
+          <div class="fs-panel fs-panel-class">
+            <p class="fs-panel-title">Klasseoversigt <span>8.B</span></p>
+            <ul class="fs-roster">
+              <li><span class="fs-name">Sofie</span><span class="fs-bar" style="--p:.84"></span><span class="fs-tag is-good">Stabil</span></li>
+              <li><span class="fs-name">Malik</span><span class="fs-bar" style="--p:.58"></span><span class="fs-tag is-up">Fremgang</span></li>
+              <li><span class="fs-name">Ida</span><span class="fs-bar" style="--p:.76"></span><span class="fs-tag is-good">Stabil</span></li>
+              <li><span class="fs-name">Noah</span><span class="fs-bar" style="--p:.41"></span><span class="fs-tag is-help">Brug for hjælp</span></li>
+              <li><span class="fs-name">Emma</span><span class="fs-bar" style="--p:.63"></span><span class="fs-tag is-up">Fremgang</span></li>
+            </ul>
+          </div>
+
+          <div class="fs-panel fs-panel-review">
+            <p class="fs-panel-title">Langt svar fra Ida</p>
+            <p class="fs-review-task">Forklar med dine egne ord, hvorfor 2/4 og 1/2 er lige meget.</p>
+            <p class="fs-review-answer">
+              ”Hvis man deler en pizza i 4 og tager 2, har man lige så meget, som hvis man deler den
+              i 2 og tager 1. Den er bare skåret i flere stykker.”
+            </p>
+            <div class="fs-review-actions">
+              <span class="fs-review-btn">Giv XP</span>
+              <span class="fs-review-note">Din vurdering</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 7. SKOLEN ═════════════════════════════════════════════════════════ -->
+    <section class="fs-scene fs-trust" aria-labelledby="trust-title">
+      <div class="shell fs-trust-grid">
+        <h2 id="trust-title">Det, skolen kan regne med.</h2>
+        <ul class="fs-principles">
+          <li>
+            <h3>Lærlig retter kun det, der kan afgøres sikkert.</h3>
+            <p>Er svaret entydigt, får eleven svar med det samme. Ellers lander det hos læreren.</p>
+          </li>
+          <li>
+            <h3>Lærlig lader ikke som om.</h3>
+            <p>Hvor det kræver en lærers faglige skøn, foregiver systemet ikke at være sikkert.</p>
+          </li>
+          <li>
+            <h3>Så lidt elevdata som muligt.</h3>
+            <p>Lærlig bruges af børn. Det har været en begrænsning fra begyndelsen.</p>
+          </li>
+          <li>
+            <h3>Faste regler, ingen tilfældigheder.</h3>
+            <p>Hvad et svar er værd, følger faste regler. Der er ikke held indblandet.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ══ 8. AFSLUTNING ═════════════════════════════════════════════════════
+         Picks section 2 back up: the same 24 students, now each with a step of its own. -->
+    <section class="fs-scene fs-closing" aria-labelledby="closing-title">
+      <div class="shell fs-closing-grid">
+        <div class="fs-closing-copy">
+          <h2 id="closing-title" class="fs-statement">
+            <span>Ét klasseværelse.</span>
+            <span>Mange forskellige næste skridt.</span>
+          </h2>
+          <p class="fs-lede">Vil I høre, hvordan Lærlig kan bruges på jeres skole? Skriv til os.</p>
+          <div class="fs-actions">
+            <a class="fs-btn fs-btn-primary" href="mailto:kontakt@lærlig.dk">Skriv til kontakt@lærlig.dk</a>
+            <a class="fs-btn fs-btn-quiet" href="/til-skoler">Lærlig til skoler</a>
+          </div>
+        </div>
+
+        <div class="fs-class fs-class-steps" aria-hidden="true">
+          <span style="--h:.62;--s:.14"></span><span style="--h:.34;--s:.06"></span><span style="--h:.81;--s:.12"></span><span style="--h:.47;--s:.09"></span><span style="--h:.55;--s:.16"></span><span style="--h:.28;--s:.07"></span>
+          <span style="--h:.73;--s:.10"></span><span style="--h:.41;--s:.13"></span><span style="--h:.66;--s:.05"></span><span style="--h:.90;--s:.08"></span><span style="--h:.37;--s:.15"></span><span style="--h:.58;--s:.11"></span>
+          <span style="--h:.22;--s:.12"></span><span style="--h:.69;--s:.07"></span><span style="--h:.51;--s:.14"></span><span style="--h:.44;--s:.06"></span><span style="--h:.77;--s:.11"></span><span style="--h:.31;--s:.09"></span>
+          <span style="--h:.85;--s:.05"></span><span style="--h:.49;--s:.16"></span><span style="--h:.60;--s:.08"></span><span style="--h:.26;--s:.13"></span><span style="--h:.71;--s:.10"></span><span style="--h:.53;--s:.12"></span>
+        </div>
       </div>
     </section>
 
@@ -135,5 +429,6 @@
   </footer>
 
   <script src="js/landing.js" defer></script>
+  <script type="module" src="js/forside.js"></script>
 </body>
 </html>

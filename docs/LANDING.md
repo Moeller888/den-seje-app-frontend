@@ -25,7 +25,20 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 5 | [#181](https://github.com/Moeller888/den-seje-app-frontend/pull/181) · [#182](https://github.com/Moeller888/den-seje-app-frontend/pull/182) | `4d85c5c` · `4c6ea58` | Dette dokument bragt i overensstemmelse med produktionen |
 | 6 | [#183](https://github.com/Moeller888/den-seje-app-frontend/pull/183) | `fa7296f` | **One-pager → flersidet hjemmeside.** Seks selvstændige sider bag rene ruter |
 | 7 | [#186](https://github.com/Moeller888/den-seje-app-frontend/pull/186) | `ff6f029` | Teksten skrevet om i almindeligt dansk; "Om Lærlig" flyttet til footeren alene |
-| 8 | denne tranche | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
+| 8 | — | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
+| 9 | branch `feat/forside-laerlig-2` | **ikke merget** | **Lærlig 2.0-forsiden — til visuel review.** Erstatter tranche 8 (se nedenfor) |
+
+**Lærlig 2.0 (forslag, afventer ejerens visuelle godkendelse — 2026-10-02).** Ejeren har bedt om
+en ny forside, fordi hero-forsiden var pæn, men for generisk og for tynd til at vise, hvad Lærlig
+er. Beslutningen i tranche 8 ("kun hero") **erstattes derfor bevidst** — ikke i det stille. Den nye
+forside er en fortælling i otte scener: hero med et udsnit af det rigtige elev-UI og den levende
+default-avatar · "24 elever. 24 forskellige udgangspunkter." · samme opgave, to forskellige næste
+skridt · "Det svære kommer igen." · eleven · "Læreren bestemmer." · det, skolen kan regne med ·
+afslutning med kontakt. Undersiderne er uændrede. Avataren monteres gennem den delte
+`mountC2Avatar()` (ingen kopi af lagstakken), så forsiden aldrig viser en figur, eleven ikke får;
+det ophæver den tidligere regel om "ingen billeder", som netop var begrundet i, at referencekunst
+ikke måtte stå i stedet for den levende avatar. Ny CSS ligger i `css/forside.css` (kun forsiden),
+ny JS i `js/forside.js`. Afsnittet herunder beskriver tranche 8 og gælder, indtil 2.0 er godkendt.
 
 **Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
 produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks

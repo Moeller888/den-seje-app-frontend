@@ -303,20 +303,67 @@ test("no internal surface declares a canonical", async ({ page }) => {
   }
 });
 
-test("the front page is short: hero, overview, closing CTA — and none of the moved sections", async ({ page }) => {
+// THE FRONT PAGE IS A STORY, NOT A TITLE CARD (owner brief, Lærlig 2.0, 2026-10-02). It used to be
+// a hero and nothing else (docs/LANDING.md tranche 8). The redesign replaces that decision on
+// purpose: the front page now shows the product itself, scene by scene. What is pinned here is
+// the order of the story and what it must never become — a sales page of identical feature
+// cards — while the six information pages stay reachable through the menu and the footer.
+const STORY: Array<[string, RegExp]> = [
+  ["hero-title",    /Læring, der tilpasser sig eleven\./],
+  ["premise-title", /24 elever\.\s*24 forskellige udgangspunkter\./],
+  ["adapt-title",   /Samme opgave\. To forskellige næste skridt\./],
+  ["return-title",  /Det svære kommer igen\./],
+  ["student-title", /Du kan se, at det rykker\./],
+  ["teacher-title", /Læreren bestemmer\./],
+  ["trust-title",   /Det, skolen kan regne med\./],
+  ["closing-title", /Ét klasseværelse\.\s*Mange forskellige næste skridt\./],
+];
+
+test("the front page tells the story in order — and never turns into a card grid", async ({ page }) => {
   await openLanding(page);
-  // The hero and nothing else. The front page is the way in, not the whole sales page: the
-  // reader gets curious and explores through the menu. A second copy of the same call to
-  // action, one screen below the first, is exactly what this guards against.
-  await expect(page.locator("main > section")).toHaveCount(1);
-  await expect(page.locator(".cta-portal"), "one call to action, not two").toHaveCount(1);
-  for (const gone of [".cards", ".steps", ".split", ".ticks", ".explore", ".explore-card", ".closing"]) {
-    await expect(page.locator(gone), `${gone} is still on the front page`).toHaveCount(0);
+  const labelled = await page.locator("main > section").evaluateAll(
+    (els) => els.map((e) => e.getAttribute("aria-labelledby")));
+  expect(labelled).toEqual(STORY.map(([id]) => id));
+  for (const [id, text] of STORY) {
+    await expect(page.locator(`#${id}`)).toHaveText(text);
   }
-  // The six pages are reached through the menu and the footer, not through cards on the front page.
+  // The generic kit stays off the front page: no feature-card grids, no step cards, no old portal.
+  for (const gone of [".cards", ".card", ".steps", ".split", ".ticks", ".explore", ".explore-card", ".cta-portal"]) {
+    await expect(page.locator(gone), `${gone} is on the front page`).toHaveCount(0);
+  }
+  // The six pages are reached through the menu and the footer.
   for (const [route] of PAGES) {
     await expect(page.locator(`header a[href="${route}"], footer a[href="${route}"]`).first(),
       `${route} is not reachable from the menu or the footer`).toHaveCount(1);
+  }
+});
+
+test("the front page says 'next step', and never calls the whole product 'questions'", async ({ page }) => {
+  // Lærlig has several task types. The brief is explicit: "spørgsmål" is not the umbrella word,
+  // and "Lærlig tilpasser næste skridt til den enkelte elev" is the line the page carries.
+  await openLanding(page);
+  const text = await page.locator("main").innerText();
+  expect(text).toContain("Lærlig tilpasser næste skridt til den enkelte elev");
+  expect(text.toLowerCase()).not.toContain("spørgsmål");
+  const meta = await page.locator('meta[name="description"]').getAttribute("content");
+  expect((meta ?? "").toLowerCase()).not.toContain("spørgsmål");
+});
+
+test("the avatar on the front page is the live one, mounted by the shared render path", async ({ page }) => {
+  // No copy of the layer stack may live on the front page: js/forside.js must go through
+  // mountC2Avatar, the one path every app surface uses, so the site can never show a figure the
+  // student does not get. Whichever path it takes (R2 or the C2 fallback), it must render layers.
+  const src = fs.readFileSync(path.join(ROOT, "js", "forside.js"), "utf8");
+  expect(src).toContain('import { mountC2Avatar } from "./avatar-render-c2.js"');
+  await openLanding(page);
+  await page.waitForSelector("html[data-forside-ready]");
+  const roots = page.locator("[data-fs-avatar]");
+  const n = await roots.count();
+  expect(n).toBeGreaterThanOrEqual(2);
+  for (let i = 0; i < n; i++) {
+    const root = roots.nth(i);
+    expect(["r2", "c2"]).toContain(await root.getAttribute("data-avatar-path"));
+    expect(await root.locator("[data-c2-layer]").count()).toBeGreaterThan(0);
   }
 });
 
@@ -458,10 +505,15 @@ test("/landing.html has MOVED to / - the root case, end to end", async ({ page }
 });
 
 test("/ and /landing.html end on the same page, reached by different means", async ({ page }) => {
+  // The front page has a live avatar and a one-time demo, so its DOM keeps changing for a few
+  // seconds after `load`. Both visits are compared once the page reports itself settled
+  // (`html[data-forside-ready]`, set by js/forside.js) — the same finished document either way.
   await page.goto(baseUrl + "/", { waitUntil: "load" });
+  await page.waitForSelector("html[data-forside-ready]");
   const viaRoot = await page.content();
   await page.goto(baseUrl + "/landing.html", { waitUntil: "load" });
   expect(new URL(page.url()).pathname).toBe("/");
+  await page.waitForSelector("html[data-forside-ready]");
   expect(await page.content()).toBe(viaRoot);
 });
 
@@ -495,29 +547,48 @@ test("index.html is auth-guarded, which is why the CTA points at login.html inst
 
 // ── the CTA ───────────────────────────────────────────────────────────────────────────────────
 
-test("VI LÆRER! is a real relative link to login.html — not a script-driven button", async ({ page }) => {
+test("the hero's primary action is a real link to the 'how it works' scene on the same page", async ({ page }) => {
   await openLanding(page);
-  const cta = page.locator(".cta-portal").first();
+  const cta = page.locator(".fs-hero .fs-btn-primary");
+  await expect(cta).toHaveCount(1);
   await expect(cta).toBeVisible();
   // A real anchor: works with JS off, with middle-click, and with the keyboard.
   expect(await cta.evaluate((el) => el.tagName)).toBe("A");
-  expect(await cta.getAttribute("href")).toBe("login.html");
-  await expect(cta).toHaveText(/Vi lærer!/i);
+  await expect(cta).toHaveText("Se hvordan Lærlig virker");
+  expect(await cta.getAttribute("href")).toBe("#naeste-skridt");
+  await expect(page.locator("#naeste-skridt")).toHaveCount(1);
 });
 
-test("the CTA resolves to /login.html from BOTH / and /landing.html", async ({ page }) => {
+test("following the primary action brings the adaptive scene into view", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  await page.locator(".fs-hero .fs-btn-primary").click();
+  await expect(page.locator("#adapt-title")).toBeInViewport();
+});
+
+test("the hero's Log ind resolves to /login.html from BOTH / and /landing.html", async ({ page }) => {
   for (const from of ["/", "/landing.html"]) {
     await page.goto(baseUrl + from, { waitUntil: "load" });
-    const href = await page.locator(".cta-portal").first().evaluate((el) => (el as HTMLAnchorElement).href);
+    const link = page.locator(".fs-hero .fs-btn-quiet");
+    await expect(link).toHaveText("Log ind");
+    expect(await link.getAttribute("href")).toBe("login.html");
+    const href = await link.evaluate((el) => (el as HTMLAnchorElement).href);
     expect(new URL(href).pathname).toBe("/login.html");
   }
 });
 
-test("clicking the CTA navigates to the login page", async ({ page }) => {
+test("clicking the hero's Log ind navigates to the login page", async ({ page }) => {
   await openLanding(page);
-  await page.locator(".cta-portal").first().click();
+  await page.locator(".fs-hero .fs-btn-quiet").click();
   await page.waitForURL(baseUrl + "/login.html");
   await expect(page.locator("#login-form")).toHaveCount(1);
+});
+
+test("the closing action writes to kontakt@lærlig.dk and points schools to /til-skoler", async ({ page }) => {
+  await openLanding(page);
+  const actions = page.locator(".fs-closing .fs-btn");
+  expect(await actions.evaluateAll((els) => els.map((e) => e.getAttribute("href"))))
+    .toEqual(["mailto:kontakt@lærlig.dk", "/til-skoler"]);
 });
 
 test("the landing page never links into the quiz", async ({ page }) => {
@@ -569,16 +640,21 @@ test("the skip link is the first tab stop and reaches main", async ({ page }) =>
   await expect(focused).toBeVisible();
 });
 
-test("the CTA is keyboard reachable and shows a visible focus ring", async ({ page }) => {
+test("every front-page action is keyboard reachable and shows a visible focus ring", async ({ page }) => {
   await openLanding(page);
-  const cta = page.locator(".cta-portal").first();
-  await cta.focus();
-  const outline = await cta.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return { width: s.outlineWidth, style: s.outlineStyle };
-  });
-  expect(outline.style).not.toBe("none");
-  expect(parseFloat(outline.width)).toBeGreaterThanOrEqual(2);
+  const actions = page.locator("main .fs-btn");
+  expect(await actions.count()).toBe(4);
+  for (let i = 0; i < 4; i++) {
+    const a = actions.nth(i);
+    await a.focus();
+    await expect(a).toBeFocused();
+    const outline = await a.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { width: s.outlineWidth, style: s.outlineStyle };
+    });
+    expect(outline.style).not.toBe("none");
+    expect(parseFloat(outline.width)).toBeGreaterThanOrEqual(2);
+  }
 });
 
 test("every interactive element meets the 44x44 minimum hit area", async ({ page }) => {
@@ -669,7 +745,12 @@ for (const [label, width] of [["desktop", 1280], ["tablet", 860], ["mobile", 390
     const overflow = await page.evaluate(() =>
       document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, "the page must never scroll sideways").toBeLessThanOrEqual(1);
-    await expect(page.locator(".cta-portal").first()).toBeVisible();
+    await expect(page.locator(".fs-hero .fs-btn-primary")).toBeVisible();
+    // Measured again once the avatar has mounted and the demo has played: both add content late.
+    await page.waitForSelector("html[data-forside-ready]");
+    const settled = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(settled, "the settled page must never scroll sideways").toBeLessThanOrEqual(1);
   });
 }
 
@@ -703,23 +784,20 @@ for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as co
   });
 }
 
-test("the hero is content-height, and the whole front page is short", async ({ page }) => {
+test("the hero is content-height and the next scene follows it directly", async ({ page }) => {
+  // The hero-only page and its "under two screens" ceiling are gone by owner decision (Lærlig
+  // 2.0). What stays is the original defect guard: no viewport-height floor on the hero, and no
+  // empty band between it and what follows.
   await page.setViewportSize({ width: 1440, height: 900 });
   await openLanding(page);
   const m = await page.evaluate(() => {
     const hero = document.querySelector(".hero")!.getBoundingClientRect();
-    const footer = document.querySelector(".site-footer")!.getBoundingClientRect();
-    return {
-      heroTop: hero.top, heroBottom: hero.bottom, footerTop: footer.top,
-      viewportH: window.innerHeight, docH: document.documentElement.scrollHeight,
-    };
+    const next = document.querySelector(".fs-premise")!.getBoundingClientRect();
+    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight };
   });
   expect(m.heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
-  // No viewport-height floor: the hero is only as tall as what is in it.
   expect(m.heroBottom, "the hero must not fill the whole first screen").toBeLessThan(m.viewportH);
-  // The footer follows the hero directly, so the page stays inside about two screens.
-  expect(m.footerTop - m.heroBottom, "an empty band opened up under the hero").toBeLessThan(40);
-  expect(m.docH, "the front page grew back into a long page").toBeLessThan(m.viewportH * 2);
+  expect(Math.abs(m.nextTop - m.heroBottom), "an empty band opened up under the hero").toBeLessThan(2);
 });
 
 test("no scroll indicator remains — it would point at something already visible", async ({ page }) => {
@@ -754,30 +832,41 @@ test("the desktop nav is replaced by the toggle below the 900px breakpoint", asy
 
 // ── reduced motion ────────────────────────────────────────────────────────────────────────────
 
-test("prefers-reduced-motion removes transitions and the CTA lift", async ({ browser }) => {
+test("prefers-reduced-motion removes transitions, the button lift and the demo", async ({ browser }) => {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
   const page = await ctx.newPage();
   await page.goto(baseUrl + "/", { waitUntil: "load" });
 
-  const cta = page.locator(".cta-portal").first();
+  const cta = page.locator(".fs-hero .fs-btn-primary");
   const durations = await cta.evaluate((el) =>
     getComputedStyle(el).transitionDuration.split(",").map((d) => parseFloat(d)));
   for (const d of durations) expect(d).toBeLessThanOrEqual(0.001);
 
-  // The affordance survives as colour/glow; only the movement is gone.
+  // The affordance survives as colour; only the movement is gone.
   await cta.hover();
   expect(await cta.evaluate((el) => getComputedStyle(el).transform)).toMatch(/none|matrix\(1, 0, 0, 1, 0, 0\)/);
+
+  // The demo never plays: the finished moment is shown, still.
+  await page.waitForSelector("html[data-forside-ready]");
+  await expect(page.locator("[data-demo]")).not.toHaveClass(/is-playing/);
+  await expect(page.locator("[data-demo-xp]")).toHaveText("314");
 
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
   await ctx.close();
 });
 
-test("without reduced motion the CTA keeps its transition", async ({ browser }) => {
+test("without reduced motion the buttons keep their transition and the demo plays once", async ({ browser }) => {
   const ctx = await browser.newContext({ reducedMotion: "no-preference" });
   const page = await ctx.newPage();
   await page.goto(baseUrl + "/", { waitUntil: "load" });
-  const durations = await page.locator(".cta-portal").first().evaluate((el) =>
+  const durations = await page.locator(".fs-hero .fs-btn-primary").evaluate((el) =>
     getComputedStyle(el).transitionDuration.split(",").map((d) => parseFloat(d)));
   expect(Math.max(...durations)).toBeGreaterThan(0.05);
+  // Rewound to before the answer, then played forward to the same finished state the markup ships.
+  await expect(page.locator("[data-demo]")).toHaveClass(/is-playing/);
+  await page.waitForSelector("html[data-forside-ready]");
+  await expect(page.locator("[data-demo-xp]")).toHaveText("314");
+  await expect(page.locator("[data-demo-coins]")).toHaveText("148");
+  await expect(page.locator(".fs-next")).toHaveClass(/is-shown/);
   await ctx.close();
 });

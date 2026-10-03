@@ -173,10 +173,15 @@ test("the front page is SHORT — the long sections were moved out, not hidden",
   assert.ok(read("til-skoler.html").includes('class="cards cards-tight"'), "the principles did not arrive");
 });
 
-test("the front page stays lean — well under the old one-pager", () => {
+// Lærlig 2.0 (owner brief, 2026-10-02): the front page is the product story in eight scenes —
+// hero, premise, adaptivity, "det svære kommer igen", student, teacher, school, closing. It is no
+// longer the hero-only page of docs/LANDING.md tranche 8; the count is pinned so it cannot quietly
+// grow back into the old 5,400px one-pager of repeated cards either.
+test("the front page is the eight-scene story — no more, no fewer", () => {
   const home = read("landing.html");
   const sections = (home.match(/<section\b/g) || []).length;
-  assert.ok(sections <= 4, `front page has ${sections} sections; it should be hero + overview + CTA`);
+  assert.equal(sections, 8, `front page has ${sections} sections; the story has eight scenes`);
+  assert.ok(!/class="cards?\b/.test(home), "the front page must not carry the feature-card kit");
 });
 
 test("each information page carries exactly one h1 and its own title and description", () => {
@@ -893,9 +898,13 @@ test("the site is reachable — one contact address, in the footer of every publ
     const t = read(p);
     assert.ok(t.includes(`<a href="${CONTACT}">Skriv til os</a>`),
       `${p}: the footer must offer a way to get in touch`);
-    // Exactly one address, so a second one cannot drift in unnoticed.
-    assert.equal((t.match(/mailto:/g) || []).length, p === "priser.html" ? 2 : 1,
+    // Exactly one address, so a second one cannot drift in unnoticed. Pricing and the front page's
+    // closing scene invite schools to write, so they carry a second link — to the SAME address.
+    assert.equal((t.match(/mailto:/g) || []).length, (p === "priser.html" || p === "landing.html") ? 2 : 1,
       `${p}: unexpected number of mailto links`);
+    for (const m of t.match(/mailto:[^"'\s>]*/g) || []) {
+      assert.equal(m, CONTACT, `${p}: a mailto link points somewhere other than ${CONTACT}`);
+    }
     // The public site writes from its own domain. A personal free-mail address — the private
     // Gmail this replaced, or any other — must not come back, in a link or as visible text.
     assert.ok(!/@(?:gmail|hotmail|outlook|yahoo|live)\.[a-z.]+/i.test(t),
