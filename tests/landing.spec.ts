@@ -908,3 +908,101 @@ test("the hero demo's reward and XP bar match the server reward and the quiz's l
   expect(src).toContain(`bar.style.setProperty("--p", ".${Math.round(math.before.progress * 1000)}")`);
   expect(Number((await page.locator(".fs-hero .fs-level b").innerText()).trim())).toBe(math.after.level);
 });
+
+// ── the hero demo waits for a visible page ────────────────────────────────────────────────────
+// A front page opened in a background tab must not play its demo unseen. Playwright cannot hide a
+// page for real, so this init script owns `document.visibilityState` / `document.hidden` (read
+// from window.__fsVis) and dispatches `visibilitychange` on demand, exactly as a browser does on a
+// tab switch. A MutationObserver records every value written into the demo's XP counter: the
+// rewind writes "312" once, and each PLAY writes "322" once — so a second start is countable.
+function visibilityShim(initial: string) {
+  (window as any).__fsVis = initial;
+  Object.defineProperty(Document.prototype, "visibilityState", { configurable: true, get() { return (window as any).__fsVis; } });
+  Object.defineProperty(Document.prototype, "hidden", { configurable: true, get() { return (window as any).__fsVis === "hidden"; } });
+  (window as any).__fsXp = [];
+  new MutationObserver((records) => {
+    for (const r of records) {
+      const t = r.target as Element;
+      if (t && t.nodeType === 1 && t.hasAttribute("data-demo-xp")) (window as any).__fsXp.push(t.textContent);
+    }
+  }).observe(document, { childList: true, subtree: true });
+  (window as any).__fsSetVis = (v: string) => { (window as any).__fsVis = v; document.dispatchEvent(new Event("visibilitychange")); };
+}
+
+// After the single rewind to 312, exactly one play writes 322 — no more, no fewer.
+async function expectPlayedOnce(page: any) {
+  const seq: string[] = await page.evaluate(() => (window as any).__fsXp);
+  expect(seq.filter((v) => v === "312"), `rewound more than once: ${seq}`).toHaveLength(1);
+  expect(seq.slice(seq.indexOf("312") + 1), `played more or less than once: ${seq}`).toEqual(["322"]);
+}
+
+async function expectFinishedDemo(page: any) {
+  await expect(page.locator("[data-demo-xp]")).toHaveText("322");
+  await expect(page.locator("[data-demo-coins]")).toHaveText("148");
+  await expect(page.locator(".fs-gain-xp")).toHaveText("+10 XP");
+  await expect(page.locator(".fs-gain-coin")).toHaveText("+5 mønter");
+  expect(await page.locator("[data-demo-xpbar]").evaluate((el: HTMLElement) => el.style.getPropertyValue("--p").trim())).toBe(".776");
+  // The visible outcome, not a class: with reduced motion the demo never plays, so "Næste skridt"
+  // is shown by the markup itself and never receives is-shown.
+  await expect(page.locator(".fs-next")).toHaveCSS("opacity", "1");
+}
+
+test("a visible page plays the hero demo at once, and only once", async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: "no-preference" });
+  const page = await ctx.newPage();
+  await page.addInitScript(visibilityShim, "visible");
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  // No visibility event is ever sent: a page that is already visible must not wait for one.
+  await page.waitForSelector("html[data-forside-ready]", { timeout: 8000 });
+  await expectFinishedDemo(page);
+  await expectPlayedOnce(page);
+  await ctx.close();
+});
+
+test("a page opened in a background tab rewinds, waits, and plays once when first shown", async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: "no-preference" });
+  const page = await ctx.newPage();
+  await page.addInitScript(visibilityShim, "hidden");
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+
+  // Hidden for longer than the whole demo takes (2.9s): it must still sit at its start.
+  await page.waitForTimeout(3500);
+  await expect(page.locator("[data-demo]")).toHaveClass(/is-playing/);
+  await expect(page.locator("[data-demo-xp]")).toHaveText("312");
+  await expect(page.locator("[data-demo-coins]")).toHaveText("143");
+  await expect(page.locator("[data-demo-pick]")).not.toHaveClass(/is-picked/);
+  await expect(page.locator(".fs-next")).not.toHaveClass(/is-shown/);
+  await expect(page.locator("html[data-forside-ready]"), "the page cannot be settled before the demo has played").toHaveCount(0);
+
+  // A visibility event that leaves the page hidden changes nothing.
+  await page.evaluate(() => (window as any).__fsSetVis("hidden"));
+  await page.waitForTimeout(1200);
+  await expect(page.locator("[data-demo-pick]")).not.toHaveClass(/is-picked/);
+
+  // First shown → it plays, to the same finished values.
+  await page.evaluate(() => (window as any).__fsSetVis("visible"));
+  await page.waitForSelector("html[data-forside-ready]", { timeout: 8000 });
+  await expectFinishedDemo(page);
+
+  // Switching away and back, repeatedly, never starts it again.
+  await page.evaluate(() => { const w = window as any; w.__fsSetVis("hidden"); w.__fsSetVis("visible"); w.__fsSetVis("hidden"); w.__fsSetVis("visible"); });
+  await expect(page.locator("[data-demo-xp]"), "a second start would rewind to 312").toHaveText("322");
+  await page.waitForTimeout(3500);
+  await expectFinishedDemo(page);
+  await expectPlayedOnce(page);
+  await ctx.close();
+});
+
+test("reduced motion: a hidden page neither rewinds nor plays the demo when shown", async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await ctx.newPage();
+  await page.addInitScript(visibilityShim, "hidden");
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  await page.evaluate(() => (window as any).__fsSetVis("visible"));
+  await page.waitForSelector("html[data-forside-ready]", { timeout: 8000 });
+  await page.waitForTimeout(3500);
+  await expect(page.locator("[data-demo]")).not.toHaveClass(/is-playing/);
+  await expectFinishedDemo(page);
+  expect(await page.evaluate(() => (window as any).__fsXp), "reduced motion must never rewind").not.toContain("312");
+  await ctx.close();
+});

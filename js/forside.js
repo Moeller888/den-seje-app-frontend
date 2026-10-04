@@ -13,7 +13,8 @@
 //    shown). Only when motion is welcome does this script rewind it and play it forward once:
 //    pick → confirm → +10 XP / +5 mønter → næste skridt. Without JavaScript, with reduced motion,
 //    or if anything here fails, the finished state is what the visitor sees. Deterministic: fixed
-//    timings, fixed values, no randomness.
+//    timings, fixed values, no randomness. It plays only once the page is visible — a background
+//    tab rewinds at load and starts the moment it is first shown.
 //
 // Every lookup is null-checked; a missing element disables its own feature and never throws.
 import { mountC2Avatar } from "./avatar-render-c2.js";
@@ -89,8 +90,27 @@ function startDemo(done) {
     }],
     [2900, () => { next.classList.add("is-shown"); done(); }],
   ];
-  for (let i = 0; i < steps.length; i++) {
-    window.setTimeout(steps[i][1], steps[i][0]);
+
+  // The rewind above happens at once; the PLAY waits until the page is actually visible. A page
+  // opened in a background tab would otherwise run the whole demo unseen and greet the visitor with
+  // its end state. Rewinding first means the first visible frame is the start, never a flash of the
+  // finish. `started` makes it play exactly once: later visibility changes do nothing.
+  let started = false;
+  function play() {
+    if (started) return;
+    started = true;
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    for (let i = 0; i < steps.length; i++) {
+      window.setTimeout(steps[i][1], steps[i][0]);
+    }
+  }
+  function onVisibilityChange() {
+    if (document.visibilityState !== "hidden") play();
+  }
+  if (document.visibilityState === "hidden") {
+    document.addEventListener("visibilitychange", onVisibilityChange);
+  } else {
+    play();
   }
   return true;
 }
