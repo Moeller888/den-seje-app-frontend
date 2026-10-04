@@ -879,13 +879,43 @@ test("a door marked current in the mobile menu keeps readable text on its own su
 });
 
 test("reduced motion: the door arrow does not slide, the hover colour remains", async ({ browser }) => {
+  // The hover colour lives inside `@media (hover: hover)` on purpose, like every hover effect on
+  // the site: a touch screen must not get a "sticky" hover. Some engines do not report a hover
+  // device at all (Playwright's headless Firefox), so a live hover cannot prove the rule there.
+  // The claim is therefore checked in two ways: the stylesheet itself, in every engine — the
+  // hover colour exists under (hover: hover) and nothing under prefers-reduced-motion removes it —
+  // and a real hover wherever the engine has a hover device.
   const ctx = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto(baseUrl + "/", { waitUntil: "load" });
+
+  const rules = await page.evaluate(() => {
+    const out = { hoverColour: false, reducedTouchesColour: false };
+    const walk = (list: CSSRuleList, media: string) => {
+      for (const r of Array.from(list)) {
+        if (r instanceof CSSMediaRule) { walk(r.cssRules, media + " " + r.conditionText); continue; }
+        if (!(r instanceof CSSStyleRule)) continue;
+        if (!/\.door-elev:hover\b/.test(r.selectorText)) continue;
+        const bg = r.style.getPropertyValue("background-color") || r.style.getPropertyValue("background");
+        if (/hover:\s*hover/.test(media) && bg) out.hoverColour = true;
+        if (/prefers-reduced-motion/.test(media) && bg) out.reducedTouchesColour = true;
+      }
+    };
+    for (const sheet of Array.from(document.styleSheets)) {
+      if ((sheet.href || "").endsWith("/css/landing.css")) walk(sheet.cssRules, "");
+    }
+    return out;
+  });
+  expect(rules.hoverColour, "the student door has no hover colour for hover devices").toBe(true);
+  expect(rules.reducedTouchesColour, "reduced motion must not remove the hover colour").toBe(false);
+
+  const hoverDevice = await page.evaluate(() => window.matchMedia("(hover: hover)").matches);
   const before = await page.locator(".door-elev").evaluate((el) => getComputedStyle(el).backgroundColor);
   await page.locator(".door-elev").hover();
-  await expect.poll(() => page.locator(".door-elev").evaluate((el) => getComputedStyle(el).backgroundColor))
-    .not.toBe(before);
+  if (hoverDevice) {
+    await expect.poll(() => page.locator(".door-elev").evaluate((el) => getComputedStyle(el).backgroundColor))
+      .not.toBe(before);
+  }
   expect(await page.locator(".door-elev .door-arrow").evaluate((el) => getComputedStyle(el).transform)).toBe("none");
   await ctx.close();
 });
