@@ -26,18 +26,18 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 6 | [#183](https://github.com/Moeller888/den-seje-app-frontend/pull/183) | `fa7296f` | **One-pager → flersidet hjemmeside.** Seks selvstændige sider bag rene ruter |
 | 7 | [#186](https://github.com/Moeller888/den-seje-app-frontend/pull/186) | `ff6f029` | Teksten skrevet om i almindeligt dansk; "Om Lærlig" flyttet til footeren alene |
 | 8 | — | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
-| 9 | branch `feat/forside-laerlig-2` | **ikke merget** | **Lærlig 2.0-forsiden — til visuel review.** Erstatter tranche 8 (se nedenfor) |
-| 10 | branch `claude/task-ucppbq` (bygger på 9) | **ikke merget** | **To indgange: For eleven / For læreren** — header og informationsarkitektur. Retningen godkendt 2026-10-04 |
-| 11 | branch `claude/task-ucppbq` | **ikke merget** | **`/for-eleven`, `/for-laereren`, bro-siden `/elev-og-laerer`**, strammere hero — til visuel review (se nedenfor) |
+| 9 | branch `feat/forside-laerlig-2` → PR fra `claude/task-ucppbq` | afventer merge | **Lærlig 2.0-forsiden.** Erstatter tranche 8. Visuelt godkendt 2026-10-04 |
+| 10 | samme PR | afventer merge | **To indgange: For eleven / For læreren** — header og informationsarkitektur. Godkendt 2026-10-04 |
+| 11 | samme PR | afventer merge | **`/for-eleven`, `/for-laereren`, bro-siden `/elev-og-laerer`**, strammere hero og mobilhero. Visuelt godkendt 2026-10-04 |
 
-**Lærlig 2.0 (forslag, afventer ejerens visuelle godkendelse — 2026-10-02).** Ejeren har bedt om
+**Lærlig 2.0 (ejerens brief 2026-10-02; visuelt godkendt 2026-10-04).** Ejeren har bedt om
 en ny forside, fordi hero-forsiden var pæn, men for generisk og for tynd til at vise, hvad Lærlig
 er. Beslutningen i tranche 8 ("kun hero") **erstattes derfor bevidst** — ikke i det stille. Den nye
 forside er en fortælling i otte scener: hero med et udsnit af det rigtige elev-UI og Lærlig-figuren
 · "24 elever. 24 forskellige udgangspunkter." · samme opgave, to forskellige næste skridt · "Det
 svære kommer igen." · eleven · "Læreren bestemmer." · det, skolen kan regne med · afslutning med
-kontakt. Undersiderne er uændrede. Ny CSS ligger i `css/forside.css` (kun forsiden), ny JS i
-`js/forside.js`. Afsnittet herunder beskriver tranche 8 og gælder, indtil 2.0 er godkendt.
+kontakt. Ny CSS ligger i `css/forside.css`, ny JS i `js/forside.js`. Afsnittet "Forsiden er
+bevidst kun en hero" længere nede beskriver tranche 8 og er **afløst** af 2.0; det står som historik.
 
 **Figuren er North Star v2 — som brandbillede, ikke som runtime-avatar (ejerbeslutning
 2026-10-04).** Forsidens to figurer (heroen og elevsektionen) er den godkendte North Star v2-
@@ -47,12 +47,11 @@ monterede den levende R2-avatar via `mountC2Avatar()`. Det er en **forsidebeslut
 North Star v2 er ikke promoveret til runtime, og appen tegner fortsat elevernes avatar med R2-
 stakken (`assets/avatar-r2/`), som forsiden slet ikke indlæser længere. Ingen tekst på forsiden
 påstår, at figuren er præcis den avatar, eleven får i dag. Filen lå allerede i `assets/` og blev
-deployet; intet nyt asset er oprettet. **Endnu ikke registreret i D-registeret**
-(`docs/project-state.md`): branchen er lavet fra en ældre `main`, så nummeret tildeles ved merge mod
-den aktuelle `main` for ikke at kollidere med det igangværende avatarspor.
+deployet; intet nyt asset er oprettet. **Registreret som D-150** i `docs/project-state.md`, ved
+integrationen mod den aktuelle `main`, sammen med udvidelsen til `/for-eleven` (se nedenfor).
 
-**To indgange: For eleven / For læreren (ejerbeslutning 2026-10-04 — tranche 10, retningen
-godkendt; tranche 11 til visuel review).** Lige under headeren står to tydelige, separate
+**To indgange: For eleven / For læreren (ejerbeslutning 2026-10-04 — tranche 10 og 11, begge
+godkendt).** Lige under headeren står to tydelige, separate
 indgange til det samme produkt, på **alle ni** offentlige sider. Det er et fast element i
 Lærlig-identiteten.
 
@@ -107,7 +106,7 @@ på 900 px for hele heroens højde er **erstattet** af en direkte kontrakt ved 1
 h1 helt synlig og højst 4 linjer, primær CTA synlig, opgavekortet i produktet helt synligt,
 ingen viewport-låst højde, header → døre → hero uden mellemrum, ingen horisontal overflow.
 
-**Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
+*Historik — afløst af Lærlig 2.0 (tranche 9–11):* **Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
 produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks
 oversigtskort fjernet, og de er **ikke** erstattet af en ny tekstsektion. Slut-CTA'en røg med:
 med kortene væk stod dens "VI LÆRER!"-knap kun én skærm under den identiske knap i heroen.
@@ -322,6 +321,10 @@ eller til faktisk runtime-adfærd:
 ----------------------------------------
 INGEN BILLEDER — MED VILJE
 ----------------------------------------
+
+*Opdateret 2026-10-04:* reglen gælder fortsat for alle offentlige sider **undtagen** `landing.html` og
+`for-eleven.html`, som viser North Star v2 som brandbillede (D-150) — og kun den fil. Unit-testen
+håndhæver begge dele. Afsnittet herunder er den oprindelige begrundelse.
 
 Siden indeholder **nul `<img>`-elementer**, og en unit-test håndhæver det.
 

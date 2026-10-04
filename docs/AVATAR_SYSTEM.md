@@ -130,8 +130,8 @@ emotion. Baking eyes into the face would force an expression × color × variant
   It is a **single flat figure** with body, face, eyes, hair and clothing baked together, while the
   R2 runtime is a **separate-layer** system, so **the two are not interchangeable**.
   It has **no runtime authority**: not in `R2_MANIFEST`, not in the resolver, not loaded by any app page.
-  The public front page (`landing.html`, Lærlig 2.0) shows it as a static **brand image** only — a
-  marketing use that grants it no runtime role (see `LANDING.md`).
+  The public website shows it as a static **brand image** only — on the front page (`landing.html`)
+  and on `/for-eleven` — a marketing use that grants it no runtime role (**D-150**, `LANDING.md`).
   Deriving R2 layers from it is separate work needing its own owner decision, PR and gates.
 
 **Three roles, deliberately kept apart — do not collapse them:**
