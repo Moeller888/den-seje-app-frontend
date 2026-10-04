@@ -27,7 +27,8 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 7 | [#186](https://github.com/Moeller888/den-seje-app-frontend/pull/186) | `ff6f029` | Teksten skrevet om i almindeligt dansk; "Om Lærlig" flyttet til footeren alene |
 | 8 | — | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
 | 9 | branch `feat/forside-laerlig-2` | **ikke merget** | **Lærlig 2.0-forsiden — til visuel review.** Erstatter tranche 8 (se nedenfor) |
-| 10 | branch `claude/task-ucppbq` (bygger på 9) | **ikke merget** | **To indgange: For eleven / For læreren** — header og informationsarkitektur, til visuel review (se nedenfor) |
+| 10 | branch `claude/task-ucppbq` (bygger på 9) | **ikke merget** | **To indgange: For eleven / For læreren** — header og informationsarkitektur. Retningen godkendt 2026-10-04 |
+| 11 | branch `claude/task-ucppbq` | **ikke merget** | **`/for-eleven`, `/for-laereren`, bro-siden `/elev-og-laerer`**, strammere hero — til visuel review (se nedenfor) |
 
 **Lærlig 2.0 (forslag, afventer ejerens visuelle godkendelse — 2026-10-02).** Ejeren har bedt om
 en ny forside, fordi hero-forsiden var pæn, men for generisk og for tynd til at vise, hvad Lærlig
@@ -50,39 +51,61 @@ deployet; intet nyt asset er oprettet. **Endnu ikke registreret i D-registeret**
 (`docs/project-state.md`): branchen er lavet fra en ældre `main`, så nummeret tildeles ved merge mod
 den aktuelle `main` for ikke at kollidere med det igangværende avatarspor.
 
-**To indgange: For eleven / For læreren (ejerbeslutning 2026-10-04, tranche 10 — afventer
-visuel godkendelse).** Lige under headeren står to tydelige, separate indgange til det samme
-produkt, på **alle syv** offentlige sider:
+**To indgange: For eleven / For læreren (ejerbeslutning 2026-10-04 — tranche 10, retningen
+godkendt; tranche 11 til visuel review).** Lige under headeren står to tydelige, separate
+indgange til det samme produkt, på **alle ni** offentlige sider. Det er et fast element i
+Lærlig-identiteten.
 
 - **Dørbåndet** (`<nav class="doors">`) er to fuldbredde-halvdele. Elevdøren har appens egen
   mørke flade, lærerdøren den lyse "skrivebordsflade", forsiden allerede bruger til de voksnes
   side — farven er information. Label, typografi og rytme er fælles, så de læses som ét brand.
   På desktop bærer hver dør en lille, dekorativ kopi af produktets UI (niveau-/XP-bjælken og
-  lærerdashboardets statusmærker, `aria-hidden`); under 1080 px træder de til side.
+  lærerpanelets trendmærker, `aria-hidden`); under 1080 px træder de til side.
 - **Båndet er ikke sticky.** Den sticky header forbliver én let række; båndet ruller væk med
   toppen af siden. I mobilmenuen står de to døre derfor øverst som et par.
-- **Hovedmenuen går fra fem til fire punkter** (Produktet · Sådan virker det · Til skoler ·
-  Priser). "For elev & lærer" er fjernet fra menuen, fordi dørene nu bærer den indgang; siden
-  er stadig nået fra footeren og fra begge døre.
-- **Ingen ruter er ændret.** Dørene peger på `/elev-og-laerer#for-eleven` og
-  `/elev-og-laerer#for-laereren` — ankre på den eksisterende side. `REDIRECT_RULES`, canonicals,
-  `sitemap.xml` og 301'erne er urørte. På `/elev-og-laerer` markeres begge døre `aria-current`.
-- **Heroens 40 px-kontrakt måles nu fra dørbåndets underkant**, ikke fra headerens: båndet er
-  indhold, ikke et mellemrum. Testen vogter stadig mod et dødt bånd over heroen.
+- **Hovedmenuen har fire punkter** (Produktet · Sådan virker det · Til skoler · Priser).
+  "For elev & lærer" er ude af menuen (godkendt). Footeren har "For eleven", "For læreren" og
+  "Elev og lærer".
+- **Dørene fører til hver sin side:** `/for-eleven` og `/for-laereren` (tranche 11). Siden, man
+  står på, markerer sin egen dør med `aria-current` — i båndet og i mobilmenuen.
 
-**Foreslået næste skridt (ikke besluttet):** to dedikerede sider, `/for-eleven` og
-`/for-laereren`, med hvert sit perspektiv i dybden (eleven: opgaver, næste skridt, feedback,
-XP/mønter/figur, "Det svære kommer igen"; læreren: klasseoverblik, den enkelte elev, lange
-skrevne svar, faglig vurdering, "Læreren bestemmer"). Indholdet på `/elev-og-laerer` ville da
-blive dubleret; den skal enten blive en kort bro-side (ordbogsopslaget + de to døre) eller få en
-301 — det kræver ejerens valg, fordi én adresse ikke kan omdirigere til to. At tilføje en side
-kræver en linje i `REDIRECT_RULES` og i `RUNTIME_HTML` (se Routingkontrakten).
+**De to perspektivsider (tranche 11).** Rigtige, selvstændige sider med hver sin fortælling —
+beslægtede, men med hver sin karakter:
 
-**Kendt, ikke løst i tranche 10:** testen "the hero is content-height and the next scene follows
-it directly" fejlede allerede på `feat/forside-laerlig-2` før denne tranche (heroens underkant
-944 px ved 1440×900 mod et loft på 900 i CI-fonten DejaVu Sans). Dørbåndet lægger ~95 px til.
-Assertionen er ikke ændret; om heroen skal strammes, eller om loftet skal erstattes af en direkte
-"ingen viewport-baseret min-height"-kontrol, er en ejerbeslutning.
+| | `/for-eleven` | `/for-laereren` |
+|---|---|---|
+| Flade | åbner på appens mørke navy og bliver der | åbner på det lyse skrivebord; kun én mørk scene (elevens arbejde) |
+| Hero | "Eleven arbejder på sit eget niveau." + et forkert svar i appen, med forklaring og "Den kommer igen om lidt." | "Hele klassen. Og den enkelte elev." + klasseoversigten med lærerpanelets egne trendmærker |
+| Scener | egne opgaver (tre opgavetyper som rigtigt UI) · "Et forkert svar skal hjælpe eleven videre — ikke bare give et rødt kryds." · "Det svære kommer igen." · fremgang: XP, mønter, figuren, faste regler · afslutning | den enkelte elev · lange skrevne svar og vurderingsskalaen · "Læreren bestemmer." (domæne-fokus, kun det entydige rettes automatisk, intet tilsidesætter læreren, faste regler) · afslutning med kontakt |
+
+Produktdetaljerne er taget fra den faktiske app, ikke opfundet: trendmærkerne ↑ Fremgang /
+→ Stabil / ↓ Brug for hjælp og svarprocent-båndene (`teacher.html`), domæne-fokus ("Eleven får
+kun spørgsmål fra de valgte emner", `teacher.html`), vurderingsskalaen 1 – Afvist … 4 – Perfekt
+(`js/student-detail.js`) og dens XP 0/10/25/50 (`supabase/functions/review-answer`), avatarens
+krop/frisure/hårfarve/hudtone (`avatar.html`) samt serverens belønning for første rigtige svar,
++10 XP og +5 mønter. Navne og tal i mockups er illustrative. Siderne genbruger forsidens
+produktkomponenter (`css/forside.css`); kun deres egne layouts ligger i `css/perspektiv.css`.
+
+**North Star v2 på `/for-eleven`.** Elevsiden fortæller også om figuren, så den viser den samme
+North Star v2-brandfigur som forsiden (samme fil, samme D-124-hash) — og siger under figuren:
+"Lærligs figur. Elevens egen ser anderledes ud — det er eleven, der former den." Det udvider
+forsidebeslutningen fra 2026-10-04 til én side mere, efter ejerens brief ("North Star v2 som
+offentlig brandreference, hvor det giver mening"). Grænsen er uændret: ingen runtime-avatar,
+ingen R2-assets, ingen feature flags. Lærersiden har ingen billeder. Unit-testen tillader
+billeder på præcis `landing.html` og `for-eleven.html` — og kun North Star v2.
+
+**`/elev-og-laerer` er nu en bro-side (ingen redirect).** Kort: hvad siden er (to sider af den
+samme time), ordbogsopslaget og to store indgange videre til `/for-eleven` og `/for-laereren`.
+De gamle lister er fjernet herfra, så indholdet ikke dubleres. Ankrene `#for-eleven` og
+`#for-laereren` sidder nu på de to indgange, så gamle links stadig lander fornuftigt.
+
+**Første viewport (tranche 11).** Ved 1440×900 skal første skærm være en færdig hero: header,
+begge døre, hele overskriften, den primære handling og en meningsfuld del af produktet. Strammet
+med et lavere dørbånd (~77 px), 32 px fra båndet til eyebrow, en h1 på maks. 4,75rem (3 linjer
+med Arial-/Segoe-metrik, 4 med DejaVu Sans) og tættere intern spacing. Den gamle test med et loft
+på 900 px for hele heroens højde er **erstattet** af en direkte kontrakt ved 1440×900 og 1280×800:
+h1 helt synlig og højst 4 linjer, primær CTA synlig, opgavekortet i produktet helt synligt,
+ingen viewport-låst højde, header → døre → hero uden mellemrum, ingen horisontal overflow.
 
 **Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
 produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks
@@ -134,13 +157,15 @@ Hjemmesiden er **flersidet**. Hvert menupunkt er sin egen HTML-fil bag en ren ru
 | `/` | `landing.html` |
 | `/produktet` | `produktet.html` |
 | `/saadan-virker-det` | `saadan-virker-det.html` |
-| `/elev-og-laerer` | `elev-og-laerer.html` |
+| `/elev-og-laerer` | `elev-og-laerer.html` (bro-side) |
+| `/for-eleven` | `for-eleven.html` |
+| `/for-laereren` | `for-laereren.html` |
 | `/til-skoler` | `til-skoler.html` |
 | `/priser` | `priser.html` |
 | `/om-laerlig` | `om-laerlig.html` |
 
 Uændret ved siden af: `/index.html` = elevens quiz, `/login.html` = fælles login. `/landing`,
-`/login`, `/hub` m.fl. er fortsat **404** — kun de syv offentlige sider har rene ruter.
+`/login`, `/hub` m.fl. er fortsat **404** — kun de ni offentlige sider har rene ruter.
 
 **`_redirects` er ikke længere én regel, men en eksplicit tabel.** `REDIRECT_RULES` i
 `tools/cloudflare-build-static.mjs` er kilden, og `validateOutput()` holder den emitterede fil
@@ -159,7 +184,7 @@ Status **200 betyder intern rewrite**: adresselinjen bliver stående på den ren
 Der er ingen build-proces og ingen server-side include, og at injicere navigationen med
 JavaScript ville efterlade hjemmesidens navigation ødelagt uden JS og give et glimt ved hver
 indlæsning. Markup-gentagelsen er den ærlige pris; **styling og opførsel er delt** gennem
-`css/landing.css` og `js/landing.js`. En unit-test sammenligner navigationen på alle syv sider
+`css/landing.css` og `js/landing.js`. En unit-test sammenligner navigationen på alle ni sider
 og fejler, hvis de driver fra hinanden.
 
 **Quizzen er ikke flyttet, omdøbt eller ændret.** `index.html`, `app.js`, `js/login.js`, alle

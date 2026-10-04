@@ -1,0 +1,410 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÆRLIG — the two perspective pages and the bridge page
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Scope:   for-eleven.html and for-laereren.html (after css/landing.css and
+            css/forside.css), and elev-og-laerer.html (after css/landing.css only —
+            it uses the bridge rules at the bottom and nothing else). Everything
+            here is prefixed `pv-`, so no other page can be affected.
+
+   Reuse:   the product itself is drawn by css/forside.css — the app shell, the
+            options, the XP bar, the desk panels, the figure. These pages add
+            layout and the few UI states the front page never shows (a wrong
+            answer, the teacher's trend labels, the review scale).
+
+   Character: the same rule as the front page and the doors — colour is
+            information. /for-eleven opens on the app's dark navy and stays mostly
+            there; /for-laereren opens on the light desk and turns dark only once,
+            for the student's own work arriving on it. Related, not identical.
+
+   Fonts:   system stack only (inherited). No webfont, no CDN.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ═══ SHARED ════════════════════════════════════════════════════════════════ */
+
+/* The page hero sits under the header and the doors, like the front page's. */
+.pv-hero {
+  position: relative;
+  padding: 36px 0 clamp(64px, 8vw, 112px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 70% at 78% 40%, rgba(30, 32, 96, .75), transparent 70%),
+    var(--l-bg);
+}
+.pv-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: clamp(32px, 4vw, 56px);
+  align-items: start;
+}
+.pv-hero h1 {
+  max-width: 13ch;
+  font-size: clamp(2.5rem, 5vw, 4.25rem);
+  font-weight: 760;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--l-bright);
+  text-wrap: balance;
+}
+.pv-hero .fs-lede { max-width: 34ch; }
+.pv-hero .fs-actions { margin-top: 30px; }
+
+.pv-closing-inner { max-width: 900px; }
+.pv-closing .fs-statement { font-size: clamp(2.2rem, 5vw, 4.25rem); }
+
+/* ═══ /for-eleven ═══════════════════════════════════════════════════════════ */
+
+/* The wrong-answer state the front page never shows: the app's error surface, not a
+   red cross. The explanation is in the help colour, not in green. */
+.fs-options li.is-wrong {
+  background: var(--error-bg);
+  border-color: var(--fs-wrong);
+  color: var(--l-bright);
+}
+.pv-feedback-help { color: var(--l-accent-soft); }
+.pv-next-again { background: rgba(144, 202, 249, .10); }
+
+/* 2. Egne opgaver — the light scene. */
+.pv-tasks { background: var(--fs-paper); color: var(--fs-ink); }
+.pv-tasks h2 { color: var(--fs-ink); }
+.pv-tasks .fs-lede { color: var(--fs-ink); }
+.pv-tasks .fs-body { color: var(--fs-ink-soft); }
+.pv-tasks-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+
+/* Three sheets, dealt onto the desk: each shifted a little further right, so they read as a
+   sequence the student moves through rather than as a row of equal cards. */
+.pv-sheets { list-style: none; display: grid; gap: 16px; }
+.pv-sheet {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: var(--fs-radius-pan);
+  background: var(--l-bg);
+  color: var(--l-text);
+  border-top: 3px solid var(--l-accent-deep);
+  box-shadow: 0 24px 40px -30px rgba(18, 18, 42, .7);
+}
+.pv-sheet-number { margin-left: clamp(0px, 4vw, 48px); }
+.pv-sheet-long   { margin-left: clamp(0px, 8vw, 96px); }
+.pv-sheet-kind {
+  font-size: .8125rem;
+  font-weight: 700;
+  color: var(--l-accent-soft);
+}
+.pv-sheet-task { font-size: 1.125rem; line-height: 1.4; color: var(--l-bright); }
+
+.pv-sheet-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.pv-sheet-options span {
+  padding: 8px 0;
+  text-align: center;
+  border-radius: 10px;
+  background: var(--btn-bg);
+  border: 1.5px solid var(--border-btn);
+  font-size: .9375rem;
+  color: var(--l-dim);
+}
+.pv-sheet-options .is-picked { border-color: var(--l-accent-soft); background: var(--btn-bg-hover); color: var(--l-bright); }
+
+.pv-sheet-input { display: flex; gap: 8px; }
+.pv-field {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--l-panel);
+  border: 1.5px solid var(--border-btn);
+  color: var(--l-bright);
+  font-size: 1rem;
+}
+.pv-send {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: var(--l-accent-deep);
+  color: #fff;
+  font-weight: 650;
+  font-size: .9375rem;
+}
+.pv-field-long { min-height: 64px; color: var(--l-dim); font-size: .9375rem; line-height: 1.5; }
+.pv-sheet-note { font-size: .875rem; color: var(--l-soft); }
+
+/* 3. Feedback — typographic. */
+.pv-feedback { background: var(--l-bg); }
+.pv-feedback-grid { display: grid; gap: clamp(32px, 4vw, 56px); }
+.pv-feedback-statement { max-width: 20ch; font-size: clamp(2.2rem, 5vw, 4.25rem); color: var(--l-bright); }
+.pv-feedback-statement span + span { color: var(--l-accent-soft); }
+.pv-feedback-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); }
+.pv-feedback-copy .fs-lede, .pv-feedback-copy .fs-body { margin-top: 0; }
+
+/* 4. Det svære kommer igen — a path, walked top to bottom. */
+.pv-again { background: var(--l-bg-deep); }
+.pv-again-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.pv-path { list-style: none; position: relative; display: grid; gap: 26px; padding-left: 34px; }
+.pv-path::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--fs-wrong), var(--l-accent-soft) 30%, var(--fs-xp) 70%, var(--l-accent-soft));
+  opacity: .7;
+}
+.pv-path li { position: relative; display: grid; gap: 2px; font-size: 1rem; line-height: 1.45; }
+.pv-path li::before {
+  content: "";
+  position: absolute;
+  left: -34px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border-btn);
+  background: var(--l-bg-deep);
+}
+.pv-path li.is-wrong::before { border-color: var(--fs-wrong); background: var(--error-bg); }
+.pv-path li.is-right::before { border-color: var(--fs-xp); background: var(--correct-bg); }
+.pv-path li.is-next::before  { border-color: var(--l-accent-soft); background: var(--l-accent-deep); }
+.pv-path b { color: var(--l-bright); font-weight: 650; }
+.pv-path span { color: var(--l-soft); }
+.pv-path li.is-next span { color: var(--l-text); }
+
+/* 5. Fremgang. */
+/* The caption sits OUTSIDE the stage the chips are positioned in, so it can never slide under them. */
+.pv-figure { margin: 0; display: grid; justify-items: center; }
+.pv-figure .fs-student-figure { width: 100%; }
+.pv-figure-note {
+  margin-top: 18px;
+  max-width: 30ch;
+  font-size: .875rem;
+  text-align: center;
+  color: var(--l-soft);
+}
+.pv-facts { display: grid; gap: 0; margin-top: 28px; max-width: 52ch; }
+.pv-facts div {
+  display: grid;
+  grid-template-columns: 9.5em minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--l-border);
+}
+.pv-facts div:last-child { border-bottom: 1px solid var(--l-border); }
+.pv-facts dt { font-weight: 700; color: var(--l-bright); }
+.pv-facts dd { color: var(--l-dim); }
+
+/* ═══ /for-laereren ═════════════════════════════════════════════════════════ */
+
+/* The desk: paper, ink, and the dashboard's own colours. */
+.pv-hero-desk { background: var(--fs-paper); color: var(--fs-ink); }
+.pv-hero-desk h1 { color: var(--fs-ink); }
+.pv-hero-desk .fs-kicker { color: var(--fs-blue-ink); }
+.pv-hero-desk .fs-lede { color: var(--fs-ink-soft); }
+
+/* Buttons on paper: the ink button and the outline, so the teacher page does not borrow the
+   student page's glowing blue. */
+.pv-btn-ink { background: var(--fs-ink); color: #fff; border: 1.5px solid var(--fs-ink); }
+.pv-btn-line { background: transparent; color: var(--fs-ink); border: 1.5px solid #b8c0d8; }
+@media (hover: hover) {
+  .pv-btn-ink:hover  { background: #23234a; }
+  .pv-btn-line:hover { border-color: var(--fs-ink); }
+}
+.pv-btn-ink:focus-visible, .pv-btn-line:focus-visible { outline-color: var(--fs-blue-ink); }
+
+.pv-desk-figure { margin: 0; }
+.pv-desk-caption { margin-top: 14px; font-size: .875rem; color: var(--fs-ink-soft); }
+
+.pv-roster { list-style: none; display: grid; }
+.pv-roster li {
+  display: grid;
+  grid-template-columns: 76px 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #edf0f7;
+  font-size: .9375rem;
+}
+.pv-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+.pv-pct.is-good, .pv-stats .is-good { color: #1f6a2a; }
+.pv-pct.is-ok,   .pv-stats .is-ok   { color: #8a5a00; }
+.pv-pct.is-poor, .pv-stats .is-poor { color: #9b2c1f; }
+.pv-trend {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pv-trend.is-stable { background: #e3f3e5; color: #1f6a2a; }
+.pv-trend.is-up     { background: #e2edfb; color: #134f99; }
+.pv-trend.is-down   { background: #fbe9e6; color: #9b2c1f; }
+.pv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf0f7;
+  font-size: .8125rem;
+  color: var(--fs-ink-soft);
+}
+.pv-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: -8px; }
+.pv-dot.is-good { background: #2e8b3a; }
+.pv-dot.is-ok   { background: #c98a00; }
+.pv-dot.is-poor { background: #c0392b; }
+
+/* 2. Den enkelte elev — a step down on paper. */
+.pv-one { background: var(--fs-paper-2); color: var(--fs-ink); }
+.pv-one h2 { color: var(--fs-ink); }
+.pv-one .fs-lede { color: var(--fs-ink); }
+.pv-one .fs-body { color: var(--fs-ink-soft); }
+.pv-one-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.pv-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.pv-stats div { padding: 12px; border-radius: 10px; background: var(--fs-paper); }
+.pv-stats dt { font-size: .75rem; color: var(--fs-ink-soft); }
+.pv-stats dd { margin-top: 4px; font-size: 1.125rem; font-weight: 700; color: var(--fs-ink); }
+.pv-stats dd.is-down { font-size: .9375rem; color: #9b2c1f; }
+.pv-history { list-style: none; display: grid; gap: 8px; }
+.pv-history li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .875rem; }
+.pv-history li > span:first-child { width: 72px; font-weight: 600; color: var(--fs-ink); }
+.pv-mark { padding: 2px 9px; border-radius: 20px; font-size: .75rem; font-weight: 650; }
+.pv-mark.is-wrong { background: #fbe9e6; color: #9b2c1f; }
+.pv-mark.is-right { background: #e3f3e5; color: #1f6a2a; }
+
+/* 3. Elevsvar — the one dark scene on the teacher page. */
+.pv-answers { background: var(--l-bg); }
+.pv-answers-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.pv-panel-review { margin: 0; }
+.pv-scale { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 16px; }
+.pv-scale span {
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid #d5dbea;
+  font-size: .8125rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--fs-ink-soft);
+}
+.pv-scale .is-chosen { background: var(--fs-ink); border-color: var(--fs-ink); color: #fff; }
+
+/* 4. Læreren bestemmer — the statement and four rules, set as a ruled list. */
+.pv-control { background: var(--l-bg-deep); }
+.pv-control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
+}
+.pv-control .fs-statement { font-size: clamp(2.4rem, 5vw, 4.25rem); color: var(--l-bright); max-width: 9ch; }
+.pv-rules {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px clamp(24px, 4vw, 48px);
+}
+.pv-rules li { padding-top: 16px; border-top: 2px solid var(--l-border); }
+.pv-rules h3 { font-size: 1.125rem; font-weight: 650; line-height: 1.35; color: var(--l-bright); margin-bottom: 6px; }
+.pv-rules p { color: var(--l-soft); }
+
+/* 5. Afslutning on paper. */
+.pv-closing-desk { background: var(--fs-paper); color: var(--fs-ink); border-top: 0; }
+.pv-closing-desk .fs-statement { color: var(--fs-ink); }
+.pv-closing-desk .fs-statement span + span { color: var(--fs-blue-ink); }
+.pv-closing-desk .fs-lede { color: var(--fs-ink-soft); }
+
+/* ═══ /elev-og-laerer — THE BRIDGE ══════════════════════════════════════════ */
+
+/* The two doors, large: the same two surfaces as the band under the header. */
+.pv-bridge-doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+.pv-bridge-door {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 200px;
+  padding: clamp(24px, 3vw, 40px);
+  text-decoration: none;
+  scroll-margin-top: 96px;
+  transition: background-color 180ms var(--l-ease);
+}
+.pv-bridge-elev   { background: var(--l-panel); color: var(--l-text); border-bottom: 3px solid var(--success); border-radius: 16px 0 0 16px; }
+.pv-bridge-laerer { background: #eef1f8; color: #12122a; border-bottom: 3px solid #1565c0; border-radius: 0 16px 16px 0; }
+.pv-bridge-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(1.5rem, 2.6vw, 2.125rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.pv-bridge-elev .pv-bridge-label   { color: var(--l-bright); }
+.pv-bridge-elev .door-arrow        { color: var(--success-text); }
+.pv-bridge-laerer .door-arrow      { color: #1565c0; }
+.pv-bridge-text { max-width: 38ch; font-size: 1.0625rem; line-height: 1.55; }
+.pv-bridge-elev .pv-bridge-text    { color: var(--l-dim); }
+.pv-bridge-laerer .pv-bridge-text  { color: #4a4f72; }
+@media (hover: hover) {
+  .pv-bridge-elev:hover   { background: #212150; }
+  .pv-bridge-laerer:hover { background: #e3e8f4; }
+  .pv-bridge-door:hover .door-arrow { transform: translateX(4px); }
+}
+.pv-bridge-door:focus-visible { outline-offset: -6px; }
+.pv-bridge-laerer:focus-visible { outline-color: #1565c0; }
+
+/* ═══ RESPONSIVE ════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .pv-hero-grid,
+  .pv-tasks-grid,
+  .pv-again-grid,
+  .pv-one-grid,
+  .pv-answers-grid,
+  .pv-control-grid { grid-template-columns: 1fr; }
+
+  .pv-sheet-number, .pv-sheet-long { margin-left: 0; }
+  .pv-one-grid .pv-panel-student { order: 2; }
+  .pv-figure { order: -1; }
+  .pv-control .fs-statement { max-width: none; }
+}
+
+@media (max-width: 640px) {
+  .pv-hero { padding-top: 28px; }
+  .pv-feedback-copy { grid-template-columns: 1fr; gap: 16px; }
+  .pv-rules { grid-template-columns: 1fr; gap: 22px; }
+  .pv-facts div { grid-template-columns: 1fr; gap: 4px; }
+  .pv-roster li { grid-template-columns: 58px 46px minmax(0, 1fr); gap: 8px; font-size: .875rem; }
+  .pv-stats { grid-template-columns: 1fr 1fr; }
+  .pv-stats div:last-child { grid-column: 1 / -1; }
+  .pv-scale { grid-template-columns: 1fr 1fr; }
+
+  .pv-bridge-doors { grid-template-columns: 1fr; }
+  .pv-bridge-door { min-height: 0; }
+  .pv-bridge-elev   { border-radius: 16px 16px 0 0; }
+  .pv-bridge-laerer { border-radius: 0 0 16px 16px; }
+}
+
+/* ═══ REDUCED MOTION ════════════════════════════════════════════════════════
+   landing.css zeroes every transition globally under this query; only the
+   arrow's slide needs naming, so the hover colour remains as the affordance. */
+@media (prefers-reduced-motion: reduce) {
+  .pv-bridge-door:hover .door-arrow { transform: none; }
+}

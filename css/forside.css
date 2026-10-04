@@ -94,6 +94,7 @@
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 
 .fs-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+.fs-hero .fs-actions { margin-top: 30px; }
 
 .fs-btn {
   display: inline-flex;
@@ -130,11 +131,13 @@
 
 /* ═══ 1. HERO ═══════════════════════════════════════════════════════════════ */
 
-/* landing.css gives .hero its 40px top padding (the eyebrow sits 40px under the
-   header — a tested contract) and `overflow: hidden`. Only the bottom and the
-   layout change here. */
+/* The front page's hero sits under the header AND the two doors, so it starts a little
+   closer than landing.css's 40px: 32px from the doors' bottom edge to the eyebrow (a tested
+   contract). Together with the tighter type below, that keeps the headline, the primary
+   action and the top of the product slice inside a 1440×900 first viewport. */
 .fs-hero {
   display: block;
+  padding-top: 32px;
   padding-bottom: clamp(72px, 9vw, 128px);
   background:
     radial-gradient(ellipse 60% 70% at 78% 40%, rgba(30, 32, 96, .75), transparent 70%),
@@ -155,13 +158,13 @@
   letter-spacing: 0;
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .fs-hero h1 {
   margin-inline: 0;
   max-width: 11ch;
-  font-size: clamp(2.75rem, 6.2vw, 5.5rem);
+  font-size: clamp(2.75rem, 5.4vw, 4.75rem);
   font-weight: 760;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -169,7 +172,7 @@
 }
 
 .fs-hero-sub {
-  margin-top: 28px;
+  margin-top: 22px;
   max-width: 30ch;
   font-size: clamp(1.15rem, 1.7vw, 1.375rem);
   line-height: 1.5;

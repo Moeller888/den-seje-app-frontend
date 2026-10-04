@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>For læreren — Lærlig</title>
+  <meta name="description"
+        content="Læreren ser hele klassen og den enkelte elev, vurderer de lange skrevne svar selv og vælger, hvad eleverne arbejder med. Læreren bestemmer.">
+
+  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE. /for-laereren.html is a
+       permanent 301 to the clean route, so
+       there is one preferred URL per public page. Names the same URL sitemap.xml lists; derived
+       from the routing table in tools/cloudflare-build-static.mjs and verified on every build. -->
+  <link rel="canonical" href="https://lærlig.dk/for-laereren">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/forside.css">
+  <link rel="stylesheet" href="css/perspektiv.css">
+</head>
+<body class="forside pv pv-laerer">
+
+  <a class="skip-link" href="#main">Spring til indhold</a>
+
+  <div id="top-sentinel" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <div class="shell header-inner">
+      <a class="wordmark" href="/">
+        <span class="wordmark-text">Lærlig</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Primær">
+        <a href="/produktet">Produktet</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="login-link" href="login.html">Log ind</a>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-mobile" aria-label="Åbn menu">
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
+      <div class="nav-doors">
+        <a class="nav-door nav-door-elev" href="/for-eleven">For eleven</a>
+        <a class="nav-door nav-door-laerer" href="/for-laereren" aria-current="page">For læreren</a>
+      </div>
+      <a href="/produktet">Produktet</a>
+      <a href="/saadan-virker-det">Sådan virker det</a>
+      <a href="/til-skoler">Til skoler</a>
+      <a href="/priser">Priser</a>
+    </nav>
+  </header>
+
+  <nav class="doors" aria-label="For eleven og for læreren">
+    <a class="door door-elev" href="/for-eleven">
+      <span class="door-label">For eleven<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-elev" aria-hidden="true">
+        <span class="door-level">Niveau <b>4</b></span>
+        <span class="door-xp"><span></span></span>
+        <span class="door-gain">+10 XP</span>
+      </span>
+      <span class="door-line">Egne opgaver, næste skridt og en fremgang, eleven selv kan se.</span>
+    </a>
+    <a class="door door-laerer" href="/for-laereren" aria-current="page">
+      <span class="door-label">For læreren<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-laerer" aria-hidden="true">
+        <span class="door-tag is-good">Stabil</span>
+        <span class="door-tag is-up">Fremgang</span>
+        <span class="door-tag is-help">Brug for hjælp</span>
+      </span>
+      <span class="door-line">Overblik over klassen og den enkelte elev. Læreren bestemmer.</span>
+    </a>
+  </nav>
+
+  <main id="main">
+
+    <!-- ══ 1. HERO ═══════════════════════════════════════════════════════════
+         The teacher's surface: the light desk, where the student page opens on the app's dark
+         navy. The panel uses the teacher dashboard's own words (teacher.html → Klasseoversigt):
+         the trend arrows ↑ Fremgang, → Stabil, ↓ Brug for hjælp, and the share of correct
+         answers. Names and numbers are illustrative; nothing here talks to a backend. -->
+    <section class="pv-hero pv-hero-desk" aria-labelledby="page-title">
+      <div class="shell pv-hero-grid">
+        <div class="pv-hero-copy">
+          <p class="fs-kicker">For læreren</p>
+          <h1 id="page-title">Hele klassen. Og den enkelte elev.</h1>
+          <p class="fs-lede">
+            Lærlig tilpasser næste skridt til hver elev. Du kan se, hvordan det går — og du har
+            det sidste ord.
+          </p>
+          <div class="fs-actions">
+            <a class="fs-btn pv-btn-ink" href="login.html">Log ind</a>
+            <a class="fs-btn pv-btn-line" href="/til-skoler">Lærlig til skoler</a>
+          </div>
+        </div>
+
+        <figure class="pv-desk-figure" aria-labelledby="class-caption">
+          <div class="fs-panel pv-panel-class" aria-hidden="true">
+            <p class="fs-panel-title">Klasseoversigt <span>8.B · 24 elever</span></p>
+            <ul class="pv-roster">
+              <li><span class="fs-name">Sofie</span><span class="pv-pct is-good">86 %</span><span class="pv-trend is-stable">→ Stabil</span></li>
+              <li><span class="fs-name">Malik</span><span class="pv-pct is-ok">64 %</span><span class="pv-trend is-up">↑ Fremgang</span></li>
+              <li><span class="fs-name">Ida</span><span class="pv-pct is-good">78 %</span><span class="pv-trend is-stable">→ Stabil</span></li>
+              <li><span class="fs-name">Noah</span><span class="pv-pct is-poor">41 %</span><span class="pv-trend is-down">↓ Brug for hjælp</span></li>
+              <li><span class="fs-name">Emma</span><span class="pv-pct is-ok">67 %</span><span class="pv-trend is-up">↑ Fremgang</span></li>
+            </ul>
+            <p class="pv-legend"><span class="pv-dot is-good"></span>≥70 % rigtige <span class="pv-dot is-ok"></span>50–69 % <span class="pv-dot is-poor"></span>&lt;50 %</p>
+          </div>
+          <figcaption id="class-caption" class="pv-desk-caption">
+            Klasseoversigten: hvor mange svar der er rigtige, og om det går frem — for hver elev.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ══ 2. DEN ENKELTE ELEV ═══════════════════════════════════════════════
+         One student, opened. The fields are the student-detail page's own: XP, the recent share
+         of correct answers, Fremgang. -->
+    <section class="fs-scene pv-one" aria-labelledby="one-title">
+      <div class="shell pv-one-grid">
+        <div class="fs-panel pv-panel-student" aria-hidden="true">
+          <p class="fs-panel-title">Noah <span>8.B</span></p>
+          <dl class="pv-stats">
+            <div><dt>XP</dt><dd>214</dd></div>
+            <div><dt>Rigtige svar (seneste)</dt><dd class="is-poor">41 %</dd></div>
+            <div><dt>Fremgang</dt><dd class="is-down">↓ Brug for hjælp</dd></div>
+          </dl>
+          <ul class="pv-history">
+            <li><span>Brøker</span><span class="pv-mark is-wrong">Forkert</span><span class="pv-mark is-wrong">Forkert</span><span class="pv-mark is-right">Rigtigt</span></li>
+            <li><span>Procent</span><span class="pv-mark is-wrong">Forkert</span><span class="pv-mark is-right">Rigtigt</span><span class="pv-mark is-right">Rigtigt</span></li>
+          </ul>
+        </div>
+
+        <div class="pv-one-copy">
+          <h2 id="one-title" class="fs-big">Du kan se, hvem der har brug for dig i dag.</h2>
+          <p class="fs-lede">
+            Åbn en elev, og du ser det, der betyder noget: hvor meget eleven har lavet, hvor meget
+            der er rigtigt, og om det går frem.
+          </p>
+          <p class="fs-body">
+            Lærlig lader det svære komme igen for eleven. Du kan se, hvor det bliver ved med at
+            drille — og tage fat i det, før det vokser.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 3. ELEVSVAR ═══════════════════════════════════════════════════════
+         The one dark scene on this page: the student's own work, as it arrives on the desk.
+         The scale is the review screen's own (js/student-detail.js): 1 – Afvist, 2 – OK,
+         3 – Godt, 4 – Perfekt, worth 0 / 10 / 25 / 50 XP (supabase/functions/review-answer). -->
+    <section class="fs-scene pv-answers" aria-labelledby="answers-title">
+      <div class="shell pv-answers-grid">
+        <div class="pv-answers-copy">
+          <h2 id="answers-title" class="fs-big">Lange, skrevne svar lander hos dig.</h2>
+          <p class="fs-lede">
+            Lærlig retter dem ikke selv. Et svar med egne ord kræver et fagligt skøn — og det er
+            dit.
+          </p>
+          <p class="fs-body">
+            Du læser svaret og vurderer det på en skala fra Afvist til Perfekt. Eleven får XP efter
+            din vurdering: 0, 10, 25 eller 50.
+          </p>
+        </div>
+
+        <div class="fs-panel fs-panel-review pv-panel-review" aria-hidden="true">
+          <p class="fs-panel-title">Ventende svar <span>Ida</span></p>
+          <p class="fs-review-task">Forklar med dine egne ord, hvorfor 2/4 og 1/2 er lige meget.</p>
+          <p class="fs-review-answer">
+            ”Hvis man deler en pizza i 4 og tager 2, har man lige så meget, som hvis man deler den
+            i 2 og tager 1. Den er bare skåret i flere stykker.”
+          </p>
+          <div class="pv-scale">
+            <span>1 – Afvist</span><span>2 – OK</span><span class="is-chosen">3 – Godt</span><span>4 – Perfekt</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. LÆREREN BESTEMMER ══════════════════════════════════════════════
+         The statement, and what it means in practice. Domæne-fokus is the dashboard's own
+         control (teacher.html): a student gets tasks only from the topics the teacher chose. -->
+    <section class="fs-scene pv-control" aria-labelledby="control-title">
+      <div class="shell pv-control-grid">
+        <h2 id="control-title" class="fs-statement">Læreren bestemmer.</h2>
+        <ul class="pv-rules">
+          <li>
+            <h3>Du vælger emnerne.</h3>
+            <p>Med domæne-fokus får en elev kun opgaver fra de emner, du har valgt.</p>
+          </li>
+          <li>
+            <h3>Kun det entydige rettes automatisk.</h3>
+            <p>Et tal eller et enkelt ord kan Lærlig afgøre. Alt, der kræver skøn, kommer til dig.</p>
+          </li>
+          <li>
+            <h3>Intet tilsidesætter dig i det stille.</h3>
+            <p>Din vurdering står. Lærlig laver den ikke om bag din ryg.</p>
+          </li>
+          <li>
+            <h3>Faste regler for belønning.</h3>
+            <p>XP og mønter følger regler, du kan forklare eleverne. Ingen tilfældighed.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ══ 5. AFSLUTNING ═════════════════════════════════════════════════════ -->
+    <section class="fs-scene pv-closing pv-closing-desk" aria-labelledby="closing-title">
+      <div class="shell pv-closing-inner">
+        <h2 id="closing-title" class="fs-statement">
+          <span>Ét klasseværelse.</span>
+          <span>Mange forskellige næste skridt.</span>
+        </h2>
+        <p class="fs-lede">Vil I høre, hvordan Lærlig kan bruges på jeres skole? Skriv til os.</p>
+        <div class="fs-actions">
+          <a class="fs-btn pv-btn-ink" href="mailto:kontakt@lærlig.dk">Skriv til kontakt@lærlig.dk</a>
+          <a class="fs-btn pv-btn-line" href="/for-eleven">Se elevens side</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-text">Lærlig</span>
+        <p>Læring, der tilpasser sig eleven.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Sidefod: produktet">
+        <h2 class="footer-head">Produktet</h2>
+        <a href="/produktet">Hvad Lærlig er</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/for-eleven">For eleven</a>
+        <a href="/for-laereren">For læreren</a>
+        <a href="/elev-og-laerer">Elev og lærer</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: skoler">
+        <h2 class="footer-head">Skoler</h2>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+        <a href="/om-laerlig">Om Lærlig</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: adgang">
+        <h2 class="footer-head">Adgang</h2>
+        <a href="login.html">Log ind</a>
+        <a href="mailto:kontakt@lærlig.dk">Skriv til os</a>
+      </nav>
+    </div>
+
+    <div class="shell footer-base">
+      <p>Lærlig er i pilotdrift.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js" defer></script>
+</body>
+</html>

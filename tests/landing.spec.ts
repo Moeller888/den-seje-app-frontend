@@ -41,22 +41,24 @@ const ROUTES = new Map<string, string>(
 // so this spec models the production contract instead of a guess at it. A unit test asserts the
 // build's own list matches this derivation.
 const LEGACY = new Map<string, string>([...ROUTES].map(([route, file]) => [file, route]));
-// The six information pages, in menu order.
+// The eight information pages, in the routing table's order.
 const PAGES: Array<[string, string]> = [
   ["/produktet", "Det svære kommer igen."],
   ["/saadan-virker-det", "Tre trin, hver gang."],
   ["/elev-og-laerer", "To sider af den samme time."],
+  ["/for-eleven", "Eleven arbejder på sit eget niveau."],
+  ["/for-laereren", "Hele klassen. Og den enkelte elev."],
   ["/til-skoler", "Læreren bestemmer."],
   ["/priser", "Prisen er ikke fastlagt endnu."],
   ["/om-laerlig", "Lærlig er i pilotdrift."],
 ];
 
-// The four entries in the main menu. "Om Lærlig" is reachable from the footer only, and
-// /elev-og-laerer is reached through the two doors under the header (owner decision 2026-10-04)
-// and the footer — so neither is a menu entry. The same rule on desktop and on mobile.
-const MENU = PAGES.filter(([r]) => r !== "/om-laerlig" && r !== "/elev-og-laerer").map(([r]) => r);
-// The two doors, in order, and where they lead until dedicated pages are approved.
-const DOORS = ["/elev-og-laerer#for-eleven", "/elev-og-laerer#for-laereren"];
+// The two doors under the header (owner decision 2026-10-04), in order, and their own pages.
+const DOORS = ["/for-eleven", "/for-laereren"];
+// The four entries in the main menu. The door pages are reached through the doors; "Om Lærlig"
+// and the /elev-og-laerer bridge are reached from the footer (and the bridge from the doors'
+// pages' neighbourhood) — none of them is a menu entry. The same rule on desktop and on mobile.
+const MENU = PAGES.map(([r]) => r).filter((r) => !["/om-laerlig", "/elev-og-laerer", ...DOORS].includes(r));
 
 let server: http.Server;
 let baseUrl: string;
@@ -122,6 +124,8 @@ test("the build script declares the full public routing table", () => {
     "/produktet /produktet.html 200",
     "/saadan-virker-det /saadan-virker-det.html 200",
     "/elev-og-laerer /elev-og-laerer.html 200",
+    "/for-eleven /for-eleven.html 200",
+    "/for-laereren /for-laereren.html 200",
     "/til-skoler /til-skoler.html 200",
     "/priser /priser.html 200",
     "/om-laerlig /om-laerlig.html 200",
@@ -402,15 +406,16 @@ test("the current page is marked with aria-current in the navigation", async ({ 
     expect(marked.length, `${route} marks nothing current`).toBeGreaterThan(0);
     for (const h of marked) expect(h).toBe(route);
   }
-  // /elev-og-laerer is what both doors lead into, so it marks both doors — in the band and in the
-  // mobile menu — and nothing else.
-  await page.goto(baseUrl + "/elev-og-laerer", { waitUntil: "load" });
-  const doorMarks = await page.locator('[aria-current="page"]').evaluateAll(
-    (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
-  expect(doorMarks).toEqual([...DOORS, ...DOORS]);
-  // Pages that are not menu entries mark nothing: the front page, and /om-laerlig, which is
-  // reachable from the footer only.
-  for (const route of ["/", "/om-laerlig"]) {
+  // Each door page marks its own door — in the band and in the mobile menu — and nothing else.
+  for (const route of DOORS) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const doorMarks = await page.locator('[aria-current="page"]').evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
+    expect(doorMarks, `${route} must mark its own door, twice`).toEqual([route, route]);
+  }
+  // Pages that are neither a menu entry nor a door mark nothing: the front page, /om-laerlig
+  // (footer only) and the /elev-og-laerer bridge.
+  for (const route of ["/", "/om-laerlig", "/elev-og-laerer"]) {
     await page.goto(baseUrl + route, { waitUntil: "load" });
     await expect(page.locator('[aria-current="page"]'), `${route} must not mark a menu entry`).toHaveCount(0);
   }
@@ -806,17 +811,16 @@ test("the doors scroll away; the header alone stays — it never turns heavy", a
   expect(h.height).toBeLessThan(80);
 });
 
-test("the doors land on their own half of /elev-og-laerer", async ({ page }) => {
+test("each door leads to its own page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openLanding(page);
   await page.locator(".door-laerer").click();
-  await page.waitForURL(baseUrl + "/elev-og-laerer#for-laereren");
-  await expect(page.locator("#for-laereren")).toBeInViewport();
-  await expect(page.locator("#for-laereren .split-head")).toHaveText("For læreren");
+  await page.waitForURL(baseUrl + "/for-laereren");
+  await expect(page.locator("h1")).toHaveText("Hele klassen. Og den enkelte elev.");
   await page.goto(baseUrl + "/", { waitUntil: "load" });
   await page.locator(".door-elev").click();
-  await page.waitForURL(baseUrl + "/elev-og-laerer#for-eleven");
-  await expect(page.locator("#for-eleven")).toBeInViewport();
+  await page.waitForURL(baseUrl + "/for-eleven");
+  await expect(page.locator("h1")).toHaveText("Eleven arbejder på sit eget niveau.");
 });
 
 test("the doors follow the header in tab order and show a visible focus ring", async ({ page }) => {
@@ -859,6 +863,21 @@ test("the mobile menu leads with both doors", async ({ page }) => {
   for (let i = 0; i < 2; i++) await expect(doors.nth(i)).toBeVisible();
 });
 
+test("a door marked current in the mobile menu keeps readable text on its own surface", async ({ page }) => {
+  // Regression: the menu's generic current-page style once turned the teacher door's text white
+  // on its light surface.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const lum = (rgb: string) => { const [r, g, b] = (rgb.match(/\d+/g) || []).map(Number); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  for (const [route, sel] of [["/for-eleven", ".nav-door-elev"], ["/for-laereren", ".nav-door-laerer"]] as const) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    await page.locator("#nav-toggle").click();
+    const door = page.locator(`#nav-mobile ${sel}`);
+    await expect(door).toHaveAttribute("aria-current", "page");
+    const c = await door.evaluate((el) => { const s = getComputedStyle(el); return [s.color, s.backgroundColor]; });
+    expect(Math.abs(lum(c[0]) - lum(c[1])), `${route}: the current door's text is unreadable`).toBeGreaterThan(120);
+  }
+});
+
 test("reduced motion: the door arrow does not slide, the hover colour remains", async ({ browser }) => {
   const ctx = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
@@ -869,6 +888,124 @@ test("reduced motion: the door arrow does not slide, the hover colour remains", 
     .not.toBe(before);
   expect(await page.locator(".door-elev .door-arrow").evaluate((el) => getComputedStyle(el).transform)).toBe("none");
   await ctx.close();
+});
+
+// ── the two perspective pages and the bridge ──────────────────────────────────────────────────
+// Owner decision 2026-10-04: /for-eleven and /for-laereren are real pages with a story each, not
+// copies of /elev-og-laerer, which stays — no redirect — as a short bridge between them. The pages
+// are related but have their own character: the student page opens on the app's dark surface,
+// the teacher page on the light desk.
+
+const bg = (page: any, sel: string) => page.locator(sel).evaluate((el: Element) => getComputedStyle(el).backgroundColor);
+const luminance = (rgb: string) => {
+  const [r, g, b] = (rgb.match(/\d+/g) || []).map(Number);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+test("/for-eleven tells the student's story, on the student's dark surface", async ({ page }) => {
+  await page.goto(baseUrl + "/for-eleven", { waitUntil: "load" });
+  expect(luminance(await bg(page, ".pv-hero")), "the student page must open dark").toBeLessThan(60);
+  const text = (await page.locator("main").innerText()).replace(/\s+/g, " ");
+  for (const must of [
+    "Lærlig tilpasser næste skridt til den enkelte elev.",
+    "Egne opgaver. Ét skridt ad gangen.",
+    "Et forkert svar skal hjælpe eleven videre — ikke bare give et rødt kryds.",
+    "Det svære kommer igen.",
+    "Fremgang, man kan se.",
+    "XP", "mønter", "figur",
+  ]) expect(text, `/for-eleven is missing: ${must}`).toContain(must);
+  expect(text.toLowerCase()).not.toContain("spørgsmål");
+  // The product slice shows a wrong answer and what comes next — the moment the front page does not.
+  await expect(page.locator(".pv-hero .fs-options li.is-wrong")).toHaveCount(1);
+  await expect(page.locator(".pv-hero .pv-next-again")).toContainText("Den kommer igen");
+  await expect(page.locator('main a[href="/for-laereren"]').first()).toBeVisible();
+});
+
+test("/for-eleven shows the North Star v2 brand figure, says so, and loads no runtime avatar", async ({ page }) => {
+  const requested: string[] = [];
+  page.on("request", (r: any) => requested.push(decodeURIComponent(new URL(r.url()).pathname)));
+  await page.goto(baseUrl + "/for-eleven", { waitUntil: "load" });
+  const figures = page.locator("[data-fs-figure] img");
+  await expect(figures).toHaveCount(2);
+  for (let i = 0; i < 2; i++) {
+    expect(decodeURIComponent(new URL(await figures.nth(i).evaluate((el: HTMLImageElement) => el.currentSrc || el.src)).pathname))
+      .toBe("/" + NORTH_STAR_V2);
+  }
+  // Honest about what it is: the brand figure, not the student's own.
+  await expect(page.locator(".pv-figure-note")).toContainText("Elevens egen ser anderledes ud");
+  expect(requested.filter((p) => p.startsWith("/assets/avatar-r2/") || p.endsWith("/avatar-render-c2.js"))).toEqual([]);
+});
+
+test("/for-laereren tells the teacher's story, on the light desk", async ({ page }) => {
+  await page.goto(baseUrl + "/for-laereren", { waitUntil: "load" });
+  expect(luminance(await bg(page, ".pv-hero")), "the teacher page must open light").toBeGreaterThan(200);
+  const text = (await page.locator("main").innerText()).replace(/\s+/g, " ");
+  for (const must of [
+    "Klasseoversigt", "Brug for hjælp", "Fremgang",
+    "Du kan se, hvem der har brug for dig i dag.",
+    "Lange, skrevne svar lander hos dig.",
+    "1 – Afvist", "4 – Perfekt",
+    "Læreren bestemmer.",
+    "Du vælger emnerne.",
+    "Ét klasseværelse. Mange forskellige næste skridt.",
+  ]) expect(text, `/for-laereren is missing: ${must}`).toContain(must);
+  expect(text.toLowerCase()).not.toContain("spørgsmål");
+  // No imagery on the teacher page: the desk is drawn, not photographed.
+  await expect(page.locator("main img")).toHaveCount(0);
+  await expect(page.locator('main a[href="/for-eleven"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="mailto:kontakt@lærlig.dk"]')).toHaveCount(1);
+});
+
+test("/elev-og-laerer is a short bridge: the name, two doors onward, no copied sections", async ({ page }) => {
+  await page.goto(baseUrl + "/elev-og-laerer", { waitUntil: "load" });
+  await expect(page.locator(".dict-quote")).toHaveCount(1);
+  const doors = page.locator(".pv-bridge-door");
+  await expect(doors).toHaveCount(2);
+  expect(await doors.evaluateAll((els) => els.map((e) => e.getAttribute("href")))).toEqual(DOORS);
+  for (const gone of [".split", ".ticks", ".pv-sheets", ".pv-roster"]) {
+    await expect(page.locator(gone), `${gone} is copied onto the bridge`).toHaveCount(0);
+  }
+  // Short: the whole page, footer aside, is not a long read.
+  const words = (await page.locator("main").innerText()).split(/\s+/).filter(Boolean).length;
+  expect(words, "the bridge page grew into a page of its own").toBeLessThan(120);
+  // Old links to the two halves still land: the anchors now sit on the two doors.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(baseUrl + "/elev-og-laerer#for-laereren", { waitUntil: "load" });
+  await expect(page.locator("#for-laereren")).toBeInViewport();
+  await page.locator("#for-laereren").click();
+  await page.waitForURL(baseUrl + "/for-laereren");
+});
+
+for (const route of ["/for-eleven", "/for-laereren", "/elev-og-laerer"]) {
+  for (const [label, width] of [["desktop", 1440], ["tablet", 834], ["mobile", 390]] as const) {
+    test(`${route} has no horizontal overflow at ${label} (${width}px)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(baseUrl + route, { waitUntil: "load" });
+      const overflow = await page.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `${route} scrolls sideways at ${width}px`).toBeLessThanOrEqual(1);
+      await expect(page.locator("h1")).toBeInViewport();
+    });
+  }
+}
+
+test("every action on the perspective pages meets 44x44 and shows a focus ring", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  for (const route of ["/for-eleven", "/for-laereren", "/elev-og-laerer"]) {
+    await page.goto(baseUrl + route, { waitUntil: "load" });
+    const actions = page.locator("main a");
+    const n = await actions.count();
+    for (let i = 0; i < n; i++) {
+      const a = actions.nth(i);
+      if (!(await a.isVisible())) continue;
+      if (await a.evaluate((el) => !!el.closest(".dict-source"))) continue;   // an inline citation link
+      const box = (await a.boundingBox())!;
+      expect(box.height >= 44 && box.width >= 44, `${route}: ${await a.innerText()} is too small`).toBe(true);
+      await a.focus();
+      const o = await a.evaluate((el) => getComputedStyle(el).outlineStyle);
+      expect(o, `${route}: ${await a.innerText()} has no focus ring`).not.toBe("none");
+    }
+  }
 });
 
 // ── responsive ────────────────────────────────────────────────────────────────────────────────
@@ -896,7 +1033,7 @@ for (const [label, width] of [["desktop", 1280], ["tablet", 860], ["mobile", 390
 // window — 155px at 800px tall, 294px at 1080px. The measurement below is taken at several heights
 // precisely because a fixed-height-only check would not have caught it.
 for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as const) {
-  test(`the eyebrow sits 35-45px under the header at ${w}x${h}`, async ({ page }) => {
+  test(`the eyebrow sits 27-37px under the doors at ${w}x${h}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
     await openLanding(page);
 
@@ -918,27 +1055,62 @@ for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as co
     expect(m!.headerH, "the header must be visible and occupy real height").toBeGreaterThan(40);
 
     const gap = m!.eyebrowTop - m!.headerBottom;
-    expect(gap, `gap under the header was ${Math.round(gap)}px`).toBeGreaterThanOrEqual(35);
-    expect(gap, `gap under the header was ${Math.round(gap)}px`).toBeLessThanOrEqual(45);
+    // 32px (owner decision 2026-10-04: less air between the doors and the hero, so the hero keeps
+    // its first viewport). The band is still held tight: the regression this guards grew with
+    // the window height, which is why it is measured at several.
+    expect(gap, `gap under the doors was ${Math.round(gap)}px`).toBeGreaterThanOrEqual(27);
+    expect(gap, `gap under the doors was ${Math.round(gap)}px`).toBeLessThanOrEqual(37);
   });
 }
 
-test("the hero is content-height and the next scene follows it directly", async ({ page }) => {
-  // The hero-only page and its "under two screens" ceiling are gone by owner decision (Lærlig
-  // 2.0). What stays is the original defect guard: no viewport-height floor on the hero, and no
-  // empty band between it and what follows.
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await openLanding(page);
-  const m = await page.evaluate(() => {
-    const hero = document.querySelector(".hero")!.getBoundingClientRect();
-    const next = document.querySelector(".fs-premise")!.getBoundingClientRect();
-    const doors = document.querySelector(".doors")!.getBoundingClientRect();
-    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight, doorsBottom: doors.bottom };
+// THE FIRST-VIEWPORT CONTRACT (owner decision 2026-10-04). This replaces an older assertion that
+// the whole hero must end above 900px at 1440×900 — a historical pixel ceiling from the hero-only
+// page, which the Lærlig 2.0 hero had already outgrown before the doors arrived. What the owner
+// asked for instead is the UX rule itself: at a normal desktop size the FIRST viewport is a
+// finished hero — header, both doors, the whole headline, the primary action and a meaningful part
+// of the product — not "navigation plus the start of a hero". Asserted on the layout directly.
+for (const [w, h] of [[1440, 900], [1280, 800]] as const) {
+  test(`the first viewport at ${w}x${h} is a finished hero — header, doors, headline, action, product`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    await openLanding(page);
+    await page.waitForSelector("html[data-forside-ready]");
+    const m = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const hero = document.querySelector(".hero")!;
+      const h1 = document.querySelector(".fs-hero h1")!;
+      const cs = getComputedStyle(hero);
+      return {
+        vh: window.innerHeight,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        header: r(".site-header"), doors: r(".doors"), hero: r(".hero"), next: r(".fs-premise"),
+        h1: r(".fs-hero h1"), h1Lines: Math.round(r(".fs-hero h1").height / parseFloat(getComputedStyle(h1).lineHeight)),
+        cta: r(".fs-hero .fs-btn-primary"), shell: r(".fs-shell"), card: r(".fs-card"),
+        heroMinHeight: cs.minHeight,
+        heroContent: r(".fs-hero-grid").height + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom),
+      };
+    });
+    // The order of the top of the page: header, then the doors, then the hero — nothing between.
+    expect(m.header.top).toBe(0);
+    expect(Math.abs(m.doors.top - m.header.bottom), "the doors must follow the header").toBeLessThan(2);
+    expect(Math.abs(m.hero.top - m.doors.bottom), "the hero must follow the doors").toBeLessThan(2);
+    // The headline is whole, inside the first viewport, and not broken into a tower of lines.
+    expect(m.h1.top).toBeGreaterThanOrEqual(m.doors.bottom);
+    expect(m.h1.bottom, "the headline is cut off by the fold").toBeLessThanOrEqual(m.vh);
+    expect(m.h1Lines, "the headline falls over too many lines").toBeLessThanOrEqual(4);
+    // The primary action is fully visible.
+    expect(m.cta.bottom, "the primary action is below the fold").toBeLessThanOrEqual(m.vh);
+    // A meaningful part of the product: the app shell has started, and the task card — the task
+    // and the answer feedback — is whole inside the first viewport.
+    expect(m.shell.top).toBeLessThan(m.vh);
+    expect(m.card.bottom, "the product's task card is below the fold").toBeLessThanOrEqual(m.vh);
+    // No viewport-locked height: the hero is exactly as tall as its content, and nothing opens up
+    // under it.
+    expect(["0px", "auto"]).toContain(m.heroMinHeight);
+    expect(Math.abs(m.hero.height - m.heroContent), "the hero is taller than its content").toBeLessThan(2);
+    expect(Math.abs(m.next.top - m.hero.bottom), "an empty band opened up under the hero").toBeLessThan(2);
+    expect(m.overflow, "the page scrolls sideways").toBeLessThanOrEqual(1);
   });
-  expect(Math.abs(m.heroTop - m.doorsBottom), "the hero must start at the doors' bottom edge").toBeLessThan(2);
-  expect(m.heroBottom, "the hero must not fill the whole first screen").toBeLessThan(m.viewportH);
-  expect(Math.abs(m.nextTop - m.heroBottom), "an empty band opened up under the hero").toBeLessThan(2);
-});
+}
 
 test("no scroll indicator remains — it would point at something already visible", async ({ page }) => {
   await openLanding(page);
