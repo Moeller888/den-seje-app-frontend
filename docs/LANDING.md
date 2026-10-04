@@ -27,6 +27,7 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 | 7 | [#186](https://github.com/Moeller888/den-seje-app-frontend/pull/186) | `ff6f029` | Teksten skrevet om i almindeligt dansk; "Om Lærlig" flyttet til footeren alene |
 | 8 | — | — | **Forsiden gjort minimal:** kun hero. Oversigtskortene og slut-CTA'en fjernet |
 | 9 | branch `feat/forside-laerlig-2` | **ikke merget** | **Lærlig 2.0-forsiden — til visuel review.** Erstatter tranche 8 (se nedenfor) |
+| 10 | branch `claude/task-ucppbq` (bygger på 9) | **ikke merget** | **To indgange: For eleven / For læreren** — header og informationsarkitektur, til visuel review (se nedenfor) |
 
 **Lærlig 2.0 (forslag, afventer ejerens visuelle godkendelse — 2026-10-02).** Ejeren har bedt om
 en ny forside, fordi hero-forsiden var pæn, men for generisk og for tynd til at vise, hvad Lærlig
@@ -48,6 +49,40 @@ påstår, at figuren er præcis den avatar, eleven får i dag. Filen lå allered
 deployet; intet nyt asset er oprettet. **Endnu ikke registreret i D-registeret**
 (`docs/project-state.md`): branchen er lavet fra en ældre `main`, så nummeret tildeles ved merge mod
 den aktuelle `main` for ikke at kollidere med det igangværende avatarspor.
+
+**To indgange: For eleven / For læreren (ejerbeslutning 2026-10-04, tranche 10 — afventer
+visuel godkendelse).** Lige under headeren står to tydelige, separate indgange til det samme
+produkt, på **alle syv** offentlige sider:
+
+- **Dørbåndet** (`<nav class="doors">`) er to fuldbredde-halvdele. Elevdøren har appens egen
+  mørke flade, lærerdøren den lyse "skrivebordsflade", forsiden allerede bruger til de voksnes
+  side — farven er information. Label, typografi og rytme er fælles, så de læses som ét brand.
+  På desktop bærer hver dør en lille, dekorativ kopi af produktets UI (niveau-/XP-bjælken og
+  lærerdashboardets statusmærker, `aria-hidden`); under 1080 px træder de til side.
+- **Båndet er ikke sticky.** Den sticky header forbliver én let række; båndet ruller væk med
+  toppen af siden. I mobilmenuen står de to døre derfor øverst som et par.
+- **Hovedmenuen går fra fem til fire punkter** (Produktet · Sådan virker det · Til skoler ·
+  Priser). "For elev & lærer" er fjernet fra menuen, fordi dørene nu bærer den indgang; siden
+  er stadig nået fra footeren og fra begge døre.
+- **Ingen ruter er ændret.** Dørene peger på `/elev-og-laerer#for-eleven` og
+  `/elev-og-laerer#for-laereren` — ankre på den eksisterende side. `REDIRECT_RULES`, canonicals,
+  `sitemap.xml` og 301'erne er urørte. På `/elev-og-laerer` markeres begge døre `aria-current`.
+- **Heroens 40 px-kontrakt måles nu fra dørbåndets underkant**, ikke fra headerens: båndet er
+  indhold, ikke et mellemrum. Testen vogter stadig mod et dødt bånd over heroen.
+
+**Foreslået næste skridt (ikke besluttet):** to dedikerede sider, `/for-eleven` og
+`/for-laereren`, med hvert sit perspektiv i dybden (eleven: opgaver, næste skridt, feedback,
+XP/mønter/figur, "Det svære kommer igen"; læreren: klasseoverblik, den enkelte elev, lange
+skrevne svar, faglig vurdering, "Læreren bestemmer"). Indholdet på `/elev-og-laerer` ville da
+blive dubleret; den skal enten blive en kort bro-side (ordbogsopslaget + de to døre) eller få en
+301 — det kræver ejerens valg, fordi én adresse ikke kan omdirigere til to. At tilføje en side
+kræver en linje i `REDIRECT_RULES` og i `RUNTIME_HTML` (se Routingkontrakten).
+
+**Kendt, ikke løst i tranche 10:** testen "the hero is content-height and the next scene follows
+it directly" fejlede allerede på `feat/forside-laerlig-2` før denne tranche (heroens underkant
+944 px ved 1440×900 mod et loft på 900 i CI-fonten DejaVu Sans). Dørbåndet lægger ~95 px til.
+Assertionen er ikke ændret; om heroen skal strammes, eller om loftet skal erstattes af en direkte
+"ingen viewport-baseret min-height"-kontrol, er en ejerbeslutning.
 
 **Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
 produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks

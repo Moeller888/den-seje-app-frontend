@@ -51,9 +51,12 @@ const PAGES: Array<[string, string]> = [
   ["/om-laerlig", "Lærlig er i pilotdrift."],
 ];
 
-// The five entries in the main menu. "Om Lærlig" is reachable from the footer only, so it is
-// deliberately not one of them — the same rule on desktop and on mobile.
-const MENU = PAGES.filter(([r]) => r !== "/om-laerlig").map(([r]) => r);
+// The four entries in the main menu. "Om Lærlig" is reachable from the footer only, and
+// /elev-og-laerer is reached through the two doors under the header (owner decision 2026-10-04)
+// and the footer — so neither is a menu entry. The same rule on desktop and on mobile.
+const MENU = PAGES.filter(([r]) => r !== "/om-laerlig" && r !== "/elev-og-laerer").map(([r]) => r);
+// The two doors, in order, and where they lead until dedicated pages are approved.
+const DOORS = ["/elev-og-laerer#for-eleven", "/elev-og-laerer#for-laereren"];
 
 let server: http.Server;
 let baseUrl: string;
@@ -399,6 +402,12 @@ test("the current page is marked with aria-current in the navigation", async ({ 
     expect(marked.length, `${route} marks nothing current`).toBeGreaterThan(0);
     for (const h of marked) expect(h).toBe(route);
   }
+  // /elev-og-laerer is what both doors lead into, so it marks both doors — in the band and in the
+  // mobile menu — and nothing else.
+  await page.goto(baseUrl + "/elev-og-laerer", { waitUntil: "load" });
+  const doorMarks = await page.locator('[aria-current="page"]').evaluateAll(
+    (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
+  expect(doorMarks).toEqual([...DOORS, ...DOORS]);
   // Pages that are not menu entries mark nothing: the front page, and /om-laerlig, which is
   // reachable from the footer only.
   for (const route of ["/", "/om-laerlig"]) {
@@ -407,15 +416,18 @@ test("the current page is marked with aria-current in the navigation", async ({ 
   }
 });
 
-test("the desktop and mobile menus list exactly the same five pages", async ({ page }) => {
+test("the desktop and mobile menus list exactly the same four pages", async ({ page }) => {
   for (const route of ["/", ...PAGES.map(([r]) => r)]) {
     await page.goto(baseUrl + route, { waitUntil: "load" });
     const desktop = await page.locator(".nav-desktop a").evaluateAll(
       (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
-    const mobile = await page.locator("#nav-mobile a").evaluateAll(
+    const mobile = await page.locator("#nav-mobile > a").evaluateAll(
       (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")));
     expect(desktop, `${route}: menu drifted`).toEqual(MENU);
     expect(mobile, `${route}: the mobile menu differs from desktop`).toEqual(MENU);
+    // The mobile menu leads with the two doors — the band has scrolled away by then.
+    expect(await page.locator("#nav-mobile .nav-doors a").evaluateAll(
+      (els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href")))).toEqual(DOORS);
     // …and Om Lærlig is still reachable, from the footer.
     await expect(page.locator('footer a[href="/om-laerlig"]')).toHaveCount(1);
   }
@@ -461,7 +473,8 @@ test("no information page has horizontal overflow or an empty screen at desktop"
     await page.goto(baseUrl + route, { waitUntil: "load" });
     const m = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      headerBottom: document.querySelector(".site-header")!.getBoundingClientRect().bottom,
+      // The top chrome is the header plus the two doors directly under it.
+      headerBottom: document.querySelector(".doors")!.getBoundingClientRect().bottom,
       h1Top: document.querySelector("h1")!.getBoundingClientRect().top,
     }));
     expect(m.overflow, `${route} scrolls sideways`).toBeLessThanOrEqual(1);
@@ -750,6 +763,114 @@ test("growing past the breakpoint closes an open mobile menu", async ({ page }) 
   await expect(page.locator(".nav-desktop")).toBeVisible();
 });
 
+// ── the two doors: For eleven / For læreren ───────────────────────────────────────────────────
+// Owner decision 2026-10-04: two separate, clearly different entrances directly under the header
+// on every public page — not two more small menu links. Pinned: they are there on every page and
+// at every width, side by side, visibly different surfaces, NOT sticky (the header that follows the
+// reader stays one row), keyboard reachable with a visible ring, and they land on real anchors.
+
+for (const [label, width] of [["desktop", 1440], ["tablet", 834], ["mobile", 390]] as const) {
+  test(`the two doors sit side by side under the header at ${label} (${width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of ["/", ...PAGES.map(([r]) => r)]) {
+      await page.goto(baseUrl + route, { waitUntil: "load" });
+      const m = await page.evaluate(() => {
+        const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+        const bg = (s: string) => getComputedStyle(document.querySelector(s)!).backgroundColor;
+        return {
+          header: box(".site-header"), elev: box(".door-elev"), laerer: box(".door-laerer"),
+          elevBg: bg(".door-elev"), laererBg: bg(".door-laerer"), vw: document.documentElement.clientWidth,
+        };
+      });
+      expect(Math.abs(m.elev.top - m.header.bottom), `${route}: the doors must start at the header`).toBeLessThan(2);
+      expect(m.elev.top, `${route}: the doors must share one row`).toBe(m.laerer.top);
+      expect(m.elev.left).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(m.laerer.right - m.vw)).toBeLessThan(1);
+      expect(Math.abs(m.elev.width - m.laerer.width), `${route}: the doors must be equal halves`).toBeLessThan(2);
+      expect(m.elevBg, `${route}: the doors must be two different surfaces`).not.toBe(m.laererBg);
+      // A band, not a hero of its own: it must stay well under two header heights.
+      expect(m.elev.height, `${route}: the doors became heavy`).toBeLessThanOrEqual(120);
+      await expect(page.locator(".door-elev .door-label")).toHaveText("For eleven");
+      await expect(page.locator(".door-laerer .door-label")).toHaveText("For læreren");
+    }
+  });
+}
+
+test("the doors scroll away; the header alone stays — it never turns heavy", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  await page.evaluate(() => window.scrollTo(0, 1200));
+  await expect(page.locator(".door-elev")).not.toBeInViewport();
+  const h = await page.locator(".site-header").evaluate((el) => el.getBoundingClientRect());
+  expect(h.top).toBe(0);
+  expect(h.height).toBeLessThan(80);
+});
+
+test("the doors land on their own half of /elev-og-laerer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openLanding(page);
+  await page.locator(".door-laerer").click();
+  await page.waitForURL(baseUrl + "/elev-og-laerer#for-laereren");
+  await expect(page.locator("#for-laereren")).toBeInViewport();
+  await expect(page.locator("#for-laereren .split-head")).toHaveText("For læreren");
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  await page.locator(".door-elev").click();
+  await page.waitForURL(baseUrl + "/elev-og-laerer#for-eleven");
+  await expect(page.locator("#for-eleven")).toBeInViewport();
+});
+
+test("the doors follow the header in tab order and show a visible focus ring", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  await page.locator(".login-link").focus();
+  for (const cls of ["door-elev", "door-laerer"]) {
+    await page.keyboard.press("Tab");
+    const focused = page.locator(":focus");
+    await expect(focused).toHaveClass(new RegExp(cls));
+    const o = await focused.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: parseFloat(s.outlineWidth), offset: parseFloat(s.outlineOffset) };
+    });
+    expect(o.style).not.toBe("none");
+    expect(o.width).toBeGreaterThanOrEqual(2);
+    // Drawn inside: the band is full-bleed, so an outside ring would be clipped at the edge.
+    expect(o.offset).toBeLessThan(0);
+  }
+});
+
+test("the doors' product cues are decoration, and step aside below 1080px", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLanding(page);
+  const cues = page.locator(".door-cue");
+  await expect(cues).toHaveCount(2);
+  for (let i = 0; i < 2; i++) await expect(cues.nth(i)).toHaveAttribute("aria-hidden", "true");
+  await expect(cues.first()).toBeVisible();
+  await page.setViewportSize({ width: 1000, height: 900 });
+  await expect(cues.first()).toBeHidden();
+  await expect(page.locator(".door-elev .door-line")).toBeVisible();
+});
+
+test("the mobile menu leads with both doors", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openLanding(page);
+  await page.locator("#nav-toggle").click();
+  const doors = page.locator("#nav-mobile .nav-doors a");
+  await expect(doors).toHaveText(["For eleven", "For læreren"]);
+  for (let i = 0; i < 2; i++) await expect(doors.nth(i)).toBeVisible();
+});
+
+test("reduced motion: the door arrow does not slide, the hover colour remains", async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(baseUrl + "/", { waitUntil: "load" });
+  const before = await page.locator(".door-elev").evaluate((el) => getComputedStyle(el).backgroundColor);
+  await page.locator(".door-elev").hover();
+  await expect.poll(() => page.locator(".door-elev").evaluate((el) => getComputedStyle(el).backgroundColor))
+    .not.toBe(before);
+  expect(await page.locator(".door-elev .door-arrow").evaluate((el) => getComputedStyle(el).transform)).toBe("none");
+  await ctx.close();
+});
+
 // ── responsive ────────────────────────────────────────────────────────────────────────────────
 
 for (const [label, width] of [["desktop", 1280], ["tablet", 860], ["mobile", 390]] as const) {
@@ -784,9 +905,13 @@ for (const [w, h] of [[1280, 800], [1440, 900], [1920, 1080], [1536, 864]] as co
         const el = document.querySelector(s);
         return el ? el.getBoundingClientRect() : null;
       };
+      // Measured from the bottom of the top chrome: the header plus the two doors directly under
+      // it (owner decision 2026-10-04). The doors are content, not a spacer; what this guards is
+      // the dead band between the last of them and the hero's first line.
       const header = r(".site-header");
+      const doors = r(".doors");
       const eyebrow = r(".hero .eyebrow");
-      return header && eyebrow ? { headerBottom: header.bottom, headerH: header.height, eyebrowTop: eyebrow.top } : null;
+      return header && doors && eyebrow ? { headerBottom: doors.bottom, headerH: header.height, eyebrowTop: eyebrow.top } : null;
     });
 
     expect(m, "header or eyebrow missing").not.toBeNull();
@@ -807,9 +932,10 @@ test("the hero is content-height and the next scene follows it directly", async 
   const m = await page.evaluate(() => {
     const hero = document.querySelector(".hero")!.getBoundingClientRect();
     const next = document.querySelector(".fs-premise")!.getBoundingClientRect();
-    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight };
+    const doors = document.querySelector(".doors")!.getBoundingClientRect();
+    return { heroTop: hero.top, heroBottom: hero.bottom, nextTop: next.top, viewportH: window.innerHeight, doorsBottom: doors.bottom };
   });
-  expect(m.heroTop, "the hero must start at the header's bottom edge").toBeLessThanOrEqual(72);
+  expect(Math.abs(m.heroTop - m.doorsBottom), "the hero must start at the doors' bottom edge").toBeLessThan(2);
   expect(m.heroBottom, "the hero must not fill the whole first screen").toBeLessThan(m.viewportH);
   expect(Math.abs(m.nextTop - m.heroBottom), "an empty band opened up under the hero").toBeLessThan(2);
 });

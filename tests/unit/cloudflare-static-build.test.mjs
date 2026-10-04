@@ -220,43 +220,81 @@ test("the navigation is identical on every public page, and marks the current on
 
   const baseDesktop = strip(navOf(read("landing.html"), "nav-desktop"));
   const baseMobile = strip(navOf(read("landing.html"), "nav-mobile"));
+  const baseDoors = strip(navOf(read("landing.html"), "doors"));
   assert.ok(baseDesktop.length > 0 && baseMobile.length > 0, "the front page has no navigation");
+  assert.ok(baseDoors.length > 0, "the front page has no doors");
 
   for (const p of PUBLIC_PAGES) {
     const html = read(p);
     assert.equal(strip(navOf(html, "nav-desktop")), baseDesktop, `${p} desktop nav differs`);
     assert.equal(strip(navOf(html, "nav-mobile")), baseMobile, `${p} mobile nav differs`);
+    assert.equal(strip(navOf(html, "doors")), baseDoors, `${p} doors differ`);
 
-    // ONE consistent rule: the main navigation is the same five entries on desktop and mobile.
-    // "Om Lærlig" lives in the footer only, so — like the front page — it is not a menu entry
-    // and marks nothing. The five that are menu entries mark themselves twice, once per nav.
-    const expected = p === "om-laerlig.html" ? 0 : 2;
+    // ONE consistent rule. The four menu entries mark themselves twice, once per nav. The two
+    // doors (owner decision 2026-10-04) lead into /elev-og-laerer, so that page marks both doors
+    // in the band and in the mobile menu — four marks. "Om Lærlig" is footer-only and marks nothing.
+    const expected = p === "om-laerlig.html" ? 0 : p === "elev-og-laerer.html" ? 4 : 2;
     assert.equal((html.match(/aria-current="page"/g) || []).length, expected,
       `${p} must mark its own entry current in every nav that contains it`);
 
-    // Whatever the count, the marks must sit on the link that points at this page.
+    // Whatever the count, the marks must sit on links that point at this page.
     const route = "/" + p.replace(/\.html$/, "");
-    for (const m of html.matchAll(/<a href="([^"]+)"\s+aria-current="page"/g)) {
-      assert.equal(m[1], route, `${p} marks ${m[1]} current instead of ${route}`);
+    for (const m of html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*\saria-current="page"/g)) {
+      assert.equal(m[1].split("#")[0], route, `${p} marks ${m[1]} current instead of ${route}`);
     }
   }
   // The front page marks nothing: it is not one of the menu entries.
   assert.ok(!read("landing.html").includes('aria-current="page"'),
     "the front page is not a menu entry and must not mark one current");
 
-  // The desktop and mobile menus must carry exactly the same entries — the asymmetry where
-  // "Om Lærlig" appeared on mobile only is what this pins shut.
+  // The desktop and mobile menus carry exactly the same page entries. The mobile menu also leads
+  // with the two doors (in .nav-doors) — the band has scrolled away by the time a phone user opens
+  // it — and those are compared separately: the same two destinations as the band.
   for (const p of ["landing.html", ...PUBLIC_PAGES]) {
     const html = read(p);
-    const hrefs = (nav) => [...(navOf(html, nav).matchAll(/href="([^"]+)"/g))].map((m) => m[1]);
-    assert.deepEqual(hrefs("nav-mobile"), hrefs("nav-desktop"),
+    const hrefs = (s) => [...s.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+    const mobile = navOf(html, "nav-mobile");
+    const mobileDoors = (mobile.match(/<div class="nav-doors">[\s\S]*?<\/div>/) || [""])[0];
+    assert.deepEqual(hrefs(mobile.replace(mobileDoors, "")), hrefs(navOf(html, "nav-desktop")),
       `${p}: the mobile menu must list the same pages as the desktop menu`);
-    assert.equal(hrefs("nav-desktop").length, 5, `${p}: the main menu should stay five entries`);
-    assert.ok(!hrefs("nav-desktop").includes("/om-laerlig"),
+    assert.deepEqual(hrefs(mobileDoors), hrefs(navOf(html, "doors")),
+      `${p}: the mobile menu's doors must lead where the band's doors lead`);
+    assert.equal(hrefs(navOf(html, "nav-desktop")).length, 4, `${p}: the main menu should stay four entries`);
+    assert.ok(!hrefs(navOf(html, "nav-desktop")).includes("/om-laerlig"),
       `${p}: "Om Lærlig" belongs in the footer, not the main menu`);
     assert.ok(html.includes('<a href="/om-laerlig">Om Lærlig</a>'),
       `${p}: "Om Lærlig" must still be reachable from the footer`);
+    assert.ok(html.includes('<a href="/elev-og-laerer">For elev &amp; lærer</a>'),
+      `${p}: /elev-og-laerer must still be reachable as a page from the footer`);
   }
+});
+
+// THE TWO DOORS (owner decision 2026-10-04). "For eleven" and "For læreren" are two separate
+// entrances directly under the header on every public page — not two more menu links. Until
+// dedicated pages are approved they lead to their own half of /elev-og-laerer, whose anchors
+// must therefore exist.
+test("every public page carries the two doors, and both land on a real anchor", () => {
+  const eol = read("elev-og-laerer.html");
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const html = read(p);
+    const doors = (html.match(/<nav class="doors"[\s\S]*?<\/nav>/) || [""])[0];
+    assert.ok(doors, `${p} has no doors`);
+    // Directly after the header, before main: they belong to the top of the page.
+    assert.ok(html.indexOf("</header>") < html.indexOf('<nav class="doors"') &&
+              html.indexOf('<nav class="doors"') < html.indexOf('<main id="main">'),
+      `${p}: the doors must sit between the header and main`);
+    const links = [...doors.matchAll(/<a class="door (door-\w+)" href="([^"]+)"/g)].map((m) => [m[1], m[2]]);
+    assert.deepEqual(links, [["door-elev", "/elev-og-laerer#for-eleven"],
+                             ["door-laerer", "/elev-og-laerer#for-laereren"]], `${p}: the doors drifted`);
+    assert.match(doors, /<span class="door-label">For eleven</, `${p}: the student door lost its label`);
+    assert.match(doors, /<span class="door-label">For læreren</, `${p}: the teacher door lost its label`);
+    // The product cues are decoration; the label and the sentence carry the meaning.
+    for (const cue of doors.match(/<span class="door-cue[^"]*"[^>]*>/g) || []) {
+      assert.match(cue, /aria-hidden="true"/, `${p}: a door cue is exposed to assistive tech`);
+    }
+  }
+  assert.match(eol, /id="for-eleven"/, "the student door's anchor is missing");
+  assert.match(eol, /id="for-laereren"/, "the teacher door's anchor is missing");
 });
 
 test("the navigation uses real page links, not the old in-page anchors", () => {

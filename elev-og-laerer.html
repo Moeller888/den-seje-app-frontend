@@ -32,7 +32,6 @@
       <nav class="nav-desktop" aria-label="Primær">
         <a href="/produktet">Produktet</a>
         <a href="/saadan-virker-det">Sådan virker det</a>
-        <a href="/elev-og-laerer" aria-current="page">For elev &amp; lærer</a>
         <a href="/til-skoler">Til skoler</a>
         <a href="/priser">Priser</a>
       </nav>
@@ -48,13 +47,37 @@
     </div>
 
     <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
+      <div class="nav-doors">
+        <a class="nav-door nav-door-elev" href="/elev-og-laerer#for-eleven" aria-current="page">For eleven</a>
+        <a class="nav-door nav-door-laerer" href="/elev-og-laerer#for-laereren" aria-current="page">For læreren</a>
+      </div>
       <a href="/produktet">Produktet</a>
       <a href="/saadan-virker-det">Sådan virker det</a>
-      <a href="/elev-og-laerer" aria-current="page">For elev &amp; lærer</a>
       <a href="/til-skoler">Til skoler</a>
       <a href="/priser">Priser</a>
     </nav>
   </header>
+
+  <nav class="doors" aria-label="For eleven og for læreren">
+    <a class="door door-elev" href="/elev-og-laerer#for-eleven" aria-current="page">
+      <span class="door-label">For eleven<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-elev" aria-hidden="true">
+        <span class="door-level">Niveau <b>4</b></span>
+        <span class="door-xp"><span></span></span>
+        <span class="door-gain">+10 XP</span>
+      </span>
+      <span class="door-line">Egne opgaver, næste skridt og en fremgang, eleven selv kan se.</span>
+    </a>
+    <a class="door door-laerer" href="/elev-og-laerer#for-laereren" aria-current="page">
+      <span class="door-label">For læreren<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-laerer" aria-hidden="true">
+        <span class="door-tag is-good">Stabil</span>
+        <span class="door-tag is-up">Fremgang</span>
+        <span class="door-tag is-help">Brug for hjælp</span>
+      </span>
+      <span class="door-line">Overblik over klassen og den enkelte elev. Læreren bestemmer.</span>
+    </a>
+  </nav>
 
   <main id="main">
 
@@ -96,8 +119,9 @@
           </figcaption>
         </figure>
 
+        <!-- #for-eleven and #for-laereren are where the two doors under the header land. -->
         <div class="split">
-          <div class="split-col">
+          <div class="split-col" id="for-eleven">
             <h3 class="split-head">For eleven</h3>
             <ul class="ticks" role="list">
               <li>Du kan se, at det rykker — og hvor langt du er nået.</li>
@@ -107,7 +131,7 @@
             </ul>
           </div>
 
-          <div class="split-col">
+          <div class="split-col" id="for-laereren">
             <h3 class="split-head">For læreren</h3>
             <ul class="ticks" role="list">
               <li>Overblik over klassen og over den enkelte elev.</li>

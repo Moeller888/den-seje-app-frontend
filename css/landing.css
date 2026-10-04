@@ -251,6 +251,197 @@ img, svg { max-width: 100%; }
 .nav-mobile { display: none; }
 .nav-mobile[hidden] { display: none; }
 
+/* ── The two doors: For eleven / For læreren ──────────────────────────────── */
+/* Two full-bleed halves directly under the header, on every public page. They are NOT
+   sticky: the header that follows the reader stays one light row, and the doors scroll
+   away with the top of the page. The halves differ on purpose — the student door is the
+   app's own dark surface, the teacher door is the light "desk" surface the front page
+   already uses for the adults' side — while label, type and rhythm are shared, so they
+   read as two entrances to one product.
+   The content of each half lines up with the page shell: the band is a size container,
+   so a half can compute where the shell's edge falls (100cqw = the band's width). Where
+   container units are unsupported the plain gutter applies, which is merely less aligned. */
+
+.doors {
+  --door-gut: clamp(20px, 5vw, 48px);
+  /* Distance from the band's edge to the shell's content edge. Plain gutter by default;
+     upgraded below where container units exist. */
+  --door-edge: var(--door-gut);
+  --door-paper:    #eef1f8;   /* = the front page's --fs-paper */
+  --door-ink:      #12122a;   /* = --bg-main, as text on paper */
+  --door-ink-soft: #4a4f72;   /* 7.4:1 on the paper */
+  --door-blue-ink: #1565c0;   /* 5.1:1 on the paper */
+  container-type: inline-size;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.door {
+  position: relative;
+  /* Label and cue share the first row; the sentence runs the full width under them, so it
+     stays on one line at desktop widths and the band stays low. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label cue"
+    "line  line";
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 4px;
+  padding-block: 14px 16px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 180ms var(--l-ease);
+}
+.door-elev {
+  padding-left: var(--door-edge);
+  padding-right: clamp(20px, 3vw, 40px);
+  background: var(--l-panel);
+  color: var(--l-text);
+  border-top: 1px solid var(--l-border);
+}
+.door-laerer {
+  padding-left: clamp(20px, 3vw, 40px);
+  padding-right: var(--door-edge);
+  background: var(--door-paper);
+  color: var(--door-ink);
+  border-top: 1px solid #d5dbea;
+}
+
+@supports (width: 1cqw) {
+  .door { --door-edge: max(var(--door-gut), calc((100cqw - var(--l-shell)) / 2 + var(--door-gut))); }
+}
+
+/* The bottom rule is each door's own accent: the XP green for the student, ink for the
+   teacher. It turns into the "current" marker when the visitor is on that page. */
+.door::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--success);
+  transform: scaleY(.34);
+  transform-origin: bottom;
+  transition: transform 180ms var(--l-ease);
+}
+.door-laerer::after { background: var(--door-blue-ink); }
+
+.door-label {
+  grid-area: label;
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(1.0625rem, 1.5vw, 1.3125rem);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.door-elev .door-label   { color: var(--l-bright); }
+.door-laerer .door-label { color: var(--door-ink); }
+
+/* A drawn arrow rather than a glyph: it renders identically in every system font. */
+.door-arrow {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 180ms var(--l-ease);
+}
+.door-arrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: translateY(-50%) rotate(45deg);
+}
+.door-elev .door-arrow   { color: var(--success-text); }
+.door-laerer .door-arrow { color: var(--door-blue-ink); }
+
+.door-line {
+  grid-area: line;
+  font-size: .9375rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+.door-elev .door-line   { color: var(--l-dim); }
+.door-laerer .door-line { color: var(--door-ink-soft); }
+
+/* ── The cues: decorative copies of the product's own UI ── */
+/* Both cues are the same height, so the two labels sit on the same line across the seam. */
+.door-cue { grid-area: cue; display: flex; align-items: center; gap: 10px; height: 30px; }
+
+.door-cue-elev {
+  padding: 0 4px 0 10px;
+  border-radius: 10px;
+  background: var(--l-bg);
+  border: 1px solid var(--l-border);
+}
+.door-level { font-size: .8125rem; color: var(--l-dim); white-space: nowrap; }
+.door-level b { font-size: 1rem; color: var(--l-bright); margin-left: 2px; }
+.door-xp {
+  display: block;
+  width: 84px;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--xp-track);
+  overflow: hidden;
+}
+/* .776 = the same 322 XP / level 4 the front page's hero shows. */
+.door-xp span { display: block; width: 77.6%; height: 100%; border-radius: 4px; background: var(--success); }
+.door-gain {
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--correct-bg);
+  color: var(--success-text);
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.door-cue-laerer { gap: 6px; }
+/* The teacher dashboard's own status labels, at the same colours as the front page's desk. */
+.door-tag {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.door-tag.is-good { background: #e3f3e5; color: #1f6a2a; }
+.door-tag.is-up   { background: #e2edfb; color: #134f99; }
+.door-tag.is-help { background: #fbe9e6; color: #9b2c1f; }
+
+/* ── States ── */
+@media (hover: hover) {
+  .door-elev:hover   { background: #212150; }
+  .door-laerer:hover { background: #e3e8f4; }
+  .door:hover::after { transform: scaleY(1); }
+  .door:hover .door-arrow { transform: translateX(4px); }
+}
+.door[aria-current="page"]::after { transform: scaleY(1); }
+
+/* The focus ring is drawn INSIDE the door: the band is full-bleed, so an outside ring would
+   be clipped by the viewport edge on one side. */
+.door:focus-visible { outline-offset: -5px; border-radius: 0; }
+.door-laerer:focus-visible { outline-color: var(--door-blue-ink); }
+
+/* ── The doors inside the mobile menu ── */
+/* After scrolling, the band is gone; the menu is where a phone user looks next, so the two
+   entrances lead it — as a pair, in the same two surfaces, not as two more rows of text. */
+.nav-doors { display: none; }
+
 /* ── Ambient background ───────────────────────────────────────────────────── */
 
 .ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
@@ -824,6 +1015,12 @@ h2 {
   :root { --l-shell: 980px; }
 }
 
+/* Below this the cues would crowd the label; the label and the sentence carry the door. */
+@media (max-width: 1080px) {
+  .door-cue { display: none; }
+  .door { grid-template-columns: minmax(0, 1fr); grid-template-areas: "label" "line"; }
+}
+
 @media (max-width: 900px) {
   .nav-desktop { display: none; }
   .nav-toggle { display: inline-flex; }
@@ -846,6 +1043,25 @@ h2 {
     border-bottom: 1px solid rgba(42, 42, 90, .45);
   }
   .nav-mobile a:last-child { border-bottom: none; }
+
+  .nav-doors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 0 12px;
+  }
+  .nav-mobile .nav-door {
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .nav-mobile .nav-door-elev   { background: var(--l-panel); color: var(--l-bright); box-shadow: inset 0 -3px 0 var(--success); }
+  .nav-mobile .nav-door-laerer { background: #eef1f8; color: #12122a; box-shadow: inset 0 -3px 0 #1565c0; }
+  .nav-mobile .nav-door-laerer:focus-visible { outline-color: #1565c0; }
 
   .cards, .steps, .split { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -884,6 +1100,15 @@ h2 {
   }
 
   .cards, .steps, .split, .footer-inner { grid-template-columns: 1fr; }
+
+  /* Two doors side by side even on a phone: the split IS the message. Shorter, tighter. */
+  .door { padding-block: 12px 14px; align-content: start; }
+  .door-elev   { padding-right: 14px; }
+  .door-laerer { padding-left: 14px; }
+  .door-label  { font-size: 1.0625rem; gap: 8px; }
+  .door-arrow  { width: 14px; }
+  .door-arrow::after { width: 7px; height: 7px; }
+  .door-line   { font-size: .8125rem; line-height: 1.4; }
   .card, .split-col { padding: 24px; }
   .section { padding: 76px 0; }
   .page-hero { padding: 32px 0 4px; }
@@ -910,4 +1135,6 @@ h2 {
   .cta-portal:hover .cta-arrow { transform: none; }
   .nav-desktop a:hover::after { transform: scaleX(1); }
   .card:hover { transform: none; }
+  /* The door keeps its colour change and full-height rule on hover; only the arrow's slide goes. */
+  .door:hover .door-arrow { transform: none; }
 }
