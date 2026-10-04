@@ -88,7 +88,7 @@ produktkomponenter (`css/forside.css`); kun deres egne layouts ligger i `css/per
 
 **North Star v2 på `/for-eleven`.** Elevsiden fortæller også om figuren, så den viser den samme
 North Star v2-brandfigur som forsiden (samme fil, samme D-124-hash) — og siger under figuren:
-"Lærligs figur. Elevens egen ser anderledes ud — det er eleven, der former den." Det udvider
+"Lærligs figur. I appen former eleven sin egen." Det udvider
 forsidebeslutningen fra 2026-10-04 til én side mere, efter ejerens brief ("North Star v2 som
 offentlig brandreference, hvor det giver mening"). Grænsen er uændret: ingen runtime-avatar,
 ingen R2-assets, ingen feature flags. Lærersiden har ingen billeder. Unit-testen tillader

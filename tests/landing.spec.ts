@@ -932,7 +932,7 @@ test("/for-eleven shows the North Star v2 brand figure, says so, and loads no ru
       .toBe("/" + NORTH_STAR_V2);
   }
   // Honest about what it is: the brand figure, not the student's own.
-  await expect(page.locator(".pv-figure-note")).toContainText("Elevens egen ser anderledes ud");
+  await expect(page.locator(".pv-figure-note")).toContainText("Lærligs figur. I appen former eleven sin egen.");
   expect(requested.filter((p) => p.startsWith("/assets/avatar-r2/") || p.endsWith("/avatar-render-c2.js"))).toEqual([]);
 });
 
