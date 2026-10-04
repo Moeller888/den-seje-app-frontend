@@ -234,15 +234,20 @@ Rules (binding):
    Scoring is binary (correct/incorrect) — no partial credit — so XP/coins, spaced repetition and
    the response shape `{ status, correct_answer, review_text?, misconception_type? }` stay unchanged.
 
-Privileged award RPC: `process_text_answer` takes the verdict (`p_is_correct`) and the pupil
-(`p_user_id`) as parameters, so it must be reachable only from the backend. `process-event` calls it
-through a separate admin client (`process-event/text-answer-rpc.ts`: the shared resolver's backend
-key, no pupil `Authorization` header, no session), after authenticating the pupil and reading the
-instance with the pupil's own client and checking `student_id = user.id` (403 otherwise).
-`p_user_id` is the verified `user.id` and `p_is_correct` the evaluator's result — never request
-fields. A key-configuration error fails that path with a 500; it never falls back to the user
-client. Everything else in `process-event` stays user-scoped. Revoking EXECUTE from PUBLIC, `anon`
-and `authenticated` is a separate D-110 migration, applied after this code is live.
+Privileged award RPCs: `process_text_answer` takes the verdict (`p_is_correct`) and the pupil
+(`p_user_id`) as parameters, and `process_question_attempt` takes the pupil (`p_student_id`), so both
+must be reachable only from the backend. `process-event` calls each through a separate admin client
+(`makeAdminClient` + `process-event/text-answer-rpc.ts`: the shared resolver's backend key, no pupil
+`Authorization` header, no session), after authenticating the pupil and reading the instance with the
+pupil's own client and checking `student_id = user.id` (403 otherwise). The pupil argument is always
+the verified `user.id` and `p_is_correct` the evaluator's result — never request fields; MC/number
+correctness, rewards and idempotency stay inside `process_question_attempt`. A key-configuration
+error fails the path with a 500; it never falls back to the user client. Everything else in
+`process-event` (auth, the instance read, the long-answer save, `next_review_at`,
+`misconception_signal`) stays user-scoped. `process_text_answer` is EXECUTE-locked to `service_role`
+(D-110, 2026-10-04); the internal quest/streak helpers it and `process_question_attempt` call have no
+API-role EXECUTE at all; revoking `process_question_attempt` from PUBLIC/`anon`/`authenticated` is a
+separate D-110 migration, applied after this code is live.
 
 Short typed answers (the first evaluator, `isTextAnswerCorrect`): correct **only** if the answer
 equals the correct answer or one of the question's explicit `content.accepted_answers` after
