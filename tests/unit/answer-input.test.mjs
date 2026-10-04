@@ -284,7 +284,9 @@ test("process-event still evaluates short text with isTextAnswerCorrect + accept
   const pe = read("../../supabase/functions/process-event/index.ts");
   assert.match(pe, /import \{ isTextAnswerCorrect \} from "\.\.\/_shared\/answer-evaluation\.ts";/);
   assert.match(pe, /isTextAnswerCorrect\(answer, correct_answer, questionContent\?\.accepted_answers\)/);
-  assert.match(pe, /"process_text_answer"/);
+  // The award RPC itself moved to ./text-answer-rpc.ts (backend admin client); process-event calls it.
+  assert.match(pe, /await callProcessTextAnswer\(/);
+  assert.match(read("../../supabase/functions/process-event/text-answer-rpc.ts"), /admin\.rpc\("process_text_answer",/);
   // The long answer path is checked first and stays teacher-reviewed.
   assert.ok(pe.indexOf('answerType === "long"') < pe.indexOf('format.includes("text")'));
 });

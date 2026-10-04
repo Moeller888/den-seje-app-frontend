@@ -44,13 +44,21 @@ art layer behind them can be upgraded without a rewrite.
   (sha `2CB93EE0…`); final 164B.3 = **PASS with an owner-accepted inherited §7 alpha/matte exception**
   (a ~1 px white-matte fringe remains, accepted as D-042/D-043 technical debt — **accepted, not fixed**).
   **This changes nothing at runtime:** the candidate is still **gitignored, not promoted**; `assets/avatar-r2`
-  and `R2_MANIFEST` are untouched; **`AVATAR_R2` stays `false`**. **Gate 3 has since STARTED on explicit
+  and `R2_MANIFEST` are untouched; **`AVATAR_R2` stayed `false`** _(at the time — superseded: `AVATAR_R2 = true`
+  is live, `js/avatar-layers.js:332`)_. **Gate 3 has since STARTED on explicit
   owner command (2026-07-15, WP0 PR #69), and its deterministic layer set is COMPLETE and
   owner-countersigned (integration composite PASS, PR #86/#87)** — accepted candidates: hair z40, eyes z4,
   face z3 (neutral) + blush; decision record = the owner-countersigned Gate-3 worksheets (register
   unchanged through D-058). **Remaining Gate-3 scope: the four D-042 expression variants** (producer tool
   merged PR #88, never run; running it requires a separate owner decision on external image API: vendor +
   Master upload + budget). Nothing promoted. Gate 5 remains open. See `project-state.md` **D-047 … D-058**.
+- **R3 shadow stack — head geometry adopted (D-148, 2026-10-02), still default OFF.** The R3 head is now
+  deterministic: **G1V3** base geometry + **E2** ear junctions + **K4** contour, with the **P2** head-edit
+  regions and the classified pre-gate `pre.transition-uncovered` as the binding prerequisites for any later
+  colour attempt (`tools/avatar/build-r3-head-geometry.mjs`, `tools/avatar/recompose-r3-head-geometry.mjs`,
+  fixtures in `tools/avatar/fixtures/r3-head-geometry/`). E4 was built as a control, passed every gate and
+  was rejected. Nothing is wired into runtime, no runtime or R2 asset is promoted, and no image call is
+  made or authorised — a colour call needs a new owner instruction, call-id and claim identity.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

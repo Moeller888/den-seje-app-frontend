@@ -1,13 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { publishableKey } from "../_shared/supabase-keys.ts";
+import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabase-keys.ts";
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
+import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer } from "./text-answer-rpc.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Content-Type": "application/json"
 }
+
+// Deploy diagnostic: which backend key source the short-text path will use. serviceKeySource()
+// returns only a fixed word ("secret-keys", "legacy-service-role", "none" or
+// "invalid-configuration") and never throws, so this line can neither leak a key nor break MC.
+console.log(`[process-event] service-key source=${serviceKeySource()}`)
 
 function countWords(text: string) {
   return (text || "")
@@ -96,6 +102,14 @@ serve(async (req) => {
       })
     }
 
+    // Ownership before any answer path: RLS also lets a teacher read their pupils' instances, and
+    // the short-text award runs through an admin client that bypasses RLS (./text-answer-rpc.ts).
+    if (!isInstanceOwner(instanceData.student_id, user.id)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: corsHeaders
+      })
+    }
+
     const questionMeta    = instanceData.questions || {}
     const correct_answer  = instanceData.correct_answer
     const format          = (questionMeta.answer_format || "").toLowerCase()
@@ -155,15 +169,28 @@ serve(async (req) => {
       // process_text_answer: atomically sets answered=true, was_correct,
       // next_review_at, and awards XP+coins if correct — with a CAS guard
       // on answered=false so rewards cannot be given twice even on retry.
-      const { data: rpcResult, error: rpcError } = await supabase.rpc(
-        "process_text_answer",
-        {
-          p_instance_id: question_instance_id,
-          p_user_id:     user.id,
-          p_user_answer: answer,
-          p_is_correct:  isCorrect
-        }
-      )
+      // It trusts p_user_id and p_is_correct, so it is called ONLY through a backend admin client
+      // (no pupil Authorization header), with the verified user.id and the evaluator's result.
+      // A broken key configuration fails here, loudly — never a fallback to the user client.
+      let rpcResult: unknown
+      let rpcError: any
+      try {
+        ({ data: rpcResult, error: rpcError } = await callProcessTextAnswer(
+          () => createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS),
+          {
+            instanceId: question_instance_id,
+            userId:     user.id,
+            answer,
+            isCorrect,
+          }
+        ))
+      } catch (keyError: any) {
+        // serviceKey()'s messages name the variables, never their values.
+        console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+        return new Response(JSON.stringify({ error: "Server configuration error" }), {
+          status: 500, headers: corsHeaders
+        })
+      }
 
       if (rpcError) {
         console.error("PROCESS TEXT ANSWER ERROR:", rpcError)

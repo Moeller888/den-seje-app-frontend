@@ -1,0 +1,286 @@
+{
+  "tool": "build-r3-head-geometry",
+  "toolVersion": "1.0.0",
+  "decision": "D-148",
+  "status": "OWNER-ADOPTED DETERMINISTIC R3 HEAD GEOMETRY — R3 STAYS A SHADOW STACK, DEFAULT OFF — NO IMAGE CALL AUTHORISED, NO CLAIM, NO RUNTIME ASSET",
+  "chosen": {
+    "baseGeometry": "G1V3",
+    "earContour": "E2",
+    "contour": "K4"
+  },
+  "notChosen": {
+    "E0": "control (unchanged G1V3)",
+    "E1": "minimal smoothing — left a visible kink at the ear top",
+    "E3": "smoothest — longer, flatter jaw junction, nothing extra solved",
+    "E4": "E2 upper + E1 lower control — passed every gate, rejected: not unambiguously better at runtime and kept the larger lower jump (4 px vs 3 px)"
+  },
+  "canvas": {
+    "width": 1024,
+    "height": 1536,
+    "origin": "top-left"
+  },
+  "bboxConvention": "inclusive-max",
+  "inputs": {
+    "g1v3": {
+      "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-g1v3-v1.png",
+      "sha256": "b57c2f5db8aaf9a3d02b990fdcafe0213dedfbb038b3cb012f594c817d516c76",
+      "tracked": true,
+      "px": 67858,
+      "provenance": "owner-adopted base geometry (D-148); produced by the local G1V3 review tooling (G1 cranium + V3 ears, 294–380); a pinned input, never re-derived here",
+      "layout": "rows <= 424 = head geometry (66,156 px, mirror-symmetric, one run per row); rows 425–445 = exactly D-133's TRANSITION (1,702 px, verified pixel-for-pixel); nothing below 445"
+    },
+    "editV1": {
+      "path": "tools/avatar/fixtures/r3-head-edit/r3-head-edit-v1.png",
+      "sha256": "5e843a9a217966e80affdc2b8783cf8926941ff4ab6d62d1e424c795f4885156",
+      "decision": "D-133"
+    },
+    "transitionV1": {
+      "path": "tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png",
+      "sha256": "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3",
+      "decision": "D-133"
+    },
+    "authoringBase": {
+      "filename": "fitting-base.H1.png",
+      "sha256": "72875565ecd62b542a91156dbcca1399a434fe04634f4e737df71337be0d5af4",
+      "tracked": false,
+      "storage": "EXTERNAL — passed by --h1 and never copied into the repository (D-127 §2). Only its alpha channel is read (P2 rim) and the candidate composite stays local.",
+      "readFrom": "an explicit --h1 path supplied at build time"
+    }
+  },
+  "operations": {
+    "E2": {
+      "rule": "L′(y) = floor((Σ_{k=−r..r} L(y+k) + r) / (2r+1)) on the ORIGINAL left edge, mirrored about x = 511.5",
+      "r": 4,
+      "windows": [
+        [
+          289,
+          306
+        ],
+        [
+          376,
+          385
+        ]
+      ]
+    },
+    "K4": {
+      "rule": "coverage = clamp(3 + 1 − d, 0, 1), window 4; width from the measured Northstar ear-outline dark-run median (3 px)",
+      "width": 3,
+      "window": 4,
+      "lineRGB": [
+        16,
+        10,
+        4
+      ],
+      "rowsMax": 424,
+      "compositing": "out = floor((c·line + (255 − c)·rgb + 127) / 255), c = contour alpha",
+      "lineSource": "median RGB of Northstar Master v2 line pixels (G1V3 contour review)"
+    },
+    "P2": {
+      "EDIT": "EDIT₁ ∪ GEOM ∪ RIM",
+      "RIM": "{ y ≤ 424 : ¬EDIT₁ ∧ ¬GEOM ∧ α(H1) > 0 }",
+      "TRANSITION": "TRANSITION₁ (unchanged)",
+      "CORE": "EDIT₂ \\ TRANSITION₂",
+      "PROTECT": "complement(EDIT₂)"
+    }
+  },
+  "geometry": {
+    "crownY": 160,
+    "totalWidth": 342,
+    "totalWidthRow": 325,
+    "protrusionB": 22,
+    "outermostEarPoint": [
+      341,
+      325
+    ],
+    "changedPx": 78,
+    "removed": 36,
+    "added": 42,
+    "changedRows": [
+      291,
+      292,
+      293,
+      294,
+      295,
+      296,
+      300,
+      301,
+      302,
+      304,
+      305,
+      376,
+      377,
+      378,
+      379,
+      380,
+      381,
+      382,
+      383,
+      384
+    ],
+    "topJump": {
+      "d": 2,
+      "y": 295
+    },
+    "bottomJump": {
+      "d": 3,
+      "y": 376
+    },
+    "maxEdgeChange": {
+      "d": -6,
+      "y": 381
+    },
+    "lockedRowsChangedPx": {},
+    "asymmetryPx": 0,
+    "multiRunRows": 0,
+    "maxY": 424,
+    "components": 1,
+    "px": 66162,
+    "contourPx": 2935,
+    "k4Explanation": {
+      "onUnchangedG1V3": 2945,
+      "onE2": 2935,
+      "delta": -10,
+      "coverageDifferingPx": 226,
+      "differingRows": [
+        291,
+        292,
+        293,
+        294,
+        295,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        306,
+        307,
+        373,
+        374,
+        375,
+        376,
+        377,
+        378,
+        379,
+        380,
+        381,
+        382,
+        383,
+        384
+      ],
+      "differingPxFurtherThan4RowsFromAnE2Row": 0
+    },
+    "g1v3BandEqualsTransitionV1": true
+  },
+  "regionsV2": {
+    "editPx": 127285,
+    "editV1Px": 125423,
+    "protectPx": 1445579,
+    "transitionPx": 1702,
+    "addedToEdit": {
+      "geometryOutsideEditV1": 292,
+      "h1RimOutsideEditV1": 1570,
+      "total": 1862
+    },
+    "rim": {
+      "px": 1570,
+      "bbox": [
+        291,
+        19,
+        733,
+        424
+      ],
+      "components": 55,
+      "zones": {
+        "isse (y<294)": 1289,
+        "side (294–380)": 167,
+        "kæbe (381–424)": 114
+      },
+      "alpha": {
+        "1–31": 763,
+        "32–63": 336,
+        "64–95": 259,
+        "96–127": 212,
+        "128+": 0
+      },
+      "left": 763,
+      "right": 807,
+      "accounting": {
+        "definitions": {
+          "set1716": "H1 alpha 1..127 ∧ PROTECT₁ (¬EDIT₁) ∧ rows 0–445",
+          "set1570": "RIM = rows ≤ 424 ∧ ¬EDIT₁ ∧ ¬GEOM ∧ H1 alpha > 0"
+        },
+        "set1716": 1716,
+        "set1570": 1570,
+        "only1716": 146,
+        "only1570": 0,
+        "only1716Classified": {
+          "insideGeometryCoveredAlpha255": 94,
+          "neckRows425to445PreservedAndConnectedToTransition": 52,
+          "unexplained": 0
+        },
+        "ghostOutsideGeometryRowsLE424InOutput": 0
+      }
+    },
+    "rimSolidPx": 0,
+    "symmetry": "GEOM part is mirror-symmetric; the RIM part follows H1's own (asymmetric) hair silhouette"
+  },
+  "candidate": {
+    "what": "G1V3 + E2 + K4 over a flat review stand-in skin, composited onto H1 with the P2 regions — LOCAL ONLY (contains H1 pixels), never tracked",
+    "skinStandIn": [
+      254,
+      197,
+      128
+    ],
+    "sha256": "b6496baa19d0bd8c67a488c8ea79bae6a71f0c0f9d2de7cd3ad0bc4ef4e74c7d",
+    "gates": {
+      "preTransitionUncovered": 0,
+      "preTransitionWiderInsideEdit": 0,
+      "widerOutsideEditDiscarded": 0,
+      "join": {
+        "observed": 3,
+        "bound": 4,
+        "pass": true
+      },
+      "ghostResidueOutsideGeometry": 0,
+      "protectedBytes": 0,
+      "transitionAlphaChanges": 0,
+      "asymmetryPx": 0,
+      "rows425to445BytesVsH1": 0,
+      "lockedGeometryRowsChangedPx": 0,
+      "allPass": true
+    }
+  },
+  "fixtures": {
+    "geometry": {
+      "file": "r3-head-geometry-g1v3-e2-v1.png",
+      "sha256": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43",
+      "bytes": 7169
+    },
+    "contour": {
+      "file": "r3-head-contour-k4-v1.png",
+      "sha256": "8e8efe590cf2ffd5fc30a7bf52a56c5cffb62d117b274fa6abbd6d3cc5d7766b",
+      "bytes": 8139
+    },
+    "edit": {
+      "file": "r3-head-edit-v2.png",
+      "sha256": "7c52a7cf0e80cc9362b64e5078346b6f0a470e9fc9aa629ad5e48f0588f4b651",
+      "bytes": 8380
+    },
+    "protect": {
+      "file": "r3-head-protect-v2.png",
+      "sha256": "f3a5d89bc3648ae91a98319c75ddaddb576758c6d512dd4205104e598a906292",
+      "bytes": 10843
+    }
+  },
+  "prohibitions": {
+    "noImageRequest": "D-148 authorises no image or API call and creates no claim. A later colour call needs a new, separate owner instruction, call-id and claim identity.",
+    "r3DefaultOff": "R3 remains a hidden shadow stack, default OFF. Nothing here is wired into runtime.",
+    "noRuntimePromotion": "These are authoring fixtures, not runtime assets. No R2 asset or runtime file is touched.",
+    "noRefit": "A deviation from the expected values is a hard stop. The geometry is never re-fitted to an output."
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "tool": "build-r3-head-colour-fixtures",
+  "toolVersion": "1.0.0",
+  "status": "PREPARED — NOT AUTHORISED",
+  "purpose": "Preparation for ONE possible later colour call that produces only the hidden technical skin underlay of the D-148 R3 head. Nothing here authorises a call.",
+  "layerContract": {
+    "source": "tools/avatar/fixtures/r3/r3-shadow-contract-v1.json — layerContract.slots[base] and zModel (D-132/D-135), unchanged",
+    "underlay": "BALD, BLANK FACE — the hidden technical skin underlay; featureless",
+    "modelMayProduce": [
+      "warm tan skin matched to Northstar",
+      "very discreet natural skin variation",
+      "soft, style-consistent volume shading",
+      "restrained inner-ear shading",
+      "an even, fully covering head surface"
+    ],
+    "modelMayNotProduce": [
+      "eyes",
+      "irises",
+      "eye whites",
+      "eyelashes",
+      "eyebrows",
+      "nose",
+      "nostrils",
+      "mouth",
+      "lips",
+      "teeth",
+      "smile",
+      "blush",
+      "freckles",
+      "hair",
+      "hairline",
+      "beard",
+      "expression",
+      "clothing",
+      "neck/shoulder/body changes",
+      "background",
+      "text",
+      "objects"
+    ],
+    "separateLayersUntouched": [
+      "face",
+      "eyes",
+      "iris",
+      "blush",
+      "expressions",
+      "hair"
+    ]
+  },
+  "pipelineResponsibility": {
+    "model": "RGB of the head surface only, inside the API mask's editable area",
+    "deterministic": [
+      "E2 silhouette (D-148)",
+      "final alpha",
+      "K4 outer contour applied AFTER the model",
+      "P2 EDIT₂/PROTECT₂ split",
+      "TRANSITION and PROTECT₂ byte-identical to H1",
+      "canvas size and placement",
+      "rejection on missing coverage, uncovered transition, residue/ghost pixels or any failed gate"
+    ]
+  },
+  "inputs": {
+    "d148": {
+      "geometry": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-g1v3-e2-v1.png",
+        "sha256": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43"
+      },
+      "contour": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-contour-k4-v1.png",
+        "sha256": "8e8efe590cf2ffd5fc30a7bf52a56c5cffb62d117b274fa6abbd6d3cc5d7766b"
+      },
+      "edit": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-edit-v2.png",
+        "sha256": "7c52a7cf0e80cc9362b64e5078346b6f0a470e9fc9aa629ad5e48f0588f4b651"
+      },
+      "protect": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-protect-v2.png",
+        "sha256": "f3a5d89bc3648ae91a98319c75ddaddb576758c6d512dd4205104e598a906292"
+      },
+      "g1v3": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-g1v3-v1.png",
+        "sha256": "b57c2f5db8aaf9a3d02b990fdcafe0213dedfbb038b3cb012f594c817d516c76"
+      },
+      "spec": {
+        "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-spec-v1.json",
+        "sha256": "f4d71ca3a11b4f93ba6a51ffdc36ad293aea3777542becf10e04ea61d484b3b7"
+      },
+      "transition": {
+        "path": "tools/avatar/fixtures/r3-head-edit/r3-head-transition-v1.png",
+        "sha256": "8f7a6f4c703adc52adbf12d7ee9357d6c0fd85721f8e46ae92f5f508a7ddb9f3"
+      }
+    },
+    "northstar": {
+      "path": "assets/avatar/reference/Northstar Master v2.png",
+      "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+    }
+  },
+  "skin": {
+    "rule": {
+      "classifier": "CIELAB (D65, 8-bit sRGB): skin ⇔ 30° ≤ h ≤ 90° ∧ L* ≥ 72",
+      "patches": [
+        [
+          425,
+          372,
+          445,
+          382
+        ],
+        [
+          579,
+          372,
+          599,
+          382
+        ]
+      ],
+      "statistic": "per-channel median of the skin-class pixels in both patches",
+      "expected": [
+        254,
+        197,
+        128
+      ]
+    },
+    "sampledPixels": 462,
+    "rgb": [
+      254,
+      197,
+      128
+    ]
+  },
+  "underpainting": {
+    "u1": {
+      "file": "r3-head-underpainting-u1-v1.png",
+      "sha256": "e67e2cccb25d914dfd016fd1ed3d9d36fa883bfc75457426b59f8d1204ba217d",
+      "bytes": 7168,
+      "rule": "D-148 head geometry (rows ≤ 424) filled with the sampled skin colour, alpha 255; everything else alpha 0"
+    },
+    "u2": {
+      "file": "r3-head-underpainting-u2-v1.png",
+      "sha256": "6cfd1e1840a6cb350dfad906fae629ac13a981c7be0051b8bf9b79c0bb2ee358",
+      "bytes": 10675,
+      "rule": "factor = 1 − 0.06 · max(0, 1 − (d − 1) / 14), d = Euclidean distance to the nearest pixel outside the head geometry, rows > 424 counted as inside so the neck continues unshaded (window 16); rgb = round(skin · factor)"
+    }
+  },
+  "apiMask": {
+    "file": "r3-head-colour-api-mask-v2.png",
+    "sha256": "33790c5decd357aa1c9ec2bcebef60fe941a05826c55ccc81d6d54d31a6eb5d1",
+    "bytes": 9541,
+    "name": "API_EDIT",
+    "rule": {
+      "dilation": 2,
+      "semantics": "alpha 0 = EDITABLE, alpha 255 = PROTECTED, RGB 0,0,0 everywhere (Images edit endpoint; same as build-r3-api-mask.mjs)",
+      "apiEdit": "API_EDIT = FINAL_MODEL_RGB_REGION ∪ API_CONTEXT_MARGIN",
+      "finalModelRgbRegion": "FINAL_MODEL_RGB_REGION = GEOM (the D-148 head, rows ≤ 424) — the only pixels whose final RGB comes from the model",
+      "apiContextMargin": "API_CONTEXT_MARGIN = { y ≤ 424 : p ∉ GEOM ∧ Chebyshev distance to GEOM ≤ 2 } — request-time working room only, discarded entirely by the post-processing",
+      "p2Edit2": "P2 EDIT₂ (D-148) is NOT changed and is NOT the API mask",
+      "previous": "v1 of this mask (sha 246546f2…) was dilate8²(GEOM) ∩ (EDIT₂ \\ TRANSITION); it left 139 of 734 head-edge px without a 2-px margin",
+      "editable": "dilate8^2(GEOM) ∩ CORE₂ where CORE₂ = EDIT₂ \\ TRANSITION"
+    },
+    "editablePx": 68374,
+    "bbox": [
+      339,
+      158,
+      684,
+      424
+    ],
+    "perRegion": {
+      "crown": {
+        "geom": 20714,
+        "editable": 20714
+      },
+      "side-left": {
+        "geom": 9602,
+        "editable": 9602
+      },
+      "side-right": {
+        "geom": 9602,
+        "editable": 9602
+      },
+      "ear-left": {
+        "geom": 1315,
+        "editable": 1315
+      },
+      "ear-right": {
+        "geom": 1315,
+        "editable": 1315
+      },
+      "face-plane": {
+        "geom": 15730,
+        "editable": 15730
+      },
+      "lower-head": {
+        "geom": 7884,
+        "editable": 7884
+      }
+    },
+    "edgeMargin": {
+      "headEdgePx": 734,
+      "withFull2pxMargin": 730,
+      "exceptions": [
+        {
+          "x": 453,
+          "y": 423,
+          "margin": 1,
+          "region": "lower-head"
+        },
+        {
+          "x": 454,
+          "y": 423,
+          "margin": 1,
+          "region": "lower-head"
+        },
+        {
+          "x": 569,
+          "y": 423,
+          "margin": 1,
+          "region": "lower-head"
+        },
+        {
+          "x": 570,
+          "y": 423,
+          "margin": 1,
+          "region": "lower-head"
+        }
+      ],
+      "exceptionReason": "four jaw-corner px (two mirror pairs): the 2nd outward neighbour is in row 425, which API_CONTEXT_MARGIN never enters; each keeps a 1-px margin"
+    }
+  },
+  "apiContextMargin": {
+    "file": "r3-head-colour-api-context-margin-v1.png",
+    "sha256": "1bb3ca1b2fa307c023c26ce52f93b989320c0707e2c7d0f10694901788248e03",
+    "bytes": 7191,
+    "name": "API_CONTEXT_MARGIN",
+    "px": 2212,
+    "bbox": [
+      339,
+      158,
+      684,
+      424
+    ],
+    "markerRGB": [
+      0,
+      210,
+      220
+    ],
+    "rule": "API_CONTEXT_MARGIN = { y ≤ 424 : p ∉ GEOM ∧ Chebyshev distance to GEOM ≤ 2 } — request-time working room only, discarded entirely by the post-processing",
+    "fate": "request-time working room only — the post-processing never copies one of these pixels into the candidate"
+  },
+  "finalModelRgbRegion": {
+    "name": "FINAL_MODEL_RGB_REGION",
+    "px": 66162,
+    "rule": "FINAL_MODEL_RGB_REGION = GEOM (the D-148 head, rows ≤ 424) — the only pixels whose final RGB comes from the model",
+    "sameAs": {
+      "path": "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-g1v3-e2-v1.png",
+      "sha256": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43"
+    }
+  },
+  "toneContinuity": {
+    "S2": {
+      "top": 417,
+      "bottom": 424,
+      "denominator": 9,
+      "neckTargetExpected": [
+        253,
+        197,
+        128
+      ],
+      "neckTargetRule": "per-channel median of H1 skin-class pixels (CIELAB h 30–90°, L* ≥ 72) inside TRANSITION, rows 425–433",
+      "formula": "out = floor((w·neck + (9 − w)·rgb + 4) / 9), w = y − 416, head pixels of rows 417–424 only, before K4"
+    },
+    "S1": {
+      "thresholdDE00": 4.5,
+      "nsBox": [
+        380,
+        300,
+        644,
+        420
+      ],
+      "headRows": [
+        300,
+        416
+      ],
+      "derivation": "p95 of CIEDE2000(Northstar skin-class pixel, Northstar skin median) over x 380–644, y 300–420",
+      "expectedNsMedianRGB": [
+        254,
+        197,
+        128
+      ],
+      "measuredNorthstar": {
+        "medianRGB": [
+          254,
+          197,
+          128
+        ],
+        "n": 19925,
+        "p95DE00": 4.5
+      }
+    },
+    "recommendation": "S2 (local chin/neck continuity) + S1 (whole-head palette) — distinct purposes"
+  },
+  "regions": {
+    "names": [
+      "crown",
+      "side-left",
+      "side-right",
+      "ear-left",
+      "ear-right",
+      "face-plane",
+      "lower-head"
+    ],
+    "rule": "ear-left x<366 · ear-right x>657 · crown y≤259 · lower-head y≥381 · side-left 366≤x≤446 · side-right 577≤x≤657 · face-plane otherwise — geometric coverage regions, not facial features"
+  },
+  "prompt": {
+    "file": "r3-head-colour-prompt-v1.md",
+    "sha256": "21bff18f001ea4ad9d0cdf79766f0f1879f2caf246003ea04c5728c03f8c65de",
+    "bytes": 2455
+  },
+  "callId": "UNASSIGNED",
+  "claimIdentity": "NONE",
+  "decision": "NONE — a later owner decision must assign a call-id, a claim identity and a mechanical approval value",
+  "prohibitions": {
+    "noImageRequest": "No image or API call is authorised. The preparation adapter has no send path.",
+    "noClaim": "No claim exists or may be created by these tools.",
+    "noRuntime": "Nothing is wired into runtime; R3 stays default OFF; no R2 asset is touched."
+  }
+}
