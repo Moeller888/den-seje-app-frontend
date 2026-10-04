@@ -1,13 +1,9 @@
 // Lærlig front page — the two things landing.html needs beyond js/landing.js.
 // ---------------------------------------------------------------------------------------------
-// 1. THE REAL AVATAR. Every [data-fs-avatar] gets the live default figure, mounted through the
-//    ONE shared render path every app surface uses (js/avatar-render-c2.js → mountC2Avatar). No
-//    copy of the layer stack lives here, so the front page can never drift from what a student
-//    actually sees. The identity is `{}` — the documented default (neutral body, medium skin,
-//    default hair and hair colour). No Supabase client, no session, no user data: the module
-//    graph is avatar-render-c2.js → avatar-layers.js / cloudinary.js / avatar-r2-observability.js,
-//    none of which makes a network request beyond the static assets under /assets.
-//    No surface name is passed, so the D-076 pilot observability helper stays silent.
+// 1. THE FIGURE. The two [data-fs-figure] images are the North Star v2 DESIGN reference (D-124),
+//    used here as a brand image and nothing more. This script does NOT render an avatar: it does
+//    not import the shared R2 renderer, and the app's runtime avatar is untouched by this page. It
+//    only waits for the images to decode, so `data-forside-ready` means "what you see is final".
 //
 // 2. THE HERO DEMO. The markup ships in its FINISHED state (answer chosen, XP awarded, next step
 //    shown). Only when motion is welcome does this script rewind it and play it forward once:
@@ -17,26 +13,17 @@
 //    tab rewinds at load and starts the moment it is first shown.
 //
 // Every lookup is null-checked; a missing element disables its own feature and never throws.
-import { mountC2Avatar } from "./avatar-render-c2.js";
-
-const DEFAULT_IDENTITY = Object.freeze({});
-
-async function mountAvatars() {
-  const roots = document.querySelectorAll("[data-fs-avatar]");
-  if (!roots || roots.length === 0) return;
-  for (let i = 0; i < roots.length; i++) {
-    const root = roots[i];
-    if (!root) continue;
-    try {
-      const path = await mountC2Avatar(root, DEFAULT_IDENTITY, { layerClass: "fs-avatar-layer" });
-      root.setAttribute("data-avatar-path", String(path));
-    } catch (err) {
-      // The figure is illustrative on this page. A failed render leaves the empty stage in place
-      // (no broken image, no layout shift) and says so in the console for whoever is debugging.
-      root.setAttribute("data-avatar-path", "failed");
-      console.warn("forside: avatar render failed", err && err.message ? err.message : err);
-    }
-  }
+// Resolves once every figure image has decoded — or failed, which is reported, never thrown: the
+// figure is illustrative, and a waiter on data-forside-ready must never hang on it.
+function figuresDecoded() {
+  const imgs = document.querySelectorAll("[data-fs-figure] img");
+  if (!imgs || imgs.length === 0) return Promise.resolve();
+  return Promise.all(Array.prototype.map.call(imgs, (img) => {
+    if (!img || typeof img.decode !== "function") return Promise.resolve();
+    return img.decode().catch(() => {
+      console.warn("forside: figure image failed to load", img.currentSrc || img.src);
+    });
+  }));
 }
 
 function prefersReducedMotion() {
@@ -115,10 +102,10 @@ function startDemo(done) {
   return true;
 }
 
-// The page is SETTLED once every avatar has mounted (or failed) and the demo has finished.
+// The page is SETTLED once every figure has decoded (or failed) and the demo has finished.
 // `html[data-forside-ready]` is the one explicit signal for that — screenshots and tests wait on
 // it instead of on a guessed delay. Set on success and on failure alike: a waiter never hangs.
-Promise.all([playDemo(), mountAvatars()]).then(
+Promise.all([playDemo(), figuresDecoded()]).then(
   () => document.documentElement.setAttribute("data-forside-ready", "1"),
   () => document.documentElement.setAttribute("data-forside-ready", "1"),
 );

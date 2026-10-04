@@ -82,10 +82,21 @@ test("the landing page contacts no third party — no external host, no webfont,
   }
 });
 
-test("the landing page ships no avatar or product imagery — none is approved yet", () => {
-  const t = read("landing.html");
-  assert.ok(!/<img\b/i.test(t), "no <img> may ship until real product screenshots are approved");
-  assert.ok(!/assets\/avatar/i.test(t), "avatar assets must not be used as marketing visuals");
+// Owner decision 2026-10-04 (Lærlig 2.0): the front page shows the approved North Star v2 DESIGN
+// reference (D-124) as Lærlig's visual identity — that ONE file and nothing else. It is a brand
+// image with no runtime authority; no R2 runtime asset and no other avatar art may appear, and the
+// six information pages keep the full ban below.
+const NORTH_STAR_V2_SRC = "assets/avatar/reference/Northstar%20Master%20v2.png";
+test("the landing page's only imagery is the North Star v2 brand reference", () => {
+  // Judged on what the page REFERENCES, so its HTML comments (which name the runtime paths in order
+  // to explain that the page does not use them) are stripped first.
+  const t = read("landing.html").replace(/<!--[\s\S]*?-->/g, "");
+  const srcs = [...t.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)].map((m) => m[1]);
+  assert.equal((t.match(/<img\b/gi) || []).length, srcs.length, "every image must have a src");
+  assert.deepEqual(srcs, [NORTH_STAR_V2_SRC, NORTH_STAR_V2_SRC], "exactly the two North Star v2 figures");
+  const avatarRefs = [...t.matchAll(/assets\/avatar[^"'\s)]*/gi)].map((m) => m[0]);
+  assert.deepEqual([...new Set(avatarRefs)], [NORTH_STAR_V2_SRC], "no other avatar art, and no R2 runtime asset");
+  assert.ok(has(decodeURIComponent(NORTH_STAR_V2_SRC)), "the North Star v2 file must ship with the site");
 });
 
 test("every mandatory runtime file is present", () => {
@@ -132,7 +143,10 @@ test("every local HTML reference resolves — directly, or through a declared cl
         if (!has(ROUTE_TO_FILE[path])) missing.push(`${page} -> ${path} (route target ${ROUTE_TO_FILE[path]})`);
         continue;
       }
-      const rel = path.replace(/^\.?\//, "");
+      // Percent-decoded first, exactly as the browser does before it requests the file:
+      // `Northstar%20Master%20v2.png` names the file `Northstar Master v2.png` on disk.
+      let rel = path.replace(/^\.?\//, "");
+      try { rel = decodeURIComponent(rel); } catch { missing.push(`${page} -> ${raw} (malformed escape)`); continue; }
       if (!rel || rel.endsWith("/")) continue;
       if (!has(rel)) missing.push(`${page} -> ${raw}`);
     }
@@ -292,8 +306,12 @@ test("the information pages LOAD nothing from a third party, and ship no imagery
     }
     assert.ok(!/@import\s+url\(/i.test(t), `${p} pulls in a remote stylesheet`);
     assert.ok(!/\b(fetch|XMLHttpRequest|navigator\.sendBeacon)\s*\(/.test(t), `${p} makes a request`);
-    assert.ok(!/<img\b/i.test(t), `${p} ships an image — none is approved yet`);
-    assert.ok(!/assets\/avatar/i.test(t), `${p} uses avatar art as a marketing visual`);
+    // The front page's one approved image is held to its own test above; every other public
+    // page still ships none.
+    if (p !== "landing.html") {
+      assert.ok(!/<img\b/i.test(t), `${p} ships an image — none is approved yet`);
+      assert.ok(!/assets\/avatar/i.test(t), `${p} uses avatar art as a marketing visual`);
+    }
   }
 });
 

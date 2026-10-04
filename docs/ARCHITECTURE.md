@@ -86,7 +86,7 @@ Supabase client is loaded from a CDN ESM URL.
 
 | Page | Script | Role | Audience |
 |---|---|---|---|
-| `landing.html` | `js/landing.js`, `js/forside.js` | **Public front page** — `/` rewrites to it. The Lærlig 2.0 story in eight scenes (branch `feat/forside-laerlig-2`, pending visual approval). `js/forside.js` mounts the live default avatar through the shared `mountC2Avatar()` and plays one hero demo; static assets only. No Supabase client, no session. Styles: `css/landing.css` + `css/forside.css` (front page only). See [LANDING.md](./LANDING.md). | public |
+| `landing.html` | `js/landing.js`, `js/forside.js` | **Public front page** — `/` rewrites to it. The Lærlig 2.0 story in eight scenes (branch `feat/forside-laerlig-2`, pending visual approval). The figure is the North Star v2 design reference (D-124) shown as a static brand image — NOT the runtime avatar, which stays on the R2 stack; the page loads no avatar renderer. `js/forside.js` only waits for that image and plays one hero demo; static assets only. No Supabase client, no session. Styles: `css/landing.css` + `css/forside.css` (front page only). See [LANDING.md](./LANDING.md). | public |
 | `produktet.html`, `saadan-virker-det.html`, `elev-og-laerer.html`, `til-skoler.html`, `priser.html`, `om-laerlig.html` | `js/landing.js` | **Public information pages**, one per menu entry. Each is reached through a clean route (`/produktet`, …) declared in `REDIRECT_RULES`; all share `css/landing.css` and the same header/footer. | public |
 | `login.html` | `js/login.js` | Email/password login; redirects by `profiles.role`. | all |
 | `index.html` | `app.js` (+ `supabaseClient.js`) | Student quiz app — the core loop. Served at `/index.html`; **not** what `/` serves. | student |

@@ -31,14 +31,23 @@ Fire trancher, alle merget og live. Rækkefølgen er den, de faktisk blev levere
 **Lærlig 2.0 (forslag, afventer ejerens visuelle godkendelse — 2026-10-02).** Ejeren har bedt om
 en ny forside, fordi hero-forsiden var pæn, men for generisk og for tynd til at vise, hvad Lærlig
 er. Beslutningen i tranche 8 ("kun hero") **erstattes derfor bevidst** — ikke i det stille. Den nye
-forside er en fortælling i otte scener: hero med et udsnit af det rigtige elev-UI og den levende
-default-avatar · "24 elever. 24 forskellige udgangspunkter." · samme opgave, to forskellige næste
-skridt · "Det svære kommer igen." · eleven · "Læreren bestemmer." · det, skolen kan regne med ·
-afslutning med kontakt. Undersiderne er uændrede. Avataren monteres gennem den delte
-`mountC2Avatar()` (ingen kopi af lagstakken), så forsiden aldrig viser en figur, eleven ikke får;
-det ophæver den tidligere regel om "ingen billeder", som netop var begrundet i, at referencekunst
-ikke måtte stå i stedet for den levende avatar. Ny CSS ligger i `css/forside.css` (kun forsiden),
-ny JS i `js/forside.js`. Afsnittet herunder beskriver tranche 8 og gælder, indtil 2.0 er godkendt.
+forside er en fortælling i otte scener: hero med et udsnit af det rigtige elev-UI og Lærlig-figuren
+· "24 elever. 24 forskellige udgangspunkter." · samme opgave, to forskellige næste skridt · "Det
+svære kommer igen." · eleven · "Læreren bestemmer." · det, skolen kan regne med · afslutning med
+kontakt. Undersiderne er uændrede. Ny CSS ligger i `css/forside.css` (kun forsiden), ny JS i
+`js/forside.js`. Afsnittet herunder beskriver tranche 8 og gælder, indtil 2.0 er godkendt.
+
+**Figuren er North Star v2 — som brandbillede, ikke som runtime-avatar (ejerbeslutning
+2026-10-04).** Forsidens to figurer (heroen og elevsektionen) er den godkendte North Star v2-
+designreference fra **D-124**: `assets/avatar/reference/Northstar Master v2.png`, sha256
+`3daf32e7…139ff50`, vist som et almindeligt billede. Den erstatter den første 2.0-version, der
+monterede den levende R2-avatar via `mountC2Avatar()`. Det er en **forsidebeslutning alene**:
+North Star v2 er ikke promoveret til runtime, og appen tegner fortsat elevernes avatar med R2-
+stakken (`assets/avatar-r2/`), som forsiden slet ikke indlæser længere. Ingen tekst på forsiden
+påstår, at figuren er præcis den avatar, eleven får i dag. Filen lå allerede i `assets/` og blev
+deployet; intet nyt asset er oprettet. **Endnu ikke registreret i D-registeret**
+(`docs/project-state.md`): branchen er lavet fra en ældre `main`, så nummeret tildeles ved merge mod
+den aktuelle `main` for ikke at kollidere med det igangværende avatarspor.
 
 **Forsiden er bevidst kun en hero.** Den skal gøre den besøgende nysgerrig, ikke forklare hele
 produktet — hovedmenuen er vejen videre, og undersiderne står for dybden. Derfor er de seks

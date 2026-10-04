@@ -73,9 +73,14 @@
 
     <!-- ══ 1. HERO ═══════════════════════════════════════════════════════════
          Left: the promise. Right: a slice of the real product — the quiz's own topbar,
-         level/XP strip, task card and answer options, with the live default avatar mounted
-         by the shared render path (js/forside.js → mountC2Avatar). Nothing here talks to a
-         backend; the slice is static markup that js/forside.js plays once.
+         level/XP strip, task card and answer options — beside the Lærlig figure. Nothing here
+         talks to a backend; the slice is static markup that js/forside.js plays once.
+         THE FIGURE IS A BRAND IMAGE, NOT THE RUNTIME AVATAR. Both figures on this page are the
+         owner-approved North Star v2 DESIGN reference (D-124: assets/avatar/reference/
+         Northstar Master v2.png, sha256 3daf32e7…139ff50), shown as a plain image. It has no
+         runtime authority: the app still renders students through the R2 stack
+         (js/avatar-render-c2.js, assets/avatar-r2/), which this page does not load at all.
+         No text on the page claims the figure is the exact avatar a student gets today.
          The markup ships in its FINAL state, so without JavaScript (or with reduced motion)
          the visitor sees the finished moment rather than an empty or half-played demo.
          The numbers are the product's real ones. The reward is the SERVER's for a first correct
@@ -102,7 +107,10 @@
 
         <figure class="fs-demo" aria-labelledby="demo-caption" data-demo>
           <div class="fs-demo-stage" aria-hidden="true">
-            <div class="fs-avatar fs-avatar-hero" data-fs-avatar></div>
+            <div class="fs-avatar fs-avatar-hero" data-fs-figure>
+              <img class="fs-avatar-layer" src="assets/avatar/reference/Northstar%20Master%20v2.png"
+                   alt="" width="1024" height="1536" decoding="async" fetchpriority="high">
+            </div>
 
             <div class="fs-shell">
               <div class="fs-topbar">
@@ -260,11 +268,16 @@
     </section>
 
     <!-- ══ 5. ELEVEN ═════════════════════════════════════════════════════════
-         The avatar carries real visual weight here: the same live default figure, large. -->
+         The figure carries real visual weight here: the same North Star v2 brand image as the
+         hero (one file, fetched once), large. Not lazy-loaded: it is the hero's own file, already
+         in the cache, and data-forside-ready waits for it to decode. -->
     <section class="fs-scene fs-student" aria-labelledby="student-title">
       <div class="shell fs-student-grid">
         <div class="fs-student-figure">
-          <div class="fs-avatar fs-avatar-large" data-fs-avatar></div>
+          <div class="fs-avatar fs-avatar-large" data-fs-figure>
+            <img class="fs-avatar-layer" src="assets/avatar/reference/Northstar%20Master%20v2.png"
+                 alt="" width="1024" height="1536" decoding="async">
+          </div>
           <div class="fs-chip fs-chip-level" aria-hidden="true">
             <span class="fs-level">Niveau <b>4</b></span>
             <span class="fs-xp"><span class="fs-xp-fill" style="--p: .776"></span></span>

@@ -12,6 +12,7 @@ import { test, expect } from "@playwright/test";
 import * as http from "http";
 import * as fs from "fs";
 import * as path from "path";
+import * as crypto from "crypto";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -349,22 +350,35 @@ test("the front page says 'next step', and never calls the whole product 'questi
   expect((meta ?? "").toLowerCase()).not.toContain("spørgsmål");
 });
 
-test("the avatar on the front page is the live one, mounted by the shared render path", async ({ page }) => {
-  // No copy of the layer stack may live on the front page: js/forside.js must go through
-  // mountC2Avatar, the one path every app surface uses, so the site can never show a figure the
-  // student does not get. Whichever path it takes (R2 or the C2 fallback), it must render layers.
+// THE FIGURE IS THE NORTH STAR v2 BRAND IMAGE (owner decision, 2026-10-04). It used to be the live
+// R2 avatar mounted through mountC2Avatar. The front page now shows the approved North Star v2
+// DESIGN reference (D-124) as Lærlig's visual identity, while the app's runtime keeps the R2 stack.
+// Pinned here: both figures are exactly that file, byte-identical to the hash D-124 binds, and the
+// front page no longer pulls in the runtime renderer or any R2 runtime asset.
+const NORTH_STAR_V2 = "assets/avatar/reference/Northstar Master v2.png";
+const NORTH_STAR_V2_SHA256 = "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50";
+
+test("both figures on the front page are the approved North Star v2 — not the runtime avatar", async ({ page }) => {
+  const sha = crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, NORTH_STAR_V2))).digest("hex");
+  expect(sha, "the North Star v2 file is not the one D-124 approved").toBe(NORTH_STAR_V2_SHA256);
+
   const src = fs.readFileSync(path.join(ROOT, "js", "forside.js"), "utf8");
-  expect(src).toContain('import { mountC2Avatar } from "./avatar-render-c2.js"');
+  expect(src, "the front page must not mount the runtime avatar").not.toMatch(/avatar-render-c2|mountC2Avatar/);
+
+  const requested: string[] = [];
+  page.on("request", (r: any) => requested.push(decodeURIComponent(new URL(r.url()).pathname)));
   await openLanding(page);
   await page.waitForSelector("html[data-forside-ready]");
-  const roots = page.locator("[data-fs-avatar]");
-  const n = await roots.count();
-  expect(n).toBeGreaterThanOrEqual(2);
-  for (let i = 0; i < n; i++) {
-    const root = roots.nth(i);
-    expect(["r2", "c2"]).toContain(await root.getAttribute("data-avatar-path"));
-    expect(await root.locator("[data-c2-layer]").count()).toBeGreaterThan(0);
+
+  const figures = page.locator("[data-fs-figure] img");
+  await expect(figures).toHaveCount(2);
+  for (let i = 0; i < 2; i++) {
+    const img = figures.nth(i);
+    expect(decodeURIComponent(new URL(await img.evaluate((el: HTMLImageElement) => el.currentSrc)).pathname)).toBe("/" + NORTH_STAR_V2);
+    expect(await img.evaluate((el: HTMLImageElement) => [el.naturalWidth, el.naturalHeight])).toEqual([1024, 1536]);
   }
+  expect(requested.filter((p) => p.startsWith("/assets/avatar-r2/") || p.endsWith("/avatar-render-c2.js")),
+    "the front page loaded the runtime avatar").toEqual([]);
 });
 
 test("the navigation uses page links everywhere — no in-page anchors left in any nav", async ({ page }) => {
