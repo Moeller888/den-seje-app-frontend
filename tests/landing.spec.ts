@@ -1026,6 +1026,29 @@ for (const [label, width] of [["desktop", 1280], ["tablet", 860], ["mobile", 390
   });
 }
 
+// On a phone the figure belongs to the product (owner review 2026-10-04). It used to stand alone in
+// a band between the actions and the product, so the hero read "actions → a loose figure → then the
+// product". Pinned: the product starts right under the actions, and the figure stands beside it —
+// its whole height inside the product's vertical span, touching the product's left edge.
+for (const width of [320, 390, 430]) {
+  test(`at ${width}px the figure stands with the product, which starts right under the actions`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openLanding(page);
+    await page.waitForSelector("html[data-forside-ready]");
+    const m = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      return { actions: r(".fs-hero .fs-actions"), shell: r(".fs-hero .fs-shell"), next: r(".fs-hero .fs-next"),
+               fig: r(".fs-hero .fs-avatar-hero"),
+               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+    });
+    expect(m.shell.top - m.actions.bottom, "an empty band opened between the actions and the product").toBeLessThan(80);
+    expect(m.fig.top, "the figure stands above the product, on its own").toBeGreaterThanOrEqual(m.shell.top);
+    expect(m.fig.bottom, "the figure hangs below the product").toBeLessThanOrEqual(m.next.bottom + 2);
+    expect(m.fig.right, "the figure does not reach the product").toBeGreaterThan(m.shell.left);
+    expect(m.overflow).toBeLessThanOrEqual(1);
+  });
+}
+
 // ── the hero sits directly under the header ───────────────────────────────────────────────────
 // Regression guard. The hero used to be `min-height: 100svh` + `align-items: center` on a section
 // that starts BELOW the sticky header, so the viewport height was counted twice and the leftover

@@ -906,6 +906,15 @@
   /* The figure stands ON the shell's top edge (120px wide → 180px tall), clear of the coins. */
   .fs-demo-stage { padding-left: 0; padding-top: 172px; }
   .fs-avatar-hero { top: 0; bottom: auto; left: 22px; right: auto; width: 120px; }
+
+  /* THE FRONT PAGE'S HERO ON A PHONE (owner review 2026-10-04): the figure used to stand alone in
+     a band above the product, so the hero read "actions → a loose figure → then the product".
+     Here it keeps the desktop composition in miniature instead: a narrow column on the left, the
+     figure standing at the foot of the product and stepping over its edge, and the product
+     starting right under the actions. The overlap lands on the image's own transparent margin,
+     so no UI text is covered. Scoped to .fs-hero: /for-eleven keeps its approved layout. */
+  .fs-hero .fs-demo-stage { padding-left: 92px; padding-top: 8px; }
+  .fs-hero .fs-avatar-hero { top: auto; bottom: 30px; left: -10px; width: 152px; }
   .fs-demo-caption { padding-left: 0; }
   .fs-options li { min-height: 44px; }
   .fs-next { margin-inline: 10px; }
