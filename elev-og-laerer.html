@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>For elev & lærer — Lærlig</title>
-  <meta name="description" content="Eleven møder spørgsmål, der passer til niveauet, og kan se sin egen fremgang. Læreren beholder det faglige ansvar.">
+  <title>Elev og lærer — Lærlig</title>
+  <meta name="description" content="Lærlig har én side til eleven og én til læreren — det samme produkt, set fra hver sin plads i klassen.">
 
   <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE, and now the only one. /elev-og-laerer.html
        used to serve this document too; it is a permanent 301 to the clean route today, so
@@ -16,6 +16,7 @@
 
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/perspektiv.css">
 </head>
 <body>
 
@@ -32,7 +33,6 @@
       <nav class="nav-desktop" aria-label="Primær">
         <a href="/produktet">Produktet</a>
         <a href="/saadan-virker-det">Sådan virker det</a>
-        <a href="/elev-og-laerer" aria-current="page">For elev &amp; lærer</a>
         <a href="/til-skoler">Til skoler</a>
         <a href="/priser">Priser</a>
       </nav>
@@ -48,16 +48,45 @@
     </div>
 
     <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
+      <div class="nav-doors">
+        <a class="nav-door nav-door-elev" href="/for-eleven">For eleven</a>
+        <a class="nav-door nav-door-laerer" href="/for-laereren">For læreren</a>
+      </div>
       <a href="/produktet">Produktet</a>
       <a href="/saadan-virker-det">Sådan virker det</a>
-      <a href="/elev-og-laerer" aria-current="page">For elev &amp; lærer</a>
       <a href="/til-skoler">Til skoler</a>
       <a href="/priser">Priser</a>
     </nav>
   </header>
 
+  <nav class="doors" aria-label="For eleven og for læreren">
+    <a class="door door-elev" href="/for-eleven">
+      <span class="door-label">For eleven<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-elev" aria-hidden="true">
+        <span class="door-level">Niveau <b>4</b></span>
+        <span class="door-xp"><span></span></span>
+        <span class="door-gain">+10 XP</span>
+      </span>
+      <span class="door-line">Egne opgaver, næste skridt og en fremgang, eleven selv kan se.</span>
+    </a>
+    <a class="door door-laerer" href="/for-laereren">
+      <span class="door-label">For læreren<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-laerer" aria-hidden="true">
+        <span class="door-tag is-good">Stabil</span>
+        <span class="door-tag is-up">Fremgang</span>
+        <span class="door-tag is-help">Brug for hjælp</span>
+      </span>
+      <span class="door-line">Overblik over klassen og den enkelte elev. Læreren bestemmer.</span>
+    </a>
+  </nav>
+
   <main id="main">
 
+    <!-- THE BRIDGE PAGE (owner decision 2026-10-04). /elev-og-laerer stays — no redirect — but it
+         no longer carries the two perspectives itself: /for-eleven and /for-laereren do. This page
+         says, briefly, that Lærlig has two sides, keeps the name's dictionary entry, and sends the
+         reader on. #for-eleven and #for-laereren are kept as anchors on the two doors, so links
+         made to the old halves of this page still land somewhere sensible. -->
     <section class="page-hero" aria-labelledby="page-title">
       <div class="ambient" aria-hidden="true">
         <span class="ambient-a"></span>
@@ -65,17 +94,18 @@
       <div class="grid-veil" aria-hidden="true"></div>
 
       <div class="shell page-hero-inner">
-        <p class="eyebrow">For elev &amp; lærer</p>
+        <p class="eyebrow">Elev og lærer</p>
         <h1 id="page-title">To sider af den samme time.</h1>
         <p class="lede">
-          Eleven og læreren ser ikke det samme. Her er, hvad hver af dem møder.
+          Lærlig har én side til eleven og én til læreren. Det er det samme produkt — set fra hver
+          sin plads i klassen.
         </p>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="split-title">
+    <section class="section pv-bridge" aria-labelledby="bridge-title">
       <div class="shell">
-        <h2 id="split-title" class="visually-hidden-heading">Eleven og læreren</h2>
+        <h2 id="bridge-title" class="visually-hidden-heading">Vælg din side</h2>
 
         <!-- The name, in its own words. No heading and no commentary: the entry is the point, and
              anything written under it would explain the joke. The dagger is part of the quotation —
@@ -96,26 +126,15 @@
           </figcaption>
         </figure>
 
-        <div class="split">
-          <div class="split-col">
-            <h3 class="split-head">For eleven</h3>
-            <ul class="ticks" role="list">
-              <li>Du kan se, at det rykker — og hvor langt du er nået.</li>
-              <li>Spørgsmålene følger med dig. Kan du det, går I videre. Driller noget, kommer det igen.</li>
-              <li>Et forkert svar skal hjælpe dig videre — ikke få dig til at føle dig dum.</li>
-              <li>XP, mønter og en figur, du selv former. Det er ikke pointen, men det gør det sjovere at komme tilbage.</li>
-            </ul>
-          </div>
-
-          <div class="split-col">
-            <h3 class="split-head">For læreren</h3>
-            <ul class="ticks" role="list">
-              <li>Overblik over klassen og over den enkelte elev.</li>
-              <li>Elevernes lange, skrevne svar samlet ét sted.</li>
-              <li>Du giver XP for de svar efter din egen vurdering — ikke maskinens.</li>
-              <li>Du bestemmer. Intet system tilsidesætter din vurdering i det stille.</li>
-            </ul>
-          </div>
+        <div class="pv-bridge-doors">
+          <a class="pv-bridge-door pv-bridge-elev" id="for-eleven" href="/for-eleven">
+            <span class="pv-bridge-label">For eleven<span class="door-arrow" aria-hidden="true"></span></span>
+            <span class="pv-bridge-text">Egne opgaver på eget niveau, svar med det samme og en fremgang, eleven selv kan se.</span>
+          </a>
+          <a class="pv-bridge-door pv-bridge-laerer" id="for-laereren" href="/for-laereren">
+            <span class="pv-bridge-label">For læreren<span class="door-arrow" aria-hidden="true"></span></span>
+            <span class="pv-bridge-text">Overblik over hele klassen og den enkelte elev. De lange svar vurderer du selv.</span>
+          </a>
         </div>
       </div>
     </section>
@@ -133,7 +152,9 @@
         <h2 class="footer-head">Produktet</h2>
         <a href="/produktet">Hvad Lærlig er</a>
         <a href="/saadan-virker-det">Sådan virker det</a>
-        <a href="/elev-og-laerer">For elev &amp; lærer</a>
+        <a href="/for-eleven">For eleven</a>
+        <a href="/for-laereren">For læreren</a>
+        <a href="/elev-og-laerer">Elev og lærer</a>
       </nav>
 
       <nav class="footer-nav" aria-label="Sidefod: skoler">

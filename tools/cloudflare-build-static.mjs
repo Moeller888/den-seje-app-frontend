@@ -37,12 +37,12 @@ const OUT = join(REPO, OUT_DIR_NAME);
 // `teacher.html` and `reset-password.html` are not optional: js/login.js routes teachers to the
 // first by role, and sets Supabase's password-recovery `redirectTo` to the second. Dropping either
 // breaks a live flow, which is why the reference check below is a test and not a code review step.
-// The seven PUBLIC website pages — `landing.html` plus the six information pages — are likewise
+// The nine PUBLIC website pages — `landing.html` plus the eight information pages — are likewise
 // not optional: each one is the target of a rewrite in REDIRECT_RULES below, and a missing file
 // would leave its clean route rewriting to nothing. `validateOutput()` checks that link both ways.
 export const RUNTIME_HTML = Object.freeze([
   "achievements.html", "admin.html", "avatar.html", "collection.html", "docs.html",
-  "elev-og-laerer.html",
+  "elev-og-laerer.html", "for-eleven.html", "for-laereren.html",
   "hub.html", "index.html", "landing.html", "leaderboard.html", "login.html", "om-laerlig.html",
   "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html",
   "priser.html", "produktet.html", "reset-password.html", "saadan-virker-det.html", "shop.html",
@@ -63,8 +63,8 @@ export const ASSET_DIRS = Object.freeze([
 export const MANDATORY = Object.freeze([
   "index.html", "login.html", "hub.html", "landing.html", "docs.html", "404.html", "_redirects",
   "sitemap.xml",
-  "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html", "til-skoler.html",
-  "priser.html", "om-laerlig.html",
+  "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html", "for-eleven.html",
+  "for-laereren.html", "til-skoler.html", "priser.html", "om-laerlig.html",
   "app.js", "style.css", "supabaseClient.js", "css/theme.css", "css/landing.css", "js/landing.js",
 ]);
 
@@ -108,6 +108,8 @@ export const REDIRECT_RULES = Object.freeze([
   "/produktet /produktet.html 200",
   "/saadan-virker-det /saadan-virker-det.html 200",
   "/elev-og-laerer /elev-og-laerer.html 200",
+  "/for-eleven /for-eleven.html 200",
+  "/for-laereren /for-laereren.html 200",
   "/til-skoler /til-skoler.html 200",
   "/priser /priser.html 200",
   "/om-laerlig /om-laerlig.html 200",
@@ -134,7 +136,7 @@ export const ROUTE_TO_FILE = Object.freeze(Object.fromEntries(
 // boundary is the auth guard and RLS — this list is about search hygiene, not access control.
 export const PUBLIC_HTML = Object.freeze([
   "landing.html", "produktet.html", "saadan-virker-det.html", "elev-og-laerer.html",
-  "til-skoler.html", "priser.html", "om-laerlig.html",
+  "for-eleven.html", "for-laereren.html", "til-skoler.html", "priser.html", "om-laerlig.html",
 ]);
 export const INTERNAL_HTML = Object.freeze([
   // student app
@@ -367,7 +369,7 @@ export function notFoundHtml() {
 // Parsed with a regex rather than a DOM: the check runs inside a build that must work with no
 // dependencies installed (Cloudflare sets SKIP_DEPENDENCY_INSTALL=1), and Node has no HTML
 // parser. The regex is deliberately loose about ATTRIBUTE ORDER and quoting so it cannot be
-// fooled by a tag written differently from the seven that exist today — a <link> is treated as
+// fooled by a tag written differently from the ones that exist today — a <link> is treated as
 // canonical if it carries rel=canonical in any position, and its href is then read out.
 const LINK_TAG = /<link\b[^>]*>/gi;
 const isCanonicalLink = (tag) => /\brel\s*=\s*["']?canonical\b/i.test(tag);
@@ -419,7 +421,7 @@ export function validateCanonicals(outDir) {
     }
   }
 
-  // The fourth agreement: the canonical SET and the sitemap must be the same seven URLs.
+  // The fourth agreement: the canonical SET and the sitemap must be the same URLs.
   const canonicals = PUBLIC_ROUTES.map((route) => canonicalUrlFor(ROUTE_TO_FILE[route]));
   const sitemap = sitemapUrls();
   if (JSON.stringify(canonicals) !== JSON.stringify(sitemap)) {
@@ -442,7 +444,7 @@ export function validateCanonicals(outDir) {
 //      table produces.
 //
 // Node ships no XML parser and the project's test stack does not carry one; taking on a dependency
-// to read seven <loc> elements would be a larger change than the thing it validates. The two
+// to read the <loc> elements would be a larger change than the thing it validates. The two
 // checks together are stronger than either alone: (1) catches a generator emitting plausible
 // nonsense, (2) catches a document edited after it was generated.
 export function validateSitemap(outDir) {

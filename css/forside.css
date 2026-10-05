@@ -1,0 +1,949 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÆRLIG — the front page (landing.html only)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Scope:   loaded by landing.html ONLY, after css/landing.css. The header, footer,
+            focus ring, skip link and mobile menu stay exactly as landing.css draws
+            them for every public page. Everything here is prefixed `fs-` (or scoped
+            under `.fs-hero`) so the six information pages cannot be affected.
+
+   Scenes:  the page is a sequence of full-bleed scenes that alternate between the
+            app's own dark navy ("inside Lærlig") and a cool light surface ("the
+            room around it": the premise and the teacher's desk). The colour of a
+            scene is information: dark = what the student sees, light = what the
+            adults see.
+
+   Colour:  app tokens from css/theme.css (navy, panel, XP green, coin gold) plus the
+            landing palette from landing.css. Two landing-local light values are
+            declared below; nothing leaks into the app's token namespace.
+
+   Motion:  one orchestrated moment — the hero demo plays once (js/forside.js).
+            Everything else is still. prefers-reduced-motion removes it entirely.
+
+   Fonts:   system stack only (inherited from landing.css). No webfont, no CDN.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.forside {
+  --fs-paper:      #eef1f8;   /* the light scenes */
+  --fs-paper-2:    #e2e7f3;   /* a quiet step down on paper */
+  --fs-ink:        #12122a;   /* = --bg-main, used as text on paper */
+  --fs-ink-soft:   #4a4f72;   /* secondary text on paper — 7.4:1 on --fs-paper */
+  --fs-blue-ink:   #1565c0;   /* accent on paper — 5.1:1 on --fs-paper */
+  --fs-xp:         var(--success);       /* #4caf50 */
+  --fs-xp-text:    var(--success-text);  /* #66bb6a */
+  --fs-coin:       var(--coin);          /* #ffd700 */
+  --fs-wrong:      var(--error-bright);  /* #ef5350 */
+  --fs-radius-ui:  12px;      /* the app's own control radius */
+  --fs-radius-pan: 16px;      /* the app's own card radius */
+  --fs-scene-pad:  clamp(88px, 11vw, 160px);
+}
+
+/* Over the light scenes the shared translucent header turns grey; on this page the
+   scrolled header is kept near-opaque navy so it reads the same on every scene. */
+.forside .site-header.is-scrolled { background: rgba(18, 18, 42, .94); }
+
+/* Anchor target for the hero CTA. */
+.forside #naeste-skridt { scroll-margin-top: 72px; }
+
+/* ── Shared type ──────────────────────────────────────────────────────────── */
+
+.fs-scene { position: relative; padding-block: var(--fs-scene-pad); overflow: hidden; }
+
+/* The statement type: the largest thing on the page after the h1. Each line is
+   its own block so the break is authored, not left to the viewport. */
+.fs-statement {
+  max-width: none;
+  font-size: clamp(2.5rem, 6.4vw, 5.6rem);
+  font-weight: 760;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.fs-statement span { display: block; }
+
+.fs-big {
+  max-width: 16ch;
+  font-size: clamp(2.3rem, 5vw, 4.25rem);
+  font-weight: 740;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+
+.fs-lede {
+  margin-top: 22px;
+  max-width: 44ch;
+  font-size: clamp(1.125rem, 1.6vw, 1.3125rem);
+  line-height: 1.55;
+  color: var(--l-dim);
+  text-wrap: pretty;
+}
+.fs-body {
+  margin-top: 18px;
+  max-width: 54ch;
+  font-size: 1.0625rem;
+  color: var(--l-soft);
+  text-wrap: pretty;
+}
+.fs-kicker {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--l-accent-soft);
+  margin-bottom: 14px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.fs-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+.fs-hero .fs-actions { margin-top: 30px; }
+
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  min-width: 44px;
+  padding: 0 26px;
+  border-radius: var(--fs-radius-ui);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 160ms var(--l-ease), border-color 160ms var(--l-ease),
+              color 160ms var(--l-ease), transform 160ms var(--l-ease);
+}
+.fs-btn-primary {
+  background: var(--l-accent-deep);
+  color: #fff;
+  border: 1.5px solid transparent;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .18) inset, 0 14px 30px -16px rgba(2, 136, 209, .8);
+}
+.fs-btn-quiet {
+  background: transparent;
+  color: var(--l-dim);
+  border: 1.5px solid var(--border-btn);
+}
+@media (hover: hover) {
+  .fs-btn-primary:hover { background: var(--l-accent); transform: translateY(-1px); }
+  .fs-btn-quiet:hover   { color: var(--l-bright); border-color: rgba(144, 202, 249, .55); }
+}
+.fs-btn:focus-visible { outline: 3px solid var(--l-accent-soft); outline-offset: 3px; }
+
+/* ═══ 1. HERO ═══════════════════════════════════════════════════════════════ */
+
+/* The front page's hero sits under the header AND the two doors, so it starts a little
+   closer than landing.css's 40px: 32px from the doors' bottom edge to the eyebrow (a tested
+   contract). Together with the tighter type below, that keeps the headline, the primary
+   action and the top of the product slice inside a 1440×900 first viewport. */
+.fs-hero {
+  display: block;
+  padding-top: 32px;
+  padding-bottom: clamp(72px, 9vw, 128px);
+  background:
+    radial-gradient(ellipse 60% 70% at 78% 40%, rgba(30, 32, 96, .75), transparent 70%),
+    var(--l-bg);
+}
+
+.fs-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: clamp(32px, 4vw, 56px);
+  align-items: start;
+}
+
+.fs-hero-copy { padding-top: 0; }
+
+.fs-eyebrow {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.fs-hero h1 {
+  margin-inline: 0;
+  max-width: 11ch;
+  font-size: clamp(2.75rem, 5.4vw, 4.75rem);
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.fs-hero-sub {
+  margin-top: 22px;
+  max-width: 30ch;
+  font-size: clamp(1.15rem, 1.7vw, 1.375rem);
+  line-height: 1.5;
+  color: var(--l-dim);
+  text-wrap: pretty;
+}
+
+/* ── The product slice ────────────────────────────────────────────────────── */
+
+.fs-demo { position: relative; margin: 0; }
+
+/* The stage reserves a column on the left for the standing figure, which overlaps
+   the shell's edge — the avatar steps out of the product. */
+.fs-demo-stage {
+  position: relative;
+  padding-left: clamp(110px, 15vw, 210px);
+  padding-top: 8px;
+}
+
+.fs-avatar {
+  position: relative;
+  aspect-ratio: 2 / 3;               /* the R2 served canvas is 512×768 */
+  isolation: isolate;
+}
+.fs-avatar::before {                  /* the floor the figure stands on */
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 1.5%;
+  height: 5%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, .55), transparent 70%);
+  z-index: -1;
+}
+.fs-avatar-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.fs-avatar-hero {
+  position: absolute;
+  left: 0;
+  bottom: 34px;
+  width: clamp(170px, 22vw, 300px);
+  z-index: 3;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .45));
+}
+
+.fs-shell {
+  position: relative;
+  z-index: 2;
+  padding: 16px 18px 20px;
+  border-radius: 22px;
+  background: var(--l-bg);
+  border: 1px solid var(--l-border);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .05) inset,
+    0 40px 80px -40px rgba(0, 0, 0, .8),
+    0 0 0 8px rgba(26, 26, 62, .55);
+}
+
+.fs-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.fs-topic {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-btn);
+  color: var(--l-dim);
+  font-size: .8125rem;
+}
+.fs-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border-radius: 20px;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-btn);
+  color: var(--fs-coin);
+  font-size: .875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.fs-coin {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3a0, var(--fs-coin) 55%, #b38f00);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .25);
+  flex-shrink: 0;
+}
+
+.fs-identity {
+  padding: 10px 14px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--fs-radius-ui);
+  background: var(--l-panel);
+  border: 1px solid var(--l-border);
+}
+.fs-level-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.fs-level { font-size: .8125rem; color: var(--l-dim); }
+.fs-level b { font-size: 1.25rem; color: var(--l-bright); margin-left: 2px; }
+.fs-xp-label { font-size: .75rem; color: var(--l-soft); font-variant-numeric: tabular-nums; }
+
+.fs-xp {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--xp-track);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .2);
+}
+.fs-xp-fill {
+  display: block;
+  height: 100%;
+  width: calc(var(--p, 0) * 100%);
+  border-radius: 4px;
+  background: var(--fs-xp);
+  transition: width 600ms var(--l-ease);
+}
+
+.fs-card {
+  padding: 20px 18px 16px;
+  margin-bottom: 10px;
+  border-radius: var(--fs-radius-pan);
+  background: var(--l-panel);
+  border: 1px solid var(--l-border);
+  border-top: 3px solid var(--l-accent-deep);
+}
+.fs-task { font-size: 1.25rem; line-height: 1.45; color: var(--l-bright); }
+.fs-feedback {
+  margin-top: 10px;
+  min-height: 1.4em;
+  font-size: .875rem;
+  font-weight: 700;
+  color: var(--fs-xp-text);
+  transition: opacity 240ms var(--l-ease);
+}
+
+.fs-options { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fs-options li {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--fs-radius-ui);
+  background: var(--btn-bg);
+  border: 1.5px solid var(--border-btn);
+  color: var(--l-dim);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 220ms var(--l-ease), border-color 220ms var(--l-ease), color 220ms var(--l-ease);
+}
+/* The app's own correct-answer state: --correct-bg + green edge. */
+.fs-options li.is-correct {
+  background: var(--correct-bg);
+  border-color: var(--fs-xp);
+  color: var(--l-bright);
+}
+
+.fs-gain {
+  position: absolute;
+  right: 18px;
+  top: -16px;
+  display: flex;
+  gap: 8px;
+  transition: opacity 260ms var(--l-ease), transform 260ms var(--l-ease);
+}
+.fs-gain span {
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: .8125rem;
+  font-weight: 700;
+  background: var(--l-bg-deep);
+  border: 1px solid var(--l-border);
+}
+.fs-gain-xp   { color: var(--fs-xp-text); }
+.fs-gain-coin { color: var(--fs-coin); }
+
+/* The step that comes next — the whole point, attached under the product. */
+.fs-next {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: -6px 18px 0;
+  padding: 18px 18px 14px;
+  border-radius: 0 0 var(--fs-radius-pan) var(--fs-radius-pan);
+  background: rgba(2, 136, 209, .14);
+  border: 1px solid rgba(144, 202, 249, .28);
+  border-top: 0;
+  transition: opacity 320ms var(--l-ease), transform 320ms var(--l-ease);
+}
+/* Two stacked lines: the message first ("Godt klaret!"), the explanation under it. */
+.fs-next-label { font-size: 1.0625rem; font-weight: 700; color: var(--l-bright); }
+.fs-next-text  { font-size: .9375rem; color: var(--l-text); }
+
+.fs-demo-caption {
+  margin-top: 16px;
+  padding-left: clamp(110px, 15vw, 210px);
+  font-size: .875rem;
+  color: var(--l-soft);
+  max-width: 60ch;
+}
+
+/* ── The demo's start state (set by js/forside.js, removed step by step) ──── */
+.fs-demo.is-playing .fs-options li.is-correct:not(.is-picked) {
+  background: var(--btn-bg);
+  border-color: var(--border-btn);
+  color: var(--l-dim);
+}
+.fs-demo.is-playing .fs-options li.is-picked:not(.is-confirmed) {
+  background: var(--btn-bg-hover);
+  border-color: var(--l-accent-soft);
+  color: var(--l-bright);
+}
+.fs-demo.is-playing .fs-feedback:not(.is-shown) { opacity: 0; }
+.fs-demo.is-playing .fs-gain:not(.is-shown)     { opacity: 0; transform: translateY(6px); }
+.fs-demo.is-playing .fs-next:not(.is-shown)     { opacity: 0; transform: translateY(-8px); }
+
+/* ═══ 2. THE PREMISE ════════════════════════════════════════════════════════ */
+
+.fs-premise {
+  background: var(--fs-paper);
+  color: var(--fs-ink);
+}
+.fs-premise-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "statement statement"
+    "question  class";
+  gap: clamp(40px, 6vw, 80px) clamp(32px, 6vw, 96px);
+  align-items: end;
+}
+.fs-premise .fs-statement { grid-area: statement; color: var(--fs-ink); }
+.fs-premise .fs-statement span + span { color: var(--fs-blue-ink); }
+
+.fs-question {
+  grid-area: question;
+  max-width: 22ch;
+  font-size: clamp(1.4rem, 2.6vw, 2.125rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--fs-ink-soft);
+  text-wrap: balance;
+}
+
+/* 24 students, 6 × 4. Each is a column with a marker at its own height: one class,
+   twenty-four starting points. */
+.fs-class {
+  grid-area: class;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px 12px;
+  align-self: center;
+}
+.fs-class span {
+  position: relative;
+  display: block;
+  height: clamp(52px, 6vw, 76px);
+  border-radius: 6px;
+  background: var(--fs-paper-2);
+}
+.fs-class span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--h) * 100% - 7px);
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--fs-ink);
+}
+
+/* ═══ 3. ADAPTIVITY ═════════════════════════════════════════════════════════ */
+
+.fs-adapt { background: var(--l-bg); }
+
+.fs-head { max-width: 760px; }
+.fs-head h2 { max-width: 20ch; font-size: clamp(2rem, 4vw, 3.25rem); font-weight: 720; letter-spacing: -0.025em; }
+
+.fs-flow {
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.1fr) minmax(0, 1.1fr);
+  gap: 0;
+  margin-top: clamp(48px, 6vw, 80px);
+  counter-reset: stage;
+}
+
+.fs-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 clamp(16px, 2.4vw, 32px);
+  border-left: 1px solid var(--l-border);
+}
+.fs-stage:first-child { padding-left: 0; border-left: 0; }
+
+.fs-stage-name {
+  counter-increment: stage;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 3.2em;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--l-bright);
+}
+.fs-stage-name::before {
+  content: counter(stage);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--l-accent);
+  color: var(--l-accent-soft);
+  font-size: .875rem;
+  font-weight: 700;
+  transform: translateY(-2px);
+}
+
+.fs-mini-card {
+  flex: none;
+  padding: 20px 18px;
+  border-radius: var(--fs-radius-pan);
+  background: var(--l-panel);
+  border: 1px solid var(--l-border);
+  border-top: 3px solid var(--l-accent-deep);
+}
+.fs-mini-card p { margin-top: 14px; font-size: 1.25rem; color: var(--l-bright); }
+
+/* Two lanes, one per student. Lane A (mastery) is green-edged, lane B (needs it
+   again) is blue-edged — the colours mean the same thing in every section below. */
+.fs-lane {
+  flex: 1;
+  padding: 16px 18px;
+  border-radius: var(--fs-radius-ui);
+  background: var(--l-panel);
+  border-left: 3px solid var(--fs-xp);
+}
+.fs-lane-b { border-left-color: var(--l-accent-soft); }
+.fs-who { display: block; font-size: .875rem; font-weight: 700; color: var(--l-soft); margin-bottom: 6px; }
+.fs-lane p { color: var(--l-text); font-size: 1rem; line-height: 1.5; }
+
+.fs-answer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 28px;
+  margin-right: 10px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+}
+.fs-answer.is-right { background: var(--correct-bg); color: var(--fs-xp-text); }
+.fs-answer.is-wrong { background: var(--error-bg); color: var(--fs-wrong); }
+
+.fs-maxim {
+  margin-top: clamp(48px, 6vw, 80px);
+  max-width: 26ch;
+  font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  font-weight: 680;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--l-bright);
+  text-wrap: balance;
+}
+
+/* ═══ 4. DET SVÆRE KOMMER IGEN ══════════════════════════════════════════════ */
+
+.fs-return { background: var(--l-bg-deep); }
+.fs-return-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+
+.fs-tracks { display: grid; gap: 34px; }
+.fs-track-name {
+  display: block;
+  margin-bottom: 12px;
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--l-soft);
+}
+.fs-track-line {
+  position: relative;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+/* The rail the moments sit on. */
+.fs-track-line::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 0;
+  top: 7px;
+  height: 2px;
+  background: var(--l-border);
+}
+.fs-track-line li {
+  position: relative;
+  padding-top: 28px;
+  font-size: .9375rem;
+  line-height: 1.4;
+}
+.fs-track-line li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--l-bg-deep);
+  border: 2px solid var(--border-btn);
+}
+.fs-track-line b { display: block; color: var(--l-bright); font-weight: 650; }
+.fs-track-line span { color: var(--l-soft); }
+
+.fs-track-class .fs-track-line span { color: var(--l-dim); }
+
+/* Malik's track: the same task, three times. Red where it went wrong, green where it sat. */
+.fs-track-student .fs-track-line::before {
+  background: linear-gradient(90deg, var(--fs-wrong) 0%, var(--l-accent-soft) 30%, var(--fs-xp) 100%);
+  opacity: .7;
+}
+.fs-track-student li.is-wrong::before { border-color: var(--fs-wrong); background: var(--error-bg); }
+.fs-track-student li.is-right::before { border-color: var(--fs-xp); background: var(--correct-bg); }
+
+/* ═══ 5. ELEVEN ═════════════════════════════════════════════════════════════ */
+
+.fs-student {
+  background:
+    radial-gradient(ellipse 46% 64% at 26% 52%, rgba(30, 32, 96, .95), transparent 72%),
+    var(--l-bg);
+}
+.fs-student-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+
+.fs-student-figure { position: relative; display: flex; justify-content: center; }
+.fs-avatar-large {
+  width: min(100%, 380px);
+  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, .5));
+}
+
+.fs-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--fs-radius-ui);
+  background: rgba(26, 26, 62, .92);
+  border: 1px solid var(--l-border);
+  box-shadow: 0 16px 30px -18px rgba(0, 0, 0, .8);
+  font-size: .875rem;
+  color: var(--l-dim);
+}
+.fs-chip-level { left: 0; bottom: 16%; min-width: 170px; flex-direction: column; align-items: stretch; gap: 8px; }
+.fs-chip-level .fs-xp { width: 100%; }
+.fs-chip-coins { right: 0; top: 30%; color: var(--fs-coin); font-weight: 700; }
+
+.fs-feedback-example { margin: 30px 0 0; }
+.fs-feedback-example blockquote {
+  margin: 0;
+  padding: 16px 18px;
+  max-width: 46ch;
+  border-radius: 10px;
+  background: var(--l-bg-deep);
+  border-left: 3px solid var(--l-accent-deep);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--l-text);
+}
+.fs-feedback-example figcaption {
+  margin-top: 16px;
+  max-width: 44ch;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--l-bright);
+}
+
+.fs-types {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 28px;
+}
+.fs-types li {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-btn);
+  font-size: .875rem;
+  color: var(--l-dim);
+}
+
+/* ═══ 6. LÆREREN ════════════════════════════════════════════════════════════ */
+
+.fs-teacher { background: var(--fs-paper); color: var(--fs-ink); }
+.fs-teacher .fs-kicker { color: var(--fs-blue-ink); }
+.fs-teacher h2 { color: var(--fs-ink); }
+
+.fs-teacher-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+
+.fs-points { list-style: none; margin-top: 34px; display: grid; gap: 0; max-width: 46ch; }
+.fs-points li {
+  padding: 16px 0;
+  border-top: 1px solid #cdd4e6;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--fs-ink);
+}
+.fs-points li:last-child { border-bottom: 1px solid #cdd4e6; }
+
+/* The desk: two sheets, slightly offset — calm, paper-like, not a game screen. */
+.fs-desk { position: relative; display: grid; gap: 18px; }
+.fs-panel {
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #d5dbea;
+  box-shadow: 0 24px 50px -32px rgba(18, 18, 42, .45);
+}
+.fs-panel-review { margin-left: clamp(0px, 6vw, 72px); margin-top: -40px; position: relative; }
+.fs-panel-title {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fs-ink);
+}
+.fs-panel-title span { color: var(--fs-ink-soft); font-weight: 600; }
+
+.fs-roster { list-style: none; display: grid; gap: 2px; }
+.fs-roster li {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid #edf0f7;
+  font-size: .9375rem;
+}
+.fs-name { color: var(--fs-ink); font-weight: 600; }
+.fs-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: #e6eaf4;
+  overflow: hidden;
+}
+.fs-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p) * 100%);
+  border-radius: 3px;
+  background: var(--fs-ink-soft);
+}
+.fs-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fs-tag.is-good { background: #e3f3e5; color: #1f6a2a; }
+.fs-tag.is-up   { background: #e2edfb; color: #134f99; }
+.fs-tag.is-help { background: #fbe9e6; color: #9b2c1f; }
+
+.fs-review-task { font-size: .9375rem; color: var(--fs-ink-soft); }
+.fs-review-answer {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--fs-paper);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--fs-ink);
+}
+.fs-review-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.fs-review-btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: var(--fs-ink);
+  color: #fff;
+  font-size: .9375rem;
+  font-weight: 650;
+}
+.fs-review-note { font-size: .875rem; color: var(--fs-ink-soft); }
+
+/* ═══ 7. SKOLEN ═════════════════════════════════════════════════════════════ */
+
+.fs-trust { background: var(--l-bg); padding-block: clamp(80px, 9vw, 128px); }
+.fs-trust-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
+}
+/* 16ch, not 12: at 12ch "Det, skolen kan" could never share a line, so the balanced wrap left
+   "Det," alone at every width. 16ch fits it, keeping the heading to two lines without letting the
+   column run wide; the grid column still caps it on narrow desktops. */
+.fs-trust h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; max-width: 16ch; }
+
+.fs-principles {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px clamp(24px, 4vw, 56px);
+}
+.fs-principles li { padding-top: 18px; border-top: 2px solid var(--l-border); }
+.fs-principles h3 {
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--l-bright);
+  margin-bottom: 8px;
+}
+.fs-principles p { font-size: 1rem; color: var(--l-soft); }
+
+/* ═══ 8. AFSLUTNING ═════════════════════════════════════════════════════════ */
+
+.fs-closing {
+  background:
+    radial-gradient(ellipse 50% 60% at 80% 50%, rgba(2, 136, 209, .16), transparent 70%),
+    var(--l-bg-deep);
+  border-top: 1px solid rgba(42, 42, 90, .6);
+}
+.fs-closing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.fs-closing .fs-statement { font-size: clamp(2.3rem, 5.2vw, 4.5rem); color: var(--l-bright); }
+.fs-closing .fs-statement span + span { color: var(--l-accent-soft); }
+
+/* Section 2's class, again — now every student has a step of its own drawn above
+   their marker: same room, different next steps. */
+.fs-class-steps { grid-area: auto; }
+.fs-class-steps span { background: rgba(42, 42, 90, .55); }
+.fs-class-steps span::after { background: var(--l-accent-soft); }
+.fs-class-steps span::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--h) * 100%);
+  width: 2px;
+  height: calc(var(--s) * 100% + 10px);
+  margin-left: -1px;
+  background: linear-gradient(to top, var(--l-accent-soft), transparent);
+  opacity: .8;
+}
+
+/* ═══ RESPONSIVE ════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1000px) {
+  .fs-flow { grid-template-columns: 1fr 1fr; row-gap: 40px; }
+  .fs-stage-work { grid-column: 1 / -1; padding: 0; border: 0; }
+  .fs-stage-work .fs-mini-card { max-width: 420px; }
+  .fs-stage-see { padding-left: 0; border-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .fs-hero-grid,
+  .fs-return-grid,
+  .fs-student-grid,
+  .fs-teacher-grid,
+  .fs-trust-grid,
+  .fs-closing-grid { grid-template-columns: 1fr; }
+
+  .fs-hero h1 { max-width: 13ch; }
+
+  .fs-premise-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "statement" "class" "question";
+  }
+  .fs-class { max-width: 520px; }
+
+  .fs-student-figure { order: -1; }
+  .fs-panel-review { margin-left: 24px; margin-top: -24px; }
+}
+
+@media (max-width: 640px) {
+  .fs-actions { flex-direction: column; align-items: stretch; }
+  .fs-btn { width: 100%; }
+
+  /* The figure stands ON the shell's top edge (120px wide → 180px tall), clear of the coins. */
+  .fs-demo-stage { padding-left: 0; padding-top: 172px; }
+  .fs-avatar-hero { top: 0; bottom: auto; left: 22px; right: auto; width: 120px; }
+
+  /* THE FRONT PAGE'S HERO ON A PHONE (owner review 2026-10-04): the figure used to stand alone in
+     a band above the product, so the hero read "actions → a loose figure → then the product".
+     Here it keeps the desktop composition in miniature instead: a narrow column on the left, the
+     figure standing at the foot of the product and stepping over its edge, and the product
+     starting right under the actions. The overlap lands on the image's own transparent margin,
+     so no UI text is covered. Scoped to .fs-hero: /for-eleven keeps its approved layout. */
+  .fs-hero .fs-demo-stage { padding-left: 92px; padding-top: 8px; }
+  .fs-hero .fs-avatar-hero { top: auto; bottom: 30px; left: -10px; width: 152px; }
+  .fs-demo-caption { padding-left: 0; }
+  .fs-options li { min-height: 44px; }
+  .fs-next { margin-inline: 10px; }
+
+  .fs-flow { grid-template-columns: 1fr; row-gap: 32px; }
+  .fs-stage { padding: 0; border: 0; }
+  .fs-stage-name { min-height: 0; }
+
+  .fs-track-line { gap: 8px; font-size: .875rem; }
+  .fs-track-line li { font-size: .875rem; }
+
+  .fs-chip-level { min-width: 140px; bottom: 10%; }
+  .fs-avatar-large { width: min(78%, 300px); }
+
+  .fs-principles { grid-template-columns: 1fr; gap: 24px; }
+
+  .fs-class { gap: 10px 8px; }
+  .fs-class span { height: 48px; }
+  .fs-class span::after { width: 12px; height: 12px; margin-left: -6px; bottom: calc(var(--h) * 100% - 6px); }
+
+  .fs-roster li { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 10px; }
+  .fs-panel { padding: 18px; }
+  .fs-panel-review { margin-left: 12px; }
+}
+
+/* ═══ REDUCED MOTION ════════════════════════════════════════════════════════
+   landing.css already zeroes every transition and animation globally under this
+   query. The demo never enters its start state either (js/forside.js checks the
+   same query), so the visitor sees the finished moment, still. */
+@media (prefers-reduced-motion: reduce) {
+  .fs-btn-primary:hover { transform: none; }
+}

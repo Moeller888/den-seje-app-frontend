@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>For eleven — Lærlig</title>
+  <meta name="description"
+        content="Eleven arbejder på sit eget niveau: én opgave ad gangen, svar med det samme, en forklaring når det går galt — og en fremgang, eleven selv kan se.">
+
+  <!-- THE CANONICAL ADDRESS IS THE CLEAN ROUTE. /for-eleven.html is a
+       permanent 301 to the clean route, so
+       there is one preferred URL per public page. Names the same URL sitemap.xml lists; derived
+       from the routing table in tools/cloudflare-build-static.mjs and verified on every build. -->
+  <link rel="canonical" href="https://lærlig.dk/for-eleven">
+
+  <!-- The two perspective pages reuse the front page's product components (css/forside.css:
+       the app shell, the desk panels, the figure) so the product looks the same everywhere it is
+       shown. css/perspektiv.css holds only what these pages add. -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/forside.css">
+  <link rel="stylesheet" href="css/perspektiv.css">
+</head>
+<body class="forside pv pv-elev">
+
+  <a class="skip-link" href="#main">Spring til indhold</a>
+
+  <div id="top-sentinel" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <div class="shell header-inner">
+      <a class="wordmark" href="/">
+        <span class="wordmark-text">Lærlig</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Primær">
+        <a href="/produktet">Produktet</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="login-link" href="login.html">Log ind</a>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-mobile" aria-label="Åbn menu">
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+          <span class="nav-toggle-bar" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="nav-mobile" id="nav-mobile" aria-label="Mobilmenu" hidden>
+      <div class="nav-doors">
+        <a class="nav-door nav-door-elev" href="/for-eleven" aria-current="page">For eleven</a>
+        <a class="nav-door nav-door-laerer" href="/for-laereren">For læreren</a>
+      </div>
+      <a href="/produktet">Produktet</a>
+      <a href="/saadan-virker-det">Sådan virker det</a>
+      <a href="/til-skoler">Til skoler</a>
+      <a href="/priser">Priser</a>
+    </nav>
+  </header>
+
+  <nav class="doors" aria-label="For eleven og for læreren">
+    <a class="door door-elev" href="/for-eleven" aria-current="page">
+      <span class="door-label">For eleven<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-elev" aria-hidden="true">
+        <span class="door-level">Niveau <b>4</b></span>
+        <span class="door-xp"><span></span></span>
+        <span class="door-gain">+10 XP</span>
+      </span>
+      <span class="door-line">Egne opgaver, næste skridt og en fremgang, eleven selv kan se.</span>
+    </a>
+    <a class="door door-laerer" href="/for-laereren">
+      <span class="door-label">For læreren<span class="door-arrow" aria-hidden="true"></span></span>
+      <span class="door-cue door-cue-laerer" aria-hidden="true">
+        <span class="door-tag is-good">Stabil</span>
+        <span class="door-tag is-up">Fremgang</span>
+        <span class="door-tag is-help">Brug for hjælp</span>
+      </span>
+      <span class="door-line">Overblik over klassen og den enkelte elev. Læreren bestemmer.</span>
+    </a>
+  </nav>
+
+  <main id="main">
+
+    <!-- ══ 1. HERO ═══════════════════════════════════════════════════════════
+         The student's own surface: the app's dark navy. The product slice shows the moment the
+         front page does NOT — a wrong answer, and what Lærlig does with it. Static markup, no
+         backend, no script. The numbers are the front page's moment one step earlier: 312 XP at
+         level 4 (225–350 XP → 87/125 = .696), 143 coins.
+         THE FIGURE IS THE NORTH STAR v2 BRAND IMAGE (D-124), not the runtime avatar — the same
+         file as the front page; the caption under section 5 says so in plain words. -->
+    <section class="pv-hero" aria-labelledby="page-title">
+      <div class="shell pv-hero-grid">
+        <div class="pv-hero-copy">
+          <p class="fs-kicker">For eleven</p>
+          <h1 id="page-title">Eleven arbejder på sit eget niveau.</h1>
+          <p class="fs-lede">
+            Lærlig tilpasser næste skridt til den enkelte elev. Én opgave ad gangen, svar med det
+            samme — og en fremgang, eleven selv kan følge.
+          </p>
+          <div class="fs-actions">
+            <a class="fs-btn fs-btn-primary" href="login.html">Log ind</a>
+            <a class="fs-btn fs-btn-quiet" href="/for-laereren">Se lærerens side</a>
+          </div>
+        </div>
+
+        <figure class="pv-moment" aria-labelledby="moment-caption">
+          <div class="fs-demo-stage pv-moment-stage" aria-hidden="true">
+            <div class="fs-avatar fs-avatar-hero" data-fs-figure>
+              <img class="fs-avatar-layer" src="assets/avatar/reference/Northstar%20Master%20v2.png"
+                   alt="" width="1024" height="1536" decoding="async" fetchpriority="high">
+            </div>
+
+            <div class="fs-shell">
+              <div class="fs-topbar">
+                <span class="fs-topic">Brøker</span>
+                <span class="fs-coins"><span class="fs-coin"></span>143</span>
+              </div>
+
+              <div class="fs-identity">
+                <div class="fs-level-row">
+                  <span class="fs-level">Niveau <b>4</b></span>
+                  <span class="fs-xp-label">312 XP</span>
+                </div>
+                <div class="fs-xp"><span class="fs-xp-fill" style="--p: .696"></span></div>
+              </div>
+
+              <div class="fs-card">
+                <p class="fs-task">Hvad er 3/4 af 20?</p>
+                <p class="fs-feedback pv-feedback-help">Ikke helt. Del 20 i 4 lige store dele — og tag 3 af dem.</p>
+              </div>
+
+              <ul class="fs-options">
+                <li>12</li>
+                <li>15</li>
+                <li>16</li>
+                <li class="is-wrong">5</li>
+              </ul>
+            </div>
+
+            <div class="fs-next pv-next-again">
+              <span class="fs-next-label">Den kommer igen om lidt.</span>
+              <span class="fs-next-text">Først en forklaring. Så prøver du igen.</span>
+            </div>
+          </div>
+          <figcaption id="moment-caption" class="fs-demo-caption">
+            Et forkert svar i Lærlig: eleven får en forklaring med det samme, og opgaven kommer
+            igen om få minutter.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ══ 2. EGNE OPGAVER ═══════════════════════════════════════════════════
+         Light surface for a scene change. The three task kinds are shown as the student meets
+         them — fragments of real UI, dealt like sheets on a desk — not as feature cards. -->
+    <section class="fs-scene pv-tasks" aria-labelledby="tasks-title">
+      <div class="shell pv-tasks-grid">
+        <div class="pv-tasks-copy">
+          <h2 id="tasks-title" class="fs-big">Egne opgaver. Ét skridt ad gangen.</h2>
+          <p class="fs-lede">
+            Eleven ser én opgave ad gangen — den, der passer til, hvor eleven er lige nu. Ikke
+            klassens gennemsnit. Ikke den samme side som sidemanden.
+          </p>
+          <p class="fs-body">
+            Nogle opgaver vælger man et svar til. Andre skriver man selv: et tal, et ord eller et
+            længere svar med egne ord.
+          </p>
+        </div>
+
+        <ol class="pv-sheets" aria-label="Tre slags opgaver i Lærlig">
+          <li class="pv-sheet pv-sheet-choice">
+            <span class="pv-sheet-kind">Vælg et svar</span>
+            <p class="pv-sheet-task">Hvilken brøk er størst?</p>
+            <span class="pv-sheet-options" aria-hidden="true">
+              <span>2/5</span><span class="is-picked">3/4</span><span>1/2</span><span>5/8</span>
+            </span>
+          </li>
+          <li class="pv-sheet pv-sheet-number">
+            <span class="pv-sheet-kind">Skriv et tal eller et ord</span>
+            <p class="pv-sheet-task">Hvad er 3/4 af 20?</p>
+            <span class="pv-sheet-input" aria-hidden="true"><span class="pv-field">15</span><span class="pv-send">Svar</span></span>
+          </li>
+          <li class="pv-sheet pv-sheet-long">
+            <span class="pv-sheet-kind">Skriv et længere svar</span>
+            <p class="pv-sheet-task">Forklar med dine egne ord, hvorfor 2/4 og 1/2 er lige meget.</p>
+            <span class="pv-field pv-field-long" aria-hidden="true">Hvis man deler en pizza i 4 og tager 2 …</span>
+            <span class="pv-sheet-note">Det her svar læser din lærer.</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ══ 3. FEEDBACK ═══════════════════════════════════════════════════════
+         Typographic scene. The rule from the front page, given room of its own. -->
+    <section class="fs-scene pv-feedback" aria-labelledby="feedback-title">
+      <div class="shell pv-feedback-grid">
+        <h2 id="feedback-title" class="fs-statement pv-feedback-statement">
+          <span>Et forkert svar skal hjælpe eleven videre</span>
+          <span>— ikke bare give et rødt kryds.</span>
+        </h2>
+        <div class="pv-feedback-copy">
+          <p class="fs-lede">
+            Når et svar er forkert, viser Lærlig, hvordan man kommer videre. En kort forklaring,
+            skrevet til det, eleven lige har gjort.
+          </p>
+          <p class="fs-body">
+            Ingen nederlagsskærm og ingen tekst, der får eleven til at føle sig dum. Bare næste
+            skridt — og en ny chance om lidt.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. DET SVÆRE KOMMER IGEN ══════════════════════════════════════════
+         One student, one task, over two days — drawn vertically, as a path the student walks,
+         where the front page draws it as two horizontal tracks beside the class. The behaviour
+         is the documented one: wrong → explanation, back after a few minutes; right → back the
+         next day. -->
+    <section class="fs-scene pv-again" aria-labelledby="again-title">
+      <div class="shell pv-again-grid">
+        <div class="pv-again-copy">
+          <h2 id="again-title" class="fs-big">Det svære kommer igen.</h2>
+          <p class="fs-lede">
+            Det, eleven allerede kan, skal ikke tage tiden. Det, der driller, kommer tilbage —
+            indtil det sidder.
+          </p>
+          <p class="fs-body">
+            Svarer eleven forkert, kommer opgaven igen efter få minutter. Svarer eleven rigtigt,
+            dukker den op igen dagen efter, så man kan se, om det holdt.
+          </p>
+        </div>
+
+        <ol class="pv-path" aria-label="Maliks brøkopgave over to dage">
+          <li class="is-wrong">
+            <b>Mandag 9.02</b>
+            <span>Forkert. Malik får en forklaring.</span>
+          </li>
+          <li class="is-right">
+            <b>Mandag 9.09</b>
+            <span>Opgaven kommer igen. Rigtigt.</span>
+          </li>
+          <li class="is-right">
+            <b>Tirsdag</b>
+            <span>Igen. Stadig rigtigt.</span>
+          </li>
+          <li class="is-next">
+            <b>Næste skridt</b>
+            <span>Brøken sidder. Malik går videre.</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ══ 5. FREMGANG ═══════════════════════════════════════════════════════
+         XP, coins and the figure. The figure here is the brand figure; the caption says so,
+         because the student's own figure is the one the student shapes. The reward numbers are
+         the server's for a first correct answer (process_question_attempt): +10 XP, +5 coins. -->
+    <section class="fs-scene fs-student pv-progress" aria-labelledby="progress-title">
+      <div class="shell fs-student-grid">
+        <figure class="pv-figure">
+          <div class="fs-student-figure">
+            <div class="fs-avatar fs-avatar-large" data-fs-figure>
+              <img class="fs-avatar-layer" src="assets/avatar/reference/Northstar%20Master%20v2.png"
+                   alt="" width="1024" height="1536" decoding="async">
+            </div>
+            <div class="fs-chip fs-chip-level" aria-hidden="true">
+              <span class="fs-level">Niveau <b>4</b></span>
+              <span class="fs-xp"><span class="fs-xp-fill" style="--p: .776"></span></span>
+            </div>
+            <div class="fs-chip fs-chip-coins" aria-hidden="true">
+              <span class="fs-coin"></span>148 mønter
+            </div>
+          </div>
+          <figcaption class="pv-figure-note">
+            Lærligs figur. I appen former eleven sin egen.
+          </figcaption>
+        </figure>
+
+        <div class="fs-student-copy">
+          <h2 id="progress-title" class="fs-big">Fremgang, man kan se.</h2>
+          <p class="fs-lede">
+            Eleven kan følge med i, at det rykker — opgave for opgave og dag for dag.
+          </p>
+
+          <dl class="pv-facts">
+            <div>
+              <dt>XP og niveau</dt>
+              <dd>Et rigtigt svar giver XP — første gang +10. Niveauet stiger, og bjælken viser, hvor langt der er til det næste.</dd>
+            </div>
+            <div>
+              <dt>Mønter</dt>
+              <dd>Et rigtigt svar giver også mønter — første gang +5. Dem kan eleven bruge i Lærligs butik.</dd>
+            </div>
+            <div>
+              <dt>Figuren</dt>
+              <dd>En figur, eleven selv former: krop, frisure, hårfarve og hudtone.</dd>
+            </div>
+            <div>
+              <dt>Faste regler</dt>
+              <dd>Ingen held og ingen lodtrækning. Et rigtigt svar tæller altid.</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 6. AFSLUTNING ═════════════════════════════════════════════════════ -->
+    <section class="fs-scene fs-closing pv-closing" aria-labelledby="closing-title">
+      <div class="shell pv-closing-inner">
+        <h2 id="closing-title" class="fs-statement">
+          <span>Det vigtigste er ikke mønterne.</span>
+          <span>Det er at kunne se, at det rykker.</span>
+        </h2>
+        <p class="fs-lede">
+          Og bag hver elev står en lærer, der kan se det samme — og som bestemmer.
+        </p>
+        <div class="fs-actions">
+          <a class="fs-btn fs-btn-primary" href="/for-laereren">Se lærerens side</a>
+          <a class="fs-btn fs-btn-quiet" href="/saadan-virker-det">Sådan virker det</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-text">Lærlig</span>
+        <p>Læring, der tilpasser sig eleven.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Sidefod: produktet">
+        <h2 class="footer-head">Produktet</h2>
+        <a href="/produktet">Hvad Lærlig er</a>
+        <a href="/saadan-virker-det">Sådan virker det</a>
+        <a href="/for-eleven">For eleven</a>
+        <a href="/for-laereren">For læreren</a>
+        <a href="/elev-og-laerer">Elev og lærer</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: skoler">
+        <h2 class="footer-head">Skoler</h2>
+        <a href="/til-skoler">Til skoler</a>
+        <a href="/priser">Priser</a>
+        <a href="/om-laerlig">Om Lærlig</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Sidefod: adgang">
+        <h2 class="footer-head">Adgang</h2>
+        <a href="login.html">Log ind</a>
+        <a href="mailto:kontakt@lærlig.dk">Skriv til os</a>
+      </nav>
+    </div>
+
+    <div class="shell footer-base">
+      <p>Lærlig er i pilotdrift.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js" defer></script>
+</body>
+</html>

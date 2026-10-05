@@ -22,6 +22,7 @@ import {
 
 // The public website's pages, in menu order. Used by several assertions below.
 const PUBLIC_PAGES = ["produktet.html", "saadan-virker-det.html", "elev-og-laerer.html",
+                      "for-eleven.html", "for-laereren.html",
                       "til-skoler.html", "priser.html", "om-laerlig.html"];
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -82,18 +83,29 @@ test("the landing page contacts no third party — no external host, no webfont,
   }
 });
 
-test("the landing page ships no avatar or product imagery — none is approved yet", () => {
-  const t = read("landing.html");
-  assert.ok(!/<img\b/i.test(t), "no <img> may ship until real product screenshots are approved");
-  assert.ok(!/assets\/avatar/i.test(t), "avatar assets must not be used as marketing visuals");
+// Owner decision 2026-10-04 (Lærlig 2.0): the front page shows the approved North Star v2 DESIGN
+// reference (D-124) as Lærlig's visual identity — that ONE file and nothing else. It is a brand
+// image with no runtime authority; no R2 runtime asset and no other avatar art may appear, and the
+// six information pages keep the full ban below.
+const NORTH_STAR_V2_SRC = "assets/avatar/reference/Northstar%20Master%20v2.png";
+test("the landing page's only imagery is the North Star v2 brand reference", () => {
+  // Judged on what the page REFERENCES, so its HTML comments (which name the runtime paths in order
+  // to explain that the page does not use them) are stripped first.
+  const t = read("landing.html").replace(/<!--[\s\S]*?-->/g, "");
+  const srcs = [...t.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)].map((m) => m[1]);
+  assert.equal((t.match(/<img\b/gi) || []).length, srcs.length, "every image must have a src");
+  assert.deepEqual(srcs, [NORTH_STAR_V2_SRC, NORTH_STAR_V2_SRC], "exactly the two North Star v2 figures");
+  const avatarRefs = [...t.matchAll(/assets\/avatar[^"'\s)]*/gi)].map((m) => m[0]);
+  assert.deepEqual([...new Set(avatarRefs)], [NORTH_STAR_V2_SRC], "no other avatar art, and no R2 runtime asset");
+  assert.ok(has(decodeURIComponent(NORTH_STAR_V2_SRC)), "the North Star v2 file must ship with the site");
 });
 
 test("every mandatory runtime file is present", () => {
   for (const m of MANDATORY) assert.ok(existsSync(join(OUT, m)), `missing ${m}`);
 });
 
-test("all 28 runtime HTML pages are copied", () => {
-  assert.equal(RUNTIME_HTML.length, 28);
+test("all 30 runtime HTML pages are copied", () => {
+  assert.equal(RUNTIME_HTML.length, 30);
   for (const p of RUNTIME_HTML) assert.ok(has(p), `missing ${p}`);
 });
 
@@ -132,7 +144,10 @@ test("every local HTML reference resolves — directly, or through a declared cl
         if (!has(ROUTE_TO_FILE[path])) missing.push(`${page} -> ${path} (route target ${ROUTE_TO_FILE[path]})`);
         continue;
       }
-      const rel = path.replace(/^\.?\//, "");
+      // Percent-decoded first, exactly as the browser does before it requests the file:
+      // `Northstar%20Master%20v2.png` names the file `Northstar Master v2.png` on disk.
+      let rel = path.replace(/^\.?\//, "");
+      try { rel = decodeURIComponent(rel); } catch { missing.push(`${page} -> ${raw} (malformed escape)`); continue; }
       if (!rel || rel.endsWith("/")) continue;
       if (!has(rel)) missing.push(`${page} -> ${raw}`);
     }
@@ -141,7 +156,7 @@ test("every local HTML reference resolves — directly, or through a declared cl
 });
 
 // ── the multipage public website ──────────────────────────────────────────────────────────────
-test("all six information pages ship", () => {
+test("all eight information pages ship", () => {
   for (const p of PUBLIC_PAGES) assert.ok(has(p), `missing ${p}`);
 });
 
@@ -169,14 +184,21 @@ test("the front page is SHORT — the long sections were moved out, not hidden",
   // And each moved section must now exist on its own page.
   assert.ok(read("produktet.html").includes('class="cards"'), "the product cards did not arrive");
   assert.ok(read("saadan-virker-det.html").includes('class="steps"'), "the steps did not arrive");
-  assert.ok(read("elev-og-laerer.html").includes('class="split"'), "the split did not arrive");
+  // The elev/lærer split moved on again (owner decision 2026-10-04): /elev-og-laerer is now a
+  // short bridge, and the two perspectives have pages of their own.
+  assert.ok(read("elev-og-laerer.html").includes('class="pv-bridge-doors"'), "the bridge doors did not arrive");
   assert.ok(read("til-skoler.html").includes('class="cards cards-tight"'), "the principles did not arrive");
 });
 
-test("the front page stays lean — well under the old one-pager", () => {
+// Lærlig 2.0 (owner brief, 2026-10-02): the front page is the product story in eight scenes —
+// hero, premise, adaptivity, "det svære kommer igen", student, teacher, school, closing. It is no
+// longer the hero-only page of docs/LANDING.md tranche 8; the count is pinned so it cannot quietly
+// grow back into the old 5,400px one-pager of repeated cards either.
+test("the front page is the eight-scene story — no more, no fewer", () => {
   const home = read("landing.html");
   const sections = (home.match(/<section\b/g) || []).length;
-  assert.ok(sections <= 4, `front page has ${sections} sections; it should be hero + overview + CTA`);
+  assert.equal(sections, 8, `front page has ${sections} sections; the story has eight scenes`);
+  assert.ok(!/class="cards?\b/.test(home), "the front page must not carry the feature-card kit");
 });
 
 test("each information page carries exactly one h1 and its own title and description", () => {
@@ -201,43 +223,84 @@ test("the navigation is identical on every public page, and marks the current on
 
   const baseDesktop = strip(navOf(read("landing.html"), "nav-desktop"));
   const baseMobile = strip(navOf(read("landing.html"), "nav-mobile"));
+  const baseDoors = strip(navOf(read("landing.html"), "doors"));
   assert.ok(baseDesktop.length > 0 && baseMobile.length > 0, "the front page has no navigation");
+  assert.ok(baseDoors.length > 0, "the front page has no doors");
 
   for (const p of PUBLIC_PAGES) {
     const html = read(p);
     assert.equal(strip(navOf(html, "nav-desktop")), baseDesktop, `${p} desktop nav differs`);
     assert.equal(strip(navOf(html, "nav-mobile")), baseMobile, `${p} mobile nav differs`);
+    assert.equal(strip(navOf(html, "doors")), baseDoors, `${p} doors differ`);
 
-    // ONE consistent rule: the main navigation is the same five entries on desktop and mobile.
-    // "Om Lærlig" lives in the footer only, so — like the front page — it is not a menu entry
-    // and marks nothing. The five that are menu entries mark themselves twice, once per nav.
-    const expected = p === "om-laerlig.html" ? 0 : 2;
+    // ONE consistent rule. The four menu entries mark themselves twice, once per nav. The two
+    // door pages (owner decision 2026-10-04) mark their own door twice too: in the band and in
+    // the mobile menu. "Om Lærlig" and the /elev-og-laerer bridge are reached from the footer and
+    // the doors, are neither a menu entry nor a door, and mark nothing.
+    const expected = ["om-laerlig.html", "elev-og-laerer.html"].includes(p) ? 0 : 2;
     assert.equal((html.match(/aria-current="page"/g) || []).length, expected,
       `${p} must mark its own entry current in every nav that contains it`);
 
-    // Whatever the count, the marks must sit on the link that points at this page.
+    // Whatever the count, the marks must sit on links that point at this page.
     const route = "/" + p.replace(/\.html$/, "");
-    for (const m of html.matchAll(/<a href="([^"]+)"\s+aria-current="page"/g)) {
-      assert.equal(m[1], route, `${p} marks ${m[1]} current instead of ${route}`);
+    for (const m of html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*\saria-current="page"/g)) {
+      assert.equal(m[1].split("#")[0], route, `${p} marks ${m[1]} current instead of ${route}`);
     }
   }
   // The front page marks nothing: it is not one of the menu entries.
   assert.ok(!read("landing.html").includes('aria-current="page"'),
     "the front page is not a menu entry and must not mark one current");
 
-  // The desktop and mobile menus must carry exactly the same entries — the asymmetry where
-  // "Om Lærlig" appeared on mobile only is what this pins shut.
+  // The desktop and mobile menus carry exactly the same page entries. The mobile menu also leads
+  // with the two doors (in .nav-doors) — the band has scrolled away by the time a phone user opens
+  // it — and those are compared separately: the same two destinations as the band.
   for (const p of ["landing.html", ...PUBLIC_PAGES]) {
     const html = read(p);
-    const hrefs = (nav) => [...(navOf(html, nav).matchAll(/href="([^"]+)"/g))].map((m) => m[1]);
-    assert.deepEqual(hrefs("nav-mobile"), hrefs("nav-desktop"),
+    const hrefs = (s) => [...s.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+    const mobile = navOf(html, "nav-mobile");
+    const mobileDoors = (mobile.match(/<div class="nav-doors">[\s\S]*?<\/div>/) || [""])[0];
+    assert.deepEqual(hrefs(mobile.replace(mobileDoors, "")), hrefs(navOf(html, "nav-desktop")),
       `${p}: the mobile menu must list the same pages as the desktop menu`);
-    assert.equal(hrefs("nav-desktop").length, 5, `${p}: the main menu should stay five entries`);
-    assert.ok(!hrefs("nav-desktop").includes("/om-laerlig"),
+    assert.deepEqual(hrefs(mobileDoors), hrefs(navOf(html, "doors")),
+      `${p}: the mobile menu's doors must lead where the band's doors lead`);
+    assert.equal(hrefs(navOf(html, "nav-desktop")).length, 4, `${p}: the main menu should stay four entries`);
+    assert.ok(!hrefs(navOf(html, "nav-desktop")).includes("/om-laerlig"),
       `${p}: "Om Lærlig" belongs in the footer, not the main menu`);
     assert.ok(html.includes('<a href="/om-laerlig">Om Lærlig</a>'),
       `${p}: "Om Lærlig" must still be reachable from the footer`);
+    assert.ok(html.includes('<a href="/elev-og-laerer">Elev og lærer</a>'),
+      `${p}: /elev-og-laerer must still be reachable as a page from the footer`);
   }
+});
+
+// THE TWO DOORS (owner decision 2026-10-04). "For eleven" and "For læreren" are two separate
+// entrances directly under the header on every public page — not two more menu links. Each leads
+// to its own page. The /elev-og-laerer bridge keeps #for-eleven and #for-laereren as anchors on
+// its own two doors, so links made to the old halves of that page still land somewhere sensible.
+test("every public page carries the two doors, and both land on a real anchor", () => {
+  const eol = read("elev-og-laerer.html");
+  for (const p of ["landing.html", ...PUBLIC_PAGES]) {
+    const html = read(p);
+    const doors = (html.match(/<nav class="doors"[\s\S]*?<\/nav>/) || [""])[0];
+    assert.ok(doors, `${p} has no doors`);
+    // Directly after the header, before main: they belong to the top of the page.
+    assert.ok(html.indexOf("</header>") < html.indexOf('<nav class="doors"') &&
+              html.indexOf('<nav class="doors"') < html.indexOf('<main id="main">'),
+      `${p}: the doors must sit between the header and main`);
+    const links = [...doors.matchAll(/<a class="door (door-\w+)" href="([^"]+)"/g)].map((m) => [m[1], m[2]]);
+    assert.deepEqual(links, [["door-elev", "/for-eleven"],
+                             ["door-laerer", "/for-laereren"]], `${p}: the doors drifted`);
+    assert.match(doors, /<span class="door-label">For eleven</, `${p}: the student door lost its label`);
+    assert.match(doors, /<span class="door-label">For læreren</, `${p}: the teacher door lost its label`);
+    // The product cues are decoration; the label and the sentence carry the meaning.
+    for (const cue of doors.match(/<span class="door-cue[^"]*"[^>]*>/g) || []) {
+      assert.match(cue, /aria-hidden="true"/, `${p}: a door cue is exposed to assistive tech`);
+    }
+  }
+  assert.match(eol, /id="for-eleven" href="\/for-eleven"/, "the bridge's student door or its old anchor is missing");
+  assert.match(eol, /id="for-laereren" href="\/for-laereren"/, "the bridge's teacher door or its old anchor is missing");
+  // A bridge, not a third copy: the long perspective lists live on their own pages now.
+  assert.ok(!/class="(split|ticks)"/.test(eol), "the bridge page still carries the old split lists");
 });
 
 test("the navigation uses real page links, not the old in-page anchors", () => {
@@ -287,8 +350,20 @@ test("the information pages LOAD nothing from a third party, and ship no imagery
     }
     assert.ok(!/@import\s+url\(/i.test(t), `${p} pulls in a remote stylesheet`);
     assert.ok(!/\b(fetch|XMLHttpRequest|navigator\.sendBeacon)\s*\(/.test(t), `${p} makes a request`);
-    assert.ok(!/<img\b/i.test(t), `${p} ships an image — none is approved yet`);
-    assert.ok(!/assets\/avatar/i.test(t), `${p} uses avatar art as a marketing visual`);
+    // The front page's one approved image is held to its own test above. /for-eleven tells the
+    // student's story, the figure included, so it carries the same North Star v2 brand image
+    // (owner brief 2026-10-04: North Star v2 is the public brand reference "where it makes sense")
+    // — that one file and nothing else. Every other public page still ships none.
+    if (p === "for-eleven.html") {
+      const body = t.replace(/<!--[\s\S]*?-->/g, "");
+      const srcs = [...body.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)].map((m) => m[1]);
+      assert.deepEqual(srcs, [NORTH_STAR_V2_SRC, NORTH_STAR_V2_SRC], `${p}: only the North Star v2 figure`);
+      assert.deepEqual([...new Set([...body.matchAll(/assets\/avatar[^"'\s)]*/gi)].map((m) => m[0]))],
+        [NORTH_STAR_V2_SRC], `${p}: no other avatar art, and no R2 runtime asset`);
+    } else if (p !== "landing.html") {
+      assert.ok(!/<img\b/i.test(t), `${p} ships an image — none is approved yet`);
+      assert.ok(!/assets\/avatar/i.test(t), `${p} uses avatar art as a marketing visual`);
+    }
   }
 });
 
@@ -326,7 +401,7 @@ test("the dictionary entry is real, quotable text with its source attached", () 
 // ── search-engine classification ──────────────────────────────────────────────────────────────
 // Two lists, no default. The three assertions below are the whole contract.
 
-test("1 — the seven public pages are indexable: no robots directive at all", () => {
+test("1 — the nine public pages are indexable: no robots directive at all", () => {
   assert.deepEqual([...PUBLIC_HTML].sort(), ["landing.html", ...PUBLIC_PAGES].sort(),
     "PUBLIC_HTML drifted from the six information pages plus the front page");
   for (const p of PUBLIC_HTML) {
@@ -400,13 +475,15 @@ test("3b — validateOutput REFUSES an unclassified or misclassified page", () =
 // work - it is that it works TOO broadly and swallows /login.html, /hub.html and the running app,
 // or that it loops. Both are held shut here.
 
-test("there are exactly seven legacy redirects, one per public page", () => {
-  assert.equal(LEGACY_HTML_REDIRECTS.length, 7);
+test("there are exactly nine legacy redirects, one per public page", () => {
+  assert.equal(LEGACY_HTML_REDIRECTS.length, 9);
   assert.deepEqual([...LEGACY_HTML_REDIRECTS], [
     "/landing.html / 301",
     "/produktet.html /produktet 301",
     "/saadan-virker-det.html /saadan-virker-det 301",
     "/elev-og-laerer.html /elev-og-laerer 301",
+    "/for-eleven.html /for-eleven 301",
+    "/for-laereren.html /for-laereren 301",
     "/til-skoler.html /til-skoler 301",
     "/priser.html /priser 301",
     "/om-laerlig.html /om-laerlig 301",
@@ -454,10 +531,10 @@ test("no internal .html address is redirected - the app keeps every one of its U
                       "docs.html", "404.html"]) {
     assert.ok(!redirected.includes(file), `${file} must keep its direct address`);
   }
-  assert.equal(redirected.length, 7);
+  assert.equal(redirected.length, 9);
 });
 
-test("the redirects are seven literal sources - never a wildcard or an extension stripper", () => {
+test("the redirects are literal sources - never a wildcard or an extension stripper", () => {
   const raw = read("_redirects");
   assert.ok(!raw.includes("*"), "no wildcard anywhere");
   assert.ok(!/:\w/.test(raw), "no placeholder or :splat segment");
@@ -535,13 +612,13 @@ test("the documentation no longer claims .html addresses are preserved for publi
 // 404, no visual change, no failing request. The page simply stops being the one that ranks - or,
 // if it points somewhere that is not the page, stops being indexed at all.
 
-test("all seven public pages carry exactly one canonical link", () => {
+test("all nine public pages carry exactly one canonical link", () => {
   for (const file of PUBLIC_HTML) {
     const hrefs = canonicalLinksIn(read(file));
     assert.equal(hrefs.length, 1, `${file} has ${hrefs.length} canonical links, expected exactly 1`);
     assert.ok(hrefs[0], `${file} has a canonical link with no href`);
   }
-  assert.equal(PUBLIC_HTML.length, 7);
+  assert.equal(PUBLIC_HTML.length, 9);
 });
 
 test("each canonical is the URL its OWN route implies - file -> route -> canonical", () => {
@@ -596,7 +673,7 @@ test("no internal surface declares a canonical - not one of them", () => {
   for (const g of ["docs.html", "404.html"]) assert.deepEqual(canonicalLinksIn(read(g)), []);
 });
 
-test("CONTRACT: routing -> public file -> canonical -> sitemap all say the same seven URLs", () => {
+test("CONTRACT: routing -> public file -> canonical -> sitemap all say the same nine URLs", () => {
   // The four-way agreement, asserted end to end. Each step is computed from the previous one, so
   // a change to any single link in the chain that is not carried through the others fails here.
   const fromRouting = PUBLIC_ROUTES.map((route) => SITE_ORIGIN + route);
@@ -609,7 +686,7 @@ test("CONTRACT: routing -> public file -> canonical -> sitemap all say the same 
   assert.deepEqual(fromSitemap, fromRouting, "the sitemap drifted from the routing table");
   assert.deepEqual(fromHtml, fromSitemap, "canonical and sitemap advertise different URLs");
   assert.deepEqual(fromHtml, sitemapUrls());
-  assert.equal(new Set(fromHtml).size, 7, "two pages claim the same canonical URL");
+  assert.equal(new Set(fromHtml).size, 9, "two pages claim the same canonical URL");
 });
 
 test("validateCanonicals REFUSES every way the tag can go wrong", () => {
@@ -711,18 +788,18 @@ test("the sitemap's URLs are DERIVED from the routing table, not kept as a secon
   assert.deepEqual([...PUBLIC_ROUTES], Object.keys(ROUTE_TO_FILE));
 });
 
-test("the routing table and PUBLIC_HTML describe the same seven public pages", () => {
+test("the routing table and PUBLIC_HTML describe the same nine public pages", () => {
   // ONE source of truth. The table names the addresses, PUBLIC_HTML names the pages; the sitemap
   // is derived from the first and the robots classification from the second.
   assert.deepEqual([...new Set(Object.values(ROUTE_TO_FILE))].sort(), [...PUBLIC_HTML].sort());
-  assert.equal(PUBLIC_ROUTES.length, 7);
-  assert.equal(PUBLIC_HTML.length, 7);
+  assert.equal(PUBLIC_ROUTES.length, 9);
+  assert.equal(PUBLIC_HTML.length, 9);
   const src = readFileSync(join(REPO, "tools", "cloudflare-build-static.mjs"), "utf8");
   assert.match(src, /describe different public pages/,
     "validateOutput must refuse a routing table that disagrees with PUBLIC_HTML");
 });
 
-test("the sitemap lists exactly the seven public routes, in the routing table's order", () => {
+test("the sitemap lists exactly the nine public routes, in the routing table's order", () => {
   // A separate expected list on purpose: it is the one assertion that does not go through the
   // generator, so a generator that is confidently wrong still fails here.
   const locs = [...read(SITEMAP_FILE).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
@@ -731,6 +808,8 @@ test("the sitemap lists exactly the seven public routes, in the routing table's 
     "https://l\u00e6rlig.dk/produktet",
     "https://l\u00e6rlig.dk/saadan-virker-det",
     "https://l\u00e6rlig.dk/elev-og-laerer",
+    "https://l\u00e6rlig.dk/for-eleven",
+    "https://l\u00e6rlig.dk/for-laereren",
     "https://l\u00e6rlig.dk/til-skoler",
     "https://l\u00e6rlig.dk/priser",
     "https://l\u00e6rlig.dk/om-laerlig",
@@ -788,8 +867,8 @@ test("the sitemap invents no metadata, and its XML structure is sound", () => {
   assert.equal(SITEMAP_XMLNS, "http://www.sitemaps.org/schemas/sitemap/0.9");
   assert.ok(xml.trimEnd().endsWith("</urlset>"), "the urlset is not closed");
   for (const [open, close] of [["<url>", "</url>"], ["<loc>", "</loc>"]]) {
-    assert.equal(xml.split(open).length - 1, 7, `expected 7 ${open}`);
-    assert.equal(xml.split(close).length - 1, 7, `expected 7 ${close}`);
+    assert.equal(xml.split(open).length - 1, 9, `expected 9 ${open}`);
+    assert.equal(xml.split(close).length - 1, 9, `expected 9 ${close}`);
   }
   assert.ok(!xml.includes("*"), "a wildcard would mean URLs nobody listed");
   assert.ok(xml.endsWith("</urlset>\n"), "the document must end with a single newline");
@@ -893,9 +972,15 @@ test("the site is reachable — one contact address, in the footer of every publ
     const t = read(p);
     assert.ok(t.includes(`<a href="${CONTACT}">Skriv til os</a>`),
       `${p}: the footer must offer a way to get in touch`);
-    // Exactly one address, so a second one cannot drift in unnoticed.
-    assert.equal((t.match(/mailto:/g) || []).length, p === "priser.html" ? 2 : 1,
+    // Exactly one address, so a second one cannot drift in unnoticed. Pricing and the front page's
+    // closing scene invite schools to write, so they carry a second link — to the SAME address.
+    // The teacher page's closing scene does the same.
+    assert.equal((t.match(/mailto:/g) || []).length,
+      ["priser.html", "landing.html", "for-laereren.html"].includes(p) ? 2 : 1,
       `${p}: unexpected number of mailto links`);
+    for (const m of t.match(/mailto:[^"'\s>]*/g) || []) {
+      assert.equal(m, CONTACT, `${p}: a mailto link points somewhere other than ${CONTACT}`);
+    }
     // The public site writes from its own domain. A personal free-mail address — the private
     // Gmail this replaced, or any other — must not come back, in a link or as visible text.
     assert.ok(!/@(?:gmail|hotmail|outlook|yahoo|live)\.[a-z.]+/i.test(t),
@@ -963,27 +1048,31 @@ test("_redirects is generated as exactly the declared routing table — both hal
   assert.ok(has("_redirects"));
   const lines = read("_redirects").split("\n").map((l) => l.trim()).filter(Boolean);
   assert.deepEqual(lines, [
-    // the seven internal rewrites: the address bar keeps the clean path, no 3xx is emitted
+    // the nine internal rewrites: the address bar keeps the clean path, no 3xx is emitted
     "/ /landing.html 200",
     "/produktet /produktet.html 200",
     "/saadan-virker-det /saadan-virker-det.html 200",
     "/elev-og-laerer /elev-og-laerer.html 200",
+    "/for-eleven /for-eleven.html 200",
+    "/for-laereren /for-laereren.html 200",
     "/til-skoler /til-skoler.html 200",
     "/priser /priser.html 200",
     "/om-laerlig /om-laerlig.html 200",
-    // …and the seven permanent redirects off the legacy .html addresses
+    // …and the nine permanent redirects off the legacy .html addresses
     "/landing.html / 301",
     "/produktet.html /produktet 301",
     "/saadan-virker-det.html /saadan-virker-det 301",
     "/elev-og-laerer.html /elev-og-laerer 301",
+    "/for-eleven.html /for-eleven 301",
+    "/for-laereren.html /for-laereren 301",
     "/til-skoler.html /til-skoler 301",
     "/priser.html /priser 301",
     "/om-laerlig.html /om-laerlig 301",
   ]);
   assert.deepEqual(lines, [...REDIRECTS_FILE_LINES]);
-  assert.equal(lines.length, 14);
-  assert.equal(lines.filter((l) => l.endsWith(" 200")).length, 7);
-  assert.equal(lines.filter((l) => l.endsWith(" 301")).length, 7);
+  assert.equal(lines.length, 18);
+  assert.equal(lines.filter((l) => l.endsWith(" 200")).length, 9);
+  assert.equal(lines.filter((l) => l.endsWith(" 301")).length, 9);
   // Only these two statuses may ever appear.
   for (const l of lines) assert.match(l, /\s(200|301)$/, `${l} has a status this contract does not allow`);
 });
@@ -1076,7 +1165,7 @@ test("validateOutput rejects a tampered _redirects", () => {
 
     // AN INTERNAL SURFACE MUST NEVER BE REDIRECTED. This is the guard that keeps the app running:
     // a 301 on /login.html would break the role routing in js/login.js and the Playwright contract.
-    writeTable([...REDIRECTS_FILE_LINES.slice(0, 7), "/login.html /login 301", ...REDIRECTS_FILE_LINES.slice(7)]);
+    writeTable([...REDIRECTS_FILE_LINES.slice(0, 9), "/login.html /login 301", ...REDIRECTS_FILE_LINES.slice(9)]);
     p = validateOutput(tmp).problems;
     assert.ok(p.some((x) => x.includes("not a public marketing page") || x.includes("line 8")),
       "redirecting an internal app page must be refused");

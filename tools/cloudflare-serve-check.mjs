@@ -27,7 +27,7 @@ if (!existsSync(ROOT)) { console.error("dist-cloudflare/ is missing — run: npm
 //                            /index.html and is NOT what `/` serves — both halves are asserted
 //                            below, as is every clean route in the table.
 //   `_redirects` itself is configuration and is never served as an asset.
-// Both tables, read straight out of the generated file: seven 200 rewrites and seven 301s off the
+// Both tables, read straight out of the generated file: nine 200 rewrites and nine 301s off the
 // legacy .html addresses. Modelled exactly as workerd does it - a 301 is answered immediately, a
 // 200 rewrites internally, and NEITHER re-enters this map, which is what makes the pair loop-free.
 const REWRITES = new Map(
@@ -71,6 +71,8 @@ const PUBLIC_ROUTES = [
   ["/produktet", "/produktet.html"],
   ["/saadan-virker-det", "/saadan-virker-det.html"],
   ["/elev-og-laerer", "/elev-og-laerer.html"],
+  ["/for-eleven", "/for-eleven.html"],
+  ["/for-laereren", "/for-laereren.html"],
   ["/til-skoler", "/til-skoler.html"],
   ["/priser", "/priser.html"],
   ["/om-laerlig", "/om-laerlig.html"],
