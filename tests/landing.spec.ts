@@ -1243,8 +1243,10 @@ test("without reduced motion the buttons keep their transition and the demo play
 // source. The bar is the quiz's own level math, getXPProgressInLevel, run in the page itself.
 test("the hero demo's reward and XP bar match the server reward and the quiz's level math", async ({ page }) => {
   const dir = path.join(ROOT, "supabase", "migrations");
+  // Only a CREATE [OR REPLACE] FUNCTION defines it — a REVOKE/GRANT/ALTER `ON FUNCTION …` does not.
   const defining = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()
-    .filter((f) => fs.readFileSync(path.join(dir, f), "utf8").includes("FUNCTION public.process_question_attempt"));
+    .filter((f) => /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.process_question_attempt\s*\(/i
+      .test(fs.readFileSync(path.join(dir, f), "utf8")));
   expect(defining.length, "no migration defines process_question_attempt").toBeGreaterThan(0);
   const sql = fs.readFileSync(path.join(dir, defining[defining.length - 1]), "utf8");
   const m = sql.match(/v_xp\s*:=\s*(\d+);\s*v_coins\s*:=\s*(\d+);/);

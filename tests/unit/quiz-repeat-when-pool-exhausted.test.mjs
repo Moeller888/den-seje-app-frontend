@@ -308,8 +308,11 @@ test("the release function keeps its contract from 20261001100000", () => {
 
 test("the migration sorts after every migration that touches these objects", () => {
   const dir = join(REPO, "supabase", "migrations");
+  // Privilege and property statements (REVOKE/GRANT … ON FUNCTION, ALTER FUNCTION) do not redefine
+  // these objects, so a later lockdown migration must not count as overriding this one.
   const executable = (body) => body
-    .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    .split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n")
+    .replace(/^\s*(GRANT|REVOKE|ALTER\s+FUNCTION)\b[^;]*;/gim, "");
   const touching = readdirSync(dir)
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /process_question_attempt|request_repeat_question|repeat_count|release_open_question_outside/i.test(
