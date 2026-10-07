@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabase-keys.ts";
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
-import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer } from "./text-answer-rpc.ts";
+import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,10 +10,18 @@ const corsHeaders = {
   "Content-Type": "application/json"
 }
 
-// Deploy diagnostic: which backend key source the short-text path will use. serviceKeySource()
+// Deploy diagnostic: which backend key source the answer RPCs will use. serviceKeySource()
 // returns only a fixed word ("secret-keys", "legacy-service-role", "none" or
-// "invalid-configuration") and never throws, so this line can neither leak a key nor break MC.
+// "invalid-configuration") and never throws, so this line can neither leak a key nor break a request.
 console.log(`[process-event] service-key source=${serviceKeySource()}`)
+
+// The backend client for the two privileged answer RPCs (process_text_answer and
+// process_question_attempt) and nothing else — see ./text-answer-rpc.ts. Built per call, only when
+// one of those RPCs is about to run: no pupil Authorization header, no session. If the key cannot
+// be resolved this throws, and the caller answers with a 500 — never a fallback to the user client.
+function makeAdminClient() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS)
+}
 
 function countWords(text: string) {
   return (text || "")
@@ -176,7 +184,7 @@ serve(async (req) => {
       let rpcError: any
       try {
         ({ data: rpcResult, error: rpcError } = await callProcessTextAnswer(
-          () => createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS),
+          makeAdminClient,
           {
             instanceId: question_instance_id,
             userId:     user.id,
@@ -227,15 +235,30 @@ serve(async (req) => {
     // ── PATH 3: MC / number → process_question_attempt RPC ──────────────────
     console.log("FLOW: MC/NUMBER → process_question_attempt")
 
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      "process_question_attempt",
-      {
-        p_student_id:            user.id,
-        p_question_instance_id:  question_instance_id,
-        p_answer:                answer,
-        p_question_shown_at:     question_shown_at ?? Date.now()
-      }
-    )
+    // process_question_attempt evaluates the answer itself and awards XP/coins, streak and quests
+    // (or the reduced repeat award). It takes p_student_id as a parameter, so — like the short-text
+    // award — it is called ONLY through the backend admin client, after the ownership check above,
+    // with the verified user.id. Correctness, rewards and idempotency stay in the database function.
+    // A broken key configuration fails here, loudly — never a fallback to the user client.
+    let rpcData: any
+    let rpcError: any
+    try {
+      ({ data: rpcData, error: rpcError } = await callProcessQuestionAttempt(
+        makeAdminClient,
+        {
+          studentId:       user.id,
+          instanceId:      question_instance_id,
+          answer,
+          questionShownAt: question_shown_at ?? Date.now(),
+        }
+      ))
+    } catch (keyError: any) {
+      // serviceKey()'s messages name the variables, never their values.
+      console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500, headers: corsHeaders
+      })
+    }
 
     if (rpcError) {
       console.error("RPC ERROR:", rpcError)

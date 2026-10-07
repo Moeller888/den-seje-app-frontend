@@ -117,7 +117,7 @@ test("the privileged module has no Deno, env or network access of its own", () =
 // ── index.ts wiring (source level) ──────────────────────────────────────────────────────────────
 test("index.ts imports the key helpers and the privileged module", () => {
   assert.match(INDEX_CODE, /import \{ publishableKey, serviceKey, serviceKeySource \} from "\.\.\/_shared\/supabase-keys\.ts";/);
-  assert.match(INDEX_CODE, /import \{ ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer \} from "\.\/text-answer-rpc\.ts";/);
+  assert.match(INDEX_CODE, /import \{ ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt \} from "\.\/text-answer-rpc\.ts";/);
 });
 
 test("the user client is unchanged: publishable key + the pupil's Authorization header", () => {
@@ -134,7 +134,7 @@ test("auth and the instance read stay on the user client, and the read includes 
 test("the ownership check returns 403 and runs before every answer path", () => {
   const check = INDEX_CODE.indexOf("if (!isInstanceOwner(instanceData.student_id, user.id))");
   assert.ok(check > INDEX_CODE.indexOf(".maybeSingle()"), "after the instance is read");
-  for (const marker of ['if (answerType === "long")', 'if (format.includes("text"))', '"process_question_attempt"']) {
+  for (const marker of ['if (answerType === "long")', 'if (format.includes("text"))', "await callProcessTextAnswer(", "await callProcessQuestionAttempt("]) {
     assert.ok(check < INDEX_CODE.indexOf(marker), `before ${marker}`);
   }
   const block = INDEX_CODE.slice(check, INDEX_CODE.indexOf("}", INDEX_CODE.indexOf("status: 403", check)) + 1);
@@ -142,11 +142,23 @@ test("the ownership check returns 403 and runs before every answer path", () => 
   assert.match(block, /status: 403/);
 });
 
-test("the admin client is built only on the short-text path, from serviceKey(), with no headers", () => {
+test("the admin client is built in one place, from serviceKey(), with no headers", () => {
   const adminBuilds = INDEX_CODE.match(/createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)/g) ?? [];
   assert.equal(adminBuilds.length, 1);
-  assert.ok(PATH_TEXT.includes('createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS)'));
+  assert.match(INDEX_CODE, /function makeAdminClient\(\) \{\s*return createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, serviceKey\(\), ADMIN_CLIENT_OPTIONS\)\s*\}/);
   assert.equal((INDEX_CODE.match(/serviceKey\(\)/g) ?? []).length, 1, "serviceKey() is resolved in exactly one place");
+});
+
+test("the admin client is used only by the two privileged answer RPCs", () => {
+  // makeAdminClient is defined once and handed to exactly two call sites — the short-text award and
+  // the MC/number attempt. It is never invoked directly, so nothing else can run on it.
+  const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
+  assert.equal(uses.length, 3, "one definition + two call sites");
+  assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
+  assert.equal(/makeAdminClient\(\)/.test(INDEX_CODE.replace(/function makeAdminClient\(\)/, "")), false,
+    "the admin client is only ever built inside the privileged RPC helpers");
+  assert.equal(/makeAdminClient/.test(PATH_LONG), false);
 });
 
 test("process_text_answer is never called on the user client", () => {
@@ -178,17 +190,35 @@ test("the deploy diagnostic logs only serviceKeySource(), never a key", () => {
   }
 });
 
-test("MC / number still go through process_question_attempt on the user client, unchanged", () => {
-  assert.match(PATH_MC, /await supabase\.rpc\(\s*"process_question_attempt",\s*\{\s*p_student_id:\s+user\.id,\s*p_question_instance_id:\s+question_instance_id,\s*p_answer:\s+answer,\s*p_question_shown_at:\s+question_shown_at \?\? Date\.now\(\)\s*\}\s*\)/);
-  assert.equal(/callProcessTextAnswer|serviceKey|ADMIN_CLIENT_OPTIONS/.test(PATH_MC), false);
-  assert.match(PATH_MC, /\.update\(\{ next_review_at: nextReviewAt\.toISOString\(\) \}\)/);
+test("MC / number call process_question_attempt via the admin client with server-side values", () => {
+  assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,\s*\{\s*studentId:\s+user\.id,\s*instanceId:\s+question_instance_id,\s*answer,\s*questionShownAt:\s+question_shown_at \?\? Date\.now\(\),\s*\}\s*\)/);
+  assert.equal(/supabase\s*\.rpc\(\s*["']process_question_attempt["']/.test(INDEX_CODE), false,
+    "process_question_attempt is never called on the user client");
+  assert.equal(/callProcessTextAnswer/.test(PATH_MC), false);
+});
+
+test("a key failure on the MC / number path is a visible 500 — no user-client fallback", () => {
+  const handler = between(PATH_MC, "} catch (keyError: any) {", "if (rpcError)");
+  assert.match(handler, /console\.error\("ADMIN CLIENT ERROR:", keyError\?\.message \?\? keyError\)/);
+  assert.match(handler, /JSON\.stringify\(\{ error: "Server configuration error" \}\)/);
+  assert.match(handler, /status: 500/);
+  assert.equal(/supabase\.rpc|\.rpc\(/.test(handler), false);
+});
+
+test("the MC / number response, review scheduling and misconception writes are unchanged", () => {
+  assert.match(PATH_MC, /const status = rpcData\?\.status \?\? "pending"/);
+  assert.match(PATH_MC, /if \(rpcError\) \{\s*console\.error\("RPC ERROR:", rpcError\)\s*return new Response\(JSON\.stringify\(\{ error: rpcError\.message \}\), \{\s*status: 500, headers: corsHeaders\s*\}\)\s*\}/);
+  // These two stay on the user client exactly as before (the RLS question is separate).
+  assert.match(PATH_MC, /supabase\s*\.from\("question_instances"\)\s*\.update\(\{ misconception_signal: misconceptionType \}\)/);
+  assert.match(PATH_MC, /await supabase\s*\.from\("question_instances"\)\s*\.update\(\{ next_review_at: nextReviewAt\.toISOString\(\) \}\)/);
+  assert.match(PATH_MC, /status,\s*correct_answer: rpcData\?\.correct_answer \?\? correct_answer,\s*review_text: status === "incorrect" \? reviewText : null,\s*misconception_type: status === "incorrect" \? misconceptionType : null,/);
 });
 
 test("the long-answer path is unchanged and never uses the admin client", () => {
   assert.match(PATH_LONG, /if \(words < 20\)/);
   assert.match(PATH_LONG, /await supabase\s*\.from\("question_instances"\)\s*\.update\(\{ user_answer: answer \}\)/);
   assert.match(PATH_LONG, /JSON\.stringify\(\{ status: "pending", correct_answer: null, review_text: null \}\)/);
-  assert.equal(/callProcessTextAnswer|serviceKey|ADMIN_CLIENT_OPTIONS/.test(PATH_LONG), false);
+  assert.equal(/callProcessTextAnswer|callProcessQuestionAttempt|makeAdminClient|serviceKey|ADMIN_CLIENT_OPTIONS/.test(PATH_LONG), false);
   assert.ok(INDEX_CODE.indexOf('if (answerType === "long")') < INDEX_CODE.indexOf('if (format.includes("text"))'),
     "the long check still comes first");
 });

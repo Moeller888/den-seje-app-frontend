@@ -53,7 +53,7 @@ export type TextAnswerAward = {
 };
 
 // Calls process_text_answer through a freshly built admin client. makeAdminClient is invoked only
-// here, so the backend key is resolved only on the short-text path; if it throws, so does this.
+// here, so the backend key is resolved only when the RPC is made; if it throws, so does this.
 export async function callProcessTextAnswer(
   makeAdminClient: () => RpcClient,
   award: TextAnswerAward,
@@ -64,5 +64,32 @@ export async function callProcessTextAnswer(
     p_user_id: award.userId,
     p_user_answer: award.answer,
     p_is_correct: award.isCorrect === true,
+  });
+}
+
+// ── MC / number: process_question_attempt ────────────────────────────────────────────────────────
+// Same model, second privileged RPC. process_question_attempt evaluates the answer itself against the
+// instance's stored correct answer and awards XP/coins, streak and quests — or the reduced repeat
+// award — exactly once per instance (its own answered = false guard). It trusts p_student_id, so it
+// too is called only through the admin client, with the verified user.id, after the ownership check.
+// Nothing about correctness, rewards or idempotency moves here: this only chooses the credential.
+
+export type QuestionAttempt = {
+  studentId: string;
+  instanceId: string;
+  answer: string;
+  questionShownAt: number;
+};
+
+export async function callProcessQuestionAttempt(
+  makeAdminClient: () => RpcClient,
+  attempt: QuestionAttempt,
+): Promise<RpcResult> {
+  const admin = makeAdminClient();
+  return await admin.rpc("process_question_attempt", {
+    p_student_id: attempt.studentId,
+    p_question_instance_id: attempt.instanceId,
+    p_answer: attempt.answer,
+    p_question_shown_at: attempt.questionShownAt,
   });
 }
