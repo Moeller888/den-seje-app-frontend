@@ -23,7 +23,7 @@ import { tmpdir } from "node:os";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 import { attemptSend, CALL_ID as PREP_CALL_ID } from "../../tools/avatar/prepare-r3-head-colour-call.mjs";
 import { evaluate, FILES as EVAL_FILES } from "../../tools/avatar/evaluate-r3-head-colour-d151.mjs";
-import { preD151Contract, PRE_D151_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD151Contract, PRE_D151_CONTRACT_CANONICAL_SHA256, preD152Contract, PRE_D152_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -36,7 +36,11 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 const CONTRACT_REL = "tools/avatar/fixtures/r3/r3-shadow-contract-v1.json";
 const REGISTER_REL = "docs/project-state.md";
-const C = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-152 later recorded D-151's outcome and closed its entry in place. This suite tests D-151 AS COMMITTED: C is the live
+// contract with exactly D-152's closure reversed, required below to be canonically identical to the contract at the
+// D-151 commit. Every sandbox runs against that historical contract; one test runs the adapter against the LIVE one.
+const C = preD152Contract(LIVE);
 const D151 = C.authorisedCalls.calls.find((e) => e.decision === "D-151");
 
 const CALL = "D-151-r3-head-colour-u1-v1";
@@ -175,12 +179,13 @@ test("the adapter's pins equal the D-151 contract entry, the D-151 register row 
 // ── the authorisation itself ─────────────────────────────────────────────────────────────────
 
 test("D-151 adds exactly one authorisation: the pre-D-151 contract is reproduced canonically, nothing else changed", () => {
+  assert.equal(sha256(JSON.stringify(C)), PRE_D152_CONTRACT_CANONICAL_SHA256, "C is the contract exactly as the D-151 commit left it");
   assert.equal(sha256(JSON.stringify(preD151Contract(C))), PRE_D151_CONTRACT_CANONICAL_SHA256);
   assert.equal(C.authorisedCalls.count, 4);
   assert.deepEqual(C.authorisedCalls.calls.map((e) => e.decision), ["D-139", "D-142", "D-143", "D-151"]);
   assert.equal(C.adapterImplementations.entries.length, 1, "no new implementation entry");
   assert.equal(C.meta.authorisesImageRequest, false, "the general flag stays false");
-  assert.ok(!/D-148/.test(JSON.stringify(C)), "the contract still says nothing about D-148");
+  assert.ok(!/D-148/.test(JSON.stringify(C)) && !/D-148/.test(JSON.stringify(LIVE)), "the contract still says nothing about D-148");
 });
 
 test("D-151's entry is the ONLY live permission, and it is bound to exactly one fetch", () => {
@@ -296,7 +301,7 @@ function sgit(sb, args) {
 }
 
 /** A fresh sandbox: a git repository with the D-151 inputs as origin/main and one commit on top. */
-function sandbox({ mutateBase, onTop = true } = {}) {
+function sandbox({ mutateBase, onTop = true, liveContract = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d151-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -308,6 +313,7 @@ function sandbox({ mutateBase, onTop = true } = {}) {
   writeFileSync(sb.log, "");
   writeFileSync(sb.png, encodePngRGBA(1024, 1536, Buffer.alloc(1024 * 1536 * 4, 0x7f)));
   for (const rel of SANDBOX_FILES()) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  if (!liveContract) writeFileSync(join(sb.repo, ...CONTRACT_REL.split("/")), JSON.stringify(C, null, 2) + "\n");
   if (mutateBase) mutateBase(sb);
   sgit(sb, ["init", "-q", "-b", "main"]);
   sgit(sb, ["add", "-A"]);
@@ -403,6 +409,15 @@ test("refused before the claim: outputs already present", () => {
   const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
   assert.equal(r.status, 1); assert.match(r.out, /REFUSED \[outputs-not-empty\]/);
   assert.equal(existsSync(sb.claim), false); assert.equal(fetchLog(sb).length, 0);
+});
+
+test("since D-152 the LIVE contract refuses the D-151 adapter before any claim: its mandate is closed", () => {
+  const e = LIVE.authorisedCalls.calls.find((x) => x.decision === "D-151");
+  assert.equal(e.mandateState, "SPENT"); assert.equal(e.neverReuse, true); assert.equal(e.notAnActivePermission, true);
+  const sb = sandbox({ liveContract: true });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
+  assertRefusedBeforeClaim(sb, r, "authorisation");
+  assert.match(r.out, /mandateState: "SPENT" ≠ "UNSPENT"/);
 });
 
 test("refused before the claim: no H1", () => { const sb = sandbox(); assertRefusedBeforeClaim(sb, runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV), "inputs"); });
