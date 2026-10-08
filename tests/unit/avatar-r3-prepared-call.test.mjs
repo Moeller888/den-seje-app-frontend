@@ -68,9 +68,9 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record and the closed D-143 record", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 3);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 3);
+test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143 record and D-151's record, closed by D-152", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 4);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 4);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -84,6 +84,15 @@ test("authorisedCalls holds D-139's call, the D-142 record and the closed D-143 
   assert.equal(closed.mandateState, "SPENT");
   assert.equal(closed.neverReuse, true);
   assert.equal(closed.decision, "D-143");
+  // The fourth is D-151's: one colour-limited head call, sent once (HTTP 400, no image) and closed by D-152 — a record too.
+  const d151 = CONTRACT.authorisedCalls.calls[3];
+  assert.equal(d151.callId, "D-151-r3-head-colour-u1-v1");
+  assert.equal(d151.decision, "D-151");
+  assert.equal(d151.mandateState, "SPENT");
+  assert.equal(d151.neverReuse, true);
+  assert.match(d151.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(d151.claim.furtherAttempt, /NEW owner decision and a NEW claim identity/);
+  assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.mandateState === "UNSPENT"), "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });

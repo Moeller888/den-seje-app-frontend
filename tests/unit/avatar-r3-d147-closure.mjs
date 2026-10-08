@@ -13,6 +13,16 @@
 //
 // The values below were taken byte-for-byte from that commit. They describe the state BEFORE the call was made
 // and must never be read as the current state of D-143.
+//
+// D-151 later ADDED one authorisation (a new entry, a raised planned capacity and the prose that names it). It
+// changes no D-143/D-145 field. preD151Contract() removes exactly those additions, and the tests REQUIRE its result
+// to be canonically identical to the contract at the D-151 base commit (PRE_D151_CONTRACT_CANONICAL_SHA256).
+// preClosureContract() applies it first, so the D-147 reconstruction above is unchanged in meaning.
+//
+// D-152 then CLOSED D-151's entry in place after its one send (HTTP 400, no image) — the D-147 pattern — and counted
+// that send in callsActuallySentSoFar. preD152Contract() reverses exactly that closure; the tests REQUIRE its result to
+// be canonically identical to the contract at the D-151 commit (PRE_D152_CONTRACT_CANONICAL_SHA256). preD151Contract()
+// applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -61,9 +71,93 @@ export const PRE_CLOSURE = Object.freeze({
   "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds THREE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — the ONE ACTIVE, UNSPENT permission: SUPERSEDED NARROWLY BY D-143 for exactly one further CORE-only underlay call, not yet sent. It is not exercisable today because no adapter in origin/main is pinned and authorised to send D-143-r3-underlay-core-v2, and execution additionally requires its own owner instruction. Nothing else is authorised — no repeat of D-139's call, no reuse of D-142's call id or claim identity, no second D-143 call, and no other call in the R3 plan."
 });
 
-/** A deep copy of the live contract with D-147's closure reversed. Pure; never touches the input. */
-export function preClosureContract(live) {
+export const D151_DECISION = "D-151";
+/** The D-151 base commit (origin/main when D-151 was authorised). */
+export const PRE_D151_COMMIT = "941db7e268f5122dcf14b75bd8daddb03ed0ca21";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D151_COMMIT. */
+export const PRE_D151_CONTRACT_CANONICAL_SHA256 = "8306bec218a7b9ad6e7d0be9d8a6651c162cd45bf807b53835d9dd113d4d972e";
+/** The values D-151 replaced, as they stood at PRE_D151_COMMIT. */
+export const PRE_D151 = Object.freeze({
+  "count": 3,
+  "budgetAccounting": "assets[0] carries 3 PLANNED calls after D-143: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; and D-143's one call, sent once with its candidate rejected (recorded by D-147). The derived budget is 17-18. Budget numbers remain planning, never consent.",
+  "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds THREE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's or D-143's call id or claim identity, and no other call in the R3 plan.",
+  "minimum": 17,
+  "maximum": 18,
+  "callsPlannedAndAuthorised": {
+    "underlay": 3,
+    "why": "D-143 authorised exactly one further underlay call, and that call has been made (recorded by D-147). assets[0].calls is PLANNED capacity; it moved to 3 when the authorisation was merged, not when the call was made.",
+    "derivedBudget": "17-18"
+  },
+  "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. D-143's call has been made (recorded by D-147), so the actually-sent figure is 3 as well and the two numbers now agree. Their agreement authorises nothing either.",
+  "asset0Calls": 3
+});
+
+/** The D-151 commit (the contract as D-151 committed it, before its outcome was recorded). */
+export const PRE_D152_COMMIT = "8f379853bc8acedd06359bbeea70cf488f74df23";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D152_COMMIT. */
+export const PRE_D152_CONTRACT_CANONICAL_SHA256 = "32cff41bf3fb887babdef8ed52ebbf7ff52f3c0eb9cac1602ccc41bfaf9afc06";
+/** The keys D-152 added to D-151's entry. */
+export const D152_ADDED_D151_KEYS = Object.freeze(["outcome", "neverReuse", "notAnActivePermission", "closure", "execution"]);
+/** The values D-152 replaced, as they stood at PRE_D152_COMMIT. */
+export const PRE_D152 = Object.freeze({
+  "d151": {
+    "status": "AUTHORISED — UNSPENT — NOT YET SENT",
+    "mandateState": "UNSPENT"
+  },
+  "callsActuallySentSoFar": {
+    "underlay": 3,
+    "which": [
+      "D-139 — sent, output rejected",
+      "D-142 — sent during the incident, outcome UNKNOWN",
+      "D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)"
+    ],
+    "note": "An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147."
+  },
+  "callsPlannedAndAuthorised": {
+    "underlay": 4,
+    "why": "D-151 authorises exactly one further, colour-limited head underlay call on top of D-143's spent one. assets[0].calls is PLANNED capacity; it moves to 4 when the authorisation is committed, not when the call is made.",
+    "derivedBudget": "18-19"
+  },
+  "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. The actually-sent figure stays 3 until D-151's call is sent; until then the two numbers differ on purpose. Their agreement or disagreement authorises nothing.",
+  "budgetAccounting": "assets[0] carries 4 PLANNED calls after D-151: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); and the one colour-limited head call D-151 authorises, which has not been sent. The derived budget is 18-19. Budget numbers remain planning, never consent.",
+  "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds FOUR entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — THE ONLY active send permission. D-151 supersedes the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay, with mandateState UNSPENT until its claim exists. prohibitions.noRetry forbids a repeat and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. Apart from D-151's single call, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's or D-151's call id or claim identity, and no other call in the R3 plan."
+});
+
+/** A deep copy of the live contract with D-152's closure of D-151 reversed. Pure; never touches the input. */
+export function preD152Contract(live) {
   const c = JSON.parse(JSON.stringify(live));
+  const e151 = c.authorisedCalls.calls.find((e) => e.decision === D151_DECISION);
+  if (e151) {
+    e151.status = PRE_D152.d151.status;
+    e151.mandateState = PRE_D152.d151.mandateState;
+    for (const k of D152_ADDED_D151_KEYS) delete e151[k];
+  }
+  c.imageCallBudget.callsActuallySentSoFar = JSON.parse(JSON.stringify(PRE_D152.callsActuallySentSoFar));
+  c.imageCallBudget.callsPlannedAndAuthorised = JSON.parse(JSON.stringify(PRE_D152.callsPlannedAndAuthorised));
+  c.imageCallBudget.doNotConfuseTheTwo = PRE_D152.doNotConfuseTheTwo;
+  c.authorisedCalls.budgetAccounting = PRE_D152.budgetAccounting;
+  c.prohibitions.noImageRequestAuthorised = PRE_D152.noImageRequestAuthorised;
+  return c;
+}
+
+/** A deep copy of the live contract with D-152's closure and D-151's additions removed. Pure; never touches the input. */
+export function preD151Contract(live) {
+  const c = preD152Contract(live);
+  c.authorisedCalls.calls = c.authorisedCalls.calls.filter((e) => e.decision !== D151_DECISION);
+  c.authorisedCalls.count = PRE_D151.count;
+  c.authorisedCalls.budgetAccounting = PRE_D151.budgetAccounting;
+  c.prohibitions.noImageRequestAuthorised = PRE_D151.noImageRequestAuthorised;
+  c.imageCallBudget.minimum = PRE_D151.minimum;
+  c.imageCallBudget.maximum = PRE_D151.maximum;
+  c.imageCallBudget.callsPlannedAndAuthorised = JSON.parse(JSON.stringify(PRE_D151.callsPlannedAndAuthorised));
+  c.imageCallBudget.doNotConfuseTheTwo = PRE_D151.doNotConfuseTheTwo;
+  c.assets[0].calls = PRE_D151.asset0Calls;
+  return c;
+}
+
+/** A deep copy of the live contract with D-151's additions and D-147's closure reversed. Pure; never touches the input. */
+export function preClosureContract(live) {
+  const c = preD151Contract(live);
   const e143 = c.authorisedCalls.calls.find((e) => e.callId === D143_CALL_ID);
   const e145 = c.adapterImplementations.entries.find((e) => e.decision === "D-145" && e.callId === D143_CALL_ID);
   e143.status = PRE_CLOSURE.d143.status;
