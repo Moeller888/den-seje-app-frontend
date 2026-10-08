@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabase-keys.ts";
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
+import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +17,10 @@ const corsHeaders = {
 console.log(`[process-event] service-key source=${serviceKeySource()}`)
 
 // The backend client for the two privileged answer RPCs (process_text_answer and
-// process_question_attempt) and nothing else — see ./text-answer-rpc.ts. Built per call, only when
-// one of those RPCs is about to run: no pupil Authorization header, no session. If the key cannot
-// be resolved this throws, and the caller answers with a 500 — never a fallback to the user client.
+// process_question_attempt — see ./text-answer-rpc.ts) and for the server-owned question_instances
+// writes (long-answer save, misconception signal — see ./instance-writes.ts), and nothing else.
+// Built per call, only when one of those is about to run: no pupil Authorization header, no session.
+// If the key cannot be resolved this throws — never a fallback to the user client.
 function makeAdminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS)
 }
@@ -146,15 +148,33 @@ serve(async (req) => {
 
       // Save the answer text so the teacher can see it. Do not mark answered=true
       // because the question should stay visible in the teacher queue.
-      const { error: saveError } = await supabase
-        .from("question_instances")
-        .update({ user_answer: answer })
-        .eq("id", question_instance_id)
-        .eq("student_id", user.id)
+      // question_instances has no UPDATE policy, so the pupil's client would update 0 rows and
+      // report success. The save goes through the admin client, scoped to the instance AND the
+      // verified user.id, and must touch exactly one row (./instance-writes.ts). Nothing has been
+      // awarded yet, so a failed save is a 500 — never a silent "pending".
+      let saveResult: InstanceWriteResult
+      try {
+        saveResult = await updateOwnInstance(
+          makeAdminClient,
+          { instanceId: question_instance_id, studentId: user.id },
+          { user_answer: answer }
+        )
+      } catch (keyError: any) {
+        // serviceKey()'s messages name the variables, never their values.
+        console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+        return new Response(JSON.stringify({ error: "Server configuration error" }), {
+          status: 500, headers: corsHeaders
+        })
+      }
 
-      if (saveError) {
-        console.error("LONG SAVE ERROR:", saveError)
-        return new Response(JSON.stringify({ error: saveError.message }), {
+      if (!saveResult.ok) {
+        console.error("LONG SAVE ERROR:", JSON.stringify({
+          instance_id: question_instance_id,
+          reason: saveResult.reason,
+          rows: saveResult.rows,
+          code: saveResult.code,
+        }))
+        return new Response(JSON.stringify({ error: "Could not save answer" }), {
           status: 500, headers: corsHeaders
         })
       }
@@ -209,14 +229,15 @@ serve(async (req) => {
 
       console.log("PROCESS TEXT ANSWER RESULT:", rpcResult)
 
-      // Fire-and-forget: record misconception signal if incorrect and available
+      // Record the misconception signal if incorrect and available — through the admin client,
+      // scoped to the instance and user.id. Non-fatal: the answer is already processed, so a failed
+      // write is logged ("INSTANCE WRITE FAILED") and the normal response below is still returned.
       if (!isCorrect && misconceptionType) {
-        supabase
-          .from("question_instances")
-          .update({ misconception_signal: misconceptionType })
-          .eq("id", question_instance_id)
-          .eq("student_id", user.id)
-          .then(() => {})
+        await recordMisconceptionSignal(makeAdminClient, {
+          instanceId: question_instance_id,
+          studentId:  user.id,
+          signal:     misconceptionType,
+        })
       }
 
       // 'already_processed' means the instance was already answered — return
@@ -270,14 +291,15 @@ serve(async (req) => {
     const status = rpcData?.status ?? "pending"
     console.log("DEBUG MC RESULT:", { status })
 
-    // Fire-and-forget: record misconception signal if incorrect and available
+    // Record the misconception signal if incorrect and available — through the admin client, scoped
+    // to the instance and user.id. Non-fatal: the RPC has already marked the instance answered and
+    // paid out, so a failed write is logged ("INSTANCE WRITE FAILED") and the response is unchanged.
     if (status === "incorrect" && misconceptionType) {
-      supabase
-        .from("question_instances")
-        .update({ misconception_signal: misconceptionType })
-        .eq("id", question_instance_id)
-        .eq("student_id", user.id)
-        .then(() => {})
+      await recordMisconceptionSignal(makeAdminClient, {
+        instanceId: question_instance_id,
+        studentId:  user.id,
+        signal:     misconceptionType,
+      })
     }
 
     // Set next_review_at for spaced repetition scheduling.

@@ -243,12 +243,36 @@ must be reachable only from the backend. `process-event` calls each through a se
 pupil's own client and checking `student_id = user.id` (403 otherwise). The pupil argument is always
 the verified `user.id` and `p_is_correct` the evaluator's result — never request fields; MC/number
 correctness, rewards and idempotency stay inside `process_question_attempt`. A key-configuration
-error fails the path with a 500; it never falls back to the user client. Everything else in
-`process-event` (auth, the instance read, the long-answer save, `next_review_at`,
-`misconception_signal`) stays user-scoped. `process_text_answer` is EXECUTE-locked to `service_role`
-(D-110, 2026-10-04); the internal quest/streak helpers it and `process_question_attempt` call have no
-API-role EXECUTE at all; revoking `process_question_attempt` from PUBLIC/`anon`/`authenticated` is a
-separate D-110 migration, applied after this code is live.
+error fails the path with a 500; it never falls back to the user client. Auth, the instance read
+and `next_review_at` stay user-scoped. `process_text_answer` (D-110, 2026-10-04) and
+`process_question_attempt` (D-110, 2026-10-07) are EXECUTE-locked to `service_role`; the internal
+quest/streak helpers they call have no API-role EXECUTE at all.
+
+Server-owned `question_instances` writes: the table has RLS with SELECT and INSERT policies but **no
+UPDATE policy**, so an UPDATE through the pupil's client is filtered to 0 rows and PostgREST reports
+success (`error = null`) — the long-answer save and `misconception_signal` were lost silently that
+way (0 signals ever stored). Pupils are deliberately not given an UPDATE policy (they must not be able
+to change `answered`, `correct_answer`, `repeat_count`, reward fields or another pupil's rows).
+Instead `process-event` makes these two writes through the same admin client, after the ownership
+check, via `process-event/instance-writes.ts`: every update is scoped to `id` **and**
+`student_id = user.id`, returns the touched ids (`.select("id")`), and only exactly one row is
+success — 0 rows, >1 row, a DB error or an odd response are failures.
+- `misconception_signal` (MC/number and short-text, incorrect answers) is **non-fatal**: it runs after
+  the award RPC has already accepted the answer, so a failure is logged as one structured
+  `INSTANCE WRITE FAILED` line (instance id, reason, `fatal: false`) and the normal answer response is
+  still returned. No retry.
+- The long-answer `user_answer` save is **fatal**: nothing has been awarded yet, so a failed or 0-row
+  save returns a 500 (`LONG SAVE ERROR`) instead of `pending`.
+
+Known gaps, deliberately not changed with the write fix:
+- **`next_review_at` is ineffective in the current runtime.** `process-event` still tries to set it on
+  the pupil's client after an MC answer (0 rows, as above), but nothing would read it:
+  `get-next-question` reads `next_review_at` only on `answered = false` instances, and
+  `request_repeat_question` picks repeats (incorrect first, oldest first) without reading it. Spaced
+  repetition has to be designed as a separate product/architecture decision.
+- **`reset-pending` is a blocker before long answers are activated.** It updates every pending
+  long answer of every pupil through the backend key for any signed-in caller — no role check, no
+  scope. It must be closed before any `answer_type = "long"` content is activated.
 
 Short typed answers (the first evaluator, `isTextAnswerCorrect`): correct **only** if the answer
 equals the correct answer or one of the question's explicit `content.accepted_answers` after
@@ -275,11 +299,12 @@ format — e.g. a two-choice true/false — is shown exactly as authored and is 
 - **Event-driven progression** (`js/progression.js`): no direct coin/XP mutation — state is a pure
   aggregate of events (`MC_CORRECT`, `TEXT_APPROVED`, `XP_BOOST`, `REFUND`). No side effects in the
   engine itself; awards are applied by deterministic RPCs server-side.
-- **Spaced repetition:** `process-event` sets `next_review_at` (+1 day on correct, +10 min on
-  incorrect for MC; text path schedules via RPC).
+- **Spaced repetition:** `process-event` attempts to set `next_review_at` (+1 day on correct, +10 min
+  on incorrect for MC; text path schedules via RPC), but in the current runtime the value is never
+  read for answered instances, so it does not affect repetition — see §6 "Known gaps".
 - **Misconception signals:** wrong answers can carry a `misconception_type` (from question
-  metadata) recorded fire-and-forget on `question_instances.misconception_signal`, and a
-  `review_text` is returned to teach on the miss.
+  metadata) recorded on `question_instances.misconception_signal` through the backend write path
+  (non-fatal, logged on failure — §6), and a `review_text` is returned to teach on the miss.
 - **Content/curriculum modules:** a large family of `js/` modules support content intelligence,
   pedagogical pipeline, readability, reflection and curriculum deployment (advisory/authoring-side;
   not in the reward path).

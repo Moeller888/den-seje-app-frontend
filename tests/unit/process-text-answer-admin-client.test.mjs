@@ -149,16 +149,19 @@ test("the admin client is built in one place, from serviceKey(), with no headers
   assert.equal((INDEX_CODE.match(/serviceKey\(\)/g) ?? []).length, 1, "serviceKey() is resolved in exactly one place");
 });
 
-test("the admin client is used only by the two privileged answer RPCs", () => {
-  // makeAdminClient is defined once and handed to exactly two call sites — the short-text award and
-  // the MC/number attempt. It is never invoked directly, so nothing else can run on it.
+test("the admin client is used only by the two privileged answer RPCs and the server-owned instance writes", () => {
+  // makeAdminClient is defined once and handed to exactly five call sites — the short-text award, the
+  // MC/number attempt, the long-answer save and the two misconception-signal writes
+  // (./instance-writes.ts). It is never invoked directly, so nothing else can run on it.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 3, "one definition + two call sites");
+  assert.equal(uses.length, 6, "one definition + five call sites");
   assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
   assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
+  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAdminClient,/);
+  assert.match(PATH_TEXT, /await recordMisconceptionSignal\(makeAdminClient,/);
+  assert.match(PATH_MC, /await recordMisconceptionSignal\(makeAdminClient,/);
   assert.equal(/makeAdminClient\(\)/.test(INDEX_CODE.replace(/function makeAdminClient\(\)/, "")), false,
-    "the admin client is only ever built inside the privileged RPC helpers");
-  assert.equal(/makeAdminClient/.test(PATH_LONG), false);
+    "the admin client is only ever built inside the privileged helpers");
 });
 
 test("process_text_answer is never called on the user client", () => {
@@ -205,20 +208,24 @@ test("a key failure on the MC / number path is a visible 500 — no user-client 
   assert.equal(/supabase\.rpc|\.rpc\(/.test(handler), false);
 });
 
-test("the MC / number response, review scheduling and misconception writes are unchanged", () => {
+test("the MC / number response and review scheduling are unchanged; the misconception write is backend-owned", () => {
   assert.match(PATH_MC, /const status = rpcData\?\.status \?\? "pending"/);
   assert.match(PATH_MC, /if \(rpcError\) \{\s*console\.error\("RPC ERROR:", rpcError\)\s*return new Response\(JSON\.stringify\(\{ error: rpcError\.message \}\), \{\s*status: 500, headers: corsHeaders\s*\}\)\s*\}/);
-  // These two stay on the user client exactly as before (the RLS question is separate).
-  assert.match(PATH_MC, /supabase\s*\.from\("question_instances"\)\s*\.update\(\{ misconception_signal: misconceptionType \}\)/);
+  // The misconception signal goes through the admin client, scoped to the instance and user.id.
+  assert.match(PATH_MC, /if \(status === "incorrect" && misconceptionType\) \{\s*await recordMisconceptionSignal\(makeAdminClient, \{\s*instanceId: question_instance_id,\s*studentId:\s+user\.id,\s*signal:\s+misconceptionType,\s*\}\)\s*\}/);
+  assert.equal(/supabase\s*\.from\("question_instances"\)\s*\.update\(\{ misconception_signal/.test(INDEX_CODE), false);
+  // next_review_at is deliberately left exactly as it was (a separate spaced-repetition decision).
   assert.match(PATH_MC, /await supabase\s*\.from\("question_instances"\)\s*\.update\(\{ next_review_at: nextReviewAt\.toISOString\(\) \}\)/);
   assert.match(PATH_MC, /status,\s*correct_answer: rpcData\?\.correct_answer \?\? correct_answer,\s*review_text: status === "incorrect" \? reviewText : null,\s*misconception_type: status === "incorrect" \? misconceptionType : null,/);
 });
 
-test("the long-answer path is unchanged and never uses the admin client", () => {
+test("the long-answer path keeps its contract; only the save moved to the scoped admin write", () => {
   assert.match(PATH_LONG, /if \(words < 20\)/);
-  assert.match(PATH_LONG, /await supabase\s*\.from\("question_instances"\)\s*\.update\(\{ user_answer: answer \}\)/);
+  assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAdminClient,\s*\{ instanceId: question_instance_id, studentId: user\.id \},\s*\{ user_answer: answer \}\s*\)/);
+  assert.equal(/supabase\s*\.from\("question_instances"\)\s*\.update/.test(PATH_LONG), false, "no user-client update left");
   assert.match(PATH_LONG, /JSON\.stringify\(\{ status: "pending", correct_answer: null, review_text: null \}\)/);
-  assert.equal(/callProcessTextAnswer|callProcessQuestionAttempt|makeAdminClient|serviceKey|ADMIN_CLIENT_OPTIONS/.test(PATH_LONG), false);
+  assert.equal(/callProcessTextAnswer|callProcessQuestionAttempt|serviceKey|ADMIN_CLIENT_OPTIONS|answered/.test(PATH_LONG), false,
+    "no award RPC, and answered is not touched");
   assert.ok(INDEX_CODE.indexOf('if (answerType === "long")') < INDEX_CODE.indexOf('if (format.includes("text"))'),
     "the long check still comes first");
 });
