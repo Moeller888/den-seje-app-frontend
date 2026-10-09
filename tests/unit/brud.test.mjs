@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  WORLD_W, WORLD_H, COLS, ROWS, BALL_R, PAD_W, PAD_Y, MAX_BALL_SPEED, MAX_LEVEL_SPEED,
+  WORLD_W, WORLD_H, COLS, ROWS, BALL_R, PAD_W, PAD_Y, MAX_BALL_SPEED, MAX_LEVEL_SPEED, PADDLE_ACCEL,
   layoutBricks, clampPaddle, launchVelocity, nextLevelSpeed, stepBall,
 } from "../../js/brud-logic.js";
 
@@ -68,6 +68,46 @@ test("the paddle sends the ball back up, angled by where it hit, never faster th
   stepBall(edge, 180, [], DT);
   assert.ok(edge.vx > 0 && edge.vy < 0);
   assert.ok(Math.hypot(edge.vx, edge.vy) <= MAX_BALL_SPEED + 1e-6);
+});
+
+test("every paddle hit speeds the ball up by PADDLE_ACCEL until it reaches the cap", () => {
+  assert.ok(PADDLE_ACCEL > 1.02, "the ball must speed up noticeably on each hit");
+  const ball = { x: 180, y: PAD_Y - BALL_R - 1, vx: 0, vy: 300, clean: false };
+  let speed = 300;
+  let hits = 0;
+  while (speed < MAX_BALL_SPEED && hits < 200) {
+    ball.x = 180; ball.y = PAD_Y - BALL_R - 1; ball.vy = Math.abs(ball.vy); ball.vx = 0;
+    assert.equal(stepBall(ball, 180, [], DT).paddle, true);
+    const next = Math.hypot(ball.vx, ball.vy);
+    assert.ok(Math.abs(next - Math.min(MAX_BALL_SPEED, speed * PADDLE_ACCEL)) < 1e-6);
+    speed = next;
+    hits += 1;
+  }
+  assert.ok(hits <= 25, `the ball should reach full speed within 25 paddle hits, took ${hits}`);
+  assert.ok(Math.abs(speed - MAX_BALL_SPEED) < 1e-6);
+});
+
+test("at full speed the ball cannot pass through the paddle or a brick between two steps", () => {
+  const perStep = MAX_BALL_SPEED * DT;
+  assert.ok(perStep < BALL_R + 14, "paddle catch window");
+  const brick = layoutBricks()[0];
+  assert.ok(perStep < brick.h + BALL_R * 2, "brick hit window");
+  // A ball falling straight down at full speed from any sub-step offset is still caught.
+  for (let off = 0; off < perStep; off += 0.5) {
+    const ball = { x: 180, y: PAD_Y - BALL_R - 1 - off, vx: 0, vy: MAX_BALL_SPEED, clean: false };
+    let caught = false;
+    for (let i = 0; i < 4 && !caught; i++) caught = stepBall(ball, 180, [], DT).paddle;
+    assert.ok(caught, `missed at offset ${off}`);
+  }
+});
+
+test("on a computer the paddle is steered by keyboard only; touch still drags it", () => {
+  const js = read("js/brud.js");
+  assert.match(js, /ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right"/);
+  assert.match(js, /if \(event\.pointerType === "mouse"\) return;/);
+  assert.match(js, /if \(event\.pointerType !== "mouse"\) \{/);
+  const html = read("brud.html");
+  assert.ok(!/musen/.test(html), "the page must not tell pupils to steer with the mouse");
 });
 
 test("a brick hit straight off the paddle is perfect; the next one is not", () => {
