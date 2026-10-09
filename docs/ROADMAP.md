@@ -624,12 +624,13 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
   succesbeskeden et tvunget kodeordsskift, som den live funktion (v17) ikke udfører. Live v17
   adskiller sig fra repo også i nøgleopslaget (legacy `SUPABASE_SERVICE_ROLE_KEY` vs. `serviceKey()`)
   — diff live vs. repo før deploy.
-- **Fundet, ikke rettet i denne tranche (kræver ejerbeslutning / migration):**
-  `get_teacher_visibility(p_teacher_id)` er SECURITY DEFINER uden kontrol af, at kalderen ER den
-  lærer, og EXECUTE er givet til `anon`. Den bør låses som `get_my_students` (rolle fra
-  `auth.uid()`), via en særskilt migration med ejerautorisation (D-110).
-  Live findes desuden 3 auth-brugere uden profil — samme partial-failure, som create-student nu
-  forhindrer fremover. De er ikke rørt.
+- **Sikkerhedsfund, lukket separat:** `get_teacher_visibility(p_teacher_id)` kontrollerede ikke, at
+  kalderen VAR den lærer, og `anon` havde EXECUTE. Rettet i PR #300
+  (`20261009100000_get_teacher_visibility_caller_scope.sql`) og anvendt i produktion 2026-10-09
+  (registreret som `20261009123844`): kun en lærer, der spørger på sit eget id, får rækker;
+  `anon`/`PUBLIC`/`service_role` har ikke længere EXECUTE.
+- **Fundet, ikke rettet:** live findes 3 auth-brugere uden profil — samme partial-failure, som
+  create-student nu forhindrer fremover. De er ikke rørt.
 
 **Senere produktbeslutninger (bevidst IKKE i tranche 1):** `classes`-tabel og flere klasser pr.
 lærer · klassekoder · CSV-import · UNI-Login · skoleadministration · selvbetjent lærer-signup ·
