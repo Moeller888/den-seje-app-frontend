@@ -607,7 +607,7 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
 **157C** (Edge observability foundation) · **157CA** (observability docs + static validation) ·
 **157CC** (this rebase) — complete (foundations; default-off; production-safe).
 
-## Lærerens brugerrejse — tranche 1 "Ny lærer → første elev i gang" (branch `feat/teacher-first-run`, IKKE merget, IKKE deployet)
+## Lærerens brugerrejse — tranche 1 "Ny lærer → første elev i gang" (`feat/teacher-first-run`; `create-student` v18 live 2026-10-09)
 
 - **First-run:** en lærer med 0 elever ser kun en kort guide i fire trin og "Opret første elev", som
   fører direkte til den eksisterende elevoprettelse (ingen modal, ingen tour). En fejl ved indlæsning
@@ -620,10 +620,12 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
   "Vurder svar". review-answer-kontrakten og XP-reglerne er uændrede.
 - **create-student** sætter `must_reset_password = true`, og ruller auth-brugeren tilbage, hvis
   profilen ikke kan skrives.
-- **Deploy-rækkefølge (vigtig):** `create-student` skal deployes FØR frontenden merges. Ellers lover
-  succesbeskeden et tvunget kodeordsskift, som den live funktion (v17) ikke udfører. Live v17
-  adskiller sig fra repo også i nøgleopslaget (legacy `SUPABASE_SERVICE_ROLE_KEY` vs. `serviceKey()`)
-  — diff live vs. repo før deploy.
+- **Deploy-rækkefølge (overholdt):** `create-student` skulle deployes FØR frontenden merges, ellers
+  ville succesbeskeden love et tvunget kodeordsskift, som den gamle funktion (v17, legacy
+  `SUPABASE_SERVICE_ROLE_KEY`) ikke udførte. `create-student` **v18** blev deployet fra denne
+  branch 2026-10-09 (bundle `7796366d…`, `verify_jwt=false`, `source=secret-keys`); dens fire
+  deploy-filer er byte-identiske med koden i denne tranche, så merge af tranchen lukker live/main-
+  driften. Frontenden går live via Cloudflare ved merge.
 - **Sikkerhedsfund, lukket separat:** `get_teacher_visibility(p_teacher_id)` kontrollerede ikke, at
   kalderen VAR den lærer, og `anon` havde EXECUTE. Rettet i PR #300
   (`20261009100000_get_teacher_visibility_caller_scope.sql`) og anvendt i produktion 2026-10-09
