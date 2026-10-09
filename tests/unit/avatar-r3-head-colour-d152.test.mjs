@@ -22,7 +22,7 @@ import { loadInputs, apiMaskToEditable, finalModelRgbRegion, apiContextMargin, F
 import { processOutput, decodeOutput, ColourGateError } from "../../tools/avatar/process-r3-head-colour-output.mjs";
 import { decodeOutputRgbOrRgba, backgroundLeakGate, LEAK_RULE } from "../../tools/avatar/r3-head-colour-opaque-output.mjs";
 import * as D152 from "../../tools/avatar/prepare-r3-head-colour-call-d152.mjs";
-import { preD152Contract, PRE_D152_CONTRACT_CANONICAL_SHA256, PRE_D152, D152_ADDED_D151_KEYS, preD153Contract, PRE_D153_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD152Contract, PRE_D152_CONTRACT_CANONICAL_SHA256, PRE_D152, D152_ADDED_D151_KEYS, preD153Contract, PRE_D153_CONTRACT_CANONICAL_SHA256, preD154Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -75,7 +75,8 @@ test("as D-152 left it, the contract is reproduced canonically, and D-151 is sti
   assert.equal(sha256(JSON.stringify(C)), PRE_D153_CONTRACT_CANONICAL_SHA256);
   const live151 = LIVE.authorisedCalls.calls.find((e) => e.decision === "D-151");
   assert.deepEqual(live151, D151, "D-153 does not touch D-151's entry");
-  assert.equal(LIVE.imageCallBudget.callsActuallySentSoFar.underlay, 4, "D-153 does not count a send it has not made");
+  assert.equal(preD154Contract(LIVE).imageCallBudget.callsActuallySentSoFar.underlay, 4, "D-153 did not count a send it had not made");
+  assert.equal(LIVE.imageCallBudget.callsActuallySentSoFar.underlay, 5, "D-154 counts D-153 send");
 });
 
 test("no live permission remains, the prose says so, and D-152 adds no authorisation", () => {
