@@ -477,11 +477,6 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/review-answer/index.ts"
 
-[functions.reset-pending]
-enabled = true
-verify_jwt = false
-entrypoint = "./functions/reset-pending/index.ts"
-
 [functions.avatar-asset-validator]
 enabled = true
 verify_jwt = false

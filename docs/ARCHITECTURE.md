@@ -179,7 +179,7 @@ lives in `_shared/monitoring.ts` — the single boundary every function inherits
 | `process-event` | user JWT | Submits an answer; routes MC/number/text/long; awards XP/coins via RPC; sets `next_review_at`; records misconception signal. **Central answer boundary.** |
 | `buy-item` | user JWT | Shop purchase; coins verified via RLS/atomic RPC. |
 | `create-student` / `create-teacher` | no JWT | Admin account creation. |
-| `reset-student` / `reset-pending` / `reset-student-password` | privileged | Reset progress / pending / password. |
+| `reset-student` / `reset-student-password` | privileged | Reset progress / password. |
 | `question-context` | JWT | Fetches question context. |
 | `equip-avatar` | user JWT | Equip/unequip a cosmetic slot. |
 | `review-answer` | teacher JWT → service role | Teacher scores an open answer; awards XP by score. |
@@ -264,15 +264,19 @@ success — 0 rows, >1 row, a DB error or an odd response are failures.
 - The long-answer `user_answer` save is **fatal**: nothing has been awarded yet, so a failed or 0-row
   save returns a 500 (`LONG SAVE ERROR`) instead of `pending`.
 
-Known gaps, deliberately not changed with the write fix:
+Known gaps and retirements around these writes:
 - **`next_review_at` is ineffective in the current runtime.** `process-event` still tries to set it on
   the pupil's client after an MC answer (0 rows, as above), but nothing would read it:
   `get-next-question` reads `next_review_at` only on `answered = false` instances, and
   `request_repeat_question` picks repeats (incorrect first, oldest first) without reading it. Spaced
   repetition has to be designed as a separate product/architecture decision.
-- **`reset-pending` is a blocker before long answers are activated.** It updates every pending
-  long answer of every pupil through the backend key for any signed-in caller — no role check, no
-  scope. It must be closed before any `answer_type = "long"` content is activated.
+- **`reset-pending` retired 2026-10-09; live endpoint temporarily returns 410 pending separate
+  deletion.** It let any signed-in caller (pupils included) update every `question_instances` row
+  with `teacher_score IS NULL` — all pupils' MC answers, not only long answers — through the backend
+  key, with no role check and no scope. It had no caller since its teacher button was removed on
+  2026-04-22. The code is gone from the repo; `tests/unit/question-instances-write-scope.test.mjs`
+  keeps every runtime `question_instances` write on an explicit allowlist with `id` + `student_id`
+  scope, so an unscoped write cannot come back unnoticed.
 
 Short typed answers (the first evaluator, `isTextAnswerCorrect`): correct **only** if the answer
 equals the correct answer or one of the question's explicit `content.accepted_answers` after
