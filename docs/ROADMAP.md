@@ -607,6 +607,34 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
 **157C** (Edge observability foundation) · **157CA** (observability docs + static validation) ·
 **157CC** (this rebase) — complete (foundations; default-off; production-safe).
 
+## Lærerens brugerrejse — tranche 1 "Ny lærer → første elev i gang" (branch `feat/teacher-first-run`, IKKE merget, IKKE deployet)
+
+- **First-run:** en lærer med 0 elever ser kun en kort guide i fire trin og "Opret første elev", som
+  fører direkte til den eksisterende elevoprettelse (ingen modal, ingen tour). En fejl ved indlæsning
+  af elever vises som fejl — aldrig som "du har ingen elever".
+- **"Dine elever"** viser nu ALLE lærerens elever (navn, klassetrin, niveau, "Vis elev") fra
+  `get_teacher_visibility` — samme kontrakt som Klasseoversigt. Den gamle sektion viste reelt kun
+  elever med ventende lange svar, og dens navne-opslag (`profiles!…(email)`) pegede på en kolonne,
+  `profiles` ikke har.
+- **"Svar til vurdering"** er en separat arbejdskø: elever med ventende lange svar, antal, ældste,
+  "Vurder svar". review-answer-kontrakten og XP-reglerne er uændrede.
+- **create-student** sætter `must_reset_password = true`, og ruller auth-brugeren tilbage, hvis
+  profilen ikke kan skrives.
+- **Deploy-rækkefølge (vigtig):** `create-student` skal deployes FØR frontenden merges. Ellers lover
+  succesbeskeden et tvunget kodeordsskift, som den live funktion (v17) ikke udfører. Live v17
+  adskiller sig fra repo også i nøgleopslaget (legacy `SUPABASE_SERVICE_ROLE_KEY` vs. `serviceKey()`)
+  — diff live vs. repo før deploy.
+- **Fundet, ikke rettet i denne tranche (kræver ejerbeslutning / migration):**
+  `get_teacher_visibility(p_teacher_id)` er SECURITY DEFINER uden kontrol af, at kalderen ER den
+  lærer, og EXECUTE er givet til `anon`. Den bør låses som `get_my_students` (rolle fra
+  `auth.uid()`), via en særskilt migration med ejerautorisation (D-110).
+  Live findes desuden 3 auth-brugere uden profil — samme partial-failure, som create-student nu
+  forhindrer fremover. De er ikke rørt.
+
+**Senere produktbeslutninger (bevidst IKKE i tranche 1):** `classes`-tabel og flere klasser pr.
+lærer · klassekoder · CSV-import · UNI-Login · skoleadministration · selvbetjent lærer-signup ·
+bulk-tildeling af domæner · nyt dashboard-framework · ændringer i den adaptive motor · avatararbejde.
+
 ## Future sections
 
 ### Platform / services track (from the 157A audit)

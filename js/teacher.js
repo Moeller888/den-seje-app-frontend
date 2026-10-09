@@ -52,10 +52,15 @@ window.addEventListener("pageshow", async (event) => {
 ======================== */
 
 const studentListContainer = document.getElementById("studentList");
+const reviewQueueContainer = document.getElementById("reviewQueue");
 const studentEmailInput = document.getElementById("studentEmail");
 const studentPasswordInput = document.getElementById("studentPassword");
 const createStudentBtn = document.getElementById("createStudentBtn");
 const createMessage = document.getElementById("createMessage");
+const createBox = document.getElementById("createBox");
+const firstRunSection = document.getElementById("firstRun");
+const firstRunCta = document.getElementById("firstRunCta");
+const pageLoading = document.getElementById("pageLoading");
 const logoutBtn = document.getElementById("logoutBtn");
 
 /* ========================
@@ -81,47 +86,133 @@ function isValidEmail(email) {
    CREATE STUDENT
 ======================== */
 
+// The error codes create-student returns (supabase/functions/create-student/handler.ts), in the
+// teacher's words. The provider's own text is never shown.
+const CREATE_ERROR_TEXT = {
+  invalid_email: "Emailen ser ikke rigtig ud. Tjek den, og prøv igen.",
+  invalid_password: "Adgangskoden skal være mindst 6 tegn.",
+  create_failed: "Eleven kunne ikke oprettes. Tjek emailen – den kan allerede være i brug.",
+  unauthorized: "Din session er udløbet. Log ud og ind igen, og prøv så igen.",
+  forbidden: "Kun lærere kan oprette elever.",
+  profile_failed: "Eleven blev ikke oprettet. Prøv igen om lidt.",
+  profile_failed_rollback_failed:
+    "Oprettelsen gik galt halvvejs, og emailen kan nu være optaget. " +
+    "Skriv til kontakt@lærlig.dk, før du prøver igen med samme email.",
+};
+
+const CREATE_ERROR_FALLBACK = "Eleven kunne ikke oprettes. Prøv igen om lidt.";
+
+// supabase.functions.invoke() puts a non-2xx response in error.context (a Response) and leaves
+// data null, so the code has to be read from there.
+async function readFunctionErrorCode(error, data) {
+  if (data && typeof data.error === "string") return data.error;
+  const ctx = error?.context;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const body = await (typeof ctx.clone === "function" ? ctx.clone() : ctx).json();
+      if (body && typeof body.error === "string") return body.error;
+    } catch (e) {
+      console.error("[teacher] create-student error body unreadable", e);
+    }
+  }
+  return null;
+}
+
+function showCreateError(text) {
+  createMessage.innerHTML = "";
+  const p = document.createElement("p");
+  p.className = "create-error";
+  p.textContent = text;
+  createMessage.appendChild(p);
+}
+
+// What actually happens next, and nothing more: create-student flags the pupil with
+// must_reset_password, js/login.js sends a flagged pupil to the forced reset, and app.js asks for
+// the grade and runs the placement questions when neither is set yet.
+function showCreateSuccess(email) {
+  createMessage.innerHTML = "";
+  const box = document.createElement("div");
+  box.className = "create-success";
+  box.id = "createSuccess";
+
+  const title = document.createElement("strong");
+  title.textContent = "Eleven er oprettet.";
+
+  const give = document.createElement("p");
+  give.append("Giv eleven emailen ");
+  const em = document.createElement("b");
+  em.textContent = email;
+  give.append(em, " og den midlertidige adgangskode, du lige har valgt.");
+
+  const next = document.createElement("p");
+  next.textContent =
+    "Ved første login vælger eleven sin egen adgangskode. Derefter vælger eleven klassetrin " +
+    "og løser nogle startopgaver, så opgaverne passer til elevens niveau.";
+
+  box.append(title, give, next);
+  createMessage.appendChild(box);
+}
+
 createStudentBtn.addEventListener("click", async () => {
 
   const email = studentEmailInput.value.trim();
   const password = studentPasswordInput.value.trim();
 
-  createMessage.textContent = "";
-  createMessage.style.color = "red";
+  createMessage.innerHTML = "";
 
   if (!email || !password) {
-    createMessage.textContent = "Udfyld begge felter.";
+    showCreateError("Udfyld både email og midlertidig adgangskode.");
     return;
   }
 
   if (!isValidEmail(email)) {
-    createMessage.textContent = "Ugyldig email-adresse.";
+    showCreateError(CREATE_ERROR_TEXT.invalid_email);
     return;
   }
 
   if (password.length < 6) {
-    createMessage.textContent = "Adgangskode skal være mindst 6 tegn.";
+    showCreateError(CREATE_ERROR_TEXT.invalid_password);
     return;
   }
 
-  const { data, error } = await supabase.functions.invoke(
-    "create-student",
-    { body: { email, password } }
-  );
+  createStudentBtn.disabled = true;
 
-  if (error || data?.error) {
-    createMessage.textContent =
-      error?.message || data?.error || "Fejl ved oprettelse.";
-    return;
+  let data = null;
+  let error = null;
+  try {
+    ({ data, error } = await supabase.functions.invoke(
+      "create-student",
+      { body: { email, password } }
+    ));
+  } catch (e) {
+    error = e;
   }
 
-  createMessage.style.color = "green";
-  createMessage.textContent = "Elev oprettet korrekt.";
+  if (error || data?.error || data?.success !== true) {
+    createStudentBtn.disabled = false;
+    const code = await readFunctionErrorCode(error, data);
+    console.error("[teacher] create-student failed", code ?? error);
+    showCreateError(CREATE_ERROR_TEXT[code] ?? CREATE_ERROR_FALLBACK);
+    return;
+  }
 
   studentEmailInput.value = "";
   studentPasswordInput.value = "";
 
-  await loadStudentOverview();
+  showCreateSuccess(email);
+
+  // The new pupil changes the roster, so every panel that reads it is reloaded — including the
+  // switch from first run to the full dashboard after the very first pupil.
+  await refreshAfterRosterChange();
+
+  createStudentBtn.disabled = false;
+  createBox?.scrollIntoView({ block: "nearest" });
+});
+
+firstRunCta?.addEventListener("click", () => {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  createBox?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+  studentEmailInput.focus({ preventScroll: true });
 });
 
 /* ========================
@@ -580,20 +671,140 @@ async function loadEngagementPanel() {
 }
 
 /* ========================
-   STUDENT OVERVIEW (PENDING)
+   ROSTER: "DINE ELEVER" + FIRST RUN
+   Every pupil this teacher owns, from get_teacher_visibility — the same contract the class
+   overview uses (scoped by profiles.teacher_id). It also decides between the first-run state
+   (roster loaded and empty) and the full dashboard. A load ERROR never shows the first-run
+   state: "we could not load your pupils" is not "you have no pupils".
 ======================== */
 
-function groupByStudent(rows) {
+let rosterStudents = [];
+
+function setRosterState(state) {
+  // state: "loading" | "empty" | "students" | "error"
+  if (pageLoading) pageLoading.hidden = state !== "loading";
+  if (firstRunSection) firstRunSection.hidden = state !== "empty";
+  if (createBox) createBox.hidden = state === "loading";
+  document.querySelectorAll("[data-needs-students]").forEach(el => {
+    el.hidden = !(state === "students" || state === "error");
+  });
+  document.body.dataset.teacherState = state;
+}
+
+function panelMessage(container, text, isError) {
+  container.innerHTML = "";
+  const p = document.createElement("p");
+  p.className = "panel-state" + (isError ? " is-error" : "");
+  p.textContent = text;
+  container.appendChild(p);
+}
+
+function gradeText(grade) {
+  return grade != null ? grade + ". klasse" : "Klassetrin ikke valgt endnu";
+}
+
+function levelText(s) {
+  // placement_band is set by the placement questions; before that the pupil has no level yet.
+  // current_band is then the band of the pupil's recent answers.
+  if (s.placement_band == null) return "Niveau ikke fundet endnu";
+  const band = s.current_band ?? s.placement_band;
+  return "Niveau: band " + band;
+}
+
+function renderStudentList(students) {
+  if (!studentListContainer) return;
+  studentListContainer.innerHTML = "";
+
+  const list = document.createElement("ul");
+  list.className = "row-list";
+  list.id = "studentRows";
+
+  students.forEach(s => {
+    const li = document.createElement("li");
+    li.className = "row-item";
+    li.dataset.studentId = s.student_id;
+
+    const main = document.createElement("div");
+    main.className = "row-main";
+
+    const name = document.createElement("div");
+    name.className = "row-name";
+    name.textContent = s.display_name ?? "Elev";
+
+    const meta = document.createElement("div");
+    meta.className = "row-meta";
+    const grade = document.createElement("span");
+    grade.className = "row-grade";
+    grade.textContent = gradeText(s.selected_grade);
+    const level = document.createElement("span");
+    level.className = "row-level";
+    level.textContent = levelText(s);
+    meta.append(grade, level);
+
+    main.append(name, meta);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row-action student-open-btn";
+    btn.dataset.id = s.student_id;
+    btn.textContent = "Vis elev";
+    btn.setAttribute("aria-label", "Vis elev: " + (s.display_name ?? "Elev"));
+    btn.onclick = () => {
+      window.location.href = `student-detail.html?id=${encodeURIComponent(s.student_id)}`;
+    };
+
+    li.append(main, btn);
+    list.appendChild(li);
+  });
+
+  studentListContainer.appendChild(list);
+}
+
+async function loadRoster() {
+  const { data, error } = await supabase.rpc("get_teacher_visibility", {
+    p_teacher_id: teacherId
+  });
+
+  if (error || !Array.isArray(data)) {
+    console.error("[teacher] roster load failed", error);
+    rosterStudents = [];
+    setRosterState("error");
+    if (studentListContainer) {
+      panelMessage(studentListContainer, "Dine elever kunne ikke indlæses. Genindlæs siden for at prøve igen.", true);
+    }
+    return false;
+  }
+
+  rosterStudents = data.filter(s => s && typeof s.student_id === "string");
+
+  if (rosterStudents.length === 0) {
+    setRosterState("empty");
+    return true;
+  }
+
+  setRosterState("students");
+  renderStudentList(rosterStudents);
+  return true;
+}
+
+/* ========================
+   "SVAR TIL VURDERING" — the review work queue
+   Long answers from this teacher's pupils that have no teacher_score yet. A work queue, not the
+   pupil list. Reviewing itself still happens on student-detail.html through review-answer, whose
+   ownership checks and XP rules are unchanged.
+======================== */
+
+function groupPendingByStudent(rows, namesById) {
   const map = {};
 
   rows.forEach(row => {
     if (!row.student_id) return;
-    if (!row.user_answer || row.user_answer.trim() === "") return;
+    if (typeof row.user_answer !== "string" || row.user_answer.trim() === "") return;
 
     if (!map[row.student_id]) {
       map[row.student_id] = {
         student_id: row.student_id,
-        email: row.profiles?.email ?? "Ukendt",
+        name: namesById[row.student_id] ?? "Elev",
         count: 0,
         oldest: row.created_at
       };
@@ -609,39 +820,77 @@ function groupByStudent(rows) {
   return Object.values(map);
 }
 
-function renderStudentList(students) {
-  const container = document.getElementById("studentList");
-  container.innerHTML = "";
-
-  if (students.length === 0) {
-    container.innerHTML = "<p>Ingen ventende svar</p>";
-    return;
-  }
-
-  students.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "box";
-
-    div.innerHTML = `
-      <strong>${s.email}</strong><br>
-      Ventende svar: ${s.count}<br>
-      Ældste: ${new Date(s.oldest).toLocaleString()}
-      <br><br>
-    `;
-
-    const btn = document.createElement("button");
-    btn.textContent = "Gå til elev";
-    btn.onclick = () => {
-      window.location.href = `student-detail.html?id=${s.student_id}`;
-    };
-
-    div.appendChild(btn);
-    container.appendChild(div);
+function formatOldest(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "ukendt tidspunkt";
+  return d.toLocaleString("da-DK", {
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
   });
 }
 
-async function loadStudentOverview() {
-  // Step 1: Get only students belonging to this teacher.
+function renderReviewQueue(groups) {
+  if (!reviewQueueContainer) return;
+
+  if (groups.length === 0) {
+    panelMessage(reviewQueueContainer, "Ingen svar venter på vurdering.", false);
+    return;
+  }
+
+  reviewQueueContainer.innerHTML = "";
+  const list = document.createElement("ul");
+  list.className = "row-list";
+  list.id = "reviewRows";
+
+  groups.forEach(g => {
+    const li = document.createElement("li");
+    li.className = "row-item";
+    li.dataset.studentId = g.student_id;
+
+    const main = document.createElement("div");
+    main.className = "row-main";
+
+    const name = document.createElement("div");
+    name.className = "row-name";
+    name.textContent = g.name;
+
+    const meta = document.createElement("div");
+    meta.className = "row-meta";
+    const count = document.createElement("span");
+    count.className = "review-count";
+    const chip = document.createElement("span");
+    chip.className = "count-chip";
+    chip.textContent = String(g.count);
+    count.append(chip, " svar venter");
+    const oldest = document.createElement("span");
+    oldest.className = "review-oldest";
+    oldest.textContent = "Ældste: " + formatOldest(g.oldest);
+    meta.append(count, oldest);
+
+    main.append(name, meta);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row-action review-open-btn";
+    btn.dataset.id = g.student_id;
+    btn.textContent = "Vurder svar";
+    btn.setAttribute("aria-label", "Vurder svar fra " + g.name);
+    btn.onclick = () => {
+      window.location.href = `student-detail.html?id=${encodeURIComponent(g.student_id)}`;
+    };
+
+    li.append(main, btn);
+    list.appendChild(li);
+  });
+
+  reviewQueueContainer.appendChild(list);
+}
+
+async function loadReviewQueue() {
+  if (!reviewQueueContainer) return;
+
+  // Step 1: resolve this teacher's own pupils before reading any of their answers. The
+  // question_instances policy scopes rows to the caller's pupils as well; this keeps the query
+  // honest about what it asks for (tests/unit/question-instances-read-scope.test.mjs).
   const { data: myStudents, error: studentsError } = await supabase
     .from("profiles")
     .select("id")
@@ -649,65 +898,74 @@ async function loadStudentOverview() {
     .eq("role", "student");
 
   if (studentsError) {
-    console.error(studentsError);
-    studentListContainer.innerHTML = "<p>Fejl ved indlæsning af elever</p>";
+    console.error("[teacher] review queue pupil lookup failed", studentsError);
+    panelMessage(reviewQueueContainer, "Svarene kunne ikke indlæses. Genindlæs siden for at prøve igen.", true);
     return;
   }
 
-  const studentIds = (myStudents || []).map(s => s.id);
-
+  const studentIds = (myStudents || []).map(s => s.id).filter(Boolean);
   if (studentIds.length === 0) {
-    studentListContainer.innerHTML = "<p>Ingen elever tilknyttet</p>";
+    renderReviewQueue([]);
     return;
   }
 
-  // Step 2: Pending instances for this teacher's students only.
+  const namesById = {};
+  rosterStudents.forEach(s => { namesById[s.student_id] = s.display_name ?? "Elev"; });
+
+  // Step 2: unscored answers from those pupils.
   const { data: instancesRaw, error: instancesError } = await supabase
     .from("question_instances")
-    .select(`
-      student_id,
-      created_at,
-      user_answer,
-      teacher_score,
-      question_id,
-      profiles!question_instances_student_id_fkey (
-        email
-      )
-    `)
+    .select("student_id, created_at, user_answer, teacher_score, question_id")
     .in("student_id", studentIds)
     .is("teacher_score", null)
     .not("user_answer", "is", null);
 
   if (instancesError) {
-    console.error(instancesError);
+    console.error("[teacher] review queue load failed", instancesError);
+    panelMessage(reviewQueueContainer, "Svarene kunne ikke indlæses. Genindlæs siden for at prøve igen.", true);
     return;
   }
 
   const instances = instancesRaw || [];
 
-  // Step 3: Identify which of those questions are long-answer type.
-  // Short-text is auto-graded; teachers only review long-answer submissions.
+  // Step 3: only long answers go to the teacher. Short text is graded automatically.
   const questionIds = [...new Set(instances.map(r => r.question_id).filter(Boolean))];
 
   if (questionIds.length === 0) {
-    renderStudentList([]);
+    renderReviewQueue([]);
     return;
   }
 
-  const { data: longQuestions } = await supabase
+  const { data: longQuestions, error: questionsError } = await supabase
     .from("questions")
     .select("id")
     .in("id", questionIds)
     .eq("answer_type", "long");
 
+  if (questionsError) {
+    console.error("[teacher] review queue question lookup failed", questionsError);
+    panelMessage(reviewQueueContainer, "Svarene kunne ikke indlæses. Genindlæs siden for at prøve igen.", true);
+    return;
+  }
+
   const longQuestionIds = new Set((longQuestions || []).map(q => q.id));
 
-  // Step 4: Filter instances to long-answer only and group by student.
+  // Step 4: group per pupil, oldest waiting first.
   const longInstances = instances.filter(r => longQuestionIds.has(r.question_id));
-
-  const grouped = groupByStudent(longInstances);
+  const grouped = groupPendingByStudent(longInstances, namesById);
   grouped.sort((a, b) => new Date(a.oldest) - new Date(b.oldest));
-  renderStudentList(grouped);
+  renderReviewQueue(grouped);
+}
+
+// Everything that reads the roster, reloaded after it changes (a pupil was created).
+async function refreshAfterRosterChange() {
+  const ok = await loadRoster();
+  if (!ok || rosterStudents.length === 0) return;
+  await loadReviewQueue();
+  await loadEngagementPanel();
+  await loadClassOverview();
+  await loadDomainPanel();
+  await loadSpotlightPanel();
 }
 
 /* ========================
@@ -832,8 +1090,16 @@ if (spotlightRemoveBtn) {
    INIT
 ======================== */
 
-await loadEngagementPanel();
-await loadClassOverview();
-await loadDomainPanel();
-await loadStudentOverview();
-await loadSpotlightPanel();
+setRosterState("loading");
+
+// The roster decides what this teacher sees first: the first-run guide (no pupils yet) or the
+// dashboard. The other panels only load when there is something to show.
+const rosterLoaded = await loadRoster();
+
+if (!rosterLoaded || rosterStudents.length > 0) {
+  await loadReviewQueue();
+  await loadEngagementPanel();
+  await loadClassOverview();
+  await loadDomainPanel();
+  await loadSpotlightPanel();
+}

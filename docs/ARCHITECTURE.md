@@ -95,7 +95,7 @@ Supabase client is loaded from a CDN ESM URL.
 | `shop.html` | inline | Coin shop; calls `buy-item`. | student |
 | `avatar.html` | `js/` avatar engines | Avatar viewer / customisation surface. | student |
 | `collection.html`, `themes.html`, `achievements.html`, `leaderboard.html` | inline + `js/` | Progression/cosmetic surfaces. | student |
-| `teacher.html` | `js/teacher.js` | Teacher dashboard, student management. | teacher |
+| `teacher.html` | `js/teacher.js` | Teacher dashboard. With **0 pupils** it shows only a first-run guide + "Opret elev"; with pupils: "Kræver din opmærksomhed" (Svar til vurdering), "Overblik" (Klasseaktivitet, Klasseoversigt), "Elever" (Dine elever = every pupil from `get_teacher_visibility`, Opret elev, Domæne-fokus, Fremhæv). A roster load error is never shown as "no pupils". | teacher |
 | `student-detail.html` | `js/student-detail.js` | Per-student detail + open-answer review. | teacher |
 | `admin.html` | `js/admin.js` | Super-admin: account creation, ops. | super_admin |
 | `reset-password.html` | `js/reset-password.js` | Password reset flow. | all |
@@ -178,7 +178,8 @@ lives in `_shared/monitoring.ts` — the single boundary every function inherits
 | `get-next-question` | no JWT | Returns the next question instance for a student. |
 | `process-event` | user JWT | Submits an answer; routes MC/number/text/long; awards XP/coins via RPC; sets `next_review_at`; records misconception signal. **Central answer boundary.** |
 | `buy-item` | user JWT | Shop purchase; coins verified via RLS/atomic RPC. |
-| `create-student` / `create-teacher` | no JWT | Admin account creation. |
+| `create-student` | no gateway JWT; verifies the caller's token and `profiles.role = 'teacher'` itself | Teacher creates a pupil: auth user, then profile (`role='student'`, `teacher_id` = caller, **`must_reset_password = true`** → forced reset on first login via the existing `login.js` → `reset-password.html?forced=1` flow). A failed profile write deletes the auth user again; a failed delete returns `profile_failed_rollback_failed`. Contract in `create-student/handler.ts`, tested by `tests/unit/create-student-handler.test.mjs`. |
+| `create-teacher` | no JWT | Admin account creation. |
 | `reset-student` / `reset-student-password` | privileged | Reset progress / password. |
 | `question-context` | JWT | Fetches question context. |
 | `equip-avatar` | user JWT | Equip/unequip a cosmetic slot. |
