@@ -425,14 +425,19 @@ async function main() {
   });
   const arena = $("brud-arena");
   if (arena) {
+    // On a computer the paddle is steered with the keyboard only (arrows or A/D); a mouse click
+    // still launches the ball. A finger or pen drags the paddle, so tablets and phones can play.
     arena.addEventListener("pointerdown", (event) => {
       if (event.target && event.target.closest && event.target.closest("button")) return;
-      const x = pointerToWorld(event);
-      if (x !== null && Number.isFinite(x)) state.pointerX = x;
+      if (event.pointerType !== "mouse") {
+        const x = pointerToWorld(event);
+        if (x !== null && Number.isFinite(x)) state.pointerX = x;
+      }
       launch();
     });
     arena.addEventListener("pointermove", (event) => {
       if (state.phase !== "play") return;
+      if (event.pointerType === "mouse") return;
       const x = pointerToWorld(event);
       if (x !== null && Number.isFinite(x)) state.pointerX = x;
     });

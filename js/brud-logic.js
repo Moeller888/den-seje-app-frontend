@@ -1,7 +1,8 @@
 // Brud — pure breakout logic. No DOM, no rewards.
 // Keep the ball up with the paddle and break the bricks. A brick hit straight off the paddle — no
 // wall bounce and no other brick in between — is perfect. A cleared wall is rebuilt and the ball
-// gets faster. The ball dropping past the paddle ends the round.
+// gets faster. Every paddle hit also speeds the ball up by PADDLE_ACCEL, up to MAX_BALL_SPEED, so a
+// round cannot drag on. The ball dropping past the paddle ends the round.
 // Everything is in a fixed world of WORLD_W × WORLD_H units; the page scales it onto the canvas,
 // so a resize mid-round never moves a brick.
 
@@ -13,7 +14,10 @@ export const BALL_R = 7;
 export const PAD_W = 80;
 export const PAD_Y = WORLD_H * 0.84;
 export const PAD_SPEED = 420;
-export const MAX_BALL_SPEED = 520;
+// At the cap the ball moves 15 units per 1/60 s step — less than the paddle's catch window (21) and
+// a brick's hit window (30), so it can never pass through either between two steps.
+export const MAX_BALL_SPEED = 900;
+export const PADDLE_ACCEL = 1.06;
 export const MAX_LEVEL_SPEED = 1.7;
 
 const LAUNCH_SPEED = 300;
@@ -99,7 +103,7 @@ export function stepBall(ball, padX, bricks, dt) {
   if (ball.vy > 0 && ball.y >= PAD_Y - r && ball.y <= PAD_Y + 14 && ball.x >= padX - half && ball.x <= padX + half) {
     ball.y = PAD_Y - r;
     const hit = (ball.x - padX) / half;
-    const sp = Math.min(MAX_BALL_SPEED, Math.hypot(ball.vx, ball.vy) * 1.02);
+    const sp = Math.min(MAX_BALL_SPEED, Math.hypot(ball.vx, ball.vy) * PADDLE_ACCEL);
     ball.vx = hit * sp * 0.85;
     ball.vy = -Math.sqrt(Math.max(40, sp * sp - ball.vx * ball.vx));
     ball.clean = true;
