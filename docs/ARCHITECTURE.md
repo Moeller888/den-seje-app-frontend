@@ -120,7 +120,13 @@ input and returns to a valid state. Never bypass this machine.
 Schema and most content are managed as **versioned SQL migrations** in `supabase/migrations/`
 (60+ files; timestamped). Highlights of what the migrations establish:
 
-- **Identity / roles:** `profiles` (holds `role`: `student` | `teacher` | `super_admin`).
+- **Identity / roles:** `profiles` (holds `role`: `student` | `teacher` | `super_admin`). Direct
+  SELECT (policy `profiles_select`, as set by migration `20261009221339` — applied to production
+  only under its own D-110 approval): everyone reads their own row;
+  a teacher also reads their own pupils (`role = 'student' AND teacher_id = auth.uid()`, caller's
+  role = teacher via `auth_profile_role()`). Pupils, other teachers' pupils and global reads go
+  through scoped SECURITY DEFINER RPCs (`get_teacher_visibility`, `get_student_overview`, …) or
+  the backend key. Before that migration any signed-in user could read every pupil profile.
 - **Learning core:** `questions`, `question_instances` (per-student instance with
   `correct_answer`, `user_answer`, `answered`, `was_correct`, `next_review_at`,
   `misconception_signal`), `student_progress` (xp, coins, mastery, counters).

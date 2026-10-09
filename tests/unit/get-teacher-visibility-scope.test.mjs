@@ -271,7 +271,11 @@ test("the migration sorts after the newest live migration and its version is uni
   assert.ok(files.includes(FILE));
   assert.equal(files.filter((f) => f.startsWith("20261009100000_")).length, 1);
   assert.ok("20261009100000" > "20261007192021", "after the newest remote version (2026-10-09)");
-  assert.equal(files[files.length - 1], FILE, "it is the newest migration in the repository");
+  // No later migration may redefine or re-grant get_teacher_visibility (a later, unrelated migration
+  // is fine — this file need not stay the newest in the repository).
+  const later = files.filter((f) => f > FILE).filter((f) =>
+    /get_teacher_visibility/i.test(readFileSync(join(MIGRATIONS, f), "utf8").replace(/--.*$/gm, "")));
+  assert.deepEqual(later, [], "it is the newest migration touching get_teacher_visibility");
 });
 
 test("exactly one CREATE OR REPLACE, then the four privilege statements, for the one signature", () => {
