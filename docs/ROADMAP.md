@@ -607,6 +607,37 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
 **157C** (Edge observability foundation) · **157CA** (observability docs + static validation) ·
 **157CC** (this rebase) — complete (foundations; default-off; production-safe).
 
+## Lærerens brugerrejse — tranche 1 "Ny lærer → første elev i gang" (`feat/teacher-first-run`; `create-student` v18 live 2026-10-09)
+
+- **First-run:** en lærer med 0 elever ser kun en kort guide i fire trin og "Opret første elev", som
+  fører direkte til den eksisterende elevoprettelse (ingen modal, ingen tour). En fejl ved indlæsning
+  af elever vises som fejl — aldrig som "du har ingen elever".
+- **"Dine elever"** viser nu ALLE lærerens elever (navn, klassetrin, niveau, "Vis elev") fra
+  `get_teacher_visibility` — samme kontrakt som Klasseoversigt. Den gamle sektion viste reelt kun
+  elever med ventende lange svar, og dens navne-opslag (`profiles!…(email)`) pegede på en kolonne,
+  `profiles` ikke har.
+- **"Svar til vurdering"** er en separat arbejdskø: elever med ventende lange svar, antal, ældste,
+  "Vurder svar". review-answer-kontrakten og XP-reglerne er uændrede.
+- **create-student** sætter `must_reset_password = true`, og ruller auth-brugeren tilbage, hvis
+  profilen ikke kan skrives.
+- **Deploy-rækkefølge (overholdt):** `create-student` skulle deployes FØR frontenden merges, ellers
+  ville succesbeskeden love et tvunget kodeordsskift, som den gamle funktion (v17, legacy
+  `SUPABASE_SERVICE_ROLE_KEY`) ikke udførte. `create-student` **v18** blev deployet fra denne
+  branch 2026-10-09 (bundle `7796366d…`, `verify_jwt=false`, `source=secret-keys`); dens fire
+  deploy-filer er byte-identiske med koden i denne tranche, så merge af tranchen lukker live/main-
+  driften. Frontenden går live via Cloudflare ved merge.
+- **Sikkerhedsfund, lukket separat:** `get_teacher_visibility(p_teacher_id)` kontrollerede ikke, at
+  kalderen VAR den lærer, og `anon` havde EXECUTE. Rettet i PR #300
+  (`20261009100000_get_teacher_visibility_caller_scope.sql`) og anvendt i produktion 2026-10-09
+  (registreret som `20261009123844`): kun en lærer, der spørger på sit eget id, får rækker;
+  `anon`/`PUBLIC`/`service_role` har ikke længere EXECUTE.
+- **Fundet, ikke rettet:** live findes 3 auth-brugere uden profil — samme partial-failure, som
+  create-student nu forhindrer fremover. De er ikke rørt.
+
+**Senere produktbeslutninger (bevidst IKKE i tranche 1):** `classes`-tabel og flere klasser pr.
+lærer · klassekoder · CSV-import · UNI-Login · skoleadministration · selvbetjent lærer-signup ·
+bulk-tildeling af domæner · nyt dashboard-framework · ændringer i den adaptive motor · avatararbejde.
+
 ## Future sections
 
 ### Platform / services track (from the 157A audit)

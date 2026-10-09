@@ -1,93 +1,76 @@
+// create-student — a teacher creates a pupil account.
+//
+// This file is WIRING ONLY. The contract (who may call, what is written, the partial-failure
+// rollback and every response) lives in handler.ts, which carries no client, no fetch and no env
+// so it can be tested with fakes: tests/unit/create-student-handler.test.mjs.
+//
+// ERROR POLICY
+// Every Supabase call below checks `error`. The role read THROWS on failure, so a failed read is
+// never mistaken for "not a teacher". The other calls return their error to the handler, which
+// decides the response.
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { serviceKey } from "../_shared/supabase-keys.ts";
+import { createHandler } from "./handler.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SUPABASE_SERVICE_ROLE_KEY = serviceKey()
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+serve((req) => {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
 
-serve(async (req) => {
+  return createHandler({
+    getUserId: async (token) => {
+      const { data, error } = await supabase.auth.getUser(token)
+      if (error || !data?.user?.id) return null
+      return data.user.id
+    },
 
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
-  }
+    getRole: async (userId) => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle()
+      if (error) throw new Error(`role lookup failed: ${error.message ?? "unknown error"}`)
+      return data && typeof data.role === "string" ? data.role : null
+    },
 
-  try {
-    const authHeader = req.headers.get("Authorization")
-    if (!authHeader)
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders })
-
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY
-    )
-
-    const token = authHeader.replace("Bearer ", "")
-
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser(token)
-
-    if (userError || !user)
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders })
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single()
-
-    if (profileError || !profile || profile.role !== "teacher")
-      return new Response("Forbidden", { status: 403, headers: corsHeaders })
-
-    const { email, password } = await req.json()
-
-    if (!email || !password)
-      return new Response("Email and password required", { status: 400, headers: corsHeaders })
-
-    // 👤 Opret auth-user
-    const { data: newUser, error: createError } =
-      await supabase.auth.admin.createUser({
+    createAuthUser: async (email, password) => {
+      const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: true
+        email_confirm: true,
       })
+      return { id: data?.user?.id ?? null, error: error ?? null }
+    },
 
-    if (createError || !newUser?.user)
-      return new Response(createError?.message || "User creation failed", {
-        status: 400,
-        headers: corsHeaders
-      })
+    // must_reset_password = true makes the teacher-chosen password temporary in practice:
+    // js/login.js routes a flagged pupil to reset-password.html?forced=1, and js/reset-password.js
+    // clears the flag once the pupil has chosen their own password. Same flag, same flow as
+    // reset-student-password — no parallel mechanism.
+    writeStudentProfile: async (studentId, teacherId) => {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: studentId,
+          role: "student",
+          teacher_id: teacherId,
+          must_reset_password: true,
+        })
+      return { error: error ?? null }
+    },
 
-    // 🧠 Upsert profile
-    const { error: upsertError } = await supabase
-      .from("profiles")
-      .upsert({
-        id: newUser.user.id,
-        role: "student",
-        teacher_id: user.id
-      })
+    deleteAuthUser: async (userId) => {
+      const { error } = await supabase.auth.admin.deleteUser(userId)
+      return { error: error ?? null }
+    },
 
-    if (upsertError)
-      return new Response(upsertError.message, {
-        status: 500,
-        headers: corsHeaders
-      })
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    )
-
-  } catch (err: any) {
-    return new Response(err.message, {
-      status: 500,
-      headers: corsHeaders
-    })
-  }
+    logError: (stage, detail) => {
+      console.error(`[create-student] ${stage}`, JSON.stringify(detail))
+    },
+  })(req)
 })

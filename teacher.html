@@ -428,6 +428,188 @@
       color: var(--text-main);
     }
 
+    /* ── Page structure: what needs attention / overview / pupils ─────── */
+
+    [hidden] { display: none !important; }
+
+    .group-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-dim);
+      margin: 22px 2px 8px;
+    }
+
+    .box-intro {
+      margin: -4px 0 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+
+    .panel-state {
+      color: var(--text-dim);
+      font-size: 14px;
+      padding: 4px 0;
+    }
+
+    .panel-state.is-error { color: var(--error-bright, #ef5350); font-weight: bold; }
+
+    /* ── First run (no pupils yet) ─────────────────────────────────── */
+
+    .first-run {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 22px 20px;
+      margin-bottom: 14px;
+    }
+
+    .first-run h2 {
+      font-size: 21px;
+      line-height: 1.25;
+      color: var(--text-bright);
+      margin-bottom: 6px;
+      text-wrap: balance;
+    }
+
+    .first-run-lead {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-main);
+      max-width: 60ch;
+      margin-bottom: 16px;
+    }
+
+    .first-run-steps {
+      list-style: none;
+      counter-reset: step;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+      max-width: 62ch;
+    }
+
+    .first-run-steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      column-gap: 12px;
+      align-items: start;
+    }
+
+    .first-run-steps li::before {
+      content: counter(step);
+      grid-row: span 2;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--btn-bg);
+      color: var(--text-bright);
+      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .first-run-steps strong {
+      font-size: 15px;
+      color: var(--text-bright);
+      line-height: 1.35;
+      padding-top: 4px;
+    }
+
+    .first-run-steps span {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-dim);
+      min-width: 0;
+    }
+
+    .first-run-cta {
+      padding: 11px 22px;
+      font-size: 15px;
+    }
+
+    /* ── Create pupil ──────────────────────────────────────────────── */
+
+    .create-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .create-field { display: flex; flex-direction: column; min-width: 0; flex: 1 1 200px; }
+    .create-field input { width: 100%; }
+
+    .create-success {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .create-success strong { display: block; font-size: 15px; color: var(--text-bright); margin-bottom: 4px; }
+    .create-success p + p { margin-top: 4px; }
+
+    #createMessage:empty { display: none; }
+
+    .create-error { color: var(--error-bright, #ef5350); font-weight: bold; }
+
+    /* ── Pupil list and review queue ───────────────────────────────── */
+
+    .row-list { list-style: none; display: flex; flex-direction: column; }
+
+    .row-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 14px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .row-item:first-child { border-top: none; padding-top: 0; }
+
+    .row-main { flex: 1 1 200px; min-width: 0; }
+
+    .row-name {
+      font-weight: bold;
+      color: var(--text-bright);
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .row-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .row-action { padding: 6px 14px; font-size: 13px; }
+
+    .count-chip {
+      display: inline-block;
+      min-width: 22px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+    }
+
     @media (min-width: 600px) {
       .page { padding: 0; }
       body { padding: 24px; }
@@ -442,6 +624,47 @@
     <span class="topbar-title">Lærerpanel</span>
     <button id="logoutBtn" class="logout-btn">Log ud</button>
   </div>
+
+  <p id="pageLoading" class="panel-state" role="status">Indl&#230;ser dine elever&#8230;</p>
+
+  <!-- First run: shown only when the roster has loaded and is EMPTY. Never on a load error. -->
+  <section id="firstRun" class="first-run" hidden aria-labelledby="firstRunTitle">
+    <h2 id="firstRunTitle">Kom i gang med din f&#248;rste elev</h2>
+    <p class="first-run-lead">
+      Du har ingen elever endnu. S&#229;dan kommer din f&#248;rste elev i gang:
+    </p>
+    <ol class="first-run-steps">
+      <li>
+        <strong>Opret din f&#248;rste elev</strong>
+        <span>Skriv elevens email og en midlertidig adgangskode, som du selv v&#230;lger.</span>
+      </li>
+      <li>
+        <strong>Giv eleven login</strong>
+        <span>Giv eleven emailen og den midlertidige adgangskode, fx p&#229; en seddel.</span>
+      </li>
+      <li>
+        <strong>Eleven v&#230;lger klassetrin og finder sit niveau</strong>
+        <span>Ved f&#248;rste login v&#230;lger eleven sin egen adgangskode og sit klassetrin. Derefter l&#248;ser eleven nogle startopgaver, s&#229; opgaverne passer til elevens niveau.</span>
+      </li>
+      <li>
+        <strong>F&#248;lg elevens arbejde her</strong>
+        <span>Her ser du, hvad eleven arbejder med, elevens niveau og de svar, der venter p&#229; din vurdering.</span>
+      </li>
+    </ol>
+    <button type="button" id="firstRunCta" class="first-run-cta">Opret f&#248;rste elev</button>
+  </section>
+
+  <div data-needs-students hidden>
+
+  <h2 class="group-title">Kr&#230;ver din opm&#230;rksomhed</h2>
+
+  <div class="box" id="reviewBox">
+    <h3>Svar til vurdering</h3>
+    <p class="box-intro">Lange svar, som eleverne har afleveret, og som venter p&#229; din vurdering.</p>
+    <div id="reviewQueue"><p class="panel-state">Indl&#230;ser...</p></div>
+  </div>
+
+  <h2 class="group-title">Overblik</h2>
 
   <!-- Section 138: Live engagement view -->
   <div class="box">
@@ -463,6 +686,33 @@
       <span class="legend-item"><span class="pct-poor">&#9679;</span> &lt;50%</span>
     </div>
   </div>
+
+  <h2 class="group-title">Elever</h2>
+
+  <div class="box" id="studentsBox">
+    <h3>Dine elever</h3>
+    <div id="studentList"><p class="panel-state">Indl&#230;ser...</p></div>
+  </div>
+
+  </div>
+
+  <div class="box" id="createBox" hidden>
+    <h3>Opret elev</h3>
+    <div class="create-grid">
+      <label class="create-field">
+        <span class="form-label">Elevens email</span>
+        <input type="email" id="studentEmail" autocomplete="off" placeholder="elev@skole.dk">
+      </label>
+      <label class="create-field">
+        <span class="form-label">Midlertidig adgangskode</span>
+        <input type="password" id="studentPassword" autocomplete="new-password" placeholder="Mindst 6 tegn">
+      </label>
+      <button id="createStudentBtn">Opret elev</button>
+    </div>
+    <div id="createMessage" role="status" aria-live="polite"></div>
+  </div>
+
+  <div data-needs-students hidden>
 
   <div class="box">
     <h3>Dom&#230;ne-fokus</h3>
@@ -488,21 +738,6 @@
       <button id="domainResetBtn" style="background:transparent;color:var(--text-dim);border:1px solid var(--border);">Alle dom&#230;ner</button>
     </div>
     <div id="domainMessage" style="margin-top:10px;font-size:14px;font-weight:bold;min-height:20px;"></div>
-  </div>
-
-  <div class="box">
-    <h3>Opret elev</h3>
-    <div class="form-row">
-      <input type="email" id="studentEmail" placeholder="Elevens email">
-      <input type="password" id="studentPassword" placeholder="Midlertidig adgangskode">
-      <button id="createStudentBtn">Opret</button>
-    </div>
-    <div id="createMessage"></div>
-  </div>
-
-  <div class="box">
-    <h3>Dine elever</h3>
-    <div id="studentList">Indlæser...</div>
   </div>
 
   <div class="box">
@@ -541,6 +776,8 @@
     </div>
     <div id="spotlightMessage2"></div>
     <div id="spotlightCurrentList" style="margin-top:18px"></div>
+  </div>
+
   </div>
 
 </div>
