@@ -223,6 +223,11 @@ const REVIEWED_LATER_READERS = {
     "(auth.uid()) and return an id / a count; process_question_attempt reads one instance " +
     "matched on both id and student_id and returns only its status — the same reads the " +
     "production function already makes. No row data reaches a caller who could not already read it.",
+  "20261009100000_get_teacher_visibility_caller_scope.sql":
+    "get_teacher_visibility makes the same aggregate read of question_instances it has made since " +
+    "20260608065035, but NARROWS who reaches it: rows are read only for pupils whose teacher_id is " +
+    "the verified auth.uid() of a caller whose profiles.role is 'teacher', and EXECUTE is revoked " +
+    "from PUBLIC, anon and service_role. No policy, RLS or table privilege is touched.",
 };
 
 test("the migration sorts after every migration that touches question_instances", () => {
@@ -253,7 +258,8 @@ test("the migration sorts after every migration that touches question_instances"
 test("reviewed later readers are exactly the named files, and change reads only", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_READERS),
-    ["20261002000000_quiz_repeat_when_pool_exhausted.sql"],
+    ["20261002000000_quiz_repeat_when_pool_exhausted.sql",
+     "20261009100000_get_teacher_visibility_caller_scope.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
