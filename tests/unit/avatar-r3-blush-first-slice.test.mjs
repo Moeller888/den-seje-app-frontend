@@ -213,8 +213,8 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
     assert.ok(m, a.name + " has an unreadable calls value");
     min += Number(m[1]); max += Number(m[2]);
   }
-  assert.equal(min, 18, "assets[0] carries 4 PLANNED calls after D-151");
-  assert.equal(max, 19);
+  assert.equal(min, 19, "assets[0] carries 5 PLANNED calls after D-153");
+  assert.equal(max, 20);
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
@@ -223,8 +223,10 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // actually-sent figure is still 2 (D-139 and the D-142 attempt).
   // D-151 authorises ONE further, colour-limited head underlay call, so assets[0] carries 4 PLANNED calls and the
   // derived budget is 18-19. Planned capacity is not a claim that the call was made: the actually-sent figure stays 3.
-  assert.equal(C.imageCallBudget.minimum, 18);
-  assert.equal(C.imageCallBudget.maximum, 19);
+  // D-153 authorises ONE further, opaque-background head underlay call, so assets[0] carries 5 PLANNED calls and the
+  // derived budget is 19-20. Planned capacity is not a claim that the call was made.
+  assert.equal(C.imageCallBudget.minimum, 19);
+  assert.equal(C.imageCallBudget.maximum, 20);
 });
 
 test("nothing is wired, and the existing blush behaviour is untouched", () => {

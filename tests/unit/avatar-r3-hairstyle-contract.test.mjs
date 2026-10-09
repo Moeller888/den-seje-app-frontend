@@ -163,8 +163,10 @@ test("coverage gains a second axis, and the budget is unchanged", () => {
   // actually-sent figure is still 2 (D-139 and the D-142 attempt).
   // D-151 authorises ONE further, colour-limited head underlay call, so assets[0] carries 4 PLANNED calls and the
   // derived budget is 18-19. Planned capacity is not a claim that the call was made: the actually-sent figure stays 3.
-  assert.equal(C.imageCallBudget.minimum, 18);
-  assert.equal(C.imageCallBudget.maximum, 19);
+  // D-153 authorises ONE further, opaque-background head underlay call, so assets[0] carries 5 PLANNED calls and the
+  // derived budget is 19-20. Planned capacity is not a claim that the call was made.
+  assert.equal(C.imageCallBudget.minimum, 19);
+  assert.equal(C.imageCallBudget.maximum, 20);
 });
 
 test("nothing is wired yet, and nothing existing is changed", () => {

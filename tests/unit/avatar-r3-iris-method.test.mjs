@@ -148,8 +148,10 @@ test("the image-call budget is derived arithmetically and is now 15-16", () => {
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
   // D-151 authorises ONE further, colour-limited head underlay call, so assets[0] carries 4 PLANNED calls and the
   // derived budget is 18-19. Planned capacity is not a claim that the call was made: the actually-sent figure stays 3.
-  assert.equal(min, 18, "the iris is still one call; assets[0] now carries four PLANNED calls (D-151)");
-  assert.equal(max, 19);
+  // D-153 authorises ONE further, opaque-background head underlay call, so assets[0] carries 5 PLANNED calls and the
+  // derived budget is 19-20. Planned capacity is not a claim that the call was made.
+  assert.equal(min, 19, "the iris is still one call; assets[0] now carries five PLANNED calls (D-153)");
+  assert.equal(max, 20);
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);

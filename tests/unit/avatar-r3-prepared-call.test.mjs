@@ -68,9 +68,9 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143 record and D-151's record, closed by D-152", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 4);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 4);
+test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151 and D-153 records", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 5);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 5);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -92,7 +92,15 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143 rec
   assert.equal(d151.neverReuse, true);
   assert.match(d151.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d151.claim.furtherAttempt, /NEW owner decision and a NEW claim identity/);
-  assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.mandateState === "UNSPENT"), "no live permission remains");
+  // The fifth is D-153's: one opaque-background head call, sent once (HTTP 200, candidate rejected) and closed by D-154.
+  const d153 = CONTRACT.authorisedCalls.calls[4];
+  assert.equal(d153.callId, "D-153-r3-head-colour-u1-opaque-v1");
+  assert.equal(d153.decision, "D-153");
+  assert.equal(d153.mandateState, "SPENT");
+  assert.equal(d153.neverReuse, true);
+  assert.equal(d153.parameters.background, "opaque");
+  assert.match(d153.prohibitions.noRetry, /Exactly one fetch/);
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });

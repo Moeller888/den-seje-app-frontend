@@ -22,14 +22,17 @@ import { loadInputs, apiMaskToEditable, finalModelRgbRegion, apiContextMargin, F
 import { processOutput, decodeOutput, ColourGateError } from "../../tools/avatar/process-r3-head-colour-output.mjs";
 import { decodeOutputRgbOrRgba, backgroundLeakGate, LEAK_RULE } from "../../tools/avatar/r3-head-colour-opaque-output.mjs";
 import * as D152 from "../../tools/avatar/prepare-r3-head-colour-call-d152.mjs";
-import { preD152Contract, PRE_D152_CONTRACT_CANONICAL_SHA256, PRE_D152, D152_ADDED_D151_KEYS } from "./avatar-r3-d147-closure.mjs";
+import { preD152Contract, PRE_D152_CONTRACT_CANONICAL_SHA256, PRE_D152, D152_ADDED_D151_KEYS, preD153Contract, PRE_D153_CONTRACT_CANONICAL_SHA256, preD154Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
 const N = OUT_W * OUT_H;
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const repoFile = (rel) => join(REPO, ...rel.split("/"));
-const C = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8"));
+const LIVE = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8"));
+// D-153 later ADDED one authorisation. This suite tests the contract AS D-152 LEFT IT: C is the live contract with exactly
+// D-153's additions removed, required below to be canonically identical to the contract at the D-153 base commit.
+const C = preD153Contract(LIVE);
 const REG = readFileSync(repoFile("docs/project-state.md"), "utf8").split("\n");
 const D151 = C.authorisedCalls.calls.find((e) => e.decision === "D-151");
 const PREP_REL = "tools/avatar/prepare-r3-head-colour-call-d152.mjs";
@@ -66,6 +69,14 @@ test("the closure changed only status, mandateState and added keys; the D-151 co
   for (const k of Object.keys(preEntry)) if (!["status", "mandateState"].includes(k)) assert.deepEqual(D151[k], preEntry[k], "authorisation field " + k + " is unchanged");
   assert.deepEqual(Object.keys(D151).filter((k) => !(k in preEntry)).sort(), [...D152_ADDED_D151_KEYS].sort());
   assert.equal(PRE_D152.d151.mandateState, "UNSPENT", "as committed, D-151 was the one live permission");
+});
+
+test("as D-152 left it, the contract is reproduced canonically, and D-151 is still closed in the live contract", () => {
+  assert.equal(sha256(JSON.stringify(C)), PRE_D153_CONTRACT_CANONICAL_SHA256);
+  const live151 = LIVE.authorisedCalls.calls.find((e) => e.decision === "D-151");
+  assert.deepEqual(live151, D151, "D-153 does not touch D-151's entry");
+  assert.equal(preD154Contract(LIVE).imageCallBudget.callsActuallySentSoFar.underlay, 4, "D-153 did not count a send it had not made");
+  assert.equal(LIVE.imageCallBudget.callsActuallySentSoFar.underlay, 5, "D-154 counts D-153 send");
 });
 
 test("no live permission remains, the prose says so, and D-152 adds no authorisation", () => {
