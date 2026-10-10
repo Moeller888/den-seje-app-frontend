@@ -127,6 +127,13 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   role = teacher via `auth_profile_role()`). Pupils, other teachers' pupils and global reads go
   through scoped SECURITY DEFINER RPCs (`get_teacher_visibility`, `get_student_overview`, …) or
   the backend key. Before that migration any signed-in user could read every pupil profile.
+  Direct UPDATE (migration `20261010102416`, applied only under its own D-110 approval): a user may
+  change only `placement_band` and `current_band` on their own row (the adaptive engine in
+  `app.js`); every other column is written by SECURITY DEFINER RPCs (`set_student_grade`,
+  `set_student_domains`, `equip_item`, `set_active_theme`, `set_avatar_identity`, …) or Edge
+  Functions on the backend key. `must_reset_password` is set by create-student /
+  reset-student-password and cleared only by a real password change (trigger on
+  `auth.users.encrypted_password`), so a pupil cannot skip the forced change.
 - **Learning core:** `questions`, `question_instances` (per-student instance with
   `correct_answer`, `user_answer`, `answered`, `was_correct`, `next_review_at`,
   `misconception_signal`), `student_progress` (xp, coins, mastery, counters).
