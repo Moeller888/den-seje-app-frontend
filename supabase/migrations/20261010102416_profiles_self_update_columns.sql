@@ -42,6 +42,21 @@
 -- through the API. reset-password.js keeps its now-redundant client clear until a follow-up PR, so
 -- the frontend works before and after this migration is applied.
 --
+-- WHY THERE IS NO "GRANT EXECUTE … TO supabase_auth_admin"
+-- Postgres checks EXECUTE on a trigger function only when the trigger is CREATED, for the creator
+-- (here postgres, which owns the function). It never checks it when the trigger fires, so Supabase
+-- Auth's role needs no grant. Leaving it out keeps the function uncallable by every role except its
+-- owner. Proven in tests/unit/profiles-self-update-columns-migration-run.test.mjs, which applies
+-- this file as a non-superuser that owns profiles and holds TRIGGER on an auth.users owned by
+-- supabase_auth_admin — the production arrangement, verified read-only 2026-10-10 — and fires the
+-- trigger as supabase_auth_admin.
+--
+-- ORDERING CONTRACT FOR BACKEND WRITERS
+-- Because every real password change clears the flag, a writer that wants the flag TRUE must
+-- change the password FIRST. reset-student-password does (updateUserById, then the flag);
+-- create-student inserts the auth user (an INSERT — the trigger does not fire) before the profile.
+-- tests/unit/profiles-self-update-columns-guard.test.mjs fails if that order is reversed.
+--
 -- WHAT THIS MIGRATION DOES NOT DO
 -- No policy change (profiles_select and profiles_self_update are untouched), no data change, no
 -- change to SELECT/INSERT/DELETE privileges, no other table.

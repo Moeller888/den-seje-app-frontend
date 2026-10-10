@@ -228,6 +228,100 @@ test("the trigger function is SECURITY DEFINER, path-pinned and not executable b
   assert.deepEqual(r.rows, [{ prosecdef: true, proconfig: ["search_path=public, pg_temp"], anon_x: false, auth_x: false }]);
 });
 
+// ── Trigger privileges as production has them ───────────────────────────────────────────────────
+// Production: auth.users is owned by supabase_auth_admin; migrations run as postgres, which is NOT a
+// superuser but holds TRIGGER on auth.users and owns public.profiles; Supabase Auth (GoTrue)
+// performs the password UPDATE as supabase_auth_admin. The fixture above runs everything as the
+// bootstrap superuser, so these tests rebuild that ownership and apply the migration as a
+// non-superuser "migrator" — proving it can be applied, and that the trigger fires for GoTrue's role
+// WITHOUT any EXECUTE grant: Postgres checks EXECUTE on a trigger function only when the trigger is
+// CREATED (for the creator, who owns the function), never when it fires.
+async function productionLikeDb() {
+  const pg = new PGlite();
+  await pg.exec(FIXTURE);
+  await pg.exec(`
+    CREATE ROLE supabase_auth_admin NOBYPASSRLS;
+    CREATE ROLE migrator NOSUPERUSER BYPASSRLS;
+    ALTER TABLE auth.users OWNER TO supabase_auth_admin;
+    ALTER TABLE public.profiles OWNER TO migrator;
+    GRANT USAGE ON SCHEMA auth TO migrator, supabase_auth_admin;
+    GRANT USAGE, CREATE ON SCHEMA public TO migrator;
+    GRANT TRIGGER ON auth.users TO migrator;
+  `);
+  await pg.exec("SET ROLE migrator");
+  await pg.exec(MIGRATION);
+  await pg.exec("RESET ROLE");
+  return pg;
+}
+
+test("the migration applies as a non-superuser role that owns profiles and holds TRIGGER on auth.users", async () => {
+  const pg = await productionLikeDb();
+  const r = await pg.query(`SELECT pg_get_userbyid(p.proowner) AS owner, p.prosecdef,
+      (SELECT pg_get_userbyid(c.relowner) FROM pg_class c WHERE c.oid = 'auth.users'::regclass) AS users_owner,
+      (SELECT count(*)::int FROM pg_trigger t WHERE t.tgrelid = 'auth.users'::regclass AND NOT t.tgisinternal) AS triggers
+    FROM pg_proc p WHERE p.proname = 'clear_must_reset_password_on_password_change'`);
+  assert.deepEqual(r.rows, [{ owner: "migrator", prosecdef: true, users_owner: "supabase_auth_admin", triggers: 1 }]);
+});
+
+test("GoTrue's role (supabase_auth_admin) fires the trigger with NO execute grant, and the function stays closed", async () => {
+  const pg = await productionLikeDb();
+  const x = await pg.query(`SELECT r AS role, has_function_privilege(r, 'public.clear_must_reset_password_on_password_change()', 'EXECUTE') AS x
+    FROM unnest(ARRAY['anon', 'authenticated', 'supabase_auth_admin', 'service_role']) AS r ORDER BY r`);
+  assert.deepEqual(x.rows.map((r) => [r.role, r.x]),
+    [["anon", false], ["authenticated", false], ["service_role", false], ["supabase_auth_admin", false]],
+    "no API role and not even GoTrue's role can call the function directly");
+  await pg.exec("SET ROLE supabase_auth_admin");
+  await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P1]);
+  await pg.exec("RESET ROLE");
+  assert.equal((await profile(pg, P1)).must_reset_password, false, "a real password change by GoTrue clears the flag");
+  // Calling it directly as an API role is refused.
+  const direct = await as(pg, "authenticated", P1, "SELECT public.clear_must_reset_password_on_password_change()");
+  assert.match(direct.error ?? "", /permission denied|trigger functions can only be called as triggers/i);
+});
+
+test("12. normal Auth flows never error: signup INSERT, sign-in updates, and a password change for a user with no profile", async () => {
+  const pg = await productionLikeDb();
+  const ORPHAN = "00000000-0000-4000-8000-0000000000e1";
+  await pg.exec("SET ROLE supabase_auth_admin");
+  // Signup / admin createUser is an INSERT: the AFTER UPDATE trigger does not fire.
+  await pg.query("INSERT INTO auth.users (id, encrypted_password) VALUES ($1::uuid, md5($1::uuid::text))", [ORPHAN]);
+  // Sign-in touches other columns only.
+  await pg.query("UPDATE auth.users SET last_sign_in_at = now() WHERE id = $1", [P1]);
+  // A password change for an auth user with no profile row (the live orphans) is a clean no-op.
+  await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [ORPHAN]);
+  await pg.exec("RESET ROLE");
+  assert.equal((await profile(pg, P1)).must_reset_password, true, "sign-in alone does not clear the flag");
+  assert.equal(await profile(pg, ORPHAN), undefined, "no profile row is created");
+});
+
+test("9d. teacher reset end-to-end as production roles: GoTrue changes the password, then the backend sets the flag", async () => {
+  const pg = await productionLikeDb();
+  await pg.exec("SET ROLE supabase_auth_admin");
+  await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P2]);
+  await pg.exec("RESET ROLE");
+  await pg.exec("SET ROLE service_role");
+  await pg.query("UPDATE public.profiles SET must_reset_password = true WHERE id = $1", [P2]);
+  await pg.exec("RESET ROLE");
+  assert.equal((await profile(pg, P2)).must_reset_password, true);
+  // …and the pupil's own forced change afterwards clears it.
+  await pg.exec("SET ROLE supabase_auth_admin");
+  await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P2]);
+  await pg.exec("RESET ROLE");
+  assert.equal((await profile(pg, P2)).must_reset_password, false);
+});
+
+test("the reverse order would be wrong — which is why reset-student-password's order is guarded", async () => {
+  const pg = await productionLikeDb();
+  await pg.exec("SET ROLE service_role");
+  await pg.query("UPDATE public.profiles SET must_reset_password = true WHERE id = $1", [P2]);
+  await pg.exec("RESET ROLE");
+  await pg.exec("SET ROLE supabase_auth_admin");
+  await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P2]);
+  await pg.exec("RESET ROLE");
+  assert.equal((await profile(pg, P2)).must_reset_password, false,
+    "flag first, password second would silently cancel the teacher's forced reset");
+});
+
 // ── 11, 13, 14: reads and the caller-scope policy are unchanged ─────────────────────────────────
 test("13. self SELECT (login.js: role + must_reset_password) still works", async () => {
   const pg = await db({ migrated: true });

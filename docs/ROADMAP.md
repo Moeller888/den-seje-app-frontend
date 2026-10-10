@@ -638,6 +638,33 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
 lærer · klassekoder · CSV-import · UNI-Login · skoleadministration · selvbetjent lærer-signup ·
 bulk-tildeling af domæner · nyt dashboard-framework · ændringer i den adaptive motor · avatararbejde.
 
+## Lærerens brugerrejse — tranche 2 "Rigtige klasser" (arkitekturaudit 2026-10-10; implementering IKKE startet)
+
+Auditten anbefaler `classes` + `class_teachers` + `class_students` med én autoritetshjælper og
+udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet nedenfor.
+
+- **2-0A — beskyttede profilkolonner (PR #308, migration
+  `20261010102416_profiles_self_update_columns.sql`, IKKE anvendt):** `authenticated` (og `anon`)
+  havde tabel-UPDATE på `profiles`, og RLS styrer kun rækken, ikke kolonnerne — en elev kunne selv
+  ændre `teacher_id` (skifte lærer / melde sig ud), nulstille `active_domains`, rydde
+  `must_reset_password` og omgå de validerende RPC'er. Rettelsen tillader kun direkte UPDATE af
+  `placement_band` og `current_band` (app.js). `must_reset_password` er IKKE klientskrivbar: flaget
+  ryddes kun ved et reelt kodeordsskift via en trigger på `auth.users.encrypted_password`, og
+  backend-skrivere skal skifte kodeordet FØR de sætter flaget (guardet i test).
+  (PR #307 — samme hul med `must_reset_password` klientskrivbar — er lukket som erstattet af #308;
+  dens migration `20261010120000_profiles_protected_columns.sql` er forældet og må ikke anvendes.)
+- **2-0A.1 — fjern den overflødige klient-rydning (ikke startet):** `js/reset-password.js`
+  forsøger stadig `profiles.update({ must_reset_password: false })`. Efter 2-0A afvises den (og
+  ignoreres af siden), fordi triggeren allerede har ryddet flaget. Fjernes FØRST når 2-0A er anvendt
+  og verificeret i produktion.
+- **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
+  `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
+  har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
+  fjernes efter samme mønster som PR #300. Separat, senere opgave.
+- **Legacy `reset-student` (live v9, ikke startet):** en gammel, ubrugt alternativ elevoprettelse
+  uden `must_reset_password` og uden rollback. Ingen kaldere i repoet. Pensioneres separat, som
+  `reset-pending` (PR #302).
+
 ## Future sections
 
 ### Platform / services track (from the 157A audit)
