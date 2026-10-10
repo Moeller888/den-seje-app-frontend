@@ -133,7 +133,9 @@ Schema and most content are managed as **versioned SQL migrations** in `supabase
   `set_student_domains`, `equip_item`, `set_active_theme`, `set_avatar_identity`, …) or Edge
   Functions on the backend key. `must_reset_password` is set by create-student /
   reset-student-password and cleared only by a real password change (trigger on
-  `auth.users.encrypted_password`), so a pupil cannot skip the forced change.
+  `auth.users.encrypted_password`), so a pupil cannot skip the forced change. The trigger function
+  is executable by its owner only: `20261010160000` removes the EXECUTE that service_role inherits
+  from Supabase's default function privilege (no change to the trigger's behaviour).
 - **Learning core:** `questions`, `question_instances` (per-student instance with
   `correct_answer`, `user_answer`, `answered`, `was_correct`, `next_review_at`,
   `misconception_signal`), `student_progress` (xp, coins, mastery, counters).

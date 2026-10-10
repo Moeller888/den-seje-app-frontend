@@ -11,7 +11,10 @@
 //   4. the browser never INSERTs or UPSERTs profiles;
 //   5. reset-student-password changes the password BEFORE it sets must_reset_password = true. The
 //      trigger clears the flag on every real password change, so the reverse order would silently
-//      cancel a teacher's forced reset (shown at runtime in the migration-run test).
+//      cancel a teacher's forced reset (shown at runtime in the migration-run test);
+//   6. after the whole migration chain no role but the owner may EXECUTE the trigger function:
+//      20261010102416 leaves service_role with EXECUTE through Supabase's default function
+//      privilege, and 20261010160000 removes it. No migration may grant EXECUTE on it again.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -136,4 +139,38 @@ test("create-student creates the auth user BEFORE writing must_reset_password = 
   const create = src.indexOf("auth.admin.createUser(");
   const flag = src.search(/must_reset_password:\s*true/);
   assert.ok(create > 0 && flag > 0 && create < flag);
+});
+
+// ── 6. EXECUTE on the trigger function after the whole chain ─────────────────────────────────────
+const FOLLOW_UP = "20261010160000_profiles_trigger_execute_lockdown.sql";
+const TRIGGER_FN = "public.clear_must_reset_password_on_password_change()";
+
+test("the follow-up exists, sorts after 20261010102416 and is exactly one REVOKE FROM service_role", () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();
+  assert.ok(files.includes(FOLLOW_UP), "the hardening migration must be in the chain");
+  assert.ok(files.indexOf(FOLLOW_UP) > files.indexOf(FILE), "it must apply after the migration that creates the function");
+  const stmts = code(readFileSync(join(MIGRATIONS, FOLLOW_UP), "utf8")).split(";").map((s) => s.trim()).filter(Boolean);
+  assert.deepEqual(stmts, [`REVOKE EXECUTE ON FUNCTION ${TRIGGER_FN} FROM service_role`]);
+});
+
+test("20261010102416 alone does NOT revoke service_role — which is why the follow-up exists", () => {
+  const sql = code(readFileSync(join(MIGRATIONS, FILE), "utf8"));
+  const revokes = [...sql.matchAll(/REVOKE EXECUTE ON FUNCTION public\.clear_must_reset_password_on_password_change\(\) FROM ([^;]*);/g)]
+    .flatMap((m) => m[1].split(",").map((s) => s.trim()));
+  assert.deepEqual(revokes.sort(), ["PUBLIC", "anon", "authenticated"]);
+});
+
+test("after the whole chain every non-owner role is revoked, and no migration ever grants EXECUTE on it", () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();
+  const revoked = new Set();
+  const grants = [];
+  for (const f of files) {
+    const sql = code(readFileSync(join(MIGRATIONS, f), "utf8"));
+    for (const m of sql.matchAll(/REVOKE EXECUTE ON FUNCTION public\.clear_must_reset_password_on_password_change\(\) FROM ([^;]*);/g)) {
+      for (const r of m[1].split(",").map((s) => s.trim())) revoked.add(r);
+    }
+    if (/GRANT [^;]*clear_must_reset_password_on_password_change/i.test(sql)) grants.push(f);
+  }
+  for (const r of ["PUBLIC", "anon", "authenticated", "service_role"]) assert.ok(revoked.has(r), `${r} must be revoked`);
+  assert.deepEqual(grants, [], "the trigger function is not an API surface for any role");
 });

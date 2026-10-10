@@ -236,7 +236,16 @@ test("the trigger function is SECURITY DEFINER, path-pinned and not executable b
 // non-superuser "migrator" — proving it can be applied, and that the trigger fires for GoTrue's role
 // WITHOUT any EXECUTE grant: Postgres checks EXECUTE on a trigger function only when the trigger is
 // CREATED (for the creator, who owns the function), never when it fires.
-async function productionLikeDb() {
+//
+// The migrator also carries Supabase's DEFAULT function privilege, as production's postgres does
+// (pg_default_acl for functions in public, read-only 2026-10-10):
+//   {postgres=X, anon=X, authenticated=X, service_role=X}
+// so a function it creates starts out executable by those roles. An earlier version of this fixture
+// left that out and wrongly showed service_role without EXECUTE after this migration; the follow-up
+// 20261010160000_profiles_trigger_execute_lockdown exists because of exactly that default.
+const FOLLOW_UP = readFileSync(join(ROOT, "supabase", "migrations", "20261010160000_profiles_trigger_execute_lockdown.sql"), "utf8");
+
+async function productionLikeDb({ followUp = false } = {}) {
   const pg = new PGlite();
   await pg.exec(FIXTURE);
   await pg.exec(`
@@ -247,11 +256,22 @@ async function productionLikeDb() {
     GRANT USAGE ON SCHEMA auth TO migrator, supabase_auth_admin;
     GRANT USAGE, CREATE ON SCHEMA public TO migrator;
     GRANT TRIGGER ON auth.users TO migrator;
+    ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
+      GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
   `);
   await pg.exec("SET ROLE migrator");
   await pg.exec(MIGRATION);
+  if (followUp) await pg.exec(FOLLOW_UP);
   await pg.exec("RESET ROLE");
   return pg;
+}
+
+const FN = "public.clear_must_reset_password_on_password_change()";
+async function executeMatrix(pg) {
+  const r = await pg.query(`SELECT r AS role, has_function_privilege(r, '${FN}', 'EXECUTE') AS x
+    FROM unnest(ARRAY['anon', 'authenticated', 'migrator', 'service_role', 'supabase_auth_admin']) AS r ORDER BY r`);
+  const acl = (await pg.query(`SELECT proacl::text AS acl FROM pg_proc WHERE oid = '${FN}'::regprocedure`)).rows[0].acl;
+  return { ...Object.fromEntries(r.rows.map((x) => [x.role, x.x])), public: /(^|[{,])=X/.test(acl) };
 }
 
 test("the migration applies as a non-superuser role that owns profiles and holds TRIGGER on auth.users", async () => {
@@ -263,13 +283,52 @@ test("the migration applies as a non-superuser role that owns profiles and holds
   assert.deepEqual(r.rows, [{ owner: "migrator", prosecdef: true, users_owner: "supabase_auth_admin", triggers: 1 }]);
 });
 
-test("GoTrue's role (supabase_auth_admin) fires the trigger with NO execute grant, and the function stays closed", async () => {
+test("this migration ALONE leaves service_role with EXECUTE (inherited from Supabase's default privilege)", async () => {
   const pg = await productionLikeDb();
-  const x = await pg.query(`SELECT r AS role, has_function_privilege(r, 'public.clear_must_reset_password_on_password_change()', 'EXECUTE') AS x
-    FROM unnest(ARRAY['anon', 'authenticated', 'supabase_auth_admin', 'service_role']) AS r ORDER BY r`);
-  assert.deepEqual(x.rows.map((r) => [r.role, r.x]),
-    [["anon", false], ["authenticated", false], ["service_role", false], ["supabase_auth_admin", false]],
-    "no API role and not even GoTrue's role can call the function directly");
+  assert.deepEqual(await executeMatrix(pg), {
+    anon: false, authenticated: false, migrator: true, public: false,
+    service_role: true,            // ← the inherited default; closed by 20261010160000
+    supabase_auth_admin: false,
+  });
+});
+
+test("with the follow-up 20261010160000, only the owner holds EXECUTE", async () => {
+  const pg = await productionLikeDb({ followUp: true });
+  assert.deepEqual(await executeMatrix(pg), {
+    anon: false, authenticated: false, migrator: true, public: false, service_role: false, supabase_auth_admin: false,
+  });
+});
+
+for (const followUp of [false, true]) {
+  test(`trigger runtime is unchanged ${followUp ? "WITH" : "without"} the follow-up: GoTrue clears, sign-in does not, teacher reset and create-student end TRUE`, async () => {
+    const pg = await productionLikeDb({ followUp });
+    const NEW = "00000000-0000-4000-8000-000000000009";
+    await pg.exec("SET ROLE supabase_auth_admin");
+    await pg.query("UPDATE auth.users SET last_sign_in_at = now() WHERE id = $1", [P1]);            // sign-in
+    await pg.exec("RESET ROLE");
+    assert.equal((await profile(pg, P1)).must_reset_password, true, "sign-in alone does not clear");
+    await pg.exec("SET ROLE supabase_auth_admin");
+    await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P1]); // real change
+    await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P2]); // teacher reset, step 1
+    await pg.query("INSERT INTO auth.users (id, encrypted_password) VALUES ($1::uuid, md5($1::uuid::text))", [NEW]); // create-student, step 1
+    await pg.exec("RESET ROLE");
+    assert.equal((await profile(pg, P1)).must_reset_password, false, "a real password change clears");
+    await pg.exec("SET ROLE service_role");
+    await pg.query("UPDATE public.profiles SET must_reset_password = true WHERE id = $1", [P2]);   // teacher reset, step 2
+    await pg.query("INSERT INTO public.profiles (id, role, teacher_id, must_reset_password) VALUES ($1, 'student', $2, true)", [NEW, T1]);
+    await pg.exec("RESET ROLE");
+    assert.equal((await profile(pg, P2)).must_reset_password, true, "teacher reset ends TRUE");
+    assert.equal((await profile(pg, NEW)).must_reset_password, true, "create-student ends TRUE");
+    for (const role of ["anon", "authenticated", "service_role"]) {
+      const r = await as(pg, role, P1, `SELECT ${FN}`);
+      assert.match(r.error ?? "", /permission denied|trigger functions can only be called as triggers/i, `${role} cannot call it`);
+    }
+  });
+}
+
+test("GoTrue's role (supabase_auth_admin) fires the trigger with NO execute grant", async () => {
+  const pg = await productionLikeDb({ followUp: true });
+  assert.equal((await executeMatrix(pg)).supabase_auth_admin, false, "GoTrue's role holds no EXECUTE");
   await pg.exec("SET ROLE supabase_auth_admin");
   await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P1]);
   await pg.exec("RESET ROLE");

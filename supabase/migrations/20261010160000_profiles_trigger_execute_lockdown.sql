@@ -1,0 +1,30 @@
+-- Hardening after 20261010102416_profiles_self_update_columns: remove the EXECUTE that
+-- service_role inherits on the trigger function.
+--
+-- ROOT CAUSE
+-- Production has a default privilege for functions that postgres creates in schema public
+-- (pg_default_acl, read-only 2026-10-10):
+--     {postgres=X/postgres, anon=X/postgres, authenticated=X/postgres, service_role=X/postgres}
+-- 20261010102416 creates public.clear_must_reset_password_on_password_change() as postgres and
+-- revokes EXECUTE from PUBLIC, anon and authenticated, but not from service_role. After it,
+-- service_role therefore holds EXECUTE through that default. supabase_auth_admin does not, and
+-- does not need it: Postgres checks EXECUTE on a trigger function only when the trigger is
+-- created, never when it fires.
+--
+-- WHY THIS IS NOT AN ACUTE EXPLOIT
+-- A trigger function cannot be called as an ordinary function ("trigger functions can only be
+-- called as triggers"), and service_role is the backend key, which already has full UPDATE on
+-- profiles and bypasses RLS. The grant gives nothing that service_role did not already have.
+--
+-- WHY IT IS STILL REMOVED
+-- Least privilege, and the documented contract for this function: it is not an API surface for
+-- any role. After this migration only its owner holds EXECUTE.
+--
+-- This migration does not change the trigger, its runtime behaviour, any profiles grant, any
+-- policy or any data. It is the only statement here, and it is idempotent.
+--
+-- 20261010102416 is merged and is NOT rewritten. This file must be applied after it.
+-- Applying it to production needs its own owner authorisation (D-110). `supabase db push` is
+-- forbidden.
+
+REVOKE EXECUTE ON FUNCTION public.clear_must_reset_password_on_password_change() FROM service_role;

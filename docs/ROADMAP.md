@@ -651,6 +651,9 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `placement_band` og `current_band` (app.js). `must_reset_password` er IKKE klientskrivbar: flaget
   ryddes kun ved et reelt kodeordsskift via en trigger på `auth.users.encrypted_password`, og
   backend-skrivere skal skifte kodeordet FØR de sætter flaget (guardet i test).
+  En lille efterfølgende hardening-migration, `20261010160000_profiles_trigger_execute_lockdown.sql`,
+  fjerner den EXECUTE, som `service_role` arver på triggerfunktionen via Supabases default-rettighed
+  for funktioner. Den ændrer ikke triggerens adfærd; den skal anvendes efter `20261010102416`.
   (PR #307 — samme hul med `must_reset_password` klientskrivbar — er lukket som erstattet af #308;
   dens migration `20261010120000_profiles_protected_columns.sql` er forældet og må ikke anvendes.)
 - **2-0A.1 — fjern den overflødige klient-rydning (ikke startet):** `js/reset-password.js`
