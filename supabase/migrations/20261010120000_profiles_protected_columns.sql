@@ -1,0 +1,52 @@
+-- Tranche 2-0A: stop API clients from writing the authority columns of public.profiles.
+--
+-- THE DEFECT
+-- authenticated (and anon) hold TABLE-level UPDATE on public.profiles — relacl
+-- {…, anon=arwdDxtm, authenticated=arwdDxtm, …}, measured read-only on production 2026-10-10 — and
+-- no column ACL exists. The only UPDATE policy is:
+--
+--   profiles_self_update  FOR UPDATE TO authenticated
+--     USING      (id = auth.uid())
+--     WITH CHECK (id = auth.uid() AND role = auth_profile_role())
+--
+-- RLS decides WHICH ROW a caller may change, never WHICH COLUMNS. The policy keeps a caller on
+-- their own row and pins role, but every other column of that row is writable. A pupil can
+-- therefore PATCH their own profile and
+--   * set teacher_id to another teacher's id — and become a member of that teacher's class:
+--     roster, activity and review queue, get_classroom_leaderboard / get_weekly_activity (the
+--     classmates' names), and password-help mails, all key on profiles.teacher_id;
+--   * set teacher_id to NULL and drop out of their own teacher's view;
+--   * clear active_domains, the domain focus their teacher set through set_student_domains.
+-- role is the one column the policy already pins; it is protected here too, so it no longer
+-- depends on a WITH CHECK expression alone.
+--
+-- THE FIX: least privilege on columns
+-- Table-level UPDATE is revoked from authenticated and anon, and authenticated is granted UPDATE
+-- on exactly the columns the browser legitimately writes to its own row. Postgres checks column
+-- privileges first; RLS (profiles_self_update, unchanged) still decides the row. Both must pass.
+--
+-- THE ALLOWLIST — every direct browser write to profiles in the repository (2026-10-10):
+--   placement_band       app.js  — the one-time placement result
+--   current_band         app.js  — the adaptive band carried between sessions
+--   must_reset_password  js/reset-password.js — cleared after the forced password change
+-- Nothing else is written directly by a client. equipped_slots, active_theme, active_title,
+-- avatar_identity, selected_grade and active_domains are written by SECURITY DEFINER functions
+-- owned by postgres (equip_item, unequip_item, set_active_theme, set_active_title,
+-- set_avatar_identity, set_student_grade, set_student_domains), which run with the owner's
+-- privileges and are not affected. Account creation and teacher-side writes (create-student,
+-- create-teacher, reset-student-password, equip-avatar) use the service role, which keeps its
+-- privileges. avatar_gender and full_name are read by the client, never written.
+--
+-- NOT CHANGED: SELECT, INSERT and DELETE grants (INSERT and DELETE have no policy and are already
+-- refused by RLS); any policy; any function; any data; service_role; the owner.
+--
+-- CONVERGENT: the REVOKE removes the table privilege; the GRANT lists the complete column set.
+-- Re-running yields the same effective privileges.
+--
+-- Applying it to production needs its own owner authorisation (D-110). `supabase db push` is
+-- forbidden.
+
+REVOKE UPDATE ON TABLE public.profiles FROM anon;
+REVOKE UPDATE ON TABLE public.profiles FROM authenticated;
+
+GRANT UPDATE (placement_band, current_band, must_reset_password) ON TABLE public.profiles TO authenticated;

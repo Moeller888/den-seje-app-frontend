@@ -638,6 +638,28 @@ _Prior:_ **157AA** (docs foundation) · **157AB** (consolidation) · **157B** (S
 lærer · klassekoder · CSV-import · UNI-Login · skoleadministration · selvbetjent lærer-signup ·
 bulk-tildeling af domæner · nyt dashboard-framework · ændringer i den adaptive motor · avatararbejde.
 
+## Lærerens brugerrejse — tranche 2 "Rigtige klasser" (arkitekturaudit 2026-10-10; implementering IKKE startet)
+
+Auditten anbefaler `classes` + `class_teachers` + `class_students` med én autoritetshjælper og
+udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet nedenfor.
+
+- **2-0A — beskyttede profilkolonner (migration `20261010120000_profiles_protected_columns.sql`,
+  IKKE anvendt):** `authenticated` havde tabel-UPDATE på `profiles`, og RLS styrer kun rækken, ikke
+  kolonnerne — en elev kunne selv ændre `teacher_id` (skifte lærer / melde sig ud) og nulstille
+  `active_domains`. Rettelsen fjerner tabel-UPDATE fra `anon` og `authenticated` og giver kun
+  UPDATE på de tre kolonner, browseren faktisk skriver: `placement_band`, `current_band`,
+  `must_reset_password`. Alt andet skrives via SECURITY DEFINER-RPC'er eller service role.
+- **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
+  `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
+  har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
+  fjernes efter samme mønster som PR #300.
+- **Oprydning efter 2-0A — legacy `reset-student` (live v9, ikke startet):** en gammel, ubrugt
+  alternativ elevoprettelse uden `must_reset_password` og uden rollback. Ingen kaldere i repoet.
+  Pensioneres som `reset-pending` (PR #302).
+- **Kendt, accepteret efter 2-0A:** eleven kan stadig selv skrive `placement_band`, `current_band`
+  og `must_reset_password` på egen række (elevappen ejer dem). At flytte dem bag RPC'er er en
+  separat beslutning.
+
 ## Future sections
 
 ### Platform / services track (from the 157A audit)
