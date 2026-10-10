@@ -29,6 +29,11 @@ const P2 = "00000000-0000-4000-8000-000000000002";   // pupil of T1
 
 const FIXTURE = `
   CREATE ROLE anon NOBYPASSRLS; CREATE ROLE authenticated NOBYPASSRLS; CREATE ROLE service_role BYPASSRLS;
+  -- Supabase's default privileges (verified live 2026-10-10, D-110 preflight): every function a
+  -- postgres-side role creates in public gets EXECUTE for anon, authenticated AND service_role, and
+  -- not for PUBLIC. Without this the fixture would hide that a new function starts out callable.
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
   CREATE SCHEMA auth;
   CREATE TABLE auth.users (id uuid PRIMARY KEY, encrypted_password text, last_sign_in_at timestamptz);
   CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
@@ -219,13 +224,22 @@ test("10. create-student v18 (backend key) still inserts the pupil with must_res
   assert.deepEqual([p.role, p.teacher_id, p.must_reset_password], ["student", T1, true]);
 });
 
-test("the trigger function is SECURITY DEFINER, path-pinned and not executable by API roles", async () => {
+// Who may EXECUTE the trigger function: the owner, and nobody else (PUBLIC included).
+const EXECUTE_MATRIX = `SELECT pg_get_userbyid(p.proowner) AS owner, p.prosecdef, p.proconfig,
+    has_function_privilege(p.proowner, p.oid, 'EXECUTE') AS owner_x,
+    coalesce((SELECT bool_or(a.grantee = 0) FROM aclexplode(p.proacl) a WHERE a.privilege_type = 'EXECUTE'), false) AS public_x,
+    has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_x,
+    has_function_privilege('authenticated', p.oid, 'EXECUTE') AS auth_x,
+    has_function_privilege('service_role', p.oid, 'EXECUTE') AS service_x
+  FROM pg_proc p WHERE p.proname = 'clear_must_reset_password_on_password_change'`;
+
+test("the trigger function is SECURITY DEFINER, path-pinned, and only its owner may EXECUTE it", async () => {
   const pg = await db({ migrated: true });
-  const r = await pg.query(`SELECT p.prosecdef, p.proconfig,
-      has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_x,
-      has_function_privilege('authenticated', p.oid, 'EXECUTE') AS auth_x
-    FROM pg_proc p WHERE p.proname = 'clear_must_reset_password_on_password_change'`);
-  assert.deepEqual(r.rows, [{ prosecdef: true, proconfig: ["search_path=public, pg_temp"], anon_x: false, auth_x: false }]);
+  const r = await pg.query(EXECUTE_MATRIX);
+  assert.deepEqual(r.rows.map(({ owner, ...rest }) => rest), [{
+    prosecdef: true, proconfig: ["search_path=public, pg_temp"],
+    owner_x: true, public_x: false, anon_x: false, auth_x: false, service_x: false,
+  }]);
 });
 
 // ── Trigger privileges as production has them ───────────────────────────────────────────────────
@@ -236,7 +250,7 @@ test("the trigger function is SECURITY DEFINER, path-pinned and not executable b
 // non-superuser "migrator" — proving it can be applied, and that the trigger fires for GoTrue's role
 // WITHOUT any EXECUTE grant: Postgres checks EXECUTE on a trigger function only when the trigger is
 // CREATED (for the creator, who owns the function), never when it fires.
-async function productionLikeDb() {
+async function productionLikeDb(migration = MIGRATION) {
   const pg = new PGlite();
   await pg.exec(FIXTURE);
   await pg.exec(`
@@ -247,12 +261,31 @@ async function productionLikeDb() {
     GRANT USAGE ON SCHEMA auth TO migrator, supabase_auth_admin;
     GRANT USAGE, CREATE ON SCHEMA public TO migrator;
     GRANT TRIGGER ON auth.users TO migrator;
+    -- The same Supabase default privileges, for functions the migrating role creates.
+    ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+    ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
   `);
   await pg.exec("SET ROLE migrator");
-  await pg.exec(MIGRATION);
+  await pg.exec(migration);
   await pg.exec("RESET ROLE");
   return pg;
 }
+
+// The D-110 preflight finding: with Supabase's default privileges, revoking only from
+// PUBLIC, anon and authenticated leaves service_role able to EXECUTE the function.
+const OLD_REVOKE = "FROM PUBLIC, anon, authenticated;";
+const NEW_REVOKE = "FROM PUBLIC, anon, authenticated, service_role;";
+
+test("default-privilege regression: the old REVOKE (without service_role) leaves service_role with EXECUTE", async () => {
+  assert.ok(MIGRATION.includes(NEW_REVOKE), "the canonical migration revokes from service_role");
+  const mutated = MIGRATION.replace(NEW_REVOKE, OLD_REVOKE);
+  assert.notEqual(mutated, MIGRATION);
+  const before = (await (await productionLikeDb(mutated)).query(EXECUTE_MATRIX)).rows[0];
+  assert.equal(before.service_x, true, "Supabase's default privileges grant it — the old line did not take it back");
+  const after = (await (await productionLikeDb()).query(EXECUTE_MATRIX)).rows[0];
+  assert.deepEqual([after.owner, after.owner_x, after.public_x, after.anon_x, after.auth_x, after.service_x],
+    ["migrator", true, false, false, false, false]);
+});
 
 test("the migration applies as a non-superuser role that owns profiles and holds TRIGGER on auth.users", async () => {
   const pg = await productionLikeDb();
@@ -266,10 +299,11 @@ test("the migration applies as a non-superuser role that owns profiles and holds
 test("GoTrue's role (supabase_auth_admin) fires the trigger with NO execute grant, and the function stays closed", async () => {
   const pg = await productionLikeDb();
   const x = await pg.query(`SELECT r AS role, has_function_privilege(r, 'public.clear_must_reset_password_on_password_change()', 'EXECUTE') AS x
-    FROM unnest(ARRAY['anon', 'authenticated', 'supabase_auth_admin', 'service_role']) AS r ORDER BY r`);
+    FROM unnest(ARRAY['anon', 'authenticated', 'migrator', 'supabase_auth_admin', 'service_role']) AS r ORDER BY r`);
   assert.deepEqual(x.rows.map((r) => [r.role, r.x]),
-    [["anon", false], ["authenticated", false], ["service_role", false], ["supabase_auth_admin", false]],
-    "no API role and not even GoTrue's role can call the function directly");
+    [["anon", false], ["authenticated", false], ["migrator", true], ["service_role", false], ["supabase_auth_admin", false]],
+    "only the owner can call the function; no API role and not even GoTrue's role");
+  assert.equal((await pg.query(EXECUTE_MATRIX)).rows[0].public_x, false, "PUBLIC has no EXECUTE");
   await pg.exec("SET ROLE supabase_auth_admin");
   await pg.query("UPDATE auth.users SET encrypted_password = md5(encrypted_password) WHERE id = $1", [P1]);
   await pg.exec("RESET ROLE");
@@ -349,8 +383,11 @@ test("the migration is exactly: revoke UPDATE, grant two columns, one trigger fu
   ]);
   assert.equal(stmts[0], "REVOKE UPDATE ON public.profiles FROM anon, authenticated");
   assert.equal(stmts[1], "GRANT UPDATE (placement_band, current_band) ON public.profiles TO authenticated");
+  assert.equal(stmts[3], "REVOKE EXECUTE ON FUNCTION public.clear_must_reset_password_on_password_change() FROM PUBLIC, anon, authenticated, service_role");
   assert.match(stmts[4], /AFTER UPDATE OF encrypted_password ON auth\.users FOR EACH ROW WHEN \(NEW\.encrypted_password IS DISTINCT FROM OLD\.encrypted_password\)/);
-  assert.equal(/POLICY|service_role|DELETE|INSERT|DROP|CREATE OR REPLACE/i.test(code), false);
+  assert.equal(/POLICY|DELETE|INSERT|DROP|CREATE OR REPLACE/i.test(code), false);
+  // service_role appears only in that REVOKE — its table privileges on profiles are never touched.
+  assert.deepEqual(stmts.filter((s) => /service_role/.test(s)), [stmts[3]]);
 });
 
 test("the migration version is unique and sorts after the newest live migration", () => {

@@ -82,7 +82,10 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.clear_must_reset_password_on_password_change() FROM PUBLIC, anon, authenticated;
+-- service_role is listed too: this project's default privileges grant EXECUTE on every new
+-- postgres-owned function in public to anon, authenticated AND service_role (verified read-only
+-- 2026-10-10, D-110 preflight). Only the owner keeps EXECUTE; the trigger needs no other grant.
+REVOKE EXECUTE ON FUNCTION public.clear_must_reset_password_on_password_change() FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE TRIGGER clear_must_reset_password_on_password_change
 AFTER UPDATE OF encrypted_password ON auth.users

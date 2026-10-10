@@ -650,7 +650,10 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `must_reset_password` og omgå de validerende RPC'er. Rettelsen tillader kun direkte UPDATE af
   `placement_band` og `current_band` (app.js). `must_reset_password` er IKKE klientskrivbar: flaget
   ryddes kun ved et reelt kodeordsskift via en trigger på `auth.users.encrypted_password`, og
-  backend-skrivere skal skifte kodeordet FØR de sætter flaget (guardet i test).
+  backend-skrivere skal skifte kodeordet FØR de sætter flaget (guardet i test). D-110-preflight
+  2026-10-10 fandt, at projektets default privileges giver nye `public`-funktioner EXECUTE til
+  `service_role`; triggerfunktionens REVOKE omfatter derfor også `service_role` (rettet i den
+  endnu ikke anvendte migration, testet med Supabases default privileges i PGlite).
   (PR #307 — samme hul med `must_reset_password` klientskrivbar — er lukket som erstattet af #308;
   dens migration `20261010120000_profiles_protected_columns.sql` er forældet og må ikke anvendes.)
 - **2-0A.1 — fjern den overflødige klient-rydning (ikke startet):** `js/reset-password.js`
