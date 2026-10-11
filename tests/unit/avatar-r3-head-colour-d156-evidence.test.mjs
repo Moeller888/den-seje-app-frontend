@@ -170,9 +170,10 @@ test("the D-156 row records the follow-up: format, pattern, the qualified halo r
   assert.equal(sha256(one("D-153")), "e5cbcb036520e951f2380ea99c1a090a612ccca01aa037e43dbcf38f642d53e9");
   assert.ok(one("D-155").includes("C — NO NEW IMAGE CALL SHOULD BE AUTHORISED YET"));
   const row = one("D-156");
-  for (const needle of ["**(9) Opfølgning", "farvetype 2", "uden `tRNS`", "16-px-skakbræt", "99,92 %", "D-155's halo-tolkning holder ikke", "5.268 (95,4 %)",
-    "konklusion C står uændret", "11.429 med medianen", "ikke et bevis for, at ethvert overscan/bleed-design er umuligt", "ikke D-155's kategori B",
-    "konservativ, tilstrækkelig designantagelse", "B — OVERSCAN DESIGN NOT GEOMETRICALLY FEASIBLE"])
+  for (const needle of ["**(9) Opfølgning", "farvetype 2", "uden `tRNS`", "16-px-skakbræt", "99,92 %", "D-155's halo-tolkning korrigeres (kvalificeres) i D-156", "5.268 (95,43 %)",
+    "sikkert 76 px (60 + 16; 1,38 %)", "højst 228 px (76 + 152; 4,13 %)", "ikke et generelt robusthedsbevis",
+    "konklusion C står uændret", "11.429 udækkede pixels med medianen", "ikke et bevis for, at ethvert overscan/bleed-design er umuligt", "ikke D-155's kategori B",
+    "konservativ, tilstrækkelig designantagelse", "Hals-/kæbeovergangen er det centrale åbne designspørgsmål", "B — OVERSCAN DESIGN NOT GEOMETRICALLY FEASIBLE"])
     assert.ok(row.includes(needle), "the D-156 row must carry " + JSON.stringify(needle));
   assert.ok(!/[ÃÂ]\S|\uFFFD/.test(row));
 });
