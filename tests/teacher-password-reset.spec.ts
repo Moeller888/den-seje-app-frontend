@@ -193,17 +193,23 @@ test("7. Student can choose new password via forced-change flow", async ({ brows
   });
   expect(signInErr, "temp login failed").toBeNull();
 
-  // Step 2: Change password (mirrors reset-password.js updateUser call)
+  const { data: flagged } = await adminClient
+    .from("profiles")
+    .select("must_reset_password")
+    .eq("id", student2Id)
+    .maybeSingle();
+  expect(flagged?.must_reset_password, "flag must be set before the pupil's change").toBe(true);
+
+  // Step 2: Change password (mirrors reset-password.js updateUser call). The page writes nothing
+  // else: the trigger on auth.users clears must_reset_password on this real password change.
   const { error: updateErr } = await client.auth.updateUser({ password: NEW_PASS });
   expect(updateErr, "password change failed").toBeNull();
 
-  // Step 3: Clear the flag (mirrors reset-password.js forced-mode cleanup)
-  const { data: { session } } = await client.auth.getSession();
-  if (session) {
-    await client.from("profiles")
-      .update({ must_reset_password: false })
-      .eq("id", student2Id);
-  }
+  // Step 3: The browser cannot clear the flag itself (no UPDATE privilege on that column).
+  const { error: clientClearErr } = await client.from("profiles")
+    .update({ must_reset_password: false })
+    .eq("id", student2Id);
+  expect(clientClearErr?.code, "a client write to must_reset_password must be refused").toBe("42501");
 
   // Step 4: Verify new password works
   const client2 = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

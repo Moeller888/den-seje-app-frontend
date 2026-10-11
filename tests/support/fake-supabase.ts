@@ -12,6 +12,8 @@
 //   longQuestionIds  ids of questions whose answer_type is 'long'
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
+//   updateUserError  when set, auth.updateUser fails with it
+//   recoverySession  when set, auth.setSession (a recovery link) succeeds with this session
 //
 // Everything the page does is recorded on `window.__FAKE.log` so a spec can assert on it.
 export const FAKE_SUPABASE_MODULE = String.raw`
@@ -90,14 +92,24 @@ export function createClient() {
         try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(F().session)); } catch (e) {}
         return { data: { session: F().session }, error: null };
       },
-      updateUser: async (attrs) => { log({ auth: "updateUser", hasPassword: typeof attrs.password === "string" }); return { data: {}, error: null }; },
+      updateUser: async (attrs) => {
+        log({ auth: "updateUser", hasPassword: typeof attrs.password === "string" });
+        if (F().updateUserError) return { data: null, error: { message: F().updateUserError } };
+        return { data: {}, error: null };
+      },
       signOut: async () => {
         log({ auth: "signOut" });
         F().session = null;
         try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
         return { error: null };
       },
-      setSession: async () => ({ data: null, error: { message: "stub" } }),
+      setSession: async () => {
+        log({ auth: "setSession" });
+        const s = F().recoverySession;
+        if (!s) return { data: null, error: { message: "stub" } };
+        F().session = s;
+        return { data: { session: s }, error: null };
+      },
       resetPasswordForEmail: async () => ({ error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
     },

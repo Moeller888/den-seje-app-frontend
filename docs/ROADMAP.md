@@ -643,8 +643,10 @@ bulk-tildeling af domæner · nyt dashboard-framework · ændringer i den adapti
 Auditten anbefaler `classes` + `class_teachers` + `class_students` med én autoritetshjælper og
 udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet nedenfor.
 
-- **2-0A — beskyttede profilkolonner (PR #308, migration
-  `20261010102416_profiles_self_update_columns.sql`, IKKE anvendt):** `authenticated` (og `anon`)
+- **2-0A — beskyttede profilkolonner (PR #308 + #310, migration
+  `20261010102416_profiles_self_update_columns.sql`) — LIVE og verificeret 2026-10-11** (D-110,
+  remote version `20261011092154`; postflight, rollbackede runtime-probes og prod-browserflows
+  grønne): `authenticated` (og `anon`)
   havde tabel-UPDATE på `profiles`, og RLS styrer kun rækken, ikke kolonnerne — en elev kunne selv
   ændre `teacher_id` (skifte lærer / melde sig ud), nulstille `active_domains`, rydde
   `must_reset_password` og omgå de validerende RPC'er. Rettelsen tillader kun direkte UPDATE af
@@ -652,14 +654,15 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   ryddes kun ved et reelt kodeordsskift via en trigger på `auth.users.encrypted_password`, og
   backend-skrivere skal skifte kodeordet FØR de sætter flaget (guardet i test). D-110-preflight
   2026-10-10 fandt, at projektets default privileges giver nye `public`-funktioner EXECUTE til
-  `service_role`; triggerfunktionens REVOKE omfatter derfor også `service_role` (rettet i den
-  endnu ikke anvendte migration, testet med Supabases default privileges i PGlite).
+  `service_role`; triggerfunktionens REVOKE omfatter derfor også `service_role` (rettet før
+  apply, testet med Supabases default privileges i PGlite).
   (PR #307 — samme hul med `must_reset_password` klientskrivbar — er lukket som erstattet af #308;
   dens migration `20261010120000_profiles_protected_columns.sql` er forældet og må ikke anvendes.)
-- **2-0A.1 — fjern den overflødige klient-rydning (ikke startet):** `js/reset-password.js`
-  forsøger stadig `profiles.update({ must_reset_password: false })`. Efter 2-0A afvises den (og
-  ignoreres af siden), fordi triggeren allerede har ryddet flaget. Fjernes FØRST når 2-0A er anvendt
-  og verificeret i produktion.
+- **2-0A.1 — klient-rydningen fjernet (gennemført):** `js/reset-password.js` skriver ikke længere
+  til `profiles`; den skifter kun kodeord via `auth.updateUser` og logger en tvunget elev ud.
+  `must_reset_password = false` sker nu udelukkende via kodeordsskift-triggeren. Guard-testen har
+  ingen undtagelse længere: browserkode må kun opdatere `placement_band` og `current_band`, og et
+  nyt klient-write til `must_reset_password` får testen til at fejle.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør

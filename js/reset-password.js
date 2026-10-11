@@ -112,13 +112,9 @@ resetForm.addEventListener("submit", async (e) => {
   }
 
   if (forced) {
-    // Clear the forced-reset flag now that the student chose a new password.
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase.from("profiles")
-        .update({ must_reset_password: false })
-        .eq("id", session.user.id);
-    }
+    // The forced-reset flag (profiles.must_reset_password) is cleared server-side: a trigger on
+    // auth.users clears it when the password really changes (20261010102416). The browser has no
+    // UPDATE privilege on that column and must not try.
     await supabase.auth.signOut();
   }
 
