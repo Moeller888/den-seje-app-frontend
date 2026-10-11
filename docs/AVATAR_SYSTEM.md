@@ -6,7 +6,7 @@ _Binding design goal: `docs/avatar-vision.md`. Decision register (D-001…D-041)
 _This file is the **map**; it does not restate the decision register or the ADRs — it points to them._
 _Accessibility (read-aloud / TTS) is a separate platform-track feature, not avatar-domain — see
 [ROADMAP.md](./ROADMAP.md) and [157o-read-aloud.md](./157o-read-aloud.md)._
-_Last reviewed: 2026-07-03._
+_Last reviewed: 2026-10-11._
 
 ---
 
@@ -57,8 +57,19 @@ art layer behind them can be upgraded without a rewrite.
   regions and the classified pre-gate `pre.transition-uncovered` as the binding prerequisites for any later
   colour attempt (`tools/avatar/build-r3-head-geometry.mjs`, `tools/avatar/recompose-r3-head-geometry.mjs`,
   fixtures in `tools/avatar/fixtures/r3-head-geometry/`). E4 was built as a control, passed every gate and
-  was rejected. Nothing is wired into runtime, no runtime or R2 asset is promoted, and no image call is
-  made or authorised — a colour call needs a new owner instruction, call-id and claim identity.
+  was rejected. Nothing is wired into runtime and no runtime or R2 asset is promoted.
+- **R3 head colour — no accepted candidate; no call authorised (D-149 … D-156, as of 2026-10-11).** The
+  deterministic preparation was accepted (D-149: U1 underpainting, API_EDIT mask, S1 palette gate, S2
+  transition). Two one-shot colour calls were authorised and **spent**: D-151 returned HTTP 400 with no
+  image (D-152 prepared the `background: "opaque"` fix); D-153 returned HTTP 200 but the candidate was
+  **rejected** by the background-leak gate (5,752 of 66,162 head pixels read as background; D-156 later
+  showed the "background" is a painted 16 px checkerboard and the model's own silhouette is smaller than
+  the requested one). D-154 found deterministic salvage **not viable**; D-155
+  concluded **C — no new image call should be authorised yet**; D-156 found the examined overscan/bleed
+  design **not geometrically feasible (B)** at the jaw underside and neck rows. The **jaw/neck transition**
+  is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
+  = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
+  call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
