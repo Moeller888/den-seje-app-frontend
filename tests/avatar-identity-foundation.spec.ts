@@ -1,7 +1,7 @@
 // Section 152A: Avatar Identity Foundation tests.
 // Verifies: backfill shape, set_avatar_identity RPC (accept/reject), trigger
 // enforcement against direct garbage writes, anon lockout, zero visual change
-// on avatar page / hub / quiz, and avatar_gender flow coexistence.
+// on avatar page / hub / quiz, and that a pupil can no longer write avatar_gender directly (2-0A).
 //
 // The test student's avatar_identity and avatar_gender are captured in
 // beforeAll and restored in afterAll.
@@ -267,23 +267,38 @@ test("8. Quiz page renders the female body when identity is female", async ({
   ).toBeAttached({ timeout: 15000 });
 });
 
-test("9. avatar_gender flow still works alongside avatar_identity", async ({
+test("9. a pupil's direct avatar_gender write is denied and leaves avatar_gender and avatar_identity unchanged", async ({
   browserName,
 }) => {
   test.skip(browserName !== "chromium", "API dedup");
 
-  // Direct gender write (the existing Section 143 path) must be unaffected
-  // by the identity trigger.
-  const { error } = await studentClient
+  // Roadmap 2-0A (migration profiles_self_update_columns, live as 20261011092154): authenticated
+  // may UPDATE only placement_band and current_band on its own profiles row. avatar_gender is no
+  // longer client-writable, so the old direct Section 143 write must now be rejected outright.
+  const { data: before, error: beforeError } = await adminClient
     .from("profiles")
-    .update({ avatar_gender: "boy" })
-    .eq("id", studentId);
-  expect(error, `avatar_gender write failed: ${error?.message}`).toBeNull();
-
-  const { data: row } = await adminClient
-    .from("profiles")
-    .select("avatar_gender")
+    .select("avatar_gender, avatar_identity")
     .eq("id", studentId)
     .maybeSingle();
-  expect((row as any)?.avatar_gender).toBe("boy");
+  expect(beforeError, `profile read failed: ${beforeError?.message}`).toBeNull();
+  expect(before, "test student profile must exist").toBeTruthy();
+  const beforeGender = (before as any).avatar_gender;
+  const attempted = beforeGender === "boy" ? "girl" : "boy";
+
+  const { error } = await studentClient
+    .from("profiles")
+    .update({ avatar_gender: attempted })
+    .eq("id", studentId);
+  expect(error, "a direct avatar_gender write by the pupil must be rejected").not.toBeNull();
+  expect(error?.code).toBe("42501");
+  expect(error?.message).toContain("permission denied for table profiles");
+
+  const { data: row, error: rowError } = await adminClient
+    .from("profiles")
+    .select("avatar_gender, avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect(rowError, `profile read failed: ${rowError?.message}`).toBeNull();
+  expect((row as any)?.avatar_gender).toBe(beforeGender);
+  expect((row as any)?.avatar_identity).toEqual((before as any).avatar_identity);
 });
