@@ -1,7 +1,17 @@
 // Section 152A: Avatar Identity Foundation tests.
-// Verifies: backfill shape, set_avatar_identity RPC (accept/reject), trigger
-// enforcement against direct garbage writes, anon lockout, zero visual change
-// on avatar page / hub / quiz, and avatar_gender flow coexistence.
+// Verifies: backfill shape, set_avatar_identity RPC (accept/reject), that a pupil
+// cannot write avatar_identity or avatar_gender directly, anon lockout, the body
+// variant on avatar page / hub / quiz, and that avatar_gender is still readable.
+//
+// Two separate boundaries are in play since 2-0A (migration 20261010102416):
+//   - client write boundary = profile COLUMN PRIVILEGES. A signed-in pupil may
+//     directly UPDATE only placement_band and current_band; any other column —
+//     avatar_identity and avatar_gender included — is refused with 42501 before
+//     any trigger runs (proven in PGlite by profiles-self-update-columns-migration-run);
+//   - identity validation = the set_avatar_identity RPC (tests 2/3) plus the
+//     identity trigger on the server-side write path.
+// The direct-write tests below therefore prove the privilege boundary, not the
+// trigger.
 //
 // The test student's avatar_identity and avatar_gender are captured in
 // beforeAll and restored in afterAll.
@@ -157,31 +167,41 @@ test("3. set_avatar_identity rejects an invalid body_type", async ({ browserName
   expect(error, "invalid body_type must be rejected").not.toBeNull();
 });
 
-test("4. Trigger blocks direct garbage writes to avatar_identity", async ({
+test("4. direct client writes to avatar_identity are denied by column privileges", async ({
   browserName,
 }) => {
   test.skip(browserName !== "chromium", "API dedup");
 
-  // Unknown key
-  const { error: e1 } = await studentClient
+  const { data: before } = await adminClient
     .from("profiles")
-    .update({ avatar_identity: { hax: 1 } })
-    .eq("id", studentId);
-  expect(e1, "unknown keys must be rejected by the trigger").not.toBeNull();
+    .select("avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
 
-  // Wrong version
-  const { error: e2 } = await studentClient
-    .from("profiles")
-    .update({ avatar_identity: { v: 2, body_type: "male", chosen_at: null } })
-    .eq("id", studentId);
-  expect(e2, "wrong version must be rejected by the trigger").not.toBeNull();
+  // The pupil has no UPDATE privilege on avatar_identity (2-0A), so each payload is
+  // refused with 42501 whatever its shape — the identity trigger is never reached.
+  const garbage: Array<[string, unknown]> = [
+    ["unknown keys",      { hax: 1 }],
+    ["wrong version",     { v: 2, body_type: "male", chosen_at: null }],
+    ["invalid body_type", { v: 1, body_type: "dragon", chosen_at: null }],
+  ];
+  for (const [label, payload] of garbage) {
+    const { error } = await studentClient
+      .from("profiles")
+      .update({ avatar_identity: payload })
+      .eq("id", studentId);
+    expect(error, `${label}: direct avatar_identity write must be refused`).not.toBeNull();
+    expect(error?.code, `${label}: must be a privilege denial (42501)`).toBe("42501");
+    expect(error?.message ?? "", label).toMatch(/permission denied/i);
+  }
 
-  // Invalid body_type
-  const { error: e3 } = await studentClient
+  const { data: after } = await adminClient
     .from("profiles")
-    .update({ avatar_identity: { v: 1, body_type: "dragon", chosen_at: null } })
-    .eq("id", studentId);
-  expect(e3, "invalid body_type must be rejected by the trigger").not.toBeNull();
+    .select("avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect((after as any)?.avatar_identity, "avatar_identity must be unchanged")
+    .toEqual((before as any)?.avatar_identity);
 });
 
 test("5. anon cannot execute set_avatar_identity", async ({ browserName }) => {
@@ -267,23 +287,46 @@ test("8. Quiz page renders the female body when identity is female", async ({
   ).toBeAttached({ timeout: 15000 });
 });
 
-test("9. avatar_gender flow still works alongside avatar_identity", async ({
+test("9. avatar_gender is readable but not directly writable by the pupil", async ({
   browserName,
 }) => {
   test.skip(browserName !== "chromium", "API dedup");
 
-  // Direct gender write (the existing Section 143 path) must be unaffected
-  // by the identity trigger.
-  const { error } = await studentClient
-    .from("profiles")
-    .update({ avatar_gender: "boy" })
-    .eq("id", studentId);
-  expect(error, `avatar_gender write failed: ${error?.message}`).toBeNull();
-
-  const { data: row } = await adminClient
+  const { data: before, error: beforeErr } = await adminClient
     .from("profiles")
     .select("avatar_gender")
     .eq("id", studentId)
     .maybeSingle();
-  expect((row as any)?.avatar_gender).toBe("boy");
+  expect(beforeErr, `avatar_gender read failed: ${beforeErr?.message}`).toBeNull();
+  const current = (before as any)?.avatar_gender;
+  // Attempt a real change, so an accepted write could not pass unnoticed.
+  const attempted = current === "boy" ? "girl" : "boy";
+
+  // Since 2-0A the pupil has no UPDATE privilege on avatar_gender (only
+  // placement_band / current_band are client-writable), so the old direct
+  // Section 143 write is refused.
+  const { error } = await studentClient
+    .from("profiles")
+    .update({ avatar_gender: attempted })
+    .eq("id", studentId);
+  expect(error, "a direct avatar_gender write must be refused").not.toBeNull();
+  expect(error?.code, "must be a privilege denial (42501)").toBe("42501");
+  expect(error?.message ?? "").toMatch(/permission denied/i);
+
+  const { data: after } = await adminClient
+    .from("profiles")
+    .select("avatar_gender")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect((after as any)?.avatar_gender, "avatar_gender must be unchanged").toBe(current);
+
+  // Reading is unaffected: the pupil still sees its own avatar_gender, as hub.html
+  // and avatar.html do.
+  const { data: own, error: readErr } = await studentClient
+    .from("profiles")
+    .select("avatar_gender")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect(readErr, `pupil avatar_gender read failed: ${readErr?.message}`).toBeNull();
+  expect((own as any)?.avatar_gender).toBe(current);
 });
