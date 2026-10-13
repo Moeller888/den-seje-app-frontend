@@ -272,18 +272,45 @@ test("9. avatar_gender flow still works alongside avatar_identity", async ({
 }) => {
   test.skip(browserName !== "chromium", "API dedup");
 
-  // Direct gender write (the existing Section 143 path) must be unaffected
-  // by the identity trigger.
-  const { error } = await studentClient
+  // 2-0A (20261010102416, live): authenticated may UPDATE only placement_band and
+  // current_band, so the old Section 143 direct client write of avatar_gender is
+  // refused by privileges. No browser code writes avatar_gender (it is only read
+  // for the CSS tint). The server path must still coexist with the identity trigger.
+  const { data: before } = await adminClient
     .from("profiles")
-    .update({ avatar_gender: "boy" })
-    .eq("id", studentId);
-  expect(error, `avatar_gender write failed: ${error?.message}`).toBeNull();
+    .select("avatar_gender, avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect(before, "test student profile must exist").not.toBeNull();
+  const beforeGender = (before as any)?.avatar_gender;
+  const target = beforeGender === "boy" ? "girl" : "boy";
 
-  const { data: row } = await adminClient
+  const { error: clientError } = await studentClient
+    .from("profiles")
+    .update({ avatar_gender: target })
+    .eq("id", studentId);
+  expect(clientError, "direct client write of avatar_gender must be refused").not.toBeNull();
+  expect(clientError?.code).toBe("42501");
+
+  const { data: afterClient } = await adminClient
     .from("profiles")
     .select("avatar_gender")
     .eq("id", studentId)
     .maybeSingle();
-  expect((row as any)?.avatar_gender).toBe("boy");
+  expect((afterClient as any)?.avatar_gender).toBe(beforeGender);
+
+  // Server-side write is unaffected by the identity trigger and leaves avatar_identity intact.
+  const { error: adminError } = await adminClient
+    .from("profiles")
+    .update({ avatar_gender: target })
+    .eq("id", studentId);
+  expect(adminError, `server avatar_gender write failed: ${adminError?.message}`).toBeNull();
+
+  const { data: row } = await adminClient
+    .from("profiles")
+    .select("avatar_gender, avatar_identity")
+    .eq("id", studentId)
+    .maybeSingle();
+  expect((row as any)?.avatar_gender).toBe(target);
+  expect((row as any)?.avatar_identity).toEqual((before as any)?.avatar_identity);
 });
