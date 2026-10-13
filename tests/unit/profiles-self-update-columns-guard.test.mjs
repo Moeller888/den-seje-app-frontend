@@ -5,9 +5,9 @@
 //   1. the migration grants authenticated UPDATE on exactly placement_band and current_band;
 //   2. no LATER migration hands API roles UPDATE on profiles again — table-wide, via ALL, or on any
 //      column outside that allowlist (teacher_id, role, active_domains, must_reset_password, …);
-//   3. every direct browser write to profiles stays inside the allowlist. The one named exception is
-//      js/reset-password.js's now-redundant must_reset_password clear, kept for rollout
-//      compatibility until follow-up 2-0A.1 removes it;
+//   3. every direct browser write to profiles stays inside the allowlist — no exceptions. In
+//      particular no browser code writes must_reset_password: the trigger on auth.users is the only
+//      thing that clears it (2-0A.1 removed reset-password.js's old client clear);
 //   4. the browser never INSERTs or UPSERTs profiles;
 //   5. reset-student-password changes the password BEFORE it sets must_reset_password = true. The
 //      trigger clears the flag on every real password change, so the reverse order would silently
@@ -23,11 +23,6 @@ const MIGRATIONS = join(ROOT, "supabase", "migrations");
 const FILE = "20261010102416_profiles_self_update_columns.sql";
 
 const CLIENT_WRITABLE = ["current_band", "placement_band"];
-
-// The ONLY tolerated browser write outside the allowlist. After the migration it is refused by
-// privileges (and ignored by the page); the trigger has already cleared the flag. Remove the entry
-// together with the write in 2-0A.1 — the stale-exception test below fails if it outlives the code.
-const KNOWN_REDUNDANT_WRITES = { "js/reset-password.js": ["must_reset_password"] };
 
 const code = (sql) => sql.replace(/--.*$/gm, "").replace(/\s+/g, " ");
 
@@ -85,39 +80,73 @@ function browserSources() {
   return out;
 }
 
-function browserWrites() {
+function writesIn(file, src) {
   const writes = [];
-  for (const f of browserSources()) {
-    const src = readFileSync(join(ROOT, f), "utf8");
-    for (const m of src.matchAll(/\.from\(\s*["'`]profiles["'`]\s*\)([\s\S]{0,200}?)\.(update|upsert|insert)\(\s*(\{[^}]*\})?/g)) {
-      const keys = m[3] ? [...m[3].matchAll(/([A-Za-z_]\w*)\s*:/g)].map((k) => k[1]) : null;
-      writes.push({ file: f, op: m[2], keys });
-    }
+  for (const m of src.matchAll(/\.from\(\s*["'`]profiles["'`]\s*\)([\s\S]{0,200}?)\.(update|upsert|insert)\(\s*(\{[^}]*\})?/g)) {
+    const keys = m[3] ? [...m[3].matchAll(/([A-Za-z_]\w*)\s*:/g)].map((k) => k[1]) : null;
+    writes.push({ file, op: m[2], keys });
   }
   return writes;
 }
 
-test("every direct browser write to profiles stays inside the allowlist (plus the one named 2-0A.1 exception)", () => {
+function browserWrites() {
+  return browserSources().flatMap((f) => writesIn(f, readFileSync(join(ROOT, f), "utf8")));
+}
+
+// Why a browser write to profiles is not allowed; null when it is.
+function violation(w) {
+  if (w.op !== "update") return `${w.file}: the browser must never ${w.op} profiles`;
+  if (!w.keys) return `${w.file}: profiles.update must use a literal object so its columns can be checked`;
+  const bad = w.keys.filter((k) => !CLIENT_WRITABLE.includes(k));
+  return bad.length ? `${w.file}: writes profiles.${bad.join(", ")}, which is not client-writable — use an RPC` : null;
+}
+
+test("every direct browser write to profiles stays inside the allowlist", () => {
   const writes = browserWrites();
-  assert.ok(writes.length >= 3, "the known writes must still be found — otherwise this guard is blind");
-  for (const w of writes) {
-    assert.equal(w.op, "update", `${w.file}: the browser must never ${w.op} profiles`);
-    assert.ok(w.keys, `${w.file}: profiles.update must use a literal object so its columns can be checked`);
-    const allowed = [...CLIENT_WRITABLE, ...(KNOWN_REDUNDANT_WRITES[w.file] ?? [])];
-    for (const k of w.keys) {
-      assert.ok(allowed.includes(k), `${w.file}: writes profiles.${k}, which is not client-writable — use an RPC`);
+  assert.ok(writes.length >= 2, "the known band writes must still be found — otherwise this guard is blind");
+  assert.deepEqual(writes.map(violation).filter(Boolean), []);
+});
+
+test("no browser code writes must_reset_password — the auth.users trigger is the only thing that clears it", () => {
+  const offenders = browserWrites().filter((w) => (w.keys ?? []).includes("must_reset_password"));
+  assert.deepEqual(offenders.map((w) => w.file), []);
+  // A non-literal update object would hide the column from the matcher above; this catches the name itself.
+  for (const f of browserSources()) {
+    const src = readFileSync(join(ROOT, f), "utf8");
+    for (const m of src.matchAll(/\.from\(\s*["'`]profiles["'`]\s*\)[\s\S]{0,200}?\.update\(([\s\S]{0,200}?)\)/g)) {
+      assert.equal(/must_reset_password/.test(m[1]), false, `${f}: client write to must_reset_password`);
     }
   }
 });
 
-test("the 2-0A.1 exception is not stale, and the allowlist has no column nobody writes", () => {
-  const writes = browserWrites();
-  for (const [file, cols] of Object.entries(KNOWN_REDUNDANT_WRITES)) {
-    const found = writes.filter((w) => w.file === file).flatMap((w) => w.keys ?? []);
-    for (const c of cols) assert.ok(found.includes(c), `${file} no longer writes ${c} — remove the exception (2-0A.1 done)`);
+test("the browser-write matcher rejects a reintroduced must_reset_password clear (negative control)", () => {
+  const shapes = [
+    `await supabase.from("profiles").update({ must_reset_password: false }).eq("id", session.user.id);`,
+    `await supabase.from("profiles")\n  .update({ must_reset_password: false })\n  .eq("id", uid);`,
+    `supabase.from('profiles').update({ current_band: 2, must_reset_password: false })`,
+    `supabase.from("profiles").upsert({ id: uid })`,
+    `supabase.from("profiles").update(patch)`,
+  ];
+  for (const s of shapes) {
+    const ws = writesIn("probe.js", s);
+    assert.equal(ws.length, 1, s);
+    assert.ok(violation(ws[0]), s);
   }
-  const used = new Set(writes.flatMap((w) => w.keys ?? []));
+  assert.equal(violation(writesIn("probe.js", `supabase.from("profiles").update({ current_band: 2 })`)[0]), null);
+});
+
+test("the allowlist has no column nobody writes", () => {
+  const used = new Set(browserWrites().flatMap((w) => w.keys ?? []));
   for (const c of CLIENT_WRITABLE) assert.ok(used.has(c), `${c} is granted but no browser code writes it`);
+});
+
+test("reset-password.js changes the password, signs a forced pupil out, and leaves the flag to the server", () => {
+  const src = readFileSync(join(ROOT, "js", "reset-password.js"), "utf8");
+  assert.match(src, /supabase\.auth\.updateUser\(\{\s*password:\s*newPassword\s*\}\)/);
+  assert.match(src, /if \(forced\) \{[\s\S]*?await supabase\.auth\.signOut\(\);[\s\S]*?\}/);
+  assert.match(src, /window\.location\.href = "login\.html"/);
+  assert.equal(/\.from\(\s*["'`]profiles["'`]\s*\)/.test(src), false, "reset-password.js must not touch profiles");
+  assert.equal(/must_reset_password\s*:/.test(src), false, "reset-password.js must not write must_reset_password");
 });
 
 test("reset-student-password changes the password BEFORE it sets must_reset_password = true", () => {

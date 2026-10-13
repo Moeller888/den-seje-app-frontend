@@ -311,7 +311,21 @@ test("6d. client-side validation stops before the server is called", async ({ pa
 
 // ── 7/8. first pupil login → existing forced reset flow ──────────────────────────────────────
 
-test("7/8. a flagged pupil is sent from login to the forced reset, which clears the flag", async ({ page }) => {
+// The flag itself is cleared by the trigger on auth.users when the password really changes
+// (20261010102416, proven live and in profiles-self-update-columns-migration-run). The browser no
+// longer writes profiles at all here (2-0A.1): it changes the password, signs a forced pupil out
+// and goes to login.
+const profilesWrites = (log: any[]) =>
+  log.filter((e) => e.table === "profiles" && e.ops.some((o: any) => ["update", "upsert", "insert"].includes(o.op)));
+
+test("7/8. a flagged pupil is sent from login to the forced reset; the page changes the password, signs out and goes to login — no profiles write", async ({ page }) => {
+  await page.route("**/login.html", async (r) => {
+    // Only the redirect AFTER the reset is stubbed; the first visit serves the real login page.
+    if (new URL(page.url()).pathname.endsWith("/reset-password.html")) {
+      return r.fulfill({ status: 200, contentType: "text/html", body: "<p>login</p>" });
+    }
+    return r.continue();
+  });
   await open(page, "/login.html", {
     session: null,
     profile: { role: "student", must_reset_password: true },
@@ -327,12 +341,59 @@ test("7/8. a flagged pupil is sent from login to the forced reset, which clears 
   await page.locator("#confirm-password").fill(OWN_PW);
   await page.locator("#resetSubmitBtn").click();
   await expect(page.locator("#reset-message")).toContainText("Adgangskode opdateret");
+  await expect(page).toHaveURL(/\/login\.html$/);
 
   const log = await fakeLog(page);
+  const update = log.findIndex((e) => e.auth === "updateUser" && e.hasPassword);
+  const signOut = log.findIndex((e) => e.auth === "signOut");
+  expect(update).toBeGreaterThanOrEqual(0);
+  expect(signOut).toBeGreaterThan(update);
+  expect(profilesWrites(log)).toEqual([]);
+  // login.js still READS the flag (select); every profiles call in the whole flow is a read.
+  const profilesCalls = log.filter((e) => e.table === "profiles");
+  expect(profilesCalls.length).toBeGreaterThan(0);
+  for (const e of profilesCalls) expect(e.ops.map((o: any) => o.op)).not.toContain("update");
+});
+
+test("7b. a failed password change stops the forced flow: error shown, no sign-out, no profiles write, no redirect", async ({ page }) => {
+  await open(page, "/reset-password.html?forced=1", {
+    session: { user: { id: "student-1" } },
+    updateUserError: "Password should be different from the old password.",
+  });
+  await expect(page.locator("#form-section")).toBeVisible();
+  await page.locator("#new-password").fill(OWN_PW);
+  await page.locator("#confirm-password").fill(OWN_PW);
+  await page.locator("#resetSubmitBtn").click();
+  await expect(page.locator("#reset-message")).toHaveText("Fejl: Password should be different from the old password.");
+  await expect(page.locator("#resetSubmitBtn")).toBeEnabled();
+
+  // The success path redirects after 2 s; give it longer than that to prove nothing happens.
+  await page.waitForTimeout(2500);
+  await expect(page).toHaveURL(/\/reset-password\.html\?forced=1$/);
+  const log = await fakeLog(page);
+  expect(log.some((e) => e.auth === "updateUser")).toBe(true);
+  expect(log.some((e) => e.auth === "signOut")).toBe(false);
+  expect(profilesWrites(log)).toEqual([]);
+});
+
+test("7c. the e-mail recovery reset (not forced) still changes the password and goes to login, without signing out or writing profiles", async ({ page }) => {
+  await page.route("**/login.html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<p>login</p>" }));
+  await open(page, "/reset-password.html#type=recovery&access_token=fake-access&refresh_token=fake-refresh", {
+    session: null,
+    recoverySession: { user: { id: "student-1" } },
+  });
+  await expect(page.locator("#form-section")).toBeVisible();
+  await page.locator("#new-password").fill(OWN_PW);
+  await page.locator("#confirm-password").fill(OWN_PW);
+  await page.locator("#resetSubmitBtn").click();
+  await expect(page.locator("#reset-message")).toContainText("Adgangskode opdateret");
+  await expect(page).toHaveURL(/\/login\.html$/);
+
+  const log = await fakeLog(page);
+  expect(log.some((e) => e.auth === "setSession")).toBe(true);
   expect(log.some((e) => e.auth === "updateUser" && e.hasPassword)).toBe(true);
-  const clear = log.find((e) => e.table === "profiles" && e.ops.some((o: any) => o.op === "update"));
-  expect(clear.ops.find((o: any) => o.op === "update").args[0]).toEqual({ must_reset_password: false });
-  expect(log.some((e) => e.auth === "signOut")).toBe(true);
+  expect(log.some((e) => e.auth === "signOut")).toBe(false);
+  expect(profilesWrites(log)).toEqual([]);
 });
 
 test("8b. an unflagged pupil goes straight to the app, not to the reset", async ({ page }) => {
