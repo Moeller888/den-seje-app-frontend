@@ -31,6 +31,10 @@
 // D-154 then CLOSED D-153's entry in place after its one send (HTTP 200, candidate rejected by background-leak) and
 // counted that send. preD154Contract() reverses exactly that closure, proven canonically identical to the contract at
 // the D-153 commit (PRE_D154_CONTRACT_CANONICAL_SHA256); preD153Contract() applies it first.
+//
+// D-159 then ADDED one top-level section, faceNeutralPreparation (preparation only: no authorisation, no call id, no
+// claim, no budget, counter or asset change). preD159Contract() deletes exactly that key, proven canonically identical
+// to the contract at the D-159 base (PRE_D159_CONTRACT_CANONICAL_SHA256); preD154Contract() applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -184,9 +188,23 @@ export const PRE_D154 = Object.freeze({
   "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds FIVE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — THE ONLY active send permission. D-153 supersedes the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque, with mandateState UNSPENT until its claim exists. prohibitions.noRetry forbids a repeat and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. Apart from D-153's single call, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's or D-153's call id or claim identity, and no other call in the R3 plan."
 });
 
-/** A deep copy of the live contract with D-154's closure of D-153 reversed. Pure; never touches the input. */
-export function preD154Contract(live) {
+/** The D-159 base commit (the contract as it stood before D-159 added faceNeutralPreparation). */
+export const PRE_D159_COMMIT = "14a4d49f695f732c6fae233947c9c03e624201a8";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D159_COMMIT. */
+export const PRE_D159_CONTRACT_CANONICAL_SHA256 = "d1f705ef57c67398a3bee49a6412d06387b8469b05918defbb8a068e69e49e14";
+/** The top-level keys D-159 added. D-159 changed nothing else in the contract. */
+export const D159_ADDED_TOP_LEVEL_KEYS = Object.freeze(["faceNeutralPreparation"]);
+
+/** A deep copy of the live contract with D-159's addition removed. Pure; never touches the input. */
+export function preD159Contract(live) {
   const c = JSON.parse(JSON.stringify(live));
+  for (const k of D159_ADDED_TOP_LEVEL_KEYS) delete c[k];
+  return c;
+}
+
+/** A deep copy of the live contract with D-159's addition and D-154's closure of D-153 reversed. Pure; never touches the input. */
+export function preD154Contract(live) {
+  const c = preD159Contract(live);
   const e153 = c.authorisedCalls.calls.find((x) => x.decision === D153_DECISION);
   if (e153) {
     e153.status = PRE_D154.d153.status;

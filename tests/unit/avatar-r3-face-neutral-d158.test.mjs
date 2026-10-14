@@ -55,6 +55,14 @@ test("D-158 changes nothing in the contract: no face-neutral call, sent stays 5,
 test("no face-neutral preparation artefact, study output or review is tracked", () => {
   const tracked = execFileSync("git", ["ls-files"], { cwd: REPO, encoding: "utf8" }).split("\n");
   const self = "tests/unit/avatar-r3-face-neutral-d158.test.mjs";
-  assert.deepEqual(tracked.filter((f) => f !== self && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
+  // D-159 authorises tracking EXACTLY these preparation files (tools, the exact prompt text and their test). Every other
+  // face-neutral file — studies, guides, reviews, H1-derived images — stays untracked.
+  const authorisedByD159 = new Set([
+    "tools/avatar/prepare-r3-face-neutral-request.mjs",
+    "tools/avatar/check-r3-face-neutral-output.mjs",
+    "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt",
+    "tests/unit/avatar-r3-face-neutral-d159.test.mjs",
+  ]);
+  assert.deepEqual(tracked.filter((f) => f !== self && !authorisedByD159.has(f) && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
   assert.deepEqual(tracked.filter((f) => f.startsWith("tools/avatar/build/")), []);
 });
