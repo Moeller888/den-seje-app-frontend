@@ -90,7 +90,9 @@ test("real H1: the prototype reproduces its pinned SHA-256 and passes every chec
 
 test("R3 stays default OFF: no shipped file references the prototype", () => {
   const shipped = [];
-  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
+  // dist-cloudflare/ is the gitignored, GENERATED copy of the allowlisted sources this walk already reads; cloudflare-static-build.test.mjs
+  // deletes and rebuilds it while the suite runs in parallel, so walking it races (ENOENT) and adds no coverage.
+  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase", "dist-cloudflare"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
   walk(REPO);
   for (const p of shipped) assert.ok(!/det-u1|r3-head-det/.test(readFileSync(p, "utf8")), relative(REPO, p) + " must not reference the prototype");
 });

@@ -18,9 +18,12 @@ const REG = readFileSync(repoFile("docs/project-state.md"), "utf8").split("\n");
 const rows = (k) => REG.filter((l) => l.startsWith("| **" + k + "** |"));
 const one = (k) => { const r = rows(k); assert.equal(r.length, 1, k + " must appear exactly once"); return r[0]; };
 
-test("D-158 is registered exactly once, directly after D-156, and the earlier rows are verbatim", () => {
+test("D-158 is registered exactly once after D-156 (only D-157, from its own branch, may sit between), and the earlier rows are verbatim", () => {
   const row = one("D-158");
-  assert.equal(REG.findIndex((l) => l.startsWith("| **D-158** |")), REG.findIndex((l) => l.startsWith("| **D-156** |")) + 1);
+  const i156 = REG.findIndex((l) => l.startsWith("| **D-156** |")), i158 = REG.findIndex((l) => l.startsWith("| **D-158** |"));
+  assert.ok(i158 > i156, "D-158 follows D-156");
+  const between = REG.slice(i156 + 1, i158).map((l) => (l.match(/^\| \*\*(D-\d+)\*\* \|/) || [null, l])[1]);
+  assert.ok(between.length === 0 || (between.length === 1 && between[0] === "D-157"), "only the D-157 row may stand between D-156 and D-158: " + JSON.stringify(between));
   assert.equal(sha256(one("D-154")), "53b2dd7cca76ce45cfb9d590fc7c8306efd0eb545412a03b49a451fb9806f6a1");
   assert.equal(sha256(one("D-155")), "0f7bd20d9279a1d3efeaaf4ba183073f511ca76444e9355f830771e9e60c9e61");
   assert.equal(sha256(one("D-156")), "709a7f399b64840242aaffeb399b333fbde80f7dc5eb9102ad950d857630d31e");

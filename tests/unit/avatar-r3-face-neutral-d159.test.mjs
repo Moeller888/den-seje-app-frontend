@@ -46,7 +46,7 @@ test("D-159 is registered exactly once, directly after D-158, and D-158 is not r
   const OLD = "Status **`B — KONTRAKT BLOKERER`** for requestforberedelsen;";
   assert.equal(d158.split(NEW).length, 2, "D-158's status is re-pointed to D-159 and keeps the old status as 'was'");
   assert.equal(sha256(d158.replace(NEW, OLD) + "\n"), "564229aee3b794e10a5bf27938079759112015eea2f0ea7d51775ccce7bed624", "apart from the status line, D-158 is the row as registered");
-  assert.equal(rowsOf("D-157").length, 0, "D-157 lives on another local branch and is not duplicated here");
+  assert.ok(rowsOf("D-157").length <= 1, "D-157 (from its own branch) is never duplicated");
 });
 
 test("the D-159 row carries the decision, the pins, the exception's conditions and the D-158 correction", () => {
@@ -81,6 +81,24 @@ test("the section authorises nothing: no call id, no claim, no new authorisedCal
   assert.deepEqual([C.imageCallBudget.isAuthorisation, C.meta.authorisesImageRequest, C.architecture.defaultEnabled], [false, false, false]);
   assert.deepEqual(C.assets.find((a) => a.name === "r3-face-neutral"), { id: 5, name: "r3-face-neutral", slot: "face", method: "generated", calls: 1 });
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(rel("js/avatar-layers.js"), "utf8")), "R3 stays OFF");
+});
+
+test("the later-attempt rules: three distinct quantities, no sixth underlay call, unknown outcome counts, every image kept", () => {
+  const R = S.laterAttemptRules;
+  assert.match(R.source, /authorises nothing/);
+  assert.match(R.callCounting.threeQuantities, /three different quantities/);
+  assert.match(R.callCounting.decisionOrMergeIsNotASend, /No owner decision, authorisation entry or merge ever raises callsActuallySentSoFar/);
+  assert.match(R.callCounting.underlayStaysFive, /never counted as a sixth underlay call/);
+  assert.match(R.callCounting.whenASendIsRecorded, /claim exists and the single network attempt has started/);
+  assert.match(R.callCounting.unknownOutcome, /still counts as sent, with outcome UNKNOWN/);
+  assert.match(R.callCounting.unknownOutcome, /no retry/);
+  assert.match(R.unexpectedImageCount.keep, /complete raw response and every delivered image/);
+  assert.match(R.unexpectedImageCount.record, /actual number of images and the SHA-256/);
+  assert.match(R.unexpectedImageCount.mark, /n = 1, mark the outcome UNEXPECTED/);
+  assert.match(R.unexpectedImageCount.never, /No automatic selection, no candidate production and no retry/);
+  assert.ok(!/first image/i.test(JSON.stringify(R)), "no 'record only the first image' rule");
+  assert.match(R.sendPath, /never gets a send path/);
+  assert.deepEqual(Object.keys(C.imageCallBudget.callsActuallySentSoFar).filter((k) => typeof C.imageCallBudget.callsActuallySentSoFar[k] === "number"), ["underlay"], "no face counter exists before a face call is sent");
 });
 
 test("the section's pins and parameters are exactly the adapter's", () => {
