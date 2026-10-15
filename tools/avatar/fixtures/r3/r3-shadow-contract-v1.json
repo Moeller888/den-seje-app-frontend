@@ -2164,5 +2164,313 @@
         "testSafetyHardening": "New and changed adapter tests are fully isolated: an explicit allowlist environment, a sandbox identity and sandbox paths. A unit test may not read, check, write or delete a real claim or output path. The D-139 adapter test, the CORE preparation test and the prepared-call test are hardened to that rule, and the guard in the D-143 test file enforces it for every adapter test. Two legacy suites — the D-129 fitting-base test and the D-121 North Star refinement test — carry a NARROW, machine-readable READ-ONLY exception for seven named constructs, bound to file, rule, construct and count. No exception can cover send: true, a real network call, reading the key, or writing, deleting or moving a real claim or output, and it lapses automatically when its construct is removed. It is not a precedent and may not be widened without a new owner decision. The D-139 production adapter is unchanged."
       }
     ]
+  },
+
+  "faceNeutralPreparation": {
+    "decision": "D-159",
+    "adoptedOn": "2026-10-14",
+    "status": "PREPARATION ONLY — NO IMAGE REQUEST AUTHORISED — NO UPLOAD AUTHORISED — NO CALL ID — NO CLAIM",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "noAuthorisedCallsEntry": "D-159 adds no entry to authorisedCalls and changes no call budget, no asset entry and no counter. A later face-neutral attempt needs its own owner decision, its own call id and its own one-shot claim, under futureSendAuthorisationRule.",
+    "layerSplit": {
+      "face": "r3-face-neutral holds two COMPLETE brows, the nose and the mouth, each with its necessary local lines, shading and highlights.",
+      "eyesFixed": "eyes-fixed holds the eye whites, the eye outline, the lashes, the eye highlights and the STATIC eyelid fold above each eye.",
+      "staticFoldIsNotBlink": "The static fold is the fixed fold drawn in Northstar above each eye. It is not the blink engine's moving lid (zModel blink).",
+      "iris": "The iris stays its own tintable sublayer under irisContract.",
+      "blush": "Blush stays its own layer under blushContract.",
+      "faceBlend": "normal source-over",
+      "faceDelivery": "direct transparent output: one separate RGBA feature layer on the master canvas. No skin surface, no skin patch, and no alpha reconstructed from an opaque composite.",
+      "faceExcludes": [
+        "skin surface or skin patch",
+        "general head shading",
+        "every eye part and the static fold",
+        "hair and any hair-shaped cut of a brow",
+        "blush",
+        "ears, neck, body and clothing",
+        "text, accessories and background"
+      ]
+    },
+    "coordinateConvention": {
+      "canvas": "master 1024x1536, x right, y down, integer pixel indices",
+      "rectangles": "[x0, y0, x1, y1] is INCLUSIVE on all four sides: pixel (x, y) is inside iff x0 <= x <= x1 and y0 <= y <= y1",
+      "foldZones": "polyline with a half-width measured from the pixel centre (x + 0.5, y + 0.5)",
+      "browAreas": "the brow shape dilated in the Chebyshev metric",
+      "source": "the same convention as the gitignored preparation files (reference package annotations: integer indices, inclusive boxes; pixel-centre distances for the folds)"
+    },
+    "areaModel": {
+      "targetAreas": {
+        "role": "DIAGNOSTIC only — they flag for the visual review and never reject",
+        "brows": "each brow shape dilated by 3 px; right brow = the measured Northstar brow (bbox [534, 243, 619, 269]); left brow = its mirror about x 510.8997, then tx -5, ty +4 (bbox [397, 247, 482, 273]) — the owner-accepted PROVISIONAL design, not a production landmark",
+        "nose": [
+          488,
+          340,
+          518,
+          379
+        ],
+        "mouth": [
+          466,
+          372,
+          559,
+          402
+        ]
+      },
+      "excludedZones": {
+        "role": "DIAGNOSTIC with HIGH PRIORITY and a MANDATORY visual review; any alpha here is flagged, never auto-repaired",
+        "eyeZones": [
+          [
+            401,
+            277,
+            479,
+            357
+          ],
+          [
+            540,
+            275,
+            619,
+            356
+          ]
+        ],
+        "foldZones": [
+          {
+            "polyline": [
+              [
+                432,
+                272
+              ],
+              [
+                458,
+                274
+              ],
+              [
+                470,
+                281
+              ],
+              [
+                476,
+                286
+              ]
+            ],
+            "halfWidth": 3
+          },
+          {
+            "polyline": [
+              [
+                541,
+                288
+              ],
+              [
+                549,
+                280
+              ],
+              [
+                556,
+                274
+              ],
+              [
+                565,
+                272
+              ],
+              [
+                582,
+                272
+              ]
+            ],
+            "halfWidth": 3
+          }
+        ],
+        "uncertainty": "visual readings, about 2 px"
+      },
+      "broadEnvelope": {
+        "rect": [
+          384,
+          230,
+          632,
+          412
+        ],
+        "role": "BINDING TECHNICAL REJECTION for the one later attempt: any pixel with alpha > 0 outside it rejects the output before any candidate file exists",
+        "derivation": "the union of the target-area bounding boxes ([394, 244, 485, 276], [531, 240, 622, 272], nose, mouth) padded by 10 px",
+        "provesNothingAboutContent": "Pixels inside the envelope can still be skin, eye parts, the fold, hair or guide markers. Those are judged by the diagnostics and the visual review."
+      },
+      "noAutomaticChange": "No automatic crop, move, warp, matte removal or repair of any output."
+    },
+    "productionOrderException": {
+      "scope": "ONE later face-neutral attempt, and only after its own call authorisation",
+      "permits": "that attempt may be produced against the adopted E2 head geometry before the technical underlay asset (production step 2) is approved",
+      "basis": "productionOrderConstraints gives the reason for underlay before face-neutral as the approved underlay GEOMETRY; that geometry is adopted, the underlay asset is not",
+      "conditions": [
+        "the exception covers face-neutral and that one authorised attempt only",
+        "the raw output and its review material are not automatically an accepted candidate",
+        "final asset approval requires a review on the approved underlay",
+        "a review with the later R3 eyes and hair remains required",
+        "a changed underlay geometry requires a new assessment",
+        "a changed underlay skin tone or shading requires a renewed visual review"
+      ],
+      "notArgued": "Transparency alone is NOT claimed to make the layer independent of the underlay: local shading, highlights and matte edges can depend on it.",
+      "productionOrderUnchanged": "productionOrder and productionOrderConstraints are not edited; this is one named exception."
+    },
+    "preparedRequest": {
+      "sendable": false,
+      "model": "gpt-image-2.5-sunburst-2026-09-08",
+      "operation": "Images Edits",
+      "endpointDocumentation": "POST https://api.openai.com/v1/images/edits — documentation only",
+      "bodyFormat": "multipart form fields; image[] repeated per image in input order",
+      "fieldOrder": [
+        "model",
+        "image[]",
+        "image[]",
+        "prompt",
+        "size",
+        "quality",
+        "n",
+        "output_format",
+        "background"
+      ],
+      "parameters": {
+        "size": "1024x1536",
+        "quality": "high",
+        "n": 1,
+        "output_format": "png",
+        "background": "transparent"
+      },
+      "omitted": [
+        "mask",
+        "input_fidelity",
+        "output_compression",
+        "response_format",
+        "moderation"
+      ],
+      "inputs": [
+        {
+          "order": 1,
+          "role": "placement guide only",
+          "name": "input-1-placement-guide-A-prime.png",
+          "sha256": "aed1745ecf5c82472774509546bdeeef7463dd7fad57a3a83933a5bcab613dcf",
+          "bytes": 407991,
+          "tracked": false,
+          "storage": "PRIVATE — H1-derived; only in a gitignored build folder; never tracked, never on a deployable path"
+        },
+        {
+          "order": 2,
+          "role": "style, identity and default expression only",
+          "path": "assets/avatar/reference/Northstar Master v2.png",
+          "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+          "bytes": 761394
+        }
+      ],
+      "prompt": {
+        "path": "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt",
+        "sha256": "9c0b26496ce693dfe0d958fc34c60e68d3eddab98e48bb7b1f11af94e07d2413",
+        "bytes": 2193,
+        "encoding": "UTF-8, LF, no trailing newline"
+      }
+    },
+    "outputHandling": {
+      "order": [
+        "keep the raw output unchanged",
+        "binding technical checks: decode, master canvas, RGBA 8-bit, not empty, no alpha outside the broad envelope; the first failure rejects and no candidate file is written",
+        "diagnostic indicators",
+        "the owner's visual review",
+        "candidate status decided separately by the owner"
+      ],
+      "visualReview": "complete brows, Northstar identity and default expression, nose and mouth finish, no eye parts, fold, hair, blush, skin, body or markers, placement and matte edges — on U1 and on light, neutral and dark backgrounds, at 1:1, magnified, 360x540 and 180x270",
+      "alphaIsNotProof": "Alpha alone proves neither the foreground colour, nor complete brows, nor the absence of a skin matte."
+    },
+    "laterAttemptRules": {
+      "source": "owner instruction 2026-10-14, recorded with D-159; it authorises nothing",
+      "callCounting": {
+        "threeQuantities": "Planned calls (assets[].calls), authorised attempts (authorisedCalls entries) and calls actually sent (imageCallBudget.callsActuallySentSoFar) are three different quantities.",
+        "decisionOrMergeIsNotASend": "No owner decision, authorisation entry or merge ever raises callsActuallySentSoFar.",
+        "underlayStaysFive": "callsActuallySentSoFar.underlay counts only the five historical head-underlay calls (D-139, D-142, D-143, D-151, D-153) and stays 5. A face-neutral attempt is never counted as a sixth underlay call; it is recorded separately for the face slot, under the axes below.",
+        "axes": {
+          "claimState": "Is the one-shot claim consumed? unconsumed | consumed. A consumed claim proves only that the claim was written; it does NOT prove that a request was dispatched.",
+          "dispatch": "Is the START of the single network attempt documented? not-started (documented stop before the network call) | undetermined (it cannot be decided whether the attempt started) | started (a local dispatch record written immediately before the request is handed to the network client). A local dispatch record is NOT confirmation that the server received the request.",
+          "result": "What came back? none (no attempt) | unknown (no reliable result) | http-error (an HTTP error response was received) | response (a normal response was received). Only a received response — error or normal — documents that the server answered."
+        },
+        "independence": "The three axes are recorded separately. An unknown result never turns a documented dispatch start into an unknown dispatch, and a consumed claim never counts as a dispatch.",
+        "counterMeaning": "For a face-neutral attempt the actually-sent figure counts attempts whose dispatch START is documented (dispatch = started). It measures documented local dispatch, not confirmed server receipt; server answers are recorded separately (serverAnswered).",
+        "undeterminedDispatch": "An attempt whose dispatch start is undetermined is recorded separately as dispatch-undetermined. It is counted neither as sent nor as not sent.",
+        "cases": [
+          {
+            "case": "claim consumed; documented stop before the network attempt",
+            "claimState": "consumed",
+            "dispatch": "not-started",
+            "evidence": "local stop record before any dispatch record",
+            "result": "none",
+            "actuallySent": 0,
+            "dispatchUndetermined": 0,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "claim consumed; later crash, dispatch start cannot be decided",
+            "claimState": "consumed",
+            "dispatch": "undetermined",
+            "evidence": "claim present; neither a stop record nor a dispatch record",
+            "result": "unknown",
+            "actuallySent": 0,
+            "dispatchUndetermined": 1,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; result unknown",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record",
+            "result": "unknown",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; HTTP error received",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record + received HTTP error response",
+            "result": "http-error",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": true,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; normal response received",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record + received response",
+            "result": "response",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": true,
+            "automaticRetry": false
+          }
+        ],
+        "noRetry": "Every case with a consumed claim excludes automatic retry. A further attempt needs a new owner decision, a new call id and a new claim identity.",
+        "historicalAccounting": "callsActuallySentSoFar.underlay = 5 is the historical record and is not rewritten. It counts D-142 as sent during the incident with outcome UNKNOWN, under the accounting of its time. The axes above apply to future face-neutral attempts only, which are recorded separately from the underlay figure."
+      },
+      "unexpectedImageCount": {
+        "keep": "Keep the complete raw response and every delivered image byte stream unchanged.",
+        "record": "Record the actual number of images and the SHA-256 of the raw response and of every image.",
+        "mark": "If the number differs from n = 1, mark the outcome UNEXPECTED.",
+        "never": "No automatic selection, no candidate production and no retry. The owner assesses the outcome."
+      },
+      "sendPath": "The preparation-only adapter never gets a send path. A later send adapter and call authorisation must satisfy futureSendAuthorisationRule (the exact decision row and authorisation entry present in origin/main) and the one-shot claim rules. Neither exists."
+    },
+    "tools": {
+      "adapter": "tools/avatar/prepare-r3-face-neutral-request.mjs — preparation-only; it cannot send",
+      "checks": "tools/avatar/check-r3-face-neutral-output.mjs — reads bytes, writes nothing"
+    },
+    "notApproved": [
+      "an upload",
+      "an image request",
+      "access to credentials",
+      "a claim or a call id",
+      "the underlay as an asset",
+      "any face output as a candidate",
+      "the provisional brow coordinates as production landmarks"
+    ]
   }
 }

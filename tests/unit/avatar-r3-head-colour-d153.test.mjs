@@ -255,7 +255,9 @@ test("the D-149 and D-152 preparation adapters still cannot send, and R3 is stil
   assert.equal(attemptSend().allowed, false); assert.equal(attemptSendD152().allowed, false);
   assert.equal(PREP_CALL_ID, "UNASSIGNED"); assert.equal(D152_CALL_ID, "UNASSIGNED"); assert.equal(D152_CLAIM, "NONE");
   const shipped = [];
-  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
+  // dist-cloudflare/ is the gitignored, GENERATED copy of the allowlisted sources this walk already reads; cloudflare-static-build.test.mjs
+  // deletes and rebuilds it while the suite runs in parallel, so walking it races (ENOENT) and adds no coverage.
+  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase", "dist-cloudflare"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
   walk(REPO);
   for (const p of shipped) assert.ok(!/r3-head-colour|openai-send-r3|head-colour-d15/.test(readFileSync(p, "utf8")), relative(REPO, p) + " must not reference the R3 head-colour work");
 });

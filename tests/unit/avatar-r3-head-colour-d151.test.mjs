@@ -238,7 +238,9 @@ test("the D-149 preparation adapter still cannot send, and R3 is still default O
   const r = attemptSend(); assert.equal(r.allowed, false);
   assert.equal(PREP_CALL_ID, "UNASSIGNED", "the preparation adapter keeps no call-id");
   const shipped = [];
-  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
+  // dist-cloudflare/ is the gitignored, GENERATED copy of the allowlisted sources this walk already reads; cloudflare-static-build.test.mjs
+  // deletes and rebuilds it while the suite runs in parallel, so walking it races (ENOENT) and adds no coverage.
+  const walk = (dir) => { for (const n of readdirSync(dir)) { const p = join(dir, n); if (statSync(p).isDirectory()) { if (!["node_modules", ".git", "tools", "tests", "docs", "supabase", "dist-cloudflare"].includes(n)) walk(p); } else if (/\.(html|js|mjs|css)$/.test(n)) shipped.push(p); } };
   walk(REPO);
   for (const p of shipped) {
     const s = readFileSync(p, "utf8");
