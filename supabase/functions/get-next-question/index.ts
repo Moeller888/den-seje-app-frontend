@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { publishableKey } from "../_shared/supabase-keys.ts";
+import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
+import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// The backend client for creating a question instance (./instance-insert.ts), and nothing else.
+// Built per call, only when an instance is about to be written: no pupil Authorization header, no
+// session. If the key cannot be resolved this throws — never a fallback to the user client.
+function makeAdminClient() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS);
+}
 
 // Subjects (fag). English questions use learning_objective = "english";
 // every other domain is history. Must match teacher.js ALL_DOMAINS.
@@ -338,21 +346,26 @@ serve(async (req) => {
         continue;
       }
 
-      const { data, error } = await supabase
-        .from("question_instances")
-        .insert({
-          student_id,
-          question_id: q.id,
-          answered: false,
-          correct_answer: normalized.correct,
-          difficulty_at_time: 1,
-          mastery_snapshot: 1,
-          next_review_at: new Date().toISOString(),
-        })
-        .select("id")
-        .limit(1);
+      // Server-owned assignment: the backend admin client writes the row, with the verified
+      // student_id and the server-normalised key (./instance-insert.ts). Pupils have no INSERT on
+      // question_instances, so they can never choose their own correct_answer. A key failure
+      // throws to the outer catch (500); a row-level failure (e.g. a concurrent insert of the
+      // same question) is logged and the next candidate is tried, as before.
+      const { data, error } = await insertQuestionInstance(makeAdminClient, {
+        studentId: student_id,
+        questionId: q.id,
+        correctAnswer: normalized.correct,
+        nowIso: new Date().toISOString(),
+      });
 
-      if (!error && data && data.length > 0) {
+      if (error) {
+        console.error("INSTANCE INSERT FAILED:", JSON.stringify({
+          question_id: q.id,
+          code: (error as { code?: unknown })?.code ?? null,
+        }));
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
         inserted = { instance: data[0], question: q, normalized, format };
         break;
       }

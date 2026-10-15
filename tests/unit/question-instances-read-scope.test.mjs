@@ -230,6 +230,36 @@ const REVIEWED_LATER_READERS = {
     "from PUBLIC, anon and service_role. No policy, RLS or table privilege is touched.",
 };
 
+// Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
+// clients — they can narrow who writes, never widen who reads. Each entry is verified statement by
+// statement below: nothing but DROP POLICY on a named INSERT policy and REVOKE INSERT is allowed.
+const INSERT_POLICIES = ["Students can insert own instances", "students can insert their own instances"];
+const REVIEWED_LATER_INSERT_NARROWING = {
+  "20261015120000_question_instances_server_owned_insert.sql":
+    "drops the two duplicate INSERT policies and revokes INSERT from PUBLIC, anon and authenticated, " +
+    "so only the backend (get-next-question/instance-insert.ts) creates instances. Both SELECT " +
+    "policies, RLS and every other privilege are untouched — no read can widen.",
+};
+
+test("reviewed INSERT-narrowing migrations contain only DROP of named INSERT policies and REVOKE INSERT", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_INSERT_NARROWING),
+    ["20261015120000_question_instances_server_owned_insert.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  const dropInsertPolicy = new RegExp(String.raw`^DROP POLICY "(${INSERT_POLICIES.join("|")})" ON public\.question_instances$`);
+  const revokeInsert = /^REVOKE INSERT ON public\.question_instances FROM (PUBLIC|anon|authenticated)(, (PUBLIC|anon|authenticated))*$/;
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_INSERT_NARROWING)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    const statements = executableSql(readFileSync(join(dir, name), "utf8"))
+      .split(";").map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
+    assert.ok(statements.length > 0, `${name} has no executable SQL`);
+    for (const s of statements) {
+      assert.ok(dropInsertPolicy.test(s) || revokeInsert.test(s),
+        `${name}: "${s}" is not an INSERT-only narrowing — the exception does not cover it`);
+    }
+  }
+});
+
 test("the migration sorts after every migration that touches question_instances", () => {
   // Originally "sorts after every migration already in the tree", compared against the last file
   // in the whole directory. That encoded "nothing has been added since" rather than the property
@@ -247,6 +277,7 @@ test("the migration sorts after every migration that touches question_instances"
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => touchesReadScope(readFileSync(join(dir, n), "utf8")))
     .filter((n) => !Object.hasOwn(REVIEWED_LATER_READERS, n))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_INSERT_NARROWING, n))
     .sort();
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");

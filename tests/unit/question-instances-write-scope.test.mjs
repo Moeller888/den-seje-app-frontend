@@ -211,8 +211,10 @@ const SITES = FILES.flatMap((file) =>
 
 // The reviewed, allowed runtime writes. Adding a write anywhere means adding it here, consciously.
 const ALLOWLIST = [
-  // New instance for the signed-in pupil — pupil's own client (RLS INSERT policy student_id = auth.uid()).
-  { file: "supabase/functions/get-next-question/index.ts", op: "insert", receiver: "supabase" },
+  // New instance for the signed-in pupil — backend admin client, verified user.id, server-chosen
+  // question and server-normalised key. Pupils hold no INSERT (20261015120000), so no client can
+  // create an instance — or choose its correct_answer — at all.
+  { file: "supabase/functions/get-next-question/instance-insert.ts", op: "insert", receiver: "admin" },
   // next_review_at after an MC answer — pupil's own client (RLS-filtered; separate spaced-repetition decision).
   { file: "supabase/functions/process-event/index.ts", op: "update", receiver: "supabase" },
   // Server-owned lifecycle writes (long-answer save, misconception signal) — backend admin client.
@@ -244,11 +246,26 @@ test("no runtime file names the table outside a literal .from(...) call", () => 
   }
 });
 
-test("the only admin-client write is the scoped, row-counted v32 helper", () => {
+test("the only admin-client writes are the scoped v32 update helper and the server-owned insert", () => {
   const admin = SITES.filter((s) => s.receiver !== "supabase");
-  assert.deepEqual(admin.map((s) => s.file), ["supabase/functions/process-event/instance-writes.ts"]);
+  assert.deepEqual(admin.map((s) => s.file), [
+    "supabase/functions/get-next-question/instance-insert.ts",
+    "supabase/functions/process-event/instance-writes.ts",
+  ]);
   const src = stripComments(readFileSync(join(REPO, "supabase/functions/process-event/instance-writes.ts"), "utf8"));
   assert.match(src, /const admin = makeAdminClient\(\);/);
   assert.match(src, /\.eq\("id", scope\.instanceId\)\s*\.eq\("student_id", scope\.studentId\)\s*\.select\("id"\);/);
   assert.match(src, /if \(data\.length === 1\) return \{ ok: true, rows: 1 \};/);
+
+  // The insert writes exactly the columns get-next-question has always written, with student_id
+  // and correct_answer taken from the server-side assignment — never a verdict or teacher field.
+  const ins = stripComments(readFileSync(join(REPO, "supabase/functions/get-next-question/instance-insert.ts"), "utf8"));
+  assert.match(ins, /const admin = makeAdminClient\(\);/);
+  const values = /\.insert\(\{([\s\S]*?)\}\)/.exec(ins);
+  assert.ok(values, "insert payload not found");
+  const keys = [...values[1].matchAll(/^\s*([a-z_]+):/gm)].map((m) => m[1]).sort();
+  assert.deepEqual(keys, ["answered", "correct_answer", "difficulty_at_time", "mastery_snapshot",
+    "next_review_at", "question_id", "student_id"]);
+  assert.match(values[1], /student_id: assignment\.studentId,/);
+  assert.match(values[1], /answered: false,/);
 });

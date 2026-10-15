@@ -663,6 +663,25 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `must_reset_password = false` sker nu udelukkende via kodeordsskift-triggeren. Guard-testen har
   ingen undtagelse længere: browserkode må kun opdatere `placement_band` og `current_band`, og et
   nyt klient-write til `must_reset_password` får testen til at fejle.
+- **2-0C — serverejet oprettelse af `question_instances` (PR åben, IKKE merget, IKKE deployet,
+  migration IKKE anvendt):** en elev kunne selv indsætte en `question_instances`-række med valgfri
+  `correct_answer` (og `answered`, `was_correct`, `teacher_score` …) for ethvert spørgsmål, også
+  inaktive, og derefter få 10 XP + 5 mønter for at "svare" på sit eget facit — både MC/tal
+  (`process_question_attempt`) og stav til (`process-event` → `process_text_answer`) bedømmer mod
+  instansens nøgle. Rettelsen: `get-next-question` opretter instansen via backend-admin-klienten
+  (`instance-insert.ts`), og migrationen `20261015120000_question_instances_server_owned_insert.sql`
+  fjerner begge INSERT-policies og INSERT for `anon`/`authenticated`. **Rækkefølge:** deploy
+  `get-next-question` → verificér → anvend migration (særskilte ejergodkendelser). Read-only audit
+  2026-10-15: ingen tegn på udnyttelse.
+- **Fundet, ikke rettet (særskilte opgaver):**
+  - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
+    fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
+    1011 for klassetrin 9 historie) bliver i praksis næsten aldrig serveret, og rækkefølgen kan skifte
+    ved bulk-opdateringer. Kræver en eksplicit udvælgelsesbeslutning.
+  - Mastery opdateres ikke i svarflowet: ingen funktion skriver `student_progress.mastery_level`,
+    `mastery_score`, `mastery_balance` eller `total_attempts`, og `update_mastery()` kaldes ikke —
+    hverken for MC eller tekst. Lærerens `correct_ratio` (`get_student_overview`) bygger på
+    `total_attempts`. Kræver en produkt-/arkitekturbeslutning om, hvad mastery skal betyde.
 - **2-0B — RPC EXECUTE-hygiejne (ikke startet):** `get_my_students`, `set_spotlight`,
   `remove_spotlight`, `set_student_domains`, `get_classroom_leaderboard` og `get_weekly_activity`
   har stadig EXECUTE for `anon`. De afviser kald uden `auth.uid()`, så det er P3 — men `anon` bør
