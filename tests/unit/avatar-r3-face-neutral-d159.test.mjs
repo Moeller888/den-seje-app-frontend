@@ -83,22 +83,75 @@ test("the section authorises nothing: no call id, no claim, no new authorisedCal
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(rel("js/avatar-layers.js"), "utf8")), "R3 stays OFF");
 });
 
-test("the later-attempt rules: three distinct quantities, no sixth underlay call, unknown outcome counts, every image kept", () => {
+test("the later-attempt rules: three distinct quantities, no sixth underlay call, history untouched, every image kept", () => {
   const R = S.laterAttemptRules;
   assert.match(R.source, /authorises nothing/);
   assert.match(R.callCounting.threeQuantities, /three different quantities/);
   assert.match(R.callCounting.decisionOrMergeIsNotASend, /No owner decision, authorisation entry or merge ever raises callsActuallySentSoFar/);
   assert.match(R.callCounting.underlayStaysFive, /never counted as a sixth underlay call/);
-  assert.match(R.callCounting.whenASendIsRecorded, /claim exists and the single network attempt has started/);
-  assert.match(R.callCounting.unknownOutcome, /still counts as sent, with outcome UNKNOWN/);
-  assert.match(R.callCounting.unknownOutcome, /no retry/);
+  assert.match(R.callCounting.historicalAccounting, /not rewritten/);
+  assert.equal(C.imageCallBudget.callsActuallySentSoFar.underlay, 5);
+  assert.ok(C.imageCallBudget.callsActuallySentSoFar.which.includes("D-142 — sent during the incident, outcome UNKNOWN"), "the historical D-142 record is unchanged");
+  assert.ok(!("whenASendIsRecorded" in R.callCounting) && !("unknownOutcome" in R.callCounting), "the superseded rule that counted an unknown outcome as sent is gone");
   assert.match(R.unexpectedImageCount.keep, /complete raw response and every delivered image/);
   assert.match(R.unexpectedImageCount.record, /actual number of images and the SHA-256/);
   assert.match(R.unexpectedImageCount.mark, /n = 1, mark the outcome UNEXPECTED/);
   assert.match(R.unexpectedImageCount.never, /No automatic selection, no candidate production and no retry/);
   assert.ok(!/first image/i.test(JSON.stringify(R)), "no 'record only the first image' rule");
   assert.match(R.sendPath, /never gets a send path/);
-  assert.deepEqual(Object.keys(C.imageCallBudget.callsActuallySentSoFar).filter((k) => typeof C.imageCallBudget.callsActuallySentSoFar[k] === "number"), ["underlay"], "no face counter exists before a face call is sent");
+  assert.deepEqual(Object.keys(C.imageCallBudget.callsActuallySentSoFar).filter((k) => typeof C.imageCallBudget.callsActuallySentSoFar[k] === "number"), ["underlay"], "no face counter exists before a face attempt");
+});
+
+// ── the claim / dispatch / result model, checked by deriving it from synthetic event sequences ──────────────
+// A pure reducer over the events a future send adapter could record. It never touches a real claim or the network.
+function derive(events) {
+  const has = (e) => events.includes(e);
+  const claimState = has("claim") ? "consumed" : "unconsumed";
+  const dispatch = has("dispatch") ? "started" : has("stop") ? "not-started" : claimState === "consumed" ? "undetermined" : "not-started";
+  const result = has("response") ? "response" : has("httpError") ? "http-error" : dispatch === "not-started" ? "none" : "unknown";
+  return { claimState, dispatch, result, actuallySent: dispatch === "started" ? 1 : 0, dispatchUndetermined: dispatch === "undetermined" ? 1 : 0,
+    serverAnswered: result === "response" || result === "http-error", automaticRetry: false };
+}
+const SEQUENCES = [["claim", "stop"], ["claim", "crash"], ["claim", "dispatch", "crash"], ["claim", "dispatch", "httpError"], ["claim", "dispatch", "response"]];
+
+test("the five registered cases are exactly what the synthetic event sequences imply", () => {
+  const cases = S.laterAttemptRules.callCounting.cases;
+  assert.equal(cases.length, 5);
+  SEQUENCES.forEach((seq, i) => {
+    const d = derive(seq), c = cases[i];
+    for (const k of ["claimState", "dispatch", "result", "actuallySent", "dispatchUndetermined", "serverAnswered", "automaticRetry"])
+      assert.equal(c[k], d[k], `case ${i + 1} (${c.case}) — ${k}`);
+  });
+});
+
+test("the accounting is internally consistent across every case", () => {
+  const cases = S.laterAttemptRules.callCounting.cases;
+  for (const c of cases) {
+    assert.equal(c.claimState, "consumed");
+    assert.equal(c.automaticRetry, false, "a consumed claim never allows an automatic retry");
+    assert.equal(c.actuallySent, c.dispatch === "started" ? 1 : 0, "only a documented dispatch start counts as sent");
+    assert.equal(c.dispatchUndetermined, c.dispatch === "undetermined" ? 1 : 0, "an undetermined start is recorded separately");
+    assert.ok(!(c.actuallySent && c.dispatchUndetermined), "an attempt is never both sent and undetermined");
+    assert.equal(c.serverAnswered, c.result === "http-error" || c.result === "response", "only a received response documents a server answer");
+    if (c.serverAnswered) assert.equal(c.dispatch, "started", "a server answer implies a documented dispatch");
+    if (c.dispatch === "not-started") assert.equal(c.result, "none");
+  }
+  assert.ok(cases.some((c) => c.claimState === "consumed" && c.actuallySent === 0 && c.dispatch === "not-started"), "a consumed claim alone is not a dispatch");
+  assert.ok(cases.some((c) => c.dispatch === "started" && c.result === "unknown" && c.actuallySent === 1 && !c.serverAnswered), "an unknown result does not downgrade a documented dispatch");
+  const sum = (k) => cases.reduce((n, c) => n + c[k], 0), notStarted = cases.filter((c) => c.dispatch === "not-started").length;
+  assert.deepEqual([sum("actuallySent"), sum("dispatchUndetermined"), notStarted], [3, 1, 1]);
+  assert.equal(sum("actuallySent") + sum("dispatchUndetermined") + notStarted, cases.length, "every consumed claim is exactly one of sent / undetermined / not started");
+  assert.equal(cases.filter((c) => c.serverAnswered).length, 2);
+});
+
+test("negative control: the consistency rules reject the superseded model and a claim-only send", () => {
+  assert.equal(derive(["claim", "crash"]).actuallySent, 0, "an undetermined dispatch is not counted as sent");
+  const documented = derive(["claim", "dispatch", "crash"]);
+  const superseded = { ...documented, dispatch: "undetermined" };   // the rejected idea: an unknown result makes the dispatch unknown
+  assert.notEqual(superseded.dispatch, documented.dispatch);
+  assert.notEqual(superseded.actuallySent, superseded.dispatch === "started" ? 1 : 0, "the consistency rule detects it");
+  const claimOnlySend = { ...derive(["claim", "stop"]), actuallySent: 1 };
+  assert.notEqual(claimOnlySend.actuallySent, claimOnlySend.dispatch === "started" ? 1 : 0, "the consistency rule detects a claim-only send");
 });
 
 test("the section's pins and parameters are exactly the adapter's", () => {

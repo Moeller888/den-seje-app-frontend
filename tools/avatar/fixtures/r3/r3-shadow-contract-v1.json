@@ -2382,9 +2382,74 @@
       "callCounting": {
         "threeQuantities": "Planned calls (assets[].calls), authorised attempts (authorisedCalls entries) and calls actually sent (imageCallBudget.callsActuallySentSoFar) are three different quantities.",
         "decisionOrMergeIsNotASend": "No owner decision, authorisation entry or merge ever raises callsActuallySentSoFar.",
-        "underlayStaysFive": "callsActuallySentSoFar.underlay counts only the five historical head-underlay calls (D-139, D-142, D-143, D-151, D-153) and stays 5. A face-neutral attempt is never counted as a sixth underlay call; it is counted separately for the face slot, and only once it is sent.",
-        "whenASendIsRecorded": "A send is recorded when its one-shot claim exists and the single network attempt has started (the claim is written before the fetch, as for D-153).",
-        "unknownOutcome": "If the network outcome is unknown, the attempt still counts as sent, with outcome UNKNOWN (as for D-142). There is no retry; any further attempt needs a new owner decision, a new call id and a new claim."
+        "underlayStaysFive": "callsActuallySentSoFar.underlay counts only the five historical head-underlay calls (D-139, D-142, D-143, D-151, D-153) and stays 5. A face-neutral attempt is never counted as a sixth underlay call; it is recorded separately for the face slot, under the axes below.",
+        "axes": {
+          "claimState": "Is the one-shot claim consumed? unconsumed | consumed. A consumed claim proves only that the claim was written; it does NOT prove that a request was dispatched.",
+          "dispatch": "Is the START of the single network attempt documented? not-started (documented stop before the network call) | undetermined (it cannot be decided whether the attempt started) | started (a local dispatch record written immediately before the request is handed to the network client). A local dispatch record is NOT confirmation that the server received the request.",
+          "result": "What came back? none (no attempt) | unknown (no reliable result) | http-error (an HTTP error response was received) | response (a normal response was received). Only a received response — error or normal — documents that the server answered."
+        },
+        "independence": "The three axes are recorded separately. An unknown result never turns a documented dispatch start into an unknown dispatch, and a consumed claim never counts as a dispatch.",
+        "counterMeaning": "For a face-neutral attempt the actually-sent figure counts attempts whose dispatch START is documented (dispatch = started). It measures documented local dispatch, not confirmed server receipt; server answers are recorded separately (serverAnswered).",
+        "undeterminedDispatch": "An attempt whose dispatch start is undetermined is recorded separately as dispatch-undetermined. It is counted neither as sent nor as not sent.",
+        "cases": [
+          {
+            "case": "claim consumed; documented stop before the network attempt",
+            "claimState": "consumed",
+            "dispatch": "not-started",
+            "evidence": "local stop record before any dispatch record",
+            "result": "none",
+            "actuallySent": 0,
+            "dispatchUndetermined": 0,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "claim consumed; later crash, dispatch start cannot be decided",
+            "claimState": "consumed",
+            "dispatch": "undetermined",
+            "evidence": "claim present; neither a stop record nor a dispatch record",
+            "result": "unknown",
+            "actuallySent": 0,
+            "dispatchUndetermined": 1,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; result unknown",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record",
+            "result": "unknown",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": false,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; HTTP error received",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record + received HTTP error response",
+            "result": "http-error",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": true,
+            "automaticRetry": false
+          },
+          {
+            "case": "documented dispatch start; normal response received",
+            "claimState": "consumed",
+            "dispatch": "started",
+            "evidence": "local dispatch record + received response",
+            "result": "response",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": true,
+            "automaticRetry": false
+          }
+        ],
+        "noRetry": "Every case with a consumed claim excludes automatic retry. A further attempt needs a new owner decision, a new call id and a new claim identity.",
+        "historicalAccounting": "callsActuallySentSoFar.underlay = 5 is the historical record and is not rewritten. It counts D-142 as sent during the incident with outcome UNKNOWN, under the accounting of its time. The axes above apply to future face-neutral attempts only, which are recorded separately from the underlay figure."
       },
       "unexpectedImageCount": {
         "keep": "Keep the complete raw response and every delivered image byte stream unchanged.",
