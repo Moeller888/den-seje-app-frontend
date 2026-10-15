@@ -1,0 +1,60 @@
+-- Question instances are created by the server only — a pupil can no longer write their own key.
+--
+-- WHY THIS IS A SECURITY FIX
+-- A question_instances row is an assignment AND the answer key it is graded against:
+--   * process-event grades short text with isTextAnswerCorrect(answer, question_instances.correct_answer,
+--     questions.content.accepted_answers) and pays through process_text_answer;
+--   * process_question_attempt compares MC / number answers to question_instances.correct_answer and
+--     pays XP, coins, streak and quests itself.
+-- anon and authenticated hold table-wide INSERT, and the two INSERT policies check only
+-- student_id = auth.uid(). A pupil could therefore POST their own row through PostgREST with ANY
+-- question_id (active or not), correct_answer of their choosing and any other column (answered,
+-- was_correct, teacher_score, teacher_feedback, reviewed_by, repeat_count, xp_awarded …), then answer
+-- it through the normal process-event endpoint and be paid 10 XP + 5 coins for typing their own key.
+-- Bounded by idx_student_question_instance (one row per pupil and question), but it makes every
+-- reward and every teacher-visible answer history forgeable. Verified by code review and in
+-- tests/unit/question-instances-server-insert-migration-run.test.mjs; NOT exercised in production.
+--
+-- THE WRITE CONTRACT AFTER THIS MIGRATION (every runtime question_instances write, origin/main eb61e64)
+--   INSERT  get-next-question → ./instance-insert.ts, backend admin client, verified user.id,
+--           server-normalised key of a question chosen by get_unserved_questions
+--   UPDATE  process-event → instance-writes.ts (admin, scoped id + student_id);
+--           process_text_answer, process_question_attempt, review_answer, request_repeat_question,
+--           release_open_question_outside (SECURITY DEFINER, owner postgres)
+--   DELETE  release_open_question_outside (SECURITY DEFINER)
+--   (process-event's user-client next_review_at UPDATE is already filtered to 0 rows by RLS — no
+--   UPDATE policy — and is unchanged here.)
+-- tests/unit/question-instances-write-scope.test.mjs pins this list.
+--
+-- WHAT THIS MIGRATION DOES
+--   1. Drops both INSERT policies on question_instances (they are duplicates; neither is in the
+--      repo's migration history — both were created directly in production).
+--   2. Revokes INSERT on question_instances from PUBLIC, anon and authenticated.
+-- service_role (backend key) and the owner are untouched, so the admin client and every
+-- SECURITY DEFINER function keep working.
+--
+-- WHAT IT DOES NOT DO
+-- No data change: every existing row, answered or open, stays exactly as it is. No change to SELECT
+-- (pupils and teachers keep reading their rows through the existing SELECT policies), UPDATE, DELETE,
+-- other tables, functions or rewards.
+--
+-- ORDERING CONTRACT (MUST)
+-- get-next-question with ./instance-insert.ts must be deployed AND verified BEFORE this migration is
+-- applied. Applied first, the old function's user-client INSERT is denied for every candidate, every
+-- pupil falls through to repeats / no_questions, and the quiz stops. The reverse order is safe: the
+-- new function works with or without this migration.
+--
+-- ROLLBACK (separate owner authorisation; exactly the opposite change):
+--
+--   GRANT INSERT ON public.question_instances TO anon, authenticated;
+--   CREATE POLICY "Students can insert own instances" ON public.question_instances
+--     AS PERMISSIVE FOR INSERT TO public WITH CHECK (student_id = auth.uid());
+--   CREATE POLICY "students can insert their own instances" ON public.question_instances
+--     AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK (auth.uid() = student_id);
+--
+-- Apply ONLY via apply_migration with separate owner authorisation (D-110). Never `supabase db push`.
+
+DROP POLICY "Students can insert own instances" ON public.question_instances;
+DROP POLICY "students can insert their own instances" ON public.question_instances;
+
+REVOKE INSERT ON public.question_instances FROM PUBLIC, anon, authenticated;

@@ -281,6 +281,25 @@ success — 0 rows, >1 row, a DB error or an odd response are failures.
 - The long-answer `user_answer` save is **fatal**: nothing has been awarded yet, so a failed or 0-row
   save returns a 500 (`LONG SAVE ERROR`) instead of `pending`.
 
+Server-owned `question_instances` **creation** (D-110, PR "question-instances-server-insert"; migration
+`20261015120000_question_instances_server_owned_insert.sql` **not yet applied**): an instance is both
+the assignment and the answer key — `process-event` grades short text against
+`question_instances.correct_answer`, and `process_question_attempt` compares MC/number answers to the
+same column before paying XP, coins, streak and quests. Live today, `anon`/`authenticated` hold
+table-wide INSERT and both INSERT policies check only `student_id = auth.uid()`, so a pupil can POST
+their own row with any `question_id` (active or not) and a `correct_answer` of their choosing, then be
+paid for "answering" it — bounded to one row per pupil and question by
+`idx_student_question_instance`, but it makes every reward and every teacher-visible answer history
+forgeable. The rule is: **the pupil submits an answer; the server decides the key, the verdict and the
+reward.** `get-next-question` therefore writes the instance through a backend admin client
+(`get-next-question/instance-insert.ts`: the shared resolver's backend key, no pupil header, no
+session, no fallback), with the verified `user.id` and the server-normalised key of a question chosen
+by `get_unserved_questions`; the migration then drops both INSERT policies and revokes INSERT from
+`PUBLIC`, `anon` and `authenticated`. **Order is mandatory:** deploy and verify `get-next-question`
+first, apply the migration second — the other way round denies every assignment and stops the quiz.
+Read-only audit 2026-10-15: no sign of exploitation (3 historic key mismatches are legacy
+whitespace-stripped keys, all answered incorrect; 0 open instances with a mismatching key).
+
 Known gaps and retirements around these writes:
 - **`next_review_at` is ineffective in the current runtime.** `process-event` still tries to set it on
   the pupil's client after an MC answer (0 rows, as above), but nothing would read it:
