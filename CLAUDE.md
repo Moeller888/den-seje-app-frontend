@@ -59,7 +59,9 @@ Run all tests (standard workflow):
 ```
 .\fix-tests.ps1
 ```
-This runs Playwright, and if tests fail it invokes Claude to auto-fix, then re-runs and auto-commits on green.
+This runs Playwright, and if tests fail it invokes Claude to auto-fix, then re-runs and reports the result.
+It never stages, commits, pushes or opens a PR: fixes are left in the working tree, and the Git lifecycle
+is handled separately by Claude Code under the `.claude/settings.json` permission model.
 
 Hurtig smoke-test (daglig udvikling, ~10 sek.):
 ```
@@ -329,10 +331,12 @@ TEST & AUTOMATION WORKFLOW
 - Ingen manuelle mellemtrin
 - Ingen copy/paste loops
 
-38. AUTO-COMMIT KUN VED GRØNNE TESTS
+38. COMMIT KUN VED GRØNNE TESTS
 
 - Commit må kun ske hvis alle tests passer
 - Ingen commits med kendte fejl
+- `fix-tests.ps1` committer og pusher aldrig selv; commit/push/PR/merge sker separat
+  under permission-modellen i `.claude/settings.json`
 
 39. HEALTH TEST ER KRITISK
 
