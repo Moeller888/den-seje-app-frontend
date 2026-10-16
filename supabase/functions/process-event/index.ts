@@ -4,6 +4,7 @@ import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabas
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
+import { readInstanceForGrading } from "./instance-read.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +17,10 @@ const corsHeaders = {
 // "invalid-configuration") and never throws, so this line can neither leak a key nor break a request.
 console.log(`[process-event] service-key source=${serviceKeySource()}`)
 
-// The backend client for the two privileged answer RPCs (process_text_answer and
-// process_question_attempt — see ./text-answer-rpc.ts) and for the server-owned question_instances
-// writes (long-answer save, misconception signal — see ./instance-writes.ts), and nothing else.
+// The backend client for the grading read (instance + answer key + question — see ./instance-read.ts),
+// the two privileged answer RPCs (process_text_answer and process_question_attempt — see
+// ./text-answer-rpc.ts) and the server-owned question_instances writes (long-answer save,
+// misconception signal — see ./instance-writes.ts), and nothing else.
 // Built per call, only when one of those is about to run: no pupil Authorization header, no session.
 // If the key cannot be resolved this throws — never a fallback to the user client.
 function makeAdminClient() {
@@ -90,20 +92,22 @@ serve(async (req) => {
     }
 
     // ── Fetch instance + question meta ───────────────────────────────────────
-    const { data: instanceData, error: instanceError } = await supabase
-      .from("question_instances")
-      .select(`
-        correct_answer,
-        student_id,
-        questions (
-          answer_format,
-          answer_type,
-          content,
-          metadata
-        )
-      `)
-      .eq("id", question_instance_id)
-      .maybeSingle()
+    // A backend read (./instance-read.ts): the answer key and the question content are server-only.
+    // Nothing from the row is used or returned before the ownership check below.
+    let instanceData: any
+    let instanceError: any
+    try {
+      ({ data: instanceData, error: instanceError } = await readInstanceForGrading(
+        makeAdminClient,
+        question_instance_id
+      ))
+    } catch (keyError: any) {
+      // serviceKey()'s messages name the variables, never their values.
+      console.error("ADMIN CLIENT ERROR:", keyError?.message ?? keyError)
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500, headers: corsHeaders
+      })
+    }
 
     if (instanceError || !instanceData) {
       console.error("INSTANCE ERROR:", instanceError)
@@ -112,8 +116,8 @@ serve(async (req) => {
       })
     }
 
-    // Ownership before any answer path: RLS also lets a teacher read their pupils' instances, and
-    // the short-text award runs through an admin client that bypasses RLS (./text-answer-rpc.ts).
+    // Ownership before any answer path: the instance was read through the admin client, which
+    // bypasses RLS, so a teacher or another pupil naming this id must be stopped here (403).
     if (!isInstanceOwner(instanceData.student_id, user.id)) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: corsHeaders

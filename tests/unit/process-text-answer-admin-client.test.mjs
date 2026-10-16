@@ -124,16 +124,25 @@ test("the user client is unchanged: publishable key + the pupil's Authorization 
   assert.match(INDEX_CODE, /const supabase = createClient\(\s*Deno\.env\.get\("SUPABASE_URL"\)!,\s*publishableKey\(\),\s*\{ global: \{ headers: \{ Authorization: req\.headers\.get\("Authorization"\)! \} \} \}\s*\)/);
 });
 
-test("auth and the instance read stay on the user client, and the read includes student_id", () => {
+test("auth stays on the user client; the grading read is a backend read that includes student_id", () => {
+  // 20261016160000 (answer keys server-side): correct_answer and questions.content are server-only,
+  // so the instance is read through the backend client (./instance-read.ts) and ownership is then
+  // checked on the returned student_id before anything from the row is used.
   assert.match(INDEX_CODE, /await supabase\.auth\.getUser\(\)/);
-  const read = between(INDEX_CODE, "const { data: instanceData, error: instanceError } = await supabase", ".maybeSingle()");
-  assert.match(read, /\.from\("question_instances"\)/);
-  assert.match(read, /student_id,/);
+  assert.match(INDEX_CODE, /import \{ readInstanceForGrading \} from "\.\/instance-read\.ts";/);
+  assert.match(INDEX_CODE,
+    /\(\{ data: instanceData, error: instanceError \} = await readInstanceForGrading\(\s*makeAdminClient,\s*question_instance_id\s*\)\)/);
+  const readModule = readFileSync(new URL("../../supabase/functions/process-event/instance-read.ts", import.meta.url), "utf8");
+  assert.match(readModule, /\.from\("question_instances"\)/);
+  assert.match(readModule, /student_id,/);
+  assert.match(readModule, /\.eq\("id", instanceId\)\s*\.maybeSingle\(\)/);
+  assert.equal(/supabase\s*\.from\("question_instances"\)\s*\.select\(\s*`\s*correct_answer/.test(INDEX_CODE), false,
+    "the key is never read on the user client");
 });
 
 test("the ownership check returns 403 and runs before every answer path", () => {
   const check = INDEX_CODE.indexOf("if (!isInstanceOwner(instanceData.student_id, user.id))");
-  assert.ok(check > INDEX_CODE.indexOf(".maybeSingle()"), "after the instance is read");
+  assert.ok(check > INDEX_CODE.indexOf("await readInstanceForGrading("), "after the instance is read");
   for (const marker of ['if (answerType === "long")', 'if (format.includes("text"))', "await callProcessTextAnswer(", "await callProcessQuestionAttempt("]) {
     assert.ok(check < INDEX_CODE.indexOf(marker), `before ${marker}`);
   }
@@ -149,12 +158,14 @@ test("the admin client is built in one place, from serviceKey(), with no headers
   assert.equal((INDEX_CODE.match(/serviceKey\(\)/g) ?? []).length, 1, "serviceKey() is resolved in exactly one place");
 });
 
-test("the admin client is used only by the two privileged answer RPCs and the server-owned instance writes", () => {
-  // makeAdminClient is defined once and handed to exactly five call sites — the short-text award, the
-  // MC/number attempt, the long-answer save and the two misconception-signal writes
-  // (./instance-writes.ts). It is never invoked directly, so nothing else can run on it.
+test("the admin client is used only by the grading read, the two privileged answer RPCs and the server-owned instance writes", () => {
+  // makeAdminClient is defined once and handed to exactly six call sites — the grading read
+  // (./instance-read.ts), the short-text award, the MC/number attempt, the long-answer save and the
+  // two misconception-signal writes (./instance-writes.ts). It is never invoked directly, so nothing
+  // else can run on it.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 6, "one definition + five call sites");
+  assert.equal(uses.length, 7, "one definition + six call sites");
+  assert.match(INDEX_CODE, /await readInstanceForGrading\(\s*makeAdminClient,/);
   assert.match(PATH_TEXT, /await callProcessTextAnswer\(\s*makeAdminClient,/);
   assert.match(PATH_MC, /await callProcessQuestionAttempt\(\s*makeAdminClient,/);
   assert.match(PATH_LONG, /await updateOwnInstance\(\s*makeAdminClient,/);
