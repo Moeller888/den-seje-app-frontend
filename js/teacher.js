@@ -472,7 +472,29 @@ async function loadClassOverview() {
    Two queries total — no N+1:
      1. get_teacher_visibility  → student names + bands
      2. question_instances      → last-7-day activity for all students
+   A load error is shown as an error with "Prøv igen" — never as "Aldrig" / "Inaktiv". When the
+   activity rows may be cut off (the request limit, or a lower server row cap), the panel says so
+   and makes no claim about pupils who have no rows in what came back.
 ======================== */
+
+// Upper bound on activity rows per request. The server may return fewer (PostgREST max-rows), so
+// completeness is decided by the exact match count, never by comparing the row count to this.
+const ENGAGEMENT_ACTIVITY_LIMIT = 5000;
+
+function showEngagementError(summaryEl, tableEl, insightsEl) {
+  if (tableEl)    tableEl.innerHTML = "";
+  if (insightsEl) insightsEl.innerHTML = "";
+  panelMessage(summaryEl, "Klasseaktiviteten kunne ikke indlæses. Det betyder ikke, at eleverne har været inaktive.", true);
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "row-action engagement-retry-btn";
+  retry.textContent = "Prøv igen";
+  retry.onclick = async () => {
+    retry.disabled = true;
+    await loadEngagementPanel();
+  };
+  summaryEl.appendChild(retry);
+}
 
 function formatRelativeTime(date, now) {
   const diffMs   = now - date;
@@ -503,12 +525,20 @@ async function loadEngagementPanel() {
   const insightsEl = document.getElementById("engagement-insights");
   if (!summaryEl) return;
 
+  panelMessage(summaryEl, "Indlæser...", false);
+
   // Query 1: students with names + current bands
   const { data: students, error: studErr } = await supabase.rpc("get_teacher_visibility", {
     p_teacher_id: teacherId,
   });
 
-  if (studErr || !students || students.length === 0) {
+  if (studErr || !Array.isArray(students)) {
+    console.error("[teacher] engagement pupil lookup failed", studErr);
+    showEngagementError(summaryEl, tableEl, insightsEl);
+    return;
+  }
+
+  if (students.length === 0) {
     summaryEl.innerHTML = "<p class='overview-empty'>Ingen elever tilknyttet endnu.</p>";
     if (tableEl)    tableEl.innerHTML = "";
     if (insightsEl) insightsEl.innerHTML = "";
@@ -518,20 +548,32 @@ async function loadEngagementPanel() {
   const studentIds    = students.map(s => s.student_id);
   const totalStudents = students.length;
 
-  // Query 2: all answered activity in the last 7 days for this teacher's students
+  // Query 2: all answered activity in the last 7 days for this teacher's students, newest first,
+  // so that if the rows are cut off it is the oldest that are missing.
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const { data: activityRows } = await supabase
+  const { data: activityRows, error: activityErr, count: activityCount } = await supabase
     .from("question_instances")
-    .select("student_id, answered_at")
+    .select("student_id, answered_at", { count: "exact" })
     .in("student_id", studentIds)
     .eq("answered", true)
     .not("answered_at", "is", null)
     .gte("answered_at", weekAgo.toISOString())
-    .limit(5000);
+    .order("answered_at", { ascending: false })
+    .limit(ENGAGEMENT_ACTIVITY_LIMIT);
 
-  const rows = activityRows ?? [];
+  if (activityErr || !Array.isArray(activityRows)) {
+    console.error("[teacher] engagement activity load failed", activityErr);
+    showEngagementError(summaryEl, tableEl, insightsEl);
+    return;
+  }
+
+  const rows = activityRows;
+
+  // Complete only when the exact number of matching rows is known and all of them came back.
+  // A missing count is treated as possibly incomplete.
+  const complete = typeof activityCount === "number" && activityCount === rows.length;
 
   // Aggregate per student in JS
   const now        = new Date();
@@ -589,6 +631,19 @@ async function loadEngagementPanel() {
     </div>
   `;
 
+  if (!complete) {
+    const warn = document.createElement("div");
+    warn.className = "insight-item insight-yellow";
+    warn.id = "engagement-incomplete";
+    warn.setAttribute("role", "status");
+    warn.textContent =
+      "Aktiviteten kunne kun hentes delvist (" + rows.length + " af " +
+      (typeof activityCount === "number" ? activityCount : "et ukendt antal") +
+      " besvarelser fra de sidste 7 dage). Tallene er minimumstal, og en elev uden viste svar " +
+      "kan godt have været aktiv.";
+    summaryEl.prepend(warn);
+  }
+
   // Per-student table — most active today first, then by week
   if (tableEl) {
     const sorted = [...students].sort((a, b) => {
@@ -601,13 +656,15 @@ async function loadEngagementPanel() {
     const tableRows = sorted.map(s => {
       const a      = actMap[s.student_id] ?? { today: 0, week: 0, lastActive: null };
       const band   = s.current_band != null ? "Band " + s.current_band : "—";
-      const last   = a.lastActive ? formatRelativeTime(a.lastActive, now) : "Aldrig";
-      const dotCls = getActivityDotClass(a.lastActive, todayStart, now);
+      // With incomplete rows, a pupil with none of them is unknown — not "Aldrig".
+      const unknown = !complete && !a.lastActive;
+      const last   = a.lastActive ? formatRelativeTime(a.lastActive, now) : (unknown ? "Ukendt" : "Aldrig");
+      const dotCls = unknown ? "gray" : getActivityDotClass(a.lastActive, todayStart, now);
       return `<tr>
         <td>${s.display_name ?? "Elev"}</td>
         <td><span class="band-num">${band}</span></td>
-        <td>${a.today}</td>
-        <td>${a.week}</td>
+        <td>${unknown ? "—" : a.today}</td>
+        <td>${unknown ? "—" : a.week}</td>
         <td style="font-size:13px;color:var(--text-dim)">${last}</td>
         <td><span class="activity-dot ${dotCls}" title="${last}"></span></td>
       </tr>`;
@@ -641,19 +698,20 @@ async function loadEngagementPanel() {
 
   let html = '<div class="engagement-insights">';
 
-  if (mostActive) {
+  // Activity insights only from a complete picture; the band insight does not depend on it.
+  if (complete && mostActive) {
     html += `<div class="insight-item insight-green">
       &#11088; Mest aktiv i dag: <strong>${mostActive.display_name}</strong>
       &mdash; ${actMap[mostActive.student_id]?.today ?? 0} sp&oslash;rgsm&aring;l
     </div>`;
   }
 
-  if (inactive7.length > 0) {
+  if (complete && inactive7.length > 0) {
     const names = inactive7.map(s => s.display_name ?? "Elev").join(", ");
     html += `<div class="insight-item insight-yellow">
       &#9888; Inaktiv &gt;7 dage: <strong>${names}</strong>
     </div>`;
-  } else if (totalStudents > 0) {
+  } else if (complete && totalStudents > 0) {
     html += `<div class="insight-item insight-green">
       &#10003; Alle elever har v&aelig;ret aktive inden for 7 dage
     </div>`;

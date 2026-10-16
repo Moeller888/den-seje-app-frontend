@@ -450,3 +450,108 @@ for (const vp of [{ name: "mobil", width: 375, height: 812 }, { name: "tablet", 
     });
   }
 }
+
+// ── 11. "Klasseaktivitet": a load error or cut-off rows are never shown as inactivity ─────────
+
+const ENG = "#engagement-summary";
+
+function activityNow(studentId: string, n: number) {
+  const at = new Date().toISOString();
+  return Array.from({ length: n }, () => ({ student_id: studentId, answered_at: at }));
+}
+
+async function expectNoInactivityClaim(page: Page) {
+  await expect(page.locator("#engagement-table")).not.toContainText("Aldrig");
+  await expect(page.locator("#engagement-insights")).not.toContainText("Inaktiv");
+  await expect(page.locator("#engagement-insights")).not.toContainText("Alle elever har været aktive");
+}
+
+test("11. an activity DATABASE ERROR shows an error with 'Prøv igen' — not 'Aldrig' or 'Inaktiv'", async ({ page }) => {
+  const { errors } = await openTeacher(page, { students: THREE_STUDENTS, activityError: "boom" });
+  const summary = page.locator(ENG);
+  await expect(summary.locator(".panel-state.is-error")).toHaveText(
+    "Klasseaktiviteten kunne ikke indlæses. Det betyder ikke, at eleverne har været inaktive.");
+  await expect(summary.getByRole("button", { name: "Prøv igen" })).toBeVisible();
+  await expect(page.locator(".stat-card")).toHaveCount(0);
+  await expect(page.locator("#engagement-table")).toBeEmpty();
+  await expect(page.locator("#engagement-insights")).toBeEmpty();
+  await expectNoInactivityClaim(page);
+  expect(errors).toEqual([]);
+});
+
+test("11b. a pupil LOOKUP error in the panel is an error — not 'Ingen elever tilknyttet endnu'", async ({ page }) => {
+  await openTeacher(page, { rosterError: "boom" });
+  await expect(page.locator(ENG).locator(".panel-state.is-error")).toContainText("Klasseaktiviteten kunne ikke indlæses");
+  await expect(page.locator(ENG)).not.toContainText("Ingen elever tilknyttet endnu");
+});
+
+test("11c. a valid query with zero activity still shows 0, 'Aldrig' and 'Inaktiv >7 dage'", async ({ page }) => {
+  await openTeacher(page, { students: THREE_STUDENTS, activityRows: [] });
+  await expect(page.locator("#eng-active-week")).toHaveText("0");
+  await expect(page.locator("#eng-today-total")).toHaveText("0");
+  await expect(page.locator("#engagement-incomplete")).toHaveCount(0);
+  await expect(page.locator(ENG).locator(".is-error")).toHaveCount(0);
+  const rows = page.locator("#engagement-table tbody tr");
+  await expect(rows).toHaveCount(3);
+  for (let i = 0; i < 3; i++) {
+    await expect(rows.nth(i).locator("td").nth(2)).toHaveText("0");
+    await expect(rows.nth(i).locator("td").nth(4)).toHaveText("Aldrig");
+  }
+  await expect(page.locator("#engagement-insights")).toContainText("Inaktiv >7 dage: anna.h, bo.k, cy.l");
+});
+
+test("11d. a complete result shows the activity — and the query asks for an exact count, newest first", async ({ page }) => {
+  await openTeacher(page, { students: THREE_STUDENTS, activityRows: activityNow("s-anna", 2) });
+  await expect(page.locator("#eng-active-today")).toHaveText("1");
+  await expect(page.locator("#eng-today-total")).toHaveText("2");
+  await expect(page.locator("#engagement-incomplete")).toHaveCount(0);
+  const anna = page.locator("#engagement-table tbody tr").filter({ hasText: "anna.h" });
+  await expect(anna.locator("td").nth(2)).toHaveText("2");
+  await expect(page.locator("#engagement-insights")).toContainText("Inaktiv >7 dage: bo.k, cy.l");
+
+  const q = (await fakeLog(page)).find((e) =>
+    e.table === "question_instances" && e.ops.some((o: any) => o.op === "eq" && o.args[0] === "answered"));
+  expect(q.ops).toContainEqual({ op: "select", args: ["student_id, answered_at", { count: "exact" }] });
+  expect(q.ops).toContainEqual({ op: "order", args: ["answered_at", { ascending: false }] });
+});
+
+test("11e. CUT-OFF rows (count > rows) are flagged, and pupils without rows are 'Ukendt' — not inactive", async ({ page }) => {
+  await openTeacher(page, { students: THREE_STUDENTS, activityRows: activityNow("s-anna", 2), activityCount: 7000 });
+  await expect(page.locator("#engagement-incomplete")).toContainText("Aktiviteten kunne kun hentes delvist (2 af 7000 besvarelser");
+  const rows = page.locator("#engagement-table tbody tr");
+  for (const name of ["bo.k", "cy.l"]) {
+    const r = rows.filter({ hasText: name });
+    await expect(r.locator("td").nth(2)).toHaveText("—");
+    await expect(r.locator("td").nth(3)).toHaveText("—");
+    await expect(r.locator("td").nth(4)).toHaveText("Ukendt");
+    await expect(r.locator(".activity-dot")).toHaveClass(/gray/);
+  }
+  // What did come back is still shown.
+  await expect(rows.filter({ hasText: "anna.h" }).locator("td").nth(2)).toHaveText("2");
+  await expectNoInactivityClaim(page);
+  await expect(page.locator("#engagement-insights")).not.toContainText("Mest aktiv i dag");
+});
+
+test("11f. a MISSING count is treated as possibly incomplete, never as complete", async ({ page }) => {
+  await openTeacher(page, { students: THREE_STUDENTS, activityRows: [], activityCount: null });
+  await expect(page.locator("#engagement-incomplete")).toContainText("0 af et ukendt antal besvarelser");
+  await expectNoInactivityClaim(page);
+});
+
+test("11g. 'Prøv igen' after an error loads the panel again and shows the real activity", async ({ page }) => {
+  await openTeacher(page, { students: THREE_STUDENTS, activityError: "boom", activityRows: activityNow("s-bo", 3) });
+  const retry = page.locator(ENG).getByRole("button", { name: "Prøv igen" });
+  await expect(retry).toBeVisible();
+
+  await page.evaluate(() => { (window as any).__FAKE.activityError = null; });
+  await retry.click();
+
+  await expect(page.locator(ENG).locator(".is-error")).toHaveCount(0);
+  await expect(page.locator(".stat-card")).toHaveCount(4);
+  await expect(page.locator("#eng-today-total")).toHaveText("3");
+  await expect(page.locator("#engagement-table tbody tr").filter({ hasText: "bo.k" }).locator("td").nth(2)).toHaveText("3");
+
+  const activityQueries = (await fakeLog(page)).filter((e) =>
+    e.table === "question_instances" && e.ops.some((o: any) => o.op === "eq" && o.args[0] === "answered"));
+  expect(activityQueries).toHaveLength(2);
+});

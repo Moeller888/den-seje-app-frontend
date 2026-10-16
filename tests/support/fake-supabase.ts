@@ -10,6 +10,10 @@
 //   rosterError    when set, get_teacher_visibility returns this as `error`
 //   instances      question_instances rows for the review-queue query
 //   longQuestionIds  ids of questions whose answer_type is 'long'
+//   activityRows   question_instances rows for the engagement panel's 7-day activity query
+//   activityCount  the exact count reported for that query (default: activityRows.length;
+//                  set null to report no count)
+//   activityError  when set, the activity query returns this as `error`
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
 //   updateUserError  when set, auth.updateUser fails with it
@@ -49,7 +53,14 @@ function resolveQuery(table, ops, mode) {
 
   if (table === "question_instances") {
     // The engagement panel's activity query filters on answered=true; the review queue does not.
-    if (ops.some(o => o.op === "eq" && o.args[0] === "answered")) return { data: [], error: null };
+    if (ops.some(o => o.op === "eq" && o.args[0] === "answered")) {
+      if (f.activityError) return { data: null, error: { message: f.activityError }, count: null };
+      const ids = (ins.find(o => o.args[0] === "student_id") || { args: [null, []] }).args[1];
+      const rows = (f.activityRows || []).filter(r => ids.includes(r.student_id));
+      const wantsCount = (ops.find(o => o.op === "select") || {}).args?.[1]?.count === "exact";
+      const count = !wantsCount ? null : ("activityCount" in f ? f.activityCount : rows.length);
+      return { data: rows, error: null, count };
+    }
     const ids = (ins.find(o => o.args[0] === "student_id") || { args: [null, []] }).args[1];
     const rows = (f.instances || []).filter(r =>
       ids.includes(r.student_id) && r.teacher_score == null && r.user_answer != null);
