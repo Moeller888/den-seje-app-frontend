@@ -140,9 +140,10 @@ test("the contract authorises exactly one call, by id, and every pin matches the
   // being the only entry present — a D-143 permission must never make this adapter sendable.
   // D-151 later added a live permission for yet another call; it must not make this adapter sendable either.
   // D-153 later added the one live permission for an opaque-background call; it must not make this adapter sendable.
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 5);
-  assert.equal(CONTRACT.authorisedCalls.count, 5);
-  assert.equal(A.verifyAuthorisation(CONTRACT).call.decision, "D-139", "it matches D-139's entry, not D-143's, D-151's or D-153's");
+  // D-160 later added the one live permission for a face-neutral attempt; it must not make this adapter sendable either.
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 6);
+  assert.equal(CONTRACT.authorisedCalls.count, 6);
+  assert.equal(A.verifyAuthorisation(CONTRACT).call.decision, "D-139", "it matches D-139's entry, not D-143's, D-151's, D-153's or D-160's");
   assert.equal(CONTRACT.authorisedCalls.calls.filter((x) => x.callId === A.CALL_ID).length, 1);
 });
 

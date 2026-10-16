@@ -8,12 +8,15 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { preD160Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 const repoFile = (rel) => join(REPO, ...rel.split("/"));
-const C = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8"));
+// D-160 later added one authorisation (proven exact by preD160Contract in avatar-r3-d147-closure.mjs). This file checks the
+// contract as its own decision left it, so it reads the contract with exactly D-160's additions removed.
+const C = preD160Contract(JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8")));
 const REG = readFileSync(repoFile("docs/project-state.md"), "utf8").split("\n");
 const rows = (k) => REG.filter((l) => l.startsWith("| **" + k + "** |"));
 const one = (k) => { const r = rows(k); assert.equal(r.length, 1, k + " must appear exactly once"); return r[0]; };

@@ -1091,7 +1091,7 @@
   ],
   "authorisedCalls": {
     "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
-    "count": 5,
+    "count": 6,
     "budgetAccounting": "assets[0] carries 5 PLANNED calls after D-153: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); D-151's one call, sent once and refused with HTTP 400, no image (recorded by D-152); and D-153's one call, sent once, raw received, candidate rejected by background-leak (recorded by D-154). The derived budget is 19-20. Budget numbers remain planning, never consent.",
     "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
     "calls": [
@@ -1997,6 +1997,114 @@
           "promotion": "NONE",
           "runtime": "unchanged; R3 stays default OFF"
         }
+      },
+      {
+        "decision": "D-160",
+        "preparedBy": "D-159",
+        "callId": "D-160-r3-face-neutral-v1",
+        "status": "AUTHORISED — ONE CALL — NOT YET ATTEMPTED",
+        "mandateState": "UNSPENT",
+        "outcome": "NOT YET ATTEMPTED",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": {
+          "size": "1024x1536",
+          "quality": "high",
+          "n": 1,
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "fieldOrder": [
+          "model",
+          "image[]",
+          "image[]",
+          "prompt",
+          "size",
+          "quality",
+          "n",
+          "output_format",
+          "background"
+        ],
+        "neverSentFields": [
+          "mask",
+          "input_fidelity",
+          "output_compression",
+          "response_format",
+          "moderation"
+        ],
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "inputs": [
+          {
+            "order": 1,
+            "role": "Image 1",
+            "purpose": "placement guide only",
+            "name": "input-1-placement-guide-A-prime.png",
+            "bytes": 407991,
+            "sha256": "aed1745ecf5c82472774509546bdeeef7463dd7fad57a3a83933a5bcab613dcf",
+            "tracked": false
+          },
+          {
+            "order": 2,
+            "role": "Image 2",
+            "purpose": "style, identity and default expression only",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "bytes": 761394,
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "tracked": true
+          }
+        ],
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt",
+          "bytes": 2193,
+          "sha256": "9c0b26496ce693dfe0d958fc34c60e68d3eddab98e48bb7b1f11af94e07d2413",
+          "encoding": "UTF-8, LF, no trailing newline"
+        },
+        "claim": {
+          "identity": "D-160-r3-face-neutral-v1-claim",
+          "filename": "D-160-r3-face-neutral-v1.claim.json",
+          "eventsFilename": "D-160-r3-face-neutral-v1.events.jsonl"
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-face-neutral-d160.mjs"
+        },
+        "outputs": {
+          "count": 1,
+          "dir": "tools/avatar/build/r3-face-neutral-d160"
+        },
+        "accounting": {
+          "slot": "face-neutral; recorded under D-159's claim / dispatch / result axes, never a sixth underlay call"
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No automatic or manual retry, no fallback request, no other model, and a redirect is never followed. Every consumed claim excludes a retry; a further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity.",
+          "noPromotion": "The call promotes nothing and writes no candidate file. Candidate status is a separate owner decision after the visual review, on the later approved underlay and with the later eyes and hair (D-159 productionOrderException).",
+          "noRuntimeChange": "R3 stays default OFF."
+        },
+        "adoptedOn": "2026-10-16",
+        "ownerDecision": "Owner instruction 2026-10-16: D-160 is approved as a one-time permission for exactly this face-neutral attempt, including the upload of exactly the two images and the prompt named here, in that one later call. The approval is NOT a run instruction.",
+        "uploadScope": "Exactly the two ordered images (guide A′ aed1745e…, then Northstar Master v2 3daf32e7…) and the exact prompt (9c0b2649…), and only inside the one later call. Nothing is uploaded at authorisation or at merge, and nothing else is ever uploaded under this entry.",
+        "runInstruction": {
+          "mergeIsNotAnInstruction": true,
+          "requiresSeparateExplicitOwnerInstruction": true,
+          "rule": "The call may be run only after a NEW, separate and explicit owner instruction, given after D-160 is merged into origin/main, from a checkout whose HEAD equals origin/main (D-143 §13(c), D-145 §5). This entry, its merge and the presence of the adapter are not that instruction."
+        },
+        "claimRules": {
+          "creation": "The claim is created with an exclusive \"wx\" open after every check and immediately before the dispatch record; from that line the mandate is SPENT on every outcome.",
+          "accounting": "claim, dispatch and result are recorded separately (D-159 laterAttemptRules.callCounting): a consumed claim is not a dispatch; a dispatch record marks the project's local dispatch boundary and is not proof of server receipt; a crash between the claim and the dispatch record leaves the dispatch undetermined.",
+          "furtherAttempt": "A consumed claim never permits a retry. A further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity."
+        },
+        "outputHandling": {
+          "keep": "The complete raw response body and every delivered image byte stream are stored unchanged, with the request id, the image count and every SHA-256.",
+          "unexpectedImageCount": "A count other than n = 1 is marked UNEXPECTED; everything is kept, nothing is selected and no check is run.",
+          "technicalChecks": "With exactly one image, D-159's binding technical checks and its diagnostics run on the stored bytes. A technical rejection leaves no candidate file.",
+          "neverAutomatic": "No automatic repair, move, warp, crop, matte removal, candidate file or promotion.",
+          "review": "The owner's visual review is required. Final approval follows D-159: a review on the later approved underlay, and with the later R3 eyes and hair; D-159's layer split and its production-order exception apply unchanged."
+        },
+        "counters": "No decision, entry or merge raises callsActuallySentSoFar. The attempt is recorded in the face slot under D-159's axes and is never counted as a sixth underlay call; callsActuallySentSoFar.underlay stays 5. assets[4] (r3-face-neutral) already plans exactly 1 call; no budget figure changes."
       }
     ]
   },
@@ -2112,7 +2220,7 @@
     "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
   },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds FIVE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's or D-153's call id or claim identity, and no other call in the R3 plan. D-154 is feasibility analysis only and adds no entry.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds SIX entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — THE ONLY active send permission. D-160 supersedes the general rule NARROWLY for exactly one face-neutral attempt (the r3-face-neutral layer prepared by D-159), with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after the merge. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id and a NEW claim identity. Apart from D-160's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's or D-160's call id or claim identity, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
@@ -2162,6 +2270,26 @@
           "fullCiCoverage": false
         },
         "testSafetyHardening": "New and changed adapter tests are fully isolated: an explicit allowlist environment, a sandbox identity and sandbox paths. A unit test may not read, check, write or delete a real claim or output path. The D-139 adapter test, the CORE preparation test and the prepared-call test are hardened to that rule, and the guard in the D-143 test file enforces it for every adapter test. Two legacy suites — the D-129 fitting-base test and the D-121 North Star refinement test — carry a NARROW, machine-readable READ-ONLY exception for seven named constructs, bound to file, rule, construct and count. No exception can cover send: true, a real network call, reading the key, or writing, deleting or moving a real claim or output, and it lapses automatically when its construct is removed. It is not a precedent and may not be widened without a new owner decision. The D-139 production adapter is unchanged."
+      },
+      {
+        "decision": "D-160",
+        "callId": "D-160-r3-face-neutral-v1",
+        "authorisedBy": "D-160",
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-face-neutral-d160.mjs",
+          "status": "IMPLEMENTED — NOT EXECUTED",
+          "ownerApproval": "D-160",
+          "ownerApprovalFlag": "--owner-approval=D-160"
+        },
+        "mandateState": "UNSPENT",
+        "outcome": "NOT YET ATTEMPTED",
+        "mergeIsNotAnInstruction": true,
+        "executionRequiresSeparateOwnerInstruction": true,
+        "implementedOn": "2026-10-16",
+        "implementedBy": "PR #322 (merge 20184ed1f7ff8299fdbc38563ad61e0da8fba855): the adapter was merged INACTIVE, before this authorisation, and refused every run until D-160 is in origin/main.",
+        "noAdapterSha256": "No adapter SHA-256 is pinned in this contract (D-145). The executed code version is identified by the origin/main commit SHA and the adapter's computed SHA-256, both written into the claim and the manifest.",
+        "ciCoverage": "The mock-send scenarios run in CI against a sandbox copy of the adapter in which only the two lines of the guide pin name a synthetic guide; the copy is proven otherwise byte-identical. Only the check of the real guide A′ against the production pin needs the private file and runs locally.",
+        "snapshotNote": "faceNeutralPreparation.laterAttemptRules.sendPath (D-159) says that neither a send adapter nor a call authorisation exists. That was true when D-159 was adopted and is left verbatim; since PR #322 the adapter exists, and since D-160 the authorisation."
       }
     ]
   },
