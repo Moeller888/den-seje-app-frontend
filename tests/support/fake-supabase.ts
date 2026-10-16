@@ -14,6 +14,10 @@
 //   activityCount  the exact count reported for that query (default: activityRows.length;
 //                  set null to report no count)
 //   activityError  when set, the activity query returns this as `error`
+//   students[].spotlight_label / spotlight_message  passed through to get_my_students
+//   overview       the get_student_overview row for student-detail.html (absent: no rows)
+//   detailPending / detailReviewed  student-detail.html's pending / reviewed question_instances
+//   questionContent  { [question id]: content } returned by the questions lookup
 //   createResponse  "ok" | { status, code } — what create-student answers
 //   signInError    when set, signInWithPassword fails with it
 //   updateUserError  when set, auth.updateUser fails with it
@@ -61,6 +65,13 @@ function resolveQuery(table, ops, mode) {
       const count = !wantsCount ? null : ("activityCount" in f ? f.activityCount : rows.length);
       return { data: rows, error: null, count };
     }
+    // student-detail.html reads ONE pupil's answers (eq student_id): pending, or reviewed.
+    const oneStudent = ops.find(o => o.op === "eq" && o.args[0] === "student_id");
+    if (oneStudent) {
+      const reviewed = ops.some(o => o.op === "not" && o.args[0] === "teacher_score");
+      const src = reviewed ? (f.detailReviewed || []) : (f.detailPending || []);
+      return { data: src.filter(r => r.student_id === oneStudent.args[1]), error: null };
+    }
     const ids = (ins.find(o => o.args[0] === "student_id") || { args: [null, []] }).args[1];
     const rows = (f.instances || []).filter(r =>
       ids.includes(r.student_id) && r.teacher_score == null && r.user_answer != null);
@@ -71,7 +82,9 @@ function resolveQuery(table, ops, mode) {
     const ids = (ins.find(o => o.args[0] === "id") || { args: [null, []] }).args[1];
     const isLongFilter = ops.some(o => o.op === "eq" && o.args[0] === "answer_type" && o.args[1] === "long");
     const longIds = f.longQuestionIds || [];
-    return { data: ids.filter(id => !isLongFilter || longIds.includes(id)).map(id => ({ id })), error: null };
+    const content = f.questionContent || {};
+    return { data: ids.filter(id => !isLongFilter || longIds.includes(id))
+      .map(id => (id in content ? { id, content: content[id] } : { id })), error: null };
   }
 
   return { data: mode === "single" ? null : [], error: null };
@@ -135,7 +148,11 @@ export function createClient() {
       if (fn === "get_my_students") {
         return { data: (f.students || []).map(s => ({
           student_id: s.student_id, display_name: s.display_name, xp: 0, prestige_score: 0,
-          spotlight_label: null, spotlight_message: null, spotlight_set_at: null })), error: null };
+          spotlight_label: s.spotlight_label ?? null, spotlight_message: s.spotlight_message ?? null,
+          spotlight_set_at: null })), error: null };
+      }
+      if (fn === "get_student_overview") {
+        return { data: f.overview ? [{ ...f.overview }] : [], error: null };
       }
       return { data: null, error: null };
     },
