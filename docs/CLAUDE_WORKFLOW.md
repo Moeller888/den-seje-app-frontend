@@ -51,7 +51,9 @@ inspect the whole repo, produce architecture/recommendations, **stop before chan
 Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–44).
 
 - **Standard one-command workflow:** `.\fix-tests.ps1` — runs Playwright; on failure invokes Claude
-  to find root cause and fix, re-runs, and **auto-commits only on green**.
+  to find root cause and fix, re-runs, and reports the result. It **never stages, commits, pushes or
+  opens a PR** — fixes stay in the working tree; commit/push/PR/merge happen separately under the
+  `.claude/settings.json` permission model, and only on green.
 - **Fast smoke (daily dev, ~10s):** `npx playwright test tests/example.spec.ts --project=chromium`
   — verifies the core flow (login → question → answer).
 - **Full suite (before push/release, ~55s):** `npx playwright test` — all specs on Chromium,
