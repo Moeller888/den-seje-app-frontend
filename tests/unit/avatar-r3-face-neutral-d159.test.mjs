@@ -10,14 +10,16 @@ import { deflateSync } from "node:zlib";
 import { spawnSync, execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { preD159Contract, PRE_D159_CONTRACT_CANONICAL_SHA256, D159_ADDED_TOP_LEVEL_KEYS } from "./avatar-r3-d147-closure.mjs";
+import { preD160Contract, preD159Contract, PRE_D159_CONTRACT_CANONICAL_SHA256, D159_ADDED_TOP_LEVEL_KEYS } from "./avatar-r3-d147-closure.mjs";
 import { PINS, PARAMETERS, FIELD_ORDER, OMITTED, ENDPOINT_DOCUMENTATION, buildPreview, validateFields, parseArgs } from "../../tools/avatar/prepare-r3-face-neutral-request.mjs";
 import { checkFaceNeutralOutput, readPng, browShapes, bboxOf, BROAD_ENVELOPE, NOSE_TARGET, MOUTH_TARGET, BROW_MARGIN, BROW_RULE, EYE_ZONES } from "../../tools/avatar/check-r3-face-neutral-output.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url)), REPO = join(HERE, "..", "..");
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const rel = (p) => join(REPO, ...p.split("/"));
-const C = JSON.parse(readFileSync(rel("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8"));
+// D-160 later added one authorisation (proven exact by preD160Contract in avatar-r3-d147-closure.mjs). This file checks the
+// contract as its own decision left it, so it reads the contract with exactly D-160's additions removed.
+const C = preD160Contract(JSON.parse(readFileSync(rel("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8")));
 const S = C.faceNeutralPreparation;
 const REG = readFileSync(rel("docs/project-state.md"), "utf8").split("\n");
 const rowsOf = (k) => REG.filter((l) => l.startsWith("| **" + k + "** |"));

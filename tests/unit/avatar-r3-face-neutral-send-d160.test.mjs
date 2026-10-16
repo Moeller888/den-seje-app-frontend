@@ -27,6 +27,7 @@ import { tmpdir } from "node:os";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 import { formatEvent, parseEvents, deriveAttempt, EVENTS as LEDGER_EVENTS } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { buildPreview, parseArgs as prepParseArgs, STATUS as PREP_STATUS } from "../../tools/avatar/prepare-r3-face-neutral-request.mjs";
+import { preD160Contract, PRE_D160_CONTRACT_CANONICAL_SHA256, PRE_D159_CONTRACT_CANONICAL_SHA256, preD159Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -46,6 +47,13 @@ const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join
 const SPEC = JSON.parse(readFileSync(repoFile(SPEC_REL), "utf8"));
 const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
+// D-160 authorised the call. PRE is the contract and register exactly as they stood before D-160 (proven canonical below).
+const PRE = preD160Contract(LIVE);
+const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-160** |")).join("\n");
+const D160_LIVE = LIVE.authorisedCalls.calls.find((e) => e.callId === "D-160-r3-face-neutral-v1");
+const D160_IMPL = LIVE.adapterImplementations.entries.find((e) => e.decision === "D-160");
+const D160_ROW_LIVE = REGISTER.split("\n").find((l) => l.startsWith("| **D-160** |"));
+const D159_ROW_SHA_AT_PRE_D160 = "5dbf45dbc569a080aa4fe687147650aca833ac508ddf26a449a73f9e86d1858e";
 
 const CALL = "D-160-r3-face-neutral-v1";
 const CLAIM_ID = "D-160-r3-face-neutral-v1-claim";
@@ -155,15 +163,18 @@ test("the adapter's constants equal the inactive specification and the D-159 con
 
 // ── the specification is inactive, and the live repository carries no permission ─────────────────────────────────
 
-test("the specification is PREPARED — NOT AUTHORISED, and its proposed identity is unused in the live contract and register", () => {
+test("the specification stays PREPARED — NOT AUTHORISED; before D-160 its identity was unused; the live D-160 entries equal its drafts", () => {
   assert.equal(SPEC.status, "PREPARED — NOT AUTHORISED");
   assert.deepEqual([SPEC.isAuthorisation, SPEC.authorisesImageRequest, SPEC.authorisesUpload, SPEC.claimCreated], [false, false, false, false]);
   assert.match(SPEC.whatThisFileIs, /never reads this file/);
-  const live = JSON.stringify(LIVE);
-  for (const v of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, "D-160", ADAPTER_REL]) assert.ok(!live.includes(v), "the live contract does not carry " + v);
-  assert.equal(REGISTER.split("\n").filter((l) => l.startsWith("| **D-160** |")).length, 0, "no D-160 register row");
-  for (const v of [CALL, CLAIM_ID]) assert.ok(!REGISTER.includes(v), "the register does not carry " + v);
-  assert.equal(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT").length, 0, "no active permission exists");
+  const pre = JSON.stringify(PRE);
+  for (const v of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, "D-160", ADAPTER_REL]) assert.ok(!pre.includes(v), "before D-160 the contract did not carry " + v);
+  assert.equal(PRE_REGISTER.split("\n").filter((l) => l.startsWith("| **D-160** |")).length, 0);
+  assert.equal(PRE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT").length, 0, "before D-160 no active permission existed");
+  const draft = SPEC.toBeAddedByTheOwnerDecision;
+  for (const [k, v] of Object.entries(draft.authorisedCallsEntry)) assert.deepEqual(D160_LIVE[k], v, "the live D-160 entry's " + k + " is the reviewed draft");
+  for (const [k, v] of Object.entries(draft.adapterImplementationsEntry)) assert.deepEqual(D160_IMPL[k], v, "the live D-160 implementation's " + k + " is the reviewed draft");
+  for (const needle of draft.registerRowMustName) assert.ok(D160_ROW_LIVE.includes(needle), "the D-160 row names " + needle);
   assert.deepEqual(Object.keys(LIVE.imageCallBudget.callsActuallySentSoFar).filter((k) => typeof LIVE.imageCallBudget.callsActuallySentSoFar[k] === "number"), ["underlay"]);
   assert.equal(LIVE.imageCallBudget.callsActuallySentSoFar.underlay, 5, "the historical underlay figure is unchanged");
   assert.equal(LIVE.meta.authorisesImageRequest, false);
@@ -347,7 +358,7 @@ function authorise(sb, { entry = (e) => e, impl = (x) => x, row = D160_ROW, guid
  *   "branch"    `top` is committed on a local branch on top of origin/main
  *   "detached"  `top` is committed on a detached HEAD on top of origin/main
  */
-function sandbox({ base, layout = "main", top, adapterSource } = {}) {
+function sandbox({ base, layout = "main", top, adapterSource, live = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d160-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -361,6 +372,10 @@ function sandbox({ base, layout = "main", top, adapterSource } = {}) {
   writeFileSync(sb.png, outputPng({ outside: false }));
   writeFileSync(sb.png + ".outside.png", outputPng({ outside: true }));
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  if (!live) {   // the state before D-160: exactly D-160's contract additions and register row removed
+    writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n");
+    writeFileSync(registerPath(sb), PRE_REGISTER);
+  }
   if (adapterSource) writeFileSync(join(sb.repo, ...ADAPTER_REL.split("/")), adapterSource);
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]);
@@ -409,12 +424,28 @@ test("isolation is proven first: every derived path is inside the sandbox, and t
 
 // ── refusals before the claim that need no guide ─────────────────────────────────────────────────────────────────
 
-test("THE LIVE STATE CANNOT SEND: origin/main as it is today is refused before any claim, dry run and send alike", () => {
+test("BEFORE D-160 NOTHING COULD SEND: the reconstructed pre-D-160 state is refused before any claim, dry run and send alike", () => {
   const sb = sandbox();
   const dry = runAdapter(sb, [...GOOD_ARGS, "--guide", BAD_GUIDE()]);
   assertRefusedBeforeClaim(sb, dry, "register");
   assert.match(dry.out, /D-160 appears 0 times/);
   assertRefusedBeforeClaim(sb, runAdapter(sb, [...GOOD_ARGS, ...SEND, "--guide", BAD_GUIDE()], KEY_ENV), "register");
+});
+
+test("THE LIVE D-160 STATE: the production adapter accepts the committed authorisation and implementation; a wrong guide is still refused before the claim", () => {
+  const sb = sandbox({ live: true });
+  const dry = runAdapter(sb, [...GOOD_ARGS, "--guide", BAD_GUIDE()]);
+  assertRefusedBeforeClaim(sb, dry, "guide");
+  assert.match(dry.out, /authorisation : exactly one active, unspent D-160-r3-face-neutral-v1 entry and one D-160 implementation entry in origin\/main/);
+  assertRefusedBeforeClaim(sb, runAdapter(sb, [...GOOD_ARGS, ...SEND, "--guide", BAD_GUIDE()]), "guide");
+});
+
+test("THE LIVE D-160 STATE in a working tree that is not origin/main (uncommitted, local branch) is refused before the claim", () => {
+  const toLive = (s) => { copyFileSync(repoFile(CONTRACT_REL), contractPath(s)); copyFileSync(repoFile(REGISTER_REL), registerPath(s)); };
+  const wt = sandbox({ layout: "worktree", top: toLive });
+  assertRefusedBeforeClaim(wt, runAdapter(wt, [...GOOD_ARGS, ...SEND, "--guide", BAD_GUIDE()], KEY_ENV), "blob-divergence");
+  const br = sandbox({ layout: "branch", top: toLive });
+  assertRefusedBeforeClaim(br, runAdapter(br, [...GOOD_ARGS, ...SEND, "--guide", BAD_GUIDE()], KEY_ENV), "branch");
 });
 
 test("an authorisation only in the working tree (not committed, not in origin/main) is refused before the claim", () => {
@@ -787,9 +818,71 @@ test("local: the real guide A′ matches the production pin, size and PNG header
   assert.equal(SPEC.request.inputs[0].sha256, GUIDE_SHA); assert.equal(LIVE.faceNeutralPreparation.preparedRequest.inputs[0].sha256, GUIDE_SHA);
 });
 
-test("local: the PRODUCTION adapter's dry run accepts the real guide A′ under the real pins — nothing written, no key", NEED_GUIDE, () => {
-  const sb = sandbox({ base: (s) => authorise(s) });
+test("local: the PRODUCTION adapter's dry run accepts the real guide A′ under the LIVE D-160 authorisation — nothing written, no key", NEED_GUIDE, () => {
+  const sb = sandbox({ live: true });
   const r = runAdapter(sb, [...GOOD_ARGS, "--guide", GUIDE_PATH]);
+  assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
+  assert.equal(existsSync(sb.claim), false); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0); assert.equal(existsSync(outDir(sb)), false);
+});
+
+// ── D-160: the authorisation itself ─────────────────────────────────────────────────────────────────────────────
+
+test("D-160 adds exactly one authorisation: the pre-D-160 contract is reproduced canonically, nothing else changed", () => {
+  assert.equal(sha256(JSON.stringify(PRE)), PRE_D160_CONTRACT_CANONICAL_SHA256, "LIVE minus D-160's additions is the contract at the D-160 base");
+  assert.equal(sha256(JSON.stringify(preD159Contract(LIVE))), PRE_D159_CONTRACT_CANONICAL_SHA256, "the older reconstruction chain still holds");
+  assert.deepEqual([PRE.authorisedCalls.count, LIVE.authorisedCalls.count], [5, 6]);
+  assert.deepEqual(LIVE.authorisedCalls.calls.slice(0, 5), PRE.authorisedCalls.calls, "the five historical entries are unchanged");
+  assert.deepEqual(LIVE.adapterImplementations.entries.slice(0, 1), PRE.adapterImplementations.entries, "the D-145 implementation is unchanged");
+  assert.deepEqual(LIVE.authorisedCalls.calls.map((e) => e.decision), ["D-139", "D-142", "D-143", "D-151", "D-153", "D-160"]);
+  assert.deepEqual(LIVE.adapterImplementations.entries.map((e) => e.decision), ["D-145", "D-160"]);
+  assert.deepEqual(LIVE.imageCallBudget, PRE.imageCallBudget, "no budget figure or counter changed");
+  assert.deepEqual(LIVE.assets, PRE.assets, "no asset changed; assets[4] already plans the one face-neutral call");
+  assert.deepEqual(LIVE.faceNeutralPreparation, PRE.faceNeutralPreparation, "D-159's section is not rewritten");
+  assert.equal(LIVE.assets.find((a) => a.name === "r3-face-neutral").calls, 1);
+});
+
+test("D-160's entry is the ONLY live permission: UNSPENT, NOT YET ATTEMPTED, one fetch, merge is not a run instruction", () => {
+  assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT").map((e) => e.callId), [CALL]);
+  for (const e of LIVE.authorisedCalls.calls.slice(1, 5)) assert.deepEqual([e.mandateState, e.neverReuse], ["SPENT", true], e.callId + " stays closed");
+  assert.deepEqual([D160_LIVE.decision, D160_LIVE.status, D160_LIVE.mandateState, D160_LIVE.outcome], ["D-160", "AUTHORISED — ONE CALL — NOT YET ATTEMPTED", "UNSPENT", "NOT YET ATTEMPTED"]);
+  for (const k of ["neverReuse", "notAnActivePermission", "closedBy", "closure", "execution"]) assert.ok(!(k in D160_LIVE), "no " + k);
+  assert.deepEqual([D160_LIVE.claim.identity, D160_LIVE.claim.filename, D160_LIVE.claim.eventsFilename], [CLAIM_ID, CLAIM_FILE, EVENTS_FILE]);
+  assert.deepEqual([D160_LIVE.runInstruction.mergeIsNotAnInstruction, D160_LIVE.runInstruction.requiresSeparateExplicitOwnerInstruction], [true, true]);
+  assert.match(D160_LIVE.runInstruction.rule, /NEW, separate and explicit owner instruction, given after D-160 is merged/);
+  assert.deepEqual([D160_IMPL.adapter.status, D160_IMPL.mandateState, D160_IMPL.outcome, D160_IMPL.mergeIsNotAnInstruction, D160_IMPL.executionRequiresSeparateOwnerInstruction],
+    ["IMPLEMENTED — NOT EXECUTED", "UNSPENT", "NOT YET ATTEMPTED", true, true]);
+  assert.ok(!Object.keys(D160_IMPL.adapter).some((k) => /sha-?256/i.test(k)), "no adapter hash is pinned (D-145)");
+  assert.match(D160_LIVE.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(D160_LIVE.claimRules.furtherAttempt, /NEW owner decision, a NEW call id and a NEW claim identity/);
+  assert.match(D160_LIVE.uploadScope, /Exactly the two ordered images/);
+  assert.match(D160_LIVE.outputHandling.unexpectedImageCount, /UNEXPECTED/);
+  assert.match(D160_LIVE.outputHandling.review, /later approved underlay, and with the later R3 eyes and hair/);
+  assert.match(LIVE.prohibitions.noImageRequestAuthorised, /holds SIX entries/);
+  assert.match(LIVE.prohibitions.noImageRequestAuthorised, /\(6\) D-160-r3-face-neutral-v1 — THE ONLY active send permission/);
+  assert.match(LIVE.prohibitions.noImageRequestAuthorised, /\(5\) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission/);
+  assert.equal(LIVE.meta.authorisesImageRequest, false);
+  assert.deepEqual(LIVE.imageCallBudget.callsActuallySentSoFar, PRE.imageCallBudget.callsActuallySentSoFar);
+  assert.equal(LIVE.imageCallBudget.callsActuallySentSoFar.underlay, 5, "no decision or merge raises the sent figure");
+  assert.equal(LIVE.architecture.defaultEnabled, false, "R3 stays default OFF");
+  assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(repoFile("js/avatar-layers.js"), "utf8")), "R3 stays OFF at runtime");
+});
+
+test("the D-160 register row: once, directly after D-159, every pin named, D-159 verbatim, no mojibake", () => {
+  const lines = REGISTER.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith("| **D-160** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-160** |")), lines.findIndex((l) => l.startsWith("| **D-159** |")) + 1);
+  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-159** |"))), D159_ROW_SHA_AT_PRE_D160, "D-159 is not rewritten");
+  for (const needle of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, MODEL, ADAPTER_REL, APPROVAL, GUIDE_SHA, NORTHSTAR_SHA, PROMPT_SHA,
+    "`AUTHORISED — ONE CALL — NOT YET ATTEMPTED`", "IKKE EN KØRSELSINSTRUKS", "\"Neither exists\"", "ingen retry", "UNEXPECTED", "ingen kandidatfil",
+    "`callsActuallySentSoFar.underlay` forbliver **5**", "R3 forbliver default OFF", "særskilt og eksplicit ejerinstruks"]) assert.ok(D160_ROW_LIVE.includes(needle), "the D-160 row carries " + JSON.stringify(needle));
+  assert.ok(!/[ÃÂ]\S|�/.test(D160_ROW_LIVE), "no mojibake in the Danish row");
+});
+
+test("synthetic, in CI: the LIVE D-160 entry and row — with only the guide pin made synthetic — pass the adapter's dry run, which writes and sends nothing", () => {
+  const sb = sandbox({ live: true, adapterSource: SYN_ADAPTER, base: (s) => {
+    for (const f of [contractPath(s), registerPath(s)]) writeFileSync(f, readFileSync(f, "utf8").split(GUIDE_SHA).join(SYN.sha256).split("\"bytes\": 407991").join("\"bytes\": " + SYN.bytes));
+  } });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...G(sb)]);
   assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
   assert.equal(existsSync(sb.claim), false); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0); assert.equal(existsSync(outDir(sb)), false);
 });

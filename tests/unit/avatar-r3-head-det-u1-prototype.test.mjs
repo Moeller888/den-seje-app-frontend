@@ -12,6 +12,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEAM } from "../../tools/avatar/build-r3-head-colour-fixtures.mjs";
 import * as P from "../../tools/avatar/build-r3-head-det-u1-prototype.mjs";
+import { preD160Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -19,7 +20,9 @@ const TOOL = "tools/avatar/build-r3-head-det-u1-prototype.mjs";
 const W = 1024, N = 1024 * 1536;
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const repoFile = (rel) => join(REPO, ...rel.split("/"));
-const C = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8"));
+// D-160 later added one authorisation (proven exact by preD160Contract in avatar-r3-d147-closure.mjs). This file checks the
+// contract as its own decision left it, so it reads the contract with exactly D-160's additions removed.
+const C = preD160Contract(JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json"), "utf8")));
 const strip = (s) => s.split("\n").filter((l) => !l.trimStart().startsWith("//") && !l.trimStart().startsWith("*")).join("\n");
 const H1_PATH = process.env.FITTING_BASE_V1_PATH;
 const H1_OK = typeof H1_PATH === "string" && (() => { try { return sha256(readFileSync(H1_PATH)) === P.PINS.h1; } catch (_) { return false; } })();
