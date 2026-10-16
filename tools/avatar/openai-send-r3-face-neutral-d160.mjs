@@ -562,7 +562,8 @@ async function main(argv) {
   let fetches = 0;
   let seq = 0;
   let claim = null;
-  const event = (name, fields, flag) => { seq += 1; appendEvent(loc.events, formatEvent(CALL_ID, seq, name, fields), flag); };
+  // `fresh` starts the record on a new line, so a record written after a torn write is never fused into the torn line.
+  const event = (name, fields, flag, fresh = false) => { seq += 1; appendEvent(loc.events, (fresh ? "\n" : "") + formatEvent(CALL_ID, seq, name, fields), flag); };
   const finish = (classification, stage, reason) => {
     console.log("\n  CLAIM: " + loc.claimDisplay + " — consumed; the mandate is spent on every outcome.");
     let claimPresent = false, eventsText = "";
@@ -595,7 +596,7 @@ async function main(argv) {
     event("dispatch", { at: new Date().toISOString(), note: "written immediately before the request is handed to the network client; not proof of server receipt" }, "wx");
   } catch (e) {
     const why = errText(e);
-    try { event("stop", { at: new Date().toISOString(), reason: "the dispatch record could not be written: " + why + "; nothing was sent" }, "a"); }
+    try { event("stop", { at: new Date().toISOString(), reason: "the dispatch record could not be written: " + why + "; nothing was sent" }, "a", true); }
     catch (e2) { manifest.events.stopWriteError = errText(e2); }
     manifest.events.dispatchWriteError = why;
     return finish("NOT_DISPATCHED", "dispatch-record", "the dispatch record could not be written, so the request was not sent");

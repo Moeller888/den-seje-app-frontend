@@ -11,8 +11,11 @@
 //     layer. The crash windows (claim → dispatch record → fetch) are simulated by the same mock patching node:fs from
 //     outside; the adapter knows nothing about it.
 //   · No test reads, lists or checks the real claim register, a real key or the real build area.
-// Guide A′ is PRIVATE (H1-derived, gitignored). Scenarios that must get past the guide check need
-// R3_FACE_GUIDE_A_PRIME_PATH and are skipped without it; every refusal before the guide stage runs without it.
+// Guide A′ is PRIVATE (H1-derived, gitignored) and never needed for the behaviour tests. Every send scenario runs in CI
+// against a SANDBOX COPY of the adapter in which exactly the two lines of the guide pin are replaced by the pin of a
+// synthetic guide; a test proves that the copy is otherwise byte-identical to the production adapter, and that the
+// production adapter itself refuses the synthetic authorisation. Only the check of the REAL guide A′ against the
+// production pin needs R3_FACE_GUIDE_A_PRIME_PATH and is skipped without it.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, readdirSync, statSync, copyFileSync, realpathSync, rmSync } from "node:fs";
@@ -252,6 +255,16 @@ const MOCK_SRC = [
   "  };",
   "  syncBuiltinESMExports();",
   "}",
+  "if (MODE === \"torn-dispatch\") {",
+  "  // the first write to the event log stops half-way and throws: a torn dispatch record",
+  "  const origOpen = fs.openSync, origWrite = fs.writeSync; let eventsFd = null, torn = false;",
+  "  fs.openSync = function (p, ...rest) { const fd = origOpen.call(fs, p, ...rest); if (norm(p) === norm(EVENTS)) eventsFd = fd; return fd; };",
+  "  fs.writeSync = function (fd, data, ...rest) {",
+  "    if (!torn && fd === eventsFd && typeof data === \"string\") { torn = true; origWrite.call(fs, fd, data.slice(0, data.length >> 1)); const e = new Error(\"ENOSPC: mock torn write\"); e.code = \"ENOSPC\"; throw e; }",
+  "    return origWrite.call(fs, fd, data, ...rest);",
+  "  };",
+  "  syncBuiltinESMExports();",
+  "}",
   "globalThis.fetch = async function d160MockFetch(url, init) {",
   "  const headers = init && init.headers ? init.headers : {};",
   "  const body = init ? init.body : null;",
@@ -306,9 +319,16 @@ const editContract = (sb, fn) => { const c = JSON.parse(readFileSync(contractPat
 const D160_ROW = "| **D-160** | SANDBOX TEST ROW — not a decision. " + SPEC.toBeAddedByTheOwnerDecision.registerRowMustName.join(" · ") + " |";
 
 /** Writes the D-160 authorisation — exactly the inert objects of the specification — into the sandbox's files. */
-function authorise(sb, { entry = (e) => e, impl = (x) => x, row = D160_ROW } = {}) {
+function authorise(sb, { entry = (e) => e, impl = (x) => x, row = D160_ROW, guide = null } = {}) {
+  // guide: { sha256, bytes } of a SYNTHETIC guide — the D-159 section, the entry and the row then name it consistently
+  if (guide && row !== null) row = row.split(GUIDE_SHA).join(guide.sha256);
   editContract(sb, (c) => {
-    c.authorisedCalls.calls.push(entry(structuredClone(SPEC.toBeAddedByTheOwnerDecision.authorisedCallsEntry)));
+    const e = structuredClone(SPEC.toBeAddedByTheOwnerDecision.authorisedCallsEntry);
+    if (guide) {
+      Object.assign(e.inputs[0], { bytes: guide.bytes, sha256: guide.sha256 });
+      Object.assign(c.faceNeutralPreparation.preparedRequest.inputs[0], { bytes: guide.bytes, sha256: guide.sha256 });
+    }
+    c.authorisedCalls.calls.push(entry(e));
     const x = impl(structuredClone(SPEC.toBeAddedByTheOwnerDecision.adapterImplementationsEntry));
     if (x) c.adapterImplementations.entries.push(x);
   });
@@ -327,7 +347,7 @@ function authorise(sb, { entry = (e) => e, impl = (x) => x, row = D160_ROW } = {
  *   "branch"    `top` is committed on a local branch on top of origin/main
  *   "detached"  `top` is committed on a detached HEAD on top of origin/main
  */
-function sandbox({ base, layout = "main", top } = {}) {
+function sandbox({ base, layout = "main", top, adapterSource } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d160-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -341,6 +361,7 @@ function sandbox({ base, layout = "main", top } = {}) {
   writeFileSync(sb.png, outputPng({ outside: false }));
   writeFileSync(sb.png + ".outside.png", outputPng({ outside: true }));
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  if (adapterSource) writeFileSync(join(sb.repo, ...ADAPTER_REL.split("/")), adapterSource);
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]);
   sgit(sb, ["add", "-A"]);
@@ -543,40 +564,79 @@ test("refused before the claim: outputs of this call already present", () => {
   }
 });
 
-// ── with guide A′: the dry run and the mocked send scenarios ────────────────────────────────────────────────────
-const NEED_GUIDE = { skip: !GUIDE_OK && "R3_FACE_GUIDE_A_PRIME_PATH (the pinned private guide A′) is not available" };
-const G = () => ["--guide", GUIDE_PATH];
-const sendSandbox = () => sandbox({ base: (s) => authorise(s) });
+// ── the send scenarios, in CI: a sandbox copy of the adapter with a SYNTHETIC guide pin ─────────────────────────
+// The copy differs from the production adapter in exactly the two lines of the GUIDE constant: its bytes and its
+// SHA-256 name a synthetic guide. Everything else — every check, the claim, the dispatch record, the fetch, the output
+// handling — is the production code byte for byte, and a test below proves it before any scenario relies on it.
+
+/** A deterministic synthetic guide: a 1024x1536 8-bit RGBA PNG, like A′ in shape, with nothing private in it. */
+function syntheticGuidePng() {
+  const w = 1024, h = 1536, px = Buffer.alloc(w * h * 4, 0);
+  for (let y = 240; y < 410; y++) for (let x = 390; x < 630; x++) if ((x + y) % 7 === 0) px.set([0, 255, 255, 255], (y * w + x) * 4);
+  return encodePngRGBA(w, h, px);
+}
+const SYN_GUIDE = syntheticGuidePng();
+const SYN = Object.freeze({ bytes: SYN_GUIDE.length, sha256: sha256(SYN_GUIDE) });
+const PROD_PIN_LINES = "bytes: 407991,\n  sha256: \"" + GUIDE_SHA + "\" });";
+const SYN_PIN_LINES = "bytes: " + SYN.bytes + ",\n  sha256: \"" + SYN.sha256 + "\" });";
+const SYN_ADAPTER = SRC.split(PROD_PIN_LINES).join(SYN_PIN_LINES);
+
+test("the synthetic sandbox adapter differs from the production adapter in exactly the two guide-pin lines", () => {
+  assert.equal(SRC.split(PROD_PIN_LINES).length, 2, "the production guide pin occurs exactly once");
+  assert.equal(SRC.split(GUIDE_SHA).length, 2, "the production guide hash occurs nowhere else in the adapter");
+  assert.notEqual(SYN.sha256, GUIDE_SHA);
+  const a = SRC.split("\n"), b = SYN_ADAPTER.split("\n");
+  assert.equal(a.length, b.length, "same number of lines");
+  const differing = a.map((l, i) => (l === b[i] ? -1 : i)).filter((i) => i >= 0);
+  assert.equal(differing.length, 2, "exactly two lines differ");
+  assert.equal(differing[1], differing[0] + 1, "and they are adjacent");
+  assert.match(a[differing[0]], /^const GUIDE = Object\.freeze\(\{ role: "Image 1", name: "input-1-placement-guide-A-prime\.png", bytes: 407991,$/);
+  assert.equal(b[differing[0]], a[differing[0]].replace("bytes: 407991,", "bytes: " + SYN.bytes + ","));
+  assert.equal(b[differing[1]], "  sha256: \"" + SYN.sha256 + "\" });");
+  assert.equal(SYN_ADAPTER.replace(SYN_PIN_LINES, PROD_PIN_LINES), SRC, "reversing the substitution gives the production adapter exactly");
+});
+
+const synGuidePath = (sb) => { const p = join(sb.root, "synthetic-guide.png"); if (!existsSync(p)) writeFileSync(p, SYN_GUIDE); return p; };
+const G = (sb) => ["--guide", synGuidePath(sb)];
+const sendSandbox = () => sandbox({ adapterSource: SYN_ADAPTER, base: (s) => authorise(s, { guide: SYN }) });
 const manifest = (sb) => JSON.parse(readFileSync(outFile(sb, "request.json"), "utf8"));
 // Every file in the sandbox except the mock, which holds the dummy literal it compares against.
 const allSandboxText = (sb) => { const out = []; const walk = (d) => { for (const n of readdirSync(d)) { const p = join(d, n); if (n === ".git" || p === sb.mock) continue; if (statSync(p).isDirectory()) walk(p); else if (statSync(p).size < 8e6) out.push(readFileSync(p, "latin1")); } }; walk(sb.root); return out.join("\n"); };
 
-test("with guide A′: the dry run passes every check, writes nothing and reads no credential", NEED_GUIDE, () => {
+test("the PRODUCTION adapter refuses the synthetic authorisation and the synthetic guide before any claim", () => {
+  const sb = sandbox({ base: (s) => authorise(s, { guide: SYN }) });   // production adapter, synthetic pins in contract and register
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV);
+  assertRefusedBeforeClaim(sb, r, "register");
+  assert.match(r.out, new RegExp("does not carry " + GUIDE_SHA));
+  const real = sandbox({ base: (s) => authorise(s) });                 // production adapter and real pins, but the synthetic guide
+  assertRefusedBeforeClaim(real, runAdapter(real, [...GOOD_ARGS, ...SEND, ...G(real)], KEY_ENV), "guide");
+});
+
+test("synthetic: the dry run passes every check, writes nothing and reads no credential", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...G()]);
+  const r = runAdapter(sb, [...GOOD_ARGS, ...G(sb)]);
   assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
   assert.equal(existsSync(sb.claim), false); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0); assert.equal(existsSync(outDir(sb)), false);
 });
 
-test("with guide A′: a send without a key is refused at the key, after every check and before the claim", NEED_GUIDE, () => {
+test("synthetic: a send without a key is refused at the key, after every check and before the claim", () => {
   const sb = sendSandbox();
-  assertRefusedBeforeClaim(sb, runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()]), "key");
+  assertRefusedBeforeClaim(sb, runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)]), "key");
 });
 
-test("with guide A′: a normal response — claim, then dispatch record, then ONE fetch; everything stored; through the checks; no candidate", NEED_GUIDE, () => {
+test("synthetic: a normal response — claim, then dispatch record, then ONE fetch; everything stored; through the checks; no candidate", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV);
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV);
   assert.equal(r.status, 0, r.out);
   const log = fetchLog(sb);
   assert.equal(log.length, 1, "exactly one request");
   const L = log[0];
   assert.equal(L.claimExistedAtCall, true, "the claim existed when the fetch was made");
-  const atCall = parseEvents(L.eventsAtCall, CALL).records;
-  assert.deepEqual(atCall.map((x) => x.event), ["dispatch"], "the dispatch record — and only it — existed when the fetch was made");
+  assert.deepEqual(parseEvents(L.eventsAtCall, CALL).records.map((x) => x.event), ["dispatch"], "the dispatch record — and only it — existed when the fetch was made");
   assert.equal(L.url, "https://api.openai.com/v1/images/edits"); assert.equal(L.method, "POST"); assert.equal(L.redirect, "error"); assert.equal(L.dummyKey, true);
   assert.deepEqual(L.fields, ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"]);
   assert.deepEqual(L.images, ["input-1-placement-guide-A-prime.png", "Northstar Master v2.png"]);
-  assert.deepEqual(L.imageSha, [GUIDE_SHA, NORTHSTAR_SHA], "the ordered inputs are exactly the pinned bytes");
+  assert.deepEqual(L.imageSha, [SYN.sha256, NORTHSTAR_SHA], "the ordered inputs are exactly the pinned bytes");
   assert.equal(L.prompt, readFileSync(repoFile(PROMPT_REL), "utf8"), "the exact prompt");
   assert.equal(L.background, "transparent"); assert.equal(L.hasMask, false); assert.equal(L.hasInputFidelity, false);
   const m = manifest(sb);
@@ -584,6 +644,7 @@ test("with guide A′: a normal response — claim, then dispatch record, then O
   assert.deepEqual([m.accounting.claimState, m.accounting.dispatch, m.accounting.result, m.accounting.actuallySent, m.accounting.dispatchUndetermined, m.accounting.serverAnswered],
     ["consumed", "started", "response", 1, 0, true]);
   assert.equal(m.response.requestId, "req_mockok"); assert.equal(m.images.count, 1); assert.equal(m.slot, "face-neutral (never an underlay call)");
+  assert.equal(m.request.model, MODEL); assert.equal(m.request.redirect, "error");
   assert.equal(sha256(readFileSync(outFile(sb, "response.json"))), sha256(readFileSync(sb.body)), "the raw response is stored byte for byte");
   assert.equal(m.response.bodySha256, sha256(readFileSync(sb.body)));
   assert.equal(sha256(readFileSync(outFile(sb, "image-1.png"))), sha256(readFileSync(sb.png)), "the image is stored byte for byte");
@@ -594,72 +655,87 @@ test("with guide A′: a normal response — claim, then dispatch record, then O
   assert.deepEqual(parseEvents(readFileSync(sb.events, "utf8"), CALL).records.map((x) => x.event), ["dispatch", "answer"]);
   assert.ok(!allSandboxText(sb).includes(DUMMY_KEY.slice(3)) && !r.out.includes(DUMMY_KEY.slice(3)), "the key appears in no log and no file");
   assert.ok(!JSON.stringify(m).includes(sb.root) && !readFileSync(sb.claim, "utf8").includes(sb.root), "no absolute path is recorded");
-  const again = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV);
+  const again = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV);
   assert.equal(again.status, 1); assert.match(again.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(sb).length, 1, "the request counter never exceeds one");
 });
 
-test("with guide A′: documented dispatch + HTTP error — sent, answered, no image, no retry", NEED_GUIDE, () => {
+test("synthetic: documented dispatch + HTTP error — sent, answered, no image, no retry", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "http500" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "http500" });
   assert.equal(r.status, 3, r.out);
   const m = manifest(sb);
   assert.deepEqual([m.outcome.classification, m.response.httpStatus, m.response.requestId], ["HTTP_ERROR", 500, "req_mock500"]);
   assert.deepEqual([m.accounting.dispatch, m.accounting.result, m.accounting.actuallySent, m.accounting.serverAnswered], ["started", "http-error", 1, true]);
   assert.equal(sha256(readFileSync(outFile(sb, "response.json"))), sha256(readFileSync(sb.body)));
   assert.equal(existsSync(outFile(sb, "image-1.png")), false); assert.equal(fetchLog(sb).length, 1);
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV).status, 1, "no retry"); assert.equal(fetchLog(sb).length, 1);
 });
 
-test("with guide A′: documented dispatch + transport error — sent, result UNKNOWN, never downgraded, no retry", NEED_GUIDE, () => {
+test("synthetic: documented dispatch + transport error — sent, result UNKNOWN, never downgraded, no retry", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "throw" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "throw" });
   assert.equal(r.status, 3, r.out);
   const m = manifest(sb);
   assert.equal(m.outcome.classification, "DISPATCHED_RESULT_UNKNOWN");
   assert.deepEqual([m.accounting.dispatch, m.accounting.result, m.accounting.actuallySent, m.accounting.dispatchUndetermined, m.accounting.serverAnswered], ["started", "unknown", 1, 0, false]);
-  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV).status, 1);
+  assert.deepEqual(parseEvents(readFileSync(sb.events, "utf8"), CALL).records.map((x) => x.event), ["dispatch", "transport-error"]);
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV).status, 1);
   assert.equal(fetchLog(sb).length, 1);
 });
 
-test("with guide A′: a crash inside the network call — the log documents the dispatch, the result stays UNKNOWN", NEED_GUIDE, () => {
+test("synthetic: a crash inside the network call — the log documents the dispatch, the result stays UNKNOWN", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "die-in-fetch" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "die-in-fetch" });
   assert.equal(r.status, 137, r.out);
   assert.equal(existsSync(outFile(sb, "request.json")), false, "the crash left no manifest");
   const d = onDisk(sb);
   assert.deepEqual([d.claimState, d.dispatch, d.result, d.actuallySent, d.dispatchUndetermined, d.serverAnswered, d.automaticRetry], ["consumed", "started", "unknown", 1, 0, false, false]);
-  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV).status, 1, "no retry");
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV).status, 1, "no retry");
   assert.equal(fetchLog(sb).length, 1);
 });
 
-test("with guide A′: a crash between the claim and the dispatch record — dispatch UNDETERMINED, nothing fetched, no retry", NEED_GUIDE, () => {
+test("synthetic: a crash between the claim and the dispatch record — dispatch UNDETERMINED, nothing fetched, no retry", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "die-at-dispatch" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "die-at-dispatch" });
   assert.equal(r.status, 137, r.out);
   assert.equal(existsSync(sb.claim), true); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0);
   const d = onDisk(sb);
   assert.deepEqual([d.claimState, d.dispatch, d.result, d.actuallySent, d.dispatchUndetermined, d.serverAnswered], ["consumed", "undetermined", "unknown", 0, 1, false],
     "the log cannot prove that no request started, so it is neither sent nor not sent");
-  const again = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV);
+  const again = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV);
   assert.equal(again.status, 1); assert.match(again.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(sb).length, 0);
 });
 
-test("with guide A′: the dispatch record cannot be written — a documented STOP, nothing fetched, no retry", NEED_GUIDE, () => {
+test("synthetic: the dispatch record cannot be written — a documented STOP, nothing fetched, no retry", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "fail-dispatch" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "fail-dispatch" });
   assert.equal(r.status, 3, r.out);
   assert.equal(fetchLog(sb).length, 0, "no fetch");
   const m = manifest(sb);
   assert.equal(m.outcome.classification, "NOT_DISPATCHED"); assert.equal(m.outcome.fetches, 0);
   assert.deepEqual([m.accounting.claimState, m.accounting.dispatch, m.accounting.result, m.accounting.actuallySent, m.accounting.dispatchUndetermined], ["consumed", "not-started", "none", 0, 0]);
   assert.deepEqual(parseEvents(readFileSync(sb.events, "utf8"), CALL).records.map((x) => x.event), ["stop"]);
-  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], KEY_ENV).status, 1, "a consumed claim excludes a retry even though nothing was sent");
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], KEY_ENV).status, 1, "a consumed claim excludes a retry even though nothing was sent");
 });
 
-test("with guide A′: two images — UNEXPECTED, both kept unchanged, none selected, no check", NEED_GUIDE, () => {
+test("synthetic: a TORN dispatch record — the stop record starts on its own line and stays readable; nothing fetched", () => {
   const sb = sendSandbox();
-  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "two" });
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "torn-dispatch" });
+  assert.equal(r.status, 3, r.out);
+  assert.equal(fetchLog(sb).length, 0, "no fetch");
+  const text = readFileSync(sb.events, "utf8");
+  const parsed = parseEvents(text, CALL);
+  assert.deepEqual(parsed.records.map((x) => x.event), ["stop"], "the stop record survives the torn line");
+  assert.equal(parsed.damaged.length, 1, "the torn dispatch half-line is reported as damage, not as evidence");
+  const m = manifest(sb);
+  assert.deepEqual([m.outcome.classification, m.accounting.dispatch, m.accounting.result, m.accounting.actuallySent, m.accounting.dispatchUndetermined], ["NOT_DISPATCHED", "not-started", "none", 0, 0]);
+});
+
+test("synthetic: two images — UNEXPECTED, both kept unchanged, none selected, no check", () => {
+  const sb = sendSandbox();
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "two" });
   assert.equal(r.status, 0, r.out);
   const m = manifest(sb);
   assert.equal(m.outcome.classification, "UNEXPECTED"); assert.equal(m.images.count, 2);
@@ -670,27 +746,28 @@ test("with guide A′: two images — UNEXPECTED, both kept unchanged, none sele
   assert.equal(sha256(readFileSync(outFile(sb, "response.json"))), sha256(readFileSync(sb.body)));
 });
 
-test("with guide A′: zero images — UNEXPECTED, the raw response kept", NEED_GUIDE, () => {
+test("synthetic: zero images — UNEXPECTED, the raw response kept", () => {
   const sb = sendSandbox();
-  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "zero" }).status, 0);
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "zero" }).status, 0);
   const m = manifest(sb);
   assert.equal(m.outcome.classification, "UNEXPECTED"); assert.equal(m.images.count, 0);
   assert.deepEqual(readdirSync(outDir(sb)).sort(), ["r3-face-neutral-d160.request.json", "r3-face-neutral-d160.response.json"]);
 });
 
-test("with guide A′: alpha outside the broad envelope — TECHNICAL_REJECT at AUTO-5, the raw image kept, no candidate", NEED_GUIDE, () => {
+test("synthetic: alpha outside the broad envelope — TECHNICAL_REJECT at AUTO-5, the raw image kept, no candidate", () => {
   const sb = sendSandbox();
-  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G()], { ...KEY_ENV, D160_MOCK_MODE: "outside" }).status, 0);
+  assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND, ...G(sb)], { ...KEY_ENV, D160_MOCK_MODE: "outside" }).status, 0);
   const m = manifest(sb);
   assert.equal(m.outcome.classification, "TECHNICAL_REJECT"); assert.equal(m.check.firstFailure, "AUTO-5"); assert.equal(m.outcome.candidateWritten, false);
   assert.equal(sha256(readFileSync(outFile(sb, "image-1.png"))), sha256(readFileSync(sb.png + ".outside.png")), "the raw output is kept unchanged");
   assert.ok(!readdirSync(outDir(sb)).some((n) => /candidate/i.test(n)), "no candidate file");
 });
 
-test("with guide A′: two simultaneous processes cannot send two requests", NEED_GUIDE, async () => {
+test("synthetic: two simultaneous processes cannot send two requests", async () => {
   const sb = sendSandbox();
+  const args = [...GOOD_ARGS, ...SEND, ...G(sb)];
   const one = () => new Promise((res) => {
-    const c = spawn(process.execPath, ["--import", pathToFileURL(sb.mock).href, join(sb.repo, ...ADAPTER_REL.split("/")), ...GOOD_ARGS, ...SEND, ...G()],
+    const c = spawn(process.execPath, ["--import", pathToFileURL(sb.mock).href, join(sb.repo, ...ADAPTER_REL.split("/")), ...args],
       { cwd: sb.repo, env: envFor(sb, { ...KEY_ENV, D160_MOCK_MODE: "slow" }), windowsHide: true });
     let out = ""; c.stdout.on("data", (d) => { out += d; }); c.stderr.on("data", (d) => { out += d; });
     c.on("close", (code) => res({ code, out }));
@@ -698,4 +775,21 @@ test("with guide A′: two simultaneous processes cannot send two requests", NEE
   const [a, b] = await Promise.all([one(), one()]);
   assert.equal(fetchLog(sb).length, 1, "exactly one request across both processes");
   assert.deepEqual([a.code, b.code].sort(), [0, 1], a.out + "\n----\n" + b.out);
+});
+
+// ── LOCAL ONLY: the real private guide A′ against the production pin. No send, no key, no claim register. ─────────
+const NEED_GUIDE = { skip: !GUIDE_OK && "local private-input check: R3_FACE_GUIDE_A_PRIME_PATH (the pinned private guide A′) is not available — CI never has it" };
+
+test("local: the real guide A′ matches the production pin, size and PNG header", NEED_GUIDE, () => {
+  const b = readFileSync(GUIDE_PATH);
+  assert.equal(b.length, 407991); assert.equal(sha256(b), GUIDE_SHA);
+  assert.equal(b.readUInt32BE(16), 1024); assert.equal(b.readUInt32BE(20), 1536); assert.equal(b[24], 8); assert.equal(b[25], 6); assert.equal(b[28], 0);
+  assert.equal(SPEC.request.inputs[0].sha256, GUIDE_SHA); assert.equal(LIVE.faceNeutralPreparation.preparedRequest.inputs[0].sha256, GUIDE_SHA);
+});
+
+test("local: the PRODUCTION adapter's dry run accepts the real guide A′ under the real pins — nothing written, no key", NEED_GUIDE, () => {
+  const sb = sandbox({ base: (s) => authorise(s) });
+  const r = runAdapter(sb, [...GOOD_ARGS, "--guide", GUIDE_PATH]);
+  assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
+  assert.equal(existsSync(sb.claim), false); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0); assert.equal(existsSync(outDir(sb)), false);
 });
