@@ -352,6 +352,73 @@ test("the documented rollback restores the old grants and the old rows for every
   }
 });
 
+// ── Full role × view × operation matrix ─────────────────────────────────────────────────────────
+// Every client caller (anon, pupil, teacher, super_admin) against every view and every statement
+// kind. Reads must match the contract exactly; no write of any kind may succeed for anyone.
+
+const CALLERS = [
+  { name: "anon", role: "anon", uid: null },
+  { name: "pupil", role: "authenticated", uid: P1 },
+  { name: "teacher", role: "authenticated", uid: T1 },
+  { name: "super_admin", role: "authenticated", uid: ADMIN },
+];
+const writeRefused = (r) => Boolean(r.error) &&
+  /permission denied|cannot (delete from|update|insert into|truncate) view|is not a table/i.test(r.error);
+
+test("matrix: SELECT for every caller and view matches the contract exactly", async () => {
+  const pg = await db({ migrated: true });
+  for (const c of CALLERS) {
+    for (const v of ALL_VIEWS) {
+      const r = await as(pg, c.role, c.uid, sel(v));
+      const where = `${c.name} SELECT ${v}`;
+      if (c.name === "anon" || LOCKED.includes(v)) {
+        assert.ok(denied(r), `${where} must be denied, got ${JSON.stringify(r).slice(0, 120)}`);
+      } else if (c.name === "super_admin") {
+        assert.equal(r.error, undefined, `${where}: ${r.error}`);
+        assert.ok(r.rows.length > 0, `${where} must see the statistics`);
+      } else {
+        assert.equal(r.error, undefined, `${where}: ${r.error}`);
+        assert.deepEqual(r.rows, [], `${where} must see zero rows`);
+      }
+    }
+  }
+});
+
+test("matrix: INSERT, UPDATE, DELETE and TRUNCATE are refused for every caller on every view", async () => {
+  const pg = await db({ migrated: true });
+  for (const v of ALL_VIEWS) {
+    const [first] = await viewColumns(pg, v);
+    const writes = {
+      INSERT: `INSERT INTO public.${v} DEFAULT VALUES`,
+      UPDATE: `UPDATE public.${v} SET ${first.attname} = ${first.attname}`,
+      DELETE: `DELETE FROM public.${v}`,
+      TRUNCATE: `TRUNCATE public.${v}`,
+    };
+    for (const c of CALLERS) {
+      for (const [op, sql] of Object.entries(writes)) {
+        const r = await as(pg, c.role, c.uid, sql);
+        assert.ok(writeRefused(r), `${c.name} ${op} ${v} must be refused, got ${JSON.stringify(r).slice(0, 160)}`);
+      }
+    }
+  }
+  // And nothing a refused statement could have reached has moved.
+  assert.deepEqual(await snapshot(pg), await snapshot(await db({ migrated: false })));
+});
+
+test("after: the ww2_taxonomy_audit → questions → question_instances cascade is closed to clients", async () => {
+  const pg = await db({ migrated: true });
+  for (const c of CALLERS) {
+    assert.ok(writeRefused(await as(pg, c.role, c.uid, "DELETE FROM public.ww2_taxonomy_audit")), c.name);
+  }
+  // The base table stays as before: clients hold DELETE on questions, but RLS has no DELETE policy.
+  for (const c of CALLERS) {
+    const r = await as(pg, c.role, c.uid, "DELETE FROM public.questions");
+    assert.equal(r.affected, 0, `${c.name} deletes no question directly`);
+  }
+  const hist = await pg.query("SELECT count(*)::int AS n FROM public.question_instances WHERE question_id = $1", [QW]);
+  assert.equal(hist.rows[0].n, 1, "the pupil's history row on the ww2 question survives");
+});
+
 // ── Static shape of the file ─────────────────────────────────────────────────────────────────────
 
 const statements = () => MIGRATION.split("\n").filter((l) => !l.trimStart().startsWith("--")).join("\n")
