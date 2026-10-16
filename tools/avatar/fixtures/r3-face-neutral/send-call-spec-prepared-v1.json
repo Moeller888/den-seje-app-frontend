@@ -1,0 +1,107 @@
+{
+  "schema": "r3-face-neutral-send-call-spec",
+  "schemaVersion": 1,
+  "status": "PREPARED — NOT AUTHORISED",
+  "isAuthorisation": false,
+  "authorisesImageRequest": false,
+  "authorisesUpload": false,
+  "claimCreated": false,
+  "preparedFrom": "D-159 (faceNeutralPreparation)",
+  "whatThisFileIs": "A concrete, INACTIVE specification of ONE proposed face-neutral image call and of the exact contract and register additions a later owner decision would have to merge into origin/main before the send adapter can run. It authorises nothing. The send adapter never reads this file: it reads only the origin/main contract and register. Copying text from here into a working tree, a branch or an unmerged commit authorises nothing either (D-142 futureSendAuthorisationRule).",
+  "proposedIdentity": {
+    "decision": "D-160",
+    "decisionNumberNote": "D-160 is the next free number: origin/main ends at D-159, D-157 is taken on the unmerged local branch avatar/d-157-r3-under-jaw-bleed, and no ref carries D-160 (checked 2026-10-16). The call id and the claim identity embed the number; if the owner decision is given another number, the adapter and this file must be revised first.",
+    "callId": "D-160-r3-face-neutral-v1",
+    "claimIdentity": "D-160-r3-face-neutral-v1-claim",
+    "claimFilename": "D-160-r3-face-neutral-v1.claim.json",
+    "eventsFilename": "D-160-r3-face-neutral-v1.events.jsonl",
+    "claimRegister": "<LOCALAPPDATA or XDG_STATE_HOME>/DenSejeApp/one-shot-claims/Moeller888-den-seje-app-frontend/ — outside every clone and outside temp",
+    "ownerApprovalFlag": "--owner-approval=D-160",
+    "state": "PREPARED — NOT AUTHORISED; no claim exists and none is created by this preparation"
+  },
+  "sendAdapter": {
+    "file": "tools/avatar/openai-send-r3-face-neutral-d160.mjs",
+    "imports": ["tools/avatar/r3-face-neutral-attempt-ledger.mjs", "tools/avatar/check-r3-face-neutral-output.mjs"],
+    "preparationAdapterUnchanged": "tools/avatar/prepare-r3-face-neutral-request.mjs stays preparation-only and cannot send."
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "operation": "images.edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+    "fieldOrder": ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
+    "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+    "redirect": "error — a redirect is never followed",
+    "inputs": [
+      { "order": 1, "role": "Image 1", "purpose": "placement guide only", "name": "input-1-placement-guide-A-prime.png", "bytes": 407991, "sha256": "aed1745ecf5c82472774509546bdeeef7463dd7fad57a3a83933a5bcab613dcf", "tracked": false, "storage": "PRIVATE — H1-derived; gitignored build folder only; supplied with --guide" },
+      { "order": 2, "role": "Image 2", "purpose": "style, identity and default expression only", "name": "Northstar Master v2.png", "repoPath": "assets/avatar/reference/Northstar Master v2.png", "bytes": 761394, "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "tracked": true }
+    ],
+    "prompt": { "file": "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt", "bytes": 2193, "sha256": "9c0b26496ce693dfe0d958fc34c60e68d3eddab98e48bb7b1f11af94e07d2413", "encoding": "UTF-8, LF, no trailing newline" },
+    "layerContent": "Two complete brows (complete under the hair), the nose and the mouth. No skin patch, no eye parts, no static fold, no hair, no blush."
+  },
+  "toBeAddedByTheOwnerDecision": {
+    "note": "These two objects are what the D-160 owner decision would add to the contract, and the register row must name the listed values. They are written here only so the decision can be reviewed exactly. In THIS file they are inert.",
+    "authorisedCallsEntry": {
+      "decision": "D-160",
+      "preparedBy": "D-159",
+      "callId": "D-160-r3-face-neutral-v1",
+      "status": "AUTHORISED — ONE CALL — NOT YET ATTEMPTED",
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED",
+      "endpoint": "https://api.openai.com/v1/images/edits",
+      "operation": "images.edits",
+      "model": "gpt-image-2.5-sunburst-2026-09-08",
+      "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+      "fieldOrder": ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
+      "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+      "inputOrder": ["Image 1", "Image 2"],
+      "inputs": [
+        { "order": 1, "role": "Image 1", "purpose": "placement guide only", "name": "input-1-placement-guide-A-prime.png", "bytes": 407991, "sha256": "aed1745ecf5c82472774509546bdeeef7463dd7fad57a3a83933a5bcab613dcf", "tracked": false },
+        { "order": 2, "role": "Image 2", "purpose": "style, identity and default expression only", "name": "Northstar Master v2.png", "repoPath": "assets/avatar/reference/Northstar Master v2.png", "bytes": 761394, "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50", "tracked": true }
+      ],
+      "prompt": { "file": "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt", "bytes": 2193, "sha256": "9c0b26496ce693dfe0d958fc34c60e68d3eddab98e48bb7b1f11af94e07d2413", "encoding": "UTF-8, LF, no trailing newline" },
+      "claim": { "identity": "D-160-r3-face-neutral-v1-claim", "filename": "D-160-r3-face-neutral-v1.claim.json", "eventsFilename": "D-160-r3-face-neutral-v1.events.jsonl" },
+      "adapter": { "file": "tools/avatar/openai-send-r3-face-neutral-d160.mjs" },
+      "outputs": { "count": 1, "dir": "tools/avatar/build/r3-face-neutral-d160" },
+      "accounting": { "slot": "face-neutral; recorded under D-159's claim / dispatch / result axes, never a sixth underlay call" },
+      "prohibitions": {
+        "noRetry": "Exactly one fetch. No automatic or manual retry, no fallback request, no other model, and a redirect is never followed. Every consumed claim excludes a retry; a further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity.",
+        "noPromotion": "The call promotes nothing and writes no candidate file. Candidate status is a separate owner decision after the visual review, on the later approved underlay and with the later eyes and hair (D-159 productionOrderException).",
+        "noRuntimeChange": "R3 stays default OFF."
+      }
+    },
+    "adapterImplementationsEntry": {
+      "decision": "D-160",
+      "callId": "D-160-r3-face-neutral-v1",
+      "authorisedBy": "D-160",
+      "adapter": {
+        "file": "tools/avatar/openai-send-r3-face-neutral-d160.mjs",
+        "status": "IMPLEMENTED — NOT EXECUTED",
+        "ownerApproval": "D-160",
+        "ownerApprovalFlag": "--owner-approval=D-160"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED",
+      "mergeIsNotAnInstruction": true,
+      "executionRequiresSeparateOwnerInstruction": true
+    },
+    "registerRowMustName": [
+      "D-160-r3-face-neutral-v1",
+      "D-160-r3-face-neutral-v1-claim",
+      "D-160-r3-face-neutral-v1.claim.json",
+      "gpt-image-2.5-sunburst-2026-09-08",
+      "tools/avatar/openai-send-r3-face-neutral-d160.mjs",
+      "--owner-approval=D-160",
+      "aed1745ecf5c82472774509546bdeeef7463dd7fad57a3a83933a5bcab613dcf",
+      "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+      "9c0b26496ce693dfe0d958fc34c60e68d3eddab98e48bb7b1f11af94e07d2413"
+    ],
+    "alsoRequiredInOriginMain": "The D-142 and D-159 register rows exactly once each; meta.authorisesImageRequest false; the D-160 entry is the ONLY unspent entry; no spent call id reopened."
+  },
+  "outputHandling": {
+    "stored": "the complete raw response body, every delivered image unchanged, the request id, the image count, every SHA-256, the request manifest and the attempt's event log",
+    "unexpectedImageCount": "a count other than 1 is UNEXPECTED: everything is kept, nothing is selected, no check runs",
+    "technicalChecks": "with exactly one image: D-159's binding checks (decode, master canvas, 8-bit RGBA, not empty, no alpha outside [384, 230, 632, 412]) and its diagnostics; a REJECT leaves no candidate",
+    "neverWritten": "a candidate file; any crop, move, warp, matte removal or repair"
+  }
+}
