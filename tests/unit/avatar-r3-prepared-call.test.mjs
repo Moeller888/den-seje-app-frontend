@@ -68,7 +68,7 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151 and D-153 records, and D-160's one live permission", () => {
+test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153 and D-160 records", () => {
   assert.equal(CONTRACT.authorisedCalls.count, 6);
   assert.equal(CONTRACT.authorisedCalls.calls.length, 6);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
@@ -100,13 +100,13 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.equal(d153.neverReuse, true);
   assert.equal(d153.parameters.background, "opaque");
   assert.match(d153.prohibitions.noRetry, /Exactly one fetch/);
-  // The sixth is D-160's: ONE face-neutral attempt, authorised and not yet attempted — the only live permission.
+  // The sixth is D-160's: ONE face-neutral attempt, sent once (HTTP 200, technical reject at AUTO-5) and closed by D-161.
   const d160 = CONTRACT.authorisedCalls.calls[5];
   assert.equal(d160.callId, "D-160-r3-face-neutral-v1");
   assert.equal(d160.decision, "D-160");
-  assert.deepEqual([d160.mandateState, d160.outcome], ["UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d160.mandateState, d160.neverReuse, d160.notAnActivePermission], ["SPENT", true, true]);
   assert.match(d160.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-160-r3-face-neutral-v1"], "D-160's attempt is the only live permission");
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
