@@ -440,8 +440,9 @@ async function loadClassOverview() {
         .join(" ");
     }
 
+    // The name cell is filled with textContent below — a pupil name is never parsed as HTML.
     return "<tr>" +
-      "<td>" + (s.display_name ?? "Elev") + "</td>" +
+      "<td></td>" +
       "<td>" + (grade !== "—" ? '<span class="grade-chip">' + grade + "</span>" : "—") + "</td>" +
       "<td>" + placedHtml + "</td>" +
       "<td>" + currentHtml + "</td>" +
@@ -458,6 +459,10 @@ async function loadClassOverview() {
     "<th>Elev</th><th>Kl.</th><th>Start</th><th>Niveau</th>" +
     "<th>Spm.</th><th>Korrekt</th><th>Trend</th><th>Emner</th><th></th>" +
     "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+
+  container.querySelectorAll(".overview-table tbody tr").forEach((tr, i) => {
+    tr.cells[0].textContent = students[i]?.display_name ?? "Elev";
+  });
 
   container.querySelectorAll(".go-student-btn").forEach(btn => {
     btn.onclick = () => {
@@ -660,8 +665,9 @@ async function loadEngagementPanel() {
       const unknown = !complete && !a.lastActive;
       const last   = a.lastActive ? formatRelativeTime(a.lastActive, now) : (unknown ? "Ukendt" : "Aldrig");
       const dotCls = unknown ? "gray" : getActivityDotClass(a.lastActive, todayStart, now);
+      // The name cell is filled with textContent below — a pupil name is never parsed as HTML.
       return `<tr>
-        <td>${s.display_name ?? "Elev"}</td>
+        <td></td>
         <td><span class="band-num">${band}</span></td>
         <td>${unknown ? "—" : a.today}</td>
         <td>${unknown ? "—" : a.week}</td>
@@ -683,6 +689,10 @@ async function loadEngagementPanel() {
         </table>
       </div>
     `;
+
+    tableEl.querySelectorAll(".overview-table tbody tr").forEach((tr, i) => {
+      tr.cells[0].textContent = sorted[i]?.display_name ?? "Elev";
+    });
   }
 
   // Quick insights
@@ -697,19 +707,22 @@ async function loadEngagementPanel() {
   const band5 = students.filter(s => s.current_band != null && s.current_band >= 5);
 
   let html = '<div class="engagement-insights">';
+  // Pupil names for each empty <strong>, in order — set with textContent, never parsed as HTML.
+  const strongNames = [];
 
   // Activity insights only from a complete picture; the band insight does not depend on it.
   if (complete && mostActive) {
+    strongNames.push(mostActive.display_name ?? "Elev");
     html += `<div class="insight-item insight-green">
-      &#11088; Mest aktiv i dag: <strong>${mostActive.display_name}</strong>
+      &#11088; Mest aktiv i dag: <strong></strong>
       &mdash; ${actMap[mostActive.student_id]?.today ?? 0} sp&oslash;rgsm&aring;l
     </div>`;
   }
 
   if (complete && inactive7.length > 0) {
-    const names = inactive7.map(s => s.display_name ?? "Elev").join(", ");
+    strongNames.push(inactive7.map(s => s.display_name ?? "Elev").join(", "));
     html += `<div class="insight-item insight-yellow">
-      &#9888; Inaktiv &gt;7 dage: <strong>${names}</strong>
+      &#9888; Inaktiv &gt;7 dage: <strong></strong>
     </div>`;
   } else if (complete && totalStudents > 0) {
     html += `<div class="insight-item insight-green">
@@ -718,14 +731,17 @@ async function loadEngagementPanel() {
   }
 
   if (band5.length > 0) {
-    const names = band5.map(s => s.display_name ?? "Elev").join(", ");
+    strongNames.push(band5.map(s => s.display_name ?? "Elev").join(", "));
     html += `<div class="insight-item insight-purple">
-      &#127942; Band 5: <strong>${names}</strong>
+      &#127942; Band 5: <strong></strong>
     </div>`;
   }
 
   html += "</div>";
   insightsEl.innerHTML = html;
+  insightsEl.querySelectorAll("strong").forEach((el, i) => {
+    el.textContent = strongNames[i] ?? "";
+  });
 }
 
 /* ========================
@@ -1071,14 +1087,18 @@ async function loadSpotlightPanel() {
     return;
   }
 
+  // Name, label and message are text, never parsed as HTML.
   spotlightCurrentList.innerHTML =
-    "<p style='font-weight:bold;font-size:13px;margin-bottom:8px'>Aktive fremhævelser:</p>" +
-    spotlighted.map(s =>
-      `<div style='padding:6px 10px;background:#f5f5f5;border-radius:4px;margin-bottom:5px;font-size:13px'>` +
-        `<strong>${s.display_name}</strong> — ${s.spotlight_label}` +
-        (s.spotlight_message ? ` — "${s.spotlight_message}"` : "") +
-      `</div>`
-    ).join("");
+    "<p style='font-weight:bold;font-size:13px;margin-bottom:8px'>Aktive fremhævelser:</p>";
+  spotlighted.forEach(s => {
+    const row = document.createElement("div");
+    row.style.cssText = "padding:6px 10px;background:#f5f5f5;border-radius:4px;margin-bottom:5px;font-size:13px";
+    const name = document.createElement("strong");
+    name.textContent = s.display_name ?? "Elev";
+    row.append(name, " — " + (s.spotlight_label ?? ""));
+    if (s.spotlight_message) row.append(` — "${s.spotlight_message}"`);
+    spotlightCurrentList.appendChild(row);
+  });
 }
 
 if (spotlightSetBtn) {
