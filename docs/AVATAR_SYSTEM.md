@@ -70,6 +70,15 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
+- **R3 face-neutral — one attempt spent and rejected; no live permission (D-158 … D-161, as of 2026-10-16).**
+  D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
+  separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
+  authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
+  binding AUTO-5 check: the brow tails and the mouth region reach outside the broad envelope. The owner rejected
+  the output's geometry (brows too wide, nose and mouth too low). D-161 closed the mandate: D-160 is SPENT and never
+  reused, `callsActuallySentSoFar.faceNeutral` = **1** (separate from `underlay` = **5**), 0 live permissions. No
+  candidate, nothing promoted, R3 stays shadow and default OFF; a further attempt needs a new owner decision,
+  call-id and claim identity. See `project-state.md` **D-158 … D-161**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
