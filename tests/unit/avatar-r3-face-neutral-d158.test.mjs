@@ -55,17 +55,25 @@ test("D-158 changes nothing in the contract: no face-neutral call, sent stays 5,
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(repoFile("js/avatar-layers.js"), "utf8")));
 });
 
-test("no face-neutral preparation artefact, study output or review is tracked", () => {
+test("only the reviewed face-neutral source files are tracked — no preparation artefact, study output or review", () => {
   const tracked = execFileSync("git", ["ls-files"], { cwd: REPO, encoding: "utf8" }).split("\n");
   const self = "tests/unit/avatar-r3-face-neutral-d158.test.mjs";
-  // D-159 authorises tracking EXACTLY these preparation files (tools, the exact prompt text and their test). Every other
-  // face-neutral file — studies, guides, reviews, H1-derived images — stays untracked.
-  const authorisedByD159 = new Set([
+  // D-159 authorises tracking EXACTLY these preparation files (tools, the exact prompt text and their test), and the
+  // owner allowed EXACTLY the four reviewed source files of the INACTIVE send-adapter preparation (owner instructions
+  // 2026-10-16, PR #322): code, a test and the PREPARED — NOT AUTHORISED specification — no image, credential, claim or
+  // active permission. Every other face-neutral file — studies, private guides, H1-derived images, review HTML and
+  // images, raw responses, claims and event logs — stays untracked.
+  const authorised = new Set([
     "tools/avatar/prepare-r3-face-neutral-request.mjs",
     "tools/avatar/check-r3-face-neutral-output.mjs",
     "tools/avatar/fixtures/r3-face-neutral/prompt-text.exact.txt",
     "tests/unit/avatar-r3-face-neutral-d159.test.mjs",
+    "tools/avatar/openai-send-r3-face-neutral-d160.mjs",
+    "tools/avatar/r3-face-neutral-attempt-ledger.mjs",
+    "tools/avatar/fixtures/r3-face-neutral/send-call-spec-prepared-v1.json",
+    "tests/unit/avatar-r3-face-neutral-send-d160.test.mjs",
   ]);
-  assert.deepEqual(tracked.filter((f) => f !== self && !authorisedByD159.has(f) && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
+  assert.deepEqual(tracked.filter((f) => f !== self && !authorised.has(f) && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
   assert.deepEqual(tracked.filter((f) => f.startsWith("tools/avatar/build/")), []);
+  assert.deepEqual(tracked.filter((f) => /\.claim\.json$|\.events\.jsonl$|placement-guide/i.test(f)), [], "no claim, event log or placement guide is tracked");
 });
