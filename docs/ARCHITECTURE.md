@@ -265,8 +265,8 @@ and `next_review_at` stay user-scoped. `process_text_answer` (D-110, 2026-10-04)
 `process_question_attempt` (D-110, 2026-10-07) are EXECUTE-locked to `service_role`; the internal
 quest/streak helpers they call have no API-role EXECUTE at all.
 
-Server-owned `question_instances` writes: the table has RLS with SELECT and INSERT policies but **no
-UPDATE policy**, so an UPDATE through the pupil's client is filtered to 0 rows and PostgREST reports
+Server-owned `question_instances` writes: the table has RLS with SELECT policies only — **no INSERT
+policy** (since 2026-10-16, see creation below) and **no UPDATE policy** — so an UPDATE through the pupil's client is filtered to 0 rows and PostgREST reports
 success (`error = null`) — the long-answer save and `misconception_signal` were lost silently that
 way (0 signals ever stored). Pupils are deliberately not given an UPDATE policy (they must not be able
 to change `answered`, `correct_answer`, `repeat_count`, reward fields or another pupil's rows).
@@ -281,24 +281,36 @@ success — 0 rows, >1 row, a DB error or an odd response are failures.
 - The long-answer `user_answer` save is **fatal**: nothing has been awarded yet, so a failed or 0-row
   save returns a 500 (`LONG SAVE ERROR`) instead of `pending`.
 
-Server-owned `question_instances` **creation** (D-110, PR "question-instances-server-insert"; migration
-`20261015120000_question_instances_server_owned_insert.sql` **not yet applied**): an instance is both
-the assignment and the answer key — `process-event` grades short text against
-`question_instances.correct_answer`, and `process_question_attempt` compares MC/number answers to the
-same column before paying XP, coins, streak and quests. Live today, `anon`/`authenticated` hold
-table-wide INSERT and both INSERT policies check only `student_id = auth.uid()`, so a pupil can POST
-their own row with any `question_id` (active or not) and a `correct_answer` of their choosing, then be
-paid for "answering" it — bounded to one row per pupil and question by
-`idx_student_question_instance`, but it makes every reward and every teacher-visible answer history
-forgeable. The rule is: **the pupil submits an answer; the server decides the key, the verdict and the
+Server-owned `question_instances` **creation** (D-110, PR #319; **live since 2026-10-16**:
+`get-next-question` v173 deployed 11:56 UTC, then migration
+`20261015120000_question_instances_server_owned_insert.sql` applied 12:35 UTC via `apply_migration`,
+remote ledger version `20261016123525` — the remote version differs from the repo filename, as with
+other D-110 migrations): an instance is both the assignment and the answer key — `process-event`
+grades short text against `question_instances.correct_answer`, and `process_question_attempt`
+compares MC/number answers to the same column before paying XP, coins, streak and quests. Until
+2026-10-16, `anon`/`authenticated` held table-wide INSERT and both INSERT policies checked only
+`student_id = auth.uid()`, so a pupil could POST their own row with any `question_id` (active or not)
+and a `correct_answer` of their choosing, then be paid for "answering" it — bounded to one row per
+pupil and question by `idx_student_question_instance`, but it made every reward and every
+teacher-visible answer history forgeable. The rule is: **the pupil submits an answer; the server decides the key, the verdict and the
 reward.** `get-next-question` therefore writes the instance through a backend admin client
 (`get-next-question/instance-insert.ts`: the shared resolver's backend key, no pupil header, no
 session, no fallback), with the verified `user.id` and the server-normalised key of a question chosen
-by `get_unserved_questions`; the migration then drops both INSERT policies and revokes INSERT from
-`PUBLIC`, `anon` and `authenticated`. **Order is mandatory:** deploy and verify `get-next-question`
-first, apply the migration second — the other way round denies every assignment and stops the quiz.
-Read-only audit 2026-10-15: no sign of exploitation (3 historic key mismatches are legacy
-whitespace-stripped keys, all answered incorrect; 0 open instances with a mismatching key).
+by `get_unserved_questions`; the migration dropped both INSERT policies and revoked INSERT from
+`PUBLIC`, `anon` and `authenticated` (`service_role` and the owner keep it, so the admin client and
+the SECURITY DEFINER functions are unaffected). **Order was mandatory and was followed:** deploy and
+verify `get-next-question` first, apply the migration second — the other way round denies every
+assignment and stops the quiz. Read-only audit 2026-10-15: no sign of exploitation (3 historic key
+mismatches are legacy whitespace-stripped keys, all answered incorrect; 0 open instances with a
+mismatching key). Verification 2026-10-16: the four deployed files are byte-identical (SHA-256) to
+the repo; existing rows, their checksum and the reward RPC definitions are unchanged by the
+migration; after it, an isolated smoke call as the CI test pupil created a new instance with the
+server key while `authenticated` has no INSERT, and a full e2e run (981 passed) went green.
+**Rollback order is reversed:** never redeploy the pre-fix `get-next-question` (v172 = `eb61e64`)
+alone — first revert the migration (the GRANT + CREATE POLICY text in its header), then the function;
+both need separate owner authorisation. Remaining hardening debt: `anon`/`authenticated` still hold
+UPDATE, DELETE and TRUNCATE on the table — UPDATE/DELETE are blocked by RLS (no policies), TRUNCATE
+is not reachable through PostgREST.
 
 Known gaps and retirements around these writes:
 - **`next_review_at` is ineffective in the current runtime.** `process-event` still tries to set it on

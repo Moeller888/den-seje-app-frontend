@@ -663,16 +663,22 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `must_reset_password = false` sker nu udelukkende via kodeordsskift-triggeren. Guard-testen har
   ingen undtagelse længere: browserkode må kun opdatere `placement_band` og `current_band`, og et
   nyt klient-write til `must_reset_password` får testen til at fejle.
-- **2-0C — serverejet oprettelse af `question_instances` (PR åben, IKKE merget, IKKE deployet,
-  migration IKKE anvendt):** en elev kunne selv indsætte en `question_instances`-række med valgfri
+- **2-0C — serverejet oprettelse af `question_instances` (gennemført 2026-10-16):** en elev kunne selv indsætte en `question_instances`-række med valgfri
   `correct_answer` (og `answered`, `was_correct`, `teacher_score` …) for ethvert spørgsmål, også
   inaktive, og derefter få 10 XP + 5 mønter for at "svare" på sit eget facit — både MC/tal
   (`process_question_attempt`) og stav til (`process-event` → `process_text_answer`) bedømmer mod
   instansens nøgle. Rettelsen: `get-next-question` opretter instansen via backend-admin-klienten
   (`instance-insert.ts`), og migrationen `20261015120000_question_instances_server_owned_insert.sql`
-  fjerner begge INSERT-policies og INSERT for `anon`/`authenticated`. **Rækkefølge:** deploy
+  fjerner begge INSERT-policies og INSERT for `anon`/`authenticated`. **Rækkefølge (fulgt):** deploy
   `get-next-question` → verificér → anvend migration (særskilte ejergodkendelser). Read-only audit
-  2026-10-15: ingen tegn på udnyttelse.
+  2026-10-15: ingen tegn på udnyttelse. PR #319 merget (`482b64f`); `get-next-question` v173 deployet
+  2026-10-16 kl. 11:56 UTC (fire filer SHA-256-identiske med repoet); migrationen anvendt kl. 12:35 UTC
+  via `apply_migration`, remote version `20261016123525` (≠ repo-filnavnet). Verificeret: eksisterende
+  rækker og belønnings-RPC'er uændrede, isoleret smoke-test som CI-testeleven oprettede en ny instans
+  uden klient-INSERT, fuld e2e grøn (981 bestået). **Rollback i omvendt rækkefølge:** v172 må aldrig
+  redeployes alene — først migrationen tilbage (GRANT + CREATE POLICY i dens header), så funktionen.
+  Restgæld (hærdning, ikke udnyttelig i dag): `anon`/`authenticated` har stadig UPDATE, DELETE og
+  TRUNCATE på tabellen — UPDATE/DELETE blokeres af RLS, TRUNCATE nås ikke via PostgREST.
 - **Fundet, ikke rettet (særskilte opgaver):**
   - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
     fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
@@ -744,16 +750,21 @@ tekst-rettelsen virker i prod (særskilt ejergodkendelse). ✅ `process-event` v
 `answer_type` for tekst) og bygger stav til-feltet: ét `<input type="text">` uden stavekontrol,
 autokorrektur, automatisk stort bogstav og autoudfyldning; Enter og knappen sender den rå tekst til
 den eksisterende `submitAnswer`; tomt svar sendes ikke. `answer_type = "long"` beholder textarea +
-lærerkø uændret. Et ukendt format giver nu en synlig fejl i stedet for svarknapper. Ingen aktive
-spørgsmål endnu — de første kommer som særskilt D-110-migration.
+lærerkø uændret. Et ukendt format giver nu en synlig fejl i stedet for svarknapper. ✅ **Live siden
+2026-10-15:** de to første stav til-spørgsmål (Polen og Norge) er aktive via D-110-migrationen
+`20261011094747_stav_til_first_questions.sql` (PR #314; remote version `20261015091923` ≠
+repo-filnavnet); Belgien forbliver bevidst inaktiv. Fordi `get_unserved_questions` vælger `LIMIT 50`
+uden `ORDER BY` (se 2-0C ovenfor), serveres de to tekstspørgsmål kun sjældent blandt de mange aktive
+MC-spørgsmål.
 
 _Teknisk gæld:_ `get-next-question` (`mapAnswerFormat`) oversætter stadig et ukendt eller manglende
 `answer_format` til `"mc"` på serveren, så klientens fejltilstand nås først, når den fallback
-fjernes (kræver Edge-deploy). Ingen aktive spørgsmål rammer den i dag (alle er `mc`).
+fjernes (kræver Edge-deploy). Ingen aktive spørgsmål rammer den i dag (alle aktive er `mc` eller
+`text`).
 
 | # | Opgaveform | Stimulus | Interaktion (`answer_format`) | Server-evaluator | Belønningsvej | Fase | Størrelse |
 |---|---|---|---|---|---|---|---|
-| 1 | **Stav til / short text** | tekst (evt. oplæsning) | `text` — ét kort felt ✅ | eksakt tekst + `accepted_answers` ✅ | `process_text_answer` | **1 (første vertikale)** — renderer bygget, afventer indhold | S |
+| 1 | **Stav til / short text** | tekst (evt. oplæsning) | `text` — ét kort felt ✅ | eksakt tekst + `accepted_answers` ✅ | `process_text_answer` | **1 (første vertikale)** — ✅ live 2026-10-15 (2 aktive spørgsmål) | S |
 | 2 | **Sandt/falsk** | tekst | `true_false` — to valg, aldrig udfyldt | eksakt valgmulighed | `process_question_attempt` | 1 | S |
 | 3 | **Tal/årstal** | tekst | `number` (renderer findes) | numerisk lighed (heltal; decimalkomma) | `process_question_attempt` | 1 | S |
 | 4 | **Udfyld hul** | sætning med hul | `cloze` — felt(er) i sætningen | eksakt pr. hul, alle huller rigtige | `process_text_answer` | 2 | S–M |
@@ -968,7 +979,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Kløft (Spil-menuen) | ✅ Live (2026-10-02, PR #279) | Timingspil porteret fra Nord-minigames (`src/game/kloeft-engine.ts`). Et skår falder ned gennem en skakt; klik når det er ud for kløften i væggen (midterste tredjedel = perfekt). Kløften bliver smallere og skåret hurtigere for hvert skår. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_kloeft_best`). `kloeft.html` + `js/kloeft.js` + `js/kloeft-logic.js`. |
 | Hop (Spil-menuen) | ✅ Live (2026-10-02, PR #280) | Platformspil porteret fra Nord-minigames (`src/game/hop-engine.ts`). Figuren løber selv; klik/mellemrum/pil op for at hoppe over huller og klodser. Tidligt hop (0,7–1,9 enheder før forhindringen) = perfekt. Farten stiger med scoren. Banen er deterministisk pr. runde (seed = rundetæller i browseren); en unit-test søger og beviser, at banen kan gennemføres. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_hop_best`). `hop.html` + `js/hop.js` + `js/hop-logic.js`. |
 | Brud (Spil-menuen) | ✅ Live (2026-10-02, PR #282) | Breakout porteret fra Nord-minigames (`src/game/brud-engine.ts`). Pladen styres med pil/A-D på computer (musen styrer ikke, ejerønske 2026-10-09) og med fingeren på touch; klik/mellemrum skyder. Bolden bliver 6 % hurtigere for hvert slag med pladen (loft 900) så en runde ikke trækker ud. En klods ramt direkte fra pladen (ingen væg imellem) = perfekt; ryddet mur → ny mur og hurtigere bold. Kører i en fast verden på 360×420, der skaleres ind i canvas, så en ændring af vinduets størrelse ikke flytter klodserne. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_brud_best`). `brud.html` + `js/brud.js` + `js/brud-logic.js`. Med Brud er alle Nord-minigames porteret undtagen Drej og Vig (ejerbeslutning). |
-| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`), ingen aktive spørgsmål endnu. |
+| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`); live siden 2026-10-15 med 2 aktive spørgsmål (Polen, Norge). Instansoprettelsen er serverejet siden 2026-10-16 (2-0C), så facit kan ikke længere sættes af eleven — det fundament, alle kommende opgaveformer bygger på. |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 
