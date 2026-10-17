@@ -312,6 +312,29 @@ both need separate owner authorisation. Remaining hardening debt: `anon`/`authen
 UPDATE, DELETE and TRUNCATE on the table — UPDATE/DELETE are blocked by RLS (no policies), TRUNCATE
 is not reachable through PostgREST.
 
+**Answer keys stay server-side** (audit findings E1/E2, 2026-10-16 — **in the repo, NOT live yet**;
+step A = migration `20261016160000_answer_keys_server_side_rpcs.sql` + `get-next-question` +
+`process-event`; step B = frontend placement + a second migration). Before this, the key reached the
+browser before answering through four paths: P1 `get-next-question` returned `content.correct`;
+P2 `get_unserved_questions` (EXECUTE for `anon` and `authenticated`) returned full content; P3 the
+owner can SELECT `question_instances.correct_answer`; P4 `questions` is readable by `PUBLIC` through
+`"allow read questions" USING (true)` — the whole bank, keys included, without logging in — and
+placement graded in the browser on top of it. E2: `request_repeat_question(p_grade, p_domains)` was
+callable by pupils with a self-chosen scope, so an empty mini-scope produced repeats (2 XP each)
+while unanswered questions remained. **The contract now:** the pre-answer payload is built from a
+whitelist (`supabase/functions/_shared/question-dto.ts` — `content.{question, options (MC, strings),
+type, force_text}` and pedagogical metadata tags; never `correct`, `accepted_answers`, `facit`,
+`tolerance`, `criteria` or `review_text`); every key-bearing read runs on the backend client scoped
+to the verified student (`get_unserved_questions_for_student`, `request_repeat_question_for_student`
+— both EXECUTE for `service_role` only — and `process-event/instance-read.ts`, followed by the 403
+ownership check); the scope is derived from the profile (`get-next-question/scope.ts`:
+`selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`);
+placement runs through `start_placement()` / `submit_placement(jsonb)` with a server-only
+`placement_sessions` row, graded once server-side, returning only the band. Step A only ADDS; step B
+removes P2/P3/P4 and the old repeat entry point from the client roles. **Order is mandatory:** merge
+A → apply migration A → deploy `get-next-question` and `process-event` → merge B (frontend) → apply
+migration B. Each apply and each deploy needs its own owner authorisation (D-110).
+
 Known gaps and retirements around these writes:
 - **`next_review_at` is ineffective in the current runtime.** `process-event` still tries to set it on
   the pupil's client after an MC answer (0 rows, as above), but nothing would read it:

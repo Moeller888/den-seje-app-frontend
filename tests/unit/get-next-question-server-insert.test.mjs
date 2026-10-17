@@ -143,10 +143,25 @@ test("the user client is unchanged: publishable key + the pupil's Authorization 
   assert.match(INDEX_CODE, /const student_id = user\.id;/);
 });
 
-test("the admin client is used only for the instance insert", () => {
+test("the admin client is used only for the instance insert and the server-only key-carrying reads", () => {
+  // 20261016160000 (answer keys server-side): besides the insert, the backend client now makes the
+  // reads that carry an answer key — the due/repeat instance with its question and the two
+  // service-only RPCs — so the key never has to be readable by the pupil. Exactly those, nothing else.
   const uses = INDEX_CODE.match(/makeAdminClient/g) ?? [];
-  assert.equal(uses.length, 2, "the definition and the one insertQuestionInstance call");
+  assert.equal(uses.length, 4,
+    "the definition, the accessor's type annotation, the per-request accessor and the insertQuestionInstance call");
+  assert.match(INDEX_CODE, /let adminClient: ReturnType<typeof makeAdminClient> \| null = null;/);
+  assert.match(INDEX_CODE, /const admin = \(\) => \(adminClient \?\?= makeAdminClient\(\)\);/);
+  assert.equal((INDEX_CODE.match(/makeAdminClient\(\)/g) ?? []).length, 2, "built only by the accessor (and defined once)");
   assert.match(INDEX_CODE, /await insertQuestionInstance\(makeAdminClient, \{/);
+  const adminUses = [...INDEX_CODE.matchAll(/await admin\(\)\s*\.(from|rpc)\(\s*"([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
+  assert.deepEqual(adminUses, [
+    "from:question_instances",
+    "rpc:get_unserved_questions_for_student",
+    "rpc:request_repeat_question_for_student",
+    "from:question_instances",
+  ]);
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 4, "no other admin() use");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
@@ -162,17 +177,18 @@ test("student_id comes only from user.id and the key only from the server-normal
   assert.equal(/\bbody\b/.test(call[1]), false, "nothing from the request body");
 });
 
-test("the insert stays inside the server-chosen candidate loop (get_unserved_questions)", () => {
+test("the insert stays inside the server-chosen candidate loop (get_unserved_questions_for_student)", () => {
   const loop = INDEX_CODE.slice(INDEX_CODE.indexOf("for (const q of sortedQuestions)"),
-    INDEX_CODE.indexOf('"request_repeat_question"'));
-  assert.ok(INDEX_CODE.indexOf('"get_unserved_questions"') < INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
+    INDEX_CODE.indexOf('"request_repeat_question_for_student"'));
+  const unserved = INDEX_CODE.indexOf('"get_unserved_questions_for_student"');
+  assert.ok(unserved !== -1 && unserved < INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
   assert.match(loop, /await insertQuestionInstance\(makeAdminClient, \{/);
 });
 
 test("a row-level insert failure is logged and the next candidate is tried; success needs a returned row", () => {
   const loop = INDEX_CODE.slice(INDEX_CODE.indexOf("for (const q of sortedQuestions)"));
   assert.match(loop, /if \(error\) \{\s*console\.error\("INSTANCE INSERT FAILED:"/);
-  assert.match(loop, /if \(!error && Array\.isArray\(data\) && data\.length > 0\) \{\s*inserted = \{ instance: data\[0\], question: q, normalized, format \};\s*break;/);
+  assert.match(loop, /if \(!error && Array\.isArray\(data\) && data\.length > 0\) \{\s*inserted = \{ instance: data\[0\], question: q, normalized, pub, format \};\s*break;/);
 });
 
 test("a key failure reaches the outer catch as a visible 500 — no user-client fallback", () => {

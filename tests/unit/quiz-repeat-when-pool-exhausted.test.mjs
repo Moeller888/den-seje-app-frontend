@@ -306,6 +306,30 @@ test("the release function keeps its contract from 20261001100000", () => {
   assert.match(s, /GRANT EXECUTE ON FUNCTION public\.release_open_question_outside\(text\[\]\) TO authenticated;/);
 });
 
+// Later migrations that use these objects' names without redefining them. Each entry names the file
+// and why; it is checked below to define none of the four objects this migration owns.
+const REVIEWED_LATER_REPEAT_USERS = {
+  "20261016160000_answer_keys_server_side_rpcs.sql":
+    "adds request_repeat_question_for_student, a backend-only copy of the repeat selection for a " +
+    "verified student id (E2). It reads and bumps repeat_count exactly as request_repeat_question " +
+    "does, and redefines neither request_repeat_question, process_question_attempt nor " +
+    "release_open_question_outside — the award stays this migration's.",
+};
+
+test("reviewed later repeat users redefine none of this migration's functions", () => {
+  const dir = join(REPO, "supabase", "migrations");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS), ["20261016160000_answer_keys_server_side_rpcs.sql"],
+    "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
+    assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
+    const body = readFileSync(join(dir, name), "utf8").split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+    assert.equal(
+      /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.(process_question_attempt|request_repeat_question|release_open_question_outside)\s*\(/i.test(body),
+      false, `${name} must not redefine a function this migration owns`);
+    assert.equal(/ALTER\s+TABLE[^;]*question_instances/i.test(body), false, `${name} must not alter question_instances`);
+  }
+});
+
 test("the migration sorts after every migration that touches these objects", () => {
   const dir = join(REPO, "supabase", "migrations");
   // Privilege and property statements (REVOKE/GRANT … ON FUNCTION, ALTER FUNCTION) do not redefine
@@ -317,6 +341,7 @@ test("the migration sorts after every migration that touches these objects", () 
     .filter((n) => /^\d{14}_.*\.sql$/.test(n))
     .filter((n) => /process_question_attempt|request_repeat_question|repeat_count|release_open_question_outside/i.test(
       executable(readFileSync(join(dir, n), "utf8"))))
+    .filter((n) => !Object.hasOwn(REVIEWED_LATER_REPEAT_USERS, n))
     .sort();
   assert.ok(touching.includes("20261001100000_release_open_question_outside.sql"),
     "the fagskift migration this one overrides must be in the tree");
@@ -350,8 +375,10 @@ test("the Edge Function only attempts a repeat when nothing was inserted", () =>
   const s = edge();
   assert.match(s, /if \(!inserted\) \{[\s\S]{0,600}request_repeat_question/,
     "the repeat path must be gated on the new-question path having failed");
-  assert.match(s, /\{ p_grade: selectedGrade, p_domains: subjectDomains \}/,
-    "the same grade and subject scope as the unserved query");
+  // Since 20261016160000 the repeat runs through request_repeat_question_for_student (backend only),
+  // for the verified student, with the scope get-next-question derived from the profile (./scope.ts).
+  assert.match(s, /\{ p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains \}/,
+    "the same grade and subject scope as the unserved query, for the verified student");
   assert.ok(!/request_repeat_question",\s*\{[^}]*activeDomains/.test(s),
     "the teacher filter alone ignores the chosen subject — a historie pupil could get English");
 });
