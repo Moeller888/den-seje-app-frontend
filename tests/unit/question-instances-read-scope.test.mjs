@@ -12,6 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -239,7 +240,98 @@ const REVIEWED_LATER_READERS = {
     "granted to service_role only — get-next-question calls them with the verified user.id. They " +
     "narrow who can read (the browser can no longer name a scope); no policy, RLS or table privilege " +
     "on question_instances is touched.",
+  "20261018143726_fix_danish_question_bank_text.sql":
+    "besides fixing questions.content/metadata text, it CREATE OR REPLACEs process_question_attempt with the " +
+    "identical signature (uuid, uuid, text, bigint) RETURNS json, SECURITY DEFINER, search_path public, pg_temp — " +
+    "the same function, no new overload, so its owner and its EXECUTE (service_role only since " +
+    "20261007182046) are unchanged. Its one read of question_instances is the same single instance matched on " +
+    "BOTH qi.id = p_question_instance_id AND qi.student_id = p_student_id, now also reading that question's " +
+    "content and metadata; it still returns only status and correct_answer. The orthography-alias grading is a " +
+    "separate behaviour change and is NOT reviewed here. Pinned by content (REVIEWED_LATER_READER_PINS).",
 };
+
+// A reviewed exception added from 2026-10-18 on is bound to the exact reviewed bytes: if the file changes, the
+// exception no longer applies and a new review is needed. (The earlier entries predate this pin.)
+const REVIEWED_LATER_READER_PINS = {
+  "20261018143726_fix_danish_question_bank_text.sql": "efe71e74e53373c77779928ac0bba9044a68c0807e723d76120d422fa276b793",
+};
+const sha256Hex = (s) => createHash("sha256").update(s).digest("hex");
+// A reviewed reader is excused only while its content is the reviewed content (where it is pinned).
+const isReviewedLaterReader = (name, body) =>
+  Object.hasOwn(REVIEWED_LATER_READERS, name) && (!Object.hasOwn(REVIEWED_LATER_READER_PINS, name) || sha256Hex(body) === REVIEWED_LATER_READER_PINS[name]);
+// The migrations that can change the read scope and are not excused, sorted — the scope migration must be last.
+const unexcusedReadScopeTouchers = (entries) => entries
+  .filter(({ name }) => /^\d{14}_.*\.sql$/.test(name))
+  .filter(({ body }) => touchesReadScope(body))
+  .filter(({ name, body }) => !isReviewedLaterReader(name, body))
+  .filter(({ name }) => !Object.hasOwn(REVIEWED_LATER_INSERT_NARROWING, name))
+  .map(({ name }) => name).sort();
+
+// The executable statements of a body that READ question_instances, normalised to single spaces.
+const readStatements = (body) => executableSql(body)
+  .split(";").map((s) => s.replace(/\s+/g, " ").trim())
+  .filter((s) => new RegExp(String.raw`(?<!\bDELETE\s+)\bFROM\s+${QI}|\bJOIN\s+${QI}`, "i").test(s));
+
+// The review of 20261018143726 as a function, so the negative controls below run the SAME checks on variants.
+// It returns the problems found; an empty list means the reviewed properties hold. Static only: it reads the
+// migration's text and proves nothing about what is applied in the live database.
+function reviewProcessQuestionAttemptRedefinition(body) {
+  const problems = [];
+  const sqlText = executableSql(body);
+  for (const re of READ_SCOPE_PATTERNS.slice(0, 3)) if (re.test(sqlText)) problems.push("changes a policy, RLS or table privilege: " + re);
+  const defs = [...sqlText.matchAll(/CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+public\.process_question_attempt\s*\(([^)]*)\)\s*RETURNS\s+(\w+)\s+LANGUAGE\s+plpgsql\s+(SECURITY\s+DEFINER\s+)?SET\s+search_path\s+(?:TO|=)\s*([^\n]*)/gi)];
+  if (defs.length !== 1) problems.push(`expected exactly one process_question_attempt definition, found ${defs.length}`);
+  else {
+    const [, params, returns, definer, searchPath] = defs[0];
+    const types = params.split(",").map((p) => p.trim().split(/\s+/).pop().toLowerCase());
+    if (types.join(",") !== "uuid,uuid,text,bigint") problems.push("signature " + types.join(",") + " is not (uuid, uuid, text, bigint) — a new overload would get default privileges");
+    if (returns.toLowerCase() !== "json") problems.push("returns " + returns);
+    if (!definer) problems.push("not SECURITY DEFINER");
+    if (searchPath.replace(/['\s]/g, "") !== "public,pg_temp") problems.push("search_path " + searchPath.trim());
+  }
+  const reads = readStatements(body);
+  if (reads.length !== 1) problems.push(`expected exactly one read of question_instances, found ${reads.length}`);
+  else {
+    const m = /\bFROM question_instances qi JOIN questions q ON q\.id = qi\.question_id WHERE (.+)$/i.exec(reads[0]);
+    if (!m) problems.push("the read is not the single-instance lookup joined only to its question: " + reads[0]);
+    else {
+      const where = m[1];
+      if (/\bOR\b|[()]/i.test(where)) problems.push("the WHERE clause is not a plain conjunction: " + where);
+      const conjuncts = where.split(/\s+AND\s+/i).map((c) => c.trim()).sort();
+      if (JSON.stringify(conjuncts) !== JSON.stringify(["qi.id = p_question_instance_id", "qi.student_id = p_student_id"])) {
+        problems.push("the lookup is not bound to exactly the instance id AND the student id: " + where);
+      }
+    }
+  }
+  const fn = /\$function\$([\s\S]*?)\$function\$/.exec(sqlText);
+  if (!fn) problems.push("no $function$ body");
+  else {
+    const keys = jsonBuildObjectKeys(fn[1]);
+    if (!keys.length || keys.some((k) => !["status", "correct_answer"].includes(k))) problems.push("returns keys " + JSON.stringify(keys) + ", not only status and correct_answer");
+  }
+  return problems;
+}
+// Every key of every json_build_object(...) call: the arguments are split at top-level commas (parentheses and
+// single-quoted strings respected); the even-indexed arguments are the keys.
+function jsonBuildObjectKeys(code) {
+  const keys = [];
+  for (const m of code.matchAll(/json_build_object\s*\(/gi)) {
+    let i = m.index + m[0].length, depth = 1, inStr = false, cur = "";
+    const args = [];
+    for (; i < code.length && depth > 0; i++) {
+      const ch = code[i];
+      if (inStr) { cur += ch; if (ch === "'") inStr = false; continue; }
+      if (ch === "'") { inStr = true; cur += ch; continue; }
+      if (ch === "(") depth++;
+      if (ch === ")") { depth--; if (depth === 0) break; }
+      if (ch === "," && depth === 1) { args.push(cur.trim()); cur = ""; continue; }
+      cur += ch;
+    }
+    args.push(cur.trim());
+    for (let k = 0; k < args.length; k += 2) keys.push(/^'([^']*)'$/.test(args[k]) ? args[k].slice(1, -1) : "<non-literal key: " + args[k] + ">");
+  }
+  return keys;
+}
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
 // clients — they can narrow who writes, never widen who reads. Each entry is verified statement by
@@ -283,13 +375,9 @@ test("the migration sorts after every migration that touches question_instances"
   // A later migration that reads the table is still caught. It may sort after this one only by
   // being named in REVIEWED_LATER_READERS above — a deliberate, reviewed decision, never a
   // loosened pattern.
+  // A pinned reviewed reader is excused only while its content is the reviewed content.
   const dir = join(REPO, "supabase", "migrations");
-  const touching = readdirSync(dir)
-    .filter((n) => /^\d{14}_.*\.sql$/.test(n))
-    .filter((n) => touchesReadScope(readFileSync(join(dir, n), "utf8")))
-    .filter((n) => !Object.hasOwn(REVIEWED_LATER_READERS, n))
-    .filter((n) => !Object.hasOwn(REVIEWED_LATER_INSERT_NARROWING, n))
-    .sort();
+  const touching = unexcusedReadScopeTouchers(readdirSync(dir).map((name) => ({ name, body: readFileSync(join(dir, name), "utf8") })));
   assert.ok(touching.includes("20260923000000_question_instances_teacher_read_scope.sql"),
     "this migration must be present in the tree");
   assert.equal(touching[touching.length - 1],
@@ -303,8 +391,15 @@ test("reviewed later readers are exactly the named files, and change reads only"
     ["20261002000000_quiz_repeat_when_pool_exhausted.sql",
      "20261009100000_get_teacher_visibility_caller_scope.sql",
      "20261016150000_analytics_views_lockdown.sql",
-     "20261016160000_answer_keys_server_side_rpcs.sql"],
+     "20261016160000_answer_keys_server_side_rpcs.sql",
+     "20261018143726_fix_danish_question_bank_text.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
+  assert.deepEqual(Object.keys(REVIEWED_LATER_READER_PINS), ["20261018143726_fix_danish_question_bank_text.sql"],
+    "every exception added from 2026-10-18 on is pinned to its reviewed content");
+  for (const [name, pin] of Object.entries(REVIEWED_LATER_READER_PINS)) {
+    assert.ok(Object.hasOwn(REVIEWED_LATER_READERS, name), `${name} is pinned but not a reviewed reader`);
+    assert.equal(sha256Hex(readFileSync(join(dir, name), "utf8")), pin, `${name} changed since it was reviewed — a new review is needed`);
+  }
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {
     const body = readFileSync(join(dir, name), "utf8");
@@ -317,6 +412,62 @@ test("reviewed later readers are exactly the named files, and change reads only"
         `${name} changes a policy, RLS or table privilege — the exception does not cover that`);
     }
   }
+});
+
+// ── 20261018143726: the reviewed redefinition of process_question_attempt ─────────────────────────────────────
+// These checks are STATIC: they prove what the tracked migration text says. They do not prove what is applied in the
+// live database (that needs a read-only catalogue check there), and they review the READ scope only — the
+// orthography-alias grading the same file introduces is a separate behaviour change, not reviewed here.
+const DANISH_TEXT = "20261018143726_fix_danish_question_bank_text.sql";
+const danishText = () => readFileSync(join(REPO, "supabase", "migrations", DANISH_TEXT), "utf8");
+
+test("20261018143726: the redefinition keeps the one read bound to the instance id AND the student id, same signature, same returns", () => {
+  assert.deepEqual(reviewProcessQuestionAttemptRedefinition(danishText()), []);
+  // the same exact signature the EXECUTE lockdown names: CREATE OR REPLACE replaces that function, no new overload
+  const lockdown = readFileSync(join(REPO, "supabase", "migrations", "20261007182046_process_question_attempt_execute_lockdown.sql"), "utf8");
+  assert.match(executableSql(lockdown), /GRANT EXECUTE\s+ON FUNCTION public\.process_question_attempt\(uuid, uuid, text, bigint\)\s+TO service_role;/);
+  // no later migration re-grants or redefines it
+  const later = readdirSync(join(REPO, "supabase", "migrations")).filter((n) => n.slice(0, 14) > "20261007182046" && n !== DANISH_TEXT && /\.sql$/.test(n));
+  for (const n of later) {
+    const s = executableSql(readFileSync(join(REPO, "supabase", "migrations", n), "utf8"));
+    assert.ok(!/process_question_attempt/.test(s), `${n} touches process_question_attempt in executable SQL — review it`);
+  }
+});
+
+test("negative controls: every weakening of the reviewed redefinition is caught", () => {
+  const body = danishText();
+  const variants = {
+    "student_id bound removed": (b) => b.replace(/\s+AND qi\.student_id = p_student_id;/, ";"),
+    "student_id bound weakened": (b) => b.replace("qi.student_id = p_student_id", "qi.student_id = qi.student_id"),
+    "instance id bound removed": (b) => b.replace(/qi\.id\s+= p_question_instance_id\s+AND\s+/, ""),
+    "instance id bound weakened": (b) => b.replace(/qi\.id\s+= p_question_instance_id/, "qi.id IS NOT NULL"),
+    "OR widening": (b) => b.replace("AND qi.student_id = p_student_id;", "AND qi.student_id = p_student_id OR true;"),
+    "policy added": (b) => b + "\nCREATE POLICY \"x\" ON public.question_instances FOR SELECT TO authenticated USING (true);\n",
+    "RLS changed": (b) => b + "\nALTER TABLE public.question_instances DISABLE ROW LEVEL SECURITY;\n",
+    "privilege granted": (b) => b + "\nGRANT SELECT ON public.question_instances TO anon;\n",
+    "new overload": (b) => b.replace("p_question_shown_at bigint)", "p_question_shown_at bigint, p_scope text)"),
+    "SECURITY DEFINER dropped": (b) => b.replace(" SECURITY DEFINER\n SET search_path", " SET search_path"),
+    "extra returned field": (b) => b.replace("'correct_answer', null)", "'correct_answer', null, 'user_answer', v_instance.user_answer)"),
+    "a second read": (b) => b + "\nSELECT count(*) FROM public.question_instances;\n",
+  };
+  for (const [label, mutate] of Object.entries(variants)) {
+    const v = mutate(body);
+    assert.notEqual(v, body, `${label}: the variant must actually differ from the reviewed text`);
+    assert.ok(reviewProcessQuestionAttemptRedefinition(v).length > 0, `${label} must be caught`);
+  }
+});
+
+test("negative controls: an unknown later reader and a changed reviewed file are not excused", () => {
+  const scope = { name: "20260923000000_question_instances_teacher_read_scope.sql", body: sql() };
+  const reviewed = { name: DANISH_TEXT, body: danishText() };
+  assert.deepEqual(unexcusedReadScopeTouchers([scope, reviewed]).at(-1), scope.name, "the reviewed, unchanged file is excused");
+  const unknown = { name: "20261231000000_new_reader.sql", body: "CREATE FUNCTION f() RETURNS bigint SECURITY DEFINER AS $$ SELECT count(*) FROM public.question_instances $$ LANGUAGE sql;" };
+  assert.equal(unexcusedReadScopeTouchers([scope, reviewed, unknown]).at(-1), unknown.name, "an unknown later reader sorts after the scope migration and fails the order test");
+  const changed = { name: DANISH_TEXT, body: danishText() + "\n-- a later edit\n" };
+  assert.equal(unexcusedReadScopeTouchers([scope, changed]).at(-1), DANISH_TEXT, "changed reviewed content needs a new review");
+  assert.equal(isReviewedLaterReader(DANISH_TEXT, changed.body), false);
+  const write = { name: "20261231000001_pure_write.sql", body: "DELETE FROM public.question_instances WHERE id = $1;" };
+  assert.deepEqual(unexcusedReadScopeTouchers([scope, write]), [scope.name], "a pure write is still not a read-scope change");
 });
 
 test("no later migration re-broadens the read scope", () => {
