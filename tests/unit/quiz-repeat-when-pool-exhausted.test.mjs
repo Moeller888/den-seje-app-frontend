@@ -330,7 +330,7 @@ test("reviewed later repeat users redefine none of this migration's functions", 
   }
 });
 
-test("the migration sorts after every migration that touches these objects", () => {
+test("the reviewed spelling migration is the only later definition of the repeat award function", () => {
   const dir = join(REPO, "supabase", "migrations");
   // Privilege and property statements (REVOKE/GRANT … ON FUNCTION, ALTER FUNCTION) do not redefine
   // these objects, so a later lockdown migration must not count as overriding this one.
@@ -346,8 +346,10 @@ test("the migration sorts after every migration that touches these objects", () 
   assert.ok(touching.includes("20261001100000_release_open_question_outside.sql"),
     "the fagskift migration this one overrides must be in the tree");
   assert.ok(touching.includes("20261002000000_quiz_repeat_when_pool_exhausted.sql"));
-  assert.equal(touching[touching.length - 1],
-    "20261002000000_quiz_repeat_when_pool_exhausted.sql", "it must apply last among them");
+  // The spelling runtime suite proves every changed answer on repeats and pins the rest
+  // of the complete function byte-for-byte, including all reward and idempotency logic.
+  assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
+    ["20261018143726_fix_danish_question_bank_text.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {
