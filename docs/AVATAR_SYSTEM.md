@@ -79,6 +79,11 @@ art layer behind them can be upgraded without a rewrite.
   reused, `callsActuallySentSoFar.faceNeutral` = **1** (separate from `underlay` = **5**), 0 live permissions. No
   candidate, nothing promoted, R3 stays shadow and default OFF; a further attempt needs a new owner decision,
   call-id and claim identity. See `project-state.md` **D-158 … D-161**.
+  **D-162 (2026-10-18)** adopted guide B (head only, windows; tracked fixture, no H1 bytes) and a sharper prompt as
+  the new preparation basis, and authorised **one** further attempt `D-162-r3-face-neutral-guide-b-v1` through the
+  separate adapter `tools/avatar/openai-send-r3-face-neutral-d162.mjs`: UNSPENT, not yet attempted, and not a run
+  instruction (it needs a separate owner instruction after merge). Planned face capacity 2; actually sent unchanged
+  (`faceNeutral` = 1, `underlay` = 5). Final approval of any output still needs the approved underlay, eyes and hair.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

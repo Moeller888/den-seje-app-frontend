@@ -27,7 +27,7 @@ import { tmpdir } from "node:os";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 import { formatEvent, parseEvents, deriveAttempt, EVENTS as LEDGER_EVENTS } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { buildPreview, parseArgs as prepParseArgs, STATUS as PREP_STATUS } from "../../tools/avatar/prepare-r3-face-neutral-request.mjs";
-import { preD160Contract, PRE_D160_CONTRACT_CANONICAL_SHA256, PRE_D159_CONTRACT_CANONICAL_SHA256, preD159Contract, preD161Contract, PRE_D161_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD160Contract, PRE_D160_CONTRACT_CANONICAL_SHA256, PRE_D159_CONTRACT_CANONICAL_SHA256, preD159Contract, preD161Contract, PRE_D161_CONTRACT_CANONICAL_SHA256, preD162Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -45,7 +45,9 @@ const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 const SPEC = JSON.parse(readFileSync(repoFile(SPEC_REL), "utf8"));
-const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-162 later added guide B's preparation and a new, separate authorisation. LIVE_NOW is the contract exactly as D-161
+// left it (D-162's additions removed, proven canonical in avatar-r3-face-neutral-send-d162.test.mjs).
+const LIVE_NOW = preD162Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 // D-161 later recorded D-160's one send and closed its entry in place. LIVE is the contract exactly as D-160 committed
 // it (D-161's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
 const LIVE = preD161Contract(LIVE_NOW);
@@ -376,7 +378,8 @@ function sandbox({ base, layout = "main", top, adapterSource, live = false, clos
   writeFileSync(sb.png + ".outside.png", outputPng({ outside: true }));
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (live) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-160 as committed, before D-161 closed it
-  else if (!closed) {   // the state before D-160: exactly D-160's contract additions and register row removed
+  else if (closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE_NOW, null, 2) + "\n");   // as D-161 closed it, before D-162
+  else {   // the state before D-160: exactly D-160's contract additions and register row removed
     writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n");
     writeFileSync(registerPath(sb), PRE_REGISTER);
   }
