@@ -679,6 +679,21 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   redeployes alene — først migrationen tilbage (GRANT + CREATE POLICY i dens header), så funktionen.
   Restgæld (hærdning, ikke udnyttelig i dag): `anon`/`authenticated` har stadig UPDATE, DELETE og
   TRUNCATE på tabellen — UPDATE/DELETE blokeres af RLS, TRUNCATE nås ikke via PostgREST.
+- **Facit holdes på serveren (E1/E2, audit 2026-10-16) — trin A live, trin B merget men IKKE anvendt.**
+  Facit nåede browseren før svaret ad fire veje: P1 `get-next-question` sendte `content.correct`;
+  P2 `get_unserved_questions` (EXECUTE for `anon`/`authenticated`) returnerede hele indholdet; P3 eleven
+  kunne SELECT'e `question_instances.correct_answer`; P4 `questions` var læsbar for alle (`allow read
+  questions` USING `true`) — og placement bedømte i browseren. E2: `request_repeat_question` kunne kaldes
+  med et selvvalgt mini-scope og give gentagelser (2 XP) uden ende. **Trin A** (PR #330, `8e7e191`):
+  migration `20261016160000_answer_keys_server_side_rpcs.sql` anvendt 2026-10-18 via `apply_migration`,
+  remote version `20261018095931` (≠ repo-filnavnet; D-110-divergens, ikke CLI-synkroniseret);
+  `get-next-question` v174 og `process-event` v33 deployet (byte-identiske med repoet; production-smoke
+  34/34). **Trin B** (PR-B): placement via `start_placement`/`submit_placement` i `app.js` og migration
+  `20261018170000_answer_keys_client_paths_lockdown.sql` (kun lærer/super_admin læser `questions`;
+  `question_instances` kolonne-grant uden `correct_answer`; EXECUTE fjernet på de to gamle RPC'er). Trin
+  B's migration kræver en særskilt ejergodkendelse; indtil da er P2/P3/P4 og den gamle repeat-vej åbne.
+  Bemærk: `metadata.danish_orthography_correct_aliases` (#331) indeholder facit-stavemåder og lækkes af
+  P2/P4 indtil trin B er anvendt.
 - **Fundet, ikke rettet (særskilte opgaver):**
   - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
     fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
