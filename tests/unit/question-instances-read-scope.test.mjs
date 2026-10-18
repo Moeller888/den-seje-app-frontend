@@ -233,6 +233,12 @@ const REVIEWED_LATER_READERS = {
     "JOINs question_instances for per-question aggregates, no student_id) plus a predicate that " +
     "NARROWS it to postgres, service_role and super_admin callers, and revokes anon and every " +
     "non-SELECT privilege on it. It touches no policy, RLS or privilege on question_instances.",
+  "20261016160000_answer_keys_server_side_rpcs.sql":
+    "get_unserved_questions_for_student and request_repeat_question_for_student read only the rows " +
+    "of the student id they are given, and EXECUTE is revoked from PUBLIC, anon and authenticated and " +
+    "granted to service_role only — get-next-question calls them with the verified user.id. They " +
+    "narrow who can read (the browser can no longer name a scope); no policy, RLS or table privilege " +
+    "on question_instances is touched.",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -296,7 +302,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
   assert.deepEqual(Object.keys(REVIEWED_LATER_READERS),
     ["20261002000000_quiz_repeat_when_pool_exhausted.sql",
      "20261009100000_get_teacher_visibility_caller_scope.sql",
-     "20261016150000_analytics_views_lockdown.sql"],
+     "20261016150000_analytics_views_lockdown.sql",
+     "20261016160000_answer_keys_server_side_rpcs.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

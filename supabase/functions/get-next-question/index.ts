@@ -1,36 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
+import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
+import { deriveQuestionScope } from "./scope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// The backend client for creating a question instance (./instance-insert.ts), and nothing else.
-// Built per call, only when an instance is about to be written: no pupil Authorization header, no
-// session. If the key cannot be resolved this throws — never a fallback to the user client.
+// The backend client: no pupil Authorization header, no session. If the key cannot be resolved this
+// throws — never a fallback to the user client. It is used for exactly two things:
+//   * creating a question instance (./instance-insert.ts), and
+//   * the server-side reads that carry an answer key — the due/repeat instance with its question,
+//     get_unserved_questions_for_student and request_repeat_question_for_student — always scoped to
+//     the verified student_id. What leaves this function is only toPublicQuestion's payload.
 function makeAdminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), ADMIN_CLIENT_OPTIONS);
 }
-
-// Subjects (fag). English questions use learning_objective = "english";
-// every other domain is history. Must match teacher.js ALL_DOMAINS.
-const ENGLISH_DOMAIN = "english";
-const HISTORY_DOMAINS = [
-  "prehistoric_denmark",
-  "vikings",
-  "middle_ages",
-  "reformation_monarchy",
-  "enlightenment",
-  "revolutions_democracy",
-  "industrialisation",
-  "world_war_1",
-  "world_war_2",
-  "cold_war",
-  "democracy_power",
-];
 
 function mapAnswerFormat(format: string | null) {
   if (!format) return "mc";
@@ -40,6 +28,9 @@ function mapAnswerFormat(format: string | null) {
   return "mc";
 }
 
+// SERVER-SIDE ONLY. Validates the stored content and extracts the answer key that becomes
+// question_instances.correct_answer. Its result must never be sent to the browser — the response is
+// built from toPublicQuestion (../_shared/question-dto.ts) instead.
 function normalizeContent(raw: any, answer_format: string) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid content");
@@ -48,11 +39,6 @@ function normalizeContent(raw: any, answer_format: string) {
   const question = raw.question;
   let options = raw.options;
   const correct = raw.correct ?? null;
-
-  // Pass review_text through if present and non-empty (teacher-authored explanation)
-  const review_text = (typeof raw.review_text === "string" && raw.review_text.trim().length > 0)
-    ? raw.review_text.trim()
-    : null;
 
   if (typeof question !== "string" || question.trim().length === 0) {
     throw new Error("Missing question text");
@@ -63,10 +49,10 @@ function normalizeContent(raw: any, answer_format: string) {
       throw new Error("MC question missing valid options");
     }
 
-    return { question, options, correct, review_text };
+    return { question, options, correct };
   }
 
-  return { question, correct, review_text };
+  return { question, correct };
 }
 
 // NUZO wave scoring: higher score = preferred for this wave phase.
@@ -190,65 +176,53 @@ serve(async (req) => {
 
     const student_id = user.id;
 
+    // One backend client per request, built on first use (see makeAdminClient).
+    let adminClient: ReturnType<typeof makeAdminClient> | null = null;
+    const admin = () => (adminClient ??= makeAdminClient());
+
     const body = await req.json().catch(() => ({}));
-    const lastQuestionId        = body?.last_question_id ?? null;
     const sessionContext        = body?.session_context ?? null;
     const wavePhase             = (sessionContext?.wave_phase as string) ?? "challenge";
     const lastMisconceptionType = (sessionContext?.last_misconception_type as string | null) ?? null;
-    const selectedGrade         = (body?.selected_grade as number | null) ?? null;
     const currentDifficultyBand = (body?.current_difficulty_band as number | null) ?? null;
 
-    // Fetch teacher-assigned domain filter (null = free exploration, all domains available)
-    const { data: profileData } = await supabase
+    // The scope comes from the pupil's profile, which the pupil cannot write (./scope.ts). The request
+    // contributes only the chosen subject; body.selected_grade is deliberately ignored.
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("active_domains")
+      .select("active_domains, selected_grade")
       .eq("id", student_id)
       .maybeSingle();
 
-    const activeDomains: string[] | null =
-      Array.isArray(profileData?.active_domains) && (profileData.active_domains as string[]).length > 0
-        ? (profileData.active_domains as string[])
-        : null;
+    if (profileError) throw profileError;
 
-    // Subject chosen by the student on spil.html. Missing/unknown = "historie"
-    // (backwards compatible with clients that do not send a subject).
-    const subject: "historie" | "engelsk" = body?.subject === "engelsk" ? "engelsk" : "historie";
-
-    // Effective domain filter for this subject:
-    //   engelsk  → only English questions (teacher history filter does not apply)
-    //   historie → teacher filter minus English, or all history domains when unfiltered
-    let subjectDomains: string[];
-    if (subject === "engelsk") {
-      subjectDomains = [ENGLISH_DOMAIN];
-    } else {
-      const assignedHistory = activeDomains !== null
-        ? activeDomains.filter((d) => d !== ENGLISH_DOMAIN)
-        : [];
-      subjectDomains = assignedHistory.length > 0 ? assignedHistory : HISTORY_DOMAINS;
-    }
+    const scope = deriveQuestionScope(profileData, body?.subject);
+    const selectedGrade  = scope.grade;
+    const subjectDomains = scope.subjectDomains;
 
     console.log("WAVE:", { wavePhase, lastMisconceptionType });
     console.log("GRADE:", { selectedGrade, currentDifficultyBand });
-    console.log("DOMAINS:", { activeDomains, subject, subjectDomains });
+    console.log("DOMAINS:", { activeDomains: scope.activeDomains, subject: scope.subject, subjectDomains });
 
     // Fagskift: idx_one_open_question allows only ONE unanswered instance per student. If that
     // open instance belongs to the OTHER subject (and holds no saved answer), release it so the
     // student gets the chosen subject from the first question. Subject-level domains are passed —
     // not the teacher filter — so only a subject switch releases. Missing RPC = loud 500.
-    const releaseDomains = subject === "engelsk" ? [ENGLISH_DOMAIN] : HISTORY_DOMAINS;
     const { data: releasedCount, error: releaseError } = await supabase.rpc(
       "release_open_question_outside",
-      { p_domains: releaseDomains }
+      { p_domains: scope.releaseDomains }
     );
 
     if (releaseError) throw releaseError;
     if (typeof releasedCount === "number" && releasedCount > 0) {
-      console.log("RELEASED_OPEN_QUESTION:", { subject, releasedCount });
+      console.log("RELEASED_OPEN_QUESTION:", { subject: scope.subject, releasedCount });
     }
 
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
-    const { data: dueInstances, error: dueError } = await supabase
+    // Read through the backend client, scoped to the verified student: the embedded question carries
+    // the key, which only the server may read.
+    const { data: dueInstances, error: dueError } = await admin()
       .from("question_instances")
       .select(`
         id,
@@ -277,7 +251,7 @@ serve(async (req) => {
     // above. Any remaining open instance (same subject, or a long answer awaiting the teacher)
     // must be served — hiding it would block every new insert and dead-end at no_questions.
     const sortedDue = sortByWave(
-      (dueInstances || []).filter(i => i.questions && i.questions.is_active !== false),
+      (dueInstances || []).filter((i: any) => i.questions && i.questions.is_active !== false),
       wavePhase,
       lastMisconceptionType
     );
@@ -288,15 +262,15 @@ serve(async (req) => {
 
       try {
         const format = mapAnswerFormat(q.answer_format);
-        const normalized = normalizeContent(q.content, format);
+        const pub = toPublicQuestion(q.content, format, q.metadata);
 
         return new Response(
           JSON.stringify({
             question_instance_id: instance.id,
-            content: normalized,
+            content: pub.content,
             answer_format: format,
             answer_type: q.answer_type || "short",
-            metadata: q.metadata ?? null,
+            metadata: pub.metadata,
             wave_phase: wavePhase,
           }),
           {
@@ -310,14 +284,15 @@ serve(async (req) => {
     }
 
     // 🔥 2. NEW QUESTIONS — unserved only, grade-filtered, domain-filtered
-    // get_unserved_questions excludes questions already instanced for the student
-    // via a server-side NOT EXISTS subquery, eliminating the silent insert-failure
-    // loop that caused no_questions when the limit(50) batch was exhausted.
-    const { data: questions, error: questionError } = await supabase.rpc(
-      "get_unserved_questions",
+    // get_unserved_questions_for_student excludes questions already instanced for the student
+    // via a server-side NOT EXISTS subquery. It returns full content (the key included), so it is
+    // EXECUTE for the backend only and called with the verified student_id.
+    const { data: questions, error: questionError } = await admin().rpc(
+      "get_unserved_questions_for_student",
       {
-        p_grade:   selectedGrade,
-        p_domains: subjectDomains,
+        p_student_id: student_id,
+        p_grade:      selectedGrade,
+        p_domains:    subjectDomains,
       }
     );
 
@@ -338,9 +313,11 @@ serve(async (req) => {
 
       let format: string;
       let normalized: any;
+      let pub: ReturnType<typeof toPublicQuestion>;
       try {
         format = mapAnswerFormat(q.answer_format);
         normalized = normalizeContent(q.content, format);
+        pub = toPublicQuestion(q.content, format, q.metadata);
       } catch (e) {
         console.error("Skipping question with bad content:", q.id, e);
         continue;
@@ -366,33 +343,34 @@ serve(async (req) => {
       }
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        inserted = { instance: data[0], question: q, normalized, format };
+        inserted = { instance: data[0], question: q, normalized, pub, format };
         break;
       }
     }
 
     // 🔁 3. REPEAT — last resort, only once the unserved pool is genuinely empty.
     //
-    // request_repeat_question reopens one already answered auto-graded instance: incorrect
-    // answers first, oldest first. It re-verifies server-side that no unserved question remains
-    // and that the pupil has no open question, so this cannot be used to skip ahead to repeats
-    // or to open a second question. It returns null when a repeat is not warranted.
+    // request_repeat_question_for_student reopens one already answered auto-graded instance:
+    // incorrect answers first, oldest first. It re-verifies that no unserved question remains in the
+    // SERVER-DERIVED scope (profile grade + subject domains, ./scope.ts) and that the pupil has no
+    // open question, so a pupil can neither skip ahead to repeats nor name an empty scope to farm
+    // them. It is EXECUTE for the backend only. It returns null when a repeat is not warranted.
     //
     // Reopening bumps question_instances.repeat_count, which is what makes
     // process_question_attempt award the reduced amount for the re-answer.
     //
-    // Same subject scope as get_unserved_questions above: a pupil in historie must not be handed
-    // an English repeat, and "the pool is empty" must mean empty for the chosen subject.
+    // Same subject scope as the unserved query above: a pupil in historie must not be handed an
+    // English repeat, and "the pool is empty" must mean empty for the chosen subject.
     if (!inserted) {
-      const { data: repeatId, error: repeatError } = await supabase.rpc(
-        "request_repeat_question",
-        { p_grade: selectedGrade, p_domains: subjectDomains }
+      const { data: repeatId, error: repeatError } = await admin().rpc(
+        "request_repeat_question_for_student",
+        { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
       );
 
       if (repeatError) throw repeatError;
 
       if (repeatId) {
-        const { data: repeatRows, error: repeatFetchError } = await supabase
+        const { data: repeatRows, error: repeatFetchError } = await admin()
           .from("question_instances")
           .select(`
             id,
@@ -429,15 +407,15 @@ serve(async (req) => {
           if (rq && rq.is_active !== false) {
             try {
               const format = mapAnswerFormat(rq.answer_format);
-              const normalized = normalizeContent(rq.content, format);
+              const pub = toPublicQuestion(rq.content, format, rq.metadata);
 
               return new Response(
                 JSON.stringify({
                   question_instance_id: repeatRow.id,
-                  content: normalized,
+                  content: pub.content,
                   answer_format: format,
                   answer_type: rq.answer_type || "short",
-                  metadata: rq.metadata ?? null,
+                  metadata: pub.metadata,
                   wave_phase: wavePhase,
                   is_repeat: true,
                 }),
@@ -470,10 +448,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         question_instance_id: inserted.instance.id,
-        content: inserted.normalized,
+        content: inserted.pub.content,
         answer_format: inserted.format,
         answer_type: inserted.question?.answer_type || "short",
-        metadata: inserted.question?.metadata ?? null,
+        metadata: inserted.pub.metadata,
         wave_phase: wavePhase,
       }),
       {

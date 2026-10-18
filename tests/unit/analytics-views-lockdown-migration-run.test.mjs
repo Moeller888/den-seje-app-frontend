@@ -438,7 +438,18 @@ test("the file only revokes view privileges and re-creates the two admin views",
   for (const r of s.slice(0, 3)) assert.doesNotMatch(r, /service_role/, "service_role keeps its grants");
 });
 
-test("the migration sorts after every migration already in the tree", () => {
-  const files = readdirSync(join(ROOT, "supabase", "migrations")).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();
-  assert.equal(files[files.length - 1], FILE);
+// Originally "sorts after every migration already in the tree" (last file in the directory). That
+// encoded "nothing has been added since" instead of the property it protects, and failed on the
+// first unrelated migration (20261016160000_answer_keys_server_side_rpcs.sql, PR #330). The
+// property is: nothing that sorts after this file can touch the six views again (a later GRANT or
+// CREATE OR REPLACE would silently undo the lockdown). Comment lines never count.
+test("the migration sorts after every migration that touches the six views", () => {
+  const dir = join(ROOT, "supabase", "migrations");
+  const names = new RegExp(String.raw`\b(?:public\.)?(?:${ALL_VIEWS.join("|")})\b`, "i");
+  const executable = (body) => body.split(/\r?\n/).filter((l) => !l.trim().startsWith("--")).join("\n");
+  const touching = readdirSync(dir).filter((f) => /^\d{14}_.+\.sql$/.test(f))
+    .filter((f) => names.test(executable(readFileSync(join(dir, f), "utf8")))).sort();
+  assert.ok(touching.includes(FILE), "this migration must be present in the tree");
+  assert.equal(touching[touching.length - 1], FILE,
+    `a later migration touches the locked views and could re-open them: ${touching.filter((f) => f > FILE).join(", ")}`);
 });
