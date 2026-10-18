@@ -555,3 +555,116 @@ test("11g. 'Prøv igen' after an error loads the panel again and shows the real 
     e.table === "question_instances" && e.ops.some((o: any) => o.op === "eq" && o.args[0] === "answered"));
   expect(activityQueries).toHaveLength(2);
 });
+
+// ── 12. untrusted text is shown as text on every teacher surface ─────────────────────────────
+// Pupil names come from an e-mail the teacher typed, and an answer is whatever the pupil typed;
+// neither may ever be parsed as HTML. Each payload both alerts and sets a flag, so an executed
+// handler is caught either way.
+
+const XSS_ALERT = "<img src=x onerror=alert(1)>";
+const XSS_FLAG = `<img src=x onerror="window.__pwned=true">`;
+const DK_NAME = "søren.ærø-o'brien";
+const INTL_NAME = "zoë.müller-łukasz&co";
+
+function watchForExecution(page: Page) {
+  const dialogs: string[] = [];
+  page.on("dialog", (d) => { dialogs.push(d.message()); d.dismiss().catch(() => {}); });
+  return {
+    dialogs,
+    async expectNothingRan() {
+      expect(dialogs, "an HTML event handler raised a dialog").toEqual([]);
+      expect(await page.evaluate(() => (window as any).__pwned === true), "an HTML event handler ran").toBe(false);
+    },
+  };
+}
+
+test("12. pupil names are text in the class overview, activity panel, insights, spotlights and 'Dine elever'", async ({ page }) => {
+  const exec = watchForExecution(page);
+  const today = new Date().toISOString();
+  await openTeacher(page, {
+    students: [
+      // Active today (→ "Mest aktiv i dag"), band 5 (→ "Band 5"), spotlighted with a hostile message.
+      student({ student_id: "s-x1", display_name: XSS_ALERT, selected_grade: 7, current_band: 5,
+        spotlight_label: "Ugens indsats", spotlight_message: XSS_FLAG }),
+      // No activity (→ "Inaktiv >7 dage").
+      student({ student_id: "s-x2", display_name: XSS_FLAG, selected_grade: 8 }),
+      student({ student_id: "s-dk", display_name: DK_NAME, selected_grade: 6 }),
+      student({ student_id: "s-in", display_name: INTL_NAME, selected_grade: 9 }),
+    ],
+    activityRows: [{ student_id: "s-x1", answered_at: today }, { student_id: "s-dk", answered_at: today }, { student_id: "s-in", answered_at: today }],
+  });
+
+  const surfaces = ["#classOverview", "#engagement-table", "#engagement-insights", "#spotlightCurrentList", "#studentList"];
+  for (const sel of surfaces) {
+    await expect(page.locator(`${sel} img`), `${sel} has no injected element`).toHaveCount(0);
+  }
+
+  // Class overview: every name cell is the literal value; the rest of the row still renders.
+  const ov = page.locator("#classOverview tbody tr");
+  await expect(ov.locator("td:first-child")).toHaveText([XSS_ALERT, XSS_FLAG, DK_NAME, INTL_NAME]);
+  await expect(ov.nth(0).locator(".grade-chip")).toHaveText("7");
+  await expect(page.locator("#classOverview .go-student-btn")).toHaveCount(4);
+
+  // Activity table and insights.
+  const eng = page.locator("#engagement-table tbody tr");
+  await expect(eng).toHaveCount(4);
+  await expect(eng.filter({ hasText: XSS_ALERT }).locator("td").nth(2)).toHaveText("1");
+  await expect(eng.filter({ hasText: DK_NAME })).toHaveCount(1);
+  await expect(eng.filter({ hasText: INTL_NAME })).toHaveCount(1);
+  await expect(page.locator(".stat-card")).toHaveCount(4);
+  const ins = page.locator("#engagement-insights strong");
+  await expect(ins).toHaveText([XSS_ALERT, XSS_FLAG, XSS_ALERT]); // mest aktiv · inaktiv · band 5
+
+  // Spotlights: name, label and the teacher's message are all text.
+  const spot = page.locator("#spotlightCurrentList");
+  await expect(spot.locator("strong")).toHaveText(XSS_ALERT);
+  await expect(spot).toContainText(`Ugens indsats — "${XSS_FLAG}"`);
+
+  // "Dine elever" keeps its protection.
+  await expect(page.locator("#studentRows .row-name")).toHaveText([XSS_ALERT, XSS_FLAG, DK_NAME, INTL_NAME]);
+
+  await exec.expectNothingRan();
+});
+
+test("12b. student-detail: the pupil's e-mail and typed answers are text — the review still works", async ({ page }) => {
+  const exec = watchForExecution(page);
+  await open(page, "/student-detail.html?id=s-x1", {
+    ...TEACHER,
+    overview: { email: `${XSS_ALERT}@skole.dk`, xp: 40, level: 2, correct_ratio: 50, total_correct_answers: 3, total_attempts: 6 },
+    questionContent: {
+      "q-1": { question: "Hvad hedder Danmarks hovedstad?", answer: "København" },
+      "q-2": { question: "Stav til: øl & æbler", answer: "øl & æbler" },
+    },
+    detailPending: [
+      { id: "i-1", student_id: "s-x1", question_id: "q-1", user_answer: XSS_ALERT, teacher_score: null, teacher_feedback: null, created_at: "2026-10-15T08:00:00Z" },
+      { id: "i-2", student_id: "s-x1", question_id: "q-2", user_answer: `${DK_NAME} & ${INTL_NAME}`, teacher_score: null, teacher_feedback: null, created_at: "2026-10-15T08:01:00Z" },
+    ],
+    detailReviewed: [
+      { id: "i-3", student_id: "s-x1", question_id: "q-1", user_answer: XSS_FLAG, teacher_score: 3, teacher_feedback: XSS_ALERT, created_at: "2026-10-14T08:00:00Z" },
+    ],
+  });
+
+  const info = page.locator("#studentInfo");
+  await expect(info).toContainText(`Email: ${XSS_ALERT}@skole.dk`);
+  await expect(info).toContainText("XP: 40");
+
+  const review = page.locator("#reviewPanel");
+  await expect(review.locator(".box")).toHaveCount(3);
+  await expect(review.locator(".box").nth(0)).toContainText(`SVAR${XSS_ALERT}`);
+  await expect(review.locator(".box").nth(0)).toContainText("FACITKøbenhavn");
+  // Danish and international characters and '&' arrive unchanged — no double escaping.
+  await expect(review.locator(".box").nth(1)).toContainText("SPØRGSMÅLStav til: øl & æbler");
+  await expect(review.locator(".box").nth(1)).toContainText(`SVAR${DK_NAME} & ${INTL_NAME}`);
+  await expect(review.locator(".box").nth(1)).not.toContainText("&amp;");
+  await expect(review.locator(".box").nth(2)).toContainText(`SVAR${XSS_FLAG}`);
+  await expect(review.locator(".box").nth(2)).toContainText(`Score: 3`);
+  await expect(review.locator(".box").nth(2)).toContainText(`Feedback: ${XSS_ALERT}`);
+
+  // The score buttons are still there for each pending answer.
+  await expect(review.locator(".box").nth(0).getByRole("button")).toHaveText(["1 – Afvist", "2 – OK", "3 – Godt", "4 – Perfekt"]);
+
+  for (const sel of ["#studentInfo", "#reviewPanel"]) {
+    await expect(page.locator(`${sel} img`), `${sel} has no injected element`).toHaveCount(0);
+  }
+  await exec.expectNothingRan();
+});

@@ -486,7 +486,7 @@ function renderStudent(student, profileData) {
   const placementBand = profileData?.placement_band != null ? "Band " + profileData.placement_band    : "Ikke afsluttet";
 
   container.innerHTML = `
-    <p><strong>Email:</strong> ${student.email ?? "—"}</p>
+    <p><strong>Email:</strong> <span id="studentEmailValue"></span></p>
     <p><strong>Klassetrin:</strong> ${grade}</p>
     <p><strong>Startband (placeringstest):</strong> ${placementBand}</p>
     <p style="margin-bottom:6px;"><strong>Dom&#230;ne-fokus</strong></p>
@@ -500,6 +500,9 @@ function renderStudent(student, profileData) {
     <p><strong>Total korrekte:</strong> ${student.total_correct_answers ?? 0}</p>
     <p><strong>Forsøg i alt:</strong> ${student.total_attempts ?? 0}</p>
   `;
+
+  // The pupil's e-mail is text, never parsed as HTML.
+  container.querySelector("#studentEmailValue").textContent = student.email ?? "—";
 }
 
 // ========================
@@ -632,7 +635,17 @@ function formatHistoryDate(iso) {
 
 // ========================
 // RENDER REVIEW
+// The pupil's answer is text the pupil typed: it, the question, the facit and the feedback are
+// set with textContent and never parsed as HTML.
 // ========================
+
+// <strong>LABEL</strong><br>value<br><br> — the same layout as before, value as text.
+function appendReviewBlock(box, label, value) {
+  const strong = document.createElement("strong");
+  strong.textContent = label;
+  box.append(strong, document.createElement("br"), String(value),
+    document.createElement("br"), document.createElement("br"));
+}
 
 function renderReview(pending, reviewed) {
 
@@ -672,11 +685,9 @@ function renderReview(pending, reviewed) {
     const box = document.createElement("div");
     box.className = "box";
 
-    box.innerHTML = `
-      <strong>SPØRGSMÅL</strong><br>${question}<br><br>
-      <strong>SVAR</strong><br>${answer}<br><br>
-      <strong>FACIT</strong><br>${facit}<br><br>
-    `;
+    appendReviewBlock(box, "SPØRGSMÅL", question);
+    appendReviewBlock(box, "SVAR", answer);
+    appendReviewBlock(box, "FACIT", facit);
 
     const scores = [
       { score: 1, label: "1 – Afvist" },
@@ -722,12 +733,14 @@ function renderReview(pending, reviewed) {
     const box = document.createElement("div");
     box.className = "box";
 
-    box.innerHTML = `
-      <strong>SPØRGSMÅL</strong><br>${question}<br><br>
-      <strong>SVAR</strong><br>${answer}<br><br>
-      <strong>Score:</strong> ${item.teacher_score}<br>
-      <strong>Feedback:</strong> ${item.teacher_feedback ?? ""}
-    `;
+    appendReviewBlock(box, "SPØRGSMÅL", question);
+    appendReviewBlock(box, "SVAR", answer);
+    const scoreLabel = document.createElement("strong");
+    scoreLabel.textContent = "Score:";
+    const feedbackLabel = document.createElement("strong");
+    feedbackLabel.textContent = "Feedback:";
+    box.append(scoreLabel, " " + String(item.teacher_score), document.createElement("br"),
+      feedbackLabel, " " + (item.teacher_feedback ?? ""));
 
     container.appendChild(box);
   });
