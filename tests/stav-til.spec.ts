@@ -1,9 +1,11 @@
 // "Stav til" — the short typed answer, end to end in the real quiz page.
 //
 // No production question is created, activated or answered. Both backend calls are intercepted:
-// get-next-question serves one fixture question (answer_format "text", answer_type "short") and
-// then {step:"no_questions"}; process-event records what the page sends and answers "incorrect"
-// with the correct spelling. The pupil login and the read-only progress/avatar loads are real.
+// get-next-question serves one fixture question shaped EXACTLY like the public question DTO that
+// get-next-question v174 sends (supabase/functions/_shared/question-dto.ts: content carries only the
+// display fields — no `correct`, no `accepted_answers`, no `review_text`), then {step:"no_questions"};
+// process-event records what the page sends and answers as the server would AFTER grading. The pupil
+// login and the read-only progress/avatar loads are real.
 //
 // The renderer under test is the CHECKED-OUT one. The suite runs against the live site, which
 // serves main's frontend until a change is merged, so app.js and js/answer-input.js are served from
@@ -32,27 +34,31 @@ const CORS = {
 };
 
 const FIXTURE_INSTANCE_ID = '00000000-0000-4000-8000-0000000057a1';
+const CORRECT_SPELLING = 'blåbær';
+// The public DTO: display fields only. The key exists only in the process-event answer below.
 const FIXTURE_QUESTION = {
   question_instance_id: FIXTURE_INSTANCE_ID,
-  content: { question: 'Stav til: den blå frugt fra skovbunden', correct: 'blåbær', review_text: null },
+  content: { question: 'Stav til: den blå frugt fra skovbunden' },
   answer_format: 'text',
   answer_type: 'short',
   metadata: null,
   wave_phase: 'challenge',
 };
+const PUBLIC_CONTENT_KEYS = ['question', 'options', 'type', 'force_text'];
 
-test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', async ({ page }) => {
-  const requested: string[] = [];
-  const answered: string[] = [];
+type Reply = { status: number; body: unknown; delayMs?: number };
+
+// Logs the test pupil in with the checked-out renderer and both backend calls intercepted.
+// `replies` are the process-event answers in order (the last one repeats).
+async function openStavTil(page: any, replies: Reply[]) {
   const submitted: any[] = [];
+  const unanswered: string[] = [];
   let questionsServed = 0;
 
   page.on('request', (request: any) => {
     const url = request.url();
     if (request.method() === 'OPTIONS') return;
-    if (url.includes('/functions/v1/get-next-question') || url.includes('/functions/v1/process-event')) {
-      requested.push(url);
-    }
+    if (url.includes('/rest/v1/questions')) unanswered.push(`direct questions read: ${url}`);
   });
 
   await page.route((url: URL) => url.pathname in LOCAL_FRONTEND, async (route: any) => {
@@ -65,19 +71,13 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
   });
 
   await page.route('**/functions/v1/get-next-question', async (route: any) => {
-    const request = route.request();
-    if (request.method() === 'OPTIONS') {
+    if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: CORS });
       return;
     }
-    answered.push(request.url());
     const body = questionsServed === 0 ? FIXTURE_QUESTION : { step: 'no_questions' };
     questionsServed++;
-    await route.fulfill({
-      status: 200,
-      headers: { ...CORS, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    await route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   });
 
   await page.route('**/functions/v1/process-event', async (route: any) => {
@@ -86,12 +86,13 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
       await route.fulfill({ status: 204, headers: CORS });
       return;
     }
-    answered.push(request.url());
     submitted.push(request.postDataJSON());
+    const reply = replies[Math.min(submitted.length - 1, replies.length - 1)];
+    if (reply.delayMs) await new Promise((r) => setTimeout(r, reply.delayMs));
     await route.fulfill({
-      status: 200,
+      status: reply.status,
       headers: { ...CORS, 'content-type': 'application/json' },
-      body: JSON.stringify({ status: 'incorrect', correct_answer: 'blåbær', review_text: null, misconception_type: null }),
+      body: JSON.stringify(reply.body),
     });
   });
 
@@ -102,9 +103,19 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
 
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'ready', { timeout: 20000 });
   await expect(page.locator('#question')).toContainText('Stav til');
+  return { submitted, unanswered, input: page.locator('#options input#short-answer-input') };
+}
+
+const INCORRECT = { status: 200, body: { status: 'incorrect', correct_answer: CORRECT_SPELLING, review_text: null, misconception_type: null } };
+const CORRECT = { status: 200, body: { status: 'correct', correct_answer: CORRECT_SPELLING, review_text: null, misconception_type: null } };
+
+test('Stav til: one-line input, no spelling aids, no key before answering, Enter sends the raw answer', async ({ page }) => {
+  expect(Object.keys(FIXTURE_QUESTION.content).every((k) => PUBLIC_CONTENT_KEYS.includes(k)),
+    'the fixture must be the public DTO').toBe(true);
+
+  const { submitted, unanswered, input } = await openStavTil(page, [INCORRECT]);
 
   // A single-line text field — not the long-answer textarea, not option buttons.
-  const input = page.locator('#options input#short-answer-input');
   await expect(input).toBeVisible();
   await expect(page.locator('#options textarea')).toHaveCount(0);
   await expect(input).toHaveAttribute('type', 'text');
@@ -113,8 +124,13 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
   await expect(input).toHaveAttribute('autocapitalize', 'none');
   await expect(input).toHaveAttribute('autocomplete', 'off');
   await expect(input).toHaveAttribute('aria-label', 'Skriv dit svar');
+  await expect(input).toHaveAttribute('maxlength', '100');
+  await expect(input).toHaveAttribute('placeholder', 'Skriv dit svar her');
   await expect(input).toBeFocused();
   await expect(page.getByRole('button', { name: 'Send svar' })).toBeVisible();
+
+  // Nothing on the page knows the answer before the pupil has answered.
+  expect((await page.content()).toLowerCase()).not.toContain(CORRECT_SPELLING);
 
   // Empty: nothing is sent, the pupil is told why, and the field keeps focus.
   await input.press('Enter');
@@ -122,6 +138,10 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
   await expect(page.locator('#short-answer-hint')).toHaveText('Skriv et svar, før du sender.');
   await expect(input).toHaveAttribute('aria-invalid', 'true');
   expect(submitted, 'an empty answer must never reach process-event').toHaveLength(0);
+
+  // Typing clears the error at once.
+  await input.pressSequentially('B');
+  await expect(page.locator('#short-answer-hint')).toHaveText('');
 
   // A typed answer goes out raw on Enter — æ/ø/å, case and spacing exactly as typed.
   await input.fill(' Blåbær ');
@@ -131,12 +151,65 @@ test('Stav til: one-line input, no spelling aids, Enter sends the raw answer', a
   expect(submitted[0].question_instance_id).toBe(FIXTURE_INSTANCE_ID);
   expect(Object.keys(submitted[0]).sort()).toEqual(['answer', 'question_instance_id', 'question_shown_at', 'student_id']);
 
-  // Incorrect: the existing feedback shows the correct spelling from the server.
-  await expect(page.locator('#feedback')).toContainText('Svaret er blåbær');
+  // Incorrect: the correct spelling appears only now, from the server's graded answer.
+  await expect(page.locator('#feedback')).toContainText(`Svaret er ${CORRECT_SPELLING}`);
 
   // The quiz moves on through the normal state machine (here: to the empty state).
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
+  expect(unanswered, 'the page never reads the question bank directly').toEqual([]);
+});
 
-  expect(answered.length).toBeGreaterThan(0);
-  expect(requested, 'every backend call must have been answered by the intercept').toEqual(answered);
+test('Stav til: a correct answer is confirmed once — double Enter/click while pending sends nothing more', async ({ page }) => {
+  const { submitted, input } = await openStavTil(page, [{ ...CORRECT, delayMs: 1200 }]);
+
+  await input.fill('blåbær');
+  await input.press('Enter');
+  await input.press('Enter');
+  await page.getByRole('button', { name: 'Send svar' }).click({ force: true });
+
+  // While the answer is on its way the field is locked and busy, and the button is disabled.
+  await expect(input).toHaveAttribute('aria-busy', 'true');
+  expect(await input.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true);
+  await expect(page.getByRole('button', { name: 'Send svar' })).toBeDisabled();
+
+  await expect(page.locator('#feedback')).toContainText('Ja!');
+  await expect(page.locator('#feedback')).toHaveClass(/feedback-correct/);
+  expect(submitted, 'exactly one request for one answer').toHaveLength(1);
+  await expect(page.locator('#question')).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
+  expect(submitted).toHaveLength(1);
+});
+
+test('Stav til: a server error hands the answer back — text kept, field focused, Enter retries', async ({ page }) => {
+  const { submitted, input } = await openStavTil(page, [{ status: 500, body: { error: 'boom' } }, CORRECT]);
+
+  await input.fill('Blåbær');
+  await input.press('Enter');
+
+  await expect(page.locator('#feedback')).toContainText('Fejl ved svar');
+  await expect(input).toHaveValue('Blåbær');
+  await expect(input).toBeFocused();
+  expect(await input.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(false);
+  await expect(page.getByRole('button', { name: 'Send svar' })).toBeEnabled();
+
+  await input.press('Enter');
+  await expect(page.locator('#feedback')).toContainText('Ja!');
+  expect(submitted.map((s) => s.answer)).toEqual(['Blåbær', 'Blåbær']);
+});
+
+test('Stav til on a phone: the field and button fit, the font does not trigger zoom', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { input } = await openStavTil(page, [INCORRECT]);
+
+  await expect(input).toBeVisible();
+  const field = await input.boundingBox();
+  const button = await page.getByRole('button', { name: 'Send svar' }).boundingBox();
+  expect(field && button, 'both are laid out').toBeTruthy();
+  expect(field!.x).toBeGreaterThanOrEqual(0);
+  expect(field!.x + field!.width).toBeLessThanOrEqual(390);
+  expect(button!.x + button!.width).toBeLessThanOrEqual(390);
+  expect(button!.height, 'a comfortable touch target').toBeGreaterThanOrEqual(40);
+  const fontSize = await input.evaluate((el: Element) => parseFloat(getComputedStyle(el).fontSize));
+  expect(fontSize, 'iOS zooms into inputs below 16px').toBeGreaterThanOrEqual(16);
+
+  await testInfo.attach('stav-til-mobile', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
 });

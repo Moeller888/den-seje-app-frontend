@@ -14,6 +14,8 @@ import {
   ANSWER_RENDERERS,
   SHORT_TEXT_INPUT_ATTRIBUTES,
   SHORT_TEXT_EMPTY_HINT,
+  SHORT_TEXT_MAX_LENGTH,
+  SHORT_TEXT_PLACEHOLDER,
   resolveAnswerRenderer,
   isSubmittableTextAnswer,
   buildShortTextAnswer,
@@ -33,6 +35,8 @@ function fakeElement(tagName) {
     textContent: "",
     style: {},
     focused: 0,
+    readOnly: false,
+    disabled: false,
     onclick: null,
     setAttribute(name, value) { attrs.set(name, String(value)); },
     getAttribute(name) { return attrs.has(name) ? attrs.get(name) : null; },
@@ -40,6 +44,11 @@ function fakeElement(tagName) {
     hasAttribute(name) { return attrs.has(name); },
     addEventListener(type, fn) { listeners.set(type, [...(listeners.get(type) ?? []), fn]); },
     focus() { this.focused++; },
+    // Dispatches an input event (the pupil typed).
+    type(value) {
+      this.value = value;
+      for (const fn of listeners.get("input") ?? []) fn({});
+    },
     // Dispatches a keydown and reports whether the handler called preventDefault.
     key(key, extra = {}) {
       let prevented = false;
@@ -123,7 +132,7 @@ test("autocorrect, autocapitalize and autocomplete are off", () => {
   assert.equal(input.getAttribute("autocapitalize"), "none", "canonical value; \"off\" is a legacy alias");
   assert.equal(input.getAttribute("autocomplete"), "off");
   assert.deepEqual(Object.keys(SHORT_TEXT_INPUT_ATTRIBUTES).sort(),
-    ["autocapitalize", "autocomplete", "autocorrect", "enterkeyhint", "spellcheck", "type"]);
+    ["autocapitalize", "autocomplete", "autocorrect", "enterkeyhint", "maxlength", "spellcheck", "type"]);
 });
 
 test("the field is labelled and described for screen readers", () => {
@@ -300,4 +309,94 @@ test("get-next-question delivers text questions as text, with their answer_type"
 test("the client never sends accepted_answers or decides correctness", () => {
   const input = read("../../js/answer-input.js");
   assert.equal(/accepted_answers|isTextAnswerCorrect|normalize\(/.test(input.replace(/^\/\/.*$/gm, "")), false);
+});
+
+// ── Fase 1 completion: limits, hint, and the field while an answer is on its way ──────────────────
+// An async onSubmit modelled on submitAnswer: it disables the button while it works and re-enables
+// it only when the answer is handed back (network/server error) — exactly what app.js does.
+function buildAsync() {
+  const calls = [];
+  let finish;
+  const control = buildShortTextAnswer(fakeDocument, {
+    onSubmit: (raw, btn) => {
+      calls.push(raw);
+      btn.disabled = true;
+      return new Promise((resolve) => { finish = (accepted) => { if (!accepted) btn.disabled = false; resolve(); }; });
+    },
+    describedBy: "question",
+  });
+  return { ...control, calls, finish: (accepted) => finish(accepted) };
+}
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+test("the field has a length limit and a visible placeholder, and is still a plain text input", () => {
+  const { input } = build();
+  assert.equal(input.getAttribute("maxlength"), String(SHORT_TEXT_MAX_LENGTH));
+  assert.ok(SHORT_TEXT_MAX_LENGTH >= 60, "long enough for any real word or short phrase");
+  assert.equal(input.getAttribute("placeholder"), SHORT_TEXT_PLACEHOLDER);
+  assert.ok(input.getAttribute("aria-label"), "the placeholder never replaces the label");
+});
+
+test("typing after an empty attempt clears the error at once", () => {
+  const { input, hint } = build();
+  input.key("Enter");
+  assert.equal(hint.textContent, SHORT_TEXT_EMPTY_HINT);
+  input.type("   ");
+  assert.equal(hint.textContent, SHORT_TEXT_EMPTY_HINT, "whitespace is still not an answer");
+  input.type("k");
+  assert.equal(hint.textContent, "");
+  assert.equal(input.hasAttribute("aria-invalid"), false);
+});
+
+test("double submit: a second Enter or click while the first answer is pending sends nothing", async () => {
+  const { input, button, calls, finish } = buildAsync();
+  input.value = "blåbær";
+  input.key("Enter");
+  input.key("Enter");
+  button.onclick();
+  assert.deepEqual(calls, ["blåbær"], "exactly one onSubmit call");
+  assert.equal(input.readOnly, true, "the sent answer cannot be edited");
+  assert.equal(input.getAttribute("aria-busy"), "true");
+  finish(true);
+  await tick();
+  input.key("Enter");
+  assert.deepEqual(calls, ["blåbær"], "an accepted answer is never sent again from this control");
+  assert.equal(input.readOnly, true, "accepted: stays locked until the next question replaces it");
+  assert.equal(input.hasAttribute("aria-busy"), false);
+});
+
+test("network/server error: the answer comes back editable, keeps the text, gets focus, and can be resent", async () => {
+  const { input, calls, finish } = buildAsync();
+  input.value = "Blåbær";
+  input.key("Enter");
+  const focusedBefore = input.focused;
+  finish(false);
+  await tick();
+  assert.equal(input.readOnly, false);
+  assert.equal(input.value, "Blåbær", "nothing typed is lost");
+  assert.ok(input.focused > focusedBefore, "focus returns to the field for a retry");
+  input.key("Enter");
+  assert.deepEqual(calls, ["Blåbær", "Blåbær"], "the retry sends the same raw text");
+});
+
+test("a rejected onSubmit promise also releases the field (fail loud, never stuck)", async () => {
+  const control = buildShortTextAnswer(fakeDocument, { onSubmit: () => Promise.reject(new Error("x")) });
+  control.input.value = "hund";
+  control.input.key("Enter");
+  await tick();
+  assert.equal(control.input.readOnly, false);
+  assert.equal(control.input.hasAttribute("aria-busy"), false);
+});
+
+test("quiz feedback is announced to screen readers (index.html)", () => {
+  const html = read("../../index.html");
+  assert.match(html, /<div id="feedback" role="status" aria-live="polite"><\/div>/);
+  assert.match(html, /<div id="review-feedback" aria-live="polite"><\/div>/);
+});
+
+test("the text input keeps a 16px font, so phones do not zoom into the field", () => {
+  const html = read("../../index.html");
+  const rule = html.match(/#options input\[type="text"\],\s*#options textarea\s*\{([^}]*)\}/);
+  assert.ok(rule, "the shared text-input rule exists");
+  assert.match(rule[1], /font-size:\s*16px/);
 });

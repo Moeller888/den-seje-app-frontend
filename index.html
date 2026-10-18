@@ -870,8 +870,9 @@
   <!-- Question card: the visual and interaction focal point -->
   <div class="game-card" id="game-card">
     <div id="question">Indl&#230;ser&hellip;</div>
-    <div id="feedback"></div>
-    <div id="review-feedback"></div>
+    <!-- Announced to screen readers when the result arrives (Ja! / Svaret er … / fejl). -->
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div id="review-feedback" aria-live="polite"></div>
     <button type="button" id="reflection-continue">Videre &#8594;</button>
   </div>
 
