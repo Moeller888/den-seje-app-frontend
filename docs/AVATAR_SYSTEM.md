@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — three attempts spent; parts method adopted; first parts sheet: nose rejected, brows and mouth kept for review; no live permission (D-158 … D-166, as of 2026-10-19).**
+- **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; one nose attempt authorised, not yet run (D-158 … D-167, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -108,6 +108,16 @@ art layer behind them can be upgraded without a rewrite.
   skin-coloured fill) and **kept both brows and the mouth for further review** (not a production approval); their six
   source anchors stay DRAFT. No composition, candidate or promotion; R3 stays shadow and default OFF. A new nose needs a
   new owner decision with its own capacity, call-id and claim. See `project-state.md` **D-166**.
+  **D-167 (2026-10-19)** extended the parts method: a **partial nose sheet** (`partial-nose-v1`, the same 2×2 layout with
+  only the nose cell; RAW-4′ = content in the nose cell and alpha 0 in the other three cells, while a full sheet keeps
+  D-164's RAW-1..5) and **composition from several raw sources** through a source manifest (raw file + full SHA-256,
+  sheet type, cell, annotation file + hash, approval status per part; `r3-face-parts-compose.mjs --manifest`). The brows
+  and the mouth are planned from the untouched D-165 sheet `d3004660…`; D-165's nose is blocked as a source. Their six
+  anchors stay DRAFT, and production needs every used anchor owner-APPROVED. D-167 authorised **one** nose attempt
+  `D-167-r3-face-parts-nose-v1` (adapter `tools/avatar/openai-send-r3-face-parts-nose-d167.mjs`, Northstar only,
+  prompt `ed73b60a…`, 1024×1024): UNSPENT, not yet attempted, not a run instruction; the shading and highlight are
+  reviewed on light, medium and dark skin afterwards. Planned face capacity 4 (budget 22–23); actually sent unchanged
+  (`faceNeutral` = 3, `underlay` = 5). See `project-state.md` **D-167**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

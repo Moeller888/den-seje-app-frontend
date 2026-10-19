@@ -276,28 +276,118 @@ export function composeFaceLayer({ sheetPx, rawSha, annotations, targets, mode }
   if (!vt.ok) return { ok: false, stage: "targets", ...vt };
   const canvas = new Float64Array(MASTER.w * MASTER.h * 4), layers = {}, parts = [];
   for (const part of LAYOUT.order) {
-    const ann = annotations?.[part], va = validateAnnotation(ann, part, rawSha, mode);
-    if (!va.ok) return { ok: false, stage: "annotation", part, ...va };
-    const cell = extractCell(sheetPx, part), d = cellDiagnostics(cell);
-    if (!d.supportPx) return { ok: false, stage: "cell", part, code: "EMPTY_PART" };
-    if (d.boundaryPx) return { ok: false, stage: "cell", part, code: "CUT_AT_CELL_BOUNDARY" };
-    const names = PART_POINTS[part], src = names.map((k) => ann.points[k]), dst = names.map((k) => targets.points[part][k].xy);
-    const f = fitUniformScaleTranslate(src, dst);
-    if (!f.ok) return { ok: false, stage: "fit", part, code: f.code, why: f.why };
-    const [u0, v0, u1, v1] = d.supportBox, dest = [f.tx + f.s * u0, f.ty + f.s * v0, f.tx + f.s * (u1 + 1), f.ty + f.s * (v1 + 1)];
-    if (dest[0] < 0 || dest[1] < 0 || dest[2] > MASTER.w || dest[3] > MASTER.h) return { ok: false, stage: "fit", part, code: "OUTSIDE_CANVAS" };
-    const layer = resampleArea(cell, f.s, f.tx, f.ty, MASTER.w, MASTER.h);
-    const solo = new Float64Array(MASTER.w * MASTER.h * 4); overInto(solo, MASTER.w, layer); layers[part] = quantise(solo, MASTER.w, MASTER.h);
-    const overlapPx = overInto(canvas, MASTER.w, layer);
-    const reviewReasons = [...(ann.reviewFlags ?? [])];
-    if (f.residualMaxPx > 1e-9 && !reviewReasons.includes("orientation")) reviewReasons.push("orientation (residual reported; no threshold approved)");
-    parts.push({ part, cell: LAYOUT.cells[part], cellPixelSha256: pixelSha256(cell.px), annotation: { version: ann.annotationVersion, status: ann.status, annotator: ann.annotator, reviewFlags: ann.reviewFlags ?? [] },
-      sourcePoints: Object.fromEntries(names.map((k, i) => [k, src[i]])), targetPoints: Object.fromEntries(names.map((k, i) => [k, dst[i]])),
-      transform: { s: f.s, tx: f.tx, ty: f.ty }, fitDescription: f.fitDescription,
-      residualVectorsPx: Object.fromEntries(names.map((k, i) => [k, f.residuals[i]])), residualMaxPx: f.residualMaxPx, angleDeviationDeg: f.angleDeviationDeg, lengthRatio: f.lengthRatio,
-      overlapPxWithEarlierParts: overlapPx, ownerReviewRequired: reviewReasons.length > 0, ownerReviewReasons: reviewReasons,
-      technicalDiagnostics: { supportBox: d.supportBox, solidBox: d.solidBox, strayPx: d.strayPx, minEdgeDistancePx: d.minEdgeDistancePx, noSolidPixels: !d.solidPx } });
+    const r = placePart({ part, sheetPx, rawSha, ann: annotations?.[part], targets, mode, canvas, layers });
+    if (!r.ok) return r;
+    parts.push(r.entry);
   }
   const px = quantise(canvas, MASTER.w, MASTER.h);
   return { ok: true, px, layers, log: { tool: TOOL_ID, mode, layout: LAYOUT, conventions: CONVENTIONS, rawSha256: rawSha, targets: { schema: targets.schema, version: targets.version, status: targets.status }, parts, output: { pixelSha256: pixelSha256(px), preview: mode === "preview" } } };
+}
+
+/** One part: annotation against ITS source's hash, the cell of ITS source, fit, resample, source-over into `canvas`. */
+function placePart({ part, sheetPx, rawSha, ann, targets, mode, canvas, layers }) {
+  const va = validateAnnotation(ann, part, rawSha, mode);
+  if (!va.ok) return { ok: false, stage: "annotation", part, ...va };
+  const cell = extractCell(sheetPx, part), d = cellDiagnostics(cell);
+  if (!d.supportPx) return { ok: false, stage: "cell", part, code: "EMPTY_PART" };
+  if (d.boundaryPx) return { ok: false, stage: "cell", part, code: "CUT_AT_CELL_BOUNDARY" };
+  const names = PART_POINTS[part], src = names.map((k) => ann.points[k]), dst = names.map((k) => targets.points[part][k].xy);
+  const f = fitUniformScaleTranslate(src, dst);
+  if (!f.ok) return { ok: false, stage: "fit", part, code: f.code, why: f.why };
+  const [u0, v0, u1, v1] = d.supportBox, dest = [f.tx + f.s * u0, f.ty + f.s * v0, f.tx + f.s * (u1 + 1), f.ty + f.s * (v1 + 1)];
+  if (dest[0] < 0 || dest[1] < 0 || dest[2] > MASTER.w || dest[3] > MASTER.h) return { ok: false, stage: "fit", part, code: "OUTSIDE_CANVAS" };
+  const layer = resampleArea(cell, f.s, f.tx, f.ty, MASTER.w, MASTER.h);
+  const solo = new Float64Array(MASTER.w * MASTER.h * 4); overInto(solo, MASTER.w, layer); layers[part] = quantise(solo, MASTER.w, MASTER.h);
+  const overlapPx = overInto(canvas, MASTER.w, layer);
+  const reviewReasons = [...(ann.reviewFlags ?? [])];
+  if (f.residualMaxPx > 1e-9 && !reviewReasons.includes("orientation")) reviewReasons.push("orientation (residual reported; no threshold approved)");
+  return { ok: true, entry: { part, cell: LAYOUT.cells[part], cellPixelSha256: pixelSha256(cell.px), annotation: { version: ann.annotationVersion, status: ann.status, annotator: ann.annotator, reviewFlags: ann.reviewFlags ?? [] },
+    sourcePoints: Object.fromEntries(names.map((k, i) => [k, src[i]])), targetPoints: Object.fromEntries(names.map((k, i) => [k, dst[i]])),
+    transform: { s: f.s, tx: f.tx, ty: f.ty }, fitDescription: f.fitDescription,
+    residualVectorsPx: Object.fromEntries(names.map((k, i) => [k, f.residuals[i]])), residualMaxPx: f.residualMaxPx, angleDeviationDeg: f.angleDeviationDeg, lengthRatio: f.lengthRatio,
+    overlapPxWithEarlierParts: overlapPx, ownerReviewRequired: reviewReasons.length > 0, ownerReviewReasons: reviewReasons,
+    technicalDiagnostics: { supportBox: d.supportBox, solidBox: d.solidBox, strayPx: d.strayPx, minEdgeDistancePx: d.minEdgeDistancePx, noSolidPixels: !d.solidPx } } };
+}
+
+// ═════════════════════════════════ D-167: partial sheets and composition from several sources ═════════════════════════════════
+// A SHEET TYPE says which fixed cells of the unchanged 2x2 layout may carry content. "full-v1" is D-164's sheet with its
+// ORIGINAL checks (checkRawSheet, RAW-4 = every cell); "partial-nose-v1" is D-167's nose-only sheet (checkPartialSheet,
+// RAW-4′). RAW-4 is never weakened: a full sheet is still checked as a full sheet.
+export const SHEET_TYPES = Object.freeze({
+  "full-v1": Object.freeze({ decision: "D-164", contentCells: Object.freeze([...LAYOUT.order]), checks: "RAW-1..5" }),
+  "partial-nose-v1": Object.freeze({ decision: "D-167", contentCells: Object.freeze(["nose"]), checks: "RAW-1, RAW-2, RAW-3, RAW-4′, RAW-5" }),
+});
+/** Parts of a raw sheet the owner has rejected: never usable as a source, in any mode. */
+export const REJECTED_SOURCE_PARTS = Object.freeze([
+  Object.freeze({ rawSha256: "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d", part: "nose", decision: "D-166", why: "rejected by the owner: mirrored orientation and a skin-coloured fill" }),
+]);
+export const SOURCE_MANIFEST_SCHEMA = "r3-face-parts-source-manifest-v1";
+
+/**
+ * RAW checks for a PARTIAL sheet (D-167). RAW-1..3 as RAW-1..3; RAW-4′: every named content cell has content (alpha > 0) AND
+ * every other cell has alpha = 0 everywhere — RGB under alpha 0 is not visible content and does not count; RAW-5: nothing
+ * of a content cell on its outermost ring. Binding; RDIAG for the content cells never reject.
+ */
+export function checkPartialSheet(buf, contentCells) {
+  const auto = [], diag = [];
+  const step = (id, name, ok, detail) => { auto.push({ id, name, status: ok ? RESULT.ok : RESULT.rejected, detail }); return ok; };
+  const P = decodePng(buf);
+  const fail = (id) => ({ verdict: "REJECT", firstFailure: id, auto, diag, rawSha256: Buffer.isBuffer(buf) ? sha256(buf) : null });
+  if (!Array.isArray(contentCells) || !contentCells.length || contentCells.some((c) => !LAYOUT.cells[c])) throw new Error("checkPartialSheet: invalid content cells");
+  if (!step("RAW-1", "PNG decodes", P.ok, P.ok ? "ok" : P.error)) return fail("RAW-1");
+  if (!step("RAW-2", "sheet 1024x1024", P.header.w === 1024 && P.header.h === 1024, `${P.header.w}x${P.header.h}`)) return fail("RAW-2");
+  if (!step("RAW-3", "RGBA 8-bit, not interlaced", !!P.px, `colour type ${P.header.colourType}, bit depth ${P.header.bitDepth}, interlace ${P.header.interlace}`)) return fail("RAW-3");
+  const cells = Object.fromEntries(LAYOUT.order.map((n) => [n, cellDiagnostics(extractCell(P.px, n))]));
+  const emptyContent = contentCells.filter((n) => !cells[n].supportPx);
+  const visibleElsewhere = LAYOUT.order.filter((n) => !contentCells.includes(n) && cells[n].supportPx);
+  const ok4 = !emptyContent.length && !visibleElsewhere.length;
+  if (!step("RAW-4′", `content (alpha > 0) in ${contentCells.join(", ")} and alpha = 0 in every other cell (RGB under alpha 0 does not count)`, ok4,
+    ok4 ? `content in ${contentCells.join(", ")}; ${LAYOUT.order.length - contentCells.length} other cells fully transparent`
+      : [emptyContent.length ? `empty: ${emptyContent.join(", ")}` : "", visibleElsewhere.length ? `visible pixels in: ${visibleElsewhere.map((n) => `${n} ${cells[n].supportPx} px`).join(", ")}` : ""].filter(Boolean).join("; "))) return fail("RAW-4′");
+  const cut = contentCells.filter((n) => cells[n].boundaryPx);
+  if (!step("RAW-5", "nothing cut at a cell boundary (alpha = 0 on the content cells' outermost ring)", !cut.length, cut.length ? cut.map((n) => `${n}: ${cells[n].boundaryPx} px`).join("; ") : "0 px")) return fail("RAW-5");
+  for (const n of contentCells) {
+    const c = cells[n];
+    diag.push({ id: "RDIAG-1", part: n, name: "stray pixels outside the largest 8-connected component", value: { components: c.components, strayPx: c.strayPx }, flagged: c.strayPx > 0 });
+    diag.push({ id: "RDIAG-2", part: n, name: "minimum distance from content to the cell edge (px)", value: c.minEdgeDistancePx, flagged: null, note: "reported only; no margin threshold is approved" });
+    diag.push({ id: "RDIAG-3", part: n, name: "guide-marker colours (cyan/magenta ±8)", value: c.markerColourPx, flagged: c.markerColourPx > 0 });
+    diag.push({ id: "RDIAG-4", part: n, name: "skin-like solid pixels (ΔE76 ≤ 6 to U1 skin) — review support only, never proof of the right look", value: c.skinLikeSolidPx, flagged: c.skinLikeSolidPx > 0 });
+    diag.push({ id: "RDIAG-5", part: n, name: "near-white solid pixels (L* ≥ 90, chroma ≤ 8) — the nose highlight is white", value: c.nearWhiteSolidPx, flagged: c.nearWhiteSolidPx > 0 });
+  }
+  diag.push({ id: "RDIAG-6", name: "wrong part in the cell / text / eyes / hair / blush / skin patch", value: "NOT APPLICABLE automatically", flagged: null, note: "visual review only" });
+  return { verdict: "PASS_TO_ANNOTATION", firstFailure: null, auto, diag, cells, contentCells: [...contentCells], rawSha256: sha256(buf), px: P.px };
+}
+/** The raw checks for a sheet of a known type: full-v1 keeps D-164's checkRawSheet unchanged. */
+export function checkSheetByType(buf, sheetType) {
+  const t = SHEET_TYPES[sheetType];
+  if (!t) return { verdict: "REJECT", firstFailure: "SHEET_TYPE_UNKNOWN", auto: [], diag: [], rawSha256: Buffer.isBuffer(buf) ? sha256(buf) : null };
+  return sheetType === "full-v1" ? checkRawSheet(buf) : checkPartialSheet(buf, [...t.contentCells]);
+}
+
+/**
+ * Compose ONE face layer from several raw sources (D-167). `sources` maps each part to { sheetPx, rawSha, sheetType }: every
+ * part is read from the fixed cell of ITS OWN raw sheet and its annotation must be bound to THAT sheet's hash. Nothing is
+ * pasted into a new "raw sheet". A part whose sheet type does not carry it, or an owner-rejected source part, is refused.
+ * Geometry, filter, rounding, targets and residual policy are exactly those of composeFaceLayer.
+ */
+export function composeFromSources({ sources, annotations, targets, mode }) {
+  const vt = validateTargets(targets, mode);
+  if (!vt.ok) return { ok: false, stage: "targets", ...vt };
+  const canvas = new Float64Array(MASTER.w * MASTER.h * 4), layers = {}, parts = [];
+  for (const part of LAYOUT.order) {
+    const s = sources?.[part];
+    if (!s || !s.sheetPx || typeof s.rawSha !== "string" || !/^[0-9a-f]{64}$/.test(s.rawSha)) return { ok: false, stage: "source", part, code: "SOURCE_MISSING", why: `no valid source for ${part}` };
+    const type = SHEET_TYPES[s.sheetType];
+    if (!type) return { ok: false, stage: "source", part, code: "SHEET_TYPE_UNKNOWN", why: String(s.sheetType) };
+    if (!type.contentCells.includes(part)) return { ok: false, stage: "source", part, code: "SOURCE_TYPE_DOES_NOT_CARRY_PART", why: `${s.sheetType} carries ${type.contentCells.join(", ")}` };
+    const rejected = REJECTED_SOURCE_PARTS.find((r) => r.rawSha256 === s.rawSha && r.part === part);
+    if (rejected) return { ok: false, stage: "source", part, code: "SOURCE_PART_REJECTED_BY_OWNER", why: `${rejected.decision}: ${rejected.why}` };
+    const r = placePart({ part, sheetPx: s.sheetPx, rawSha: s.rawSha, ann: annotations?.[part], targets, mode, canvas, layers });
+    if (!r.ok) return r;
+    parts.push({ ...r.entry, source: { rawSha256: s.rawSha, sheetType: s.sheetType, layoutId: LAYOUT.id, cell: LAYOUT.cells[part], coordinateSpace: "cell-local continuous; pixel i covers [i, i+1); origin = the cell's top-left" } });
+  }
+  const px = quantise(canvas, MASTER.w, MASTER.h);
+  const rawShas = [...new Set(LAYOUT.order.map((p) => sources[p].rawSha))];
+  return { ok: true, px, layers, log: { tool: TOOL_ID, mode, layout: LAYOUT, conventions: CONVENTIONS, sources: Object.fromEntries(LAYOUT.order.map((p) => [p, { rawSha256: sources[p].rawSha, sheetType: sources[p].sheetType }])),
+    rawSha256s: rawShas, noNewRawSheet: "each part was read from its own unchanged raw sheet; no combined raw sheet exists", targets: { schema: targets.schema, version: targets.version, status: targets.status }, parts, output: { pixelSha256: pixelSha256(px), preview: mode === "preview" } } };
 }

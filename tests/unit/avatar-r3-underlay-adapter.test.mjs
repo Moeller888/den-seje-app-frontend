@@ -143,8 +143,9 @@ test("the contract authorises exactly one call, by id, and every pin matches the
   // D-160 later added the one live permission for a face-neutral attempt; it must not make this adapter sendable either.
   // D-162 later added the one live permission for a further face-neutral attempt; it must not make this adapter sendable.
   // D-165 later added the one live permission for the first face-neutral parts sheet; it must not make this adapter sendable.
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 8);
-  assert.equal(CONTRACT.authorisedCalls.count, 8);
+  // D-167 later added the one live permission for the partial nose sheet; it must not make this adapter sendable.
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 9);
+  assert.equal(CONTRACT.authorisedCalls.count, 9);
   assert.equal(A.verifyAuthorisation(CONTRACT).call.decision, "D-139", "it matches D-139's entry, not D-143's, D-151's, D-153's or D-160's");
   assert.equal(CONTRACT.authorisedCalls.calls.filter((x) => x.callId === A.CALL_ID).length, 1);
 });
