@@ -129,13 +129,14 @@ export function cellDiagnostics({ w, h, px }) {
   sizes.sort((a, b) => b - a);
   return { supportBox: support, solidBox: solid, supportPx, solidPx, faintPx, boundaryPx, minEdgeDistancePx: minEdge, components: sizes.length, largestComponentPx: sizes[0] ?? 0, strayPx: supportPx - (sizes[0] ?? 0), markerColourPx: markerPx, skinLikeSolidPx: skinLikePx, nearWhiteSolidPx: nearWhitePx };
 }
+const RESULT = Object.freeze({ ok: "PASS", rejected: "REJECT" });
 /**
- * RAW checks on the sheet bytes. Binding PROPOSAL: RAW-1..5 reject; RDIAG never reject.
+ * RAW checks on the sheet bytes. Binding (D-164): RAW-1..5 reject; RDIAG never reject.
  * The old global face envelope is deliberately NOT applied to a sheet.
  */
 export function checkRawSheet(buf) {
   const auto = [], diag = [];
-  const step = (id, name, ok, detail) => { auto.push({ id, name, status: ok ? "PASS" : "REJECT", detail }); return ok; };
+  const step = (id, name, ok, detail) => { auto.push({ id, name, status: ok ? RESULT.ok : RESULT.rejected, detail }); return ok; };
   const P = decodePng(buf);
   const fail = (id) => ({ verdict: "REJECT", firstFailure: id, auto, diag, rawSha256: Buffer.isBuffer(buf) ? sha256(buf) : null });
   if (!step("RAW-1", "PNG decodes", P.ok, P.ok ? "ok" : P.error)) return fail("RAW-1");

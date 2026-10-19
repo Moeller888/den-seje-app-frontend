@@ -596,8 +596,10 @@ test("the head mask check is recorded read-only, with both gaps, and no new mask
   assert.match(h.prohibition, /NOT automatically promoted to runtime masks/);
 });
 
-test("the deterministic operations are only the four with documented precedent", () => {
-  assert.equal(C.deterministicOperations.length, 4);
+test("the deterministic operations are only the four with documented precedent, plus D-164's parts placement", () => {
+  // D-164 (owner decision 2026-10-19) added exactly one operation: the face-neutral parts placement. Nothing else.
+  assert.deepEqual(C.deterministicOperations.map((o) => o.op), ["master -> served 512x768", "runtime masks from approved layers",
+    "colour tokens for hair and iris", "blush construction", "face-neutral parts placement (D-164)"]);
   for (const op of C.deterministicOperations) assert.ok(op.precedent && op.precedent.length > 0, op.op + " needs a precedent");
 });
 
