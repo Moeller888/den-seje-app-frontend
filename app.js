@@ -243,9 +243,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ── Placement assessment system ────────────────────────────────────────
-  // Runs once on first login after grade selection. Fetches 10 questions
-  // across bands 1-4 directly (no XP, no question_instances created).
-  // Saves result as profiles.placement_band to seed starting difficulty.
+  // Runs once on first login after grade selection: 10 questions across bands 1-4
+  // (no XP, no question_instances created) seed the starting difficulty.
+  // SERVER-OWNED (answer keys server-side, E1): start_placement() picks the questions and
+  // returns display data only — never the answer — and submit_placement() grades the chosen
+  // answers once, writes profiles.placement_band and returns only the band. The browser
+  // never reads the questions table and never sees or stores a key.
 
   async function loadAdaptiveBands() {
     const { data } = await supabase
@@ -257,54 +260,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     persistedBand = data?.current_band ?? null;
   }
 
-  async function fetchPlacementQuestions(grade) {
-    const collected = [];
-    // 3 band-1, 3 band-2, 2 band-3, 2 band-4 = 10 total
-    const bandTargets = [[1, 3], [2, 3], [3, 2], [4, 2]];
-
-    for (const [band, count] of bandTargets) {
-      const { data, error } = await supabase
-        .from("questions")
-        .select("id, content, difficulty_band")
-        .eq("is_active", true)
-        .eq("answer_format", "mc")
-        .eq("difficulty_band", band)
-        .neq("learning_objective", "english") // placement measures history level only
-        .or(`target_grade.lte.${grade},target_grade.is.null`)
-        .limit(count * 5);
-
-      if (error || !data || data.length === 0) continue;
-
-      const shuffled = [...data].sort(() => Math.random() - 0.5);
-      collected.push(...shuffled.slice(0, Math.min(count, shuffled.length)));
+  // The placement set for this pupil, chosen server-side (3 band-1, 3 band-2, 2 band-3, 2 band-4;
+  // history MC within the pupil's grade). An open session is reused, so a refresh shows the same
+  // questions. Each item is { id, question, options, difficulty_band } — display data only.
+  async function fetchPlacementQuestions() {
+    const { data, error } = await supabase.rpc("start_placement");
+    if (error) {
+      logError("PLACEMENT_START_ERROR", error);
+      return [];
     }
-
-    return collected.sort(() => Math.random() - 0.5);
+    if (!Array.isArray(data)) return [];
+    return data.filter((q) =>
+      q && typeof q.id === "string"
+      && typeof q.question === "string" && q.question.trim().length > 0
+      && Array.isArray(q.options) && q.options.length >= 2);
   }
 
-  // Scoring: correct answer on band N scores N points. Wrong scores 0.
-  // Hard correct answers strongly reward; hard wrong answers do not punish.
-  // Max = 3×1 + 3×2 + 2×3 + 2×4 = 23
-  function calculatePlacementBand(responses) {
-    let score = 0;
-    for (const r of responses) {
-      if (r.correct) score += r.band;
+  // Grades the chosen answers server-side (once per session) and returns the band 1-4, or null.
+  // The old browser-side scoring rule (band N correct = N points; >= 18/12/6 → 4/3/2, else 1)
+  // lives unchanged in submit_placement, which also writes profiles.placement_band.
+  async function submitPlacement(answers) {
+    const { data, error } = await supabase.rpc("submit_placement", { p_answers: answers });
+    if (error) {
+      logError("PLACEMENT_SUBMIT_ERROR", error);
+      return null;
     }
-    if (score >= 18) return 4;
-    if (score >= 12) return 3;
-    if (score >= 6)  return 2;
-    return 1;
-  }
-
-  async function savePlacementBand(band) {
-    try {
-      await supabase
-        .from("profiles")
-        .update({ placement_band: band })
-        .eq("id", studentId);
-    } catch (e) {
-      logError("PLACEMENT_SAVE_ERROR", e);
-    }
+    return Number.isInteger(data) && data >= 1 && data <= 4 ? data : null;
   }
 
   // Persist the adaptive engine's current band to profiles.current_band.
@@ -335,7 +316,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const questions = await fetchPlacementQuestions(selectedGrade ?? 7);
+      const questions = await fetchPlacementQuestions();
 
       if (!questions || questions.length < 5) {
         logEvent("PLACEMENT_SKIPPED", { reason: "insufficient_questions", count: questions?.length ?? 0 });
@@ -345,14 +326,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       overlay.style.display = "flex";
 
-      const responses = [];
+      // Only what the pupil chose — never a verdict; the server grades.
+      const answers = [];
       const total = questions.length;
 
       for (let i = 0; i < total; i++) {
         const q = questions[i];
 
-        const questionText = q?.content?.question ?? null;
-        if (!questionText) continue;
+        const questionText = q.question;
 
         progressBar.style.width = ((i / total) * 100) + "%";
         countEl.textContent = (i + 1) + " / " + total;
@@ -360,15 +341,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         questionEl.textContent = questionText;
         attachReadAloudControl(questionEl, questionText);
 
-        let options = q?.content?.options ?? [];
-        if (!Array.isArray(options) || options.length < 2) continue;
-
-        const correct = q?.content?.correct ?? "";
-        options = [...options].sort(() => Math.random() - 0.5);
+        const options = [...q.options].sort(() => Math.random() - 0.5);
 
         optionsEl.innerHTML = "";
 
-        const wasCorrect = await new Promise((resolveAnswer) => {
+        const chosen = await new Promise((resolveAnswer) => {
           options.forEach((opt) => {
             const row = document.createElement("div");
             row.className = "option-row";
@@ -377,9 +354,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             btn.textContent = opt;
             btn.onclick = () => {
               optionsEl.querySelectorAll(".placement-option-btn").forEach((b) => { b.disabled = true; });
-              const isCorrect = opt === correct;
-              btn.classList.add(isCorrect ? "placement-correct" : "placement-incorrect");
-              setTimeout(() => resolveAnswer(isCorrect), 500);
+              btn.classList.add("placement-selected");
+              setTimeout(() => resolveAnswer(opt), 500);
             };
             row.appendChild(btn);
             attachOptionReadAloudControl(row, typeof opt === "string" ? opt : "");
@@ -387,21 +363,26 @@ document.addEventListener("DOMContentLoaded", async () => {
           });
         });
 
-        responses.push({ correct: wasCorrect, band: q.difficulty_band ?? 1 });
+        answers.push({ question_id: q.id, answer: chosen });
       }
 
       progressBar.style.width = "100%";
 
-      const band = calculatePlacementBand(responses);
-      await savePlacementBand(band);
-      placementBand = band;
-
-      logEvent("PLACEMENT_COMPLETE", { score: responses.filter(r => r.correct).reduce((s, r) => s + r.band, 0), band });
-
+      const band = await submitPlacement(answers);
       stopReadAloud();
-      questionEl.textContent = "Klar! Vi starter dig det rigtige sted.";
       optionsEl.innerHTML = "";
       countEl.textContent = "";
+
+      if (band === null) {
+        // Fail loud, not stuck: the pupil starts at the grade's default band and placement is
+        // offered again on the next login (the open server session is reused).
+        logEvent("PLACEMENT_SUBMIT_FAILED", { answered: answers.length });
+        questionEl.textContent = "Vi kunne ikke gemme dit udgangspunkt — du starter på dit klassetrin.";
+      } else {
+        placementBand = band;
+        logEvent("PLACEMENT_COMPLETE", { band, answered: answers.length });
+        questionEl.textContent = "Klar! Vi starter dig det rigtige sted.";
+      }
 
       await new Promise((r) => setTimeout(r, 1100));
       overlay.style.display = "none";

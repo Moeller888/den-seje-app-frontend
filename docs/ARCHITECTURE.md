@@ -312,9 +312,18 @@ both need separate owner authorisation. Remaining hardening debt: `anon`/`authen
 UPDATE, DELETE and TRUNCATE on the table — UPDATE/DELETE are blocked by RLS (no policies), TRUNCATE
 is not reachable through PostgREST.
 
-**Answer keys stay server-side** (audit findings E1/E2, 2026-10-16 — **in the repo, NOT live yet**;
-step A = migration `20261016160000_answer_keys_server_side_rpcs.sql` + `get-next-question` +
-`process-event`; step B = frontend placement + a second migration). Before this, the key reached the
+**Answer keys stay server-side** (audit findings E1/E2, 2026-10-16). **Status 2026-10-18:** step A is
+**live** — migration `20261016160000_answer_keys_server_side_rpcs.sql` applied once via
+`apply_migration`, remote ledger version **`20261018095931`** (`answer_keys_server_side_rpcs`; ≠ the
+repo filename — D-110 divergence, not CLI-synchronised), and `get-next-question` **v174** /
+`process-event` **v33** deployed from PR #330 (`8e7e191`), byte-identical to the repo after
+re-download, production smoke 34/34. Step B (PR-B: frontend placement on `start_placement` /
+`submit_placement` + migration `20261018170000_answer_keys_client_paths_lockdown.sql`) is **merged
+but NOT applied** until a separate owner authorisation; until then P2/P3/P4 and the legacy repeat
+entry point remain open. Note: since `20261018143726_fix_danish_question_bank_text` (#331),
+`questions.metadata.danish_orthography_correct_aliases` holds the two accepted spellings of the
+correct MC option — answer data in `metadata`, which the whitelist DTO never forwards and which
+P2/P4 expose until step B is applied. Before this, the key reached the
 browser before answering through four paths: P1 `get-next-question` returned `content.correct`;
 P2 `get_unserved_questions` (EXECUTE for `anon` and `authenticated`) returned full content; P3 the
 owner can SELECT `question_instances.correct_answer`; P4 `questions` is readable by `PUBLIC` through
@@ -331,7 +340,14 @@ ownership check); the scope is derived from the profile (`get-next-question/scop
 `selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`);
 placement runs through `start_placement()` / `submit_placement(jsonb)` with a server-only
 `placement_sessions` row, graded once server-side, returning only the band. Step A only ADDS; step B
-removes P2/P3/P4 and the old repeat entry point from the client roles. **Order is mandatory:** merge
+removes P2/P3/P4 and the old repeat entry point from the client roles: `questions` is readable only by
+`authenticated` callers whose `auth_profile_role()` is `teacher` or `super_admin` (policy
+`"staff read questions"`; anon loses table SELECT); `question_instances` loses table-level SELECT for
+`anon`/`authenticated`, and `authenticated` gets a column grant on every column **except**
+`correct_answer` (RLS still decides the rows; selecting `correct_answer` or `*` is refused); EXECUTE on
+`get_unserved_questions` and `request_repeat_question` is revoked from PUBLIC, anon, authenticated
+and service_role (functions kept). New `question_instances` columns are not client-readable until
+granted. **Order is mandatory:** merge
 A → apply migration A → deploy `get-next-question` and `process-event` → merge B (frontend) → apply
 migration B. Each apply and each deploy needs its own owner authorisation (D-110).
 
@@ -429,10 +445,12 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   North Star Master **raster** render path. Default-off → `mountC2Avatar` uses the untouched C2/SVG
   path. When on (local preview), it renders the Phase-1 baked base — currently a **temporary PNG
   preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`); **WebP is the production target**.
-- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `false` — Section 157O).
-  Master switch for the read-aloud (TTS) service. Default-off → no control, no audio. When on, a
-  "🔊 Læs op" button reads the question via a pre-recorded Piper clip (if present) or on-device Web
-  Speech. No upload, no live service. See `docs/157o-read-aloud.md`.
+- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `true` — Section 157O).
+  Master switch for the read-aloud (TTS) service. The prompt player provides play/pause, restart,
+  saved speed and device-voice choice plus word highlighting where the browser exposes boundaries;
+  each multiple-choice option keeps its separate quick-read button. Audio comes from a pre-recorded
+  Piper clip (if present) or browser Web Speech. No app-managed upload, key or live TTS service. See
+  `docs/157o-read-aloud.md`.
 - **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
   for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
   keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.

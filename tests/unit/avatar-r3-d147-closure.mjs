@@ -47,6 +47,18 @@
 // callsActuallySentSoFar (faceNeutral = 1; the underlay figure and its evidence untouched) and re-worded the prose.
 // preD161Contract() reverses exactly that closure, proven canonically identical to the contract at the D-160 commit
 // line (PRE_D161_CONTRACT_CANONICAL_SHA256); preD160Contract() applies it first.
+//
+// D-162 then ADDED the guide-B preparation section (faceNeutralGuideBPreparation), one UNSPENT authorisedCalls entry for
+// D-162-r3-face-neutral-guide-b-v1 (count 6 -> 7), one adapterImplementations entry, the planned face capacity
+// (assets[4].calls 1 -> 2, budget 19-20 -> 20-21, callsPlannedAndAuthorised.faceNeutral) and the prose that names it.
+// The actually-sent figures are unchanged. preD162Contract() removes exactly those additions, proven canonically
+// identical to the contract at the D-162 base (PRE_D162_CONTRACT_CANONICAL_SHA256); preD161Contract() applies it first.
+//
+// D-163 then CLOSED D-162's entry and its implementation entry in place after the one send (HTTP 200, one image,
+// TECHNICAL_REJECT at AUTO-5), raised the separate face accounting (callsActuallySentSoFar.faceNeutral 1 -> 2; the
+// underlay figure and its evidence untouched) and re-worded the prose. preD163Contract() reverses exactly that closure,
+// proven canonically identical to the contract at the D-162 merge (PRE_D163_CONTRACT_CANONICAL_SHA256);
+// preD162Contract() applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -207,6 +219,76 @@ export const PRE_D159_CONTRACT_CANONICAL_SHA256 = "d1f705ef57c67398a3bee49a6412d
 /** The top-level keys D-159 added. D-159 changed nothing else in the contract. */
 export const D159_ADDED_TOP_LEVEL_KEYS = Object.freeze(["faceNeutralPreparation"]);
 
+export const D162_DECISION = "D-162";
+/** The D-162 base commit (origin/main when D-162 was authorised). */
+export const PRE_D162_COMMIT = "d9371d12eb46e9c425176a4378e9b69503da0877";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D162_COMMIT. */
+export const PRE_D162_CONTRACT_CANONICAL_SHA256 = "27108e4444c26457d54c9fb8957b6238ae90c572d662741fe24b37f9700c3d48";
+/** The top-level key D-162 added. */
+export const D162_ADDED_TOP_LEVEL_KEYS = Object.freeze(["faceNeutralGuideBPreparation"]);
+/** The values D-162 replaced, as they stood at PRE_D162_COMMIT. */
+export const PRE_D162 = Object.freeze({
+  "count": 6,
+  "asset4Calls": 1,
+  "minimum": 19,
+  "maximum": 20,
+  "callsPlannedAndAuthorised": {"underlay":5,"why":"D-153 authorised exactly one further, colour-limited head underlay call with background opaque, and that call has been made (recorded by D-154). assets[0].calls is PLANNED capacity; it moved to 5 when the authorisation was committed, not when the call was made.","derivedBudget":"19-20"},
+  "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds SIX entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's or D-160's call id or claim identity, and no other call in the R3 plan."
+});
+
+export const D163_DECISION = "D-163";
+/** origin/main when D-163 recorded the outcome (the D-162 merge the one D-162 send ran from). */
+export const PRE_D163_COMMIT = "877b2b7b7c20b03ec5a72b4b0811703f6e6a0722";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D163_COMMIT. */
+export const PRE_D163_CONTRACT_CANONICAL_SHA256 = "596e91a1ead4ce2ee4eab9ddf7828de9fc0feb6f892b9adffe3b09732f8d7222";
+/** The keys D-163 added to D-162's entry and to its implementation entry. */
+export const D163_ADDED_D162_KEYS = Object.freeze(["neverReuse", "notAnActivePermission", "closure", "execution", "technicalObservations", "visualReview", "diagnosticsLimitation"]);
+export const D163_ADDED_D162_IMPL_KEYS = Object.freeze(["neverReuse", "closedBy"]);
+/** The values D-163 replaced, as they stood at PRE_D163_COMMIT. */
+export const PRE_D163 = Object.freeze({
+  "d162": {"status":"AUTHORISED — ONE CALL — NOT YET ATTEMPTED","mandateState":"UNSPENT","outcome":"NOT YET ATTEMPTED"},
+  "d162impl": {"adapterStatus":"IMPLEMENTED — NOT EXECUTED","mandateState":"UNSPENT","outcome":"NOT YET ATTEMPTED"},
+  "callsActuallySentSoFar": {"underlay":5,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)","D-151 — sent once, HTTP 400 (background transparent not supported for this model), no image, nothing promoted (recorded by D-152)","D-153 — sent once, HTTP 200, raw received, candidate rejected by background-leak, nothing promoted (recorded by D-154)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147, D-151's since D-152 and D-153's since D-154.","faceNeutral":1,"faceNeutralRecord":{"counts":"Face-neutral attempts whose dispatch START is documented (D-159 laterAttemptRules.callCounting.counterMeaning). It measures documented local dispatch, not confirmed server receipt; server answers are counted separately below. It is never part of the underlay figure, which stays 5.","attempts":["D-160-r3-face-neutral-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, geometry rejected by the owner, nothing promoted (recorded by D-161)"],"dispatchUndetermined":0,"serverAnswered":1}},
+  "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds SEVEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — THE ONLY active send permission. D-162 supersedes the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt, faceNeutralGuideBPreparation), with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after the merge. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id and a NEW claim identity. Apart from D-162's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's or D-162's call id or claim identity, and no other call in the R3 plan."
+});
+
+/** A deep copy of the live contract with D-163's closure of D-162 reversed. Pure; never touches the input. */
+export function preD163Contract(live) {
+  const c = JSON.parse(JSON.stringify(live));
+  const e162 = c.authorisedCalls.calls.find((x) => x.decision === "D-162");
+  if (e162) {
+    e162.status = PRE_D163.d162.status;
+    e162.mandateState = PRE_D163.d162.mandateState;
+    e162.outcome = PRE_D163.d162.outcome;
+    for (const k of D163_ADDED_D162_KEYS) delete e162[k];
+  }
+  const i162 = c.adapterImplementations.entries.find((x) => x.decision === "D-162");
+  if (i162) {
+    i162.adapter.status = PRE_D163.d162impl.adapterStatus;
+    i162.mandateState = PRE_D163.d162impl.mandateState;
+    i162.outcome = PRE_D163.d162impl.outcome;
+    for (const k of D163_ADDED_D162_IMPL_KEYS) delete i162[k];
+  }
+  c.imageCallBudget.callsActuallySentSoFar = JSON.parse(JSON.stringify(PRE_D163.callsActuallySentSoFar));
+  c.prohibitions.noImageRequestAuthorised = PRE_D163.noImageRequestAuthorised;
+  return c;
+}
+
+/** A deep copy of the live contract with D-163's closure and D-162's additions removed. Pure; never touches the input. */
+export function preD162Contract(live) {
+  const c = preD163Contract(live);
+  c.authorisedCalls.calls = c.authorisedCalls.calls.filter((e) => e.decision !== D162_DECISION);
+  c.authorisedCalls.count = PRE_D162.count;
+  c.adapterImplementations.entries = c.adapterImplementations.entries.filter((e) => e.decision !== D162_DECISION);
+  c.assets[4].calls = PRE_D162.asset4Calls;
+  c.imageCallBudget.minimum = PRE_D162.minimum;
+  c.imageCallBudget.maximum = PRE_D162.maximum;
+  c.imageCallBudget.callsPlannedAndAuthorised = JSON.parse(JSON.stringify(PRE_D162.callsPlannedAndAuthorised));
+  c.prohibitions.noImageRequestAuthorised = PRE_D162.noImageRequestAuthorised;
+  for (const k of D162_ADDED_TOP_LEVEL_KEYS) delete c[k];
+  return c;
+}
+
 export const D161_DECISION = "D-161";
 /** origin/main when D-161 recorded the outcome (the commit the one D-160 send ran from). */
 export const PRE_D161_COMMIT = "f6ed33e63e8cbf2f01e7376c1a46204f1cfc3e7c";
@@ -225,7 +307,7 @@ export const PRE_D161 = Object.freeze({
 
 /** A deep copy of the live contract with D-161's closure of D-160 reversed. Pure; never touches the input. */
 export function preD161Contract(live) {
-  const c = JSON.parse(JSON.stringify(live));
+  const c = preD162Contract(live);
   const e160 = c.authorisedCalls.calls.find((x) => x.decision === "D-160");
   if (e160) {
     e160.status = PRE_D161.d160.status;

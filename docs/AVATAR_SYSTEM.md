@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — one attempt spent and rejected; no live permission (D-158 … D-161, as of 2026-10-16).**
+- **R3 face-neutral — two attempts spent and rejected; no live permission (D-158 … D-163, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -79,6 +79,15 @@ art layer behind them can be upgraded without a rewrite.
   reused, `callsActuallySentSoFar.faceNeutral` = **1** (separate from `underlay` = **5**), 0 live permissions. No
   candidate, nothing promoted, R3 stays shadow and default OFF; a further attempt needs a new owner decision,
   call-id and claim identity. See `project-state.md` **D-158 … D-161**.
+  **D-162 (2026-10-18)** adopted guide B (head only, windows; tracked fixture, no H1 bytes) and a sharper prompt as
+  the new preparation basis, and authorised **one** further attempt `D-162-r3-face-neutral-guide-b-v1` through the
+  separate adapter `tools/avatar/openai-send-r3-face-neutral-d162.mjs`. That attempt was sent once (HTTP 200, one
+  image) and was **rejected** by the binding AUTO-5 check: as with D-160, the brows are too large and sit too far
+  out, and the nose and mouth sit too low — guide B did not correct size or vertical placement. **D-163 (2026-10-19)**
+  closed the mandate: D-162 is SPENT and never reused, `callsActuallySentSoFar.faceNeutral` = **2** (separate from
+  `underlay` = **5**), the planned face capacity (2) is used up, 0 live permissions. No candidate, nothing promoted,
+  R3 stays shadow and default OFF; a further attempt needs a new owner decision, new capacity, a new call-id and a
+  new claim identity. Final approval of any output still needs the approved underlay, eyes and hair.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

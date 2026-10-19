@@ -103,7 +103,10 @@ function violation(w) {
 
 test("every direct browser write to profiles stays inside the allowlist", () => {
   const writes = browserWrites();
-  assert.ok(writes.length >= 2, "the known band writes must still be found — otherwise this guard is blind");
+  // The known band write (app.js current_band) must still be found — otherwise this guard is blind.
+  // The placement_band write is gone on purpose since PR-B (see GRANTED_BUT_UNUSED below).
+  assert.ok(writes.some((w) => w.file === "app.js" && (w.keys ?? []).includes("current_band")),
+    "the known current_band write must still be found — otherwise this guard is blind");
   assert.deepEqual(writes.map(violation).filter(Boolean), []);
 });
 
@@ -135,9 +138,27 @@ test("the browser-write matcher rejects a reintroduced must_reset_password clear
   assert.equal(violation(writesIn("probe.js", `supabase.from("profiles").update({ current_band: 2 })`)[0]), null);
 });
 
+// Granted columns the browser deliberately no longer writes, each with the reason and the follow-up.
+// Every other granted column must still have a browser writer — an unused grant is a hole.
+const GRANTED_BUT_UNUSED = {
+  placement_band:
+    "since PR-B (answer keys server-side, E1) placement is graded and stored server-side by " +
+    "submit_placement(); app.js no longer writes it. Revoking the grant is a follow-up migration that " +
+    "must be coordinated with tests/profiles-rls.spec.ts, which still asserts the pupil write live.",
+};
+
 test("the allowlist has no column nobody writes", () => {
   const used = new Set(browserWrites().flatMap((w) => w.keys ?? []));
-  for (const c of CLIENT_WRITABLE) assert.ok(used.has(c), `${c} is granted but no browser code writes it`);
+  for (const c of CLIENT_WRITABLE) {
+    if (Object.hasOwn(GRANTED_BUT_UNUSED, c)) {
+      assert.ok(GRANTED_BUT_UNUSED[c].length > 0, `${c} must state why it is granted but unused`);
+      assert.equal(used.has(c), false, `${c} is written by the browser again — remove it from GRANTED_BUT_UNUSED`);
+      continue;
+    }
+    assert.ok(used.has(c), `${c} is granted but no browser code writes it`);
+  }
+  assert.deepEqual(Object.keys(GRANTED_BUT_UNUSED), ["placement_band"],
+    "adding an exception is a reviewed decision — extend this list deliberately");
 });
 
 test("reset-password.js changes the password, signs a forced pupil out, and leaves the flag to the server", () => {

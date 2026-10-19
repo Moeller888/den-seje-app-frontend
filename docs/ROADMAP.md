@@ -462,10 +462,11 @@ _Last reviewed: 2026-07-01._
   demands it. No code, no migration; **no broad activation**; **`AVATAR_R2` stays `false`.** See
   `docs/project-state.md` (D-075).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
-  analytics boundaries decided). **No service implemented yet.**
+  analytics boundaries decided). Read-aloud is live; the remaining service status is tracked below.
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
-  "🔊 Læs op", on-device, no consent, fail-soft; Danish voice preferred. First platform service
-  activated for students; Piper clips remain an offline deliverable.
+  and student-task prompts have a zero-cost player with pause/resume, restart, saved speed/voice and
+  word highlighting where supported; MC options retain their separate 🔊. Fail-soft, no consent;
+  Piper clips remain an offline deliverable.
 - **Docs:** this foundation set (Section 157AA) being established.
 - **CI (D-066):** the Playwright workflow is **path-aware** — docs-only and standalone
   avatar-tool-only PRs skip the full browser suite (fast checks only); **push to main and any
@@ -679,6 +680,21 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   redeployes alene — først migrationen tilbage (GRANT + CREATE POLICY i dens header), så funktionen.
   Restgæld (hærdning, ikke udnyttelig i dag): `anon`/`authenticated` har stadig UPDATE, DELETE og
   TRUNCATE på tabellen — UPDATE/DELETE blokeres af RLS, TRUNCATE nås ikke via PostgREST.
+- **Facit holdes på serveren (E1/E2, audit 2026-10-16) — trin A live, trin B merget men IKKE anvendt.**
+  Facit nåede browseren før svaret ad fire veje: P1 `get-next-question` sendte `content.correct`;
+  P2 `get_unserved_questions` (EXECUTE for `anon`/`authenticated`) returnerede hele indholdet; P3 eleven
+  kunne SELECT'e `question_instances.correct_answer`; P4 `questions` var læsbar for alle (`allow read
+  questions` USING `true`) — og placement bedømte i browseren. E2: `request_repeat_question` kunne kaldes
+  med et selvvalgt mini-scope og give gentagelser (2 XP) uden ende. **Trin A** (PR #330, `8e7e191`):
+  migration `20261016160000_answer_keys_server_side_rpcs.sql` anvendt 2026-10-18 via `apply_migration`,
+  remote version `20261018095931` (≠ repo-filnavnet; D-110-divergens, ikke CLI-synkroniseret);
+  `get-next-question` v174 og `process-event` v33 deployet (byte-identiske med repoet; production-smoke
+  34/34). **Trin B** (PR-B): placement via `start_placement`/`submit_placement` i `app.js` og migration
+  `20261018170000_answer_keys_client_paths_lockdown.sql` (kun lærer/super_admin læser `questions`;
+  `question_instances` kolonne-grant uden `correct_answer`; EXECUTE fjernet på de to gamle RPC'er). Trin
+  B's migration kræver en særskilt ejergodkendelse; indtil da er P2/P3/P4 og den gamle repeat-vej åbne.
+  Bemærk: `metadata.danish_orthography_correct_aliases` (#331) indeholder facit-stavemåder og lækkes af
+  P2/P4 indtil trin B er anvendt.
 - **Fundet, ikke rettet (særskilte opgaver):**
   - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
     fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
@@ -972,7 +988,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Analytics (PostHog) | ✅ Module + events (157D/157E), default-off | `js/analytics.js` + consent gate + banner; core events wired (login/question/purchase), double-gated. Activation needs key + consent + staging. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
-| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`; per-option 🔊 `eb6d5fc`) | `js/read-aloud/` on-device Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable). Every text-based student task uses it: quiz and placement — "🔊 Læs op" on the prompt **+ per-MC-option 🔊** (reads one option, never submits). `ENABLE_READ_ALOUD=true`. |
+| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`; per-option 🔊 `eb6d5fc`) | `js/read-aloud/` browser Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable). Every text-based student task uses it: prompt player with pause/resume, restart, saved speed/voice and word highlighting where supported **+ per-MC-option 🔊** (reads one option, never submits). `ENABLE_READ_ALOUD=true`; no app-managed TTS cost. |
 | Stabel (Spil-menuen) | 🟡 **Mønter bygget — migration afventer ejerens godkendelse** (2026-09-25) | **Ejerbeslutning 2026-09-25 omgør "Stabel giver ingen mønter":** en afsluttet runde giver **1 mønt pr. plade, højst 50 mønter pr. elev pr. dag** (dansk døgn, Europe/Copenhagen). Pladeantallet rapporteres af browseren og kan forfalskes; loftet i `claim_stabel_reward` (SECURITY DEFINER, kun `role = student`) er forsvaret, ikke scoren. Ledger: `stabel_daily_rewards` (RLS uden policies, ingen tabelrettigheder til anon/authenticated). Migration `20260928000000_stabel_reward.sql`, runtime-testet på PGlite. Ingen XP. Udseende: PRISMA-isometrisk canvas (PR #273). |
 | Husk (Spil-menuen) | ✅ Live (2026-10-02, PR #277) | Hukommelsesspil porteret fra Nord-minigames (Grok-workspace, `src/components/husk/`). **Ejerbeslutning 2026-10-02:** de nye spil giver **ingen mønter og ingen XP** — kun lokal rekord (`dsj_husk_best`); mønter er en senere, særskilt opgave med egen migration. Brættet vokser 12 → 16 → 20 felter (6/8/10 par, én tilladt fejl pr. par). Deterministisk blanding (seed = rundetæller i browseren, ingen `Math.random`). `husk.html` + `js/husk.js` + `js/husk-logic.js`. Drej og Vig porteres ikke. |
 | Nål (Spil-menuen) | ✅ Live (2026-10-02, PR #278) | Timingspil porteret fra Nord-minigames (`src/game/naal-engine.ts`). En nål drejer rundt; klik mens den er i buen (midterste femtedel = perfekt). Hvert ramt bue gør den næste kortere og nålen hurtigere; hver 7. vender den. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_naal_best`). Canvas i temaets farver. `naal.html` + `js/naal.js` + `js/naal-logic.js`. |
