@@ -91,7 +91,7 @@ test("flipping a bad, open or matched tile does nothing", () => {
 test("the Husk page is internal, pays nothing and goes back to the menu", () => {
   const page = read("husk.html");
   assert.match(page, /noindex/);
-  assert.match(page, /href="spil\.html"/);
+  assert.match(page, /href="spil\.html\?fane=minigames"/);
   assert.match(page, /src="js\/husk\.js"/);
   const js = read("js/husk.js");
   assert.equal(js.includes(".rpc("), false, "Husk pays no coins");
