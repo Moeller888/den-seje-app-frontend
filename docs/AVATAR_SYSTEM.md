@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — two attempts spent and rejected; parts method adopted; one parts-sheet attempt authorised, not yet run (D-158 … D-165, as of 2026-10-19).**
+- **R3 face-neutral — three attempts spent; parts method adopted; first parts sheet: nose rejected, brows and mouth kept for review; no live permission (D-158 … D-166, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -102,6 +102,12 @@ art layer behind them can be upgraded without a rewrite.
   RAW-1..5 (never the face envelope), a RAW pass only opens visual review and DRAFT source annotation. UNSPENT, not yet
   attempted, and not a run instruction. Planned face capacity 3; actually sent unchanged (`faceNeutral` = 2,
   `underlay` = 5). See `project-state.md` **D-165**.
+  **D-166 (2026-10-19)** recorded that one send (HTTP 200, one 1024×1024 sheet `d3004660…`, RAW-1..5 passed) and closed
+  the mandate: D-165 is SPENT and never reused, `callsActuallySentSoFar.faceNeutral` = **3** (`underlay` = **5**), the
+  planned face capacity (3) is used up, 0 live permissions. The owner **rejected the nose** (mirrored orientation and a
+  skin-coloured fill) and **kept both brows and the mouth for further review** (not a production approval); their six
+  source anchors stay DRAFT. No composition, candidate or promotion; R3 stays shadow and default OFF. A new nose needs a
+  new owner decision with its own capacity, call-id and claim. See `project-state.md` **D-166**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
