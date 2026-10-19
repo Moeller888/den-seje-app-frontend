@@ -30,6 +30,7 @@ export function createReadAloud(config) {
   const enabled = cfg.enabled !== undefined ? !!cfg.enabled : (ENABLE_READ_ALOUD === true);
 
   let _providers = null;
+  let _activeProvider = null;
   function providers() {
     if (_providers) return _providers;
     const list = Array.isArray(cfg.providers) && cfg.providers.length > 0
@@ -43,6 +44,42 @@ export function createReadAloud(config) {
     try { return providers().some((p) => p.isSupported()); } catch (_e) { return false; }
   }
 
+  /** The single request shape every provider sees, for both canSpeak() and speak(). */
+  function buildRequest(text, opts) {
+    const o = opts && typeof opts === "object" ? opts : {};
+    const segments = Array.isArray(o.segments)
+      ? o.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0 &&
+          typeof s.lang === "string" && s.lang.length > 0)
+      : [];
+    const req = {
+      text: typeof text === "string" ? text : "",
+      clipKey: o.clipKey || hashKey(text),
+      lang: o.lang || "da-DK",
+      rate: o.rate,
+      voiceURI: typeof o.voiceURI === "string" ? o.voiceURI : null,
+      onBoundary: typeof o.onBoundary === "function" ? o.onBoundary : undefined,
+      onState: typeof o.onState === "function" ? o.onState : undefined,
+    };
+    if (segments.length > 0) req.segments = segments;
+    return req;
+  }
+
+  /** A provider without canSpeak() can voice any request it supports. Never throws. */
+  function providerCanSpeak(p, req) {
+    try {
+      if (!p.isSupported()) return false;
+      return typeof p.canSpeak === "function" ? p.canSpeak(req) === true : true;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function stopProviders() {
+    try { providers().forEach((provider) => { try { provider.stop(); } catch (_e) { /* ignore */ } }); }
+    catch (_e) { /* ignore */ }
+    _activeProvider = null;
+  }
+
   return {
     /** True only when enabled AND at least one provider is supported. Never throws. */
     isAvailable() {
@@ -50,10 +87,30 @@ export function createReadAloud(config) {
     },
 
     /**
+     * Whether at least one provider can actually voice this text (same options as speak).
+     * Callers render read-aloud controls only when this is true. Never throws.
+     * @param {string} text
+     * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[]}} [opts]
+     * @returns {boolean}
+     */
+    canSpeak(text, opts) {
+      try {
+        if (!enabled || typeof text !== "string" || text.trim().length === 0) return false;
+        const req = buildRequest(text, opts);
+        return providers().some((p) => providerCanSpeak(p, req));
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /**
      * Speak text. Tries pre-recorded clip first, then on-device speech. Returns true
      * if any provider produced audio. No-op (false) when disabled. Never throws.
      * @param {string} text
-     * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[]}} [opts]
+     * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[],
+     *          rate?:number, voiceURI?:string,
+     *          onBoundary?:(boundary:{charIndex:number,charLength:number})=>void,
+     *          onState?:(state:"speaking"|"paused"|"ended"|"error")=>void}} [opts]
      *        `segments` — read the text as language runs, each with its own voice
      *        (English subject: Danish frame + English words). Invalid runs are dropped.
      * @returns {Promise<boolean>}
@@ -61,21 +118,15 @@ export function createReadAloud(config) {
     async speak(text, opts) {
       try {
         if (!enabled) return false;
-        const o = opts && typeof opts === "object" ? opts : {};
-        const segments = Array.isArray(o.segments)
-          ? o.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0 &&
-              typeof s.lang === "string" && s.lang.length > 0)
-          : [];
-        const req = {
-          text: typeof text === "string" ? text : "",
-          clipKey: o.clipKey || hashKey(text),
-          lang: o.lang || "da-DK",
-        };
-        if (segments.length > 0) req.segments = segments;
+        const req = buildRequest(text, opts);
+        stopProviders();
         for (const p of providers()) {
           try {
-            if (!p.isSupported()) continue;
-            if (await p.speak(req)) return true;
+            if (!providerCanSpeak(p, req)) continue;
+            if (await p.speak(req)) {
+              _activeProvider = p;
+              return true;
+            }
           } catch (_e) { /* try next provider */ }
         }
         return false;
@@ -86,8 +137,39 @@ export function createReadAloud(config) {
 
     /** Stop any in-progress read-aloud. Never throws. */
     stop() {
-      try { providers().forEach((p) => { try { p.stop(); } catch (_e) { /* ignore */ } }); }
-      catch (_e) { /* ignore */ }
+      stopProviders();
+    },
+
+    /** Pause the active provider where supported. */
+    pause() {
+      try {
+        return !!(_activeProvider && typeof _activeProvider.pause === "function" && _activeProvider.pause());
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /** Resume the active provider where supported. */
+    resume() {
+      try {
+        return !!(_activeProvider && typeof _activeProvider.resume === "function" && _activeProvider.resume());
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /** Device voices available for one language, best-quality first. */
+    getVoices(lang = "da-DK") {
+      try {
+        for (const provider of providers()) {
+          if (typeof provider.listVoices !== "function") continue;
+          const voices = provider.listVoices(lang);
+          if (Array.isArray(voices) && voices.length > 0) return voices;
+        }
+        return [];
+      } catch (_e) {
+        return [];
+      }
     },
   };
 }

@@ -1,8 +1,6 @@
 // ── Web Speech read-aloud provider (157O) ────────────────────────────────────
-// On-device fallback (browser SpeechSynthesis). Zero-cost, no files, no network, no
-// upload — runs entirely on the device. Used when no pre-recorded Piper clip exists.
-// Danish voice availability/quality varies by device, hence pre-recorded is preferred;
-// this guarantees read-aloud still works before clips are produced.
+// Zero-cost browser speech with deterministic voice choice, playback controls and
+// word-boundary events for the visual reading track. Nothing is uploaded by app code.
 
 const PROVIDER_ID = "webspeech";
 
@@ -31,30 +29,74 @@ function voiceQuality(v) {
   }
 }
 
-// Pick a voice for `lang` from the synth's list, preferring an exact match (e.g.
-// "da-DK", "en-GB"), then any voice of the same language ("da*", "en*"). Within each
-// of those groups the most natural voice wins (voiceQuality); ties keep the browser's
-// list order. Returns null when voices are not yet loaded or none matches the
-// language — the caller then speaks with `utterance.lang` only, so read-aloud still
-// works (browser default voice). Never picks a voice of another language. Never throws.
-function pickVoice(lang) {
+function availableVoices() {
   try {
     if (typeof window === "undefined" || !window.speechSynthesis ||
-        typeof window.speechSynthesis.getVoices !== "function") return null;
+        typeof window.speechSynthesis.getVoices !== "function") return [];
     const voices = window.speechSynthesis.getVoices();
-    if (!Array.isArray(voices) || voices.length === 0) return null; // not loaded yet → no hard fail
+    return Array.isArray(voices) ? voices : [];
+  } catch (_e) {
+    return [];
+  }
+}
+
+/**
+ * List voices for one language, best quality first while preserving browser order
+ * within a quality tier. Returned objects contain no browser-specific methods.
+ */
+export function listSpeechVoices(lang = "da-DK") {
+  try {
+    const want = typeof lang === "string" && lang ? lang.toLowerCase() : "da-dk";
+    const base = want.split("-")[0];
+    return availableVoices()
+      .map((voice, index) => ({ voice, index }))
+      .filter(({ voice }) => {
+        const voiceLang = voice && typeof voice.lang === "string"
+          ? voice.lang.toLowerCase().replace("_", "-")
+          : "";
+        return voiceLang.split("-")[0] === base;
+      })
+      .sort((a, b) => voiceQuality(b.voice) - voiceQuality(a.voice) || a.index - b.index)
+      .map(({ voice }) => ({
+        name: typeof voice.name === "string" && voice.name ? voice.name : "Ukendt stemme",
+        voiceURI: typeof voice.voiceURI === "string" ? voice.voiceURI : "",
+        lang: typeof voice.lang === "string" ? voice.lang : lang,
+      }))
+      .filter((voice) => voice.voiceURI.length > 0);
+  } catch (_e) {
+    return [];
+  }
+}
+
+function pickVoice(lang, requestedVoiceURI) {
+  try {
+    const voices = availableVoices();
+    if (voices.length === 0) return null;
     const want = (typeof lang === "string" && lang ? lang : "da-DK").toLowerCase();
+    const base = want.split("-")[0];
+
+    if (typeof requestedVoiceURI === "string" && requestedVoiceURI) {
+      const requested = voices.find((voice) => {
+        const voiceLang = voice && typeof voice.lang === "string"
+          ? voice.lang.toLowerCase().replace("_", "-")
+          : "";
+        return voice && voice.voiceURI === requestedVoiceURI && voiceLang.split("-")[0] === base;
+      });
+      if (requested) return requested;
+    }
+
     let exact = null;
     let exactQ = -1;
-    const base = want.split("-")[0];
     let same = null;
     let sameQ = -1;
-    for (const v of voices) {
-      const vlang = (v && typeof v.lang === "string" ? v.lang : "").toLowerCase().replace("_", "-");
-      if (vlang.length === 0) continue;
-      const q = voiceQuality(v);
-      if (vlang === want && q > exactQ) { exact = v; exactQ = q; }
-      if (vlang.split("-")[0] === base && q > sameQ) { same = v; sameQ = q; }
+    for (const voice of voices) {
+      const voiceLang = voice && typeof voice.lang === "string"
+        ? voice.lang.toLowerCase().replace("_", "-")
+        : "";
+      if (!voiceLang) continue;
+      const quality = voiceQuality(voice);
+      if (voiceLang === want && quality > exactQ) { exact = voice; exactQ = quality; }
+      if (voiceLang.split("-")[0] === base && quality > sameQ) { same = voice; sameQ = quality; }
     }
     return exact || same || null;
   } catch (_e) {
@@ -62,21 +104,73 @@ function pickVoice(lang) {
   }
 }
 
-// Start loading the device's voice list ahead of the first click. Chrome only begins
-// loading voices on the first getVoices() call and returns [] until they arrive, so
-// without this the first "🔊" click of a page always got the default (robotic) voice.
-// The provider is created when the 🔊 button renders, so the list is ready by the time
-// the student clicks. Fire-and-forget; never throws.
 function warmVoices() {
+  try { availableVoices(); } catch (_e) { /* speech still works with the default voice */ }
+}
+
+function safeRate(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(2, Math.max(0.6, n));
+}
+
+function wordLength(text, index, reported) {
+  if (Number.isFinite(reported) && reported > 0) return reported;
   try {
-    if (typeof window === "undefined" || !window.speechSynthesis ||
-        typeof window.speechSynthesis.getVoices !== "function") return;
-    window.speechSynthesis.getVoices();
-  } catch (_e) { /* fail-soft: speak() still works with the default voice */ }
+    const match = String(text).slice(index).match(/^[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/u);
+    return match ? match[0].length : 1;
+  } catch (_e) {
+    return 1;
+  }
+}
+
+function locateParts(text, segments, fallbackLang) {
+  const runs = Array.isArray(segments)
+    ? segments.filter((segment) => segment && typeof segment.text === "string" && segment.text.trim())
+    : [];
+  if (runs.length === 0) return [{ text, lang: fallbackLang, offset: 0 }];
+
+  let cursor = 0;
+  return runs.map((run) => {
+    let offset = text.indexOf(run.text, cursor);
+    if (offset < 0) {
+      const trimmed = run.text.trim();
+      offset = trimmed ? text.indexOf(trimmed, cursor) : -1;
+    }
+    if (offset < 0) offset = cursor;
+    cursor = Math.max(cursor, offset + run.text.length);
+    return {
+      text: run.text,
+      lang: typeof run.lang === "string" && run.lang ? run.lang : fallbackLang,
+      offset,
+    };
+  });
+}
+
+function notify(req, state) {
+  try { if (req && typeof req.onState === "function") req.onState(state); }
+  catch (_e) { /* UI callbacks can never break speech */ }
 }
 
 export function createWebSpeechProvider() {
   warmVoices();
+  let activeFinish = null;
+  let activeNotify = null;
+
+  function finish(state) {
+    const done = activeFinish;
+    activeFinish = null;
+    activeNotify = null;
+    try { if (typeof done === "function") done(state); } catch (_e) { /* fail-soft */ }
+  }
+
+  function stop() {
+    try {
+      if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+    } catch (_e) { /* fail-soft */ }
+    finish("ended");
+  }
+
   return {
     id: PROVIDER_ID,
 
@@ -90,35 +184,100 @@ export function createWebSpeechProvider() {
       }
     },
 
+    /** Speech synthesis can read any non-empty text once the browser supports it. */
+    canSpeak(req) {
+      try {
+        return this.isSupported() && !!(req && typeof req.text === "string" && req.text.trim());
+      } catch (_e) {
+        return false;
+      }
+    },
+
     async speak(req) {
       try {
         if (!this.isSupported()) return false;
         const text = req && typeof req.text === "string" ? req.text : "";
-        const lang = (req && typeof req.lang === "string" && req.lang) ? req.lang : "da-DK";
-        // Language runs (English subject): each run gets its own voice; speechSynthesis
-        // queues them, so they play in order. Without runs the whole text is one run.
-        const runs = req && Array.isArray(req.segments)
-          ? req.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0)
-          : [];
-        const parts = runs.length > 0 ? runs : [{ text, lang }];
-        if (parts.every((p) => p.text.trim().length === 0)) return false;
-        window.speechSynthesis.cancel(); // stop anything in progress
-        for (const p of parts) {
-          const u = new SpeechSynthesisUtterance(p.text);
-          u.lang = (typeof p.lang === "string" && p.lang) ? p.lang : lang;
-          const voice = pickVoice(u.lang); // prefer the most natural voice of that language
-          if (voice) u.voice = voice;      // else fall back to the browser default voice
-          window.speechSynthesis.speak(u);
+        const lang = req && typeof req.lang === "string" && req.lang ? req.lang : "da-DK";
+        const parts = locateParts(text, req && req.segments, lang)
+          .filter((part) => part.text.trim().length > 0);
+        if (parts.length === 0) return false;
+
+        stop();
+        let remaining = parts.length;
+        let completed = false;
+        const complete = (state) => {
+          if (completed) return;
+          completed = true;
+          notify(req, state);
+        };
+        activeFinish = complete;
+        activeNotify = (state) => notify(req, state);
+        // cancel() reports the replaced utterances asynchronously; only the current request may react.
+        const isCurrent = () => activeFinish === complete;
+
+        for (const part of parts) {
+          const utterance = new SpeechSynthesisUtterance(part.text);
+          utterance.lang = part.lang;
+          utterance.rate = safeRate(req && req.rate);
+          const voice = pickVoice(utterance.lang, req && req.voiceURI);
+          if (voice) utterance.voice = voice;
+          utterance.onstart = () => { if (isCurrent()) notify(req, "speaking"); };
+          utterance.onboundary = (event) => {
+            try {
+              if (!isCurrent()) return;
+              if (event && event.name && event.name !== "word") return;
+              const localIndex = event && Number.isFinite(event.charIndex) ? event.charIndex : 0;
+              if (req && typeof req.onBoundary === "function") {
+                req.onBoundary({
+                  charIndex: part.offset + localIndex,
+                  charLength: wordLength(part.text, localIndex, event && event.charLength),
+                });
+              }
+            } catch (_e) { /* highlighting is optional */ }
+          };
+          utterance.onend = () => {
+            if (!isCurrent()) return;
+            remaining -= 1;
+            if (remaining === 0) finish("ended");
+          };
+          utterance.onerror = () => { if (isCurrent()) finish("error"); };
+          window.speechSynthesis.speak(utterance);
         }
+        return true;
+      } catch (_e) {
+        stop();
+        return false;
+      }
+    },
+
+    stop,
+
+    pause() {
+      try {
+        const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+        if (!synth || typeof synth.pause !== "function" || synth.paused) return false;
+        synth.pause();
+        if (typeof activeNotify === "function") activeNotify("paused");
         return true;
       } catch (_e) {
         return false;
       }
     },
 
-    stop() {
-      try { if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel(); }
-      catch (_e) { /* ignore */ }
+    resume() {
+      try {
+        const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+        if (!synth || typeof synth.resume !== "function" || !synth.paused) return false;
+        synth.resume();
+        if (typeof activeNotify === "function") activeNotify("speaking");
+        return true;
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    listVoices(lang) {
+      return listSpeechVoices(lang);
     },
   };
 }

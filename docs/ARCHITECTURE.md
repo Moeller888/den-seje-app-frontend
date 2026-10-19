@@ -429,10 +429,12 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   North Star Master **raster** render path. Default-off → `mountC2Avatar` uses the untouched C2/SVG
   path. When on (local preview), it renders the Phase-1 baked base — currently a **temporary PNG
   preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`); **WebP is the production target**.
-- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `false` — Section 157O).
-  Master switch for the read-aloud (TTS) service. Default-off → no control, no audio. When on, a
-  "🔊 Læs op" button reads the question via a pre-recorded Piper clip (if present) or on-device Web
-  Speech. No upload, no live service. See `docs/157o-read-aloud.md`.
+- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `true` — Section 157O).
+  Master switch for the read-aloud (TTS) service. The prompt player provides play/pause, restart,
+  saved speed and device-voice choice plus word highlighting where the browser exposes boundaries;
+  each multiple-choice option keeps its separate quick-read button. Audio comes from a pre-recorded
+  Piper clip (if present) or browser Web Speech. No app-managed upload, key or live TTS service. See
+  `docs/157o-read-aloud.md`.
 - **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
   for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
   keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.
