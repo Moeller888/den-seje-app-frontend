@@ -48,7 +48,9 @@ const FIXTURE_QUESTION = {
 };
 const PUBLIC_CONTENT_KEYS = ['question', 'options', 'type', 'force_text'];
 
-type Reply = { status: number; body: unknown; delayMs?: number };
+// `gate`: the reply is held until the test resolves it, so "while pending" is a state the test
+// controls — never a race against a timer.
+type Reply = { status: number; body: unknown; gate?: Promise<void> };
 
 // Logs the test pupil in with the checked-out renderer and both backend calls intercepted.
 // `replies` are the process-event answers in order (the last one repeats).
@@ -93,7 +95,7 @@ async function openStavTil(page: any, replies: Reply[], question: unknown = FIXT
     }
     submitted.push(request.postDataJSON());
     const reply = replies[Math.min(submitted.length - 1, replies.length - 1)];
-    if (reply.delayMs) await new Promise((r) => setTimeout(r, reply.delayMs));
+    if (reply.gate) await reply.gate;
     await route.fulfill({
       status: reply.status,
       headers: { ...CORS, 'content-type': 'application/json' },
@@ -108,7 +110,19 @@ async function openStavTil(page: any, replies: Reply[], question: unknown = FIXT
 
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'ready', { timeout: 20000 });
   await expect(page.locator('#question')).toContainText(String((question as any).content.question));
-  return { submitted, unanswered, input: page.locator('#options input#short-answer-input') };
+
+  // Every text #feedback shows, in order. "Ja!" is on screen only until the next question loads, so
+  // the test reads this log instead of racing the transition.
+  await page.evaluate(() => {
+    const el = document.getElementById('feedback')!;
+    const log: string[] = ((window as any).__feedbackLog = []);
+    new MutationObserver(() => {
+      const text = el.textContent ?? '';
+      if (text && log[log.length - 1] !== text) log.push(text);
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+  });
+  const feedbackLog = () => page.evaluate(() => (window as any).__feedbackLog as string[]);
+  return { submitted, unanswered, feedbackLog, input: page.locator('#options input#short-answer-input') };
 }
 
 const INCORRECT = { status: 200, body: { status: 'incorrect', correct_answer: CORRECT_SPELLING, review_text: null, misconception_type: null } };
@@ -118,7 +132,7 @@ test('Stav til: one-line input, no spelling aids, no key before answering, Enter
   expect(Object.keys(FIXTURE_QUESTION.content).every((k) => PUBLIC_CONTENT_KEYS.includes(k)),
     'the fixture must be the public DTO').toBe(true);
 
-  const { submitted, unanswered, input } = await openStavTil(page, [INCORRECT]);
+  const { submitted, unanswered, feedbackLog, input } = await openStavTil(page, [INCORRECT]);
 
   // A single-line text field — not the long-answer textarea, not option buttons.
   await expect(input).toBeVisible();
@@ -157,7 +171,7 @@ test('Stav til: one-line input, no spelling aids, no key before answering, Enter
   expect(Object.keys(submitted[0]).sort()).toEqual(['answer', 'question_instance_id', 'question_shown_at', 'student_id']);
 
   // Incorrect: the correct spelling appears only now, from the server's graded answer.
-  await expect(page.locator('#feedback')).toContainText(`Svaret er ${CORRECT_SPELLING}`);
+  await expect.poll(feedbackLog).toContainEqual(`Svaret er ${CORRECT_SPELLING} — husk det nu.`);
 
   // The quiz moves on through the normal state machine (here: to the empty state).
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
@@ -165,7 +179,9 @@ test('Stav til: one-line input, no spelling aids, no key before answering, Enter
 });
 
 test('Stav til: a correct answer is confirmed once — double Enter/click while pending sends nothing more', async ({ page }) => {
-  const { submitted, input } = await openStavTil(page, [{ ...CORRECT, delayMs: 1200 }]);
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  const { submitted, feedbackLog, input } = await openStavTil(page, [{ ...CORRECT, gate }]);
 
   await input.fill('blåbær');
   await input.press('Enter');
@@ -176,16 +192,23 @@ test('Stav til: a correct answer is confirmed once — double Enter/click while 
   await expect(input).toHaveAttribute('aria-busy', 'true');
   expect(await input.evaluate((el: HTMLInputElement) => el.readOnly)).toBe(true);
   await expect(page.getByRole('button', { name: 'Send svar' })).toBeDisabled();
+  await expect.poll(() => submitted.length, { message: 'exactly one request while pending' }).toBe(1);
 
-  await expect(page.locator('#feedback')).toContainText('Ja!');
-  await expect(page.locator('#feedback')).toHaveClass(/feedback-correct/);
+  // The server answers; the pupil sees the confirmation.
+  const classWhenConfirmed = page.waitForFunction(() => {
+    const el = document.getElementById('feedback');
+    return el && (el.textContent ?? '').includes('Ja!') ? el.className : null;
+  });
+  release();
+  expect(await (await classWhenConfirmed).jsonValue()).toBe('feedback-correct');
+  await expect.poll(feedbackLog).toContainEqual('Ja! 🎯');
   expect(submitted, 'exactly one request for one answer').toHaveLength(1);
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
   expect(submitted).toHaveLength(1);
 });
 
 test('Stav til: a server error hands the answer back — text kept, field focused, Enter retries', async ({ page }) => {
-  const { submitted, input } = await openStavTil(page, [{ status: 500, body: { error: 'boom' } }, CORRECT]);
+  const { submitted, feedbackLog, input } = await openStavTil(page, [{ status: 500, body: { error: 'boom' } }, CORRECT]);
 
   await input.fill('Blåbær');
   await input.press('Enter');
@@ -197,7 +220,7 @@ test('Stav til: a server error hands the answer back — text kept, field focuse
   await expect(page.getByRole('button', { name: 'Send svar' })).toBeEnabled();
 
   await input.press('Enter');
-  await expect(page.locator('#feedback')).toContainText('Ja!');
+  await expect.poll(feedbackLog).toContainEqual('Ja! 🎯');
   expect(submitted.map((s) => s.answer)).toEqual(['Blåbær', 'Blåbær']);
 });
 
