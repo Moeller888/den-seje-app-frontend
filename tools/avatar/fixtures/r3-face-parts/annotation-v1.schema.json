@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "r3-face-parts-annotation-v1",
+  "title": "R3 face-parts source-point annotation (one file per part)",
+  "description": "Placement METADATA for one part of one raw parts sheet. It never changes pixels. The compositor accepts it only when raw.sha256 equals the sheet's SHA-256, part/cell/layout match the fixed layout, the point names are exactly the part's names, and status is APPROVED (production). The tool (face-parts-tool.mjs validateAnnotation) is the enforcing implementation; this schema documents it.",
+  "type": "object",
+  "required": ["schema", "annotationVersion", "raw", "layoutId", "part", "cell", "coordinateSpace", "pointDefinitions", "points", "uncertaintyPx", "annotator", "status", "approvedBy", "approvedOn", "reviewFlags"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "const": "r3-face-parts-annotation-v1" },
+    "annotationVersion": { "type": "integer", "minimum": 1, "description": "incremented on every correction; a correction is a new file version, never an in-place edit of an approved one" },
+    "raw": { "type": "object", "required": ["file", "sha256"], "properties": { "file": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } },
+    "layoutId": { "const": "r3-face-parts-2x2-v1" },
+    "part": { "enum": ["browLeft", "browRight", "nose", "mouth"] },
+    "cell": { "description": "browLeft [0,0], browRight [1,0], nose [0,1], mouth [1,1]", "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+    "coordinateSpace": { "const": "cell-local continuous; pixel i covers [i, i+1); origin = the cell's top-left" },
+    "pointDefinitions": { "type": "string", "description": "the target-points version whose 'definition' texts the points follow" },
+    "points": {
+      "type": "object",
+      "description": "exactly the part's point names: brows {inner, outer}; nose {top, bottom}; mouth {left, right}. Each [x, y], finite, inside [0, 512].",
+      "additionalProperties": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+    },
+    "uncertaintyPx": { "type": "number", "minimum": 0 },
+    "annotator": { "type": "string" },
+    "status": { "enum": ["DRAFT", "APPROVED", "REJECTED", "SYNTHETIC_TEST_APPROVED"], "description": "only the owner sets APPROVED; SYNTHETIC_TEST_APPROVED is refused in production" },
+    "approvedBy": { "type": ["string", "null"] },
+    "approvedOn": { "type": ["string", "null"], "description": "ISO date" },
+    "reviewFlags": { "type": "array", "items": { "enum": ["orientation", "proportions", "lineWeight", "style", "other"] }, "description": "marks the part for owner review; flags never change the transform and never set an acceptance threshold" },
+    "note": { "type": "string" }
+  }
+}

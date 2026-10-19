@@ -59,6 +59,11 @@
 // underlay figure and its evidence untouched) and re-worded the prose. preD163Contract() reverses exactly that closure,
 // proven canonically identical to the contract at the D-162 merge (PRE_D163_CONTRACT_CANONICAL_SHA256);
 // preD162Contract() applies it first.
+//
+// D-164 then ADDED the parts method (top-level faceNeutralPartsMethod), one deterministicOperations entry and the new
+// assets[4].method. No authorisedCalls entry, budget figure or counter changed. preD164Contract() removes exactly those
+// additions, proven canonically identical to the contract at the D-163 merge (PRE_D164_CONTRACT_CANONICAL_SHA256);
+// preD163Contract() applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -252,9 +257,28 @@ export const PRE_D163 = Object.freeze({
   "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds SEVEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — THE ONLY active send permission. D-162 supersedes the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt, faceNeutralGuideBPreparation), with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after the merge. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id and a NEW claim identity. Apart from D-162's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's or D-162's call id or claim identity, and no other call in the R3 plan."
 });
 
-/** A deep copy of the live contract with D-163's closure of D-162 reversed. Pure; never touches the input. */
-export function preD163Contract(live) {
+export const D164_DECISION = "D-164";
+/** origin/main when D-164 integrated the parts method (the D-163 merge). */
+export const PRE_D164_COMMIT = "efd92d49f85083bcf9f47e4cf47b12fe8aaba16e";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D164_COMMIT. */
+export const PRE_D164_CONTRACT_CANONICAL_SHA256 = "653c71b709e0506ee6606e0b06f49f31c34481d8de169ebb2923fb4dd6ecbc54";
+/** The top-level key D-164 added, its deterministicOperations entry, and the assets[4].method it replaced. */
+export const D164_ADDED_TOP_LEVEL_KEYS = Object.freeze(["faceNeutralPartsMethod"]);
+export const D164_ADDED_OPERATION = "face-neutral parts placement (D-164)";
+export const PRE_D164 = Object.freeze({ "asset4Method": "generated" });
+
+/** A deep copy of the live contract with D-164's additions removed. Pure; never touches the input. */
+export function preD164Contract(live) {
   const c = JSON.parse(JSON.stringify(live));
+  for (const k of D164_ADDED_TOP_LEVEL_KEYS) delete c[k];
+  c.deterministicOperations = c.deterministicOperations.filter((o) => o.op !== D164_ADDED_OPERATION);
+  c.assets[4].method = PRE_D164.asset4Method;
+  return c;
+}
+
+/** A deep copy of the live contract with D-164's additions and D-163's closure of D-162 reversed. Pure; never touches the input. */
+export function preD163Contract(live) {
+  const c = preD164Contract(live);
   const e162 = c.authorisedCalls.calls.find((x) => x.decision === "D-162");
   if (e162) {
     e162.status = PRE_D163.d162.status;
