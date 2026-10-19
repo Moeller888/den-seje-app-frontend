@@ -164,3 +164,32 @@ test("process-event evaluates short text with isTextAnswerCorrect and passes acc
   assert.match(src, /isTextAnswerCorrect\(answer, correct_answer, questionContent\?\.accepted_answers\)/);
   assert.equal(/\.includes\(c\)|c\.includes\(u\)|function isTextCorrect/.test(src), false, "substring evaluator must not return");
 });
+
+// ── Stav til, fase 1: Danish spelling cases the two live questions (Polen, Norge) rely on ─────────
+test("Danish capitals fold like lower case: BLÅBÆR = blåbær, ØRESUND = Øresund", () => {
+  assert.equal(isTextAnswerCorrect("BLÅBÆR", "blåbær"), true);
+  assert.equal(isTextAnswerCorrect("øresund", "Øresund"), true);
+  assert.equal(isTextAnswerCorrect("ÆRØ", "Ærø"), true);
+});
+
+test("a Danish partial answer is wrong: blå is not blåbær, Nor is not Norge", () => {
+  assert.equal(isTextAnswerCorrect("blå", "blåbær"), false);
+  assert.equal(isTextAnswerCorrect("Nor", "Norge"), false);
+});
+
+test("a common misspelling is wrong — the system never guesses the intended word", () => {
+  for (const wrong of ["Polan", "Poland", "Norway", "Norg", "Norgee", "blaabaer", "blabær"]) {
+    assert.equal(isTextAnswerCorrect(wrong, wrong.startsWith("N") ? "Norge" : wrong.startsWith("P") ? "Polen" : "blåbær"), false, wrong);
+  }
+});
+
+test("several explicit variants are each accepted, and only those", () => {
+  const accepted = ["Kong Christian 4.", "Christian IV", "Christian den Fjerde"];
+  for (const v of accepted) assert.equal(isTextAnswerCorrect(` ${v.toUpperCase()} `, "Christian 4.", accepted), true, v);
+  assert.equal(isTextAnswerCorrect("Christian", "Christian 4.", accepted), false);
+});
+
+test("a typed answer with the key's trailing full stop still matches (edge punctuation both sides)", () => {
+  assert.equal(isTextAnswerCorrect("Christian 4", "Christian 4."), true);
+  assert.equal(isTextAnswerCorrect("Polen.", "Polen"), true);
+});
