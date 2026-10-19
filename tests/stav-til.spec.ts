@@ -9,7 +9,8 @@
 //
 // The renderer under test is the CHECKED-OUT one. The suite runs against the live site, which
 // serves main's frontend until a change is merged, so app.js and js/answer-input.js are served from
-// this checkout. After merge the live files are the same bytes, so the overlay changes nothing.
+// this checkout — and so is index.html, whose #feedback / #review-feedback live regions are part of
+// the change. After merge the live files are the same bytes, so the overlay changes nothing.
 
 import { test, expect } from '@playwright/test';
 import * as dotenv from 'dotenv';
@@ -23,6 +24,7 @@ const REPO = path.resolve(__dirname, '..');
 dotenv.config({ path: path.resolve(REPO, '.env') });
 
 const LOCAL_FRONTEND: Record<string, string> = {
+  '/index.html': path.join(REPO, 'index.html'),
   '/app.js': path.join(REPO, 'app.js'),
   '/js/answer-input.js': path.join(REPO, 'js', 'answer-input.js'),
 };
@@ -65,7 +67,10 @@ async function openStavTil(page: any, replies: Reply[], question: unknown = FIXT
     const file = LOCAL_FRONTEND[new URL(route.request().url()).pathname];
     await route.fulfill({
       status: 200,
-      headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' },
+      headers: {
+        'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/javascript; charset=utf-8',
+        'cache-control': 'no-store',
+      },
       body: readFileSync(file, 'utf8'),
     });
   });
