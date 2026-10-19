@@ -28,7 +28,7 @@ initAnalytics();
 maybeShowConsentBanner();
 
 const DEBUG = true;
-const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };
+const GRADE_START_BAND = { 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 2, 9: 3 };
 let uiState = "IDLE";
 
 function logEvent(event, payload = {}) {
