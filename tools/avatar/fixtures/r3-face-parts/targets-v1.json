@@ -1,0 +1,93 @@
+{
+  "schema": "r3-face-neutral-targets-v1",
+  "version": "r3-face-neutral-targets-v1",
+  "status": "APPROVED",
+  "approval": {
+    "decision": "D-164",
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-19",
+    "scope": "All eight points approved unchanged from the reviewed draft r3-face-neutral-targets-v1-draft. The two browLeft points are approved as RECONSTRUCTED DESIGN, not as measurements of hidden pixels.",
+    "statusNote": "Only the owner may set APPROVED. Any correction is a new targets version with a new pin and a new owner decision."
+  },
+  "canvas": [1024, 1536],
+  "coordinates": "master canvas, continuous: pixel i covers [i, i+1); x right, y down",
+  "reference": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "readingMethod": "visual reading on x8 crops with a 10 px grid. No automatic feature extraction from Northstar."
+  },
+  "points": {
+    "browRight": {
+      "inner": {
+        "xy": [534.0, 269.5],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The brow tip nearest the face midline: where the brow's upper and lower contour meet.",
+        "source": "Northstar, visual reading.",
+        "rationale": "Agrees with the extreme column x = 534 (rows 266–269) of the existing D-159 brow component, which was derived by the published brow rule; the tip itself is a visual reading."
+      },
+      "outer": {
+        "xy": [619.5, 268.5],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The brow tip farthest from the midline: where the upper and lower contour meet.",
+        "source": "Northstar, visual reading.",
+        "rationale": "Agrees with the extreme column x = 619 (rows 266–268) of the D-159 brow component."
+      }
+    },
+    "browLeft": {
+      "inner": {
+        "xy": [482.8, 273.5],
+        "uncertaintyPx": "2 (inherited) + the reconstruction itself",
+        "kind": "RECONSTRUCTED_DESIGN",
+        "definition": "As browRight.inner, on the image-left brow.",
+        "source": "D-159 provisional brow rule applied to browRight.inner: x = 2·510.8997 − 5 − x_R, y = y_R + 4.",
+        "rationale": "Northstar's image-left brow ends are hidden by hair. This point is a DESIGN choice (mirror + the owner-accepted −5/+4 offset), not a measurement of hidden pixels."
+      },
+      "outer": {
+        "xy": [397.3, 272.5],
+        "uncertaintyPx": "2 (inherited) + the reconstruction itself",
+        "kind": "RECONSTRUCTED_DESIGN",
+        "definition": "As browRight.outer, on the image-left brow.",
+        "source": "The same rule applied to browRight.outer.",
+        "rationale": "Hidden by hair on Northstar; reconstructed design, NOT measured."
+      }
+    },
+    "nose": {
+      "top": {
+        "xy": [504.5, 348.0],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The highest point of the nose's dark contour line.",
+        "source": "Northstar, visual reading.",
+        "rationale": "Inside D-159's nose box [496, 348, 510, 371]. Short span (≈ 22.5 px): ±2 px here moves the nose scale by up to ≈ ±13 %."
+      },
+      "bottom": {
+        "xy": [505.0, 370.5],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The lowest point of the nose's dark contour line (base of the nostril curve).",
+        "source": "Northstar, visual reading.",
+        "rationale": "Inside D-159's nose box."
+      }
+    },
+    "mouth": {
+      "left": {
+        "xy": [475.0, 388.0],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The image-left end of the mouth line's centre (the corner; the small end tick is excluded).",
+        "source": "Northstar, visual reading.",
+        "rationale": "Inside D-159's mouth box [474, 380, 551, 394]."
+      },
+      "right": {
+        "xy": [550.5, 380.0],
+        "uncertaintyPx": 2,
+        "kind": "MEASURED_ANNOTATION",
+        "definition": "The image-right end of the mouth line's centre (the corner; the small end tick is excluded).",
+        "source": "Northstar, visual reading.",
+        "rationale": "About 8 px higher than the left corner: Northstar's smile is tilted ≈ 6°. A level mouth cannot fit it without rotation, which is excluded — the residual is reported instead."
+      }
+    }
+  }
+}

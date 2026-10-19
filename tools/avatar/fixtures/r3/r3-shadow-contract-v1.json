@@ -547,7 +547,7 @@
     { "id": 2,  "name": "r3-tee-default",         "slot": "tee",      "method": "generated", "calls": 1 },
     { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
     { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
-    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated", "calls": 2 },
+    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated-parts-sheet+point-anchored-composition", "calls": 2 },
     { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
     { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
@@ -578,7 +578,8 @@
     { "op": "master -> served 512x768", "how": "downscaleHalf + cwebp -lossless -exact -z 9, verified by decoding", "precedent": "the established promotion path for every R2 asset" },
     { "op": "runtime masks from approved layers", "how": "the tee layer's own alpha IS the tee region, so the D-085 colour classification is not needed", "precedent": "build-r2-torso-occlusion-mask.mjs, 34 gates" },
     { "op": "colour tokens for hair and iris", "how": "one greyscale asset x a colour token", "precedent": "R2 already contracts hair and iris as multiply x token" },
-    { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" }
+    { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" },
+    { "op": "face-neutral parts placement (D-164)", "how": "fixed 2x2 cell extraction from a 1024x1024 parts sheet; per part ONE positive uniform scale s and a translation t, least-squares from its two APPROVED source points to its two APPROVED target points; exact area filter on premultiplied RGBA; Math.round half-up; source-over into one 1024x1536 face layer. No rotation, reflection, per-axis scale, shear or warp. See faceNeutralPartsMethod.", "precedent": "R2 hair tight crop (D-119): a deterministic downscale and a paste at a fixed offset" }
   ],
 
   "productionOrder": [
@@ -3066,5 +3067,214 @@
       "three changes are tested together (body removed, windows, prompt): an outcome cannot be attributed to one of them (accepted by the owner)"
     ],
     "diagnosticsRule": "Diagnostics run on the whole raw output. An indicator with 0 pixels in its domain (e.g. DIAG-3/6/7, which only see alpha 255) is NOT APPLICABLE / INCONCLUSIVE, never 'no fault'. The production checks are unchanged."
+  },
+
+  "faceNeutralPartsMethod": {
+    "decision": "D-164",
+    "adoptedOn": "2026-10-19",
+    "status": "ADOPTED — PARTS METHOD, APPROVED TARGET POINTS AND CHECKS ARE BINDING FOR r3-face-neutral — NO IMAGE REQUEST AUTHORISED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "scope": "Applies only to assets[4] r3-face-neutral. Expression faces, skin-tone behaviour and every other asset are not covered and are decided separately.",
+    "method": "The image model authors SEPARATE, isolated, transparent parts on one 1024x1024 parts sheet; a pinned deterministic tool scales and places them by approved point anchors and assembles ONE face layer for the existing face slot. The model no longer decides size or position on the master canvas.",
+    "relationToEarlierDecisions": "D-159's layer split, faceDelivery (one RGBA feature layer on the master canvas, normal source-over), production-order exception and output checker stay in force. D-159's areaModel target areas stay DIAGNOSTIC; the approved target points below do not replace them. D-158's brow definition stands; the image-left brow's target points are the D-159 reconstruction. D-160 and D-162 (whole-canvas, model-placed) are spent; their outputs are never a pixel source, a geometric authority or an annotation source for parts. The runtime, layerContract, zModel, faceSlotSemantics, eyes-fixed, iris, hair and blush are unchanged.",
+    "rawSheet": {
+      "size": [
+        1024,
+        1024
+      ],
+      "format": "PNG, 8-bit RGBA, transparent background",
+      "layout": {
+        "id": "r3-face-parts-2x2-v1",
+        "cell": [
+          512,
+          512
+        ],
+        "cells": {
+          "browLeft": [
+            0,
+            0
+          ],
+          "browRight": [
+            1,
+            0
+          ],
+          "nose": [
+            0,
+            1
+          ],
+          "mouth": [
+            1,
+            1
+          ]
+        },
+        "compositingOrder": [
+          "browLeft",
+          "browRight",
+          "nose",
+          "mouth"
+        ]
+      },
+      "content": "exactly one complete feature per fixed cell, drawn large in the reference orientation; no skin, face surface, eyes, eyelids, lashes, folds, hair, blush, ears, text, numbers, grid lines or guide marks",
+      "neverModified": "The raw sheet is stored unchanged and is never written to; every later step reads it."
+    },
+    "prompt": {
+      "file": "tools/avatar/fixtures/r3-face-parts/prompt-parts-sheet-v1.txt",
+      "sha256": "85b8500fbaca1a8ce87c3b3296818f1b3e8fd89719e97fc96a3cd9c33735c61c",
+      "bytes": 2413,
+      "status": "FROZEN DRAFT — not a request. A later, separate call decision may adopt it unchanged or replace it with a new pinned version.",
+      "plannedInput": "Northstar Master v2 (3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50) as the only reference image; no layout guide, so no guide marks can be printed into the output",
+      "orientation": "It requires the reference orientation of every feature, in particular the tilted mouth (right corner higher)."
+    },
+    "targets": {
+      "file": "tools/avatar/fixtures/r3-face-parts/targets-v1.json",
+      "sha256": "f6fe9f82ed57de32c6a7abdc96b5ea7c4154362a490fb3ac1799fbecb67ac3fd",
+      "version": "r3-face-neutral-targets-v1",
+      "status": "APPROVED",
+      "approvedBy": "owner",
+      "approvedOn": "2026-10-19",
+      "points": {
+        "browRight": {
+          "inner": [
+            534,
+            269.5
+          ],
+          "outer": [
+            619.5,
+            268.5
+          ]
+        },
+        "browLeft": {
+          "inner": [
+            482.8,
+            273.5
+          ],
+          "outer": [
+            397.3,
+            272.5
+          ]
+        },
+        "nose": {
+          "top": [
+            504.5,
+            348
+          ],
+          "bottom": [
+            505,
+            370.5
+          ]
+        },
+        "mouth": {
+          "left": [
+            475,
+            388
+          ],
+          "right": [
+            550.5,
+            380
+          ]
+        }
+      },
+      "kinds": "six MEASURED_ANNOTATION points (visual readings on Northstar, about ±2 px) and two RECONSTRUCTED_DESIGN points (browLeft: the D-159 mirror rule; Northstar's ends are hidden by hair — design, never a measurement of hidden pixels)",
+      "definitions": "per point in the targets file (brows: inner and outer tip where the upper and lower contour meet; nose: highest and lowest point of the dark contour line; mouth: the ends of the mouth line's centre, end ticks excluded)",
+      "uncertainty": "±2 px per point. Over the nose's short span (≈ 22.5 px) that is up to ≈ ±13 % of its scale; the nose is reviewed with particular care.",
+      "noAutomaticExtraction": "The points were read visually; no feature was extracted automatically from Northstar.",
+      "changes": "Any correction is a new targets version with a new file pin and a new owner decision."
+    },
+    "annotation": {
+      "schemaFile": "tools/avatar/fixtures/r3-face-parts/annotation-v1.schema.json",
+      "schemaSha256": "7b49c7884d684feb69ee9891999fd3d93a5d91e214a908ecd8683c4489043d48",
+      "rule": "Source points are separate METADATA per part — never a pixel change. Each annotation is bound to the raw sheet's SHA-256, the layout, the part and its cell, names exactly the part's points, and records its version, annotator, uncertainty and approval status.",
+      "approval": "Only the owner sets APPROVED. Synthetic test statuses are never accepted in production. A correction is a new annotation version."
+    },
+    "authorOperation": {
+      "allowed": [
+        "fixed 2x2 cell extraction (the grid is fixed before any call, never chosen after seeing an output)",
+        "ONE positive uniform scale s per part",
+        "a translation per part (sub-pixel allowed)",
+        "the pinned area filter and rounding",
+        "source-over in the fixed order"
+      ],
+      "excluded": [
+        "rotation",
+        "reflection (a non-positive fitted s is rejected)",
+        "per-axis scale",
+        "shear",
+        "warp or any non-linear deformation",
+        "a crop to pass a check",
+        "stray-pixel or matte removal",
+        "inpainting, reconstruction or pixel repair"
+      ],
+      "fit": "q = s·p + t, least squares over the part's two approved point pairs: s = Σ(p−p̄)·(q−q̄) / Σ|p−p̄|², t = q̄ − s·p̄",
+      "bboxRole": "Alpha and bounding boxes never set s or t. They only reject (empty part, content cut at a cell boundary, placement outside the canvas) or diagnose.",
+      "residualPolicy": {
+        "decision": "REVIEW-ONLY (owner decision D-164)",
+        "rule": "The residual vector of every point and the angle deviation are always logged and shown. A non-zero residual is a least-squares approximation and is never described as an exact fit; the part is flagged for the owner's review.",
+        "noThreshold": "No numeric residual limit rejects a composition. Introducing one requires a separate owner decision with its reason."
+      },
+      "orientation": "A part that does not fit its targets without rotation is never rotated or deformed; the residual is reported and the owner decides."
+    },
+    "conventions": {
+      "coordinates": "continuous: pixel i covers [i, i+1); source points cell-local, target points on the 1024x1536 master canvas",
+      "filter": "exact area (box) filter over each output pixel's footprint, on premultiplied RGBA",
+      "colourSpace": "sRGB-encoded 8-bit values averaged directly (not linear light)",
+      "alpha": "files straight 8-bit RGBA; internally premultiplied float64",
+      "rounding": "alpha8 = Math.round(a·255); colour8 = clamp(Math.round(premul / a)); Math.round = half up; a rounded alpha of 0 is (0,0,0,0)",
+      "determinism": "identical inputs give identical pixels on the same engine; file bytes additionally depend on zlib, the pixel SHA-256 does not",
+      "noQualityClaim": "Geometric determinism says nothing about visual quality: line weight, style, edges and identity are judged by the owner's visual review."
+    },
+    "checks": {
+      "rawSheet": {
+        "binding": [
+          "RAW-1 the PNG decodes",
+          "RAW-2 1024x1024",
+          "RAW-3 8-bit RGBA, not interlaced",
+          "RAW-4 every fixed cell has content (alpha > 0)",
+          "RAW-5 nothing cut at a cell boundary: alpha = 0 on every cell's outermost ring, including the sheet's centre lines"
+        ],
+        "diagnostic": [
+          "RDIAG-1 stray pixels outside the largest 8-connected component",
+          "RDIAG-2 minimum distance to the cell edge (no margin threshold)",
+          "RDIAG-3 guide-marker colours",
+          "RDIAG-4 skin-like solid pixels",
+          "RDIAG-5 near-white solid pixels",
+          "RDIAG-6 wrong part, text, eyes, hair or blush — visual review only"
+        ],
+        "globalEnvelopeNotApplied": "The broad face envelope [384, 230, 632, 412] is a master-canvas rule and is never applied to a parts sheet."
+      },
+      "annotationAndTargets": "schema, raw SHA-256, layout, part, cell, exact point names, APPROVED status; the pinned targets file; s > 0; the placed part stays on the canvas",
+      "composedLayer": {
+        "binding": "the EXISTING D-159 checker unchanged: AUTO-1..5, including the broad envelope [384, 230, 632, 412] as a binding technical rejection",
+        "diagnostic": "the existing DIAG-1..8, overlap between parts, residual vectors and angle deviations, owner-review flags",
+        "visualReview": "on U1 and on light, neutral and dark backgrounds, at 1:1, 360x540 and 180x270, and under the northstar, afro and short hairstyles; final approval still needs the approved underlay, eyes and hair (D-159)"
+      },
+      "firstFailure": "The first binding failure stops the run and writes no output file. Nothing is cropped, moved or repaired to pass a check."
+    },
+    "rawOutputRule": "The existing rule that raw outputs are never cropped, moved, scaled, warped, de-matted or repaired stays in force unchanged: the raw sheet is never written. The authorOperation applies only to the cells of a parts sheet, by the pinned tool, from APPROVED metadata, and its result is a NEW derived file. A composed layer is not a candidate until the owner decides.",
+    "tools": {
+      "library": "tools/avatar/r3-face-parts-tool.mjs",
+      "cli": "tools/avatar/r3-face-parts-compose.mjs",
+      "test": "tests/unit/avatar-r3-face-parts-tool.test.mjs",
+      "syntheticFixtures": "tests/unit/avatar-r3-face-parts-synthetic.mjs (technical test shapes, not a face)",
+      "noToolSha256": "No tool SHA-256 is pinned here (as D-145). Every transform log records the library, CLI and checker SHA-256.",
+      "productionGuards": [
+        "only the pinned targets file",
+        "only APPROVED annotations",
+        "output only inside the gitignored tools/avatar/build/",
+        "never overwrites an existing output",
+        "no network, credential, claim or image request"
+      ]
+    },
+    "budget": "assets[4]'s planned capacity (2) is used up by D-160 and D-162 (callsActuallySentSoFar.faceNeutral = 2). D-164 adds no planned call and changes no budget figure: a parts-sheet attempt needs a separate owner decision with its own capacity, call-id, claim identity and send adapter.",
+    "notApproved": [
+      "an image request or upload",
+      "a call-id or claim",
+      "a send adapter",
+      "a candidate or promotion",
+      "a runtime change",
+      "expression faces or skin-tone handling",
+      "a numeric residual threshold"
+    ]
   }
 }

@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — two attempts spent and rejected; no live permission (D-158 … D-163, as of 2026-10-19).**
+- **R3 face-neutral — two attempts spent and rejected; no live permission; parts method adopted (D-158 … D-164, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -88,6 +88,14 @@ art layer behind them can be upgraded without a rewrite.
   `underlay` = **5**), the planned face capacity (2) is used up, 0 live permissions. No candidate, nothing promoted,
   R3 stays shadow and default OFF; a further attempt needs a new owner decision, new capacity, a new call-id and a
   new claim identity. Final approval of any output still needs the approved underlay, eyes and hair.
+  **D-164 (2026-10-19)** made the **parts method** the binding production method for `r3-face-neutral`: the image
+  model will author separate transparent parts (both brows, nose, mouth) on a fixed 2×2 sheet, and the pinned tool
+  `tools/avatar/r3-face-parts-compose.mjs` places them by **owner-approved point anchors**
+  (`tools/avatar/fixtures/r3-face-parts/targets-v1.json`; the image-left brow's points are reconstructed design) with
+  one uniform scale and a translation per part — no rotation, reflection or deformation; residuals are review-only —
+  and assembles one 1024×1536 layer for the existing face slot (runtime unchanged). The raw sheet has its own checks;
+  the composed layer keeps D-159's AUTO-1..5 including the broad envelope. No call, adapter or capacity is authorised:
+  a parts attempt needs a separate owner decision. See `project-state.md` **D-164**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
