@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; one nose attempt authorised, not yet run (D-158 … D-167, as of 2026-10-19).**
+- **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -118,6 +118,12 @@ art layer behind them can be upgraded without a rewrite.
   prompt `ed73b60a…`, 1024×1024): UNSPENT, not yet attempted, not a run instruction; the shading and highlight are
   reviewed on light, medium and dark skin afterwards. Planned face capacity 4 (budget 22–23); actually sent unchanged
   (`faceNeutral` = 3, `underlay` = 5). See `project-state.md` **D-167**.
+  **D-168 (2026-10-19)** recorded that one nose send (HTTP 200, one partial sheet `8e309b67…`) and closed the mandate:
+  RAW-1..3 passed, **RAW-4′ rejected** five alpha-1 pixels outside the nose cell (RAW-5 not reached), no tolerance was
+  added after the fact, and no nose is visually approved (orientation right, but the contour is too thick, the shading
+  too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
+  `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
+  permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
