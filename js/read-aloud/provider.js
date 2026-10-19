@@ -14,14 +14,25 @@
  * @property {string} lang           // e.g. "da-DK"
  * @property {{text:string, lang:string}[]} [segments]  // optional language runs; a provider
  *           that can switch voices reads these in order, else it reads `text`
+ * @property {number} [rate]         // playback speed, clamped by the provider
+ * @property {string|null} [voiceURI] // preferred device voice; ignored when unavailable
+ * @property {(boundary:{charIndex:number,charLength:number}) => void} [onBoundary]
+ * @property {(state:"speaking"|"paused"|"ended"|"error") => void} [onState]
  */
 
 /**
  * @typedef {Object} ReadAloudProvider
  * @property {string} id
  * @property {() => boolean} isSupported
+ * @property {(req: ReadAloudRequest) => boolean} [canSpeak]  // can it voice THIS request?
+ *           Omitted = any request is speakable when supported. The UI only renders controls
+ *           when at least one provider can speak the text, so a new provider (e.g. a paid
+ *           cloud voice) plugs in by implementing this contract — no UI change.
  * @property {(req: ReadAloudRequest) => Promise<boolean>} speak  // true = produced audio
  * @property {() => void} stop
+ * @property {() => boolean} [pause]
+ * @property {() => boolean} [resume]
+ * @property {(lang:string) => {name:string,voiceURI:string,lang:string}[]} [listVoices]
  */
 
 /**

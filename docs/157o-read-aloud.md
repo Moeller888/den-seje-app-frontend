@@ -25,9 +25,33 @@ A provider-abstracted read-aloud service (consistent with the OCR/AI layers), **
 | `provider.js` | `ReadAloudProvider` contract + `assertReadAloudProvider()`. App depends only on this. |
 | `manifest.js` | `clipPathFor(clipKey)` (empty by default) + `hashKey(text)` (stable djb2 key). |
 | `provider-prerecorded.js` | **Primary** — plays a Piper clip (via `Audio`) when one exists; else returns false. |
-| `provider-webspeech.js` | **Fallback** — on-device `speechSynthesis` (`da-DK`); no files, no network. |
-| `index.js` | `createReadAloud()` facade → `isAvailable()`/`speak()`/`stop()`. Order: prerecorded → web speech. |
-| `adapters/quiz.js` | `attachReadAloudControl(container, text)` — question "🔊 Læs op" button. Plus `attachOptionReadAloudControl(row, text)` — per-MC-option "🔊" button (reads one option). Both no-op when disabled. |
+| `provider-webspeech.js` | **Fallback** — browser `speechSynthesis` (`da-DK`); speed, device-voice selection, pause/resume and word boundaries where supported. |
+| `index.js` | `createReadAloud()` facade → availability, speak/stop/pause/resume and device voices. Order: prerecorded → web speech. |
+| `adapters/quiz.js` | `attachReadAloudControl(container, text)` — prompt player with visual reading track. Plus `attachOptionReadAloudControl(row, text)` — per-MC-option "🔊" button (reads one option). Both no-op when disabled. |
+
+### Player upgrade (2026-10-18)
+
+The prompt control is now a compact reading player shared by quiz, placement and every text-based
+student task:
+
+- play/pause/resume and "Forfra";
+- speed choices 0.75×, normal, 1.25× and 1.5×;
+- a list of the Danish voices actually available on the device, with automatic best-voice fallback;
+- speed and voice saved locally on that device (no profile data or database write);
+- word highlighting driven by browser boundary events; speech still works without highlighting in
+  browsers that do not emit them;
+- visible status, keyboard focus, 44 px controls, responsive wrapping and reduced-motion support.
+
+The provider contract remains the single integration boundary. No Azure key, Edge Function, new
+database path or paid runtime service was added. `css/read-aloud.css` is included on all student
+surfaces that use the shared adapter.
+
+**Support rule.** Controls render only when the facade's `canSpeak(text)` is true, i.e. at least
+one provider can voice *that* text. Web Speech can voice any text once the browser supports it; the
+pre-recorded provider counts as supported only when the manifest ships at least one clip, and can
+voice a text only when a clip exists for its `hashKey`. With no Web Speech and no matching clip the
+prompt stays plain text, no 🔊 is added, and the quiz is unaffected. A future provider (e.g. a paid
+cloud voice) joins by implementing the optional `canSpeak(req)` in `provider.js` — no UI change.
 
 **Wiring:** every text-based student task uses this adapter, not a second speaker.
 `app.js` calls `attachReadAloudControl(questionElement, question.content.question)` right
@@ -98,7 +122,7 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
   the voice. Tests: `tests/unit/read-aloud-lang-segments.test.mjs` (incl. a no-text-lost invariant
   over the whole English corpus). New question patterns may need a word-list/frame rule here.
   Piper clips remain a future quality upgrade; adding them needs no further activation.
-- Styling of the control is minimal; CSS polish is a follow-up.
+- The full player is reserved for prompts; MC options deliberately keep the compact one-tap button.
 - **Rule:** any new text-based student task (question, option, prompt) gets
   `attachReadAloudControl` on the prompt and `attachOptionReadAloudControl` on each
   multiple-choice option. The 🔊 stays a sibling of the answer control, so it can never submit.
