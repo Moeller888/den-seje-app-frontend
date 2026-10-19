@@ -19,6 +19,7 @@ import {
   resolveAnswerRenderer,
   isSubmittableTextAnswer,
   buildShortTextAnswer,
+  shortTextCorrection,
 } from "../../js/answer-input.js";
 
 const read = (rel) => readFileSync(new URL(rel, import.meta.url), "utf8");
@@ -232,7 +233,7 @@ const renderOptionsSrc = (() => {
 })();
 
 test("app.js selects renderers through resolveAnswerRenderer", () => {
-  assert.match(APP, /import \{ ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer \} from "\.\/js\/answer-input\.js";/);
+  assert.match(APP, /import \{ ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection \} from "\.\/js\/answer-input\.js";/);
   assert.match(renderOptionsSrc, /const renderer = resolveAnswerRenderer\(question\);/);
 });
 
@@ -399,4 +400,29 @@ test("the text input keeps a 16px font, so phones do not zoom into the field", (
   const rule = html.match(/#options input\[type="text"\],\s*#options textarea\s*\{([^}]*)\}/);
   assert.ok(rule, "the shared text-input rule exists");
   assert.match(rule[1], /font-size:\s*16px/);
+});
+
+// ── Feedback after an incorrect answer that has an explanation (review_text) ──────────────────
+test("the correction states the correct spelling and what the pupil typed", () => {
+  assert.equal(shortTextCorrection("Polen", "Pølen"), "Det staves: Polen — du skrev: Pølen");
+  assert.equal(shortTextCorrection(" Norge ", "  norway "), "Det staves: Norge — du skrev: norway");
+});
+
+test("the correction never invents a spelling: no correct answer → null (explanation alone)", () => {
+  for (const missing of [null, undefined, "", "   ", 42, {}]) {
+    assert.equal(shortTextCorrection(missing, "Pølen"), null, JSON.stringify(missing));
+  }
+});
+
+test("the correction without a typed answer names only the spelling", () => {
+  for (const typed of [null, undefined, "", "   "]) {
+    assert.equal(shortTextCorrection("Polen", typed), "Det staves: Polen");
+  }
+});
+
+test("app.js keeps the correction only for \"stav til\" — other reflections are unchanged", () => {
+  const app = read("../../app.js");
+  assert.match(app, /currentRenderer === ANSWER_RENDERERS\.SHORT_TEXT\s*\?\s*shortTextCorrection\(data\.correct_answer, userAnswer\)\s*:\s*null/);
+  assert.match(app, /enterReflectionState\(reviewText, correction\)/);
+  assert.match(app, /feedback\.textContent = leadText \?\? "";/);
 });

@@ -50,7 +50,7 @@ type Reply = { status: number; body: unknown; delayMs?: number };
 
 // Logs the test pupil in with the checked-out renderer and both backend calls intercepted.
 // `replies` are the process-event answers in order (the last one repeats).
-async function openStavTil(page: any, replies: Reply[]) {
+async function openStavTil(page: any, replies: Reply[], question: unknown = FIXTURE_QUESTION) {
   const submitted: any[] = [];
   const unanswered: string[] = [];
   let questionsServed = 0;
@@ -75,7 +75,7 @@ async function openStavTil(page: any, replies: Reply[]) {
       await route.fulfill({ status: 204, headers: CORS });
       return;
     }
-    const body = questionsServed === 0 ? FIXTURE_QUESTION : { step: 'no_questions' };
+    const body = questionsServed === 0 ? question : { step: 'no_questions' };
     questionsServed++;
     await route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   });
@@ -102,7 +102,7 @@ async function openStavTil(page: any, replies: Reply[]) {
   await page.click('button');
 
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'ready', { timeout: 20000 });
-  await expect(page.locator('#question')).toContainText('Stav til');
+  await expect(page.locator('#question')).toContainText(String((question as any).content.question));
   return { submitted, unanswered, input: page.locator('#options input#short-answer-input') };
 }
 
@@ -212,4 +212,61 @@ test('Stav til on a phone: the field and button fit, the font does not trigger z
   expect(fontSize, 'iOS zooms into inputs below 16px').toBeGreaterThanOrEqual(16);
 
   await testInfo.attach('stav-til-mobile', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
+});
+
+// The two live "stav til" questions both carry a review_text, so an incorrect answer takes the
+// reflection path, not "Svaret er …". This mirrors Polen (b88f169a…) exactly: the public DTO the
+// browser receives, and the graded process-event answer with the live review_text
+// (supabase/migrations/20261011094747_stav_til_first_questions.sql).
+const POLEN_QUESTION = {
+  question_instance_id: FIXTURE_INSTANCE_ID,
+  content: { question: 'Hvilket land invaderede Tyskland 1. september 1939?' },
+  answer_format: 'text',
+  answer_type: 'short',
+  metadata: null,
+  wave_phase: 'challenge',
+};
+const POLEN_REVIEW_TEXT = 'Tyskland angreb Polen den 1. september 1939. To dage senere erklærede Storbritannien og '
+  + 'Frankrig Tyskland krig – det var starten på Anden Verdenskrig.';
+const POLEN_INCORRECT = {
+  status: 200,
+  body: { status: 'incorrect', correct_answer: 'Polen', review_text: POLEN_REVIEW_TEXT, misconception_type: null },
+};
+
+test('Stav til with review_text (as live): the spelling, what was typed and the explanation — then Videre by keyboard', async ({ page }, testInfo) => {
+  expect(Object.keys(POLEN_QUESTION.content).every((k) => PUBLIC_CONTENT_KEYS.includes(k)),
+    'the fixture must be the public DTO').toBe(true);
+  const { submitted, input } = await openStavTil(page, [POLEN_INCORRECT], POLEN_QUESTION);
+
+  // Before answering, neither the key nor the explanation is on the page.
+  const before = await page.content();
+  expect(before).not.toContain('Polen');
+  expect(before).not.toContain('Anden Verdenskrig');
+
+  await input.fill('Pølen');
+  await input.press('Enter');
+  await expect.poll(() => submitted.length).toBe(1);
+  expect(submitted[0].answer).toBe('Pølen');
+
+  // Reflection: the correct spelling and the pupil's own attempt stay visible above the explanation,
+  // in the announced status region; the explanation is in its own live region.
+  await expect(page.locator('#question')).toHaveAttribute('data-state', 'reflecting');
+  await expect(page.locator('#feedback')).toHaveText('Det staves: Polen — du skrev: Pølen');
+  await expect(page.locator('#feedback')).toHaveAttribute('role', 'status');
+  await expect(page.locator('#feedback')).toHaveClass(/feedback-error/);
+  await expect(page.locator('#review-feedback')).toBeVisible();
+  await expect(page.locator('#review-feedback')).toHaveText(POLEN_REVIEW_TEXT);
+  await expect(page.locator('#review-feedback')).toHaveAttribute('aria-live', 'polite');
+  await expect(page.locator('#options')).toBeHidden();
+
+  // Not locked: "Videre" gets focus, and the keyboard alone moves the pupil on.
+  const videre = page.locator('#reflection-continue');
+  await expect(videre).toBeVisible();
+  await expect(videre).toBeFocused();
+  await testInfo.attach('stav-til-review-text', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#question')).toHaveAttribute('data-state', 'empty', { timeout: 15000 });
+  await expect(page.locator('#review-feedback')).toBeHidden();
+  expect(submitted, 'one answer, one request').toHaveLength(1);
 });

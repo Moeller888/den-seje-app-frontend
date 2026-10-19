@@ -76,6 +76,18 @@ export function isSubmittableTextAnswer(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+// After an incorrect "stav til" answer that has an explanation (review_text), the quiz shows the
+// explanation panel instead of "Svaret er …". The spelling itself must still be stated plainly:
+// the correct spelling from the server's graded response, and what the pupil actually typed (the
+// field is hidden in that state). Display only — this never decides correctness. Null when the
+// server sent no correct answer, so the caller shows the explanation alone, as before.
+export function shortTextCorrection(correctAnswer, typedAnswer) {
+  if (typeof correctAnswer !== "string" || correctAnswer.trim().length === 0) return null;
+  const correct = correctAnswer.trim();
+  const typed = typeof typedAnswer === "string" ? typedAnswer.trim() : "";
+  return typed ? `Det staves: ${correct} — du skrev: ${typed}` : `Det staves: ${correct}`;
+}
+
 // Builds the one-line input, the submit button and an announced hint for an empty attempt.
 // onSubmit(rawText, button) is the existing submitAnswer — the quiz state machine stays in charge.
 //
