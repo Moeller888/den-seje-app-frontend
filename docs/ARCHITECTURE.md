@@ -42,7 +42,10 @@ _Avatar internals: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md). AI rules: [AI_GUIDELI
 - **Frontend:** vanilla JS + static HTML, **no build step** in the source sense, deployed to
   **Cloudflare Workers (Static Assets)** and live on `https://lærlig.dk`. Deployment copies an
   explicit allowlist into `dist-cloudflare/` (`tools/cloudflare-build-static.mjs`) rather than
-  serving the repo root. Canonical: [`HOSTING.md`](./HOSTING.md).
+  serving the repo root. Canonical: [`HOSTING.md`](./HOSTING.md). **157P** adds one small Worker
+  script (`worker/index.js`) that runs only for requests no asset matched and owns read-aloud
+  alone: cached clips in R2 and a rate-limited, authenticated synthesis endpoint backed by Azure
+  Speech (key = Worker secret). The app still talks to Supabase directly from the browser.
 - **Backend:** hosted Supabase — Postgres (with RLS), Auth, Storage, and Deno **Edge Functions**.
 - **Tests:** Playwright E2E against the live production URL, 3 browsers (Chromium/Firefox/WebKit),
   1 worker, no parallelism. The target is defined once as `PROD` in `tests/helpers.ts` and is
@@ -447,10 +450,12 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`); **WebP is the production target**.
 - **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `true` — Section 157O).
   Master switch for the read-aloud (TTS) service. The prompt player provides play/pause, restart,
-  saved speed and device-voice choice plus word highlighting where the browser exposes boundaries;
-  each multiple-choice option keeps its separate quick-read button. Audio comes from a pre-recorded
-  Piper clip (if present) or browser Web Speech. No app-managed upload, key or live TTS service. See
-  `docs/157o-read-aloud.md`.
+  saved speed and word highlighting; each multiple-choice option keeps its separate quick-read
+  button. **157P (built, awaiting approval):** audio is one cached Azure Neural voice
+  (`da-DK-ChristelNeural`, English runs `en-GB-SoniaNeural`) served from R2 by the Worker script
+  (`worker/`, `/tts/v<N>/<sha256>.mp3|.json`, `POST /api/tts`), identical in every browser; no voice
+  picker and no Web Speech fallback in production (`ENABLE_WEBSPEECH_DEV_FALLBACK=false`). The Azure
+  key is a Worker secret only. See `docs/157o-read-aloud.md` §7.
 - **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
   for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
   keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.

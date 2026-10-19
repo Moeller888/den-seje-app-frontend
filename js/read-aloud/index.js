@@ -1,20 +1,32 @@
-// ── Read-aloud service facade (157O) ─────────────────────────────────────────
+// ── Read-aloud service facade (157O/157P) ────────────────────────────────────
 // Single entry point for read-aloud. Hides providers entirely; callers just ask it to
-// speak text. Default-off, fail-soft, zero-cost. Provider order: PRE-RECORDED (Piper
-// clip, preferred) → WEB SPEECH (on-device fallback). The first provider that actually
-// produces audio wins.
+// speak text. Fail-soft. Provider order in production: CACHED AZURE NEURAL only
+// (provider-azure.js) — every browser plays the same Microsoft voice from the same file.
 //
-// No upload, no third-party service (Web Speech runs on-device; clips are first-party
-// static assets). Built on the js/audio.js graceful-no-op philosophy.
+// Web Speech (on-device voices) differs per browser, so it is NOT a production fallback:
+// when Azure audio cannot be fetched the player shows a calm error instead of switching to
+// another voice. It stays available behind ENABLE_WEBSPEECH_DEV_FALLBACK for offline
+// development only. The provider contract (provider.js) is unchanged, so another provider
+// can still be added without touching the UI.
 
 import { assertReadAloudProvider } from "./provider.js";
-import { createPrerecordedProvider } from "./provider-prerecorded.js";
+import { createAzureProvider } from "./provider-azure.js";
 import { createWebSpeechProvider } from "./provider-webspeech.js";
 import { hashKey } from "./manifest.js";
 
-// Master switch (157O). ACTIVATED (Web Speech only; Piper manifest stays empty).
-// On-device, no consent, fail-soft — see docs/157o-read-aloud.md §activation.
+// Master switch (157O). ACTIVATED.
 export const ENABLE_READ_ALOUD = true;
+
+// Development/offline only (157P). Must stay false in Git: true would let Chrome, Edge and
+// Safari each speak with a different local voice again.
+export const ENABLE_WEBSPEECH_DEV_FALLBACK = false;
+
+/** The production provider list (plus Web Speech only when the dev flag is on). */
+export function defaultReadAloudProviders() {
+  const list = [createAzureProvider()];
+  if (ENABLE_WEBSPEECH_DEV_FALLBACK === true) list.push(createWebSpeechProvider());
+  return list;
+}
 
 /** Whether the read-aloud flag is on (no capability check). No side effects. */
 export function isReadAloudEnabled() {
@@ -35,7 +47,7 @@ export function createReadAloud(config) {
     if (_providers) return _providers;
     const list = Array.isArray(cfg.providers) && cfg.providers.length > 0
       ? cfg.providers
-      : [createPrerecordedProvider(), createWebSpeechProvider()];
+      : defaultReadAloudProviders();
     _providers = list.map(assertReadAloudProvider);
     return _providers;
   }
@@ -104,7 +116,7 @@ export function createReadAloud(config) {
     },
 
     /**
-     * Speak text. Tries pre-recorded clip first, then on-device speech. Returns true
+     * Speak text with the first provider that can voice it. Returns true
      * if any provider produced audio. No-op (false) when disabled. Never throws.
      * @param {string} text
      * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[],
