@@ -70,7 +70,7 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
-- **R3 face-neutral — two attempts spent and rejected; no live permission; parts method adopted (D-158 … D-164, as of 2026-10-19).**
+- **R3 face-neutral — two attempts spent and rejected; parts method adopted; one parts-sheet attempt authorised, not yet run (D-158 … D-165, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
   authorised exactly one attempt. That attempt was sent once (HTTP 200, one image) and was **rejected** by the
@@ -96,6 +96,12 @@ art layer behind them can be upgraded without a rewrite.
   and assembles one 1024×1536 layer for the existing face slot (runtime unchanged). The raw sheet has its own checks;
   the composed layer keeps D-159's AUTO-1..5 including the broad envelope. No call, adapter or capacity is authorised:
   a parts attempt needs a separate owner decision. See `project-state.md` **D-164**.
+  **D-165 (2026-10-19)** authorised **one** attempt for the first parts sheet, `D-165-r3-face-parts-sheet-v1`, through the
+  separate adapter `tools/avatar/openai-send-r3-face-parts-d165.mjs`: Northstar as the only image, D-164's frozen prompt
+  unchanged, the established model and parameters with size 1024×1024; the returned sheet is checked with D-164's
+  RAW-1..5 (never the face envelope), a RAW pass only opens visual review and DRAFT source annotation. UNSPENT, not yet
+  attempted, and not a run instruction. Planned face capacity 3; actually sent unchanged (`faceNeutral` = 2,
+  `underlay` = 5). See `project-state.md` **D-165**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
