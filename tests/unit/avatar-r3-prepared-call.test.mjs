@@ -68,7 +68,7 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153 and D-160 records, and D-162's one live permission", () => {
+test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153, D-160 and D-162 records", () => {
   assert.equal(CONTRACT.authorisedCalls.count, 7);
   assert.equal(CONTRACT.authorisedCalls.calls.length, 7);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
@@ -106,11 +106,12 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.equal(d160.decision, "D-160");
   assert.deepEqual([d160.mandateState, d160.neverReuse, d160.notAnActivePermission], ["SPENT", true, true]);
   assert.match(d160.prohibitions.noRetry, /Exactly one fetch/);
-  // The seventh is D-162's: ONE further face-neutral attempt (guide B), authorised and not yet attempted — the only live permission.
+  // The seventh is D-162's: ONE further face-neutral attempt (guide B), sent once (HTTP 200, technical reject at AUTO-5) and closed by D-163.
   const d162 = CONTRACT.authorisedCalls.calls[6];
-  assert.deepEqual([d162.callId, d162.decision, d162.mandateState, d162.outcome], ["D-162-r3-face-neutral-guide-b-v1", "D-162", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d162.callId, d162.decision], ["D-162-r3-face-neutral-guide-b-v1", "D-162"]);
+  assert.deepEqual([d162.mandateState, d162.neverReuse, d162.notAnActivePermission, d162.closure.closedBy], ["SPENT", true, true, "D-163"]);
   assert.match(d162.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-162-r3-face-neutral-guide-b-v1"], "D-162's attempt is the only live permission");
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
