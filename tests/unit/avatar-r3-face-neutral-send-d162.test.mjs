@@ -22,7 +22,7 @@ import { tmpdir } from "node:os";
 import { encodePngRGBA } from "../../tools/avatar/build-r2-torso-occlusion-mask.mjs";
 import { readPng } from "../../tools/avatar/check-r3-face-neutral-output.mjs";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
-import { preD162Contract, PRE_D162_CONTRACT_CANONICAL_SHA256, preD161Contract, PRE_D161_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD162Contract, PRE_D162_CONTRACT_CANONICAL_SHA256, preD161Contract, PRE_D161_CONTRACT_CANONICAL_SHA256, preD163Contract, PRE_D163_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -41,7 +41,10 @@ const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const U1_REL = "tools/avatar/fixtures/r3-head-colour/r3-head-underpainting-u1-v1.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-163 later recorded D-162's one send and closed its entry in place. LIVE is the contract exactly as D-162 committed
+// it (D-163's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
+const LIVE = preD163Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD162Contract(LIVE);
 const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-162** |")).join("\n");
@@ -277,10 +280,10 @@ const registerPath = (sb) => join(sb.repo, ...REGISTER_REL.split("/"));
 const editContract = (sb, fn) => { const c = JSON.parse(readFileSync(contractPath(sb), "utf8")); fn(c); writeFileSync(contractPath(sb), JSON.stringify(c, null, 2) + "\n"); };
 const editEntry = (fn) => (sb) => editContract(sb, (c) => { const i = c.authorisedCalls.calls.findIndex((e) => e.callId === CALL); c.authorisedCalls.calls[i] = fn(structuredClone(c.authorisedCalls.calls[i])); });
 const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterImplementations.entries.findIndex((e) => e.decision === "D-162"); const x = fn(structuredClone(c.adapterImplementations.entries[i])); if (x) c.adapterImplementations.entries[i] = x; else c.adapterImplementations.entries.splice(i, 1); });
-const toLive = (sb) => { copyFileSync(repoFile(CONTRACT_REL), contractPath(sb)); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
+const toLive = (sb) => { writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n"); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
 
-/** A fresh sandbox. Default: the LIVE committed state (D-162 active) as origin/main. `pre`: the state before D-162. */
-function sandbox({ base, layout = "main", top, pre = false } = {}) {
+/** A fresh sandbox. Default: the state D-162 committed (D-162 active) as origin/main. `pre`: before D-162. `closed`: since D-163. */
+function sandbox({ base, layout = "main", top, pre = false, closed = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d162-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -293,6 +296,7 @@ function sandbox({ base, layout = "main", top, pre = false } = {}) {
   writeFileSync(sb.png, outputPng({ outside: false })); writeFileSync(sb.png + ".outside.png", outputPng({ outside: true }));
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
+  else if (!closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-162 as committed, before D-163 closed it
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -508,4 +512,85 @@ test("two simultaneous processes cannot send two requests", async () => {
     { cwd: sb.repo, env: envFor(sb, { ...KEY_ENV, D162_MOCK_MODE: "slow" }), windowsHide: true }); let out = ""; c.stdout.on("data", (d) => { out += d; }); c.stderr.on("data", (d) => { out += d; }); c.on("close", (code) => res({ code, out })); });
   const [a, b] = await Promise.all([one(), one()]);
   assert.equal(fetchLog(sb).length, 1); assert.deepEqual([a.code, b.code].sort(), [0, 1], a.out + "\n----\n" + b.out);
+});
+
+// ── D-163: the one send is recorded and the mandate is closed ───────────────────────────────────────────────────
+const D163_ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-163** |"));
+const E_NOW = LIVE_NOW.authorisedCalls.calls.find((e) => e.callId === CALL);
+const IMPL_NOW = LIVE_NOW.adapterImplementations.entries.find((e) => e.decision === "D-162");
+const D162_ROW_SHA_AT_PRE_D163 = "30d8346ff7febcea2bf00ef53e4eb23f9031c3f45957a34afb5b8fe43f1c795b";
+
+test("D-163 changes exactly the closure: the contract as D-162 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(LIVE)), PRE_D163_CONTRACT_CANONICAL_SHA256, "LIVE_NOW with D-163's closure reversed is the contract at 877b2b7");
+  assert.equal(sha256(JSON.stringify(preD162Contract(LIVE_NOW))), PRE_D162_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.slice(0, 6), LIVE.authorisedCalls.calls.slice(0, 6), "the six earlier entries are unchanged");
+  assert.deepEqual(LIVE_NOW.adapterImplementations.entries.slice(0, 2), LIVE.adapterImplementations.entries.slice(0, 2), "the D-145 and D-160 implementations are unchanged");
+  assert.deepEqual([LIVE_NOW.authorisedCalls.count, LIVE_NOW.authorisedCalls.calls.length], [7, 7], "no entry is added");
+  for (const k of ["assets", "faceNeutralPreparation", "faceNeutralGuideBPreparation", "meta", "architecture"]) assert.deepEqual(LIVE_NOW[k], LIVE[k], k + " is unchanged");
+  for (const k of Object.keys(E)) {
+    if (["status", "mandateState", "outcome"].includes(k)) continue;
+    assert.deepEqual(E_NOW[k], E[k], "D-162's authorisation field " + k + " is preserved");
+  }
+});
+
+test("D-163 closes D-162 in place: SPENT, never reused, not a permission, with the recorded execution", () => {
+  assert.deepEqual([E_NOW.mandateState, E_NOW.neverReuse, E_NOW.notAnActivePermission], ["SPENT", true, true]);
+  assert.match(E_NOW.status, /^SPENT — SENT ONCE, HTTP 200, ONE IMAGE RECEIVED, TECHNICAL_REJECT AT AUTO-5/);
+  assert.equal(E_NOW.closure.closedBy, "D-163");
+  assert.equal(E_NOW.closure.snapshotCanonicalSha256BeforeClosure, sha256(JSON.stringify(E)), "the closure names the committed entry's snapshot");
+  const x = E_NOW.execution;
+  assert.deepEqual([x.request.fetches, x.request.retried, x.request.requestId, x.response.httpStatus, x.response.imagesReturned],
+    [1, false, "req_d1e3c60590ca45f5b9de181dfb51754d", 200, 1]);
+  assert.equal(x.response.bodySha256, "e64facc6c0d8b78652ebce077982312afc4f127c40c3e56dcd2e4ab7b05b0876");
+  assert.equal(x.raw.sha256, "ecbfc638dedfbab596411eb1d8901f30ac95f7ea879c38361a4928ec1ea43e20");
+  assert.equal(x.request.promptSha256, PROMPT_SHA);
+  assert.ok(x.request.inputs[0].includes(GUIDE_SHA) && x.request.inputs[1].includes(NORTHSTAR_SHA));
+  assert.deepEqual(x.accounting, { claimState: "consumed", dispatch: "started", result: "response", actuallySent: 1, dispatchUndetermined: 0, serverAnswered: true, automaticRetry: false, logConsistent: true });
+  assert.match(x.sentBy, /877b2b7b7c20b03ec5a72b4b0811703f6e6a0722/);
+  assert.match(x.runCircumstances.ciAtSendTime, /Playwright job had not started/);
+  assert.match(E_NOW.technicalObservations.failed, /AUTO-5: 2,365 px/);
+  assert.match(E_NOW.visualReview.ownerDecision, /No separate owner image verdict was recorded/);
+  assert.match(E_NOW.diagnosticsLimitation.whatRan, /WHOLE raw output/);
+  assert.match(E_NOW.diagnosticsLimitation.vacuousForThisOutput, /NOT APPLICABLE and evaluated nothing/);
+  assert.deepEqual([IMPL_NOW.adapter.status, IMPL_NOW.mandateState, IMPL_NOW.neverReuse, IMPL_NOW.closedBy], ["IMPLEMENTED — EXECUTED ONCE — SPENT", "SPENT", true, "D-163"]);
+});
+
+test("D-163: the face accounting rises to 2, the underlay figure and its evidence are untouched, no live permission remains, R3 OFF", () => {
+  const sent = LIVE_NOW.imageCallBudget.callsActuallySentSoFar, then = LIVE.imageCallBudget.callsActuallySentSoFar;
+  assert.equal(sent.faceNeutral, 2);
+  assert.deepEqual([sent.faceNeutralRecord.dispatchUndetermined, sent.faceNeutralRecord.serverAnswered], [0, 2]);
+  assert.deepEqual(sent.faceNeutralRecord.attempts.slice(0, 1), then.faceNeutralRecord.attempts, "D-160's record is unchanged");
+  assert.match(sent.faceNeutralRecord.attempts[1], /^D-162-r3-face-neutral-guide-b-v1 — .*\(recorded by D-163\)$/);
+  assert.equal(sent.faceNeutralRecord.counts, then.faceNeutralRecord.counts);
+  for (const k of ["underlay", "which", "note"]) assert.deepEqual(sent[k], then[k], "underlay accounting field " + k + " is unchanged");
+  assert.equal(sent.underlay, 5);
+  const { callsActuallySentSoFar: a, ...restNow } = LIVE_NOW.imageCallBudget, { callsActuallySentSoFar: b, ...restThen } = LIVE.imageCallBudget;
+  assert.deepEqual(restNow, restThen, "no other budget field changed");
+  assert.equal(LIVE_NOW.imageCallBudget.callsPlannedAndAuthorised.faceNeutral, sent.faceNeutral, "the planned face capacity (2) is used up");
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission remains");
+  assert.match(LIVE_NOW.prohibitions.noImageRequestAuthorised, /\(7\) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission/);
+  assert.match(LIVE_NOW.prohibitions.noImageRequestAuthorised, /No entry in this list is an active send permission/);
+  assert.equal(LIVE_NOW.meta.authorisesImageRequest, false);
+  assert.equal(LIVE_NOW.architecture.defaultEnabled, false);
+  assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(repoFile("js/avatar-layers.js"), "utf8")), "R3 stays OFF at runtime");
+});
+
+test("the D-163 register row: once, directly after D-162, D-162 verbatim, the outcome and its limits named", () => {
+  const lines = REGISTER.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith("| **D-163** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-163** |")), lines.findIndex((l) => l.startsWith("| **D-162** |")) + 1);
+  assert.equal(sha256(ROW), D162_ROW_SHA_AT_PRE_D163, "D-162's row is not rewritten");
+  for (const needle of [CALL, CLAIM_ID, "877b2b7b7c20b03ec5a72b4b0811703f6e6a0722", "req_d1e3c60590ca45f5b9de181dfb51754d", "**HTTP 200**",
+    "ecbfc638dedfbab596411eb1d8901f30ac95f7ea879c38361a4928ec1ea43e20", "e64facc6c0d8b78652ebce077982312afc4f127c40c3e56dcd2e4ab7b05b0876",
+    "2.365 px", "`TECHNICAL_REJECT`", "hele råoutputtet", "højeste alfa 254", "IKKE ANVENDELIGE", "særskilt billedvurdering", "39152285533",
+    "`callsActuallySentSoFar.faceNeutral` = **2**", "`callsActuallySentSoFar.underlay` forbliver **5**", "R3 forbliver default OFF"]) assert.ok(D163_ROW.includes(needle), "the D-163 row carries " + JSON.stringify(needle));
+  assert.ok(!/[ÃÂ]\S|�/.test(D163_ROW), "no mojibake in the Danish row");
+});
+
+test("since D-163 the LIVE contract refuses the D-162 adapter before any claim: its mandate is closed", () => {
+  const sb = sandbox({ closed: true });
+  assertRefusedBeforeClaim(sb, runAdapter(sb, GOOD_ARGS), "authorisation");
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
+  assertRefusedBeforeClaim(sb, r, "authorisation");
+  assert.match(r.out, /mandateState/);
 });
