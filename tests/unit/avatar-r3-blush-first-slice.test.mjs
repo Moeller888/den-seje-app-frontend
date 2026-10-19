@@ -214,8 +214,10 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
     min += Number(m[1]); max += Number(m[2]);
   }
   // D-162 authorises ONE further face-neutral attempt, so assets[4] carries 2 PLANNED calls and the budget is 20-21.
-  assert.equal(min, 20, "assets[0] carries 5 PLANNED calls after D-153; assets[4] carries 2 after D-162");
-  assert.equal(max, 21);
+  // D-165 authorises ONE further face-neutral attempt (the first parts sheet), so assets[4] carries 3 PLANNED calls and the
+  // derived budget is 21-22. Planned capacity is not a claim that the call was made.
+  assert.equal(min, 21, "assets[0] carries 5 PLANNED calls after D-153; assets[4] carries 3 after D-165");
+  assert.equal(max, 22);
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
@@ -228,8 +230,10 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // derived budget is 19-20. Planned capacity is not a claim that the call was made.
   // D-162 authorises ONE further face-neutral attempt, so assets[4] carries 2 PLANNED calls and the derived budget is
   // 20-21. Planned capacity is not a claim that the call was made.
-  assert.equal(C.imageCallBudget.minimum, 20);
-  assert.equal(C.imageCallBudget.maximum, 21);
+  // D-165 authorises ONE further face-neutral attempt (the first parts sheet), so assets[4] carries 3 PLANNED calls and the
+  // derived budget is 21-22. Planned capacity is not a claim that the call was made.
+  assert.equal(C.imageCallBudget.minimum, 21);
+  assert.equal(C.imageCallBudget.maximum, 22);
 });
 
 test("nothing is wired, and the existing blush behaviour is untouched", () => {

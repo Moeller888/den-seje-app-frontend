@@ -6,14 +6,16 @@ import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { preD164Contract, PRE_D164_CONTRACT_CANONICAL_SHA256, preD163Contract, PRE_D163_CONTRACT_CANONICAL_SHA256, D164_ADDED_OPERATION } from "./avatar-r3-d147-closure.mjs";
+import { preD164Contract, PRE_D164_CONTRACT_CANONICAL_SHA256, preD163Contract, PRE_D163_CONTRACT_CANONICAL_SHA256, D164_ADDED_OPERATION, preD165Contract } from "./avatar-r3-d147-closure.mjs";
 import { LAYOUT, PART_POINTS, MODES } from "../../tools/avatar/r3-face-parts-tool.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
-const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
+// D-165 later added the first parts-sheet authorisation. LIVE is the contract exactly as D-164 left it (D-165's additions
+// removed, proven canonical in avatar-r3-face-parts-send-d165.test.mjs).
+const LIVE = preD165Contract(JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8")));
 const PRE = preD164Contract(LIVE);
 const S = LIVE.faceNeutralPartsMethod;
 const REGISTER = file("docs/project-state.md").toString("utf8");

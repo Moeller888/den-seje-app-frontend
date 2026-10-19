@@ -547,7 +547,7 @@
     { "id": 2,  "name": "r3-tee-default",         "slot": "tee",      "method": "generated", "calls": 1 },
     { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
     { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
-    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated-parts-sheet+point-anchored-composition", "calls": 2 },
+    { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated-parts-sheet+point-anchored-composition", "calls": 3 },
     { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
     { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
@@ -563,12 +563,12 @@
   ],
 
   "imageCallBudget": {
-    "minimum": 20,
-    "maximum": 21,
+    "minimum": 21,
+    "maximum": 22,
     "isAuthorisation": false,
     "countingRule": "Every image call ACTUALLY SENT counts, including one whose output was rejected and one sent by accident. D-139 was sent and its output rejected; the D-142 attempt was sent during an incident with an unknown outcome. Adopted by D-142, unchanged by D-143.",
-    "callsActuallySentSoFar": {"underlay":5,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)","D-151 — sent once, HTTP 400 (background transparent not supported for this model), no image, nothing promoted (recorded by D-152)","D-153 — sent once, HTTP 200, raw received, candidate rejected by background-leak, nothing promoted (recorded by D-154)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147, D-151's since D-152 and D-153's since D-154.","faceNeutral":2,"faceNeutralRecord":{"counts":"Face-neutral attempts whose dispatch START is documented (D-159 laterAttemptRules.callCounting.counterMeaning). It measures documented local dispatch, not confirmed server receipt; server answers are counted separately below. It is never part of the underlay figure, which stays 5.","attempts":["D-160-r3-face-neutral-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, geometry rejected by the owner, nothing promoted (recorded by D-161)","D-162-r3-face-neutral-guide-b-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, nothing promoted (recorded by D-163)"],"dispatchUndetermined":0,"serverAnswered":2}},
-    "callsPlannedAndAuthorised": {"underlay":5,"why":"D-153 authorised exactly one further, colour-limited head underlay call with background opaque, and that call has been made (recorded by D-154). assets[0].calls is PLANNED capacity; it moved to 5 when the authorisation was committed, not when the call was made.","derivedBudget":"20-21","faceNeutral":2,"faceNeutralWhy":"D-162 authorises exactly one further face-neutral attempt on top of D-160's spent one. assets[4].calls is PLANNED capacity; it moves 1 -> 2 when the authorisation is committed, not when the call is made."},
+    "callsActuallySentSoFar": {"underlay":5,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)","D-151 — sent once, HTTP 400 (background transparent not supported for this model), no image, nothing promoted (recorded by D-152)","D-153 — sent once, HTTP 200, raw received, candidate rejected by background-leak, nothing promoted (recorded by D-154)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147, D-151's since D-152 and D-153's since D-154.","faceNeutral":3,"faceNeutralRecord":{"counts":"Face-neutral attempts whose dispatch START is documented (D-159 laterAttemptRules.callCounting.counterMeaning). It measures documented local dispatch, not confirmed server receipt; server answers are counted separately below. It is never part of the underlay figure, which stays 5.","attempts":["D-160-r3-face-neutral-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, geometry rejected by the owner, nothing promoted (recorded by D-161)","D-162-r3-face-neutral-guide-b-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, nothing promoted (recorded by D-163)","D-165-r3-face-parts-sheet-v1 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 sheet, RAW-1..5 passed, nose rejected by the owner, brows and mouth kept for further review, nothing promoted (recorded by D-166)"],"dispatchUndetermined":0,"serverAnswered":3}},
+    "callsPlannedAndAuthorised": {"underlay":5,"why":"D-153 authorised exactly one further, colour-limited head underlay call with background opaque, and that call has been made (recorded by D-154). assets[0].calls is PLANNED capacity; it moved to 5 when the authorisation was committed, not when the call was made.","derivedBudget":"21-22","faceNeutral":3,"faceNeutralWhy":"D-165 authorises exactly one further face-neutral attempt — the first D-164 parts sheet — on top of D-160's and D-162's spent ones. assets[4].calls is PLANNED capacity; it moves 2 -> 3 when the authorisation is committed, not when the call is made."},
     "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. D-153's call has been made (recorded by D-154), so the actually-sent figure is 5 as well and the two numbers agree. Their agreement authorises nothing. D-154 is feasibility analysis only and adds no planned call.",
     "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
     "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
@@ -1092,8 +1092,8 @@
   ],
   "authorisedCalls": {
     "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
-    "count": 7,
-    "budgetAccounting": "assets[0] carries 5 PLANNED calls after D-153: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); D-151's one call, sent once and refused with HTTP 400, no image (recorded by D-152); and D-153's one call, sent once, raw received, candidate rejected by background-leak (recorded by D-154). The derived budget is 19-20. Budget numbers remain planning, never consent.",
+    "count": 8,
+    "budgetAccounting": "assets[0] carries 5 PLANNED calls after D-153: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); D-151's one call, sent once and refused with HTTP 400, no image (recorded by D-152); and D-153's one call, sent once, raw received, candidate rejected by background-leak (recorded by D-154). assets[4] (r3-face-neutral) carries 3 PLANNED calls after D-165: D-160's, D-162's and D-165's single attempts, each sent once (recorded by D-161, D-163 and D-166), so actually sent is underlay 5 and faceNeutral 3 and the planned face capacity is used up. The derived budget is 21-22. Budget numbers remain planning, never consent.",
     "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
     "calls": [
       {
@@ -2446,6 +2446,226 @@
           "results": "DIAG-1 skin-like soft pixels 0 of 8,104; DIAG-2 not flagged (203 of 2,752 low-alpha pixels satisfy the premultiplication invariant); DIAG-4 36 px in the eye zones and 104 px in the fold zones (visually no eye part); DIAG-8 0 marker-coloured px; no magenta cast; 5,220 solid px, 175 of them on a guide-B window edge. DIAG-5 was not evaluated.",
           "vacuousForThisOutput": "DIAG-3 (halo), DIAG-6 (painted background) and DIAG-7 (opaque skin) measure only pixels with alpha 255; this output has none (maximum alpha 254), so they are NOT APPLICABLE and evaluated nothing. No claim about the absence of a halo, a painted background or an opaque skin patch rests on them."
         }
+      },
+      {
+        "decision": "D-165",
+        "preparedBy": "D-164",
+        "callId": "D-165-r3-face-parts-sheet-v1",
+        "status": "SPENT — SENT ONCE, HTTP 200, ONE IMAGE RECEIVED, RAW-1..5 PASSED, NOSE REJECTED BY THE OWNER, BROWS AND MOUTH KEPT FOR FURTHER REVIEW, NOTHING PROMOTED",
+        "mandateState": "SPENT",
+        "outcome": "SENT ONCE — HTTP 200 — ONE 8-bit RGBA 1024x1024 SHEET RECEIVED — D-164's RAW-1..5 PASSED (PASS_TO_ANNOTATION) — NOT VISUALLY APPROVED AS A WHOLE: THE OWNER REJECTED THE NOSE; BOTH BROWS AND THE MOUTH ARE KEPT FOR FURTHER REVIEW, NOT APPROVED FOR PRODUCTION — NO COMPOSITION, NOTHING PROMOTED",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": {
+          "size": "1024x1024",
+          "quality": "high",
+          "n": 1,
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "parametersNote": "Model, endpoint, quality, n, output_format and background are those of D-160 and D-162; only the size is changed, to the 1024x1024 parts sheet of D-164.",
+        "fieldOrder": [
+          "model",
+          "image[]",
+          "prompt",
+          "size",
+          "quality",
+          "n",
+          "output_format",
+          "background"
+        ],
+        "neverSentFields": [
+          "mask",
+          "input_fidelity",
+          "output_compression",
+          "response_format",
+          "moderation"
+        ],
+        "inputOrder": [
+          "Image 1"
+        ],
+        "inputs": [
+          {
+            "order": 1,
+            "role": "Image 1",
+            "purpose": "the only reference: style, identity, default expression and orientation of the four features",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "bytes": 761394,
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "tracked": true
+          }
+        ],
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-face-parts/prompt-parts-sheet-v1.txt",
+          "bytes": 2413,
+          "sha256": "85b8500fbaca1a8ce87c3b3296818f1b3e8fd89719e97fc96a3cd9c33735c61c",
+          "encoding": "UTF-8, LF only, ending in exactly one LF (the frozen D-164 bytes)"
+        },
+        "promptAdoption": "D-165 adopts D-164's frozen prompt draft unchanged (faceNeutralPartsMethod.prompt). It ends in one LF, unlike the D-160/D-162 prompts; the pinned bytes are sent exactly as they are, never rewritten.",
+        "claim": {
+          "identity": "D-165-r3-face-parts-sheet-v1-claim",
+          "filename": "D-165-r3-face-parts-sheet-v1.claim.json",
+          "eventsFilename": "D-165-r3-face-parts-sheet-v1.events.jsonl"
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-face-parts-d165.mjs"
+        },
+        "outputs": {
+          "count": 1,
+          "dir": "tools/avatar/build/r3-face-parts-d165",
+          "sheet": [
+            1024,
+            1024
+          ]
+        },
+        "accounting": {
+          "slot": "face-neutral parts sheet (r3-face-neutral); recorded under D-159's claim / dispatch / result axes, never an underlay call; the third face-neutral attempt (D-160 and D-162 came before)"
+        },
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No automatic or manual retry, no fallback request, no other model, and a redirect is never followed. Every consumed claim excludes a retry; a further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity.",
+          "noPromotion": "The call promotes nothing and writes no candidate file. Candidate status is a separate owner decision after the visual review of the composed layer.",
+          "noPixelReuse": "The rejected D-160 and D-162 images are never production parts, pixel sources or annotation sources.",
+          "noRuntimeChange": "R3 stays default OFF. No runtime, eyes, iris, hair or underlay change."
+        },
+        "adoptedOn": "2026-10-19",
+        "ownerDecision": "Owner instruction 2026-10-19: prepare ONE new call permission for the first D-164 parts sheet and raise the planned face-neutral capacity from 2 to 3; the actually-sent counters stay unchanged until a real call. The approval covers preparation, commit, push, PR and merge — it is NOT a run instruction.",
+        "uploadScope": "Exactly one image (Northstar Master v2 3daf32e7…) and the exact prompt (85b8500f…), read as origin/main blobs, and only inside the one later call. Nothing is uploaded at authorisation or at merge.",
+        "runInstruction": {
+          "mergeIsNotAnInstruction": true,
+          "requiresSeparateExplicitOwnerInstruction": true,
+          "rule": "The call may be run only after a NEW, separate and explicit owner instruction, given after D-165 is merged into origin/main, from a clean checkout whose HEAD equals origin/main (D-143 §13(c), D-145 §5). This entry, its merge and the presence of the adapter are not that instruction."
+        },
+        "claimRules": {
+          "creation": "The claim is created with an exclusive \"wx\" open in the per-user claim register outside every clone, after every check and immediately before the dispatch record; from that line the mandate is SPENT on every outcome.",
+          "accounting": "claim, dispatch and result are recorded separately (D-159 laterAttemptRules.callCounting): a consumed claim is not a dispatch; a dispatch record marks the project's local dispatch boundary and is not proof of server receipt; a crash between the claim and the dispatch record leaves the dispatch undetermined.",
+          "furtherAttempt": "A consumed claim never permits a retry. A further attempt requires a NEW owner decision, a NEW call id and a NEW claim identity."
+        },
+        "outputHandling": {
+          "keep": "The complete raw response body and every delivered image byte stream are stored unchanged, with the request id, the image count and every SHA-256.",
+          "unexpectedImageCount": "A count other than n = 1 is marked UNEXPECTED; everything is kept, nothing is selected and no check is run.",
+          "technicalChecks": "With exactly one image, D-164's RAW-1..5 (decode, 1024x1024, 8-bit RGBA, content in every fixed cell, nothing cut at a cell boundary) and its raw diagnostics run on the stored sheet. The master-canvas face envelope and AUTO-1..5 are NOT applied to the sheet. A RAW rejection leaves no candidate.",
+          "passMeaning": "PASS_TO_ANNOTATION means ONLY that the sheet may go to the owner's visual review and to DRAFT source annotation. It does not approve its appearance.",
+          "annotation": "After the call, source points are first proposed as DRAFT, bound to the exact raw sheet's SHA-256, and shown visually for the owner's approval. Nothing sets APPROVED automatically.",
+          "composition": "Composition needs the owner-APPROVED source annotations and D-164's approved target points. The composed 1024x1536 layer must pass the existing AUTO-1..5 including the broad envelope; residuals and angle deviations are shown as D-164 requires (review-only).",
+          "neverAutomatic": "No automatic repair, move, warp, crop, matte removal, candidate file, candidate approval or promotion.",
+          "review": [
+            "Both eyebrows are COMPLETE and full length with naturally tapered ends — the brow that Northstar's hair partly covers is never a stump. Hair handles coverage later, in the composed avatar.",
+            "One feature per fixed cell, in the reference orientation (the tilted mouth), large and with clear space to the cell edges.",
+            "No skin, face surface, eye part, fold, hair, blush, text, grid line or guide mark; transparent background; no unwanted matte edge.",
+            "A technical pass is NOT an asset approval. Final approval follows D-159 and D-164: the composed layer on the later approved underlay and with the later R3 eyes and hair."
+          ]
+        },
+        "neverReuseIdentities": "D-160-r3-face-neutral-v1, D-162-r3-face-neutral-guide-b-v1 and every earlier call id and claim identity are SPENT and never reused.",
+        "counters": "No decision, entry or merge raises callsActuallySentSoFar (underlay 5, faceNeutral 2). assets[4] (r3-face-neutral) planned capacity moves 2 -> 3 for this one attempt; planning only, never consent.",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "closure": {
+          "closedBy": "D-166",
+          "closedOn": "2026-10-19",
+          "what": "D-166 records the actual outcome of D-165's single send and closes this entry in place. The authorisation fields above are left as they were when D-165 was committed; only status, mandateState and outcome were changed, and the keys from neverReuse onwards were added.",
+          "snapshotCanonicalSha256BeforeClosure": "389f965a858db63fd599ea1e5fc7f49cad5e9f18e3402bd4d7d71eb16285852a",
+          "neverReused": "The call-id D-165-r3-face-parts-sheet-v1 and the claim identity D-165-r3-face-parts-sheet-v1-claim are SPENT and are never reused. A further attempt requires a NEW owner decision, a NEW call-id and a NEW claim identity."
+        },
+        "execution": {
+          "sentBy": "tools/avatar/openai-send-r3-face-parts-d165.mjs from origin/main 6b873bf37f226e365d3bde03e89331fd1570f50f (a fresh detached worktree, HEAD = origin/main, clean); adapter SHA-256 ed91751107e3298fe98276bba0b90a1fdafe3b4235fd1f47fcc4f0930eae2960",
+          "runCircumstances": {
+            "ownerInstruction": "The owner's separate, explicit execution instruction of 2026-10-19, given after the D-165 merge (PR #342, merge 6b873bf): preflight, one dry run, then exactly one send. The dry run passed before the claim was created; no D-165 claim existed beforehand.",
+            "ciAtSendTime": "On 6b873bf (main run 39232505574) the checks had completed successfully. Recorded as it happened; it grants nothing further."
+          },
+          "claim": {
+            "file": "D-165-r3-face-parts-sheet-v1.claim.json (claim register, outside the repository)",
+            "state": "consumed — mandate SPENT",
+            "claimedAt": "2026-10-19T10:03:30.465Z",
+            "sha256": "e2d02530a9f6fc63cb50aed4796ed2df31f8034c2d27db9f29c24cbdd187e345",
+            "bytes": 1355
+          },
+          "eventLog": {
+            "file": "D-165-r3-face-parts-sheet-v1.events.jsonl (claim register, outside the repository)",
+            "sha256": "30150a967ff4eb56bdbedc28936f1a63052562f244aa15cbdfa765a387eb403a",
+            "bytes": 405,
+            "records": [
+              "1 dispatch 2026-10-19T10:03:30.467Z (written immediately before the request was handed to the network client)",
+              "2 answer 2026-10-19T10:04:05.276Z, HTTP 200, req_ab32359e7096450e97de8e9a26d32b2a, body read"
+            ]
+          },
+          "accounting": {
+            "claimState": "consumed",
+            "dispatch": "started",
+            "result": "response",
+            "actuallySent": 1,
+            "dispatchUndetermined": 0,
+            "serverAnswered": true,
+            "automaticRetry": false,
+            "logConsistent": true
+          },
+          "request": {
+            "startedAt": "2026-10-19T10:03:30.449Z",
+            "fetches": 1,
+            "retried": false,
+            "endpoint": "https://api.openai.com/v1/images/edits",
+            "model": "gpt-image-2.5-sunburst-2026-09-08",
+            "parameters": {
+              "size": "1024x1024",
+              "quality": "high",
+              "n": 1,
+              "output_format": "png",
+              "background": "transparent"
+            },
+            "redirect": "error",
+            "inputs": [
+              "Northstar Master v2 3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50 (origin/main blob, the only image)"
+            ],
+            "promptSha256": "85b8500fbaca1a8ce87c3b3296818f1b3e8fd89719e97fc96a3cd9c33735c61c",
+            "requestId": "req_ab32359e7096450e97de8e9a26d32b2a"
+          },
+          "response": {
+            "httpStatus": 200,
+            "finishedAt": "2026-10-19T10:04:05.498Z",
+            "openaiProcessingMs": 33189,
+            "imagesReturned": 1,
+            "bodyBytes": 866189,
+            "bodySha256": "41dad8f52258d0affc935a3704d1bac585dc0e941172973ee8b2b6b0bf7671ea"
+          },
+          "manifest": {
+            "file": "tools/avatar/build/r3-face-parts-d165/r3-face-parts-d165.request.json",
+            "sha256": "67763ce0dd7e625556dbbf3d7e3fb3f7006b634e105d8aa8a7045a459155fb97",
+            "bytes": 5375
+          },
+          "raw": {
+            "file": "tools/avatar/build/r3-face-parts-d165/r3-face-parts-d165.image-1.png",
+            "bytes": 649231,
+            "sha256": "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d",
+            "format": "PNG 1024x1024, 8-bit RGBA (colour type 6), not interlaced"
+          },
+          "untracked": "The raw response, the sheet, the manifest, the check report, the claim, the event log, the review material and the DRAFT annotations stay untracked, in the gitignored build area of the run worktree and in the claim register."
+        },
+        "technicalObservations": {
+          "checkReport": {
+            "file": "tools/avatar/build/r3-face-parts-d165/r3-face-parts-d165.check.json",
+            "sha256": "7287d7bd49bc1046f303dbb2064ff113ab263adfa8ea40624d89b3e0d781ad3e",
+            "bytes": 7739
+          },
+          "passed": "RAW-1 the PNG decodes; RAW-2 1024x1024; RAW-3 8-bit RGBA, not interlaced; RAW-4 content in all four fixed cells; RAW-5 0 px on any cell boundary. Verdict PASS_TO_ANNOTATION — which opens only visual review and DRAFT source annotation.",
+          "notApplied": "The master-canvas face envelope and AUTO-1..5 were not applied to the sheet, as D-164 and D-165 require; they apply only to a later composed 1024x1536 layer.",
+          "limitsUnchanged": "No check, limit or envelope is changed, and the raw sheet is not changed."
+        },
+        "visualReview": {
+          "basis": "The raw sheet composited in memory on a checker, light and dark backgrounds and as an alpha map; each part separately; x4 Northstar crops beside each part; x6/x4 grid crops for point reading (gitignored review material in the run worktree).",
+          "findings": [
+            "Both brows are complete and full length with naturally tapered ends — the brow Northstar's hair partly covers is not a stump. Their fill matches Northstar's brow colour (mean RGB 82/43/18 against a Northstar sample of 85/42/14).",
+            "The mouth is a thin dark line with Northstar's small end ticks; its tilt keeps the reference direction (right corner higher) but is flatter, about −4.1° against −6.05°.",
+            "The nose is built mirrored relative to Northstar (dark contour on the left and a filled body on the right, where Northstar has the contour on the right and warm shading to its left) and its body is filled with a skin colour (RDIAG-4: 875 skin-like solid px).",
+            "No eye part, hair, blush, text or marker; clean edges against transparency on light and dark backgrounds."
+          ],
+          "ownerDecision": "2026-10-19: the owner rejects the NOSE visually (wrong orientation and a skin-coloured fill). Both BROWS and the MOUTH are kept for further review; that is not a production approval. The proposed source anchors stay DRAFT: six non-nose points (two per brow, two for the mouth). No composition, candidate or promotion. The nose is never mirrored, retouched, de-skinned or otherwise repaired."
+        },
+        "diagnosticsLimitation": {
+          "whatRan": "D-164's raw diagnostics ran on the whole stored sheet (no derived copy). RDIAG-6 (wrong part, text, eyes, hair, blush) is visual only.",
+          "results": "RDIAG-1 stray pixels outside the largest component per cell: browLeft 62, browRight 91, nose 27, mouth 600 (faint, alpha < 32); RDIAG-2 minimum edge distance 8 / 5 / 6 / 9 px; RDIAG-3 0 marker-coloured px; RDIAG-4 0 / 0 / 875 / 0 skin-like solid px; RDIAG-5 near-white solid px 0 / 0 / 356 (the nose highlight) / 0.",
+          "hiddenRgb": "738,937 fully transparent pixels carry RGB (up to 209). Invisible under alpha compositing, and D-164's premultiplied compositor ignores them; recorded so that no tool that ignores alpha is mistaken for the truth about the sheet."
+        }
       }
     ]
   },
@@ -2561,7 +2781,7 @@
     "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
   },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds SEVEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's or D-162's call id or claim identity, and no other call in the R3 plan.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds EIGHT entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (8) D-165-r3-face-parts-sheet-v1 — NO LONGER a permission. D-165 superseded the general rule NARROWLY for exactly one face-neutral parts-sheet attempt. That attempt was sent once and D-166 records its outcome: HTTP 200, one sheet, RAW-1..5 passed, the nose rejected by the owner, the brows and mouth kept for further review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's, D-162's or D-165's call id or claim identity, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
@@ -2654,6 +2874,27 @@
         "ciCoverage": "The send scenarios run in CI against the PRODUCTION adapter with the real tracked guide and prompt pins (no synthetic pin substitution is needed: no input is private).",
         "neverReuse": true,
         "closedBy": "D-163"
+      },
+      {
+        "decision": "D-165",
+        "callId": "D-165-r3-face-parts-sheet-v1",
+        "authorisedBy": "D-165",
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-face-parts-d165.mjs",
+          "status": "IMPLEMENTED — EXECUTED ONCE — SPENT",
+          "ownerApproval": "D-165",
+          "ownerApprovalFlag": "--owner-approval=D-165"
+        },
+        "mandateState": "SPENT",
+        "outcome": "EXECUTED ONCE — THE OUTCOME IS RECORDED IN THE D-165 ENTRY OF authorisedCalls",
+        "mergeIsNotAnInstruction": true,
+        "executionRequiresSeparateOwnerInstruction": true,
+        "implementedOn": "2026-10-19",
+        "derivedFrom": "tools/avatar/openai-send-r3-face-neutral-d162.mjs (left unchanged and closed): identity and pins changed; one input image (Northstar) instead of two; size 1024x1024; the output check is D-164's RAW-1..5 from tools/avatar/r3-face-parts-tool.mjs instead of the master-canvas checker. The ledger is reused unchanged.",
+        "noAdapterSha256": "No adapter SHA-256 is pinned in this contract (D-145). The executed code version is identified by the origin/main commit SHA and the adapter's computed SHA-256, both written into the claim and the manifest.",
+        "ciCoverage": "The send scenarios run in CI against the PRODUCTION adapter with the real tracked prompt and Northstar pins, with fetch mocked from outside; no synthetic pin substitution is needed.",
+        "neverReuse": true,
+        "closedBy": "D-166"
       }
     ]
   },

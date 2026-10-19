@@ -9,7 +9,7 @@ import { BlinkEngine } from "./js/avatar-blink-engine.js";
 import { initMonitoring, captureError } from "./js/sentry.js";
 import { attachOcrControl } from "./js/ocr/adapters/answer-capture.js";
 import { prepareChoiceOptions } from "./js/answer-options.js";
-import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer } from "./js/answer-input.js";
+import { ANSWER_RENDERERS, resolveAnswerRenderer, buildShortTextAnswer, shortTextCorrection } from "./js/answer-input.js";
 import { initAnalytics, track } from "./js/analytics.js";
 import { maybeShowConsentBanner } from "./js/analytics-consent.js";
 import { attachReadAloudControl, attachOptionReadAloudControl, stopReadAloud } from "./js/read-aloud/adapters/quiz.js";
@@ -28,7 +28,7 @@ initAnalytics();
 maybeShowConsentBanner();
 
 const DEBUG = true;
-const GRADE_START_BAND = { 7: 1, 8: 2, 9: 3 };
+const GRADE_START_BAND = { 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 2, 9: 3 };
 let uiState = "IDLE";
 
 function logEvent(event, payload = {}) {
@@ -175,6 +175,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let sessionConsecutiveCorrect = 0;
   let sessionConsecutiveIncorrect = 0;
   let lastMisconceptionType = null;
+  // Renderer of the question on screen — "stav til" feedback names the spelling (see submitAnswer).
+  let currentRenderer = null;
 
   // Session rhythm tracking — Section 55.
   // sessionQuestionCount: total answered this session, passed to get-next-question.
@@ -770,10 +772,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 2250);
   }
 
-  function enterReflectionState(reviewText) {
+  // leadText: a line kept above the explanation (only "stav til": the correct spelling).
+  function enterReflectionState(reviewText, leadText = null) {
     setUIState(UI_STATES.REFLECTING);
-    feedback.textContent = "";
-    feedback.className = "";
+    feedback.textContent = leadText ?? "";
+    feedback.className = leadText ? "feedback-error" : "";
     reviewFeedback.textContent = reviewText;
     reviewFeedback.classList.add("visible");
     optionsContainer.style.display = "none";
@@ -927,7 +930,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         sessionConsecutiveReflections++;
         feedback.textContent = "Ikke helt —";
         feedback.className = "feedback-error";
-        setTimeout(() => enterReflectionState(reviewText), 400);
+        // "Stav til": the explanation alone does not state the spelling, so keep it on screen.
+        const correction = currentRenderer === ANSWER_RENDERERS.SHORT_TEXT
+          ? shortTextCorrection(data.correct_answer, userAnswer)
+          : null;
+        setTimeout(() => enterReflectionState(reviewText, correction), 400);
         return;
       }
 
@@ -1009,6 +1016,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const content = question.content;
     // One renderer per interaction type — see js/answer-input.js for the selection order.
     const renderer = resolveAnswerRenderer(question);
+    currentRenderer = renderer;
 
     // 157E: analytics — question shown (format only, no content). No-op unless active.
     track("question_shown", { format });

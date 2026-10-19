@@ -120,7 +120,7 @@ Rules:
 | Advisory grading | Edge (`grade-answer`, via §6 layer) | suggestion only → teacher/RPC | `pending` → teacher queue (today's behaviour) |
 | Draft teacher feedback | Edge (§6 layer) | suggestion only → teacher edits | teacher writes feedback manually |
 | STT (voice→text) | deferred | none | manual entry |
-| TTS (read-aloud) | deferred (pre-gen audio preferred) | none | no audio |
+| TTS (read-aloud) | Worker → Azure Speech, cached in R2 (157P); question/answer text only, never pupil data | none (audio only) | calm "kunne ikke hentes" state, no other voice |
 | Cosmetic item art | offline pipeline, slot-constrained | item overlays only, QA-gated; **never geometry** | manual/curated items |
 
 ## 9. Definition of compliant AI work

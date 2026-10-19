@@ -543,8 +543,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      justify-content: safe center;
+      gap: 12px;
       padding: 24px;
+      overflow-y: auto;
     }
     #grade-selector-overlay h2 {
       color: var(--text-primary, #f0edf8);
@@ -869,8 +871,9 @@
   <!-- Question card: the visual and interaction focal point -->
   <div class="game-card" id="game-card">
     <div id="question">Indl&#230;ser&hellip;</div>
-    <div id="feedback"></div>
-    <div id="review-feedback"></div>
+    <!-- Announced to screen readers when the result arrives (Ja! / Svaret er … / fejl). -->
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div id="review-feedback" aria-live="polite"></div>
     <button type="button" id="reflection-continue">Videre &#8594;</button>
   </div>
 
@@ -931,6 +934,10 @@
 <div id="grade-selector-overlay">
   <h2>Vælg dit klassetrin</h2>
   <p>Du f&#229;r sp&#248;rgsm&#229;l, der passer til dit niveau</p>
+  <button class="grade-btn" data-grade="3">3. klasse</button>
+  <button class="grade-btn" data-grade="4">4. klasse</button>
+  <button class="grade-btn" data-grade="5">5. klasse</button>
+  <button class="grade-btn" data-grade="6">6. klasse</button>
   <button class="grade-btn" data-grade="7">7. klasse</button>
   <button class="grade-btn" data-grade="8">8. klasse</button>
   <button class="grade-btn" data-grade="9">9. klasse</button>

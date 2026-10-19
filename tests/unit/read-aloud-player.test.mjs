@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWebSpeechProvider, listSpeechVoices } from "../../js/read-aloud/provider-webspeech.js";
 import { readableTokens, attachReadAloudControl, attachOptionReadAloudControl } from "../../js/read-aloud/adapters/quiz.js";
-import { createReadAloud } from "../../js/read-aloud/index.js";
+import { createReadAloud, defaultReadAloudProviders, ENABLE_WEBSPEECH_DEV_FALLBACK } from "../../js/read-aloud/index.js";
 import { createPrerecordedProvider } from "../../js/read-aloud/provider-prerecorded.js";
 import { hashKey } from "../../js/read-aloud/manifest.js";
 
@@ -150,8 +150,8 @@ test("late events from a cancelled utterance never end the request that replaced
   assert.deepEqual(second, ["speaking", "ended"]);
 });
 
-test("support: no Web Speech + empty clip manifest → nothing can speak and no control renders", async () => {
-  installAudio(); // audio playback exists, but no clip is shipped
+test("support: without audio playback nothing can speak and no control renders", async () => {
+  // Node has fetch and WebCrypto but no Audio: the cached Azure provider cannot play.
   assert.equal(createPrerecordedProvider().isSupported(), false);
   const ra = createReadAloud({ enabled: true });
   assert.equal(ra.isAvailable(), false);
@@ -168,13 +168,16 @@ test("support: no Web Speech + empty clip manifest → nothing can speak and no 
   assert.equal(prompt.textContent, "Hvad er hovedstaden?");
 });
 
-test("support: Web Speech available → any text can be spoken", async () => {
-  installSpeech([voice("Dansk", "da-DK", "da")]);
+test("support: production never falls back to the browser's own voice (157P)", async () => {
+  // Web Speech exists, but the default provider list is the cached Azure voice only, so a
+  // browser without audio playback gets no read-aloud rather than a different voice.
+  const { spoken } = installSpeech([voice("Dansk", "da-DK", "da")]);
+  assert.equal(ENABLE_WEBSPEECH_DEV_FALLBACK, false);
+  assert.deepEqual(defaultReadAloudProviders().map((p) => p.id), ["azure-cached"]);
   const ra = createReadAloud({ enabled: true });
-  assert.equal(ra.isAvailable(), true);
-  assert.equal(ra.canSpeak("Hvad er hovedstaden?"), true);
-  assert.equal(ra.canSpeak("   "), false);
-  assert.equal(await ra.speak("Hvad er hovedstaden?"), true);
+  assert.equal(ra.canSpeak("Hvad er hovedstaden?"), false);
+  assert.equal(await ra.speak("Hvad er hovedstaden?"), false);
+  assert.equal(spoken.length, 0);
 });
 
 test("support: no Web Speech + a matching local clip → that text is still read aloud", async () => {
@@ -211,7 +214,7 @@ test("a failed clip falls back to Web Speech without a false 'ended' in between"
 });
 
 test("every student surface using the adapter ships the shared player styles", () => {
-  for (const page of ["index.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html"]) {
+  for (const page of ["index.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "slope.html"]) {
     const html = readFileSync(join(REPO, page), "utf8");
     assert.match(html, /<link rel="stylesheet" href="css\/read-aloud\.css">/, page);
   }

@@ -161,7 +161,10 @@ test("the Danish migrations insert 210 well-formed MC questions, 30 per grade 3-
 
 test("the frontend offers dansk and sends it as the subject", () => {
   const spil = read("spil.html");
-  assert.match(spil, /<a class="spil-card" href="index\.html\?fag=dansk">[\s\S]*?<span class="spil-name">Dansk<\/span>/);
+  const fag = spil.match(/<nav[^>]*id="spil-panel-fag"[^>]*>([\s\S]*?)<\/nav>/);
+  assert.ok(fag, "the Fag panel exists");
+  assert.match(fag[1], /<a class="spil-card" href="index\.html\?fag=dansk">[\s\S]*?<span class="spil-name">Dansk<\/span>/,
+    "the Dansk card is under the Fag tab");
   const app = read("app.js");
   assert.match(app, /fagParam === "dansk" \? "dansk"/);
   assert.match(app, /SUBJECT_LABEL = \{ engelsk: "Engelsk", dansk: "Dansk" \}/);

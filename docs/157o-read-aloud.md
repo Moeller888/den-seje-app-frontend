@@ -1,13 +1,13 @@
-# 157N/157O — Read-Aloud (TTS): Decision + Implementation
+# 157N/157O/157P — Read-Aloud (TTS): Decision + Implementation
 
-Status: **157N decided · 157O LIVE in production** (Web Speech activated, commit `52e7a04`; per-MC-option 🔊 added, commit `eb6d5fc`; both 2026-07-03). Audio clips remain an offline deliverable.
+Status: **157P built — cached Azure Neural voice, awaiting owner approval after the real Edge/Chrome audio test (2026-10-19); not merged or deployed.** Until 157P ships, production runs 157O (Web Speech, `52e7a04`; per-MC-option 🔊 `eb6d5fc`; player `74f741b`). **§7 supersedes the 157N strategy and the §6 parked option** — read §7 first.
 Date: 2026-06-30 (built) · 2026-07-03 (activated). Owner: project owner (solo). Gate: **SOFT** (built, now live).
 Service: `js/read-aloud/`. Wiring: `app.js`. Builds on the `js/audio.js` graceful-playback pattern.
 Rules: [AI_GUIDELINES.md](./AI_GUIDELINES.md) (privacy), [PROJECT_VISION.md](./PROJECT_VISION.md) (accessibility).
 
 ---
 
-## 1. 157N — Strategy decision
+## 1. 157N — Strategy decision (SUPERSEDED by §7, 2026-10-19)
 
 **Decided: pre-generated Piper clips as the primary path, with an on-device Web Speech fallback —
 no live TTS service.** Rationale (from the 157A audit): a live TTS server is unreachable from the
@@ -36,14 +36,14 @@ student task:
 
 - play/pause/resume and "Forfra";
 - speed choices 0.75×, normal, 1.25× and 1.5×;
-- a list of the Danish voices actually available on the device, with automatic best-voice fallback;
+- ~~a list of the Danish voices actually available on the device~~ — removed in 157P (§7): one fixed voice;
 - speed and voice saved locally on that device (no profile data or database write);
 - word highlighting driven by browser boundary events; speech still works without highlighting in
   browsers that do not emit them;
 - visible status, keyboard focus, 44 px controls, responsive wrapping and reduced-motion support.
 
-The provider contract remains the single integration boundary. No Azure key, Edge Function, new
-database path or paid runtime service was added. `css/read-aloud.css` is included on all student
+The provider contract remains the single integration boundary. (157O added no paid service; 157P
+adds the cached Azure provider — §7.) `css/read-aloud.css` is included on all student
 surfaces that use the shared adapter.
 
 **Support rule.** Controls render only when the facade's `canSpeak(text)` is true, i.e. at least
@@ -130,7 +130,7 @@ Set `ENABLE_READ_ALOUD=true`, serve/deploy a preview:
 
 ## 6. Parked option — pre-generated neural clips (owner decision 2026-10-02)
 
-**Status: PARKED (not decided, not started).** Kept as the candidate fix if on-device voices prove
+**Status: STARTED as 157P (§7, owner decision 2026-10-19)** — originally parked. Kept as the candidate fix if on-device voices prove
 too weak for the pilot.
 
 **Why it came up (measured 2026-10-02, owner's own machine):**
@@ -151,3 +151,116 @@ same quality on every device. Web Speech stays the fallback.
    (e.g. Azure) — this changes the 157N decision ("no third-party service") and must be recorded.
 2. Scope analysis first: number of questions + options, total size vs Cloudflare static-asset
    limits, cost vs free quotas, and whether a voice reads Danish *and* English naturally in one clip.
+
+## 7. 157P — One voice in every browser: cached Azure Neural (owner decision 2026-10-19)
+
+**Why.** Web Speech plays whatever voice the device has: neural Christel in Edge, robotic
+*Microsoft Helle* in Chrome on Windows, something else on iPad. The owner did not accept that
+difference. **Decision:** every supported browser plays the **same Microsoft Neural voice from the
+same cached file**. This replaces the 157N "no third-party service" rule and starts the §6 option:
+question and answer text (never pupil data) is sent once to Azure Speech.
+
+**Voices.** `da-DK-ChristelNeural` (default, Danish) and `en-GB-SoniaNeural` (English runs in the
+English subject). Defined once in `TTS_VOICES` (`js/read-aloud/tts-key.js`).
+
+### Architecture
+
+```
+browser (provider-azure.js)                 Cloudflare Worker (worker/)                 Azure Speech
+ key = SHA-256(canonical request)
+ GET /tts/v1/<key>.json ── hit ──────────▶ R2 laerlig-readaloud ─▶ metadata + word timings
+   │ 404                                       (immutable, public, 1-year cache)
+   ▼
+ POST /api/tts {segments} + user JWT ────▶ verify Supabase JWT (ES256, JWKS)
+                                           R2 hit? → return it (no limit, no Azure)
+                                           rate limit (per user 20/min, global 60/min)
+                                           Durable Object per key (single flight) ──▶ WebSocket TTS
+                                           write MP3, then metadata (commit marker)  ◀── MP3 + WordBoundary
+ <audio src=/tts/v1/<key>.mp3>  ◀── Range/206 from R2 (Safari)
+```
+
+- **Provider order:** `provider-azure.js` is the first and only production provider. The provider
+  contract (`provider.js`) is unchanged, so another provider can still be added without UI change.
+- **No silent fallback.** If the clip cannot be fetched or synthesised (network, Azure error,
+  timeouts: metadata 8 s, synthesis 25 s, playback start 12 s) the player shows
+  "Oplæsningen kunne ikke hentes lige nu. Prøv igen om lidt." and the option 🔊 dims. Web Speech
+  stays in the code only behind `ENABLE_WEBSPEECH_DEV_FALLBACK` (`js/read-aloud/index.js`, `false`
+  in Git) for offline development.
+- **No voice picker.** The voice select is removed; only the speed (0,75×–1,5×) remains a local
+  preference (`dsj_read_aloud_rate`).
+- **Word highlighting** uses Azure's `WordBoundary` events, collected during synthesis and stored in
+  the clip metadata (`words: [{w, t, d}]`, milliseconds of audio). The browser maps each word onto
+  the shown text in order and highlights from the audio element's own media clock (`currentTime`).
+  That clock already runs 1,5× or 0,75× with `playbackRate`, so the timings are scaled correctly at
+  every speed and across pause/resume without re-synthesis (`wordIndexAt`, `wallClockMs`).
+- **Pause, fortsæt, "Forfra", stop on next question and per-option 🔊** behave as in 157O; "Forfra"
+  reuses the in-memory metadata and the browser's HTTP cache.
+
+### Storage and the cache key
+
+- **R2 bucket `laerlig-readaloud`**, binding `TTS_BUCKET`. Objects `tts/v<N>/<sha256>.mp3`
+  (`audio/mpeg`, 24 kHz 48 kbit/s mono) and `tts/v<N>/<sha256>.json` (key, audio path, runs,
+  voices, text, word timings, bytes, createdAt). Served by the Worker at the same path on lærlig.dk
+  with `Cache-Control: public, max-age=31536000, immutable`; a missing clip is `404 no-store`.
+- **Key** = SHA-256 of `{v: TTS_CACHE_VERSION, format, segments: [[lang, voice, text]…]}` where
+  text is NFC-normalised with whitespace collapsed and same-language neighbours merged. The browser,
+  the Worker and the generator import the same function, so Edge and Chrome request the **same URL**
+  and receive the **same bytes**. The Worker recomputes the key itself; it never trusts a client key.
+- **Invalidation.** A shipped clip is never overwritten. Edited text → new key → new clip on the
+  next play. Another voice or format → new key automatically. To re-voice everything (e.g. a better
+  voice model), bump `TTS_CACHE_VERSION`: all URLs move to `/tts/v<N+1>/` and the generator fills
+  them; old objects can then be deleted from R2 by prefix.
+
+### Cost control and safety
+
+- Azure key: Worker secret `AZURE_SPEECH_KEY` (+ `AZURE_SPEECH_REGION`). Sent only from the Worker
+  to Azure as a request header; never in Git, a response, a log line, a URL or the browser bundle.
+- `POST /api/tts` requires a Supabase access token (or the generator's `TTS_ADMIN_TOKEN`), accepts
+  only `{text}` / `{segments:[{text, lang}]}` (any other field → 400), `da-DK`/`en-GB` only, at most
+  800 characters and 24 runs, body ≤ 16 KB, same-origin. Only the token's `sub` is used, as the
+  rate-limit key; nothing about the user reaches Azure.
+- **Single flight:** every miss for one key is routed to one Durable Object (`TtsClipCoordinator`,
+  `idFromName(key)`); concurrent requests share one Azure call and one write.
+- Logs are key-free: `tts_clip_created {key, chars, bytes}` and `tts_clip_failed {code}`.
+
+### New and changed texts — the generator
+
+```
+node --env-file=.env tools/read-aloud/generate-clips.mjs --dry-run           # count only
+TTS_ADMIN_TOKEN=… node --env-file=.env tools/read-aloud/generate-clips.mjs   # fill production
+```
+
+It reads the active questions (service role, `.env`) and the six game introductions, builds the
+same requests as the quiz adapter (English language runs via `lang-segments.js`), and asks the
+Worker only for clips whose metadata does not exist yet (one `HEAD` per clip). Run it after
+importing or editing questions; until then a missing clip is generated once, on its first play.
+`--base http://127.0.0.1:8787` targets `wrangler dev`; `--limit N`, `--concurrency N` (default 2,
+keeps inside Azure's request quota; 429/5xx are retried with back-off).
+
+**Volume (2026-10-19 dry run):** 2.101 active questions → 10.503 texts → **9.221 unique clips,
+585.768 characters**. One-time fill ≈ 0,59 M Neural characters; afterwards only new or edited
+texts cost anything. Azure's free F0 tier covers 0,5 M Neural characters per month (the fill then
+spans two months), or it is one small S0 bill at the per-million list price. R2 storage for ~9.200
+short MP3s is far inside the free 10 GB, and reads through the Worker are not billed as egress.
+
+### Configuration (owner)
+
+1. Azure Speech resource (F0 or S0), e.g. region `northeurope`.
+2. `npx wrangler r2 bucket create laerlig-readaloud`
+3. `npx wrangler secret put AZURE_SPEECH_KEY`, `… AZURE_SPEECH_REGION`, `… TTS_ADMIN_TOKEN`
+   (≥ 32 random characters; the generator uses the same value).
+4. Merge → Cloudflare deploys the script, the Durable Object migration (`v1-tts-clip`) and the rate
+   limiters together with the assets.
+5. Run the generator against production.
+
+Local: `.dev.vars` (gitignored) with the same three names, `npm run build:cloudflare`, then
+`npx wrangler dev` — R2, the Durable Object and the rate limiters run locally; Azure is real.
+
+### Tests
+
+`tests/unit/read-aloud-azure.test.mjs`: clip identity, input validation, cache hit/miss, 12
+concurrent requests → 1 Azure call, Azure error/timeout → nothing stored, WebSocket protocol
+(audio + WordBoundary, timeout, early close), Supabase JWT (valid/expired/foreign/tampered/HS256),
+admin token, HTTP surface (404 no-store, Range 206, 401/400/403/405/413/429/503/504), provider
+(hit, miss, error, timeout, stop-while-loading, timing at 0,75× and 1,5×).
+`tests/unit/read-aloud-player.test.mjs`: production never uses Web Speech.

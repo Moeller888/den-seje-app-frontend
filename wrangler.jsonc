@@ -2,15 +2,23 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "den-seje-app-frontend",
   "compatibility_date": "2026-08-04",
+  "main": "worker/index.js",
 
-  // ASSET-ONLY WORKER. There is deliberately no "main", no Worker script, no bindings and no
-  // Functions: this deployment serves static files and nothing else. The app talks to Supabase
-  // directly from the browser, exactly as it did on Vercel, so no server-side code is involved.
+  // STATIC ASSETS + ONE SMALL SCRIPT (157P). The asset layer answers every request that matches
+  // a file in "directory" BEFORE the script runs, exactly as before; worker/index.js only sees
+  // what no asset matched. It owns read-aloud and nothing else:
+  //   GET|HEAD /tts/v<N>/<sha256>.mp3|.json -> cached Azure clip + word timings from R2
+  //   POST     /api/tts                     -> get-or-create one clip (Supabase JWT, rate limit)
+  // and hands everything else back to the asset layer (-> 404 page). The app still talks to
+  // Supabase directly from the browser. Secrets (never in this file, never in Git):
+  //   AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, TTS_ADMIN_TOKEN  -> `wrangler secret put <NAME>`
+  // Local development reads them from .dev.vars (gitignored). See docs/157o-read-aloud.md.
   //
   // "directory" is the generated output of tools/cloudflare-build-static.mjs — NEVER the repo
   // root. The root holds .env files, the docs/ decision register, tests/, tools/, supabase/ and
   // tracked node_modules; the build script copies only an explicit allowlist and then re-validates
-  // the result, so none of that can be published.
+  // the result, so none of that can be published. worker/ is bundled by Wrangler as code and is
+  // never copied into the assets.
   // ROUTING CONTRACT: ASYMMETRIC BY DESIGN.
   //
   //   public clean route      -> internal 200 rewrite to its HTML file (_redirects). The address
@@ -38,6 +46,33 @@
   "assets": {
     "directory": "./dist-cloudflare",
     "html_handling": "none",
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+    "binding": "ASSETS"
+  },
+
+  "vars": {
+    "SUPABASE_URL": "https://tjzbehwfagiwpwodsgwg.supabase.co"
+  },
+
+  // Clips + timing metadata. Immutable objects named by content hash (js/read-aloud/tts-key.js).
+  "r2_buckets": [
+    { "binding": "TTS_BUCKET", "bucket_name": "laerlig-readaloud" }
+  ],
+
+  // One instance per clip key: concurrent misses for the same text are synthesised once.
+  "durable_objects": {
+    "bindings": [
+      { "name": "TTS_CLIP", "class_name": "TtsClipCoordinator" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1-tts-clip", "new_sqlite_classes": ["TtsClipCoordinator"] }
+  ],
+
+  // Cache misses only (a cached clip is never rate limited). Per signed-in user, plus a global
+  // ceiling that also keeps a burst inside Azure's own request quota.
+  "ratelimits": [
+    { "name": "TTS_USER_RATE_LIMIT", "namespace_id": "15701", "simple": { "limit": 20, "period": 60 } },
+    { "name": "TTS_GLOBAL_RATE_LIMIT", "namespace_id": "15702", "simple": { "limit": 60, "period": 60 } }
+  ]
 }
