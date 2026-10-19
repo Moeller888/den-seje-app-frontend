@@ -34,6 +34,14 @@ Cloudflare Workers Static Assets vælges som ny frontend-host. Dashboardet tilby
 "Create Worker", ikke en separat Pages-oprettelse; det er korrekt — frontenden deployes som en
 **asset-only Worker**.
 
+> **157P (ejerbeslutning 2026-10-19):** Workeren får ét lille script, `worker/index.js`, til
+> oplæsning. Asset-laget svarer stadig FØRST på alle filer, `_redirects` og 404-siden; scriptet
+> ser kun anmodninger, ingen fil matchede, og ejer kun `/tts/v<N>/…` (cachede Azure-klip i R2) og
+> `POST /api/tts`. Bindinger: R2 `laerlig-readaloud`, Durable Object `TtsClipCoordinator`, to
+> rate limiters. Secrets (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `TTS_ADMIN_TOKEN`) sættes med
+> `wrangler secret put` og ligger aldrig i Git. `worker/` bundtes som kode og kopieres aldrig til
+> `dist-cloudflare/`. Se [157o-read-aloud.md §7](./157o-read-aloud.md).
+
 ----------------------------------------
 HVAD MIGRATIONEN *IKKE* ÆNDREDE
 ----------------------------------------

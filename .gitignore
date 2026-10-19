@@ -43,3 +43,7 @@ dist-cloudflare/
 # model is the tracked .claude/settings.json (guarded by tests/unit/claude-settings-guard.test.mjs).
 .claude/settings.local.json
 .claude/*.bak*
+
+# Wrangler local secrets (Azure Speech key for the read-aloud Worker) — never commit
+.dev.vars*
+.wrangler/

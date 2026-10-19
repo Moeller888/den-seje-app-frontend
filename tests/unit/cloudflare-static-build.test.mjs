@@ -1041,7 +1041,22 @@ test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () 
   assert.match(wrangler, /"html_handling":\s*"none"/);
   assert.ok(!/"html_handling":\s*"auto-trailing-slash"/.test(wrangler), "auto-trailing-slash 307s away the .html extension");
   assert.match(wrangler, /"not_found_handling":\s*"404-page"/, "the 404 page behaviour must be preserved");
-  assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
+  // 157P (owner decision): one small script for read-aloud. Assets must still win first, so
+  // routing, redirects and the 404 page are untouched by it.
+  assert.ok(!/run_worker_first/.test(wrangler), "assets must be served before the script runs");
+});
+
+// 157P: the script owns /tts/ and /api/tts only and hands everything else back to the assets.
+test("the read-aloud Worker script is narrow and keeps secrets out of config", () => {
+  const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
+  assert.match(wrangler, /"main":\s*"worker\/index\.js"/, "the only script entry is worker/index.js");
+  assert.match(wrangler, /"binding":\s*"ASSETS"/);
+  assert.ok(!/"(AZURE_SPEECH_KEY|TTS_ADMIN_TOKEN)"\s*:/.test(wrangler), "secrets are set with `wrangler secret put`, never in config");
+  const src = readFileSync(join(REPO, "worker", "index.js"), "utf8");
+  assert.match(src, /return env\.ASSETS\.fetch\(request\);/, "unmatched requests go back to the asset layer");
+  const routes = [...src.matchAll(/url\.pathname === "([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(routes, ["/api/tts"]);
+  assert.ok(!has("worker/index.js") && !has("index.js"), "worker code is bundled, never published as an asset");
 });
 
 test("_redirects is generated as exactly the declared routing table — both halves", () => {
@@ -1372,7 +1387,8 @@ test("the build refuses to publish the repository root", () => {
   assert.ok(!/--assets\s+\.[\s"']/.test(src), "must never suggest deploying the repo root");
   const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
   assert.match(wrangler, /"directory":\s*"\.\/dist-cloudflare"/);
-  assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only — no main entry");
+  assert.ok(!/"main":\s*"\.\/?"/.test(wrangler) && !/"main":\s*"[^"]*dist-cloudflare/.test(wrangler),
+    "the script entry is code (worker/index.js), never the root or the asset directory");
 });
 
 test("the serve-check still asserts the routing contract over HTTP", () => {

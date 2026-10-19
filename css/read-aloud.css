@@ -31,8 +31,8 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   text-align: left;
-  /* WebKit reports a long selected voice name as layout overflow past its <select>;
-     contain it here. The 10px padding keeps the 5px focus rings unclipped. */
+  /* Contain WebKit's reported <select> overflow. The 10px padding keeps the 5px focus
+     rings unclipped. */
   overflow: hidden;
 }
 
@@ -80,11 +80,6 @@
   font: 700 11px/1.2 Arial, sans-serif;
 }
 
-.read-aloud-voice-field {
-  flex: 1 1 170px;
-  min-width: 150px;
-}
-
 .read-aloud-field select {
   min-height: 44px;
   max-width: 100%;
@@ -113,6 +108,15 @@
   font: 400 12px/1.2 Arial, sans-serif;
 }
 
+/* Calm error state (157P): the audio could not be fetched; no other voice takes over. */
+.read-aloud-player[data-state="error"] .read-aloud-status {
+  color: var(--text-main);
+}
+
+.read-aloud-option-btn.is-unavailable {
+  opacity: 0.55;
+}
+
 .read-aloud-player button:hover:not(:disabled),
 .read-aloud-field select:hover {
   background-color: var(--btn-bg-hover);
@@ -137,10 +141,6 @@
 
   .read-aloud-field {
     flex: 1 1 calc(40% - 4px);
-  }
-
-  .read-aloud-voice-field {
-    flex-basis: 55%;
   }
 }
 

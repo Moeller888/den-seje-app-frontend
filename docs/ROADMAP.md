@@ -467,6 +467,10 @@ _Last reviewed: 2026-07-01._
   and student-task prompts have a zero-cost player with pause/resume, restart, saved speed/voice and
   word highlighting where supported; MC options retain their separate 🔊. Fail-soft, no consent;
   Piper clips remain an offline deliverable.
+- **Read-aloud (157P, 2026-10-19):** **built, awaiting owner approval** after the real Edge/Chrome
+  audio test — one cached Azure Neural voice (`da-DK-ChristelNeural`, `en-GB-SoniaNeural`) for every
+  browser, served from R2 by a small Worker script; voice picker removed; no Web Speech fallback in
+  production. Owner decision supersedes 157N "no third-party service". [157o §7](./157o-read-aloud.md).
 - **Docs:** this foundation set (Section 157AA) being established.
 - **CI (D-066):** the Playwright workflow is **path-aware** — docs-only and standalone
   avatar-tool-only PRs skip the full browser suite (fast checks only); **push to main and any
@@ -594,6 +598,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157M AI-grade in teacher review | requires 157CB | 157L | **FUTURE INFRASTRUCTURE** | Activation follows 157L. |
 | 157N Piper TTS **strategy** | — | none | **UNGATED** | Decision/spec. |
 | 157O Read-aloud (Web Speech + Piper) | — | none | **LIVE** | Web Speech path **activated in prod** (`52e7a04`, 2026-07-03); Piper clips still an offline deliverable. |
+| 157P Read-aloud — cached Azure Neural | 157O | Azure Speech (text only), R2 | **BUILT — awaiting approval** | Same voice + same file in every browser; Worker script + R2 + Durable Object; [157o §7](./157o-read-aloud.md). |
 | 157P Whisper STT feasibility | — | none | **UNGATED** | Decision (likely defer). |
 | 157Q GDPR/consent consolidation | — | none | **SOFT GATE** | Consent mechanism is buildable code/docs. |
 | 157R Rollback / flag hardening | — | none | **SOFT GATE** | Cross-cutting code; no infra. |
