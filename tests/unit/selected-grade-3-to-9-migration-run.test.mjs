@@ -1,7 +1,8 @@
 // Klassetrin 3.-6.: migration 20261019130000_selected_grade_3_to_9, run UNMODIFIED against a real
 // PostgreSQL (PGlite, in-process WebAssembly — no Docker, no network), on a fixture built from
 // 20260529000000_grade_difficulty_schema (the constraint and set_student_grade it replaces), plus
-// the grade selector in index.html/app.js.
+// the grade selector in index.html/app.js. The EXECUTE grants are the LIVE ones (read 2026-10-19:
+// PUBLIC, anon, authenticated, service_role); CREATE OR REPLACE must leave them exactly as they are.
 //
 // HONEST LIMITS: PGlite is PostgreSQL 18.x; production is 17.6. auth.uid() reads `test.uid`. The live
 // constraint and function must be diffed against 20260529000000 before applying (see the migration
@@ -28,7 +29,7 @@ async function fixture(t) {
   const pg = new PGlite();
   t.after(() => pg.close());
   await pg.exec(`
-    CREATE ROLE anon NOBYPASSRLS; CREATE ROLE authenticated NOBYPASSRLS;
+    CREATE ROLE anon NOBYPASSRLS; CREATE ROLE authenticated NOBYPASSRLS; CREATE ROLE service_role BYPASSRLS;
     CREATE SCHEMA auth;
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
       $$ SELECT nullif(current_setting('test.uid', true), '')::uuid $$;
@@ -38,8 +39,7 @@ async function fixture(t) {
       CHECK (selected_grade IS NULL OR selected_grade IN (7, 8, 9));
     INSERT INTO public.profiles VALUES ('${P1}', 'student', NULL), ('${P2}', 'student', 9);
     ${BEFORE_FN}
-    REVOKE ALL ON FUNCTION public.set_student_grade(smallint) FROM PUBLIC, anon;
-    GRANT EXECUTE ON FUNCTION public.set_student_grade(smallint) TO authenticated;
+    GRANT EXECUTE ON FUNCTION public.set_student_grade(smallint) TO anon, authenticated, service_role;
   `);
   return pg;
 }
@@ -86,15 +86,18 @@ test("out-of-range and NULL grades are still refused, at the RPC and at the colu
 
 test("set_student_grade keeps its security shape: definer, search_path, grants, auth check", async (t) => {
   const pg = await fixture(t);
-  await pg.exec(MIGRATION);
-  const fn = (await pg.query(`SELECT prosecdef, proconfig, proacl::text AS acl FROM pg_proc
+  const shape = async () => (await pg.query(`SELECT prosecdef, proconfig, proacl::text AS acl FROM pg_proc
     WHERE oid = 'public.set_student_grade(smallint)'::regprocedure`)).rows[0];
-  assert.equal(fn.prosecdef, true);
-  assert.deepEqual(fn.proconfig, ["search_path=public"]);
-  assert.match(fn.acl, /authenticated=X/);
-  assert.equal(/(^|[{,])=X|anon=X/.test(fn.acl), false, "no PUBLIC or anon EXECUTE");
+  const before = await shape();
+  await pg.exec(MIGRATION);
+  const after = await shape();
+  assert.deepEqual(after, before, "definer, search_path and grants unchanged");
+  assert.equal(after.prosecdef, true);
+  assert.deepEqual(after.proconfig, ["search_path=public"]);
+  // A caller without a user (anon, or no JWT) still cannot set anything.
   assert.match(await setGrade(pg, "", 5) ?? "", /not_authenticated/);
-  assert.match(await setGrade(pg, P1, 5, "anon") ?? "", /permission denied/);
+  assert.match(await setGrade(pg, "", 5, "anon") ?? "", /not_authenticated/);
+  assert.equal(await gradeOf(pg, P1), null);
 });
 
 test("the selector offers 3.-9. klasse and every grade has a start band", () => {
