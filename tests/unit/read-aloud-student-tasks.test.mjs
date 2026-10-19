@@ -26,4 +26,5 @@ test("quiz and placement read the prompt and each option", () => {
   assert.match(read("js/kloeft.js"), /attachReadAloudControl\(/);
   assert.match(read("js/hop.js"), /attachReadAloudControl\(/);
   assert.match(read("js/brud.js"), /attachReadAloudControl\(/);
+  assert.match(read("js/slope.js"), /attachReadAloudControl\(/);
 });

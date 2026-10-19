@@ -211,7 +211,7 @@ test("a failed clip falls back to Web Speech without a false 'ended' in between"
 });
 
 test("every student surface using the adapter ships the shared player styles", () => {
-  for (const page of ["index.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html"]) {
+  for (const page of ["index.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "slope.html"]) {
     const html = readFileSync(join(REPO, page), "utf8");
     assert.match(html, /<link rel="stylesheet" href="css\/read-aloud\.css">/, page);
   }
