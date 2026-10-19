@@ -68,7 +68,7 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160 and D-162 records, and D-165's one live permission", () => {
+test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153, D-160, D-162 and D-165 records", () => {
   assert.equal(CONTRACT.authorisedCalls.count, 8);
   assert.equal(CONTRACT.authorisedCalls.calls.length, 8);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
@@ -111,11 +111,13 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.deepEqual([d162.callId, d162.decision], ["D-162-r3-face-neutral-guide-b-v1", "D-162"]);
   assert.deepEqual([d162.mandateState, d162.neverReuse, d162.notAnActivePermission, d162.closure.closedBy], ["SPENT", true, true, "D-163"]);
   assert.match(d162.prohibitions.noRetry, /Exactly one fetch/);
-  // The eighth is D-165's: ONE face-neutral parts-sheet attempt, authorised and not yet attempted — the only live permission.
+  // The eighth is D-165's: ONE face-neutral parts-sheet attempt.
+  // D-166 later recorded that one send (HTTP 200, one sheet, RAW-1..5 passed, the nose rejected) and closed the entry.
   const d165 = CONTRACT.authorisedCalls.calls[7];
-  assert.deepEqual([d165.callId, d165.decision, d165.mandateState, d165.outcome], ["D-165-r3-face-parts-sheet-v1", "D-165", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d165.callId, d165.decision], ["D-165-r3-face-parts-sheet-v1", "D-165"]);
+  assert.deepEqual([d165.mandateState, d165.neverReuse, d165.notAnActivePermission, d165.closure.closedBy], ["SPENT", true, true, "D-166"]);
   assert.match(d165.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-165-r3-face-parts-sheet-v1"], "D-165's attempt is the only live permission");
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
