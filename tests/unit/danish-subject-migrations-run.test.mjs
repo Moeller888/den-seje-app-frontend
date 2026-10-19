@@ -3,7 +3,8 @@
 //
 //   20261019120000_placement_exclude_danish  start_placement() keeps 'danish' out, as it keeps
 //                                            'english' out — ONE line differs from 20261016160000.
-//   20261019120001_danish_grade3_5           90 MC questions, learning_objective 'danish'.
+//   20261019120001_danish_grade3_5           90 MC questions, learning_objective 'danish', grades 3-5.
+//   20261019120002_danish_grade6_9           120 MC questions, learning_objective 'danish', grades 6-9.
 //
 // HONEST LIMITS: PGlite is PostgreSQL 18.x; production is 17.6. The fixture is the minimum
 // start_placement() reads. The live start_placement() must be diffed against 20261016160000 before
@@ -20,6 +21,7 @@ const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const BASE = read("supabase/migrations/20261016160000_answer_keys_server_side_rpcs.sql");
 const PLACEMENT = read("supabase/migrations/20261019120000_placement_exclude_danish.sql");
 const QUESTIONS = read("supabase/migrations/20261019120001_danish_grade3_5.sql");
+const QUESTIONS_6_9 = read("supabase/migrations/20261019120002_danish_grade6_9.sql");
 
 const fnBody = (sql, head) => {
   const start = sql.indexOf(head);
@@ -97,6 +99,7 @@ test("placement draws history only: never English, never Danish", async (t) => {
   const pg = await fixture(t);
   await pg.exec(PLACEMENT);
   await pg.exec(QUESTIONS);
+  await pg.exec(QUESTIONS_6_9);
   // 12 history MC questions within grade 5 (bands 1×4, 2×4, 3×2, 4×2), plus one English question.
   const bands = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4];
   for (const [i, band] of bands.entries()) {
@@ -115,11 +118,12 @@ test("placement draws history only: never English, never Danish", async (t) => {
   assert.match((await as(pg, "anon", "", "SELECT public.start_placement()")).error, /permission denied/);
 });
 
-test("the Danish migration inserts 90 well-formed MC questions for grades 3-5", async (t) => {
+test("the Danish migrations insert 210 well-formed MC questions, 30 per grade 3-9", async (t) => {
   const pg = await fixture(t);
   await pg.exec(QUESTIONS);
+  await pg.exec(QUESTIONS_6_9);
   const rows = (await pg.query("SELECT * FROM public.questions ORDER BY target_grade, difficulty_band")).rows;
-  assert.equal(rows.length, 90);
+  assert.equal(rows.length, 210);
   const perGrade = {};
   for (const q of rows) {
     perGrade[q.target_grade] = (perGrade[q.target_grade] ?? 0) + 1;
@@ -140,9 +144,14 @@ test("the Danish migration inserts 90 well-formed MC questions for grades 3-5", 
       assert.equal(/Ã|�/.test(text), false, `mojibake in: ${text}`);
     }
   }
-  assert.deepEqual(perGrade, { 3: 30, 4: 30, 5: 30 });
+  assert.deepEqual(perGrade, { 3: 30, 4: 30, 5: 30, 6: 30, 7: 30, 8: 30, 9: 30 });
+  // No question text is repeated within a grade.
+  for (const g of [3, 4, 5, 6, 7, 8, 9]) {
+    const texts = rows.filter((q) => q.target_grade === g).map((q) => q.content.question + "|" + q.content.correct);
+    assert.equal(new Set(texts).size, texts.length, `duplicate question in grade ${g}`);
+  }
   // Every band is used in every grade, and the correct option is not always in the same place.
-  for (const g of [3, 4, 5]) {
+  for (const g of [3, 4, 5, 6, 7, 8, 9]) {
     const bandsUsed = new Set(rows.filter((q) => q.target_grade === g).map((q) => q.difficulty_band));
     assert.deepEqual([...bandsUsed].sort(), [1, 2, 3, 4]);
   }
