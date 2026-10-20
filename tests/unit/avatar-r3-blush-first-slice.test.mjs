@@ -218,8 +218,10 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // derived budget is 21-22. Planned capacity is not a claim that the call was made.
   // D-167 authorises ONE further face-neutral attempt (the partial nose sheet), so assets[4] carries 4 PLANNED calls and
   // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
-  assert.equal(min, 22, "assets[0] carries 5 PLANNED calls after D-153; assets[4] carries 4 after D-167");
-  assert.equal(max, 23);
+  // D-172 adds ONE further planned eyes-fixed call (call A2), so assets[5] carries 2 PLANNED calls and the derived budget is
+  // 23-24. Planned capacity is not a claim that the call was made.
+  assert.equal(min, 23, "assets[0] carries 5 PLANNED calls after D-153; assets[4] 4 after D-167; assets[5] 2 after D-172");
+  assert.equal(max, 24);
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
@@ -236,8 +238,9 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // derived budget is 21-22. Planned capacity is not a claim that the call was made.
   // D-167 authorises ONE further face-neutral attempt (the partial nose sheet), so assets[4] carries 4 PLANNED calls and
   // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
-  assert.equal(C.imageCallBudget.minimum, 22);
-  assert.equal(C.imageCallBudget.maximum, 23);
+  // D-172 adds ONE further planned eyes-fixed call (call A2), so the derived budget is 23-24.
+  assert.equal(C.imageCallBudget.minimum, 23);
+  assert.equal(C.imageCallBudget.maximum, 24);
 });
 
 test("nothing is wired, and the existing blush behaviour is untouched", () => {
