@@ -3,10 +3,11 @@
 //
 // WHERE IT SITS IN THE FLOW (index.ts), unchanged around it:
 //   1. an open / due instance is served first (spaced repetition and an interrupted request win);
-//   2. NEW questions: get_question_candidates_for_student returns a per-pupil, stratified candidate
-//      window (migration 20261019150000) → planNextQuestions orders it → the first successful
-//      server-side insert wins;
-//   3. the repeat RPC, only when the scope is exhausted.
+//   2. NEW questions: get_question_candidates_for_student returns a per-pupil, stratified window of
+//      SERVABLE candidates (migration 20261019150000) → planNextQuestions orders it → the first
+//      successful server-side insert wins;
+//   3. the repeat RPC, only when no SERVABLE unserved question is left
+//      (request_repeat_question_servable_for_student — the same servable rule as step 2).
 // Scope (subject, teacher's domains, grade), "not served before", the answer key, the reward and the
 // mastery logic are all decided elsewhere and are not touched here: this file only ORDERS candidates
 // the scope already allowed.
@@ -14,7 +15,8 @@
 // THE DECISION, per request, from server-owned data only
 //   history  the pupil's newest WINDOW question_instances (created_at = when first served; a reopened
 //            repeat keeps its old created_at, so the window counts NEW questions only);
-//   band     ./server-band.ts (never the request body).
+//   band     advance_student_band — the server-owned fold of every attempt (./server-band.ts); never
+//            the request body.
 // A non-base kind K becomes DUE when all of these hold:
 //   * K is servable (../_shared/interaction-kinds.ts) and has a QUALIFIED candidate: a band within
 //     bandTolerance of the pupil's band. A quota is never met with too-easy or too-hard items;
@@ -24,7 +26,8 @@
 //   * the window's non-base total stays within totalShare · (n + 1).
 // The most-behind due kind wins (registry order breaks ties). Otherwise the base kind (choice) is
 // used; when the base kind has no candidate left, the most-behind servable kind is used regardless of
-// quota — the limits steer variety, they never turn an answerable pool into "no questions".
+// quota — the limits steer variety, they never turn an answerable pool into "no questions". Even then
+// a teacher-graded kind (long answers) comes only when no auto-graded candidate is left at all.
 //
 // WITHIN THE CHOSEN KIND, in this order of precedence:
 //   1. band tier: |band − pupil band| ≤ bandTolerance first;
@@ -97,6 +100,14 @@ export type MixDecision = {
 };
 
 export type MixPlan<T> = { ordered: T[]; decision: MixDecision };
+
+// Fallback order: the base kind, then the other auto-graded kinds, then teacher-graded kinds (registry
+// order within each group).
+const FALLBACK_ORDER: readonly InteractionKind[] = [
+  BASE_KIND,
+  ...KIND_ORDER.filter((k) => k !== BASE_KIND && !INTERACTION_KINDS[k].teacherGraded),
+  ...KIND_ORDER.filter((k) => k !== BASE_KIND && INTERACTION_KINDS[k].teacherGraded),
+];
 
 // Shares are fractions (0.30 / 3 = 0.09999…); compare whole-question thresholds with a tolerance so a
 // kind that is exactly one question behind is due.
@@ -217,20 +228,26 @@ export function planNextQuestions<T extends MixCandidate>(input: {
     reason = "base";
   }
   if (kind === null) {
-    // No base candidates left: serve what the pool still holds rather than nothing.
-    const rest = KIND_ORDER.filter((k) => k !== BASE_KIND && (byKind.get(k) ?? []).length > 0);
-    if (rest.length > 0) {
-      kind = rest.reduce((a, b) => (deficit(b) > deficit(a) ? b : a));
+    // No base candidates left: serve what the pool still holds rather than nothing — an auto-graded
+    // kind first (most behind its share wins, registry order breaks ties). A teacher-graded kind only
+    // when no auto-graded candidate is left at all: a long answer holds the pupil's one open instance
+    // until the teacher grades it.
+    const rest = FALLBACK_ORDER.filter((k) => k !== BASE_KIND && (byKind.get(k) ?? []).length > 0);
+    const autoGraded = rest.filter((k) => !INTERACTION_KINDS[k].teacherGraded);
+    const pool = autoGraded.length > 0 ? autoGraded : rest;
+    if (pool.length > 0) {
+      kind = pool.reduce((a, b) => (deficit(b) > deficit(a) + EPSILON ? b : a));
       reason = "base_exhausted";
     }
   }
 
-  // 4. Chosen kind first, then the rest as insert-race fallback (base kind before the others).
+  // 4. Chosen kind first, then the rest as insert-race fallback: base kind, other auto-graded kinds,
+  //    teacher-graded kinds last.
   const order = (k: InteractionKind) =>
     orderWithinKind(byKind.get(k) ?? [], targetBand, input.wavePhase, input.lastMisconceptionType, recentDomains, policy);
   const ordered: T[] = [];
   if (kind !== null) ordered.push(...order(kind));
-  for (const k of [BASE_KIND, ...KIND_ORDER.filter((x) => x !== BASE_KIND)]) {
+  for (const k of FALLBACK_ORDER) {
     if (k !== kind) ordered.push(...order(k));
   }
 

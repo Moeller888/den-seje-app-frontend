@@ -31,7 +31,10 @@
 //      process_question_attempt) and extend the public DTO (_shared/question-dto.ts) on purpose;
 //   3. flip servable to true in the same PR that ships the renderer, with the parity test in
 //      tests/unit/interaction-kinds.test.mjs extended to the new renderer.
-// The SQL candidate function needs no change: it stratifies by the stored fields, not by kind names.
+// The SQL twin public.question_is_servable (migration 20261019150000) must change in the same PR as
+// step 3: it decides what the candidate window and the repeat exhaustion check count as servable, and
+// tests/unit/question-format-mix-migration-run.test.mjs fails while the two disagree. The candidate
+// window itself needs no change: it stratifies by the stored fields, not by kind names.
 //
 // Pure TypeScript with no Deno or network imports, so the Node unit suite tests exactly what the
 // Edge Functions run.
@@ -122,15 +125,16 @@ export function classifyQuestion(row: StoredFormatFields | null | undefined): In
 
   if (format === "match") return forceText ? null : "match_pairs";
 
+  // mapAnswerFormat (server) tests "mc" first, resolveAnswerRenderer (browser) tests "number" first:
+  // a format containing both would be graded as one kind and shown as the other.
+  if (format.startsWith("mc") && format.includes("number")) return null;
+
   if (forceText) {
     // The browser's force_text renderer wins over the format; the server grades by format. Only an
     // MC row is graded as free text against its key today.
     return format.startsWith("mc") ? "force_text" : null;
   }
 
-  // mapAnswerFormat (server) tests "mc" first, resolveAnswerRenderer (browser) tests "number" first:
-  // a format containing both would be graded as one kind and shown as the other.
-  if (format.startsWith("mc") && format.includes("number")) return null;
   if (format.startsWith("mc")) return "choice";
   if (format.includes("number")) return "number";
   if (format === "text") return "short_text";
@@ -139,4 +143,11 @@ export function classifyQuestion(row: StoredFormatFields | null | undefined): In
 
 export function isServableKind(kind: InteractionKind | null): kind is InteractionKind {
   return kind !== null && INTERACTION_KINDS[kind].servable === true;
+}
+
+// The answer_format the browser receives for a stored row — or null when the row must not be served.
+// Unlike get-next-question's mapAnswerFormat, an unknown format never falls back to "mc".
+export function servableWireFormat(row: StoredFormatFields | null | undefined): string | null {
+  const kind = classifyQuestion(row);
+  return isServableKind(kind) ? INTERACTION_KINDS[kind].wireFormat : null;
 }

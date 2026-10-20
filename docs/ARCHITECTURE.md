@@ -392,7 +392,7 @@ format — e.g. a two-choice true/false — is shown exactly as authored and is 
 ### Question selection & the format mix (fordeling af opgaveformer) — prepared 2026-10-19, NOT active
 
 **Status:** code merged-ready behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` = today's
-selection, unchanged. `shadow`/`v2` need migration `20261019150000_question_candidates_stratified.sql`
+selection, unchanged. `shadow`/`v2` need migration `20261019150000_question_format_mix.sql`
 (prepared, **not applied**, awaiting security review and a separate D-110 authorisation).
 
 **The problem it solves.** `get_unserved_questions_for_student` ends in `LIMIT 50` with no `ORDER BY`,
@@ -407,14 +407,26 @@ the browser.
    always gets the same open question back (`idx_one_open_question`);
 2. new questions — `v1`: `get_unserved_questions_for_student` + `sortByWave` (client band).
    `v2`: `mix-flow.ts` reads, in parallel and on the backend client scoped to the verified pupil,
-   (a) `get_question_candidates_for_student` — same scope predicate, but up to 20 rows **per
-   (answer_format, answer_type, force_text, difficulty_band)** ranked `md5(student_id || question_id)`
-   (deterministic per pupil, different between pupils, ≈ 4 ms on the largest live history, same as
-   today), (b) the pupil's newest 60 `question_instances` with only classifying fields (no content,
-   no key), (c) the pupil's `placement_sessions` row. `server-band.ts` derives the band;
+   (a) `get_question_candidates_for_student` — same scope predicate, **servable formats only**, up to
+   20 rows **per (answer_format, answer_type, force_text, difficulty_band)** ranked
+   `md5(student_id || question_id)` (deterministic per pupil, different between pupils, ≈ 4 ms on the
+   largest live history, same as today), (b) the pupil's newest 20 `question_instances` with only
+   classifying fields (no content, no key, no verdict), (c) `advance_student_band` (below).
    `format-mix.ts` orders the candidates; the first successful server-side insert wins, as before;
-3. the repeat RPC, only once the scope is exhausted.
-`shadow` serves `v1` and only logs the `v2` decision (`FORMAT_MIX:`), for comparison before switching.
+3. the repeat RPC, only once the scope is exhausted — `v2` uses
+   `request_repeat_question_servable_for_student`, whose "exhausted" means "no **servable** unserved
+   question left", the same rule as (a). The old check counted every format, so a pool holding only
+   formats the client cannot show (e.g. Match par before its renderer) gave "no questions" although
+   answered questions could be repeated. All other guards are the old function's, byte for byte.
+`shadow` serves `v1` and only logs the `v2` decision (`FORMAT_MIX:`), for comparison before switching;
+it does call `advance_student_band`, i.e. it fills `student_band_state` (a server-only table) without
+changing what is served. In `v2` every path — due, new, repeat — takes the browser's `answer_format`
+from the registry (`servableWireFormat`): an unknown format is skipped and logged, never served as
+`"mc"` (v1 keeps `mapAnswerFormat`'s `"mc"` fallback unchanged; no such row exists live, 2026-10-20).
+
+**One servable rule in two languages.** `public.question_is_servable(answer_format, answer_type,
+content)` is the SQL twin of the registry (`classifyQuestion` + `servable`); a PGlite parity test runs
+both over a 210-case matrix, so they can only change together.
 
 **Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
 `choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
@@ -422,7 +434,8 @@ the browser.
 where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
 (a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
 `maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
-chosen by quota would hold the pupil on it — they are served only when nothing else is left.
+chosen by quota would hold the pupil on it — they are served only when no auto-graded candidate of
+any kind is left, and they come last in the insert-fallback order too.
 
 **The mix rule** (`format-mix.ts`, hypotheses tested in `tools/question-mix-sim/`): over the newest
 20 NEW questions (server history), a non-base kind is due when it has a candidate within ±1 band of
@@ -437,16 +450,27 @@ limit (at most 1 non-base question in 4 = 25 %, so the 30 % total is only a back
 the spacing, gap 5 cuts the non-base share from 24 % to 16 % in a richer bank; ±2 bands lowers level fit to ~70 % within ±1, ±0 bands halves Stav
 til reach because both live items are band 1. The starting values were kept.
 
-**Server-owned level.** `server-band.ts` replays app.js's rule (3 correct → +1, 2 incorrect → −1,
-1..5) over the newest 60 verdicts in `question_instances`, seeded by a completed
-`placement_sessions.band`, else the grade's start band. `profiles.current_band`,
+**Server-owned level.** `advance_student_band(student, grade)` folds app.js's rule (3 correct → +1,
+2 incorrect → −1, 1..5) over the pupil's verdicts into `student_band_state`, **each attempt exactly
+once**, in `(answered_at, id)` order behind a cursor, under a row lock. Seed: a completed
+`placement_sessions.band`, else the grade's start band, else 2; the fold restarts from the seed when
+the seed changes or the cursor's instance is gone. Why stateful: `question_instances` keeps only the
+latest verdict per instance (a repeat overwrites it), and no per-attempt log is live
+(`question_attempt_audit` and `analytics_question_attempts` have had no writes since 2026-03-08). A
+replay of the newest N verdicts forgot earned progression — 12 correct answers reached band 5, 60
+further alternating answers dropped it back to 1. The fold relies on one invariant: the answer RPCs
+write `answered_at = now()` in the same UPDATE as the verdict, and a pupil's next answer starts only
+after the previous one committed. `server-band.ts` is the TS specification of the fold, pinned equal
+to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
+level is a separate product decision. `profiles.current_band`,
 `profiles.placement_band` (both client-writable) and the request body are not inputs.
 
 **Adding a new kind (Match par next):** (1) registry entry with `servable: false`; (2) renderer in
 `js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
-`_shared/question-dto.ts`; (3) flip `servable` in the PR that ships the renderer, extending the parity
-test. The SQL function and the mix need no change: a new `answer_format` gets its own stratum, and the
-mix reads limits from the registry.
+`_shared/question-dto.ts`; (3) flip `servable` in the registry **and** in `question_is_servable` (a
+reviewed migration) in the PR that ships the renderer, extending both parity tests. The candidate
+window and the mix need no change: a new `answer_format` gets its own stratum, and the mix reads
+limits from the registry.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set

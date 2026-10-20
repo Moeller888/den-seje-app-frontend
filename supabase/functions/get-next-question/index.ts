@@ -7,6 +7,7 @@ import { deriveQuestionScope } from "./scope.ts";
 import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
+import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,6 +126,13 @@ serve(async (req) => {
       console.log("RELEASED_OPEN_QUESTION:", { subject: scope.subject, releasedCount });
     }
 
+    // Which selection runs (step 2 explains the modes). Under "v2" every path — due, new, repeat — takes
+    // the browser's answer_format from the interaction-kind registry, so a format the client cannot
+    // show is skipped instead of falling back to "mc"; v1 keeps mapAnswerFormat unchanged.
+    const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
+    const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
+      mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
+
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
     // Read through the backend client, scoped to the verified student: the embedded question carries
@@ -168,7 +176,8 @@ serve(async (req) => {
       if (!q) continue;
 
       try {
-        const format = mapAnswerFormat(q.answer_format);
+        const format = wireFormat(q);
+        if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
         const pub = toPublicQuestion(q.content, format, q.metadata);
 
         return new Response(
@@ -200,7 +209,7 @@ serve(async (req) => {
     //                 (get_question_candidates_for_student), server-derived band, interaction-kind
     //                 mix — ./mix-flow.ts.
     // "shadow" and "v2" need migration 20261019150000 applied first; without it their RPC fails loudly.
-    const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
+    // (mixEngine and wireFormat are resolved before step 1.)
     let sortedQuestions: any[];
 
     if (mixEngine === "v2") {
@@ -268,7 +277,9 @@ serve(async (req) => {
       let normalized: any;
       let pub: ReturnType<typeof toPublicQuestion>;
       try {
-        format = mapAnswerFormat(q.answer_format);
+        const resolved = wireFormat(q);
+        if (resolved === null) throw new Error(`Unservable format: ${q.answer_format}`);
+        format = resolved;
         normalized = normalizeContent(q.content, format);
         pub = toPublicQuestion(q.content, format, q.metadata);
       } catch (e) {
@@ -315,10 +326,18 @@ serve(async (req) => {
     // Same subject scope as the unserved query above: a pupil in historie must not be handed an
     // English repeat, and "the pool is empty" must mean empty for the chosen subject.
     if (!inserted) {
-      const { data: repeatId, error: repeatError } = await admin().rpc(
-        "request_repeat_question_for_student",
-        { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
-      );
+      // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
+      // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
+      // show still reaches repeats instead of "no questions". Every other guard is identical.
+      const { data: repeatId, error: repeatError } = mixEngine === "v2"
+        ? await admin().rpc(
+          "request_repeat_question_servable_for_student",
+          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+        )
+        : await admin().rpc(
+          "request_repeat_question_for_student",
+          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+        );
 
       if (repeatError) throw repeatError;
 
@@ -359,7 +378,8 @@ serve(async (req) => {
 
           if (rq && rq.is_active !== false) {
             try {
-              const format = mapAnswerFormat(rq.answer_format);
+              const format = wireFormat(rq);
+              if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
               const pub = toPublicQuestion(rq.content, format, rq.metadata);
 
               return new Response(
