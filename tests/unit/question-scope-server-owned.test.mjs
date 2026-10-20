@@ -7,14 +7,14 @@
 // empty one ("no unserved question left here") made it hand out a repeat while unanswered questions
 // remained — answer, ask again, without end, 2 XP each. get-next-question also took the grade from the
 // request body. Now the grade is profiles.selected_grade, the domains are profiles.active_domains
-// (the teacher's filter) intersected with the subject, and the request may only pick "historie" or
-// "engelsk" — each a whole, fixed domain set that cannot be shrunk to a mini-scope.
+// (the teacher's filter) intersected with the subject, and the request may only pick "historie",
+// "engelsk" or "dansk" — each a whole, fixed domain set that cannot be shrunk to a mini-scope.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { deriveQuestionScope, HISTORY_DOMAINS, ENGLISH_DOMAIN } from "../../supabase/functions/get-next-question/scope.ts";
+import { deriveQuestionScope, HISTORY_DOMAINS, ENGLISH_DOMAIN, DANISH_DOMAIN } from "../../supabase/functions/get-next-question/scope.ts";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
@@ -45,10 +45,23 @@ test("an unfiltered pupil gets every history domain; engelsk gets English only",
   assert.deepEqual(en.releaseDomains, [ENGLISH_DOMAIN]);
 });
 
+test("dansk gets Danish only, and historie never gets Danish", () => {
+  const da = deriveQuestionScope({ active_domains: ["vikings"] }, "dansk");
+  assert.equal(da.subject, "dansk");
+  assert.deepEqual(da.subjectDomains, [DANISH_DOMAIN], "teacher history filter does not apply to dansk");
+  assert.deepEqual(da.releaseDomains, [DANISH_DOMAIN]);
+  assert.deepEqual(deriveQuestionScope({ active_domains: null }, "dansk").subjectDomains, [DANISH_DOMAIN]);
+  assert.equal(HISTORY_DOMAINS.includes(DANISH_DOMAIN), false);
+  const hi = deriveQuestionScope({ active_domains: ["vikings", "danish", "english"] }, "historie");
+  assert.deepEqual(hi.subjectDomains, ["vikings"], "teacher filter minus English and Danish");
+  assert.deepEqual(deriveQuestionScope({ active_domains: ["danish"] }, "historie").subjectDomains, [...HISTORY_DOMAINS],
+    "a Danish-only teacher filter leaves historie unfiltered, like English");
+});
+
 test("the request cannot shrink the scope to an artificial mini-scope", () => {
-  // Whatever a client sends as "subject", the result is one of the two whole, fixed domain sets.
-  const allowed = [JSON.stringify([...HISTORY_DOMAINS]), JSON.stringify([ENGLISH_DOMAIN])];
-  for (const subject of [undefined, null, "", "vikings", ["vikings"], { p_domains: ["nope"] }, "ENGELSK", 7]) {
+  // Whatever a client sends as "subject", the result is one of the three whole, fixed domain sets.
+  const allowed = [JSON.stringify([...HISTORY_DOMAINS]), JSON.stringify([ENGLISH_DOMAIN]), JSON.stringify([DANISH_DOMAIN])];
+  for (const subject of [undefined, null, "", "vikings", ["vikings"], { p_domains: ["nope"] }, "ENGELSK", "DANSK", "danish", 7]) {
     const s = deriveQuestionScope({ selected_grade: 7, active_domains: null }, subject);
     assert.ok(allowed.includes(JSON.stringify(s.subjectDomains)), `subject ${JSON.stringify(subject)} narrowed the scope`);
     assert.equal(s.grade, 7);

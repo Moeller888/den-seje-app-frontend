@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng } from "../../tools/avatar/r3-face-parts-tool.mjs";
 import { mainSheet, buildSheet, renderCell, ellipseF, COL } from "./avatar-r3-face-parts-synthetic.mjs";
-import { preD167Contract, PRE_D167_CONTRACT_CANONICAL_SHA256, preD166Contract, PRE_D166_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD167Contract, PRE_D167_CONTRACT_CANONICAL_SHA256, preD166Contract, PRE_D166_CONTRACT_CANONICAL_SHA256, preD168Contract, PRE_D168_CONTRACT_CANONICAL_SHA256, preD169Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -36,7 +36,12 @@ const PREV_PROMPT_REL = "tools/avatar/fixtures/r3-face-parts/prompt-parts-sheet-
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-169 later added the eyes method (eyesPartsMethod). LIVE_NOW is the contract exactly as D-168 left it (D-169's
+// additions removed, proven canonical in avatar-r3-eyes-d169.test.mjs).
+const LIVE_NOW = preD169Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
+// D-168 later recorded D-167's one send and closed its entry in place. LIVE is the contract exactly as D-167 committed
+// it (D-168's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
+const LIVE = preD168Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD167Contract(LIVE);
 const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-167** |")).join("\n");
@@ -282,10 +287,10 @@ const registerPath = (sb) => join(sb.repo, ...REGISTER_REL.split("/"));
 const editContract = (sb, fn) => { const c = JSON.parse(readFileSync(contractPath(sb), "utf8")); fn(c); writeFileSync(contractPath(sb), JSON.stringify(c, null, 2) + "\n"); };
 const editEntry = (fn) => (sb) => editContract(sb, (c) => { const i = c.authorisedCalls.calls.findIndex((e) => e.callId === CALL); c.authorisedCalls.calls[i] = fn(structuredClone(c.authorisedCalls.calls[i])); });
 const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterImplementations.entries.findIndex((e) => e.decision === "D-167"); const x = fn(structuredClone(c.adapterImplementations.entries[i])); if (x) c.adapterImplementations.entries[i] = x; else c.adapterImplementations.entries.splice(i, 1); });
-const toLive = (sb) => { copyFileSync(repoFile(CONTRACT_REL), contractPath(sb)); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
+const toLive = (sb) => { writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n"); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
 
-/** A fresh sandbox. Default: the LIVE committed state (D-167 active) as origin/main. `pre`: the state before D-167. */
-function sandbox({ base, layout = "main", top, pre = false } = {}) {
+/** A fresh sandbox. Default: the state D-167 committed (D-167 active) as origin/main. `pre`: before D-167. `closed`: since D-168. */
+function sandbox({ base, layout = "main", top, pre = false, closed = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d167-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -299,6 +304,7 @@ function sandbox({ base, layout = "main", top, pre = false } = {}) {
   for (const [k, suffix] of [["cut", ".cut.png"], ["visible", ".visible.png"], ["hidden", ".hidden.png"], ["full", ".full.png"], ["master", ".master.png"]]) writeFileSync(sb.png + suffix, PNGS[k]);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
+  else if (!closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-167 as committed, before D-168 closed it
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -540,4 +546,73 @@ test("two clones share one claim register: a claim made from one clone refuses t
   const r = runAdapter(second, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, LOCALAPPDATA: first.state, XDG_STATE_HOME: first.state, D167_MOCK_CLAIM: first.claim, D167_MOCK_EVENTS: first.events });
   assert.equal(r.status, 1, r.out); assert.match(r.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(second).length, 0, "the second clone sent nothing");
+});
+
+// ── D-168: the one send is recorded and the mandate is closed ───────────────────────────────────────────────────
+const D168_ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-168** |"));
+const E_NOW = LIVE_NOW.authorisedCalls.calls.find((e) => e.callId === CALL);
+const IMPL_NOW = LIVE_NOW.adapterImplementations.entries.find((e) => e.decision === "D-167");
+const D167_ROW_SHA_AT_PRE_D168 = "46d34839c0ccd2f96db8632f8eecbf3e83ecc066a34b03116265707afaa04503";
+const RAW_SHA_D167 = "8e309b67a3304ff95682b53932e807d035d8ccb421729855fa66be96b0f0c9a0";
+const REQUEST_ID_D167 = "req_1fbd147c8a804b5e9e01ce854c5ced74";
+
+test("D-168 changes exactly the closure: the contract as D-167 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(LIVE)), PRE_D168_CONTRACT_CANONICAL_SHA256, "LIVE_NOW with D-168's closure reversed is the contract at a21f40d");
+  assert.equal(sha256(JSON.stringify(preD167Contract(LIVE_NOW))), PRE_D167_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.slice(0, 8), LIVE.authorisedCalls.calls.slice(0, 8), "the eight earlier entries are unchanged");
+  assert.deepEqual(LIVE_NOW.adapterImplementations.entries.slice(0, 4), LIVE.adapterImplementations.entries.slice(0, 4));
+  assert.deepEqual([LIVE_NOW.authorisedCalls.count, LIVE_NOW.authorisedCalls.calls.length], [9, 9], "no entry is added");
+  for (const k of ["assets", "faceNeutralPartsMethod", "faceNeutralPartsExtension", "deterministicOperations", "meta", "architecture"]) assert.deepEqual(LIVE_NOW[k], LIVE[k], k + " is unchanged — no tolerance, no new capacity");
+  for (const k of Object.keys(E)) { if (["status", "mandateState", "outcome"].includes(k)) continue; assert.deepEqual(E_NOW[k], E[k], "D-167's authorisation field " + k + " is preserved"); }
+});
+
+test("D-168 closes D-167 in place: SPENT, never reused, not a permission, the RAW-4′ rejection recorded without an after-the-fact tolerance", () => {
+  assert.deepEqual([E_NOW.mandateState, E_NOW.neverReuse, E_NOW.notAnActivePermission, E_NOW.closure.closedBy], ["SPENT", true, true, "D-168"]);
+  assert.match(E_NOW.status, /^SPENT — SENT ONCE, HTTP 200, ONE IMAGE RECEIVED, TECHNICAL_REJECT AT RAW-4′/);
+  assert.equal(E_NOW.closure.snapshotCanonicalSha256BeforeClosure, sha256(JSON.stringify(E)));
+  assert.match(E_NOW.closure.noAfterTheFactTolerance, /No tolerance is introduced after the result/);
+  const x = E_NOW.execution;
+  assert.deepEqual([x.request.fetches, x.request.retried, x.request.requestId, x.response.httpStatus, x.response.imagesReturned], [1, false, REQUEST_ID_D167, 200, 1]);
+  assert.equal(x.raw.sha256, RAW_SHA_D167); assert.equal(x.request.promptSha256, PROMPT_SHA);
+  assert.deepEqual(x.accounting, { claimState: "consumed", dispatch: "started", result: "response", actuallySent: 1, dispatchUndetermined: 0, serverAnswered: true, automaticRetry: false, logConsistent: true });
+  assert.match(x.sentBy, /a21f40d628462cf1acf4fbbd09800ed4da3cbc0b/);
+  assert.match(E_NOW.technicalObservations.passed, /RAW-1 the PNG decodes; RAW-2 1024x1024; RAW-3 8-bit RGBA/);
+  assert.match(E_NOW.technicalObservations.failed, /RAW-4′: 5 px with alpha > 0 outside the nose cell/);
+  assert.match(E_NOW.technicalObservations.raw5, /not evaluated as a binding check/);
+  assert.match(E_NOW.visualReview.ownerDecision, /No nose is visually approved/);
+  assert.deepEqual([IMPL_NOW.adapter.status, IMPL_NOW.mandateState, IMPL_NOW.neverReuse, IMPL_NOW.closedBy], ["IMPLEMENTED — EXECUTED ONCE — SPENT", "SPENT", true, "D-168"]);
+});
+
+test("D-168: faceNeutral rises to 4, underlay stays 5, no new capacity, the budget text is true to the figures, no live permission, R3 OFF", () => {
+  const sent = LIVE_NOW.imageCallBudget.callsActuallySentSoFar, then = LIVE.imageCallBudget.callsActuallySentSoFar;
+  assert.deepEqual([sent.faceNeutral, sent.faceNeutralRecord.serverAnswered, sent.faceNeutralRecord.dispatchUndetermined], [4, 4, 0]);
+  assert.deepEqual(sent.faceNeutralRecord.attempts.slice(0, 3), then.faceNeutralRecord.attempts);
+  assert.match(sent.faceNeutralRecord.attempts[3], /^D-167-r3-face-parts-nose-v1 — .*\(recorded by D-168\)$/);
+  for (const k of ["underlay", "which", "note"]) assert.deepEqual(sent[k], then[k]);
+  const { callsActuallySentSoFar: a, ...restNow } = LIVE_NOW.imageCallBudget, { callsActuallySentSoFar: b, ...restThen } = LIVE.imageCallBudget;
+  assert.deepEqual(restNow, restThen, "no other budget field changed (planned stays 4, budget 22-23)");
+  assert.deepEqual([LIVE_NOW.imageCallBudget.callsPlannedAndAuthorised.faceNeutral, LIVE_NOW.assets[4].calls], [4, 4]);
+  assert.match(LIVE_NOW.authorisedCalls.budgetAccounting, /actually sent is underlay 5 and faceNeutral 4 and the planned face capacity is used up\. The derived budget is 22-23\./);
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission remains");
+  assert.match(LIVE_NOW.prohibitions.noImageRequestAuthorised, /\(9\) D-167-r3-face-parts-nose-v1 — NO LONGER a permission/);
+  assert.equal(LIVE_NOW.meta.authorisesImageRequest, false); assert.equal(LIVE_NOW.architecture.defaultEnabled, false);
+});
+
+test("the D-168 register row: once, directly after D-167, D-167 verbatim, the outcome named", () => {
+  const lines = REGISTER.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith("| **D-168** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-168** |")), lines.findIndex((l) => l.startsWith("| **D-167** |")) + 1);
+  assert.equal(sha256(ROW), D167_ROW_SHA_AT_PRE_D168, "D-167's row is not rewritten");
+  for (const needle of [CALL, CLAIM_ID, "a21f40d628462cf1acf4fbbd09800ed4da3cbc0b", REQUEST_ID_D167, "**HTTP 200**", RAW_SHA_D167, "RAW-1..3", "RAW-4′", "fem pixels", "alfa 1",
+    "RAW-5", "ikke vurderet bindende", "ingen efterfølgende tolerance", "`callsActuallySentSoFar.faceNeutral` = **4**", "`callsActuallySentSoFar.underlay` forbliver **5**", "R3 forbliver default OFF"])
+    assert.ok(D168_ROW.includes(needle), "the D-168 row carries " + JSON.stringify(needle));
+  assert.ok(!/[ÃÂ]\S|�/.test(D168_ROW), "no mojibake in the Danish row");
+});
+
+test("since D-168 the LIVE contract refuses the D-167 adapter before any claim: its mandate is closed", () => {
+  const sb = sandbox({ closed: true });
+  assertRefusedBeforeClaim(sb, runAdapter(sb, GOOD_ARGS), "authorisation");
+  const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
+  assertRefusedBeforeClaim(sb, r, "authorisation");
+  assert.match(r.out, /mandateState: "SPENT", expected "UNSPENT"/);
 });

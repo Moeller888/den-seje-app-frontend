@@ -192,10 +192,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   let persistedBand = null;  // earned level, updated every 10 questions
   let activeDomains = null;  // teacher-assigned domain filter (null = all domains)
 
-  // Subject (fag) chosen on spil.html via ?fag=historie|engelsk. Unknown/missing = historie.
-  const SUBJECT_LABEL = { engelsk: "Engelsk" };
+  // Subject (fag) chosen on spil.html via ?fag=historie|engelsk|dansk. Unknown/missing = historie.
+  const SUBJECT_LABEL = { engelsk: "Engelsk", dansk: "Dansk" };
   const fagParam = new URLSearchParams(window.location.search).get("fag");
-  const currentSubject = fagParam === "engelsk" ? "engelsk" : "historie";
+  const currentSubject = fagParam === "engelsk" ? "engelsk"
+    : fagParam === "dansk" ? "dansk"
+    : "historie";
   let diffConsecutiveCorrect = 0;
   let diffConsecutiveIncorrect = 0;
 
@@ -408,6 +410,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     cold_war:              "Den Kolde Krig",
     democracy_power:       "Demokrati & Magt",
     english:               "Engelsk",
+    danish:                "Dansk",
   };
 
   async function loadActiveDomains() {
@@ -424,9 +427,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const text = document.getElementById("domain-focus-text");
     if (!bar || !text) return;
 
-    if (currentSubject === "engelsk") {
-      // Teacher's history learning journey does not apply to English.
-      text.textContent = "Fag: " + SUBJECT_LABEL.engelsk;
+    if (currentSubject === "engelsk" || currentSubject === "dansk") {
+      // Teacher's history learning journey does not apply to English or Danish.
+      text.textContent = "Fag: " + SUBJECT_LABEL[currentSubject];
       bar.style.display = "block";
     } else if (activeDomains !== null) {
       const names = activeDomains.map(d => DOMAIN_LABEL[d] ?? d).join("  ·  ");
@@ -1193,6 +1196,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (currentSubject === "engelsk") {
         questionElement.textContent = "🎉 Du har klaret alle engelskopgaverne lige nu";
+        const sub = document.createElement("p");
+        sub.id = "no-questions-sub";
+        sub.textContent = "Prøv historie på Spil-siden, eller kom tilbage senere.";
+        optionsContainer.appendChild(sub);
+      } else if (currentSubject === "dansk") {
+        questionElement.textContent = "🎉 Du har klaret alle danskopgaverne lige nu";
         const sub = document.createElement("p");
         sub.id = "no-questions-sub";
         sub.textContent = "Prøv historie på Spil-siden, eller kom tilbage senere.";

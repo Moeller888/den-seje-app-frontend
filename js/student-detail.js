@@ -76,6 +76,7 @@ const DOMAIN_LABELS = {
   cold_war:              "Den Kolde Krig",
   democracy_power:       "Demokrati & Magt",
   english:               "Engelsk",
+  danish:                "Dansk",
 };
 
 function objectiveToDomain(lo) {

@@ -340,7 +340,8 @@ type, force_text}` and pedagogical metadata tags; never `correct`, `accepted_ans
 to the verified student (`get_unserved_questions_for_student`, `request_repeat_question_for_student`
 — both EXECUTE for `service_role` only — and `process-event/instance-read.ts`, followed by the 403
 ownership check); the scope is derived from the profile (`get-next-question/scope.ts`:
-`selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`);
+`selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`/`dansk`, each a whole fixed domain set; `english` and `danish` are
+kept out of historie and of placement);
 placement runs through `start_placement()` / `submit_placement(jsonb)` with a server-only
 `placement_sessions` row, graded once server-side, returning only the band. Step A only ADDS; step B
 removes P2/P3/P4 and the old repeat entry point from the client roles: `questions` is readable only by
