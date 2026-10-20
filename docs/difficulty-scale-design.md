@@ -1,6 +1,6 @@
 # Sværhedsskala 1–10.000 — designforslag
 
-**Status:** FORSLAG. B1 og B4 er besluttet af ejeren 2026-10-20 (§9). B2, B3 og B5–B9 er åbne.
+**Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9). B9 er udskudt.
 Intet i dette dokument er bygget eller anvendt.
 **Dato:** 2026-10-20 · **Grundlag:** `main` @ `d93faff`
 **Anledning:** Ejeren ønsker 10.000 sværere engelskopgaver fordelt på niveau 1–10.000. Den 19.
@@ -229,14 +229,14 @@ E2E: en elev i 3. klasse med højt niveau får B1-opgaver.
 | # | Spørgsmål | Forslag |
 |---|---|---|
 | B1 | Niveau pr. fag eller ét samlet niveau? | **BESLUTTET 2026-10-20: pr. fag** |
-| B2 | Startformlen §4.1 (35 lige store celler) | Ja, som udgangspunkt |
-| B3 | Måltræfprocent ~75 % (op:ned = 1:3) og skridtformlen | Ja |
+| B2 | Startformlen §4.1 (35 lige store celler) | **BESLUTTET 2026-10-20: ja** |
+| B3 | Måltræfprocent ~75 % (op:ned = 1:3) og skridtformlen | **BESLUTTET 2026-10-20: ja** |
 | B4 | Fjernes klassetrinsloftet kun for engelsk først, eller for alle fag på én gang? | **BESLUTTET 2026-10-20: alle fag på én gang** (se §5.3 og §5.4) |
-| B5 | Skal lærerbedømte fritekstsvar flytte niveauet? | Ikke i v1 |
-| B6 | Rækkefølge i forhold til PR #351 (serverejet bånd) | Merge #351 først, og byg niveauet på dens mekanisme |
-| B7 | CEFR-forankringen i §7 til engelsk | Ja |
-| B8 | Hvad ser eleven? (niveautal, CEFR-mærke eller ingenting) | Ingenting i v1; lærervisningen viser niveauet |
-| B9 | Udfases placeringstesten, når skalaen kører? | Senere, særskilt beslutning |
+| B5 | Skal lærerbedømte fritekstsvar flytte niveauet? | **BESLUTTET 2026-10-20: nej, ikke i v1** |
+| B6 | Rækkefølge i forhold til PR #351 (serverejet bånd) | **BESLUTTET 2026-10-20: #351 merges først**, og niveauet bygges på dens mekanisme |
+| B7 | CEFR-forankringen i §7 til engelsk | **BESLUTTET 2026-10-20: ja** |
+| B8 | Hvad ser eleven? (niveautal, CEFR-mærke eller ingenting) | **BESLUTTET 2026-10-20: ingenting i v1**; læreren ser niveauet pr. fag |
+| B9 | Udfases placeringstesten, når skalaen kører? | Udskudt: særskilt beslutning, når skalaen kører |
 
-Når de resterende beslutninger (B2, B3, B5–B9) er truffet, registreres beslutningen i `docs/ARCHITECTURE.md` (datamodel/udvælgelse) og
-`docs/ROADMAP.md`, og trin 2 kan begynde.
+Beslutningerne er registreret i `docs/ROADMAP.md`. `docs/ARCHITECTURE.md` opdateres i samme PR som migration A,
+når datamodellen faktisk findes. Trin 2 venter på, at PR #351 er merget (B6).

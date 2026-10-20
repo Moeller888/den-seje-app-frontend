@@ -719,18 +719,20 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 
 ## Future sections
 
-### Sværhedsskala 1–10.000 (designforslag 2026-10-20; B1 og B4 besluttet, resten åbent)
+### Sværhedsskala 1–10.000 (design godkendt 2026-10-20; ikke bygget)
 
 - **Ejerbeslutninger 2026-10-20:** niveauet er **pr. fag** (B1), og klassetrinsloftet fjernes for
-  **alle fag** (historie, engelsk og dansk) på én gang (B4).
+  **alle fag** (historie, engelsk og dansk) på én gang (B4). Startformel og skridtregel som foreslået
+  (B2, B3). Lærerbedømte svar flytter ikke niveauet i v1 (B5). PR #351 merges først, og niveauet
+  bygges på dens serverejede båndmekanisme (B6). CEFR-forankring for engelsk (B7). Eleven ser ikke
+  niveauet i v1 (B8). Udfasning af placeringstesten er udskudt (B9).
 
 - Design: [`docs/difficulty-scale-design.md`](difficulty-scale-design.md). Ét kontinuerligt niveau
   1–10.000 pr. fag. Klassetrinnet sætter kun startniveauet (ejerens retning, 2026-10-19).
   Udvælgelsen bliver nærmest-først i SQL uden klassetrinsloft, og elevens niveau bliver serverejet,
   bag flaget `LEVEL_ENGINE` (ikke sat = uændret).
-- Ejeren skal tage stilling til B2, B3 og B5–B9 (designets §9), før der skrives kode. Derefter følger:
-  migration A (additiv) → migration B → Edge bag flag → en pilot på ca. 500 engelskopgaver
-  (B1–C1, niveau 3.001–10.000) → opskalering til 10.000 engelskopgaver.
+- Rækkefølge, når #351 er merget: migration A (additiv) → migration B → Edge bag flag → en pilot
+  på ca. 500 engelskopgaver (CEFR B1–C1, niveau 3.001–10.000) → opskalering til 10.000 engelskopgaver.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
 
 ### Platform / services track (from the 157A audit)
