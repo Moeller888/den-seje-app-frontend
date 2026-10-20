@@ -10,7 +10,7 @@
 -- Må KUN anvendes via apply_migration med særskilt ejer-autorisation (D-110).
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'library'?","options":["bibliotek","boghandel","skole","laboratorium"],"correct":"bibliotek","accepted_answers":["bibliotek"],"review_text":"'Library' betyder bibliotek. En boghandel hedder 'bookshop'."}$$::jsonb,
+  $${"question":"Hvad betyder 'basement'?","options":["kælder","køkken","kirke","loft"],"correct":"kælder","accepted_answers":["kælder"],"review_text":"'Basement' betyder kælder. Køkken hedder 'kitchen'."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',6,1
 );
@@ -40,19 +40,19 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad er flertal af 'child'?","options":["childs","children","childes","child"],"correct":"children","accepted_answers":["children"],"review_text":"'Child' er uregelmæssigt: one child, two children."}$$::jsonb,
+  $${"question":"Hvad er flertal af 'goose'?","options":["gooses","geese","geeses","goose"],"correct":"geese","accepted_answers":["geese"],"review_text":"'Goose' (gås) er uregelmæssigt: one goose, two geese."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',6,1
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'hungry'?","options":["vred","træt","sulten","glad"],"correct":"sulten","accepted_answers":["sulten"],"review_text":"'Hungry' betyder sulten. Vred hedder 'angry'."}$$::jsonb,
+  $${"question":"Hvad betyder 'sleepy'?","options":["sulten","sur","søvnig","syg"],"correct":"søvnig","accepted_answers":["søvnig"],"review_text":"'Sleepy' betyder søvnig – man har lyst til at sove."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',6,1
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad hedder 'onsdag' på engelsk?","options":["Thursday","Tuesday","Monday","Wednesday"],"correct":"Wednesday","accepted_answers":["Wednesday"],"review_text":"Onsdag hedder 'Wednesday'. Ugedage skrives med stort på engelsk."}$$::jsonb,
+  $${"question":"Hvad hedder 'lørdag' på engelsk?","options":["Sunday","Thursday","Tuesday","Saturday"],"correct":"Saturday","accepted_answers":["Saturday"],"review_text":"Lørdag hedder 'Saturday'. Ugedage skrives med stort på engelsk."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',6,1
 );
@@ -70,7 +70,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'How much is it?'","options":["Hvor mange er der?","Hvor er det?","Hvad koster det?","Hvad er klokken?"],"correct":"Hvad koster det?","accepted_answers":["Hvad koster det?"],"review_text":"'How much is it?' spørger om prisen."}$$::jsonb,
+  $${"question":"Hvad betyder 'How far is it?'","options":["Hvor høj er den?","Hvornår går den?","Hvor langt er der?","Hvad koster det?"],"correct":"Hvor langt er der?","accepted_answers":["Hvor langt er der?"],"review_text":"'How far is it?' spørger om afstanden."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',2,'auto',true,'english',6,2
 );
@@ -100,7 +100,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'neighbour'?","options":["nevø","ven","lærer","nabo"],"correct":"nabo","accepted_answers":["nabo"],"review_text":"'Neighbour' betyder nabo. Nevø hedder 'nephew'."}$$::jsonb,
+  $${"question":"Hvad betyder 'nephew'?","options":["bedstefar","onkel","fætter","nevø"],"correct":"nevø","accepted_answers":["nevø"],"review_text":"'Nephew' betyder nevø – din søsters eller brors søn."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',2,'auto',true,'english',6,2
 );
@@ -124,19 +124,19 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad er datid af 'buy'?","options":["buyed","brought","buys","bought"],"correct":"bought","accepted_answers":["bought"],"review_text":"Buy – bought. 'Brought' er datid af 'bring'."}$$::jsonb,
+  $${"question":"Hvad er datid af 'fight'?","options":["fighted","faught","fights","fought"],"correct":"fought","accepted_answers":["fought"],"review_text":"Fight – fought. Det er et uregelmæssigt udsagnsord."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',6,3
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'Never mind'?","options":["Det gør ikke noget","Pas på","Aldrig igen","Kom ind"],"correct":"Det gør ikke noget","accepted_answers":["Det gør ikke noget"],"review_text":"'Never mind' siger man, når noget ikke er vigtigt: det gør ikke noget."}$$::jsonb,
+  $${"question":"Hvad betyder 'Hang on'?","options":["Vent lidt","Hæng den op","Læg på","Skynd dig"],"correct":"Vent lidt","accepted_answers":["Vent lidt"],"review_text":"'Hang on' siger man, når nogen skal vente et øjeblik."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"analysis","difficulty_type":"inferential","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',6,3
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad er det modsatte af 'early'?","options":["soon","late","fast","first"],"correct":"late","accepted_answers":["late"],"review_text":"Early betyder tidlig, late betyder sen."}$$::jsonb,
+  $${"question":"Hvad er det modsatte af 'loud'?","options":["proud","quiet","late","slow"],"correct":"quiet","accepted_answers":["quiet"],"review_text":"Loud betyder høj (om lyd), quiet betyder stille."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',6,3
 );
@@ -190,7 +190,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'environment'?","options":["regering","underholdning","miljø","udstyr"],"correct":"miljø","accepted_answers":["miljø"],"review_text":"'Environment' betyder miljø. Regering hedder 'government'."}$$::jsonb,
+  $${"question":"Hvad betyder 'climate'?","options":["klinik","kultur","klima","kamp"],"correct":"klima","accepted_answers":["klima"],"review_text":"'Climate' betyder klima – det typiske vejr et sted over mange år."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',7,1
 );
@@ -220,13 +220,13 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad er datid af 'go'?","options":["goed","gone","goes","went"],"correct":"went","accepted_answers":["went"],"review_text":"Go – went – gone. 'Gone' bruges efter have/has."}$$::jsonb,
+  $${"question":"Hvad er datid af 'bring'?","options":["bringed","bought","brang","brought"],"correct":"brought","accepted_answers":["brought"],"review_text":"Bring – brought. 'Bought' er datid af 'buy'."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',7,1
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'reliable'?","options":["pålidelig","læselig","venlig","farlig"],"correct":"pålidelig","accepted_answers":["pålidelig"],"review_text":"'Reliable' betyder pålidelig – man kan stole på det."}$$::jsonb,
+  $${"question":"Hvad betyder 'shy'?","options":["genert","sur","stolt","modig"],"correct":"genert","accepted_answers":["genert"],"review_text":"'Shy' betyder genert."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',7,1
 );
@@ -262,7 +262,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'It's up to you'?","options":["Det er over dig","Du skal op","Det bestemmer du","Det er din tur til at rejse dig"],"correct":"Det bestemmer du","accepted_answers":["Det bestemmer du"],"review_text":"'It's up to you' betyder, at det er dit valg."}$$::jsonb,
+  $${"question":"Hvad betyder 'I can't make it'?","options":["Jeg kan ikke lave det","Jeg kan ikke forstå det","Jeg kan ikke komme","Jeg gider ikke"],"correct":"Jeg kan ikke komme","accepted_answers":["Jeg kan ikke komme"],"review_text":"'I can't make it' betyder, at man ikke kan nå at komme."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"comprehension","difficulty_type":"conceptual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',2,'auto',true,'english',7,2
 );
@@ -310,7 +310,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'It's a piece of cake'?","options":["Det er et stykke kage","Det er lækkert","Det er meget let","Det er dyrt"],"correct":"Det er meget let","accepted_answers":["Det er meget let"],"review_text":"Udtrykket betyder, at noget er meget let."}$$::jsonb,
+  $${"question":"Hvad betyder 'to be over the moon'?","options":["at være ude at rejse","at være fraværende","at være helt vildt glad","at være meget træt"],"correct":"at være helt vildt glad","accepted_answers":["at være helt vildt glad"],"review_text":"Udtrykket betyder, at man er overlykkelig."}$$::jsonb,
   'mc','short',$${"concepts":["hverdagsudtryk"],"cognitive_skill":"analysis","difficulty_type":"inferential","misconception_type":"surface_association","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',7,3
 );
@@ -322,7 +322,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["She has been to London twice.","She has been in London twice ago.","She have been to London twice.","She was been to London twice."],"correct":"She has been to London twice.","accepted_answers":["She has been to London twice."],"review_text":"Førnutid: she has been. 'Ago' kan ikke bruges med førnutid."}$$::jsonb,
+  $${"question":"Hvilken sætning om London er korrekt?","options":["She has been to London twice.","She has been in London twice ago.","She have been to London twice.","She was been to London twice."],"correct":"She has been to London twice.","accepted_answers":["She has been to London twice."],"review_text":"Førnutid: she has been. 'Ago' kan ikke bruges med førnutid."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',7,3
 );
@@ -346,7 +346,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["I'm used to getting up early.","I'm used to get up early.","I use to getting up early.","I'm use to getting up early."],"correct":"I'm used to getting up early.","accepted_answers":["I'm used to getting up early."],"review_text":"'Be used to' + -ing betyder at være vant til: I'm used to getting up early."}$$::jsonb,
+  $${"question":"Hvilken sætning om at stå tidligt op er korrekt?","options":["I'm used to getting up early.","I'm used to get up early.","I use to getting up early.","I'm use to getting up early."],"correct":"I'm used to getting up early.","accepted_answers":["I'm used to getting up early."],"review_text":"'Be used to' + -ing betyder at være vant til: I'm used to getting up early."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',4,'auto',true,'english',7,4
 );
@@ -370,7 +370,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvad betyder 'government'?","options":["regering","guvernante","udstyr","virksomhed"],"correct":"regering","accepted_answers":["regering"],"review_text":"'Government' betyder regering."}$$::jsonb,
+  $${"question":"Hvad betyder 'election'?","options":["valg","elektricitet","forelæsning","udstyr"],"correct":"valg","accepted_answers":["valg"],"review_text":"'Election' betyder valg, fx et folketingsvalg."}$$::jsonb,
   'mc','short',$${"concepts":["ordforråd"],"cognitive_skill":"recall","difficulty_type":"factual","misconception_type":"surface_association","challenge_role":"reinforcement","insight_type":"conceptual_bridge","domain":"english"}$$::jsonb,
   'mc_single',1,'auto',true,'english',8,1
 );
@@ -502,7 +502,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["She suggested to go to the cinema.","She suggested go to the cinema.","She suggested going to the cinema.","She suggested goes to the cinema."],"correct":"She suggested going to the cinema.","accepted_answers":["She suggested going to the cinema."],"review_text":"Efter 'suggest' bruger man -ing: suggested going."}$$::jsonb,
+  $${"question":"Hvilken sætning om biografen er korrekt?","options":["She suggested to go to the cinema.","She suggested go to the cinema.","She suggested going to the cinema.","She suggested goes to the cinema."],"correct":"She suggested going to the cinema.","accepted_answers":["She suggested going to the cinema."],"review_text":"Efter 'suggest' bruger man -ing: suggested going."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',8,3
 );
@@ -526,7 +526,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["I wish I have more time.","I wish I would have more time yesterday.","I wish I had more time.","I wish I am having more time."],"correct":"I wish I had more time.","accepted_answers":["I wish I had more time."],"review_text":"Efter 'I wish' om nutiden bruger man datid: I wish I had."}$$::jsonb,
+  $${"question":"Hvilken sætning om at ønske sig mere tid er korrekt?","options":["I wish I have more time.","I wish I would have more time yesterday.","I wish I had more time.","I wish I am having more time."],"correct":"I wish I had more time.","accepted_answers":["I wish I had more time."],"review_text":"Efter 'I wish' om nutiden bruger man datid: I wish I had."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',4,'auto',true,'english',8,4
 );
@@ -664,7 +664,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["The number of students have increased.","The number of students has increased.","The number of students are increasing.","The number of student has increased."],"correct":"The number of students has increased.","accepted_answers":["The number of students has increased."],"review_text":"Grundleddet er 'the number' (antallet), som er ental: has increased."}$$::jsonb,
+  $${"question":"Hvilken sætning om antallet af elever er korrekt?","options":["The number of students have increased.","The number of students has increased.","The number of students are increasing.","The number of student has increased."],"correct":"The number of students has increased.","accepted_answers":["The number of students has increased."],"review_text":"Grundleddet er 'the number' (antallet), som er ental: has increased."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',3,'auto',true,'english',9,3
 );
@@ -706,7 +706,7 @@ INSERT INTO public.questions (content, answer_format, answer_type, metadata, typ
 );
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band) VALUES (
-  $${"question":"Hvilken sætning er korrekt?","options":["Rarely have I seen such a beautiful view.","Rarely I have seen such a beautiful view.","Rarely have I saw such a beautiful view.","Rarely I saw have such a beautiful view."],"correct":"Rarely have I seen such a beautiful view.","accepted_answers":["Rarely have I seen such a beautiful view."],"review_text":"Efter 'rarely' i starten bytter man om: Rarely have I seen."}$$::jsonb,
+  $${"question":"Hvilken sætning om en smuk udsigt er korrekt?","options":["Rarely have I seen such a beautiful view.","Rarely I have seen such a beautiful view.","Rarely have I saw such a beautiful view.","Rarely I saw have such a beautiful view."],"correct":"Rarely have I seen such a beautiful view.","accepted_answers":["Rarely have I seen such a beautiful view."],"review_text":"Efter 'rarely' i starten bytter man om: Rarely have I seen."}$$::jsonb,
   'mc','short',$${"concepts":["grammatik"],"cognitive_skill":"application","difficulty_type":"applied","misconception_type":"overgeneralization","challenge_role":"challenge","insight_type":"reframing","domain":"english"}$$::jsonb,
   'mc_single',4,'auto',true,'english',9,4
 );

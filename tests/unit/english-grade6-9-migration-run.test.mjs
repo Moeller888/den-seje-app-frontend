@@ -25,6 +25,8 @@ test("the migration inserts 120 well-formed English MC questions, 30 per grade 6
       learning_objective text, target_grade smallint
         CHECK (target_grade IS NULL OR (target_grade >= 3 AND target_grade <= 9)),
       difficulty_band smallint CHECK (difficulty_band IS NULL OR (difficulty_band BETWEEN 1 AND 5)));
+    -- Mirrors live: question text is unique across the whole bank, not per grade.
+    CREATE UNIQUE INDEX unique_question_text ON public.questions ((content ->> 'question'));
   `);
   await pg.exec(MIGRATION);
   const rows = (await pg.query("SELECT * FROM public.questions ORDER BY target_grade, difficulty_band")).rows;
@@ -54,9 +56,10 @@ test("the migration inserts 120 well-formed English MC questions, 30 per grade 6
   for (const g of [6, 7, 8, 9]) {
     const inGrade = rows.filter((q) => q.target_grade === g);
     assert.deepEqual([...new Set(inGrade.map((q) => q.difficulty_band))].sort(), [1, 2, 3, 4]);
-    const texts = inGrade.map((q) => q.content.question + "|" + q.content.correct);
-    assert.equal(new Set(texts).size, texts.length, `duplicate question in grade ${g}`);
   }
+  // No question text is repeated anywhere (live enforces this with unique_question_text).
+  const texts = rows.map((q) => q.content.question);
+  assert.equal(new Set(texts).size, texts.length, "duplicate question text");
   const positions = new Set(rows.map((q) => q.content.options.indexOf(q.content.correct)));
   assert.deepEqual([...positions].sort(), [0, 1, 2, 3]);
 });
