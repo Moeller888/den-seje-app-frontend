@@ -1,0 +1,9 @@
+Input image 1 is the North Star character master. Draw ONLY the two irises of this character as pure greyscale luminance maps on a fully transparent background.
+
+Output: one 1536x1024 transparent PNG sheet. Draw the two irises side by side, about four times the size they have in the North Star, centred on the sheet: the image-left iris in the left half and the image-right iris in the right half, with the same spacing as in the North Star. Leave a clear empty vertical strip in the middle of the sheet and wide empty margins at all four edges.
+
+Each iris is ONE complete, solid, fully opaque, upright oval — taller than wide, like the North Star iris — drawn COMPLETE, including the top part that the eyelid hides in the North Star, and slightly larger than the visible iris so its edge can sit under an outline ring drawn elsewhere.
+
+Inside each oval, reproduce the North Star iris shading in GREYSCALE ONLY (pure neutral grey: red = green = blue for every pixel): a near-black vertical oval pupil in the centre, a dark upper iris, a lighter lower crescent with the same soft banding as the North Star. The lightest iris tone is a light grey; the pupil is the darkest tone. Both pupils look straight ahead.
+
+Do NOT draw: any colour or tint, the white catch-light highlight, the iris outline ring, the white of the eye, lashes, eyelids, skin, any other facial feature, text, labels, guides or frames. Every pixel outside the two ovals must be fully transparent (alpha 0). The edge of each oval is clean, with no glow, halo or matte.
