@@ -124,7 +124,7 @@ art layer behind them can be upgraded without a rewrite.
   too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
   `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
   permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
-- **R3 eyes — method adopted; targets approved; one eyes-fixed call (A) authorised, not yet run; iris call B not authorised (D-169 … D-170, as of 2026-10-20).**
+- **R3 eyes — method adopted; targets approved; eyes-fixed call A sent once (E1–E5 passed, visual review pending); no live permission; iris call B not authorised (D-169 … D-171, as of 2026-10-20).**
   D-169 fixed how `assets[5]` (eyes-fixed) and `assets[6]` (iris) will be made: two transparent 1536×1024 sheets with
   shared registration. Sheet A carries both eyes without iris (transparent opening inside the ring, highlight and fold
   kept) and is placed with ONE shared uniform scale + translation from four anchors (ring centres Lc/Rc, outer corners
@@ -143,6 +143,11 @@ art layer behind them can be upgraded without a rewrite.
   thresholds; a pass opens only the owner's visual review and DRAFT annotation. UNSPENT, not a run instruction; inside
   `assets[5]`'s one planned call (budget 22–23, no retake); actually sent unchanged (`faceNeutral` = 4, `underlay` = 5).
   The iris call B is not authorised. See `project-state.md` **D-170**.
+  **D-171 (2026-10-20)** recorded that one send (HTTP 200, request `req_0663822323e8423e902d36e822d86de7`, one
+  1536×1024 sheet `9d26bce1…`) and closed the mandate: E1–E5 passed (alpha 1–15 reported only), the owner's visual review
+  is pending, no source annotation is approved and no candidate exists. D-170 is SPENT; `callsActuallySentSoFar.eyesFixed`
+  = **1** (`faceNeutral` = 4, `underlay` = 5 unchanged); the planned eyes-fixed capacity is used up; 0 live permissions.
+  See `project-state.md` **D-171**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

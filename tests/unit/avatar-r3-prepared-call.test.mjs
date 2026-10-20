@@ -68,7 +68,7 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160, D-162, D-165 and D-167 records, and D-170's one live call", () => {
+test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167 and D-170 records", () => {
   assert.equal(CONTRACT.authorisedCalls.count, 10);
   assert.equal(CONTRACT.authorisedCalls.calls.length, 10);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
@@ -122,12 +122,13 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.deepEqual([d167.callId, d167.decision], ["D-167-r3-face-parts-nose-v1", "D-167"]);
   assert.deepEqual([d167.mandateState, d167.neverReuse, d167.notAnActivePermission, d167.closure.closedBy], ["SPENT", true, true, "D-168"]);
   assert.match(d167.prohibitions.noRetry, /Exactly one fetch/);
-  // The tenth is D-170's: ONE eyes-fixed sheet (call A), authorised and not yet attempted — the ONLY live permission.
+  // The tenth is D-170's: ONE eyes-fixed sheet (call A), sent once (HTTP 200, E1..E5 passed, visual review pending) and closed by D-171.
   const d170 = CONTRACT.authorisedCalls.calls[9];
-  assert.deepEqual([d170.callId, d170.decision, d170.mandateState, d170.outcome], ["D-170-r3-eyes-fixed-v1", "D-170", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d170.callId, d170.decision], ["D-170-r3-eyes-fixed-v1", "D-170"]);
+  assert.deepEqual([d170.mandateState, d170.neverReuse, d170.notAnActivePermission, d170.closure.closedBy], ["SPENT", true, true, "D-171"]);
   assert.match(d170.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d170.irisCallB, /NOT authorised/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-170-r3-eyes-fixed-v1"], "D-170's call A is the only live permission");
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
