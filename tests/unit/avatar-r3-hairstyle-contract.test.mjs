@@ -171,8 +171,10 @@ test("coverage gains a second axis, and the budget is unchanged", () => {
   // derived budget is 21-22. Planned capacity is not a claim that the call was made.
   // D-167 authorises ONE further face-neutral attempt (the partial nose sheet), so assets[4] carries 4 PLANNED calls and
   // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
-  assert.equal(C.imageCallBudget.minimum, 22);
-  assert.equal(C.imageCallBudget.maximum, 23);
+  // D-172 adds ONE further planned eyes-fixed call (call A2), so assets[5] carries 2 PLANNED calls and the derived budget is
+  // 23-24. Planned capacity is not a claim that the call was made.
+  assert.equal(C.imageCallBudget.minimum, 23);
+  assert.equal(C.imageCallBudget.maximum, 24);
 });
 
 test("nothing is wired yet, and nothing existing is changed", () => {
