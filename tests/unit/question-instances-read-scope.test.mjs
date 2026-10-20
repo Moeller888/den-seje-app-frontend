@@ -245,6 +245,13 @@ const REVIEWED_LATER_READERS = {
     "on BOTH id and student_id, joined to its question — to accept two reviewed spellings of the correct " +
     "option. It returns only that instance's status and key after answering, as before; no policy, RLS " +
     "or privilege on question_instances is touched.",
+  "20261019150000_question_candidates_stratified.sql":
+    "adds ONE new function, get_question_candidates_for_student (SECURITY DEFINER, search_path public, " +
+    "pg_temp; EXECUTE revoked from PUBLIC, anon and authenticated, granted to service_role only). Its only " +
+    "read of question_instances is the NOT EXISTS of get_unserved_questions_for_student — matched on " +
+    "qi.student_id = the given student id AND qi.question_id = q.id — and it returns no instance column " +
+    "at all, only questions rows. No policy, RLS, table privilege or existing function is touched " +
+    "(proven in question-candidates-stratified-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -369,7 +376,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261009100000_get_teacher_visibility_caller_scope.sql",
      "20261016150000_analytics_views_lockdown.sql",
      "20261016160000_answer_keys_server_side_rpcs.sql",
-     "20261018143726_fix_danish_question_bank_text.sql"],
+     "20261018143726_fix_danish_question_bank_text.sql",
+     "20261019150000_question_candidates_stratified.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

@@ -161,7 +161,12 @@ test("the admin client is used only for the instance insert and the server-only 
     "rpc:request_repeat_question_for_student",
     "from:question_instances",
   ]);
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 4, "no other admin() use");
+  // The format mix (QUESTION_MIX_ENGINE "v2"/"shadow") hands the same backend client to
+  // ./mix-flow.ts, whose three reads (candidate RPC, own history, own placement session — all scoped
+  // to the verified student) are pinned in question-format-mix.test.mjs.
+  assert.equal((INDEX_CODE.match(/await loadFormatMixPlan\(admin\(\) as unknown as MixReadClient, \{\s*studentId: student_id,/g) ?? []).length, 2,
+    "the v2 and the shadow call");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 6, "no other admin() use");
 });
 
 test("index.ts never writes question_instances on the user client", () => {

@@ -388,6 +388,70 @@ Choice options (`js/answer-options.js`): only `answer_format = "mc"` is padded t
 (legacy WWII-year pool — a no-op for every active question, which all have four). Any other choice
 format — e.g. a two-choice true/false — is shown exactly as authored and is never padded.
 
+### Question selection & the format mix (fordeling af opgaveformer) — prepared 2026-10-19, NOT active
+
+**Status:** code merged-ready behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` = today's
+selection, unchanged. `shadow`/`v2` need migration `20261019150000_question_candidates_stratified.sql`
+(prepared, **not applied**, awaiting security review and a separate D-110 authorisation).
+
+**The problem it solves.** `get_unserved_questions_for_student` ends in `LIMIT 50` with no `ORDER BY`,
+so every pupil gets the same first 50 rows in physical heap order. On 2026-10-19 the two live
+Stav til rows sat at physical positions 1846–1847 of 2,101 active rows: no new pupil met them, one
+topic filled up to 89 % of the first 20 questions, and the window moved whenever rows were UPDATEd.
+The band that steers ordering also came from the request body (`current_difficulty_band`), i.e. from
+the browser.
+
+**The flow** (`supabase/functions/get-next-question/`), unchanged around the new step:
+1. an open/due instance is served first — spaced repetition, a reload or an interrupted request
+   always gets the same open question back (`idx_one_open_question`);
+2. new questions — `v1`: `get_unserved_questions_for_student` + `sortByWave` (client band).
+   `v2`: `mix-flow.ts` reads, in parallel and on the backend client scoped to the verified pupil,
+   (a) `get_question_candidates_for_student` — same scope predicate, but up to 20 rows **per
+   (answer_format, answer_type, force_text, difficulty_band)** ranked `md5(student_id || question_id)`
+   (deterministic per pupil, different between pupils, ≈ 4 ms on the largest live history, same as
+   today), (b) the pupil's newest 60 `question_instances` with only classifying fields (no content,
+   no key), (c) the pupil's `placement_sessions` row. `server-band.ts` derives the band;
+   `format-mix.ts` orders the candidates; the first successful server-side insert wins, as before;
+3. the repeat RPC, only once the scope is exhausted.
+`shadow` serves `v1` and only logs the `v2` decision (`FORMAT_MIX:`), for comparison before switching.
+
+**Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
+`choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
+`force_text` · `match_pairs` (registered, **not servable**). `classifyQuestion` names a kind only
+where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
+(a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
+`maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
+chosen by quota would hold the pupil on it — they are served only when nothing else is left.
+
+**The mix rule** (`format-mix.ts`, hypotheses tested in `tools/question-mix-sim/`): over the newest
+20 NEW questions (server history), a non-base kind is due when it has a candidate within ±1 band of
+the pupil, at least 3 other new questions have passed since the last non-base question, it is a
+whole question behind its share (`min(maxShare, 30 % / qualified kinds)`, `maxShare` 15 %), and the
+non-base total stays ≤ 30 %. Otherwise the base kind. If the base kind is exhausted, the remaining
+servable kinds are served regardless of quota — limits steer variety, they never produce a false
+"no questions". Within a kind: band tier (±1) → NUZO wave score (`wave-order.ts`, scoring unchanged,
+moved verbatim from `index.ts`) → a topic not among the last 3 → SQL hash order.
+Parameter sweep (2026-10-19, `node tools/question-mix-sim/sim.mjs --sweep`): gap 3 is the binding
+limit (at most 1 non-base question in 4 = 25 %, so the 30 % total is only a backstop); gap 2 breaks
+the spacing, gap 5 cuts the non-base share from 24 % to 16 % in a richer bank; ±2 bands lowers level fit to ~70 % within ±1, ±0 bands halves Stav
+til reach because both live items are band 1. The starting values were kept.
+
+**Server-owned level.** `server-band.ts` replays app.js's rule (3 correct → +1, 2 incorrect → −1,
+1..5) over the newest 60 verdicts in `question_instances`, seeded by a completed
+`placement_sessions.band`, else the grade's start band. `profiles.current_band`,
+`profiles.placement_band` (both client-writable) and the request body are not inputs.
+
+**Adding a new kind (Match par next):** (1) registry entry with `servable: false`; (2) renderer in
+`js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
+`_shared/question-dto.ts`; (3) flip `servable` in the PR that ships the renderer, extending the parity
+test. The SQL function and the mix need no change: a new `answer_format` gets its own stratum, and the
+mix reads limits from the registry.
+
+**Activation order** (each step its own owner authorisation): security review → apply the migration
+(D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
+`QUESTION_MIX_ENGINE=shadow`, compare `FORMAT_MIX:` logs → `v2`. Rollback: unset the secret (back to
+`v1` without a deploy); the function can stay.
+
 ## 7. Adaptive learning engine
 
 - **Event-driven progression** (`js/progression.js`): no direct coin/XP mutation — state is a pure
