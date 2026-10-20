@@ -719,6 +719,17 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 
 ## Future sections
 
+### Sværhedsskala 1–10.000 (designforslag 2026-10-20, afventer ejerbeslutning)
+
+- Design: [`docs/difficulty-scale-design.md`](difficulty-scale-design.md). Ét kontinuerligt niveau
+  1–10.000 pr. fag. Klassetrinnet sætter kun startniveauet (ejerens retning, 2026-10-19).
+  Udvælgelsen bliver nærmest-først i SQL uden klassetrinsloft, og elevens niveau bliver serverejet,
+  bag flaget `LEVEL_ENGINE` (ikke sat = uændret).
+- Ejeren skal tage stilling til B1–B9 (designets §9), før der skrives kode. Derefter følger:
+  migration A (additiv) → migration B → Edge bag flag → en pilot på ca. 500 engelskopgaver
+  (B1–C1, niveau 3.001–10.000) → opskalering til 10.000 engelskopgaver.
+- Løser det tidligere fund om `LIMIT 50` uden `ORDER BY` for de fag, der kører på skalaen.
+
 ### Platform / services track (from the 157A audit)
 
 Each is one controlled section; all integrations behind a default-off flag, fail-soft. The **Gate**
