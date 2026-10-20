@@ -151,7 +151,7 @@ test("the review render tints by luminance x R3_IRIS_DEFAULT under the fixed lay
   assert.deepEqual(IRIS_TOKEN, { name: "R3_IRIS_DEFAULT", hex: "#A34A0F", rgb: [0xa3, 0x4a, 0x0f] });
 });
 
-test("CLI: raw-check mode, rejections write nothing, success reruns byte-identically, production refuses the DRAFT targets", () => {
+test("CLI: raw-check mode, rejections write nothing, success reruns byte-identically, production refuses unapproved annotations and DRAFT targets", () => {
   const dir = mkdtempSync(join(tmpdir(), "r3-eyes-cli-"));
   const fp = join(dir, "fixed.png"), ip = join(dir, "iris.png"), ap = join(dir, "ann.json"), tp = join(dir, "targets.json");
   writeFileSync(fp, FIXED); writeFileSync(ip, IRIS); writeFileSync(ap, JSON.stringify(syntheticAnnotation(FIXED))); writeFileSync(tp, JSON.stringify(syntheticTargets()));
@@ -171,11 +171,16 @@ test("CLI: raw-check mode, rejections write nothing, success reruns byte-identic
   for (const f of ["eyes-fixed-layer.png", "iris-luminance-layer.png", "review-tinted-pair-REVIEW-ONLY.png"]) assert.equal(sha256(readFileSync(join(dir, "o1", f))), sha256(readFileSync(join(dir, "o2", f))), f);
   const again = run("--fixed", fp, "--iris", ip, "--annotation", ap, "--targets", tp, "--mode", "synthetic-test", "--out", join(dir, "o1"));
   assert.equal(JSON.parse(again.stdout).code, "OUT_EXISTS");
-  const approvedAnn = { ...syntheticAnnotation(FIXED), status: "APPROVED" }; writeFileSync(ap, JSON.stringify(approvedAnn));
-  const prod = run("--fixed", fp, "--iris", ip, "--annotation", ap, "--out", join(REPO, "tools", "avatar", "build", "r3-eyes-cli-test-never-written"));
+  // Since D-170 the pinned production targets are APPROVED: production now passes the targets stage and refuses the
+  // synthetic annotation's status instead; a DRAFT targets file (D-169's v1) is still refused as unpinned / unapproved.
+  const never = join(REPO, "tools", "avatar", "build", "r3-eyes-cli-test-never-written");
+  const prod = run("--fixed", fp, "--iris", ip, "--annotation", ap, "--out", never);
   assert.equal(prod.status, 2);
-  assert.equal(JSON.parse(prod.stdout).code, "TARGETS_NOT_APPROVED", "the pinned targets file is DRAFT");
-  assert.ok(!existsSync(join(REPO, "tools", "avatar", "build", "r3-eyes-cli-test-never-written")));
+  assert.equal(JSON.parse(prod.stdout).code, "ANNOTATION_NOT_APPROVED", "a synthetic annotation is never accepted in production");
+  const draftTargets = run("--fixed", fp, "--iris", ip, "--annotation", ap, "--targets", join(REPO, "tools", "avatar", "fixtures", "r3-eyes", "targets-eyes-v1.json"), "--out", never);
+  assert.equal(JSON.parse(draftTargets.stdout).code, "TARGETS_NOT_PINNED", "D-169's DRAFT v1 is not the pinned production file");
+  assert.ok(!existsSync(never));
+  const approvedAnn = { ...syntheticAnnotation(FIXED), status: "APPROVED" }; writeFileSync(ap, JSON.stringify(approvedAnn));
   assert.equal(JSON.parse(run("--fixed", fp, "--iris", ip, "--annotation", ap, "--out", join(dir, "o-prod")).stdout).code, "OUT_NOT_IN_BUILD");
 });
 

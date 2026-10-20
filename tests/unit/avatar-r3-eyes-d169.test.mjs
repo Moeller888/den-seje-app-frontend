@@ -6,14 +6,17 @@ import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { preD169Contract, PRE_D169_CONTRACT_CANONICAL_SHA256, preD168Contract, PRE_D168_CONTRACT_CANONICAL_SHA256, preD164Contract, PRE_D164_CONTRACT_CANONICAL_SHA256, D169_ADDED_OPERATION } from "./avatar-r3-d147-closure.mjs";
+import { preD170Contract, preD169Contract, PRE_D169_CONTRACT_CANONICAL_SHA256, preD168Contract, PRE_D168_CONTRACT_CANONICAL_SHA256, preD164Contract, PRE_D164_CONTRACT_CANONICAL_SHA256, D169_ADDED_OPERATION } from "./avatar-r3-d147-closure.mjs";
 import { THRESHOLDS, EYE_ZONES, IRIS_TOKEN, MODES, EYES, FIT_POINTS, CHECK_POINTS } from "../../tools/avatar/r3-eyes-tool.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
-const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
+// D-170 later approved the eye targets (a new pinned version) and authorised call A. NOW is the contract as it is; LIVE is
+// the contract exactly as D-169 left it (D-170's changes removed, proven canonical in avatar-r3-eyes-fixed-send-d170.test.mjs).
+const NOW = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
+const LIVE = preD170Contract(NOW);
 const PRE = preD169Contract(LIVE);
 const S = LIVE.eyesPartsMethod;
 const REGISTER = file("docs/project-state.md").toString("utf8");
@@ -61,7 +64,8 @@ test("the pinned files exist and match: targets, both prompts, the annotation sc
   assert.match(file(S.rawSheets.iris.prompt.file).toString("utf8"), /pure neutral grey: red = green = blue/);
   assert.equal(sha256(file(S.annotation.schemaFile)), S.annotation.schemaSha256);
   const cli = file(S.tools.cli).toString("utf8");
-  assert.equal(/TARGETS_SHA256 = "([0-9a-f]{64})"/.exec(cli)[1], S.targets.sha256, "the CLI pins the same targets file");
+  // D-170 moved the CLI's production pin from D-169's DRAFT v1 to the approved v2; it always pins the contract's current targets.
+  assert.equal(/TARGETS_SHA256 = "([0-9a-f]{64})"/.exec(cli)[1], NOW.eyesPartsMethod.targets.sha256, "the CLI pins the contract's current targets file");
   for (const k of ["library", "cli", "test", "syntheticFixtures"]) assert.ok(existsSync(join(REPO, ...S.tools[k].split(" ")[0].split("/"))), S.tools[k]);
 });
 

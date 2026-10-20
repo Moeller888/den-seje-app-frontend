@@ -15,8 +15,7 @@
 // prints a JSON report, exits 2 and writes NOTHING. On success it creates the new --out dir with eyes-fixed-layer.png
 // (+ iris-luminance-layer.png and review-tinted-pair-REVIEW-ONLY.png in the pair stage) and transform-log.json. No layer is
 // a candidate. Raw sheets are only read. PRODUCTION mode additionally requires the tracked, pinned targets file (whose status
-// must be APPROVED — the D-169 file is DRAFT, so production refuses until a later owner decision) and an --out inside
-// tools/avatar/build/.
+// must be APPROVED — D-169's v1 was DRAFT; D-170 pins the approved v2) and an --out inside tools/avatar/build/.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,9 +23,9 @@ import { checkFixedSheet, checkIrisSheet, composeEyes, tintedReviewPair, encodeP
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
-/** D-169: the eye target points (tools/avatar/fixtures/r3-eyes/targets-eyes-v1.json), status DRAFT. */
-export const TARGETS_REL = "tools/avatar/fixtures/r3-eyes/targets-eyes-v1.json";
-export const TARGETS_SHA256 = "09848f0e5ae87de1b1fbdf8a9102ec3125cf2e21a1cc6324a7ed1bcbad19a88c";
+/** D-170: the owner-APPROVED eye target points (targets-eyes-v2.json; v1 was D-169's DRAFT of the same readings). */
+export const TARGETS_REL = "tools/avatar/fixtures/r3-eyes/targets-eyes-v2.json";
+export const TARGETS_SHA256 = "b67c7ade689a3641ea7e51c7994c30012a40c6b30c65c63fa845885653d24d5f";
 const BUILD = join(REPO, "tools", "avatar", "build");
 const inside = (child, parent) => { const r = relative(parent, child); return r !== "" && !r.startsWith("..") && !isAbsolute(r); };
 const W = 1024, H = 1536;
@@ -64,7 +63,7 @@ if (!aj.ok) stop({ stage: "annotation", code: "ANNOTATION_JSON_INVALID", why: aj
 const targetsPath = resolve(args.targets ?? join(REPO, ...TARGETS_REL.split("/")));
 const tj = readJson(targetsPath);
 if (!tj.ok) stop({ stage: "targets", code: "TARGETS_JSON_INVALID", why: tj.error });
-if (mode === "production" && tj.sha256 !== TARGETS_SHA256) stop({ stage: "targets", code: "TARGETS_NOT_PINNED", why: "production uses only the D-169 targets file with its pinned SHA-256" });
+if (mode === "production" && tj.sha256 !== TARGETS_SHA256) stop({ stage: "targets", code: "TARGETS_NOT_PINNED", why: "production uses only the D-170 approved targets file with its pinned SHA-256" });
 // 3. compose + P-checks
 const c = composeEyes({ fixed, iris, annotation: aj.value, targets: tj.value, mode });
 if (!c.ok) stop({ stage: c.stage, code: c.code, why: c.why });
