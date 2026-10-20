@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng, THRESHOLDS } from "../../tools/avatar/r3-eyes-tool.mjs";
 import { fixedSheet } from "./avatar-r3-eyes-synthetic.mjs";
-import { preD170Contract, PRE_D170_CONTRACT_CANONICAL_SHA256, preD169Contract, PRE_D169_CONTRACT_CANONICAL_SHA256, preD171Contract, PRE_D171_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD170Contract, PRE_D170_CONTRACT_CANONICAL_SHA256, preD169Contract, PRE_D169_CONTRACT_CANONICAL_SHA256, preD171Contract, PRE_D171_CONTRACT_CANONICAL_SHA256, preD172Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -41,7 +41,9 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 // D-171 later recorded D-170's one send and closed its entry in place. LIVE is the contract exactly as D-170 committed it
 // (D-171's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
-const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-172 later added the eyes-fixed retake preparation (one more planned call, call A2). LIVE_NOW is the contract exactly as
+// D-171 left it (D-172's additions removed, proven canonical in avatar-r3-eyes-fixed-send-d172.test.mjs).
+const LIVE_NOW = preD172Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 const LIVE = preD171Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD170Contract(LIVE);

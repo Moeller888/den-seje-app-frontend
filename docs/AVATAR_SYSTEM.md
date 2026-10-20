@@ -124,7 +124,7 @@ art layer behind them can be upgraded without a rewrite.
   too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
   `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
   permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
-- **R3 eyes — method adopted; targets approved; eyes-fixed call A sent once (E1–E5 passed, visual review pending); no live permission; iris call B not authorised (D-169 … D-171, as of 2026-10-20).**
+- **R3 eyes — method adopted; targets approved; call A sent once and set aside by the owner; one improved eyes-fixed call A2 authorised, not yet run; iris call B not authorised (D-169 … D-172, as of 2026-10-20).**
   D-169 fixed how `assets[5]` (eyes-fixed) and `assets[6]` (iris) will be made: two transparent 1536×1024 sheets with
   shared registration. Sheet A carries both eyes without iris (transparent opening inside the ring, highlight and fold
   kept) and is placed with ONE shared uniform scale + translation from four anchors (ring centres Lc/Rc, outer corners
@@ -148,6 +148,13 @@ art layer behind them can be upgraded without a rewrite.
   is pending, no source annotation is approved and no candidate exists. D-170 is SPENT; `callsActuallySentSoFar.eyesFixed`
   = **1** (`faceNeutral` = 4, `underlay` = 5 unchanged); the planned eyes-fixed capacity is used up; 0 live permissions.
   See `project-state.md` **D-171**.
+  **D-172 (2026-10-20, depends on D-171 / PR #354)**: the owner set the D-170 sheet aside (shape off Northstar; the local
+  review placement gave s = 0.1939 because the model drew the eyes at about 5.2x, and would fail P1, P2 and P5). One
+  further eyes-fixed call `D-172-r3-eyes-fixed-v2` is authorised with a new prompt v2 (`eb51a3ea…`: tall oval rings with
+  their top under the lash line, no white band, no inner flick, short outer flick, short fold over the inner half,
+  explicit 4x geometry) and two new binding shape checks fixed before the call — F1 no white band, F2 eye spacing
+  compatible with the scale range — after D-169's unchanged E1–E5. Planned eyes-fixed capacity 1 -> 2, budget 23–24;
+  actually sent unchanged. Not a run instruction. See `project-state.md` **D-172**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

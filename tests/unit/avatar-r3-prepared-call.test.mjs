@@ -68,9 +68,9 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167 and D-170 records", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 10);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 10);
+test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167 and D-170 records, and D-172's one live call", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 11);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 11);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -128,7 +128,11 @@ test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143
   assert.deepEqual([d170.mandateState, d170.neverReuse, d170.notAnActivePermission, d170.closure.closedBy], ["SPENT", true, true, "D-171"]);
   assert.match(d170.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d170.irisCallB, /NOT authorised/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
+  // The eleventh is D-172's: ONE further eyes-fixed sheet (call A2), authorised and not yet attempted — the ONLY live permission.
+  const d172 = CONTRACT.authorisedCalls.calls[10];
+  assert.deepEqual([d172.callId, d172.decision, d172.mandateState, d172.outcome], ["D-172-r3-eyes-fixed-v2", "D-172", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.match(d172.irisCallB, /NOT authorised/);
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-172-r3-eyes-fixed-v2"], "D-172's call A2 is the only live permission");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
@@ -243,8 +247,10 @@ test("D-145: the implemented send adapter belongs to D-143's call, not to the pr
   const impl = CONTRACT.adapterImplementations.entries;
   // D-160 later recorded a second implementation, for its own face-neutral call; it belongs to neither D-142 nor D-143.
   // D-162 later recorded a third implementation, for its own face-neutral call, and D-165 a fourth, for the parts sheet.
-  // D-167 later recorded a fifth, for the partial nose sheet, and D-170 a sixth, for the eyes-fixed sheet (call A).
-  assert.equal(impl.length, 6);
+  // D-167 later recorded a fifth, for the partial nose sheet, D-170 a sixth, for the eyes-fixed sheet (call A), and D-172 a
+  // seventh, for the further eyes-fixed sheet (call A2).
+  assert.equal(impl.length, 7);
+  assert.deepEqual([impl[6].decision, impl[6].callId], ["D-172", "D-172-r3-eyes-fixed-v2"]);
   assert.deepEqual([impl[5].decision, impl[5].callId], ["D-170", "D-170-r3-eyes-fixed-v1"]);
   assert.deepEqual([impl[4].decision, impl[4].callId], ["D-167", "D-167-r3-face-parts-nose-v1"]);
   assert.deepEqual([impl[3].decision, impl[3].callId], ["D-165", "D-165-r3-face-parts-sheet-v1"]);
