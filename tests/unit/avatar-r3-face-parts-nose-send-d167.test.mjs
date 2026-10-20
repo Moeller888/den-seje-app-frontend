@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng } from "../../tools/avatar/r3-face-parts-tool.mjs";
 import { mainSheet, buildSheet, renderCell, ellipseF, COL } from "./avatar-r3-face-parts-synthetic.mjs";
-import { preD167Contract, PRE_D167_CONTRACT_CANONICAL_SHA256, preD166Contract, PRE_D166_CONTRACT_CANONICAL_SHA256, preD168Contract, PRE_D168_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD167Contract, PRE_D167_CONTRACT_CANONICAL_SHA256, preD166Contract, PRE_D166_CONTRACT_CANONICAL_SHA256, preD168Contract, PRE_D168_CONTRACT_CANONICAL_SHA256, preD169Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -36,7 +36,9 @@ const PREV_PROMPT_REL = "tools/avatar/fixtures/r3-face-parts/prompt-parts-sheet-
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-169 later added the eyes method (eyesPartsMethod). LIVE_NOW is the contract exactly as D-168 left it (D-169's
+// additions removed, proven canonical in avatar-r3-eyes-d169.test.mjs).
+const LIVE_NOW = preD169Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 // D-168 later recorded D-167's one send and closed its entry in place. LIVE is the contract exactly as D-167 committed
 // it (D-168's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
 const LIVE = preD168Contract(LIVE_NOW);

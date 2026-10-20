@@ -124,6 +124,18 @@ art layer behind them can be upgraded without a rewrite.
   too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
   `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
   permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
+- **R3 eyes — method adopted, target points DRAFT, no call (D-169, as of 2026-10-20).**
+  D-169 fixed how `assets[5]` (eyes-fixed) and `assets[6]` (iris) will be made: two transparent 1536×1024 sheets with
+  shared registration. Sheet A carries both eyes without iris (transparent opening inside the ring, highlight and fold
+  kept) and is placed with ONE shared uniform scale + translation from four anchors (ring centres Lc/Rc, outer corners
+  Lo/Ro); sheet B carries two achromatic irises whose alpha-weighted centroids are mapped onto A's placed ring centres.
+  Clarifications U1–U6 are binding (pupil in the iris map, ring in eyes-fixed, iris call sees only Northstar, chroma
+  ≤ 12, tint `round(Y/255 × #A34A0F)`); U7 (folds 0–4 px below D-164's brow lines) is an open review item. Checks
+  E1–E5, I1–I5 and P1–P6 and every threshold are fixed before any call (alpha 1–15 reported only). Tool
+  `tools/avatar/r3-eyes-tool.mjs` + CLI `tools/avatar/r3-eyes-compose.mjs`; targets
+  `tools/avatar/fixtures/r3-eyes/targets-eyes-v1.json` are **DRAFT**, so production refuses until the owner approves a
+  version. No call-id, claim or adapter; 1 + 1 planned calls inside 22–23, no room for a retake. See `project-state.md`
+  **D-169**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

@@ -548,7 +548,7 @@
     { "id": 3,  "name": "r3-trousers-default",    "slot": "trousers", "method": "generated", "calls": 1 },
     { "id": 4,  "name": "r3-shoes-default",       "slot": "shoes",    "method": "generated", "calls": 1 },
     { "id": 5,  "name": "r3-face-neutral",        "slot": "face",     "method": "generated-parts-sheet+point-anchored-composition", "calls": 4 },
-    { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated", "calls": 1 },
+    { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated-eyes-sheet+anchored-composition", "calls": 1 },
     { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
     { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated", "calls": 1 },
@@ -579,7 +579,8 @@
     { "op": "runtime masks from approved layers", "how": "the tee layer's own alpha IS the tee region, so the D-085 colour classification is not needed", "precedent": "build-r2-torso-occlusion-mask.mjs, 34 gates" },
     { "op": "colour tokens for hair and iris", "how": "one greyscale asset x a colour token", "precedent": "R2 already contracts hair and iris as multiply x token" },
     { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" },
-    { "op": "face-neutral parts placement (D-164)", "how": "fixed 2x2 cell extraction from a 1024x1024 parts sheet; per part ONE positive uniform scale s and a translation t, least-squares from its two APPROVED source points to its two APPROVED target points; exact area filter on premultiplied RGBA; Math.round half-up; source-over into one 1024x1536 face layer. No rotation, reflection, per-axis scale, shear or warp. See faceNeutralPartsMethod.", "precedent": "R2 hair tight crop (D-119): a deterministic downscale and a paste at a fixed offset" }
+    { "op": "face-neutral parts placement (D-164)", "how": "fixed 2x2 cell extraction from a 1024x1024 parts sheet; per part ONE positive uniform scale s and a translation t, least-squares from its two APPROVED source points to its two APPROVED target points; exact area filter on premultiplied RGBA; Math.round half-up; source-over into one 1024x1536 face layer. No rotation, reflection, per-axis scale, shear or warp. See faceNeutralPartsMethod.", "precedent": "R2 hair tight crop (D-119): a deterministic downscale and a paste at a fixed offset" },
+    { "op": "eyes placement and iris registration (D-169)", "how": "eyes-fixed: ONE positive uniform scale s and a translation t shared by BOTH eyes, least squares from four APPROVED source anchors (ringCentre and outerCorner per eye) to four APPROVED target points; iris: the two alpha-weighted iris centroids mapped, by one shared positive uniform scale and translation, onto the PLACED eyes-fixed ring centres; exact area filter on premultiplied RGBA (the D-164 code); Math.round half-up; one 1024x1536 layer per sublayer. No rotation, reflection, per-axis scale, shear, warp, crop, de-matting or repair. See eyesPartsMethod.", "precedent": "D-164 face-neutral parts placement: the same filter, rounding and least-squares uniform fit, approved separately for the eyes" }
   ],
 
   "productionOrder": [
@@ -3896,6 +3897,275 @@
       "a composition before every used annotation is owner-APPROVED",
       "a numeric residual threshold",
       "any repair, mirroring or reuse of D-165's nose"
+    ]
+  },
+
+  "eyesPartsMethod": {
+    "decision": "D-169",
+    "adoptedOn": "2026-10-20",
+    "status": "ADOPTED — EYES METHOD, CLARIFICATIONS AND CHECKS ARE BINDING FOR assets[5] AND assets[6] — TARGET POINTS DRAFT — NO IMAGE REQUEST AUTHORISED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "scope": "Applies only to assets[5] r3-eyes-neutral-fixed and assets[6] r3-eyes-neutral-iris in the neutral expression. The blink lids (z 5), eyesCosmetic (z 6), expression eyes and every other asset are not covered and are decided separately.",
+    "method": "TWO raw sheets with SHARED registration. Sheet A (assets[5]) carries both eyes together without iris; a pinned deterministic tool places A with ONE shared uniform scale and translation from four owner-approved anchors. Sheet B (assets[6]) carries the two achromatic irises; their alpha-weighted centroids are mapped onto A's PLACED ring centres. Both sublayers end on the same anchor set (the ring centres). The prompts only keep the motif on the sheet; they do not provide registration.",
+    "relationToEarlierDecisions": "D-135's zModel (iris FIRST, eyes-fixed SECOND, both on the eyes slot at z 4), D-136's irisContract (one achromatic luminance map x R3_IRIS_DEFAULT #A34A0F, judged only as the composed render pair against Northstar, no untinted fallback, no after-the-fact tolerance) and D-159's layerSplit stay in force; the clarifications below make them precise and replace none of them. D-164's faceNeutralPartsMethod is NOT extended to the eyes: its code (least-squares uniform fit, area filter, source-over, rounding) is reused only as named here, and its permissions, target points, broad face envelope and the sheet empty-cell rules (RAW-4, RAW-4′) do not transfer. productionOrder (eyes fixed before iris) is unchanged.",
+    "clarifications": {
+      "binding": true,
+      "U1": "The pupil is part of the iris luminance map as its darkest tone. It is tinted with the iris and moves with it.",
+      "U2": "The dark ring around the iris belongs to eyes-fixed (achromatic, as in Northstar); it hides the iris' outer edge.",
+      "U3": "eyes-fixed is transparent (alpha 0) inside the iris ring, except for the highlight. This transparent area is the OPENING.",
+      "U4": "The iris call takes ONLY Northstar Master v2 as input, never the eyes-fixed sheet. Registration is deterministic, afterwards (method), not copied by the model.",
+      "U5": "'ONE luminance map' is one sheet with TWO separately drawn irises; neither is a mirrored or reused copy of the other.",
+      "U6": "Achromatic means max(R,G,B) − min(R,G,B) <= 12 on every pixel with alpha >= 16, fixed BEFORE any call. Tint (runtime and review render): per channel round(Y/255 x token) with Rec.709 luminance Y = 0.2126 R + 0.7152 G + 0.0722 B; alpha unchanged; normal source-over under eyes-fixed."
+    },
+    "openReviewItems": {
+      "U7": "The static folds (D-159 fold zones, y 272..286) lie 0–4 px below D-164's approved brow lines (y 268.5..273.5) at x 432–458 and x 556–582. No target changes now: the overlap is an explicit item of the combined visual review once eyes exist. Any adjustment is a new owner decision."
+    },
+    "rawSheets": {
+      "eyesFixed": {
+        "sheetType": "r3-eyes-fixed-sheet-v1",
+        "asset": 6,
+        "size": [
+          1536,
+          1024
+        ],
+        "format": "PNG, 8-bit RGBA, transparent background",
+        "content": "both eyes together, image-left eye in the left half, about 4x: whites, upper lash line with flicks, thin lower outline, iris ring, highlight upper-left of the pupil in BOTH eyes, static fold; the inside of the ring transparent except the highlight; no skin, iris colour, pupil, brows, hair, text or marks",
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-eyes/prompt-eyes-fixed-sheet-v1.txt",
+          "sha256": "aa2c8efc8404e943f44f4cb56d5978b1b82e691cfdab59e25d2ec6ac46591253",
+          "bytes": 1714,
+          "status": "FROZEN DRAFT — not a request. A later, separate call decision may adopt it unchanged or replace it with a new pinned version.",
+          "plannedInput": "Northstar Master v2 (3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50) as the only image"
+        }
+      },
+      "iris": {
+        "sheetType": "r3-eyes-iris-sheet-v1",
+        "asset": 7,
+        "size": [
+          1536,
+          1024
+        ],
+        "format": "PNG, 8-bit RGBA, transparent background",
+        "content": "two complete, solid, upright greyscale ovals, one per half, about 4x, slightly larger than the visible iris (so the edge sits under the ring), drawn including the part the lid hides; dark centred pupil, lighter lower crescent; no colour, highlight, ring, white, lashes or skin",
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-eyes/prompt-eyes-iris-sheet-v1.txt",
+          "sha256": "8acada222bb45bb66427029a3eb3ec184d757481ec76ba42103212460c84a787",
+          "bytes": 1540,
+          "status": "FROZEN DRAFT — not a request. A later, separate call decision may adopt it unchanged or replace it with a new pinned version.",
+          "plannedInput": "Northstar Master v2 (3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50) as the only image — never the eyes-fixed sheet (U4)"
+        }
+      },
+      "neverModified": "Both raw sheets are stored unchanged and are never written to; every later step reads them."
+    },
+    "targets": {
+      "file": "tools/avatar/fixtures/r3-eyes/targets-eyes-v1.json",
+      "sha256": "09848f0e5ae87de1b1fbdf8a9102ec3125cf2e21a1cc6324a7ed1bcbad19a88c",
+      "version": "r3-eyes-targets-v1",
+      "status": "DRAFT",
+      "approval": "D-169 records the readings; it does not approve them. Only the owner sets APPROVED, by a separate decision, as a new pinned targets version. The CLI's production mode refuses DRAFT.",
+      "fitAnchors": [
+        "eyeLeft.ringCentre (Lc)",
+        "eyeLeft.outerCorner (Lo)",
+        "eyeRight.ringCentre (Rc)",
+        "eyeRight.outerCorner (Ro)"
+      ],
+      "checkPoints": [
+        "eyeLeft.innerCorner (Li)",
+        "eyeRight.innerCorner (Ri)"
+      ],
+      "points": {
+        "eyeLeft": {
+          "ringCentre": [
+            448.8,
+            321.7
+          ],
+          "outerCorner": [
+            402,
+            310
+          ],
+          "innerCorner": [
+            477,
+            312
+          ]
+        },
+        "eyeRight": {
+          "ringCentre": [
+            571,
+            320.6
+          ],
+          "outerCorner": [
+            617,
+            312
+          ],
+          "innerCorner": [
+            541,
+            318
+          ]
+        }
+      },
+      "uncertainty": "ring centres ±1.5 px (the ring top under the lash line is partly reconstructed); corners ±3 px (their y is ill-defined in this style)",
+      "noAutomaticExtraction": "The points were read visually on x6 crops; no feature was extracted automatically from Northstar."
+    },
+    "annotation": {
+      "schemaFile": "tools/avatar/fixtures/r3-eyes/annotation-eyes-v1.schema.json",
+      "schemaSha256": "72de84f3d372a90a59e0bf50a07e61e4e96e52a33a9b3325963c9ed2f7ad4723",
+      "rule": "One annotation per eyes-fixed sheet, separate METADATA, never a pixel change: bound to the sheet's SHA-256; exactly ringCentre + outerCorner + innerCorner per eye in sheet coordinates; each ring centre in its own half; version, annotator, uncertainty and status recorded.",
+      "approval": "Only the owner sets APPROVED. Synthetic statuses are never accepted in production. A correction is a new annotation version.",
+      "irisNotAnnotated": "The iris sheet is never annotated: its anchors are the alpha-weighted centroids, computed deterministically."
+    },
+    "authorOperation": {
+      "allowed": [
+        "eyes-fixed: ONE positive uniform scale and one translation shared by both eyes, least squares over the four fit anchors",
+        "iris: ONE positive uniform scale and one translation shared by both irises, least squares from the two alpha-weighted centroids to the two PLACED ring centres",
+        "the pinned area filter and rounding (D-164 code)",
+        "a review render of the pair tinted per U6 (never an asset)"
+      ],
+      "excluded": [
+        "rotation",
+        "reflection (a non-positive fitted s is rejected)",
+        "per-axis scale",
+        "shear",
+        "warp or any non-linear deformation",
+        "a crop to pass a check",
+        "stray-pixel or matte removal",
+        "recolouring or desaturating the iris",
+        "inpainting, reconstruction or pixel repair",
+        "a separate transform per eye"
+      ],
+      "fit": "q = s·p + t, least squares: s = Σ(p−p̄)·(q−q̄) / Σ|p−p̄|², t = q̄ − s·p̄",
+      "centroid": "the alpha-weighted mean of the pixel centres (x + 0.5, y + 0.5) of the iris component (alpha >= 16, 8-connected)",
+      "bboxRole": "Alpha and bounding boxes never set a transform; only the approved annotation (A) and the iris centroids (B) do."
+    },
+    "conventions": "faceNeutralPartsMethod.conventions apply unchanged (continuous coordinates, exact area filter on premultiplied RGBA, sRGB values averaged directly, straight 8-bit files, Math.round half-up, determinism, no quality claim). Annotation coordinates are sheet-continuous on the 1536x1024 sheet.",
+    "thresholds": {
+      "visibleAlphaMin": 16,
+      "lowAlphaReportedMax": 15,
+      "midStripX": [
+        728,
+        808
+      ],
+      "borderPx": 32,
+      "openingAlphaBelow": 8,
+      "openingMinComponentPx": 2000,
+      "openingAreaRange": [
+        0.5,
+        1.6
+      ],
+      "openingAreaNominalPx": {
+        "eyeLeft": 31496,
+        "eyeRight": 33158
+      },
+      "highlightAlphaMin": 128,
+      "highlightLuminanceMin": 200,
+      "highlightMinFractionOfOpening": 0.01,
+      "skinAlphaMin": 250,
+      "skinDeltaE76Max": 10,
+      "irisFillRatioRange": [
+        0.92,
+        1.05
+      ],
+      "irisChromaMax": 12,
+      "irisOpaqueInsetPx": 3,
+      "pupilDarkestFraction": 0.1,
+      "pupilMaxNormalisedDistance": 0.2,
+      "residualFixedMaxPx": 2,
+      "residualIrisMaxPx": 1.5,
+      "scaleRange": [
+        0.2,
+        0.3
+      ],
+      "irisToFixedScaleRatioRange": [
+        0.9,
+        1.1
+      ],
+      "coverageIrisAlphaMin": 250,
+      "containmentIrisAlphaFrom": 8,
+      "fixedSolidAlphaMin": 250,
+      "envelopeAlphaFrom": 8,
+      "envelopeGrowPx": 6,
+      "centreMaxDistancePx": 3
+    },
+    "thresholdRule": "Every threshold is fixed here BEFORE any eyes call. Changing one is a new owner decision made before a call, never after seeing an output.",
+    "checks": {
+      "eyesFixedSheet": {
+        "binding": [
+          "E1 PNG decodes, 1536x1024, 8-bit RGBA, not interlaced",
+          "E2 no pixel with alpha >= 16 in the middle strip x 728..807 or in the 32 px border",
+          "E3 per half exactly one enclosed transparent opening (alpha < 8, 4-connected, not touching the sheet border, >= 2000 px) of 0.5..1.6 x the nominal area",
+          "E4 per opening a bright opaque highlight (alpha >= 128, luminance >= 200, >= 1 % of the opening) inside the opening's convex hull, upper-left of the region centroid",
+          "E5 no opaque skin-coloured pixel (alpha >= 250, ΔE76 <= 10 to the U1 skin [254, 197, 128])"
+        ],
+        "reported": [
+          "E2-LOW pixels with alpha 1..15 (strip/border and whole sheet)",
+          "E3-SMALL enclosed transparent components below 2000 px",
+          "E-VISUAL style, lashes, folds, gaze, symmetry, no mirrored copy — visual review"
+        ]
+      },
+      "irisSheet": {
+        "binding": [
+          "I1 PNG decodes, 1536x1024, 8-bit RGBA, not interlaced",
+          "I2 exactly two components (alpha >= 16, 8-connected), one per half, each an upright filled oval (0.92..1.05 of its bbox ellipse, height > width)",
+          "I3 achromatic: max(R,G,B) − min(R,G,B) <= 12 on every pixel with alpha >= 16",
+          "I4 fully opaque: alpha 255 on every pixel more than 3 px inside its component",
+          "I5 pupil centred: the opaque pixels at or below the darkest-10 % luminance (ties included) have their centroid within 0.2 of the half-axes from the iris centroid"
+        ],
+        "reported": [
+          "I2-LOW pixels with alpha 1..15",
+          "I-VISUAL shading like Northstar, no highlight, no ring, no colour — visual review"
+        ]
+      },
+      "placement": {
+        "binding": [
+          "P1 residual: eyes-fixed max 2.0 px per fit anchor; iris max 1.5 px",
+          "P2 scale: eyes-fixed and iris in 0.20..0.30; iris/fixed ratio 0.90..1.10",
+          "P3 coverage: every master pixel of the placed opening (resampled opening coverage > 0) has iris alpha >= 250",
+          "P4 containment: iris alpha >= 8 only where eyes-fixed alpha >= 250 or inside the placed opening",
+          "P5 envelope: eyes-fixed alpha >= 8 only inside D-159's eye and fold zones (faceNeutralPreparation.areaModel.excludedZones) grown by 6 px",
+          "P6 placed ring centres within 3 px of the target Lc and Rc (implied by P1 at these thresholds; kept explicit)"
+        ],
+        "diagnostic": [
+          "P7 ring-centre y difference, left/right iris size ratio, check-point (Li, Ri) residuals"
+        ]
+      },
+      "lowAlphaRule": "Owner decision D-169: alpha >= 16 is visible content and rejects where a rule forbids content; alpha 1..15 is reported only. After placement P5 still binds at alpha >= 8 (a 1..15 sheet pixel shrinks about 16x in the 4x downscale).",
+      "notReused": "The broad face envelope [384, 230, 632, 412] and the parts-sheet empty-cell rules (RAW-4, RAW-4′) are not applied to eye sheets; every eyes rule above has its own reason (eyesPartsMethod prep, D-169).",
+      "visualReview": "After the automatic checks and before any candidate decision: the tinted pair against Northstar at 1:1 and 4x on light, medium and dark skin — gaze (both pupils straight ahead, highlights upper-left), symmetry (same size and tilt, not mirrored), shape (tall oval iris, thick upper lash with outer flicks, clean white, fold), overlap (iris top under the lash line, no halo or gap at the ring, no iris outside the eye, the fold against the D-165 brows: U7), iris tone (warm brown, near-black pupil, lighter lower crescent).",
+      "firstFailure": "The first binding failure stops the run and writes no output file. Nothing is cropped, moved or repaired to pass a check."
+    },
+    "productionSequence": [
+      "1 a separate owner decision authorises ONE eyes-fixed call (its own call-id, claim identity and adapter)",
+      "2 E1..E5; owner review of sheet A; owner-APPROVED annotation; owner-APPROVED targets version",
+      "3 fixed stage: placement of A alone, P1/P2/P5/P6; owner review",
+      "4 only then a separate owner decision authorises ONE iris call",
+      "5 I1..I5; pair stage: P1..P6, P7 reported; owner visual review of the tinted pair (D-136)"
+    ],
+    "rawOutputRule": "The rule that raw outputs are never cropped, moved, scaled, warped, de-matted or repaired stays in force unchanged: the raw sheets are never written. The authorOperation applies only to these two sheet types, by the pinned tool, from APPROVED metadata and deterministic centroids, and its result is a NEW derived file. No layer is a candidate until the owner decides.",
+    "tools": {
+      "library": "tools/avatar/r3-eyes-tool.mjs",
+      "cli": "tools/avatar/r3-eyes-compose.mjs",
+      "test": "tests/unit/avatar-r3-eyes-tool.test.mjs",
+      "syntheticFixtures": "tests/unit/avatar-r3-eyes-synthetic.mjs (technical test shapes, not an eye design)",
+      "noToolSha256": "No tool SHA-256 is pinned here (as D-164). Every transform log records the library, CLI and parts-library SHA-256.",
+      "productionGuards": [
+        "only the pinned targets file, and only when it is APPROVED",
+        "only APPROVED annotations",
+        "output only inside the gitignored tools/avatar/build/",
+        "never overwrites an existing output",
+        "no network, credential, claim or image request"
+      ]
+    },
+    "budget": "assets[5] and assets[6] keep 1 planned call each, already inside the derived budget 22-23. D-169 adds no call and changes no budget figure or counter. Each sheet needs its own separate one-shot authorisation (A first, B only after A is approved). There is no planned capacity for a retake: a rejected sheet needs a new owner capacity decision.",
+    "notApproved": [
+      "an image request or upload",
+      "a call-id or claim",
+      "a send adapter",
+      "the DRAFT eye target points",
+      "a candidate or promotion",
+      "a runtime change or the R3_IRIS_DEFAULT runtime constant",
+      "a change to D-164's targets because of U7",
+      "blink lids, eyesCosmetic or expression eyes"
     ]
   }
 }

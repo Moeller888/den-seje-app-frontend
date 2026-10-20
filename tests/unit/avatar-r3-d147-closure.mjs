@@ -90,6 +90,11 @@
 // underlay figure untouched), made the budget text true to the figures and re-worded the prose. preD168Contract()
 // reverses exactly that closure, proven canonically identical to the contract at the D-167 merge
 // (PRE_D168_CONTRACT_CANONICAL_SHA256); preD167Contract() applies it first.
+//
+// D-169 then ADDED the eyes method (top-level eyesPartsMethod), one deterministicOperations entry and the new
+// assets[5].method. No authorisedCalls entry, budget figure or counter changed. preD169Contract() removes exactly those
+// additions, proven canonically identical to the contract at the D-168 merge (PRE_D169_CONTRACT_CANONICAL_SHA256);
+// preD168Contract() applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -360,9 +365,27 @@ export const PRE_D168 = Object.freeze({
   "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds NINE entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (8) D-165-r3-face-parts-sheet-v1 — NO LONGER a permission. D-165 superseded the general rule NARROWLY for exactly one face-neutral parts-sheet attempt. That attempt was sent once and D-166 records its outcome: HTTP 200, one sheet, RAW-1..5 passed, the nose rejected by the owner, the brows and mouth kept for further review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (9) D-167-r3-face-parts-nose-v1 — THE ONLY active send permission. D-167 supersedes the general rule NARROWLY for exactly one face-neutral partial nose sheet (faceNeutralPartsExtension), with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after the merge. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id and a NEW claim identity. Apart from D-167's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's, D-162's, D-165's or D-167's call id or claim identity, and no other call in the R3 plan."
 });
 
-/** A deep copy of the live contract with D-168's closure of D-167 reversed. Pure; never touches the input. */
-export function preD168Contract(live) {
+export const D169_DECISION = "D-169";
+/** origin/main when D-169 adopted the eyes method (the D-168 merge). */
+export const PRE_D169_COMMIT = "6e2b668b4bc8481afb15bf65e309f55c539e837b";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D169_COMMIT. */
+export const PRE_D169_CONTRACT_CANONICAL_SHA256 = "b232524ed723ef8b240d32e926dfbb8dc3e4166c1f0b479ee192b8025877171c";
+export const D169_ADDED_TOP_LEVEL_KEYS = Object.freeze(["eyesPartsMethod"]);
+export const D169_ADDED_OPERATION = "eyes placement and iris registration (D-169)";
+export const PRE_D169 = Object.freeze({ "asset5Method": "generated" });
+
+/** A deep copy of the live contract with D-169's additions removed. Pure; never touches the input. */
+export function preD169Contract(live) {
   const c = JSON.parse(JSON.stringify(live));
+  for (const k of D169_ADDED_TOP_LEVEL_KEYS) delete c[k];
+  c.deterministicOperations = c.deterministicOperations.filter((o) => o.op !== D169_ADDED_OPERATION);
+  c.assets[5].method = PRE_D169.asset5Method;
+  return c;
+}
+
+/** A deep copy of the live contract with D-169's additions removed and D-168's closure of D-167 reversed. Pure. */
+export function preD168Contract(live) {
+  const c = preD169Contract(live);
   const e167 = c.authorisedCalls.calls.find((x) => x.decision === "D-167");
   if (e167) {
     e167.status = PRE_D168.d167.status;
