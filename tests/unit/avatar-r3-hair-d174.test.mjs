@@ -7,7 +7,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256, D174_ADDED_OPERATION, PRE_D174 } from "./avatar-r3-d147-closure.mjs";
+import { preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256, D174_ADDED_OPERATION, PRE_D174, preD175Contract } from "./avatar-r3-d147-closure.mjs";
 import { FIT_POINTS, CHECK_POINTS, RAMP_B } from "../../tools/avatar/r3-hair-tool.mjs";
 import { HAIR_COLOR_TOKENS, DEFAULT_HAIR_COLOR } from "../../js/avatar-layers.js";
 
@@ -15,7 +15,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
-const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
+// D-175 later authorised the one hair call (an authorisedCalls entry, its implementation, a hair axis, the frozen prompt).
+// LIVE is the contract exactly as D-174 left it (D-175's changes removed, proven canonical in avatar-r3-hair-send-d175.test.mjs).
+const LIVE = preD175Contract(JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8")));
 const PRE = preD174Contract(LIVE);
 const S = LIVE.hairMethod;
 const TARGETS = JSON.parse(file(S.targets.file).toString("utf8"));
@@ -51,7 +53,8 @@ test("D-174 authorises nothing: no call entry, no live permission, no budget or 
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(file("js/avatar-layers.js").toString("utf8")), "R3 stays OFF at runtime");
   assert.match(S.budget, /keeps 1 planned call/); assert.match(S.budget, /adds no call and changes no budget figure or counter/); assert.match(S.budget, /no planned capacity for a retake/);
   for (const x of ["an image request or upload", "a call-id or claim", "a send adapter", "a frozen prompt", "a source anchor", "a runtime change or the wiring of ramp B", "a token change"]) assert.ok(S.notApproved.includes(x), x);
-  assert.ok(!readdirSync(join(REPO, "tools", "avatar")).some((f) => /send.*hair|hair.*send/i.test(f)), "no hair send adapter");
+  // D-174 added no adapter; the only hair send adapter is the one D-175 later added for its single authorised call.
+  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)), ["openai-send-r3-hair-d175.mjs"], "no hair send adapter except D-175's");
 });
 
 test("the approved targets are a byte-identical copy of the v2 review anchors: no coordinate changed, roles and uncertainty documented", () => {
