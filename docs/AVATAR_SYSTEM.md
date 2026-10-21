@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; no call (D-174, as of 2026-10-21).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the one hair call (D-175) sent once and technically rejected at H2; no live permission (D-174 … D-176, as of 2026-10-21).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -192,6 +192,19 @@ art layer behind them can be upgraded without a rewrite.
   - **Budget and permissions.** It uses the one planned hair call with no reserve. The budget stays 23–24 and actual
     use is unchanged. UNSPENT, not yet attempted, and not a run instruction: the send needs a separate execution message
     after merge. Afro, short and headwear are not authorised. See `project-state.md` **D-175**.
+  **D-176 (2026-10-21)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_06b406050c254e07a172b9c0797ea68e`, one 1024×1024 sheet `24bf9f70…`.
+  - **Checks.** H1 passed; **H2 rejected**: 3 px with alpha ≥ 16 in the 16 px safety margin at x = 1008, where a lock
+    tip reaches into the margin. The image edge does not cut the hair.
+    - H2 is the first binding rejection; it does not prove that every other requirement is met.
+    - H3–H5 were not evaluated as binding checks, and HP1–HP8 were not run. Separate diagnostic readings stay
+      diagnostics.
+  - **Visual status.** The hairstyle is recognisable and the greyscale tones are promising. The fringe and temple locks
+    deviate, and the ear transitions and placement are not validated, so final acceptance is not possible on this basis.
+  - **Result and accounting.** No candidate and no approved source anchors. `callsActuallySentSoFar.hair` = **1**
+    (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair capacity (1) is used up and the budget stays
+    23–24.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-176**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
