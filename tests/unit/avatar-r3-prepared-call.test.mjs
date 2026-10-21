@@ -69,8 +69,8 @@ test("it is honest that one call can still fail", () => {
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
 test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167, D-170 and D-172 records, and D-175's one hair permission", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 12);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 12);
+  assert.equal(CONTRACT.authorisedCalls.count, 13);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 13);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -140,7 +140,11 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.deepEqual([d175.mandateState, d175.neverReuse, d175.notAnActivePermission, d175.closure.closedBy], ["SPENT", true, true, "D-176"]);
   assert.match(d175.prohibitions.noRetry, /Exactly one fetch/);
   assert.match(d175.otherHairstyles, /NOT authorised/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
+  // The thirteenth is D-177's: ONE further hair sheet with an explicit margin (prompt v2), authorised and not yet attempted.
+  const d177 = CONTRACT.authorisedCalls.calls[12];
+  assert.deepEqual([d177.callId, d177.decision, d177.mandateState, d177.outcome], ["D-177-r3-hair-northstar-v2", "D-177", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.match(d177.prohibitions.noRetry, /Exactly one fetch/);
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-177-r3-hair-northstar-v2"], "D-177's is the only live permission");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
@@ -256,8 +260,10 @@ test("D-145: the implemented send adapter belongs to D-143's call, not to the pr
   // D-160 later recorded a second implementation, for its own face-neutral call; it belongs to neither D-142 nor D-143.
   // D-162 later recorded a third implementation, for its own face-neutral call, and D-165 a fourth, for the parts sheet.
   // D-167 later recorded a fifth, for the partial nose sheet, D-170 a sixth, for the eyes-fixed sheet (call A), and D-172 a
-  // seventh, for the further eyes-fixed sheet (call A2). D-175 later recorded an eighth, for its one hair sheet.
-  assert.equal(impl.length, 8);
+  // seventh, for the further eyes-fixed sheet (call A2). D-175 later recorded an eighth, for its one hair sheet, and D-177
+  // a ninth, for the further hair sheet with an explicit margin.
+  assert.equal(impl.length, 9);
+  assert.deepEqual([impl[8].decision, impl[8].callId], ["D-177", "D-177-r3-hair-northstar-v2"]);
   assert.deepEqual([impl[7].decision, impl[7].callId], ["D-175", "D-175-r3-hair-northstar-v1"]);
   assert.deepEqual([impl[6].decision, impl[6].callId], ["D-172", "D-172-r3-eyes-fixed-v2"]);
   assert.deepEqual([impl[5].decision, impl[5].callId], ["D-170", "D-170-r3-eyes-fixed-v1"]);
