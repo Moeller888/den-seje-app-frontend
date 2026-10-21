@@ -114,7 +114,7 @@
       { "slot": "trousers", "newInR3": true,  "content": "blue default trousers" },
       { "slot": "shoes",    "newInR3": true,  "content": "grey default sneakers" },
       { "slot": "torso",    "newInR3": false, "note": "cosmetic garment; must occlude the tee layer" },
-      { "slot": "hair",     "newInR3": false, "blend": "multiply x hair token" }
+      { "slot": "hair",     "newInR3": false, "blend": "tonal ramp B over the hair token (D-174): straight-alpha source-over, no multiply — PLANNED, not wired to any runtime" }
     ],
     "newSlotsRationale": "R2 bakes the t-shirt, trousers and sneakers into its base layer. R3 makes them separate layers, so the default outfit becomes removable and the occlusion contract changes from 'garment occludes a baked tee' to 'garment occludes a separate tee layer'.",
     "excludedFromReproduction": {
@@ -222,7 +222,7 @@
         "slot": "hair",
         "z": 40,
         "kind": "mandatory raster",
-        "note": "multiply x hair token"
+        "note": "tonal ramp B over the hair token (D-174; planned, not wired to any runtime)"
       },
       {
         "slot": "headwear",
@@ -551,7 +551,7 @@
     { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated-eyes-sheet+anchored-composition", "calls": 2 },
     { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
-    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated", "calls": 1 },
+    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated-hair-sheet+anchored-composition", "calls": 1 },
     { "id": 10, "name": "r3-face-curious",        "slot": "face",     "method": "generated", "calls": 1 },
     { "id": 11, "name": "r3-face-determined",     "slot": "face",     "method": "generated", "calls": 1 },
     { "id": 12, "name": "r3-face-focused",        "slot": "face",     "method": "generated", "calls": 1 },
@@ -580,7 +580,8 @@
     { "op": "colour tokens for hair and iris", "how": "one greyscale asset x a colour token", "precedent": "R2 already contracts hair and iris as multiply x token" },
     { "op": "blush construction", "how": "ONLY if a per-channel multiply construction over a defined region is documented and proven in advance; otherwise one call", "precedent": "R2 blush is documented as tone-agnostic per-channel factors" },
     { "op": "face-neutral parts placement (D-164)", "how": "fixed 2x2 cell extraction from a 1024x1024 parts sheet; per part ONE positive uniform scale s and a translation t, least-squares from its two APPROVED source points to its two APPROVED target points; exact area filter on premultiplied RGBA; Math.round half-up; source-over into one 1024x1536 face layer. No rotation, reflection, per-axis scale, shear or warp. See faceNeutralPartsMethod.", "precedent": "R2 hair tight crop (D-119): a deterministic downscale and a paste at a fixed offset" },
-    { "op": "eyes placement and iris registration (D-169)", "how": "eyes-fixed: ONE positive uniform scale s and a translation t shared by BOTH eyes, least squares from four APPROVED source anchors (ringCentre and outerCorner per eye) to four APPROVED target points; iris: the two alpha-weighted iris centroids mapped, by one shared positive uniform scale and translation, onto the PLACED eyes-fixed ring centres; exact area filter on premultiplied RGBA (the D-164 code); Math.round half-up; one 1024x1536 layer per sublayer. No rotation, reflection, per-axis scale, shear, warp, crop, de-matting or repair. See eyesPartsMethod.", "precedent": "D-164 face-neutral parts placement: the same filter, rounding and least-squares uniform fit, approved separately for the eyes" }
+    { "op": "eyes placement and iris registration (D-169)", "how": "eyes-fixed: ONE positive uniform scale s and a translation t shared by BOTH eyes, least squares from four APPROVED source anchors (ringCentre and outerCorner per eye) to four APPROVED target points; iris: the two alpha-weighted iris centroids mapped, by one shared positive uniform scale and translation, onto the PLACED eyes-fixed ring centres; exact area filter on premultiplied RGBA (the D-164 code); Math.round half-up; one 1024x1536 layer per sublayer. No rotation, reflection, per-axis scale, shear, warp, crop, de-matting or repair. See eyesPartsMethod.", "precedent": "D-164 face-neutral parts placement: the same filter, rounding and least-squares uniform fit, approved separately for the eyes" },
+    { "op": "hair placement and tonal ramp B (D-174)", "how": "placement: ONE positive uniform scale s and a translation t, least squares from the four APPROVED source anchors on the one hair sheet (crownTuftTip, centralLockTip, leftTempleLockTip, rightTempleLockTip) to the four APPROVED target points of targets-hair-v1.json; exact area filter on premultiplied RGBA (the D-164 code); Math.round half-up; one achromatic 1024x1536 hair luminance layer. No rotation, reflection, per-axis scale, shear, warp, crop, de-matting or repair. Colour: tonal ramp B over the token's own base and shadow — integer arithmetic on 8-bit sRGB code values, round half up, alpha copied unchanged; for R3 hair it replaces the multiply x token rule of 'colour tokens for hair and iris'. OFFLINE ONLY: no renderer uses it. See hairMethod.", "precedent": "D-169 eyes placement: the same filter, rounding and least-squares uniform fit, approved separately for the hair; the ramp is new and pinned by its own unit tests" }
   ],
 
   "productionOrder": [
@@ -4726,5 +4727,135 @@
     "layerSplitUnchanged": "D-169's layer split and transparency: whites, outline, lashes, ring, highlight and static fold in eyes-fixed; the inside of the ring transparent except the highlight; no skin, iris colour or pupil.",
     "capacity": "assets[5] planned calls 1 -> 2, derived budget 22-23 -> 23-24. No capacity or authorisation for the iris call B. Actually sent unchanged (eyesFixed 1 per D-171, faceNeutral 4, underlay 5).",
     "records": "The D-170 raw sheet (9d26bce1…), its check report and the local review sample stay unchanged as records; they are never a pixel source for call A2."
+  },
+
+  "hairMethod": {
+    "decision": "D-174",
+    "adoptedOn": "2026-10-21",
+    "status": "ADOPTED — HAIR METHOD, PLACEMENT CHECKS AND COLOUR METHOD B ARE BINDING FOR assets[8] — PLACEMENT TARGETS APPROVED — SOURCE ANCHORS UNKNOWN — COLOUR METHOD B NOT WIRED TO ANY RUNTIME — NO IMAGE REQUEST AUTHORISED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "scope": "Applies only to assets[8] r3-hair-northstar. r3-hair-afro and r3-hair-short (assets[13], assets[14]), headwear and every other asset are not covered and are decided separately. D-137's hairstyle mapping is unchanged.",
+    "ownerDecisions": {
+      "1 method": "ONE transparent, achromatic hair sheet, placed by anchors with ONE positive uniform scale and a translation. No rotation, reflection or warp.",
+      "2 placementPrinciple": "Functional placement checks plus a BROAD diagnostic envelope. The coarse v2 sketch polygon never becomes a tight, binding envelope.",
+      "3 targets": "The ten anchors of hair-draft-anchors-v2.json are APPROVED as placement targets with their documented uncertainty and roles. The approval covers the target placement only — not the sketch's finished hair form and not future source anchors on a generated sheet. The exact file version and hash are pinned; no coordinate was changed.",
+      "4 earTop": "The hair may cover the top of the ears inside the bounded v2 area, fixed geometrically (HP8). The observed 545 px is NOT an acceptance limit.",
+      "5 napeLock": "The lock under the image-right ear is part of the planned hair design. Its final connection is judged against an underlay with a neck before any production approval. The free-standing sketch is not an approved asset.",
+      "6 colour": "Method B, the documented tonal ramp, is the planned R3 hair colouring, with its four stops and formula unchanged. The greyish highlight on black hair is accepted as the starting point for the first asset review, not as a final visual approval.",
+      "7 tokens": "The standard brown #5A3D28 and all other existing hair tokens are kept unchanged.",
+      "8 productionOrder": "Hair may be produced against the adopted head geometry before the final underlay approval (see productionOrderException). Final acceptance still needs a review against the finished underlay.",
+      "9 capacity": "assets[8] keeps ONE planned call, no reserve. D-174 authorises no image call."
+    },
+    "method": "ONE raw 1024x1024 hair sheet (assets[8]): only the hair, transparent background, achromatic. Its four fit anchors are read on THAT sheet and owner-approved as an annotation; a pinned deterministic tool places the sheet with ONE positive uniform scale and translation (least squares onto the four APPROVED targets), resamples it with the D-164 area filter into one 1024x1536 achromatic hair luminance layer, checks it functionally against the adopted head geometry, the face layer's complete brows and the drawn eyes, and colours it with tonal ramp B over the hair token.",
+    "relationToEarlierDecisions": "D-135's zModel (hair z 40, above every face and clothing layer) and paint order stay in force. D-137's hairstyle mapping and its rule that the hair colour token itself is untouched stay in force. D-159/D-164's complete brows stay in force: the face layer is never cut or changed, the hair alone covers the brow ends. The adopted R3 head geometry (G1V3 + E2 + K4, r3-head-geometry-spec-v1.json) is the scalp and ear reference. D-174 changes only the hair blend in layerContract and zModel from multiply x token to tonal ramp B, assets[8].method, and adds one deterministicOperations entry.",
+    "rawSheet": {
+      "sheetType": "r3-hair-sheet-v1",
+      "asset": 9,
+      "size": [1024, 1024],
+      "format": "PNG, 8-bit RGBA, transparent background, achromatic",
+      "content": "only Northstar's hair incl. the lock under the image-right ear, front view, not mirrored, large and centred with a transparent margin; near-black outline, dark-grey shadow, mid-grey main tone, near-white light streaks (ramp B's tone convention: ink ~0, shadow ~80, base ~150, light ~255); complete lock tips; clean lower edge at the ears; no face, skin, scalp, ears, head, body, text or marks",
+      "prompt": {
+        "file": "tools/avatar/fixtures/r3-hair/prompt-hair-sheet-v1.txt",
+        "sha256": "43084da7dae90e154126d7c507f2eacae1dc205648dbe8d3614adc02f0495728",
+        "bytes": 1029,
+        "status": "DRAFT — tracked and pinned, not a request. A later call decision freezes it unchanged or pins a new version.",
+        "plannedInput": "Northstar Master v2 only (3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50)"
+      }
+    },
+    "targets": {
+      "file": "tools/avatar/fixtures/r3-hair/targets-hair-v1.json",
+      "sha256": "c50356b36e4c52246269523bb9247ad21544e0cc57efd54c4b9c60fde12b24c6",
+      "version": "r3-hair-targets-v1",
+      "status": "APPROVED",
+      "approvedBy": "owner",
+      "approvedOn": "2026-10-21",
+      "approvedByDecision": "D-174",
+      "sourceFile": "tools/avatar/fixtures/r3-hair/hair-draft-anchors-v2.json",
+      "sourceSha256": "1cdb33c24cac7ff97373d2b90d51088c03b1348f0b3e3ef5cdc19e91da843f95",
+      "sourceRule": "A byte-identical copy of the review file hair-draft-anchors-v2.json; every target xy equals its namedPoints exactly.",
+      "roles": { "fit": ["crownTuftTip (A1)", "centralLockTip (A5)", "leftTempleLockTip (A7)", "rightTempleLockTip (A8)"], "check": ["leftOuterSpikeTip (A2)", "rightOuterSpikeTip (A3)", "centreHairline (A4)", "rightOfCentreLockTip (A6)", "leftEarTopJunction (A9)", "rightEarTopJunction (A10)"] },
+      "uncertaintyPx": 3,
+      "approvalScope": "Placement targets only. Not the sketch's hair form, not an envelope, not a source anchor."
+    },
+    "sourceAnchors": {
+      "status": "UNKNOWN — no hair sheet exists. They are read on the one generated sheet, bound to its SHA-256, and used only when owner-APPROVED.",
+      "schemaFile": "tools/avatar/fixtures/r3-hair/annotation-hair-v1.schema.json",
+      "schemaSha256": "36f861c43489c8b37693ae8add3c0dba5aa7252400eaad9a0798686d9890eca5",
+      "rule": "The four fit points are required; the six check points are optional and reported only. An approved TARGET is never a source anchor, and a source anchor is never copied from a target."
+    },
+    "authorOperation": {
+      "allowed": ["ONE positive uniform scale and one translation, least squares over the four fit anchors", "the pinned area filter (D-164 code) and Math.round half-up", "tonal ramp B for review renders and, after a separate decision, the asset"],
+      "forbidden": ["rotation, reflection, per-axis scale, shear or warp", "cropping, moving, de-matting, recolouring or repairing the raw sheet or the placed layer to pass a check", "cutting, shortening or moving a brow", "using the sketch polygon as the hair shape", "R2 hair or H1 as a pixel source"]
+    },
+    "colour": {
+      "method": "B — tonal ramp (D-174)",
+      "luma": "L = roundHalfUp((2126 R + 7152 G + 722 B) / 10000) on the straight 8-bit code values",
+      "stops": "L 0 -> ink, L 80 -> token.shadow, L 150 -> token.base, L 255 -> light; ink_c = roundHalfUp(shadow_c / 2); light_c = base_c + roundHalfUp((255 - base_c) x 45 x base_c / (100 x max(base_r, base_g, base_b))), a base with max 0 keeps light = base",
+      "interpolation": "piecewise linear; for L0 < L <= L1: out_c = c0 + roundHalfUp((c1 - c0) x (L - L0) / (L1 - L0)); L on a stop gives that stop exactly; values clamped to 0..255",
+      "rounding": "roundHalfUp(n / d) = floor((2n + d) / (2d)) with integer n and d > 0 — integer arithmetic only, platform-independent",
+      "colourSpace": "8-bit sRGB code values used directly: no linearisation, no colour management, no ICC or gAMA handling",
+      "alpha": "straight alpha copied unchanged; the colour comes from the pixel's own unpremultiplied luma; alpha 0 gives (0, 0, 0, 0); the result is composited source-over as a normal straight-alpha layer — no multiply, no CSS mask",
+      "tokens": "js/avatar-layers.js HAIR_COLOR_TOKENS, unchanged (owner decision 7); default brown #5A3D28",
+      "blackHighlight": "black's light stop #8A7C71 is greyish; accepted as the starting point for the first asset review, not as a final visual approval",
+      "implementation": "tools/avatar/r3-hair-tool.mjs rampStopsB / rampColourB / applyTonalRampB",
+      "runtime": "NOT WIRED. No renderer, compositor, resolver or manifest uses ramp B; the live R2 hair and C2 hair keep their existing rendering (R2: multiply x token). Wiring R3 hair colouring into a runtime needs its own decision."
+    },
+    "placementPrinciple": {
+      "rule": "Functional checks decide (HP4..HP8); the broad envelope is reported only.",
+      "notAnEnvelope": "The v2 sketch polygon (targets geometry.sketchSilhouette) is a coarse REVIEW-ONLY drawing. It defines exactly two things: the ear-top area of HP8 and the broad diagnostic envelope. It is never a tight, binding envelope for the painted asset."
+    },
+    "earTop": {
+      "rule": "Hair alpha >= 8 on the V3 ear columns is allowed only inside the v2 ear-top area.",
+      "earColumns": "head geometry alpha >= 128, rows 294..380 (the V3 ears of G1V3), x <= 362 or x >= 661 (outside the row-293 cranium span 363..660)",
+      "area": "an ear-column pixel whose centre lies inside geometry.sketchSilhouette or within 3 px of it",
+      "notALimit": "The 545 px measured in the v2 review is a review figure, never an acceptance limit."
+    },
+    "napeLock": "Planned part of the hair design and named in the prompt. Its connection is judged against an underlay with a neck before production approval; in the checks it is diagnostic only (solid hair within 8 px of geometry.napeLock is reported).",
+    "productionOrderException": {
+      "scope": "assets[8] r3-hair-northstar",
+      "permits": "the hair may be prepared and produced against the adopted R3 head geometry (G1V3 + E2 + K4) before the technical underlay asset (production step 2) is approved",
+      "basis": "productionOrderConstraints gives the reason for underlay before hair-northstar as the approved underlay GEOMETRY; that geometry is adopted (r3-head-geometry-spec-v1.json), the underlay asset is not",
+      "conditions": ["final acceptance of the hair needs a review against the finished, approved underlay", "a changed underlay geometry requires a new assessment of HP4, HP5 and HP8", "the nape lock's connection is judged against an underlay with a neck", "the exception authorises no image call"],
+      "productionOrderUnchanged": "productionOrder and productionOrderConstraints are not edited; this is one named exception, as D-159's for face-neutral."
+    },
+    "thresholds": { "visibleAlphaMin": 16, "lowAlphaReportedMax": 15, "borderPx": 16, "chromaMax": 12, "dominantComponentMinFraction": 0.95, "visibleAreaFractionRange": [0.15, 0.8], "residualFitMaxPx": 3.0, "scaleRange": [0.35, 0.85], "hairTouchAlphaMin": 8, "hairSolidAlphaMin": 250, "holeAlphaBelow": 128, "crownMaxY": 199, "browEndCoveredMinFraction": 0.5, "earAllowanceGrowPx": 3, "envelopeGrowPx": 24, "napeGrowPx": 8 },
+    "zones": {
+      "convention": "master canvas 1024x1536, integer pixel indices, inclusive ranges; polygon and polyline distances from the pixel centre (x + 0.5, y + 0.5)",
+      "faceSeed": [511, 360],
+      "ear": { "rows": [294, 380], "leftMaxX": 362, "rightMinX": 661 },
+      "browLeft": { "rows": [240, 280], "outerEnd": [397, 407], "middle": [414, 462], "innerEnd": [469, 483] },
+      "browRight": { "rows": [238, 276], "cols": [528, 626] },
+      "eyeAndFoldZones": "D-159's eyeZones and foldZones (faceNeutralPreparation.areaModel.excludedZones), for the diagnostic zone overlap only"
+    },
+    "thresholdRule": "Every threshold and zone is fixed here BEFORE any hair call. Changing one is a new owner decision made before a call, never after seeing an output.",
+    "measurementBasis": {
+      "headGeometry": { "file": "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-g1v3-e2-v1.png", "sha256": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43", "use": "head = alpha >= 128 (D-071); its solid silhouette equals U1's pixel for pixel" },
+      "faceLayer": "the face layer under review, read only (its brows: alpha >= 128 in the brow zones)",
+      "eyes": "the placed eyes-fixed layer and the iris layer under review, read only",
+      "alphaRule": "hair touches at alpha >= 8, hides at alpha >= 250, leaves a hole at alpha < 128; 1..7 reported"
+    },
+    "checks": {
+      "rawSheet": {
+        "binding": ["H1 PNG decodes, 1024x1024, 8-bit RGBA, not interlaced", "H2 no pixel with alpha >= 16 in the 16 px border", "H3 achromatic: max(R,G,B) - min(R,G,B) <= 12 at alpha >= 16", "H4 one dominant 8-connected component holds >= 0.95 of the visible pixels", "H5 visible area fraction 0.15..0.8"],
+        "reported": ["H-LOWALPHA alpha 1..15", "H-TONES visible pixels per ramp-B tone band", "H-VISUAL hairstyle, nape lock, lock tips, lower edge — visual review"]
+      },
+      "placement": {
+        "binding": ["HP1 max residual over the four fit anchors <= 3.0 px", "HP2 scale s in 0.35..0.85", "HP4 crown: every head pixel in rows <= 199 under hair alpha >= 250", "HP5 no scalp hole: no head pixel under hair alpha < 128 outside the component 4-connected to the face pixel (511, 360)", "HP6 complete brows: >= 0.5 of the image-left brow's outer end (x 397..407) and inner end (x 469..483) under hair alpha >= 250, 0 px of hair alpha >= 8 on its middle (x 414..462) and on the image-right brow", "HP7 actual eye coverage: 0 px of hair alpha >= 8 over drawn eyes-fixed content (whites, lashes and outline, fold strokes) or over the iris", "HP8 ears: hair alpha >= 8 on the V3 ear columns only inside the v2 ear-top area"],
+        "reported": ["HP3 check-point residuals", "D-159 eye and fold zone overlap (zone overlap alone decides nothing)", "broad envelope: hair alpha >= 8 farther than 24 px from the sketch silhouette and the nape lock", "nape lock: solid hair within 8 px of it", "alpha 1..7"]
+      },
+      "visualReview": "On U1 with the face and eyes under review, at 1:1, x4, 360x540 and 180x270, next to Northstar, in all eight hair tokens with ramp B; and again against the finished underlay before any acceptance."
+    },
+    "rawOutputRule": "Raw sheets are never cropped, moved, scaled, warped, de-matted or repaired; the tool only reads them.",
+    "tools": {
+      "library": "tools/avatar/r3-hair-tool.mjs",
+      "cli": "tools/avatar/r3-hair-compose.mjs",
+      "tests": ["tests/unit/avatar-r3-hair-tool.test.mjs", "tests/unit/avatar-r3-hair-d174.test.mjs"],
+      "noToolSha256": "No tool SHA-256 is pinned here (as D-164 and D-169); the tests pin the behaviour."
+    },
+    "budget": "assets[8] keeps 1 planned call inside the derived budget 23-24. D-174 adds no call and changes no budget figure or counter. There is no planned capacity for a retake.",
+    "productionSequence": ["1 a separate owner decision authorises ONE hair call (its own call-id, claim identity, frozen prompt and adapter)", "2 H1..H5; owner review of the sheet; owner-APPROVED annotation of the source anchors", "3 placement, HP1..HP8, diagnostics; owner review with ramp B in all eight tokens", "4 review against the finished underlay (with a neck for the nape lock) before any acceptance", "5 wiring ramp B into a runtime is its own later decision"],
+    "notApproved": ["an image request or upload", "a call-id or claim", "a send adapter", "a frozen prompt", "the sketch's hair form or any envelope as a hair shape", "a source anchor", "a candidate or promotion", "a runtime change or the wiring of ramp B", "a token change", "afro, short or headwear"]
   }
 }

@@ -121,6 +121,12 @@
 // budget text true to the figures and re-worded the prose. preD173Contract() reverses exactly that closure, proven
 // canonically identical to the contract at the D-172 merge (PRE_D173_CONTRACT_CANONICAL_SHA256); preD172Contract()
 // applies it first.
+//
+// D-174 then ADDED the hair method (top-level hairMethod) and one deterministicOperations entry, set assets[8].method, and
+// changed the hair blend in layerContract and the hair note in zModel from multiply x token to tonal ramp B. No
+// authorisedCalls entry, budget figure or counter changed. preD174Contract() removes exactly those changes, proven
+// canonically identical to the contract at the D-173 commit (PR #357) (PRE_D174_CONTRACT_CANONICAL_SHA256);
+// preD173Contract() applies it first.
 
 export const PRE_CLOSURE_COMMIT = "3f62932325ce4f00c9b9bfaa64e4b321bf3f4889";
 /** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_CLOSURE_COMMIT. */
@@ -408,9 +414,30 @@ export const PRE_D173 = Object.freeze({
   "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds ELEVEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (8) D-165-r3-face-parts-sheet-v1 — NO LONGER a permission. D-165 superseded the general rule NARROWLY for exactly one face-neutral parts-sheet attempt. That attempt was sent once and D-166 records its outcome: HTTP 200, one sheet, RAW-1..5 passed, the nose rejected by the owner, the brows and mouth kept for further review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (9) D-167-r3-face-parts-nose-v1 — NO LONGER a permission. D-167 superseded the general rule NARROWLY for exactly one face-neutral partial nose sheet. That attempt was sent once and D-168 records its outcome: HTTP 200, one partial sheet, rejected by the binding RAW-4′ check, no nose approved, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (10) D-170-r3-eyes-fixed-v1 — NO LONGER a permission. D-170 superseded the general rule NARROWLY for exactly one eyes-fixed sheet (call A). That attempt was sent once and D-171 records its outcome: HTTP 200, one sheet, E1..E5 passed, the owner's visual review pending, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. The iris call B is not authorised. (11) D-172-r3-eyes-fixed-v2 — THE ONLY active send permission. D-172 supersedes the general rule NARROWLY for exactly one further eyes-fixed sheet (call A2), with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after D-171 and D-172 are merged. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id and a NEW claim identity. The iris call B is not authorised. Apart from D-172's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's, D-162's, D-165's, D-167's, D-170's or D-172's call id or claim identity, and no other call in the R3 plan."
 });
 
-/** A deep copy of the live contract with D-173's closure of D-172 reversed. Pure; never touches the input. */
-export function preD173Contract(live) {
+export const D174_DECISION = "D-174";
+/** The D-173 commit D-174 builds on (PR #357; D-174 depends on it). */
+export const PRE_D174_COMMIT = "202915fda1562cff5d4d2749f9ca5598fd233ea2";
+/** sha256(JSON.stringify(contract)) of tools/avatar/fixtures/r3/r3-shadow-contract-v1.json at PRE_D174_COMMIT. */
+export const PRE_D174_CONTRACT_CANONICAL_SHA256 = "69b5d78650bea068a16399ae7a139906c1c12ff5cc73d188a7ccf7a027c3f50e";
+export const D174_ADDED_TOP_LEVEL_KEYS = Object.freeze(["hairMethod"]);
+export const D174_ADDED_OPERATION = "hair placement and tonal ramp B (D-174)";
+/** The values D-174 replaced, as they stood at PRE_D174_COMMIT. */
+export const PRE_D174 = Object.freeze({ "asset8Method": "generated", "layerHairBlend": "multiply x hair token", "zModelHairNote": "multiply x hair token" });
+
+/** A deep copy of the live contract with D-174's changes removed. Pure; never touches the input. */
+export function preD174Contract(live) {
   const c = JSON.parse(JSON.stringify(live));
+  for (const k of D174_ADDED_TOP_LEVEL_KEYS) delete c[k];
+  c.deterministicOperations = c.deterministicOperations.filter((o) => o.op !== D174_ADDED_OPERATION);
+  c.assets[8].method = PRE_D174.asset8Method;
+  c.layerContract.slots.find((s) => s.slot === "hair").blend = PRE_D174.layerHairBlend;
+  c.zModel.slots.find((s) => s.slot === "hair").note = PRE_D174.zModelHairNote;
+  return c;
+}
+
+/** A deep copy of the live contract with D-174's changes removed and D-173's closure of D-172 reversed. Pure. */
+export function preD173Contract(live) {
+  const c = preD174Contract(live);
   const e172 = c.authorisedCalls.calls.find((x) => x.decision === "D-172");
   if (e172) {
     e172.status = PRE_D173.d172.status;

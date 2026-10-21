@@ -161,6 +161,25 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; no call (D-174, as of 2026-10-21).**
+  **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
+  - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
+    four owner-approved source anchors on that sheet onto four of the ten approved targets
+    (`tools/avatar/fixtures/r3-hair/targets-hair-v1.json`, a byte-identical copy of the v2 review anchors, roles fit
+    A1/A5/A7/A8 and check A2/A3/A4/A6/A9/A10, ±3 px). It is checked with functional checks: HP4 crown, HP5 no scalp hole,
+    HP6 complete brows with only the image-left brow's ends covered, HP7 no actual coverage of drawn eye content, and
+    HP8 ear tops only inside the v2 area. D-159 zone overlap and a broad (+24 px) envelope are reported only.
+  - **Source anchors.** These are unknown until a sheet exists.
+  - **Colour method B.** A tonal ramp with integer, 8-bit sRGB code values: ink, token.shadow, token.base and light at
+    L 0/80/150/255; alpha unchanged; source-over. It is the planned R3 hair colouring (`layerContract`/`zModel` hair
+    blend changed from multiply × token). It is **not wired to any runtime** — R2/C2 hair is unchanged — and the hair
+    tokens are unchanged.
+  - **Other decisions.** The lock under the image-right ear is part of the design; its connection is judged against an
+    underlay with a neck. Hair may be made against D-148's geometry before the underlay is approved; final acceptance
+    still needs the finished underlay.
+  - **Tools and capacity.** Tool `tools/avatar/r3-hair-tool.mjs` + CLI `r3-hair-compose.mjs`, with a DRAFT prompt and an
+    annotation schema. One planned call, no reserve, budget 23–24 unchanged. No call-id, claim, adapter or permission;
+    R3 stays default OFF. Depends on D-173 (PR #357). See `project-state.md` **D-174**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

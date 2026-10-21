@@ -1,0 +1,441 @@
+{
+  "schema": "r3-hair-targets-v1",
+  "version": "r3-hair-targets-v1",
+  "status": "APPROVED",
+  "approval": {
+    "decision": "D-174",
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-21",
+    "scope": "The owner approves the ten anchors of hair-draft-anchors-v2.json as PLACEMENT TARGETS with their documented uncertainty (3 px) and roles (fit: A1, A5, A7, A8; check: the other six). The approval covers the target placement only — NOT the sketch's finished hair form, and NOT any future source anchor on a generated sheet (those are unknown until a sheet exists and are annotated and approved per sheet).",
+    "statusNote": "Only the owner may set APPROVED. Any coordinate change is a new targets version with a new pin and a new owner decision; nothing here was moved, rounded or re-read."
+  },
+  "canvas": [
+    1024,
+    1536
+  ],
+  "coordinates": "master canvas, continuous: pixel i covers [i, i+1); x right, y down",
+  "source": {
+    "file": "tools/avatar/fixtures/r3-hair/hair-draft-anchors-v2.json",
+    "sha256": "1cdb33c24cac7ff97373d2b90d51088c03b1348f0b3e3ef5cdc19e91da843f95",
+    "bytes": 4962,
+    "copiedFrom": "tools/avatar/build/r3-hair-placement-review-v2/hair-draft-anchors-v2.json (gitignored review; byte-identical)",
+    "rule": "points[k].xy === source.namedPoints[k] exactly; geometry.sketchSilhouette === outerVolume ++ fringeEdge; geometry.napeLock === designProposals.rightNapeLock.polygon"
+  },
+  "reference": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "use": "visual reading only"
+  },
+  "points": {
+    "crownTuftTip": {
+      "id": "A1",
+      "xy": [
+        525,
+        22
+      ],
+      "role": "fit",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "leftOuterSpikeTip": {
+      "id": "A2",
+      "xy": [
+        290,
+        222
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "rightOuterSpikeTip": {
+      "id": "A3",
+      "xy": [
+        732,
+        233
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "centreHairline": {
+      "id": "A4",
+      "xy": [
+        575,
+        200
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "centralLockTip": {
+      "id": "A5",
+      "xy": [
+        478,
+        281
+      ],
+      "role": "fit",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "rightOfCentreLockTip": {
+      "id": "A6",
+      "xy": [
+        512,
+        256
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "leftTempleLockTip": {
+      "id": "A7",
+      "xy": [
+        396,
+        279
+      ],
+      "role": "fit",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "rightTempleLockTip": {
+      "id": "A8",
+      "xy": [
+        625,
+        250
+      ],
+      "role": "fit",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "leftEarTopJunction": {
+      "id": "A9",
+      "xy": [
+        351,
+        312
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "MEASURED_ANNOTATION",
+      "source": "visual reading on gridded x2 / x5 views of Northstar Master v2 (no automatic extraction)"
+    },
+    "rightEarTopJunction": {
+      "id": "A10",
+      "xy": [
+        648,
+        320.5
+      ],
+      "role": "check",
+      "uncertaintyPx": 3,
+      "kind": "DESIGN_POINT",
+      "source": "v2 design point on the adopted head geometry: the midpoint of the moved silhouette ends (655, 320) and (641, 321) that close v1's 6 exposed scalp px — not a Northstar reading"
+    }
+  },
+  "geometry": {
+    "sketchSilhouette": [
+      [
+        350,
+        312
+      ],
+      [
+        334,
+        300
+      ],
+      [
+        315,
+        287
+      ],
+      [
+        296,
+        276
+      ],
+      [
+        312,
+        262
+      ],
+      [
+        300,
+        246
+      ],
+      [
+        290,
+        222
+      ],
+      [
+        306,
+        206
+      ],
+      [
+        300,
+        186
+      ],
+      [
+        316,
+        170
+      ],
+      [
+        296,
+        150
+      ],
+      [
+        305,
+        121
+      ],
+      [
+        330,
+        128
+      ],
+      [
+        345,
+        110
+      ],
+      [
+        352,
+        66
+      ],
+      [
+        380,
+        80
+      ],
+      [
+        410,
+        66
+      ],
+      [
+        440,
+        58
+      ],
+      [
+        480,
+        52
+      ],
+      [
+        505,
+        40
+      ],
+      [
+        525,
+        22
+      ],
+      [
+        540,
+        40
+      ],
+      [
+        552,
+        58
+      ],
+      [
+        562,
+        77
+      ],
+      [
+        585,
+        80
+      ],
+      [
+        612,
+        90
+      ],
+      [
+        630,
+        72
+      ],
+      [
+        642,
+        63
+      ],
+      [
+        645,
+        95
+      ],
+      [
+        655,
+        112
+      ],
+      [
+        685,
+        112
+      ],
+      [
+        712,
+        124
+      ],
+      [
+        695,
+        140
+      ],
+      [
+        712,
+        175
+      ],
+      [
+        722,
+        210
+      ],
+      [
+        732,
+        233
+      ],
+      [
+        712,
+        240
+      ],
+      [
+        715,
+        268
+      ],
+      [
+        708,
+        290
+      ],
+      [
+        690,
+        302
+      ],
+      [
+        668,
+        312
+      ],
+      [
+        655,
+        320
+      ],
+      [
+        641,
+        321
+      ],
+      [
+        633,
+        292
+      ],
+      [
+        628,
+        262
+      ],
+      [
+        625,
+        250
+      ],
+      [
+        612,
+        224
+      ],
+      [
+        595,
+        206
+      ],
+      [
+        575,
+        200
+      ],
+      [
+        552,
+        206
+      ],
+      [
+        528,
+        222
+      ],
+      [
+        512,
+        256
+      ],
+      [
+        500,
+        262
+      ],
+      [
+        488,
+        268
+      ],
+      [
+        478,
+        281
+      ],
+      [
+        466,
+        252
+      ],
+      [
+        465,
+        217
+      ],
+      [
+        445,
+        228
+      ],
+      [
+        425,
+        238
+      ],
+      [
+        413,
+        246
+      ],
+      [
+        410,
+        262
+      ],
+      [
+        405,
+        274
+      ],
+      [
+        396,
+        279
+      ],
+      [
+        384,
+        276
+      ],
+      [
+        372,
+        286
+      ],
+      [
+        360,
+        300
+      ],
+      [
+        352,
+        312
+      ]
+    ],
+    "sketchSilhouetteStatus": "REVIEW-ONLY v2 sketch (DRAFT). It is NOT approved as a hair form and NOT a binding envelope. D-174 uses it for exactly two things: the ear-top area (HP8: the V3 ear columns inside this polygon grown 3 px) and the BROAD diagnostic envelope (grown 24 px, reported only).",
+    "napeLock": [
+      [
+        633,
+        380
+      ],
+      [
+        646,
+        379
+      ],
+      [
+        641,
+        389
+      ],
+      [
+        631,
+        402
+      ],
+      [
+        625,
+        394
+      ],
+      [
+        627,
+        386
+      ]
+    ],
+    "napeLockStatus": "PLANNED part of the hair design (D-174). The free-standing sketch is NOT an approved shape; its final connection is judged against an underlay with a neck before any production approval. Diagnostic only in the checks."
+  }
+}
