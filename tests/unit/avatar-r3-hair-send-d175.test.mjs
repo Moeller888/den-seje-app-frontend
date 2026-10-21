@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
-import { preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, PRE_D175, preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, PRE_D175, preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256, preD176Contract, PRE_D176_CONTRACT_CANONICAL_SHA256, PRE_D176 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -40,7 +40,10 @@ const PREV_TARGETS_REL = "tools/avatar/fixtures/r3-eyes/targets-eyes-v2.json";
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-176 later recorded D-175's one send and closed its entry in place. LIVE is the contract exactly as D-175 committed it
+// (D-176's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
+const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+const LIVE = preD176Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD175Contract(LIVE);
 const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-175** |")).join("\n");
@@ -278,10 +281,10 @@ const registerPath = (sb) => join(sb.repo, ...REGISTER_REL.split("/"));
 const editContract = (sb, fn) => { const c = JSON.parse(readFileSync(contractPath(sb), "utf8")); fn(c); writeFileSync(contractPath(sb), JSON.stringify(c, null, 2) + "\n"); };
 const editEntry = (fn) => (sb) => editContract(sb, (c) => { const i = c.authorisedCalls.calls.findIndex((e) => e.callId === CALL); c.authorisedCalls.calls[i] = fn(structuredClone(c.authorisedCalls.calls[i])); });
 const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterImplementations.entries.findIndex((e) => e.decision === "D-175"); const x = fn(structuredClone(c.adapterImplementations.entries[i])); if (x) c.adapterImplementations.entries[i] = x; else c.adapterImplementations.entries.splice(i, 1); });
-const toLive = (sb) => { copyFileSync(repoFile(CONTRACT_REL), contractPath(sb)); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
+const toLive = (sb) => { writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n"); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
 
-/** A fresh sandbox. Default: the state D-175 commits (D-175 active) as origin/main. `pre`: before D-175. */
-function sandbox({ base, layout = "main", top, pre = false } = {}) {
+/** A fresh sandbox. Default: the state D-175 committed (D-175 active) as origin/main. `pre`: before D-175. `closed`: since D-176. */
+function sandbox({ base, layout = "main", top, pre = false, closed = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d175-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -295,6 +298,7 @@ function sandbox({ base, layout = "main", top, pre = false } = {}) {
   for (const k of ["border", "low", "colour", "island", "wrongsize"]) writeFileSync(sb.png + "." + k + ".png", PNGS[k]);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
+  else if (!closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-175 as committed, before D-176 closed it
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -546,4 +550,84 @@ test("two clones share one claim register: a claim made from one clone refuses t
   const r = runAdapter(second, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, LOCALAPPDATA: first.state, XDG_STATE_HOME: first.state, D175_MOCK_CLAIM: first.claim, D175_MOCK_EVENTS: first.events });
   assert.equal(r.status, 1, r.out); assert.match(r.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(second).length, 0, "the second clone sent nothing");
+});
+
+// ── D-176: the one send is recorded and the mandate is closed ───────────────────────────────────────────────────
+const D176_ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-176** |"));
+const E_NOW = LIVE_NOW.authorisedCalls.calls.find((e) => e.callId === CALL);
+const IMPL_NOW = LIVE_NOW.adapterImplementations.entries.find((e) => e.decision === "D-175");
+const RAW_SHA_D175 = "24bf9f70ba4d7fe436962db49eba9f5400a37a646e06a6906c813313d78a174d";
+const REQUEST_ID_D175 = "req_06b406050c254e07a172b9c0797ea68e";
+
+test("D-176 changes exactly the closure: the contract as D-175 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(LIVE)), PRE_D176_CONTRACT_CANONICAL_SHA256, "LIVE_NOW with D-176's closure reversed is the contract at ce54884");
+  assert.equal(sha256(JSON.stringify(preD175Contract(LIVE_NOW))), PRE_D175_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
+  assert.deepEqual(Object.keys(LIVE_NOW), Object.keys(LIVE), "no top-level key is added");
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.slice(0, 11), LIVE.authorisedCalls.calls.slice(0, 11), "the eleven earlier entries are unchanged");
+  assert.deepEqual(LIVE_NOW.adapterImplementations.entries.slice(0, -1), LIVE.adapterImplementations.entries.slice(0, -1));
+  assert.deepEqual([LIVE_NOW.authorisedCalls.count, LIVE_NOW.authorisedCalls.calls.length], [12, 12], "no entry is added");
+  for (const k of ["assets", "hairMethod", "eyesPartsMethod", "deterministicOperations", "layerContract", "zModel", "meta", "architecture", "irisContract"]) assert.deepEqual(LIVE_NOW[k], LIVE[k], k + " is unchanged — no threshold, pin, prompt or capacity changes");
+  assert.deepEqual(LIVE_NOW.imageCallBudget.callsPlannedAndAuthorised, LIVE.imageCallBudget.callsPlannedAndAuthorised, "no new capacity");
+  assert.equal(sha256(JSON.stringify(LIVE.authorisedCalls.calls.find((e) => e.callId === CALL))), E_NOW.closure.snapshotCanonicalSha256BeforeClosure);
+  for (const k of Object.keys(E)) { if (["status", "mandateState", "outcome"].includes(k)) continue; assert.deepEqual(E_NOW[k], E[k], "D-175's authorisation field " + k + " is preserved"); }
+  assert.deepEqual([PRE_D176.d175.mandateState, PRE_D176.d175impl.mandateState], ["UNSPENT", "UNSPENT"]);
+});
+
+test("D-176 closes D-175 in place: SPENT, never reused, not a permission; H1 passed, H2 first binding rejection, H3..H5 not evaluated, HP not run; no candidate", () => {
+  assert.deepEqual([E_NOW.mandateState, E_NOW.neverReuse, E_NOW.notAnActivePermission, E_NOW.closure.closedBy], ["SPENT", true, true, "D-176"]);
+  assert.match(E_NOW.status, /^SPENT — SENT ONCE, HTTP 200, ONE IMAGE RECEIVED, TECHNICAL_REJECT AT H2, NO CANDIDATE, NOTHING PROMOTED$/);
+  assert.match(E_NOW.outcome, /H1 PASSED — H2 REJECTED .*column x 1008.* — H3\.\.H5 NOT EVALUATED .* — HP1\.\.HP8 NOT RUN — NO SOURCE ANNOTATION — NO CANDIDATE/);
+  assert.match(E_NOW.closure.noAfterTheFactTolerance, /never cropped, moved or repaired to pass H2/);
+  const x = E_NOW.execution;
+  assert.deepEqual([x.request.fetches, x.request.retried, x.request.requestId, x.response.httpStatus, x.response.imagesReturned], [1, false, REQUEST_ID_D175, 200, 1]);
+  assert.deepEqual([x.raw.sha256, x.raw.bytes, x.request.promptSha256], [RAW_SHA_D175, 1029136, PROMPT_SHA]);
+  assert.deepEqual(x.request.parameters, { size: "1024x1024", quality: "high", n: 1, output_format: "png", background: "transparent" });
+  assert.deepEqual(x.accounting, { claimState: "consumed", dispatch: "started", result: "response", actuallySent: 1, dispatchUndetermined: 0, serverAnswered: true, automaticRetry: false, logConsistent: true });
+  assert.match(x.sentBy, /ce548845d2b22f191ce7af30a153ee1acf4ddce4/);
+  const t = E_NOW.technicalObservations;
+  assert.match(t.passed, /^H1 /);
+  assert.match(t.rejected, /\(1008, 557\) alpha 18, \(1008, 598\) alpha 35, \(1008, 599\) alpha 70/);
+  assert.match(t.rejected, /the image edge itself does not cut the hair/);
+  assert.match(t.notEvaluated, /H3, H4 and H5 were NOT evaluated as binding checks/);
+  assert.match(t.firstBindingRejection, /FIRST binding technical rejection\. It does not prove that every other technical or visual requirement is met/);
+  assert.match(t.diagnosticsNotBinding, /never as a pass.*are not H3\.\.H5 results and change no verdict/);
+  assert.ok(!/H[345] (passed|PASS)/i.test(JSON.stringify(t)), "no diagnostic is recorded as a passed binding check");
+  assert.match(E_NOW.visualReview.status, /recognisable .* greyscale tones are promising.* fringe and the temple locks deviates.* ear transitions and the placement are not validated.* final acceptance is not possible/);
+  assert.deepEqual([IMPL_NOW.adapter.status, IMPL_NOW.mandateState, IMPL_NOW.neverReuse, IMPL_NOW.closedBy], ["IMPLEMENTED — EXECUTED ONCE — SPENT", "SPENT", true, "D-176"]);
+});
+
+test("D-176's accounting: hair 1, the other figures and the budget unchanged; no entry is a live permission", () => {
+  const b = LIVE_NOW.imageCallBudget, s = b.callsActuallySentSoFar;
+  assert.deepEqual([s.underlay, s.faceNeutral, s.eyesFixed, s.hair], [5, 4, 2, 1]);
+  assert.deepEqual([s.hairRecord.attempts.length, s.hairRecord.dispatchUndetermined, s.hairRecord.serverAnswered], [1, 0, 1]);
+  assert.match(s.hairRecord.attempts[0], /^D-175-r3-hair-northstar-v1 — .*TECHNICAL_REJECT at H2 .*H3\.\.H5 not evaluated, nothing promoted \(recorded by D-176\)$/);
+  const { hair, hairRecord, ...rest } = s; assert.deepEqual(rest, PRE_D176.callsActuallySentSoFar, "underlay, faceNeutral and eyesFixed records are untouched");
+  assert.deepEqual([b.minimum, b.maximum, b.callsPlannedAndAuthorised.derivedBudget, b.callsPlannedAndAuthorised.hair, LIVE_NOW.assets[8].calls], [23, 24, "23-24", 1, 1]);
+  assert.deepEqual(LIVE_NOW.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission remains");
+  assert.match(LIVE_NOW.authorisedCalls.budgetAccounting, /D-175's one hair sheet, sent once \(recorded by D-176\), so actually sent is hair 1 and the planned hair capacity \(1\) is used up\. The derived budget is 23-24\./);
+  const P = LIVE_NOW.prohibitions.noImageRequestAuthorised;
+  assert.match(P, /\(12\) D-175-r3-hair-northstar-v1 — NO LONGER a permission/);
+  assert.match(P, /No entry in this list is an active send permission — .*D-172's or D-175's call id or claim identity, no second hair call, and no other call in the R3 plan\.$/);
+  assert.ok(!/THE ONLY active send permission/.test(P));
+  assert.equal(P.slice(0, P.indexOf(" (12) ")), PRE_D176.noImageRequestAuthorised.slice(0, PRE_D176.noImageRequestAuthorised.indexOf(" (12) ")), "every earlier restriction is kept word for word");
+});
+
+test("THE SPENT D-175 PERMISSION IS REFUSED BEFORE THE CLAIM: in the closed D-176 state the adapter neither dry-runs nor sends", () => {
+  const sb = sandbox({ closed: true });
+  const dry = runAdapter(sb, GOOD_ARGS);
+  assert.equal(dry.status, 1, dry.out); assert.match(dry.out, /REFUSED \[authorisation\]/); assert.match(dry.out, /mandateState: "SPENT", expected "UNSPENT"/);
+  const send = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
+  assertRefusedBeforeClaim(sb, send, "authorisation");
+  assert.match(send.out, /the entry carries neverReuse; it is not an active, unspent permission/);
+  assert.equal(readdirSync(sb.state).length, 0, "the claim register was not even created");
+});
+
+test("the D-176 register row: once, directly after D-175, the outcome and the accounting named, no mojibake; the docs describe it", () => {
+  const lines = REGISTER.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith("| **D-176** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-176** |")), lines.findIndex((l) => l.startsWith("| **D-175** |")) + 1);
+  for (const needle of [CALL, CLAIM_ID, REQUEST_ID_D175, RAW_SHA_D175, "HTTP 200", "x = 1008", "H3–H5", "HP1–HP8", "første bindende", "RECORDED — D-175 SPENT — NO LIVE PERMISSION",
+    "`hair` = 1", "`eyesFixed` = 2", "`faceNeutral` = 4", "`underlay` = 5", "23–24", "R3 forbliver default OFF"]) assert.ok(D176_ROW.includes(needle), "the D-176 row carries " + JSON.stringify(needle));
+  assert.ok(!/[ÃÂ]\S|�/.test(D176_ROW), "no mojibake in the Danish row");
+  assert.match(readFileSync(repoFile("docs/AVATAR_SYSTEM.md"), "utf8"), /\*\*D-176 \(2026-10-21\)\*\* recorded that one hair send/);
 });
