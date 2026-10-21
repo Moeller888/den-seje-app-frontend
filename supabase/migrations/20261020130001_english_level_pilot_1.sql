@@ -8,9 +8,9 @@
 -- ligger i), så de gamle visninger og den nuværende udvælgelse har en værdi.
 -- Metadata følger mønstret fra de eksisterende engelsk-batches (kategorinøglen k), plus metadata.cefr.
 --
--- VIGTIGT: is_active=true. Med det nuværende flow (klassetrinsloft) bliver opgaverne serveret til
--- elever i engelsk, hvis klassetrin >= target_grade, så snart migrationen er anvendt — også før
--- LEVEL_ENGINE slås til. Ejeren afgør ved anvendelsen, om det er ønsket.
+-- ANVENDELSE (ejerbeslutning 2026-10-21): anvendes FØRST, når niveausystemet kører, dvs. når
+-- migration B er anvendt og LEVEL_ENGINE er slået til i produktion. Filen har is_active=true, så
+-- anvendt før det ville opgaverne blive serveret under det gamle klassetrinsloft.
 -- Må KUN anvendes via apply_migration med særskilt ejer-autorisation (D-110).
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level)
