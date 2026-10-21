@@ -124,7 +124,7 @@ art layer behind them can be upgraded without a rewrite.
   too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
   `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
   permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
-- **R3 eyes — method adopted; targets approved; call A sent once and set aside by the owner; one improved eyes-fixed call A2 authorised, not yet run; iris call B not authorised (D-169 … D-172, as of 2026-10-20).**
+- **R3 eyes — method adopted; targets approved; eyes-fixed calls A and A2 each sent once and set aside; no live permission; iris call B not authorised (D-169 … D-173, as of 2026-10-20).**
   D-169 fixed how `assets[5]` (eyes-fixed) and `assets[6]` (iris) will be made: two transparent 1536×1024 sheets with
   shared registration. Sheet A carries both eyes without iris (transparent opening inside the ring, highlight and fold
   kept) and is placed with ONE shared uniform scale + translation from four anchors (ring centres Lc/Rc, outer corners
@@ -155,6 +155,12 @@ art layer behind them can be upgraded without a rewrite.
   explicit 4x geometry) and two new binding shape checks fixed before the call — F1 no white band, F2 eye spacing
   compatible with the scale range — after D-169's unchanged E1–E5. Planned eyes-fixed capacity 1 -> 2, budget 23–24;
   actually sent unchanged. Not a run instruction. See `project-state.md` **D-172**.
+  **D-173 (2026-10-20)** recorded that one A2 send (HTTP 200, request `req_c12adc8346d54f06984a1b5faace2ab8`, one sheet
+  `f061484d…`) and closed the mandate: E1–E5 and F1–F2 passed and the white band is gone, but the ring is a wide opaque
+  BROWN iris area in the fixed layer (forbidden by the layer split; no binding check measures it), and the local review
+  placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
+  (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
+  `project-state.md` **D-173**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
