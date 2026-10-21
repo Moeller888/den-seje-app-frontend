@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the one hair call (D-175) sent once and technically rejected at H2; no live permission (D-174 … D-176, as of 2026-10-21).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; one further hair call with an explicit margin authorised, not yet attempted (D-174 … D-177, as of 2026-10-21).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -205,6 +205,19 @@ art layer behind them can be upgraded without a rewrite.
     (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair capacity (1) is used up and the budget stays
     23–24.
   - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-176**.
+  **D-177 (2026-10-21)** authorised exactly ONE further hair call, `D-177-r3-hair-northstar-v2`:
+  - **Capacity.** One added planned hair call (`assets[8]` 1 → 2, budget 23–24 → 24–25). Actual use is unchanged
+    (hair = 1).
+  - **Request.** D-175's locked request: `1024x1024`, one transparent PNG, Northstar as the only image.
+  - **Prompt v2 (variant B), frozen (`a9304faf…`).** "large" is removed and an explicit transparent margin of at least
+    64 px is required on every side. It also asks for one long central lock, one separate lock at each temple, and side
+    edges ending above the ears except the lock below the left ear.
+  - **Unchanged.** H2's binding border stays 16 px, and no threshold, target or method changes. A margin in the prompt
+    is no guarantee.
+  - **Adapter.** A separate inactive adapter, `tools/avatar/openai-send-r3-hair-d177.mjs`, derived from the closed D-175
+    adapter. Same rules: dry run without credentials, one fetch, no retry, only H1–H5.
+  - **Status.** UNSPENT and not a run instruction: the send needs a separate execution message after merge. See
+    `project-state.md` **D-177**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

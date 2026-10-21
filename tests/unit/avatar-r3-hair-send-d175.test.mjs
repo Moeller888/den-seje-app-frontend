@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
-import { preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, PRE_D175, preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256, preD176Contract, PRE_D176_CONTRACT_CANONICAL_SHA256, PRE_D176 } from "./avatar-r3-d147-closure.mjs";
+import { preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, PRE_D175, preD174Contract, PRE_D174_CONTRACT_CANONICAL_SHA256, preD173Contract, PRE_D173_CONTRACT_CANONICAL_SHA256, preD176Contract, PRE_D176_CONTRACT_CANONICAL_SHA256, PRE_D176, preD177Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -42,7 +42,9 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 // D-176 later recorded D-175's one send and closed its entry in place. LIVE is the contract exactly as D-175 committed it
 // (D-176's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
-const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// D-177 later added the second hair call. LIVE_NOW is the contract exactly as D-176 left it (D-177's additions removed,
+// proven canonical in avatar-r3-hair-send-d177.test.mjs).
+const LIVE_NOW = preD177Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 const LIVE = preD176Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD175Contract(LIVE);
@@ -299,6 +301,7 @@ function sandbox({ base, layout = "main", top, pre = false, closed = false } = {
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
   else if (!closed) writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-175 as committed, before D-176 closed it
+  else writeFileSync(contractPath(sb), JSON.stringify(LIVE_NOW, null, 2) + "\n");             // as D-176 left it, before D-177
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
