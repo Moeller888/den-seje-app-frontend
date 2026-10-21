@@ -180,6 +180,18 @@ art layer behind them can be upgraded without a rewrite.
   - **Tools and capacity.** Tool `tools/avatar/r3-hair-tool.mjs` + CLI `r3-hair-compose.mjs`, with a DRAFT prompt and an
     annotation schema. One planned call, no reserve, budget 23–24 unchanged. No call-id, claim, adapter or permission;
     R3 stays default OFF. Depends on D-173 (PR #357). See `project-state.md` **D-174**.
+  **D-175 (2026-10-21)** authorised exactly ONE hair call, `D-175-r3-hair-northstar-v1`:
+  - **Request.** `images/edits` with the locked model `gpt-image-2.5-sunburst-2026-09-08`, `1024x1024`, one transparent
+    PNG, and Northstar as the only image. D-174's prompt v1 is frozen unchanged (`43084da7…`).
+  - **Adapter.** A separate inactive adapter, `tools/avatar/openai-send-r3-hair-d175.mjs`. Its dry run reads no
+    credentials and makes no network call or claim. A send checks the permission inside the send function, needs a
+    clean HEAD equal to origin/main, takes an exclusive claim across clones, makes one fetch with no retry, keeps the raw
+    response and every image, and runs only H1–H5.
+  - **After the call.** Source anchors are annotated as DRAFT and need owner approval. Placement is done only by
+    `r3-hair-compose.mjs`.
+  - **Budget and permissions.** It uses the one planned hair call with no reserve. The budget stays 23–24 and actual
+    use is unchanged. UNSPENT, not yet attempted, and not a run instruction: the send needs a separate execution message
+    after merge. Afro, short and headwear are not authorised. See `project-state.md` **D-175**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
