@@ -86,6 +86,12 @@ before(async () => {
   db = new PGlite();
   await db.exec(`
     CREATE ROLE anon NOBYPASSRLS; CREATE ROLE authenticated NOBYPASSRLS; CREATE ROLE service_role BYPASSRLS;
+    -- The LIVE default privileges (pg_default_acl, read 2026-10-21): every new table in public is
+    -- arwdDxtm and every new function EXECUTE for anon and authenticated. Without these in the
+    -- fixture a missing REVOKE in the migration would go unnoticed.
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
     CREATE SCHEMA auth;
     CREATE TABLE auth.users (id uuid PRIMARY KEY);
     CREATE TABLE public.questions (id uuid PRIMARY KEY, content jsonb NOT NULL, answer_format text NOT NULL,
@@ -371,8 +377,11 @@ test("privileges: every new function EXECUTE for service_role only; student_band
     ('question_is_servable','get_question_candidates_for_student','request_repeat_question_servable_for_student','advance_student_band') ORDER BY proname`);
   assert.deepEqual(definer.map((r) => [r.proname, r.prosecdef]), [["advance_student_band", true], ["get_question_candidates_for_student", true],
     ["question_is_servable", false], ["request_repeat_question_servable_for_student", true]]);
+  // The fixture grants what live default privileges grant; the migration must take all of it back.
+  const [{ ok: defaultsWork }] = await q1("SELECT has_function_privilege('authenticated', 'public.get_unserved_questions_for_student(uuid, smallint, text[])', 'EXECUTE') AS ok");
+  assert.equal(defaultsWork, false, "migration A's own REVOKE holds under the live defaults too");
   for (const role of ["anon", "authenticated"]) {
-    for (const priv of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
+    for (const priv of ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER", "MAINTAIN"]) {
       const [{ ok }] = await q1(`SELECT has_table_privilege('${role}', 'public.student_band_state', '${priv}') AS ok`);
       assert.equal(ok, false, `${role} ${priv}`);
     }

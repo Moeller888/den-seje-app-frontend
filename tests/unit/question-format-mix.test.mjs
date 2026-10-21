@@ -447,6 +447,23 @@ test("index.ts: v2 orders by the mix plan and never by the request's band", () =
   assert.equal(/sortByWave|currentDifficultyBand\s*[,)]/.test(v2.replace(/client_band: currentDifficultyBand/, "")), false);
 });
 
+test("index.ts: the FORMAT_MIX logs carry no pupil identity, no answer and no key", () => {
+  const logs = [...INDEX_CODE.matchAll(/console\.log\("FORMAT_MIX:", JSON\.stringify\(\{([\s\S]*?)\}\)\);/g)].map((m) => m[1]);
+  assert.equal(logs.length, 2, "the v2 and the shadow log");
+  for (const body of logs) {
+    for (const forbidden of ["student_id", "user", "correct", "normalized", "content", "answer", "email", "name"]) {
+      assert.equal(new RegExp(String.raw`\b${forbidden}\b`, "i").test(body), false, `FORMAT_MIX must not log ${forbidden}`);
+    }
+  }
+  // The decision object itself: kinds, counts, the band — nothing per question but ids in shadow.
+  assert.deepEqual(Object.keys(planNextQuestions({ candidates: [], history: [], targetBand: 1, wavePhase: "challenge",
+    lastMisconceptionType: null }).decision).sort(), ["dropped", "gapSinceNonBase", "kind", "qualified", "reason", "served", "targetBand", "window"]);
+});
+
+test("index.ts: the engine is read inside the request handler — unsetting the secret needs no deploy", () => {
+  assert.ok(INDEX_CODE.indexOf("serve(async (req) => {") < INDEX_CODE.indexOf("const mixEngine = resolveMixEngine("));
+});
+
 test("index.ts: shadow serves v1; a shadow failure is logged and never changes the response", () => {
   const start = INDEX_CODE.indexOf('if (mixEngine === "shadow") {');
   assert.ok(start > INDEX_CODE.indexOf("sortedQuestions = sortByWave("), "shadow runs after v1 has chosen");
