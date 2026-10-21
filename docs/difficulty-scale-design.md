@@ -211,9 +211,10 @@ Hvis niveauerne skal kunne skrives til, skal de have et indhold. Forslag: forank
    svarflowet. Gamle funktioner bliver stående.
 4. **Edge:** `get-next-question` bag `LEVEL_ENGINE` (ikke sat = uændret). Deployes og verificeres med
    flaget slået fra.
-5. **Indhold:** pilot på ca. 500 engelskopgaver (niveau 3.001–10.000) som migrationer. Hver
-   migration anvendes med autorisation.
-6. **Aktivering:** `LEVEL_ENGINE=v1` for alle fag. Ejeren tester med en testelev i hvert fag.
+5. **Aktivering:** `LEVEL_ENGINE=v1` for alle fag. Ejeren tester med en testelev i hvert fag.
+6. **Indhold:** de nye engelskopgaver (pilot #358 og portion 2 #360, niveau 3.001–10.000) anvendes
+   **først nu**, når niveausystemet kører (ejerbeslutning 2026-10-21). Ellers ville de blive serveret
+   under det gamle klassetrinsloft. Hver migration anvendes med autorisation.
 7. **Opskalering:** resten op til 10.000 engelskopgaver. Historie og dansk kører på skalaen fra
    aktiveringen med deres eksisterende indhold. Nyt indhold til dem er en særskilt opgave.
 
