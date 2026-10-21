@@ -25,6 +25,7 @@ export const MODES = Object.freeze({
   "synthetic-test": { annotation: ["SYNTHETIC_TEST_APPROVED"], targets: ["SYNTHETIC_TEST_APPROVED", "APPROVED"] },
 });
 export const sha256 = (b) => createHash("sha256").update(b).digest("hex");
+const RESULT = Object.freeze({ ok: "PASS", rejected: "REJECT" });
 
 /** Every numeric threshold, fixed by D-174 BEFORE any hair call. Mirrored verbatim in hairMethod.thresholds. */
 export const THRESHOLDS = Object.freeze({
@@ -116,7 +117,7 @@ const isPoly = (a) => Array.isArray(a) && a.length >= 3 && a.every(isPt);
 /** The binding raw checks H1..H5 (D-174). The first failure stops. Returns verdict, steps, diagnostics and (on PASS) px. */
 export function checkHairSheet(buf) {
   const T = THRESHOLDS, auto = [], diag = [];
-  const step = (id, name, ok, detail) => { auto.push({ id, name, result: ok ? "PASS" : "REJECT", detail }); return ok; };
+  const step = (id, name, ok, detail) => { auto.push({ id, name, result: ok ? RESULT.ok : RESULT.rejected, detail }); return ok; };
   const fail = (id) => ({ verdict: "REJECT", firstFailure: id, auto, diag, rawSha256: sha256(buf) });
   const P = decodePng(buf);
   const okFmt = P.ok && !!P.px && P.header.w === SHEET.w && P.header.h === SHEET.h;
