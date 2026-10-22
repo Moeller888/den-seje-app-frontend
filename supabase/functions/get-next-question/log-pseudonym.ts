@@ -7,11 +7,21 @@
 // the prefix keeps it from matching a hash of the bare id made for any other purpose. The same pupil
 // always gets the same value, so lines can be grouped per pupil.
 //
-// WHAT IT IS NOT
-// Not anonymous: there is no secret, so anyone who already holds a list of student ids (an operator with
-// database access) can compute the pseudonym for each and link the lines. That is deliberate — it is how
-// the evaluation excludes test accounts — and it adds nothing such a person could not already read in
-// the database. The log still holds no id, name, e-mail, answer or key.
+// WHAT IT IS NOT — THE DATA IS NOT ANONYMOUS
+// This is PSEUDONYMISED personal data (GDPR art. 4(5)), not anonymous data, and must be handled as
+// personal data. There is no secret, so anyone who holds a list of student ids can compute each
+// pupil's pseudonym and link every line to that pupil. That is deliberate — it is how the evaluation
+// excludes known test accounts — and it gives nothing such a person could not already read in the
+// database. The log still holds no id, name, e-mail, answer or key.
+//
+// WHO CAN LINK IT, AND FOR HOW LONG (2026-10-22)
+//   * Read access to Edge Function logs = members of the Supabase organisation (dashboard Logs Explorer,
+//     Management API, the Supabase MCP). Pupils and teachers have none.
+//   * Linking also needs student ids: the same operators (database / service role). A teacher can read
+//     their own pupils' ids through RLS but has no log access.
+//   * Retention is Supabase's log retention for the plan — the project is on the free plan (1 day at
+//     the time of writing); logs stay in Supabase (project region eu-west-1). An evaluation that needs
+//     more than a day must export aggregates, never raw lines with pseudonyms, outside Supabase.
 //
 // Pure TypeScript with no Deno or network imports (Web Crypto exists in Deno and Node), so the Node unit
 // suite tests exactly what the Edge Function runs.
