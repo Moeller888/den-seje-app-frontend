@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; no live permission (D-174 … D-179, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; one live permission: the third hair call (D-180, the first under v2), not yet sent (D-174 … D-180, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -252,6 +252,23 @@ art layer behind them can be upgraded without a rewrite.
   - **Prompt v3** is a DRAFT (ear transitions, both temple locks, no lock below the ears) and authorises no call. Tool
     `r3-hair-tool-v2.mjs` + CLI `r3-hair-compose-v2.mjs`. No call, capacity, claim, adapter or promotion; D-177 keeps
     its status and is never approved under v2; R3 stays default OFF. See `project-state.md` **D-179**.
+  **D-180 (2026-10-22)** authorised exactly ONE further hair call, the first under registration v2,
+  `D-180-r3-hair-northstar-v3`:
+  - **Capacity.** One added planned hair call (`assets[8]` 2 → 3, budget 24–25 → 25–26), no reserve. Actual use is
+    unchanged (hair = 2).
+  - **Request.** The locked request of D-175 and D-177: `1024x1024`, one transparent PNG, Northstar as the only image
+    (`3daf32e7…`); targets v2 (`8c3b24e8…`) pinned, never sent.
+  - **Prompt v3, frozen** byte for byte as D-179's draft (`5c80c576…`, 1,537 B): readable ear transitions, two separate
+    temple locks, a V-shaped parting, no lock below the ears or at the neck, one connected piece, the 64 px margin.
+  - **Adapter.** A separate inactive adapter, `tools/avatar/openai-send-r3-hair-d180.mjs`, derived from the closed D-177
+    adapter. Same rules: dry run without credentials, one fetch, no retry, only H1–H5 after receipt.
+  - **After the call.** D-179's placement and shape checks need a later, owner-APPROVED v2 source annotation and are
+    never reported as passed on the raw sheet alone. The annotation is a DRAFT (A4 proposal as a review aid; A9/A10
+    read twice, the second time with the first reading hidden); placement with `r3-hair-compose-v2.mjs` needs a
+    separate owner approval.
+  - **Unchanged.** No D-179 target, threshold or check changes; D-177 keeps its historical status.
+  - **Status.** UNSPENT and not a run instruction: the send needs a separate execution message after merge. R3 stays
+    default OFF. See `project-state.md` **D-180**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

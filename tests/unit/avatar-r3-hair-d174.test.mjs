@@ -53,8 +53,8 @@ test("D-174 authorises nothing: no call entry, no live permission, no budget or 
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(file("js/avatar-layers.js").toString("utf8")), "R3 stays OFF at runtime");
   assert.match(S.budget, /keeps 1 planned call/); assert.match(S.budget, /adds no call and changes no budget figure or counter/); assert.match(S.budget, /no planned capacity for a retake/);
   for (const x of ["an image request or upload", "a call-id or claim", "a send adapter", "a frozen prompt", "a source anchor", "a runtime change or the wiring of ramp B", "a token change"]) assert.ok(S.notApproved.includes(x), x);
-  // D-174 added no adapter; the only hair send adapters are the ones D-175 and D-177 later added, one per authorised call.
-  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs"], "no hair send adapter except D-175's and D-177's");
+  // D-174 added no adapter; the only hair send adapters are the ones D-175, D-177 and D-180 later added, one per authorised call.
+  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs"], "no hair send adapter except D-175's, D-177's and D-180's");
 });
 
 test("the approved targets are a byte-identical copy of the v2 review anchors: no coordinate changed, roles and uncertainty documented", () => {
