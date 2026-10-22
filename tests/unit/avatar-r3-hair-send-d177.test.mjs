@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
-import { preD177Contract, PRE_D177_CONTRACT_CANONICAL_SHA256, PRE_D177, preD176Contract, PRE_D176_CONTRACT_CANONICAL_SHA256, preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256, PRE_D178 } from "./avatar-r3-d147-closure.mjs";
+import { preD177Contract, PRE_D177_CONTRACT_CANONICAL_SHA256, PRE_D177, preD176Contract, PRE_D176_CONTRACT_CANONICAL_SHA256, preD175Contract, PRE_D175_CONTRACT_CANONICAL_SHA256, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256, PRE_D178, preD179Contract } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -41,8 +41,9 @@ const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 // D-178 later recorded D-177's one send and closed its entry in place. LIVE is the contract exactly as D-177 committed it
-// (D-178's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
-const LIVE_NOW = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
+// (D-178's closure reversed, proven canonical below); the closed state itself is tested at the end of this file. D-179 then
+// added hairMethod.methodV2 only; LIVE_NOW is the contract as D-178 left it (proven canonical in avatar-r3-hair-d179.test.mjs).
+const LIVE_NOW = preD179Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 const LIVE = preD178Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD177Contract(LIVE);
