@@ -8,9 +8,13 @@
 -- ligger i), så de gamle visninger og den nuværende udvælgelse har en værdi.
 -- Metadata følger mønstret fra de eksisterende engelsk-batches (kategorinøglen k), plus metadata.cefr.
 --
--- ANVENDELSE (ejerbeslutning 2026-10-21): anvendes FØRST, når niveausystemet kører, dvs. når
--- migration B er anvendt og LEVEL_ENGINE er slået til i produktion. Filen har is_active=true, så
--- anvendt før det ville opgaverne blive serveret under det gamle klassetrinsloft.
+-- INAKTIV VED INDSÆTTELSEN (ejerbeslutning 2026-10-22): alle rækker får is_active=false og bliver
+-- derfor aldrig serveret, før de aktiveres. Hver række er mærket i den eksisterende kolonne
+-- metadata med 'level_batch' = 'batch4' (ingen ny kolonne). Aktivering er en SEPARAT migration,
+-- som først må laves efter den dokumenterede stikprøvekontrol, og når niveausystemet er
+-- implementeret, testet og slået til. Den skal have sin egen ejergodkendelse, fx:
+--   UPDATE public.questions SET is_active = true
+--   WHERE learning_objective = 'english' AND metadata->>'level_batch' = 'batch4';
 -- Må KUN anvendes via apply_migration med særskilt ejer-autorisation (D-110).
 
 INSERT INTO public.questions (content, answer_format, answer_type, metadata, type, difficulty, question_type, is_active, learning_objective, target_grade, difficulty_band, difficulty_level)
@@ -21,8 +25,8 @@ SELECT
   jsonb_build_object('concepts', jsonb_build_array(m.concept), 'cognitive_skill', m.skill,
                      'difficulty_type', m.dtype, 'misconception_type', m.mis,
                      'challenge_role', e->>'role', 'insight_type', e->>'insight',
-                     'cefr', e->>'cefr', 'domain', 'english'),
-  'mc_single', (e->>'b')::int, 'auto', true, 'english', (e->>'g')::int, (e->>'b')::int, (e->>'l')::int
+                     'cefr', e->>'cefr', 'level_batch', 'batch4', 'domain', 'english'),
+  'mc_single', (e->>'b')::int, 'auto', false, 'english', (e->>'g')::int, (e->>'b')::int, (e->>'l')::int
 FROM jsonb_array_elements($$[
 {"l":3001,"g":5,"b":1,"cefr":"A2","role":"reinforcement","insight":"conceptual_bridge","k":"g","q":"Hvilket ord passer: 'My parents ___ married in 2005.'","o":["got","get","gets","have got"],"a":"got","r":"Datid af 'get married' er 'got married'."},
 {"l":3030,"g":5,"b":1,"cefr":"A2","role":"reinforcement","insight":"conceptual_bridge","k":"g","q":"Hvilket ord passer: 'I ___ my grandmother every Sunday.'","o":["visits","visit","visiting","am visit"],"a":"visit","r":"En vane med I: nutid uden -s."},
