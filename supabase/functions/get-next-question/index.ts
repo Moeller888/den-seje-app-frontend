@@ -8,6 +8,7 @@ import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
+import { chooseSelectionRoute, loadLevelPlan, resolveLevelEngine, type LevelReadClient } from "./level-flow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -130,6 +131,10 @@ serve(async (req) => {
     // the browser's answer_format from the interaction-kind registry, so a format the client cannot
     // show is skipped instead of falling back to "mc"; v1 keeps mapAnswerFormat unchanged.
     const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
+    // The level engine (Edge secret LEVEL_ENGINE, ./level-flow.ts). Unset = "off" = everything below
+    // runs exactly as before; "v1" changes only step 2 (new questions) and step 3 (repeat RPC).
+    const levelEngine = resolveLevelEngine(Deno.env.get("LEVEL_ENGINE"));
+    const route = chooseSelectionRoute(mixEngine, levelEngine);
     const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
       mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
 
@@ -212,7 +217,24 @@ serve(async (req) => {
     // (mixEngine and wireFormat are resolved before step 1.)
     let sortedQuestions: any[];
 
-    if (mixEngine === "v2") {
+    if (route.newQuestions === "level" || route.newQuestions === "level+mix") {
+      // LEVEL_ENGINE=v1: the pupil's server-owned level for the subject, nearest-level candidates, no
+      // grade ceiling (migration 20261022120000; ./level-flow.ts). Needs migrations #351, A and B.
+      const { ordered, level, mixKind } = await loadLevelPlan(admin() as unknown as LevelReadClient, {
+        studentId: student_id,
+        subject: scope.subject,
+        grade: selectedGrade,
+        domains: subjectDomains,
+        wavePhase,
+        lastMisconceptionType,
+        mixEngine,
+      });
+      console.log("LEVEL_ENGINE:", JSON.stringify({
+        route: route.newQuestions, subject: scope.subject, level: level.level, answered: level.answered,
+        newly_folded: level.newlyFolded, seed_source: level.seedSource, candidates: ordered.length, mix_kind: mixKind,
+      }));
+      sortedQuestions = ordered;
+    } else if (mixEngine === "v2") {
       const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
         studentId: student_id,
         grade: selectedGrade,
@@ -329,14 +351,20 @@ serve(async (req) => {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
       // show still reaches repeats instead of "no questions". Every other guard is identical.
-      const { data: repeatId, error: repeatError } = mixEngine === "v2"
-        ? await admin().rpc(
-          "request_repeat_question_servable_for_student",
-          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
-        )
+      // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261022120000).
+      const { data: repeatId, error: repeatError } = route.repeatArgs !== "student+domains"
+        ? (mixEngine === "v2"
+          ? await admin().rpc(
+            "request_repeat_question_servable_for_student",
+            { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          )
+          : await admin().rpc(
+            "request_repeat_question_for_student",
+            { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          ))
         : await admin().rpc(
-          "request_repeat_question_for_student",
-          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+          "request_repeat_level_question_for_student",
+          { p_student_id: student_id, p_domains: subjectDomains }
         );
 
       if (repeatError) throw repeatError;

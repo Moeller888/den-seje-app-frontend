@@ -162,6 +162,9 @@ test("the admin client is used only for the instance insert and the server-only 
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
     "rpc:request_repeat_question_for_student",
+    // LEVEL_ENGINE "v1" only: the repeat over the level engine's pool (migration 20261022120000;
+    // service_role only, SECURITY INVOKER, same student-scoped guards).
+    "rpc:request_repeat_level_question_for_student",
     "from:question_instances",
   ]);
   // The format mix (QUESTION_MIX_ENGINE "v2"/"shadow") hands the same backend client to
@@ -169,7 +172,12 @@ test("the admin client is used only for the instance insert and the server-only 
   // to the verified student) are pinned in question-format-mix.test.mjs.
   assert.equal((INDEX_CODE.match(/await loadFormatMixPlan\(admin\(\) as unknown as MixReadClient, \{\s*studentId: student_id,/g) ?? []).length, 2,
     "the v2 and the shadow call");
-  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 7, "no other admin() use");
+  // The level engine (LEVEL_ENGINE "v1") hands the same backend client to ./level-flow.ts, whose reads
+  // (advance_student_level, the candidate RPC, own history — all scoped to the verified student) are
+  // pinned in level-flow.test.mjs.
+  assert.equal((INDEX_CODE.match(/await loadLevelPlan\(admin\(\) as unknown as LevelReadClient, \{\s*studentId: student_id,/g) ?? []).length, 1,
+    "the level engine call");
+  assert.equal((INDEX_CODE.match(/\badmin\(\)/g) ?? []).length, 9, "no other admin() use");
 });
 
 test("index.ts never writes question_instances on the user client", () => {
