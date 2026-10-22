@@ -139,6 +139,53 @@ art layer behind them can be upgraded without a rewrite.
     - The nose is a single stroke.
   - **Later dependency.** The clothing/body join below the neck is a later, separate dependency. Nothing is promoted, the
     active renderer is unchanged, no body is coupled, and R3 stays default OFF. See `project-state.md` **D-187**.
+- **R3 review variant "northstar-layers" — Northstar v2's own pixels in separate layers, beside D-187; nothing approved (D-188, as of 2026-10-22).**
+  **D-188 (2026-10-22)** lets Northstar v2's pixels be a direct source for this **separate review variant only**. The
+  original geometry, colours, sideburns and painted details are kept. The H1 ban is unchanged. Earlier decisions and every
+  candidate's status are kept, and D-187 stays the review tool's default.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-layers --out <empty dir>`. Use
+    `--variant both` to write `d187/` and `northstar-layers/` side by side. The generator is
+    `tools/avatar/r3-northstar-layers.mjs`.
+  - **Source.** The tracked `Northstar Master v2.png`, sha256 `3daf32e7…ff50`. Any other bytes are refused.
+  - **Tracked files.** `tools/avatar/fixtures/r3-northstar-layers/` (stored binary) holds the spec, the nine compositing
+    layers and the six masks as byte copies of the local prototype. `manifest-v1.json` records the move and the
+    prototype's file hashes, and the tests prove the generator rebuilds each layer and mask pixel for pixel.
+  - **Not tracked, rebuilt on demand.**
+    - The comparison-only body: Northstar's body, rebuilt only for the comparison and never an R3 body asset.
+    - The `face` helper export: never composed over the four parts.
+    - The editable `.ora`: rebuilt deterministically for Krita and GIMP.
+  - **Layer order.**
+    - skin (with ears and neck);
+    - hair shadow;
+    - left brow, right brow;
+    - nose;
+    - mouth;
+    - iris;
+    - fixed eye parts;
+    - hair.
+  - **Composite.** The default uses the original colours. Of 391,180 visible pixels, 377,143 are bit-identical and the
+    largest difference is 5 out of 255, in both colour and alpha.
+    - Most remaining differences are 1–2 levels: the original's alpha is 253–254, and two stacked layers give 255.
+    - The largest differences sit on the face contour at the sideburns, which is deliberately in both the skin and hair
+      layers.
+  - **Not applicable.** These checks presuppose G1V3/E2/K4, R3's hair targets, the D-159 eye envelope or an
+    achromatic iris, so they are reported NOT APPLICABLE with the reason: D-186 underlay, D-185 hair, HP4–HP8,
+    nape lock, face fits and eye envelope.
+  - **Open areas.**
+    - Missing:
+      - cranium, forehead and head contour under the hair;
+      - the hidden brow end and the hair lock's edge over it;
+      - the ear tops under the sideburns;
+      - the sclera behind the iris.
+    - Reconstructed, as a smooth fill: the skin under the features, the iris under the highlight, and the lit skin under
+      the hair shadow.
+    - Limits:
+      - the original line art carries warm rims, which show when the skin under the features changes;
+      - the brows do not follow a hair recolouring;
+      - 83 opaque light halo pixels sit in the brow, nose and mouth layers.
+  - **OKLab recolourings.** The ones in the report are proposals only.
+  - **Not evidence.** A good default image does not show that other hairstyles, skin tones or expressions work.
+  - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-188**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

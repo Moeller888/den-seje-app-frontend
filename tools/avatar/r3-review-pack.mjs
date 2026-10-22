@@ -10,7 +10,11 @@
 //             APPROVED D-164 targets (one positive uniform scale + translation per part);
 //   · eyes  — the v5 prototype's pinned fixed and iris layers (renders of its tracked SVGs; --render-eyes re-renders them).
 //
-// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes]
+// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both]
+//
+// --variant (D-188): "d187" (the default) is the pack above, unchanged — its rule of no Northstar pixels as a source still holds
+// for it. "northstar-layers" rebuilds the SEPARATE D-188 review variant (r3-review-northstar-layers.mjs), whose visible pixels
+// are Northstar v2's own, and compares it with Northstar and with this pack's head; "both" writes d187/ and northstar-layers/.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
@@ -357,23 +361,44 @@ ${fig("09-shape-differences-r3-outline-on-northstar.png", "R3-hovedets ydre kont
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+export const VARIANTS = Object.freeze(["d187", "northstar-layers", "both"]);
+/** D-188: writes the northstar-layers review variant (images, report.html, report.json) into OUT, beside this pack's head. */
+export async function writeNorthstarLayersVariant(OUT, pack = buildPack()) {
+  const RV = await import("./r3-review-northstar-layers.mjs");
+  const variant = RV.buildVariant(), ns = decodePng(rel("assets/avatar/reference/Northstar Master v2.png")).px;
+  const written = RV.writeVariantReview(variant, OUT, composeHead(colourLayers(pack)), ns);
+  writeFileSync(join(OUT, "report.html"), RV.variantReportHtml(variant, written));
+  writeFileSync(join(OUT, "report.json"), JSON.stringify({ variant: RV.VARIANT, decision: "D-188", status: variant.tracked.man.status, compositeOrder: variant.tracked.man.compositeOrder, headPixelSha256: written.headPixelSha256, checks: variant.checks, files: written.files }, null, 2) + "\n");
+  return variant;
+}
+
 const invokedDirectly = typeof process.argv[1] === "string" && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
 if (invokedDirectly) {
   const args = process.argv.slice(2), arg = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes]");
-  const OUT = resolve(outDir); if (existsSync(OUT) && readdirSync(OUT).length) throw new Error("output directory not empty"); mkdirSync(OUT, { recursive: true });
+  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both]");
+  const variant = arg("--variant") ?? "d187"; if (!VARIANTS.includes(variant)) throw new Error(`--variant must be one of ${VARIANTS.join(", ")}`);
+  const ROOT = resolve(outDir); if (existsSync(ROOT) && readdirSync(ROOT).length) throw new Error("output directory not empty"); mkdirSync(ROOT, { recursive: true });
   const pack = buildPack();
-  let eyesNote = "Øjenlagene er de fastlåste render af de versionsstyrede SVG'er (ikke genrenderet i denne kørsel).";
-  if (args.includes("--render-eyes")) {
-    const r = await renderEyes(pack.bufs), same = pixelSha256(r.fixedPx) === pixelSha256(pack.eyes.fixedPx) && pixelSha256(r.irisPx) === pixelSha256(pack.eyes.irisPx);
-    eyesNote = same ? "--render-eyes: begge SVG'er genrenderet med Chromium — pixel-identiske med de fastlåste lag." : "--render-eyes: genrenderingen AFVIGER fra de fastlåste lag (renderer-forskel); de fastlåste lag er brugt.";
-    if (!same) process.exitCode = 1;
+  if (variant !== "d187") {
+    const NOUT = variant === "both" ? join(ROOT, "northstar-layers") : ROOT; mkdirSync(NOUT, { recursive: true });
+    const v = await writeNorthstarLayersVariant(NOUT, pack);
+    console.log(JSON.stringify({ variant: "northstar-layers", firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
+    if (v.checks.firstFailure) process.exitCode = 1;
   }
-  const layers = { "base-medium": HN.renderSkin(pack.base.built.lum, pack.base.built.ink, pack.spec.tokens.skin.medium.rgb, pack.base.spec.palette.skinWarmth), "nape-lock": pack.lockPx, "hair-merged": pack.hairPx, face: pack.face.facePx, "head-medium-brown": composeHead(colourLayers(pack)) };
-  const pins = {}; for (const [k, px] of Object.entries(layers)) { writeFileSync(join(OUT, `layer-${k}-1024x1536.png`), encodePng(W, H, px)); pins[k] = pixelSha256(px); }
-  const files = writeReview(pack, OUT);
-  writeFileSync(join(OUT, "report.html"), reportHtml(pack, files, { eyes: eyesNote }));
-  writeFileSync(join(OUT, "report.json"), JSON.stringify({ id: pack.spec.id, mode: REVIEW_MODE, layerOrder: LAYER_ORDER, pixelSha256: pins, checks: pack.checks, files, eyes: eyesNote }, null, 2) + "\n");
-  console.log(JSON.stringify({ firstFailure: pack.checks.firstFailure, failed: pack.checks.checks.filter((c) => c.ok === false).map((c) => c.id), pixelSha256: pins, eyes: eyesNote }, null, 1));
-  if (pack.checks.firstFailure) process.exitCode = 1;
+  if (variant !== "northstar-layers") {
+    const OUT = variant === "both" ? join(ROOT, "d187") : ROOT; mkdirSync(OUT, { recursive: true });
+    let eyesNote = "Øjenlagene er de fastlåste render af de versionsstyrede SVG'er (ikke genrenderet i denne kørsel).";
+    if (args.includes("--render-eyes")) {
+      const r = await renderEyes(pack.bufs), same = pixelSha256(r.fixedPx) === pixelSha256(pack.eyes.fixedPx) && pixelSha256(r.irisPx) === pixelSha256(pack.eyes.irisPx);
+      eyesNote = same ? "--render-eyes: begge SVG'er genrenderet med Chromium — pixel-identiske med de fastlåste lag." : "--render-eyes: genrenderingen AFVIGER fra de fastlåste lag (renderer-forskel); de fastlåste lag er brugt.";
+      if (!same) process.exitCode = 1;
+    }
+    const layers = { "base-medium": HN.renderSkin(pack.base.built.lum, pack.base.built.ink, pack.spec.tokens.skin.medium.rgb, pack.base.spec.palette.skinWarmth), "nape-lock": pack.lockPx, "hair-merged": pack.hairPx, face: pack.face.facePx, "head-medium-brown": composeHead(colourLayers(pack)) };
+    const pins = {}; for (const [k, px] of Object.entries(layers)) { writeFileSync(join(OUT, `layer-${k}-1024x1536.png`), encodePng(W, H, px)); pins[k] = pixelSha256(px); }
+    const files = writeReview(pack, OUT);
+    writeFileSync(join(OUT, "report.html"), reportHtml(pack, files, { eyes: eyesNote }));
+    writeFileSync(join(OUT, "report.json"), JSON.stringify({ id: pack.spec.id, mode: REVIEW_MODE, layerOrder: LAYER_ORDER, pixelSha256: pins, checks: pack.checks, files, eyes: eyesNote }, null, 2) + "\n");
+    console.log(JSON.stringify({ firstFailure: pack.checks.firstFailure, failed: pack.checks.checks.filter((c) => c.ok === false).map((c) => c.id), pixelSha256: pins, eyes: eyesNote }, null, 1));
+    if (pack.checks.firstFailure) process.exitCode = 1;
+  }
 }

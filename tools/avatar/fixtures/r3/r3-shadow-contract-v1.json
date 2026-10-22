@@ -6545,5 +6545,79 @@
       "a body coupling",
       "a change to G1V3, E2, K4, any R3 target or any threshold"
     ]
+  },
+  "northstarLayerReview": {
+    "decision": "D-188",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW VARIANT — NORTHSTAR V2 PIXELS AS A DIRECT SOURCE FOR THIS VARIANT ONLY; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "Northstar v2's pixels may be used as a direct source for this separate R3 review variant. The original geometry, colours, sideburns and painted details are kept. The exception applies to this review variant only; earlier decisions and every candidate's status are kept. The H1 ban stands unchanged; the source is the tracked Northstar v2 with its verified hash. No production approval and no runtime activation.",
+    "pixelSourceException": {
+      "scope": "the review variant northstar-layers of tools/avatar/r3-review-pack.mjs and its generator tools/avatar/r3-northstar-layers.mjs only",
+      "source": {
+        "file": "assets/avatar/reference/Northstar Master v2.png",
+        "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+      },
+      "notWidened": "The rule of no Northstar pixels as a source still holds for the D-187 pack, for D-185, D-186 and every other R3 part; nothing outside this variant may read the variant's layers as a source.",
+      "h1": "unchanged: never used, copied, tracked or published"
+    },
+    "variant": {
+      "name": "northstar-layers",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-layers --out <empty dir> (or --variant both; the default stays d187)",
+      "generator": "tools/avatar/r3-northstar-layers.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-layers/ (spec-v1.json, layers/, masks/, manifest-v1.json; stored binary)",
+      "compositeOrder": [
+        "skin",
+        "hairShadow",
+        "browL",
+        "browR",
+        "nose",
+        "mouth",
+        "iris",
+        "eyesFixed",
+        "hair"
+      ],
+      "helperExports": {
+        "face": "brows + nose + mouth in one file for viewing and editing; never composed over the four parts (the compositor refuses it)"
+      },
+      "comparisonOnly": {
+        "body": "Northstar's body and clothes, rebuilt on demand for the documented comparison with the whole original; not tracked, not an R3 layer, not an R3 body asset"
+      },
+      "defaultColours": "the original colours; OKLab recolourings in the report are PROPOSALS, not tokens and not a runtime method",
+      "editableSource": "OpenRaster rebuilt deterministically (buildOraFromTracked); not tracked"
+    },
+    "provenance": {
+      "prototype": "tools/avatar/build/northstar-v2-layers/ (local, gitignored, 2026-10-22)",
+      "moved": "spec, nine compositing layers and six masks tracked as byte-identical copies; the generator ported unchanged in behaviour and proven to rebuild every tracked layer and mask pixel for pixel (manifest-v1.json records the prototype file hashes)"
+    },
+    "geometry": "Northstar's own head, ears, neck, sideburns and hair. G1V3, E2, K4, the D-164 face targets, the eye targets and the R3 hair targets are NOT used to deform it; the checks that presuppose them are reported NOT APPLICABLE with the reason.",
+    "result": {
+      "deviationFromOriginal": "391,180 visible px: 377,143 bit-identical; colour difference 0 / 1-2 / 3-5 = 380,751 / 10,402 / 27, none above 5; alpha 0 / 1-2 / 3-5 = 377,771 / 13,379 / 30; maximum 5 / 5",
+      "explanation": "the original figure has alpha 253-254, two stacked layers give 255; feature colours over reconstructed skin are rounded; the largest differences lie on the opaque face contour that is deliberately in both the skin and hair layers at the sideburns"
+    },
+    "openAreas": [
+      "MISSING: cranium, forehead, temples and head contour under the hair",
+      "MISSING: the hidden end of the image-left brow and the hair lock's lower edge over it",
+      "MISSING: ear tops under the sideburns",
+      "MISSING: sclera behind the iris",
+      "RECONSTRUCTED (smooth fill): skin under the features, iris under the highlight, lit skin under the hair shadow",
+      "LIMIT: warm rims of the original line art show when the skin under the features changes",
+      "LIMIT: the brows do not follow a hair recolouring",
+      "LIMIT: 83 opaque light halo px in the brow, nose and mouth layers (browL 3, browR 45, nose 17, mouth 18; largest connected group an 11 px edge row): the original light sharpening halo where the skin red channel is already ~249-255, so the exact lift needs alpha 1; correct over this skin, pale specks on another skin tone"
+    ],
+    "notEvidenceFor": "A good default image is not evidence that other hairstyles, skin tones or expressions work.",
+    "promotion": "The variant is never promotable by passing technical checks (promotionStatus() is always false; promote() throws). Promotion needs a later, explicit owner decision.",
+    "notApproved": [
+      "any layer's final look",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "an R3 body asset",
+      "a skin, iris or hair token or recolouring method",
+      "a change to G1V3, E2, K4, any R3 target or any threshold",
+      "a change to D-187 or any earlier decision"
+    ]
   }
 }
