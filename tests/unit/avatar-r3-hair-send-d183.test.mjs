@@ -1,5 +1,5 @@
-// R3 HAIR SHEET — D-182: one further authorised hair call with TWO reference images in a fixed order (Image 1 Northstar for
-// style, Image 2 the tracked geometry guide for fit), the frozen prompt v4 and D-182's design reading of A9/A10 as short ear
+// R3 HAIR SHEET — D-183: one further authorised hair call with TWO reference images in a fixed order (Image 1 Northstar for
+// style, Image 2 the tracked geometry guide for fit), the frozen prompt v4 and D-183's design reading of A9/A10 as short ear
 // transitions (assets[8] 3 -> 4, budget 25-26 -> 26-27, no reserve), and its separate send adapter, tested without ever
 // reaching the real world. Derived from the D-180 suite; the lessons of D-142 and D-145 apply unchanged:
 //   · The send adapter is NEVER imported. This file reads its source as text, or runs it as a CLI in a child process
@@ -22,13 +22,13 @@ import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-a
 import { encodePng, decodePng, pixelSha256, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
 import { proposeA4, checkLocks, lockWindowsPx } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import { buildGuide, loadTargets, SCALE } from "../../tools/avatar/r3-hair-guide-v1.mjs";
-import { preD182Contract, PRE_D182_CONTRACT_CANONICAL_SHA256, PRE_D182, PRE_D182_COMMIT, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD183Contract, PRE_D183_CONTRACT_CANONICAL_SHA256, PRE_D183, PRE_D183_COMMIT, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const repoFile = (rel) => join(REPO, ...rel.split("/"));
-const ADAPTER_REL = "tools/avatar/openai-send-r3-hair-d182.mjs";
+const ADAPTER_REL = "tools/avatar/openai-send-r3-hair-d183.mjs";
 const PREV_ADAPTER_REL = "tools/avatar/openai-send-r3-hair-d180.mjs";
 const LEDGER_REL = "tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 const HAIR_TOOL_REL = "tools/avatar/r3-hair-tool.mjs";
@@ -47,14 +47,14 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 const LIVE = JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8"));
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
-const PRE = preD182Contract(LIVE);
-const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-182** |")).join("\n");
-const CALL = "D-182-r3-hair-northstar-v4";
+const PRE = preD183Contract(LIVE);
+const PRE_REGISTER = REGISTER.split("\n").filter((l) => !l.startsWith("| **D-183** |")).join("\n");
+const CALL = "D-183-r3-hair-northstar-v4";
 const CLAIM_ID = CALL + "-claim";
 const CLAIM_FILE = CALL + ".claim.json";
 const EVENTS_FILE = CALL + ".events.jsonl";
-const DUMMY_KEY = "sk-d182-sandbox-dummy-key-not-a-credential";
-const APPROVAL = "--owner-approval=D-182";
+const DUMMY_KEY = "sk-d183-sandbox-dummy-key-not-a-credential";
+const APPROVAL = "--owner-approval=D-183";
 const GOOD_ARGS = ["--call-id=" + CALL, "--claim-identity=" + CLAIM_ID];
 const SEND = ["--send", APPROVAL];
 const PROMPT_SHA = "5584602925dbc8cc9454f46bc42b771b3f35c34f64f60ee62b204707f1697ad4";
@@ -66,13 +66,13 @@ const GUIDE_SHA = "4779de4acc8e58269a5fbbc96cb113507864e00314b6f9d70be7e25eecc75
 const GUIDE_PIXEL_SHA = "37dbb6869f03f2a6d03867e4faf2089fd72700021cb0f7d99773015becd80ea2";
 const MODEL = "gpt-image-2.5-sunburst-2026-09-08";
 const D180_ADAPTER_SHA = "46e2865d0d2f57cc4a18eed228b84c739aabac13e29f294ec736cadf95003a8b";   // the D-180 adapter as it ran (D-181 execution.sentBy)
-const D181_ROW_SHA_AT_D181 = "198ac176d68dc0f28e1b57e16cf660d38a6f092add083b8659f883baed1b2822";
+const D182_ROW_SHA_AT_MAIN = "b1b1cdd1568b0ed5d772cfd225729656d22d87016a797929683ac092fee5e165";   // the D-182 row (question format mix, #374), registered by another track
 const SPENT_IDS = ["D-139-r3-underlay-head-only-v1", "D-142-r3-underlay-core-v1", "D-143-r3-underlay-core-v2", "D-151-r3-head-colour-u1-v1",
   "D-153-r3-head-colour-u1-opaque-v1", "D-160-r3-face-neutral-v1", "D-162-r3-face-neutral-guide-b-v1", "D-165-r3-face-parts-sheet-v1", "D-167-r3-face-parts-nose-v1",
   "D-170-r3-eyes-fixed-v1", "D-172-r3-eyes-fixed-v2", "D-175-r3-hair-northstar-v1", "D-177-r3-hair-northstar-v2", "D-180-r3-hair-northstar-v3"];
 const E = LIVE.authorisedCalls.calls.find((e) => e.callId === CALL);
-const IMPL = LIVE.adapterImplementations.entries.find((e) => e.decision === "D-182");
-const ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-182** |"));
+const IMPL = LIVE.adapterImplementations.entries.find((e) => e.decision === "D-183");
+const ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-183** |"));
 const V2 = LIVE.hairMethod.methodV2;
 const PACK = V2.referencePack;
 
@@ -83,8 +83,8 @@ function isInside(child, parent) {
 }
 
 // ── the decision itself ───────────────────────────────────────────────────────────────────────────────────────
-test("D-182 adds exactly one authorisation, its implementation, one planned hair call and two methodV2 keys: the contract at the D-181 merge is reproduced canonically", () => {
-  assert.equal(sha256(JSON.stringify(PRE)), PRE_D182_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D182_COMMIT);
+test("D-183 adds exactly one authorisation, its implementation, one planned hair call and two methodV2 keys: the contract at the D-181 merge is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(PRE)), PRE_D183_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D183_COMMIT);
   assert.equal(sha256(JSON.stringify(preD181Contract(LIVE))), PRE_D181_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
   assert.equal(sha256(JSON.stringify(preD180Contract(LIVE))), PRE_D180_CONTRACT_CANONICAL_SHA256);
   assert.equal(sha256(JSON.stringify(preD179Contract(LIVE))), PRE_D179_CONTRACT_CANONICAL_SHA256);
@@ -96,7 +96,7 @@ test("D-182 adds exactly one authorisation, its implementation, one planned hair
   for (let i = 0; i < LIVE.assets.length; i++) if (i !== 8) assert.deepEqual(LIVE.assets[i], PRE.assets[i], "asset " + i + " is unchanged");
   const b = LIVE.imageCallBudget;
   assert.deepEqual([b.minimum, b.maximum, b.callsPlannedAndAuthorised.derivedBudget, b.callsPlannedAndAuthorised.hair], [26, 27, "26-27", 4]);
-  assert.deepEqual([PRE_D182.minimum, PRE_D182.maximum], [25, 26]);
+  assert.deepEqual([PRE_D183.minimum, PRE_D183.maximum], [25, 26]);
   let min = 0, max = 0; for (const x of LIVE.assets) { if (typeof x.calls === "number") { min += x.calls; max += x.calls; } else { const m = /^(\d+)-(\d+)$/.exec(x.calls); min += +m[1]; max += +m[2]; } }
   assert.deepEqual([min, max], [26, 27], "the budget is derived arithmetically: +1");
   assert.deepEqual(b.callsActuallySentSoFar, PRE.imageCallBudget.callsActuallySentSoFar, "actually sent is unchanged");
@@ -113,14 +113,14 @@ test("D-182 adds exactly one authorisation, its implementation, one planned hair
   assert.ok(!/AVATAR_R3\s*=\s*true/.test(readFileSync(repoFile("js/avatar-layers.js"), "utf8")), "R3 stays OFF at runtime");
 });
 
-test("D-182's design reading of A9/A10: coordinates kept, original reading and design meaning kept apart, D-179 unchanged", () => {
+test("D-183's design reading of A9/A10: coordinates kept, original reading and design meaning kept apart, D-179 unchanged", () => {
   const D = V2.earTransitionDesign, T = JSON.parse(readFileSync(repoFile(TARGETS_REL), "utf8"));
-  assert.equal(D.decision, "D-182");
+  assert.equal(D.decision, "D-183");
   assert.deepEqual([D.leftEarTopJunction.xy, D.rightEarTopJunction.xy], [T.points.leftEarTopJunction.xy, T.points.rightEarTopJunction.xy]);
   assert.deepEqual([T.points.leftEarTopJunction.xy, T.points.rightEarTopJunction.xy], [[351, 312], [648, 320.5]]);
   assert.match(D.leftEarTopJunction.originalReading, /^MEASURED_ANNOTATION on Northstar Master v2: the junction where a lock tip meets the outer top of the image-left ear/);
   assert.match(D.rightEarTopJunction.originalReading, /^DESIGN_POINT \(D-179\): the midpoint \(648, 320\.5\)/);
-  for (const k of ["leftEarTopJunction", "rightEarTopJunction"]) assert.match(D[k].designMeaning, /^DESIGN TARGET \(D-182\): the inner lower corner of a short lower edge .* above the ear/);
+  for (const k of ["leftEarTopJunction", "rightEarTopJunction"]) assert.match(D[k].designMeaning, /^DESIGN TARGET \(D-183\): the inner lower corner of a short lower edge .* above the ear/);
   assert.match(D.ownerDecision, /deliberate R3 design variation/);
   assert.match(D.conflictRecorded, /Northstar does not show the short ear transitions/);
   assert.match(D.unchanged, /Coordinates, uncertainties .* the seat-fit principle, every D-179 threshold, the hidden second reading and the owner approval of every source annotation are unchanged/);
@@ -128,7 +128,7 @@ test("D-182's design reading of A9/A10: coordinates kept, original reading and d
 });
 
 test("the reference pack: two images in a fixed order with full hashes, the guide reproduced by its tracked generator, prompt v4 frozen", () => {
-  assert.deepEqual([PACK.decision, PACK.inputOrder], ["D-182", ["Image 1", "Image 2"]]);
+  assert.deepEqual([PACK.decision, PACK.inputOrder], ["D-183", ["Image 1", "Image 2"]]);
   assert.deepEqual([PACK.styleReference.file, PACK.styleReference.sha256, PACK.styleReference.bytes], [NORTHSTAR_REL, NORTHSTAR_SHA, 761394]);
   assert.equal(sha256(readFileSync(repoFile(NORTHSTAR_REL))), NORTHSTAR_SHA);
   const g = readFileSync(repoFile(GUIDE_REL));
@@ -143,7 +143,7 @@ test("the reference pack: two images in a fixed order with full hashes, the guid
   assert.match(PACK.guide.construction, /No Northstar pixel extracted, traced or sampled; no rejected hair sheet used/);
   const p = readFileSync(repoFile(PROMPT_REL));
   assert.deepEqual([PACK.promptV4.file, PACK.promptV4.sha256, PACK.promptV4.bytes, sha256(p), p.length], [PROMPT_REL, PROMPT_SHA, 1427, PROMPT_SHA, 1427]);
-  assert.match(PACK.promptV4.status, /^FROZEN by D-182/);
+  assert.match(PACK.promptV4.status, /^FROZEN by D-183/);
   assert.equal(sha256(readFileSync(repoFile(PREV_PROMPT_REL))), PROMPT_V3_SHA, "prompt v3 is unchanged");
   assert.deepEqual(PACK.transform.sheetToMaster, built.transform.sheetToMaster);
   assert.equal(PACK.transform.masterToSheet, "sheet = 1.75 * (master - [508, 171.25]) + [512, 512]");
@@ -175,14 +175,14 @@ test("prompt v4 and the guide do not contradict each other: who controls what, a
   assert.ok(Object.values(lockWindowsPx(T)).every((w) => w > 20));
 });
 
-test("D-182's entry is the ONLY live permission: the locked request with two images, prompt v4, targets v2, H1..H5 only; merge is not a run instruction", () => {
+test("D-183's entry is the ONLY live permission: the locked request with two images, prompt v4, targets v2, H1..H5 only; merge is not a run instruction", () => {
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT").map((e) => e.callId), [CALL]);
   for (const id of SPENT_IDS.slice(1)) { const x = LIVE.authorisedCalls.calls.find((e) => e.callId === id); assert.equal(x.mandateState, "SPENT", id); }
-  assert.deepEqual([E.decision, E.preparedBy, E.status, E.mandateState, E.outcome], ["D-182", "D-182", "AUTHORISED — ONE CALL — NOT YET ATTEMPTED", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([E.decision, E.preparedBy, E.status, E.mandateState, E.outcome], ["D-183", "D-183", "AUTHORISED — ONE CALL — NOT YET ATTEMPTED", "UNSPENT", "NOT YET ATTEMPTED"]);
   for (const k of ["neverReuse", "notAnActivePermission", "closedBy", "closure", "execution"]) assert.ok(!(k in E), "no " + k);
   assert.deepEqual([E.claim.identity, E.claim.filename, E.claim.eventsFilename, E.adapter.file], [CLAIM_ID, CLAIM_FILE, EVENTS_FILE, ADAPTER_REL]);
   assert.deepEqual([E.runInstruction.mergeIsNotAnInstruction, E.runInstruction.requiresSeparateExplicitOwnerInstruction], [true, true]);
-  assert.match(E.runInstruction.rule, /after D-182 is merged/);
+  assert.match(E.runInstruction.rule, /after D-183 is merged/);
   const d180 = LIVE.authorisedCalls.calls.find((e) => e.decision === "D-180");
   assert.deepEqual([E.model, E.endpoint, E.operation, E.parameters, E.neverSentFields, E.targets], [d180.model, d180.endpoint, d180.operation, d180.parameters, d180.neverSentFields, d180.targets], "the locked request of D-180");
   assert.deepEqual(E.parameters, { size: "1024x1024", quality: "high", n: 1, output_format: "png", background: "transparent" });
@@ -191,11 +191,11 @@ test("D-182's entry is the ONLY live permission: the locked request with two ima
   assert.deepEqual(E.inputs.map((i) => [i.order, i.role, i.name, i.repoPath, i.bytes, i.sha256, i.tracked]), [[1, "Image 1", "Northstar Master v2.png", NORTHSTAR_REL, 761394, NORTHSTAR_SHA, true], [2, "Image 2", "guide-hair-v1.png", GUIDE_REL, readFileSync(repoFile(GUIDE_REL)).length, GUIDE_SHA, true]]);
   assert.match(E.inputs[0].purpose, /STYLE reference/); assert.match(E.inputs[1].purpose, /GEOMETRY reference/);
   assert.deepEqual([E.prompt.file, E.prompt.sha256, E.prompt.bytes], [PROMPT_REL, PROMPT_SHA, 1427]);
-  assert.deepEqual([E.outputs.dir, E.outputs.sheet, E.outputs.count, E.outputs.sheetType], ["tools/avatar/build/r3-hair-d182", [1024, 1024], 1, "r3-hair-sheet-v1"]);
+  assert.deepEqual([E.outputs.dir, E.outputs.sheet, E.outputs.count, E.outputs.sheetType], ["tools/avatar/build/r3-hair-d183", [1024, 1024], 1, "r3-hair-sheet-v1"]);
   assert.match(E.otherHairstyles, /NOT authorised/);
   assert.deepEqual([E.outputHandling.technicalChecks, E.outputHandling.passMeaning, E.outputHandling.annotation, E.outputHandling.composition], [d180.outputHandling.technicalChecks, d180.outputHandling.passMeaning, d180.outputHandling.annotation, d180.outputHandling.composition], "raw checks, DRAFT annotation with hidden second reading and owner-approved placement stay separate, as D-180");
   assert.match(E.prohibitions.noPixelReuse, /never a pixel source of the hair layer/);
-  assert.match(E.prohibitions.noMethodChange, /D-182 only documents the design meaning of A9\/A10/);
+  assert.match(E.prohibitions.noMethodChange, /D-183 only documents the design meaning of A9\/A10/);
   assert.match(E.counters, /hair 3\)\. assets\[8\] planned capacity moves 3 -> 4 .* 25-26 -> 26-27/);
   assert.match(E.ownerDecision, /NOT a run instruction\.$/);
   assert.deepEqual([IMPL.adapter.file, IMPL.adapter.status, IMPL.adapter.ownerApprovalFlag, IMPL.mandateState, IMPL.mergeIsNotAnInstruction], [ADAPTER_REL, "IMPLEMENTED — NOT EXECUTED", APPROVAL, "UNSPENT", true]);
@@ -203,29 +203,29 @@ test("D-182's entry is the ONLY live permission: the locked request with two ima
   const P = LIVE.prohibitions.noImageRequestAuthorised;
   assert.match(P, /holds FIFTEEN entries/);
   assert.match(P, /\(14\) D-180-r3-hair-northstar-v3 — NO LONGER a permission/);
-  assert.match(P, /\(15\) D-182-r3-hair-northstar-v4 — THE ONLY active send permission/);
-  assert.match(P, /Apart from D-182's single attempt, no entry in this list is an active send permission .*D-177's or D-180's call id or claim identity, no fifth hair call, and no other call in the R3 plan\.$/);
-  const pre = PRE_D182.noImageRequestAuthorised;
+  assert.match(P, /\(15\) D-183-r3-hair-northstar-v4 — THE ONLY active send permission/);
+  assert.match(P, /Apart from D-183's single attempt, no entry in this list is an active send permission .*D-177's or D-180's call id or claim identity, no fifth hair call, and no other call in the R3 plan\.$/);
+  const pre = PRE_D183.noImageRequestAuthorised;
   assert.equal(P.slice(0, P.indexOf(" (15) ")), pre.slice(0, pre.indexOf(" No entry in this list is an active send permission")).replace("FOURTEEN", "FIFTEEN"), "every earlier restriction is kept word for word");
-  assert.match(LIVE.authorisedCalls.budgetAccounting, /D-182 adds ONE further planned hair call \(assets\[8\] 3 -> 4\) .*authorised and not yet sent\. The derived budget is 26-27\./);
+  assert.match(LIVE.authorisedCalls.budgetAccounting, /D-183 adds ONE further planned hair call \(assets\[8\] 3 -> 4\) .*authorised and not yet sent\. The derived budget is 26-27\./);
 });
 
-test("the D-182 register row: once, directly after D-181, D-181 verbatim, every pin named, no mojibake; the docs describe it", () => {
+test("the D-183 register row: once, directly after D-182 (another track's row, kept verbatim), every pin named, no mojibake; the docs describe it", () => {
   const lines = REGISTER.split("\n");
-  assert.equal(lines.filter((l) => l.startsWith("| **D-182** |")).length, 1);
-  assert.equal(lines.findIndex((l) => l.startsWith("| **D-182** |")), lines.findIndex((l) => l.startsWith("| **D-181** |")) + 1);
-  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-181** |"))), D181_ROW_SHA_AT_D181, "D-181 is not rewritten");
-  for (const needle of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, MODEL, ADAPTER_REL, APPROVAL, NORTHSTAR_SHA, GUIDE_SHA, PROMPT_SHA, PROMPT_REL, GUIDE_REL, GENERATOR_REL, TARGETS_SHA, "1024x1024", "tools/avatar/build/r3-hair-d182/",
+  assert.equal(lines.filter((l) => l.startsWith("| **D-183** |")).length, 1);
+  assert.equal(lines.findIndex((l) => l.startsWith("| **D-183** |")), lines.findIndex((l) => l.startsWith("| **D-182** |")) + 1);
+  assert.equal(sha256(lines.find((l) => l.startsWith("| **D-182** |"))), D182_ROW_SHA_AT_MAIN, "D-182 is not rewritten");
+  for (const needle of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, MODEL, ADAPTER_REL, APPROVAL, NORTHSTAR_SHA, GUIDE_SHA, PROMPT_SHA, PROMPT_REL, GUIDE_REL, GENERATOR_REL, TARGETS_SHA, "1024x1024", "tools/avatar/build/r3-hair-d183/",
     "AUTHORISED — ONE CALL — NOT YET ATTEMPTED`", "IKKE EN KØRSELSINSTRUKS", "bakkenbarter", "designmål", "Image 1", "Image 2", "25–26 → 26–27", "3 → 4", "H1–H5", "`hair` = 3", "`eyesFixed` = 2", "`faceNeutral` = 4", "`underlay` = 5",
-    "anden gang med første aflæsning skjult", "særskilt eksekveringsbesked", "R3 forbliver default OFF"]) assert.ok(ROW.includes(needle), "the D-182 row carries " + JSON.stringify(needle));
+    "anden gang med første aflæsning skjult", "særskilt eksekveringsbesked", "R3 forbliver default OFF"]) assert.ok(ROW.includes(needle), "the D-183 row carries " + JSON.stringify(needle));
   assert.ok(!/[ÃÂ]\S|�/.test(ROW), "no mojibake in the Danish row");
   const doc = readFileSync(repoFile("docs/AVATAR_SYSTEM.md"), "utf8");
-  assert.match(doc, /\*\*D-182 \(2026-10-22\)\*\* authorised exactly ONE further hair call/);
-  assert.match(doc, /one live permission: the fourth hair call \(D-182, Northstar for style and a geometry guide\), not yet sent \(D-174 … D-182, as of 2026-10-22\)/);
+  assert.match(doc, /\*\*D-183 \(2026-10-22\)\*\* authorised exactly ONE further hair call/);
+  assert.match(doc, /one live permission: the fourth hair call \(D-183, Northstar for style and a geometry guide\), not yet sent \(D-174 … D-183, as of 2026-10-22\)/);
 });
 
 // ── static: the adapter's shape ─────────────────────────────────────────────────────────────────────────────────
-test("the D-180 adapter is unchanged; the D-182 adapter exports nothing and imports only node built-ins, the ledger and the hair tool", () => {
+test("the D-180 adapter is unchanged; the D-183 adapter exports nothing and imports only node built-ins, the ledger and the hair tool", () => {
   assert.equal(sha256(readFileSync(repoFile(PREV_ADAPTER_REL))), D180_ADAPTER_SHA, "the D-180 adapter is byte-identical to what ran");
   assert.ok(!/^\s*export\b/m.test(CODE));
   const imports = [...CODE.matchAll(/^\s*import\b[^;]*?from\s+"([^"]+)"/gm)].map((m) => m[1]);
@@ -256,10 +256,10 @@ test("no injection point, no bypass flag; the key is read once, after every chec
     "if (!args.sendMode)", "const again = resolveRefs()", "process.env.OPENAI_API" + "_KEY", "claim = createClaim(", "event(\"dispatch\"", "res = await globalThis.fetch(", "checkHairSheet(imgBuf)"]) { const i = body.indexOf(k); assert.ok(i > last, k + " in order"); last = i; }
   for (const del of ["unlinkSync", "rmSync", "rmdirSync", "truncateSync", "copyFileSync"]) assert.ok(!CODE.includes(del), "must not contain " + del);
   assert.ok(!/candidate\.png|\.candidate\./.test(CODE), "no candidate file");
-  assert.match(CODE, /const OUT_DIR = "tools\/avatar\/build\/r3-hair-d182";/);
+  assert.match(CODE, /const OUT_DIR = "tools\/avatar\/build\/r3-hair-d183";/);
   for (const id of SPENT_IDS) assert.ok(SRC.includes(id), "lists " + id + " as never-reuse");
   for (const v of [CALL, CLAIM_ID, CLAIM_FILE, EVENTS_FILE, APPROVAL, ADAPTER_REL, PROMPT_REL, PROMPT_SHA, TARGETS_REL, TARGETS_SHA, NORTHSTAR_SHA, MODEL]) assert.ok(SRC.includes(v), "the adapter carries " + v);
-  assert.match(SRC, /const REQUIRED_DECISIONS = Object\.freeze\(\["D-142", "D-159", "D-174", "D-179", "D-181", "D-182"\]\);/);
+  assert.match(SRC, /const REQUIRED_DECISIONS = Object\.freeze\(\["D-142", "D-159", "D-174", "D-179", "D-181", "D-183"\]\);/);
   assert.match(SRC, /const FIELD_ORDER = Object\.freeze\(\["model", "image\[\]", "image\[\]", "prompt", "size", "quality", "n", "output_format", "background"\]\);/);
   for (const v of [GUIDE_REL, GUIDE_SHA, GENERATOR_REL]) assert.ok(SRC.includes(v), "the adapter carries " + v);
   assert.match(SRC, /const PARAMETERS = Object\.freeze\(\{ size: "1024x1024", quality: "high", n: 1, output_format: "png", background: "transparent" \}\);/);
@@ -267,17 +267,17 @@ test("no injection point, no bypass flag; the key is read once, after every chec
 
 // ── sandbox: a temporary git repository per scenario ─────────────────────────────────────────────────────────────
 const SANDBOX_ROOTS = [];
-after(() => { for (const root of SANDBOX_ROOTS) if (isInside(root, realpathSync.native(tmpdir())) && /d182-sandbox-/.test(root)) rmSync(root, { recursive: true, force: true }); });
+after(() => { for (const root of SANDBOX_ROOTS) if (isInside(root, realpathSync.native(tmpdir())) && /d183-sandbox-/.test(root)) rmSync(root, { recursive: true, force: true }); });
 
 const MOCK_SRC = [
-  "// D-182 test mock: replaces globalThis.fetch (and, for the crash windows, node:fs) for one child process. Refuses to load unconfigured.",
+  "// D-183 test mock: replaces globalThis.fetch (and, for the crash windows, node:fs) for one child process. Refuses to load unconfigured.",
   "import fs, { appendFileSync, existsSync, readFileSync, writeFileSync } from \"node:fs\";",
   "import { syncBuiltinESMExports } from \"node:module\";",
   "import { resolve } from \"node:path\";",
-  "const LOG = process.env.D182_MOCK_LOG, MODE = process.env.D182_MOCK_MODE, CLAIM = process.env.D182_MOCK_CLAIM, EVENTS = process.env.D182_MOCK_EVENTS,",
-  "  PNG = process.env.D182_MOCK_PNG, BODY = process.env.D182_MOCK_BODY;",
-  "if (!LOG || !MODE || !CLAIM || !EVENTS || !PNG || !BODY) throw new Error(\"d182 mock: not configured — refusing to run\");",
-  "const KEY = \"sk-d182-sandbox-dummy-key-not-a-credential\";",
+  "const LOG = process.env.D183_MOCK_LOG, MODE = process.env.D183_MOCK_MODE, CLAIM = process.env.D183_MOCK_CLAIM, EVENTS = process.env.D183_MOCK_EVENTS,",
+  "  PNG = process.env.D183_MOCK_PNG, BODY = process.env.D183_MOCK_BODY;",
+  "if (!LOG || !MODE || !CLAIM || !EVENTS || !PNG || !BODY) throw new Error(\"d183 mock: not configured — refusing to run\");",
+  "const KEY = \"sk-d183-sandbox-dummy-key-not-a-credential\";",
   "const norm = (p) => { const r = resolve(String(p)); return process.platform === \"win32\" ? r.toLowerCase() : r; };",
   "if (MODE === \"die-at-dispatch\" || MODE === \"fail-dispatch\") {",
   "  const orig = fs.openSync; let failed = false;",
@@ -299,7 +299,7 @@ const MOCK_SRC = [
   "  };",
   "  syncBuiltinESMExports();",
   "}",
-  "globalThis.fetch = async function d182MockFetch(url, init) {",
+  "globalThis.fetch = async function d183MockFetch(url, init) {",
   "  const headers = init && init.headers ? init.headers : {};",
   "  const body = init ? init.body : null;",
   "  appendFileSync(LOG, JSON.stringify({ url: String(url), method: init && init.method, redirect: init && init.redirect, dummyKey: headers.Authorization === \"Bearer \" + KEY,",
@@ -347,11 +347,11 @@ function envFor(sb, extra) {
   for (const k of ["PATH", "Path", "SystemRoot", "windir", "COMSPEC", "PATHEXT", "SystemDrive"]) if (typeof process.env[k] === "string") env[k] = process.env[k];
   Object.assign(env, { LOCALAPPDATA: sb.state, XDG_STATE_HOME: sb.state, HOME: sb.home, USERPROFILE: sb.home, TEMP: sb.tmp, TMP: sb.tmp, TMPDIR: sb.tmp,
     HTTP_PROXY: "http://127.0.0.1:9", HTTPS_PROXY: "http://127.0.0.1:9", NO_PROXY: "", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: sb.gitconfig,
-    D182_MOCK_LOG: sb.log, D182_MOCK_MODE: "ok", D182_MOCK_CLAIM: sb.claim, D182_MOCK_EVENTS: sb.events, D182_MOCK_PNG: sb.png, D182_MOCK_BODY: sb.body }, extra || {});
+    D183_MOCK_LOG: sb.log, D183_MOCK_MODE: "ok", D183_MOCK_CLAIM: sb.claim, D183_MOCK_EVENTS: sb.events, D183_MOCK_PNG: sb.png, D183_MOCK_BODY: sb.body }, extra || {});
   return env;
 }
 function sgit(sb, args) {
-  const r = spawnSync("git", ["-C", sb.repo, "-c", "user.name=d182-sandbox", "-c", "user.email=sandbox@example.invalid", "-c", "core.autocrlf=false", ...args], { env: envFor(sb), encoding: "utf8", windowsHide: true });
+  const r = spawnSync("git", ["-C", sb.repo, "-c", "user.name=d183-sandbox", "-c", "user.email=sandbox@example.invalid", "-c", "core.autocrlf=false", ...args], { env: envFor(sb), encoding: "utf8", windowsHide: true });
   if (r.status !== 0) throw new Error("sandbox git " + args.join(" ") + ": " + r.stderr);
   return r.stdout.trim();
 }
@@ -359,12 +359,12 @@ const contractPath = (sb) => join(sb.repo, ...CONTRACT_REL.split("/"));
 const registerPath = (sb) => join(sb.repo, ...REGISTER_REL.split("/"));
 const editContract = (sb, fn) => { const c = JSON.parse(readFileSync(contractPath(sb), "utf8")); fn(c); writeFileSync(contractPath(sb), JSON.stringify(c, null, 2) + "\n"); };
 const editEntry = (fn) => (sb) => editContract(sb, (c) => { const i = c.authorisedCalls.calls.findIndex((e) => e.callId === CALL); c.authorisedCalls.calls[i] = fn(structuredClone(c.authorisedCalls.calls[i])); });
-const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterImplementations.entries.findIndex((e) => e.decision === "D-182"); const x = fn(structuredClone(c.adapterImplementations.entries[i])); if (x) c.adapterImplementations.entries[i] = x; else c.adapterImplementations.entries.splice(i, 1); });
+const editImpl = (fn) => (sb) => editContract(sb, (c) => { const i = c.adapterImplementations.entries.findIndex((e) => e.decision === "D-183"); const x = fn(structuredClone(c.adapterImplementations.entries[i])); if (x) c.adapterImplementations.entries[i] = x; else c.adapterImplementations.entries.splice(i, 1); });
 const toLive = (sb) => { writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n"); copyFileSync(repoFile(REGISTER_REL), registerPath(sb)); };
 
-/** A fresh sandbox. Default: the state D-182 commits (D-182 active) as origin/main. `pre`: before D-182 (the D-181 merge). */
+/** A fresh sandbox. Default: the state D-183 commits (D-183 active) as origin/main. `pre`: before D-183 (the D-181 merge). */
 function sandbox({ base, layout = "main", top, pre = false } = {}) {
-  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d182-sandbox-")));
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d183-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
     gitconfig: join(root, "gitconfig"), png: join(root, "mock-output.png"), body: join(root, "mock-body.json"), mock: join(root, "mock.mjs") };
@@ -377,13 +377,13 @@ function sandbox({ base, layout = "main", top, pre = false } = {}) {
   for (const k of ["border", "low", "colour", "island", "wrongsize"]) writeFileSync(sb.png + "." + k + ".png", PNGS[k]);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (pre) { writeFileSync(contractPath(sb), JSON.stringify(PRE, null, 2) + "\n"); writeFileSync(registerPath(sb), PRE_REGISTER); }
-  else writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-182 as committed
+  else writeFileSync(contractPath(sb), JSON.stringify(LIVE, null, 2) + "\n");   // D-183 as committed
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
   else if (layout === "branch" || layout === "detached") {
-    if (layout === "branch") sgit(sb, ["checkout", "-q", "-b", "local-d182"]); else sgit(sb, ["checkout", "-q", "--detach"]);
-    top(sb); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "D-182 not merged"]);
+    if (layout === "branch") sgit(sb, ["checkout", "-q", "-b", "local-d183"]); else sgit(sb, ["checkout", "-q", "--detach"]);
+    top(sb); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "D-183 not merged"]);
   }
   return sb;
 }
@@ -393,8 +393,8 @@ function runFile(sb, rel, args, extra) {
 }
 const runAdapter = (sb, args, extra) => runFile(sb, ADAPTER_REL, args, extra);
 const fetchLog = (sb) => readFileSync(sb.log, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
-const outDir = (sb) => join(sb.repo, "tools", "avatar", "build", "r3-hair-d182");
-const outFile = (sb, n) => join(outDir(sb), "r3-hair-d182." + n);
+const outDir = (sb) => join(sb.repo, "tools", "avatar", "build", "r3-hair-d183");
+const outFile = (sb, n) => join(outDir(sb), "r3-hair-d183." + n);
 const KEY_ENV = { OPENAI_API_KEY: DUMMY_KEY };
 const onDisk = (sb) => deriveAttempt({ claimPresent: existsSync(sb.claim), eventsText: existsSync(sb.events) ? readFileSync(sb.events, "utf8") : null, callId: CALL });
 const manifest = (sb) => JSON.parse(readFileSync(outFile(sb, "request.json"), "utf8"));
@@ -417,31 +417,31 @@ test("isolation is proven first: every derived path is inside the sandbox, the m
 });
 
 // ── the committed state ─────────────────────────────────────────────────────────────────────────────────────────
-test("THE LIVE D-182 STATE: the dry run passes with the real tracked pins and NO credential, writes nothing, claims nothing, sends nothing", () => {
+test("THE LIVE D-183 STATE: the dry run passes with the real tracked pins and NO credential, writes nothing, claims nothing, sends nothing", () => {
   const sb = sandbox();
   const r = runAdapter(sb, GOOD_ARGS);
   assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
-  assert.match(r.out, /authorisation : exactly one active, unspent D-182-r3-hair-northstar-v4 entry and one D-182 implementation entry in origin\/main/);
+  assert.match(r.out, /authorisation : exactly one active, unspent D-183-r3-hair-northstar-v4 entry and one D-183 implementation entry in origin\/main/);
   assert.match(r.out, /size 1024x1024/);
   assert.match(r.out, new RegExp("Image 1 North Star " + NORTHSTAR_SHA + " · Image 2 guide " + GUIDE_SHA));
   assert.equal(existsSync(sb.claim), false); assert.equal(existsSync(sb.events), false); assert.equal(fetchLog(sb).length, 0); assert.equal(existsSync(outDir(sb)), false);
   assert.equal(readdirSync(sb.state).length, 0, "the claim register was not even created");
 });
-test("BEFORE D-182 nothing could send: the reconstructed pre-D-182 state is refused before any claim", () => {
+test("BEFORE D-183 nothing could send: the reconstructed pre-D-183 state is refused before any claim", () => {
   const sb = sandbox({ pre: true });
   const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
-  assertRefusedBeforeClaim(sb, r, "register"); assert.match(r.out, /D-182 appears 0 times/);
+  assertRefusedBeforeClaim(sb, r, "register"); assert.match(r.out, /D-183 appears 0 times/);
   // with the register row but the D-181 contract, the authorisation and the reference pack are missing
   const c = sandbox({ base: (s) => writeFileSync(contractPath(s), JSON.stringify(PRE, null, 2) + "\n") });
   const rc = runAdapter(c, [...GOOD_ARGS, ...SEND], KEY_ENV);
-  assertRefusedBeforeClaim(c, rc, "authorisation"); assert.match(rc.out, /hairMethod\.methodV2\.referencePack \(D-182\) is missing/); assert.match(rc.out, /authorises 0 entries for D-182-r3-hair-northstar-v4/);
+  assertRefusedBeforeClaim(c, rc, "authorisation"); assert.match(rc.out, /hairMethod\.methodV2\.referencePack \(D-183\) is missing/); assert.match(rc.out, /authorises 0 entries for D-183-r3-hair-northstar-v4/);
 });
 test("an authorisation only in the working tree, on a local branch or on a detached HEAD is refused before the claim", () => {
   const wt = sandbox({ pre: true, layout: "worktree", top: toLive }); assertRefusedBeforeClaim(wt, runAdapter(wt, [...GOOD_ARGS, ...SEND], KEY_ENV), "blob-divergence");
   const br = sandbox({ pre: true, layout: "branch", top: toLive }); assertRefusedBeforeClaim(br, runAdapter(br, [...GOOD_ARGS, ...SEND], KEY_ENV), "branch");
   const dt = sandbox({ pre: true, layout: "detached", top: toLive }); assertRefusedBeforeClaim(dt, runAdapter(dt, [...GOOD_ARGS, ...SEND], KEY_ENV), "head-not-origin-main");
 });
-test("D-180 STAYS CLOSED: in the live D-182 state, the D-180 adapter is refused before any claim", () => {
+test("D-180 STAYS CLOSED: in the live D-183 state, the D-180 adapter is refused before any claim", () => {
   const sb = sandbox();
   const r = runFile(sb, PREV_ADAPTER_REL, ["--call-id=D-180-r3-hair-northstar-v3", "--claim-identity=D-180-r3-hair-northstar-v3-claim", "--send", "--owner-approval=D-180"], KEY_ENV);
   assert.equal(r.status, 1, r.out); assert.match(r.out, /REFUSED \[authorisation\]/); assert.match(r.out, /mandateState: "SPENT", expected "UNSPENT"/);
@@ -449,11 +449,11 @@ test("D-180 STAYS CLOSED: in the live D-182 state, the D-180 adapter is refused 
 });
 
 for (const [label, args] of [
-  ["a wrong call-id", ["--call-id=D-182-r3-hair-northstar-v5", "--claim-identity=" + CLAIM_ID, ...SEND]],
-  ["an afro call-id", ["--call-id=D-182-r3-hair-afro-v1", "--claim-identity=" + CLAIM_ID, ...SEND]],
+  ["a wrong call-id", ["--call-id=D-183-r3-hair-northstar-v5", "--claim-identity=" + CLAIM_ID, ...SEND]],
+  ["an afro call-id", ["--call-id=D-183-r3-hair-afro-v1", "--claim-identity=" + CLAIM_ID, ...SEND]],
   ...SPENT_IDS.map((id) => ["the spent call-id " + id, ["--call-id=" + id, "--claim-identity=" + CLAIM_ID, ...SEND]]),
   ["D-180's spent claim identity", ["--call-id=" + CALL, "--claim-identity=D-180-r3-hair-northstar-v3-claim", ...SEND]],
-  ["a wrong claim identity", ["--call-id=" + CALL, "--claim-identity=D-182-other-claim", ...SEND]],
+  ["a wrong claim identity", ["--call-id=" + CALL, "--claim-identity=D-183-other-claim", ...SEND]],
   ["--send without the approval", [...GOOD_ARGS, "--send"]],
   ["the approval without --send", [...GOOD_ARGS, APPROVAL]],
   ["D-180's approval", [...GOOD_ARGS, "--send", "--owner-approval=D-180"]],
@@ -473,8 +473,8 @@ test("refused before the claim: an inactive, spent, closed, duplicated or second
     ["status PREPARED", editEntry((e) => ({ ...e, status: "PREPARED — NOT AUTHORISED" }))],
     ["already attempted", editEntry((e) => ({ ...e, outcome: "EXECUTED ONCE" }))],
     ["neverReuse", editEntry((e) => ({ ...e, neverReuse: true }))],
-    ["closed", editEntry((e) => ({ ...e, closedBy: "D-183" }))],
-    ["another decision", editEntry((e) => ({ ...e, decision: "D-183" }))],
+    ["closed", editEntry((e) => ({ ...e, closedBy: "D-184" }))],
+    ["another decision", editEntry((e) => ({ ...e, decision: "D-184" }))],
     ["prepared by D-179", editEntry((e) => ({ ...e, preparedBy: "D-179" }))],
     ["H1..H5 not bound", editEntry((e) => ({ ...e, outputHandling: { ...e.outputHandling, technicalChecks: "E1..E5" } }))],
     ["placement not left to the compose tool", editEntry((e) => ({ ...e, outputHandling: { ...e.outputHandling, composition: "placed by hand" } }))],
@@ -609,26 +609,26 @@ test("a normal hair sheet — claim, dispatch record, ONE fetch of exactly the p
   assert.ok(!/"HP|E1|RAW-4|AUTO-5/.test(JSON.stringify(c.auto)), "neither a placement, shape, eyes or face check");
   assert.equal(sha256(readFileSync(outFile(sb, "response.json"))), sha256(readFileSync(sb.body)));
   assert.equal(sha256(readFileSync(outFile(sb, "image-1.png"))), sha256(readFileSync(sb.png)));
-  assert.deepEqual(readdirSync(outDir(sb)).sort(), ["r3-hair-d182.check.json", "r3-hair-d182.image-1.png", "r3-hair-d182.request.json", "r3-hair-d182.response.json"]);
+  assert.deepEqual(readdirSync(outDir(sb)).sort(), ["r3-hair-d183.check.json", "r3-hair-d183.image-1.png", "r3-hair-d183.request.json", "r3-hair-d183.response.json"]);
   assert.ok(!allSandboxText(sb).includes(DUMMY_KEY.slice(3)) && !r.out.includes(DUMMY_KEY.slice(3)), "the key appears nowhere");
   const again = runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV);
   assert.equal(again.status, 1); assert.match(again.out, /REFUSED \[claim-exists\]/); assert.equal(fetchLog(sb).length, 1);
 });
 test("the sheet's own checks: a border pixel, a coloured pixel, a second island or a wrong size is a TECHNICAL_REJECT; alpha 15 is only reported", () => {
   for (const [mode, first] of [["border", "H2"], ["colour", "H3"], ["island", "H4"], ["wrongsize", "H1"]]) {
-    const sb = sandbox(); const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: mode });
+    const sb = sandbox(); const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: mode });
     assert.equal(r.status, 0, mode + "\n" + r.out);
     const m = manifest(sb); assert.deepEqual([m.outcome.classification, m.check.firstFailure, m.outcome.candidateWritten], ["TECHNICAL_REJECT", first, false], mode);
     assert.ok(existsSync(outFile(sb, "image-1.png")), mode + ": the rejected sheet is still kept unchanged");
     assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND], KEY_ENV).status, 1, "no retry after " + mode); assert.equal(fetchLog(sb).length, 1);
   }
-  const low = sandbox(); assert.equal(runAdapter(low, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: "low" }).status, 0);
+  const low = sandbox(); assert.equal(runAdapter(low, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: "low" }).status, 0);
   const c = checkDoc(low); assert.equal(c.verdict, "PASS_TO_ANNOTATION");
   assert.equal(c.diag.find((d) => d.id === "H-LOWALPHA").value, 1);
 });
 test("HTTP error, transport error and a crash inside the network call — sent, no retry, the result never downgrades the dispatch", () => {
   for (const [mode, code, cls, result, answered] of [["http500", 3, "HTTP_ERROR", "http-error", true], ["throw", 3, "DISPATCHED_RESULT_UNKNOWN", "unknown", false], ["die-in-fetch", 137, null, "unknown", false]]) {
-    const sb = sandbox(); const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: mode });
+    const sb = sandbox(); const r = runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: mode });
     assert.equal(r.status, code, mode + "\n" + r.out);
     const d = onDisk(sb); assert.deepEqual([d.dispatch, d.result, d.actuallySent, d.serverAnswered], ["started", result, 1, answered], mode);
     if (cls) assert.equal(manifest(sb).outcome.classification, cls);
@@ -636,33 +636,33 @@ test("HTTP error, transport error and a crash inside the network call — sent, 
   }
 });
 test("crash windows before the network: claim → dispatch undetermined; dispatch record fails or is torn → documented stop; nothing fetched", () => {
-  const a = sandbox(); assert.equal(runAdapter(a, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: "die-at-dispatch" }).status, 137);
+  const a = sandbox(); assert.equal(runAdapter(a, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: "die-at-dispatch" }).status, 137);
   assert.deepEqual([onDisk(a).dispatch, onDisk(a).dispatchUndetermined, fetchLog(a).length], ["undetermined", 1, 0]);
   assert.equal(runAdapter(a, [...GOOD_ARGS, ...SEND], KEY_ENV).status, 1, "no retry");
   for (const mode of ["fail-dispatch", "torn-dispatch"]) {
-    const sb = sandbox(); assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: mode }).status, 3, mode);
+    const sb = sandbox(); assert.equal(runAdapter(sb, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: mode }).status, 3, mode);
     const m = manifest(sb); assert.deepEqual([m.outcome.classification, m.accounting.dispatch, m.accounting.actuallySent, fetchLog(sb).length], ["NOT_DISPATCHED", "not-started", 0, 0], mode);
     assert.deepEqual(parseEvents(readFileSync(sb.events, "utf8"), CALL).records.map((x) => x.event), ["stop"], mode);
   }
 });
 test("an unexpected image count is kept whole without selection or check", () => {
-  const two = sandbox(); assert.equal(runAdapter(two, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: "two" }).status, 0);
+  const two = sandbox(); assert.equal(runAdapter(two, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: "two" }).status, 0);
   const m2 = manifest(two); assert.deepEqual([m2.outcome.classification, m2.images.count, m2.check], ["UNEXPECTED", 2, null]);
   assert.ok(existsSync(outFile(two, "image-1.png")) && existsSync(outFile(two, "image-2.png")) && !existsSync(outFile(two, "check.json")));
-  const zero = sandbox(); assert.equal(runAdapter(zero, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D182_MOCK_MODE: "zero" }).status, 0);
+  const zero = sandbox(); assert.equal(runAdapter(zero, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, D183_MOCK_MODE: "zero" }).status, 0);
   assert.equal(manifest(zero).outcome.classification, "UNEXPECTED");
 });
 test("two simultaneous processes cannot send two requests", async () => {
   const sb = sandbox();
   const one = () => new Promise((res) => { const c = spawn(process.execPath, ["--import", pathToFileURL(sb.mock).href, join(sb.repo, ...ADAPTER_REL.split("/")), ...GOOD_ARGS, ...SEND],
-    { cwd: sb.repo, env: envFor(sb, { ...KEY_ENV, D182_MOCK_MODE: "slow" }), windowsHide: true }); let out = ""; c.stdout.on("data", (d) => { out += d; }); c.stderr.on("data", (d) => { out += d; }); c.on("close", (code) => res({ code, out })); });
+    { cwd: sb.repo, env: envFor(sb, { ...KEY_ENV, D183_MOCK_MODE: "slow" }), windowsHide: true }); let out = ""; c.stdout.on("data", (d) => { out += d; }); c.stderr.on("data", (d) => { out += d; }); c.on("close", (code) => res({ code, out })); });
   const [a, b] = await Promise.all([one(), one()]);
   assert.equal(fetchLog(sb).length, 1); assert.deepEqual([a.code, b.code].sort(), [0, 1], a.out + "\n----\n" + b.out);
 });
 test("two clones share one claim register: a claim made from one clone refuses the send from another", () => {
   const first = sandbox(); assert.equal(runAdapter(first, [...GOOD_ARGS, ...SEND], KEY_ENV).status, 0);
   const second = sandbox();
-  const r = runAdapter(second, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, LOCALAPPDATA: first.state, XDG_STATE_HOME: first.state, D182_MOCK_CLAIM: first.claim, D182_MOCK_EVENTS: first.events });
+  const r = runAdapter(second, [...GOOD_ARGS, ...SEND], { ...KEY_ENV, LOCALAPPDATA: first.state, XDG_STATE_HOME: first.state, D183_MOCK_CLAIM: first.claim, D183_MOCK_EVENTS: first.events });
   assert.equal(r.status, 1, r.out); assert.match(r.out, /REFUSED \[claim-exists\]/);
   assert.equal(fetchLog(second).length, 0, "the second clone sent nothing");
 });

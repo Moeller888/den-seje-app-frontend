@@ -177,7 +177,7 @@ test("coverage gains a second axis, and the budget is unchanged", () => {
   // calls and the derived budget is 24-25. Planned capacity is not a claim that the call was made.
   // D-180 adds ONE further planned hair call (the third hair sheet, the first under registration v2), so assets[8] carries 3
   // PLANNED calls and the derived budget is 25-26. Planned capacity is not a claim that the call was made.
-  // D-182 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so assets[8] carries 4 PLANNED
+  // D-183 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so assets[8] carries 4 PLANNED
   // calls and the derived budget is 26-27. Planned capacity is not a claim that the call was made.
   assert.equal(C.imageCallBudget.minimum, 26);
   assert.equal(C.imageCallBudget.maximum, 27);

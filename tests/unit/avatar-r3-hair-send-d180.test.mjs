@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents, deriveAttempt } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng, THRESHOLDS, checkHairSheet } from "../../tools/avatar/r3-hair-tool.mjs";
-import { preD182Contract, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, PRE_D181, PRE_D181_COMMIT, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, PRE_D180, PRE_D180_COMMIT, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256, preD177Contract, PRE_D177_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD183Contract, preD181Contract, PRE_D181_CONTRACT_CANONICAL_SHA256, PRE_D181, PRE_D181_COMMIT, preD180Contract, PRE_D180_CONTRACT_CANONICAL_SHA256, PRE_D180, PRE_D180_COMMIT, preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256, preD177Contract, PRE_D177_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -44,9 +44,9 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 // D-181 later recorded D-180's one send and closed its entry in place. LIVE is the contract exactly as D-180 committed it
 // (D-181's closure reversed, proven canonical below); the closed state itself is tested at the end of this file.
-// D-182 later added the fourth hair call; LIVE_NOW is the contract as D-181 left it (D-182's additions removed, proven
-// canonical in avatar-r3-hair-send-d182.test.mjs).
-const LIVE_NOW = preD182Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
+// D-183 later added the fourth hair call; LIVE_NOW is the contract as D-181 left it (D-183's additions removed, proven
+// canonical in avatar-r3-hair-send-d183.test.mjs).
+const LIVE_NOW = preD183Contract(JSON.parse(readFileSync(repoFile(CONTRACT_REL), "utf8")));
 const LIVE = preD181Contract(LIVE_NOW);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const PRE = preD180Contract(LIVE);
@@ -709,5 +709,5 @@ test("the D-181 register row: once, directly after D-180, D-180 verbatim, the ou
     "NOT_IDENTIFIABLE", "`hair` = 3", "`eyesFixed` = 2", "`faceNeutral` = 4", "`underlay` = 5", "25–26", "R3 forbliver default OFF"]) assert.ok(D181_ROW.includes(needle), "the D-181 row carries " + JSON.stringify(needle));
   assert.ok(!/[ÃÂ]\S|�/.test(D181_ROW), "no mojibake in the Danish row");
   assert.match(readFileSync(repoFile("docs/AVATAR_SYSTEM.md"), "utf8"), /\*\*D-181 \(2026-10-22\)\*\* recorded that one hair send/);
-  // the status line is current state: D-182 later added a live permission (tested in avatar-r3-hair-send-d182.test.mjs)
+  // the status line is current state: D-183 later added a live permission (tested in avatar-r3-hair-send-d183.test.mjs)
 });

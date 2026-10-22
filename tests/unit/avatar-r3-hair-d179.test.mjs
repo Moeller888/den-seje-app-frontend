@@ -43,8 +43,8 @@ test("methodV2 authorises nothing: no call, no capacity, no claim, no adapter; R
   assert.deepEqual([LIVE.assets[8].calls, LIVE.imageCallBudget.minimum, LIVE.imageCallBudget.maximum, LIVE.imageCallBudget.callsActuallySentSoFar.hair], [2, 24, 25, 2]);
   assert.equal(LIVE.architecture.defaultEnabled, false);
   assert.equal(LIVE.meta.authorisesImageRequest, false);
-  // D-179 added no adapter; D-180 and D-182 later added the ones for their own authorised calls.
-  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs", "openai-send-r3-hair-d182.mjs"], "no send adapter except D-175's, D-177's, D-180's and D-182's");
+  // D-179 added no adapter; D-180 and D-183 later added the ones for their own authorised calls.
+  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs", "openai-send-r3-hair-d183.mjs"], "no send adapter except D-175's, D-177's, D-180's and D-183's");
   for (const x of ["an image request or upload", "capacity, a call-id or a claim", "a frozen prompt v3", "the D-177 sheet under v2", "a new runtime layer for the nape lock"]) assert.ok(V2.notApproved.includes(x), x);
 });
 

@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; one live permission: the fourth hair call (D-182, Northstar for style and a geometry guide), not yet sent (D-174 … D-182, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; one live permission: the fourth hair call (D-183, Northstar for style and a geometry guide), not yet sent (D-174 … D-183, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -284,7 +284,7 @@ art layer behind them can be upgraded without a rewrite.
   - **Accounting.** `callsActuallySentSoFar.hair` = **3** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the
     planned hair capacity (3) is used up and the budget stays 25–26.
   - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-181**.
-  **D-182 (2026-10-22)** authorised exactly ONE further hair call, `D-182-r3-hair-northstar-v4`, with a reference pack:
+  **D-183 (2026-10-22)** authorised exactly ONE further hair call, `D-183-r3-hair-northstar-v4`, with a reference pack:
   - **Ear transitions.** Northstar shows sideburns, not the short ear transitions D-179 defines. The owner accepts short ear
     transitions without sideburns as a deliberate R3 design variation; A9 and A10 keep their coordinates and are documented
     as design targets (`methodV2.earTransitionDesign`). Targets, definitions, fit principle and thresholds are unchanged.
@@ -293,9 +293,9 @@ art layer behind them can be upgraded without a rewrite.
     tracked generator `tools/avatar/r3-hair-guide-v1.mjs` (the approved targets as fixed vertices; no Northstar pixels).
   - **Prompt v4, frozen** (`55846029…`): no sideburns, no lock below the ears, no nape lock; never the guide's flat fill or lines.
   - **Capacity.** `assets[8]` 3 → 4, budget 25–26 → 26–27, no reserve; actual use unchanged (hair = 3).
-  - **Adapter.** `tools/avatar/openai-send-r3-hair-d182.mjs`, derived from the closed D-180 adapter: both images pinned and
+  - **Adapter.** `tools/avatar/openai-send-r3-hair-d183.mjs`, derived from the closed D-180 adapter: both images pinned and
     sent in order, dry run without credentials, one fetch, no retry, only H1–H5. Annotation and placement stay separate.
-  - **Status.** UNSPENT and not a run instruction. R3 stays default OFF. See `project-state.md` **D-182**.
+  - **Status.** UNSPENT and not a run instruction. R3 stays default OFF. See `project-state.md` **D-183**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

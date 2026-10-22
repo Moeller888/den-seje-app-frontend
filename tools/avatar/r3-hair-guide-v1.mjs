@@ -1,10 +1,10 @@
-// R3 HAIR GEOMETRY GUIDE v1 (D-182) — a hand-authored vector drawing used as the GEOMETRY reference (Image 2) of one hair
+// R3 HAIR GEOMETRY GUIDE v1 (D-183) — a hand-authored vector drawing used as the GEOMETRY reference (Image 2) of one hair
 // call. Northstar is the STYLE reference (Image 1). This file is the guide's only source: the tracked PNG
 // tools/avatar/fixtures/r3-hair/guide-hair-v1.png is its output, and a test proves the generator reproduces its pixels.
 //
 // How it is drawn: the APPROVED targets-hair-v2 points are fixed contour vertices (A1..A10, never moved), the v2 review
 // sketch's vertices were the starting silhouette, and Northstar's volume and lock directions were read VISUALLY. No
-// Northstar pixel is extracted, traced or sampled; no rejected hair sheet is used. A9 and A10 are drawn as D-182's design
+// Northstar pixel is extracted, traced or sampled; no rejected hair sheet is used. A9 and A10 are drawn as D-183's design
 // targets: the inner corner of a short lower edge above each ear (no sideburns) — a deliberate R3 design variation.
 //
 // The guide is NOT a production asset, NOT a hair layer and NOT an approval of any target. Its flat grey fill and its thin
@@ -41,7 +41,7 @@ export function loadTargets() {
  *  (fraction of its length; + outward from the hair, - inward). Named vertices are used by the tests and the review view. */
 export function contour(P) {
   return [
-    // left: the short lower edge above the ear; A9 is its inner corner (D-182 design target)
+    // left: the short lower edge above the ear; A9 is its inner corner (D-183 design target)
     { n: "A9", p: P.leftEarTopJunction, b: 0.04 }, { n: "L-lowerOuter", p: [327, 309], b: 0.10 },
     // left side locks point out and curve down: lower flank concave, upper flank convex
     { n: "L-n1", p: [321, 293], b: -0.08 }, { n: "L-t1", p: [289, 279], b: 0.20 },

@@ -224,9 +224,9 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // budget is 24-25. Planned capacity is not a claim that the call was made.
   // D-180 adds ONE further planned hair call (the third hair sheet, the first under registration v2), so assets[8] carries 3
   // PLANNED calls and the derived budget is 25-26. Planned capacity is not a claim that the call was made.
-  // D-182 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so assets[8] carries 4 PLANNED
+  // D-183 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so assets[8] carries 4 PLANNED
   // calls and the derived budget is 26-27. Planned capacity is not a claim that the call was made.
-  assert.equal(min, 26, "assets[0] carries 5 PLANNED calls after D-153; assets[4] 4 after D-167; assets[5] 2 after D-172; assets[8] 4 after D-182");
+  assert.equal(min, 26, "assets[0] carries 5 PLANNED calls after D-153; assets[4] 4 after D-167; assets[5] 2 after D-172; assets[8] 4 after D-183");
   assert.equal(max, 27);
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
@@ -247,7 +247,7 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // D-172 adds ONE further planned eyes-fixed call (call A2), so the derived budget is 23-24.
   // D-177 adds ONE further planned hair call (the second hair sheet), so the derived budget is 24-25.
   // D-180 adds ONE further planned hair call (the third hair sheet, under registration v2), so the derived budget is 25-26.
-  // D-182 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so the derived budget is 26-27.
+  // D-183 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so the derived budget is 26-27.
   assert.equal(C.imageCallBudget.minimum, 26);
   assert.equal(C.imageCallBudget.maximum, 27);
 });

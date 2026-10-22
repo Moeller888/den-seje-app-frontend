@@ -1,12 +1,12 @@
 // R3 HAIR SHEET — THE SEND ADAPTER FOR ONE AUTHORISED CALL. ONE CLAIM, ONE DISPATCH RECORD, ONE FETCH.
 //
-// D-182 authorises exactly one call, D-182-r3-hair-northstar-v4: TWO reference images in a fixed order — Image 1 Northstar
+// D-183 authorises exactly one call, D-183-r3-hair-northstar-v4: TWO reference images in a fixed order — Image 1 Northstar
 // Master v2 (the STYLE reference: painting, line weight, shadows, highlights) and Image 2 the tracked geometry guide
 // guide-hair-v1.png (the GEOMETRY reference: fit and lock structure, drawn by tools/avatar/r3-hair-guide-v1.mjs) — with
-// the frozen prompt v4, one 1024x1024 transparent hair sheet for registration v2 (hairMethod.methodV2, D-179, with D-182's
+// the frozen prompt v4, one 1024x1024 transparent hair sheet for registration v2 (hairMethod.methodV2, D-179, with D-183's
 // design reading of A9/A10 as short ear transitions; assets[8] r3-hair-northstar, its fourth planned call, no reserve).
-// Afro, short and headwear are NOT authorised. Merging this file or D-182 is NOT an instruction to run it: the call needs a
-// separate, explicit owner instruction after D-182 is merged. This file is derived from the D-180 adapter, which stays
+// Afro, short and headwear are NOT authorised. Merging this file or D-183 is NOT an instruction to run it: the call needs a
+// separate, explicit owner instruction after D-183 is merged. This file is derived from the D-180 adapter, which stays
 // unchanged and closed (D-181): the identity, the second image, the prompt pin (hairMethod.methodV2.referencePack.promptV4)
 // and the never-reuse list differ; the output check is still D-174's raw hair-sheet check H1..H5 (checkHairSheet from
 // tools/avatar/r3-hair-tool.mjs) with H2's 16 px border unchanged — every threshold fixed before any call. The ledger is
@@ -16,7 +16,7 @@
 //
 // THE FUNCTION THAT CAN FETCH CHECKS ITSELF (D-142 futureSendAuthorisationRule). Every check runs inside main(), the
 // only function that calls fetch, and every one runs BEFORE the claim:
-//   1  argv is parsed strictly: --call-id=, --claim-identity=, and for a send --send and --owner-approval=D-182.
+//   1  argv is parsed strictly: --call-id=, --claim-identity=, and for a send --send and --owner-approval=D-183.
 //   2  git, read-only: this repository's top level; origin/main from the LOCAL remote-tracking ref (no network); HEAD
 //      equals it exactly; HEAD is main or detached.
 //   3  every tracked input — this adapter, the ledger, the hair tool and the two libraries it imports, the register, the
@@ -24,14 +24,14 @@
 //      commit and the working-tree bytes equal it byte for byte.
 //   4  the pins are checked on the origin/main BLOBS (the bytes that are sent): North Star, the guide, the exact prompt, the
 //      targets v2.
-//   5  the origin/main register carries D-142, D-159, D-174, D-179, D-181 and D-182 exactly once each; the D-182 row names
+//   5  the origin/main register carries D-142, D-159, D-174, D-179, D-181 and D-183 exactly once each; the D-183 row names
 //      this call.
 //   6  the origin/main contract: the general flag is false; D-142's rule, D-159's section, D-174's hair method (the
 //      1024x1024 sheet, H1..H5 and every threshold equal to the tool's) and D-179's methodV2 (no authorisation; the APPROVED
-//      targets v2 pin; D-182's ear-transition design reading; the reference pack with the guide pin and the prompt v4 pin,
-//      FROZEN by D-182) are present; exactly one authorisedCalls entry has this call id, it is D-182's, ACTIVE and UNSPENT,
+//      targets v2 pin; D-183's ear-transition design reading; the reference pack with the guide pin and the prompt v4 pin,
+//      FROZEN by D-183) are present; exactly one authorisedCalls entry has this call id, it is D-183's, ACTIVE and UNSPENT,
 //      every pin equals this file's constants, and it is the ONLY unspent entry; no spent call id is reopened; exactly one
-//      D-182 implementation entry names this file.
+//      D-183 implementation entry names this file.
 //   7  the claim register (shared by every local clone) has neither this call's claim nor its event log.
 //   8  the output directory holds none of this call's files.
 //   9  the multipart body: field order, exactly two images in the order North Star then guide, no mask, no input_fidelity,
@@ -49,11 +49,11 @@
 // right, and not that any D-179 placement or shape check has passed. Placement is done later ONLY by
 // tools/avatar/r3-hair-compose-v2.mjs from an owner-APPROVED annotation; nothing here moves, scales, colours or repairs a pixel.
 //
-// Usage (only after D-182 is merged; the send only on a separate, explicit owner instruction):
-//   node tools/avatar/openai-send-r3-hair-d182.mjs --call-id=D-182-r3-hair-northstar-v4 \
-//        --claim-identity=D-182-r3-hair-northstar-v4-claim
+// Usage (only after D-183 is merged; the send only on a separate, explicit owner instruction):
+//   node tools/avatar/openai-send-r3-hair-d183.mjs --call-id=D-183-r3-hair-northstar-v4 \
+//        --claim-identity=D-183-r3-hair-northstar-v4-claim
 //        read-only dry run: every check, nothing written, no credential read
-//   … the same plus --send --owner-approval=D-182
+//   … the same plus --send --owner-approval=D-183
 //        THE ONE SEND
 import { readFileSync, writeFileSync, renameSync, mkdirSync, lstatSync, realpathSync, readdirSync,
   openSync, writeSync, fsyncSync, closeSync } from "node:fs";
@@ -68,22 +68,22 @@ import { checkHairSheet, THRESHOLDS } from "./r3-hair-tool.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 
-// ── identity (inactive until D-182 is merged; the send needs a separate owner instruction) ──────────────────────────
-const TOOL = "openai-send-r3-hair-d182";
-const ADAPTER_PATH = "tools/avatar/openai-send-r3-hair-d182.mjs";
-const DECISION = "D-182";
-const PREPARED_BY = "D-182";
+// ── identity (inactive until D-183 is merged; the send needs a separate owner instruction) ──────────────────────────
+const TOOL = "openai-send-r3-hair-d183";
+const ADAPTER_PATH = "tools/avatar/openai-send-r3-hair-d183.mjs";
+const DECISION = "D-183";
+const PREPARED_BY = "D-183";
 const METHOD_DECISION = "D-174";
 const METHOD_V2_DECISION = "D-179";
 const TARGETS_DECISION = "D-179";
-const CALL_ID = "D-182-r3-hair-northstar-v4";
-const CLAIM_IDENTITY = "D-182-r3-hair-northstar-v4-claim";
-const CLAIM_FILENAME = "D-182-r3-hair-northstar-v4.claim.json";
-const EVENTS_FILENAME = "D-182-r3-hair-northstar-v4.events.jsonl";
-const OWNER_APPROVAL = "D-182";
-const OWNER_APPROVAL_FLAG = "--owner-approval=D-182";
+const CALL_ID = "D-183-r3-hair-northstar-v4";
+const CLAIM_IDENTITY = "D-183-r3-hair-northstar-v4-claim";
+const CLAIM_FILENAME = "D-183-r3-hair-northstar-v4.claim.json";
+const EVENTS_FILENAME = "D-183-r3-hair-northstar-v4.events.jsonl";
+const OWNER_APPROVAL = "D-183";
+const OWNER_APPROVAL_FLAG = "--owner-approval=D-183";
 const IMPLEMENTATION_STATUS = "IMPLEMENTED — NOT EXECUTED";
-const REQUIRED_DECISIONS = Object.freeze(["D-142", "D-159", "D-174", "D-179", "D-181", "D-182"]);
+const REQUIRED_DECISIONS = Object.freeze(["D-142", "D-159", "D-174", "D-179", "D-181", "D-183"]);
 const NEVER_REUSE_CALL_IDS = Object.freeze(["D-139-r3-underlay-head-only-v1", "D-142-r3-underlay-core-v1", "D-143-r3-underlay-core-v2",
   "D-151-r3-head-colour-u1-v1", "D-153-r3-head-colour-u1-opaque-v1", "D-160-r3-face-neutral-v1", "D-162-r3-face-neutral-guide-b-v1",
   "D-165-r3-face-parts-sheet-v1", "D-167-r3-face-parts-nose-v1", "D-170-r3-eyes-fixed-v1", "D-172-r3-eyes-fixed-v2", "D-175-r3-hair-northstar-v1",
@@ -121,19 +121,19 @@ const NORTHSTAR = Object.freeze({ role: "Image 1", name: "Northstar Master v2.pn
 const GUIDE = Object.freeze({ role: "Image 2", name: "guide-hair-v1.png", bytes: 44574,
   sha256: "4779de4acc8e58269a5fbbc96cb113507864e00314b6f9d70be7e25eecc758ec" });
 const PROMPT = Object.freeze({ name: "prompt-hair-sheet-v4.txt", bytes: 1427,
-  sha256: "5584602925dbc8cc9454f46bc42b771b3f35c34f64f60ee62b204707f1697ad4", encoding: "UTF-8, LF only, ending in exactly one LF (the frozen D-182 bytes)" });
+  sha256: "5584602925dbc8cc9454f46bc42b771b3f35c34f64f60ee62b204707f1697ad4", encoding: "UTF-8, LF only, ending in exactly one LF (the frozen D-183 bytes)" });
 const TARGETS = Object.freeze({ version: "r3-hair-targets-v2", sha256: "8c3b24e8404d3ccf44160108eaf13cd58cdb66c6705f503a6415b49a151864cc" });
 const SHEET_TYPE = "r3-hair-sheet-v1";
 
 // ── claim register and outputs ───────────────────────────────────────────────────────────────────────────────────
 const REPO_IDENTITY = "Moeller888-den-seje-app-frontend";
-const OUT_DIR = "tools/avatar/build/r3-hair-d182";
+const OUT_DIR = "tools/avatar/build/r3-hair-d183";
 const OUT = Object.freeze({
-  response: OUT_DIR + "/r3-hair-d182.response.json",
-  manifest: OUT_DIR + "/r3-hair-d182.request.json",
-  check: OUT_DIR + "/r3-hair-d182.check.json",
+  response: OUT_DIR + "/r3-hair-d183.response.json",
+  manifest: OUT_DIR + "/r3-hair-d183.request.json",
+  check: OUT_DIR + "/r3-hair-d183.check.json",
 });
-const imageOut = (k) => OUT_DIR + "/r3-hair-d182.image-" + k + ".png";
+const imageOut = (k) => OUT_DIR + "/r3-hair-d183.image-" + k + ".png";
 const MAX_IMAGES_STORED = 16;
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -294,16 +294,16 @@ function verifyAuthorisation(c) {
     const v2 = get(hair, "methodV2");
     if (get(v2, "decision") !== METHOD_V2_DECISION || get(v2, "isAuthorisation") !== false || get(v2, "authorisesImageRequest") !== false) problems.push("hairMethod.methodV2 (D-179) is missing or claims to be an authorisation");
     const pack = get(v2, "referencePack");
-    if (get(pack, "decision") !== DECISION) problems.push("hairMethod.methodV2.referencePack (D-182) is missing");
-    eq("D-182 referencePack.inputOrder", get(pack, "inputOrder"), [NORTHSTAR.role, GUIDE.role]);
-    eq("D-182 referencePack.guide.file", get(pack, "guide", "file"), TRACKED.guide);
-    eq("D-182 referencePack.guide.sha256", get(pack, "guide", "sha256"), GUIDE.sha256);
-    eq("D-182 referencePack.guide.bytes", get(pack, "guide", "bytes"), GUIDE.bytes);
-    eq("D-182 referencePack.promptV4.file", get(pack, "promptV4", "file"), TRACKED.prompt);
-    eq("D-182 referencePack.promptV4.sha256", get(pack, "promptV4", "sha256"), PROMPT.sha256);
-    eq("D-182 referencePack.promptV4.bytes", get(pack, "promptV4", "bytes"), PROMPT.bytes);
-    if (!/^FROZEN by D-182/.test(get(pack, "promptV4", "status") || "")) problems.push("the hair prompt v4 is not FROZEN by D-182");
-    if (get(v2, "earTransitionDesign", "decision") !== DECISION) problems.push("D-182's design reading of A9/A10 (hairMethod.methodV2.earTransitionDesign) is missing");
+    if (get(pack, "decision") !== DECISION) problems.push("hairMethod.methodV2.referencePack (D-183) is missing");
+    eq("D-183 referencePack.inputOrder", get(pack, "inputOrder"), [NORTHSTAR.role, GUIDE.role]);
+    eq("D-183 referencePack.guide.file", get(pack, "guide", "file"), TRACKED.guide);
+    eq("D-183 referencePack.guide.sha256", get(pack, "guide", "sha256"), GUIDE.sha256);
+    eq("D-183 referencePack.guide.bytes", get(pack, "guide", "bytes"), GUIDE.bytes);
+    eq("D-183 referencePack.promptV4.file", get(pack, "promptV4", "file"), TRACKED.prompt);
+    eq("D-183 referencePack.promptV4.sha256", get(pack, "promptV4", "sha256"), PROMPT.sha256);
+    eq("D-183 referencePack.promptV4.bytes", get(pack, "promptV4", "bytes"), PROMPT.bytes);
+    if (!/^FROZEN by D-183/.test(get(pack, "promptV4", "status") || "")) problems.push("the hair prompt v4 is not FROZEN by D-183");
+    if (get(v2, "earTransitionDesign", "decision") !== DECISION) problems.push("D-183's design reading of A9/A10 (hairMethod.methodV2.earTransitionDesign) is missing");
     eq("methodV2.targets.file", get(v2, "targets", "file"), TRACKED.targets);
     eq("methodV2.targets.sha256", get(v2, "targets", "sha256"), TARGETS.sha256);
     eq("methodV2.targets.status", get(v2, "targets", "status"), "APPROVED");
@@ -364,7 +364,7 @@ function verifyAuthorisation(c) {
   return { ok: problems.length === 0, problems };
 }
 
-/** The ONE D-182 implementation entry, from the origin/main contract only, field by field (D-145: no adapter hash pinned). */
+/** The ONE D-183 implementation entry, from the origin/main contract only, field by field (D-145: no adapter hash pinned). */
 function verifyImplementation(c) {
   const problems = [];
   const block = c.adapterImplementations;
@@ -417,7 +417,7 @@ function occupiedOutputs() {
   if (!pathExists(dir)) return [];
   let names;
   try { names = readdirSync(dir); } catch (e) { return ["the output directory cannot be listed: " + errText(e)]; }
-  return names.filter((n) => n.startsWith("r3-hair-d182.")).map((n) => OUT_DIR + "/" + n);
+  return names.filter((n) => n.startsWith("r3-hair-d183.")).map((n) => OUT_DIR + "/" + n);
 }
 
 function buildBody(blobs, prompt) {
