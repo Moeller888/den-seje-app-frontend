@@ -70,6 +70,39 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
+- **R3 head underlay — deterministic head/neck drawing without H1 pixels; one review candidate, not production-approved (D-186, as of 2026-10-22).**
+  **D-186 (2026-10-22)** chose **method A**: a deterministic drawing with no image call.
+  - **Sources.** G1V3 + E2 (rows ≤ 424) and K4 are kept unchanged, and U1 is used only to verify the geometry and read
+    the medium skin colour.
+  - **Neck.** The neck is self-drawn as a separate geometry **N1** (rows 425–479; choice b), so the asset contains
+    **no H1 pixels**.
+  - **Never used:** H1, `r3-head-g1v3-v1.png` (its rows 425–445 are H1-derived), Northstar pixels and paint from
+    rejected calls.
+  - **Method.** Generator `tools/avatar/r3-underlay-headneck.mjs` plus the spec and manifest in
+    `tools/avatar/fixtures/r3-underlay-headneck/`.
+    - **Layers.** An achromatic luminance layer times a skin token with warm shadows; the medium tone comes first and
+      other tones follow from the same luminance. Hair ramp B is not used for skin.
+    - **Ink.** K4 plus the drawn chin, neck and ear lines.
+    - **Ears.** An inner rim with a helix fold, a C-shaped concha and the ear's front line, all drawn inside the
+      existing ear silhouettes.
+    - **Jaw and chin.** The chin leaves the jaw corner at the jaw's own slope, closes horizontally at y 442, and has a
+      cast shadow under it.
+    - **Rebuild.** Deterministic, and verified byte-identical in a separate directory.
+  - **Checks.**
+    - UN-HEAD, UN-ATTACH (the 424/425 step 4 ≤ the geometry's own 423/424 step 4), UN-SHAPE, UN-EXTENT and
+      UN-LUMINANCE pass.
+    - `pre.join-continuity` and `pre.transition-silhouette` are **NOT APPLICABLE**, because both compare against
+      H1's rows. They are not reported as passed, and their bounds and earlier results are unchanged.
+  - **Whole-head review.** The candidate was composed locally with D-185's `r3-hair-hybrid-v2`, the D-165 brows and
+    mouth (DRAFT), the nose placeholder and eyes v5 (DRAFT).
+    - HP4–HP8 and HP-FRAG pass on the new pixels (HP6/HP7 run locally and are NOT RUN in CI).
+    - The hair covers no chin or neck pixel.
+    - The nape lock is not introduced.
+  - **D-185 correction.** G1V3/U1 already had ear silhouettes; what was missing was the drawn ear detail and a neck.
+    D-185's row stays verbatim.
+  - **Not production-approved.** The owner's visual review is pending. Only the medium tone exists, the face parts and
+    eyes are provisional, the nape lock and the body join are not part of this asset, and nothing is promoted.
+    R3 stays default OFF. See `project-state.md` **D-186**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
@@ -161,7 +194,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; no live permission (D-174 … D-181, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; the fourth hair call (D-183, Northstar for style and a geometry guide) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; hybrid derivation adopted, one review candidate (r3-hair-hybrid-v2), not production-approved; no live permission (D-174 … D-185, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -284,6 +317,47 @@ art layer behind them can be upgraded without a rewrite.
   - **Accounting.** `callsActuallySentSoFar.hair` = **3** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the
     planned hair capacity (3) is used up and the budget stays 25–26.
   - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-181**.
+  **D-183 (2026-10-22)** authorised exactly ONE further hair call, `D-183-r3-hair-northstar-v4`, with a reference pack:
+  - **Ear transitions.** Northstar shows sideburns, not the short ear transitions D-179 defines. The owner accepts short ear
+    transitions without sideburns as a deliberate R3 design variation; A9 and A10 keep their coordinates and are documented
+    as design targets (`methodV2.earTransitionDesign`). Targets, definitions, fit principle and thresholds are unchanged.
+  - **Two images, fixed order.** Image 1 Northstar (`3daf32e7…`) controls painting, line weight, shadows and highlights;
+    Image 2 the geometry guide `guide-hair-v1.png` (`4779de4a…`) controls fit and lock structure. The guide is drawn by the
+    tracked generator `tools/avatar/r3-hair-guide-v1.mjs` (the approved targets as fixed vertices; no Northstar pixels).
+  - **Prompt v4, frozen** (`55846029…`): no sideburns, no lock below the ears, no nape lock; never the guide's flat fill or lines.
+  - **Capacity.** `assets[8]` 3 → 4, budget 25–26 → 26–27, no reserve; actual use unchanged (hair = 3).
+  - **Adapter.** `tools/avatar/openai-send-r3-hair-d183.mjs`, derived from the closed D-180 adapter: both images pinned and
+    sent in order, dry run without credentials, one fetch, no retry, only H1–H5. Annotation and placement stay separate.
+  - **Status.** UNSPENT and not a run instruction. R3 stays default OFF. See `project-state.md` **D-183**.
+  **D-184 (2026-10-22)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_d7b8bfbbb21b4defb4773bd7c143b5d9`, Northstar and the guide in order, one 1024×1024 sheet
+    `7b36e054…`, one fetch, no retry; claim, event log, manifest and raw response verified consistent.
+  - **Checks.** **H1–H5 passed**; they prove the technical sheet only. D-179's placement and shape checks were **not evaluated**.
+  - **Guide vs sheet.** Northstar's painting is taken over and the silhouette follows the guide's size and position (IoU 0.835),
+    but not its geometry where it matters: no V parting, pointed locks instead of short ear transitions, no separate image-right
+    temple lock.
+  - **Identifiability (review finding, not an approval).** A4 is ambiguous and A9/A10 are missing under D-179's definitions, so
+    the sheet cannot be annotated: no reduced fit, no invented coordinate, no DRAFT annotation. No visible halo.
+  - **Disposition: kept for review, not visually approved.** Raw files, claim and event log stay byte for byte and untracked.
+  - **Accounting.** `callsActuallySentSoFar.hair` = **4** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair
+    capacity (4) is used up and the budget stays 26–27.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-184**.
+  **D-185 (2026-10-22)** adopted **hybrid derivation** as a new authoring method and recorded one review candidate:
+  - **Method.** Generated painting from a technically passed raw sheet plus documented edits only: vector masks
+    (`remove`), named paint fields with one grey tone beneath the raw painting (`add`) and self-drawn contours inked only
+    on existing hair (`contours`). No Northstar pixels, no H1, no hidden pixel retouching, no change to the raw sheet or
+    to earlier check results. Change categories and their extent are recorded; every derivation needs the owner's visual
+    review. It is not an after-the-fact approval of the raw sheet's fit.
+  - **Three parts kept apart.** The untouched source (`tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.png`,
+    `7b36e054…`, with its original check report), the edit spec + generator (`tools/avatar/r3-hair-hybrid.mjs`), and the
+    derived sheet and placed candidate with their own pixel hashes. hybrid-v1 (the prototype) is kept unchanged.
+  - **Construction annotation** (`hybrid-annotation-v1`): points are drawn vertices bound to the edit geometry, with
+    source hashes, the transform, crops of the rasterised corners and their own review status. They are not readings;
+    D-179's hidden second reading still applies to raw sheets. A zero residual is not an independent validation.
+  - **Candidate `r3-hair-hybrid-v2`.** H1–H5, HP-LOCK, HP4v2, HP5, HP8 and HP-FRAG pass on the derived pixels; HP6/HP7 pass
+    locally with the DRAFT face parts and eyes v5 (reported NOT RUN in CI); ramp B in all eight colours; deterministic
+    rebuild. Not production-approved: face parts and eyes are provisional, U1 has no ears or neck, the nape lock is not
+    authored and the owner's visual approval is pending. R3 stays default OFF. See `project-state.md` **D-185**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
