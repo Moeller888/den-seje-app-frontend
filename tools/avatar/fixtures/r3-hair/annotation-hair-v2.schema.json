@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "r3-hair-annotation-v2",
+  "title": "R3 hair — source annotation v2 on ONE generated hair sheet (D-179, registration v2)",
+  "description": "Separate METADATA for one raw 1024x1024 hair sheet, never a pixel change. Coordinates are SHEET px, continuous (pixel i covers [i, i+1)); targets and every placed-layer check are MASTER px, and a sheet uncertainty u becomes u * s master px after the fit. The three fit points (A4, A9, A10) are required and must be IDENTIFIED: a NOT_IDENTIFIABLE fit point rejects, there is no reduced fit. A4 may start from the tool's automatic proposal (proposeA4), which is a review aid only. A9 and A10 are each read twice (repeated reading, preferably with the first reading hidden during the second pass); this is a reading protocol, not evidence of statistical independence. The two temple locks (A7, A8) are documented as separate locks for HP-LOCK. Only an owner-APPROVED annotation is used in production.",
+  "type": "object",
+  "required": ["schema", "version", "status", "raw", "annotator", "units", "fitPoints", "locks"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "r3-hair-annotation-v2" },
+    "version": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["DRAFT", "APPROVED", "SYNTHETIC_TEST_APPROVED"] },
+    "raw": { "type": "object", "required": ["file", "sha256"], "additionalProperties": false, "properties": { "file": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } },
+    "annotator": { "type": "string", "minLength": 1 },
+    "units": { "const": "sheet-px" },
+    "fitPoints": {
+      "type": "object",
+      "required": ["centreHairline", "leftEarTopJunction", "rightEarTopJunction"],
+      "additionalProperties": false,
+      "properties": {
+        "centreHairline": {
+          "type": "object",
+          "required": ["status", "xy", "uncertaintySheetPx"],
+          "additionalProperties": false,
+          "properties": {
+            "status": { "enum": ["IDENTIFIED", "NOT_IDENTIFIABLE"] },
+            "xy": { "oneOf": [{ "$ref": "#/$defs/pt" }, { "type": "null" }] },
+            "uncertaintySheetPx": { "const": 3 },
+            "reason": { "type": "string" },
+            "proposal": { "type": "object", "required": ["tool"], "additionalProperties": false, "properties": { "tool": { "const": "r3-hair-tool-v2 proposeA4" }, "xy": { "oneOf": [{ "$ref": "#/$defs/pt" }, { "type": "null" }] }, "accepted": { "type": "boolean" } } }
+          }
+        },
+        "leftEarTopJunction": { "$ref": "#/$defs/earJunction" },
+        "rightEarTopJunction": { "$ref": "#/$defs/earJunction" }
+      }
+    },
+    "locks": {
+      "type": "object",
+      "required": ["leftTempleLock", "rightTempleLock"],
+      "additionalProperties": false,
+      "properties": { "leftTempleLock": { "$ref": "#/$defs/lock" }, "rightTempleLock": { "$ref": "#/$defs/lock" } }
+    },
+    "checkPoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "crownTuftTip": { "$ref": "#/$defs/pt" }, "leftOuterSpikeTip": { "$ref": "#/$defs/pt" }, "rightOuterSpikeTip": { "$ref": "#/$defs/pt" }, "centralLockTip": { "$ref": "#/$defs/pt" }, "rightOfCentreLockTip": { "$ref": "#/$defs/pt" } }
+    },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "pt": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1024 }, "minItems": 2, "maxItems": 2 },
+    "earJunction": {
+      "type": "object",
+      "required": ["status", "xy", "uncertaintySheetPx"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["IDENTIFIED", "NOT_IDENTIFIABLE"] },
+        "xy": { "oneOf": [{ "$ref": "#/$defs/pt" }, { "type": "null" }] },
+        "uncertaintySheetPx": { "const": 4 },
+        "reason": { "type": "string" },
+        "readings": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": { "type": "object", "required": ["xy"], "additionalProperties": false, "properties": { "xy": { "$ref": "#/$defs/pt" }, "pass": { "enum": [1, 2] }, "firstReadingHidden": { "type": "boolean" } } }
+        }
+      }
+    },
+    "lock": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["IDENTIFIED", "NOT_IDENTIFIABLE"] },
+        "tip": { "$ref": "#/$defs/pt" },
+        "flankingNotches": { "type": "array", "items": { "$ref": "#/$defs/pt" }, "minItems": 2, "maxItems": 2 },
+        "evidence": { "type": "string", "minLength": 10 },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

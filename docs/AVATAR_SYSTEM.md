@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; no live permission (D-174 … D-178, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; no live permission (D-174 … D-179, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -231,6 +231,24 @@ art layer behind them can be upgraded without a rewrite.
   - **Accounting.** `callsActuallySentSoFar.hair` = **2** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the
     planned hair capacity (2) is used up and the budget stays 24–25.
   - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-178**.
+  **D-179 (2026-10-22)** adopted registration v2 for FUTURE hair sheets (`hairMethod.methodV2`); v1 stays unchanged for
+  the records of D-174 … D-178:
+  - **Seat fit.** ONE positive uniform scale + translation on A4 (top of the parting), A9 and A10 (ear-top junctions),
+    with D-174's coordinates unchanged (`targets-hair-v2.json`, roles only; A10 stays a reconstructed design point). A
+    missing or unidentifiable fit point rejects; there is no reduced fit. Annotations are sheet px, targets master px.
+  - **Reading.** An automatic A4 proposal (alpha < 16, flood fill inside the A9–A10 band) is a review aid only. A9/A10
+    are read twice (a repeated reading, not proof of independence). Source annotations still need owner approval.
+  - **Shape checks.** A7 and A8 are mandatory temple locks (HP-LOCK: identified separate lock with tip, two notches and
+    evidence, length ≥ 6 px, tip inside its window). HP-FRAG rejects loose hair pieces on the head. HP4's crown zone is
+    rows ≤ 194; HP5–HP8 are unchanged.
+  - **Thresholds (proposed, open owner point).** Seat residual ≤ 6.0 master px and |sx/sy − 1| ≤ 0.08, the worst case of
+    the documented noise model over the whole scale range 0.35–0.85 (the study's 5.5 px / 0.07 did not hold at 0.85).
+    Simulated rates are model results, not observed failure rates.
+  - **Nape lock.** A later, separate authoring part that waits for an underlay with a neck, merged into the same hair
+    layer — no new runtime layer.
+  - **Prompt v3** is a DRAFT (ear transitions, both temple locks, no lock below the ears) and authorises no call. Tool
+    `r3-hair-tool-v2.mjs` + CLI `r3-hair-compose-v2.mjs`. No call, capacity, claim, adapter or promotion; D-177 keeps
+    its status and is never approved under v2; R3 stays default OFF. See `project-state.md` **D-179**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
