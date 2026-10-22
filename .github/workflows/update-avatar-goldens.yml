@@ -9,8 +9,9 @@ on:
 # Both this regen and playwright.yml mutate/read the SAME shared Supabase test student
 # profile. Serialize them across the whole repo so a concurrent full suite cannot bleed
 # state (e.g. equipped cosmetics) into these goldens. Queue, do not cancel.
-# `queue: max` matches the playwright.yml `test` job: waiting runs line up FIFO instead of a
-# new arrival cancelling the pending one (see the comment there and tests/unit/ci-e2e-queue.test.mjs).
+# It always uses E2E account slot 0 (E2E_SLOT below), whose lock is this legacy group name.
+# `queue: max` matches the playwright.yml `test` job: waiting runs line up FIFO instead of a new
+# arrival cancelling the pending one (tests/unit/ci-e2e-slots.test.mjs).
 concurrency:
   group: e2e-shared-supabase
   cancel-in-progress: false
@@ -30,6 +31,8 @@ jobs:
       # required secrets with no default (tests/test-credentials.mjs).
       TEST_TEACHER_PASSWORD:     ${{ secrets.TEST_TEACHER_PASSWORD }}
       TEST_STUDENT2_PASSWORD:    ${{ secrets.TEST_STUDENT2_PASSWORD }}
+      # Always slot 0 — the goldens are taken on the original accounts, under the lock above.
+      E2E_SLOT:                  "0"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

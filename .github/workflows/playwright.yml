@@ -4,13 +4,29 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # Manual full run. `slot` picks the E2E account slot; it is honoured only if it is an ACTIVE slot
+  # (< vars.E2E_SLOT_COUNT), otherwise the run uses slot 0. This is how a newly activated slot is
+  # provisioned and verified on its own before PRs are routed to it.
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "E2E account slot (0 = the original accounts)"
+        type: choice
+        options: [ "0", "1", "2", "3" ]
+        default: "0"
 
 # Concurrency is PER-JOB on `test` (see below), not workflow-level, so docs/unit-only/avatar-tool
 # fast runs get an isolated `ci-fast-<run_id>` group and never queue behind the shared
-# Supabase lock. full-mode and every fail-closed fallback take `e2e-shared-supabase`,
-# preserving serialization with update-avatar-goldens.yml (both mutate the same shared
-# test-student profile). A full suite can never run under a fast group — see
-# .github/ci/classify-changes.mjs `concurrencyGroup`. (D-067)
+# Supabase lock. full-mode and every fail-closed fallback take their E2E account slot's lock:
+# slot 0 (the default, and every fallback) is `e2e-shared-supabase`, preserving serialization with
+# update-avatar-goldens.yml (both mutate the slot-0 test-student profile); slots 1..3 are
+# `e2e-shared-supabase-slot-<n>` on their own accounts. A full suite can never run under a fast
+# group — see .github/ci/classify-changes.mjs `concurrencyGroup` / `jobLockGroup` and
+# .github/ci/e2e-slot.mjs. (D-067)
+#
+# MAIN STILL RUNS THE FULL SUITE ON PUSH. `main` has no branch protection (no required check, direct
+# pushes allowed), so a green PR run does not prove what lands on main. Removing the push run is
+# only safe once that protection exists.
 
 jobs:
   # ── Classify — no shared lock (touches no Supabase state) ───────────────────
@@ -47,17 +63,23 @@ jobs:
       concurrency_group: ${{ steps.classify.outputs.concurrency_group }}
       changed_files_b64: ${{ steps.classify.outputs.changed_files_b64 }}
       reason: ${{ steps.classify.outputs.reason }}
+      slot: ${{ steps.classify.outputs.slot }}
     steps:
     - uses: actions/checkout@v4
     - id: classify
       uses: actions/github-script@v7
+      env:
+        # Number of active E2E account slots. Unset = 1 = every run on slot 0 (pre-slot behaviour).
+        E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}
       with:
         script: |
+          const fs = require('fs');
           const path = require('path');
           const { pathToFileURL } = require('url');
           const modUrl = pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href;
 
           const mod = await import(modUrl);
+          const slots = await import(pathToFileURL(path.resolve('.github/ci/e2e-slot.mjs')).href);
           let mode = 'full';
           let files = [];
           let reason = 'full — non-PR/main push always runs the full suite';
@@ -85,6 +107,43 @@ jobs:
                   : mode === 'avatar-tool'
                   ? 'avatar-tool — Playwright not required; standalone tool checks only'
                   : 'full — changes outside docs/**, tests/unit/** and tools/avatar/** require the full suite';
+
+                // Maintainer label `ci:e2e-not-required` (classify-changes.mjs evaluateSkipLabel).
+                // Labels and the labeller are read LIVE (not from the event payload), so "Re-run all
+                // jobs" after labelling sees the label. Every failure below keeps mode = full.
+                if (mode === 'full') {
+                  const owner = context.repo.owner;
+                  const repo = context.repo.repo;
+                  const issue_number = context.payload.pull_request.number;
+                  const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, { owner, repo, issue_number, per_page: 100 });
+                  const labelPresent = labels.some((l) => l && l.name === mod.SKIP_LABEL);
+                  if (labelPresent) {
+                    let labelerRole = null;
+                    try {
+                      const events = await github.paginate(github.rest.issues.listEvents, { owner, repo, issue_number, per_page: 100 });
+                      const labelled = events.filter((e) => e && e.event === 'labeled' && e.label && e.label.name === mod.SKIP_LABEL);
+                      const last = labelled.length > 0 ? labelled[labelled.length - 1] : null;
+                      const login = last && last.actor && typeof last.actor.login === 'string' ? last.actor.login : null;
+                      if (login !== null) {
+                        const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: login });
+                        labelerRole = typeof data.role_name === 'string' ? data.role_name : null;
+                        console.log('label ' + mod.SKIP_LABEL + ' applied by ' + login + ' (role: ' + labelerRole + ')');
+                      }
+                    } catch (err) {
+                      core.warning('label authorisation lookup failed → full: ' + err.message);
+                      labelerRole = null;
+                    }
+                    const { BINARY_DEPENDENT } = await import(pathToFileURL(path.resolve('tests/unit-ci-exclusions.mjs')).href);
+                    const inputs = mod.collectLabelEvidenceInputs(fs, path, process.cwd(), BINARY_DEPENDENT);
+                    const verdict = mod.evaluateSkipLabel({ files, labelPresent, labelerRole, ...inputs });
+                    if (verdict.ok) {
+                      mode = mod.LABEL_MODE;
+                      reason = verdict.reason;
+                    } else {
+                      reason = 'full — label ' + mod.SKIP_LABEL + ' present but refused: ' + verdict.reason;
+                    }
+                  }
+                }
               }
             }
           } catch (err) {
@@ -93,7 +152,21 @@ jobs:
             files = [];
             reason = 'full — classifier error, failing closed';
           }
-          if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';
+          if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'label-verified' && mode !== 'full') mode = 'full';
+
+          // E2E account slot (.github/ci/e2e-slot.mjs). Fail-safe: any error → slot 0.
+          let slot = 0;
+          try {
+            slot = slots.selectSlot({
+              eventName: context.eventName,
+              prNumber: context.payload.pull_request ? context.payload.pull_request.number : null,
+              dispatchSlot: context.payload.inputs ? context.payload.inputs.slot : null,
+              slotCount: process.env.E2E_SLOT_COUNT,
+            });
+          } catch (err) {
+            core.warning('slot selection error → slot 0: ' + err.message);
+            slot = 0;
+          }
 
           // Encode the changed-files payload; if it exceeds the job-output cap, fail closed to
           // full + shared and drop the payload (full does not need the list).
@@ -107,28 +180,31 @@ jobs:
 
           // concurrency_group OUTPUT is for logging/summary only — the real job lock is derived
           // from classify result + validated mode in the `test` job's concurrency expression.
-          let group = mod.concurrencyGroup(mode, context.runId);
+          let group = mod.jobLockGroup('success', mode, context.runId, String(slot));
           if (typeof group !== 'string' || group === '') group = 'e2e-shared-supabase';
-          if (mode === 'full' && group !== 'e2e-shared-supabase') group = 'e2e-shared-supabase';
 
           core.setOutput('mode', mode);
           core.setOutput('concurrency_group', group);
           core.setOutput('changed_files_b64', b64);
           core.setOutput('reason', reason);
+          core.setOutput('slot', String(slot));
 
-          const lockClass = group === 'e2e-shared-supabase' ? 'shared Supabase lock' : 'isolated fast run';
+          const lockClass = group.startsWith('ci-fast-') ? 'isolated fast run' : 'E2E account slot ' + slot + ' lock';
           const checks = mode === 'docs'
             ? 'classifier unit tests, git diff --check, mojibake scan'
             : mode === 'unit-only'
             ? 'classifier unit tests, git diff --check, mojibake scan (the unit suite runs in the unit job)'
             : mode === 'avatar-tool'
             ? 'classifier unit tests, git diff --check, mojibake scan, node --check on changed tools/avatar scripts'
+            : mode === 'label-verified'
+            ? 'classifier unit tests, label evidence re-check, git diff --check, mojibake scan, full unit suite'
             : 'classifier unit tests, npm ci, Playwright browser install, global setup, full Playwright suite';
 
           core.startGroup('Path-aware CI classification');
           console.log('event      : ' + context.eventName);
           console.log('commit     : ' + context.sha);
           console.log('mode       : ' + mode);
+          console.log('slot       : ' + slot);
           console.log('group      : ' + group + ' (' + lockClass + ')');
           console.log('changed    : ' + files.length + ' file(s)');
           for (const f of files) console.log('  ' + f);
@@ -141,6 +217,7 @@ jobs:
               ['event', context.eventName],
               ['commit', context.sha],
               ['mode', mode],
+              ['E2E account slot', String(slot)],
               ['concurrency group', group],
               ['lock class', lockClass],
               ['Playwright skipped', mode === 'full' ? 'no' : 'yes'],
@@ -164,28 +241,30 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     # The ACTUAL job lock — does NOT trust the classify concurrency_group output alone. A fast
-    # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/unit-only/avatar-tool,
-    # and it is derived from the trusted github.run_id. Every other state (classify
-    # failure/cancelled/skipped, missing/invalid/full mode, partial outputs) → the shared lock.
+    # group is chosen ONLY when classify SUCCEEDED and its mode is exactly docs/unit-only/avatar-tool/
+    # label-verified (none of which runs Playwright), and it is derived from the trusted
+    # github.run_id. A slot 1..3 lock is chosen ONLY when classify succeeded and its slot output is
+    # exactly '1', '2' or '3' — the SAME predicate as E2E_SLOT below, so the lock and the accounts
+    # can never disagree. Every other state (classify failure/cancelled/skipped, missing/invalid
+    # mode or slot, partial outputs) → slot 0 = the legacy shared lock.
     # Mirrors jobLockGroup() in .github/ci/classify-changes.mjs.
     concurrency:
       group: >-
         ${{
           (needs.classify.result == 'success'
-            && (needs.classify.outputs.mode == 'docs' || needs.classify.outputs.mode == 'unit-only' || needs.classify.outputs.mode == 'avatar-tool'))
+            && (needs.classify.outputs.mode == 'docs' || needs.classify.outputs.mode == 'unit-only' || needs.classify.outputs.mode == 'avatar-tool' || needs.classify.outputs.mode == 'label-verified'))
           && format('ci-fast-{0}', github.run_id)
+          || (needs.classify.result == 'success'
+            && (needs.classify.outputs.slot == '1' || needs.classify.outputs.slot == '2' || needs.classify.outputs.slot == '3'))
+          && format('e2e-shared-supabase-slot-{0}', needs.classify.outputs.slot)
           || 'e2e-shared-supabase'
         }}
       cancel-in-progress: false
-      # FIFO queue, not displacement. With the default (`queue: single`) a group holds one running
-      # and ONE pending job, and every newly queued job CANCELS the pending one — with a 35–45 min
-      # serial suite and several pushers, that cancelled PR and main runs that had merely been
-      # waiting (9 of 53 runs, 2026-10-09…18). `queue: max` lets up to 100 jobs wait and runs them
-      # one at a time in FIFO order. It changes only the WAITING; the group is unchanged, so at
-      # most one job ever RUNS against the shared test data. Must stay paired with
-      # cancel-in-progress: false (GitHub rejects max + true) and must match
-      # update-avatar-goldens.yml, which takes the same group. Guarded by
-      # tests/unit/ci-e2e-queue.test.mjs.
+      # FIFO queue, not displacement. With the default (`queue: single`) a group holds one running and
+      # ONE pending job, and every newly queued job CANCELS the pending one — that cancelled PR and
+      # main runs that had merely been waiting. `queue: max` lets waiting jobs line up and start one
+      # at a time in arrival order. It changes only the waiting: at most one job ever RUNS per group.
+      # Must stay paired with cancel-in-progress: false. Guarded by tests/unit/ci-e2e-slots.test.mjs.
       queue: max
     # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
     # process.env via repository Actions secrets. Values live ONLY in GitHub Secrets. If a
@@ -210,6 +289,9 @@ jobs:
       # variable is created. Set it to the Cloudflare Worker origin to repoint CI with no code
       # change (Settings → Secrets and variables → Actions → Variables). See docs/HOSTING.md.
       PROD_BASE_URL:             ${{ vars.PROD_BASE_URL }}
+      # E2E account slot (tests/e2e-slot.mjs). The predicate is IDENTICAL to the slot branch of the
+      # concurrency group above; anything else is '0' — the original accounts under the legacy lock.
+      E2E_SLOT: ${{ (needs.classify.result == 'success' && (needs.classify.outputs.slot == '1' || needs.classify.outputs.slot == '2' || needs.classify.outputs.slot == '3')) && needs.classify.outputs.slot || '0' }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -234,7 +316,7 @@ jobs:
           const mod = await import(pathToFileURL(path.resolve('.github/ci/classify-changes.mjs')).href);
 
           const raw = process.env.CLASSIFY_MODE || '';
-          const mode = (raw === 'docs' || raw === 'unit-only' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';
+          const mode = (raw === 'docs' || raw === 'unit-only' || raw === 'avatar-tool' || raw === 'label-verified' || raw === 'full') ? raw : 'full';
           const listPath = path.join(process.env.RUNNER_TEMP || '.', 'ci-changed-files.txt');
 
           if (mode === 'full') {
@@ -243,6 +325,36 @@ jobs:
             core.setOutput('mode', 'full');
             core.setOutput('files_path', listPath);
             console.log('effective mode: full');
+            return;
+          }
+
+          // label-verified: re-check everything except the labeller's role (which needs the API and
+          // was checked by classify) on THIS checkout. Any failure fails the check — this job already
+          // holds a fast lock, so it must never escalate to Playwright here.
+          if (mode === 'label-verified') {
+            const b64l = process.env.CHANGED_FILES_B64 || '';
+            let lfiles;
+            try {
+              lfiles = JSON.parse(Buffer.from(b64l, 'base64').toString('utf8'));
+            } catch (err) {
+              core.setFailed('label-verified but the changed-files payload could not be decoded: ' + err.message);
+              return;
+            }
+            const p = mod.validateLabelPayload(lfiles);
+            if (!p.ok) {
+              core.setFailed('label-verified payload invalid: ' + p.error);
+              return;
+            }
+            const { BINARY_DEPENDENT } = await import(pathToFileURL(path.resolve('tests/unit-ci-exclusions.mjs')).href);
+            const evidence = mod.evaluateLabelEvidence({ files: lfiles, ...mod.collectLabelEvidenceInputs(fs, path, process.cwd(), BINARY_DEPENDENT) });
+            if (!evidence.ok) {
+              core.setFailed('label-verified evidence re-check failed: ' + evidence.reason);
+              return;
+            }
+            fs.writeFileSync(listPath, lfiles.join('\n') + '\n');
+            core.setOutput('mode', mode);
+            core.setOutput('files_path', listPath);
+            console.log('effective mode: label-verified — ' + evidence.reason);
             return;
           }
 
@@ -274,12 +386,12 @@ jobs:
 
     # Classifier + concurrency unit tests — run in EVERY mode.
     - name: Classifier unit tests
-      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'full'
-      run: node --test tests/unit/ci-classify-changes.test.mjs
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'label-verified' || steps.mode.outputs.mode == 'full'
+      run: node --test tests/unit/ci-classify-changes.test.mjs tests/unit/ci-e2e-slots.test.mjs tests/unit/ci-e2e-skip-label.test.mjs
 
-    # ── Fast checks (docs + unit-only + avatar-tool) ──────────────────────────
+    # ── Fast checks (docs + unit-only + avatar-tool + label-verified) ─────────
     - name: Fast checks — whitespace + mojibake
-      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool'
+      if: steps.mode.outputs.mode == 'docs' || steps.mode.outputs.mode == 'unit-only' || steps.mode.outputs.mode == 'avatar-tool' || steps.mode.outputs.mode == 'label-verified'
       env:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -337,6 +449,15 @@ jobs:
         console.log('node --check passed on ' + checked + ' changed tools/avatar script(s)');
         NODE
 
+    # ── label-verified: the unit suite must be green IN THIS JOB ──────────────
+    # The `unit` job also runs it, but the required `test` check must not pass on a label alone: it
+    # passes only if the whole unit suite (including the PR's executable migration test) is green.
+    - name: Label mode — full unit suite
+      if: steps.mode.outputs.mode == 'label-verified'
+      run: |
+        npm ci
+        npm run test:unit:ci
+
     # ── Full suite (unchanged) ────────────────────────────────────────────────
     - name: Install dependencies
       if: steps.mode.outputs.mode == 'full'
@@ -368,5 +489,6 @@ jobs:
           docs)        echo "docs fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
           unit-only)   echo "unit-only fast checks completed (unit suite: see the unit job)" >> "$GITHUB_STEP_SUMMARY" ;;
           avatar-tool) echo "avatar-tool fast checks completed" >> "$GITHUB_STEP_SUMMARY" ;;
+          label-verified) echo "label-verified checks completed (ci:e2e-not-required; unit suite green in this job)" >> "$GITHUB_STEP_SUMMARY" ;;
           *)           echo "full Playwright suite completed" >> "$GITHUB_STEP_SUMMARY" ;;
         esac
