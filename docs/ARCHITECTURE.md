@@ -389,11 +389,16 @@ Choice options (`js/answer-options.js`): only `answer_format = "mc"` is padded t
 (legacy WWII-year pool — a no-op for every active question, which all have four). Any other choice
 format — e.g. a two-choice true/false — is shown exactly as authored and is never padded.
 
-### Question selection & the format mix (fordeling af opgaveformer) — prepared 2026-10-19, NOT active
+### Question selection & the format mix (fordeling af opgaveformer) — shadow since 2026-10-22, v2 NOT active
 
-**Status:** code merged-ready behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` = today's
-selection, unchanged. `shadow`/`v2` need migration `20261019150000_question_format_mix.sql`
-(prepared, **not applied**, awaiting security review and a separate D-110 authorisation).
+**Status:** merged in PR #351 (`14cbd50`) behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` =
+the old selection, unchanged. **Live since 2026-10-22, each step its own owner authorisation (D-181):**
+migration `20261019150000_question_format_mix.sql` applied 05:34 UTC via the Supabase plugin's
+`apply_migration`, **remote ledger version `20261022053442`** (≠ the repo filename, as with other D-110
+migrations; the stored SQL is byte-identical to the file, sha256 `870d1dfb…ace2f4e`) →
+`get-next-question` deployed 06:22 UTC (version 179, all 11 files identical to `main`) →
+`QUESTION_MIX_ENGINE=shadow` set 06:30 UTC. Pupils are still served `v1`; **`v2` is not active** and
+needs a separate owner authorisation.
 
 **The problem it solves.** `get_unserved_questions_for_student` ends in `LIMIT 50` with no `ORDER BY`,
 so every pupil gets the same first 50 rows in physical heap order. On 2026-10-19 the two live

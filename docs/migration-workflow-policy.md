@@ -78,6 +78,13 @@ gates below are what that decision buys, not a substitute for it.
 8. The new local/remote divergence is measured and **documented honestly**.
 9. **No migration may be presented as CLI-synchronised.**
 
+**How step 5 is kept with the Supabase plugin (owner decision D-181, 2026-10-22).** The plugin's
+`apply_migration` sends no `Idempotency-Key`, so the API cannot reject a second send of the same
+migration. "Once" is therefore enforced by the procedure, not the API: one call per migration, and
+after an error or a timeout **no new call** until `list_migrations` and the database catalogue show
+whether the migration landed. A blind retry is forbidden. A migration whose first statement is a plain
+`CREATE` would fail on a second run instead of applying twice, but that is a safety net, not the rule.
+
 **Every API migration can increase the version divergence**, because the API assigns its own
 timestamp and the repository keeps the file it already had. Step 8 exists so that growth is visible
 rather than discovered later.
