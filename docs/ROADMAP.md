@@ -719,7 +719,7 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 
 ## Future sections
 
-### Sværhedsskala 1–10.000 (design godkendt 2026-10-20; ikke bygget)
+### Sværhedsskala 1–10.000 (design godkendt 2026-10-20, opdateret 2026-10-22; ikke bygget)
 
 - **Ejerbeslutninger 2026-10-20:** niveauet er **pr. fag** (B1), og klassetrinsloftet fjernes for
   **alle fag** (historie, engelsk og dansk) på én gang (B4). Startformel og skridtregel som foreslået
@@ -731,8 +731,13 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   1–10.000 pr. fag. Klassetrinnet sætter kun startniveauet (ejerens retning, 2026-10-19).
   Udvælgelsen bliver nærmest-først i SQL uden klassetrinsloft, og elevens niveau bliver serverejet,
   bag flaget `LEVEL_ENGINE` (ikke sat = uændret).
-- Rækkefølge, når #351 er merget: migration A (additiv) → migration B → Edge bag flag → en pilot
-  på ca. 500 engelskopgaver (CEFR B1–C1, niveau 3.001–10.000) → opskalering til 10.000 engelskopgaver.
+- **Ejerbeslutninger 2026-10-22 (designets §10):** de 3.000 nye engelskopgaver (#358–#365) indsættes
+  **inaktive** og mærket `metadata.level_batch`. Ingen migration kører i produktion uden godkendelse
+  af netop den migration. Opgaverne uden niveau tælles i den rigtige database, før migration A
+  anvendes. Der skrives ikke flere portioner. En dokumenteret stikprøvekontrol skal ligge før
+  aktiveringen.
+- Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
+  `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
 
 ### Platform / services track (from the 157A audit)

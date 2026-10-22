@@ -1,6 +1,7 @@
 # Sværhedsskala 1–10.000 — designforslag
 
-**Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9). B9 er udskudt.
+**Status:** GODKENDT DESIGN. B1–B8 er besluttet af ejeren 2026-10-20 (§9), og E1–E5 2026-10-22 (§10).
+B9 er udskudt.
 Intet i dette dokument er bygget eller anvendt.
 **Dato:** 2026-10-20 · **Grundlag:** `main` @ `d93faff`
 **Anledning:** Ejeren ønsker 10.000 sværere engelskopgaver fordelt på niveau 1–10.000. Den 19.
@@ -25,7 +26,8 @@ Aftalt rækkefølge: dette design → ejergodkendelse → beslutningen registrer
 | Engelsk indhold | Ca. 1.000 MC-spørgsmål, **kun 3.–5. klasse, bånd 1–4** | Der findes ingen engelskopgaver over 5. klasses niveau. Det er derfor, opgaverne opleves som for lette |
 | Data til kalibrering | Der findes ingen live log pr. forsøg. `question_instances` gemmer kun den seneste dom (se PR #351-noten) | Det er svært at måle opgavers faktiske sværhed bagefter |
 
-PR #351 (opgaveformer, ikke merget) indfører et **serverejet** bånd (`student_band_state` +
+PR #351 (opgaveformer, **merget i `main` 2026-10-21**; om dens migration er anvendt i produktion, er
+endnu ikke verificeret) indfører et **serverejet** bånd (`student_band_state` +
 `advance_student_band`). Det er det samme greb, som skalaen har brug for (se §6).
 
 ---
@@ -211,12 +213,17 @@ Hvis niveauerne skal kunne skrives til, skal de have et indhold. Forslag: forank
    svarflowet. Gamle funktioner bliver stående.
 4. **Edge:** `get-next-question` bag `LEVEL_ENGINE` (ikke sat = uændret). Deployes og verificeres med
    flaget slået fra.
-5. **Aktivering:** `LEVEL_ENGINE=v1` for alle fag. Ejeren tester med en testelev i hvert fag.
-6. **Indhold:** de nye engelskopgaver (pilot #358 og portion 2 #360, niveau 3.001–10.000) anvendes
-   **først nu**, når niveausystemet kører (ejerbeslutning 2026-10-21). Ellers ville de blive serveret
-   under det gamle klassetrinsloft. Hver migration anvendes med autorisation.
-7. **Opskalering:** resten op til 10.000 engelskopgaver. Historie og dansk kører på skalaen fra
-   aktiveringen med deres eksisterende indhold. Nyt indhold til dem er en særskilt opgave.
+5. **Aktivering af motoren:** `LEVEL_ENGINE=v1` for alle fag. Ejeren tester med en testelev i hvert fag.
+6. **Indhold:** de 3.000 nye engelskopgaver (#358, #360, #362, #363, #364, #365) indsættes
+   **inaktive** (`is_active=false`) og mærket `metadata.level_batch` (E1). Hver migration anvendes
+   kun med ejerens godkendelse af netop den migration (E2).
+7. **Stikprøvekontrol (E5):** dokumenteret kontrol på tværs af alle niveauer og portioner, før noget
+   aktiveres.
+8. **Aktivering af indholdet:** en separat migration pr. portion,
+   `UPDATE … SET is_active = true WHERE learning_objective = 'english' AND metadata->>'level_batch' = …`,
+   hver med egen ejergodkendelse.
+9. **Opskalering:** standset efter 3.000 opgaver (ejerbeslutning 2026-10-22). Historie og dansk kører
+   på skalaen fra aktiveringen med deres eksisterende indhold. Nyt indhold er en særskilt opgave.
 
 **Tests (tilføjes i trin 2–4):** unittest af formlen §4.1 (alle 35 celler, monotoni), unittest af
 skridtfunktionen §6 (grænser 1/10.000, ligevægt ~75 %), migrationstest af tabel og RLS (eleven kan
@@ -240,4 +247,16 @@ E2E: en elev i 3. klasse med højt niveau får B1-opgaver.
 | B9 | Udfases placeringstesten, når skalaen kører? | Udskudt: særskilt beslutning, når skalaen kører |
 
 Beslutningerne er registreret i `docs/ROADMAP.md`. `docs/ARCHITECTURE.md` opdateres i samme PR som migration A,
-når datamodellen faktisk findes. Trin 2 venter på, at PR #351 er merget (B6).
+når datamodellen faktisk findes. PR #351 er merget (B6 opfyldt i repoet).
+
+---
+
+## 10. Ejerbeslutninger 2026-10-22
+
+| # | Beslutning |
+|---|---|
+| E1 | De 3.000 nye engelskopgaver er **inaktive**, indtil niveausystemet er implementeret, testet og slået til. Portionen ligger i den eksisterende kolonne `metadata` (`level_batch`). Der må ikke oprettes en ny kolonne uden ejerens godkendelse. |
+| E2 | Ingen migration køres mod produktionsdatabasen uden ejerens udtrykkelige godkendelse af den konkrete migration. |
+| E3 | Før migration A tælles de eksisterende opgaver uden niveau i den rigtige database (read-only), og antal og fordeling rapporteres. Deres niveau vælges ikke, før ejeren har besluttet det. |
+| E4 | Først skal blokeringen omkring #351 løses, derefter bygges selve niveausystemet. Der skrives ikke flere opgaveportioner. |
+| E5 | Før aktivering laves en dokumenteret stikprøvekontrol på tværs af alle niveauer: uklare spørgsmål, flere mulige rigtige svar, forkert CEFR-placering og sproglige fejl. |
