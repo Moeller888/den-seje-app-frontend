@@ -69,8 +69,8 @@ test("it is honest that one call can still fail", () => {
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
 test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167, D-170 and D-172 records, and D-175's one hair permission", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 14);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 14);
+  assert.equal(CONTRACT.authorisedCalls.count, 15);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 15);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -146,12 +146,18 @@ test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-
   assert.deepEqual([d177.callId, d177.decision], ["D-177-r3-hair-northstar-v2", "D-177"]);
   assert.deepEqual([d177.mandateState, d177.neverReuse, d177.notAnActivePermission, d177.closure.closedBy], ["SPENT", true, true, "D-178"]);
   assert.match(d177.prohibitions.noRetry, /Exactly one fetch/);
-  // The fourteenth is D-180's: ONE further hair sheet, the first under registration v2 (prompt v3), authorised and not yet
-  // attempted.
+  // The fourteenth is D-180's: ONE further hair sheet, the first under registration v2 (prompt v3), sent once (HTTP 200,
+  // H1..H5 passed, D-179's placement and shape checks not evaluated, kept for review) and closed by D-181.
   const d180 = CONTRACT.authorisedCalls.calls[13];
-  assert.deepEqual([d180.callId, d180.decision, d180.mandateState, d180.outcome], ["D-180-r3-hair-northstar-v3", "D-180", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.deepEqual([d180.callId, d180.decision], ["D-180-r3-hair-northstar-v3", "D-180"]);
+  assert.deepEqual([d180.mandateState, d180.neverReuse, d180.notAnActivePermission, d180.closure.closedBy], ["SPENT", true, true, "D-181"]);
   assert.match(d180.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-180-r3-hair-northstar-v3"], "D-180's is the only live permission");
+  // The fifteenth is D-183's: ONE further hair sheet with two reference images (Northstar for style, the geometry guide),
+  // authorised and not yet attempted.
+  const d183 = CONTRACT.authorisedCalls.calls[14];
+  assert.deepEqual([d183.callId, d183.decision, d183.mandateState, d183.outcome], ["D-183-r3-hair-northstar-v4", "D-183", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.match(d183.prohibitions.noRetry, /Exactly one fetch/);
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-183-r3-hair-northstar-v4"], "D-183's is the only live permission");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
@@ -270,7 +276,9 @@ test("D-145: the implemented send adapter belongs to D-143's call, not to the pr
   // seventh, for the further eyes-fixed sheet (call A2). D-175 later recorded an eighth, for its one hair sheet, and D-177
   // a ninth, for the further hair sheet with an explicit margin.
   // D-180 later recorded a tenth, for the third hair sheet (the first under registration v2).
-  assert.equal(impl.length, 10);
+  // D-183 later recorded an eleventh, for the fourth hair sheet (two reference images).
+  assert.equal(impl.length, 11);
+  assert.deepEqual([impl[10].decision, impl[10].callId], ["D-183", "D-183-r3-hair-northstar-v4"]);
   assert.deepEqual([impl[9].decision, impl[9].callId], ["D-180", "D-180-r3-hair-northstar-v3"]);
   assert.deepEqual([impl[8].decision, impl[8].callId], ["D-177", "D-177-r3-hair-northstar-v2"]);
   assert.deepEqual([impl[7].decision, impl[7].callId], ["D-175", "D-175-r3-hair-northstar-v1"]);
