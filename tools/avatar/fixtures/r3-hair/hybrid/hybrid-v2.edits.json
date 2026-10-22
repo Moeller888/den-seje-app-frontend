@@ -1,0 +1,296 @@
+{
+  "id": "r3-hair-hybrid-v2",
+  "status": "REVIEW CANDIDATE (D-185) — the final hybrid derivation of the D-183 sheet; not a production asset, not an approval; D-183's record unchanged",
+  "coordinates": "{\"guide\": [from, to]} = the guide's own curved contour between two named vertices; otherwise sheet px of the 1024x1024 D-183 sheet (= the guide's sheet frame): continuous, pixel i covers [i, i+1), x right, y down. Named points are guide-hair-v1 vertices (the approved targets mapped by the guide transform) and are resolved by the generator from tools/avatar/r3-hair-guide-v1.mjs.",
+  "paintingSource": "the raw D-183 sheet; every kept pixel is the raw pixel unless an edit below names it",
+  "remove": [
+    {
+      "id": "R-left-ear",
+      "why": "the long side locks that hang below the image-left ear: cut along a drawn convex lock flank A7-n-side -> A9 and the short lower edge A9 -> L-lowerOuter, so A9 is the inner lower corner and the cut lock ends in a tip",
+      "polygon": [
+        {
+          "guide": [
+            "A7",
+            "A7-n-side"
+          ]
+        },
+        {
+          "curve": [
+            "A7-n-side",
+            "A9"
+          ],
+          "bulge": 0.15
+        },
+        {
+          "guide": [
+            "A9",
+            "L-lowerOuter"
+          ]
+        },
+        [
+          180,
+          770
+        ],
+        [
+          180,
+          1024
+        ],
+        [
+          316,
+          1024
+        ]
+      ]
+    },
+    {
+      "id": "R-right-ear",
+      "why": "the hanging side mass below the image-right ear and the wedge that separates the right temple lock from the side hair: cut along A8 -> A8-n-side (lock flank), A8-n-side -> A10 (side-hair inner edge) and A10 -> R-lowerOuter (short lower edge)",
+      "polygon": [
+        "A8",
+        "A8-n-side",
+        [
+          746,
+          664
+        ],
+        [
+          754,
+          672
+        ],
+        [
+          744,
+          716
+        ],
+        [
+          755,
+          725
+        ],
+        "A10",
+        "R-lowerOuter",
+        [
+          810,
+          770
+        ],
+        [
+          810,
+          1024
+        ],
+        [
+          716.75,
+          1024
+        ]
+      ],
+      "drawnTufts": "the side-hair inner edge A8-n-side -> A10 is a drawn contour with two small tufts pointing towards the face, (746, 664) and (744, 716) with notches (754, 672) and (755, 725), instead of one straight cut through the painting"
+    },
+    {
+      "id": "R-face-left",
+      "why": "the raw central lock is longer and wider than the design and hangs over the middle of the image-left brow and the image-left eye: cut along the guide's face-opening contour A7 -> A7-n-face -> A5-n-left -> A5 -> A5-n-right -> A6, so the central lock ends at A5 and the brow middle stays free",
+      "polygon": [
+        {
+          "guide": [
+            "A7",
+            "A7-n-face"
+          ],
+          "offset": [
+            [
+              0,
+              0
+            ],
+            [
+              0.2,
+              -3
+            ],
+            [
+              0.36,
+              -4
+            ],
+            [
+              0.46,
+              0
+            ],
+            [
+              0.58,
+              1.2
+            ],
+            [
+              1,
+              1.6
+            ]
+          ]
+        },
+        {
+          "guide": [
+            "A7-n-face",
+            "A6"
+          ]
+        },
+        [
+          519,
+          1024
+        ],
+        [
+          316,
+          1024
+        ]
+      ],
+      "offsetWhy": "piecewise offset along A7 -> A7-n-face: 0 at the A7 tip, out to -3 / -4 sheet px at 20 % / 36 % (the raw lock's own wider edge, so the lock covers more of the brow's diagonal outer end), back to 0 at 46 %, then +1.2 at 58 % and +1.6 at A7-n-face (pulled into the hair where the flank would touch the brow middle)"
+    }
+  ],
+  "add": [
+    {
+      "id": "A-parting-V",
+      "why": "the V-shaped parting: hair painted UNDER the raw sheet above two straight edges that meet at A4, so the face opening's highest point is one apex; the raw tuft and notches above the edges stay visible on top",
+      "polygon": [
+        [
+          574,
+          580
+        ],
+        "A4",
+        [
+          686,
+          578
+        ],
+        [
+          686,
+          530
+        ],
+        [
+          574,
+          530
+        ]
+      ],
+      "tone": 70
+    },
+    {
+      "id": "A-right-lower-edge",
+      "why": "the short lower edge of the image-right side hair reaches the A10 corner: hair painted UNDER the raw sheet between the raw bottom and the edge A10 -> R-lowerOuter",
+      "polygon": [
+        "A10",
+        "R-lowerOuter",
+        [
+          792,
+          740
+        ],
+        [
+          751.75,
+          740
+        ]
+      ],
+      "tone": 110
+    }
+  ],
+  "contours": [
+    {
+      "id": "C-parting-V",
+      "points": [
+        [
+          574,
+          580
+        ],
+        "A4",
+        [
+          686,
+          578
+        ]
+      ]
+    },
+    {
+      "id": "C-left-ear",
+      "points": [
+        {
+          "curve": [
+            "A7-n-side",
+            "A9"
+          ],
+          "bulge": 0.15
+        },
+        {
+          "guide": [
+            "A9",
+            "L-lowerOuter"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C-face-left",
+      "points": [
+        {
+          "guide": [
+            "A7",
+            "A7-n-face"
+          ],
+          "offset": [
+            [
+              0,
+              0
+            ],
+            [
+              0.2,
+              -3
+            ],
+            [
+              0.36,
+              -4
+            ],
+            [
+              0.46,
+              0
+            ],
+            [
+              0.58,
+              1.2
+            ],
+            [
+              1,
+              1.6
+            ]
+          ]
+        },
+        {
+          "guide": [
+            "A7-n-face",
+            "A6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C-right-ear",
+      "points": [
+        "A8",
+        "A8-n-side",
+        [
+          746,
+          664
+        ],
+        [
+          754,
+          672
+        ],
+        [
+          744,
+          716
+        ],
+        [
+          755,
+          725
+        ],
+        "A10",
+        "R-lowerOuter"
+      ]
+    }
+  ],
+  "parameters": {
+    "supersample": 4,
+    "inkTone": 22,
+    "inkHalfWidthPx": 2.2,
+    "inkRule": "a drawn contour is inked only where the final hair alpha >= 16 (it never creates hair); coverage = clamp(halfWidth + 0.5 - distance, 0, 1)",
+    "compositing": "final = (raw with alpha * (1 - removeCoverage)) OVER (add paint with alpha = addCoverage); then ink mixed into RGB by its coverage; alpha unchanged by ink"
+  },
+  "changesFromPrevious": {
+    "from": "r3-hair-hybrid-v1 (kept unchanged)",
+    "changes": [
+      "R-left-ear and C-left-ear: the inner contour A7-n-side -> A9 is a drawn convex lock flank (curve, bulge 0.15) instead of a straight cut across the lock strokes, so the hanging lock ends in a tip at A9",
+      "R-face-left and C-face-left: the A7 -> A7-n-face flank follows the raw lock's own wider edge on its lower part (piecewise offset out to -4 sheet px) so more of the brow's diagonal outer end is covered, and is pulled into the hair only on its upper part, where it would touch the brow middle; no new paint"
+    ]
+  }
+}

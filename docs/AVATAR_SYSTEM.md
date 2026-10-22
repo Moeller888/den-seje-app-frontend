@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; the fourth hair call (D-183, Northstar for style and a geometry guide) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; no live permission (D-174 … D-184, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; the fourth hair call (D-183, Northstar for style and a geometry guide) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; hybrid derivation adopted, one review candidate (r3-hair-hybrid-v2), not production-approved; no live permission (D-174 … D-185, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -309,6 +309,22 @@ art layer behind them can be upgraded without a rewrite.
   - **Accounting.** `callsActuallySentSoFar.hair` = **4** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair
     capacity (4) is used up and the budget stays 26–27.
   - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-184**.
+  **D-185 (2026-10-22)** adopted **hybrid derivation** as a new authoring method and recorded one review candidate:
+  - **Method.** Generated painting from a technically passed raw sheet plus documented edits only: vector masks
+    (`remove`), named paint fields with one grey tone beneath the raw painting (`add`) and self-drawn contours inked only
+    on existing hair (`contours`). No Northstar pixels, no H1, no hidden pixel retouching, no change to the raw sheet or
+    to earlier check results. Change categories and their extent are recorded; every derivation needs the owner's visual
+    review. It is not an after-the-fact approval of the raw sheet's fit.
+  - **Three parts kept apart.** The untouched source (`tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.png`,
+    `7b36e054…`, with its original check report), the edit spec + generator (`tools/avatar/r3-hair-hybrid.mjs`), and the
+    derived sheet and placed candidate with their own pixel hashes. hybrid-v1 (the prototype) is kept unchanged.
+  - **Construction annotation** (`hybrid-annotation-v1`): points are drawn vertices bound to the edit geometry, with
+    source hashes, the transform, crops of the rasterised corners and their own review status. They are not readings;
+    D-179's hidden second reading still applies to raw sheets. A zero residual is not an independent validation.
+  - **Candidate `r3-hair-hybrid-v2`.** H1–H5, HP-LOCK, HP4v2, HP5, HP8 and HP-FRAG pass on the derived pixels; HP6/HP7 pass
+    locally with the DRAFT face parts and eyes v5 (reported NOT RUN in CI); ramp B in all eight colours; deterministic
+    rebuild. Not production-approved: face parts and eyes are provisional, U1 has no ears or neck, the nape lock is not
+    authored and the owner's visual approval is pending. R3 stays default OFF. See `project-state.md` **D-185**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

@@ -6194,6 +6194,143 @@
           "placedOnFaceSample": "HP4v2, HP5, HP6, HP7, HP8 and HP-FRAG pass with the guide placed on U1 + the D-165 face DRAFT + eyes v5 (review composite, not tracked)"
         },
         "risks": "The model may still follow Northstar's hanging side hair, may copy the guide's flat grey look or thin lines, or may ignore the guide's geometry. A geometry reference does not guarantee a correct sheet; every check after the call is unchanged."
+      },
+      "hybridDerivation": {
+        "decision": "D-185",
+        "adoptedOn": "2026-10-22",
+        "status": "ADOPTED — HYBRID DERIVATION AS A NEW AUTHORING METHOD FOR R3 HAIR — ONE REVIEW CANDIDATE (r3-hair-hybrid-v2) — NOT PRODUCTION-APPROVED — NO IMAGE REQUEST, NO CAPACITY, NO RUNTIME CHANGE",
+        "isAuthorisation": false,
+        "authorisesImageRequest": false,
+        "ownerDecision": "The owner approves hybrid derivation as a new authoring method: generated painting from a technically passed raw sheet combined with documented vector masks, self-drawn contours and named paint fields. It is not an after-the-fact approval of the raw sheet's fit. A general percentage ceiling is not required; the exact change categories and their extent are recorded, and every new derivation needs the owner's visual review. Per cent preserved is traceability, not proof of quality.",
+        "separation": {
+          "source": "The untouched raw source: its bytes, SHA-256 and original check report, byte-identical copies of the closed attempt's files. Never written, never re-checked into a different result.",
+          "editsAndGenerator": "The edit specification (JSON) and the tracked generator tools/avatar/r3-hair-hybrid.mjs with its dependencies.",
+          "derived": "The derived sheet and its placed review candidate, each with its own hashes; derived files never replace or rename the source."
+        },
+        "allowedEdits": {
+          "remove": "a vector polygon (mask) whose coverage removes raw hair; the reason is recorded",
+          "add": "a named paint field: a vector polygon painted with one documented grey tone BENEATH the raw painting; the reason is recorded",
+          "contours": "a self-drawn contour inked along a vector path, only where hair already exists (a contour never creates hair)",
+          "pointForms": "a guide vertex name (the approved targets mapped by the guide transform), an [x, y] sheet point, the guide's own curved contour between two named vertices with an optional documented offset, or a quadratic curve with a documented bulge"
+        },
+        "forbidden": [
+          "Northstar pixels (no extraction, sampling or tracing)",
+          "H1 or any other private reference file",
+          "free or hidden pixel retouching outside the documented edit types",
+          "changing the raw source, its claim or any earlier check result",
+          "moving a target or changing a D-179 threshold to make a derivation pass"
+        ],
+        "changeCategories": {
+          "rawKeptExact": "raw pixel kept byte for byte",
+          "rawRemoved": "raw hair removed by a mask",
+          "rawPartlyRemoved": "raw edge partly removed (anti-aliased cut)",
+          "rawUnderPainted": "raw hair kept; semi-transparent raw alpha topped up by a named paint field beneath it",
+          "rawInked": "raw hair recoloured by a drawn contour",
+          "newPainted": "new hair from a named paint field where the raw sheet had none",
+          "other": "anything else (must be 0)",
+          "transparent": "transparent in both"
+        },
+        "annotation": {
+          "schema": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-annotation-v1.schema.json",
+          "validator": "validateHybridAnnotation in tools/avatar/r3-hair-hybrid.mjs",
+          "form": "CONSTRUCTION annotation: each fit point and lock record is bound to a drawn vertex of the edit geometry (the approved targets through the guide transform), carries the source and derivation hashes, the transform, a crop of the actual rasterised corner (pixel SHA-256) and its own review status (DRAFT — owner review pending, OWNER_REVIEWED or REJECTED).",
+          "notReadings": "Construction points are not readings. D-179's two readings with the first hidden remain a requirement of the raw-sheet method and are never claimed for a derivation; a construction point never carries readings.",
+          "zeroResidual": "A seat residual of zero follows from the construction and is never presented as an independent validation; what the checks still prove is functional, on the actual derived pixels."
+        },
+        "checks": {
+          "unchanged": "D-179's geometric and functional requirements apply unchanged to the derived pixels: H1..H5 on the derived sheet, the seat fit and HP2 (by construction), HP-LOCK, HP4v2, HP5..HP8 and HP-FRAG after placement, plus ramp B in all eight hair colours.",
+          "notRunIsNotPassed": "A check whose inputs are not supplied (the face layer, eyes and iris for HP6 and HP7) is reported NOT RUN, never passed. The recorded HP6/HP7 results of the candidate come from local runs with the named, hashed DRAFT inputs.",
+          "visualReview": "Every derivation needs the owner's visual review of seams, halo, paint breaks and all eight colours on light and dark skin before it can become a candidate for production."
+        },
+        "reproducibility": "The generator is deterministic (fixed operation order, IEEE-754 doubles); pixel hashes are the binding identity, PNG file bytes may differ with the zlib build.",
+        "candidate": {
+          "id": "r3-hair-hybrid-v2",
+          "status": "REVIEW CANDIDATE — owner visual review pending — NOT production-approved",
+          "source": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.png",
+            "sha256": "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d",
+            "report": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.check.json",
+            "reportSha256": "e0a7a537ad4ca1985e9c727a3faf31f5a3a4901556d202dd052431baf16cbefc",
+            "record": "D-183 sheet, closed by D-184; D-183's status is unchanged"
+          },
+          "spec": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.edits.json",
+            "sha256": "66d5426ad1ace78054730c56eda76b3e43849328c79f9eab8ffee6cd19cf4e8f"
+          },
+          "previousPrototype": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v1.edits.json",
+            "sha256": "916b52e716e0abe0e6bc4011c85d080376cc14c3b0f0062712ffbc1f2e1d11d9",
+            "derivedPixelSha256": "d6f784d0899a62e40f65092aed308bc431a611732942eac16d0f66e1000e9a58",
+            "status": "hybrid-v1, the prototype — kept unchanged"
+          },
+          "derivedSheet": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2-sheet.png",
+            "sha256": "02897e62c6216c551aefafcee8836209369e5316acf791c179ecf9ca7486fb6f",
+            "pixelSha256": "298b1cdd0bbbfa07b4de57c0de6df771a0c7e5e24751be1f524f7c4cb2b150e0"
+          },
+          "placedMasterPixelSha256": "e506555e5a4481772467a4972ca24df9142f3e1f0ca711e346cee43fd765199e",
+          "changeMapPixelSha256": "f4413738586689344c6eb7099e6ae58231c930ff988bd6df21dca3544cf9924b",
+          "annotation": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.annotation.json",
+            "sha256": "c87a42ce7c4c9ce6cbf2a12fc397b7b620b41018ac41bf56f90ef78f8dcaf6a1",
+            "schema": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-annotation-v1.schema.json"
+          },
+          "manifest": {
+            "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.manifest.json",
+            "sha256": "d7f0d51cff8696033b43f32904bfe011db0e8975a0fde3fb879f1fa27b3452f7"
+          },
+          "changeCounts": {
+            "rawKeptExact": 229330,
+            "rawRemoved": 6258,
+            "rawPartlyRemoved": 454,
+            "rawUnderPainted": 4353,
+            "rawInked": 1230,
+            "newPainted": 1074,
+            "other": 0,
+            "transparent": 805877
+          },
+          "checks": {
+            "rawSheet": "PASS_TO_ANNOTATION",
+            "seat": "residual 0 by construction (not an independent validation)",
+            "hpLock": "leftTempleLock pass: length 28.6 master px, tip 0.0 px from its target (window 27.9); rightTempleLock pass: length 22.8 master px, tip 6.5 px from its target (window 35.4)",
+            "placed": "HP4 pass, HP5 pass, HP6 pass, HP7 pass, HP8 pass, HP-FRAG pass",
+            "hp6Detail": {
+              "leftBrowPx": 1139,
+              "outerEnd": {
+                "px": 90,
+                "solid": 59
+              },
+              "innerEnd": {
+                "px": 153,
+                "solid": 112
+              },
+              "middleTouchedPx": 0,
+              "rightBrowPx": 1113,
+              "rightTouchedPx": 0
+            },
+            "placedRunWith": "head geometry, face layer, eyes and iris"
+          },
+          "refinementsFromV1": [
+            "R-left-ear and C-left-ear: the inner contour A7-n-side -> A9 is a drawn convex lock flank (curve, bulge 0.15) instead of a straight cut across the lock strokes, so the hanging lock ends in a tip at A9",
+            "R-face-left and C-face-left: the A7 -> A7-n-face flank follows the raw lock's own wider edge on its lower part (piecewise offset out to -4 sheet px) so more of the brow's diagonal outer end is covered, and is pulled into the hair only on its upper part, where it would touch the brow middle; no new paint"
+          ],
+          "reviewStatus": "REVIEW CANDIDATE — owner visual review pending. Not a production asset, not a promotion, not wired to runtime."
+        },
+        "productionGaps": [
+          "the face parts are provisional (the D-165 brows and mouth are DRAFT, the nose is a placeholder)",
+          "the eyes are the v5 prototype, not approved production eyes",
+          "U1 is not the finished underlay: it has no ears and no neck, so the ear transitions and the nape lock cannot be judged against the final head",
+          "the nape lock is not authored",
+          "no runtime layer is wired and R3 stays default OFF",
+          "the owner's visual approval of the candidate is pending"
+        ],
+        "notApproved": [
+          "a production asset or promotion",
+          "a runtime change or the wiring of ramp B",
+          "an image request, capacity or claim",
+          "a change to D-179's targets, thresholds or raw-sheet annotation rules",
+          "a change to D-183's historical status"
+        ]
       }
     }
   }

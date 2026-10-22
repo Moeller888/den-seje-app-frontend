@@ -1,0 +1,199 @@
+{
+  "id": "r3-hair-hybrid-v2",
+  "decision": "D-185",
+  "status": "REVIEW CANDIDATE — owner visual review pending — NOT production-approved",
+  "parts": {
+    "1 source (untouched)": {
+      "file": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.png",
+      "sha256": "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d",
+      "report": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.check.json",
+      "reportSha256": "e0a7a537ad4ca1985e9c727a3faf31f5a3a4901556d202dd052431baf16cbefc",
+      "record": "D-183 sheet, closed by D-184 (kept for review, not visually approved); byte-identical copy"
+    },
+    "2 edits and generator": {
+      "spec": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.edits.json",
+      "specSha256": "66d5426ad1ace78054730c56eda76b3e43849328c79f9eab8ffee6cd19cf4e8f",
+      "previousSpec": {
+        "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v1.edits.json",
+        "sha256": "916b52e716e0abe0e6bc4011c85d080376cc14c3b0f0062712ffbc1f2e1d11d9",
+        "derivedPixelSha256": "d6f784d0899a62e40f65092aed308bc431a611732942eac16d0f66e1000e9a58",
+        "status": "hybrid-v1, the prototype — kept unchanged"
+      },
+      "generator": "tools/avatar/r3-hair-hybrid.mjs",
+      "dependencies": {
+        "tools/avatar/r3-hair-hybrid.mjs": "cab8049257421ad38d8f9a69713fd3b2f4236cf345b0bddc145c3f229f1522cf",
+        "tools/avatar/r3-hair-tool.mjs": "2c5bf2da27d2c5da49136f60d8289c1730f0bca5934753b394004ed05e5610f9",
+        "tools/avatar/r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+        "tools/avatar/r3-face-parts-tool.mjs": "9158b7ed8e2af53f0cea265529e4774765650583911d998801333e78a83339d4",
+        "tools/avatar/r3-eyes-tool.mjs": "98a5c043ebd1aebe64e072d9cca277a9157e054c39c6d7a92b65cfd10efd3b8a",
+        "tools/avatar/r3-hair-guide-v1.mjs": "67368143f10a662ef994842e7b9f8642cebfc1e45857a50bf2e588ebc6df0ff6",
+        "tools/avatar/fixtures/r3-hair/targets-hair-v2.json": "8c3b24e8404d3ccf44160108eaf13cd58cdb66c6705f503a6415b49a151864cc",
+        "tools/avatar/fixtures/r3-head-geometry/r3-head-geometry-g1v3-e2-v1.png": "a7ba877560d5e9ff179b532c241aae383c12281b3a1f09eb74f77ad4704fbe43"
+      },
+      "runtime": {
+        "node": "v24.15.0",
+        "zlib": "1.3.1-e00f703"
+      },
+      "rasterisation": "even-odd polygon fill, 4x4 supersampling; contours as distance coverage clamp(r + 0.5 - d, 0, 1), r = 2.2 sheet px; untouched pixels keep the raw bytes; IEEE-754 doubles in a fixed order. Pixel hashes are platform-independent; PNG file bytes depend on zlib."
+    },
+    "3 derived sheet and placed review candidate": {
+      "sheet": {
+        "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2-sheet.png",
+        "sha256": "02897e62c6216c551aefafcee8836209369e5316acf791c179ecf9ca7486fb6f",
+        "pixelSha256": "298b1cdd0bbbfa07b4de57c0de6df771a0c7e5e24751be1f524f7c4cb2b150e0"
+      },
+      "placedMasterPixelSha256": "e506555e5a4481772467a4972ca24df9142f3e1f0ca711e346cee43fd765199e",
+      "annotation": {
+        "file": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.annotation.json",
+        "sha256": "c87a42ce7c4c9ce6cbf2a12fc397b7b620b41018ac41bf56f90ef78f8dcaf6a1",
+        "schema": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-annotation-v1.schema.json"
+      },
+      "changeMapPixelSha256": "f4413738586689344c6eb7099e6ae58231c930ff988bd6df21dca3544cf9924b"
+    }
+  },
+  "changeCounts": {
+    "rawKeptExact": 229330,
+    "rawRemoved": 6258,
+    "rawPartlyRemoved": 454,
+    "rawUnderPainted": 4353,
+    "rawInked": 1230,
+    "newPainted": 1074,
+    "other": 0,
+    "transparent": 805877
+  },
+  "changeLegend": {
+    "rawKeptExact": "raw pixel kept byte for byte",
+    "rawRemoved": "raw hair removed by a mask",
+    "rawPartlyRemoved": "raw edge partly removed (anti-aliased cut)",
+    "rawUnderPainted": "raw hair kept; semi-transparent raw alpha topped up by a named paint field beneath it",
+    "rawInked": "raw hair recoloured by a drawn contour",
+    "newPainted": "new hair from a named paint field where the raw sheet had none",
+    "other": "anything else (must be 0)",
+    "transparent": "transparent in both"
+  },
+  "checks": {
+    "rawSheet": {
+      "verdict": "PASS_TO_ANNOTATION",
+      "firstFailure": null,
+      "auto": [
+        "H1 PASS 1024x1024, colour type 6, bit depth 8, interlace 0",
+        "H2 PASS 0 px",
+        "H3 PASS max chroma 9",
+        "H4 PASS 1 components, largest 236441 of 236441 (1.0000)",
+        "H5 PASS 0.2255"
+      ]
+    },
+    "a4Proposal": {
+      "xy": [
+        627.5,
+        563
+      ],
+      "offsetFromConstructionSheetPx": 1.8802011195614152
+    },
+    "seat": {
+      "residualMaxMasterPx": 5.684341886080802e-14,
+      "aspect": 0.9999999999999998,
+      "s": 0.5714285714285713,
+      "byConstruction": true
+    },
+    "locks": [
+      {
+        "lock": "leftTempleLock",
+        "ok": true,
+        "lengthMasterPx": 28.635642126552703,
+        "tipOffsetMasterPx": 0,
+        "windowPx": 27.901612856607407,
+        "reason": null
+      },
+      {
+        "lock": "rightTempleLock",
+        "ok": true,
+        "lengthMasterPx": 22.789324613215935,
+        "tipOffsetMasterPx": 6.494208565942299,
+        "windowPx": 35.35533905932738,
+        "reason": null
+      }
+    ],
+    "placed": [
+      {
+        "id": "HP4",
+        "ok": true,
+        "value": 0
+      },
+      {
+        "id": "HP5",
+        "ok": true,
+        "value": {
+          "holePx": 0,
+          "holes": 0,
+          "faceSeedOpen": true
+        }
+      },
+      {
+        "id": "HP6",
+        "ok": true,
+        "value": {
+          "leftBrowPx": 1139,
+          "outerEnd": {
+            "px": 90,
+            "solid": 59
+          },
+          "innerEnd": {
+            "px": 153,
+            "solid": 112
+          },
+          "middleTouchedPx": 0,
+          "rightBrowPx": 1113,
+          "rightTouchedPx": 0
+        }
+      },
+      {
+        "id": "HP7",
+        "ok": true,
+        "value": {
+          "eyeWhite": 0,
+          "lashOrOutline": 0,
+          "foldStroke": 0,
+          "otherEyesFixed": 0,
+          "iris": 0
+        }
+      },
+      {
+        "id": "HP8",
+        "ok": true,
+        "value": {
+          "outsidePx": 0,
+          "insidePx": 290
+        }
+      },
+      {
+        "id": "HP-FRAG",
+        "ok": true,
+        "value": {
+          "ok": true,
+          "components": 1,
+          "fragmentsOnHeadPx": 0,
+          "fragmentsOnHead": 0,
+          "fragmentsOffHeadPx": 0
+        }
+      }
+    ],
+    "placedRunWith": "head geometry, face layer, eyes and iris",
+    "greyMaxChroma": 9,
+    "lowAlphaPx": 8335,
+    "localReviewInputs": {
+      "note": "HP6 and HP7 need the face layer, eyes and iris, which are untracked DRAFT review material; they were run locally with these inputs and are recorded here, never re-claimed in CI",
+      "faceLayer": {
+        "file": "wt-r3-d167-run/tools/avatar/build/r3-face-review-composite-v1/face-layer-REVIEW-ONLY-1024x1536.png",
+        "sha256": "93415561f74ee52f4951b819afcc915cbd6e8525c79be6e0274e1dfdba625b7d"
+      },
+      "eyesFixedV5": {
+        "sha256": "d188d5a23e77bb5a98a326692f89ec5133d913869384e8d0fd1fd6577e21e967"
+      },
+      "irisV5": {
+        "sha256": "5ea7c8cf331561eeee30aba825cb6d7ed3672a5d74ea9fbf361341ae512202eb"
+      }
+    }
+  },
+  "reproduction": "two independent builds give identical pixel hashes for the derived sheet, the placed master and the change map"
+}
