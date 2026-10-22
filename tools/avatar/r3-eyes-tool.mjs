@@ -200,6 +200,47 @@ export function checkFixedSheet(buf) {
   return { verdict: "PASS_TO_ANNOTATION", firstFailure: null, auto, diag, rawSha256: sha256(buf), px, openingLabels: T4.labels, openings };
 }
 
+// ═════════════════════════════════ D-172: binding shape checks for a further eyes-fixed sheet ═════════════════════════════════
+/**
+ * Fixed by D-172 BEFORE its call; mirrored verbatim in eyesFixedRetakePreparation.shapeChecks.thresholds. D-169's THRESHOLDS
+ * and E1..E5 are unchanged. targetRingCentreSpacingPx is |Lc − Rc| of the APPROVED targets-eyes-v2 (D-170), not a new reading.
+ */
+export const SHAPE_THRESHOLDS = Object.freeze({
+  bandColumnFraction: 0.6,          // F1 scans the column at 60 % of the opening's bbox width (away from the upper-left highlight)
+  lightAlphaMin: 128,
+  lightLuminanceMin: 200,
+  stopAlphaBelow: 8,                // the upward scan stops at the first pixel with alpha < 8 (above the lash line)
+  whiteBandLightPxMax: 0,
+  targetRingCentreSpacingPx: 122.205,
+});
+/**
+ * F1..F2 on a PASSING checkFixedSheet result (D-172). F1 no white band: in each opening's F1 column, from its topmost opening
+ * pixel upward to the first pixel with alpha < 8, no pixel is light (alpha >= 128, luminance >= 200) — the ring's top meets the
+ * lash line with no white between. F2 spacing: the implied shared scale targetRingCentreSpacingPx / |region centroid L − R|
+ * lies in D-169's scaleRange, so the sheet's eye spacing is compatible with the approved targets before any annotation.
+ */
+export function checkFixedSheetShape(fixed) {
+  const auto = [], diag = [], S = SHAPE_THRESHOLDS;
+  const step = (id, name, ok, detail) => { auto.push({ id, name, status: ok ? RESULT.ok : RESULT.rejected, detail }); return ok; };
+  const fail = (id) => ({ verdict: "REJECT", firstFailure: id, auto, diag });
+  if (!fixed || fixed.verdict !== "PASS_TO_ANNOTATION" || !fixed.px || !fixed.openingLabels || !fixed.openings) return { verdict: "REJECT", firstFailure: "E-CHECKS-NOT-PASSED", auto, diag };
+  const { w } = SHEET, px = fixed.px;
+  const f1 = EYES.map((e) => {
+    const o = fixed.openings[e], [x0, y0, x1, y1] = o.bbox, col = x0 + Math.round(S.bandColumnFraction * (x1 - x0));
+    let top = -1; for (let y = y0; y < y1; y++) if (fixed.openingLabels[y * w + col] === o.id) { top = y; break; }
+    if (top < 0) return { eye: e, ok: false, detail: `no opening pixel in column ${col}` };
+    let light = 0, y = top - 1;
+    for (; y >= 0; y--) { const i = (y * w + col) * 4; if (px[i + 3] < S.stopAlphaBelow) break; if (px[i + 3] >= S.lightAlphaMin && lum(px[i], px[i + 1], px[i + 2]) >= S.lightLuminanceMin) light++; }
+    return { eye: e, ok: light <= S.whiteBandLightPxMax, detail: `column ${col}: ${light} light px between the opening top (y ${top}) and y ${y + 1}` };
+  });
+  if (!step("F1", "no white band: the ring's top meets the upper lash line with no light pixel between (D-172)", f1.every((r) => r.ok), f1.map((r) => `${r.eye}: ${r.detail}`).join("; "))) return fail("F1");
+  const a = fixed.openings.eyeLeft.regionCentroid, b = fixed.openings.eyeRight.regionCentroid, d = Math.hypot(b[0] - a[0], b[1] - a[1]), implied = S.targetRingCentreSpacingPx / d;
+  const ok2 = implied >= THRESHOLDS.scaleRange[0] && implied <= THRESHOLDS.scaleRange[1];
+  if (!step("F2", `eye spacing compatible with the approved targets: ${S.targetRingCentreSpacingPx} / |region centroid L − R| in ${THRESHOLDS.scaleRange[0]}..${THRESHOLDS.scaleRange[1]} (D-172)`, ok2, `spacing ${d.toFixed(1)} px, implied s ${implied.toFixed(4)}`)) return fail("F2");
+  diag.push({ id: "F-VISUAL", name: "tall oval ring (about 1.3 x), short outer flick only, no inner flick, short fold above the inner half — visual review only", value: "visual review only", flagged: null });
+  return { verdict: "PASS_TO_ANNOTATION", firstFailure: null, auto, diag };
+}
+
 // ═════════════════════════════════ B: iris sheet ═════════════════════════════════
 /** The binding raw checks I1..I5 for an iris sheet (D-169). On PASS, returns one component per eye with its centroid. */
 export function checkIrisSheet(buf) {
