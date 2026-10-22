@@ -6619,5 +6619,88 @@
       "a change to G1V3, E2, K4, any R3 target or any threshold",
       "a change to D-187 or any earlier decision"
     ]
+  },
+  "northstarHeadReview": {
+    "decision": "D-189",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW VARIANT — RECONSTRUCTED HEAD UNDER THE HAIR AND CLEANED FEATURE EDGES ON THE D-188 BASELINE; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner authorises a local reconstruction of the hidden head areas, a new versioned review variant with its own sources and hashes, and the cleaning of the 83 documented halo pixels and the related edge problems. D-188's variant stays unchanged as the baseline. No image call, no external order, no production approval.",
+    "variant": {
+      "name": "northstar-head",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-head --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-head.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-head/ (spec-v1.json, layers/, masks/, manifest-v1.json; stored binary)",
+      "compositeOrder": [
+        "cranium",
+        "skin",
+        "hairShadow",
+        "browL",
+        "browR",
+        "nose",
+        "mouth",
+        "iris",
+        "eyesFixed",
+        "hair"
+      ],
+      "builtLayers": [
+        "cranium",
+        "skin",
+        "browL",
+        "browR",
+        "nose",
+        "mouth",
+        "hair"
+      ],
+      "reusedFromD188": [
+        "hairShadow",
+        "iris",
+        "eyesFixed"
+      ],
+      "baseline": {
+        "decision": "D-188",
+        "mergeCommit": "0eecda0955904e1d9152dc38b279ea386cd47ffa",
+        "manifestSha256": "e913d46d0eeb4c426f43a81a404268464f989ecae083a7172c4bfc053df07149",
+        "rule": "every D-188 file stays byte-identical and is read through its own pins"
+      }
+    },
+    "reconstructed": {
+      "cranium": "RECONSTRUCTED DESIGN, not observed pixels: one round cranium (ellipse arc, centre (510, 250), radii 133.8 x 130, top y 120) that meets the visible face contour at (383, 291) and (637, 291), as its own layer UNDER the unchanged skin; flat lit skin (253, 199, 131) with a 20 px harmonic transition from the visible skin; ink (12, 5, 1) half width 1.3 px",
+      "earRoots": "the two small skin wedges between each ear's front edge and the face line that the sideburns covered, closed by a short ink stroke",
+      "notShapedBy": "G1V3, E2, K4 or any R3 target",
+      "hairShadow": "kept as its own D-188 layer, so the bare head carries no shadow of the original hairstyle"
+    },
+    "featureEdges": {
+      "method": "local-ink projection with the local skin as background (spec featureEdges): halo lighter than the skin next to dark ink projects to alpha 0; warm antialias becomes the local ink colour at the projected alpha; painted shade fills (the nose shadow) and white highlights are cores and keep their colour; the hair's own outline that D-188 duplicated into the left brow leaves the brow (it stays in the opaque hair)",
+      "result": "opaque light-skin pixels in the brow, nose and mouth layers 83 -> 0; 1,676 composite pixels change against D-188 (max 46/255 where the original halo was brightest)",
+      "eyes": "not changed (D-188's eye layers are reused)"
+    },
+    "hairEdgeResidue": "15 opaque dark pixels the D-188 skin kept next to the hair move to this variant's hair layer (composite with hair unchanged within 1/255; no dark specks on the bare head)",
+    "result": {
+      "deviationFromOriginal": "391180 visible px: 340563 bit-identical; colour 0 / 1-2 / 3-5 / 6-16 / >16 = 350014 / 40014 / 560 / 446 / 146; max 47 / 5",
+      "explanation": "the cranium under the hair shifts colour by at most 2/255 (the hair's alpha is 253-254); every larger difference lies in the feature edges where the original halo was deliberately removed; 0 changed pixels under semi-transparent hair edges; 0 changed pixels outside the explicit edit masks"
+    },
+    "openAreas": [
+      "OPEN: the hidden end and upper edge of the image-left brow (the hair lock covered it)",
+      "OPEN: the sclera behind the iris",
+      "OPEN: new expressions and closed eyelids",
+      "OPEN: the eyes keep D-188's lift (the lash's outer edge is not re-projected)",
+      "LIMIT: the cranium's shape is a design choice, not observed; a shorter haircut would expose it and needs the owner's or an artist's eye",
+      "LIMIT: faint flat tone patches remain on the forehead where D-188's lit-skin reconstruction meets the painted base"
+    ],
+    "notEvidenceFor": "A clean bare head and a good default image are not evidence that other hairstyles, skin tones or expressions work.",
+    "promotion": "Never promotable by passing technical checks (promotionStatus() false; promote() throws).",
+    "notApproved": [
+      "any layer's final look",
+      "the cranium's shape",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "an R3 body asset",
+      "a skin, iris or hair token or recolouring method",
+      "a change to D-188, D-187 or any earlier decision"
+    ]
   }
 }

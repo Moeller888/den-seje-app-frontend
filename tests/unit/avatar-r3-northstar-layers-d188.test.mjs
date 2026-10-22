@@ -14,7 +14,7 @@ import { decodePng, pixelSha256 } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import * as NL from "../../tools/avatar/r3-northstar-layers.mjs";
 import { runVariantChecks, NOT_APPLICABLE, VARIANT } from "../../tools/avatar/r3-review-northstar-layers.mjs";
 import { VARIANTS, loadPack } from "../../tools/avatar/r3-review-pack.mjs";
-import { preD188Contract, PRE_D188_CONTRACT_CANONICAL_SHA256, PRE_D188_COMMIT, preD187Contract, PRE_D187_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD189Contract, preD188Contract, PRE_D188_CONTRACT_CANONICAL_SHA256, PRE_D188_COMMIT, preD187Contract, PRE_D187_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -30,7 +30,7 @@ const N = 1024 * 1536;
 test("D-188 adds exactly the top-level key northstarLayerReview: the contract minus it is the D-187 merge", () => {
   assert.equal(sha(JSON.stringify(preD188Contract(LIVE))), PRE_D188_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D188_COMMIT);
   assert.equal(sha(JSON.stringify(preD187Contract(LIVE))), PRE_D187_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "northstarLayerReview");
+  assert.equal(Object.keys(preD189Contract(LIVE)).at(-1), "northstarLayerReview", "the last key D-188 added (D-189 appends northstarHeadReview after it)");
   assert.deepEqual([NR.decision, NR.isAuthorisation, NR.authorisesImageRequest, NR.authorisesUpload], ["D-188", false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   const sent = LIVE.imageCallBudget.callsActuallySentSoFar;
@@ -166,7 +166,7 @@ test("review only: every check passes, yet the variant is never promotable; D-18
   assert.equal(na.length, NOT_APPLICABLE.length);
   assert.ok(na.some((c) => /G1V3 \+ E2 \+ K4/.test(c.name)) && na.some((c) => /hair targets/.test(c.name)) && na.some((c) => /D-159 envelope/.test(c.name)));
   // the D-187 path is untouched: default variant, Northstar still refused as a source there
-  assert.deepEqual([...VARIANTS], ["d187", "northstar-layers", "both"]);
+  assert.deepEqual([...VARIANTS].slice(0, 3), ["d187", "northstar-layers", "both"], "D-188's variants are kept (D-189 appends northstar-head)");
   assert.equal(VARIANT, "northstar-layers");
   assert.match(file("tools/avatar/r3-review-pack.mjs").toString("utf8"), /const variant = arg\("--variant"\) \?\? "d187"/);
   assert.match(loadPack.toString(), /northstar/, "D-187's loadPack still refuses a Northstar source file");
