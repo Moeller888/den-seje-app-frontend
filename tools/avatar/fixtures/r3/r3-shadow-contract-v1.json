@@ -6702,5 +6702,55 @@
       "a skin, iris or hair token or recolouring method",
       "a change to D-188, D-187 or any earlier decision"
     ]
+  },
+  "northstarBrowReview": {
+    "decision": "D-190",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW VARIANT — THE IMAGE-LEFT BROW COMPLETED BY THE D-158 MIRRORING ON THE D-189 BASELINE; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "Make the image-left brow complete with the D-158 mirroring. D-189's variant stays unchanged as the baseline.",
+    "variant": {
+      "name": "northstar-brow",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-brow --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-brow.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-brow/ (spec-v1.json, layers/browL.png, masks/, manifest-v1.json; stored binary)",
+      "builtLayers": [
+        "browL"
+      ],
+      "baseline": {
+        "decision": "D-189",
+        "mergeCommit": "cb2fa202a8fdcaa26d9bd69d195a4036b5982464",
+        "manifestSha256": "59b58f4bbab3338600334567f7640a42849881c7687ae34cc3d316b89d962ae1"
+      }
+    },
+    "method": {
+      "binding": "D-158 (1)(b)–(h)",
+      "source": "the D-189 browR layer (Northstar's own image-right brow)",
+      "axis": "x = 509.79, the midpoint of the two eye components' centroids (D-158 measured 510.90 on its own segmentation; the translation absorbs the axis)",
+      "fit": "lexicographic (safe skin, then IoU where the brow is observable, then smallest deviation): translation only, tx = -3, ty = 4, no rotation, no scale; 0 px on safe skin (raw mirror 10), IoU 0.8623, recall 0.9247; D-158's own fit (tx −5, ty +4 at axis 510.90) is the same place within 1 px",
+      "completion": "observed brow over the fitted mirror; the mirror only inside D-188's missing-under-hair mask where the observed brow has no pixel; every observed pixel kept"
+    },
+    "result": {
+      "filledPx": 496,
+      "filled": "RECONSTRUCTED, never observed",
+      "changes": "the layers change only in the mirror-fill mask (496 px, 0 outside); with hair 444 px change by at most 2/255, all under opaque hair, 0 outside the mask"
+    },
+    "openAreas": [
+      "LIMIT: small dark remnants of the hair lock's edge at the brow's upper right (x ≈ 465–470) are observed pixels and are kept (D-158)",
+      "LIMIT: the filled part carries the mirrored light direction of the source brow",
+      "OPEN: the sclera behind the iris",
+      "OPEN: new expressions and closed eyelids",
+      "OPEN: D-158 (h) — the brow is still to be judged without hair, with Northstar hair, afro, short and in every supported expression"
+    ],
+    "promotion": "Never promotable by passing technical checks.",
+    "notApproved": [
+      "the brow's final shape",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "a change to D-189, D-188 or any earlier decision"
+    ]
   }
 }

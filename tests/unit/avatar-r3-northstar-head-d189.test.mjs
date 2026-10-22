@@ -15,7 +15,7 @@ import * as NL from "../../tools/avatar/r3-northstar-layers.mjs";
 import * as HD from "../../tools/avatar/r3-northstar-head.mjs";
 import { runVariantChecks, changeReport, EDIT_MASK_OF } from "../../tools/avatar/r3-review-northstar-head.mjs";
 import { VARIANTS } from "../../tools/avatar/r3-review-pack.mjs";
-import { preD189Contract, PRE_D189_CONTRACT_CANONICAL_SHA256, PRE_D189_COMMIT, preD188Contract, PRE_D188_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD190Contract, preD189Contract, PRE_D189_CONTRACT_CANONICAL_SHA256, PRE_D189_COMMIT, preD188Contract, PRE_D188_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -32,7 +32,7 @@ const luma = (p, i) => 0.299 * p[i * 4] + 0.587 * p[i * 4 + 1] + 0.114 * p[i * 4
 test("D-189 adds exactly the top-level key northstarHeadReview: the contract minus it is the D-188 merge", () => {
   assert.equal(sha(JSON.stringify(preD189Contract(LIVE))), PRE_D189_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D189_COMMIT);
   assert.equal(sha(JSON.stringify(preD188Contract(LIVE))), PRE_D188_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "northstarHeadReview");
+  assert.equal(Object.keys(preD190Contract(LIVE)).at(-1), "northstarHeadReview", "the last key D-189 added (D-190 appends northstarBrowReview after it)");
   assert.deepEqual([HR.decision, HR.isAuthorisation, HR.authorisesImageRequest, HR.authorisesUpload], ["D-189", false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   assert.deepEqual([LIVE.imageCallBudget.minimum, LIVE.imageCallBudget.maximum], [26, 27], "no capacity");
@@ -123,7 +123,7 @@ test("review only: every binding check passes, yet the variant is never promotab
   assert.equal(HD.promotionStatus().promotable, false);
   assert.throws(() => HD.promote(), /cannot be promoted/);
   assert.match(MAN.status, /not approved, not promotable/);
-  assert.deepEqual([...VARIANTS], ["d187", "northstar-layers", "both", "northstar-head"]);
+  assert.deepEqual([...VARIANTS].slice(0, 4), ["d187", "northstar-layers", "both", "northstar-head"], "D-189's variants are kept (D-190 appends northstar-brow)");
   assert.match(file("tools/avatar/r3-review-pack.mjs").toString("utf8"), /const variant = arg\("--variant"\) \?\? "d187"/, "D-187 stays the default");
   assert.ok(checks.checks.some((c) => c.ok === null && /G1V3/.test(c.id)), "geometry checks reported not applicable");
 });
