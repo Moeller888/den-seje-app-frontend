@@ -9,7 +9,7 @@ import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256, PRE_D179_COMMIT, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD179Contract, PRE_D179_CONTRACT_CANONICAL_SHA256, PRE_D179_COMMIT, preD178Contract, PRE_D178_CONTRACT_CANONICAL_SHA256, preD180Contract } from "./avatar-r3-d147-closure.mjs";
 import { THRESHOLDS, FIT_POINTS, MANDATORY_LOCKS, lockWindowsPx, validateAnnotation, TOOL_ID, encodePng } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -18,7 +18,9 @@ const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
 // the CLI runs on import, so its pin is read from its source text
 const CLI_V2_TARGETS_SHA256 = /export const TARGETS_SHA256 = "([0-9a-f]{64})";/.exec(file("tools/avatar/r3-hair-compose-v2.mjs").toString("utf8"))?.[1];
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
-const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
+// D-180 later authorised the third hair call and froze prompt v3. LIVE is the contract exactly as D-179 left it (D-180's
+// additions removed, proven canonical in avatar-r3-hair-send-d180.test.mjs).
+const LIVE = preD180Contract(JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8")));
 const PRE = preD179Contract(LIVE);
 const V2 = LIVE.hairMethod.methodV2;
 // the v2 CLI runs with an explicit allowlist environment, never this process's environment (D-142 / D-145 guard)
@@ -41,7 +43,8 @@ test("methodV2 authorises nothing: no call, no capacity, no claim, no adapter; R
   assert.deepEqual([LIVE.assets[8].calls, LIVE.imageCallBudget.minimum, LIVE.imageCallBudget.maximum, LIVE.imageCallBudget.callsActuallySentSoFar.hair], [2, 24, 25, 2]);
   assert.equal(LIVE.architecture.defaultEnabled, false);
   assert.equal(LIVE.meta.authorisesImageRequest, false);
-  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs"], "no new send adapter");
+  // D-179 added no adapter; D-180 later added the one for its own authorised call.
+  assert.deepEqual(readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*hair|hair.*send/i.test(f)).sort(), ["openai-send-r3-hair-d175.mjs", "openai-send-r3-hair-d177.mjs", "openai-send-r3-hair-d180.mjs"], "no send adapter except D-175's, D-177's and D-180's");
   for (const x of ["an image request or upload", "capacity, a call-id or a claim", "a frozen prompt v3", "the D-177 sheet under v2", "a new runtime layer for the nape lock"]) assert.ok(V2.notApproved.includes(x), x);
 });
 
