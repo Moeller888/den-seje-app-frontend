@@ -264,6 +264,18 @@ test("global-setup provisions slots 1..3 through ensureSlotUser and leaves slot 
   }
 });
 
+// The primary address comes from a secret, and for slots 1..3 is derived from one. GitHub masks only
+// the exact secret string, so the derived form is protected solely by the `::add-mask::` the config
+// prints. Global setup therefore never interpolates it at all: no log line, no error message.
+test("global-setup never puts the primary student address into a log line or message", () => {
+  const gs = read("tests/global-setup.ts");
+  assert.equal(gs.includes("${TEST_STUDENT_EMAIL}"), false);
+  assert.ok(gs.includes("Deleted all question_instances for the primary test student (${user.id}, slot ${E2E_SLOT})"));
+  assert.ok(gs.includes("avatar_identity=neutral(chosen) for the primary test student (${user.id}, slot ${E2E_SLOT})"));
+  // Negative control: the check sees the shape it forbids.
+  assert.ok("for ${TEST_STUDENT_EMAIL} (${user.id})".includes("${TEST_STUDENT_EMAIL}"));
+});
+
 test("helpers and global-setup still read addresses only from TEST_*_EMAIL (which the config rewrites)", () => {
   const helpers = read("tests/helpers.ts");
   assert.ok(helpers.includes('export const TEACHER_EMAIL    = process.env.TEST_TEACHER_EMAIL    ?? "teacher-test@hotmail.com";'));

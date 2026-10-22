@@ -44,6 +44,7 @@ import {
   type RestoreDeps,
 } from './support/teacher-id-restore.ts';
 import { awaitSettled, type BarrierDeps } from './support/completion-barrier.ts';
+import { mailGuardVerdict } from './support/mail-guard.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -208,12 +209,26 @@ async function baselineIdsForStudent(): Promise<string[]> {
   return (await rowsForStudent(studentId)).map((r) => r.id);
 }
 
+// Throws instead of calling unless the deployed function provably cannot send mail for this call:
+// the student has no teacher, or a counted row still holds it well inside the cooldown
+// (tests/support/mail-guard.ts). Some tests inherit their cooldown from the previous test, so
+// without this a test run on its own would mail the student's teacher.
+async function assertMailImpossible(label: string): Promise<void> {
+  const currentTeacherId = await restoreDeps.readTeacherId(studentId);
+  const rows = await rowsForStudent(studentId);
+  const verdict = mailGuardVerdict({ teacherId: currentTeacherId, rows, nowMs: Date.now() });
+  if (!verdict.safe) {
+    throw new Error(`${label}: refusing a live call with the student's address: ${verdict.reason}`);
+  }
+}
+
 // Calls with the student address and does not return until that request's row exists AND has
 // reached an allowed terminal status.
 async function callHelpForStudentAndSettle(
   label: string,
   allowedTerminal: readonly string[] = SAFE_TERMINAL,
 ): Promise<{ res: HelpResponse; rows: any[] }> {
+  await assertMailImpossible(label);
   const baselineIds = await baselineIdsForStudent();
   const res = await callHelp(STUDENT_EMAIL);
   const rows = await awaitSettledRows(baselineIds, 1, label, allowedTerminal);
@@ -418,6 +433,7 @@ test('ANTI-ENUMERATION: latency must not distinguish a real account from an unkn
 
   // Captured after seeding: the seeded row is the reference, not an outcome of the calls below.
   const baselineIds = await baselineIdsForStudent();
+  await assertMailImpossible('anti-enumeration');
 
   const N = 7;
   const knownMs: number[] = [];
