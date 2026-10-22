@@ -149,8 +149,9 @@ test("the contract authorises exactly one call, by id, and every pin matches the
   // D-175 later added the one live permission for the hair sheet; it must not make this adapter sendable either.
   // D-177 later added the one live permission for the further hair sheet; it must not make this adapter sendable either.
   // D-180 later added the one live permission for the third hair sheet; it must not make this adapter sendable either.
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 14);
-  assert.equal(CONTRACT.authorisedCalls.count, 14);
+  // D-182 later added the one live permission for the fourth hair sheet; it must not make this adapter sendable either.
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 15);
+  assert.equal(CONTRACT.authorisedCalls.count, 15);
   assert.equal(A.verifyAuthorisation(CONTRACT).call.decision, "D-139", "it matches D-139's entry, not D-143's, D-151's, D-153's or D-160's");
   assert.equal(CONTRACT.authorisedCalls.calls.filter((x) => x.callId === A.CALL_ID).length, 1);
 });
