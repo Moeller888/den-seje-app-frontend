@@ -392,7 +392,7 @@ format — e.g. a two-choice true/false — is shown exactly as authored and is 
 ### Question selection & the format mix (fordeling af opgaveformer) — shadow since 2026-10-22, v2 NOT active
 
 **Status:** merged in PR #351 (`14cbd50`) behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` =
-the old selection, unchanged. **Live since 2026-10-22, each step its own owner authorisation (D-181):**
+the old selection, unchanged. **Live since 2026-10-22, each step its own owner authorisation (D-182):**
 migration `20261019150000_question_format_mix.sql` applied 05:34 UTC via the Supabase plugin's
 `apply_migration`, **remote ledger version `20261022053442`** (≠ the repo filename, as with other D-110
 migrations; the stored SQL is byte-identical to the file, sha256 `870d1dfb…ace2f4e`) →

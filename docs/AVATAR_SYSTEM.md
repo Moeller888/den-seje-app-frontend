@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; one live permission: the third hair call (D-180, the first under v2), not yet sent (D-174 … D-180, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; no live permission (D-174 … D-181, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -269,6 +269,21 @@ art layer behind them can be upgraded without a rewrite.
   - **Unchanged.** No D-179 target, threshold or check changes; D-177 keeps its historical status.
   - **Status.** UNSPENT and not a run instruction: the send needs a separate execution message after merge. R3 stays
     default OFF. See `project-state.md` **D-180**.
+  **D-181 (2026-10-22)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_35b74ddf9bf74236ae703007ff0c9a08`, one 1024×1024 sheet `e310112e…`, one fetch, no
+    retry; claim, event log, manifest and raw response verified consistent.
+  - **Checks.** **H1–H5 passed** (margin 77–220 px, one connected piece). They prove the technical sheet only. D-179's
+    placement and shape checks were **not evaluated**; there is no annotation, placement or candidate.
+  - **Identifiability (review finding, not an approval).** Under D-179's exact definitions A4 is ambiguous (a rounded,
+    tufted arch, no V apex) and A9/A10 are missing (no short lower edge above the ears; the side hair hangs in pointed
+    locks). The image-right temple lock is not a separate form. Under D-179 the sheet therefore cannot be annotated: no
+    reduced fit, no invented coordinate, no DRAFT annotation.
+  - **Halo.** None visible with correct alpha compositing on light or dark; RGB under alpha 0 is invisible.
+  - **Disposition: kept for review, not visually approved.** Raw files, claim and event log stay byte for byte and
+    untracked.
+  - **Accounting.** `callsActuallySentSoFar.hair` = **3** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the
+    planned hair capacity (3) is used up and the budget stays 25–26.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-181**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

@@ -78,7 +78,7 @@ gates below are what that decision buys, not a substitute for it.
 8. The new local/remote divergence is measured and **documented honestly**.
 9. **No migration may be presented as CLI-synchronised.**
 
-**How step 5 is kept with the Supabase plugin (owner decision D-181, 2026-10-22).** The plugin's
+**How step 5 is kept with the Supabase plugin (owner decision D-182, 2026-10-22).** The plugin's
 `apply_migration` sends no `Idempotency-Key`, so the API cannot reject a second send of the same
 migration. "Once" is therefore enforced by the procedure, not the API: one call per migration, and
 after an error or a timeout **no new call** until `list_migrations` and the database catalogue show
