@@ -551,7 +551,7 @@
     { "id": 6,  "name": "r3-eyes-neutral-fixed",  "slot": "eyes",     "method": "generated-eyes-sheet+anchored-composition", "calls": 2 },
     { "id": 7,  "name": "r3-eyes-neutral-iris",   "slot": "eyes",     "method": "generated-luminance-map-plus-token", "calls": 1 },
     { "id": 8,  "name": "r3-blush-multiply",      "slot": "blush",    "method": "generated-or-constructed", "calls": "0-1" },
-    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated-hair-sheet+anchored-composition", "calls": 3 },
+    { "id": 9,  "name": "r3-hair-northstar",      "slot": "hair",     "method": "generated-hair-sheet+anchored-composition", "calls": 4 },
     { "id": 10, "name": "r3-face-curious",        "slot": "face",     "method": "generated", "calls": 1 },
     { "id": 11, "name": "r3-face-determined",     "slot": "face",     "method": "generated", "calls": 1 },
     { "id": 12, "name": "r3-face-focused",        "slot": "face",     "method": "generated", "calls": 1 },
@@ -563,12 +563,12 @@
   ],
 
   "imageCallBudget": {
-    "minimum": 25,
-    "maximum": 26,
+    "minimum": 26,
+    "maximum": 27,
     "isAuthorisation": false,
     "countingRule": "Every image call ACTUALLY SENT counts, including one whose output was rejected and one sent by accident. D-139 was sent and its output rejected; the D-142 attempt was sent during an incident with an unknown outcome. Adopted by D-142, unchanged by D-143.",
     "callsActuallySentSoFar": {"underlay":5,"which":["D-139 — sent, output rejected","D-142 — sent during the incident, outcome UNKNOWN","D-143 — sent once, HTTP 200, raw received, candidate rejected by pre.transition-silhouette, nothing promoted (recorded by D-147)","D-151 — sent once, HTTP 400 (background transparent not supported for this model), no image, nothing promoted (recorded by D-152)","D-153 — sent once, HTTP 200, raw received, candidate rejected by background-leak, nothing promoted (recorded by D-154)"],"note":"An OBSERVATION of what has left this machine. D-143's single send is counted here since D-147, D-151's since D-152 and D-153's since D-154.","faceNeutral":4,"faceNeutralRecord":{"counts":"Face-neutral attempts whose dispatch START is documented (D-159 laterAttemptRules.callCounting.counterMeaning). It measures documented local dispatch, not confirmed server receipt; server answers are counted separately below. It is never part of the underlay figure, which stays 5.","attempts":["D-160-r3-face-neutral-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, geometry rejected by the owner, nothing promoted (recorded by D-161)","D-162-r3-face-neutral-guide-b-v1 — claim consumed, dispatch started, HTTP 200 received, one image, TECHNICAL_REJECT at AUTO-5, nothing promoted (recorded by D-163)","D-165-r3-face-parts-sheet-v1 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 sheet, RAW-1..5 passed, nose rejected by the owner, brows and mouth kept for further review, nothing promoted (recorded by D-166)","D-167-r3-face-parts-nose-v1 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 partial sheet, TECHNICAL_REJECT at RAW-4′ (5 px at alpha 1 outside the nose cell), no nose approved, nothing promoted (recorded by D-168)"],"dispatchUndetermined":0,"serverAnswered":4},"eyesFixed":2,"eyesFixedRecord":{"counts":"Eyes-fixed attempts (assets[5]) whose dispatch START is documented, on D-159's claim / dispatch / result axes. It is never part of the underlay or face-neutral figures, which stay 5 and 4.","attempts":["D-170-r3-eyes-fixed-v1 — claim consumed, dispatch started, HTTP 200 received, one 1536x1024 sheet, E1..E5 passed, visual review pending, nothing promoted (recorded by D-171)","D-172-r3-eyes-fixed-v2 — claim consumed, dispatch started, HTTP 200 received, one 1536x1024 sheet, E1..E5 and F1..F2 passed, review placement fails P5, opaque brown iris area in the fixed layer, nothing promoted (recorded by D-173)"],"dispatchUndetermined":0,"serverAnswered":2},"hair":3,"hairRecord":{"counts":"Hair attempts (assets[8]) whose dispatch START is documented, on D-159's claim / dispatch / result axes. It is never part of the underlay, face-neutral or eyes-fixed figures, which stay 5, 4 and 2.","attempts":["D-175-r3-hair-northstar-v1 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 sheet, H1 passed, TECHNICAL_REJECT at H2 (3 px in the 16 px border), H3..H5 not evaluated, nothing promoted (recorded by D-176)","D-177-r3-hair-northstar-v2 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 sheet, H1..H5 passed, HP1..HP8 not run, no source annotation approved, kept for review, nothing promoted (recorded by D-178)","D-180-r3-hair-northstar-v3 — claim consumed, dispatch started, HTTP 200 received, one 1024x1024 sheet, H1..H5 passed, D-179 placement and shape checks not evaluated, fit points A4, A9 and A10 not identifiable under D-179, no source annotation, kept for review, nothing promoted (recorded by D-181)"],"dispatchUndetermined":0,"serverAnswered":3}},
-    "callsPlannedAndAuthorised": {"underlay":5,"why":"D-153 authorised exactly one further, colour-limited head underlay call with background opaque, and that call has been made (recorded by D-154). assets[0].calls is PLANNED capacity; it moved to 5 when the authorisation was committed, not when the call was made.","derivedBudget":"25-26","faceNeutral":4,"faceNeutralWhy":"D-167 authorises exactly one further face-neutral attempt — the partial nose sheet — on top of D-160's, D-162's and D-165's spent ones. assets[4].calls is PLANNED capacity; it moves 3 -> 4 when the authorisation is committed, not when the call is made.","eyesFixed":2,"eyesFixedWhy":"D-170 authorised one eyes-fixed call (call A) inside assets[5]'s one planned call; it was sent once (recorded by D-171). D-172 adds exactly ONE further planned eyes-fixed call (1 -> 2) for call A2, so the derived budget moves 22-23 -> 23-24. assets[5].calls is PLANNED capacity; it moves when the authorisation is committed, not when the call is made. The iris (assets[6]) keeps 1 planned call with no authorisation.","hair":3,"hairWhy":"D-175 authorised one hair sheet inside assets[8]'s one planned call (D-174); it was sent once (recorded by D-176). D-177 added exactly ONE further planned hair call (1 -> 2) for the second hair sheet; it was sent once (recorded by D-178) and moved the derived budget 23-24 -> 24-25. D-180 adds exactly ONE further planned hair call (2 -> 3) for the third hair sheet, the first under registration v2 (hairMethod.methodV2, D-179) with prompt v3, so the derived budget moves 24-25 -> 25-26. assets[8].calls is PLANNED capacity; it moves when the authorisation is committed, not when the call is made. No reserve: a rejected sheet needs a new capacity decision."},
+    "callsPlannedAndAuthorised": {"underlay":5,"why":"D-153 authorised exactly one further, colour-limited head underlay call with background opaque, and that call has been made (recorded by D-154). assets[0].calls is PLANNED capacity; it moved to 5 when the authorisation was committed, not when the call was made.","derivedBudget":"26-27","faceNeutral":4,"faceNeutralWhy":"D-167 authorises exactly one further face-neutral attempt — the partial nose sheet — on top of D-160's, D-162's and D-165's spent ones. assets[4].calls is PLANNED capacity; it moves 3 -> 4 when the authorisation is committed, not when the call is made.","eyesFixed":2,"eyesFixedWhy":"D-170 authorised one eyes-fixed call (call A) inside assets[5]'s one planned call; it was sent once (recorded by D-171). D-172 adds exactly ONE further planned eyes-fixed call (1 -> 2) for call A2, so the derived budget moves 22-23 -> 23-24. assets[5].calls is PLANNED capacity; it moves when the authorisation is committed, not when the call is made. The iris (assets[6]) keeps 1 planned call with no authorisation.","hair":4,"hairWhy":"D-175 authorised one hair sheet inside assets[8]'s one planned call (D-174); it was sent once (recorded by D-176). D-177 added exactly ONE further planned hair call (1 -> 2) for the second hair sheet; it was sent once (recorded by D-178) and moved the derived budget 23-24 -> 24-25. D-180 added exactly ONE further planned hair call (2 -> 3) for the third hair sheet, the first under registration v2 (hairMethod.methodV2, D-179) with prompt v3; it was sent once (recorded by D-181) and moved the derived budget 24-25 -> 25-26. D-183 adds exactly ONE further planned hair call (3 -> 4) for the fourth hair sheet (two reference images: Northstar for style, the D-183 guide for geometry; prompt v4), so the derived budget moves 25-26 -> 26-27. assets[8].calls is PLANNED capacity; it moves when the authorisation is committed, not when the call is made. No reserve: a rejected sheet needs a new capacity decision."},
     "doNotConfuseTheTwo": "Raising assets[0].calls is NOT a claim that the call has been made, and it is NOT permission to make it. D-153's call has been made (recorded by D-154), so the actually-sent figure is 5 as well and the two numbers agree. Their agreement authorises nothing. D-154 is feasibility analysis only and adds no planned call.",
     "derivedFrom": "the sum of assets[].calls, where a fixed number counts as itself and the range \"0-1\" contributes 0 to the minimum and 1 to the maximum",
     "note": "A planning budget only. Every call needs separate owner authorisation, its own one-shot claim, no automatic retry, no automatic promotion."
@@ -1094,8 +1094,8 @@
   ],
   "authorisedCalls": {
     "shape": "A LIST, not a boolean. Read authorisedCalls.calls and match on callId. An authorisation that cannot name its call id, its prompt hash, its ordered input hashes, its model, its mask hash and its single output is not an authorisation.",
-    "count": 14,
-    "budgetAccounting": "assets[0] carries 5 PLANNED calls after D-153: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); D-151's one call, sent once and refused with HTTP 400, no image (recorded by D-152); and D-153's one call, sent once, raw received, candidate rejected by background-leak (recorded by D-154). assets[4] (r3-face-neutral) carries 4 PLANNED calls after D-167: D-160's, D-162's, D-165's and D-167's single attempts, each sent once (recorded by D-161, D-163, D-166 and D-168), so actually sent is underlay 5 and faceNeutral 4 and the planned face capacity is used up. assets[5] (r3-eyes-neutral-fixed) carries its 1 PLANNED call: D-170's one eyes-fixed sheet, sent once (recorded by D-171), D-172 added ONE further planned eyes-fixed call (assets[5] 1 -> 2) for call A2, sent once (recorded by D-173), so actually sent is eyesFixed 2 and the planned eyes-fixed capacity (2) is used up; assets[6] (iris) keeps 1 PLANNED call with no authorisation. assets[8] (r3-hair-northstar) carries its 1 PLANNED call (D-174): D-175's one hair sheet, sent once (recorded by D-176), and D-177 added ONE further planned hair call (assets[8] 1 -> 2) for the second hair sheet, sent once (recorded by D-178), and D-180 added ONE further planned hair call (assets[8] 2 -> 3) for the third hair sheet (registration v2, prompt v3), sent once (recorded by D-181), so actually sent is hair 3 and the planned hair capacity (3) is used up. The derived budget is 25-26. Budget numbers remain planning, never consent.",
+    "count": 15,
+    "budgetAccounting": "assets[0] carries 5 PLANNED calls after D-153: D-139, sent with its output rejected; the D-142 attempt, sent during an incident with an unknown outcome; D-143's one call, sent once with its candidate rejected (recorded by D-147); D-151's one call, sent once and refused with HTTP 400, no image (recorded by D-152); and D-153's one call, sent once, raw received, candidate rejected by background-leak (recorded by D-154). assets[4] (r3-face-neutral) carries 4 PLANNED calls after D-167: D-160's, D-162's, D-165's and D-167's single attempts, each sent once (recorded by D-161, D-163, D-166 and D-168), so actually sent is underlay 5 and faceNeutral 4 and the planned face capacity is used up. assets[5] (r3-eyes-neutral-fixed) carries its 1 PLANNED call: D-170's one eyes-fixed sheet, sent once (recorded by D-171), D-172 added ONE further planned eyes-fixed call (assets[5] 1 -> 2) for call A2, sent once (recorded by D-173), so actually sent is eyesFixed 2 and the planned eyes-fixed capacity (2) is used up; assets[6] (iris) keeps 1 PLANNED call with no authorisation. assets[8] (r3-hair-northstar) carries its 1 PLANNED call (D-174): D-175's one hair sheet, sent once (recorded by D-176), and D-177 added ONE further planned hair call (assets[8] 1 -> 2) for the second hair sheet, sent once (recorded by D-178), and D-180 added ONE further planned hair call (assets[8] 2 -> 3) for the third hair sheet (registration v2, prompt v3), sent once (recorded by D-181), so actually sent is hair 3; D-183 adds ONE further planned hair call (assets[8] 3 -> 4) for the fourth hair sheet (two reference images: Northstar for style, the D-183 guide for geometry; prompt v4), authorised and not yet sent. The derived budget is 26-27. Budget numbers remain planning, never consent.",
     "entriesAreNotAllPermissions": "An entry in this list is not automatically a permission. Read status and mandateState: a SPENT entry with neverReuse is a RECORD of what was attempted, and no adapter may act on it.",
     "calls": [
       {
@@ -4020,6 +4020,135 @@
           "status": "The hairstyle reads as a spiky cartoon hair piece in greyscale, one connected piece with the margin met. The prompt v3 requirements are visibly not met: no V-shaped parting and no long central lock between the brows; no short lower edge with a readable ear transition on either side — both side masses hang down in pointed locks to about row 800; the image-right temple lock is not a separate lock. Whether the image-left lock beside the opening is the temple lock is not shown.",
           "ownerDecision": "Disposition: KEPT FOR REVIEW, NOT VISUALLY APPROVED. No candidate, no source annotation and no visual approval are given. Whether the sheet goes on is a separate, later owner decision."
         }
+      },
+      {
+        "decision": "D-183",
+        "preparedBy": "D-183",
+        "callId": "D-183-r3-hair-northstar-v4",
+        "status": "AUTHORISED — ONE CALL — NOT YET ATTEMPTED",
+        "mandateState": "UNSPENT",
+        "outcome": "NOT YET ATTEMPTED",
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "operation": "images.edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": {
+          "size": "1024x1024",
+          "quality": "high",
+          "n": 1,
+          "output_format": "png",
+          "background": "transparent"
+        },
+        "parametersNote": "The model and parameters of D-175, D-177 and D-180, unchanged: the 1024x1024 hair sheet, one transparent PNG. Only the inputs change: two reference images.",
+        "fieldOrder": [
+          "model",
+          "image[]",
+          "image[]",
+          "prompt",
+          "size",
+          "quality",
+          "n",
+          "output_format",
+          "background"
+        ],
+        "neverSentFields": [
+          "mask",
+          "input_fidelity",
+          "output_compression",
+          "response_format",
+          "moderation"
+        ],
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "inputs": [
+          {
+            "order": 1,
+            "role": "Image 1",
+            "purpose": "the STYLE reference: painting, line weight, shadows and highlights of the boy's hair",
+            "name": "Northstar Master v2.png",
+            "repoPath": "assets/avatar/reference/Northstar Master v2.png",
+            "bytes": 761394,
+            "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+            "tracked": true
+          },
+          {
+            "order": 2,
+            "role": "Image 2",
+            "purpose": "the GEOMETRY reference: fit, size, position and lock structure on the 1024x1024 sheet",
+            "name": "guide-hair-v1.png",
+            "repoPath": "tools/avatar/fixtures/r3-hair/guide-hair-v1.png",
+            "bytes": 44574,
+            "sha256": "4779de4acc8e58269a5fbbc96cb113507864e00314b6f9d70be7e25eecc758ec",
+            "tracked": true
+          }
+        ],
+        "prompt": {
+          "file": "tools/avatar/fixtures/r3-hair/prompt-hair-sheet-v4.txt",
+          "bytes": 1427,
+          "sha256": "5584602925dbc8cc9454f46bc42b771b3f35c34f64f60ee62b204707f1697ad4",
+          "encoding": "UTF-8, LF only, ending in exactly one LF (the frozen D-183 bytes)"
+        },
+        "targets": {
+          "file": "tools/avatar/fixtures/r3-hair/targets-hair-v2.json",
+          "sha256": "8c3b24e8404d3ccf44160108eaf13cd58cdb66c6705f503a6415b49a151864cc",
+          "version": "r3-hair-targets-v2",
+          "status": "APPROVED",
+          "note": "pinned so the call runs only with D-179's approved v2 targets in origin/main; the targets are never sent"
+        },
+        "claim": {
+          "identity": "D-183-r3-hair-northstar-v4-claim",
+          "filename": "D-183-r3-hair-northstar-v4.claim.json",
+          "eventsFilename": "D-183-r3-hair-northstar-v4.events.jsonl"
+        },
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-hair-d183.mjs"
+        },
+        "outputs": {
+          "count": 1,
+          "dir": "tools/avatar/build/r3-hair-d183",
+          "sheet": [
+            1024,
+            1024
+          ],
+          "sheetType": "r3-hair-sheet-v1"
+        },
+        "accounting": {
+          "slot": "hair sheet (assets[8] r3-hair-northstar); recorded under D-159's claim / dispatch / result axes; never an underlay, face-neutral or eyes call; the fourth hair attempt and the first with a geometry guide, inside D-183's one added planned call, with no reserve"
+        },
+        "otherHairstyles": "r3-hair-afro and r3-hair-short (assets[13], assets[14]) and headwear are NOT authorised by D-183.",
+        "prohibitions": {
+          "noRetry": "Exactly one fetch. No automatic or manual retry, no fallback request, no other model, and a redirect is never followed. Every consumed claim excludes a retry; a further attempt requires a NEW owner decision, a NEW call id, a NEW claim identity and new capacity.",
+          "noPromotion": "The call promotes nothing and writes no candidate file. Candidate status is a separate owner decision after the visual review.",
+          "noPixelReuse": "The D-175, D-177 and D-180 sheets, the review placements, R2 hair, H1, the v1/v2 review sketches and every earlier R3 output are never pixel sources or annotation sources. The guide is a geometry reference sent to the model only; it is never a pixel source of the hair layer. Northstar and the guide are the only images sent.",
+          "noMethodChange": "No D-179 threshold, target coordinate, point definition or check is changed, before or after the output; D-183 only documents the design meaning of A9/A10. D-177 and D-180 keep their historical status. The nape lock stays a later, separate authoring part and is not on this sheet.",
+          "noRuntimeChange": "R3 stays default OFF. No runtime, token, ramp-B wiring, face, eyes or underlay change."
+        },
+        "adoptedOn": "2026-10-22",
+        "ownerDecision": "Owner decision 2026-10-22: accept short ear transitions without Northstar's sideburns as a deliberate R3 design variation (A9/A10 keep their coordinates as design targets); keep D-179's fit principle, thresholds and annotation requirements; use Northstar as the style reference and a self-drawn guide as the geometry reference; prepare ONE further hair call with no reserve (assets[8] 3 -> 4, budget 25-26 -> 26-27, actually sent unchanged). The approval covers implementation, commit, push, PR and merge on green checks — it is NOT a run instruction.",
+        "uploadScope": "Exactly two images in this order — Image 1 Northstar Master v2 (3daf32e7…) and Image 2 guide-hair-v1.png (4779de4a…) — and the exact prompt v4 (55846029…), read as origin/main blobs, and only inside the one later call.",
+        "runInstruction": {
+          "mergeIsNotAnInstruction": true,
+          "requiresSeparateExplicitOwnerInstruction": true,
+          "rule": "The call may be run only after a NEW, separate and explicit owner instruction, given after D-183 is merged into origin/main, from a clean checkout whose HEAD equals origin/main (D-143 §13(c), D-145 §5). This entry, its merge and the presence of the adapter are not that instruction."
+        },
+        "claimRules": {
+          "creation": "The claim is created with an exclusive \"wx\" open in the per-user claim register outside every clone, after every check and immediately before the dispatch record; from that line the mandate is SPENT on every outcome.",
+          "accounting": "claim, dispatch and result are recorded separately (D-159 laterAttemptRules.callCounting): a consumed claim is not a dispatch; a dispatch record marks the project's local dispatch boundary and is not proof of server receipt; a crash between the claim and the dispatch record leaves the dispatch undetermined.",
+          "furtherAttempt": "A consumed claim never permits a retry. A further attempt requires a NEW owner decision, a NEW call id, a NEW claim identity and new capacity."
+        },
+        "outputHandling": {
+          "keep": "The complete raw response body and every delivered image byte stream are stored unchanged, with the request id, the image count and every SHA-256.",
+          "unexpectedImageCount": "A count other than n = 1 is marked UNEXPECTED; everything is kept, nothing is selected and no check is run.",
+          "technicalChecks": "With exactly one image, D-174's raw hair-sheet checks H1..H5 run with the thresholds in hairMethod.thresholds (alpha 1..15 reported only), all fixed before any call; H2's 16 px border is unchanged. No placement or shape check — neither D-179's (HP1v2, HP2, HP-LOCK, HP4v2..HP8, HP-FRAG) nor v1's HP1..HP8 — no ramp-B colouring and no face-parts, eyes or master-canvas check runs in the adapter. A rejection leaves no candidate. No threshold is changed after the result.",
+          "passMeaning": "PASS_TO_ANNOTATION means ONLY that the sheet may go to the owner's visual review and to DRAFT source annotation. It does not approve its appearance, and it never means that a D-179 placement or shape check has passed: those need an owner-APPROVED v2 source annotation and are never evaluated on the raw sheet alone.",
+          "visualReview": "Northstar's painting (line weight, shading, light streaks) on the guide's geometry: the V-shaped parting, the long central lock, two separate temple locks, short ear transitions above the ears with no sideburns, no lock below the ears or at the neck, one connected piece, complete lock tips, the margin, not mirrored, no flat guide look, no face, skin, scalp or ears, and ramp B's tone convention are reviewed by the owner.",
+          "annotation": "After the call, the v2 source annotation (annotation-hair-v2 schema) is proposed as DRAFT on that sheet, bound to its SHA-256: centreHairline A4 with the tool's proposal as a review aid only; leftEarTopJunction A9 and rightEarTopJunction A10 each read twice under the same point definition, the second time with the first reading hidden, each with its marked crop (hairMethod.methodV2.registration.repeatedReading); and both temple locks (A7, A8) with tip, notches and evidence. A point that cannot be identified unambiguously is NOT_IDENTIFIABLE and rejects. Only the owner sets APPROVED.",
+          "composition": "Placement is done ONLY by tools/avatar/r3-hair-compose-v2.mjs from D-179's approved targets v2 and an owner-APPROVED v2 annotation, and only after that separate owner approval (one positive uniform scale and translation on A4, A9 and A10; HP1v2, HP2, HP-LOCK, HP4v2..HP8 and HP-FRAG bind). No free manual moving, scaling or pixel repair.",
+          "neverAutomatic": "No automatic repair, move, warp, crop, matte removal, colouring, candidate file, candidate approval or promotion."
+        },
+        "neverReuseIdentities": "Every earlier call id and claim identity (D-139 … D-180) is SPENT and never reused.",
+        "counters": "No decision, entry or merge raises callsActuallySentSoFar (underlay 5, faceNeutral 4, eyesFixed 2, hair 3). assets[8] planned capacity moves 3 -> 4 for this one attempt and the derived budget 25-26 -> 26-27; planning only, never consent."
       }
     ]
   },
@@ -4135,7 +4264,7 @@
     "noTestContextGuard": "A production guard keyed on the test runner is deliberately NOT introduced now. This rule alone would have prevented the incident, and making production behaviour depend on test environment variables carries its own cost. A later decision may revisit it."
   },
   "prohibitions": {
-    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds FOURTEEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (8) D-165-r3-face-parts-sheet-v1 — NO LONGER a permission. D-165 superseded the general rule NARROWLY for exactly one face-neutral parts-sheet attempt. That attempt was sent once and D-166 records its outcome: HTTP 200, one sheet, RAW-1..5 passed, the nose rejected by the owner, the brows and mouth kept for further review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (9) D-167-r3-face-parts-nose-v1 — NO LONGER a permission. D-167 superseded the general rule NARROWLY for exactly one face-neutral partial nose sheet. That attempt was sent once and D-168 records its outcome: HTTP 200, one partial sheet, rejected by the binding RAW-4′ check, no nose approved, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (10) D-170-r3-eyes-fixed-v1 — NO LONGER a permission. D-170 superseded the general rule NARROWLY for exactly one eyes-fixed sheet (call A). That attempt was sent once and D-171 records its outcome: HTTP 200, one sheet, E1..E5 passed, the owner's visual review pending, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. The iris call B is not authorised. (11) D-172-r3-eyes-fixed-v2 — NO LONGER a permission. D-172 superseded the general rule NARROWLY for exactly one further eyes-fixed sheet (call A2). That attempt was sent once and D-173 records its outcome: HTTP 200, one sheet, E1..E5 and F1..F2 passed, an opaque brown iris area in the fixed layer, no candidate, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. The iris call B is not authorised. (12) D-175-r3-hair-northstar-v1 — NO LONGER a permission. D-175 superseded the general rule NARROWLY for exactly one hair sheet (assets[8] r3-hair-northstar). That attempt was sent once and D-176 records its outcome: HTTP 200, one sheet, H1 passed, TECHNICAL_REJECT at H2, H3..H5 not evaluated, no candidate, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. (13) D-177-r3-hair-northstar-v2 — NO LONGER a permission. D-177 superseded the general rule NARROWLY for exactly one further hair sheet (assets[8] r3-hair-northstar) with prompt v2. That attempt was sent once and D-178 records its outcome: HTTP 200, one sheet, H1..H5 passed, HP1..HP8 not run, no source annotation approved, kept for review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. (14) D-180-r3-hair-northstar-v3 — NO LONGER a permission. D-180 superseded the general rule NARROWLY for exactly one further hair sheet (assets[8] r3-hair-northstar), the first under registration v2, with prompt v3. That attempt was sent once and D-181 records its outcome: HTTP 200, one sheet, H1..H5 passed, D-179 placement and shape checks not evaluated, no source annotation, no candidate, nothing promoted, kept for review. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. No entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's, D-162's, D-165's, D-167's, D-170's, D-172's, D-175's, D-177's or D-180's call id or claim identity, no fourth hair call, and no other call in the R3 plan.",
+    "noImageRequestAuthorised": "D-132 and this contract authorise no image request in general, and that general rule is unchanged. authorisedCalls.calls holds FIFTEEN entries. Read them by callId and by their own fields, never by the length of the list. (1) D-139-r3-underlay-head-only-v1 — D-139 superseded the general rule NARROWLY for exactly that one named call. That call was made. Its claim is spent on any outcome, prohibitions.noRetry forbids a repeat, and claim.furtherAttempt requires a NEW owner decision and a NEW claim identity. (2) D-142-r3-underlay-core-v1 — NEVER a permission. An incident RECORD with mandateState SPENT, outcome UNKNOWN and neverReuse true. A SPENT entry with neverReuse never counts as an active send permission, and no adapter may read it, or its presence in this list, as authorisation to send. (3) D-143-r3-underlay-core-v2 — NO LONGER a permission. D-143 superseded the general rule NARROWLY for exactly one further CORE-only underlay call. That call was sent once through the D-145 adapter, and D-147 records its outcome: HTTP 200, raw received, candidate rejected, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (4) D-151-r3-head-colour-u1-v1 — NO LONGER a permission. D-151 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay. That call was sent once and D-152 records its outcome: HTTP 400 (background transparent not supported for this model), no image, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-152 is preparation only and adds no entry. (5) D-153-r3-head-colour-u1-opaque-v1 — NO LONGER a permission. D-153 superseded the general rule NARROWLY for exactly one colour-limited call on the R3 head underlay with background opaque. That call was sent once and D-154 records its outcome: HTTP 200, raw received, candidate rejected by background-leak, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. D-154 is feasibility analysis only and adds no entry. (6) D-160-r3-face-neutral-v1 — NO LONGER a permission. D-160 superseded the general rule NARROWLY for exactly one face-neutral attempt. That attempt was sent once and D-161 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, the geometry rejected by the owner, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (7) D-162-r3-face-neutral-guide-b-v1 — NO LONGER a permission. D-162 superseded the general rule NARROWLY for exactly one further face-neutral attempt (guide B and its prompt). That attempt was sent once and D-163 records its outcome: HTTP 200, one image, rejected by the binding AUTO-5 check, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (8) D-165-r3-face-parts-sheet-v1 — NO LONGER a permission. D-165 superseded the general rule NARROWLY for exactly one face-neutral parts-sheet attempt. That attempt was sent once and D-166 records its outcome: HTTP 200, one sheet, RAW-1..5 passed, the nose rejected by the owner, the brows and mouth kept for further review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (9) D-167-r3-face-parts-nose-v1 — NO LONGER a permission. D-167 superseded the general rule NARROWLY for exactly one face-neutral partial nose sheet. That attempt was sent once and D-168 records its outcome: HTTP 200, one partial sheet, rejected by the binding RAW-4′ check, no nose approved, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. (10) D-170-r3-eyes-fixed-v1 — NO LONGER a permission. D-170 superseded the general rule NARROWLY for exactly one eyes-fixed sheet (call A). That attempt was sent once and D-171 records its outcome: HTTP 200, one sheet, E1..E5 passed, the owner's visual review pending, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. The iris call B is not authorised. (11) D-172-r3-eyes-fixed-v2 — NO LONGER a permission. D-172 superseded the general rule NARROWLY for exactly one further eyes-fixed sheet (call A2). That attempt was sent once and D-173 records its outcome: HTTP 200, one sheet, E1..E5 and F1..F2 passed, an opaque brown iris area in the fixed layer, no candidate, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. The iris call B is not authorised. (12) D-175-r3-hair-northstar-v1 — NO LONGER a permission. D-175 superseded the general rule NARROWLY for exactly one hair sheet (assets[8] r3-hair-northstar). That attempt was sent once and D-176 records its outcome: HTTP 200, one sheet, H1 passed, TECHNICAL_REJECT at H2, H3..H5 not evaluated, no candidate, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. (13) D-177-r3-hair-northstar-v2 — NO LONGER a permission. D-177 superseded the general rule NARROWLY for exactly one further hair sheet (assets[8] r3-hair-northstar) with prompt v2. That attempt was sent once and D-178 records its outcome: HTTP 200, one sheet, H1..H5 passed, HP1..HP8 not run, no source annotation approved, kept for review, nothing promoted. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. (14) D-180-r3-hair-northstar-v3 — NO LONGER a permission. D-180 superseded the general rule NARROWLY for exactly one further hair sheet (assets[8] r3-hair-northstar), the first under registration v2, with prompt v3. That attempt was sent once and D-181 records its outcome: HTTP 200, one sheet, H1..H5 passed, D-179 placement and shape checks not evaluated, no source annotation, no candidate, nothing promoted, kept for review. The entry carries mandateState SPENT, neverReuse true and notAnActivePermission true, and no adapter may read it, or its presence in this list, as authorisation to send. Afro, short and headwear are not authorised. (15) D-183-r3-hair-northstar-v4 — THE ONLY active send permission. D-183 supersedes the general rule NARROWLY for exactly one further hair sheet (assets[8] r3-hair-northstar) under registration v2, with TWO reference images in a fixed order (Image 1 Northstar for style, Image 2 the D-183 geometry guide) and prompt v4, with mandateState UNSPENT and outcome NOT YET ATTEMPTED until its claim exists. Its merge is not a run instruction: the call needs a separate, explicit owner instruction after D-183 is merged. prohibitions.noRetry forbids a repeat and claimRules.furtherAttempt requires a NEW owner decision, a NEW call id, a NEW claim identity and new capacity. Afro, short and headwear are not authorised. Apart from D-183's single attempt, no entry in this list is an active send permission — no repeat of D-139's call, no reuse of D-142's, D-143's, D-151's, D-153's, D-160's, D-162's, D-165's, D-167's, D-170's, D-172's, D-175's, D-177's or D-180's call id or claim identity, no fifth hair call, and no other call in the R3 plan.",
     "noAutomaticRepair": "If an output fails, it is never warped, retried or repaired automatically. The failure is documented and a new call needs new authorisation and a new claim.",
     "noH1InRepository": "H1 must not be copied into the repository, tracked or published. This contract stores its filename, role, sha256, byte count, dimensions and measured anchors — never the image. See referencePair.authoringBase for the binding policy, the intended archive and the observed location, kept apart on purpose.",
     "noExistingAssetChange": "No runtime asset, manifest, golden or existing mask is modified by this contract.",
@@ -4375,6 +4504,25 @@
         "ciCoverage": "The send scenarios run in CI against the PRODUCTION adapter with the real tracked prompt, targets and Northstar pins, with fetch mocked from outside; no synthetic pin substitution is needed.",
         "neverReuse": true,
         "closedBy": "D-181"
+      },
+      {
+        "decision": "D-183",
+        "callId": "D-183-r3-hair-northstar-v4",
+        "authorisedBy": "D-183",
+        "adapter": {
+          "file": "tools/avatar/openai-send-r3-hair-d183.mjs",
+          "status": "IMPLEMENTED — NOT EXECUTED",
+          "ownerApproval": "D-183",
+          "ownerApprovalFlag": "--owner-approval=D-183"
+        },
+        "mandateState": "UNSPENT",
+        "outcome": "NOT YET ATTEMPTED",
+        "mergeIsNotAnInstruction": true,
+        "executionRequiresSeparateOwnerInstruction": true,
+        "implementedOn": "2026-10-22",
+        "derivedFrom": "tools/avatar/openai-send-r3-hair-d180.mjs (left unchanged and closed, D-181): identity, the second image (the guide, pinned and checked as a 1024x1024 RGBA PNG), the two-image field order, the prompt pin (v4, read from hairMethod.methodV2.referencePack.promptV4) and the never-reuse list changed. The output check is still D-174's checkHairSheet (H1..H5). The ledger is reused unchanged.",
+        "noAdapterSha256": "No adapter SHA-256 is pinned in this contract (D-145). The executed code version is identified by the origin/main commit SHA and the adapter's computed SHA-256, both written into the claim and the manifest.",
+        "ciCoverage": "The send scenarios run in CI against the PRODUCTION adapter with the real tracked prompt, guide, targets and Northstar pins, with fetch mocked from outside; no synthetic pin substitution is needed."
       }
     ]
   },
@@ -5813,6 +5961,117 @@
         "thresholds": "APPROVED by the owner: seat residual <= 6.0 master px, |sx/sy - 1| <= 0.08, scale range 0.35..0.85. They apply to FUTURE v2 hair attempts only and are never used to reclassify D-177. The noise model and its limits stay documented in methodV2.simulation.",
         "reading": "The second reading of A9 and A10 is made with the first reading hidden. The agreement limit stays 4 sheet px; a larger difference is investigated and the point read again; the approved xy is one of the two readings and never an automatic average. Both readings follow the same unambiguous point definition and are shown with marked crops for owner review. A hidden repeat guarantees neither correctness nor statistical independence: a systematic misinterpretation can repeat itself. A point that cannot be identified unambiguously is rejected as NOT_IDENTIFIABLE; there is no reduced fit.",
         "scalpHoles": "HP5 stays unchanged. This decision adds no tolerance for pixel-sized holes."
+      },
+      "earTransitionDesign": {
+        "decision": "D-183",
+        "adoptedOn": "2026-10-22",
+        "ownerDecision": "The owner accepts short ear transitions WITHOUT Northstar's sideburns as a deliberate R3 design variation. A9 and A10 keep their coordinates and are documented as DESIGN TARGETS for these transitions; D-179's fit principle, thresholds and annotation requirements are unchanged.",
+        "conflictRecorded": "Northstar does not show the short ear transitions D-179's definition describes: its side hair continues as a sideburn in front of each ear. A9 was read on Northstar where a lock tip meets the OUTER top of the left ear, not at an inner corner; A10 is a design point.",
+        "leftEarTopJunction": {
+          "id": "A9",
+          "xy": [
+            351,
+            312
+          ],
+          "originalReading": "MEASURED_ANNOTATION on Northstar Master v2: the junction where a lock tip meets the outer top of the image-left ear; Northstar's hair continues as a sideburn in front of that ear",
+          "designMeaning": "DESIGN TARGET (D-183): the inner lower corner of a short lower edge of the image-left side hair above the ear, where that edge meets the contour towards the face — no sideburn"
+        },
+        "rightEarTopJunction": {
+          "id": "A10",
+          "xy": [
+            648,
+            320.5
+          ],
+          "originalReading": "DESIGN_POINT (D-179): the midpoint (648, 320.5) of the v2 review sketch's lower edge (655, 320)-(641, 321), not a Northstar reading; Northstar has a sideburn in front of the image-right ear",
+          "designMeaning": "DESIGN TARGET (D-183): the inner lower corner of a short lower edge of the image-right side hair above the ear — no sideburn"
+        },
+        "unchanged": "Coordinates, uncertainties (3 master px), roles (fit points), the point definitions and definition ids, targets-hair-v2.json and its pin, the seat-fit principle, every D-179 threshold, the hidden second reading and the owner approval of every source annotation are unchanged. Only the documented meaning of the two targets is made explicit."
+      },
+      "referencePack": {
+        "decision": "D-183",
+        "status": "FROZEN by D-183 — the two reference images and the prompt of the one authorised hair call D-183-r3-hair-northstar-v4",
+        "inputOrder": [
+          "Image 1",
+          "Image 2"
+        ],
+        "styleReference": {
+          "role": "Image 1",
+          "file": "assets/avatar/reference/Northstar Master v2.png",
+          "bytes": 761394,
+          "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+          "controls": "painting, line weight, shadows and highlights"
+        },
+        "guide": {
+          "role": "Image 2",
+          "file": "tools/avatar/fixtures/r3-hair/guide-hair-v1.png",
+          "bytes": 44574,
+          "sha256": "4779de4acc8e58269a5fbbc96cb113507864e00314b6f9d70be7e25eecc758ec",
+          "pixelSha256": "37dbb6869f03f2a6d03867e4faf2089fd72700021cb0f7d99773015becd80ea2",
+          "size": [
+            1024,
+            1024
+          ],
+          "format": "PNG 8-bit RGBA, transparent background; flat grey fill (150), near-black outline (22), thin lock lines (70)",
+          "controls": "fit, size, position on the sheet and lock structure",
+          "generator": {
+            "file": "tools/avatar/r3-hair-guide-v1.mjs",
+            "id": "r3-hair-guide-v1",
+            "reproduces": "the pixels (pixelSha256) of the tracked PNG; file bytes also depend on the zlib build"
+          },
+          "construction": "Hand-authored vector contour: the approved targets-hair-v2 points as fixed vertices, the v2 review sketch's vertices as the starting silhouette, Northstar's volume and lock directions read visually. No Northstar pixel extracted, traced or sampled; no rejected hair sheet used. Not a production asset and not a hair layer.",
+          "status": "FROZEN by D-183 — DRAFT design material frozen as an input; it approves no target and no hair form"
+        },
+        "promptV4": {
+          "file": "tools/avatar/fixtures/r3-hair/prompt-hair-sheet-v4.txt",
+          "bytes": 1427,
+          "sha256": "5584602925dbc8cc9454f46bc42b771b3f35c34f64f60ee62b204707f1697ad4",
+          "status": "FROZEN by D-183 — the exact bytes of the one authorised hair call D-183-r3-hair-northstar-v4. Prompts v1, v2 and v3 are unchanged.",
+          "says": [
+            "Image 1 controls the painting: style, line weight, shading, shadows and light streaks",
+            "Image 2 controls the fit and the lock structure",
+            "do not copy Northstar's sideburns, a lock below the ears or the nape lock",
+            "do not reproduce the guide's flat fill or its guide lines",
+            "greyscale, one connected piece, a margin of at least 64 px"
+          ]
+        },
+        "transform": {
+          "coordinates": "master 1024x1536 and sheet 1024x1024, both continuous: pixel i covers [i, i+1), x right, y down",
+          "masterToSheet": "sheet = 1.75 * (master - [508, 171.25]) + [512, 512]",
+          "sheetToMaster": {
+            "s": 0.5714285714285714,
+            "tx": 215.42857142857144,
+            "ty": -121.32142857142856
+          },
+          "scaleNote": "s = 0.5714 lies inside HP2's 0.35..0.85; the model is not bound to this scale — the seat fit decides",
+          "fitPointsOnSheet": {
+            "A4": [
+              629.25,
+              562.3125
+            ],
+            "A9": [
+              237.25,
+              758.3125
+            ],
+            "A10": [
+              757,
+              773.1875
+            ]
+          },
+          "marginSheetPx": {
+            "left": 120,
+            "top": 250.8,
+            "right": 120,
+            "bottom": 250.8
+          }
+        },
+        "guideDiagnostics": {
+          "status": "diagnostic only — the guide is not a model output and these results approve nothing",
+          "rawChecks": "H1..H5 pass on the guide itself (H3 max chroma 0, H4 one component)",
+          "a4Proposal": "the A4 proposal lands 0.42 master px from A4",
+          "hpLock": "leftTempleLock: length 28.6 master px, tip 0 px from its target (window 27.9); rightTempleLock: length 27 master px, tip 0 px from its target (window 35.36)",
+          "placedOnFaceSample": "HP4v2, HP5, HP6, HP7, HP8 and HP-FRAG pass with the guide placed on U1 + the D-165 face DRAFT + eyes v5 (review composite, not tracked)"
+        },
+        "risks": "The model may still follow Northstar's hanging side hair, may copy the guide's flat grey look or thin lines, or may ignore the guide's geometry. A geometry reference does not guarantee a correct sheet; every check after the call is unchanged."
       }
     }
   }
