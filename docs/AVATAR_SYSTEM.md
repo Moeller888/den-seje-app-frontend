@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; one live permission: the fourth hair call (D-183, Northstar for style and a geometry guide), not yet sent (D-174 … D-183, as of 2026-10-22).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; registration v2 adopted for future sheets; the third hair call (D-180, the first under v2) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; the fourth hair call (D-183, Northstar for style and a geometry guide) sent once, H1–H5 passed, fit points not identifiable under v2, kept for review; no live permission (D-174 … D-184, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -296,6 +296,19 @@ art layer behind them can be upgraded without a rewrite.
   - **Adapter.** `tools/avatar/openai-send-r3-hair-d183.mjs`, derived from the closed D-180 adapter: both images pinned and
     sent in order, dry run without credentials, one fetch, no retry, only H1–H5. Annotation and placement stay separate.
   - **Status.** UNSPENT and not a run instruction. R3 stays default OFF. See `project-state.md` **D-183**.
+  **D-184 (2026-10-22)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_d7b8bfbbb21b4defb4773bd7c143b5d9`, Northstar and the guide in order, one 1024×1024 sheet
+    `7b36e054…`, one fetch, no retry; claim, event log, manifest and raw response verified consistent.
+  - **Checks.** **H1–H5 passed**; they prove the technical sheet only. D-179's placement and shape checks were **not evaluated**.
+  - **Guide vs sheet.** Northstar's painting is taken over and the silhouette follows the guide's size and position (IoU 0.835),
+    but not its geometry where it matters: no V parting, pointed locks instead of short ear transitions, no separate image-right
+    temple lock.
+  - **Identifiability (review finding, not an approval).** A4 is ambiguous and A9/A10 are missing under D-179's definitions, so
+    the sheet cannot be annotated: no reduced fit, no invented coordinate, no DRAFT annotation. No visible halo.
+  - **Disposition: kept for review, not visually approved.** Raw files, claim and event log stay byte for byte and untracked.
+  - **Accounting.** `callsActuallySentSoFar.hair` = **4** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair
+    capacity (4) is used up and the budget stays 26–27.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-184**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
