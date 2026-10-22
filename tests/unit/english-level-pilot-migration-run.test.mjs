@@ -56,7 +56,8 @@ test("the pilot inserts 500 well-formed English MC questions on the level scale"
     assert.equal(q.answer_format, "mc");
     assert.equal(q.question_type, "auto");
     assert.equal(q.type, "mc_single");
-    assert.equal(q.is_active, true);
+    assert.equal(q.is_active, false, "inserted inactive (owner decision 2026-10-22)");
+    assert.equal(q.metadata.level_batch, "pilot");
     assert.equal(q.metadata.domain, "english");
     assert.equal(q.difficulty, q.difficulty_band);
 

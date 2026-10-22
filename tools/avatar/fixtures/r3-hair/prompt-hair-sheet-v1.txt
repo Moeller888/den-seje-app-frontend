@@ -1,0 +1,5 @@
+Draw ONLY the hair of the boy in the image, isolated on a fully transparent background, as one clean cut-out hair piece in the same cartoon style, line weight and lock shapes: the tall swept crown tuft, the spiky side locks, the fringe with a long central lock pointing down between the brows and a lock at each temple, and the small lock that hangs below his left ear (the ear on the right side of the image).
+Front view, the same orientation as the reference, never mirrored. The whole hairstyle large and centred, with a clear transparent margin on every side.
+Render it in neutral greyscale only (no colour, no brown, no tint): a near-black outline, dark grey shadow areas, mid-grey main hair tone and a few near-white zigzag light streaks, so it can be recoloured later.
+The hair must be complete underneath: finished lock tips along the fringe, and the lower edge at each side ending cleanly where the ears would be.
+No face, skin, eyes, eyebrows, ears, head, neck, body, scalp, shadows on skin, background, text or marks.
