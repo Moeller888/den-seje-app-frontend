@@ -1,0 +1,26 @@
+{
+  "id": "r3-review-pack-v1",
+  "decision": "D-187",
+  "status": "REVIEW PACK — every part keeps its own status (DRAFT / DESIGNFORSLAG / DESIGNPROTOTYPE / REVIEW CANDIDATE); versioning approves nothing",
+  "entrypoint": "node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes]",
+  "rebuild": "verified 2026-10-22: two runs into separate directories gave byte-identical layers, review images and pins; --render-eyes re-rendered both eye SVGs with Playwright 1.59.1 Chromium pixel-identical to the pinned layers (Windows). The unit CI has no browser and verifies the pinned eye layers instead.",
+  "spec": { "file": "tools/avatar/fixtures/r3-review-pack/review-pack-v1.json", "sha256": "7c228e22a89889f3b294d4b01eebc820a69e40cfa37280d9b86701f0b360c263" },
+  "napeLockSpec": { "file": "tools/avatar/fixtures/r3-review-pack/nape-lock-v1.spec.json", "sha256": "0f729118dd5a9694e61e5279996589c040739ebf4699348a4cff1f88358f70d6" },
+  "pixelSha256": {
+    "baseMedium": "75a385c741649a24d25ba37844005faae24ba4a96b198d9335891962fb120d1e",
+    "hybridHairPlaced": "e506555e5a4481772467a4972ca24df9142f3e1f0ca711e346cee43fd765199e",
+    "napeLock": "1489825ede3aee70929fa83fecc9dae68207c9c6dc9a1e5a73ad331c9d55acfd",
+    "hairMerged": "fbcda49ddc0644adaa249b14d74a479bcdbe31c20d22bbb225b06a02a3f3b2a7",
+    "face": "3123122f49236f1ffae7374b15bc96bbfa54e7230f3ab4372f01d1ea01b981b4",
+    "headMediumBrownBrown": "e12b80b18eb59f5afb4f745b659e697d20384f25d8baddd988ab352f352a4a15"
+  },
+  "trackedCandidates": {
+    "napeLock": { "file": "tools/avatar/fixtures/r3-review-pack/r3-nape-lock-v1-1024x1536.png", "sha256": "cbec5381174010fe9a4cbc7b84fda32b3cc91ac46370b844b841c0ca063c8f4e", "status": "DRAFT" },
+    "hairMerged": { "file": "tools/avatar/fixtures/r3-review-pack/r3-review-hair-merged-v1-1024x1536.png", "sha256": "dc98b7ed161b2ccdc7b6656f5fa90714a1032c97e82fc0b3e2f828d2b57b92b4", "status": "REVIEW CANDIDATE (D-185) + DRAFT nape lock + the documented hole fill" },
+    "face": { "file": "tools/avatar/fixtures/r3-review-pack/r3-review-face-v1-1024x1536.png", "sha256": "93415561f74ee52f4951b819afcc915cbd6e8525c79be6e0274e1dfdba625b7d", "status": "DRAFT + DESIGNFORSLAG (byte-identical to the earlier local face review layer)" }
+  },
+  "assemblyFixes": [
+    { "id": "ASSEMBLY-FIX-HOLES", "what": "22 px of an enclosed transparent wedge between the D-185 hair's opening edge and the head silhouette at the image-right temple (rows 234-246, x 638-644) showed the background through the figure", "fix": "filled in the hair layer, opaque, with the mean grey of the solid hair neighbours (deterministic); D-185's own placed pixels are verified unchanged before the merge", "check": "FIG-HOLES: 0 px after the fix" }
+  ],
+  "pngBytesNote": "the binding identity is pixelSha256; PNG bytes depend on the zlib build"
+}

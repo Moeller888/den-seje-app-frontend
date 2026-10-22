@@ -44,10 +44,10 @@ export function loadSources(spec) {
 
 // ── geometry helpers ────────────────────────────────────────────────────────────────────────────────────────────
 // AXIS is the pixel-index axis (pixel i mirrors to pixel 2 * AXIS - i); in continuous coordinates the same mirror is x -> 2 * AXIS + 1 - x
-const MIRROR_X = 2 * AXIS + 1, mirrorPt = ([x, y]) => [MIRROR_X - x, y];
-const quad = (a, c, b, m) => { const o = []; for (let k = 0; k <= m; k++) { const t = k / m, u = 1 - t; o.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } return o; };
-const expand = (pts) => pts.flatMap((p, i) => (Array.isArray(p) ? [p] : (p.q ? quad(...p.q, 32).slice(i ? 1 : 0) : [])));
-function polyCoverage(P, S = 4) {
+export const MIRROR_X = 2 * AXIS + 1, mirrorPt = ([x, y]) => [MIRROR_X - x, y];
+export const quad = (a, c, b, m) => { const o = []; for (let k = 0; k <= m; k++) { const t = k / m, u = 1 - t; o.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } return o; };
+export const expand = (pts) => pts.flatMap((p, i) => (Array.isArray(p) ? [p] : (p.q ? quad(...p.q, 32).slice(i ? 1 : 0) : [])));
+export function polyCoverage(P, S = 4) {
   const cov = new Float32Array(W * H);
   let y0 = Infinity, y1 = -Infinity; for (const [, y] of P) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
   for (let sy = Math.max(0, Math.floor(y0) * S); sy < Math.min(H, Math.ceil(y1) + 1) * S; sy++) {
@@ -58,7 +58,7 @@ function polyCoverage(P, S = 4) {
   }
   return cov;
 }
-function lineCoverage(P, r, into = new Float32Array(W * H)) {
+export function lineCoverage(P, r, into = new Float32Array(W * H)) {
   for (let i = 0; i + 1 < P.length; i++) {
     const [ax, ay] = P[i], [bx, by] = P[i + 1], vx = bx - ax, vy = by - ay, vv = vx * vx + vy * vy || 1;
     for (let y = Math.max(0, Math.floor(Math.min(ay, by) - r - 1)); y <= Math.min(H - 1, Math.ceil(Math.max(ay, by) + r + 1)); y++)
@@ -70,7 +70,7 @@ function lineCoverage(P, r, into = new Float32Array(W * H)) {
   return into;
 }
 /** Separable box blur of radius r (deterministic), used to feather a field's edge. */
-function feather(cov, r) {
+export function feather(cov, r) {
   if (r <= 0) return cov;
   const R = Math.round(r), tmp = new Float32Array(W * H), out = new Float32Array(W * H), n = 2 * R + 1;
   for (let y = 0; y < H; y++) { let s = 0; for (let x = -R; x <= R; x++) s += cov[y * W + Math.min(W - 1, Math.max(0, x))]; for (let x = 0; x < W; x++) { tmp[y * W + x] = s / n; s += cov[y * W + Math.min(W - 1, x + R + 1)] - cov[y * W + Math.max(0, x - R)]; } }

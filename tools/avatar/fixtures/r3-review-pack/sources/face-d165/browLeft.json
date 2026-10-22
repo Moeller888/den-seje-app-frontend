@@ -1,0 +1,33 @@
+{
+  "schema": "r3-face-parts-annotation-v1",
+  "annotationVersion": 1,
+  "raw": {
+    "file": "tools/avatar/build/r3-face-parts-d165/r3-face-parts-d165.image-1.png",
+    "sha256": "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d"
+  },
+  "layoutId": "r3-face-parts-2x2-v1",
+  "part": "browLeft",
+  "cell": [
+    0,
+    0
+  ],
+  "coordinateSpace": "cell-local continuous; pixel i covers [i, i+1); origin = the cell's top-left",
+  "pointDefinitions": "r3-face-neutral-targets-v1",
+  "points": {
+    "inner": [
+      430.5,
+      287.5
+    ],
+    "outer": [
+      88,
+      304
+    ]
+  },
+  "uncertaintyPx": 2,
+  "annotator": "Claude (visual reading on x6/x4 grid crops; brow tips cross-checked against the alpha>=128 extreme columns) — PROPOSAL",
+  "status": "DRAFT",
+  "approvedBy": null,
+  "approvedOn": null,
+  "reviewFlags": [],
+  "note": "image-left brow drawn complete with tapered ends (not a stump); inner = its right tip"
+}

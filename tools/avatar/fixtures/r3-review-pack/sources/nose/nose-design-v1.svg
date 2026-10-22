@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DESIGNFORSLAG — R3 face-neutral nose, offline design study v1. Not approved; not a production asset.
+     Units: master-canvas pixels at face scale. Origin: the top tip of the stroke. Hand-specified; no traced pixels. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6.2 -4 10.7 30.5" width="171" height="488">
+  <path id="nose-contour" d="M 0 0 Q -4.4 11.25 0.5 22.5 Q -0.4 11.25 0 0 Z" fill="#2a1810" fill-opacity="1" stroke="none"/>
+</svg>
