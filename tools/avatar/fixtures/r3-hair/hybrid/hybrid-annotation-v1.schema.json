@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "r3-hair-hybrid-annotation-v1",
+  "title": "R3 hair hybrid derivation — construction annotation (D-185)",
+  "description": "The fit points and lock records of a hybrid derivation are DRAWN vertices of its edit geometry, bound to the approved targets through the guide transform. They are not readings of a sheet. D-179's two readings with the first hidden apply to the raw-sheet method only and are never claimed here. A seat residual of zero follows from the construction and is not an independent validation. The validator is validateHybridAnnotation in tools/avatar/r3-hair-hybrid.mjs.",
+  "type": "object",
+  "required": ["schema", "kind", "reviewStatus", "derivation", "units", "transform", "fitPoints", "locks", "validationNote"],
+  "properties": {
+    "schema": { "const": "r3-hair-hybrid-annotation-v1" },
+    "kind": { "type": "string", "pattern": "^CONSTRUCTION" },
+    "reviewStatus": { "enum": ["DRAFT — owner review pending", "OWNER_REVIEWED", "REJECTED"] },
+    "derivation": {
+      "type": "object",
+      "required": ["id", "specSha256", "generator", "source", "derivedPixelSha256"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^r3-hair-hybrid-v[0-9]+$" },
+        "specSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "generator": { "const": "tools/avatar/r3-hair-hybrid.mjs" },
+        "source": { "type": "object", "required": ["file", "sha256", "report", "reportSha256"] },
+        "derivedPixelSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "units": { "const": "sheet-px" },
+    "transform": { "type": "object", "required": ["from", "sheetToMaster"] },
+    "fitPoints": {
+      "type": "object",
+      "required": ["centreHairline", "leftEarTopJunction", "rightEarTopJunction"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["xy", "boundTo", "definition", "crop"],
+        "not": { "required": ["readings"] },
+        "properties": { "crop": { "type": "object", "required": ["pixelSha256"] } }
+      }
+    },
+    "locks": {
+      "type": "object",
+      "required": ["leftTempleLock", "rightTempleLock"],
+      "additionalProperties": { "type": "object", "required": ["tip", "flankingNotches", "boundTo", "crop"] }
+    },
+    "validationNote": { "type": "string", "pattern": "not an independent validation" }
+  }
+}
