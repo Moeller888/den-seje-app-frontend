@@ -159,8 +159,10 @@ test("the image-call budget is derived arithmetically and is now 15-16", () => {
   // 23-24. The iris (assets[6]) is still one call.
   // D-177 adds ONE further planned hair call (the second hair sheet), so assets[8] carries 2 PLANNED calls and the derived
   // budget is 24-25. The iris (assets[6]) is still one call.
-  assert.equal(min, 24, "the iris is still one call; assets[0] carries five PLANNED calls (D-153), assets[4] four (D-167), assets[5] two (D-172), assets[8] two (D-177)");
-  assert.equal(max, 25);
+  // D-180 adds ONE further planned hair call (the third hair sheet, under registration v2), so assets[8] carries 3 PLANNED
+  // calls and the derived budget is 25-26. The iris (assets[6]) is still one call.
+  assert.equal(min, 25, "the iris is still one call; assets[0] carries five PLANNED calls (D-153), assets[4] four (D-167), assets[5] two (D-172), assets[8] three (D-180)");
+  assert.equal(max, 26);
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);

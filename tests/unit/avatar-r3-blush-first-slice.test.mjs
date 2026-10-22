@@ -222,8 +222,10 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // 23-24. Planned capacity is not a claim that the call was made.
   // D-177 adds ONE further planned hair call (the second hair sheet), so assets[8] carries 2 PLANNED calls and the derived
   // budget is 24-25. Planned capacity is not a claim that the call was made.
-  assert.equal(min, 24, "assets[0] carries 5 PLANNED calls after D-153; assets[4] 4 after D-167; assets[5] 2 after D-172; assets[8] 2 after D-177");
-  assert.equal(max, 25);
+  // D-180 adds ONE further planned hair call (the third hair sheet, the first under registration v2), so assets[8] carries 3
+  // PLANNED calls and the derived budget is 25-26. Planned capacity is not a claim that the call was made.
+  assert.equal(min, 25, "assets[0] carries 5 PLANNED calls after D-153; assets[4] 4 after D-167; assets[5] 2 after D-172; assets[8] 3 after D-180");
+  assert.equal(max, 26);
   // D-142: the counting rule now includes every image call ACTUALLY SENT — D-139, whose
   // output was rejected, and the D-142 attempt, sent during an incident with an unknown outcome.
   // assets[0] therefore carries 2 calls and the derived budget is 16-17.
@@ -242,8 +244,9 @@ test("the method is deliberately not chosen; D-138 recorded 15-16, D-142 recount
   // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
   // D-172 adds ONE further planned eyes-fixed call (call A2), so the derived budget is 23-24.
   // D-177 adds ONE further planned hair call (the second hair sheet), so the derived budget is 24-25.
-  assert.equal(C.imageCallBudget.minimum, 24);
-  assert.equal(C.imageCallBudget.maximum, 25);
+  // D-180 adds ONE further planned hair call (the third hair sheet, under registration v2), so the derived budget is 25-26.
+  assert.equal(C.imageCallBudget.minimum, 25);
+  assert.equal(C.imageCallBudget.maximum, 26);
 });
 
 test("nothing is wired, and the existing blush behaviour is untouched", () => {
