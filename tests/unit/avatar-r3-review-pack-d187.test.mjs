@@ -15,7 +15,7 @@ import { validateAnnotation as validateFaceAnnotation } from "../../tools/avatar
 import { composeEyes } from "../../tools/avatar/r3-eyes-tool.mjs";
 import { HAIR_COLOR_TOKENS } from "../../js/avatar-layers.js";
 import { REVIEW_MODE, LAYER_ORDER, loadPack, buildPack, colourLayers, composeHead, mergeHair, figureHoles, over, reportHtml } from "../../tools/avatar/r3-review-pack.mjs";
-import { preD187Contract, PRE_D187_CONTRACT_CANONICAL_SHA256, PRE_D187_COMMIT, preD186Contract, PRE_D186_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD188Contract, preD187Contract, PRE_D187_CONTRACT_CANONICAL_SHA256, PRE_D187_COMMIT, preD186Contract, PRE_D186_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -33,7 +33,7 @@ const N = 1024 * 1536;
 test("D-187 adds exactly the top-level key reviewPack: the contract minus it is the D-186 merge", () => {
   assert.equal(sha(JSON.stringify(preD187Contract(LIVE))), PRE_D187_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D187_COMMIT);
   assert.equal(sha(JSON.stringify(preD186Contract(LIVE))), PRE_D186_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "reviewPack");
+  assert.equal(Object.keys(preD188Contract(LIVE)).at(-1), "reviewPack", "the last key D-187 added (D-188 appends northstarLayerReview after it)");
   assert.deepEqual([RP.decision, RP.isAuthorisation, RP.authorisesImageRequest, RP.authorisesUpload], ["D-187", false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   const sent = LIVE.imageCallBudget.callsActuallySentSoFar;
