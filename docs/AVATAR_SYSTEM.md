@@ -103,6 +103,42 @@ art layer behind them can be upgraded without a rewrite.
   - **Not production-approved.** The owner's visual review is pending. Only the medium tone exists, the face parts and
     eyes are provisional, the nape lock and the body join are not part of this asset, and nothing is promoted.
     R3 stays default OFF. See `project-state.md` **D-186**.
+- **R3 head review pack — one versioned, reproducible review of the whole head; nothing approved (D-187, as of 2026-10-22).**
+  **D-187 (2026-10-22)** approves the review **workflow**, not the parts' look.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes]` does the following from a
+    clean checkout:
+    - rebuilds every layer;
+    - composes the head in the zModel order base < face < iris < eyes-fixed < hair;
+    - runs the checks;
+    - writes the review images, `report.html` and `report.json`.
+
+    Two runs in separate directories were byte-identical. `--render-eyes` re-renders the v5 eye SVGs with Chromium
+    pixel-identically; the unit CI has no browser, so it verifies the pinned renders.
+  - **Parts.**
+    - D-186 head/neck;
+    - D-185 hybrid hair with a self-drawn **nape lock** (DRAFT; image-right only, hanging from behind the ear and jaw,
+      clipped behind the head, merged under the hair in the same hair layer — no new runtime layer);
+    - the D-165 brows and mouth (DRAFT anchors) and the authored nose (DESIGNFORSLAG) on the approved D-164 targets;
+    - eyes prototype v5 with its separate iris layer.
+  - **Sources.** All sources are pinned in `tools/avatar/fixtures/r3-review-pack/`. They are stored byte-exact, and no
+    H1 or Northstar pixels are used.
+  - **Review mode.** Only the explicit review mode `review-pack` may compose these DRAFT parts. The production compose
+    paths keep refusing them (tested), and every part keeps its status.
+  - **Assembly fix.** A 22 px enclosed gap between the hair's opening edge and the head silhouette at the image-right
+    temple was filled in the hair layer, documented, with FIG-HOLES 0.
+  - **Checks.** HP4–HP8 and HP-FRAG pass on the actual review pixels. HP6 and HP7 now run in CI against the pinned review
+    parts, so their results hold for this pack only. The H1 gates stay NOT APPLICABLE.
+  - **Colours.** The main result uses medium skin. Light and dark are shown as FORSLAG, the brown iris is adopted, blue
+    and green are review tints, and all eight hair colours go through ramp B.
+  - **Open visual points.**
+    - The ears are smaller and end higher than Northstar's.
+    - The N1 neck flares at the bottom.
+    - The hair is darker and cooler and lacks the side locks below the left ear.
+    - The nape lock is on one side only.
+    - There is no warm skin shadow under the fringe.
+    - The nose is a single stroke.
+  - **Later dependency.** The clothing/body join below the neck is a later, separate dependency. Nothing is promoted, the
+    active renderer is unchanged, no body is coupled, and R3 stays default OFF. See `project-state.md` **D-187**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

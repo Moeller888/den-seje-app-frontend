@@ -11,7 +11,7 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePng, pixelSha256 } from "../../tools/avatar/r3-hair-tool.mjs";
 import { TOOL_ID, W, H, HEAD_LAST_ROW, loadSources, buildHeadNeck, renderSkin, checkHeadNeck } from "../../tools/avatar/r3-underlay-headneck.mjs";
-import { preD186Contract, PRE_D186_CONTRACT_CANONICAL_SHA256, PRE_D186_COMMIT, preD185Contract, PRE_D185_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD187Contract, preD186Contract, PRE_D186_CONTRACT_CANONICAL_SHA256, PRE_D186_COMMIT, preD185Contract, PRE_D185_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -30,7 +30,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 test("D-186 adds exactly the top-level key underlayHeadNeck: the contract minus it is the D-185 merge", () => {
   assert.equal(sha(JSON.stringify(preD186Contract(LIVE))), PRE_D186_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D186_COMMIT);
   assert.equal(sha(JSON.stringify(preD185Contract(LIVE))), PRE_D185_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "underlayHeadNeck");
+  assert.equal(Object.keys(preD187Contract(LIVE)).at(-1), "underlayHeadNeck", "the last key D-186 added (D-187 appends reviewPack after it)");
   assert.deepEqual([UH.decision, UH.isAuthorisation, UH.authorisesImageRequest, UH.authorisesUpload], ["D-186", false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   const sent = LIVE.imageCallBudget.callsActuallySentSoFar;

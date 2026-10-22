@@ -1,0 +1,36 @@
+{
+  "design": {
+    "name": "nose-design-v1",
+    "status": "DESIGNFORSLAG — not approved, not a production asset",
+    "heightPx": 22.5,
+    "end": [
+      0.5,
+      22.5
+    ],
+    "outerControl": [
+      -4.4,
+      11.25
+    ],
+    "innerControl": [
+      -0.4,
+      11.25
+    ],
+    "maxWidthPx": 2,
+    "colour": "#2a1810",
+    "opacity": 1,
+    "noFill": "no skin-coloured body, no orange shading, no white highlight (deliberate simplification for review)"
+  },
+  "svg": {
+    "file": "nose-design-v1.svg",
+    "sha256": "309f6f77dee65a1392c25f77b236202b3c5c6d4908e90abbcb53d0767620a95c"
+  },
+  "rasterisation": "analytic inside-test of the crescent between the two quadratic Béziers, 8x8 supersampling per output pixel, coverage → alpha (Math.round), straight RGBA, the single colour #2a1810; no filter other than the supersample",
+  "faceScalePlacement": "preview only: the top tip on the approved target (504.5, 348.0); no composition, no source annotation",
+  "files": {
+    "nose-design-v1-x4-transparent.png": "195b1d9a73b5be8002525409cf8138e3b8a4221b93ab8af17d8616a18f6d1868",
+    "01-northstar-vs-design-same-window-x8.png": "a533c366b0d017d4efa33f44943f1776becc60b8fd6f1afdbcbc66665d52fc08",
+    "02a-face-scale-1to1-light-medium-dark.png": "1613787f788a180641561cc498ef97b8bc64775ff2f2b73096f58577444661eb",
+    "02b-face-scale-light-medium-dark-shown-x6.png": "a0201c1681311b80dc67ebad349220258fe3708ea166cc8e27830cd13fc311df",
+    "03-edges-x16-checker.png": "c9becea395cc3fc944fa6dad2e78a5cd0554f15304edce02bf2101309e090f44"
+  }
+}

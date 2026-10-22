@@ -6430,5 +6430,120 @@
       "a change to G1V3, E2, K4, any R3 target or any threshold",
       "a change to D-185's or any earlier decision's historical status"
     ]
+  },
+  "reviewPack": {
+    "decision": "D-187",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW PACK — FOR THE OWNER'S VISUAL REVIEW; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner approves the review WORKFLOW, not the parts' final look: one versioned, reproducible R3 head review pack with the D-186 head/neck, the D-185 hybrid hair, the D-165 brows and mouth, the self-drawn nose and eyes prototype v5 with its separate iris layer; the nape lock is drawn as a separate authoring part and merged into the hair layer at authoring time. No runtime activation, no image call, no capacity, no claim, no promotion, no body coupling.",
+    "reviewMode": {
+      "name": "review-pack",
+      "rule": "Only the explicit review mode of tools/avatar/r3-review-pack.mjs may compose DRAFT, DESIGNFORSLAG and DESIGNPROTOTYPE parts. The production paths are unchanged and keep refusing them: r3-face-parts-tool (production mode accepts APPROVED annotations only), r3-eyes-tool composeEyes (a passed eyes-fixed sheet and an APPROVED annotation), r3-hair-tool-v2 composeHair (a passed raw sheet and an APPROVED annotation). The tool refuses to run in any other mode.",
+      "statusesKept": "Every part keeps its status: the brows, mouth and nape lock stay DRAFT, the nose DESIGNFORSLAG, the eyes DESIGNPROTOTYPE v5, the hair and head/neck REVIEW CANDIDATE. Versioning a file never changes its status.",
+      "untrackedRuleSuperseded": "D-166 kept the D-165 sheet, its check report and the DRAFT annotations untracked; D-187 tracks byte-identical copies of exactly those files (and of the nose and eyes v5 sources) as review-pack sources so the checks can run in CI. D-166's record is not rewritten."
+    },
+    "entrypoint": "node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes]",
+    "spec": "tools/avatar/fixtures/r3-review-pack/review-pack-v1.json",
+    "manifest": "tools/avatar/fixtures/r3-review-pack/review-pack-v1.manifest.json",
+    "layerOrder": [
+      "base",
+      "face",
+      "eyesIris",
+      "eyesFixed",
+      "hair"
+    ],
+    "layerOrderSource": "zModel: base 0 < face 3 < eyes 4 (iris first, eyes-fixed second, approvedTies) < hair 40",
+    "sources": {
+      "base": "D-186 generator and spec (G1V3 + E2 + K4, no H1)",
+      "hair": "D-185 generator and edit spec on the tracked D-183 sheet copy, placed to pixel e506555e…; raw-sheet rules are not applied to the derivation",
+      "face": "byte-identical copies of the D-165 sheet (d3004660…), its check report (7287d7bd…) and the three DRAFT anchors; the authored vector nose-design-v1 (309f6f77…); the APPROVED D-164 targets",
+      "eyes": "the v5 prototype's two SVGs (authored source) and their two pinned Chromium renders (fixed d188d5a2…, iris 5ea7c8cf…); --render-eyes re-renders them locally (verified pixel-identical); the unit CI has no browser and verifies the pins",
+      "never": [
+        "H1",
+        "r3-head-g1v3-v1.png",
+        "Northstar pixels as a source",
+        "D-165's rejected nose",
+        "paint from any rejected call"
+      ]
+    },
+    "napeLock": {
+      "spec": "tools/avatar/fixtures/r3-review-pack/nape-lock-v1.spec.json",
+      "status": "DRAFT",
+      "method": "a deterministic drawing in master px (no image call, no Northstar pixels): one short lock that hangs from behind the image-right ear and jaw to a free tip, filled with the hair layer's own greys and inked; clipped behind the head (alpha x (1 - base alpha), 0 on base alpha >= 128) and merged UNDER the D-185 hair in the same hair luminance layer. No new runtime layer, no z-model change.",
+      "side": "image-right only, as read visually from Northstar",
+      "checks": "NL-BEHIND, NL-ROOT, NL-EXTENT, NL-LUMINANCE pass; HP-FRAG reports it as one off-head component (allowed: HP-FRAG fails only on head pixels)"
+    },
+    "assemblyFixes": [
+      {
+        "id": "ASSEMBLY-FIX-HOLES",
+        "what": "an enclosed 22 px transparent wedge between the D-185 hair's opening edge and the head silhouette at the image-right temple",
+        "fix": "filled in the hair layer with the neighbouring hair grey; D-185's own pixels are verified before the merge",
+        "check": "FIG-HOLES 0"
+      }
+    ],
+    "checks": {
+      "binding": [
+        "SRC (12 pinned sources)",
+        "BASE-REBUILD",
+        "UN-HEAD",
+        "UN-ATTACH",
+        "UN-SHAPE",
+        "UN-EXTENT",
+        "UN-LUMINANCE",
+        "HAIR-REBUILD",
+        "HAIR-LOCKS",
+        "NL-BEHIND",
+        "NL-ROOT",
+        "NL-EXTENT",
+        "NL-LUMINANCE",
+        "FIG-HOLES",
+        "HP4",
+        "HP5",
+        "HP6",
+        "HP7",
+        "HP8",
+        "HP-FRAG",
+        "AUTO-1..5 (face layer)",
+        "EYES-ENVELOPE",
+        "EYES-IRIS-LUMINANCE",
+        "TRANSPARENCY"
+      ],
+      "notApplicable": [
+        "pre.join-continuity",
+        "pre.transition-silhouette"
+      ],
+      "scope": "HP6 and HP7 now run in CI against the PINNED review parts. Their results hold for this review pack only, never for unknown future production assets."
+    },
+    "tokens": {
+      "skin": "medium adopted (D-149); light and dark shown as FORSLAG (no adopted R3 tokens)",
+      "iris": "brown adopted (R3_IRIS_DEFAULT); blue and green are v5 review tints, not adopted",
+      "hair": "the eight HAIR_COLOR_TOKENS through ramp B (method planned, not wired to runtime)"
+    },
+    "pixelSha256": {
+      "headMediumBrownBrown": "e12b80b18eb59f5afb4f745b659e697d20384f25d8baddd988ab352f352a4a15",
+      "hairMerged": "fbcda49ddc0644adaa249b14d74a479bcdbe31c20d22bbb225b06a02a3f3b2a7",
+      "napeLock": "1489825ede3aee70929fa83fecc9dae68207c9c6dc9a1e5a73ad331c9d55acfd",
+      "face": "3123122f49236f1ffae7374b15bc96bbfa54e7230f3ab4372f01d1ea01b981b4"
+    },
+    "openVisualPoints": [
+      "R3's ears are smaller and end higher than Northstar's",
+      "the N1 neck flares at the bottom where Northstar's runs straight into the collar",
+      "the hair is darker and cooler (ramp B brown) and lacks the side locks below the image-left ear",
+      "the nape lock exists only on the image-right side",
+      "no warm skin shadow under the fringe",
+      "the nose is a single stroke"
+    ],
+    "laterDependency": "the clothing/body join below the neck (row 480) is a later, separate dependency; this pack couples no body",
+    "notApproved": [
+      "any part's final look",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "a body coupling",
+      "a change to G1V3, E2, K4, any R3 target or any threshold"
+    ]
   }
 }
