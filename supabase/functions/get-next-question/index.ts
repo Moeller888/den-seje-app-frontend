@@ -4,6 +4,10 @@ import { publishableKey, serviceKey } from "../_shared/supabase-keys.ts";
 import { toPublicQuestion } from "../_shared/question-dto.ts";
 import { ADMIN_CLIENT_OPTIONS, insertQuestionInstance } from "./instance-insert.ts";
 import { deriveQuestionScope } from "./scope.ts";
+import { sortByWave } from "./wave-order.ts";
+import { resolveMixEngine } from "./format-mix.ts";
+import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
+import { servableWireFormat } from "../_shared/interaction-kinds.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,102 +57,6 @@ function normalizeContent(raw: any, answer_format: string) {
   }
 
   return { question, correct };
-}
-
-// NUZO wave scoring: higher score = preferred for this wave phase.
-// Reads conceptual tension dimensions — not just difficulty.
-// Uses: difficulty_type, cognitive_skill, misconception_type (recovery targeting),
-//       insight_type (perspective_shift / reframing / conceptual_bridge),
-//       challenge_role (reinforcement / challenge / deep_challenge).
-// Optional: questionBand + targetBand give difficulty-band preference bonus (+6 exact, +3 adjacent).
-// Questions without metadata score 0 — no preference, existing order preserved.
-function getWaveScore(
-  metadata: any,
-  wavePhase: string,
-  lastMisconceptionType: string | null,
-  questionBand: number | null = null,
-  targetBand: number | null = null
-): number {
-  if (!metadata || typeof metadata !== "object") return 0;
-
-  const difficultyType    = metadata.difficulty_type    ?? null;
-  const cognitiveSkill    = metadata.cognitive_skill    ?? null;
-  const misconceptionType = metadata.misconception_type ?? null;
-  const insightType       = metadata.insight_type       ?? null;
-  const challengeRole     = metadata.challenge_role     ?? null;
-  let score = 0;
-
-  switch (wavePhase) {
-    case "recovery":
-      // Genopbygning: prefer factual/recall to restore conceptual ground
-      if (difficultyType === "factual") score += 10;
-      if (cognitiveSkill === "recall")  score += 5;
-      // Targeted recovery: same misconception type helps address root confusion
-      if (lastMisconceptionType && misconceptionType === lastMisconceptionType) score += 8;
-      // Prefer stabilisering-role objects — safe re-entry after destabilization
-      if (challengeRole === "reinforcement") score += 6;
-      // Prefer conceptual_bridge insights — gentler entry point, lower tension
-      if (insightType === "conceptual_bridge") score += 4;
-      break;
-
-    case "reinforcement":
-      // Stabilisering: consolidate unstable understanding, reduce cognitive load
-      if (difficultyType === "conceptual")    score += 8;
-      if (cognitiveSkill === "comprehension") score += 5;
-      // Prefer reinforcement-role objects for direct role alignment
-      if (challengeRole === "reinforcement") score += 5;
-      // Prefer reframing insights — shift perspective without high tension
-      if (insightType === "reframing") score += 4;
-      break;
-
-    case "deep_challenge":
-      // Begrebsovergang: shift abstraction level, require synthesis
-      if (difficultyType === "analytical") score += 10;
-      if (difficultyType === "applied")    score += 7;
-      if (cognitiveSkill === "synthesis" || cognitiveSkill === "evaluation") score += 5;
-      // Prefer deep_challenge-role objects for direct role alignment
-      if (challengeRole === "deep_challenge") score += 6;
-      // Prefer perspective_shift insights — require reconsidering assumptions
-      if (insightType === "perspective_shift") score += 5;
-      break;
-
-    case "challenge":
-    default:
-      // Tankespænding: balanced productive tension — conceptual without overwhelming
-      if (difficultyType === "conceptual" || difficultyType === "applied") score += 3;
-      // Prefer challenge-role objects
-      if (challengeRole === "challenge") score += 4;
-      // Prefer conceptual_bridge or reframing — introductory tension types
-      if (insightType === "conceptual_bridge" || insightType === "reframing") score += 2;
-      break;
-  }
-
-  // Difficulty-band preference: +6 for exact match, +3 for adjacent band
-  if (questionBand !== null && targetBand !== null) {
-    const diff = Math.abs(questionBand - targetBand);
-    if (diff === 0) score += 6;
-    else if (diff === 1) score += 3;
-  }
-
-  return score;
-}
-
-// targetBand: optional difficulty band target from adaptive difficulty engine.
-// When provided, band-matching bonus is included in wave scores.
-function sortByWave(
-  questions: any[],
-  wavePhase: string,
-  lastMisconceptionType: string | null,
-  targetBand: number | null = null
-): any[] {
-  if (wavePhase === "challenge" && targetBand === null) return questions; // No reordering needed
-  return [...questions].sort((a, b) => {
-    const aBand = (a.difficulty_band as number | null) ?? null;
-    const bBand = (b.difficulty_band as number | null) ?? null;
-    const aScore = getWaveScore(a.metadata, wavePhase, lastMisconceptionType, aBand, targetBand);
-    const bScore = getWaveScore(b.metadata, wavePhase, lastMisconceptionType, bBand, targetBand);
-    return bScore - aScore; // Descending: highest score = first
-  });
 }
 
 serve(async (req) => {
@@ -218,6 +126,13 @@ serve(async (req) => {
       console.log("RELEASED_OPEN_QUESTION:", { subject: scope.subject, releasedCount });
     }
 
+    // Which selection runs (step 2 explains the modes). Under "v2" every path — due, new, repeat — takes
+    // the browser's answer_format from the interaction-kind registry, so a format the client cannot
+    // show is skipped instead of falling back to "mc"; v1 keeps mapAnswerFormat unchanged.
+    const mixEngine = resolveMixEngine(Deno.env.get("QUESTION_MIX_ENGINE"));
+    const wireFormat = (row: { answer_format?: unknown; answer_type?: unknown; content?: unknown }): string | null =>
+      mixEngine === "v2" ? servableWireFormat(row) : mapAnswerFormat(row.answer_format as string | null);
+
     // 🔥 1. DUE QUESTIONS (spaced repetition — wave awareness applied to ordering)
     // Due instances are served regardless of grade filter (backwards compatible).
     // Read through the backend client, scoped to the verified student: the embedded question carries
@@ -261,7 +176,8 @@ serve(async (req) => {
       if (!q) continue;
 
       try {
-        const format = mapAnswerFormat(q.answer_format);
+        const format = wireFormat(q);
+        if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
         const pub = toPublicQuestion(q.content, format, q.metadata);
 
         return new Response(
@@ -284,27 +200,73 @@ serve(async (req) => {
     }
 
     // 🔥 2. NEW QUESTIONS — unserved only, grade-filtered, domain-filtered
-    // get_unserved_questions_for_student excludes questions already instanced for the student
-    // via a server-side NOT EXISTS subquery. It returns full content (the key included), so it is
-    // EXECUTE for the backend only and called with the verified student_id.
-    const { data: questions, error: questionError } = await admin().rpc(
-      "get_unserved_questions_for_student",
-      {
-        p_student_id: student_id,
-        p_grade:      selectedGrade,
-        p_domains:    subjectDomains,
+    //
+    // Which selection runs is a SERVER setting, the Edge secret QUESTION_MIX_ENGINE (./format-mix.ts):
+    //   unset / "v1"  today's selection, unchanged: get_unserved_questions_for_student + sortByWave
+    //                 with the band from the request body;
+    //   "shadow"      serves v1 and only LOGS what the format mix would have chosen;
+    //   "v2"          serves the format mix: stratified per-pupil candidates
+    //                 (get_question_candidates_for_student), server-derived band, interaction-kind
+    //                 mix — ./mix-flow.ts.
+    // "shadow" and "v2" need migration 20261019150000 applied first; without it their RPC fails loudly.
+    // (mixEngine and wireFormat are resolved before step 1.)
+    let sortedQuestions: any[];
+
+    if (mixEngine === "v2") {
+      const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
+        studentId: student_id,
+        grade: selectedGrade,
+        domains: subjectDomains,
+        wavePhase,
+        lastMisconceptionType,
+      });
+      console.log("FORMAT_MIX:", JSON.stringify({
+        engine: mixEngine, ...plan.decision, band, client_band: currentDifficultyBand,
+      }));
+      sortedQuestions = plan.ordered;
+    } else {
+      // get_unserved_questions_for_student excludes questions already instanced for the student
+      // via a server-side NOT EXISTS subquery. It returns full content (the key included), so it is
+      // EXECUTE for the backend only and called with the verified student_id.
+      const { data: questions, error: questionError } = await admin().rpc(
+        "get_unserved_questions_for_student",
+        {
+          p_student_id: student_id,
+          p_grade:      selectedGrade,
+          p_domains:    subjectDomains,
+        }
+      );
+
+      if (questionError) throw questionError;
+
+      // Sort candidate questions by wave + difficulty-band preference before attempting insertion.
+      sortedQuestions = sortByWave(
+        questions || [],
+        wavePhase,
+        lastMisconceptionType,
+        currentDifficultyBand
+      );
+
+      if (mixEngine === "shadow") {
+        // Observation only: a failure here is logged and never changes what is served.
+        try {
+          const { plan, band } = await loadFormatMixPlan(admin() as unknown as MixReadClient, {
+            studentId: student_id,
+            grade: selectedGrade,
+            domains: subjectDomains,
+            wavePhase,
+            lastMisconceptionType,
+          });
+          console.log("FORMAT_MIX:", JSON.stringify({
+            engine: mixEngine, ...plan.decision, band, client_band: currentDifficultyBand,
+            would_try_first: plan.ordered.length > 0 ? plan.ordered[0].id : null,
+            v1_first: sortedQuestions.length > 0 ? sortedQuestions[0]?.id ?? null : null,
+          }));
+        } catch (e) {
+          console.error("FORMAT_MIX_SHADOW_FAILED:", (e as { message?: unknown })?.message ?? e);
+        }
       }
-    );
-
-    if (questionError) throw questionError;
-
-    // Sort candidate questions by wave + difficulty-band preference before attempting insertion.
-    const sortedQuestions = sortByWave(
-      questions || [],
-      wavePhase,
-      lastMisconceptionType,
-      currentDifficultyBand
-    );
+    }
 
     let inserted = null;
 
@@ -315,7 +277,9 @@ serve(async (req) => {
       let normalized: any;
       let pub: ReturnType<typeof toPublicQuestion>;
       try {
-        format = mapAnswerFormat(q.answer_format);
+        const resolved = wireFormat(q);
+        if (resolved === null) throw new Error(`Unservable format: ${q.answer_format}`);
+        format = resolved;
         normalized = normalizeContent(q.content, format);
         pub = toPublicQuestion(q.content, format, q.metadata);
       } catch (e) {
@@ -362,10 +326,18 @@ serve(async (req) => {
     // Same subject scope as the unserved query above: a pupil in historie must not be handed an
     // English repeat, and "the pool is empty" must mean empty for the chosen subject.
     if (!inserted) {
-      const { data: repeatId, error: repeatError } = await admin().rpc(
-        "request_repeat_question_for_student",
-        { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
-      );
+      // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
+      // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
+      // show still reaches repeats instead of "no questions". Every other guard is identical.
+      const { data: repeatId, error: repeatError } = mixEngine === "v2"
+        ? await admin().rpc(
+          "request_repeat_question_servable_for_student",
+          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+        )
+        : await admin().rpc(
+          "request_repeat_question_for_student",
+          { p_student_id: student_id, p_grade: selectedGrade, p_domains: subjectDomains }
+        );
 
       if (repeatError) throw repeatError;
 
@@ -406,7 +378,8 @@ serve(async (req) => {
 
           if (rq && rq.is_active !== false) {
             try {
-              const format = mapAnswerFormat(rq.answer_format);
+              const format = wireFormat(rq);
+              if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
               const pub = toPublicQuestion(rq.content, format, rq.metadata);
 
               return new Response(

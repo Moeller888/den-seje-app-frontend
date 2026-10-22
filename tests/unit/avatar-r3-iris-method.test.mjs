@@ -155,8 +155,12 @@ test("the image-call budget is derived arithmetically and is now 15-16", () => {
   // derived budget is 21-22. Planned capacity is not a claim that the call was made.
   // D-167 authorises ONE further face-neutral attempt (the partial nose sheet), so assets[4] carries 4 PLANNED calls and
   // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
-  assert.equal(min, 22, "the iris is still one call; assets[0] carries five PLANNED calls (D-153), assets[4] four (D-167)");
-  assert.equal(max, 23);
+  // D-172 adds ONE further planned eyes-fixed call (call A2), so assets[5] carries 2 PLANNED calls and the derived budget is
+  // 23-24. The iris (assets[6]) is still one call.
+  // D-177 adds ONE further planned hair call (the second hair sheet), so assets[8] carries 2 PLANNED calls and the derived
+  // budget is 24-25. The iris (assets[6]) is still one call.
+  assert.equal(min, 24, "the iris is still one call; assets[0] carries five PLANNED calls (D-153), assets[4] four (D-167), assets[5] two (D-172), assets[8] two (D-177)");
+  assert.equal(max, 25);
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);

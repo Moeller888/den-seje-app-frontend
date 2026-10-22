@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { checkFixedSheet, checkIrisSheet, composeEyes, tintedReviewPair, inEyeEnvelope, validateTargets, validateAnnotation, decodePng, encodePng, sha256, pixelSha256, THRESHOLDS, SHEET, IRIS_TOKEN } from "../../tools/avatar/r3-eyes-tool.mjs";
+import { checkFixedSheet, checkFixedSheetShape, SHAPE_THRESHOLDS, checkIrisSheet, composeEyes, tintedReviewPair, inEyeEnvelope, validateTargets, validateAnnotation, decodePng, encodePng, sha256, pixelSha256, THRESHOLDS, SHEET, IRIS_TOKEN } from "../../tools/avatar/r3-eyes-tool.mjs";
 import { resampleArea, overInto, quantise } from "../../tools/avatar/r3-face-parts-tool.mjs";
 import { fixedSheet, irisSheet, syntheticAnnotation, syntheticTargets, DRAFT_TARGETS, GEO, toSheet } from "./avatar-r3-eyes-synthetic.mjs";
 
@@ -187,4 +187,26 @@ test("CLI: raw-check mode, rejections write nothing, success reruns byte-identic
 test("the thresholds are the D-169 values", () => {
   assert.deepEqual([THRESHOLDS.residualFixedMaxPx, THRESHOLDS.residualIrisMaxPx, THRESHOLDS.irisChromaMax, THRESHOLDS.visibleAlphaMin, THRESHOLDS.lowAlphaReportedMax], [2.0, 1.5, 12, 16, 15]);
   assert.deepEqual([...THRESHOLDS.scaleRange, ...THRESHOLDS.irisToFixedScaleRatioRange, ...THRESHOLDS.openingAreaRange], [0.2, 0.3, 0.9, 1.1, 0.5, 1.6]);
+});
+
+// ── D-172: binding shape checks F1..F2 for a further eyes-fixed sheet ──────────────────────────────────────────────
+test("F1/F2 (D-172): the synthetic sheet has no white band and a compatible spacing", () => {
+  const r = checkFixedSheetShape(checkFixedSheet(FIXED));
+  assert.equal(r.verdict, "PASS_TO_ANNOTATION", JSON.stringify(r.auto));
+  assert.deepEqual(r.auto.map((x) => x.id), ["F1", "F2"]);
+  assert.match(r.auto[1].detail, /implied s 0\.2500/);
+});
+test("F1 (D-172): a light band between the ring's top and the lash line rejects; RGB under alpha does not count", () => {
+  const base = checkFixedSheet(FIXED);
+  const band = fixedSheet((px) => { for (const e of ["eyeLeft", "eyeRight"]) { const [x0, y0, x1] = base.openings[e].bbox; for (let x = x0; x < x1; x++) for (let y = y0 - 6; y < y0 - 2; y++) if (px[at(x, y) + 3] >= 128) px.set([250, 250, 250, 255], at(x, y)); } });
+  const c = checkFixedSheet(band); assert.equal(c.verdict, "PASS_TO_ANNOTATION", "the E-checks still pass");
+  assert.equal(checkFixedSheetShape(c).firstFailure, "F1");
+});
+test("F2 (D-172): an eye spacing outside the scale range rejects; E-checks must have passed first", () => {
+  const c = checkFixedSheet(FIXED);
+  const wide = { ...c, openings: { eyeLeft: { ...c.openings.eyeLeft, regionCentroid: [400, 512] }, eyeRight: { ...c.openings.eyeRight, regionCentroid: [1045.5, 512] } } };
+  const r = checkFixedSheetShape(wide);
+  assert.equal(r.firstFailure, "F2"); assert.match(r.auto[1].detail, /implied s 0\.189/);
+  assert.equal(checkFixedSheetShape({ verdict: "REJECT" }).firstFailure, "E-CHECKS-NOT-PASSED");
+  assert.deepEqual([SHAPE_THRESHOLDS.whiteBandLightPxMax, SHAPE_THRESHOLDS.targetRingCentreSpacingPx, SHAPE_THRESHOLDS.bandColumnFraction], [0, 122.205, 0.6]);
 });
