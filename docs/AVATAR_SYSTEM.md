@@ -186,6 +186,41 @@ art layer behind them can be upgraded without a rewrite.
   - **OKLab recolourings.** The ones in the report are proposals only.
   - **Not evidence.** A good default image does not show that other hairstyles, skin tones or expressions work.
   - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-188**.
+- **R3 review variant "northstar-head" — reconstructed head and cleaned feature edges on the D-188 baseline; nothing approved (D-189, as of 2026-10-22).**
+  **D-189 (2026-10-22)** builds a second Northstar review variant. The D-188 variant stays byte-identical and is the
+  baseline, read through its own pins.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-head --out <empty dir>`. The generator
+    is `tools/avatar/r3-northstar-head.mjs`, and the files live in `tools/avatar/fixtures/r3-northstar-head/`
+    (spec, seven derived layers, six masks and a manifest, stored binary).
+  - **Reconstructed cranium.** The cranium is design, not observed pixels.
+    - It is one round head under the hair: an ellipse arc about x = 510 that meets the visible face contour at
+      (383, 291) and (637, 291).
+    - It is painted as flat lit skin, like Northstar's own face, with a 20 px harmonic transition from the visible skin.
+    - It is its own layer under the unchanged skin.
+    - Two small ear-root wedges that the sideburns hid are filled and closed with a short stroke.
+    - The shape is not forced into G1V3/E2.
+    - The hair's cast shadow stays its own layer, so the bare head carries no shadow of the old hairstyle.
+  - **Cleaned feature edges.**
+    - Brow, nose and mouth edges are re-projected onto the line between the local skin and the nearest core colour of
+      the same feature.
+    - The light halo goes, warm rims become ink, and the nose shadow and white highlights keep their colour.
+    - The hair outline that D-188 had duplicated into the left brow leaves the brow.
+    - The opaque light pixels drop from 83 to 0. The eyes are not changed.
+  - **Hair-edge residue.** 15 dark pixels the D-188 skin kept next to the hair move to this variant's hair layer.
+  - **Measured.**
+    - The cranium under the hair shifts the default composite by at most 2/255, because the hair's alpha is 253–254.
+    - The feature edges change 1,676 pixels, with a maximum of 46/255 where the halo was brightest.
+    - 0 pixels changed under semi-transparent hair edges.
+    - 0 pixels changed outside the explicit edit masks, per layer and in the composite.
+  - **Open areas.**
+    - the hidden brow end;
+    - the sclera behind the iris;
+    - new expressions;
+    - the eye lash edge;
+    - the cranium's shape as a design choice;
+    - faint tone patches on the forehead.
+  - **Illustration.** The report shows an illustrative coverage mask of a shorter haircut. It is not a hairstyle.
+  - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-189**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

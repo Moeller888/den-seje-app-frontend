@@ -10,7 +10,7 @@
 //             APPROVED D-164 targets (one positive uniform scale + translation per part);
 //   · eyes  — the v5 prototype's pinned fixed and iris layers (renders of its tracked SVGs; --render-eyes re-renders them).
 //
-// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both]
+// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head]
 //
 // --variant (D-188): "d187" (the default) is the pack above, unchanged — its rule of no Northstar pixels as a source still holds
 // for it. "northstar-layers" rebuilds the SEPARATE D-188 review variant (r3-review-northstar-layers.mjs), whose visible pixels
@@ -361,7 +361,16 @@ ${fig("09-shape-differences-r3-outline-on-northstar.png", "R3-hovedets ydre kont
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-export const VARIANTS = Object.freeze(["d187", "northstar-layers", "both"]);
+export const VARIANTS = Object.freeze(["d187", "northstar-layers", "both", "northstar-head"]);
+/** D-189: writes the northstar-head review variant (reconstructed head + cleaned feature edges on the unchanged D-188 baseline). */
+export async function writeNorthstarHeadVariant(OUT) {
+  const RV = await import("./r3-review-northstar-head.mjs");
+  const variant = RV.buildVariant(), ns = decodePng(rel("assets/avatar/reference/Northstar Master v2.png")).px;
+  const written = RV.writeVariantReview(variant, OUT, ns);
+  writeFileSync(join(OUT, "report.html"), RV.variantReportHtml(variant));
+  writeFileSync(join(OUT, "report.json"), JSON.stringify({ variant: RV.VARIANT, decision: "D-189", status: variant.tracked.man.status, compositeOrder: variant.tracked.man.compositeOrder, headPixelSha256: written.headPixelSha256, checks: variant.checks, files: written.files }, null, 2) + "\n");
+  return variant;
+}
 /** D-188: writes the northstar-layers review variant (images, report.html, report.json) into OUT, beside this pack's head. */
 export async function writeNorthstarLayersVariant(OUT, pack = buildPack()) {
   const RV = await import("./r3-review-northstar-layers.mjs");
@@ -375,17 +384,22 @@ export async function writeNorthstarLayersVariant(OUT, pack = buildPack()) {
 const invokedDirectly = typeof process.argv[1] === "string" && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
 if (invokedDirectly) {
   const args = process.argv.slice(2), arg = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both]");
+  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head]");
   const variant = arg("--variant") ?? "d187"; if (!VARIANTS.includes(variant)) throw new Error(`--variant must be one of ${VARIANTS.join(", ")}`);
   const ROOT = resolve(outDir); if (existsSync(ROOT) && readdirSync(ROOT).length) throw new Error("output directory not empty"); mkdirSync(ROOT, { recursive: true });
-  const pack = buildPack();
-  if (variant !== "d187") {
+  if (variant === "northstar-head") {
+    const v = await writeNorthstarHeadVariant(ROOT);
+    console.log(JSON.stringify({ variant, firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
+    if (v.checks.firstFailure) process.exitCode = 1;
+  }
+  const pack = variant === "northstar-head" ? null : buildPack();
+  if (variant === "northstar-layers" || variant === "both") {
     const NOUT = variant === "both" ? join(ROOT, "northstar-layers") : ROOT; mkdirSync(NOUT, { recursive: true });
     const v = await writeNorthstarLayersVariant(NOUT, pack);
     console.log(JSON.stringify({ variant: "northstar-layers", firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
     if (v.checks.firstFailure) process.exitCode = 1;
   }
-  if (variant !== "northstar-layers") {
+  if (variant === "d187" || variant === "both") {
     const OUT = variant === "both" ? join(ROOT, "d187") : ROOT; mkdirSync(OUT, { recursive: true });
     let eyesNote = "Øjenlagene er de fastlåste render af de versionsstyrede SVG'er (ikke genrenderet i denne kørsel).";
     if (args.includes("--render-eyes")) {
