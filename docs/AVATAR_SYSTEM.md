@@ -70,6 +70,39 @@ art layer behind them can be upgraded without a rewrite.
   is the central open design question. Call-id `UNASSIGNED`, claim `NONE`, `callsActuallySentSoFar.underlay`
   = **5**, 0 live permissions. Nothing is promoted and R3 stays shadow and default OFF — any further colour
   call needs a new owner decision, call-id and claim identity. See `project-state.md` **D-149 … D-156**.
+- **R3 head underlay — deterministic head/neck drawing without H1 pixels; one review candidate, not production-approved (D-186, as of 2026-10-22).**
+  **D-186 (2026-10-22)** chose **method A**: a deterministic drawing with no image call.
+  - **Sources.** G1V3 + E2 (rows ≤ 424) and K4 are kept unchanged, and U1 is used only to verify the geometry and read
+    the medium skin colour.
+  - **Neck.** The neck is self-drawn as a separate geometry **N1** (rows 425–479; choice b), so the asset contains
+    **no H1 pixels**.
+  - **Never used:** H1, `r3-head-g1v3-v1.png` (its rows 425–445 are H1-derived), Northstar pixels and paint from
+    rejected calls.
+  - **Method.** Generator `tools/avatar/r3-underlay-headneck.mjs` plus the spec and manifest in
+    `tools/avatar/fixtures/r3-underlay-headneck/`.
+    - **Layers.** An achromatic luminance layer times a skin token with warm shadows; the medium tone comes first and
+      other tones follow from the same luminance. Hair ramp B is not used for skin.
+    - **Ink.** K4 plus the drawn chin, neck and ear lines.
+    - **Ears.** An inner rim with a helix fold, a C-shaped concha and the ear's front line, all drawn inside the
+      existing ear silhouettes.
+    - **Jaw and chin.** The chin leaves the jaw corner at the jaw's own slope, closes horizontally at y 442, and has a
+      cast shadow under it.
+    - **Rebuild.** Deterministic, and verified byte-identical in a separate directory.
+  - **Checks.**
+    - UN-HEAD, UN-ATTACH (the 424/425 step 4 ≤ the geometry's own 423/424 step 4), UN-SHAPE, UN-EXTENT and
+      UN-LUMINANCE pass.
+    - `pre.join-continuity` and `pre.transition-silhouette` are **NOT APPLICABLE**, because both compare against
+      H1's rows. They are not reported as passed, and their bounds and earlier results are unchanged.
+  - **Whole-head review.** The candidate was composed locally with D-185's `r3-hair-hybrid-v2`, the D-165 brows and
+    mouth (DRAFT), the nose placeholder and eyes v5 (DRAFT).
+    - HP4–HP8 and HP-FRAG pass on the new pixels (HP6/HP7 run locally and are NOT RUN in CI).
+    - The hair covers no chin or neck pixel.
+    - The nape lock is not introduced.
+  - **D-185 correction.** G1V3/U1 already had ear silhouettes; what was missing was the drawn ear detail and a neck.
+    D-185's row stays verbatim.
+  - **Not production-approved.** The owner's visual review is pending. Only the medium tone exists, the face parts and
+    eyes are provisional, the nape lock and the body join are not part of this asset, and nothing is promoted.
+    R3 stays default OFF. See `project-state.md` **D-186**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
