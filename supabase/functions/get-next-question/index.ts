@@ -8,6 +8,7 @@ import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
+import { pupilLogHash } from "./log-pseudonym.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -220,8 +221,10 @@ serve(async (req) => {
         wavePhase,
         lastMisconceptionType,
       });
+      // pupil = a one-way pseudonym (./log-pseudonym.ts), so the evaluation can exclude test accounts.
+      const pupil = await pupilLogHash(student_id);
       console.log("FORMAT_MIX:", JSON.stringify({
-        engine: mixEngine, ...plan.decision, band, client_band: currentDifficultyBand,
+        engine: mixEngine, pupil, ...plan.decision, band, client_band: currentDifficultyBand,
       }));
       sortedQuestions = plan.ordered;
     } else {
@@ -257,8 +260,10 @@ serve(async (req) => {
             wavePhase,
             lastMisconceptionType,
           });
+          // pupil = a one-way pseudonym (./log-pseudonym.ts), so the evaluation can exclude test accounts.
+          const pupil = await pupilLogHash(student_id);
           console.log("FORMAT_MIX:", JSON.stringify({
-            engine: mixEngine, ...plan.decision, band, client_band: currentDifficultyBand,
+            engine: mixEngine, pupil, ...plan.decision, band, client_band: currentDifficultyBand,
             would_try_first: plan.ordered.length > 0 ? plan.ordered[0].id : null,
             v1_first: sortedQuestions.length > 0 ? sortedQuestions[0]?.id ?? null : null,
           }));

@@ -450,7 +450,10 @@ test("index.ts: v2 orders by the mix plan and never by the request's band", () =
 test("index.ts: the FORMAT_MIX logs carry no pupil identity, no answer and no key", () => {
   const logs = [...INDEX_CODE.matchAll(/console\.log\("FORMAT_MIX:", JSON\.stringify\(\{([\s\S]*?)\}\)\);/g)].map((m) => m[1]);
   assert.equal(logs.length, 2, "the v2 and the shadow log");
+  // Each log names the pupil only by the one-way pseudonym, computed right before it from the verified id.
+  assert.equal((INDEX_CODE.match(/const pupil = await pupilLogHash\(student_id\);\s*console\.log\("FORMAT_MIX:"/g) ?? []).length, 2);
   for (const body of logs) {
+    assert.match(body, /engine: mixEngine, pupil, \.\.\.plan\.decision,/);
     for (const forbidden of ["student_id", "user", "correct", "normalized", "content", "answer", "email", "name"]) {
       assert.equal(new RegExp(String.raw`\b${forbidden}\b`, "i").test(body), false, `FORMAT_MIX must not log ${forbidden}`);
     }
