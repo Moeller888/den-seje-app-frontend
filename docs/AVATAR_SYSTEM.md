@@ -124,7 +124,7 @@ art layer behind them can be upgraded without a rewrite.
   too large and saturated, the highlight too big, and both read as light spots on dark skin). D-167 is SPENT,
   `callsActuallySentSoFar.faceNeutral` = **4** (`underlay` = **5**), the planned face capacity (4) is used up, 0 live
   permissions. The six brow and mouth anchors stay DRAFT. See `project-state.md` **D-168**.
-- **R3 eyes — method adopted; targets approved; one eyes-fixed call (A) authorised, not yet run; iris call B not authorised (D-169 … D-170, as of 2026-10-20).**
+- **R3 eyes — method adopted; targets approved; eyes-fixed calls A and A2 each sent once and set aside; no live permission; iris call B not authorised (D-169 … D-173, as of 2026-10-20).**
   D-169 fixed how `assets[5]` (eyes-fixed) and `assets[6]` (iris) will be made: two transparent 1536×1024 sheets with
   shared registration. Sheet A carries both eyes without iris (transparent opening inside the ring, highlight and fold
   kept) and is placed with ONE shared uniform scale + translation from four anchors (ring centres Lc/Rc, outer corners
@@ -143,6 +143,81 @@ art layer behind them can be upgraded without a rewrite.
   thresholds; a pass opens only the owner's visual review and DRAFT annotation. UNSPENT, not a run instruction; inside
   `assets[5]`'s one planned call (budget 22–23, no retake); actually sent unchanged (`faceNeutral` = 4, `underlay` = 5).
   The iris call B is not authorised. See `project-state.md` **D-170**.
+  **D-171 (2026-10-20)** recorded that one send (HTTP 200, request `req_0663822323e8423e902d36e822d86de7`, one
+  1536×1024 sheet `9d26bce1…`) and closed the mandate: E1–E5 passed (alpha 1–15 reported only), the owner's visual review
+  is pending, no source annotation is approved and no candidate exists. D-170 is SPENT; `callsActuallySentSoFar.eyesFixed`
+  = **1** (`faceNeutral` = 4, `underlay` = 5 unchanged); the planned eyes-fixed capacity is used up; 0 live permissions.
+  See `project-state.md` **D-171**.
+  **D-172 (2026-10-20, depends on D-171 / PR #354)**: the owner set the D-170 sheet aside (shape off Northstar; the local
+  review placement gave s = 0.1939 because the model drew the eyes at about 5.2x, and would fail P1, P2 and P5). One
+  further eyes-fixed call `D-172-r3-eyes-fixed-v2` is authorised with a new prompt v2 (`eb51a3ea…`: tall oval rings with
+  their top under the lash line, no white band, no inner flick, short outer flick, short fold over the inner half,
+  explicit 4x geometry) and two new binding shape checks fixed before the call — F1 no white band, F2 eye spacing
+  compatible with the scale range — after D-169's unchanged E1–E5. Planned eyes-fixed capacity 1 -> 2, budget 23–24;
+  actually sent unchanged. Not a run instruction. See `project-state.md` **D-172**.
+  **D-173 (2026-10-20)** recorded that one A2 send (HTTP 200, request `req_c12adc8346d54f06984a1b5faace2ab8`, one sheet
+  `f061484d…`) and closed the mandate: E1–E5 and F1–F2 passed and the white band is gone, but the ring is a wide opaque
+  BROWN iris area in the fixed layer (forbidden by the layer split; no binding check measures it), and the local review
+  placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
+  (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
+  `project-state.md` **D-173**.
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; one further hair call with an explicit margin authorised, not yet attempted (D-174 … D-177, as of 2026-10-21).**
+  **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
+  - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
+    four owner-approved source anchors on that sheet onto four of the ten approved targets
+    (`tools/avatar/fixtures/r3-hair/targets-hair-v1.json`, a byte-identical copy of the v2 review anchors, roles fit
+    A1/A5/A7/A8 and check A2/A3/A4/A6/A9/A10, ±3 px). It is checked with functional checks: HP4 crown, HP5 no scalp hole,
+    HP6 complete brows with only the image-left brow's ends covered, HP7 no actual coverage of drawn eye content, and
+    HP8 ear tops only inside the v2 area. D-159 zone overlap and a broad (+24 px) envelope are reported only.
+  - **Source anchors.** These are unknown until a sheet exists.
+  - **Colour method B.** A tonal ramp with integer, 8-bit sRGB code values: ink, token.shadow, token.base and light at
+    L 0/80/150/255; alpha unchanged; source-over. It is the planned R3 hair colouring (`layerContract`/`zModel` hair
+    blend changed from multiply × token). It is **not wired to any runtime** — R2/C2 hair is unchanged — and the hair
+    tokens are unchanged.
+  - **Other decisions.** The lock under the image-right ear is part of the design; its connection is judged against an
+    underlay with a neck. Hair may be made against D-148's geometry before the underlay is approved; final acceptance
+    still needs the finished underlay.
+  - **Tools and capacity.** Tool `tools/avatar/r3-hair-tool.mjs` + CLI `r3-hair-compose.mjs`, with a DRAFT prompt and an
+    annotation schema. One planned call, no reserve, budget 23–24 unchanged. No call-id, claim, adapter or permission;
+    R3 stays default OFF. Depends on D-173 (PR #357). See `project-state.md` **D-174**.
+  **D-175 (2026-10-21)** authorised exactly ONE hair call, `D-175-r3-hair-northstar-v1`:
+  - **Request.** `images/edits` with the locked model `gpt-image-2.5-sunburst-2026-09-08`, `1024x1024`, one transparent
+    PNG, and Northstar as the only image. D-174's prompt v1 is frozen unchanged (`43084da7…`).
+  - **Adapter.** A separate inactive adapter, `tools/avatar/openai-send-r3-hair-d175.mjs`. Its dry run reads no
+    credentials and makes no network call or claim. A send checks the permission inside the send function, needs a
+    clean HEAD equal to origin/main, takes an exclusive claim across clones, makes one fetch with no retry, keeps the raw
+    response and every image, and runs only H1–H5.
+  - **After the call.** Source anchors are annotated as DRAFT and need owner approval. Placement is done only by
+    `r3-hair-compose.mjs`.
+  - **Budget and permissions.** It uses the one planned hair call with no reserve. The budget stays 23–24 and actual
+    use is unchanged. UNSPENT, not yet attempted, and not a run instruction: the send needs a separate execution message
+    after merge. Afro, short and headwear are not authorised. See `project-state.md` **D-175**.
+  **D-176 (2026-10-21)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_06b406050c254e07a172b9c0797ea68e`, one 1024×1024 sheet `24bf9f70…`.
+  - **Checks.** H1 passed; **H2 rejected**: 3 px with alpha ≥ 16 in the 16 px safety margin at x = 1008, where a lock
+    tip reaches into the margin. The image edge does not cut the hair.
+    - H2 is the first binding rejection; it does not prove that every other requirement is met.
+    - H3–H5 were not evaluated as binding checks, and HP1–HP8 were not run. Separate diagnostic readings stay
+      diagnostics.
+  - **Visual status.** The hairstyle is recognisable and the greyscale tones are promising. The fringe and temple locks
+    deviate, and the ear transitions and placement are not validated, so final acceptance is not possible on this basis.
+  - **Result and accounting.** No candidate and no approved source anchors. `callsActuallySentSoFar.hair` = **1**
+    (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the planned hair capacity (1) is used up and the budget stays
+    23–24.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-176**.
+  **D-177 (2026-10-21)** authorised exactly ONE further hair call, `D-177-r3-hair-northstar-v2`:
+  - **Capacity.** One added planned hair call (`assets[8]` 1 → 2, budget 23–24 → 24–25). Actual use is unchanged
+    (hair = 1).
+  - **Request.** D-175's locked request: `1024x1024`, one transparent PNG, Northstar as the only image.
+  - **Prompt v2 (variant B), frozen (`a9304faf…`).** "large" is removed and an explicit transparent margin of at least
+    64 px is required on every side. It also asks for one long central lock, one separate lock at each temple, and side
+    edges ending above the ears except the lock below the left ear.
+  - **Unchanged.** H2's binding border stays 16 px, and no threshold, target or method changes. A margin in the prompt
+    is no guarantee.
+  - **Adapter.** A separate inactive adapter, `tools/avatar/openai-send-r3-hair-d177.mjs`, derived from the closed D-175
+    adapter. Same rules: dry run without credentials, one fetch, no retry, only H1–H5.
+  - **Status.** UNSPENT and not a run instruction: the send needs a separate execution message after merge. See
+    `project-state.md` **D-177**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`

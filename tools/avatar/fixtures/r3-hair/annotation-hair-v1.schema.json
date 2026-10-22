@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "r3-hair-annotation-v1",
+  "title": "R3 hair — source anchors on ONE generated hair sheet (D-174)",
+  "description": "Separate METADATA for one raw 1024x1024 hair sheet, never a pixel change. Source anchors are unknown until that sheet exists: they are read on it, bound to its SHA-256, and only an owner-APPROVED annotation is used in production. The four fit points are required; the six check points are optional and reported only. Coordinates are sheet-continuous (pixel i covers [i, i+1)).",
+  "type": "object",
+  "required": ["schema", "version", "status", "raw", "annotator", "uncertaintyPx", "points"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "r3-hair-annotation-v1" },
+    "version": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["DRAFT", "APPROVED", "SYNTHETIC_TEST_APPROVED"] },
+    "raw": {
+      "type": "object",
+      "required": ["file", "sha256"],
+      "additionalProperties": false,
+      "properties": { "file": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+    },
+    "annotator": { "type": "string", "minLength": 1 },
+    "uncertaintyPx": { "type": "number", "minimum": 0 },
+    "points": {
+      "type": "object",
+      "required": ["crownTuftTip", "centralLockTip", "leftTempleLockTip", "rightTempleLockTip"],
+      "additionalProperties": false,
+      "properties": {
+        "crownTuftTip": { "$ref": "#/$defs/pt" },
+        "centralLockTip": { "$ref": "#/$defs/pt" },
+        "leftTempleLockTip": { "$ref": "#/$defs/pt" },
+        "rightTempleLockTip": { "$ref": "#/$defs/pt" },
+        "leftOuterSpikeTip": { "$ref": "#/$defs/pt" },
+        "rightOuterSpikeTip": { "$ref": "#/$defs/pt" },
+        "centreHairline": { "$ref": "#/$defs/pt" },
+        "rightOfCentreLockTip": { "$ref": "#/$defs/pt" },
+        "leftEarTopJunction": { "$ref": "#/$defs/pt" },
+        "rightEarTopJunction": { "$ref": "#/$defs/pt" }
+      }
+    },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "pt": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1024 }, "minItems": 2, "maxItems": 2 }
+  }
+}
