@@ -27,9 +27,27 @@ jobs:
   #
   # It runs every unit file except the two that drive the vendored Windows libwebp binaries
   # (tests/unit-ci-exclusions.mjs). Those still run, and still fail loudly, locally.
+  #
+  # The one exception to "no backend": a throwaway PostgreSQL 17 service container, local to this job,
+  # for the level engine's real-concurrency test (tests/unit/difficulty-scale-b-concurrency.test.mjs) —
+  # several simultaneous sessions are something PGlite cannot show. It is empty, reachable only from
+  # this runner, holds no secret (trust auth) and is discarded with the job; it is not Supabase.
+  # LEVEL_ENGINE_PG_REQUIRED makes that test FAIL instead of skipping if the server is missing.
   unit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,6 +56,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run unit suite
+        env:
+          LEVEL_ENGINE_PG_URL: postgres://postgres@localhost:5432/postgres
+          LEVEL_ENGINE_PG_REQUIRED: "1"
         run: npm run test:unit:ci
 
   classify:

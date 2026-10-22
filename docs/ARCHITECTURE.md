@@ -493,7 +493,10 @@ else). The grade only seeds the start; it is never a ceiling or a reset.
 **Flow** (`get-next-question`, `LEVEL_ENGINE=v1`; steps 1 and the insert path unchanged):
 2. `level-flow.ts`: `advance_student_level(student, subject, grade)` → `get_level_questions_for_student
    (student, level, domains)` — active, **levelled**, servable, never-served questions, nearest level
-   first, then `md5(student_id || question_id)`, no grade ceiling. The candidates' band is re-expressed
+   first, then `md5(student_id || question_id)`, no grade ceiling. Fast path: per domain the nearest
+   300 active questions above and below the level (ordered scans of `idx_questions_objective_level`)
+   are filtered first; when that window cannot prove the answer, the full search runs — same result
+   either way (runbook §4). The candidates' band is re-expressed
    **relative to the pupil** (3 = the pupil's cell, ±1 per cell of 10000/35 levels), so the existing
    orderings work unchanged: with `QUESTION_MIX_ENGINE=v2` the format mix picks the kind
    (`planNextQuestions`, target band 3); otherwise `orderByLevel` (level tier ±1 cell first, wave score

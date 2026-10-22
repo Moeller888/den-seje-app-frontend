@@ -32,6 +32,10 @@
 --       served and whose format is servable (#351's rule), nearest level first, then
 --       md5(student_id || question_id) (deterministic per pupil, different between pupils). No grade
 --       ceiling (B4). Inactive questions and questions without a level are never returned.
+--       Fast path: the nearest 300 active questions above and below the level per domain, read through
+--       idx_questions_objective_level, are filtered first; when that window cannot prove the answer
+--       (fewer than `limit` valid questions strictly inside it) the full search runs instead. Same
+--       result either way — see the proof in the function body and docs/operations/level-engine-rollout.md §4.
 --   request_repeat_level_question_for_student(student, domains) → instance id | NULL
 --       #351's request_repeat_question_servable_for_student with the level engine's pool: "exhausted"
 --       means no active, levelled, servable unserved question is left in the domains, and only levelled
@@ -228,7 +232,21 @@ LANGUAGE plpgsql
 STABLE
 SECURITY INVOKER
 SET search_path = public, pg_temp
+-- Plan every statement with the call's actual domain and level. A cached generic plan estimates a
+-- domain's rows as 1/ndistinct of the table and then prefers reading the whole subject plus a sort
+-- over the window's ordered index scan (measured on PostgreSQL 17, docs/operations/level-engine-rollout.md §4).
+SET plan_cache_mode = force_custom_plan
 AS $$
+DECLARE
+  v_window    CONSTANT integer := 300;
+  v_limit     integer;
+  v_objective text;
+  v_part      uuid[];
+  v_fetched   integer;
+  v_farthest  integer;
+  v_near      uuid[] := '{}';
+  v_cut       integer;
+  v_ids       uuid[];
 BEGIN
   IF p_student_id IS NULL THEN
     RAISE EXCEPTION 'missing_student_id';
@@ -240,6 +258,84 @@ BEGIN
     RAISE EXCEPTION 'missing_domains';
   END IF;
 
+  v_limit := least(greatest(coalesce(p_limit, 50), 1), 100);
+
+  -- FAST PATH: per domain, the nearest v_window active questions at or above p_level and the nearest
+  -- v_window below it, read in level order from idx_questions_objective_level (20261020120000) — two
+  -- ordered index scans that stop after v_window rows. question_is_servable and the served-check then
+  -- run on at most 2 × v_window rows per domain instead of on the whole subject.
+  --
+  -- Why it gives exactly the full search's answer. A branch that returned fewer than v_window rows
+  -- holds every active question on its side. A branch that returned v_window rows ("truncated") holds
+  -- every question strictly nearer than its farthest row (an ordered LIMIT never skips a smaller
+  -- distance). So below v_cut — the smallest farthest-distance over the truncated branches — the window
+  -- holds EVERY active question, and with it every valid one. If v_limit valid questions lie below
+  -- v_cut, they are the full search's first v_limit, in the same order (same ORDER BY). Ties at
+  -- v_cut itself are excluded, because the window may hold only some of them.
+  --
+  -- One domain at a time, so the planner sees the domain and the level as values (plan_cache_mode
+  -- below) and estimates each branch's rows correctly; with the domain as a join value it
+  -- underestimates them and reads the whole subject through a bitmap or sequential scan plus a sort.
+  FOR v_objective IN
+    SELECT DISTINCT d.objective FROM unnest(p_domains) AS d(objective) WHERE d.objective IS NOT NULL
+  LOOP
+    SELECT coalesce(array_agg(w.id), '{}'), count(*), max(w.difficulty_level) - p_level
+    INTO v_part, v_fetched, v_farthest
+    FROM (
+      SELECT q.id, q.difficulty_level
+      FROM public.questions q
+      WHERE q.is_active = true AND q.learning_objective = v_objective AND q.difficulty_level >= p_level
+      ORDER BY q.difficulty_level ASC
+      LIMIT v_window
+    ) w;
+    v_near := v_near || v_part;
+    IF v_fetched = v_window THEN
+      v_cut := least(v_cut, v_farthest);
+    END IF;
+
+    SELECT coalesce(array_agg(w.id), '{}'), count(*), p_level - min(w.difficulty_level)
+    INTO v_part, v_fetched, v_farthest
+    FROM (
+      SELECT q.id, q.difficulty_level
+      FROM public.questions q
+      WHERE q.is_active = true AND q.learning_objective = v_objective AND q.difficulty_level < p_level
+      ORDER BY q.difficulty_level DESC
+      LIMIT v_window
+    ) w;
+    v_near := v_near || v_part;
+    IF v_fetched = v_window THEN
+      v_cut := least(v_cut, v_farthest);
+    END IF;
+  END LOOP;
+
+  SELECT array_agg(c.id ORDER BY c.dist, c.tiebreak, c.id)
+  INTO v_ids
+  FROM (
+    SELECT q.id, abs(q.difficulty_level - p_level) AS dist, md5(p_student_id::text || q.id::text) AS tiebreak
+    FROM public.questions q
+    WHERE q.id = ANY (v_near)
+      AND (v_cut IS NULL OR abs(q.difficulty_level - p_level) < v_cut)
+      AND public.question_is_servable(q.answer_format, q.answer_type, q.content)
+      AND NOT EXISTS (
+        SELECT 1 FROM public.question_instances qi
+        WHERE qi.student_id = p_student_id AND qi.question_id = q.id
+      )
+    ORDER BY abs(q.difficulty_level - p_level), md5(p_student_id::text || q.id::text), q.id
+    LIMIT v_limit
+  ) c;
+
+  IF coalesce(cardinality(v_ids), 0) = v_limit THEN
+    RETURN QUERY
+    SELECT q.id, q.content, q.answer_format, q.answer_type, q.metadata, q.difficulty_band::integer,
+           q.learning_objective, q.difficulty_level
+    FROM public.questions q
+    WHERE q.id = ANY (v_ids)
+    ORDER BY array_position(v_ids, q.id);
+    RETURN;
+  END IF;
+
+  -- FALLBACK: the window held fewer than v_limit valid questions (many inactive, served or unservable
+  -- rows near the level, or a small bank). The full search over the subject — the definition.
   RETURN QUERY
   SELECT q.id, q.content, q.answer_format, q.answer_type, q.metadata, q.difficulty_band::integer,
          q.learning_objective, q.difficulty_level
@@ -253,7 +349,7 @@ BEGIN
       WHERE qi.student_id = p_student_id AND qi.question_id = q.id
     )
   ORDER BY abs(q.difficulty_level - p_level), md5(p_student_id::text || q.id::text), q.id
-  LIMIT least(greatest(coalesce(p_limit, 50), 1), 100);
+  LIMIT v_limit;
 END;
 $$;
 

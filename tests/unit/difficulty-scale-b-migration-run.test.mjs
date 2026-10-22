@@ -196,7 +196,9 @@ test("every new function is SECURITY INVOKER, search_path-pinned and EXECUTE for
         has_function_privilege('public', $1::regprocedure, 'EXECUTE') AS pub
       FROM pg_proc p WHERE p.oid = $1::regprocedure`, [`public.${f}`]);
     assert.equal(row.prosecdef, false, `${f} must be SECURITY INVOKER`);
-    assert.deepEqual(row.proconfig, ["search_path=public, pg_temp"], `${f} search_path`);
+    // The candidate search also plans with the call's values (its window needs real row estimates).
+    assert.deepEqual(row.proconfig, f.startsWith("get_level_questions_for_student")
+      ? ["search_path=public, pg_temp", "plan_cache_mode=force_custom_plan"] : ["search_path=public, pg_temp"], `${f} config`);
     assert.deepEqual([row.anon, row.auth, row.pub, row.svc], [false, false, false, true], f);
   }
   assert.doesNotMatch(B, /SECURITY DEFINER\s*\n/, "no SECURITY DEFINER in executable SQL");
