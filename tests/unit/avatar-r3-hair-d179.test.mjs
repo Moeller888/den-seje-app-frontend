@@ -21,6 +21,8 @@ const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.json").toString("utf8"));
 const PRE = preD179Contract(LIVE);
 const V2 = LIVE.hairMethod.methodV2;
+// the v2 CLI runs with an explicit allowlist environment, never this process's environment (D-142 / D-145 guard)
+const CLI_ENV = Object.freeze({ SystemRoot: process.env.SystemRoot ?? "" });
 
 test("D-179 adds exactly hairMethod.methodV2; the contract minus it is the D-178 merge, and the older chain still holds", () => {
   assert.equal(sha256(JSON.stringify(PRE)), PRE_D179_CONTRACT_CANONICAL_SHA256, `canonical contract at ${PRE_D179_COMMIT}`);
@@ -110,13 +112,13 @@ test("the v2 CLI: the A4 proposal is printed as a review aid; production refuses
     const px = new Uint8ClampedArray(1024 * 1024 * 4);
     for (let y = 200; y < 600; y++) for (let x = 200; x < 824; x++) { const inV = y > 300 && Math.abs(x - 600) < (y - 300) * 0.5 + 0.5; const inFace = y > 450 && x > 320 && x < 760; if (!inV && !inFace) { const o = (y * 1024 + x) * 4; px[o] = px[o + 1] = px[o + 2] = 150; px[o + 3] = 255; } }
     const sheet = join(dir, "sheet.png"); writeFileSync(sheet, encodePng(1024, 1024, px));
-    const r = spawnSync(process.execPath, [join(REPO, "tools/avatar/r3-hair-compose-v2.mjs"), "--propose-a4", sheet, "--a9", "320,450", "--a10", "760,450"], { encoding: "utf8" });
+    const r = spawnSync(process.execPath, [join(REPO, "tools/avatar/r3-hair-compose-v2.mjs"), "--propose-a4", sheet, "--a9", "320,450", "--a10", "760,450"], { env: CLI_ENV, encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const out = JSON.parse(r.stdout);
     assert.match(out.status, /A4 PROPOSAL ONLY/);
     assert.deepEqual([out.ok, out.units, out.xy, out.outputWritten], [true, "sheet px", [600.5, 301], false]);
     writeFileSync(join(dir, "ann.json"), "{}");
-    const p = spawnSync(process.execPath, [join(REPO, "tools/avatar/r3-hair-compose-v2.mjs"), "--sheet", sheet, "--annotation", join(dir, "ann.json"), "--face", "x", "--eyes-fixed", "x", "--iris", "x", "--out", join(REPO, "tools/avatar/build/never-written"), "--targets", join(REPO, "tools/avatar/fixtures/r3-hair/targets-hair-v1.json")], { encoding: "utf8" });
+    const p = spawnSync(process.execPath, [join(REPO, "tools/avatar/r3-hair-compose-v2.mjs"), "--sheet", sheet, "--annotation", join(dir, "ann.json"), "--face", "x", "--eyes-fixed", "x", "--iris", "x", "--out", join(REPO, "tools/avatar/build/never-written"), "--targets", join(REPO, "tools/avatar/fixtures/r3-hair/targets-hair-v1.json")], { env: CLI_ENV, encoding: "utf8" });
     assert.equal(p.status, 2);
     assert.deepEqual([JSON.parse(p.stdout).code, JSON.parse(p.stdout).outputWritten], ["TARGETS_NOT_PINNED", false]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
