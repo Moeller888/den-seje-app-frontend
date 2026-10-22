@@ -56,6 +56,31 @@ test("LEVEL_ENGINE unset: index.ts keeps today's calls, word for word, behind th
   assert.equal((INDEX.match(/Deno\.env\.get\("LEVEL_ENGINE"\)/g) ?? []).length, 1);
 });
 
+test("both flags on: one selection path, one level update, never #351's band fold or candidate window", async () => {
+  // index.ts: the level branch and the two mix branches are mutually exclusive (if / else if / else), the
+  // level engine is called once, and only from the level branch.
+  const step2 = INDEX.slice(INDEX.indexOf("let sortedQuestions: any[];"), INDEX.indexOf("let inserted = null;"));
+  const levelAt = step2.indexOf('if (route.newQuestions === "level" || route.newQuestions === "level+mix") {');
+  const mixAt = step2.indexOf('} else if (mixEngine === "v2") {');
+  assert.ok(levelAt >= 0 && mixAt > levelAt, "level branch first, then else-if mix");
+  assert.equal((INDEX.match(/await loadLevelPlan\(/g) ?? []).length, 1);
+  assert.ok(step2.indexOf("await loadLevelPlan(") < mixAt, "loadLevelPlan only inside the level branch");
+  assert.ok(step2.indexOf("await loadFormatMixPlan(") > mixAt, "loadFormatMixPlan only in the mix branches");
+  // One ordered list, one insert loop: the first successful insert wins, then the loop breaks.
+  assert.equal((INDEX.match(/for \(const q of sortedQuestions\)/g) ?? []).length, 1);
+  // level+mix through the flow: exactly the level RPCs and the history read — no advance_student_band, no
+  // get_question_candidates_for_student, so neither the band nor a second candidate window is touched.
+  const c = stub({
+    [LEVEL_RPC]: { data: LEVEL_ROW, error: null },
+    [LEVEL_CANDIDATES_RPC]: { data: CANDS, error: null },
+    history: { data: [], error: null },
+  });
+  await loadLevelPlan(c, { ...INPUT, mixEngine: "v2" });
+  const rpcs = c.calls.filter((x) => x[0] === "rpc").map((x) => x[1]);
+  assert.deepEqual(rpcs, [LEVEL_RPC, LEVEL_CANDIDATES_RPC]);
+  assert.ok(!rpcs.includes("advance_student_band") && !rpcs.includes("get_question_candidates_for_student"));
+});
+
 test("step rule (B3): max(15, round(150/sqrt(n+1))); +step correct, −3·step incorrect; clamped 1..10000", () => {
   assert.deepEqual([0, 1, 2, 3, 8, 98, 99, 1000].map(levelStep), [150, 106, 87, 75, 50, 15, 15, 15]);
   assert.deepEqual(foldLevel({ level: 143, answered: 0 }, [true]), { level: 293, answered: 1 });

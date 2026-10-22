@@ -109,83 +109,76 @@ Al tilbagerulning af skema kræver ejerens godkendelse ligesom anvendelsen.
 
 ## 4. Query-planer
 
-Målt i PGlite (PostgreSQL 18, WebAssembly) med en database i produktionsstørrelse: 5.143 opgaver
-(2.143 som i produktion + 3.000 niveausatte engelskopgaver, alle **aktive** som efter aktivering) og
-30.000 besvarede instanser (200 elever × 150). Planerne viser, hvilke indeks der bruges. Tiderne er
-WebAssembly-tider og ligger væsentligt over native Postgres, så tallene skal måles igen i produktion
-(§2.5).
+### 4.1 PostgreSQL 17.10 (rigtig server), 6.090 aktive engelskopgaver
+Målt 2026-10-22 på en lokal PostgreSQL 17.10-server (`embedded-postgres`, samme major-version som
+produktionens 17.6) med `EXPLAIN (ANALYZE, BUFFERS)`. Datasættet: 2.143 opgaver formet som i
+produktion, plus 5.000 aktive engelskopgaver med niveau 1–10.000, i alt **6.090 aktive engelske**.
+Desuden 300 elever × 200 besvarelser (60.000 instanser). Maskinen var under hukommelsespres, så de
+absolutte tider svinger mellem kørsler. Forholdet mellem varianterne er stabilt.
 
-| Forespørgsel | Plan (kort) | Tid (PGlite) |
+| Variant | Plan (kort) | `EXPLAIN ANALYZE` (2 kørsler) |
 |---|---|---|
-| Kandidatvalg, engelsk (4.090 kandidater) | Bitmap Index Scan på `unique_active_objective_level` (learning_objective) → Hash Anti Join mod `idx_student_question_instance` (Index Only Scan) → top-N heapsort | 286 ms, heraf ~235 ms i `question_is_servable()` pr. række |
-| Kandidatvalg, historie (1.053) | Samme plan | 56 ms |
-| Fold-udvalg (150 svar) | Index Scan på `idx_student_question_instance` (student_id) → Merge Join med `questions_pkey` → Anti Join mod fold-loggen | 8 ms |
-| Udtømningstjek (gentagelse) | Merge Anti Join, stopper ved første træf | 0,5 ms |
-| `advance_student_level`, første kald (150 svar foldes) | — | 42 ms |
-| `advance_student_level`, gentaget kald (intet nyt) | — | 4 ms |
+| **A. Kandidatvalg som i migration B** | Bitmap Index Scan på `unique_active_objective_level` (learning_objective) → Bitmap Heap Scan med **filter `question_is_servable()` på alle 6.090 rækker** → Hash Anti Join mod `idx_student_question_instance` (Index Only Scan, 200 rækker) → top-N heapsort over 5.931 rækker | 51 ms / 178 ms, 165 buffers |
+| B. Samme uden `question_is_servable` | Seq Scan + Hash Right Anti Join + top-N heapsort | 18 ms / 40 ms |
+| C. Vindue: nærmeste 2×300 via `idx_questions_objective_level`, derefter filtrering (kun målt, ikke implementeret) | To Index Scans (frem og baglæns) på `idx_questions_objective_level` med `LIMIT 300` → servable-filter på 600 rækker → Anti Join → top-N | **22 ms**, 29 buffers, **samme 50 opgaver som A** |
+| `advance_student_level`, gentaget kald | — | 6–9 ms (median, klienttid) |
 
-<details><summary>Fulde planer</summary>
+**Flaskehalsen** er `question_is_servable()` (#351). Den har `SET search_path` og kan derfor ikke
+inlines, så den kaldes som en selvstændig funktion pr. række: 6.090 kald ≈ 33–125 ms. Næst efter
+kommer `md5(student_id || id)` og sorteringen over alle kandidater. Begge vokser lineært med antallet
+af aktive opgaver i faget.
+
+**Forventet effekt ved ≥ 5.000 aktive engelskopgaver:**
+- **A (som nu):** cirka 50–180 ms pr. ny opgave, og tiden stiger lineært med indholdet. Det er over
+  grænsen på 50 ms fra §2.5.
+- **C:** læser et fast vindue på 600 rækker uanset størrelsen på banken og giver ~22 ms. Den kræver
+  en fallback (udvid vinduet eller kør A), når eleven har fået alle 600 nærmeste.
+
+**Anbefaling:** inden `LEVEL_ENGINE=v1` skal C implementeres i en opdatering af migration B (med test
+af fallback). Det er en separat beslutning (R1).
+
+<details><summary>Fuld plan, variant A (PostgreSQL 17.10)</summary>
 
 ```
-Kandidatvalg (engelsk, niveau 6000, LIMIT 50)
-Limit (actual time=285.395..285.579 rows=50.00 loops=1)
-  ->  Sort (actual time=285.382..285.458 rows=50.00 loops=1)
+Limit  (cost=2043.93..2044.06 rows=50 width=52) (actual time=51.109..51.114 rows=50 loops=1)
+  Buffers: shared hit=165
+  ->  Sort  (actual time=51.107..51.110 rows=50 loops=1)
         Sort Key: (abs((q.difficulty_level - 6000))), (md5((student || (q.id)::text))), q.id
-        Sort Method: top-N heapsort  Memory: 28kB
-        ->  Hash Anti Join (actual time=5.675..273.432 rows=4015.00 loops=1)
+        Sort Method: top-N heapsort  Memory: 36kB
+        ->  Hash Anti Join  (actual time=0.302..50.058 rows=5931 loops=1)
               Hash Cond: (q.id = qi.question_id)
-              ->  Bitmap Heap Scan on questions q (actual time=3.096..238.457 rows=4090.00 loops=1)
+              ->  Bitmap Heap Scan on questions q  (actual time=0.235..39.066 rows=6090 loops=1)
                     Recheck Cond: ((learning_objective = ANY ('{english}'::text[])) AND is_active)
                     Filter: ((difficulty_level IS NOT NULL) AND question_is_servable(answer_format, answer_type, content))
-                    ->  Bitmap Index Scan on unique_active_objective_level (rows=4090.00)
+                    Heap Blocks: exact=152
+                    ->  Bitmap Index Scan on unique_active_objective_level  (actual time=0.102..0.102 rows=6090 loops=1)
                           Index Cond: (learning_objective = ANY ('{english}'::text[]))
-              ->  Hash (rows=150.00)
-                    ->  Index Only Scan using idx_student_question_instance on question_instances qi (rows=150.00)
+              ->  Hash  (actual time=0.049..0.049 rows=200 loops=1)
+                    ->  Index Only Scan using idx_student_question_instance on question_instances qi (rows=200)
                           Index Cond: (student_id = '…'::uuid)  Heap Fetches: 0
-Execution Time: 285.911 ms
-
-Fold-udvalg (advance_student_level)
-Sort (actual time=7.644..7.746 rows=75.00 loops=1)
-  Sort Key: qi.answered_at, qi.id
-  ->  Nested Loop Anti Join (rows=75.00)
-        Join Filter: (f.question_instance_id = qi.id)
-        ->  Merge Join (rows=75.00)
-              Merge Cond: (qi.question_id = q.id)
-              ->  Index Scan using idx_student_question_instance on question_instances qi (rows=150.00)
-                    Index Cond: (student_id = '…'::uuid)
-                    Filter: (answered AND (was_correct IS NOT NULL) AND (answered_at IS NOT NULL) AND (teacher_score IS NULL) AND (repeat_count = 0))
-              ->  Index Scan using questions_pkey on questions q (rows=1091.00)
-                    Filter: ((COALESCE(answer_type, 'short'::text) <> 'long'::text) AND (learning_objective = 'english'::text))
-        ->  Seq Scan on student_level_fold_log f (rows=0.00)   -- tom tabel; med data bruges primærnøglen
-Execution Time: 8.056 ms
-
-Udtømningstjek (request_repeat_level_question_for_student)
-Result
-  InitPlan 1
-    ->  Merge Anti Join (rows=1.00)
-          ->  Index Scan using questions_pkey on questions q (rows=1.00)
-                Filter: (is_active AND (difficulty_level IS NOT NULL) AND (learning_objective = ANY ('{english}'::text[])) AND question_is_servable(...))
-          ->  Index Only Scan using idx_student_question_instance on question_instances qi (rows=1.00)
-Execution Time: 0.485 ms
+Planning Time: 0.288 ms
+Execution Time: 51.145 ms
 ```
 </details>
 
-Bemærkninger:
-- Planneren vælger `unique_active_objective_level` frem for A's `idx_questions_objective_level`. Begge
-  starter med `learning_objective`, så resultatet er det samme. A's indeks bliver relevant, når
-  sorteringen flyttes ind i indekset (R1).
-- Fold-forespørgslen bruger de eksisterende indeks. B's `idx_qi_student_answered` er tilføjet til den,
-  men blev ikke valgt ved 150 svar pr. elev. Den bliver relevant ved længere historik.
+### 4.2 PGlite (WebAssembly), til sammenligning
+5.143 opgaver (3.000 af dem niveausatte og aktive) og 30.000 instanser: kandidatvalg engelsk 286 ms,
+historie 56 ms, fold-udvalg 8 ms, udtømningstjek 0,5 ms. Samme planform som på PostgreSQL 17.
 
----
+### 4.3 Samtidighed på en rigtig server
+`tests/unit/difficulty-scale-b-concurrency.test.mjs` kører mod en rigtig PostgreSQL med flere
+samtidige forbindelser, når `LEVEL_ENGINE_PG_URL` peger på en server, der må smides ud bagefter. Uden
+den springes testen over med en begrundelse. Kørt 2026-10-22 mod PostgreSQL 17.10: 6/6 grønne
+(ACL'er, samme første svar sendt to gange samtidig, otte samtidige kald for en helt ny elev, låsen ses
+i `pg_stat_activity`, to samtidige valg af samme kandidat giver kun én instans).
 
 ## 5. Åbne risici
 
 | # | Risiko | Afbødning |
 |---|---|---|
-| R1 | Kandidatvalget evaluerer `question_is_servable()` for **alle** fagets aktive opgaver pr. kald (funktionen har `SET search_path` og kan derfor ikke inlines). Det vokser lineært med indholdet: ~4.000 engelskopgaver efter aktivering | Mål i produktion (§2.5, grænse 50 ms). Er det for langsomt: hent først de nærmeste N efter niveau via `idx_questions_objective_level` (et vindue på begge sider af elevens niveau), filtrér dem og udvid vinduet, kun hvis der er for få |
+| R1 | Kandidatvalget evaluerer `question_is_servable()` for **alle** fagets aktive opgaver pr. kald (funktionen har `SET search_path` og kan derfor ikke inlines): 51–178 ms ved 6.090 aktive engelske på PostgreSQL 17 (§4.1), lineært voksende | Variant C (vindue via `idx_questions_objective_level`) giver de samme 50 opgaver på ~22 ms. Den bør implementeres med fallback, før `LEVEL_ENGINE=v1`. Det er en separat beslutning. Mål desuden i produktion (§2.5) |
 | R2 | Flaget er globalt, så der er ingen pilot på enkelte elever | Aktivér på et roligt tidspunkt, test straks med en testelev og rul tilbage ved at fjerne flaget (§2.6) |
 | R3 | Første kald folder hele elevens historik i faget. Elever med lang historik flyttes mange niveauer på én gang | Det er tilsigtet: den tidligere historik giver det bedste startestimat. Trinene bliver mindre med antal svar. Kan ses i fold-loggen |
-| R4 | Ægte samtidighed er kun bevist via rækkelåsen og primærnøglen, ikke ved et kapløb (PGlite har kun én forbindelse) | Rækkelås + `ON CONFLICT DO NOTHING` på fold-loggens primærnøgle gør dobbelt-foldning umulig, selv uden låsen. Kan testes mod en rigtig Postgres i staging |
+| R4 | Samtidighedstesten kører kun, når der er en rigtig PostgreSQL (`LEVEL_ENGINE_PG_URL`). GitHub CI har ingen, så den springes over dér | Kørt lokalt mod PostgreSQL 17.10: 6/6 (§4.3). Skal den køre i CI, kræver det en Postgres-service i workflowen eller en dev-afhængighed (ejerbeslutning) |
 | R5 | Placeringstesten måler kun historie, så engelsk og dansk starter på klassetrinnets startbånd | Bevidst (B9 er udskudt). De store første trin flytter eleven hurtigt |
 | R6 | Indholdets egne tests bruger stadig et forenklet skema | Kørt én gang 2026-10-22: alle 18 indholdsfiler (3.000 rækker) indsat på det produktionstro skema efter #351 → A → B, alle inaktive og mærket, niveau 1–3.000 (`batch6`) og 3.001–10.000 (de øvrige). Opgave-PR'ernes egne tests skal flyttes over på `tests/unit/helpers/prod-base-schema.mjs`, når #356 og B er merget |
