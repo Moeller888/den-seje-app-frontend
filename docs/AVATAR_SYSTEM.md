@@ -221,6 +221,26 @@ art layer behind them can be upgraded without a rewrite.
     - faint tone patches on the forehead.
   - **Illustration.** The report shows an illustrative coverage mask of a shorter haircut. It is not a hairstyle.
   - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-189**.
+- **R3 review variant "northstar-brow" — the image-left brow completed by the D-158 mirroring; nothing approved (D-190, as of 2026-10-22).**
+  **D-190 (2026-10-22)** completes the brow that the hair lock hid. The D-189 variant is the unchanged baseline.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-brow --out <empty dir>`. The generator is
+    `tools/avatar/r3-northstar-brow.mjs`, and the files live in `tools/avatar/fixtures/r3-northstar-brow/`.
+  - **Method (D-158).** The visible image-right brow is mirrored about the measured midline x = 509.79, the midpoint
+    of the eye components' centroids.
+    - The fit is lexicographic: no pixel on safe skin, then the highest IoU where the brow is observable, then the
+      smallest deviation.
+    - The result is translation only, (-3, +4), with 0 px on safe skin. It is D-158's
+      own place within 1 px.
+  - **Completion.** The mirror fills only the area the hair hid, and only where the observed brow had no pixel. Every
+    observed pixel is kept, and 496 px are reconstructed.
+  - **With hair.** The composite changes by at most 2/255, all under opaque hair.
+  - **Open areas.**
+    - small observed hair-edge remnants at the brow's upper right;
+    - the mirrored light direction in the filled part;
+    - the sclera behind the iris;
+    - new expressions;
+    - the D-158 (h) judgements.
+  - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-190**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
