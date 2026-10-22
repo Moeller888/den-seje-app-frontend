@@ -9,9 +9,12 @@ on:
 # Both this regen and playwright.yml mutate/read the SAME shared Supabase test student
 # profile. Serialize them across the whole repo so a concurrent full suite cannot bleed
 # state (e.g. equipped cosmetics) into these goldens. Queue, do not cancel.
+# `queue: max` matches the playwright.yml `test` job: waiting runs line up FIFO instead of a
+# new arrival cancelling the pending one (see the comment there and tests/unit/ci-e2e-queue.test.mjs).
 concurrency:
   group: e2e-shared-supabase
   cancel-in-progress: false
+  queue: max
 
 jobs:
   update:

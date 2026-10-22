@@ -177,6 +177,16 @@ jobs:
           || 'e2e-shared-supabase'
         }}
       cancel-in-progress: false
+      # FIFO queue, not displacement. With the default (`queue: single`) a group holds one running
+      # and ONE pending job, and every newly queued job CANCELS the pending one — with a 35–45 min
+      # serial suite and several pushers, that cancelled PR and main runs that had merely been
+      # waiting (9 of 53 runs, 2026-10-09…18). `queue: max` lets up to 100 jobs wait and runs them
+      # one at a time in FIFO order. It changes only the WAITING; the group is unchanged, so at
+      # most one job ever RUNS against the shared test data. Must stay paired with
+      # cancel-in-progress: false (GitHub rejects max + true) and must match
+      # update-avatar-goldens.yml, which takes the same group. Guarded by
+      # tests/unit/ci-e2e-queue.test.mjs.
+      queue: max
     # E2E global-setup (tests/global-setup.ts) reads Supabase + test-account creds from
     # process.env via repository Actions secrets. Values live ONLY in GitHub Secrets. If a
     # secret is unset the reference resolves to empty and CI stays red at global-setup (no
