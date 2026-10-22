@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "r3-hair-annotation-v2",
   "title": "R3 hair — source annotation v2 on ONE generated hair sheet (D-179, registration v2)",
-  "description": "Separate METADATA for one raw 1024x1024 hair sheet, never a pixel change. Coordinates are SHEET px, continuous (pixel i covers [i, i+1)); targets and every placed-layer check are MASTER px, and a sheet uncertainty u becomes u * s master px after the fit. The three fit points (A4, A9, A10) are required and must be IDENTIFIED: a NOT_IDENTIFIABLE fit point rejects, there is no reduced fit. A4 may start from the tool's automatic proposal (proposeA4), which is a review aid only. A9 and A10 are each read twice (repeated reading, preferably with the first reading hidden during the second pass); this is a reading protocol, not evidence of statistical independence. The two temple locks (A7, A8) are documented as separate locks for HP-LOCK. Only an owner-APPROVED annotation is used in production.",
+  "description": "Separate METADATA for one raw 1024x1024 hair sheet, never a pixel change. Coordinates are SHEET px, continuous (pixel i covers [i, i+1)); targets and every placed-layer check are MASTER px, and a sheet uncertainty u becomes u * s master px after the fit. The three fit points (A4, A9, A10) are required and must be IDENTIFIED: a NOT_IDENTIFIABLE fit point rejects, there is no reduced fit. A4 may start from the tool's automatic proposal (proposeA4), which is a review aid only. A9 and A10 are each read twice under the same point definition; the second reading is made with the first reading hidden, and each reading carries its marked crop for owner review. This is a reading protocol: it guarantees neither correctness nor statistical independence, and a systematic misinterpretation can repeat itself. A point that cannot be identified unambiguously is NOT_IDENTIFIABLE and rejects. The two temple locks (A7, A8) are documented as separate locks for HP-LOCK. Only an owner-APPROVED annotation is used in production.",
   "type": "object",
   "required": ["schema", "version", "status", "raw", "annotator", "units", "fitPoints", "locks"],
   "additionalProperties": false,
@@ -49,6 +49,8 @@
   },
   "$defs": {
     "pt": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1024 }, "minItems": 2, "maxItems": 2 },
+    "definition": { "enum": ["r3-hair-v2:A9-ear-top-junction", "r3-hair-v2:A10-ear-top-junction"] },
+    "crop": { "type": "object", "required": ["file", "sha256"], "additionalProperties": false, "properties": { "file": { "type": "string", "minLength": 1 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } },
     "earJunction": {
       "type": "object",
       "required": ["status", "xy", "uncertaintySheetPx"],
@@ -59,8 +61,12 @@
         "uncertaintySheetPx": { "const": 4 },
         "reason": { "type": "string" },
         "readings": {
+          "description": "D-179 owner rule: reading 2 is made with reading 1 hidden; both follow the same point definition and each carries its marked crop for owner review. Both readings and the approved xy lie within 4 sheet px of each other, and the approved xy is one of the two readings (never an average). A larger disagreement is investigated and the point read again. A hidden repeat guarantees neither correctness nor statistical independence: a systematic misinterpretation can repeat itself.",
           "type": "array", "minItems": 2, "maxItems": 2,
-          "items": { "type": "object", "required": ["xy"], "additionalProperties": false, "properties": { "xy": { "$ref": "#/$defs/pt" }, "pass": { "enum": [1, 2] }, "firstReadingHidden": { "type": "boolean" } } }
+          "prefixItems": [
+            { "type": "object", "required": ["xy", "pass", "definition", "crop"], "additionalProperties": false, "properties": { "xy": { "$ref": "#/$defs/pt" }, "pass": { "const": 1 }, "definition": { "$ref": "#/$defs/definition" }, "crop": { "$ref": "#/$defs/crop" } } },
+            { "type": "object", "required": ["xy", "pass", "firstReadingHidden", "definition", "crop"], "additionalProperties": false, "properties": { "xy": { "$ref": "#/$defs/pt" }, "pass": { "const": 2 }, "firstReadingHidden": { "const": true }, "definition": { "$ref": "#/$defs/definition" }, "crop": { "$ref": "#/$defs/crop" } } }
+          ]
         }
       }
     },

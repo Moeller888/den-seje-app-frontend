@@ -5368,11 +5368,11 @@
     "methodV2": {
       "decision": "D-179",
       "adoptedOn": "2026-10-22",
-      "status": "ADOPTED — REGISTRATION V2 FOR FUTURE HAIR SHEETS OF assets[8] — TARGETS V2 APPROVED (D-174 COORDINATES, NEW ROLES) — THRESHOLDS PROPOSED FROM THE DOCUMENTED NOISE MODEL — PROMPT V3 A DRAFT — NO IMAGE REQUEST AUTHORISED",
+      "status": "ADOPTED — REGISTRATION V2 FOR FUTURE HAIR SHEETS OF assets[8] — TARGETS V2 APPROVED (D-174 COORDINATES, NEW ROLES) — THRESHOLDS APPROVED BY THE OWNER — PROMPT V3 A DRAFT — NO IMAGE REQUEST AUTHORISED",
       "isAuthorisation": false,
       "authorisesImageRequest": false,
       "authorisesUpload": false,
-      "scope": "Applies only to FUTURE hair sheets of assets[8] r3-hair-northstar made under a NEW owner decision (its own capacity, call-id, claim and frozen prompt). The D-174 method above (v1: lock-tip fit, HP1 3.0 px, crown rows <= 199) stays unchanged and in force for the records of D-174 .. D-178. D-177's sheet keeps its historical status (kept for review, D-178) and is never approved, re-annotated or placed under v2.",
+      "scope": "Applies only to FUTURE hair sheets of assets[8] r3-hair-northstar made under a NEW owner decision (its own capacity, call-id, claim and frozen prompt). The D-174 method above (v1: lock-tip fit, HP1 3.0 px, crown rows <= 199) stays unchanged and in force for the records of D-174 .. D-178. D-177's sheet keeps its historical status (kept for review, D-178) and is never approved, re-annotated or placed under v2. The D-179 thresholds are never used to reclassify D-177.",
       "ownerPrinciples": [
         "Fit on A4, A9 and A10 with ONE positive uniform scale and a translation.",
         "The same target coordinates as D-174; no silent move.",
@@ -5392,7 +5392,11 @@
         "definitions": {
           "centreHairline (A4)": "the top of the parting: the apex of the V where the fringe parts, i.e. the highest point of the face opening at the parting, on the hair contour",
           "leftEarTopJunction (A9) / rightEarTopJunction (A10)": "the inner lower corner of the side hair above each ear, where the hair's short lower edge meets the contour towards the face",
-          "hiddenHeadPoints": "Points of the head hidden under the hair (cranium top, ear top) are never fit points: they cannot be read on an isolated sheet."
+          "hiddenHeadPoints": "Points of the head hidden under the hair (cranium top, ear top) are never fit points: they cannot be read on an isolated sheet.",
+          "definitionIds": {
+            "leftEarTopJunction (A9)": "r3-hair-v2:A9-ear-top-junction",
+            "rightEarTopJunction (A10)": "r3-hair-v2:A10-ear-top-junction"
+          }
         },
         "targetProvenance": "A4 and A9 are MEASURED_ANNOTATION readings on Northstar Master v2; A10 is a DESIGN_POINT reconstructed on the adopted head geometry and keeps that status as a fit point (targets-hair-v2 provenance).",
         "noReducedFit": "A fit point that is missing or NOT_IDENTIFIABLE rejects the sheet (FIT_POINT_MISSING / FIT_POINT_NOT_IDENTIFIABLE). The fit never drops a point.",
@@ -5402,7 +5406,7 @@
           "searchArea": "flood fill of transparent pixels, 4-connected, from every transparent pixel of the sheet's bottom row, restricted to the column band floor(min(A9.x, A10.x)) .. ceil(max(A9.x, A10.x)) - 1 of the two ear-junction readings, so the fill cannot reach the background above the hair",
           "result": "the highest filled pixel (smallest y; ties: smallest x), reported as its top-edge centre [x + 0.5, y] in sheet px"
         },
-        "repeatedReading": "A9 and A10 are each read twice, preferably with the first reading hidden during the second pass. Both readings and the approved xy must lie within 4 sheet px of each other, otherwise the point is read again (FIT_READINGS_DISAGREE). This is a repeated-reading protocol, not evidence of statistical independence.",
+        "repeatedReading": "MANDATORY (owner, D-179): A9 and A10 are each read twice under the same point definition (definitionIds); the second reading is made with the first reading hidden; each reading carries its marked crop (file + sha256) for owner review. Both readings and the approved xy must lie within 4 sheet px of each other, otherwise the disagreement is investigated and the point read again (FIT_READINGS_DISAGREE); the approved xy is one of the two readings, never an average or other derived value (FIT_POINT_NOT_A_READING). A hidden repeat guarantees neither correctness nor statistical independence: a systematic misinterpretation can repeat itself. A point that cannot be identified unambiguously is NOT_IDENTIFIABLE and rejects.",
         "approval": "Source annotations still need the owner's APPROVED status per sheet (annotation-hair-v2); the tool proposes nothing that counts as approval."
       },
       "shapeChecks": {
@@ -5433,9 +5437,9 @@
         "inheritedUnchanged": "H1..H5 and HP5..HP8 with every v1 threshold and zone (hairMethod.thresholds and hairMethod.zones above)"
       },
       "thresholdStatus": {
-        "status": "PROPOSED from the documented noise model and fixed BEFORE any v2 hair call. hairMethod.thresholdRule applies: changing one is a new owner decision before a call, never after seeing an output.",
-        "openOwnerDecision": "The study's first proposal (5.5 px, 0.07; scale 0.55..0.62 only) does NOT hold over the whole allowed range: at s 0.85 the q99.9 is 5.79 px and 0.076. The tool therefore uses the worst-case values 6.0 px and 0.08. Alternative for the owner: keep 5.5 / 0.07 and narrow scaleRange to 0.35..0.65.",
-        "crownZone": "crownMaxY 194 = A4.y 200 - 3 (target uncertainty) - 2 (anti-aliasing) - 1. Derived from the target geometry, not from any sheet. Scalp holes stay HP5's job; anti-aliasing at the parting is part of the face opening.",
+        "status": "APPROVED by the owner (D-179, 2026-10-22) for future v2 hair attempts, fixed BEFORE any v2 hair call. hairMethod.thresholdRule applies: changing one is a new owner decision before a call, never after seeing an output. They never reclassify D-177.",
+        "openOwnerDecision": "CLOSED: the owner approved 6.0 px / 0.08 over the whole scale range 0.35..0.85. Record: the study's first proposal (5.5 px, 0.07; scale 0.55..0.62 only) did not hold at s 0.85, where the q99.9 is 5.79 px and 0.076; the alternative of narrowing the scale range to 0.35..0.65 was not chosen.",
+        "crownZone": "crownMaxY 194 = A4.y 200 - 3 (target uncertainty) - 2 (anti-aliasing) - 1. Derived from the target geometry, not from any sheet. Scalp holes stay HP5's job; anti-aliasing at the parting is part of the face opening. HP5 stays unchanged; no tolerance for pixel-sized holes.",
         "notFittedToD177": "No threshold was derived from or adjusted to the D-177 sheet."
       },
       "simulation": {
@@ -5510,7 +5514,7 @@
       },
       "annotationSchema": {
         "file": "tools/avatar/fixtures/r3-hair/annotation-hair-v2.schema.json",
-        "sha256": "fde11087518dbcda5ece352008be0cf2c09f84a8ab003facd0ab52ded2189e54"
+        "sha256": "4741580cb87a1eac6f916cacbe1f0e4f666b40986944f87d830a518cea8498d4"
       },
       "promptV3": {
         "file": "tools/avatar/fixtures/r3-hair/prompt-hair-sheet-v3.txt",
@@ -5548,7 +5552,12 @@
         "a runtime change or the wiring of ramp B",
         "a new runtime layer for the nape lock",
         "afro, short or headwear"
-      ]
+      ],
+      "ownerDecisionsClosed": {
+        "thresholds": "APPROVED by the owner: seat residual <= 6.0 master px, |sx/sy - 1| <= 0.08, scale range 0.35..0.85. They apply to FUTURE v2 hair attempts only and are never used to reclassify D-177. The noise model and its limits stay documented in methodV2.simulation.",
+        "reading": "The second reading of A9 and A10 is made with the first reading hidden. The agreement limit stays 4 sheet px; a larger difference is investigated and the point read again; the approved xy is one of the two readings and never an automatic average. Both readings follow the same unambiguous point definition and are shown with marked crops for owner review. A hidden repeat guarantees neither correctness nor statistical independence: a systematic misinterpretation can repeat itself. A point that cannot be identified unambiguously is rejected as NOT_IDENTIFIABLE; there is no reduced fit.",
+        "scalpHoles": "HP5 stays unchanged. This decision adds no tolerance for pixel-sized holes."
+      }
     }
   }
 }

@@ -69,13 +69,35 @@ test("registration, units and thresholds in the contract mirror the v2 tool exac
   assert.deepEqual(Object.values(t.lockWindowsMasterPx), [Number(w.leftTempleLockTip.toFixed(3)), Number(w.rightTempleLockTip.toFixed(3))]);
   assert.match(V2.registration.a4Proposal.status, /REVIEW AID ONLY/);
   assert.match(V2.registration.a4Proposal.alphaCriterion, /alpha < 16/);
-  assert.match(V2.registration.repeatedReading, /not evidence of statistical independence/);
+  assert.match(V2.registration.repeatedReading, /^MANDATORY/);
+  assert.match(V2.registration.repeatedReading, /second reading is made with the first reading hidden/);
+  assert.match(V2.registration.repeatedReading, /guarantees neither correctness nor statistical independence: a systematic misinterpretation can repeat itself/);
+  assert.match(V2.registration.repeatedReading, /never an average/);
+  assert.deepEqual(Object.values(V2.registration.definitions.definitionIds), ["r3-hair-v2:A9-ear-top-junction", "r3-hair-v2:A10-ear-top-junction"]);
   assert.match(V2.registration.targetProvenance, /A10 is a DESIGN_POINT/);
   assert.match(V2.thresholdStatus.openOwnerDecision, /5\.79 px and 0\.076/);
   assert.match(V2.simulation.status, /never an observed failure rate on a real asset/);
   assert.match(V2.shapeChecks["HP-LOCK"], /The window alone never proves/);
   assert.equal(V2.tools.library, "tools/avatar/r3-hair-tool-v2.mjs");
   assert.equal(TOOL_ID, "r3-hair-tool-v2");
+});
+
+test("the owner's closing decisions: thresholds approved (future attempts only, never D-177), mandatory hidden second reading, HP5 unchanged", () => {
+  const d = V2.ownerDecisionsClosed;
+  assert.match(d.thresholds, /^APPROVED by the owner: seat residual <= 6\.0 master px, \|sx\/sy - 1\| <= 0\.08, scale range 0\.35\.\.0\.85\./);
+  assert.match(d.thresholds, /never used to reclassify D-177/);
+  assert.match(d.reading, /made with the first reading hidden/);
+  assert.match(d.reading, /never an automatic average/);
+  assert.match(d.reading, /NOT_IDENTIFIABLE; there is no reduced fit/);
+  assert.match(d.scalpHoles, /^HP5 stays unchanged/);
+  assert.match(V2.thresholdStatus.status, /^APPROVED by the owner/);
+  assert.match(V2.thresholdStatus.openOwnerDecision, /^CLOSED/);
+  assert.match(V2.scope, /never used to reclassify D-177/);
+  assert.match(V2.simulation.knownLimits, /10 sheet px/, "the noise model's limits stay documented");
+  assert.deepEqual([LIVE.hairMethod.thresholds.holeAlphaBelow, LIVE.hairMethod.zones.faceSeed], [128, [511, 360]], "HP5's definition is v1's, unchanged");
+  const ear = JSON.parse(file(V2.annotationSchema.file).toString("utf8")).$defs.earJunction.properties.readings;
+  assert.deepEqual([ear.prefixItems[0].properties.pass.const, ear.prefixItems[1].properties.pass.const, ear.prefixItems[1].properties.firstReadingHidden.const], [1, 2, true]);
+  for (const it of ear.prefixItems) assert.ok(it.required.includes("crop") && it.required.includes("definition"));
 });
 
 test("the v2 files are pinned beside the untouched v1 files", () => {
@@ -128,7 +150,7 @@ test("register and docs record D-179", () => {
   const ps = file("docs/project-state.md").toString("utf8"), av = file("docs/AVATAR_SYSTEM.md").toString("utf8");
   const row = ps.split("\n").find((l) => l.startsWith("| **D-179** |"));
   assert.ok(row, "a D-179 row in the decision register");
-  for (const s of ["A4, A9 og A10", "A7 og A8", "ingen reduceret tilpasning", "6,0", "0,08", "≤ 194", "HP-LOCK", "HP-FRAG", "Prompt v3", "D-177", "default OFF"]) assert.ok(row.includes(s), s);
+  for (const s of ["A4, A9 og A10", "A7 og A8", "ingen reduceret tilpasning", "6,0", "0,08", "≤ 194", "HP-LOCK", "HP-FRAG", "Prompt v3", "D-177", "default OFF", "første aflæsning skjult", "aldrig et automatisk gennemsnit", "godkendt af ejeren", "genklassificere D-177", "HP5 får ingen ny tolerance"]) assert.ok(row.includes(s), s);
   assert.ok(!/Ã¦|Ã¸|Ã¥|�/.test(row), "no mojibake");
   assert.match(av, /D-179/);
 });

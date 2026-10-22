@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkHairSheet, insidePolygon, checkPlacedHair as checkPlacedHairV1, THRESHOLDS as THRESHOLDS_V1 } from "../../tools/avatar/r3-hair-tool.mjs";
-import { composeHair, proposeA4, fitSeat, checkLocks, checkFragments, checkPlacedHair, lockWindowsPx, validateTargets, axisScales, encodePng, decodePng, THRESHOLDS, FIT_POINTS, MANDATORY_LOCKS, CHECK_POINTS, ANNOTATION_SCHEMA, SHEET } from "../../tools/avatar/r3-hair-tool-v2.mjs";
+import { composeHair, proposeA4, fitSeat, checkLocks, checkFragments, checkPlacedHair, lockWindowsPx, validateTargets, axisScales, encodePng, decodePng, THRESHOLDS, FIT_POINTS, MANDATORY_LOCKS, POINT_DEFINITIONS, CHECK_POINTS, ANNOTATION_SCHEMA, SHEET } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import { fitUniformScaleTranslate } from "../../tools/avatar/r3-face-parts-tool.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -33,10 +33,13 @@ function synthSheet({ extra = [], hole = null, poly = SIL } = {}) {
   return px;
 }
 const sheetBuf = (px) => Buffer.from(encodePng(SHEET.w, SHEET.h, px));
+// D-179 owner rule: reading 2 with reading 1 hidden, one point definition, a marked crop per reading for owner review
+const reading = (k, xy, pass) => ({ xy, pass, ...(pass === 2 ? { firstReadingHidden: true } : {}), definition: POINT_DEFINITIONS[k], crop: { file: `crops/${k}-reading-${pass}.png`, sha256: "a".repeat(64) } });
+const readingsFor = (k, a, b = a) => [reading(k, a, 1), reading(k, b, 2)];
 const NOTCHES = { leftTempleLock: [[413, 246], [372, 286]], rightTempleLock: [[612, 224], [633, 292]] };   // master; technical
 function annotationFor(rawSha, edit = (a) => a) {
   const fp = (k, u) => ({ status: "IDENTIFIED", xy: toSheet(T(k)), uncertaintySheetPx: u });
-  const ear = (k) => ({ ...fp(k, 4), readings: [{ xy: toSheet(T(k)), pass: 1 }, { xy: toSheet(T(k)), pass: 2, firstReadingHidden: true }] });
+  const ear = (k) => ({ ...fp(k, 4), readings: readingsFor(k, toSheet(T(k))) });
   const lock = (lk) => ({ status: "IDENTIFIED", tip: toSheet(T(MANDATORY_LOCKS[lk])), flankingNotches: NOTCHES[lk].map(toSheet), evidence: "synthetic test lock: a separate protrusion between two notches" });
   return edit({ schema: ANNOTATION_SCHEMA, version: "synthetic-1", status: "SYNTHETIC_TEST_APPROVED", raw: { file: "synthetic", sha256: rawSha }, annotator: "test", units: "sheet-px",
     fitPoints: { centreHairline: { ...fp("centreHairline", 3), proposal: { tool: "r3-hair-tool-v2 proposeA4", xy: null } }, leftEarTopJunction: ear("leftEarTopJunction"), rightEarTopJunction: ear("rightEarTopJunction") },
@@ -131,6 +134,21 @@ test("a missing or unidentifiable fit point rejects; there is no reduced fit", (
   assert.equal(composeHair({ sheet: BASE_SHEET, annotation: annotationFor("0".repeat(64)), targets: TARGETS, mode: "synthetic-test", ...LAYERS }).code, "ANNOTATION_RAW_SHA_MISMATCH");
 });
 
+test("reading rules (owner, D-179): hidden second reading, one definition, marked crops, approved xy is a reading — never an average", () => {
+  const k = "rightEarTopJunction", xy = toSheet(T(k)), near = [xy[0] + 3, xy[1]];
+  const code = (edit) => compose(BASE, (a) => { edit(a.fitPoints[k]); return a; }).code;
+  assert.equal(code((p) => { delete p.readings[1].firstReadingHidden; }), "FIT_READING_NOT_HIDDEN");
+  assert.equal(code((p) => { p.readings[1].firstReadingHidden = false; }), "FIT_READING_NOT_HIDDEN");
+  assert.equal(code((p) => { p.readings[1].definition = POINT_DEFINITIONS.leftEarTopJunction; }), "FIT_READING_DEFINITION_MISMATCH", "both readings follow the same definition of THIS point");
+  assert.equal(code((p) => { delete p.readings[0].crop; }), "FIT_READING_CROP_MISSING");
+  assert.equal(code((p) => { p.readings[1].crop.sha256 = "not-a-hash"; }), "FIT_READING_CROP_MISSING");
+  assert.equal(code((p) => { p.readings.reverse(); }), "FIT_READINGS_ORDER_INVALID");
+  assert.equal(code((p) => { p.readings = readingsFor(k, xy, near); p.xy = [xy[0] + 1.5, xy[1]]; }), "FIT_POINT_NOT_A_READING", "the average of the two readings is not accepted");
+  assert.equal(compose(BASE, (a) => { a.fitPoints[k].readings = readingsFor(k, xy, near); return a; }).ok, true, "the approved xy may be either reading");
+  assert.equal(code((p) => { p.readings = readingsFor(k, xy, [xy[0] + 4.5, xy[1]]); }), "FIT_READINGS_DISAGREE", "4.5 > 4 sheet px: investigate and read again");
+  assert.equal(code((p) => { p.status = "NOT_IDENTIFIABLE"; p.xy = null; p.reason = "no unambiguous inner corner"; }), "FIT_POINT_NOT_IDENTIFIABLE");
+});
+
 test("edge cases: the seat residual is accepted up to 6.0 master px and rejected above, on the exact fit arithmetic", () => {
   const a9 = toSheet(T("leftEarTopJunction"));
   let seenPass = false, seenFail = false;
@@ -158,7 +176,7 @@ test("known misreading: one ear junction read 10 sheet px off is NOT caught by t
   const quiet = fitSeat(annotationFor("x", (a) => { a.fitPoints.leftEarTopJunction.xy = off; a.fitPoints.leftEarTopJunction.readings = [{ xy: off }, { xy: off }]; return a; }), TARGETS);
   assert.equal(quiet.ok, true, "a consistent misreading of 10 sheet px passes the seat fit");
   assert.ok(quiet.log.residualMaxMasterPx < THRESHOLDS.seatResidualMaxPx);
-  const caught = compose(BASE, (a) => { a.fitPoints.leftEarTopJunction.xy = off; a.fitPoints.leftEarTopJunction.readings = [{ xy: a9 }, { xy: off }]; return a; });
+  const caught = compose(BASE, (a) => { a.fitPoints.leftEarTopJunction.xy = off; a.fitPoints.leftEarTopJunction.readings = readingsFor("leftEarTopJunction", off, a9); return a; });
   assert.equal(caught.code, "FIT_READINGS_DISAGREE");
 });
 

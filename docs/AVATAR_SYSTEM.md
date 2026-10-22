@@ -237,12 +237,15 @@ art layer behind them can be upgraded without a rewrite.
     with D-174's coordinates unchanged (`targets-hair-v2.json`, roles only; A10 stays a reconstructed design point). A
     missing or unidentifiable fit point rejects; there is no reduced fit. Annotations are sheet px, targets master px.
   - **Reading.** An automatic A4 proposal (alpha < 16, flood fill inside the A9–A10 band) is a review aid only. A9/A10
-    are read twice (a repeated reading, not proof of independence). Source annotations still need owner approval.
+    are read twice under one point definition, the second time with the first reading hidden, both shown with marked
+    crops for owner review; a disagreement over 4 sheet px is investigated and re-read, never averaged. A hidden repeat
+    guarantees neither correctness nor independence. Source annotations still need owner approval.
   - **Shape checks.** A7 and A8 are mandatory temple locks (HP-LOCK: identified separate lock with tip, two notches and
     evidence, length ≥ 6 px, tip inside its window). HP-FRAG rejects loose hair pieces on the head. HP4's crown zone is
     rows ≤ 194; HP5–HP8 are unchanged.
-  - **Thresholds (proposed, open owner point).** Seat residual ≤ 6.0 master px and |sx/sy − 1| ≤ 0.08, the worst case of
-    the documented noise model over the whole scale range 0.35–0.85 (the study's 5.5 px / 0.07 did not hold at 0.85).
+  - **Thresholds (approved by the owner).** Seat residual ≤ 6.0 master px, |sx/sy − 1| ≤ 0.08 and scale 0.35–0.85, the
+    worst case of the documented noise model over the whole range (the study's 5.5 px / 0.07 did not hold at 0.85). For
+    future attempts only; never used to reclassify D-177. HP5 is unchanged (no tolerance for pixel-sized holes).
     Simulated rates are model results, not observed failure rates.
   - **Nape lock.** A later, separate authoring part that waits for an underlay with a neck, merged into the same hair
     layer — no new runtime layer.

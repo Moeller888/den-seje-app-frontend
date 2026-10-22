@@ -32,11 +32,14 @@ export const MODES = Object.freeze({
   "synthetic-test": { annotation: ["SYNTHETIC_TEST_APPROVED"], targets: ["SYNTHETIC_TEST_APPROVED", "APPROVED"] },
 });
 export const POINT_STATUS = Object.freeze({ identified: "IDENTIFIED", notIdentifiable: "NOT_IDENTIFIABLE" });
+/** The one point definition both readings of A9 / A10 must follow (methodV2.registration.definitions). */
+export const POINT_DEFINITIONS = Object.freeze({ leftEarTopJunction: "r3-hair-v2:A9-ear-top-junction", rightEarTopJunction: "r3-hair-v2:A10-ear-top-junction" });
 export const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 
 /**
- * D-179's thresholds. PROPOSED from the documented noise model (methodV2.simulation) and fixed BEFORE any hair call; changing
- * one is a new owner decision made before a call, never after seeing an output. v1's raw-sheet thresholds (H1..H5) and its
+ * D-179's thresholds, derived from the documented noise model (methodV2.simulation) and APPROVED by the owner for future
+ * hair sheets BEFORE any v2 call; they never reclassify D-177. Changing one is a new owner decision made before a call, never
+ * after seeing an output. v1's raw-sheet thresholds (H1..H5) and its
  * HP5..HP8 thresholds are inherited unchanged.
  */
 export const THRESHOLDS = Object.freeze({
@@ -82,7 +85,11 @@ export function validateTargets(targets, mode) {
 
 /**
  * Validate a v2 annotation of ONE sheet (bound to its SHA-256). Every fit point must be IDENTIFIED with the method's sheet
- * uncertainty; A9/A10 carry two readings that agree. Lock records are checked by HP-LOCK after the fit (their absence is a
+ * uncertainty. A9/A10 carry two readings (D-179 owner rule): reading 2 made with reading 1 hidden, both under the same
+ * point definition, each with its marked crop for owner review, within 4 sheet px of each other and of the approved xy,
+ * which is one of the two readings (never an average). A larger disagreement is investigated and the point read again; a
+ * hidden repeat guarantees neither correctness nor independence — a systematic misinterpretation can repeat itself.
+ * Lock records are checked by HP-LOCK after the fit (their absence is a
  * SHAPE failure there, not an annotation error). Returns { ok } or the first failure.
  */
 export function validateAnnotation(ann, rawSha, mode) {
@@ -101,8 +108,13 @@ export function validateAnnotation(ann, rawSha, mode) {
     if (k !== "centreHairline") {
       const r = p.readings;
       if (!Array.isArray(r) || r.length !== 2 || !r.every((x) => isPt(x?.xy) && inSheet(x.xy))) return { ok: false, code: "FIT_READINGS_MISSING", why: `${k}: two readings required` };
+      if (r[0].pass !== 1 || r[1].pass !== 2) return { ok: false, code: "FIT_READINGS_ORDER_INVALID", why: `${k}: reading 1 then reading 2` };
+      if (r[1].firstReadingHidden !== true) return { ok: false, code: "FIT_READING_NOT_HIDDEN", why: `${k}: the second reading must be made with the first reading hidden` };
+      if (!r.every((x) => x.definition === POINT_DEFINITIONS[k])) return { ok: false, code: "FIT_READING_DEFINITION_MISMATCH", why: `${k}: both readings must follow ${POINT_DEFINITIONS[k]}` };
+      if (!r.every((x) => typeof x.crop?.file === "string" && x.crop.file.length > 0 && /^[0-9a-f]{64}$/.test(x.crop?.sha256 ?? ""))) return { ok: false, code: "FIT_READING_CROP_MISSING", why: `${k}: each reading needs its marked crop for owner review (file + sha256)` };
       const A = THRESHOLDS.readingAgreementMaxSheetPx;
-      if (dist(r[0].xy, r[1].xy) > A || dist(r[0].xy, p.xy) > A || dist(r[1].xy, p.xy) > A) return { ok: false, code: "FIT_READINGS_DISAGREE", why: `${k}: readings and the approved xy must lie within ${A} sheet px of each other — read again` };
+      if (dist(r[0].xy, r[1].xy) > A || dist(r[0].xy, p.xy) > A || dist(r[1].xy, p.xy) > A) return { ok: false, code: "FIT_READINGS_DISAGREE", why: `${k}: readings and the approved xy must lie within ${A} sheet px of each other — investigate the disagreement and read the point again` };
+      if (!r.some((x) => x.xy[0] === p.xy[0] && x.xy[1] === p.xy[1])) return { ok: false, code: "FIT_POINT_NOT_A_READING", why: `${k}: the approved xy is one of the two readings, never an average or other derived value` };
     }
   }
   for (const [k, v] of Object.entries(ann.checkPoints ?? {})) {
