@@ -1,0 +1,48 @@
+[
+  {
+    "id": "57c0e3db-090d-40fd-9a9b-a5609590f09a",
+    "answer_format": "mc",
+    "type": "mc_single",
+    "is_active": true,
+    "learning_objective": "industrialisation",
+    "target_grade": 8,
+    "difficulty_band": 3,
+    "content": {
+      "correct": "Industrialiseringens uligheder skabte politisk pres fra arbejderbevægelsen der lagde grunden til social lovgivning og den fremtidige velfærdstat",
+      "options": [
+        "Industrialiseringens uligheder skabte politisk pres fra arbejderbevægelsen der lagde grunden til social lovgivning og den fremtidige velfærdsstat",
+        "Velfærdsstaten opstod uafhængigt af industrialiseringen som et religiøst filantropiprojekt",
+        "Industrialiseringen skabte så stor rigdom at velfærdsstaten blot var en naturlig fordeling",
+        "Den danske velfærdsstat er importeret fra Sverige og har ingen rødder i dansk industri"
+      ],
+      "question": "Hvad har industrialiseringens uligheder at gøre med den danske velfærstats opståen?",
+      "review_text": "Velfærdsstaten kom ikke tilfældigt. Industrialiseringens uligheder skabte en organiseret arbejderbevægelse der kæmpede for sygedagpenge, folkepension og børneomsorg. Social lovgivning i begyndelsen af 1900-tallet var direkte svar på industrialiseringens menneskelige omkostninger.",
+      "accepted_answers": [
+        "Industrialiseringens uligheder skabte politisk pres fra arbejderbevægelsen der lagde grunden til social lovgivning og den fremtidige velfærdstat"
+      ]
+    }
+  },
+  {
+    "id": "b66e1947-8217-4942-9893-aef3f256b488",
+    "answer_format": "mc",
+    "type": "mc_single",
+    "is_active": true,
+    "learning_objective": "prehistoric_denmark",
+    "target_grade": 9,
+    "difficulty_band": 5,
+    "content": {
+      "correct": "Begrebet er analytisk misvisende men pædagogisk nyttigt: 'revolution' antyder hurtighed og brud men overgangen til landbrug i Danmark tok 500-1000 år og var gradvis med lange perioder af koeksistens. Childe lånte marxistisk revolutionsbegreb og overførte det på en årtusindelang transformation. Det er et eksempel på at historieskrivning bruger dramaturgiske metaforer der simplificerer kausal kompleksitet — 'revolution' mobiliserer opmærksomhed men kan forvrænge forståelsen af processer der er strukturelt betingede og langsomt udviklende",
+      "options": [
+        "Begrebet er analytisk misvisende men pædagogisk nyttigt: 'revolution' antyder hurtighed og brud men overgangen til landbrug i Danmark tog 500-1000 år og var gradvis med lange perioder af koeksistens. Childe lånte marxistisk revolutionsbegreb og overførte det på en årtusindelang transformation. Det er et eksempel på at historieskrivning bruger dramaturgiske metaforer der simplificerer kausal kompleksitet — 'revolution' mobiliserer opmærksomhed men kan forvrænge forståelsen af processer der er strukturelt betingede og langsomt udviklende",
+        "Gordon Childes begreb 'den neolitiske revolution' er fuldt præcist og beskriver korrekt en hurtig og entydig overgang der skete inden for en enkelt menneskealder",
+        "Begrebet er udelukkende negativt og bør droppes totalt fra arkæologisk og historisk terminologi uden erstatning",
+        "Overgangen til landbrug var faktisk hurtigere end Childe forestillede sig og begrebet 'revolution' undervurderer ændringens dramatiske tempo"
+      ],
+      "question": "Gordon Childes begreb 'den neolitiske revolution' — er det analytisk præcist, og hvad viser det om historieskrivningens brug af dramaturgi?",
+      "review_text": "Gordon Childe introducerede begrebet i Man Makes Himself (1936) og What Happened in History (1942) — begge bøger skrevet i en marxistisk intellektuel tradition der favoriserede revolutionære brud som historiske motorer. Childe vidste at overgangen ikke var øjeblikkelig men brugte 'revolution' som analytisk kontrast til evolutionær gradualisme. Brian Fagan (People of the Earth, 2007) og Kent Flannery har kritiseret terminologien: processen i Mellemøsten tog 3.000 år fra de første kultiverede planter til fuldt agrare samfund. I Nordeuropa endnu langsommere. Timothy Earle og Ian Kristiansen (Political Economies in Early State Formation, 2010) viser at den neolitiske transition var ikke én ting men en serie af regionale processer med varierende tempo. Det historiografiske problem er generelt: ord som 'revolution', 'kollaps', og 'krise' er dramaturgiske signaler der aktiverer forventninger om hurtighed og brud. De er ikke neutrale beskrivelser. Det metodologisk sofistikerede er at bruge dem mens man eksplicit adresserer hvad de simplificerer.",
+      "accepted_answers": [
+        "Begrebet er analytisk misvisende men pædagogisk nyttigt: 'revolution' antyder hurtighed og brud men overgangen til landbrug i Danmark tog 500-1000 år og var gradvis med lange perioder af koeksistens. Childe lånte marxistisk revolutionsbegreb og overførte det på en årtusindelang transformation. Det er et eksempel på at historieskrivning bruger dramaturgiske metaforer der simplificerer kausal kompleksitet — 'revolution' mobiliserer opmærksomhed men kan forvrænge forståelsen af processer der er strukturelt betingede og langsomt udviklende"
+      ]
+    }
+  }
+]
