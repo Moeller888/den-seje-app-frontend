@@ -8,6 +8,7 @@ import { sortByWave } from "./wave-order.ts";
 import { resolveMixEngine } from "./format-mix.ts";
 import { loadFormatMixPlan, type MixReadClient } from "./mix-flow.ts";
 import { servableWireFormat } from "../_shared/interaction-kinds.ts";
+import { createMatchKey, parseMatchPairs } from "../_shared/match-pairs.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,12 @@ function normalizeContent(raw: any, answer_format: string) {
     }
 
     return { question, options, correct };
+  }
+
+  if (answer_format === "match") {
+    // Match par: the key is this instance's shuffle of the right column, drawn here, once, and stored
+    // as correct_answer (../_shared/match-pairs.ts). content.correct is not used.
+    return { question, correct: createMatchKey(parseMatchPairs(raw).length) };
   }
 
   return { question, correct };
@@ -142,6 +149,7 @@ serve(async (req) => {
       .select(`
         id,
         next_review_at,
+        correct_answer,
         questions (
           content,
           answer_format,
@@ -178,7 +186,7 @@ serve(async (req) => {
       try {
         const format = wireFormat(q);
         if (format === null) throw new Error(`Unservable format: ${q.answer_format}`);
-        const pub = toPublicQuestion(q.content, format, q.metadata);
+        const pub = toPublicQuestion(q.content, format, q.metadata, instance.correct_answer);
 
         return new Response(
           JSON.stringify({
@@ -281,7 +289,7 @@ serve(async (req) => {
         if (resolved === null) throw new Error(`Unservable format: ${q.answer_format}`);
         format = resolved;
         normalized = normalizeContent(q.content, format);
-        pub = toPublicQuestion(q.content, format, q.metadata);
+        pub = toPublicQuestion(q.content, format, q.metadata, normalized.correct);
       } catch (e) {
         console.error("Skipping question with bad content:", q.id, e);
         continue;
@@ -346,6 +354,7 @@ serve(async (req) => {
           .from("question_instances")
           .select(`
             id,
+            correct_answer,
             questions (
               content,
               answer_format,
@@ -380,7 +389,7 @@ serve(async (req) => {
             try {
               const format = wireFormat(rq);
               if (format === null) throw new Error(`Unservable format: ${rq.answer_format}`);
-              const pub = toPublicQuestion(rq.content, format, rq.metadata);
+              const pub = toPublicQuestion(rq.content, format, rq.metadata, repeatRow.correct_answer);
 
               return new Response(
                 JSON.stringify({

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { publishableKey, serviceKey, serviceKeySource } from "../_shared/supabase-keys.ts";
 import { isTextAnswerCorrect } from "../_shared/answer-evaluation.ts";
+import { canonicalMatchAnswer } from "../_shared/match-pairs.ts";
 import { ADMIN_CLIENT_OPTIONS, isInstanceOwner, callProcessTextAnswer, callProcessQuestionAttempt } from "./text-answer-rpc.ts";
 import { updateOwnInstance, recordMisconceptionSignal, type InstanceWriteResult } from "./instance-writes.ts";
 import { readInstanceForGrading } from "./instance-read.ts";
@@ -257,8 +258,26 @@ serve(async (req) => {
       )
     }
 
-    // ── PATH 3: MC / number → process_question_attempt RPC ──────────────────
-    console.log("FLOW: MC/NUMBER → process_question_attempt")
+    // ── Match par: shape check, then the same RPC as MC / number ────────────
+    // The browser sends its connections as JSON. canonicalMatchAnswer (../_shared/match-pairs.ts)
+    // accepts exactly one connection per left and per right item and writes them in the instance
+    // key's canonical form; it decides nothing. process_question_attempt below compares that string
+    // with the key and awards — so Match par has no grading or reward path of its own, and an
+    // incomplete or malformed answer is refused here before anything is recorded or paid.
+    let gradedAnswer = answer
+    if (format === "match") {
+      const canonical = canonicalMatchAnswer(answer, correct_answer)
+      if (canonical === null) {
+        return new Response(
+          JSON.stringify({ status: "invalid", error: "Forbind alle par, før du sender." }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      gradedAnswer = canonical
+    }
+
+    // ── PATH 3: MC / number / match → process_question_attempt RPC ──────────
+    console.log("FLOW: MC/NUMBER/MATCH → process_question_attempt")
 
     // process_question_attempt evaluates the answer itself and awards XP/coins, streak and quests
     // (or the reduced repeat award). It takes p_student_id as a parameter, so — like the short-text
@@ -273,7 +292,7 @@ serve(async (req) => {
         {
           studentId:       user.id,
           instanceId:      question_instance_id,
-          answer,
+          answer:          gradedAnswer,
           questionShownAt: question_shown_at ?? Date.now(),
         }
       ))

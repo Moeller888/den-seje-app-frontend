@@ -818,7 +818,7 @@ fjernes (kræver Edge-deploy). Ingen aktive spørgsmål rammer den i dag (alle a
 | 10 | **Find fejlen** | sætning/tekst | `find_error` — vælg det forkerte ord | eksakt position | `process_text_answer` | 3 | M |
 | 11 | **Byg sætning** | ordbrikker | `build_sentence` — træk/tryk i rækkefølge | sekvens-lighed mod tilladte rækkefølger | `process_text_answer` | 3 | M |
 | 12 | **Rækkefølge/tidslinje** | begivenheder | `order` — træk og slip (touch + tastatur) | sekvens-lighed | `process_text_answer` | 3 | M–L |
-| 13 | **Match par** | to kolonner | `match` — træk og slip | par-mængde-lighed | `process_text_answer` | 3 | M–L |
+| 13 | **Match par** | to kolonner | `match` — tryk på et element og derefter dets makker (mus, touch og tastatur) | par-mængde-lighed (positioner mod instansens nøgle) | `process_question_attempt` (se note) | 3 — **bygget, ikke servable** (2026-10-22) | M–L |
 | 14 | **Kategorisering** | elementer + kategorier | `categorize` — træk i kurve | afbildnings-lighed | `process_text_answer` | 3 | M–L |
 | 15 | **Hotspot/kort** | billede/kort med navngivne områder | `hotspot` — klik på stedet | punkt inden for navngivet område | `process_text_answer` | 4 | L |
 | 16 | **Langt lærersvar** | tekst/kilde | `answer_type = "long"` (findes) | lærervurdering (`review-answer`) | lærerkø → `TEXT_APPROVED` | findes (ingen aktive spørgsmål) | — |
@@ -829,6 +829,19 @@ særskilt migration (D-110). Binær scoring — ingen delpoint — så XP, mønt
 uændrede. "Belønningsvej `process_text_answer`" for ikke-tekst-former betyder: serveren evaluerer
 det strukturerede svar og kalder den eksisterende CAS-sikrede RPC med `p_is_correct` — der laves
 ingen ny belønnings-RPC pr. form.
+
+**Afvigelse for Match par (2026-10-22, til ejerens godkendelse i PR'en):** belønningsvejen er
+`process_question_attempt`, ikke `process_text_answer`. Grunden er gentagelser:
+`request_repeat_question_for_student` genåbner alle besvarede auto-bedømte instanser undtagen
+`answer_format = 'text'`, så en `match`-instans kan gentages, og `process_text_answer` betaler fuld XP
+og fulde mønter hver gang (den kender ikke `repeat_count`). `process_question_attempt` giver 2 XP
+og ingen mønter for en gentagelse. Det kræver, at svaret kan sammenlignes som tekst: serveren
+gemmer instansens blanding af højre kolonne som nøgle (`0:2,1:0,2:1`), og `process-event` skriver
+elevens forbindelser i samme form, før RPC'en sammenligner. Ingen ny RPC og ingen migration.
+Interaktionen er "tryk og forbind" i stedet for træk og slip: den virker ens med mus, touch og
+tastatur. Træk kan lægges oven på senere uden at ændre kontrakten. **Samme gentagelsesproblem
+gælder de andre former i tabellen, der står med `process_text_answer` (4, 9–12, 14–15)**, hvis deres
+`answer_format` ikke er `text` — det skal afgøres pr. form, før de bygges.
 
 ### Avatar / art track (from 167A)
 
