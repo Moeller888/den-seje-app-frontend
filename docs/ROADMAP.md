@@ -830,7 +830,8 @@ uændrede. "Belønningsvej `process_text_answer`" for ikke-tekst-former betyder:
 det strukturerede svar og kalder den eksisterende CAS-sikrede RPC med `p_is_correct` — der laves
 ingen ny belønnings-RPC pr. form.
 
-**Afvigelse for Match par (2026-10-22, til ejerens godkendelse i PR'en):** belønningsvejen er
+**Ejerbeslutning 2026-10-22 — Match par afviger bevidst fra planen ovenfor (accepteret af ejeren):**
+(1) interaktionen er "tryk og forbind" i stedet for træk og slip, og (2) belønningsvejen er
 `process_question_attempt`, ikke `process_text_answer`. Grunden er gentagelser:
 `request_repeat_question_for_student` genåbner alle besvarede auto-bedømte instanser undtagen
 `answer_format = 'text'`, så en `match`-instans kan gentages, og `process_text_answer` betaler fuld XP
@@ -838,8 +839,8 @@ og fulde mønter hver gang (den kender ikke `repeat_count`). `process_question_a
 og ingen mønter for en gentagelse. Det kræver, at svaret kan sammenlignes som tekst: serveren
 gemmer instansens blanding af højre kolonne som nøgle (`0:2,1:0,2:1`), og `process-event` skriver
 elevens forbindelser i samme form, før RPC'en sammenligner. Ingen ny RPC og ingen migration.
-Interaktionen er "tryk og forbind" i stedet for træk og slip: den virker ens med mus, touch og
-tastatur. Træk kan lægges oven på senere uden at ændre kontrakten. **Samme gentagelsesproblem
+"Tryk og forbind" virker ens med mus, touch og tastatur; træk kan lægges oven på senere uden at
+ændre kontrakten. **Samme gentagelsesproblem
 gælder de andre former i tabellen, der står med `process_text_answer` (4, 9–12, 14–15)**, hvis deres
 `answer_format` ikke er `text` — det skal afgøres pr. form, før de bygges.
 

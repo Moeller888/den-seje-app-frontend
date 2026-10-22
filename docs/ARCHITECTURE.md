@@ -487,9 +487,12 @@ and pays it exactly like MC** (its `[^a-z0-9]` normalisation makes `0:2,1:0,2:1`
 `next_review_at`. No new RPC, no migration. Not `process_text_answer`: it ignores `repeat_count`, and
 the repeat RPC reopens every non-`text` auto-graded instance. *Browser:* `js/match-pairs.js` (tap an
 item, then its partner; arrows, Enter/Space, Escape; colour + number per pair; live region),
-`css/match-pairs.css`, demo `tools/match-pairs/demo.html` (local only). *Step 3 must also* teach v1's
-`mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and the row is then skipped for lack of
-options) or retire v1, and add the content through a reviewed migration.
+`css/match-pairs.css`, demo `tools/match-pairs/demo.html` (local only). Tap-to-connect and grading through
+`process_question_attempt` are owner decisions (2026-10-22, ROADMAP → Opgaveformer). *Step 3 must
+also* teach v1's `mapAnswerFormat` `"match"` (today it maps it to `"mc"`, and the row is then skipped
+for lack of options) or retire v1; show a Match par `user_answer` to teachers as pairs in words
+(`js/student-detail.js` prints it raw, as it does for MC); and add the content through a reviewed
+migration.
 
 **Activation order** (each step its own owner authorisation): security review → apply the migration
 (D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
