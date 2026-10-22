@@ -498,6 +498,28 @@ _Last reviewed: 2026-07-01._
   its `test` job **started 15:01:48Z and completed `success` 15:01:57Z (~9 s)** — Playwright, browser
   install and `npm ci` all skipped, required `test` green — i.e. docs-mode **finished before** the main
   run, never queuing behind the shared lock.
+  **E2E account slots + FIFO queue + maintainer label (2026-10-22, built, NOT activated).**
+  (1) **Four E2E account slots** (`0`–`3`): each has its own primary pupil, test teacher, the
+  teacher's pupil, and a password-less "owner" teacher that only anchors the primary pupil's
+  `teacher_id` (password-help needs the pupil to have a teacher; teacher-password-reset needs it NOT
+  to be the test teacher). Slot 0 = today's accounts, unchanged. Slots 1–3 derive every address by
+  inserting `+e2e-slot-<n>` before the `@` and reuse the existing password secrets; global-setup
+  creates them idempotently with `email_confirm` and an `app_metadata` marker, and refuses (never
+  resets) an existing account without that marker. Routing (`.github/ci/e2e-slot.mjs`): PR →
+  `number % E2E_SLOT_COUNT`; push/manual default → slot 0; lock `e2e-shared-supabase` for slot 0
+  (kept, so old-workflow branches and the goldens regen still serialise with it) and
+  `e2e-shared-supabase-slot-<n>` for 1–3. **Switch:** repository variable `E2E_SLOT_COUNT`; unset =
+  1 slot = exactly the old behaviour, so merging creates no production users. A static audit
+  (`tests/unit/e2e-writes-slot-scoped.test.mjs`) proves every E2E write is keyed to a slot account;
+  none writes global state today. (2) **`queue: max`** on every E2E lock (supersedes PR #333): waiting
+  runs queue FIFO instead of displacing each other. (3) **Label `ci:e2e-not-required`**: skips
+  Playwright only if a write/maintain/admin user applied it, every file is under `tests/unit/`,
+  `tests/fixtures/` (not read by a spec), `tools/question-quality/`, `docs/` or
+  `supabase/migrations/`, every migration is data-only and has an executable PGlite
+  `*-migration-run.test.mjs` naming it, and the unit suite passes inside the required `test` job;
+  anything unclear → full suite. (4) **The push-to-main full run stays:** `main` has **no branch
+  protection** (no required check, direct pushes allowed), so a green PR does not prove what lands
+  on main; removing it waits for that protection.
 
 ## Completed sections
 

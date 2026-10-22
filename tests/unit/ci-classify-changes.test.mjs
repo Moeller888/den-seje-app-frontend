@@ -445,13 +445,13 @@ test("workflow: push events and unknown modes fail closed to full", () => {
   );
   assert.ok(
     WORKFLOW.includes(
-      "if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'full') mode = 'full';",
+      "if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'label-verified' && mode !== 'full') mode = 'full';",
     ),
     "classify-side mode normalisation changed",
   );
   assert.ok(
     WORKFLOW.includes(
-      "const mode = (raw === 'docs' || raw === 'unit-only' || raw === 'avatar-tool' || raw === 'full') ? raw : 'full';",
+      "const mode = (raw === 'docs' || raw === 'unit-only' || raw === 'avatar-tool' || raw === 'label-verified' || raw === 'full') ? raw : 'full';",
     ),
     "test-side mode normalisation changed",
   );
