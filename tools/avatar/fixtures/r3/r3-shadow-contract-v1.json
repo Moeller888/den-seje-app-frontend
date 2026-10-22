@@ -6333,5 +6333,102 @@
         ]
       }
     }
+  },
+  "underlayHeadNeck": {
+    "decision": "D-186",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW CANDIDATE — NOT PRODUCTION-APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "Method A: a deterministic drawing of the R3 head underlay without an image call. G1V3 + E2 + K4 and every existing target are kept. The ear details are drawn inside the existing ear silhouettes. The neck is drawn independently (choice b), so the asset contains no H1 pixels. Medium skin tone first. D-185's wording about U1 is corrected here without rewriting D-185's row or key.",
+    "sourcePolicy": {
+      "allowed": [
+        "the head geometry G1V3 + E2 (the adopted head geometry), rows <= 424, unchanged",
+        "the K4 contour of that geometry, unchanged",
+        "U1 (D-149): verified to equal the geometry filled with the adopted skin colour, from which the medium skin colour is read",
+        "the self-written spec (the N1 neck geometry, the skin model, the drawn contours)"
+      ],
+      "forbidden": [
+        "H1 (fitting-base.H1.png) as a source, a tracked file, a published file, a generator dependency or a deployable file — a new neck does not make a copied H1 body allowed",
+        "r3-head-g1v3-v1.png (its rows 425-445 hold D-133's H1-derived TRANSITION silhouette)",
+        "Northstar pixels (visual reading only)",
+        "paint from any rejected underlay call"
+      ],
+      "privateComparisons": "Northstar comparisons and the composed whole-head review stay local in the gitignored tools/avatar/build/ and are never sources"
+    },
+    "method": {
+      "generator": "tools/avatar/r3-underlay-headneck.mjs",
+      "spec": "tools/avatar/fixtures/r3-underlay-headneck/headneck-v1.spec.json",
+      "manifest": "tools/avatar/fixtures/r3-underlay-headneck/headneck-v1.manifest.json",
+      "layers": "LUMINANCE (shading factor, achromatic, with the asset's alpha) x a skin colour token (medium = U1's [254, 197, 128]) with a per-channel warmth so shadows stay warm; INK = K4 unchanged plus the drawn chin, neck and ear lines in K4's ink colour. Hair ramp B is not used for skin.",
+      "drawn": [
+        "ears: an inner rim line with a helix-fold crescent, a C-shaped concha (shaded bean, open front edge) and the ear's front line from its upper junction to its lower junction with the jaw contour — all inside the existing ear silhouettes",
+        "jaw and chin: N1's chin leaves the head's row-424 jaw corner at the jaw's own slope and closes horizontally at y 442; the chin line is drawn inside the skin like K4",
+        "neck: an independent N1 neck (x 477 -> 458 a side, mirrored) to row 480 with a cast shadow under the chin and soft side shading",
+        "skin: a subtle edge shading of the head and chin"
+      ],
+      "mirror": "pixel i <-> pixel 1023 - i (the geometry's pixel-index axis 511.5), x -> 1024 - x in continuous coordinates"
+    },
+    "neckGeometryN1": {
+      "specKey": "headneck-v1.spec.json neckGeometryN1",
+      "attachment": "N1 starts at row 425. Its row-425 span lies inside the head's row-424 span and the 424/425 step is at most the head geometry's own 423/424 step (4 px), a bound derived from the approved geometry at run time, not chosen.",
+      "jawCorner": [
+        454,
+        424
+      ],
+      "chinBottomY": 442,
+      "neckSides": "x 477 at rows 425-452, flaring to x 458 at row 480 (image-left; mirrored)",
+      "bottomRow": 480,
+      "bounds": "rows 425-479 only; nothing at or above row 424 is touched"
+    },
+    "checks": {
+      "passed": {
+        "UN-HEAD": "rows <= 424 equal G1V3 + E2 exactly (0 differing px)",
+        "UN-ATTACH": "row 425 inside row 424, step 4 <= bound 4, every N1 row one run",
+        "UN-SHAPE": "one solid component, no hole",
+        "UN-EXTENT": "last row 479 < 480",
+        "UN-LUMINANCE": "chroma 0"
+      },
+      "notApplicable": {
+        "pre.join-continuity": "NOT APPLICABLE — it compares a generated head's row 424 with H1's row 425 (D-141); this asset has no H1 handover. Its bound and earlier results are unchanged; UN-ATTACH checks the self-drawn handover instead.",
+        "pre.transition-silhouette": "NOT APPLICABLE — it requires rows 425-445 identical to H1's TRANSITION silhouette (D-133); this asset replaces that continuation with the self-drawn N1. Its rule and earlier results are unchanged."
+      },
+      "notReportedAsPassed": "neither H1 gate is reported as passed on this asset"
+    },
+    "candidate": {
+      "id": "r3-underlay-headneck-v1",
+      "pixelSha256": {
+        "luminance": "98559e16d12c81e01fdb9ef86dd85493c9b737eb135829809dfe5d1d8d2b9d65",
+        "ink": "7165dfdfb66131d04cd37ee9b5b1c65637e74b50b0bf4e0d03b2a9587b325cec",
+        "medium": "75a385c741649a24d25ba37844005faae24ba4a96b198d9335891962fb120d1e"
+      },
+      "rebuild": "deterministic; verified byte-identical in a separate directory"
+    },
+    "wholeHeadReview": {
+      "composedWith": [
+        "D-185 r3-hair-hybrid-v2 (placed pixel e506555e…), ramp B brown",
+        "D-165 brows and mouth (DRAFT) and the nose placeholder",
+        "eyes prototype v5 (DRAFT)"
+      ],
+      "hairChecks": "HP4, HP5, HP6, HP7, HP8 and HP-FRAG pass on this asset's pixels (HP6/HP7 locally; NOT RUN in CI). The hair covers no chin or neck pixel.",
+      "napeLock": "a separate, later authoring part; not introduced here"
+    },
+    "d185Correction": "D-185's productionGaps say 'U1 is not the finished underlay: it has no ears and no neck'. G1V3/U1 already has ear silhouettes (1,079 px a side); missing were the drawn ear detail and a neck, because the neck used to be H1's. D-185's row and key stay verbatim.",
+    "productionGaps": [
+      "the owner's visual review of the whole head is pending",
+      "only the medium skin tone is rendered",
+      "brows, mouth and nose are provisional; the eyes are the v5 prototype",
+      "the nape lock is not authored",
+      "the body/tee join below row 480 is not part of this asset",
+      "not a production asset, not promoted, not wired to runtime"
+    ],
+    "notApproved": [
+      "a production asset or promotion",
+      "a runtime change",
+      "an image request, capacity or claim",
+      "a change to G1V3, E2, K4, any R3 target or any threshold",
+      "a change to D-185's or any earlier decision's historical status"
+    ]
   }
 }

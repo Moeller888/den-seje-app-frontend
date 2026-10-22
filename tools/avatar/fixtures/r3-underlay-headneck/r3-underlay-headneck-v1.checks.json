@@ -1,0 +1,72 @@
+{
+  "id": "r3-underlay-headneck-v1",
+  "specSha256": "fa11cc02db97a059d5f694dc635b7bb7ce1cef70345b5fc04e91792d4cf907ca",
+  "pixelSha256": {
+    "luminance": "98559e16d12c81e01fdb9ef86dd85493c9b737eb135829809dfe5d1d8d2b9d65",
+    "ink": "7165dfdfb66131d04cd37ee9b5b1c65637e74b50b0bf4e0d03b2a9587b325cec",
+    "medium": "75a385c741649a24d25ba37844005faae24ba4a96b198d9335891962fb120d1e"
+  },
+  "checks": [
+    {
+      "id": "UN-HEAD",
+      "name": "head geometry preserved: the solid set of rows <= 424 equals G1V3 + E2 exactly",
+      "ok": true,
+      "value": {
+        "differingPx": 0
+      }
+    },
+    {
+      "id": "UN-ATTACH",
+      "name": "neck attachment: row 425 lies inside row 424, the 424/425 step is at most the head geometry's own 423/424 step, and every N1 row is one solid run",
+      "ok": true,
+      "value": {
+        "step": 4,
+        "bound": 4,
+        "boundDerivation": "|S(G,423) symdiff S(G,424)| of the approved head geometry, computed at run time",
+        "row425InsideRow424": true,
+        "everyRowOneRun": true,
+        "lastSolidRow": 479
+      }
+    },
+    {
+      "id": "UN-SHAPE",
+      "name": "one solid component, no enclosed transparent hole",
+      "ok": true,
+      "value": {
+        "solidComponents": 1,
+        "transparentComponents": 1,
+        "enclosedHoles": 0
+      }
+    },
+    {
+      "id": "UN-EXTENT",
+      "name": "nothing below the documented neck bottom",
+      "ok": true,
+      "value": {
+        "lastRowWithAlpha": 479,
+        "neckBottom": 480
+      }
+    },
+    {
+      "id": "UN-LUMINANCE",
+      "name": "the luminance layer is achromatic",
+      "ok": true,
+      "value": {
+        "maxChroma": 0
+      }
+    }
+  ],
+  "notApplicable": [
+    {
+      "id": "pre.join-continuity",
+      "status": "NOT APPLICABLE",
+      "why": "it compares a generated head's row 424 with H1's row 425 (D-141); this asset contains no H1 pixels and has no H1 handover — UN-ATTACH checks the self-drawn handover instead"
+    },
+    {
+      "id": "pre.transition-silhouette",
+      "status": "NOT APPLICABLE",
+      "why": "it requires rows 425..445 to be identical to H1's TRANSITION silhouette (D-133); this asset deliberately replaces H1's continuation with the self-drawn N1, so the gate has no reference here"
+    }
+  ],
+  "firstFailure": null
+}
