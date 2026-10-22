@@ -462,10 +462,15 @@ _Last reviewed: 2026-07-01._
   demands it. No code, no migration; **no broad activation**; **`AVATAR_R2` stays `false`.** See
   `docs/project-state.md` (D-075).
 - **Platform services:** Section **157A audit complete** (AI / OCR / STT / TTS / image / error /
-  analytics boundaries decided). **No service implemented yet.**
+  analytics boundaries decided). Read-aloud is live; the remaining service status is tracked below.
 - **Read-aloud (157O):** **LIVE in production** (Web Speech; commit `52e7a04`, 2026-07-03) — quiz
-  "🔊 Læs op", on-device, no consent, fail-soft; Danish voice preferred. First platform service
-  activated for students; Piper clips remain an offline deliverable.
+  and student-task prompts have a zero-cost player with pause/resume, restart, saved speed/voice and
+  word highlighting where supported; MC options retain their separate 🔊. Fail-soft, no consent;
+  Piper clips remain an offline deliverable.
+- **Read-aloud (157P, 2026-10-19):** **built, awaiting owner approval** after the real Edge/Chrome
+  audio test — one cached Azure Neural voice (`da-DK-ChristelNeural`, `en-GB-SoniaNeural`) for every
+  browser, served from R2 by a small Worker script; voice picker removed; no Web Speech fallback in
+  production. Owner decision supersedes 157N "no third-party service". [157o §7](./157o-read-aloud.md).
 - **Docs:** this foundation set (Section 157AA) being established.
 - **CI (D-066):** the Playwright workflow is **path-aware** — docs-only and standalone
   avatar-tool-only PRs skip the full browser suite (fast checks only); **push to main and any
@@ -593,6 +598,7 @@ Every prior "requires 157CB" dependency, re-examined. **Category meanings:** **H
 | 157M AI-grade in teacher review | requires 157CB | 157L | **FUTURE INFRASTRUCTURE** | Activation follows 157L. |
 | 157N Piper TTS **strategy** | — | none | **UNGATED** | Decision/spec. |
 | 157O Read-aloud (Web Speech + Piper) | — | none | **LIVE** | Web Speech path **activated in prod** (`52e7a04`, 2026-07-03); Piper clips still an offline deliverable. |
+| 157P Read-aloud — cached Azure Neural | 157O | Azure Speech (text only), R2 | **BUILT — awaiting approval** | Same voice + same file in every browser; Worker script + R2 + Durable Object; [157o §7](./157o-read-aloud.md). |
 | 157P Whisper STT feasibility | — | none | **UNGATED** | Decision (likely defer). |
 | 157Q GDPR/consent consolidation | — | none | **SOFT GATE** | Consent mechanism is buildable code/docs. |
 | 157R Rollback / flag hardening | — | none | **SOFT GATE** | Cross-cutting code; no infra. |
@@ -679,6 +685,21 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   redeployes alene — først migrationen tilbage (GRANT + CREATE POLICY i dens header), så funktionen.
   Restgæld (hærdning, ikke udnyttelig i dag): `anon`/`authenticated` har stadig UPDATE, DELETE og
   TRUNCATE på tabellen — UPDATE/DELETE blokeres af RLS, TRUNCATE nås ikke via PostgREST.
+- **Facit holdes på serveren (E1/E2, audit 2026-10-16) — trin A live, trin B merget men IKKE anvendt.**
+  Facit nåede browseren før svaret ad fire veje: P1 `get-next-question` sendte `content.correct`;
+  P2 `get_unserved_questions` (EXECUTE for `anon`/`authenticated`) returnerede hele indholdet; P3 eleven
+  kunne SELECT'e `question_instances.correct_answer`; P4 `questions` var læsbar for alle (`allow read
+  questions` USING `true`) — og placement bedømte i browseren. E2: `request_repeat_question` kunne kaldes
+  med et selvvalgt mini-scope og give gentagelser (2 XP) uden ende. **Trin A** (PR #330, `8e7e191`):
+  migration `20261016160000_answer_keys_server_side_rpcs.sql` anvendt 2026-10-18 via `apply_migration`,
+  remote version `20261018095931` (≠ repo-filnavnet; D-110-divergens, ikke CLI-synkroniseret);
+  `get-next-question` v174 og `process-event` v33 deployet (byte-identiske med repoet; production-smoke
+  34/34). **Trin B** (PR-B): placement via `start_placement`/`submit_placement` i `app.js` og migration
+  `20261018170000_answer_keys_client_paths_lockdown.sql` (kun lærer/super_admin læser `questions`;
+  `question_instances` kolonne-grant uden `correct_answer`; EXECUTE fjernet på de to gamle RPC'er). Trin
+  B's migration kræver en særskilt ejergodkendelse; indtil da er P2/P3/P4 og den gamle repeat-vej åbne.
+  Bemærk: `metadata.danish_orthography_correct_aliases` (#331) indeholder facit-stavemåder og lækkes af
+  P2/P4 indtil trin B er anvendt.
 - **Fundet, ikke rettet (særskilte opgaver):**
   - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
     fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
@@ -697,6 +718,27 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   `reset-pending` (PR #302).
 
 ## Future sections
+
+### Sværhedsskala 1–10.000 (design godkendt 2026-10-20, opdateret 2026-10-22; ikke bygget)
+
+- **Ejerbeslutninger 2026-10-20:** niveauet er **pr. fag** (B1), og klassetrinsloftet fjernes for
+  **alle fag** (historie, engelsk og dansk) på én gang (B4). Startformel og skridtregel som foreslået
+  (B2, B3). Lærerbedømte svar flytter ikke niveauet i v1 (B5). PR #351 merges først, og niveauet
+  bygges på dens serverejede båndmekanisme (B6). CEFR-forankring for engelsk (B7). Eleven ser ikke
+  niveauet i v1 (B8). Udfasning af placeringstesten er udskudt (B9).
+
+- Design: [`docs/difficulty-scale-design.md`](difficulty-scale-design.md). Ét kontinuerligt niveau
+  1–10.000 pr. fag. Klassetrinnet sætter kun startniveauet (ejerens retning, 2026-10-19).
+  Udvælgelsen bliver nærmest-først i SQL uden klassetrinsloft, og elevens niveau bliver serverejet,
+  bag flaget `LEVEL_ENGINE` (ikke sat = uændret).
+- **Ejerbeslutninger 2026-10-22 (designets §10):** de 3.000 nye engelskopgaver (#358–#365) indsættes
+  **inaktive** og mærket `metadata.level_batch`. Ingen migration kører i produktion uden godkendelse
+  af netop den migration. Opgaverne uden niveau tælles i den rigtige database, før migration A
+  anvendes. Der skrives ikke flere portioner. En dokumenteret stikprøvekontrol skal ligge før
+  aktiveringen.
+- Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
+  `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
+- Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
 
 ### Platform / services track (from the 157A audit)
 
@@ -972,14 +1014,16 @@ production**; activation waits for a staging target (free local stack at first; 
 | Analytics (PostHog) | ✅ Module + events (157D/157E), default-off | `js/analytics.js` + consent gate + banner; core events wired (login/question/purchase), double-gated. Activation needs key + consent + staging. |
 | OCR / document recognition | ✅ Foundation (157I), default-off | `js/ocr/` generic service (answers + future worksheets/sources/teacher material); browser-only wasm, **no image upload**, zero-cost. Set `ENABLE_OCR=true` to activate. |
 | AI abstraction / grading (Ollama) | ✅ Layer (157K), default-off / FUTURE (activation) | `_shared/ai/` + advisory `grade-answer` shipped, default-off, no reward-path wiring. 157L process-event wiring + activation need staging + 157J reachability. |
-| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`; per-option 🔊 `eb6d5fc`) | `js/read-aloud/` on-device Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable). Every text-based student task uses it: quiz and placement — "🔊 Læs op" on the prompt **+ per-MC-option 🔊** (reads one option, never submits). `ENABLE_READ_ALOUD=true`. |
+| TTS (read-aloud) | ✅ **LIVE in prod** (157N/157O, Web Speech, `52e7a04`; per-option 🔊 `eb6d5fc`) | `js/read-aloud/` browser Web Speech (Danish voice preferred) + pre-gen Piper (clips = offline deliverable). Every text-based student task uses it: prompt player with pause/resume, restart, saved speed/voice and word highlighting where supported **+ per-MC-option 🔊** (reads one option, never submits). `ENABLE_READ_ALOUD=true`; no app-managed TTS cost. |
 | Stabel (Spil-menuen) | 🟡 **Mønter bygget — migration afventer ejerens godkendelse** (2026-09-25) | **Ejerbeslutning 2026-09-25 omgør "Stabel giver ingen mønter":** en afsluttet runde giver **1 mønt pr. plade, højst 50 mønter pr. elev pr. dag** (dansk døgn, Europe/Copenhagen). Pladeantallet rapporteres af browseren og kan forfalskes; loftet i `claim_stabel_reward` (SECURITY DEFINER, kun `role = student`) er forsvaret, ikke scoren. Ledger: `stabel_daily_rewards` (RLS uden policies, ingen tabelrettigheder til anon/authenticated). Migration `20260928000000_stabel_reward.sql`, runtime-testet på PGlite. Ingen XP. Udseende: PRISMA-isometrisk canvas (PR #273). |
 | Husk (Spil-menuen) | ✅ Live (2026-10-02, PR #277) | Hukommelsesspil porteret fra Nord-minigames (Grok-workspace, `src/components/husk/`). **Ejerbeslutning 2026-10-02:** de nye spil giver **ingen mønter og ingen XP** — kun lokal rekord (`dsj_husk_best`); mønter er en senere, særskilt opgave med egen migration. Brættet vokser 12 → 16 → 20 felter (6/8/10 par, én tilladt fejl pr. par). Deterministisk blanding (seed = rundetæller i browseren, ingen `Math.random`). `husk.html` + `js/husk.js` + `js/husk-logic.js`. Drej og Vig porteres ikke. |
 | Nål (Spil-menuen) | ✅ Live (2026-10-02, PR #278) | Timingspil porteret fra Nord-minigames (`src/game/naal-engine.ts`). En nål drejer rundt; klik mens den er i buen (midterste femtedel = perfekt). Hvert ramt bue gør den næste kortere og nålen hurtigere; hver 7. vender den. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_naal_best`). Canvas i temaets farver. `naal.html` + `js/naal.js` + `js/naal-logic.js`. |
 | Kløft (Spil-menuen) | ✅ Live (2026-10-02, PR #279) | Timingspil porteret fra Nord-minigames (`src/game/kloeft-engine.ts`). Et skår falder ned gennem en skakt; klik når det er ud for kløften i væggen (midterste tredjedel = perfekt). Kløften bliver smallere og skåret hurtigere for hvert skår. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_kloeft_best`). `kloeft.html` + `js/kloeft.js` + `js/kloeft-logic.js`. |
 | Hop (Spil-menuen) | ✅ Live (2026-10-02, PR #280) | Platformspil porteret fra Nord-minigames (`src/game/hop-engine.ts`). Figuren løber selv; klik/mellemrum/pil op for at hoppe over huller og klodser. Tidligt hop (0,7–1,9 enheder før forhindringen) = perfekt. Farten stiger med scoren. Banen er deterministisk pr. runde (seed = rundetæller i browseren); en unit-test søger og beviser, at banen kan gennemføres. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_hop_best`). `hop.html` + `js/hop.js` + `js/hop-logic.js`. |
 | Brud (Spil-menuen) | ✅ Live (2026-10-02, PR #282) | Breakout porteret fra Nord-minigames (`src/game/brud-engine.ts`). Pladen styres med pil/A-D på computer (musen styrer ikke, ejerønske 2026-10-09) og med fingeren på touch; klik/mellemrum skyder. Bolden bliver 6 % hurtigere for hvert slag med pladen (loft 900) så en runde ikke trækker ud. En klods ramt direkte fra pladen (ingen væg imellem) = perfekt; ryddet mur → ny mur og hurtigere bold. Kører i en fast verden på 360×420, der skaleres ind i canvas, så en ændring af vinduets størrelse ikke flytter klodserne. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_brud_best`). `brud.html` + `js/brud.js` + `js/brud-logic.js`. Med Brud er alle Nord-minigames porteret undtagen Drej og Vig (ejerbeslutning). |
-| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`); live siden 2026-10-15 med 2 aktive spørgsmål (Polen, Norge). Instansoprettelsen er serverejet siden 2026-10-16 (2-0C), så facit kan ikke længere sættes af eleven — det fundament, alle kommende opgaveformer bygger på. |
+| Slope (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-19) | Kugle-ned-ad-bakken-spil, bygget fra bunden i samme form som de øvrige minigames (Nord-minigames har ingen Slope-kilde — Grok-arkivet indeholder kun Prisma, Nål, Kløft, Hop, Drej, Brud, Husk og Vig). Kuglen triller selv og bliver hurtigere (9 → 19 enheder/s); styr med pil/A-D, de to knapper under banen eller ved at holde fingeren på venstre/højre side af banen. Hver række klodser har et hul på mindst 1,5 enheder; tæt forbi en klods (under 0,3) = perfekt. Ud over kanten eller ind i en klods = slut. Banen er deterministisk pr. runde (seed = rundetæller i browseren); en unit-test lader en autopilot køre 40 rækker på 12 seeds. Perspektiv tegnet på canvas i temaets farver. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord i meter (`dsj_slope_best`). `slope.html` + `js/slope.js` + `js/slope-logic.js`. |
+| Minigames-fane (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-19) | `spil.html` har to faner: **Fag** (Historie, Engelsk) og **Minigames** (Stabel, Husk, Nål, Kløft, Hop, Brud, Slope). Den åbne fane står i adressen som `?fane=minigames`; alle minigames sender tilbage til `spil.html?fane=minigames`. Quizzen sender fortsat tilbage til `spil.html` (Fag). |
+| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`); live siden 2026-10-15 med 2 aktive spørgsmål (Polen, Norge). Instansoprettelsen er serverejet siden 2026-10-16 (2-0C), så facit kan ikke længere sættes af eleven — det fundament, alle kommende opgaveformer bygger på. **Fordeling af opgaveformer** (2026-10-19): stratificeret kandidatvindue pr. elev, serverafledt niveau og formatblanding er bygget bag Edge-hemmeligheden `QUESTION_MIX_ENGINE` (standard = dagens udvælgelse). **Shadow siden 2026-10-22** (D-182): migrationen `20261019150000` er anvendt med remote-versionen `20261022053442`, `get-next-question` er deployet, og `QUESTION_MIX_ENGINE=shadow` logger v2's valg, mens eleverne stadig får v1. **v2 er ikke aktiveret** og kræver særskilt ejergodkendelse. Se [ARCHITECTURE.md → Question selection & the format mix](./ARCHITECTURE.md#question-selection--the-format-mix-fordeling-af-opgaveformer--shadow-since-2026-10-22-v2-not-active). |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 

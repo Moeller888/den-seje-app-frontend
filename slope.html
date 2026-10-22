@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="default">
+<head>
+  <script>
+  (function(){var k='dsj_active_theme',v=['default','ice','inferno','void','forest','sakura','aurora','pearl','meadow','rose-gold'];try{var t=sessionStorage.getItem(k);if(t&&v.indexOf(t)!==-1)document.documentElement.dataset.theme=t;}catch{}}());
+  </script>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slope – DEN SEJE APP</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/read-aloud.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .slope-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 16px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slope-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0 12px;
+    }
+
+    .slope-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 14px;
+      min-height: 44px;
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .slope-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .slope-back:focus-visible,
+    .slope-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .slope-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .slope-lead {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 8px 0 12px;
+    }
+    .slope-lead .read-aloud-btn {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      min-height: 44px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .slope-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 1.2em;
+      margin-bottom: 14px;
+    }
+
+    .slope-cta {
+      min-height: 48px;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-bright);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .slope-cta:hover { background: var(--btn-bg-hover); }
+    .slope-cta--primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .slope-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .slope-score {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-bright);
+    }
+
+    .slope-arena {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+        var(--bg-panel);
+      padding: 0;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .slope-arena:focus { outline: none; }
+    .slope-arena:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .slope-stage {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      overflow: hidden;
+    }
+    .slope-stage canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .slope-hud {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .slope-combo {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .slope-mute {
+      min-height: 44px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-dim);
+      background: var(--btn-bg);
+      border: 1px solid var(--border-btn);
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .slope-mute:hover { background: var(--btn-bg-hover); color: var(--text-main); }
+    .slope-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .slope-hero {
+      font-size: 28px;
+      color: var(--text-bright);
+      margin: 12px 0 8px;
+    }
+    .slope-over-line {
+      font-size: 16px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .slope-steer {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .slope-steer .slope-cta {
+      flex: 1;
+      min-height: 64px;
+      font-size: 22px;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .slope-steer .slope-cta[data-held="true"] {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    @media (max-width: 420px) {
+      .slope-stage { height: 380px; }
+    }
+  </style>
+</head>
+<body>
+<div class="slope-shell" id="slope-root" data-screen="intro">
+  <div class="slope-topbar">
+    <a class="slope-back" href="spil.html?fane=minigames">← Minigames</a>
+    <div class="slope-title">Slope</div>
+    <button type="button" class="slope-mute" id="slope-mute" aria-pressed="false">Lyd til</button>
+  </div>
+
+  <section id="slope-intro">
+    <p class="slope-lead" id="slope-lead">En kugle triller selv ned ad en bane og bliver hurtigere og hurtigere. Styr til venstre og højre med piletasterne, med A og D eller med knapperne under banen. På en skærm kan du også holde fingeren på venstre eller højre side af banen. I hver række af klodser er der et hul, du skal igennem. Smutter du tæt forbi en klods, er det perfekt. Triller du ud over kanten eller ind i en klods, er runden slut. Slope giver ingen mønter.</p>
+    <p class="slope-note" id="slope-best"></p>
+    <button type="button" class="slope-cta slope-cta--primary" id="slope-start">Start</button>
+  </section>
+
+  <section id="slope-play" hidden>
+    <div class="slope-hud">
+      <div class="slope-score" id="slope-score" aria-live="polite">0 meter</div>
+      <div class="slope-combo" id="slope-combo" aria-live="polite"></div>
+    </div>
+    <div class="slope-arena" id="slope-arena" role="application" aria-label="Slope. Styr kuglen med piletasterne eller ved at holde på venstre eller højre side.">
+      <div class="slope-stage">
+        <canvas id="slope-canvas" aria-hidden="true"></canvas>
+      </div>
+    </div>
+    <div class="slope-steer">
+      <button type="button" class="slope-cta" id="slope-left" aria-label="Styr til venstre">◀</button>
+      <button type="button" class="slope-cta" id="slope-right" aria-label="Styr til højre">▶</button>
+    </div>
+  </section>
+
+  <section id="slope-over" hidden>
+    <h2 class="slope-hero" id="slope-over-title">Ude af banen</h2>
+    <p class="slope-over-line" id="slope-over-line"></p>
+    <p class="slope-note" id="slope-best-over"></p>
+    <div class="slope-actions">
+      <button type="button" class="slope-cta slope-cta--primary" id="slope-again">Igen</button>
+      <a class="slope-cta slope-back" href="spil.html?fane=minigames">Tilbage til minigames</a>
+    </div>
+  </section>
+</div>
+<script type="module" src="js/slope.js"></script>
+</body>
+</html>

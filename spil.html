@@ -54,6 +54,7 @@
     }
     .spil-back:hover { background: var(--btn-bg-hover); color: var(--text-main); }
     .spil-back:focus-visible,
+    .spil-tab:focus-visible,
     .spil-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .spil-title {
@@ -69,11 +70,41 @@
       margin-bottom: 14px;
     }
 
+    .spil-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      margin-bottom: 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .spil-tab {
+      flex: 1;
+      min-height: 44px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .spil-tab:hover { color: var(--text-main); background: var(--btn-bg-hover); }
+    .spil-tab[aria-selected="true"] {
+      color: #fff;
+      background: var(--accent);
+    }
+
     .spil-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+    .spil-list[hidden] { display: none; }
 
     .spil-card {
       display: grid;
@@ -134,9 +165,14 @@
     <span aria-hidden="true"></span>
   </div>
 
-  <p class="spil-lead">Vælg det fag, du vil blive dygtigere til – eller spil et af spillene.</p>
+  <p class="spil-lead">Vælg det fag, du vil blive dygtigere til – eller spil et minigame.</p>
 
-  <nav class="spil-list" aria-label="Spil">
+  <div class="spil-tabs" role="tablist" aria-label="Spil">
+    <button type="button" class="spil-tab" role="tab" id="spil-tab-fag" aria-controls="spil-panel-fag" aria-selected="true">Fag</button>
+    <button type="button" class="spil-tab" role="tab" id="spil-tab-minigames" aria-controls="spil-panel-minigames" aria-selected="false" tabindex="-1">Minigames</button>
+  </div>
+
+  <nav class="spil-list" id="spil-panel-fag" role="tabpanel" aria-labelledby="spil-tab-fag">
     <a class="spil-card" href="index.html">
       <span class="spil-kicker">Quiz</span>
       <span class="spil-name">Historie</span>
@@ -149,6 +185,15 @@
       <span class="spil-line">Ord, sætninger og små tekster på engelsk. Rigtige svar giver XP og mønter.</span>
       <span class="spil-go">Spil →</span>
     </a>
+    <a class="spil-card" href="index.html?fag=dansk">
+      <span class="spil-kicker">Quiz</span>
+      <span class="spil-name">Dansk</span>
+      <span class="spil-line">Stavning, ord, grammatik, tegnsætning og små tekster. Rigtige svar giver XP og mønter.</span>
+      <span class="spil-go">Spil →</span>
+    </a>
+  </nav>
+
+  <nav class="spil-list" id="spil-panel-minigames" role="tabpanel" aria-labelledby="spil-tab-minigames" hidden>
     <a class="spil-card" href="stabel.html">
       <span class="spil-kicker">Klik</span>
       <span class="spil-name">Stabel</span>
@@ -184,6 +229,12 @@
       <span class="spil-name">Brud</span>
       <span class="spil-line">Hold bolden oppe med pladen, og knus klodserne.</span>
       <span class="spil-go">Knus →</span>
+    </a>
+    <a class="spil-card" href="slope.html">
+      <span class="spil-kicker">Styring</span>
+      <span class="spil-name">Slope</span>
+      <span class="spil-line">Kuglen triller selv ned ad banen. Styr den gennem hullerne, og hold dig på banen.</span>
+      <span class="spil-go">Rul →</span>
     </a>
   </nav>
 </div>

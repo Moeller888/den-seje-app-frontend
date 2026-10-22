@@ -1,20 +1,32 @@
-// ── Read-aloud service facade (157O) ─────────────────────────────────────────
+// ── Read-aloud service facade (157O/157P) ────────────────────────────────────
 // Single entry point for read-aloud. Hides providers entirely; callers just ask it to
-// speak text. Default-off, fail-soft, zero-cost. Provider order: PRE-RECORDED (Piper
-// clip, preferred) → WEB SPEECH (on-device fallback). The first provider that actually
-// produces audio wins.
+// speak text. Fail-soft. Provider order in production: CACHED AZURE NEURAL only
+// (provider-azure.js) — every browser plays the same Microsoft voice from the same file.
 //
-// No upload, no third-party service (Web Speech runs on-device; clips are first-party
-// static assets). Built on the js/audio.js graceful-no-op philosophy.
+// Web Speech (on-device voices) differs per browser, so it is NOT a production fallback:
+// when Azure audio cannot be fetched the player shows a calm error instead of switching to
+// another voice. It stays available behind ENABLE_WEBSPEECH_DEV_FALLBACK for offline
+// development only. The provider contract (provider.js) is unchanged, so another provider
+// can still be added without touching the UI.
 
 import { assertReadAloudProvider } from "./provider.js";
-import { createPrerecordedProvider } from "./provider-prerecorded.js";
+import { createAzureProvider } from "./provider-azure.js";
 import { createWebSpeechProvider } from "./provider-webspeech.js";
 import { hashKey } from "./manifest.js";
 
-// Master switch (157O). ACTIVATED (Web Speech only; Piper manifest stays empty).
-// On-device, no consent, fail-soft — see docs/157o-read-aloud.md §activation.
+// Master switch (157O). ACTIVATED.
 export const ENABLE_READ_ALOUD = true;
+
+// Development/offline only (157P). Must stay false in Git: true would let Chrome, Edge and
+// Safari each speak with a different local voice again.
+export const ENABLE_WEBSPEECH_DEV_FALLBACK = false;
+
+/** The production provider list (plus Web Speech only when the dev flag is on). */
+export function defaultReadAloudProviders() {
+  const list = [createAzureProvider()];
+  if (ENABLE_WEBSPEECH_DEV_FALLBACK === true) list.push(createWebSpeechProvider());
+  return list;
+}
 
 /** Whether the read-aloud flag is on (no capability check). No side effects. */
 export function isReadAloudEnabled() {
@@ -30,17 +42,54 @@ export function createReadAloud(config) {
   const enabled = cfg.enabled !== undefined ? !!cfg.enabled : (ENABLE_READ_ALOUD === true);
 
   let _providers = null;
+  let _activeProvider = null;
   function providers() {
     if (_providers) return _providers;
     const list = Array.isArray(cfg.providers) && cfg.providers.length > 0
       ? cfg.providers
-      : [createPrerecordedProvider(), createWebSpeechProvider()];
+      : defaultReadAloudProviders();
     _providers = list.map(assertReadAloudProvider);
     return _providers;
   }
 
   function anySupported() {
     try { return providers().some((p) => p.isSupported()); } catch (_e) { return false; }
+  }
+
+  /** The single request shape every provider sees, for both canSpeak() and speak(). */
+  function buildRequest(text, opts) {
+    const o = opts && typeof opts === "object" ? opts : {};
+    const segments = Array.isArray(o.segments)
+      ? o.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0 &&
+          typeof s.lang === "string" && s.lang.length > 0)
+      : [];
+    const req = {
+      text: typeof text === "string" ? text : "",
+      clipKey: o.clipKey || hashKey(text),
+      lang: o.lang || "da-DK",
+      rate: o.rate,
+      voiceURI: typeof o.voiceURI === "string" ? o.voiceURI : null,
+      onBoundary: typeof o.onBoundary === "function" ? o.onBoundary : undefined,
+      onState: typeof o.onState === "function" ? o.onState : undefined,
+    };
+    if (segments.length > 0) req.segments = segments;
+    return req;
+  }
+
+  /** A provider without canSpeak() can voice any request it supports. Never throws. */
+  function providerCanSpeak(p, req) {
+    try {
+      if (!p.isSupported()) return false;
+      return typeof p.canSpeak === "function" ? p.canSpeak(req) === true : true;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function stopProviders() {
+    try { providers().forEach((provider) => { try { provider.stop(); } catch (_e) { /* ignore */ } }); }
+    catch (_e) { /* ignore */ }
+    _activeProvider = null;
   }
 
   return {
@@ -50,10 +99,30 @@ export function createReadAloud(config) {
     },
 
     /**
-     * Speak text. Tries pre-recorded clip first, then on-device speech. Returns true
-     * if any provider produced audio. No-op (false) when disabled. Never throws.
+     * Whether at least one provider can actually voice this text (same options as speak).
+     * Callers render read-aloud controls only when this is true. Never throws.
      * @param {string} text
      * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[]}} [opts]
+     * @returns {boolean}
+     */
+    canSpeak(text, opts) {
+      try {
+        if (!enabled || typeof text !== "string" || text.trim().length === 0) return false;
+        const req = buildRequest(text, opts);
+        return providers().some((p) => providerCanSpeak(p, req));
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /**
+     * Speak text with the first provider that can voice it. Returns true
+     * if any provider produced audio. No-op (false) when disabled. Never throws.
+     * @param {string} text
+     * @param {{clipKey?:string, lang?:string, segments?:{text:string, lang:string}[],
+     *          rate?:number, voiceURI?:string,
+     *          onBoundary?:(boundary:{charIndex:number,charLength:number})=>void,
+     *          onState?:(state:"speaking"|"paused"|"ended"|"error")=>void}} [opts]
      *        `segments` — read the text as language runs, each with its own voice
      *        (English subject: Danish frame + English words). Invalid runs are dropped.
      * @returns {Promise<boolean>}
@@ -61,21 +130,15 @@ export function createReadAloud(config) {
     async speak(text, opts) {
       try {
         if (!enabled) return false;
-        const o = opts && typeof opts === "object" ? opts : {};
-        const segments = Array.isArray(o.segments)
-          ? o.segments.filter((s) => s && typeof s.text === "string" && s.text.trim().length > 0 &&
-              typeof s.lang === "string" && s.lang.length > 0)
-          : [];
-        const req = {
-          text: typeof text === "string" ? text : "",
-          clipKey: o.clipKey || hashKey(text),
-          lang: o.lang || "da-DK",
-        };
-        if (segments.length > 0) req.segments = segments;
+        const req = buildRequest(text, opts);
+        stopProviders();
         for (const p of providers()) {
           try {
-            if (!p.isSupported()) continue;
-            if (await p.speak(req)) return true;
+            if (!providerCanSpeak(p, req)) continue;
+            if (await p.speak(req)) {
+              _activeProvider = p;
+              return true;
+            }
           } catch (_e) { /* try next provider */ }
         }
         return false;
@@ -86,8 +149,39 @@ export function createReadAloud(config) {
 
     /** Stop any in-progress read-aloud. Never throws. */
     stop() {
-      try { providers().forEach((p) => { try { p.stop(); } catch (_e) { /* ignore */ } }); }
-      catch (_e) { /* ignore */ }
+      stopProviders();
+    },
+
+    /** Pause the active provider where supported. */
+    pause() {
+      try {
+        return !!(_activeProvider && typeof _activeProvider.pause === "function" && _activeProvider.pause());
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /** Resume the active provider where supported. */
+    resume() {
+      try {
+        return !!(_activeProvider && typeof _activeProvider.resume === "function" && _activeProvider.resume());
+      } catch (_e) {
+        return false;
+      }
+    },
+
+    /** Device voices available for one language, best-quality first. */
+    getVoices(lang = "da-DK") {
+      try {
+        for (const provider of providers()) {
+          if (typeof provider.listVoices !== "function") continue;
+          const voices = provider.listVoices(lang);
+          if (Array.isArray(voices) && voices.length > 0) return voices;
+        }
+        return [];
+      } catch (_e) {
+        return [];
+      }
     },
   };
 }

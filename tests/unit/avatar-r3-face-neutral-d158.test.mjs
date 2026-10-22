@@ -75,6 +75,12 @@ test("only the reviewed face-neutral source files are tracked — no preparation
     "tools/avatar/r3-face-neutral-attempt-ledger.mjs",
     "tools/avatar/fixtures/r3-face-neutral/send-call-spec-prepared-v1.json",
     "tests/unit/avatar-r3-face-neutral-send-d160.test.mjs",
+    // D-162 (owner instruction 2026-10-18): guide B (no H1 pixel bytes) and its prompt as tracked fixtures, the separate
+    // D-162 send adapter and its test.
+    "tools/avatar/fixtures/r3-face-neutral/guide-b-v1.png",
+    "tools/avatar/fixtures/r3-face-neutral/prompt-guide-b-v1.txt",
+    "tools/avatar/openai-send-r3-face-neutral-d162.mjs",
+    "tests/unit/avatar-r3-face-neutral-send-d162.test.mjs",
   ]);
   assert.deepEqual(tracked.filter((f) => f !== self && !authorised.has(f) && /r3-face-neutral|brow-mirror-fit|face-neutral-prep/i.test(f)), []);
   assert.deepEqual(tracked.filter((f) => f.startsWith("tools/avatar/build/")), []);

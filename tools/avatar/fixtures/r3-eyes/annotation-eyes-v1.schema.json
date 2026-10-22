@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "r3-eyes-annotation-v1",
+  "title": "R3 eyes-fixed sheet anchor annotation (one file per eyes-fixed sheet)",
+  "description": "Placement METADATA for one raw eyes-fixed sheet (D-169). It never changes pixels. The compositor accepts it only when raw.sha256 equals the sheet's SHA-256, the point names are exactly ringCentre + outerCorner + innerCorner per eye, every point lies on the 1536x1024 sheet with each ring centre in its own half, and status is APPROVED (production). The iris sheet is never annotated: its anchors are the alpha-weighted centroids. The tool (r3-eyes-tool.mjs validateAnnotation) is the enforcing implementation; this schema documents it.",
+  "type": "object",
+  "required": ["schema", "annotationVersion", "raw", "sheetType", "coordinateSpace", "pointDefinitions", "points", "uncertaintyPx", "annotator", "status", "approvedBy", "approvedOn"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "const": "r3-eyes-annotation-v1" },
+    "annotationVersion": { "type": "integer", "minimum": 1, "description": "incremented on every correction; a correction is a new file version, never an in-place edit of an approved one" },
+    "raw": { "type": "object", "required": ["file", "sha256"], "properties": { "file": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } },
+    "sheetType": { "const": "r3-eyes-fixed-sheet-v1" },
+    "coordinateSpace": { "const": "sheet continuous; pixel i covers [i, i+1); origin = the sheet's top-left; 1536x1024" },
+    "pointDefinitions": { "type": "string", "description": "the eye targets version whose 'definition' texts the points follow" },
+    "points": {
+      "type": "object",
+      "required": ["eyeLeft", "eyeRight"],
+      "additionalProperties": false,
+      "properties": {
+        "eyeLeft": { "$ref": "#/$defs/eye" },
+        "eyeRight": { "$ref": "#/$defs/eye" }
+      }
+    },
+    "uncertaintyPx": { "type": "number", "minimum": 0 },
+    "annotator": { "type": "string" },
+    "status": { "enum": ["DRAFT", "APPROVED", "REJECTED", "SYNTHETIC_TEST_APPROVED"], "description": "only the owner sets APPROVED; SYNTHETIC_TEST_APPROVED is refused in production" },
+    "approvedBy": { "type": ["string", "null"] },
+    "approvedOn": { "type": ["string", "null"], "description": "ISO date" },
+    "note": { "type": "string" }
+  },
+  "$defs": {
+    "point": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+    "eye": {
+      "type": "object",
+      "required": ["ringCentre", "outerCorner", "innerCorner"],
+      "additionalProperties": false,
+      "properties": {
+        "ringCentre": { "$ref": "#/$defs/point", "description": "FIT anchor" },
+        "outerCorner": { "$ref": "#/$defs/point", "description": "FIT anchor" },
+        "innerCorner": { "$ref": "#/$defs/point", "description": "CHECK point: reported after placement, never fitted" }
+      }
+    }
+  }
+}

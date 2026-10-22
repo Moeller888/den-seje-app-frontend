@@ -12,6 +12,7 @@
   <title>DEN SEJE APP</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/read-aloud.css">
 
   <style>
     /* ── Reset ──────────────────────────────────────────────── */
@@ -542,8 +543,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      justify-content: safe center;
+      gap: 12px;
       padding: 24px;
+      overflow-y: auto;
     }
     #grade-selector-overlay h2 {
       color: var(--text-primary, #f0edf8);
@@ -805,13 +808,11 @@
     .placement-option-btn:disabled {
       cursor: default;
     }
-    .placement-option-btn.placement-correct {
-      border-color: #22c55e;
-      background: rgba(34,197,94,0.14);
-    }
-    .placement-option-btn.placement-incorrect {
-      border-color: #ef4444;
-      background: rgba(239,68,68,0.10);
+    /* Placement is graded server-side (submit_placement), so the browser never knows which option
+       is right: the chosen answer is marked as chosen, not as correct or incorrect. */
+    .placement-option-btn.placement-selected {
+      border-color: var(--accent-primary, #7c3aed);
+      background: rgba(124,58,237,0.18);
     }
 
     /* ── Reduced motion ──────────────────────────────────────── */
@@ -870,8 +871,9 @@
   <!-- Question card: the visual and interaction focal point -->
   <div class="game-card" id="game-card">
     <div id="question">Indl&#230;ser&hellip;</div>
-    <div id="feedback"></div>
-    <div id="review-feedback"></div>
+    <!-- Announced to screen readers when the result arrives (Ja! / Svaret er … / fejl). -->
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div id="review-feedback" aria-live="polite"></div>
     <button type="button" id="reflection-continue">Videre &#8594;</button>
   </div>
 
@@ -932,6 +934,10 @@
 <div id="grade-selector-overlay">
   <h2>Vælg dit klassetrin</h2>
   <p>Du f&#229;r sp&#248;rgsm&#229;l, der passer til dit niveau</p>
+  <button class="grade-btn" data-grade="3">3. klasse</button>
+  <button class="grade-btn" data-grade="4">4. klasse</button>
+  <button class="grade-btn" data-grade="5">5. klasse</button>
+  <button class="grade-btn" data-grade="6">6. klasse</button>
   <button class="grade-btn" data-grade="7">7. klasse</button>
   <button class="grade-btn" data-grade="8">8. klasse</button>
   <button class="grade-btn" data-grade="9">9. klasse</button>

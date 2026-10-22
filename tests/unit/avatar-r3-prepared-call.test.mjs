@@ -68,9 +68,9 @@ test("it is honest that one call can still fail", () => {
 
 // ── authorisedCalls must be exactly what D-139 left ──────────────────────────────────────────
 
-test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143, D-151, D-153 and D-160 records", () => {
-  assert.equal(CONTRACT.authorisedCalls.count, 6);
-  assert.equal(CONTRACT.authorisedCalls.calls.length, 6);
+test("authorisedCalls holds D-139's call, the D-142 record, the closed D-143, D-151, D-153, D-160, D-162, D-165, D-167, D-170 and D-172 records, and D-175's one hair permission", () => {
+  assert.equal(CONTRACT.authorisedCalls.count, 15);
+  assert.equal(CONTRACT.authorisedCalls.calls.length, 15);
   assert.equal(CONTRACT.authorisedCalls.calls[0].callId, "D-139-r3-underlay-head-only-v1");
   assert.equal(CONTRACT.authorisedCalls.calls[0].decision, "D-139");
   // The second entry is a record. It must never be mistaken for a live permission.
@@ -106,7 +106,58 @@ test("authorisedCalls holds D-139's call, the D-142 record, and the closed D-143
   assert.equal(d160.decision, "D-160");
   assert.deepEqual([d160.mandateState, d160.neverReuse, d160.notAnActivePermission], ["SPENT", true, true]);
   assert.match(d160.prohibitions.noRetry, /Exactly one fetch/);
-  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT"), [], "no live permission remains");
+  // The seventh is D-162's: ONE further face-neutral attempt (guide B), sent once (HTTP 200, technical reject at AUTO-5) and closed by D-163.
+  const d162 = CONTRACT.authorisedCalls.calls[6];
+  assert.deepEqual([d162.callId, d162.decision], ["D-162-r3-face-neutral-guide-b-v1", "D-162"]);
+  assert.deepEqual([d162.mandateState, d162.neverReuse, d162.notAnActivePermission, d162.closure.closedBy], ["SPENT", true, true, "D-163"]);
+  assert.match(d162.prohibitions.noRetry, /Exactly one fetch/);
+  // The eighth is D-165's: ONE face-neutral parts-sheet attempt.
+  // D-166 later recorded that one send (HTTP 200, one sheet, RAW-1..5 passed, the nose rejected) and closed the entry.
+  const d165 = CONTRACT.authorisedCalls.calls[7];
+  assert.deepEqual([d165.callId, d165.decision], ["D-165-r3-face-parts-sheet-v1", "D-165"]);
+  assert.deepEqual([d165.mandateState, d165.neverReuse, d165.notAnActivePermission, d165.closure.closedBy], ["SPENT", true, true, "D-166"]);
+  assert.match(d165.prohibitions.noRetry, /Exactly one fetch/);
+  // The ninth is D-167's: ONE face-neutral partial nose sheet, sent once (HTTP 200, technical reject at RAW-4′) and closed by D-168.
+  const d167 = CONTRACT.authorisedCalls.calls[8];
+  assert.deepEqual([d167.callId, d167.decision], ["D-167-r3-face-parts-nose-v1", "D-167"]);
+  assert.deepEqual([d167.mandateState, d167.neverReuse, d167.notAnActivePermission, d167.closure.closedBy], ["SPENT", true, true, "D-168"]);
+  assert.match(d167.prohibitions.noRetry, /Exactly one fetch/);
+  // The tenth is D-170's: ONE eyes-fixed sheet (call A), sent once (HTTP 200, E1..E5 passed, visual review pending) and closed by D-171.
+  const d170 = CONTRACT.authorisedCalls.calls[9];
+  assert.deepEqual([d170.callId, d170.decision], ["D-170-r3-eyes-fixed-v1", "D-170"]);
+  assert.deepEqual([d170.mandateState, d170.neverReuse, d170.notAnActivePermission, d170.closure.closedBy], ["SPENT", true, true, "D-171"]);
+  assert.match(d170.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(d170.irisCallB, /NOT authorised/);
+  // The eleventh is D-172's: ONE further eyes-fixed sheet (call A2), sent once (HTTP 200, E1..E5 and F1..F2 passed, brown iris
+  // area in the fixed layer, no candidate) and closed by D-173.
+  const d172 = CONTRACT.authorisedCalls.calls[10];
+  assert.deepEqual([d172.callId, d172.decision], ["D-172-r3-eyes-fixed-v2", "D-172"]);
+  assert.deepEqual([d172.mandateState, d172.neverReuse, d172.notAnActivePermission, d172.closure.closedBy], ["SPENT", true, true, "D-173"]);
+  assert.match(d172.irisCallB, /NOT authorised/);
+  // The twelfth is D-175's: ONE hair sheet (assets[8]), sent once (HTTP 200, technical reject at H2) and closed by D-176.
+  const d175 = CONTRACT.authorisedCalls.calls[11];
+  assert.deepEqual([d175.callId, d175.decision], ["D-175-r3-hair-northstar-v1", "D-175"]);
+  assert.deepEqual([d175.mandateState, d175.neverReuse, d175.notAnActivePermission, d175.closure.closedBy], ["SPENT", true, true, "D-176"]);
+  assert.match(d175.prohibitions.noRetry, /Exactly one fetch/);
+  assert.match(d175.otherHairstyles, /NOT authorised/);
+  // The thirteenth is D-177's: ONE further hair sheet with an explicit margin (prompt v2), sent once (HTTP 200, H1..H5
+  // passed, no approved anchors, kept for review) and closed by D-178.
+  const d177 = CONTRACT.authorisedCalls.calls[12];
+  assert.deepEqual([d177.callId, d177.decision], ["D-177-r3-hair-northstar-v2", "D-177"]);
+  assert.deepEqual([d177.mandateState, d177.neverReuse, d177.notAnActivePermission, d177.closure.closedBy], ["SPENT", true, true, "D-178"]);
+  assert.match(d177.prohibitions.noRetry, /Exactly one fetch/);
+  // The fourteenth is D-180's: ONE further hair sheet, the first under registration v2 (prompt v3), sent once (HTTP 200,
+  // H1..H5 passed, D-179's placement and shape checks not evaluated, kept for review) and closed by D-181.
+  const d180 = CONTRACT.authorisedCalls.calls[13];
+  assert.deepEqual([d180.callId, d180.decision], ["D-180-r3-hair-northstar-v3", "D-180"]);
+  assert.deepEqual([d180.mandateState, d180.neverReuse, d180.notAnActivePermission, d180.closure.closedBy], ["SPENT", true, true, "D-181"]);
+  assert.match(d180.prohibitions.noRetry, /Exactly one fetch/);
+  // The fifteenth is D-183's: ONE further hair sheet with two reference images (Northstar for style, the geometry guide),
+  // authorised and not yet attempted.
+  const d183 = CONTRACT.authorisedCalls.calls[14];
+  assert.deepEqual([d183.callId, d183.decision, d183.mandateState, d183.outcome], ["D-183-r3-hair-northstar-v4", "D-183", "UNSPENT", "NOT YET ATTEMPTED"]);
+  assert.match(d183.prohibitions.noRetry, /Exactly one fetch/);
+  assert.deepEqual(CONTRACT.authorisedCalls.calls.filter((x) => x.mandateState === "UNSPENT").map((x) => x.callId), ["D-183-r3-hair-northstar-v4"], "D-183's is the only live permission");
   assert.ok(!CONTRACT.authorisedCalls.calls.some((x) => x.decision === "D-141"),
     "D-141 still has no entry of its own");
 });
@@ -220,7 +271,22 @@ test("D-145: the implemented send adapter belongs to D-143's call, not to the pr
   assert.equal(P.callId, null);
   const impl = CONTRACT.adapterImplementations.entries;
   // D-160 later recorded a second implementation, for its own face-neutral call; it belongs to neither D-142 nor D-143.
-  assert.equal(impl.length, 2);
+  // D-162 later recorded a third implementation, for its own face-neutral call, and D-165 a fourth, for the parts sheet.
+  // D-167 later recorded a fifth, for the partial nose sheet, D-170 a sixth, for the eyes-fixed sheet (call A), and D-172 a
+  // seventh, for the further eyes-fixed sheet (call A2). D-175 later recorded an eighth, for its one hair sheet, and D-177
+  // a ninth, for the further hair sheet with an explicit margin.
+  // D-180 later recorded a tenth, for the third hair sheet (the first under registration v2).
+  // D-183 later recorded an eleventh, for the fourth hair sheet (two reference images).
+  assert.equal(impl.length, 11);
+  assert.deepEqual([impl[10].decision, impl[10].callId], ["D-183", "D-183-r3-hair-northstar-v4"]);
+  assert.deepEqual([impl[9].decision, impl[9].callId], ["D-180", "D-180-r3-hair-northstar-v3"]);
+  assert.deepEqual([impl[8].decision, impl[8].callId], ["D-177", "D-177-r3-hair-northstar-v2"]);
+  assert.deepEqual([impl[7].decision, impl[7].callId], ["D-175", "D-175-r3-hair-northstar-v1"]);
+  assert.deepEqual([impl[6].decision, impl[6].callId], ["D-172", "D-172-r3-eyes-fixed-v2"]);
+  assert.deepEqual([impl[5].decision, impl[5].callId], ["D-170", "D-170-r3-eyes-fixed-v1"]);
+  assert.deepEqual([impl[4].decision, impl[4].callId], ["D-167", "D-167-r3-face-parts-nose-v1"]);
+  assert.deepEqual([impl[3].decision, impl[3].callId], ["D-165", "D-165-r3-face-parts-sheet-v1"]);
+  assert.deepEqual([impl[2].decision, impl[2].callId], ["D-162", "D-162-r3-face-neutral-guide-b-v1"]);
   assert.deepEqual([impl[1].decision, impl[1].callId], ["D-160", "D-160-r3-face-neutral-v1"]);
   assert.equal(impl[0].decision, "D-145");
   assert.equal(impl[0].callId, "D-143-r3-underlay-core-v2");

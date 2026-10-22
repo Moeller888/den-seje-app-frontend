@@ -1,0 +1,36 @@
+Create ONE image, 1024 x 1024 pixels, with a fully transparent background.
+
+The image is an asset sheet divided into four equal, INVISIBLE quadrants of 512 x 512 pixels. Do not draw any grid,
+divider, border, frame, label, number, letter, arrow or marker anywhere.
+
+Put exactly one facial feature of the reference character in each quadrant:
+- top-left quadrant: the eyebrow that appears on the LEFT side of the reference image;
+- top-right quadrant: the eyebrow that appears on the RIGHT side of the reference image;
+- bottom-left quadrant: the nose;
+- bottom-right quadrant: the mouth.
+
+Size and spacing:
+- Draw each feature alone, centred in its quadrant, about 3.5 times as large as it appears on the reference face:
+  each eyebrow about 300 pixels wide, the nose about 80 pixels tall, the mouth line about 270 pixels wide.
+- Scale the line weights with the feature, so the outlines look as bold relative to the feature as on the reference.
+- Leave at least 60 pixels of empty transparent space between every feature and the edges of its quadrant.
+  Nothing may touch or cross a quadrant edge.
+
+Orientation — keep the reference's exact orientation for every feature; do not straighten, level or rotate anything:
+- the mouth line is TILTED: its right end is clearly higher than its left end (about 6 degrees on the reference);
+- each eyebrow keeps the reference's angle and curve, with both tips at the same relative heights as on the reference;
+- the nose keeps the reference's direction (its short stroke and its small hook as drawn on the reference).
+
+Style — match the reference exactly:
+- the same dark outline, the same brown eyebrow fill with its subtle painted texture;
+- the same short nose stroke with its small warm shading and small white highlight;
+- the same thin dark mouth line with its small end ticks, in the calm neutral default smile.
+Both eyebrows are COMPLETE, full length, with natural tapered ends on both sides. Never cut, shorten or hide an
+eyebrow, and never shape it around hair.
+
+Draw ONLY these four features. Do NOT draw: skin, a face surface or skin patch, a head outline, eyes, eye whites,
+eyelids, lashes, eyelid folds, hair, blush, ears, neck, shadows cast onto skin, glow, a background colour, text, numbers,
+grid lines or guide marks.
+
+Edges: opaque feature cores with clean anti-aliased edges directly on transparency; no halo, no white, grey or
+skin-coloured fringe.

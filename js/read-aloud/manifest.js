@@ -24,6 +24,15 @@ export function clipPathFor(clipKey) {
 }
 
 /**
+ * Whether any clip is shipped at all. An empty manifest means the pre-recorded provider
+ * cannot speak anything, so it must not make read-aloud look available.
+ * @returns {boolean}
+ */
+export function hasClips() {
+  return Object.values(READALOUD_MANIFEST).some((p) => typeof p === "string" && p.length > 0);
+}
+
+/**
  * Stable clip key for a piece of text (djb2). The Piper pipeline names clips by the
  * same hash. Returns null on failure.
  * @param {string} text

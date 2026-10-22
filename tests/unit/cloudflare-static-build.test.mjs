@@ -104,8 +104,8 @@ test("every mandatory runtime file is present", () => {
   for (const m of MANDATORY) assert.ok(existsSync(join(OUT, m)), `missing ${m}`);
 });
 
-test("all 30 runtime HTML pages are copied", () => {
-  assert.equal(RUNTIME_HTML.length, 30);
+test("all 31 runtime HTML pages are copied", () => {
+  assert.equal(RUNTIME_HTML.length, 31);
   for (const p of RUNTIME_HTML) assert.ok(has(p), `missing ${p}`);
 });
 
@@ -525,7 +525,7 @@ test("no internal .html address is redirected - the app keeps every one of its U
     assert.ok(!redirected.includes(file), `${file} is an internal surface and must not be redirected`);
   }
   // Named explicitly, so a silent reclassification is loud here too.
-  for (const file of ["index.html", "login.html", "reset-password.html", "hub.html", "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "shop.html",
+  for (const file of ["index.html", "login.html", "reset-password.html", "hub.html", "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "slope.html", "shop.html",
                       "avatar.html", "collection.html", "themes.html", "leaderboard.html",
                       "achievements.html", "teacher.html", "student-detail.html", "admin.html",
                       "docs.html", "404.html"]) {
@@ -848,7 +848,7 @@ test("no internal surface appears in the sitemap - not as a file, not as a route
     assert.ok(!paths.includes("/" + page.replace(/\.html$/, "")), `the sitemap lists /${page}`);
   }
   // Named explicitly, so a silent removal from INTERNAL_HTML stays loud here too.
-  for (const surface of ["index", "login", "reset-password", "hub", "spil", "stabel", "husk", "naal", "kloeft", "hop", "brud", "shop", "avatar", "collection",
+  for (const surface of ["index", "login", "reset-password", "hub", "spil", "stabel", "husk", "naal", "kloeft", "hop", "brud", "slope", "shop", "avatar", "collection",
                          "themes", "leaderboard", "achievements", "teacher", "student-detail",
                          "admin", "docs", "404"]) {
     assert.ok(!xml.includes(surface), `the sitemap mentions the internal surface ${surface}`);
@@ -1041,7 +1041,22 @@ test("wrangler.jsonc keeps explicit .html routes — html_handling is none", () 
   assert.match(wrangler, /"html_handling":\s*"none"/);
   assert.ok(!/"html_handling":\s*"auto-trailing-slash"/.test(wrangler), "auto-trailing-slash 307s away the .html extension");
   assert.match(wrangler, /"not_found_handling":\s*"404-page"/, "the 404 page behaviour must be preserved");
-  assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only");
+  // 157P (owner decision): one small script for read-aloud. Assets must still win first, so
+  // routing, redirects and the 404 page are untouched by it.
+  assert.ok(!/run_worker_first/.test(wrangler), "assets must be served before the script runs");
+});
+
+// 157P: the script owns /tts/ and /api/tts only and hands everything else back to the assets.
+test("the read-aloud Worker script is narrow and keeps secrets out of config", () => {
+  const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
+  assert.match(wrangler, /"main":\s*"worker\/index\.js"/, "the only script entry is worker/index.js");
+  assert.match(wrangler, /"binding":\s*"ASSETS"/);
+  assert.ok(!/"(AZURE_SPEECH_KEY|TTS_ADMIN_TOKEN)"\s*:/.test(wrangler), "secrets are set with `wrangler secret put`, never in config");
+  const src = readFileSync(join(REPO, "worker", "index.js"), "utf8");
+  assert.match(src, /return env\.ASSETS\.fetch\(request\);/, "unmatched requests go back to the asset layer");
+  const routes = [...src.matchAll(/url\.pathname === "([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(routes, ["/api/tts"]);
+  assert.ok(!has("worker/index.js") && !has("index.js"), "worker code is bundled, never published as an asset");
 });
 
 test("_redirects is generated as exactly the declared routing table — both halves", () => {
@@ -1372,7 +1387,8 @@ test("the build refuses to publish the repository root", () => {
   assert.ok(!/--assets\s+\.[\s"']/.test(src), "must never suggest deploying the repo root");
   const wrangler = readFileSync(join(REPO, "wrangler.jsonc"), "utf8");
   assert.match(wrangler, /"directory":\s*"\.\/dist-cloudflare"/);
-  assert.ok(!/"main"\s*:/.test(wrangler), "the Worker must stay asset-only — no main entry");
+  assert.ok(!/"main":\s*"\.\/?"/.test(wrangler) && !/"main":\s*"[^"]*dist-cloudflare/.test(wrangler),
+    "the script entry is code (worker/index.js), never the root or the asset directory");
 });
 
 test("the serve-check still asserts the routing contract over HTTP", () => {

@@ -44,7 +44,7 @@ export const RUNTIME_HTML = Object.freeze([
   "achievements.html", "admin.html", "avatar.html", "collection.html", "docs.html",
   "elev-og-laerer.html", "for-eleven.html", "for-laereren.html",
   "hub.html", "index.html", "landing.html", "leaderboard.html", "login.html", "om-laerlig.html",
-  "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html",
+  "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "slope.html",
   "priser.html", "produktet.html", "reset-password.html", "saadan-virker-det.html", "shop.html",
   "student-detail.html", "teacher.html", "themes.html", "til-skoler.html",
 ]);
@@ -140,7 +140,7 @@ export const PUBLIC_HTML = Object.freeze([
 ]);
 export const INTERNAL_HTML = Object.freeze([
   // student app
-  "index.html", "hub.html", "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "shop.html", "avatar.html", "collection.html", "themes.html",
+  "index.html", "hub.html", "spil.html", "stabel.html", "husk.html", "naal.html", "kloeft.html", "hop.html", "brud.html", "slope.html", "shop.html", "avatar.html", "collection.html", "themes.html",
   "leaderboard.html", "achievements.html",
   // teacher + admin
   "teacher.html", "student-detail.html", "admin.html",

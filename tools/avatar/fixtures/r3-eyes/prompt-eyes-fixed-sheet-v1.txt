@@ -1,0 +1,14 @@
+Input image 1 is the North Star character master. Draw ONLY the two eyes of this character, as a clean art layer on a fully transparent background, in exactly the same art style, line weight and default neutral expression as the North Star.
+
+Output: one 1536x1024 transparent PNG sheet. Draw both eyes together, side by side, as one unit, about four times the size they have in the North Star, centred on the sheet, with the character's image-left eye in the left half and the image-right eye in the right half. Keep the same spacing, tilt and size relation between the two eyes as in the North Star. Leave a clear empty vertical strip in the middle of the sheet between the eyes, and keep wide empty margins at all four edges.
+
+Each eye contains ONLY these elements, copied in look and placement from the North Star:
+- the white of the eye;
+- the thick black upper lash line with its small lash flicks at the outer corner, and the thin lower outline;
+- the thin dark outline ring around the iris;
+- the white catch-light highlight inside the iris area, upper-left of the pupil, at the same place in BOTH eyes (one light source, not mirrored);
+- the thin static eyelid fold line above the eye.
+
+Leave the iris itself EMPTY: everything inside the dark iris ring, except the white highlight, must be fully transparent (alpha 0). No iris colour, no pupil, no brown, no shading inside the ring.
+
+Do NOT draw: skin, face, nose, eyebrows, hair, eyelashes on the skin outside the North Star's lash shapes, shadows on the skin, blush, any text, labels, guides, frames or any other mark. Every pixel that is not part of the two eyes must be fully transparent (alpha 0). No soft glow, no halo, no matte, no background tint.

@@ -42,7 +42,10 @@ _Avatar internals: [AVATAR_SYSTEM.md](./AVATAR_SYSTEM.md). AI rules: [AI_GUIDELI
 - **Frontend:** vanilla JS + static HTML, **no build step** in the source sense, deployed to
   **Cloudflare Workers (Static Assets)** and live on `https://lærlig.dk`. Deployment copies an
   explicit allowlist into `dist-cloudflare/` (`tools/cloudflare-build-static.mjs`) rather than
-  serving the repo root. Canonical: [`HOSTING.md`](./HOSTING.md).
+  serving the repo root. Canonical: [`HOSTING.md`](./HOSTING.md). **157P** adds one small Worker
+  script (`worker/index.js`) that runs only for requests no asset matched and owns read-aloud
+  alone: cached clips in R2 and a rate-limited, authenticated synthesis endpoint backed by Azure
+  Speech (key = Worker secret). The app still talks to Supabase directly from the browser.
 - **Backend:** hosted Supabase — Postgres (with RLS), Auth, Storage, and Deno **Edge Functions**.
 - **Tests:** Playwright E2E against the live production URL, 3 browsers (Chromium/Firefox/WebKit),
   1 worker, no parallelism. The target is defined once as `PROD` in `tests/helpers.ts` and is
@@ -312,9 +315,18 @@ both need separate owner authorisation. Remaining hardening debt: `anon`/`authen
 UPDATE, DELETE and TRUNCATE on the table — UPDATE/DELETE are blocked by RLS (no policies), TRUNCATE
 is not reachable through PostgREST.
 
-**Answer keys stay server-side** (audit findings E1/E2, 2026-10-16 — **in the repo, NOT live yet**;
-step A = migration `20261016160000_answer_keys_server_side_rpcs.sql` + `get-next-question` +
-`process-event`; step B = frontend placement + a second migration). Before this, the key reached the
+**Answer keys stay server-side** (audit findings E1/E2, 2026-10-16). **Status 2026-10-18:** step A is
+**live** — migration `20261016160000_answer_keys_server_side_rpcs.sql` applied once via
+`apply_migration`, remote ledger version **`20261018095931`** (`answer_keys_server_side_rpcs`; ≠ the
+repo filename — D-110 divergence, not CLI-synchronised), and `get-next-question` **v174** /
+`process-event` **v33** deployed from PR #330 (`8e7e191`), byte-identical to the repo after
+re-download, production smoke 34/34. Step B (PR-B: frontend placement on `start_placement` /
+`submit_placement` + migration `20261018170000_answer_keys_client_paths_lockdown.sql`) is **merged
+but NOT applied** until a separate owner authorisation; until then P2/P3/P4 and the legacy repeat
+entry point remain open. Note: since `20261018143726_fix_danish_question_bank_text` (#331),
+`questions.metadata.danish_orthography_correct_aliases` holds the two accepted spellings of the
+correct MC option — answer data in `metadata`, which the whitelist DTO never forwards and which
+P2/P4 expose until step B is applied. Before this, the key reached the
 browser before answering through four paths: P1 `get-next-question` returned `content.correct`;
 P2 `get_unserved_questions` (EXECUTE for `anon` and `authenticated`) returned full content; P3 the
 owner can SELECT `question_instances.correct_answer`; P4 `questions` is readable by `PUBLIC` through
@@ -328,10 +340,18 @@ type, force_text}` and pedagogical metadata tags; never `correct`, `accepted_ans
 to the verified student (`get_unserved_questions_for_student`, `request_repeat_question_for_student`
 — both EXECUTE for `service_role` only — and `process-event/instance-read.ts`, followed by the 403
 ownership check); the scope is derived from the profile (`get-next-question/scope.ts`:
-`selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`);
+`selected_grade`, `active_domains` ∩ subject — the request may only pick `historie`/`engelsk`/`dansk`, each a whole fixed domain set; `english` and `danish` are
+kept out of historie and of placement);
 placement runs through `start_placement()` / `submit_placement(jsonb)` with a server-only
 `placement_sessions` row, graded once server-side, returning only the band. Step A only ADDS; step B
-removes P2/P3/P4 and the old repeat entry point from the client roles. **Order is mandatory:** merge
+removes P2/P3/P4 and the old repeat entry point from the client roles: `questions` is readable only by
+`authenticated` callers whose `auth_profile_role()` is `teacher` or `super_admin` (policy
+`"staff read questions"`; anon loses table SELECT); `question_instances` loses table-level SELECT for
+`anon`/`authenticated`, and `authenticated` gets a column grant on every column **except**
+`correct_answer` (RLS still decides the rows; selecting `correct_answer` or `*` is refused); EXECUTE on
+`get_unserved_questions` and `request_repeat_question` is revoked from PUBLIC, anon, authenticated
+and service_role (functions kept). New `question_instances` columns are not client-readable until
+granted. **Order is mandatory:** merge
 A → apply migration A → deploy `get-next-question` and `process-event` → merge B (frontend) → apply
 migration B. Each apply and each deploy needs its own owner authorisation (D-110).
 
@@ -368,6 +388,99 @@ fallback is removed.
 Choice options (`js/answer-options.js`): only `answer_format = "mc"` is padded to four options
 (legacy WWII-year pool — a no-op for every active question, which all have four). Any other choice
 format — e.g. a two-choice true/false — is shown exactly as authored and is never padded.
+
+### Question selection & the format mix (fordeling af opgaveformer) — shadow since 2026-10-22, v2 NOT active
+
+**Status:** merged in PR #351 (`14cbd50`) behind the Edge secret `QUESTION_MIX_ENGINE`; unset = `v1` =
+the old selection, unchanged. **Live since 2026-10-22, each step its own owner authorisation (D-182):**
+migration `20261019150000_question_format_mix.sql` applied 05:34 UTC via the Supabase plugin's
+`apply_migration`, **remote ledger version `20261022053442`** (≠ the repo filename, as with other D-110
+migrations; the stored SQL is byte-identical to the file, sha256 `870d1dfb…ace2f4e`) →
+`get-next-question` deployed 06:22 UTC (version 179, all 11 files identical to `main`) →
+`QUESTION_MIX_ENGINE=shadow` set 06:30 UTC. Pupils are still served `v1`; **`v2` is not active** and
+needs a separate owner authorisation.
+
+**The problem it solves.** `get_unserved_questions_for_student` ends in `LIMIT 50` with no `ORDER BY`,
+so every pupil gets the same first 50 rows in physical heap order. On 2026-10-19 the two live
+Stav til rows sat at physical positions 1846–1847 of 2,101 active rows: no new pupil met them, one
+topic filled up to 89 % of the first 20 questions, and the window moved whenever rows were UPDATEd.
+The band that steers ordering also came from the request body (`current_difficulty_band`), i.e. from
+the browser.
+
+**The flow** (`supabase/functions/get-next-question/`), unchanged around the new step:
+1. an open/due instance is served first — spaced repetition, a reload or an interrupted request
+   always gets the same open question back (`idx_one_open_question`);
+2. new questions — `v1`: `get_unserved_questions_for_student` + `sortByWave` (client band).
+   `v2`: `mix-flow.ts` reads, in parallel and on the backend client scoped to the verified pupil,
+   (a) `get_question_candidates_for_student` — same scope predicate, **servable formats only**, up to
+   20 rows **per (answer_format, answer_type, force_text, difficulty_band)** ranked
+   `md5(student_id || question_id)` (deterministic per pupil, different between pupils, ≈ 4 ms on the
+   largest live history, same as today), (b) the pupil's newest 20 `question_instances` with only
+   classifying fields (no content, no key, no verdict), (c) `advance_student_band` (below).
+   `format-mix.ts` orders the candidates; the first successful server-side insert wins, as before;
+3. the repeat RPC, only once the scope is exhausted — `v2` uses
+   `request_repeat_question_servable_for_student`, whose "exhausted" means "no **servable** unserved
+   question left", the same rule as (a). The old check counted every format, so a pool holding only
+   formats the client cannot show (e.g. Match par before its renderer) gave "no questions" although
+   answered questions could be repeated. All other guards are the old function's, byte for byte.
+`shadow` serves `v1` and only logs the `v2` decision (`FORMAT_MIX:`), for comparison before switching;
+it does call `advance_student_band`, i.e. it fills `student_band_state` (a server-only table) without
+changing what is served. In `v2` every path — due, new, repeat — takes the browser's `answer_format`
+from the registry (`servableWireFormat`): an unknown format is skipped and logged, never served as
+`"mc"` (v1 keeps `mapAnswerFormat`'s `"mc"` fallback unchanged; no such row exists live, 2026-10-20).
+
+**One servable rule in two languages.** `public.question_is_servable(answer_format, answer_type,
+content)` is the SQL twin of the registry (`classifyQuestion` + `servable`); a PGlite parity test runs
+both over a 210-case matrix, so they can only change together.
+
+**Interaction kinds** — one registry, `supabase/functions/_shared/interaction-kinds.ts`:
+`choice` (base kind) · `short_text` (Stav til) · `long_text` (teacher-graded) · `number` ·
+`force_text` · `match_pairs` (registered, **not servable**). `classifyQuestion` names a kind only
+where `mapAnswerFormat` (server), `process-event` (grading) and `resolveAnswerRenderer` (browser) agree
+(a parity test runs all three); anything else is `null` and never served by `v2`. Long answers have
+`maxShare 0`: `process-event` keeps a long answer open until the teacher grades it, so a long question
+chosen by quota would hold the pupil on it — they are served only when no auto-graded candidate of
+any kind is left, and they come last in the insert-fallback order too.
+
+**The mix rule** (`format-mix.ts`, hypotheses tested in `tools/question-mix-sim/`): over the newest
+20 NEW questions (server history), a non-base kind is due when it has a candidate within ±1 band of
+the pupil, at least 3 other new questions have passed since the last non-base question, it is a
+whole question behind its share (`min(maxShare, 30 % / qualified kinds)`, `maxShare` 15 %), and the
+non-base total stays ≤ 30 %. Otherwise the base kind. If the base kind is exhausted, the remaining
+servable kinds are served regardless of quota — limits steer variety, they never produce a false
+"no questions". Within a kind: band tier (±1) → NUZO wave score (`wave-order.ts`, scoring unchanged,
+moved verbatim from `index.ts`) → a topic not among the last 3 → SQL hash order.
+Parameter sweep (2026-10-19, `node tools/question-mix-sim/sim.mjs --sweep`): gap 3 is the binding
+limit (at most 1 non-base question in 4 = 25 %, so the 30 % total is only a backstop); gap 2 breaks
+the spacing, gap 5 cuts the non-base share from 24 % to 16 % in a richer bank; ±2 bands lowers level fit to ~70 % within ±1, ±0 bands halves Stav
+til reach because both live items are band 1. The starting values were kept.
+
+**Server-owned level.** `advance_student_band(student, grade)` folds app.js's rule (3 correct → +1,
+2 incorrect → −1, 1..5) over the pupil's verdicts into `student_band_state`, **each attempt exactly
+once**, in `(answered_at, id)` order behind a cursor, under a row lock. Seed: a completed
+`placement_sessions.band`, else the grade's start band, else 2; the fold restarts from the seed when
+the seed changes or the cursor's instance is gone. Why stateful: `question_instances` keeps only the
+latest verdict per instance (a repeat overwrites it), and no per-attempt log is live
+(`question_attempt_audit` and `analytics_question_attempts` have had no writes since 2026-03-08). A
+replay of the newest N verdicts forgot earned progression — 12 correct answers reached band 5, 60
+further alternating answers dropped it back to 1. The fold relies on one invariant: the answer RPCs
+write `answered_at = now()` in the same UPDATE as the verdict, and a pupil's next answer starts only
+after the previous one committed. `server-band.ts` is the TS specification of the fold, pinned equal
+to the SQL in PGlite. The band is one level across subjects, like the client's today; a per-subject
+level is a separate product decision. `profiles.current_band`,
+`profiles.placement_band` (both client-writable) and the request body are not inputs.
+
+**Adding a new kind (Match par next):** (1) registry entry with `servable: false`; (2) renderer in
+`js/answer-input.js`, evaluator/award path in `process-event`, deliberate extension of
+`_shared/question-dto.ts`; (3) flip `servable` in the registry **and** in `question_is_servable` (a
+reviewed migration) in the PR that ships the renderer, extending both parity tests. The candidate
+window and the mix need no change: a new `answer_format` gets its own stratum, and the mix reads
+limits from the registry.
+
+**Activation order** (each step its own owner authorisation): security review → apply the migration
+(D-110, `apply_migration`) → deploy `get-next-question` (diff live vs repo first) → set
+`QUESTION_MIX_ENGINE=shadow`, compare `FORMAT_MIX:` logs → `v2`. Rollback: unset the secret (back to
+`v1` without a deploy); the function can stay.
 
 ## 7. Adaptive learning engine
 
@@ -429,10 +542,14 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
   North Star Master **raster** render path. Default-off → `mountC2Avatar` uses the untouched C2/SVG
   path. When on (local preview), it renders the Phase-1 baked base — currently a **temporary PNG
   preview** (`assets/avatar-r2/base/body-neutral-medium-v1.png`); **WebP is the production target**.
-- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `false` — Section 157O).
-  Master switch for the read-aloud (TTS) service. Default-off → no control, no audio. When on, a
-  "🔊 Læs op" button reads the question via a pre-recorded Piper clip (if present) or on-device Web
-  Speech. No upload, no live service. See `docs/157o-read-aloud.md`.
+- **`ENABLE_READ_ALOUD`** (`js/read-aloud/index.js` constant, currently `true` — Section 157O).
+  Master switch for the read-aloud (TTS) service. The prompt player provides play/pause, restart,
+  saved speed and word highlighting; each multiple-choice option keeps its separate quick-read
+  button. **157P (built, awaiting approval):** audio is one cached Azure Neural voice
+  (`da-DK-ChristelNeural`, English runs `en-GB-SoniaNeural`) served from R2 by the Worker script
+  (`worker/`, `/tts/v<N>/<sha256>.mp3|.json`, `POST /api/tts`), identical in every browser; no voice
+  picker and no Web Speech fallback in production (`ENABLE_WEBSPEECH_DEV_FALLBACK=false`). The Azure
+  key is a Worker secret only. See `docs/157o-read-aloud.md` §7.
 - **`ENABLE_ANALYTICS`** (`js/analytics.js` constant, currently `false` — Section 157D). Master switch
   for PostHog analytics. Default-off → no SDK, no network, no cookies, no events. Even when enabled +
   keyed, a **GDPR consent gate** (`setConsent`) blocks all loading/sending until explicit opt-in.

@@ -1,0 +1,26 @@
+Create ONE image, 1024 x 1024 pixels, with a fully transparent background.
+
+Divide the image into four equal, INVISIBLE quadrants of 512 x 512 pixels: top-left, top-right, bottom-left and
+bottom-right. Draw ONLY in the bottom-left quadrant. The top-left, top-right and bottom-right quadrants must stay
+completely empty and fully transparent. Do not draw any grid, divider, border, frame, label, number, letter, arrow or
+marker anywhere.
+
+In the bottom-left quadrant, draw the NOSE of the reference character, alone, centred in the quadrant, about 3.5 times as
+large as it appears on the reference face: about 80 pixels tall. Scale the line weight with the nose, so the outline looks
+as bold relative to the nose as on the reference. Leave at least 60 pixels of empty transparent space between the nose and
+the edges of its quadrant. Nothing may touch or cross a quadrant edge.
+
+Draw the nose exactly as on the reference, in the same orientation — do not mirror or flip it:
+- a short, slightly curved DARK OUTLINE STROKE on the RIGHT side of the nose;
+- a soft, discreet WARM SHADING on the LEFT side of that stroke, only as wide as on the reference;
+- the small white highlight just to the RIGHT of the dark stroke, as on the reference.
+The nose has NO filled body: do not fill the area between the shading and the highlight, and do not draw any skin-coloured
+shape, skin patch or face surface around or behind the nose.
+
+Style — match the reference exactly: the same dark outline colour and weight, the same warm shading tone, the same small
+highlight, in the calm neutral default face.
+
+Draw ONLY the nose. Do NOT draw: eyebrows, eyes, eyelids, lashes, folds, mouth, hair, blush, ears, head outline, skin,
+shadows cast onto skin, glow, a background colour, text, numbers, grid lines or guide marks.
+
+Edges: clean anti-aliased edges directly on transparency; no halo, no white, grey or skin-coloured fringe.

@@ -314,11 +314,18 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "verified student id (E2). It reads and bumps repeat_count exactly as request_repeat_question " +
     "does, and redefines neither request_repeat_question, process_question_attempt nor " +
     "release_open_question_outside — the award stays this migration's.",
+  "20261019150000_question_format_mix.sql":
+    "adds request_repeat_question_servable_for_student, the body of request_repeat_question_for_student " +
+    "with one change: 'exhausted' and 'may be repeated' are judged on servable formats " +
+    "(question_is_servable). It reads and bumps repeat_count exactly as before, keeps every guard (one open " +
+    "instance, scope, auto-graded only, never teacher-graded), and redefines neither request_repeat_question, " +
+    "process_question_attempt nor release_open_question_outside — the award stays this migration's.",
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
-  assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS), ["20261016160000_answer_keys_server_side_rpcs.sql"],
+  assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
+    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);

@@ -150,8 +150,21 @@ test("the image-call budget is derived arithmetically and is now 15-16", () => {
   // derived budget is 18-19. Planned capacity is not a claim that the call was made: the actually-sent figure stays 3.
   // D-153 authorises ONE further, opaque-background head underlay call, so assets[0] carries 5 PLANNED calls and the
   // derived budget is 19-20. Planned capacity is not a claim that the call was made.
-  assert.equal(min, 19, "the iris is still one call; assets[0] now carries five PLANNED calls (D-153)");
-  assert.equal(max, 20);
+  // D-162 authorises ONE further face-neutral attempt, so assets[4] carries 2 PLANNED calls and the budget is 20-21.
+  // D-165 authorises ONE further face-neutral attempt (the first parts sheet), so assets[4] carries 3 PLANNED calls and the
+  // derived budget is 21-22. Planned capacity is not a claim that the call was made.
+  // D-167 authorises ONE further face-neutral attempt (the partial nose sheet), so assets[4] carries 4 PLANNED calls and
+  // the derived budget is 22-23. Planned capacity is not a claim that the call was made.
+  // D-172 adds ONE further planned eyes-fixed call (call A2), so assets[5] carries 2 PLANNED calls and the derived budget is
+  // 23-24. The iris (assets[6]) is still one call.
+  // D-177 adds ONE further planned hair call (the second hair sheet), so assets[8] carries 2 PLANNED calls and the derived
+  // budget is 24-25. The iris (assets[6]) is still one call.
+  // D-180 adds ONE further planned hair call (the third hair sheet, under registration v2), so assets[8] carries 3 PLANNED
+  // calls and the derived budget is 25-26. The iris (assets[6]) is still one call.
+  // D-183 adds ONE further planned hair call (the fourth hair sheet, with a geometry guide), so assets[8] carries 4 PLANNED
+  // calls and the derived budget is 26-27. The iris (assets[6]) is still one call.
+  assert.equal(min, 26, "the iris is still one call; assets[0] carries five PLANNED calls (D-153), assets[4] four (D-167), assets[5] two (D-172), assets[8] four (D-183)");
+  assert.equal(max, 27);
   assert.equal(C.imageCallBudget.minimum, min, "the declared minimum must match the assets");
   assert.equal(C.imageCallBudget.maximum, max, "the declared maximum must match the assets");
   assert.equal(C.imageCallBudget.isAuthorisation, false);
