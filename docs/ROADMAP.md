@@ -701,6 +701,15 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
   Bemærk: `metadata.danish_orthography_correct_aliases` (#331) indeholder facit-stavemåder og lækkes af
   P2/P4 indtil trin B er anvendt.
 - **Fundet, ikke rettet (særskilte opgaver):**
+  - **Dansk har ingen opgaver i produktion** (læsende kontrol 2026-10-22). Faget Dansk er merget
+    (#340), men `20261019120001_danish_grade3_5` og `20261019120002_danish_grade6_9` er ikke anvendt:
+    `questions` har 0 rækker med `learning_objective = 'danish'`. En elev, der vælger Dansk, får
+    sandsynligvis "ingen spørgsmål". Kræver en særskilt beslutning om at anvende de to migrationer
+    (D-110). Ikke en del af niveaumotoren (punkt 6).
+  - **Engelsk 6.–9. klasse findes ikke i produktion** (læsende kontrol 2026-10-22). #344
+    (`20261019140000_english_grade6_9`, 120 opgaver) er åben og ikke anvendt; live har 0 engelske
+    opgaver med `target_grade >= 6`. Elever i 6.–9. klasse får derfor kun engelsk til 3.–5. klasse
+    under den nuværende udvælgelse. Særskilt opgave, ikke en del af punkt 6.
   - `get_unserved_questions` returnerer `LIMIT 50` uden `ORDER BY`, så udvalget følger tabellens
     fysiske rækkefølge. Nyligt indsatte/opdaterede spørgsmål (fx Polen og Norge, position 1010–1011 af
     1011 for klassetrin 9 historie) bliver i praksis næsten aldrig serveret, og rækkefølgen kan skifte
