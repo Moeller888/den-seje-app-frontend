@@ -161,7 +161,7 @@ art layer behind them can be upgraded without a rewrite.
   placement with DRAFT anchors fails P5 (outer flick tips). No candidate. `callsActuallySentSoFar.eyesFixed` = **2**
   (`faceNeutral` = 4, `underlay` = 5); the planned eyes-fixed capacity (2) is used up; 0 live permissions. See
   `project-state.md` **D-173**.
-- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; one further hair call with an explicit margin authorised, not yet attempted (D-174 … D-177, as of 2026-10-21).**
+- **R3 hair — method adopted; placement targets approved; colour method B planned but not wired to runtime; the first hair call (D-175) sent once and technically rejected at H2; the second hair call (D-177, explicit margin) sent once, H1–H5 passed, no approved anchors, kept for review; no live permission (D-174 … D-178, as of 2026-10-22).**
   **D-174 (2026-10-21)** made one transparent, achromatic 1024×1024 hair sheet the method for `assets[8]` r3-hair-northstar:
   - **Placement and checks.** The sheet is placed with ONE positive uniform scale and a translation (least squares) from
     four owner-approved source anchors on that sheet onto four of the ten approved targets
@@ -218,6 +218,19 @@ art layer behind them can be upgraded without a rewrite.
     adapter. Same rules: dry run without credentials, one fetch, no retry, only H1–H5.
   - **Status.** UNSPENT and not a run instruction: the send needs a separate execution message after merge. See
     `project-state.md` **D-177**.
+  **D-178 (2026-10-22)** recorded that one hair send and closed the mandate:
+  - **Send.** HTTP 200, request `req_29a5a835789e46ca81c62ca3dc31d552`, one 1024×1024 sheet `9d68b54d…`.
+  - **Checks.** **H1–H5 passed**, with a margin of 74–149 px. HP1–HP8 were not run and nothing was placed.
+  - **Visual status.** The hairstyle is recognisable and the margin is met. The image-right temple lock is merged into a
+    long side lock, both side locks hang to about ear height, and the light streaks are weaker. Ear transitions, eye
+    coverage and placement are not validated, and there is no visual approval.
+  - **Source anchors.** Only a DRAFT annotation exists; no source anchor is approved. A diagnostic uniform fit to the
+    targets is 55.5 px (10.7 px without A8) against HP1's 3.0 px.
+  - **Disposition: kept for review.** The raw files, claim, event log and DRAFT annotation stay byte for byte and
+    untracked, for a later, separate owner decision.
+  - **Accounting.** `callsActuallySentSoFar.hair` = **2** (`underlay` = 5, `faceNeutral` = 4, `eyesFixed` = 2); the
+    planned hair capacity (2) is used up and the budget stays 24–25.
+  - **Permissions.** 0 live permissions. Nothing is promoted, and R3 stays default OFF. See `project-state.md` **D-178**.
 
 > The 2026-06-15 "C2 NOT active" line in `docs/project-state.md` was **corrected in Section 157AB**
 > (annotated superseded in place). Trust this file for activation state; trust `project-state.md`
