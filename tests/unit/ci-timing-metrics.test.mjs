@@ -170,3 +170,47 @@ test("the baseline tool is read-only", () => {
   assert.ok(calls.length >= 2);
   assert.deepEqual([...new Set(calls)], ["api"]);
 });
+
+// ── sharding (A2) ───────────────────────────────────────────────────────────────────────────
+import { parseShard, planShards } from "../support/unit-timing.mjs";
+import { readdirSync } from "node:fs";
+import { BINARY_DEPENDENT } from "../unit-ci-exclusions.mjs";
+
+test("parseShard: unset = whole suite; malformed or out of range throws", () => {
+  assert.equal(parseShard(undefined), null);
+  assert.equal(parseShard(""), null);
+  assert.deepEqual(parseShard("2/3"), { index: 2, count: 3 });
+  for (const bad of ["0/3", "4/3", "3", "1/0", "a/b", "1/3 ", "-1/3", "1/17"]) assert.throws(() => parseShard(bad), bad);
+});
+
+test("planShards is a deterministic partition whatever the weights", () => {
+  const files = ["a", "b", "c", "d", "e", "f", "g"];
+  for (const weights of [{}, { a: 100 }, { a: 5, b: 5, c: 5, d: 5, e: 5, f: 5, g: 5 }, { z: 9, a: -1, b: NaN }]) {
+    for (const n of [1, 2, 3, 5, 9]) {
+      const plan = planShards(files, n, weights);
+      assert.equal(plan.length, n);
+      assert.deepEqual(plan.flatMap((s) => s.files).sort(), files);
+      assert.deepEqual(planShards(files, n, weights), plan, "deterministic");
+    }
+  }
+  assert.throws(() => planShards([], 3));
+  assert.throws(() => planShards(["a", "a"], 2));
+});
+
+test("the real suite: 3 shards cover every CI file exactly once and are balanced", () => {
+  const unitDir = new URL("./", import.meta.url);
+  const suite = readdirSync(unitDir).filter((f) => f.endsWith(".test.mjs") && !BINARY_DEPENDENT.includes(f)).sort();
+  const { weights } = JSON.parse(read("tests/unit-ci-weights.json"));
+  const plan = planShards(suite, 3, weights);
+  assert.deepEqual(plan.flatMap((s) => s.files).sort(), suite);
+  assert.ok(plan.every((s) => s.files.length > 0));
+  const ws = plan.map((s) => s.weight);
+  assert.ok(Math.max(...ws) <= 1.25 * Math.min(...ws), "shards drifted apart — refresh tests/unit-ci-weights.json from a CI timing table");
+});
+
+test("the runner shards only through planShards and keeps the whole-suite default", () => {
+  const src = read("tests/run-unit-ci.mjs");
+  assert.ok(src.includes("const shard = parseShard(process.env.UNIT_SHARD);"));
+  assert.ok(src.includes("let run = suite;"), "no UNIT_SHARD = the whole suite");
+  assert.ok(src.includes("run = plan[shard.index - 1].files;"));
+});

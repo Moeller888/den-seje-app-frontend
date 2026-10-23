@@ -50,9 +50,21 @@ jobs:
   #
   # It runs every unit file except the two that drive the vendored Windows libwebp binaries
   # (tests/unit-ci-exclusions.mjs). Those still run, and still fail loudly, locally.
-  unit:
+  #
+  # SHARDED (A2, 2026-10-23). The suite grew from 4.0 to 7.2 min in one week and the job has a
+  # 10-minute timeout. `unit-shard` runs it as 3 jobs; tests/run-unit-ci.mjs plans one deterministic
+  # partition (every file exactly once, balanced by tests/unit-ci-weights.json) and each shard runs
+  # its own part. `unit` is the one check that reports: it passes only if EVERY shard succeeded, so
+  # a failing, cancelled or skipped shard fails `unit`. 3 shards keeps 9 parallel PRs within the
+  # account's concurrent-job budget (each shard runs ~2 min).
+  unit-shard:
+    name: unit (shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,8 +72,23 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
-      - name: Run unit suite
+      - name: Run unit suite (shard)
+        env:
+          UNIT_SHARD: ${{ matrix.shard }}/3
         run: npm run test:unit:ci
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: unit-shard
+    if: always()
+    steps:
+      - name: All unit shards must have passed
+        env:
+          SHARDS: ${{ needs.unit-shard.result }}
+        run: |
+          echo "unit shards: $SHARDS"
+          test "$SHARDS" = "success"
 
   classify:
     runs-on: ubuntu-latest

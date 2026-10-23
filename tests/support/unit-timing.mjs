@@ -35,6 +35,44 @@ export function resolveConcurrency(raw, cpus) {
   return Math.max(1, c - 1);
 }
 
+// UNIT_SHARD = "<i>/<n>" (1-based). Unset or empty = the whole suite in one job (local runs, and
+// the label-verified step of the `test` job). Anything else throws — never a silent full or empty run.
+export function parseShard(raw) {
+  if (raw === undefined || raw === "") return null;
+  const m = /^([1-9]\d?)\/([1-9]\d?)$/.exec(String(raw));
+  if (!m) throw new Error(`UNIT_SHARD must look like "2/3" (got ${JSON.stringify(raw)})`);
+  const index = Number(m[1]), count = Number(m[2]);
+  if (index > count || count > 16) throw new Error(`UNIT_SHARD out of range (got ${JSON.stringify(raw)})`);
+  return { index, count };
+}
+
+// Deterministic longest-processing-time partition: heaviest file first onto the lightest shard,
+// ties broken by file name and then shard number. Weights only steer balance; every file lands in
+// exactly one shard whatever the weights say (unknown files weigh the median of the known ones).
+export function planShards(files, count, weights = {}) {
+  if (!Array.isArray(files) || files.length === 0) throw new Error("planShards: no files");
+  if (!Number.isInteger(count) || count < 1) throw new Error("planShards: invalid shard count");
+  if (new Set(files).size !== files.length) throw new Error("planShards: duplicate file names");
+  const known = files.map((f) => weights[f]).filter((w) => Number.isFinite(w) && w > 0).sort((a, b) => a - b);
+  const fallback = known.length ? known[Math.floor(known.length / 2)] : 1;
+  const weightOf = (f) => (Number.isFinite(weights[f]) && weights[f] > 0 ? weights[f] : fallback);
+  const order = [...files].sort((a, b) => weightOf(b) - weightOf(a) || a.localeCompare(b));
+  const shards = Array.from({ length: count }, () => ({ files: [], weight: 0 }));
+  for (const f of order) {
+    let best = 0;
+    for (let i = 1; i < count; i++) if (shards[i].weight < shards[best].weight) best = i;
+    shards[best].files.push(f);
+    shards[best].weight += weightOf(f);
+  }
+  for (const s of shards) s.files.sort();
+  // Self-check: a partition — every file exactly once.
+  const flat = shards.flatMap((s) => s.files);
+  if (flat.length !== files.length || new Set(flat).size !== files.length || !files.every((f) => flat.includes(f))) {
+    throw new Error("planShards: partition check failed");
+  }
+  return shards;
+}
+
 const sec = (ms) => (ms / 1000).toFixed(1);
 
 export function timingTable(results, wallMs, concurrency, top = 20) {
