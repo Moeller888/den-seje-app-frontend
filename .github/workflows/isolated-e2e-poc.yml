@@ -1,0 +1,134 @@
+name: Isolated E2E (proof of concept)
+# PROOF OF CONCEPT — not a required check, not part of the merge gate.
+#
+# Runs THIS commit's deploy bundle against a LOCAL Supabase stack on the runner (own Postgres,
+# Auth and mail catcher). It references NO secret at all, takes NO shared concurrency lock, and
+# refuses to run if anything in its environment points at production
+# (tests/isolated/isolation-guard.mjs). It measures what the architecture decision needs:
+# stack start-up time, whether the repository migrations replay from scratch (D-110), and the
+# cost of one isolated browser run.
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "tests/isolated/**"
+      - ".github/workflows/isolated-e2e-poc.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per ref: a newer commit on the same PR supersedes an older PoC run. Nothing shared is held,
+  # so cancelling is always safe here.
+  group: isolated-e2e-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ISOLATED_E2E: "1"
+      ISOLATED_BASE_URL: http://127.0.0.1:8788
+      ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
+      ISOLATED_MAIL_URL: http://127.0.0.1:54324
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Guard — refuse anything that is not isolated
+        run: |
+          node --input-type=module -e "import('./tests/isolated/isolation-guard.mjs').then(m => { m.assertIsolated(process.env); console.log('isolation guard: OK'); })"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      # Bare stack first (no application migrations): measures start-up and gives Auth + mail.
+      - name: Start local Supabase (bare, timed)
+        id: start
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/held-migrations"
+          mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"
+          t0=$(date +%s)
+          supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime
+          t1=$(date +%s)
+          echo "start_seconds=$((t1 - t0))" >> "$GITHUB_OUTPUT"
+          supabase status -o env > "$RUNNER_TEMP/stack.env"
+          anon=$(grep -E '^(ANON_KEY|PUBLISHABLE_KEY)=' "$RUNNER_TEMP/stack.env" | head -1 | cut -d= -f2- | tr -d '"')
+          service=$(grep -E '^(SERVICE_ROLE_KEY|SECRET_KEY)=' "$RUNNER_TEMP/stack.env" | head -1 | cut -d= -f2- | tr -d '"')
+          echo "::add-mask::$anon"
+          echo "::add-mask::$service"
+          echo "ISOLATED_SUPABASE_ANON_KEY=$anon" >> "$GITHUB_ENV"
+          echo "ISOLATED_SUPABASE_SERVICE_KEY=$service" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/stack.env"
+
+      - name: Build this commit's deploy bundle
+        run: node tools/cloudflare-build-static.mjs
+
+      - name: Serve the bundle on loopback (pointed at the local stack)
+        run: |
+          nohup node tests/isolated/serve-build.mjs > "$RUNNER_TEMP/serve.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
+          curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null
+          # The served client must name the local stack and not the production project.
+          curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "$ISOLATED_SUPABASE_URL"
+          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Isolated smoke — three browsers (timed)
+        id: smoke
+        run: |
+          set -euo pipefail
+          t0=$(date +%s)
+          npx playwright test -c tests/isolated/playwright.isolated.config.mjs
+          echo "smoke_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+
+      # D-110 evidence: do the repository migrations replay onto an empty database? Reported, never
+      # fatal — the answer decides whether the isolated schema can come from the repo or needs an
+      # owner-approved schema baseline.
+      - name: Migration replay from scratch (report only)
+        id: replay
+        if: always() && steps.start.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          mv "$RUNNER_TEMP/held-migrations/"* supabase/migrations/
+          t0=$(date +%s)
+          supabase db reset --local --no-seed > "$RUNNER_TEMP/replay.log" 2>&1
+          rc=$?
+          echo "replay_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+          echo "replay_rc=$rc" >> "$GITHUB_OUTPUT"
+          applied=$(grep -c '^Applying migration' "$RUNNER_TEMP/replay.log" || true)
+          last=$(grep '^Applying migration' "$RUNNER_TEMP/replay.log" | tail -1 | sed 's/^Applying migration //')
+          echo "applied=$applied" >> "$GITHUB_OUTPUT"
+          echo "last=$last" >> "$GITHUB_OUTPUT"
+          echo "--- replay log (tail) ---"
+          tail -40 "$RUNNER_TEMP/replay.log"
+          exit $rc
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Isolated E2E proof of concept"
+            echo ""
+            echo "| measure | value |"
+            echo "|---|---|"
+            echo "| local stack start (bare) | ${{ steps.start.outputs.start_seconds }} s |"
+            echo "| isolated smoke, 3 browsers | ${{ steps.smoke.outputs.smoke_seconds }} s (${{ steps.smoke.outcome }}) |"
+            echo "| migration replay from scratch | rc ${{ steps.replay.outputs.replay_rc }}, ${{ steps.replay.outputs.applied }} applied, last: \`${{ steps.replay.outputs.last }}\`, ${{ steps.replay.outputs.replay_seconds }} s |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup || true
