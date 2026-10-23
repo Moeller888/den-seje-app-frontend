@@ -4,9 +4,11 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  # Manual full run. `slot` picks the E2E account slot; it is honoured only if it is an ACTIVE slot
-  # (< vars.E2E_SLOT_COUNT), otherwise the run uses slot 0. This is how a newly activated slot is
-  # provisioned and verified on its own before PRs are routed to it.
+  # Manual full run. `slot` picks the E2E account slot 0..3, independent of vars.E2E_SLOT_COUNT
+  # (which routes pull requests only). This is how a slot is provisioned and verified on its own
+  # BEFORE any PR is routed to it. A slot 1..3 that is not yet active can create that slot's
+  # production accounts, so it also needs `confirm_provisioning` = `provision-slot-<n>`; anything
+  # else is REJECTED (the run fails, it never falls back to slot 0). .github/ci/e2e-slot.mjs
   workflow_dispatch:
     inputs:
       slot:
@@ -14,6 +16,11 @@ on:
         type: choice
         options: [ "0", "1", "2", "3" ]
         default: "0"
+      confirm_provisioning:
+        description: "Only for a slot 1-3 that is not active yet: type provision-slot-<n> (same n as slot) to allow creating its accounts. Leave empty otherwise."
+        type: string
+        required: false
+        default: ""
 
 # Concurrency is PER-JOB on `test` (see below), not workflow-level, so docs/unit-only/avatar-tool
 # fast runs get an isolated `ci-fast-<run_id>` group and never queue behind the shared
@@ -154,18 +161,24 @@ jobs:
           }
           if (mode !== 'docs' && mode !== 'unit-only' && mode !== 'avatar-tool' && mode !== 'label-verified' && mode !== 'full') mode = 'full';
 
-          // E2E account slot (.github/ci/e2e-slot.mjs). Fail-safe: any error → slot 0.
+          // E2E account slot (.github/ci/e2e-slot.mjs). Fail-safe: any error → slot 0. A REJECTED
+          // manual dispatch also fails this job, and the `test` job's guard step stops the run.
           let slot = 0;
           try {
             slot = slots.selectSlot({
               eventName: context.eventName,
               prNumber: context.payload.pull_request ? context.payload.pull_request.number : null,
               dispatchSlot: context.payload.inputs ? context.payload.inputs.slot : null,
+              dispatchConfirmation: context.payload.inputs ? context.payload.inputs.confirm_provisioning : null,
               slotCount: process.env.E2E_SLOT_COUNT,
             });
           } catch (err) {
-            core.warning('slot selection error → slot 0: ' + err.message);
             slot = 0;
+            if (context.eventName === 'workflow_dispatch') {
+              core.setFailed(err.message);
+            } else {
+              core.warning('slot selection error → slot 0: ' + err.message);
+            }
           }
 
           // Encode the changed-files payload; if it exceeds the job-output cap, fail closed to
@@ -297,6 +310,17 @@ jobs:
       with:
         # Full history so fast-mode git diff --check can compare the PR base..head.
         fetch-depth: 0
+    # Manual runs only, and FIRST: re-derives the slot from the dispatch inputs and requires it to be
+    # accepted (confirmation rule) AND equal to E2E_SLOT. A rejected dispatch, or a classify job that
+    # failed or disagreed, fails here — before npm ci, global setup or any Supabase call — instead of
+    # running on slot 0. Every later step has an implicit success() condition.
+    - name: Manual dispatch guard
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        DISPATCH_SLOT: ${{ inputs.slot }}
+        DISPATCH_CONFIRMATION: ${{ inputs.confirm_provisioning }}
+        E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}
+      run: node .github/ci/dispatch-guard.mjs
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*

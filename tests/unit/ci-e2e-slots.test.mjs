@@ -2,8 +2,11 @@
 //
 // What is pinned:
 //   1. slot choice (.github/ci/e2e-slot.mjs): PR number % active slots; push/schedule → 0; a manual
-//      dispatch only gets an ACTIVE slot; every unknown/invalid value → slot 0;
-//   2. the switch: with vars.E2E_SLOT_COUNT unset every run is slot 0 = the pre-slot behaviour;
+//      dispatch picks 0..3 independent of the switch, but an INACTIVE slot 1..3 needs the exact
+//      confirmation `provision-slot-<n>`, and a rejected dispatch fails (never slot 0); every other
+//      unknown/invalid value → slot 0;
+//   2. the switch: with vars.E2E_SLOT_COUNT unset every AUTOMATIC run is slot 0 = the pre-slot
+//      behaviour;
 //   3. locks: one group per slot (at most one run per slot), distinct groups across slots (slots run
 //      in parallel), slot 0 keeps the legacy `e2e-shared-supabase` name;
 //   4. the workflow: the concurrency group and E2E_SLOT use the IDENTICAL predicate, so the lock
@@ -23,6 +26,9 @@ import {
   selectSlot,
   slotGroup,
   jobSlot,
+  provisionConfirmation,
+  resolveDispatch,
+  dispatchGuard,
 } from "../../.github/ci/e2e-slot.mjs";
 import { jobLockGroup, FAST_MODES, LABEL_MODE } from "../../.github/ci/classify-changes.mjs";
 import { MAX_SLOTS as ACCOUNT_MAX_SLOTS } from "../e2e-slot.mjs";
@@ -42,8 +48,8 @@ test("slot count: only exactly 1..4 is accepted; everything else is 1 (slot 0 on
   }
 });
 
-test("the switch: with E2E_SLOT_COUNT unset every event is slot 0 (pre-slot behaviour)", () => {
-  for (const eventName of ["pull_request", "push", "workflow_dispatch", "schedule"]) {
+test("the switch: with E2E_SLOT_COUNT unset every automatic event is slot 0 (pre-slot behaviour)", () => {
+  for (const eventName of ["pull_request", "push", "schedule", "merge_group", "pull_request_target"]) {
     for (const pr of [1, 2, 3, 376, 377, 378, 379]) {
       assert.equal(selectSlot({ eventName, prNumber: pr, dispatchSlot: "3", slotCount: undefined }), 0);
       assert.equal(selectSlot({ eventName, prNumber: pr, dispatchSlot: "3", slotCount: "" }), 0);
@@ -77,15 +83,105 @@ test("push / schedule / unknown events: the documented fallback is slot 0", () =
   }
 });
 
-test("workflow_dispatch: only an ACTIVE slot is honoured; anything else is slot 0", () => {
-  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "0", slotCount: "4" }), 0);
-  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "2", slotCount: "4" }), 2);
-  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "3", slotCount: "4" }), 3);
-  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "3", slotCount: "2" }), 0, "inactive slot");
-  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "1", slotCount: undefined }), 0, "switch off");
-  for (const dispatchSlot of ["4", "-1", "x", "", undefined, null, "1.0"]) {
-    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot, slotCount: "4" }), 0, JSON.stringify(dispatchSlot));
+// The owner's table (2026-10-22): manual provisioning before activation, PR routing unchanged.
+const rejects = (args) => assert.throws(() => selectSlot(args), /^Error: manual dispatch rejected: /);
+test("owner table: the switch routes PRs only; manual dispatch is explicit and confirmed", () => {
+  const D = "workflow_dispatch";
+  // E2E_SLOT_COUNT not set
+  assert.equal(selectSlot({ eventName: "pull_request", prNumber: 401, slotCount: undefined }), 0, "PR");
+  assert.equal(selectSlot({ eventName: "push", slotCount: undefined }), 0, "push");
+  assert.equal(selectSlot({ eventName: D, dispatchSlot: "1", dispatchConfirmation: "provision-slot-1", slotCount: undefined }), 1);
+  assert.equal(selectSlot({ eventName: D, dispatchSlot: "2", dispatchConfirmation: "provision-slot-2", slotCount: undefined }), 2);
+  assert.equal(selectSlot({ eventName: D, dispatchSlot: "3", dispatchConfirmation: "provision-slot-3", slotCount: undefined }), 3);
+  rejects({ eventName: D, dispatchSlot: "3", slotCount: undefined });
+  // E2E_SLOT_COUNT = 4
+  assert.equal(selectSlot({ eventName: "pull_request", prNumber: 401, slotCount: "4" }), 1, "PR #401");
+  assert.equal(selectSlot({ eventName: "push", slotCount: "4" }), 0, "push");
+  rejects({ eventName: D, dispatchSlot: "7", slotCount: "4" });
+});
+
+test("workflow_dispatch: slot 0 needs nothing, at any switch setting", () => {
+  for (const slotCount of [undefined, "", "1", "2", "4", "junk"]) {
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "0", slotCount }), 0);
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "0", dispatchConfirmation: "", slotCount }), 0);
+    // An absent slot input is the input's default, "0".
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", slotCount }), 0);
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: null, slotCount }), 0);
   }
+});
+
+test("workflow_dispatch: an INACTIVE slot 1..3 needs exactly provision-slot-<n>", () => {
+  for (const slotCount of [undefined, "", "1", "junk", "5"]) {
+    for (const n of [1, 2, 3]) {
+      assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: String(n), dispatchConfirmation: `provision-slot-${n}`, slotCount }), n);
+      for (const dispatchConfirmation of [undefined, null, "", "yes", `provision-slot-${n} `, ` provision-slot-${n}`,
+        `PROVISION-SLOT-${n}`, `provision-slot-${(n % 3) + 1}`, "provision-slot-", "provision-slot-0", 1, true]) {
+        rejects({ eventName: "workflow_dispatch", dispatchSlot: String(n), dispatchConfirmation, slotCount });
+      }
+    }
+  }
+  // Partly active: with 2 slots, slot 1 is active and slots 2 and 3 are not.
+  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "1", slotCount: "2" }), 1);
+  rejects({ eventName: "workflow_dispatch", dispatchSlot: "2", slotCount: "2" });
+  rejects({ eventName: "workflow_dispatch", dispatchSlot: "3", slotCount: "3" });
+  assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: "3", dispatchConfirmation: "provision-slot-3", slotCount: "3" }), 3);
+});
+
+test("workflow_dispatch: an ACTIVE slot needs no confirmation, but a wrong one is still rejected", () => {
+  for (const n of [1, 2, 3]) {
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: String(n), slotCount: "4" }), n);
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: String(n), dispatchConfirmation: "", slotCount: "4" }), n);
+    assert.equal(selectSlot({ eventName: "workflow_dispatch", dispatchSlot: String(n), dispatchConfirmation: `provision-slot-${n}`, slotCount: "4" }), n);
+    rejects({ eventName: "workflow_dispatch", dispatchSlot: String(n), dispatchConfirmation: `provision-slot-${(n % 3) + 1}`, slotCount: "4" });
+  }
+  // A confirmation on slot 0 is a mistake (the person meant another slot): rejected.
+  rejects({ eventName: "workflow_dispatch", dispatchSlot: "0", dispatchConfirmation: "provision-slot-1", slotCount: "4" });
+  rejects({ eventName: "workflow_dispatch", dispatchSlot: "0", dispatchConfirmation: "provision-slot-1", slotCount: undefined });
+});
+
+test("workflow_dispatch: an invalid slot input is rejected, never mapped to slot 0", () => {
+  for (const slotCount of [undefined, "4"]) {
+    for (const dispatchSlot of ["4", "7", "-1", "x", "", " 1", "1 ", "01", "1.0", "١", 1, 0, {}, true]) {
+      rejects({ eventName: "workflow_dispatch", dispatchSlot, dispatchConfirmation: "provision-slot-1", slotCount });
+      rejects({ eventName: "workflow_dispatch", dispatchSlot, slotCount });
+    }
+  }
+});
+
+test("resolveDispatch never throws and its reasons carry no address", () => {
+  const inputs = [undefined, null, "", "0", "1", "3", "9", "x", 1, {}, [], true];
+  for (const dispatchSlot of inputs) {
+    for (const confirmation of [...inputs, "provision-slot-1", "provision-slot-3"]) {
+      for (const slotCount of [undefined, "1", "4", "junk"]) {
+        const r = resolveDispatch({ dispatchSlot, confirmation, slotCount });
+        assert.equal(typeof r.ok, "boolean");
+        if (r.ok) assert.ok([0, 1, 2, 3].includes(r.slot));
+        else assert.ok(typeof r.reason === "string" && !r.reason.includes("@"));
+      }
+    }
+  }
+  assert.deepEqual(resolveDispatch(), { ok: true, slot: 0 });
+  assert.equal(provisionConfirmation(2), "provision-slot-2");
+  for (const bad of [0, 4, -1, 1.5, "1"]) assert.throws(() => provisionConfirmation(bad));
+});
+
+test("dispatch guard: accepts only an accepted dispatch whose slot equals the job's E2E_SLOT", () => {
+  const ok = (a) => assert.equal(dispatchGuard(a).ok, true, JSON.stringify(a));
+  const no = (a) => assert.equal(dispatchGuard(a).ok, false, JSON.stringify(a));
+  // Not a dispatch: nothing to check (PR and push runs are unaffected).
+  for (const eventName of ["pull_request", "push", "schedule", undefined]) ok({ eventName, jobSlot: "0" });
+  const D = "workflow_dispatch";
+  ok({ eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "", jobSlot: "0" });
+  ok({ eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "2" });
+  ok({ eventName: D, dispatchSlot: "2", confirmation: "", slotCount: "4", jobSlot: "2" });
+  // Rejected dispatch: classify failed → the job would run slot 0 → the guard stops it.
+  no({ eventName: D, dispatchSlot: "3", confirmation: "", slotCount: "", jobSlot: "0" });
+  no({ eventName: D, dispatchSlot: "9", confirmation: "", slotCount: "4", jobSlot: "0" });
+  // Accepted, but the job disagrees (classify crashed or was tampered with) → stop.
+  no({ eventName: D, dispatchSlot: "2", confirmation: "provision-slot-2", slotCount: "", jobSlot: "0" });
+  no({ eventName: D, dispatchSlot: "0", confirmation: "", slotCount: "4", jobSlot: "1" });
+  no({ eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: undefined });
+  no({ eventName: D, dispatchSlot: "1", confirmation: "", slotCount: "4", jobSlot: 1 });
 });
 
 test("isActiveSlot respects the switch", () => {
@@ -247,10 +343,48 @@ test("workflow: classify reads the switch and publishes the slot", () => {
   assert.ok(PLAYWRIGHT.includes("core.warning('slot selection error → slot 0: ' + err.message);"));
 });
 
-test("workflow: manual dispatch offers exactly slots 0..3, default 0", () => {
+test("workflow: manual dispatch offers exactly slots 0..3, default 0, plus an optional confirmation", () => {
   assert.ok(PLAYWRIGHT.includes("  workflow_dispatch:\n    inputs:\n      slot:"));
   assert.ok(PLAYWRIGHT.includes('options: [ "0", "1", "2", "3" ]'));
   assert.ok(PLAYWRIGHT.includes('default: "0"'));
+  assert.ok(PLAYWRIGHT.includes('      confirm_provisioning:\n        description: "Only for a slot 1-3 that is not active yet: type provision-slot-<n>'));
+  assert.ok(PLAYWRIGHT.includes('        type: string\n        required: false\n        default: ""\n'));
+});
+
+test("workflow: classify passes the confirmation and FAILS a rejected dispatch", () => {
+  assert.ok(PLAYWRIGHT.includes("dispatchConfirmation: context.payload.inputs ? context.payload.inputs.confirm_provisioning : null,"));
+  assert.ok(PLAYWRIGHT.includes("if (context.eventName === 'workflow_dispatch') {\n              core.setFailed(err.message);"));
+});
+
+test("workflow: the dispatch guard is the test job's first step after checkout", () => {
+  const job = PLAYWRIGHT.slice(PLAYWRIGHT.indexOf("\n  test:\n"));
+  const steps = job.slice(job.indexOf("\n    steps:\n"));
+  const guard = steps.indexOf("    - name: Manual dispatch guard\n");
+  assert.ok(guard > 0, "guard step present");
+  // Only the checkout precedes it.
+  const before = steps.slice(0, guard);
+  assert.equal(before.split("\n    - ").length - 1, 1, "exactly one step before the guard");
+  assert.ok(before.includes("- uses: actions/checkout@v4"));
+  const block = steps.slice(guard, steps.indexOf("\n    - ", guard + 10));
+  assert.ok(block.includes("      if: github.event_name == 'workflow_dispatch'\n"));
+  assert.ok(block.includes("        DISPATCH_SLOT: ${{ inputs.slot }}\n"));
+  assert.ok(block.includes("        DISPATCH_CONFIRMATION: ${{ inputs.confirm_provisioning }}\n"));
+  assert.ok(block.includes("        E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}\n"));
+  assert.ok(block.includes("      run: node .github/ci/dispatch-guard.mjs"));
+  // No step in the test job may continue past, or run regardless of, a failed guard.
+  for (const marker of ["always()", "failure()", "!cancelled()", "continue-on-error"]) {
+    assert.ok(!steps.includes(marker), `test job steps must not use ${marker}`);
+  }
+});
+
+test("dispatch-guard.mjs: wires dispatchGuard to the environment and fails the step on rejection", () => {
+  const src = readFileSync(new URL("../../.github/ci/dispatch-guard.mjs", import.meta.url), "utf8");
+  assert.ok(src.includes('import { dispatchGuard } from "./e2e-slot.mjs";'));
+  for (const v of ["GITHUB_EVENT_NAME", "DISPATCH_SLOT", "DISPATCH_CONFIRMATION", "E2E_SLOT_COUNT", "E2E_SLOT"]) {
+    assert.ok(src.includes(`process.env.${v}`), v);
+  }
+  assert.ok(src.includes("process.exitCode = 1;"));
+  assert.ok(!src.includes("TEST_") && !src.includes("SUPABASE"), "the guard reads no account or key");
 });
 
 test("goldens workflow: always slot 0 under the legacy lock", () => {

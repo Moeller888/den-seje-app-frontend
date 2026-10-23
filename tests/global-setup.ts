@@ -475,8 +475,10 @@ export default async function globalSetup() {
     throw new Error(`global-setup: delete failed — ${error.message}`);
   }
 
+  // Logged by user id only. The address comes from a secret (and for slots 1..3 is derived from
+  // one), so it never goes into a log line, masked or not.
   console.log(
-    `[global-setup] Deleted all question_instances for ${TEST_STUDENT_EMAIL} (${user.id})`
+    `[global-setup] Deleted all question_instances for the primary test student (${user.id}, slot ${E2E_SLOT})`
   );
 
   // Reset grade, placement_band (prevents overlays), current_band (fresh session),
@@ -507,7 +509,7 @@ export default async function globalSetup() {
   }
 
   console.log(
-    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for ${TEST_STUDENT_EMAIL}`
+    `[global-setup] Set selected_grade=9, placement_band=2, current_band=null, active_domains=null, avatar_identity=neutral(chosen) for the primary test student (${user.id}, slot ${E2E_SLOT})`
   );
 
   // Slots 1..3: the primary student belongs to the slot's password-less owner teacher — never to the

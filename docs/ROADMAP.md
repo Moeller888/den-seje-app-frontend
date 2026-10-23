@@ -506,7 +506,14 @@ _Last reviewed: 2026-07-01._
   inserting `+e2e-slot-<n>` before the `@` and reuse the existing password secrets; global-setup
   creates them idempotently with `email_confirm` and an `app_metadata` marker, and refuses (never
   resets) an existing account without that marker. Routing (`.github/ci/e2e-slot.mjs`): PR →
-  `number % E2E_SLOT_COUNT`; push/manual default → slot 0; lock `e2e-shared-supabase` for slot 0
+  `number % E2E_SLOT_COUNT`; push and every other automatic event → slot 0; a manual
+  `workflow_dispatch` picks slot 0–3 independent of the switch, so a slot can be provisioned and
+  verified BEFORE PRs are routed to it, but a slot 1–3 that is not yet active additionally needs the
+  input `confirm_provisioning` = `provision-slot-<n>`. Anything else is rejected (the run fails,
+  never slot 0), and a guard step in the `test` job stops it before any Supabase call. The live
+  password-help spec refuses any call with the pupil's address unless the deployed function
+  provably cannot mail the teacher (no teacher, or a fresh cooldown row;
+  `tests/support/mail-guard.ts`); lock `e2e-shared-supabase` for slot 0
   (kept, so old-workflow branches and the goldens regen still serialise with it) and
   `e2e-shared-supabase-slot-<n>` for 1–3. **Switch:** repository variable `E2E_SLOT_COUNT`; unset =
   1 slot = exactly the old behaviour, so merging creates no production users. A static audit
