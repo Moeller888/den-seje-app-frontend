@@ -124,3 +124,34 @@ test("the main suite never collects the isolated specs", () => {
   assert.ok(cfg.includes("testMatch: '**/*.spec.ts',"));
   assert.ok(!"isolated-smoke.isolated.spec.mjs".endsWith(".spec.ts"));
 });
+
+// ── runner-level egress and honest job separation ─────────────────────────────────────────────
+import { BLACKHOLE_HOSTS, hostsLines } from "../isolated/egress-blackhole.mjs";
+
+test("the egress blackhole covers the production project, the site, mail and AI providers", () => {
+  for (const h of [`${PROD_PROJECT_REF}.supabase.co`, `db.${PROD_PROJECT_REF}.supabase.co`, "api.supabase.com",
+    "xn--lrlig-sra.dk", "www.xn--lrlig-sra.dk", "api.resend.com", "smtp.resend.com", "api.anthropic.com", "api.openai.com"]) {
+    assert.ok(BLACKHOLE_HOSTS.includes(h), h);
+  }
+  const lines = hostsLines().trim().split("\n").filter((l) => !l.startsWith("#"));
+  assert.equal(lines.length, BLACKHOLE_HOSTS.length);
+  assert.ok(lines.every((l) => /^0\.0\.0\.0 [a-z0-9.-]+$/.test(l)));
+});
+
+test("no false green: no continue-on-error, schema validation is its own failing-visible job", () => {
+  const wf = read(".github/workflows/isolated-e2e-poc.yml");
+  assert.ok(!wf.includes("continue-on-error"), "a failing step must never be masked");
+  const smoke = wf.slice(wf.indexOf("\n  isolated-smoke:\n"), wf.indexOf("\n  schema-replay:\n"));
+  const replay = wf.slice(wf.indexOf("\n  schema-replay:\n"));
+  assert.ok(smoke.length > 0 && replay.length > 0);
+  assert.ok(smoke.includes("prototype — no app schema"), "the smoke job's name says what it does NOT test");
+  assert.ok(!smoke.includes("db reset") && smoke.includes('mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"'),
+    "the smoke job runs on a bare stack and does not claim schema coverage");
+  assert.ok(replay.includes("exit $rc"), "the replay job fails when the replay fails");
+  for (const job of [smoke, replay]) {
+    const guard = job.indexOf("Guard — refuse anything that is not isolated");
+    const egress = job.indexOf("node tests/isolated/egress-blackhole.mjs --verify");
+    const firstSupabase = job.indexOf("supabase start");
+    assert.ok(guard > 0 && egress > guard && firstSupabase > egress, "guard, then verified egress block, then the stack");
+  }
+});
