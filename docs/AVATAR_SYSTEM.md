@@ -241,6 +241,31 @@ art layer behind them can be upgraded without a rewrite.
     - new expressions;
     - the D-158 (h) judgements.
   - **Promotion.** The variant is never promotable by passing checks. See `project-state.md` **D-190**.
+- **R3 review variant "northstar-hairstyles" — the reconstructed areas finished and reviewed with alternative hairstyles; nothing approved (D-191, as of 2026-10-22).**
+  **D-191 (2026-10-22)** works on the unchanged D-190 baseline. D-189 and D-190 stay as historical variants.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-hairstyles --out <empty dir>`. The
+    generator is `tools/avatar/r3-northstar-hairstyles.mjs`, and the files live in
+    `tools/avatar/fixtures/r3-northstar-hairstyles/`.
+  - **D-190 correction.** The 32 hair-lock remnant pixels at the brow move from the brow to the
+    Northstar hair, selected by a geometric mask. The D-190 mirror fills under the opaque ones.
+  - **Bare head.**
+    - 74 sideburn-tip pixels move from the skin to the hair, and the skin under them is refilled.
+    - 3966 lit-skin pixels under the hair's cast shadow are refitted with the cranium as a boundary.
+    - Northstar's own visible light patches are kept.
+  - **Default preserved.** With Northstar's hair the composite changes by at most 4/255, with
+    0 px outside the masks.
+  - **Short.** R2's short is a review derivative. Its webp is untouched and its native decode is pinned; it is placed
+    on the v2 head by one similarity. Both brows stay free, but its edges are softer than Northstar's line art.
+  - **Afro.** R2's afro is UNSUITABLE:
+    - inside the canvas it covers the brows;
+    - the placement that clears the brows clips 50 px off the top;
+    - a hairline mask cuts hard edges.
+  - **Hair shadow.** It follows Northstar's hair only.
+  - **Open areas.**
+    - an afro drawn for v2;
+    - the sclera behind the iris;
+    - expressions.
+  - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-191**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
