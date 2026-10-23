@@ -6752,5 +6752,79 @@
       "an image request, capacity or claim",
       "a change to D-189, D-188 or any earlier decision"
     ]
+  },
+  "northstarHairstylesReview": {
+    "decision": "D-191",
+    "adoptedOn": "2026-10-22",
+    "status": "REVIEW VARIANT — THE NORTHSTAR HEAD'S RECONSTRUCTED AREAS FINISHED AND REVIEWED WITH ALTERNATIVE HAIRSTYLES ON THE D-190 BASELINE; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner approves: reclassifying the documented hair-lock remnants at the image-left brow from the brow layer to the Northstar hair layer, filling under them with the existing D-190 reconstruction, local separate review derivatives of R2 afro and R2 short on the Northstar v2 head, and commit, push, PR and merge. No image call, no new hairstyle from scratch, no production approval. D-189 and D-190 stay unchanged as historical variants.",
+    "variant": {
+      "name": "northstar-hairstyles",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-hairstyles --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-hairstyles.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-hairstyles/ (spec, the R2 decodes, four rebuilt layers, two style derivatives, four masks, manifest; stored binary)",
+      "baseline": {
+        "decision": "D-190",
+        "mergeCommit": "d5dd3dc748badd3ba5148d86ecd0689599ca41b6",
+        "manifestSha256": "c44a7c242efcfbfd3ba4507c66dedb2fb3454227badae3711ff83c9d6d0f5bcb"
+      }
+    },
+    "d190Correction": "D-190 kept the dark hair-lock remnants at the brow's upper right as observed brow pixels; the short-hair review showed they are the hair lock's edge. 32 px (a geometric mask: outside the fitted mirror, above it in their column, within 3 px of the shared hair outline, in the group at x 460–472) move to the Northstar hair; the D-190 mirror fills under the opaque ones. D-190's row and files are not rewritten.",
+    "reconstructionFixes": {
+      "earSideburnTips": "74 px of sideburn tips that D-188 left in the skin inside its ear zones move to the hair; the skin under them is refilled from the neighbouring skin",
+      "litSkinRefit": "3966 px of lit skin under the hair's cast shadow refitted with the painted cranium as a boundary (no more light spots or mottled temples); the shadow layer lifted again over it",
+      "keptOriginal": "the light patches at the forehead's upper right and above the image-left brow, and the upward tip of that brow, are Northstar's own visible pixels and are kept"
+    },
+    "defaultPreserved": "with Northstar's hair 1514 px change, max 4/255 colour and 2/255 alpha, 0 outside the edit masks",
+    "hairstyles": {
+      "origin": "R2's webp originals (untouched, pinned) decoded once at native 512x768 into tracked PNGs; placed on the v2 head by one similarity each, starting from the fit on the shared Northstar hairstyle and searched on the head's fit; kept as R2's grey luminance + alpha, tinted only for review as the R2 runtime does",
+      "short": {
+        "status": "REVIEW DERIVATIVE",
+        "transform": {
+          "k": 1.77,
+          "tx": 53,
+          "ty": -11
+        },
+        "browsCovered": [
+          0,
+          0
+        ],
+        "limit": "its edges are softer than Northstar's line art (512x768 enlarged 1.77x): visible at 1:1"
+      },
+      "afro": {
+        "status": "UNSUITABLE — not an R3 asset",
+        "transform": {
+          "k": 1.7169,
+          "tx": 69,
+          "ty": -25
+        },
+        "browsCovered": [
+          25.5,
+          19.6
+        ],
+        "why": "no placement inside the canvas clears the brows: the best keeps about 1,000 px of hair on the brows' outer ends; the placement that clears them (k 1.947, tx 9, ty −83) pushes the top 50 px off the canvas; an elliptical hairline mask clears the brows but cuts hard straight edges through the curls at the temples and bares the background beside the ears. The afro needs its own drawing for the v2 face; the derivative is kept only to show the limit."
+      },
+      "shadow": "the D-188 hair-shadow layer follows Northstar's hair only; bald, short and afro compose without it"
+    },
+    "openAreas": [
+      "UNSUITABLE: R2 afro — it needs its own drawing for the v2 face with the hairline above the brows",
+      "LIMIT: R2 short is softer than Northstar's line art at 1:1",
+      "LIMIT: no cast shadow for short or afro",
+      "OPEN: the sclera behind the iris",
+      "OPEN: new expressions and closed eyelids",
+      "OPEN: D-158 (h) in every expression"
+    ],
+    "promotion": "Never promotable by passing technical checks.",
+    "notApproved": [
+      "any layer's or hairstyle's final look",
+      "R2 short or afro as an R3 asset",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "a change to D-190, D-189 or any earlier decision"
+    ]
   }
 }

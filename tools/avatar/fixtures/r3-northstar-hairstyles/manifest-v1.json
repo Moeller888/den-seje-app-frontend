@@ -1,0 +1,245 @@
+{
+  "id": "r3-northstar-hairstyles-v1",
+  "decision": "D-191",
+  "status": "REVIEW VARIANT (D-191) — the Northstar head's reconstructed areas finished and reviewed with R2-derived short (review derivative) and afro (UNSUITABLE) on the D-190 baseline; not approved, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+  },
+  "baseline": {
+    "decision": "D-190",
+    "mergeCommit": "d5dd3dc748badd3ba5148d86ecd0689599ca41b6",
+    "manifest": "tools/avatar/fixtures/r3-northstar-brow/manifest-v1.json",
+    "manifestSha256": "c44a7c242efcfbfd3ba4507c66dedb2fb3454227badae3711ff83c9d6d0f5bcb",
+    "headPixelSha256": "c1f4d7ac135ba67b36cff70e9cebf378831bd6be2afd44d9878987b59cc935ff"
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-hairstyles/spec-v1.json",
+    "sha256": "09f36057a37a580cd0120102bc3e121fdadf6b0ab3398fc1fa2a4733b4b24cd0"
+  },
+  "r2Sources": {
+    "short": {
+      "webp": "assets/avatar-r2/hair/hair-short-v1.webp",
+      "webpSha256": "1d01bfef787fc2a185e03f40abe5695a186edee41bcca2268afaa7209d41e9f3",
+      "png": "tools/avatar/fixtures/r3-northstar-hairstyles/sources/r2-short-512x768.png",
+      "pixelSha256": "16d70187722811e81af15550c5c0b99a7984a7672caceae045b2e1020767dbb5"
+    },
+    "afro": {
+      "webp": "assets/avatar-r2/hair/hair-afro-v1.webp",
+      "webpSha256": "675f8f951c65266c75cc661163219a7958b612b0d45ec9471655f0bebf9eb09a",
+      "png": "tools/avatar/fixtures/r3-northstar-hairstyles/sources/r2-afro-512x768.png",
+      "pixelSha256": "530b21d3cd327cd7f2edbc4bd47b925fb17eda457da3a9c32bcc1dae02eecdac"
+    }
+  },
+  "r2Decode": "headless Chromium 147.0.7727.15 (Playwright), native 512x768, no resampling; the unit CI has no browser and verifies the pinned decodes",
+  "generator": {
+    "file": "tools/avatar/r3-northstar-hairstyles.mjs",
+    "review": "node tools/avatar/r3-review-pack.mjs --variant northstar-hairstyles --out <empty dir>"
+  },
+  "compositeOrder": [
+    "cranium",
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "layers": {
+    "browL": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/layers/browL.png",
+      "sha256": "85551a11411d194ae386f75c4e1888c5b83aaf2d8cfdc7bdb605e8ff5180cb50",
+      "pixelSha256": "315abfb17fe747d597684f59bab01161ea3dcab04c4a363c8dde530d19b41366",
+      "bytes": 10335
+    },
+    "skin": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/layers/skin.png",
+      "sha256": "bfc6b45c1d568f3556ff2c15e19773f90ddc29e09aabbf82240983e14ab83221",
+      "pixelSha256": "9a4a54c06da8d3291639b8be90c75c17a50825ba1a0be5182fa2c702a4522c6a",
+      "bytes": 85618
+    },
+    "hairShadow": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/layers/hairShadow.png",
+      "sha256": "d7287f0bd43979f4ac189fa0ffcdc9c01bb5cb727aad960d8596a3d386a56bbd",
+      "pixelSha256": "de087c2a1f2311f25b73281e58437855a352b8d02076e53f8f102c1177ddf3ca",
+      "bytes": 22220
+    },
+    "hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/layers/hair.png",
+      "sha256": "bcb992aff810f17c7cc74c155c21af3adcee8e937a3b12cdcaa39235ac2ba662",
+      "pixelSha256": "017d71b1303181b95ad2294b5117e6b6204409ac172c98434cca3f682974ed08",
+      "bytes": 184070
+    }
+  },
+  "styles": {
+    "short": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/styles/hair-short-review.png",
+      "sha256": "0d864adff433f848c71d8062185ca6a855325b3c2104aa36cafc635b7932af26",
+      "pixelSha256": "c29e44462fc0f5c63d412d4b4f4a419d15ef5cc0e42158fffd3a51ab8f81cbb3",
+      "bytes": 67022
+    },
+    "afro": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/styles/hair-afro-review.png",
+      "sha256": "2ee39408c13d4d18d07a30756de1c943e60501474dbb61b598b2a014ac5dcc0b",
+      "pixelSha256": "fe858a652eb9a2e90c9a8dace95712a4b0a4c81bd0c6018e51df9bd31fbcc607",
+      "bytes": 202374
+    }
+  },
+  "masks": {
+    "brow-residue-to-hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/masks/brow-residue-to-hair.png",
+      "sha256": "89e3a831d3c96edfbc05dd2ee7bf5eb12cb533f7908fcc52832ffaa7ab1b17d4",
+      "pixelSha256": "97a6f0ca6b65ccf167bd5f579e8983aec673ed12c9d72cbd54b15cb18c95ba23",
+      "bytes": 6244
+    },
+    "ear-hair-to-hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/masks/ear-hair-to-hair.png",
+      "sha256": "523623169ad9d10fe44cee11ec40ab52be86ad3c2085d19c9f67c7543f25dacc",
+      "pixelSha256": "3c02e13e57fc7a415a8e14fd64e472d5a3df870eb9f0d09d7cc66a16684aaf2e",
+      "bytes": 6266
+    },
+    "ear-skin-refill": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/masks/ear-skin-refill.png",
+      "sha256": "f2ad99af85d2d5e024476c1dbae9cf3a547578ee5b967ad3f06355334c95c47f",
+      "pixelSha256": "d39066161079b49f6ce0e0321fddd069a9d7f2a6239d17751af6d3e8bb02503a",
+      "bytes": 6280
+    },
+    "lit-skin-refit": {
+      "file": "tools/avatar/fixtures/r3-northstar-hairstyles/masks/lit-skin-refit.png",
+      "sha256": "b6a27152dcdbaad70db19488749e4f8a4076f5b1b55c9b34c2f8aeb2c73e73bb",
+      "pixelSha256": "e24ace9d4f7f7e33976bc42ddcec38dab9e46a9bf3b3a3d5447e64ecfc81fead",
+      "bytes": 7581
+    }
+  },
+  "styleStatus": {
+    "short": "REVIEW DERIVATIVE",
+    "afro": "UNSUITABLE — not an R3 asset"
+  },
+  "situations": {
+    "bald": "abed61b4089700a52a5b74026289037b85afb65e5de65391ab991c84d0362890",
+    "northstar": "5a23142ce4a7700a0e68a8030700fa4cb2664dc866f3c46e4a1a4c3ec148f69e",
+    "short": "0a420f5c8c92f8ed492ee310f284f22cf9014bd76d4bbe38355a8391221775d2",
+    "afro": "06651351fe92e44b6cb7eaa330c0c5912f00ebaaa23aedd56f9148c02ed099f5"
+  },
+  "changesVsD190": {
+    "perLayer": {
+      "cranium": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "skin": {
+        "changedPx": 1845,
+        "outsideEditMaskPx": 0
+      },
+      "hairShadow": {
+        "changedPx": 3115,
+        "outsideEditMaskPx": 0
+      },
+      "browL": {
+        "changedPx": 32,
+        "outsideEditMaskPx": 0
+      },
+      "browR": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "nose": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "mouth": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "iris": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "eyesFixed": {
+        "changedPx": 0,
+        "outsideEditMaskPx": 0
+      },
+      "hair": {
+        "changedPx": 104,
+        "outsideEditMaskPx": 0
+      }
+    },
+    "northstarComposite": {
+      "changedPx": 1514,
+      "bands": {
+        "0": 5,
+        "1-2": 1504,
+        "3-5": 5,
+        "6-16": 0,
+        ">16": 0
+      },
+      "maxRgb": 4,
+      "maxAlpha": 2,
+      "outsideEditMasksPx": 0
+    }
+  },
+  "browCoverage": {
+    "bald": {
+      "browL": {
+        "browPx": 1108,
+        "coveredPct": 0,
+        "hairEdgeOnBrowPx": 0
+      },
+      "browR": {
+        "browPx": 1122,
+        "coveredPct": 0,
+        "hairEdgeOnBrowPx": 0
+      }
+    },
+    "northstar": {
+      "browL": {
+        "browPx": 1108,
+        "coveredPct": 39.5,
+        "hairEdgeOnBrowPx": 676
+      },
+      "browR": {
+        "browPx": 1122,
+        "coveredPct": 0,
+        "hairEdgeOnBrowPx": 0
+      }
+    },
+    "short": {
+      "browL": {
+        "browPx": 1108,
+        "coveredPct": 0,
+        "hairEdgeOnBrowPx": 0
+      },
+      "browR": {
+        "browPx": 1122,
+        "coveredPct": 0,
+        "hairEdgeOnBrowPx": 0
+      }
+    },
+    "afro": {
+      "browL": {
+        "browPx": 1108,
+        "coveredPct": 25.5,
+        "hairEdgeOnBrowPx": 136
+      },
+      "browR": {
+        "browPx": 1122,
+        "coveredPct": 19.6,
+        "hairEdgeOnBrowPx": 140
+      }
+    }
+  },
+  "stats": {
+    "browResiduePx": 32,
+    "earHairPx": 74,
+    "litSkinRefitPx": 3966,
+    "shadowRelifted": 3962
+  },
+  "notUsed": [
+    "H1 (fitting-base.H1.png)",
+    "a new hairstyle drawn from scratch",
+    "any image call"
+  ]
+}
