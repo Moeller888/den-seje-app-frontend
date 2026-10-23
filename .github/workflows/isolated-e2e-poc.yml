@@ -104,8 +104,11 @@ jobs:
           set -uo pipefail
           mv "$RUNNER_TEMP/held-migrations/"* supabase/migrations/
           t0=$(date +%s)
+          # The runner shell is `bash -e`: switch it off so a failing replay is MEASURED, not fatal here.
+          set +e
           supabase db reset --local --no-seed > "$RUNNER_TEMP/replay.log" 2>&1
           rc=$?
+          set -e
           echo "replay_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
           echo "replay_rc=$rc" >> "$GITHUB_OUTPUT"
           applied=$(grep -c '^Applying migration' "$RUNNER_TEMP/replay.log" || true)
