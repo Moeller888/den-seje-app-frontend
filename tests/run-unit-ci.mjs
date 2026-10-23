@@ -11,13 +11,13 @@
 // measurable: the runner prints a timing table at the end, and in GitHub Actions also writes it
 // to the job summary. A file's output is printed in one block when it finishes, so parallel
 // files never interleave; if the job is cancelled, the files still running are named.
-import { readdirSync, existsSync, appendFileSync } from "node:fs";
+import { readdirSync, existsSync, appendFileSync, readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { BINARY_DEPENDENT } from "./unit-ci-exclusions.mjs";
-import { parseCounts, timingTable, resolveConcurrency } from "./support/unit-timing.mjs";
+import { parseCounts, timingTable, resolveConcurrency, parseShard, planShards } from "./support/unit-timing.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const UNIT = join(HERE, "unit");
@@ -32,11 +32,28 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-const run = all.filter((f) => !BINARY_DEPENDENT.includes(f));
+const suite = all.filter((f) => !BINARY_DEPENDENT.includes(f));
 const concurrency = resolveConcurrency(process.env.UNIT_CONCURRENCY, availableParallelism());
-console.log(`unit suite in CI: ${run.length} of ${all.length} files ` +
+console.log(`unit suite in CI: ${suite.length} of ${all.length} files ` +
   `(${BINARY_DEPENDENT.length} excluded — Windows-only vendored libwebp, see unit-ci-exclusions.mjs), ` +
   `concurrency ${concurrency}`);
+
+// SHARDING (UNIT_SHARD=i/n). Every shard plans the SAME deterministic partition of the whole suite
+// (planShards self-checks that it is one: every file exactly once) and runs only its own part, so
+// the n shard jobs together run every file exactly once. Weights only balance the shards.
+const shard = parseShard(process.env.UNIT_SHARD);
+let run = suite;
+if (shard) {
+  const weights = JSON.parse(readFileSync(join(HERE, "unit-ci-weights.json"), "utf8")).weights ?? {};
+  const plan = planShards(suite, shard.count, weights);
+  run = plan[shard.index - 1].files;
+  console.log(`shard ${shard.index}/${shard.count}: ${run.length} of ${suite.length} files ` +
+    `(planned weights ${plan.map((p) => p.weight).join(" / ")})`);
+  if (run.length === 0) {
+    console.error("✖ this shard was planned no files — reduce the shard count");
+    process.exit(1);
+  }
+}
 
 const started = Date.now();
 const running = new Map(); // file → start time
