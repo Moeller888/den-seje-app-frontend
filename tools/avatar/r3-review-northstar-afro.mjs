@@ -17,7 +17,9 @@ const W = 1024, H = 1536, N = W * H;
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 export const VARIANT = "northstar-afro";
-/** The radial depth of the curl scallops at the hairline: skin may show between the curls this close to the target hairline. */
+/** The radial depth of the curl scallops at the hairline: skin may show between the curls this close to the target hairline.
+ *  A REVIEW CRITERION chosen AFTER seeing the data (the uncovered cranium lay at most 6 px outside the target hairline);
+ *  not an independently validated production threshold. */
 export const SCALLOP_BAND_PX = 8;
 
 /** The measurements: brows, cranium, canvas edges, components, hairline scallops. */
@@ -57,7 +59,7 @@ export function runVariantChecks({ tracked, build }) {
   const m = measure(build, spec);
   add("MEASUREMENTS", "binding", JSON.stringify(m) === JSON.stringify(man.measurements), m, "every measurement equals the recorded one (pinned)");
   add("BROWS-CLEAR", "technical", m.browCoverage.browL.coveredPx === 0 && m.browCoverage.browR.coveredPx === 0, m.browCoverage, "no opaque afro pixel on either brow");
-  add("CRANIUM-COVERED", "technical", m.cranium.beyondBandCoveredPx === m.cranium.beyondBandPx, m.cranium, `the painted cranium more than ${SCALLOP_BAND_PX} px outside the target hairline is covered (by the afro or the back hair); in the scallop band skin shows between the curls`);
+  add("CRANIUM-COVERED", "technical", m.cranium.beyondBandCoveredPx === m.cranium.beyondBandPx, m.cranium, `the painted cranium more than ${SCALLOP_BAND_PX} px outside the target hairline is covered (by the afro or the back hair); in the scallop band skin shows between the curls (the ${SCALLOP_BAND_PX} px band is a review criterion chosen after seeing the data, not a validated production threshold)`);
   add("NOT-CROPPED", "technical", m.canvas.pxWithin4OfEdge === 0 && m.canvas.topRow >= 8, m.canvas, "nothing within 4 px of the canvas edges; the top keeps its 8 px margin");
   add("ONE-MASS", "technical", m.components.smallUnder50 === 0, m.components, "the opaque afro has no loose speck under 50 px");
   add("SCALLOPS-KEPT", "technical", m.hairlineRoughnessPx.after >= 0.8 * m.hairlineRoughnessPx.before, m.hairlineRoughnessPx, "the hairline keeps at least 80 % of its curl roughness (not smoothed into an arc)");
@@ -117,8 +119,9 @@ tr.ok td:nth-child(3){color:var(--ok);font-weight:600}tr.bad td:nth-child(3){col
 <h2>Authoring</h2>${fig("a06-authoring-masks.png", "Skaldet hoved · hårgrænsens forskydning (orange) · nytegnet baghår i den lukkede hovedsprække (magenta).")}${fig("a07-placed-before-after-shift-x2.png", "×2: placeret original før forskydningen (dækker brynene) · efter (krøllebuerne bevaret).")}${fig("a08-d191-unsuitable-vs-d192.png", "D-191's uegnede R2-512-afro · D-192.")}
 <h2>Målinger</h2><ul>
 <li>Bryndækning: venstre ${m.browCoverage.browL.coveredPx} / ${m.browCoverage.browL.browPx} px, højre ${m.browCoverage.browR.coveredPx} / ${m.browCoverage.browR.browPx} px.</li>
-<li>Kraniedækning: uden for krøllebåndet (mere end ${SCALLOP_BAND_PX} px uden for målhårgrænsen) ${m.cranium.beyondBandCoveredPx} / ${m.cranium.beyondBandPx} px dækket; i krøllebåndet ${m.cranium.scallopBandCoveredPx} / ${m.cranium.scallopBandPx} px (hud mellem krøllebuerne, tilsigtet); pande inden for hårgrænsen ${m.cranium.foreheadWindowPx} px (tilsigtet).</li>
+<li>Kraniedækning: uden for krøllebåndet (mere end ${SCALLOP_BAND_PX} px uden for målhårgrænsen) ${m.cranium.beyondBandCoveredPx} / ${m.cranium.beyondBandPx} px dækket; i krøllebåndet ${m.cranium.scallopBandCoveredPx} / ${m.cranium.scallopBandPx} px (hud mellem krøllebuerne, tilsigtet); pande inden for hårgrænsen ${m.cranium.foreheadWindowPx} px (tilsigtet). Krøllebåndets bredde på ${SCALLOP_BAND_PX} px er et reviewkriterium, valgt efter at have set dataene (det udækkede kranie lå højst 6 px uden for målhårgrænsen) — ikke en uafhængigt valideret produktionstærskel.</li>
 <li>Kantbeskæring: ${m.canvas.pxWithin4OfEdge} px inden for 4 px af lærredets kant; øverste række ${m.canvas.topRow}.</li>
+<li>Fund i D-191: det skaldede hoved har en 1–2 px gennemsigtig sprække mellem øre og ansigt (y ≈ 340–380), synlig i D-191's bald og short; den lukkes kun i denne afledning (${m.stats.headSlitFillPx} px nytegnet baghår), D-191 er uændret.</li>
 <li>Komponenter: ${m.components.count} (største ${m.components.largest} px, ${m.components.smallUnder50} under 50 px).</li>
 <li>Hårgrænsens krølleruhed: før ${m.hairlineRoughnessPx.before} px, efter ${m.hairlineRoughnessPx.after} px.</li>
 <li>Forskydning: højst ${m.stats.maxHairlineShiftPx} px; ${m.stats.hairlineShiftPx} px flyttet ≥ 0,5 px. Nytegnet baghår (lukket hovedsprække): ${m.stats.headSlitFillPx} px.</li></ul>

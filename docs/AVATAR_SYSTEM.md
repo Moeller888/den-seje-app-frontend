@@ -279,7 +279,8 @@ art layer behind them can be upgraded without a rewrite.
     - No cast shadow.
   - **Measured.**
     - Brows covered: 0 px.
-    - Cranium beyond the 8 px scallop band: fully covered.
+    - Cranium beyond the 8 px scallop band: fully covered. The 8 px band is a review criterion chosen after seeing the
+      data (uncovered cranium at most 6 px out), not an independently validated production threshold.
     - 0 px near the canvas edge; top margin 8 px.
     - One component; scallops kept.
   - **Default preserved.** All D-191 situations compose pixel-identically.

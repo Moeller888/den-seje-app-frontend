@@ -6874,6 +6874,7 @@
         1.32
       ]
     },
+    "scallopBandNote": "the 8 px scallop band in craniumBeyondScallopBand is a review criterion chosen after seeing the data (the uncovered cranium lay at most 6 px outside the target hairline), not an independently validated production threshold",
     "d191Finding": "D-191's bald head has a 1–2 px transparent slit between ear and face below the D-189 ear-root wedge (y ≈ 340–380), visible in its bald and short situations. Closed only inside this derivative; D-191 is not changed.",
     "openAreas": [
       "LIMIT: curls at the hairline are compressed by up to 28 px",
