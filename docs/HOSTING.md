@@ -166,9 +166,37 @@ CLOUDFLARE DASHBOARD — PRÆCISE VÆRDIER
 ```
 Production branch:   main
 Build command:       node tools/cloudflare-build-static.mjs
-Deploy command:      npx --yes wrangler@4.118.0 deploy
+Deploy command:      node tools/cloudflare-deploy.mjs
+Non-production branch deploy command:      node tools/cloudflare-deploy.mjs
 Build variable:      SKIP_DEPENDENCY_INSTALL=1
 ```
+
+**Begge deploy-kommandoer er `node tools/cloudflare-deploy.mjs`** (indført 2026-10-22). Før stod
+der `npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions
+upload` for alle andre branches. Det fjernede oplæsningens secrets to gange (19/10 og igen senest
+21/10):
+
+1. Hver ny version — både `wrangler deploy` og `wrangler versions upload` — kopierer secrets fra
+   den **nyeste** version, ikke fra den deployede.
+2. Workers Builds bygger og uploader også alle andre branches. En branch fra før 157P har ingen
+   `worker/`, så dens upload er en ren asset-version **uden secrets** — og den bliver den nyeste
+   version.
+3. Næste merge til main arver det tomme sæt, og `/api/tts` svarer 503 `azure_not_configured`. En
+   branch-upload som nyeste version får desuden `wrangler secret put` til at nægte at køre.
+
+Scriptet læser `WORKERS_CI_BRANCH`:
+
+- **main:** stopper, før der deployes, hvis den nyeste version mangler `AZURE_SPEECH_KEY`,
+  `AZURE_SPEECH_REGION` eller `TTS_ADMIN_TOKEN`; kører `wrangler deploy`; og fejler buildet højlydt,
+  hvis den version, der nu serveres, mangler en af dem. Kun **navne** læses — aldrig værdier.
+- **alle andre branches:** kun `wrangler deploy --dry-run` (bundlen valideres, intet uploades).
+  Preview-URL'er findes alligevel ikke for en Worker med en Durable Object-klasse.
+- En branch, der er ældre end scriptet, har ingen `tools/cloudflare-deploy.mjs`, så dens build
+  fejler, før den kan uploade noget. Det er meningen: lukket ved fejl.
+
+**Hvis buildet fejler med `missing secret(s)`:** sæt de navngivne secrets igen med
+`npx wrangler secret put <NAVN> --name den-seje-app-frontend` (kræver ejer-OK), og kør
+deployet igen. Tjek bagefter kun navnene med `npx wrangler secret list --name den-seje-app-frontend`.
 
 **Wrangler er pinnet til præcis 4.118.0 og er ikke en projektafhængighed.** Fordi Cloudflare kører
 med `SKIP_DEPENDENCY_INSTALL=1`, kan man ikke regne med en lokalt installeret Wrangler; `npx --yes`
