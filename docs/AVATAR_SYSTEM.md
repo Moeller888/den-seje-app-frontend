@@ -347,6 +347,20 @@ art layer behind them can be upgraded without a rewrite.
   - **Limit.** Northstar's body and clothes are no evidence that other body shapes or clothing layers fit. They are not an R3
     asset.
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-194**.
+- **Shared upper-body framing behind a flag — quiz and hub; OFF (D-195, as of 2026-10-23).**
+  - **Flag.** `AVATAR_FRAMING_UPPER = false` and `isAvatarFramingUpper()` live in `js/avatar-layers.js`. A browser can opt
+    in per device with `localStorage.avatar_framing = "upper"`.
+  - **Class.** `app.js` (quiz `#avatar-display`) and `hub.html` (`.profile-avatar`) toggle `avatar-framing-upper` on the
+    avatar root before mounting.
+  - **CSS, only under the class.**
+    - The root clips (`overflow: hidden`).
+    - Every layer box is `left: -30%; width/height: 160%`, which is 1.6× about the top centre.
+    - The inline-positioned blink layer gets the same values with `!important`.
+    - Layer transforms are relative to their own box, so they stay aligned.
+  - **Verified.** Checked with the real renderer on the R2 and C2 paths, blink lids included.
+  - **R2 afro margin.** The R2 afro fits without clipping up to 1.62. At 1.6 it keeps about 0.3 CSS px of side room in the
+    quiz.
+  - **Status.** Off by default. Enabling it needs a separate owner decision. See `project-state.md` **D-195**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

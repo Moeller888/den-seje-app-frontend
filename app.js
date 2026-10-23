@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient.js";
 import { calculateLevelFromXP, getXPProgressInLevel } from "./js/progression.js";
 import { playSound } from "./js/audio.js";
-import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
+import { ALL_SLOTS, SLOT_Z, baseLayersFor, baseSrcFor, hairSrcFor, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor, isAvatarFramingUpper, AVATAR_FRAMING_CLASS } from "./js/avatar-layers.js";
 import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine } from "./js/avatar-presence-engine.js";
@@ -469,6 +469,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!avatarDisplay) return;
 
     avatarDisplay.innerHTML = "";
+    // D-195: shared upper-body framing, only with the flag (default OFF → no class).
+    avatarDisplay.classList.toggle(AVATAR_FRAMING_CLASS, isAvatarFramingUpper());
 
     // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
     // via the shared module; cosmetics are deferred to a later C2 section. This
