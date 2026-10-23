@@ -6826,5 +6826,71 @@
       "an image request, capacity or claim",
       "a change to D-190, D-189 or any earlier decision"
     ]
+  },
+  "northstarAfroReview": {
+    "decision": "D-192",
+    "adoptedOn": "2026-10-23",
+    "status": "REVIEW DERIVATIVE — AN AFRO FOR THE NORTHSTAR V2 HEAD FROM THE FULL-RESOLUTION R2 AFRO ORIGINAL ON THE UNCHANGED D-191 HEAD; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner asks for the best existing afro source and, if it allows it, a separate review derivative on the Northstar v2 head (its fit, complete brows and canvas), with documented local authoring changes, and authorises commit, push, PR and merge of this bounded review integration. No image call, no capacity, no claim, no runtime change, no production approval. D-191, the R2 originals and D-191's UNSUITABLE afro derivative stay unchanged.",
+    "variant": {
+      "name": "northstar-afro",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-afro --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-afro.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-afro/ (spec, two rebuilt layers, two masks, manifest; stored binary)",
+      "baseline": {
+        "decision": "D-191",
+        "mergeCommit": "269a01861c9ffc6ac3fed661947917b4d29f4020",
+        "manifestSha256": "e4c240d9a2508a55ec672cbf4d23444fd6ced7ccc99e5260ac3a6c46975975a6"
+      }
+    },
+    "source": {
+      "file": "tools/avatar/fixtures/r2-hair/afro-cleaned.png",
+      "sha256": "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd",
+      "finding": "FOUND: D-111's generated afro, delivered at 1024x1536 and tracked by D-113 (alpha-cleaned, owner-approved at render scale) beside the untouched raw; the served R2 webp is its ÷2 downscale. Verified, not assumed: a ÷2 box downscale matches the webp decode (mean |Δ| 0.70) and it holds detail beyond 512x768 (4.08 lost by ÷2 + ×2 against 1.72 for a known upscale) — a genuine full-resolution original. No other afro original exists in the repo; D-113 records that the generation directory was deleted."
+    },
+    "authoring": {
+      "placement": "one uniform scale 0.86 + translation (centred on the face axis, 8 px below the canvas top): a downscale, so the painted curls keep their detail; the head, brows and avatar scale are unchanged",
+      "hairline": "a smooth radial displacement of the afro's own curls out of the face to a superellipse forehead window above the brows (max 28.03 px), fading to 0 at the outer silhouette; nothing cut, scallops kept",
+      "backHair": "NEW DRAWN CONTENT: 107 px behind the head, only in the D-191 head's own slit between ear and face (head-slit-fill)",
+      "shadow": "none — Northstar's cast shadow belongs to its fringe on the forehead; this hairline has no hanging lock"
+    },
+    "measurements": {
+      "browsCovered": [
+        0,
+        0
+      ],
+      "craniumBeyondScallopBand": [
+        18880,
+        18880
+      ],
+      "pxNearCanvasEdge": 0,
+      "topRow": 8,
+      "components": 1,
+      "hairlineRoughnessPx": [
+        1.31,
+        1.32
+      ]
+    },
+    "scallopBandNote": "the 8 px scallop band in craniumBeyondScallopBand is a review criterion chosen after seeing the data (the uncovered cranium lay at most 6 px outside the target hairline), not an independently validated production threshold",
+    "d191Finding": "D-191's bald head has a 1–2 px transparent slit between ear and face below the D-189 ear-root wedge (y ≈ 340–380), visible in its bald and short situations. Closed only inside this derivative; D-191 is not changed.",
+    "openAreas": [
+      "LIMIT: curls at the hairline are compressed by up to 28 px",
+      "LIMIT: the ears are largely covered (only their tips show)",
+      "LIMIT: a few dark outline pixels of the D-191 head show under the right ear lobe",
+      "LIMIT: no cast shadow",
+      "OPEN: the owner's visual judgement"
+    ],
+    "promotion": "Never promotable by passing technical checks.",
+    "notApproved": [
+      "the afro's final look",
+      "the afro as an R3 production asset",
+      "a production asset or promotion",
+      "a runtime change or a change to the active renderer",
+      "an image request, capacity or claim",
+      "a change to D-191 or any earlier decision"
+    ]
   }
 }

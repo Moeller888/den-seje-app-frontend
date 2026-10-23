@@ -266,6 +266,31 @@ art layer behind them can be upgraded without a rewrite.
     - the sclera behind the iris;
     - expressions.
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-191**.
+- **R3 review derivative "northstar-afro" — an afro for the Northstar v2 head from the full-resolution R2 original; nothing approved (D-192, as of 2026-10-23).**
+  **D-192 (2026-10-23)** works on the unchanged D-191 head. D-191 and its UNSUITABLE afro derivative stay unchanged.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-afro --out <empty dir>`. The generator is
+    `tools/avatar/r3-northstar-afro.mjs`, and the files live in `tools/avatar/fixtures/r3-northstar-afro/`.
+  - **Source.** `tools/avatar/fixtures/r2-hair/afro-cleaned.png` (D-113), read only. It is a genuine 1024×1536 original;
+    the R2 webp is its ÷2 downscale.
+  - **Authoring.**
+    - One placement at scale 0.86, a downscale, so the painted curls keep their detail.
+    - A smooth radial shift (max 28 px) moves the afro's own hairline above the brows. Nothing is cut.
+    - 107 px of new back hair close the D-191 head's slit at the ear.
+    - No cast shadow.
+  - **Measured.**
+    - Brows covered: 0 px.
+    - Cranium beyond the 8 px scallop band: fully covered. The 8 px band is a review criterion chosen after seeing the
+      data (uncovered cranium at most 6 px out), not an independently validated production threshold.
+    - 0 px near the canvas edge; top margin 8 px.
+    - One component; scallops kept.
+  - **Default preserved.** All D-191 situations compose pixel-identically.
+  - **Limits.**
+    - Compressed curls at the hairline.
+    - Ears mostly covered.
+    - A few dark D-191 outline pixels under the right ear lobe.
+    - No cast shadow.
+  - **Finding.** D-191's bald head has a 1–2 px slit between ear and face, visible in its bald and short views.
+  - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-192**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
