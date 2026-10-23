@@ -6892,5 +6892,92 @@
       "an image request, capacity or claim",
       "a change to D-191 or any earlier decision"
     ]
+  },
+  "northstarEarfixQuizReview": {
+    "decision": "D-193",
+    "adoptedOn": "2026-10-23",
+    "status": "REVIEW VARIANT — THE SHARED NORTHSTAR V2 HEAD UNDERLAY WITH THE EAR SLIT CLOSED, AND A REPRODUCIBLE QUIZ-VIEW REVIEW WITH ONE BACKDROP PROPOSAL; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner authorises closing the documented transparent ear slit in a new version of the shared head underlay (earlier fixtures and results kept), a versioned, reproducible quiz-view review (52x78 CSS px, DPR 1/2/3, default/pearl/inferno/forest, Northstar/short/afro) and the investigation of ONE shared backdrop behind the avatar as a UI design proposal in the review harness, plus commit, push, PR and merge of this bounded review work. No change to the active quiz, no runtime activation of R3, no change to the active theme colours, no image call, no capacity, no claim, no promotion.",
+    "variant": {
+      "name": "northstar-earfix-quiz",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-earfix-quiz --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-earfix.mjs",
+      "quizHarness": "tools/avatar/r3-review-quiz.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-earfix/ (spec, the fixed skin layer, the slit mask, manifest; stored binary) and tools/avatar/fixtures/r3-quiz-review/spec-v1.json",
+      "baseline": {
+        "decision": "D-191",
+        "mergeCommit": "269a01861c9ffc6ac3fed661947917b4d29f4020",
+        "manifestSha256": "e4c240d9a2508a55ec672cbf4d23444fd6ced7ccc99e5260ac3a6c46975975a6"
+      },
+      "afroSource": {
+        "decision": "D-192",
+        "mergeCommit": "6d85f26dfe4bbe654752d1abc13e832ceb9b97ca",
+        "manifestSha256": "ce70c2605e05331eba654171e001795720f6fb344c9d86c1c4c5e98b50b4cd68"
+      }
+    },
+    "headFix": {
+      "maskPx": 100,
+      "leftPx": 50,
+      "rightPx": 50,
+      "changedLayer": "skin",
+      "changedOutsideMaskPx": {
+        "bald": 0,
+        "short": 0,
+        "northstar": 0
+      },
+      "northstar": "inside the mask at most 4/255, except 3 px where Northstar too showed the background (now closed)",
+      "afro": "composes without D-192's back-hair fill: 66 px of it now under the head, 41 px in the open notch below the ear no longer drawn",
+      "notFixed": "5 isolated dark specks outside the head below the ears (reported)"
+    },
+    "quizReview": {
+      "box": "52x78 CSS px with the page's own rules (index.html) and the whole theme file",
+      "dprs": [
+        1,
+        2,
+        3
+      ],
+      "themes": [
+        "default",
+        "pearl",
+        "inferno",
+        "forest"
+      ],
+      "styles": [
+        "northstar",
+        "short-black",
+        "short-blonde",
+        "afro-black",
+        "afro-blonde"
+      ],
+      "placement": "one canvas, one placement and scale for every hairstyle",
+      "bodyMissing": "the R3 figure has no body: the final composition is NOT validated"
+    },
+    "backdropProposal": {
+      "id": "theme-backdrop-v1",
+      "status": "UI DESIGN PROPOSAL in the review harness only — not a change to the active quiz",
+      "result": "dark hair separates clearly better on the dark themes; light hair and Northstar lose separation there; pearl is fine either way — it trades dark hair against light hair",
+      "boundary": "the only tried backdrop that helps every hairstyle is a large pale plate (iteration D): a visible redesign, not discreet",
+      "recommendation": "do not adopt a shared backdrop now; revisit the box with the body"
+    },
+    "activeQuizChanged": false,
+    "themeColoursChanged": false,
+    "openAreas": [
+      "OWNER: the visual judgement of the ear fix and of the quiz view",
+      "BODY: the final figure composition in the quiz box (head size, top margin, where any backdrop would sit)",
+      "OPEN: dark hair on the dark themes",
+      "REPORTED: 5 dark specks outside the head below the ears"
+    ],
+    "promotion": "Never promotable by passing technical checks.",
+    "notApproved": [
+      "the ear fix's final look",
+      "the backdrop proposal for the active quiz",
+      "a production asset or promotion",
+      "a runtime change, a change to the active quiz or to the theme colours",
+      "an image request, capacity or claim",
+      "a change to D-192, D-191 or any earlier decision"
+    ]
   }
 }

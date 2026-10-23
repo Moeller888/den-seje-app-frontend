@@ -291,6 +291,35 @@ art layer behind them can be upgraded without a rewrite.
     - No cast shadow.
   - **Finding.** D-191's bald head has a 1–2 px slit between ear and face, visible in its bald and short views.
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-192**.
+- **R3 review variant "northstar-earfix-quiz" — the shared head's ear slit closed and a reproducible quiz-view review; nothing approved (D-193, as of 2026-10-23).**
+  **D-193 (2026-10-23)** is a new version of the shared head underlay. D-191 and D-192 stay unchanged as historical results.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-earfix-quiz --out <empty dir>` (needs
+    Playwright's Chromium). The generator is `tools/avatar/r3-northstar-earfix.mjs`; the quiz harness is
+    `tools/avatar/r3-review-quiz.mjs`. The files live in `tools/avatar/fixtures/r3-northstar-earfix/` and
+    `tools/avatar/fixtures/r3-quiz-review/`.
+  - **Ear fix.**
+    - 100 px (50 per ear): narrow horizontal gaps between ear and face, plus two pinholes they close in.
+    - Reconstructed into the skin layer only.
+    - 0 px change outside the mask in bald, short and Northstar.
+    - The D-192 afro composes without its back-hair fill, so the fill is not laid twice.
+  - **Quiz review.**
+    - The page's own avatar-box rules and the whole theme file.
+    - 52×78 CSS px at DPR 1/2/3; default, pearl, inferno and forest.
+    - Northstar, short and afro in black and blonde.
+    - One canvas, placement and scale for every hairstyle.
+    - The body is missing, so the final composition is not validated.
+  - **Backdrop proposal.**
+    - One discreet, theme-tinted ellipse behind the head, in the harness only.
+    - It trades dark hair against light hair on the dark themes. All hair edges are dark.
+    - The only backdrop that helps every hairstyle is a large pale plate, which is not discreet.
+    - **Recommendation:** do not adopt it now; revisit the box with the body.
+  - **Production.** The active quiz, theme colours and hair assets are unchanged.
+  - **Open.**
+    - The owner's visual judgement.
+    - The composition with the body.
+    - Dark hair on dark themes.
+    - Five dark specks outside the head below the ears (reported).
+  - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-193**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

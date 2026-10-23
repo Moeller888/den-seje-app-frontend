@@ -16,7 +16,7 @@ import * as HS from "../../tools/avatar/r3-northstar-hairstyles.mjs";
 import * as AF from "../../tools/avatar/r3-northstar-afro.mjs";
 import { runVariantChecks, SCALLOP_BAND_PX } from "../../tools/avatar/r3-review-northstar-afro.mjs";
 import { VARIANTS } from "../../tools/avatar/r3-review-pack.mjs";
-import { preD192Contract, PRE_D192_CONTRACT_CANONICAL_SHA256, PRE_D192_COMMIT, preD191Contract, PRE_D191_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD192Contract, PRE_D192_CONTRACT_CANONICAL_SHA256, PRE_D192_COMMIT, preD191Contract, PRE_D191_CONTRACT_CANONICAL_SHA256, preD193Contract } from "./avatar-r3-d147-closure.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
@@ -32,7 +32,7 @@ const N = 1024 * 1536;
 test("D-192 adds exactly the top-level key northstarAfroReview: the contract minus it is the D-191 merge", () => {
   assert.equal(sha(JSON.stringify(preD192Contract(LIVE))), PRE_D192_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D192_COMMIT);
   assert.equal(sha(JSON.stringify(preD191Contract(LIVE))), PRE_D191_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "northstarAfroReview");
+  assert.equal(Object.keys(preD193Contract(LIVE)).at(-1), "northstarAfroReview", "the last key D-192 added (D-193 appends northstarEarfixQuizReview after it)");
   assert.deepEqual([KEY.decision, KEY.isAuthorisation, KEY.authorisesImageRequest, KEY.authorisesUpload], ["D-192", false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   assert.equal(LIVE.architecture.defaultEnabled, false, "R3 stays default OFF");
@@ -99,6 +99,6 @@ test("review only: every check passes, yet nothing is promotable; earlier varian
   assert.ok(CHECKS.checks.every((c) => c.ok === true));
   assert.equal(AF.promotionStatus().promotable, false);
   assert.throws(() => AF.promote(), /cannot be promoted/);
-  assert.deepEqual([...VARIANTS], ["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro"]);
+  assert.deepEqual([...VARIANTS].slice(0, 7), ["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro"], "D-192's variants are kept (D-193 appends northstar-earfix-quiz)");
   assert.match(file("tools/avatar/r3-review-pack.mjs").toString("utf8"), /const variant = arg\("--variant"\) \?\? "d187"/);
 });
