@@ -31,7 +31,10 @@ export default defineConfig({
   // a real assertion/pixel/render failure still fails after the retry. CI keeps 2.
   retries: process.env.CI ? 2 : 1,
 
-  reporter: 'html',
+  // html as before, plus a timing summary (per project / per spec file / flaky — no titles, no
+  // values; tests/support/timing-reporter.mjs). The timing reporter reports printsToStdio() = false,
+  // so Playwright still adds its usual console reporter exactly as it did with 'html' alone.
+  reporter: [['html'], ['./tests/support/timing-reporter.mjs']],
 
   use: {
     trace: 'retain-on-failure',
