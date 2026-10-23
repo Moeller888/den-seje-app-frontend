@@ -10,7 +10,7 @@
 //             APPROVED D-164 targets (one positive uniform scale + translation per part);
 //   · eyes  — the v5 prototype's pinned fixed and iris layers (renders of its tracked SVGs; --render-eyes re-renders them).
 //
-// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head|northstar-brow|northstar-hairstyles|northstar-afro]
+// Usage: node tools/avatar/r3-review-pack.mjs --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head|northstar-brow|northstar-hairstyles|northstar-afro|northstar-earfix-quiz]
 //
 // --variant (D-188): "d187" (the default) is the pack above, unchanged — its rule of no Northstar pixels as a source still holds
 // for it. "northstar-layers" rebuilds the SEPARATE D-188 review variant (r3-review-northstar-layers.mjs), whose visible pixels
@@ -361,7 +361,17 @@ ${fig("09-shape-differences-r3-outline-on-northstar.png", "R3-hovedets ydre kont
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-export const VARIANTS = Object.freeze(["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro"]);
+export const VARIANTS = Object.freeze(["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro", "northstar-earfix-quiz"]);
+/** D-193: writes the northstar-earfix-quiz review (the shared head's ear slit closed; the quiz-view review in Chromium at DPR
+ *  1/2/3 beside one shared backdrop proposal). Needs Playwright's Chromium; never part of the unit tests. */
+export async function writeNorthstarEarfixQuizVariant(OUT) {
+  const RV = await import("./r3-review-northstar-earfix.mjs"), Q = await import("./r3-review-quiz.mjs");
+  const variant = RV.buildVariant(), written = RV.writeVariantReview(variant, OUT), quiz = await Q.renderQuiz(OUT, { build: variant.build });
+  const files = { ...written.files, ...quiz.files };
+  writeFileSync(join(OUT, "report.html"), RV.variantReportHtml(variant, quiz, files));
+  writeFileSync(join(OUT, "report.json"), JSON.stringify({ variant: RV.VARIANT, decision: "D-193", status: variant.tracked.man.status, checks: variant.checks.checks, firstFailure: variant.checks.firstFailure, quiz: { measures: quiz.measures, opaqueDiff: quiz.opaqueDiff, composites: quiz.composites }, files }, null, 2) + "\n");
+  return variant;
+}
 /** D-192: writes the northstar-afro review (the full-resolution R2 afro fitted to the unchanged D-191 head; review derivative). */
 export async function writeNorthstarAfroVariant(OUT) {
   const RV = await import("./r3-review-northstar-afro.mjs");
@@ -408,9 +418,14 @@ export async function writeNorthstarLayersVariant(OUT, pack = buildPack()) {
 const invokedDirectly = typeof process.argv[1] === "string" && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
 if (invokedDirectly) {
   const args = process.argv.slice(2), arg = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head|northstar-brow|northstar-hairstyles|northstar-afro]");
+  const outDir = arg("--out"); if (!outDir) throw new Error("usage: --out <empty dir> [--render-eyes] [--variant d187|northstar-layers|both|northstar-head|northstar-brow|northstar-hairstyles|northstar-afro|northstar-earfix-quiz]");
   const variant = arg("--variant") ?? "d187"; if (!VARIANTS.includes(variant)) throw new Error(`--variant must be one of ${VARIANTS.join(", ")}`);
   const ROOT = resolve(outDir); if (existsSync(ROOT) && readdirSync(ROOT).length) throw new Error("output directory not empty"); mkdirSync(ROOT, { recursive: true });
+  if (variant === "northstar-earfix-quiz") {
+    const v = await writeNorthstarEarfixQuizVariant(ROOT);
+    console.log(JSON.stringify({ variant, firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
+    if (v.checks.firstFailure) process.exitCode = 1;
+  }
   if (variant === "northstar-afro") {
     const v = await writeNorthstarAfroVariant(ROOT);
     console.log(JSON.stringify({ variant, firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
@@ -431,7 +446,7 @@ if (invokedDirectly) {
     console.log(JSON.stringify({ variant, firstFailure: v.checks.firstFailure, failed: v.checks.checks.filter((c) => c.ok === false).map((c) => c.id) }, null, 1));
     if (v.checks.firstFailure) process.exitCode = 1;
   }
-  const pack = variant === "northstar-head" || variant === "northstar-brow" || variant === "northstar-hairstyles" || variant === "northstar-afro" ? null : buildPack();
+  const pack = variant === "northstar-head" || variant === "northstar-brow" || variant === "northstar-hairstyles" || variant === "northstar-afro" || variant === "northstar-earfix-quiz" ? null : buildPack();
   if (variant === "northstar-layers" || variant === "both") {
     const NOUT = variant === "both" ? join(ROOT, "northstar-layers") : ROOT; mkdirSync(NOUT, { recursive: true });
     const v = await writeNorthstarLayersVariant(NOUT, pack);

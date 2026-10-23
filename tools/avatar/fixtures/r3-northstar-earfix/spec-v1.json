@@ -1,0 +1,26 @@
+{
+  "id": "r3-northstar-earfix-v1",
+  "decision": "D-193",
+  "status": "REVIEW VARIANT — a new version of the shared Northstar v2 head underlay with the documented ear slit closed; not approved, not promotable",
+  "baseline": {
+    "decision": "D-191",
+    "manifest": "tools/avatar/fixtures/r3-northstar-hairstyles/manifest-v1.json",
+    "mergeCommit": "269a01861c9ffc6ac3fed661947917b4d29f4020",
+    "head": "the D-191 layer set (unchanged, read through its pins); D-191 and D-192 stay as historical results"
+  },
+  "slit": {
+    "finding": "D-192: D-191's bald head has a 1–2 px transparent slit between ear and face below the D-189 ear-root wedge. In Northstar v2 those pixels belong to the hair layer (thin hair between ear and face), so without hair the background shows through.",
+    "rule": "a pixel of the bald composite with alpha < 128, inside the ear band, that has a pixel of the head's MAIN connected component (alpha >= 128, 4-connected) on BOTH sides of the same row within gapPx — a narrow horizontal gap between ear and face, at most 2·gapPx − 1 wide — or a pinhole the gap closes in (all 8 neighbours opaque or already in the mask, repeated until nothing changes: two pixels at the ear-root wedge, (387, 335) and (390, 335)). Isolated specks outside the head never bound the gap; the open notch between ear lobe and jaw and the concave temple corners are wider than the gap and stay open.",
+    "bandY": [280, 420],
+    "gapPx": 3,
+    "alphaThreshold": 128
+  },
+  "reconstruction": {
+    "rule": "RECONSTRUCTED: the slit pixels are written into the SKIN layer at alpha 255, their colour a harmonic fill from the visible bald composite (pixels of the main component with alpha >= 250 outside the mask) — the ear's skin on one side, the face outline on the other. Only the skin layer changes, only inside the mask; every other layer stays D-191's. The Northstar hair stays above the skin, so with Northstar's hair the change shows only where the hair is not opaque.",
+    "layer": "skin"
+  },
+  "afro": {
+    "rule": "the D-192 afro layer (pinned, unchanged) composes on this head WITHOUT D-192's back-hair fill: the head now closes the slit itself, so the fill is never laid twice. The D-192 back-hair pixels inside the new mask are covered by the head; those outside it (in the open notch below the ear) are no longer drawn and are counted."
+  },
+  "notInScope": "the five isolated dark specks of the D-191 head outside its silhouette below the ears are reported, not removed"
+}
