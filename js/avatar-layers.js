@@ -244,7 +244,7 @@ export function isAvatarV2() {
 // ── Shared upper-body framing flag (D-195) ─────────────────────────────────────
 // One framing for every hairstyle and render path on the two small surfaces (quiz
 // #avatar-display, hub .profile-avatar): the surface adds AVATAR_FRAMING_CLASS to
-// its avatar root and that page's CSS grows every layer box 1.6× about the box's
+// its avatar root and that page's CSS grows every layer box 1.5× about the box's
 // top centre and clips below the hips. Layer transforms are relative to their own
 // box, so they stay aligned. DEFAULT OFF — while off no class is added and the
 // surfaces render exactly as before. Per-browser opt-in for review WITHOUT a code

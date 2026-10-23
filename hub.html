@@ -133,13 +133,13 @@
 
     /* D-195 shared upper-body framing — only when the AVATAR_FRAMING_UPPER flag adds
        .avatar-framing-upper (default OFF). Every layer box (base stack and the
-       expression overlay's .quiz-avatar-layer) grows 1.6x about the box's top centre,
+       expression overlay's .quiz-avatar-layer) grows 1.5x about the box's top centre,
        so each layer's own transform stays aligned; the box clips below the hips. The
        blink layer is positioned inline, hence !important on its rule only. */
     .profile-avatar.avatar-framing-upper { overflow: hidden; }
     .profile-avatar.avatar-framing-upper .profile-avatar-layer,
-    .profile-avatar.avatar-framing-upper .quiz-avatar-layer { left: -30%; width: 160%; height: 160%; }
-    .profile-avatar.avatar-framing-upper #avatar-blink-layer { left: -30% !important; width: 160% !important; height: 160% !important; }
+    .profile-avatar.avatar-framing-upper .quiz-avatar-layer { left: -25%; width: 150%; height: 150%; }
+    .profile-avatar.avatar-framing-upper #avatar-blink-layer { left: -25% !important; width: 150% !important; height: 150% !important; }
 
     /* ── Profile info block ──────────────────────────── */
 

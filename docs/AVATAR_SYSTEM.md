@@ -347,20 +347,27 @@ art layer behind them can be upgraded without a rewrite.
   - **Limit.** Northstar's body and clothes are no evidence that other body shapes or clothing layers fit. They are not an R3
     asset.
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-194**.
-- **Shared upper-body framing behind a flag — quiz and hub; OFF (D-195, as of 2026-10-23).**
+- **Shared upper-body framing 1.5× behind a flag — quiz and hub; OFF (D-195, as of 2026-10-23).**
   - **Flag.** `AVATAR_FRAMING_UPPER = false` and `isAvatarFramingUpper()` live in `js/avatar-layers.js`. A browser can opt
-    in per device with `localStorage.avatar_framing = "upper"`.
+    in per device only with `localStorage.avatar_framing = "upper"`.
   - **Class.** `app.js` (quiz `#avatar-display`) and `hub.html` (`.profile-avatar`) toggle `avatar-framing-upper` on the
     avatar root before mounting.
   - **CSS, only under the class.**
-    - The root clips (`overflow: hidden`).
-    - Every layer box is `left: -30%; width/height: 160%`, which is 1.6× about the top centre.
+    - The root clips.
+    - Every layer box is `left: -25%; width/height: 150%`: one factor for all layers, hairstyles and render paths.
     - The inline-positioned blink layer gets the same values with `!important`.
-    - Layer transforms are relative to their own box, so they stay aligned.
-  - **Verified.** Checked with the real renderer on the R2 and C2 paths, blink lids included.
-  - **R2 afro margin.** The R2 afro fits without clipping up to 1.62. At 1.6 it keeps about 0.3 CSS px of side room in the
-    quiz.
-  - **Status.** Off by default. Enabling it needs a separate owner decision. See `project-state.md` **D-195**.
+  - **Why 1.5 rather than 1.6.** At 1.6 the live R2 afro keeps about 1 CSS px (quiz) and 0.5 px (hub) of side room; at
+    1.5 it keeps about 2.5 px and 3.5 px. The head is only about 6 % smaller.
+  - **Verified** with `tools/avatar/verify-framing-d195.mjs` (the real renderer in Chromium).
+    - Every layer and lid registers to within 0.006 px.
+    - With the flag off the view is identical to `origin/main`; only the self-animating aura differs from itself.
+    - No other localStorage value enables the framing.
+  - **Losses at 1.5.**
+    - Hair and headwear: none.
+    - Body: cut below the hips, as intended.
+    - **Unintended:** about 17 % of an aura in the quiz; wings about 66–72 %; capes about 50–61 %.
+  - **Status.** Off by default. Enabling it needs a separate owner decision that weighs the wide back layers. See
+    `project-state.md` **D-195**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
