@@ -19,7 +19,7 @@ import * as EF from "../../tools/avatar/r3-northstar-earfix.mjs";
 import * as Q from "../../tools/avatar/r3-review-quiz.mjs";
 import { runVariantChecks } from "../../tools/avatar/r3-review-northstar-earfix.mjs";
 import { VARIANTS } from "../../tools/avatar/r3-review-pack.mjs";
-import { preD193Contract, PRE_D193_CONTRACT_CANONICAL_SHA256, PRE_D193_COMMIT, preD192Contract, PRE_D192_CONTRACT_CANONICAL_SHA256 } from "./avatar-r3-d147-closure.mjs";
+import { preD193Contract, PRE_D193_CONTRACT_CANONICAL_SHA256, PRE_D193_COMMIT, preD192Contract, PRE_D192_CONTRACT_CANONICAL_SHA256, preD194Contract } from "./avatar-r3-d147-closure.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const file = (rel) => readFileSync(join(REPO, ...rel.split("/")));
@@ -36,7 +36,7 @@ const W = 1024, N = W * 1536;
 test("D-193 adds exactly the top-level key northstarEarfixQuizReview: the contract minus it is the D-192 merge", () => {
   assert.equal(sha(JSON.stringify(preD193Contract(LIVE))), PRE_D193_CONTRACT_CANONICAL_SHA256, "canonical contract at " + PRE_D193_COMMIT);
   assert.equal(sha(JSON.stringify(preD192Contract(LIVE))), PRE_D192_CONTRACT_CANONICAL_SHA256, "and the older chain still holds");
-  assert.equal(Object.keys(LIVE).at(-1), "northstarEarfixQuizReview");
+  assert.equal(Object.keys(preD194Contract(LIVE)).at(-1), "northstarEarfixQuizReview", "the last key D-193 added (D-194 appends northstarFigureReview after it)");
   assert.deepEqual([KEY.decision, KEY.isAuthorisation, KEY.authorisesImageRequest, KEY.authorisesUpload, KEY.activeQuizChanged, KEY.themeColoursChanged], ["D-193", false, false, false, false, false]);
   assert.deepEqual(LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT"), [], "no live permission");
   assert.equal(LIVE.architecture.defaultEnabled, false, "R3 stays default OFF");
@@ -133,6 +133,6 @@ test("review only: every check passes, yet nothing is promotable; earlier varian
   assert.ok(CHECKS.checks.every((c) => c.ok === true));
   assert.equal(EF.promotionStatus().promotable, false);
   assert.throws(() => EF.promote(), /cannot be promoted/);
-  assert.deepEqual([...VARIANTS], ["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro", "northstar-earfix-quiz"]);
+  assert.deepEqual([...VARIANTS].slice(0, 8), ["d187", "northstar-layers", "both", "northstar-head", "northstar-brow", "northstar-hairstyles", "northstar-afro", "northstar-earfix-quiz"], "D-193's variants are kept (D-194 appends northstar-figure)");
   assert.match(file("tools/avatar/r3-review-pack.mjs").toString("utf8"), /const variant = arg\("--variant"\) \?\? "d187"/);
 });

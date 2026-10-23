@@ -1,0 +1,27 @@
+{
+  "id": "r3-figure-views-v1",
+  "decision": "D-194",
+  "status": "REVIEW HARNESS — the whole R3 figure in copies of the app's avatar views; not the active UI, no runtime change",
+  "rule": "every view is its own harness page: the page's own box and layer rules copied verbatim (animation declarations removed for one deterministic frame) plus the whole css/theme.css; the current background is the main result — no backdrop, no hair-dependent recolouring",
+  "themes": "css/theme.css",
+  "views": [
+    { "id": "quiz", "label": "Quiz (index.html)", "page": "index.html", "selectors": ["#avatar-display", "#avatar-display::before", ".quiz-avatar-layer"], "box": "<div id=\"avatar-display\">", "layerClass": "quiz-avatar-layer", "css": [52, 78], "dprs": [1, 2, 3], "themes": ["default", "pearl", "inferno", "forest"] },
+    { "id": "hub", "label": "Hub (hub.html)", "page": "hub.html", "selectors": [".profile-avatar", ".profile-avatar-layer"], "box": "<div class=\"profile-avatar\">", "layerClass": "profile-avatar-layer", "css": [110, 165], "dprs": [2], "themes": ["default", "pearl"], "note": "100x150 below 540 px viewport width" },
+    { "id": "collection", "label": "Samling (collection.html)", "page": "collection.html", "selectors": [".hero-avatar", ".avatar-layer"], "box": "<div class=\"hero-avatar\">", "layerClass": "avatar-layer", "css": [120, 180], "dprs": [2], "themes": ["default", "pearl"] },
+    { "id": "avatar", "label": "Avatarside (avatar.html)", "page": "avatar.html", "selectors": ["#avatar-preview", ".avatar-layer"], "box": "<div id=\"avatar-preview\">", "layerClass": "avatar-layer", "css": [180, 270], "dprs": [2], "themes": ["default", "pearl"] },
+    { "id": "shop", "label": "Shop (shop.html)", "page": "shop.html", "selectors": [".shop-preview", ".preview-layer"], "box": "<div class=\"shop-preview\">", "layerClass": "preview-layer", "css": [130, 152], "parentWidth": 134, "dprs": [2], "themes": ["default", "pearl"], "note": "layers inset 6 % / 3 %, 88 % × 93 %, box overflow hidden" }
+  ],
+  "styles": [
+    { "id": "northstar", "label": "Northstar", "situation": "northstar" },
+    { "id": "short-black", "label": "short · black", "situation": "short", "colour": "black" },
+    { "id": "short-blonde", "label": "short · blonde", "situation": "short", "colour": "blonde" },
+    { "id": "afro-black", "label": "afro · black", "situation": "afro", "colour": "black" },
+    { "id": "afro-blonde", "label": "afro · blonde", "situation": "afro", "colour": "blonde" }
+  ],
+  "framingProposal": {
+    "id": "upper-body-1.6",
+    "css": ".r3-framing { overflow: hidden !important; } .r3-framing > img { transform: scale(1.6); transform-origin: 50% 0%; }",
+    "what": "ONE shared framing for every hairstyle and view, in the harness only: the same canvas scaled 1.6 about its top centre, the box clipping below the hips. Same scale and place for Northstar, short and afro.",
+    "status": "UI DESIGN PROPOSAL in the review harness only — not a change to the active UI"
+  }
+}

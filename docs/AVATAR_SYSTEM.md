@@ -320,6 +320,33 @@ art layer behind them can be upgraded without a rewrite.
     - Dark hair on dark themes.
     - Five dark specks outside the head below the ears (reported).
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-193**.
+- **R3 review composition "northstar-figure" — the R3 head on Northstar v2's own body and clothes as a reference body; nothing approved (D-194, as of 2026-10-23).**
+  **D-194 (2026-10-23)** works on the unchanged D-193 head candidates.
+  - **Entrypoint.** `node tools/avatar/r3-review-pack.mjs --variant northstar-figure --out <empty dir>` (needs Playwright's
+    Chromium). The generator is `tools/avatar/r3-northstar-figure.mjs`; the views are `tools/avatar/r3-review-figure-views.mjs`.
+    The files live in `tools/avatar/fixtures/r3-northstar-figure/`.
+  - **Body.**
+    - Master coordinates, no transform: the master minus the bald head below y 440.
+    - Where the head is absent, the master's own pixels are used.
+    - Under the opaque head the body is empty, so there is no second neck or collar.
+    - Under the head's antialiased edge the body is the exact remainder (the `neck-seam` mask, 163 px).
+    - With Northstar's hair the figure is identical to the master below the seam.
+  - **Order.** Body, then D-193's head order, then the hair.
+  - **Same figure.** Size and head place are the same for every hairstyle.
+  - **Residue.** 11 hair-lock pixels below the right ear move from the skin layer to the hair layer.
+  - **Views.**
+    - quiz 52×78 at DPR 1/2/3 in four themes;
+    - hub 110×165, collection 120×180, avatar page 180×270 and shop 130×152 at DPR 2.
+    - Each is rendered with the page's own rules and the current background.
+    - The afro is not clipped anywhere.
+    - In the quiz the head is about 16 CSS px wide, so the face is small at DPR 1.
+  - **Framing proposal.**
+    - One shared scale of 1.6 about the top centre, in the harness only.
+    - The quiz head grows to about 26 px and the afro keeps about 5 % side room.
+    - The figure is cut at the hips.
+  - **Limit.** Northstar's body and clothes are no evidence that other body shapes or clothing layers fit. They are not an R3
+    asset.
+  - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-194**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160
