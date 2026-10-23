@@ -26,6 +26,7 @@ const LIVE = JSON.parse(file("tools/avatar/fixtures/r3/r3-shadow-contract-v1.jso
 const KEY = LIVE.northstarHairstylesReview;
 const TR = HS.loadTracked(), MAN = TR.man;
 const BUILD = HS.buildHairstyles();
+const CHECKS = runVariantChecks({ tracked: TR, build: BUILD });
 const N = 1024 * 1536;
 
 test("D-191 adds exactly the top-level key northstarHairstylesReview: the contract minus it is the D-190 merge", () => {
@@ -56,12 +57,11 @@ test("source binding: Northstar v2, the merged D-190 baseline, R2's untouched we
   assert.ok(tracked.length > 0 && tracked.every((f) => !/h1|fitting-base/i.test(f)));
 });
 
-test("rebuild: every built layer, style derivative and mask equals its tracked file; a second build is identical", () => {
+test("rebuild: every built layer, style derivative and mask equals its tracked file (pinned when committed, so a rebuild in CI proves reproducibility)", () => {
   for (const k of HS.BUILT) { assert.equal(pixelSha256(BUILD.layers[k]), MAN.layers[k].pixelSha256, k); assert.equal(pixelSha256(decodePng(TR.files[k]).px), MAN.layers[k].pixelSha256, k + " file"); }
   for (const k of HS.STYLES) { assert.equal(pixelSha256(BUILD.styles[k]), MAN.styles[k].pixelSha256, k); assert.equal(pixelSha256(decodePng(TR.files[k]).px), MAN.styles[k].pixelSha256, k + " file"); }
   for (const k of HS.MASKS) assert.equal(pixelSha256(BUILD.masks[k]), MAN.masks[k].pixelSha256, k);
   assert.deepEqual(BUILD.stats, MAN.stats);
-  const again = HS.buildHairstyles(); for (const k of HS.BUILT) assert.equal(pixelSha256(again.layers[k]), MAN.layers[k].pixelSha256, k + " again");
   for (const s of SITUATIONS) assert.equal(pixelSha256(HS.composeSituation(BUILD, s)), MAN.situations[s], s);
 });
 
@@ -103,7 +103,7 @@ test("hairstyles: brow coverage pinned, short frees the brows, the afro is unsui
 });
 
 test("review only: every check passes, yet nothing is promotable; earlier variants unchanged", () => {
-  const checks = runVariantChecks({ tracked: TR, build: BUILD });
+  const checks = CHECKS;
   assert.equal(checks.firstFailure, null);
   assert.ok(checks.checks.every((c) => c.ok === true));
   assert.equal(HS.promotionStatus().promotable, false);

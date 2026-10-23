@@ -72,8 +72,13 @@ export function buildHairstyles({ srcBuf, spec = loadSpec() } = {}) {
   const browL = new Uint8ClampedArray(L0.browL), hair = new Uint8ClampedArray(L0.hair), skin = new Uint8ClampedArray(L0.skin), shadow = new Uint8ClampedArray(L0.hairShadow);
   const m = Object.fromEntries(MASKS.map((k) => [k, new Uint8Array(N)]));
 
-  // (1) brow residue -> hair, the D-190 mirror under it
-  const brow = BR.buildBrow(), fittedM = decodePng(base.d190.files["brow-mirror-fitted"]).px, shared = decodePng(base.d188.files["overlap-ink-hair-features"]).px;
+  // (1) brow residue -> hair, the D-190 mirror under it. The mirror is recomputed from D-190's RECORDED fit (its manifest),
+  // with D-190's own axis and pivot computations — the same pixels as BR.buildBrow().fitted without repeating its search
+  const fit = base.d190.man.stats.fit;
+  let pcx = 0, pcy = 0, pcn = 0; const axis = BR.measureAxis(L0); for (let i = 0; i < N; i++) if (L0.browR[i * 4 + 3] >= 128) { pcx += 2 * axis - (i % W + 0.5); pcy += ((i / W) | 0) + 0.5; pcn++; }
+  if (Math.abs(axis - base.d190.man.stats.axis) > 0.001) throw new Error("the measured axis is not D-190's");
+  const brow = { fitted: BR.mirrored(L0.browR, axis, [pcx / pcn, pcy / pcn], { tx: fit.tx, ty: fit.ty, rotationDeg: fit.rotationDeg, scale: fit.scale }) };
+  const fittedM = decodePng(base.d190.files["brow-mirror-fitted"]).px, shared = decodePng(base.d188.files["overlap-ink-hair-features"]).px;
   const sh = new Uint8Array(N); for (let i = 0; i < N; i++) if (shared[i * 4 + 3]) sh[i] = 1;
   const nearShared = NL.dilate(sh, 3), cand = new Uint8Array(N);
   for (let y = 200; y < 300; y++) for (let x = 380; x < 540; x++) {
