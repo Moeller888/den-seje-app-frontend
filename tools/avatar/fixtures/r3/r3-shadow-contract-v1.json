@@ -6979,5 +6979,83 @@
       "an image request, capacity or claim",
       "a change to D-192, D-191 or any earlier decision"
     ]
+  },
+  "northstarFigureReview": {
+    "decision": "D-194",
+    "adoptedOn": "2026-10-23",
+    "status": "REVIEW COMPOSITION — THE NORTHSTAR-BASED R3 HEAD ON NORTHSTAR V2'S OWN BODY AND CLOTHES AS A REFERENCE BODY, REVIEWED IN THE APP'S AVATAR VIEWS; NOTHING APPROVED",
+    "isAuthorisation": false,
+    "authorisesImageRequest": false,
+    "authorisesUpload": false,
+    "ownerDecision": "The owner authorises the tracked Northstar v2's body and existing clothes as a direct source for this review composition, a versioned, reproducible review integration, and commit, push, PR and merge on green checks. The body and clothes are reference material for review, not an approved R3 body asset or a finished clothing solution. The H1 ban is unchanged. No image call, no capacity, no claim, no promotion, no change to the active quiz, no runtime activation.",
+    "variant": {
+      "name": "northstar-figure",
+      "entrypoint": "node tools/avatar/r3-review-pack.mjs --variant northstar-figure --out <empty dir>",
+      "generator": "tools/avatar/r3-northstar-figure.mjs",
+      "views": "tools/avatar/r3-review-figure-views.mjs",
+      "fixtures": "tools/avatar/fixtures/r3-northstar-figure/ (spec, views, three masks, manifest; masks stored binary; the body is rebuilt from the tracked master and pinned by pixel hash)",
+      "baseline": {
+        "decision": "D-193",
+        "mergeCommit": "21b367b2d6847dbc2a737a5e5588952e82a1e251",
+        "manifestSha256": "7a5919282d2636b6ad860aa7ad629184f8f76529079c1ee5e572e206a040e36f"
+      }
+    },
+    "figure": {
+      "body": "master coordinates, no transform: the master minus the bald head below y 440 — the master's own pixel where the head is absent, empty under the opaque head, the exact remainder under the head's antialiased edge (neck-seam)",
+      "order": [
+        "body",
+        "cranium",
+        "skin",
+        "hairShadow",
+        "browL",
+        "browR",
+        "nose",
+        "mouth",
+        "iris",
+        "eyesFixed",
+        "hair"
+      ],
+      "neckSeamPx": 163,
+      "underHeadPx": 3393,
+      "belowSeamVsMaster": "identical with Northstar's hair (0/255)",
+      "sameFigureForEveryHairstyle": true
+    },
+    "residue": {
+      "movedPx": 11,
+      "what": "the brown edge of Northstar's hair lock below the right ear, left in the skin layer by the D-188 split, moved to the hair layer; Northstar's composite unchanged there"
+    },
+    "views": {
+      "quiz": "52x78 CSS px, DPR 1/2/3, default/pearl/inferno/forest",
+      "others": [
+        "hub 110x165",
+        "collection 120x180",
+        "avatar 180x270",
+        "shop 130x152"
+      ],
+      "background": "the current background; no backdrop, no hair-dependent recolouring"
+    },
+    "framingProposal": {
+      "id": "upper-body-1.6",
+      "status": "UI DESIGN PROPOSAL in the review harness only — not a change to the active UI",
+      "what": "one shared scale 1.6 about the top centre for every hairstyle and view",
+      "tradeOff": "the head 60 % larger (quiz about 16 → 26 CSS px wide); the afro keeps about 5 % side room at 52x78 and would be clipped above about 1.8; the figure is cut at the hips"
+    },
+    "limits": "Northstar's own body and clothes prove only that THIS body and THESE clothes fit THIS head; they are no evidence that other body shapes, poses or clothing layers fit.",
+    "activeUiChanged": false,
+    "openAreas": [
+      "OWNER: the visual judgement of the whole figure and of the framing proposal",
+      "OPEN: an R3 body of its own and clothing layers (the reference body is no asset)",
+      "OPEN: dark hair on the dark themes"
+    ],
+    "promotion": "Never promotable by passing technical checks.",
+    "notApproved": [
+      "the figure's final look",
+      "Northstar's body or clothes as an R3 asset",
+      "the framing proposal for the active UI",
+      "a production asset or promotion",
+      "a runtime change or a change to the active UI",
+      "an image request, capacity or claim",
+      "a change to D-193 or any earlier decision"
+    ]
   }
 }

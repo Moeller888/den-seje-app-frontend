@@ -1,0 +1,34 @@
+{
+  "id": "r3-northstar-figure-v1",
+  "decision": "D-194",
+  "status": "REVIEW COMPOSITION — the Northstar-based R3 head (D-193) on Northstar v2's own body and clothes as a REFERENCE body; not an approved R3 body asset, not a clothing solution, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "use": "the owner authorises the tracked Northstar v2's body and existing clothes (T-shirt, jeans, shoes) as a DIRECT source for this review composition only. H1 is never used."
+  },
+  "baseline": {
+    "decision": "D-193",
+    "manifest": "tools/avatar/fixtures/r3-northstar-earfix/manifest-v1.json",
+    "mergeCommit": "21b367b2d6847dbc2a737a5e5588952e82a1e251",
+    "head": "the D-193 head layer set, read through its pins; D-193 and every earlier head candidate stay unchanged as the baseline"
+  },
+  "residue": {
+    "finding": "D-193 reported dark specks below the right ear. They are the brown edge of Northstar's hair lock below the right ear lobe that the D-188 split left in the SKIN layer; with Northstar's hair the lock covers them, without it they float as loose brown pixels.",
+    "rule": "a skin-layer pixel outside the bald head's main component (alpha >= 128, 4-connected), hair-lock brown (r > g > b, r − b >= 30, r <= 200), within 2 px (Chebyshev) of Northstar's hair (alpha >= 128), y 370–420. Moved to the hair layer where the hair is empty there, removed from the skin layer. Dark neutral contours (face, ear, jaw) are in the main component and never match.",
+    "bandY": [370, 420],
+    "nearHairPx": 2
+  },
+  "body": {
+    "rule": "master coordinates, no transform: below the seam line the body layer is the master MINUS the bald head. Where the head is absent it is the master's own pixel (unchanged); where the head is opaque (alpha >= opaqueHeadAlpha — the D-188 split keeps the head's skin at 254, so 255 alone would leave an invisible but amplified second neck under it) it is empty (no second neck, contour or collar under the head); where the head is partly transparent (its antialiased edge on the collar and the neck sides) it is the exact remainder that composes back to the master: alpha (ma − ha)/(1 − ha), premultiplied colour (M − H)/(1 − ha) — the 'neck-seam' mask. Above the seam line the body is empty: everything there is head, hair or background.",
+    "seamY": 440,
+    "opaqueHeadAlpha": 250,
+    "order": "body, then the head stack (D-193 order), then the hair: hair over body (curls and locks fall over the shoulders)"
+  },
+  "framing": {
+    "current": "the active views draw the whole 1024x1536 canvas with object-fit: contain — the whole figure, head small",
+    "proposal": "ONE shared framing for every hairstyle, in the review harness only: the canvas scaled by 1.6 about its top centre inside the box (overflow hidden) — head and torso to the hips; the same for Northstar, short and afro. Clearly labelled as a proposal; the active UI is not changed.",
+    "scale": 1.6
+  },
+  "limits": "Northstar's own body and clothes prove only that THIS body and THESE clothes fit THIS head. They are no evidence that other body shapes, skin tones of the body, poses or clothing layers fit."
+}

@@ -1,0 +1,121 @@
+{
+  "id": "r3-northstar-figure-v1",
+  "decision": "D-194",
+  "status": "REVIEW COMPOSITION (D-194) — the Northstar-based R3 head on Northstar v2's own body and clothes as a reference body; not an R3 body asset, not a clothing solution, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "use": "body and clothes as a direct source for this review composition only"
+  },
+  "baseline": {
+    "decision": "D-193",
+    "mergeCommit": "21b367b2d6847dbc2a737a5e5588952e82a1e251",
+    "manifest": "tools/avatar/fixtures/r3-northstar-earfix/manifest-v1.json",
+    "manifestSha256": "7a5919282d2636b6ad860aa7ad629184f8f76529079c1ee5e572e206a040e36f"
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-figure/spec-v1.json",
+    "sha256": "b4422f0a0fedf809bbba2cee32d09346f53cd8cdce59047003ba0d5ca42962ec"
+  },
+  "generator": {
+    "file": "tools/avatar/r3-northstar-figure.mjs",
+    "review": "node tools/avatar/r3-review-pack.mjs --variant northstar-figure --out <empty dir>"
+  },
+  "compositeOrder": [
+    "cranium",
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "figureOrder": [
+    "body",
+    "cranium",
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "pixels": {
+    "body": "176685a53753f4b19fd2cebf83b6446f15947ab23c32e6f26bca58374b2617d2",
+    "skin": "cd3ee48d834569e6b03479b10aabec0929924373d09564cc3f90e2e60270471c",
+    "hair": "2967586ad9a4f18f458efcbae44ddee5fac78ae2b74a2c8a940efb688d626bb7",
+    "note": "the body and the two changed head layers are rebuilt from tracked sources; only their pixel hashes are pinned (the body is not tracked as an asset)"
+  },
+  "masks": {
+    "hair-residue-to-hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-figure/masks/hair-residue-to-hair.png",
+      "sha256": "d904fc10c9acd6be840769b1465313d1a6f04134ccbdfbad2ca7b294ab6d0369",
+      "pixelSha256": "ae6c0a8e4f697fc00fa8c58d075c6d6d0bf7bf66d98f69f19765687633417faa",
+      "bytes": 6220
+    },
+    "neck-seam": {
+      "file": "tools/avatar/fixtures/r3-northstar-figure/masks/neck-seam.png",
+      "sha256": "040bc549aabb809492215d890ef5c0ce50325cdc10074f110efa0b44386e183e",
+      "pixelSha256": "d9fde209633442db3e97243e5f2563a2e75606684b6f33d4a740ac2b9848d316",
+      "bytes": 6371
+    },
+    "under-head": {
+      "file": "tools/avatar/fixtures/r3-northstar-figure/masks/under-head.png",
+      "sha256": "b3a43c6c38a4f08d849520bdd86bb66ebb0457106c2ea34c3e453802d878163e",
+      "pixelSha256": "82f4fe17fde00f8045be8524b2f6a471ac96e12c735fb516fc980c465289c085",
+      "bytes": 6355
+    }
+  },
+  "stats": {
+    "residuePx": 11,
+    "neckSeamPx": 163,
+    "underHeadPx": 3393,
+    "masterAboveSeamUncoveredPx": 0
+  },
+  "figures": {
+    "northstar": "77b407cdf1bc492036e00542a20c0f04d69179b3bc73de06ef0eeb68a9c804ff",
+    "short": "650142ec136851529dff6b27685d8551b3eedf29b7b5e367b30295b636e3e5a9",
+    "afro": "c8b60890f7580fba58766207c63ce2110e2c18ace7fb3448a6f856f82003edee"
+  },
+  "views": {
+    "spec": {
+      "file": "tools/avatar/fixtures/r3-northstar-figure/views-v1.json",
+      "sha256": "c922f29f25c98bb2c1b83057e8ddba3d3d8bbf946f52a8f09095fbb9e34de15c"
+    },
+    "rulesSha256": {
+      "quiz": "b977d6fcb1db873a4774af86455994994f981d5643d31f6f11dc6519ab47f150",
+      "hub": "bec5e3c1074987b40c684b98c19b4270f6d7b7a7254efa1d2f63920a6babd90f",
+      "collection": "f9162ad2070d545d41a04ffb3167f369577424e15a9c20b4dfc59fccca15be6b",
+      "avatar": "7e3efecbbf40ae9bdbf83dfe62f1ac5959a5f58bae900f56179f3a7490b939cd",
+      "shop": "c253d62865782850f78e40efe53d4f06905e4d911bf083e1afd094c1467aef60"
+    },
+    "harnessSha256": {
+      "quiz": "625672fe207baa95dfbe31d267ced623792e2ba3507bd4a790e876b31685999e",
+      "hub": "9b1fc0b262da81d8a0252964b91940d1747cd440fa4f3471c2af729802e37e55",
+      "collection": "28ff7d12c8d705556d6a7b29c223a5900911af98561627e98f6ede2134af28a7",
+      "avatar": "14883ddb3361605ade15deeaf47bdc32a48bd124f5f1be1e7ad0530c218d349f",
+      "shop": "2bc5a90a34e030fd8d0c52f910aac76350b2d01326388701257d01744341bcba"
+    },
+    "composites": {
+      "northstar": "77b407cdf1bc492036e00542a20c0f04d69179b3bc73de06ef0eeb68a9c804ff",
+      "short-black": "0f53c2b025b426c4e775fa678fd257fd17127ac6a872d969b91101671da66573",
+      "short-blonde": "f879d8f91194634377dd504c7f43c940d8a8fa2210735da4b3a9574c711b643d",
+      "afro-black": "49eba847b47cc60285bad121ec3854c50aa200ec53f37ad7797402ba0c19486d",
+      "afro-blonde": "409e6ecdb2e1e07395bfa1adc8c7dc256859f62a64b0efa653a2e04ec5e51b2e"
+    },
+    "note": "screenshots are browser renders and are not pinned"
+  },
+  "visualAssessment": "Hele figuren hænger sammen: samme krop, størrelse og hovedplacering for Northstar, short og afro; halsen går ind i kraven som i originalen uden dobbelt hals eller krave; ørerne slutter rent. Afroen beskæres ingen steder (top ca. 2 CSS-px i quizzen). I quizzen (52×78) er hovedet kun ca. 16 CSS-px bredt med hele figuren — ansigtet læses ved DPR 2–3, men er småt ved DPR 1; i hub, samling og avatarside læses ansigt og frisure fint. Det fælles beskæringsforslag (skala 1,6, alle frisurer ens) gør hovedet ca. 26 CSS-px bredt i quizzen og giver tydeligt bedre ansigt og frisure; prisen er, at figuren skæres ved hofterne. Mørkt hår på mørke temaer smelter fortsat sammen med baggrunden (silhuetkontrast ca. 1,1–1,3), men figuren bæres nu af krop, T-shirt og ansigt, så det er mindre kritisk end med hovedet alene. Pletterne under højre øre var hårlokkens kant i hudlaget og er flyttet til hårlaget. Ejerens visuelle godkendelse udestår.",
+  "notUsed": [
+    "H1 (fitting-base.H1.png)",
+    "any image call",
+    "a backdrop or hair-dependent recolouring",
+    "a change to the active UI"
+  ]
+}
