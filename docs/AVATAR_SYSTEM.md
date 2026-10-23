@@ -352,6 +352,9 @@ art layer behind them can be upgraded without a rewrite.
     in per device only with `localStorage.avatar_framing = "upper"`.
   - **Class.** `app.js` (quiz `#avatar-display`) and `hub.html` (`.profile-avatar`) toggle `avatar-framing-upper` on the
     avatar root before mounting.
+  - **Deploy skew.** Both read the flag through a namespace import (`import * as avatarLayersModule`). An older cached
+    `avatar-layers.js` without the new exports therefore leaves the framing off; a named import would be a module
+    SyntaxError that stops the whole quiz.
   - **CSS, only under the class.**
     - The root clips.
     - Every layer box is `left: -25%; width/height: 150%`: one factor for all layers, hairstyles and render paths.

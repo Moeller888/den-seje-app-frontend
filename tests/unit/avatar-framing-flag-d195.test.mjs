@@ -56,13 +56,27 @@ test("one shared geometry: left = -(k - 1) / 2 for k = 1.5 on both surfaces; no 
   assert.equal(count(file("hub.html")), 4);
 });
 
+const GUARD = (root) => new RegExp(`${root}\\.innerHTML = "";\\n    // D-195[^\\n]*\\n    (if \\(typeof avatarLayersModule\\.isAvatarFramingUpper === "function"\\) ${root}\\.classList\\.toggle\\(avatarLayersModule\\.AVATAR_FRAMING_CLASS, avatarLayersModule\\.isAvatarFramingUpper\\(\\) === true\\);)\\n`);
+
 test("both surfaces toggle the class from the flag right after clearing the root, before any layer mounts", () => {
-  const app = file("app.js");
-  assert.match(app, /import \{[^}]*\bisAvatarFramingUpper, AVATAR_FRAMING_CLASS \} from "\.\/js\/avatar-layers\.js";/);
-  assert.match(app, /avatarDisplay\.innerHTML = "";\n    \/\/ D-195[^\n]*\n    avatarDisplay\.classList\.toggle\(AVATAR_FRAMING_CLASS, isAvatarFramingUpper\(\)\);\n/);
-  const hub = file("hub.html");
-  assert.match(hub, /import \{[^}]*\bisAvatarFramingUpper, AVATAR_FRAMING_CLASS \} from "\.\/js\/avatar-layers\.js";/);
-  assert.match(hub, /avatarEl\.innerHTML = "";\n    \/\/ D-195[^\n]*\n    avatarEl\.classList\.toggle\(AVATAR_FRAMING_CLASS, isAvatarFramingUpper\(\)\);\n/);
-  assert.equal((app.match(/classList\.toggle\(AVATAR_FRAMING_CLASS/g) || []).length, 1);
-  assert.equal((hub.match(/classList\.toggle\(AVATAR_FRAMING_CLASS/g) || []).length, 1);
+  for (const [f, root] of [["app.js", "avatarDisplay"], ["hub.html", "avatarEl"]]) {
+    const src = file(f);
+    assert.match(src, /import \* as avatarLayersModule from "\.\/js\/avatar-layers\.js";/, f + ": namespace import");
+    assert.match(src, GUARD(root), f + ": the guarded toggle right after clearing the root");
+    assert.equal((src.match(/classList\.toggle\(avatarLayersModule\.AVATAR_FRAMING_CLASS/g) || []).length, 1, f);
+  }
+});
+
+test("deploy skew: no NAMED import of the framing exports (a module SyntaxError against an older avatar-layers.js), and the guard keeps an older module off", () => {
+  for (const f of ["app.js", "hub.html"]) {
+    for (const m of file(f).matchAll(/import \{([^}]*)\} from "\.\/js\/avatar-layers\.js";/g)) assert.ok(!/\b(isAvatarFramingUpper|AVATAR_FRAMING_CLASS)\b/.test(m[1]), f + ": framing names only via the namespace");
+  }
+  // run the exact guard line from each surface against three module shapes
+  for (const [f, root] of [["app.js", "avatarDisplay"], ["hub.html", "avatarEl"]]) {
+    const line = file(f).match(GUARD(root))[1];
+    const run = (ns) => { const calls = []; const el = { classList: { toggle: (c, on) => calls.push([c, on]) } }; new Function("avatarLayersModule", root, line)(ns, el); return calls; };
+    assert.deepEqual(run({}), [], f + ": an older module without the exports → no class, no error");
+    assert.deepEqual(run({ AVATAR_FRAMING_CLASS, isAvatarFramingUpper: () => false }), [[AVATAR_FRAMING_CLASS, false]], f + ": flag off → class removed");
+    assert.deepEqual(run({ AVATAR_FRAMING_CLASS, isAvatarFramingUpper: () => true }), [[AVATAR_FRAMING_CLASS, true]], f + ": opt-in → class added");
+  }
 });
