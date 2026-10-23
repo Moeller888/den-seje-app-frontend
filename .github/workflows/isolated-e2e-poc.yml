@@ -1,0 +1,178 @@
+name: Isolated E2E (proof of concept)
+# PROOF OF CONCEPT — not a required check, not part of the merge gate.
+#
+# Two jobs, deliberately separate so that a green check only ever means what it says:
+#   isolated-smoke   PROTOTYPE. This commit's deploy bundle against a LOCAL Supabase stack (own
+#                    Postgres, Auth, mail catcher), three browsers. It does NOT test the app's data
+#                    flows — there is no application schema (see schema-replay).
+#   schema-replay    SCHEMA VALIDATION. Do the repository migrations build the application schema
+#                    on an empty database? Today they do NOT (D-110: the base migration is empty), so
+#                    this job FAILS, visibly. Its failure is never masked.
+#
+# Neither job references a secret or a repository variable, neither takes the shared E2E lock, and
+# both refuse to run if anything points at production (tests/isolated/isolation-guard.mjs). Production
+# host names are additionally blackholed in /etc/hosts, so Node processes on the runner cannot reach
+# them either — not only the browser (which also has a request tripwire).
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "tests/isolated/**"
+      - ".github/workflows/isolated-e2e-poc.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per ref: a newer commit on the same PR supersedes an older PoC run. Nothing shared is held,
+  # so cancelling is always safe here.
+  group: isolated-e2e-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ISOLATED_E2E: "1"
+  ISOLATED_BASE_URL: http://127.0.0.1:8788
+  ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
+  ISOLATED_MAIL_URL: http://127.0.0.1:54324
+
+jobs:
+  isolated-smoke:
+    name: isolated-smoke (prototype — no app schema)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Guard — refuse anything that is not isolated
+        run: |
+          node --input-type=module -e "import('./tests/isolated/isolation-guard.mjs').then(m => { m.assertIsolated(process.env); console.log('isolation guard: OK'); })"
+
+      - name: Egress — blackhole production host names for every process on the runner
+        run: |
+          set -euo pipefail
+          node tests/isolated/egress-blackhole.mjs --hosts-lines | sudo tee -a /etc/hosts > /dev/null
+          node tests/isolated/egress-blackhole.mjs --verify
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      # Bare stack (no application migrations): Auth + mail only.
+      - name: Start local Supabase (bare, timed)
+        id: start
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/held-migrations"
+          mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"
+          t0=$(date +%s)
+          supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime
+          echo "start_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+          supabase status -o env > "$RUNNER_TEMP/stack.env"
+          anon=$(grep -E '^(ANON_KEY|PUBLISHABLE_KEY)=' "$RUNNER_TEMP/stack.env" | head -1 | cut -d= -f2- | tr -d '"')
+          service=$(grep -E '^(SERVICE_ROLE_KEY|SECRET_KEY)=' "$RUNNER_TEMP/stack.env" | head -1 | cut -d= -f2- | tr -d '"')
+          echo "::add-mask::$anon"
+          echo "::add-mask::$service"
+          echo "ISOLATED_SUPABASE_ANON_KEY=$anon" >> "$GITHUB_ENV"
+          echo "ISOLATED_SUPABASE_SERVICE_KEY=$service" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/stack.env"
+
+      - name: Build this commit's deploy bundle
+        run: node tools/cloudflare-build-static.mjs
+
+      - name: Serve the bundle on loopback (pointed at the local stack)
+        run: |
+          nohup node tests/isolated/serve-build.mjs > "$RUNNER_TEMP/serve.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
+          curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null
+          # The served client must name the local stack and not the production project.
+          curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "$ISOLATED_SUPABASE_URL"
+          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Isolated smoke — three browsers (timed)
+        id: smoke
+        run: |
+          set -euo pipefail
+          t0=$(date +%s)
+          npx playwright test -c tests/isolated/playwright.isolated.config.mjs
+          echo "smoke_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### isolated-smoke (prototype — does not test the app's data flows)"
+            echo ""
+            echo "| measure | value |"
+            echo "|---|---|"
+            echo "| local stack start (bare) | ${{ steps.start.outputs.start_seconds }} s |"
+            echo "| smoke, 3 browsers | ${{ steps.smoke.outputs.smoke_seconds }} s (${{ steps.smoke.outcome }}) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup || true
+
+  # SCHEMA VALIDATION. Fails until the application schema can be built from the repository. This
+  # failure is the honest answer, not noise: a future required isolated E2E gate must depend on it.
+  schema-replay:
+    name: schema-replay (expected to FAIL until D-110 is resolved)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Guard — refuse anything that is not isolated
+        run: |
+          node --input-type=module -e "import('./tests/isolated/isolation-guard.mjs').then(m => { m.assertIsolated(process.env); console.log('isolation guard: OK'); })"
+      - name: Egress — blackhole production host names
+        run: |
+          set -euo pipefail
+          node tests/isolated/egress-blackhole.mjs --hosts-lines | sudo tee -a /etc/hosts > /dev/null
+          node tests/isolated/egress-blackhole.mjs --verify
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+      - name: Replay every repository migration onto an empty database
+        id: replay
+        run: |
+          set -uo pipefail
+          t0=$(date +%s)
+          set +e
+          supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime,gotrue,kong,mailpit,postgrest > "$RUNNER_TEMP/replay.log" 2>&1
+          rc=$?
+          set -e
+          echo "replay_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+          echo "applied=$(grep -c '^Applying migration' "$RUNNER_TEMP/replay.log" || true)" >> "$GITHUB_OUTPUT"
+          echo "last=$(grep '^Applying migration' "$RUNNER_TEMP/replay.log" | tail -1 | sed 's/^Applying migration //')" >> "$GITHUB_OUTPUT"
+          echo "error=$(grep -m1 '^ERROR' "$RUNNER_TEMP/replay.log" | cut -c1-200)" >> "$GITHUB_OUTPUT"
+          tail -30 "$RUNNER_TEMP/replay.log"
+          exit $rc
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### schema-replay (schema validation)"
+            echo ""
+            echo "| measure | value |"
+            echo "|---|---|"
+            echo "| result | ${{ steps.replay.outcome }} |"
+            echo "| migrations applied | ${{ steps.replay.outputs.applied }} of $(ls supabase/migrations/*.sql | wc -l) files |"
+            echo "| last attempted | \`${{ steps.replay.outputs.last }}\` |"
+            echo "| first error | \`${{ steps.replay.outputs.error }}\` |"
+            echo "| time | ${{ steps.replay.outputs.replay_seconds }} s |"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup || true
