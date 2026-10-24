@@ -428,11 +428,13 @@ test("workflow: the test-job lock expression lists exactly the fast modes", () =
 });
 
 test("workflow: Playwright install/run/report steps run ONLY in full mode", () => {
+  // D-A4: the full-mode steps additionally stop on a stale (superseded or cancelled) run.
+  const FULL_ONLY = "if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'";
   for (const name of ["Install dependencies", "Install Playwright Browsers", "Run Playwright tests"]) {
     const at = WORKFLOW.indexOf("- name: " + name + "\n      if:");
     assert.notEqual(at, -1, "step not found: " + name);
     const line = WORKFLOW.slice(at, WORKFLOW.indexOf("\n", WORKFLOW.indexOf("if:", at)));
-    assert.ok(line.endsWith("if: steps.mode.outputs.mode == 'full'"), name + " condition changed: " + line);
+    assert.ok(line.endsWith(FULL_ONLY), name + " condition changed: " + line);
   }
   assert.ok(WORKFLOW.includes("run: npx playwright test\n"), "the full suite command changed");
 });
