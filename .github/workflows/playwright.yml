@@ -520,11 +520,11 @@ jobs:
     # the lock and ran the full suite). A pull_request run whose PR moved to a newer commit or was
     # closed stops here — RED (a skipped required check would read as passing). It decides only about
     # itself and cancels nothing; any doubt → run the suite (.github/ci/superseded-check.mjs).
-    # LIMIT, measured 2026-10-24: a plain cancel of a QUEUED run is invisible from inside the job —
-    # cancelled() stays false (run 40079620782) and the run's API record stays status=pending,
-    # conclusion=null (run 40083437376). Only a cancel that also cancelled a sibling job (i.e. within
-    # the first minutes, while the unit shards run) is detected. Otherwise: push or close the PR, or
-    # the owner force-cancels.
+    # LIMIT, measured 2026-10-24 (run ids in docs/ROADMAP.md, D-A4): a plain cancel of a QUEUED run is
+    # invisible from inside the job — cancelled() stays false and the run's API record stays
+    # status=pending, conclusion=null. Only a cancel that also cancelled a sibling job (i.e. within the
+    # first minutes, while the unit shards run) is detected. Otherwise: push or close the PR, or the
+    # owner force-cancels.
     - name: Stale run check (superseded or cancelled)
       id: stale
       if: steps.mode.outputs.mode == 'full'
