@@ -361,10 +361,12 @@ test("workflow: the dispatch guard is the test job's first step after checkout",
   const steps = job.slice(job.indexOf("\n    steps:\n"));
   const guard = steps.indexOf("    - name: Manual dispatch guard\n");
   assert.ok(guard > 0, "guard step present");
-  // Only the checkout precedes it.
+  // Only the checkout precedes it — plus, since D-A4, the cancelled-run refusal, which does nothing
+  // but fail (it can never let work through).
   const before = steps.slice(0, guard);
-  assert.equal(before.split("\n    - ").length - 1, 1, "exactly one step before the guard");
+  assert.equal(before.split("\n    - ").length - 1, 2, "exactly checkout and the cancelled-run refusal before the guard");
   assert.ok(before.includes("- uses: actions/checkout@v4"));
+  assert.ok(before.includes("- name: Refuse a cancelled run\n      if: cancelled()\n"));
   const block = steps.slice(guard, steps.indexOf("\n    - ", guard + 10));
   assert.ok(block.includes("      if: github.event_name == 'workflow_dispatch'\n"));
   assert.ok(block.includes("        DISPATCH_SLOT: ${{ inputs.slot }}\n"));
@@ -372,8 +374,18 @@ test("workflow: the dispatch guard is the test job's first step after checkout",
   assert.ok(block.includes("        E2E_SLOT_COUNT: ${{ vars.E2E_SLOT_COUNT }}\n"));
   assert.ok(block.includes("      run: node .github/ci/dispatch-guard.mjs"));
   // No step in the test job may continue past, or run regardless of, a failed guard.
-  for (const marker of ["always()", "failure()", "!cancelled()", "continue-on-error"]) {
+  for (const marker of ["always()", "failure()", "continue-on-error"]) {
     assert.ok(!steps.includes(marker), `test job steps must not use ${marker}`);
+  }
+  // A status function in a step `if:` removes GitHub's implicit `success() &&`. So a step that
+  // mentions cancelled() must either re-state `success() &&` first (work steps), or be a pure
+  // refusal that only prints an error and exits 1 (it can only make the job red, never do work).
+  for (const chunk of steps.split("\n    - ").slice(1)) {
+    const cond = /(?:^|\n) {6}if: (.+)/.exec(chunk);
+    if (!cond || !cond[1].includes("cancelled()")) continue;
+    const code = chunk.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
+    const refusal = /::error::/.test(code) && /\n\s+exit 1(\n|$)/.test(code) && !/\bnpx\b|\bnpm\b|docker|node /.test(code);
+    assert.ok(cond[1].startsWith("success() && ") || refusal, "a cancelled()-aware step must keep success() or be a pure refusal: " + cond[1]);
   }
 });
 
