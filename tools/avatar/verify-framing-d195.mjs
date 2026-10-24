@@ -1,4 +1,4 @@
-// D-195 BROWSER VERIFICATION of the shared upper-body framing (quiz #avatar-display, hub .profile-avatar). Runs the REAL
+// D-195/D-196 BROWSER VERIFICATION of the shared upper-body framing (quiz #avatar-display, hub .profile-avatar). Runs the REAL
 // renderer (js/avatar-render-c2.js mountC2Avatar + js/avatar-blink-engine.js BlinkEngine) in Chromium against a local static
 // server of this checkout, with each surface's own <style> block and css/theme.css, and measures:
 //   1. REGISTRATION — every mounted layer (R2 stack, tint wrappers, inline C2 hair, cosmetics with their own transforms, the
@@ -6,6 +6,9 @@
 //   2. BASELINE — flag off, and every non-documented localStorage value, renders pixel-identical to origin/main's CSS;
 //   3. CLIPPING per layer kind — each kind rendered alone with overflow visible: pixels outside the box (lost) and the
 //      smallest room inside the box, so intended body clipping is told apart from lost hair, headwear or cosmetics.
+//   4. D-196 TIER — each page decides the framing exactly as the surfaces do (avatarFramingOnFor over the MOUNTED cosmetics):
+//      no wide-slot item → framed; a wings/cape (back slot) item → today's whole-canvas view, nothing of it lost;
+//   5. PRESENTATION — sheets at actual size (DPR 1 and 2) per surface and theme (dark default, light pearl), flag off vs on.
 // Writes result.json and the review sheets into --out. Needs Playwright's Chromium; never part of the unit tests.
 // Usage: node tools/avatar/verify-framing-d195.mjs --out <dir> [--scales 1.5,1.6]
 import http from "node:http";
@@ -23,6 +26,7 @@ const SCALES = arg("--scales", "1.5,1.6").split(",").map(Number);
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".json": "application/json" };
 
 export const IDENTITIES = {
+  "r2-default-brown": { body_type: "neutral", skin_tone: "medium", hairstyle: "default", hair_color: "brown" },
   "r2-short-black": { body_type: "neutral", skin_tone: "medium", hairstyle: "short", hair_color: "black" },
   "r2-afro-brown": { body_type: "neutral", skin_tone: "medium", hairstyle: "afro", hair_color: "brown" },
   "c2-dark-blonde": { body_type: "neutral", skin_tone: "dark", hairstyle: "short", hair_color: "blonde" },
@@ -33,7 +37,10 @@ export const COSMETICS = {
   pirate: { headwear: "/assets/avatar/hat/pirate-hat.svg" },
   "aura-wings": { aura: "/assets/avatar/aura/aura-gold.svg", back: "/assets/avatar/body/wings-dragon.svg" },
   cape: { back: "/assets/avatar/shirt/cape-red.svg" },
+  aura: { aura: "/assets/avatar/aura/aura-gold.svg" },
 };
+const WIDE = (await import(new URL("../../js/avatar-layers.js", import.meta.url).href)).AVATAR_FRAMING_WIDE_SLOTS || [];
+const expectFramed = (slots) => !Object.keys(slots).some((k) => WIDE.includes(k));
 const style = (html) => html.match(/<style>([\s\S]*?)<\/style>/)[1];
 const mainFile = (f) => execFileSync("git", ["show", `origin/main:${f}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 26 });
 export const SURFACES = {
@@ -46,19 +53,20 @@ export const SURFACES = {
 export function shippedScale(html = readFileSync(join(ROOT, "index.html"), "utf8")) { const m = html.match(/#avatar-display\.avatar-framing-upper \.quiz-avatar-layer \{ left: (-?[\d.]+)%; width: ([\d.]+)%; height: ([\d.]+)%; \}/); if (!m) throw new Error("no framing rule in index.html"); return +m[2] / 100; }
 
 /** One test page: css source ('pr' | 'main'), localStorage value (null = none), optional scale override, blink frame, analysis mode. */
-function page(s, { css, value, scale, identity, slots, blink, isolate }) {
+function page(s, { css, value, scale, identity, slots, blink, isolate, theme = "default" }) {
   const S = SURFACES[s], html = css === "main" ? mainFile(S.file) : readFileSync(join(ROOT, S.file), "utf8");
   // analysis: every element OUTSIDE the avatar layers loses its paint (panels, showcase, the box itself), the page turns
   // magenta, the box keeps only a cyan dashed outline; the layers inside keep theirs (the hair tint wrapper paints with
   // background-color)
   const extra = scale ? S.override(scale) : "", iso = isolate ? `body *:not(${S.sel} *){background:none!important;box-shadow:none!important;border-color:transparent!important;outline:none!important}body *:not(${S.sel} *)::before,body *:not(${S.sel} *)::after{display:none!important}${S.sel}{overflow:visible!important;outline:1px dashed #00ffff!important;animation:none!important}body{background:#ff00ff!important}` : "";
-  return `<!doctype html><html lang="da" data-theme="default"><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/css/theme.css"><style>${style(html)}</style><style>${extra}</style><style>body{display:block;padding:40px 60px;margin:0}${iso}</style></head><body>${S.box}
+  return `<!doctype html><html lang="da" data-theme="${theme}"><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/css/theme.css"><style>${style(html)}</style><style>${extra}</style><style>body{display:block;padding:40px 60px;margin:0}${iso}</style></head><body>${S.box}
 <script type="module">
 window.__AVATAR_TEST__ = true; localStorage.clear(); ${value === null ? "" : `localStorage.setItem("avatar_framing", ${JSON.stringify(value)});`}
 const L = await import("/js/avatar-layers.js"), R = await import("/js/avatar-render-c2.js"), B = await import("/js/avatar-blink-engine.js");
 const el = document.querySelector(${JSON.stringify(S.sel)}), identity = ${JSON.stringify(identity)}, slots = ${JSON.stringify(slots)};
-el.classList.toggle(L.AVATAR_FRAMING_CLASS, L.isAvatarFramingUpper());
 const cosmetics = R.c2CosmeticLayers(Object.fromEntries(Object.keys(slots).map((k) => [k, k])), (id) => slots[id]);
+// exactly as app.js / hub.html: from the MOUNTED cosmetics, before the mount, through the namespace guard
+if (typeof L.avatarFramingOnFor === "function") el.classList.toggle(L.AVATAR_FRAMING_CLASS, L.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
 const path = await R.mountC2Avatar(el, identity, { layerClass: ${JSON.stringify(S.layerClass)}, cosmetics, surface: "verify" });
 const be = new B.BlinkEngine(el, identity.skin_tone, L.blinkConfigFor(identity, path === "r2"));
 be.forceFrame(${JSON.stringify(blink === "closed" ? "closed" : "open")});
@@ -85,7 +93,7 @@ async function main() {
   const { chromium } = await import("@playwright/test");
   await new Promise((r) => server.listen(0, "127.0.0.1", r)); const PORT = server.address().port;
   const shipped = shippedScale(), browser = await chromium.launch(), result = { shippedScale: shipped, scales: SCALES, registration: [], baseline: [], optIn: [], clipping: [], errors: [] };
-  let n = 0; const shots = {};
+  let n = 0; const shots = {}, presentation = {};
   const open = async (s, opts, { dpr = 2, width = 420 } = {}) => {
     const url = `/__v/${n++}.html`; pages[url] = page(s, opts);
     const p = await browser.newPage({ deviceScaleFactor: dpr, viewport: { width, height: 500 } }); await p.emulateMedia({ reducedMotion: "reduce" });
@@ -121,11 +129,12 @@ async function main() {
           if (blink === "closed" && dpr === 2 && cos === "none") shots[`${s}@${width}/${id}/${k}`] = onImg;
           if (blink === "closed" && dpr === 2 && cos !== "none") shots[`${s}@${width}/${id}/${cos}/${k}`] = onImg, shots[`${s}@${width}/${id}/${cos}/off`] = offImg;
           const [W0] = off.info.inner, cx = W0 / 2; let worst = 0;
-          const expect = ([x, y, w, h]) => [cx + (x - cx) * k, y * k, w * k, h * k];
+          const framed = on.info.cls.includes("avatar-framing-upper"), kk = framed ? k : 1;
+          const expect = ([x, y, w, h]) => [cx + (x - cx) * kk, y * kk, w * kk, h * kk];
           const cmp = (a, b) => { const e = expect(a); for (let i = 0; i < 4; i++) worst = Math.max(worst, Math.abs(e[i] - b[i])); };
           const ok = on.info.kids.length === off.info.kids.length && on.info.lids.length === off.info.lids.length;
           if (ok) { off.info.kids.forEach((c, i) => cmp(c.rect, on.info.kids[i].rect)); off.info.lids.forEach((r, i) => cmp(r, on.info.lids[i])); }
-          result.registration.push({ tag, scale: k, path: on.info.path, cls: on.info.cls.includes("avatar-framing-upper"), overflow: on.info.overflow, layers: on.info.kids.map((c) => c.kind).join(","), lids: on.info.lids.length, sameLayerCount: ok, worstRectErrorPx: +worst.toFixed(3) });
+          result.registration.push({ tag, scale: k, path: on.info.path, cls: framed, expectedFramed: expectFramed(slots), overflow: on.info.overflow, layers: on.info.kids.map((c) => c.kind).join(","), lids: on.info.lids.length, sameLayerCount: ok, worstRectErrorPx: +worst.toFixed(3) });
         }
       }
     }
@@ -133,6 +142,12 @@ async function main() {
     for (const s of ["quiz", "hub"]) {
       const base = { identity: IDENTITIES["r2-afro-brown"], slots: {}, blink: "closed", css: "pr" }, ref = await open(s, { ...base, value: null }), refImg = await shoot(ref.p, s); await ref.p.close();
       for (const value of ["1", "true", "UPPER", " upper", "upper ", "full", "", "lower"]) { const o = await open(s, { ...base, value }), img = await shoot(o.p, s); await o.p.close(); result.optIn.push({ surface: s, value, cls: o.info.cls.includes("avatar-framing-upper"), identicalToOff: same(img, refImg) }); }
+    }
+    // 5: presentation at actual size — the shipped CSS (no scale override), flag off vs opt-in, per theme
+    for (const [s, width] of [["quiz", 420], ["hub", 600], ["hub", 500]]) for (const theme of ["default", "pearl"]) for (const dpr of [1, 2]) {
+      const rows = [];
+      for (const [cos, slots] of Object.entries(COSMETICS)) { const row = []; for (const identity of Object.values(IDENTITIES)) for (const value of [null, "upper"]) { const o = await open(s, { identity, slots, blink: "open", css: "pr", value, theme }, { dpr, width }); row.push(await shoot(o.p, s)); await o.p.close(); } rows.push(row); }
+      presentation[`${s}-${width}-${theme}-dpr${dpr}`] = rows;
     }
     // 3: clipping per layer kind, each kind alone with overflow visible (magenta page, cyan dashed box outline)
     for (const [s, width] of [["quiz", 420], ["hub", 600], ["hub", 500]]) for (const [id, identity] of Object.entries(IDENTITIES)) for (const [cos, slots] of Object.entries(COSMETICS)) for (const k of [null, ...SCALES]) {
@@ -164,6 +179,7 @@ async function main() {
     if (s === "quiz") sheet(`sheet-quiz-afro-top-x3.png`, [[shots[`${key}/r2-afro-brown/off`], ...SCALES.map((k) => shots[`${key}/r2-afro-brown/${k}`])].map((t) => enlarge(t, 3, 0.45))]);
     if (width !== 500) for (const cos of Object.keys(COSMETICS).filter((c) => c !== "none")) sheet(`sheet-${s}-${cos}-actual.png`, ids.map((id) => [shots[`${key}/${id}/${cos}/off`], ...SCALES.map((k) => shots[`${key}/${id}/${cos}/${k}`])]));
   }
+  for (const [k, rows] of Object.entries(presentation)) sheet(`present-${k}.png`, rows, 6);
   for (const cos of ["none", "crown", "pirate", "aura-wings", "cape"]) { const rows = []; for (const id of Object.keys(IDENTITIES)) { const r = []; for (const kind of ["hair", "headwear", "aura", "back"]) for (const k of SCALES) { const t = shots[`clip/quiz/${id}/${cos}/${kind}/${k}`]; if (t) r.push(t); } if (r.length) rows.push(r); } if (rows.length) sheet(`clip-quiz-${cos}.png`, rows); }
   return result;
 }
@@ -171,8 +187,8 @@ async function main() {
 const invokedDirectly = typeof process.argv[1] === "string" && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
 if (invokedDirectly) {
   const r = await main();
-  const reg = r.registration, bad = reg.filter((x) => !x.cls || x.overflow !== "hidden" || !x.sameLayerCount || x.worstRectErrorPx > 0.05);
-  console.log(JSON.stringify({ shippedScale: r.shippedScale, registrationRuns: reg.length, registrationFailures: bad.length, worstRectErrorPx: Math.max(...reg.map((x) => x.worstRectErrorPx)), baselineRuns: r.baseline.length, baselineNotIdentical: r.baseline.filter((x) => !x.identicalToMain || x.cls).length, baselineIdenticalOnlyWithoutAnimatedAura: r.baseline.filter((x) => !x.identicalToMain && x.identicalWithoutAnimatedAura === true).length, baselineRectsDiffer: r.baseline.filter((x) => !x.rectsEqualToMain).length, optInRuns: r.optIn.length, optInLeaks: r.optIn.filter((x) => x.cls || !x.identicalToOff).length, errors: r.errors.length }, null, 1));
+  const reg = r.registration, bad = reg.filter((x) => x.cls !== x.expectedFramed || (x.cls && x.overflow !== "hidden") || !x.sameLayerCount || x.worstRectErrorPx > 0.05);
+  console.log(JSON.stringify({ shippedScale: r.shippedScale, registrationRuns: reg.length, registrationFailures: bad.length, framedRuns: reg.filter((x) => x.cls).length, wideUnframedRuns: reg.filter((x) => !x.cls).length, worstRectErrorPx: Math.max(...reg.map((x) => x.worstRectErrorPx)), baselineRuns: r.baseline.length, baselineNotIdentical: r.baseline.filter((x) => !x.identicalToMain || x.cls).length, baselineIdenticalOnlyWithoutAnimatedAura: r.baseline.filter((x) => !x.identicalToMain && x.identicalWithoutAnimatedAura === true).length, baselineRectsDiffer: r.baseline.filter((x) => !x.rectsEqualToMain).length, optInRuns: r.optIn.length, optInLeaks: r.optIn.filter((x) => x.cls || !x.identicalToOff).length, errors: r.errors.length }, null, 1));
   // a baseline pixel difference fails unless it disappears with the animated aura hidden AND every layer rect equals main's
   if (bad.length || r.baseline.some((x) => x.cls || !x.rectsEqualToMain || (!x.identicalToMain && x.identicalWithoutAnimatedAura !== true)) || r.optIn.some((x) => x.cls || !x.identicalToOff) || r.errors.length) process.exitCode = 1;
 }

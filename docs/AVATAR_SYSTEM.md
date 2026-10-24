@@ -371,6 +371,20 @@ art layer behind them can be upgraded without a rewrite.
     - **Unintended:** about 17 % of an aura in the quiz; wings about 66–72 %; capes about 50–61 %.
   - **Status.** Off by default. Enabling it needs a separate owner decision that weighs the wide back layers. See
     `project-state.md` **D-195**.
+- **Equipment-adaptive framing — quiz and hub; still behind the flag, OFF (D-196, as of 2026-10-24).**
+  - **Rule.** `avatarFramingOnFor(equippedSlots)` returns true only when the flag (or `localStorage.avatar_framing = "upper"`) is
+    on AND no item sits in `AVATAR_FRAMING_WIDE_SLOTS = ["back"]`.
+  - **Why the back slot.** Wings and capes are drawn across the whole canvas width or down to the feet, so any zoom cuts them.
+  - **What changes.**
+    - With a back item, the figure keeps today's whole-canvas view: nothing is lost, and the face is not enlarged.
+    - Otherwise it is framed at 1.5×. The face grows 1.5× (R3 quiz head about 16 → 25 CSS px), and hair and headwear lose
+      nothing.
+    - An aura alone keeps the framing; only its outermost glow at the sides is cut.
+  - **Where.** `app.js` and `hub.html` decide from the cosmetics actually mounted, right before `mountC2Avatar`, through the
+    namespace guard.
+  - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
+  - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
+  - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

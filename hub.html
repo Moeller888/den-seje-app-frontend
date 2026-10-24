@@ -1584,8 +1584,6 @@
     if (!avatarEl || !showcaseEl) return;
 
     avatarEl.innerHTML = "";
-    // D-195: shared upper-body framing, only with the flag (default OFF → no class).
-    if (typeof avatarLayersModule.isAvatarFramingUpper === "function") avatarEl.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.isAvatarFramingUpper() === true);
 
     // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
     // via the shared module; cosmetics deferred to a later C2 section. After the
@@ -1594,6 +1592,10 @@
     // no-ops on the missing base, so the (!blinkEngine) guard prevents a double init.
     if (isAvatarV2()) {
       const cosmetics = c2CosmeticLayers(equippedSlots, id => allShopItems.find(i => i.id === id)?.image_url);
+      // D-195/D-196: shared upper-body framing, only with the flag (default OFF → no class) and only when
+      // no wide-slot item (wings, capes) is mounted. Decided from the cosmetics actually mounted, before
+      // any layer mounts. Namespace guard: an older avatar-layers.js without the function → no framing.
+      if (typeof avatarLayersModule.avatarFramingOnFor === "function") avatarEl.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
       const renderPath = await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics, surface: "hub" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";

@@ -473,8 +473,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!avatarDisplay) return;
 
     avatarDisplay.innerHTML = "";
-    // D-195: shared upper-body framing, only with the flag (default OFF → no class).
-    if (typeof avatarLayersModule.isAvatarFramingUpper === "function") avatarDisplay.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.isAvatarFramingUpper() === true);
 
     // Section 155G: C2 render pipeline behind AVATAR_V2 (default OFF). Base + hair
     // via the shared module; cosmetics are deferred to a later C2 section. This
@@ -497,6 +495,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         (items ?? []).forEach(it => { if (it.image_url) srcById[it.id] = it.image_url; });
       }
       const cosmetics = c2CosmeticLayers(eqSlots, id => srcById[id] ?? null);
+      // D-195/D-196: shared upper-body framing, only with the flag (default OFF → no class) and only when
+      // no wide-slot item (wings, capes) is mounted. Decided from the cosmetics actually mounted, before
+      // any layer mounts. Namespace guard: an older avatar-layers.js without the function → no framing.
+      if (typeof avatarLayersModule.avatarFramingOnFor === "function") avatarDisplay.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
       const renderPath = await mountC2Avatar(avatarDisplay, pd?.avatar_identity ?? null, { layerClass: "quiz-avatar-layer", cosmetics, surface: "quiz" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       // PR D: re-apply the full blink profile (mode + tone) so the lids always
