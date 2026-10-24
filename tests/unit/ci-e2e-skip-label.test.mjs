@@ -271,7 +271,7 @@ test("workflow: label mode runs the full unit suite in the required check and ne
   for (const name of ["Pull Playwright image", "Run Playwright tests"]) {
     const s = WF.indexOf("- name: " + name + "\n");
     const line = WF.slice(s, WF.indexOf("\n", WF.indexOf("if:", s)));
-    assert.ok(line.endsWith("if: success() && steps.mode.outputs.mode == 'full' && !cancelled() && steps.superseded.outputs.superseded != 'true'"), name);
+    assert.ok(line.endsWith("if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'"), name);
   }
 });
 

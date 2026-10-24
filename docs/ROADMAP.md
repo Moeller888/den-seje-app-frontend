@@ -533,15 +533,17 @@ _Last reviewed: 2026-07-01._
   42 kB/s once) while every queued run waited. The suite now runs inside the official Playwright
   image, pinned by version (= `@playwright/test` in package-lock) **and digest**; secrets reach the
   container by name only; same config, retries, workers and three browsers. The pull is retried and
-  bounded to 10 min. (2) The job is unconditional so the required check always reports, and GitHub
-  runs such jobs even after a cancel (measured 2026-10-23: three cancelled runs still took the lock
-  and ran the full suite). A cancelled run now stops at lock acquisition and **fails red** (a skipped
-  required check would read as passing); a cancel during the suite lets the running step finish
-  (afterAll restores the shared accounts) and then fails red. (3) A `pull_request` run whose PR has
-  moved to a newer commit, or was closed, stops red at lock acquisition
-  (`.github/ci/superseded-check.mjs`; read-only, decides only about itself, any doubt → run).
-  Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`, which evaluates the workflow's own `if:`
-  conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
+  bounded to 10 min. (2) **Stale runs stop red at lock acquisition.** The job is unconditional so the
+  required check always reports, and GitHub runs such jobs even after a cancel (measured 2026-10-23:
+  three cancelled runs still took the lock and ran the full suite). Inside the job `cancelled()`
+  stays **false** after a queued cancel (measured 2026-10-24, run 40079620782), so a status-function
+  guard cannot work; instead `.github/ci/superseded-check.mjs` reads the PR and the run's own API
+  record: a `pull_request` run whose PR moved to a newer commit or was closed, or a run recorded as
+  cancelled, stops in seconds and **fails red** (a skipped required check would read as passing).
+  Read-only, decides only about itself, any doubt → run. Proven in CI: superseded run 40079689289
+  stopped red in 14 s. A cancel during the suite does not stop it (the suite finishes, afterAll
+  restores the accounts, the result is real). Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`,
+  which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
   its lock — a separate change.
 
 ## Completed sections

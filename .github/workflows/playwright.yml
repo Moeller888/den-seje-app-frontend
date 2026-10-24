@@ -336,21 +336,12 @@ jobs:
       # MUST equal @playwright/test in package-lock.json (tests/unit/ci-e2e-lock-setup.test.mjs).
       # Pinned by digest too, so the tag can never be re-pointed under us.
       PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
-    # Read-only token: checkout, and the superseded check reading this PR's current head.
+    # Read-only token: checkout, and the stale check reading this PR's head and this run's own record.
     permissions:
       contents: read
       pull-requests: read
+      actions: read
     steps:
-    # ── CANCELLATION (D-A4, 2026-10-24) ─────────────────────────────────────
-    # This job runs unconditionally (job-level always-condition) so the required `test` check always
-    # reports — and GitHub runs such jobs EVEN AFTER THE RUN IS CANCELLED (measured 2026-10-23: three cancelled runs still
-    # got the lock and ran the full suite). So a cancelled run must stop itself, here, the moment it
-    # gets the lock, and it must stop RED: a skipped job counts as passing for a required check.
-    - name: Refuse a cancelled run
-      if: cancelled()
-      run: |
-        echo "::error::This run was cancelled. Nothing was tested, so the test check is red — never green."
-        exit 1
     - uses: actions/checkout@v4
       with:
         # Full history so fast-mode git diff --check can compare the PR base..head.
@@ -528,12 +519,16 @@ jobs:
         npm run test:unit:ci
 
     # ── Full suite ────────────────────────────────────────────────────────────
-    # SUPERSEDED: a pull_request run whose PR has since moved to a newer commit (or was closed)
-    # stops here, red, instead of spending the lock on code nobody will merge. It decides only about
-    # itself and cancels nothing; any doubt → run the suite (.github/ci/superseded-check.mjs).
-    - name: Superseded check
-      id: superseded
-      if: success() && steps.mode.outputs.mode == 'full' && !cancelled()
+    # STALE RUN (D-A4). This job runs unconditionally so the required check always reports, and GitHub
+    # runs such jobs EVEN AFTER THEIR RUN IS CANCELLED (measured 2026-10-23: three cancelled runs took
+    # the lock and ran the full suite). Inside the job GitHub's cancelled() stays false (measured
+    # 2026-10-24), so the check reads the run's own API record instead. A pull_request run whose PR
+    # moved to a newer commit or was closed, or a run that was cancelled, stops here — RED (a skipped
+    # required check would read as passing). It decides only about itself and cancels nothing; any
+    # doubt → run the suite (.github/ci/superseded-check.mjs).
+    - name: Stale run check (superseded or cancelled)
+      id: stale
+      if: steps.mode.outputs.mode == 'full'
       env:
         EVENT_NAME: ${{ github.event_name }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -541,7 +536,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: node .github/ci/superseded-check.mjs
     - name: Install dependencies
-      if: success() && steps.mode.outputs.mode == 'full' && !cancelled() && steps.superseded.outputs.superseded != 'true'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       run: npm ci
     # BROWSERS WITHOUT APT (D-A4). `npx playwright install --with-deps` used to run here, inside the
     # lock; its apt half hit a slow Ubuntu mirror 8 times in 90 full runs (5.7–47 min, 2026-10-16..24 —
@@ -549,7 +544,7 @@ jobs:
     # all their system libraries, so nothing is fetched from apt at all. Retried, and bounded: a slow
     # registry fails this step after 10 minutes instead of holding the lock indefinitely.
     - name: Pull Playwright image
-      if: success() && steps.mode.outputs.mode == 'full' && !cancelled() && steps.superseded.outputs.superseded != 'true'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       timeout-minutes: 10
       run: |
         set -euo pipefail
@@ -561,7 +556,7 @@ jobs:
     # The suite runs in the image. Secrets are passed by NAME (-e NAME, values from this step's env),
     # never on the command line. Same config, same retries, same three browsers, same workers.
     - name: Run Playwright tests
-      if: success() && steps.mode.outputs.mode == 'full' && !cancelled() && steps.superseded.outputs.superseded != 'true'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       run: |
         set -euo pipefail
         summary_dir="$(dirname "$GITHUB_STEP_SUMMARY")"
@@ -577,14 +572,13 @@ jobs:
           "$PLAYWRIGHT_IMAGE" \
           npx playwright test
 
-    # A run cancelled while the suite was RUNNING: an unconditional job is not stopped by a cancel
-    # (measured 2026-10-23), so the running step finishes — afterAll hooks restore the shared test
-    # accounts, nothing is killed mid-test — every later step is skipped, and the job ends here, red.
-    # A superseded run ends here too.
-    - name: Fail a cancelled or superseded run
-      if: cancelled() || steps.superseded.outputs.superseded == 'true'
+    # A stale run ends here, red. (A cancel that arrives while the suite is RUNNING does not stop an
+    # unconditional job — measured 2026-10-23 — so the suite finishes, afterAll hooks restore the
+    # shared test accounts, and the result is the real one.)
+    - name: Fail a stale run
+      if: steps.stale.outputs.stale == 'true'
       run: |
-        echo "::error::Not tested to completion (run cancelled, or superseded=${{ steps.superseded.outputs.superseded }}). The test check is red, never green."
+        echo "::error::Stale run (superseded or cancelled): nothing was tested. The test check is red, never green."
         exit 1
     # ── No report artifact (containment) ──────────────────────────────────────
     # The Playwright HTML report and the traces inside it record typed values verbatim — a fill step
