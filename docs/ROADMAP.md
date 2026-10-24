@@ -527,6 +527,22 @@ _Last reviewed: 2026-07-01._
   anything unclear → full suite. (4) **The push-to-main full run stays:** `main` has **no branch
   protection** (no required check, direct pushes allowed), so a green PR does not prove what lands
   on main; removing it waits for that protection.
+  **E2E lock: no apt under the lock, cancelled/superseded runs stop red (2026-10-24, D-A4).**
+  (1) The `test` job no longer runs `npx playwright install --with-deps` while it holds the shared
+  E2E lock: its apt half hit a slow Ubuntu mirror in 8 of 90 full runs (5.7–47 min; 117 MB at
+  42 kB/s once) while every queued run waited. The suite now runs inside the official Playwright
+  image, pinned by version (= `@playwright/test` in package-lock) **and digest**; secrets reach the
+  container by name only; same config, retries, workers and three browsers. The pull is retried and
+  bounded to 10 min. (2) The job is unconditional so the required check always reports, and GitHub
+  runs such jobs even after a cancel (measured 2026-10-23: three cancelled runs still took the lock
+  and ran the full suite). A cancelled run now stops at lock acquisition and **fails red** (a skipped
+  required check would read as passing); a cancel during the suite lets the running step finish
+  (afterAll restores the shared accounts) and then fails red. (3) A `pull_request` run whose PR has
+  moved to a newer commit, or was closed, stops red at lock acquisition
+  (`.github/ci/superseded-check.mjs`; read-only, decides only about itself, any doubt → run).
+  Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`, which evaluates the workflow's own `if:`
+  conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
+  its lock — a separate change.
 
 ## Completed sections
 
