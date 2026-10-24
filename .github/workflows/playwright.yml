@@ -332,6 +332,11 @@ jobs:
       # E2E account slot (tests/e2e-slot.mjs). The predicate is IDENTICAL to the slot branch of the
       # concurrency group above; anything else is '0' — the original accounts under the legacy lock.
       E2E_SLOT: ${{ (needs.classify.result == 'success' && (needs.classify.outputs.slot == '1' || needs.classify.outputs.slot == '2' || needs.classify.outputs.slot == '3')) && needs.classify.outputs.slot || '0' }}
+    # Read-only token: checkout, and the stale check reading this PR's head and this run's own record.
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
     steps:
     - uses: actions/checkout@v4
       with:
@@ -509,16 +514,90 @@ jobs:
         npm ci
         npm run test:unit:ci
 
-    # ── Full suite (unchanged) ────────────────────────────────────────────────
+    # ── Full suite ────────────────────────────────────────────────────────────
+    # STALE RUN (D-A4). This job runs unconditionally so the required check always reports, and GitHub
+    # runs such jobs EVEN AFTER THEIR RUN IS CANCELLED (measured 2026-10-23: three cancelled runs took
+    # the lock and ran the full suite). A pull_request run whose PR moved to a newer commit or was
+    # closed stops here — RED (a skipped required check would read as passing). It decides only about
+    # itself and cancels nothing; any doubt → run the suite (.github/ci/superseded-check.mjs).
+    # LIMIT, measured 2026-10-24 (run ids in docs/ROADMAP.md, D-A4): a plain cancel of a QUEUED run is
+    # invisible from inside the job — cancelled() stays false and the run's API record stays
+    # status=pending, conclusion=null. Only a cancel that also cancelled a sibling job (i.e. within the
+    # first minutes, while the unit shards run) is detected. Otherwise: push or close the PR, or the
+    # owner force-cancels.
+    - name: Stale run check (superseded or cancelled)
+      id: stale
+      if: steps.mode.outputs.mode == 'full'
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: node .github/ci/superseded-check.mjs
     - name: Install dependencies
-      if: steps.mode.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       run: npm ci
+    # BROWSERS + APT PACKAGES FROM THE ACTIONS CACHE (D-A4). `npx playwright install --with-deps`
+    # runs inside the lock; its apt half hit a slow Ubuntu mirror 8 times in 90 full runs (5.7–47 min,
+    # 2026-10-16..24 — once 117 MB at 42 kB/s) while every other run waited. The browsers themselves
+    # always arrived in seconds. So the .deb files apt downloads, and the browsers, are cached: a run
+    # with a cache hit restores them from GitHub's cache and apt installs WITHOUT downloading (apt
+    # still checks every .deb against its signed index). The runner environment is unchanged — the
+    # official Playwright image was tried and changes Chromium's rendering (11 golden screenshots,
+    # 1 px), which would need new owner-approved baselines (run 40079704807).
+    # Key = runner image + Playwright version: a new runner image or Playwright bump starts fresh.
+    - name: Playwright and runner image versions
+      id: pwver
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
+      run: |
+        set -euo pipefail
+        v="$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")"
+        echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
+    - name: Restore Playwright browser and apt cache
+      id: pwcache
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/.cache/pw-apt
+        key: ${{ steps.pwver.outputs.key }}
+    # Bounded: a cache miss on a slow mirror fails after 15 minutes instead of holding the lock for 47.
     - name: Install Playwright Browsers
-      if: steps.mode.outputs.mode == 'full'
-      run: npx playwright install --with-deps
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
+      timeout-minutes: 15
+      run: |
+        set -euo pipefail
+        # Keep what apt downloads, so a miss refills the cache for the next run.
+        printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+          | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
+        mkdir -p ~/.cache/pw-apt
+        seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
+        if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
+        echo "apt: seeded ${seeded} cached .deb file(s); cache hit: ${{ steps.pwcache.outputs.cache-hit == 'true' }}"
+        npx playwright install --with-deps
+        find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+        echo "apt: cache now holds $(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l) .deb file(s)"
+    - name: Save Playwright browser and apt cache
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true' && steps.pwcache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/.cache/pw-apt
+        key: ${{ steps.pwver.outputs.key }}
     - name: Run Playwright tests
-      if: steps.mode.outputs.mode == 'full'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       run: npx playwright test
+
+    # A stale run ends here, red. (A cancel that arrives while the suite is RUNNING does not stop an
+    # unconditional job — measured 2026-10-23 — so the suite finishes, afterAll hooks restore the
+    # shared test accounts, and the result is the real one.)
+    - name: Fail a stale run
+      if: steps.stale.outputs.stale == 'true'
+      run: |
+        echo "::error::Stale run (superseded or cancelled): nothing was tested. The test check is red, never green."
+        exit 1
     # ── No report artifact (containment) ──────────────────────────────────────
     # The Playwright HTML report and the traces inside it record typed values verbatim — a fill step
     # is titled `Fill "<value>"`, and a trace keeps call parameters and network bodies — and the

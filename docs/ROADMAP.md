@@ -527,6 +527,29 @@ _Last reviewed: 2026-07-01._
   anything unclear → full suite. (4) **The push-to-main full run stays:** `main` has **no branch
   protection** (no required check, direct pushes allowed), so a green PR does not prove what lands
   on main; removing it waits for that protection.
+  **E2E lock: apt packages from the cache, stale runs stop red (2026-10-24, D-A4).**
+  (1) `npx playwright install --with-deps` runs inside the shared E2E lock, and its apt half hit a
+  slow Ubuntu mirror in 8 of 90 full runs (5.7–47 min; once 117 MB at 42 kB/s) while every queued run
+  waited; the browsers themselves always came in seconds. The `.deb` files apt downloads and the
+  browsers are now kept in the Actions cache (key = runner image + Playwright version); on a hit apt
+  installs without downloading (still verified against its signed index). The install step is
+  bounded to 15 min. **The official Playwright image was tried and rejected for now:** the pull took
+  29 s, but Chromium renders 1 px differently in it (11 golden screenshots failed, run 40079704807;
+  Firefox/WebKit green) — adopting it needs new owner-approved baselines. It remains the natural base
+  for the isolated E2E track. (2) **Stale runs stop red at lock acquisition.** The job is unconditional so the
+  required check always reports, and GitHub runs such jobs even after a cancel (measured 2026-10-23:
+  three cancelled runs still took the lock and ran the full suite). Inside the job `cancelled()`
+  stays **false** after a queued cancel (measured 2026-10-24, run 40079620782), so a status-function
+  guard cannot work; instead `.github/ci/superseded-check.mjs` reads the PR and the run's own API
+  record: a `pull_request` run whose PR moved to a newer commit or was closed stops in seconds and
+  **fails red** (a skipped required check would read as passing). Read-only, decides only about
+  itself, any doubt → run. Proven in CI: superseded run 40079689289 stopped red in 14 s. **Limit:**
+  a plain cancel of a queued run stays invisible to the job (the API keeps `status=pending`,
+  `conclusion=null`, run 40083437376); it is caught only if it also cancelled a sibling job (within
+  the first minutes). Otherwise push/close the PR or have the owner force-cancel. A cancel during the suite does not stop it (the suite finishes, afterAll
+  restores the accounts, the result is real). Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`,
+  which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
+  its lock — a separate change.
 
 ## Completed sections
 
