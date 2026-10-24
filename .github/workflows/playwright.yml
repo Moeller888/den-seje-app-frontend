@@ -578,8 +578,11 @@ jobs:
         npx playwright install --with-deps
         find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
         echo "apt: cache now holds $(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l) .deb file(s)"
+    # Only push runs (main) write the cache; pull requests read it (a PR may restore its base
+    # branch's cache). One entry is ~557 MB — nine PRs each saving their own would crowd the
+    # repository's 10 GB cache and evict main's entry.
     - name: Save Playwright browser and apt cache
-      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true' && steps.pwcache.outputs.cache-hit != 'true'
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push'
       uses: actions/cache/save@v4
       with:
         path: |

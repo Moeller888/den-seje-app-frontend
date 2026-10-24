@@ -532,8 +532,9 @@ _Last reviewed: 2026-07-01._
   slow Ubuntu mirror in 8 of 90 full runs (5.7–47 min; once 117 MB at 42 kB/s) while every queued run
   waited; the browsers themselves always came in seconds. The `.deb` files apt downloads and the
   browsers are now kept in the Actions cache (key = runner image + Playwright version); on a hit apt
-  installs without downloading (still verified against its signed index). The install step is
-  bounded to 15 min. **The official Playwright image was tried and rejected for now:** the pull took
+  installs without downloading (still verified against its signed index). Only push runs (main)
+  write the ~557 MB entry; pull requests restore it, so nine parallel PRs cannot crowd the 10 GB
+  repository cache. The install step is bounded to 15 min. **The official Playwright image was tried and rejected for now:** the pull took
   29 s, but Chromium renders 1 px differently in it (11 golden screenshots failed, run 40079704807;
   Firefox/WebKit green) — adopting it needs new owner-approved baselines. It remains the natural base
   for the isolated E2E track. (2) **Stale runs stop red at lock acquisition.** The job is unconditional so the

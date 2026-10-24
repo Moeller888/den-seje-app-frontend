@@ -48,6 +48,8 @@ test("the cache key changes with the runner image and the Playwright version fro
   assert.ok(step("Restore Playwright browser and apt cache").includes("uses: actions/cache/restore@v4"));
   assert.ok(step("Save Playwright browser and apt cache").includes("uses: actions/cache/save@v4"));
   assert.ok(step("Save Playwright browser and apt cache").includes("steps.pwcache.outputs.cache-hit != 'true'"), "only a miss writes the cache");
+  assert.ok(step("Save Playwright browser and apt cache").includes("&& github.event_name == 'push'\n"),
+    "only main writes the ~557 MB entry; nine PRs saving their own would evict it from the 10 GB cache");
 });
 
 test("the install step seeds apt from the cache, keeps what it downloads, and is bounded", () => {
@@ -164,6 +166,13 @@ test("fast modes are untouched: no stale check, no pull, no suite, no refusal, g
     for (const n of ["Stale run check (superseded or cancelled)", "Install Playwright Browsers", "Run Playwright tests", "Fail a stale run"]) assert.ok(!r.ran.includes(n), mode + ": " + n);
     assert.equal(r.red, false, mode);
   }
+});
+
+test("cache: a pull request restores but never saves; a push on a miss saves", () => {
+  const pr = simulate({ event: "pull_request", mode: "full" });
+  assert.ok(pr.ran.includes("Restore Playwright browser and apt cache") && !pr.ran.includes("Save Playwright browser and apt cache"));
+  const push = simulate({ event: "push", mode: "full" });
+  assert.ok(push.ran.includes("Save Playwright browser and apt cache"));
 });
 
 test("push to main runs the suite (the stale check never calls a push superseded)", () => {
