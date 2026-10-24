@@ -1,7 +1,7 @@
 // D-A4 (2026-10-24): what the `test` job does while it holds the shared E2E lock.
 //
-//   1. Browsers come from a pinned Playwright image — no `playwright install --with-deps`, no apt,
-//      inside the lock (the apt mirror cost 5.7–47 min in 8 of 90 runs).
+//   1. Browsers and apt packages come from the Actions cache — no slow apt mirror download
+//      inside the lock (it cost 5.7–47 min in 8 of 90 runs); the runner environment is unchanged.
 //   2. A STALE run — a pull_request run whose PR moved to a newer commit or was closed, or a run that
 //      was cancelled while it waited — stops at lock acquisition and is RED, never green. The job is
 //      always() and GitHub runs always() jobs even after a cancel; inside it `cancelled()` was measured
@@ -22,35 +22,44 @@ const TEST_JOB = WF.slice(WF.indexOf("\n  test:\n"));
 const stripComments = (t) => t.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
 const TEST_JOB_CODE = stripComments(TEST_JOB);
 
-// ── 1. pinned image, no apt inside the lock ─────────────────────────────────────────────────
-test("the Playwright image version equals @playwright/test in package-lock and is pinned by digest", () => {
-  const lock = JSON.parse(read("package-lock.json"));
-  const version = lock.packages["node_modules/@playwright/test"].version;
-  assert.equal(lock.packages["node_modules/playwright"].version, version);
-  const m = /PLAYWRIGHT_IMAGE: mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-noble@sha256:([0-9a-f]{64})\n/.exec(TEST_JOB);
-  assert.ok(m, "PLAYWRIGHT_IMAGE must be mcr.microsoft.com/playwright:v<version>-noble@sha256:<digest>");
-  assert.equal(m[1], version, "bump the image together with @playwright/test");
+// ── 1. browsers + apt packages from the Actions cache, same runner environment ──────────────
+const step = (name) => {
+  const at = TEST_JOB.indexOf(`- name: ${name}\n`);
+  assert.notEqual(at, -1, "step not found: " + name);
+  return TEST_JOB.slice(at, TEST_JOB.indexOf("\n    - ", at + 10));
+};
+
+test("the suite still runs on the runner itself (goldens were made there), with the unchanged command", () => {
+  assert.ok(!/docker (run|pull)|container:|PLAYWRIGHT_IMAGE/.test(TEST_JOB_CODE),
+    "the Playwright image changes Chromium rendering (11 goldens, run 40079704807) — not without new owner-approved baselines");
+  assert.ok(step("Run Playwright tests").includes("      run: npx playwright test"));
+  assert.ok(step("Install Playwright Browsers").includes("        npx playwright install --with-deps\n"), "same installer, same browsers and system deps");
 });
 
-test("no browser or apt installation happens in the locked test job", () => {
-  assert.ok(!TEST_JOB_CODE.includes("playwright install"), "the image carries the browsers — never install them under the lock");
-  assert.ok(!/\bapt(-get)?\s+install/.test(TEST_JOB_CODE));
-  const pull = TEST_JOB.slice(TEST_JOB.indexOf("- name: Pull Playwright image"), TEST_JOB.indexOf("- name: Run Playwright tests"));
-  assert.ok(pull.includes("timeout-minutes: 10"), "a slow registry must fail the step, not hold the lock");
-  assert.ok(pull.includes('docker pull --quiet "$PLAYWRIGHT_IMAGE"'));
+test("the cache key changes with the runner image and the Playwright version from package-lock", () => {
+  const v = step("Playwright and runner image versions");
+  assert.ok(v.includes(`require('./package-lock.json').packages['node_modules/playwright'].version`));
+  assert.ok(v.includes('key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}'));
+  for (const name of ["Restore Playwright browser and apt cache", "Save Playwright browser and apt cache"]) {
+    const s = step(name);
+    assert.ok(s.includes("key: ${{ steps.pwver.outputs.key }}"), name);
+    assert.ok(s.includes("~/.cache/ms-playwright") && s.includes("~/.cache/pw-apt"), name);
+  }
+  assert.ok(step("Restore Playwright browser and apt cache").includes("uses: actions/cache/restore@v4"));
+  assert.ok(step("Save Playwright browser and apt cache").includes("uses: actions/cache/save@v4"));
+  assert.ok(step("Save Playwright browser and apt cache").includes("steps.pwcache.outputs.cache-hit != 'true'"), "only a miss writes the cache");
 });
 
-test("the suite runs in the image with the same command and every job env var passed by NAME only", () => {
-  const run = TEST_JOB.slice(TEST_JOB.indexOf("- name: Run Playwright tests"), TEST_JOB.indexOf("- name: Fail a stale run"));
-  assert.ok(run.includes('"$PLAYWRIGHT_IMAGE" \\\n          npx playwright test\n'), "same command, no extra flags (projects, retries, workers come from playwright.config.ts)");
-  const envBlock = TEST_JOB.slice(TEST_JOB.indexOf("    env:\n"), TEST_JOB.indexOf("    permissions:\n"));
-  const names = [...envBlock.matchAll(/^ {6}([A-Z][A-Z0-9_]*):/gm)].map((x) => x[1]).filter((n) => n !== "PLAYWRIGHT_IMAGE");
-  assert.ok(names.length >= 9);
-  for (const n of names) assert.ok(run.includes(`-e ${n} `) || run.includes(`-e ${n} \\`), `${n} must reach the container`);
-  const valued = [...run.matchAll(/-e ([A-Z_]+)=/g)].map((x) => x[1]);
-  assert.deepEqual(valued, ["HOME"], "only the non-secret HOME=/tmp carries a value on the docker command line");
-  assert.ok(!run.includes("secrets."), "secrets stay in the job env, never in the command");
-  for (const n of ["CI", "GITHUB_STEP_SUMMARY"]) assert.ok(run.includes(`-e ${n} `), n);
+test("the install step seeds apt from the cache, keeps what it downloads, and is bounded", () => {
+  const s = step("Install Playwright Browsers");
+  assert.ok(s.includes("      timeout-minutes: 15\n"), "a miss on a slow mirror must not hold the lock for 47 minutes");
+  assert.ok(s.includes("'APT::Keep-Downloaded-Packages \"true\";'"));
+  assert.ok(s.includes("sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/"));
+  assert.ok(s.includes("find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \\;"));
+  // order: versions → restore → install → save → suite
+  const order = ["Playwright and runner image versions", "Restore Playwright browser and apt cache", "Install Playwright Browsers", "Save Playwright browser and apt cache", "Run Playwright tests"]
+    .map((n) => TEST_JOB.indexOf(`- name: ${n}\n`));
+  assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
 
 test("the lock itself is unchanged: always(), shared group fallback, FIFO queue, no cancel-in-progress", () => {
@@ -117,7 +126,7 @@ function simulate(scenario) {
   return { ran, red: ctx.failed };
 }
 
-const WORK = ["Install dependencies", "Pull Playwright image", "Run Playwright tests", "Summarise completion"];
+const WORK = ["Install dependencies", "Restore Playwright browser and apt cache", "Install Playwright Browsers", "Run Playwright tests", "Summarise completion"];
 
 test("normal full run: stale check, pull + suite run, no refusal, job green", () => {
   const r = simulate({ mode: "full" });
@@ -152,7 +161,7 @@ test("a failing stale check itself fails the job before any work (never skips to
 test("fast modes are untouched: no stale check, no pull, no suite, no refusal, green", () => {
   for (const mode of ["docs", "unit-only", "avatar-tool"]) {
     const r = simulate({ mode });
-    for (const n of ["Stale run check (superseded or cancelled)", "Pull Playwright image", "Run Playwright tests", "Fail a stale run"]) assert.ok(!r.ran.includes(n), mode + ": " + n);
+    for (const n of ["Stale run check (superseded or cancelled)", "Install Playwright Browsers", "Run Playwright tests", "Fail a stale run"]) assert.ok(!r.ran.includes(n), mode + ": " + n);
     assert.equal(r.red, false, mode);
   }
 });

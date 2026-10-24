@@ -332,10 +332,6 @@ jobs:
       # E2E account slot (tests/e2e-slot.mjs). The predicate is IDENTICAL to the slot branch of the
       # concurrency group above; anything else is '0' — the original accounts under the legacy lock.
       E2E_SLOT: ${{ (needs.classify.result == 'success' && (needs.classify.outputs.slot == '1' || needs.classify.outputs.slot == '2' || needs.classify.outputs.slot == '3')) && needs.classify.outputs.slot || '0' }}
-      # The pinned Playwright image (browsers + every system dependency preinstalled). Its version
-      # MUST equal @playwright/test in package-lock.json (tests/unit/ci-e2e-lock-setup.test.mjs).
-      # Pinned by digest too, so the tag can never be re-pointed under us.
-      PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
     # Read-only token: checkout, and the stale check reading this PR's head and this run's own record.
     permissions:
       contents: read
@@ -538,39 +534,58 @@ jobs:
     - name: Install dependencies
       if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
       run: npm ci
-    # BROWSERS WITHOUT APT (D-A4). `npx playwright install --with-deps` used to run here, inside the
-    # lock; its apt half hit a slow Ubuntu mirror 8 times in 90 full runs (5.7–47 min, 2026-10-16..24 —
-    # 117 MB at 42 kB/s once) while every other run waited. The pinned image carries the browsers and
-    # all their system libraries, so nothing is fetched from apt at all. Retried, and bounded: a slow
-    # registry fails this step after 10 minutes instead of holding the lock indefinitely.
-    - name: Pull Playwright image
+    # BROWSERS + APT PACKAGES FROM THE ACTIONS CACHE (D-A4). `npx playwright install --with-deps`
+    # runs inside the lock; its apt half hit a slow Ubuntu mirror 8 times in 90 full runs (5.7–47 min,
+    # 2026-10-16..24 — once 117 MB at 42 kB/s) while every other run waited. The browsers themselves
+    # always arrived in seconds. So the .deb files apt downloads, and the browsers, are cached: a run
+    # with a cache hit restores them from GitHub's cache and apt installs WITHOUT downloading (apt
+    # still checks every .deb against its signed index). The runner environment is unchanged — the
+    # official Playwright image was tried and changes Chromium's rendering (11 golden screenshots,
+    # 1 px), which would need new owner-approved baselines (run 40079704807).
+    # Key = runner image + Playwright version: a new runner image or Playwright bump starts fresh.
+    - name: Playwright and runner image versions
+      id: pwver
       if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
-      timeout-minutes: 10
       run: |
         set -euo pipefail
-        for attempt in 1 2 3; do
-          if docker pull --quiet "$PLAYWRIGHT_IMAGE"; then exit 0; fi
-          echo "pull attempt $attempt failed"; sleep 10
-        done
-        exit 1
-    # The suite runs in the image. Secrets are passed by NAME (-e NAME, values from this step's env),
-    # never on the command line. Same config, same retries, same three browsers, same workers.
+        v="$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")"
+        echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
+    - name: Restore Playwright browser and apt cache
+      id: pwcache
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/.cache/pw-apt
+        key: ${{ steps.pwver.outputs.key }}
+    # Bounded: a cache miss on a slow mirror fails after 15 minutes instead of holding the lock for 47.
+    - name: Install Playwright Browsers
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
+      timeout-minutes: 15
+      run: |
+        set -euo pipefail
+        # Keep what apt downloads, so a miss refills the cache for the next run.
+        printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+          | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
+        mkdir -p ~/.cache/pw-apt
+        seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
+        if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
+        echo "apt: seeded ${seeded} cached .deb file(s); cache hit: ${{ steps.pwcache.outputs.cache-hit == 'true' }}"
+        npx playwright install --with-deps
+        find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
+        echo "apt: cache now holds $(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l) .deb file(s)"
+    - name: Save Playwright browser and apt cache
+      if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true' && steps.pwcache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/.cache/pw-apt
+        key: ${{ steps.pwver.outputs.key }}
     - name: Run Playwright tests
       if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'
-      run: |
-        set -euo pipefail
-        summary_dir="$(dirname "$GITHUB_STEP_SUMMARY")"
-        docker run --rm --ipc=host \
-          --user "$(id -u):$(id -g)" \
-          -e HOME=/tmp \
-          -e CI -e GITHUB_ACTIONS -e GITHUB_STEP_SUMMARY \
-          -e SUPABASE_URL -e SUPABASE_ANON_KEY -e SUPABASE_SERVICE_ROLE_KEY \
-          -e TEST_STUDENT_EMAIL -e TEST_STUDENT_PASSWORD -e TEST_TEACHER_PASSWORD -e TEST_STUDENT2_PASSWORD \
-          -e PROD_BASE_URL -e E2E_SLOT \
-          -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" \
-          -v "$summary_dir:$summary_dir" \
-          "$PLAYWRIGHT_IMAGE" \
-          npx playwright test
+      run: npx playwright test
 
     # A stale run ends here, red. (A cancel that arrives while the suite is RUNNING does not stop an
     # unconditional job — measured 2026-10-23 — so the suite finishes, afterAll hooks restore the
