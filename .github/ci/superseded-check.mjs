@@ -7,7 +7,9 @@
 // Why here and not with `if: cancelled()`: `test` is `if: always()` (so the required check always
 // reports), and GitHub runs always() jobs even after their run is cancelled. Inside such a job the
 // `cancelled()` status function was measured FALSE after a queued cancel (2026-10-24, run
-// 40079620782), so the workflow cannot see the cancel itself. The run's own API record can.
+// 40079620782). LIMIT: the run's API record does not show it either — it stays status=pending,
+// conclusion=null after a queued cancel (run 40083437376). Question 2 is therefore answered only when
+// the cancel also cancelled a sibling job (within the first minutes, while the unit shards run).
 //
 // A stale run stops in seconds and FAILS (red), so its check can never read as green. It never
 // cancels anything and never touches another run: it only decides about ITSELF. A superseded PR's

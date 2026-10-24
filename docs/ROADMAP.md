@@ -541,10 +541,12 @@ _Last reviewed: 2026-07-01._
   three cancelled runs still took the lock and ran the full suite). Inside the job `cancelled()`
   stays **false** after a queued cancel (measured 2026-10-24, run 40079620782), so a status-function
   guard cannot work; instead `.github/ci/superseded-check.mjs` reads the PR and the run's own API
-  record: a `pull_request` run whose PR moved to a newer commit or was closed, or a run recorded as
-  cancelled, stops in seconds and **fails red** (a skipped required check would read as passing).
-  Read-only, decides only about itself, any doubt → run. Proven in CI: superseded run 40079689289
-  stopped red in 14 s. A cancel during the suite does not stop it (the suite finishes, afterAll
+  record: a `pull_request` run whose PR moved to a newer commit or was closed stops in seconds and
+  **fails red** (a skipped required check would read as passing). Read-only, decides only about
+  itself, any doubt → run. Proven in CI: superseded run 40079689289 stopped red in 14 s. **Limit:**
+  a plain cancel of a queued run stays invisible to the job (the API keeps `status=pending`,
+  `conclusion=null`, run 40083437376); it is caught only if it also cancelled a sibling job (within
+  the first minutes). Otherwise push/close the PR or have the owner force-cancel. A cancel during the suite does not stop it (the suite finishes, afterAll
   restores the accounts, the result is real). Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`,
   which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
   its lock — a separate change.
