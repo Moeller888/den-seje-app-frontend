@@ -176,7 +176,10 @@ export function baseGarments(P, G, Z, topRgb, hipRgb) {
 const hemAt = (lab, x, y0, k) => { let hem = -1; for (let y = y0; y < H; y++) if (lab[y * W + x] === k) hem = y; return hem; };
 
 /** BF1–BF15 on a candidate base figure (full 1024×1536 RGBA, transparent background). Returns { registration, checks, ok }. */
-export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam = "generated") {
+/** The gate sets. v1 = D-198's BF1–BF15 exactly (A's historical D-200 result). v2 = D-202: BF4, BF9 and BF14 replaced by the
+ *  adopted D-201 revisions (BF4v2, BF9v2, BF14v2); every other gate and threshold unchanged. v2 binds every candidate after A. */
+export const GATE_SETS = Object.freeze({ v1: "D-198 BF1–BF15 (A's historical result, D-200)", v2: "D-202 binding set: BF4v2, BF9v2 and BF14v2 replace BF4, BF9 and BF14" });
+export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam = "generated", gateSet = "v1") {
   const g = spec.gates, t = spec.targets, A = w.anchors, L = w.base.layers, master = w.fg.master, out = [], add = (id, ok, value, what) => out.push({ id, ok, value, what });
   // BF1 format and a transparent background
   let border = 0, bt = 0; for (let x = 0; x < W; x++) for (const y of [0, H - 1]) { border++; if (cand.length === N * 4 && cand[(y * W + x) * 4 + 3] === 0) bt++; }
@@ -195,7 +198,11 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const ground = (P, side) => { let yb = -1; for (let y = 1300; y < H; y++) for (let x = 0; x < W; x++) if (sideOf(x, Z.cx, side) && P[(y * W + x) * 4 + 3] >= 128) { yb = y; break; } return yb; };
   const handIoU = (side) => { let i1 = 0, u = 0; for (let i = 0; i < N; i++) { if (!Z.handRegion[side][i]) continue; const a = R[i * 4 + 3] >= 128, b = master[i * 4 + 3] >= 128; if (a && b) i1++; if (a || b) u++; } return u ? i1 / u : 0; };
   const pose = { centreX: +centre(R).toFixed(1), northstarCentreX: +centre(master).toFixed(1), groundY: { left: ground(R, "left"), right: ground(R, "right") }, handIoU: { left: +handIoU("left").toFixed(4), right: +handIoU("right").toFixed(4) } };
-  add("BF4-POSE", Math.abs(pose.centreX - pose.northstarCentreX) <= g.centreTolPx && ["left", "right"].every((s) => Math.abs(pose.groundY[s] - A.groundY) <= g.groundTolPx && pose.handIoU[s] >= g.minHandIoU), pose, "Northstar's centre axis (±" + g.centreTolPx + "), ground line (±" + g.groundTolPx + " per foot) and hands (IoU ≥ " + g.minHandIoU + ", the D-131 bound)");
+  const v2 = gateSet === "v2", P2 = v2 ? Object.fromEntries(proposedChecks(w, R, null, Z, spec).map((c) => [c.id, c])) : null;
+  if (v2) add("BF4v2-POSE", Math.abs(pose.centreX - pose.northstarCentreX) <= g.centreTolPx && ["left", "right"].every((s) => pose.handIoU[s] >= g.minHandIoU) && P2["P-BF4-BARE-FEET"].ok,
+    { centreX: pose.centreX, northstarCentreX: pose.northstarCentreX, handIoU: pose.handIoU, bareFeet: P2["P-BF4-BARE-FEET"].value },
+    "Northstar's centre axis (±" + g.centreTolPx + ") and hands (IoU ≥ " + g.minHandIoU + "); each bare sole between the top of the sneaker outsole and the ground line, the foot inside the sneaker (D-202, adopted P-BF4)");
+  else add("BF4-POSE", Math.abs(pose.centreX - pose.northstarCentreX) <= g.centreTolPx && ["left", "right"].every((s) => Math.abs(pose.groundY[s] - A.groundY) <= g.groundTolPx && pose.handIoU[s] >= g.minHandIoU), pose, "Northstar's centre axis (±" + g.centreTolPx + "), ground line (±" + g.groundTolPx + " per foot) and hands (IoU ≥ " + g.minHandIoU + ", the D-131 bound)");
   // BF5 nothing outside Northstar's silhouette + envelope (bare limbs are slimmer than the clothes, never wider)
   let outside = 0; for (let i = (spec.head.neckSeamY + 1) * W; i < N; i++) if (R[i * 4 + 3] >= 128 && !Z.envelope[i]) outside++;
   add("BF5-ENVELOPE", outside <= g.maxOutsideEnvelopePx, { outsidePx: outside }, "the body stays inside Northstar's silhouette + " + spec.zones.envelopePx + " px");
@@ -217,7 +224,10 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const topRgb = medianRgb(R, Z.topCore, "garment"), hipRgb = medianRgb(R, Z.hipCore, "garment");
   const BG = baseGarments(R, G, Z, topRgb, hipRgb), topHem = topRgb ? hemAt(BG, Z.cx, A.shoulder.y, 1) : -1;
   const top = { coverage: +cover(Z.topCore).toFixed(4), rgb: topRgb, skinDistance: topRgb && Z.skinRef ? +dist(topRgb, Z.skinRef).toFixed(1) : null, hemY: topHem };
-  add("BF9-BASE-TOP", top.coverage >= g.minCoreCoverage && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1], top, "the base top covers the chest band to the natural waist, opaque, clearly not skin-coloured, hem at y " + t.baseTopHemY.join("–"));
+  if (v2) add("BF9v2-BASE-TOP", P2["P-BF9-CHEST-BAND"].ok && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1],
+    { chestBand: P2["P-BF9-CHEST-BAND"].value, rgb: topRgb, skinDistance: top.skinDistance, hemY: topHem },
+    "the base top covers the candidate's own torso from 8 px below its armpits to the natural waist (4 px rim excluded), opaque, clearly not skin-coloured, hem at y " + t.baseTopHemY.join("–") + " (D-202, adopted P-BF9)");
+  else add("BF9-BASE-TOP", top.coverage >= g.minCoreCoverage && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1], top, "the base top covers the chest band to the natural waist, opaque, clearly not skin-coloured, hem at y " + t.baseTopHemY.join("–"));
   const legMid = (side) => { let a = -1, b = -1; for (let x = side === "left" ? 0 : Z.cx; x < (side === "left" ? Z.cx : W); x++) if (L.pants[((A.crotchY + 30) * W + x) * 4 + 3] >= 128) { if (a < 0) a = x; b = x; } return Math.round((a + b) / 2); };
   const shortsHem = hipRgb ? { left: hemAt(BG, legMid("left"), A.crotchY, 2), right: hemAt(BG, legMid("right"), A.crotchY, 2) } : { left: -1, right: -1 };
   const hip = { coverage: +cover(Z.hipCore).toFixed(4), rgb: hipRgb, skinDistance: hipRgb && Z.skinRef ? +dist(hipRgb, Z.skinRef).toFixed(1) : null, topDistance: hipRgb && topRgb ? +dist(hipRgb, topRgb).toFixed(1) : null, hemY: shortsHem };
@@ -229,14 +239,15 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const os = outlineShare(body, spec.head.neckSeamY + 1), sh = WR.sharpness(body); let haze = 0, px = 0; for (let i = 0; i < N; i++) if (body[i * 4 + 3]) { px++; if (body[i * 4 + 3] < 128) haze++; }
   add("BF12-OUTLINE", os >= g.minOutlineShare, { darkShare: +os.toFixed(3) }, "the silhouette carries Northstar's dark painted contour");
   add("BF13-SHARPNESS", sh >= g.minSharpness, { lapToGrad: +sh.toFixed(3) }, "crisp painted detail, not a soft upscale (D-197's contrast-independent ratio)");
-  add("BF14-ALPHA", haze <= g.maxHazeShare * px, { share: +(haze / Math.max(1, px)).toFixed(4) }, "a clean cut-out: semi-transparency only as a thin rim");
+  if (v2) add("BF14v2-ALPHA", P2["P-BF14-ALPHA"].ok, P2["P-BF14-ALPHA"].value, "after the established dust cleanup (cleanAlpha): semi-transparent share ≤ " + g.maxHazeShare + " and interior share ≤ " + spec.gatesV2.maxInteriorShare + " (D-202, adopted P-BF14)");
+  else add("BF14-ALPHA", haze <= g.maxHazeShare * px, { share: +(haze / Math.max(1, px)).toFixed(4) }, "a clean cut-out: semi-transparency only as a thin rim");
   // BF15 dress-back: D-197's three default items over the new body hide every base-garment pixel and give Northstar's silhouette
   const dressed = NL.overStack([body, L.shoes, L.pants, L["top-body"], L["top-sleeves"]]), cov = NL.overStack([L.shoes, L.pants, L["top-body"], L["top-sleeves"]]);
   const GB = garmentMask(body), seeds = []; for (let i = 0; i < N; i++) if (GB[i] && (Z.topCore[i] || Z.hipCore[i])) seeds.push([i % W, (i / W) | 0]);
   const baseG = NL.flood(seeds, (i) => GB[i] === 1);
   let visibleBase = 0, inter = 0, uni = 0; for (let i = 0; i < N; i++) { if (baseG[i] && cov[i * 4 + 3] < 128) visibleBase++; const a = dressed[i * 4 + 3] >= 128, b = w.body[i * 4 + 3] >= 128; if (a && b) inter++; if (a || b) uni++; }
   add("BF15-DRESS-BACK", visibleBase <= g.maxDressBackVisibleBasePx && inter / uni >= g.minDressBackIoU, { visibleBaseGarmentPx: visibleBase, silhouetteIoU: +(inter / uni).toFixed(4) }, "dressed in D-197's tee, jeans and sneakers the base shows no base garment and Northstar's silhouette");
-  return { registration: reg, checks: out, ok: out.every((x) => x.ok), registered: R, body, figure };
+  return { registration: reg, checks: out, ok: out.every((x) => x.ok), registered: R, body, figure, gateSet };
 }
 
 /** POSITIVE CONTROL for the limb gates: Northstar's own VISIBLE bare arms (below the short sleeves, to the wrists) pass the same
@@ -342,7 +353,7 @@ export function proposedChecks(w, R, body, Z = zones(w), spec = loadSpec()) {
     "the band is the candidate's own torso (4 px rim excluded) from 8 px below its armpits to the natural waist: a sleeveless top's armholes above the armpit and a close-fitting torso narrower than the t-shirt are the intended base, not gaps");
   // P-BF14 — semi-transparency measured AFTER the established dust cleanup, interior and rim separately
   const raw = alphaSplit(R), cleaned = alphaSplit(dustCleaned(R));
-  add("P-BF14-ALPHA", cleaned.share <= spec.gates.maxHazeShare && cleaned.interiorShare <= 0.01, { raw, afterDustCleanup: cleaned },
+  add("P-BF14-ALPHA", cleaned.share <= spec.gates.maxHazeShare && cleaned.interiorShare <= (spec.gatesV2 ? spec.gatesV2.maxInteriorShare : 0.01), { raw, afterDustCleanup: cleaned },
     "measured after the project's deterministic dust cleanup (cleanAlpha, used for H1 in D-131); the interior (> 2 px from transparency) is reported and capped separately, so a soft fringe inside the figure cannot hide behind a good rim");
   return out;
 }
@@ -422,7 +433,7 @@ export function diagnose(buf, OUT, spec = loadSpec()) {
 /** D-199 — the review of ONE generated candidate: BF1–BF15 and the review images, written ONLY outside the repository
  *  (D-127 §2). The raw file is read, never changed. Nothing is painted; registration is the checker's integer shift. */
 export function isOutsideRepo(dir) { const rel = relative(REPO, resolve(dir)); return rel !== "" && (rel.startsWith("..") || isAbsolute(rel)); }
-export function review(buf, OUT, spec = loadSpec()) {
+export function review(buf, OUT, spec = loadSpec(), opts = {}) {
   if (!isOutsideRepo(OUT)) throw new Error("refusing to write review material inside the repository (D-127 §2): " + OUT);
   const img = decodePng(buf), raw = img.ok && img.px && img.px.length === N * 4 ? Uint8ClampedArray.from(img.px) : null;
   const w = WR.buildWardrobe(), Z = zones(w, spec), files = {};
@@ -430,12 +441,17 @@ export function review(buf, OUT, spec = loadSpec()) {
   const report = { decision: "D-199", raw: { sha256: sha(buf), bytes: buf.length, decodedAsRgba1024x1536: !!raw, header: img.header || null }, thresholds: spec.gates, targets: spec.targets,
     note: "BF1–BF15 are measurements. They are never a visual approval: V1–V8 are the owner's. The raw image is unchanged; nothing was painted or retouched." };
   if (!raw) { report.ok = false; report.checks = [{ id: "BF1-FORMAT", ok: false, value: { header: img.header || null, error: img.error || "not 8-bit RGBA" } }]; writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n"); return report; }
-  const r = checkBaseFigure(w, raw, Z, spec);
-  report.ok = r.ok; report.registration = r.registration; report.checks = r.checks.map(({ id, ok, value, what }) => ({ id, ok, value, what }));
-  report.seamRule = SEAM_RULES.generated; report.proposedRevisions = proposedChecks(w, r.registered, r.body, Z, spec).map(({ id, ok, value }) => ({ id, ok, value, status: "PROPOSED — not binding" }));
+  const gateSet = opts.gateSet || "v2", r = checkBaseFigure(w, raw, Z, spec, "generated", gateSet);
+  report.gateSet = GATE_SETS[gateSet]; report.ok = r.ok; report.registration = r.registration; report.checks = r.checks.map(({ id, ok, value, what }) => ({ id, ok, value, what }));
+  report.seamRule = SEAM_RULES.generated;
+  if (gateSet === "v2") { const v1 = checkBaseFigure(w, raw, Z, spec, "generated", "v1"); report.v1ForComparison = { note: "the superseded D-198 gate set, for comparison only — not binding", ok: v1.ok, failed: v1.checks.filter((c) => !c.ok).map((c) => c.id) }; }
   const bg = [236, 233, 226], FIGB = [250, 0, 774, 1536], half = (P) => down(flat(P, bg), 262, 768, FIGB);
   save("r01-raw-as-received.png", half(raw), "the raw result, unchanged, flattened on a neutral background at 1/2 size (the raw file itself is kept untouched)");
   if (r.figure) {
+    // derived post-processing allowed by D-202: the established dust cleanup, then the D-201 seam composition. The raw file is untouched.
+    const cleaned = dustCleaned(r.registered), derived = recompose(w, cleaned, "generated");
+    report.derived = { dustCleanup: "cleanAlpha (alpha < 24 AND orphan-soft)", pixelsCleared: (() => { let n = 0; for (let i = 0; i < N; i++) if (r.registered[i * 4 + 3] && !cleaned[i * 4 + 3]) n++; return n; })(), seam: SEAM_RULES.generated };
+    r.figure = derived.figure; r.body = derived.body;
     const fig = r.figure, dressed = NL.overStack([r.body, w.base.layers.shoes, w.base.layers.pants, w.base.layers["top-body"], w.base.layers["top-sleeves"], w.head]);
     const ns = NL.overStack([w.body, w.head]), F = flat(fig, bg);
     save("r02-body-with-r3-head.png", half(fig), "the candidate's body (registered by the integer shift only) with the existing R3 head stack — D-201 generated-body seam rule, nothing painted");
@@ -450,6 +466,18 @@ export function review(buf, OUT, spec = loadSpec()) {
     const lab = provenanceMeasured(w, r), counts = {}; for (const k of lab) if (k) counts[k] = (counts[k] || 0) + 1;
     save("r09-provenance-measured.png", half(labelImage(lab)), "measured provenance: original kept (blue), original reference (green), reconstructed (orange), new base garment (magenta), removed (dark grey)");
     report.provenance = counts;
+    if (opts.compare) {
+      const ci = decodePng(opts.compare), craw = ci.ok && ci.px && ci.px.length === N * 4 ? Uint8ClampedArray.from(ci.px) : null;
+      if (craw) {
+        const creg = register(craw, w.fg.master, spec), cR = shift(craw, creg.dx, creg.dy), cfig = recompose(w, dustCleaned(cR), "generated").figure;
+        const cdressed = NL.overStack([recompose(w, dustCleaned(cR), "generated").body, w.base.layers.shoes, w.base.layers.pants, w.base.layers["top-body"], w.base.layers["top-sleeves"], w.head]);
+        const CF = flat(cfig, bg), x2c = (box) => crop(CF, box, 2);
+        save("c01-compare-full.png", grid([half(cfig), half(fig)], 2), "the earlier attempt (left) beside this one (right), both with the D-201 seam and the dust cleanup");
+        save("c02-compare-hips-x2.png", grid([x2c([300, 760, 724, 980]), x2([300, 760, 724, 980])], 1), "hips ×2: earlier attempt (top) and this one (bottom)");
+        save("c03-compare-dress-back.png", grid([half(cdressed), half(dressed), half(ns)], 3), "dressed back: earlier attempt, this one, the original Northstar");
+        report.compare = { sha256: sha(opts.compare) };
+      }
+    }
   }
   report.files = files; writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;
@@ -471,7 +499,7 @@ if (isMain) {
     const OUT = resolve(a[oi + 1]);
     if (!isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository; a base figure is never written there (D-127 §2)"); process.exit(1); }
     if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
-    const r = review(readFileSync(resolve(a[ri + 1])), OUT);
+    const ki = a.indexOf("--compare"), r = review(readFileSync(resolve(a[ri + 1])), OUT, loadSpec(), { gateSet: a.includes("--gates=v1") ? "v1" : "v2", compare: ki >= 0 && a[ki + 1] ? readFileSync(resolve(a[ki + 1])) : null });
     for (const c of r.checks) console.log((c.ok ? "PASS " : "FAIL ") + c.id + "  " + JSON.stringify(c.value));
     console.log(r.ok ? "\nALL BF1–BF15 PASSED — a measurement, not a visual approval." : "\nTECHNICAL REJECT — at least one BF check failed."); process.exit(r.ok ? 0 : 2);
   }
