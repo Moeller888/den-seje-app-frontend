@@ -1,11 +1,12 @@
 {
   "decision": "D-198",
-  "status": "PREPARED, NOT AUTHORISED — no image call, no capacity, no claim",
+  "status": "P0 AUTHORISED by D-199 (at most 2 calls); P1 and P2 PREPARED, NOT AUTHORISED — no clothing call, no mass production",
   "replaces": "pilot-batch-v1.json (D-197), whose 12 items and at most 24 calls were never authorised and are void as a plan: they tested only forms the clothed base could carry",
   "order": "The base figure FIRST. No clothing call before the owner has approved one base figure and its rig is built.",
   "phases": [
     {
       "id": "P0-base-figure",
+      "status": "AUTHORISED by D-199 — 2 calls (A; B only as a reserve after A is recorded as rejected); each send needs a separate, explicit owner instruction after the merge; authorisation file base-figure-calls-v1.json, adapter tools/avatar/openai-send-northstar-base-figure-d199.mjs",
       "what": "the shared base figure (base-figure-spec-v1.json)",
       "request": {
         "endpoint": "https://api.openai.com/v1/images/edits",

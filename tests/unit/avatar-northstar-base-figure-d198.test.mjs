@@ -19,15 +19,15 @@ const w = WR.buildWardrobe(), spec = BF.loadSpec(), Z = BF.zones(w, spec), { W, 
 const run = (id) => BF.checkBaseFigure(w, S[id].image, Z, spec), byId = (r) => Object.fromEntries(r.checks.map((c) => [c.id, c]));
 const PROMPT_SHA256 = "8076c3d1a6f7fd141af3fbacd9f7a8f21b8aa6bc8d6ead0dd018a2172f61fd99";
 
-test("the base-figure request is prepared and pinned, never authorised: one image, transparent, sunburst, 2 calls requested", () => {
-  assert.equal(spec.decision, "D-198"); assert.match(spec.status, /NO IMAGE CALL AUTHORISED/);
+test("the base-figure request is prepared and pinned by D-198; its calls exist only through D-199: one image, transparent, sunburst, 2 calls", () => {
+  assert.equal(spec.decision, "D-198"); assert.match(spec.status, /IMAGE CALLS AUTHORISED ONLY BY D-199/); assert.match(spec.status, /NO BASE FIGURE EXISTS/);
   assert.equal(spec.source.sha256, WR.sourceSha256());
   assert.equal(createHash("sha256").update(BF.promptBytes()).digest("hex"), PROMPT_SHA256, "the prompt is byte-pinned");
   const prompt = BF.promptBytes().toString("utf8");
   for (const must of ["sleeveless", "mid-thigh", "bare feet", "natural waist", "No navel", "Keep the background transparent", "The head stays exactly where it is"]) assert.ok(prompt.includes(must), must);
   assert.ok(!/\bchild|\bkid|\bboy|\bgirl/i.test(prompt), "the prompt names an avatar illustration, never a child");
   const p = BF.loadPilot(), p0 = p.phases[0];
-  assert.match(p.status, /NOT AUTHORISED/); assert.equal(p0.id, "P0-base-figure"); assert.equal(p0.callsRequested, 2);
+  assert.match(p.status, /P2 PREPARED, NOT AUTHORISED/); assert.equal(p0.id, "P0-base-figure"); assert.match(p0.status, /AUTHORISED by D-199/); assert.equal(p0.callsRequested, 2);
   assert.equal(p0.request.model, "gpt-image-2.5-sunburst-2026-09-08"); assert.equal(p0.request.parameters.background, "transparent"); assert.equal(p0.request.parameters.size, "1024x1536");
   assert.equal(p0.request.images.length, 1); assert.ok(p0.request.never.includes("mask"));
   const p2 = p.phases.find((x) => x.id === "P2-clothing-pilot"), forms = p2.items.map((i) => i.form).join(" | ");

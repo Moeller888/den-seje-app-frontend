@@ -165,6 +165,23 @@ Der findes ingen grundfigur, så kontrollen er vist på Northstar v2 og på stim
 
 D-197's pilotbatch (12 items, højst 24 kald) blev aldrig godkendt og er erstattet.
 
+## 6a. D-199 — autorisationen af P0
+
+Ejeren har godkendt **højst 2 billedkald**:
+- **A** er det første forsøg.
+- **B** er et reserveforsøg. Det må kun sendes, hvis A afvises teknisk eller visuelt, og først når A er registreret.
+- B bruger samme frosne request, medmindre ejeren godkender en konkret ændring.
+- Der er ingen automatiske retries, ingen ekstra kald og ingen anden model.
+- Hvert kald har sit eget one-shot-claim.
+
+Autorisationen ligger i `tools/avatar/fixtures/northstar-wardrobe/base-figure-calls-v1.json`, og adapteren er `tools/avatar/openai-send-northstar-base-figure-d199.mjs`. Hver afsendelse kræver en særskilt eksekveringsbesked efter merge.
+
+**Opbevaring:** Output gemmes kun uden for begge kloner, i `<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/` (D-127 §2).
+
+**Review:** `node tools/avatar/northstar-base-figure.mjs --review <billede> --out <mappe uden for klonerne>` kører BF1–BF15 og laver reviewbillederne.
+
+**Udskudt:** O1 og O3. O2 holdes uden for forsøget, uden at afgrænsningen gøres permanent.
+
 ## 7. Åbne ejerbeslutninger
 
 | Beslutning | Spørgsmål |

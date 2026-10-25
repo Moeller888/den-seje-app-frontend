@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-199: at most two image calls authorised (A; B only as a reserve after A is recorded as
+  rejected); not yet attempted (as of 2026-10-25).**
+  - **Calls.** `D-199-northstar-base-figure-a` and `-b`, each with its own one-shot claim; the same frozen D-198 request
+    (Northstar v2 as the only image, `base-figure-prompt-v1.txt`, `gpt-image-2.5-sunburst-2026-09-08`, 1024x1536,
+    transparent). Authorisation file `tools/avatar/fixtures/northstar-wardrobe/base-figure-calls-v1.json` (separate from the
+    R3 budget); adapter `tools/avatar/openai-send-northstar-base-figure-d199.mjs`. Each send needs a separate owner
+    instruction after the merge.
+  - **Storage.** Output only under `<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/` (D-127 §2); the review
+    tool `northstar-base-figure.mjs --review` refuses any directory inside the repository.
+  - See `project-state.md` **D-199**.
 - **Northstar base figure — one shared body in neutral, close-fitting base clothing with arms, legs and feet; contract v2;
   first image attempt prepared, not authorised; no base figure exists (D-198, as of 2026-10-25).**
   - **Why.** D-197's clothed base cannot carry sleeveless tops, short tops, shorts, skirts or sandals, so its rule that every

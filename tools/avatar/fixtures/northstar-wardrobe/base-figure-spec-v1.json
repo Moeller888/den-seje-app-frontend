@@ -1,6 +1,6 @@
 {
   "decision": "D-198",
-  "status": "PREPARED — NO IMAGE CALL AUTHORISED — NO BASE FIGURE EXISTS",
+  "status": "PREPARED BY D-198 — IMAGE CALLS AUTHORISED ONLY BY D-199 (base-figure-calls-v1.json: A, reserve B) — NO BASE FIGURE EXISTS",
   "purpose": "The target and the acceptance contract for ONE shared Northstar-style base figure in neutral, close-fitting base clothing, with continuous arms, legs and feet, so short and open clothing forms become possible. It replaces D-197's clothed base as the goal; D-197 stays a documented experiment.",
   "source": {
     "file": "assets/avatar/reference/Northstar Master v2.png",
