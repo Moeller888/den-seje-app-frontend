@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-200: call A sent once (HTTP 200, one 1024×1536 image, stored outside the clones) and
+  TECHNICALLY REJECTED at BF4, BF5, BF9, BF14 and BF15; not visually reviewed; A closed; reserve B open but not sent
+  (as of 2026-10-25).**
+  - **Failures.** Feet 7 px above the ground line; base shorts flare beyond the jeans at the hips (envelope, dress-back);
+    deep armholes leave skin in the chest band (98.53 % < 99.5 %); 7.91 % semi-transparent pixels (> 6 %). Thresholds
+    unchanged.
+  - **Tool finding.** The D-194 seam recomposition leaves a faint pale line across the neck of a generated body; the raw
+    image has none. Fix before any adoption.
+  - See `project-state.md` **D-200**.
 - **Northstar base figure — D-199: at most two image calls authorised (A; B only as a reserve after A is recorded as
   rejected); not yet attempted (as of 2026-10-25).**
   - **Calls.** `D-199-northstar-base-figure-a` and `-b`, each with its own one-shot claim; the same frozen D-198 request
