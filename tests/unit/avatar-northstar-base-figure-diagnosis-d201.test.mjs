@@ -23,11 +23,11 @@ const GATES_AT_D200 = { borderTransparentShare: 0.98, maxShiftPx: 6, minHeadIoU:
 test("the binding gates and targets are unchanged; the revisions are PROPOSED, not adopted; A stays TECHNICAL_REJECT", () => {
   assert.deepEqual(spec.gates, GATES_AT_D200);
   assert.deepEqual([spec.targets.baseTopHemY, spec.targets.baseShortsHemY], [[786, 798], [920, 990]]);
-  assert.match(spec.proposedRevisions.status, /NOT ADOPTED/); assert.match(spec.proposedRevisions.status, /A stays TECHNICAL_REJECT/);
+  assert.match(spec.proposedRevisions.status, /ADOPTED by D-202/); assert.match(spec.proposedRevisions.status, /A stays TECHNICAL_REJECT/);
   assert.deepEqual(Object.keys(spec.proposedRevisions).filter((k) => k.startsWith("P-")), ["P-BF4-BARE-FEET", "P-BF9-CHEST-BAND", "P-BF14-ALPHA"]);
   assert.match(spec.proposedRevisions.unchanged, /BF5 and BF15 are NOT revised/);
   const calls = JSON.parse(file("tools/avatar/fixtures/northstar-wardrobe/base-figure-calls-v1.json").toString("utf8"));
-  assert.deepEqual([calls.authorisedCalls.calls[0].outcome, calls.authorisedCalls.calls[1].mandateState, calls.budget.actuallySent], ["TECHNICAL_REJECT", "UNSPENT", 1]);
+  assert.deepEqual([calls.authorisedCalls.calls[0].outcome, calls.authorisedCalls.calls[1].mandateState, calls.budget.actuallySent], ["TECHNICAL_REJECT", "CLOSED_UNUSED", 1]);
 });
 
 test("the neck line: D-194's rule draws it over a continuous generated neck; the D-201 rule never does, and Northstar is untouched", () => {
@@ -66,10 +66,10 @@ test("P-BF14 is stricter where it matters: a translucent interior patch passes t
   assert.deepEqual([bf14(S["encoder-dust"].image), p14(S["encoder-dust"].image)], [false, true]);
 });
 
-test("prompt v2 is a DRAFT: v1 plus exactly one sentence about the shorts' width and crotch height; v1 stays frozen", () => {
-  const v1 = file("tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v1.txt").toString("utf8"), v2b = file("tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v2-draft.txt");
+test("prompt v2 (drafted by D-201, frozen by D-202): v1 plus exactly one sentence about the shorts' width and crotch height; v1 stays frozen", () => {
+  const v1 = file("tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v1.txt").toString("utf8"), v2b = file("tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v2.txt");
   assert.equal(sha256(Buffer.from(v1, "utf8")), "8076c3d1a6f7fd141af3fbacd9f7a8f21b8aa6bc8d6ead0dd018a2172f61fd99");
-  assert.equal(sha256(v2b), spec.promptV2Draft.sha256); assert.equal(v2b.length, spec.promptV2Draft.bytes); assert.match(spec.promptV2Draft.status, /DRAFT — not frozen, not authorised/);
+  assert.equal(sha256(v2b), spec.promptV2Draft.sha256); assert.equal(v2b.length, spec.promptV2Draft.bytes); assert.match(spec.promptV2Draft.status, /FROZEN by D-202/);
   const a = v1.split("\n"), b = v2b.toString("utf8").split("\n"), added = b.filter((l) => !a.includes(l));
   assert.equal(b.length, a.length + 1); assert.equal(added.length, 1);
   assert.match(added[0], /no wider than the jeans/); assert.match(added[0], /crotch of the shorts is at the same height as the crotch of the jeans/);

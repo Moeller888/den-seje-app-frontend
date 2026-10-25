@@ -209,3 +209,14 @@ A forbliver teknisk afvist efter den gældende kontrakt (D-200). Diagnosen skill
 **Prompt v2 er et udkast:** v1 plus én sætning om shortsenes bredde og skridthøjde. Stil, positur og hudtone er uændrede.
 
 **Diagnoseværktøj:** `node tools/avatar/northstar-base-figure.mjs --diagnose <billede> --out <mappe uden for klonerne>`.
+
+## 9. D-202 — kontrolsæt v2 og det sidste kald
+
+**Kontrolsæt v2 er vedtaget.** BF4v2, BF9v2 og BF14v2 erstatter BF4, BF9 og BF14 med de begrundelser og kontrolstimuli, der er beskrevet i §8. Alle andre kontroller og tærskler er uændrede. Kontrolsæt v1 bevares som grundlag for A's afvisning.
+
+**Prompt v2** er fryst som `base-figure-prompt-v2.txt` (`8262452e…`).
+
+**Kald:** D-199's reserve B er lukket ubrugt. Det ene nye kald `D-202-northstar-base-figure-v2` er budgettets sidste:
+- Budgettet er 2 kald, og 1 er brugt.
+- Kaldet sendes kun på ejerens særskilte eksekveringsbesked efter merge.
+- Uanset udfaldet, også ved et usikkert afsendelsesresultat, kan der ikke sendes mere.

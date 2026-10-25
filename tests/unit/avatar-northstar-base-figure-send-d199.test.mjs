@@ -35,7 +35,19 @@ const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 // D-200 later recorded A's one send and closed A in place. D199 is the authorisation file exactly as D-199 committed it (D-200's
 // closure reversed, proven canonical below); the recorded D-200 state itself is tested at the end of this file.
-const CALLS_NOW = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
+// D-202 later closed B unused and added its own call C; preD202Calls reverses exactly that (proven canonical below).
+const CALLS_LIVE = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
+function preD202Calls(now) {
+  const c = structuredClone(now), b = c.authorisedCalls.calls[1], bi = c.adapterImplementations.entries[1];
+  c.authorisedCalls.calls = c.authorisedCalls.calls.filter((e) => e.callId !== "D-202-northstar-base-figure-v2");
+  c.adapterImplementations.entries = c.adapterImplementations.entries.filter((e) => e.callId !== "D-202-northstar-base-figure-v2");
+  b.mandateState = "UNSPENT"; b.outcome = "NOT YET ATTEMPTED"; for (const k of ["closedBy", "neverReuse", "notAnActivePermission"]) delete b[k];
+  bi.mandateState = "UNSPENT"; bi.outcome = "NOT YET ATTEMPTED"; delete bi.closedBy;
+  delete c.budget.d202; delete c.budget.remaining;
+  return c;
+}
+const PRE_D202_CALLS_CANONICAL_SHA256 = "e6696a4ba5cf7c52608d88b08f48aed75cb0865f518bde9270bd5805d5457284";   // the file at the D-201 merge d56a7ad
+const CALLS_NOW = preD202Calls(CALLS_LIVE);
 function preD200Calls(now) {
   const c = structuredClone(now), a = c.authorisedCalls.calls[0], b = c.authorisedCalls.calls[1], impl = c.adapterImplementations.entries[0];
   a.mandateState = "UNSPENT"; a.outcome = "NOT YET ATTEMPTED"; for (const k of ["recordedBy", "neverReuse", "notAnActivePermission", "execution"]) delete a[k];
@@ -200,6 +212,7 @@ function sandbox({ base, layout = "main", top, recorded = false } = {}) {
   writeFileSync(sb.png, PNGS.ok); writeFileSync(sb.png + ".wrongsize.png", PNGS.wrongsize);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
   if (!recorded) { writeFileSync(callsPath(sb), JSON.stringify(CALLS_FILE, null, 2) + "\n"); writeFileSync(registerPath(sb), REGISTER); }   // D-199 as committed
+  else if (recorded === "d200") writeFileSync(callsPath(sb), JSON.stringify(CALLS_NOW, null, 2) + "\n");                                      // D-200 as committed
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -357,10 +370,25 @@ test("the D-200 register row: once, directly after D-199 (kept verbatim), the se
   for (const v of [A.call, B.call, "req_ff3e075f80e54418a8b24317bceb598f", "e450dbf1c5795b068a60f48ac28a3b9b08a92a487e8267d6404c3d9ddafef645", "TECHNICAL_REJECT", "BF4", "BF5", "BF9", "BF14", "BF15", "særskilte eksekveringsbesked"]) assert.ok(lines[i].includes(v), v);
   assert.ok(!/Ã|�/.test(lines[i]));
 });
-test("THE RECORDED D-200 STATE: A is refused before any claim; B's dry run passes with the real files and no credential", () => {
-  const sb = sandbox({ recorded: true });
+test("THE RECORDED D-200 STATE: A is refused before any claim; B's dry run passes and no credential is read", () => {
+  const sb = sandbox({ recorded: "d200" });
   assertRefusedBeforeClaim(sb, runAdapter(sb, [...A.args, ...A.send], KEY_ENV), "authorisation");
   const r = runAdapter(sb, B.args);
   assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/); assert.match(r.out, /call {5}: D-199-northstar-base-figure-b \(B\)/);
   assert.equal(existsSync(sb.claimB) || existsSync(join(sb.home, "Documents")), false); assert.equal(fetchLog(sb).length, 0);
+});
+
+// ── D-202: B closed unused; the D-199 adapter can send nothing any more ────────────────────────────────────────────────
+test("D-202 changes exactly B's closure, C's entry and the budget note: the file as D-201 left it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(preD202Calls(CALLS_LIVE))), PRE_D202_CALLS_CANONICAL_SHA256);
+  const b = CALLS_LIVE.authorisedCalls.calls[1];
+  assert.deepEqual([b.mandateState, b.closedBy, b.neverReuse, b.notAnActivePermission], ["CLOSED_UNUSED", "D-202", true, true]);
+  assert.deepEqual([CALLS_LIVE.budget.authorised, CALLS_LIVE.budget.actuallySent, CALLS_LIVE.budget.remaining], [2, 1, 1]);
+});
+test("THE LIVE D-202 STATE: the D-199 adapter refuses A and the closed B before any claim", () => {
+  const sb = sandbox({ recorded: true });
+  assertRefusedBeforeClaim(sb, runAdapter(sb, [...A.args, ...A.send], KEY_ENV), "authorisation");
+  const r = runAdapter(sb, [...B.args, ...B.send], KEY_ENV); assertRefusedBeforeClaim(sb, r, "authorisation");
+  assert.match(r.out, /the entry carries closedBy|mandateState: "CLOSED_UNUSED"/);
+  assertRefusedBeforeClaim(sb, runAdapter(sb, B.args), "authorisation");
 });

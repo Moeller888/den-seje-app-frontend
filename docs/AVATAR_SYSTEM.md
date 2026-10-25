@@ -385,6 +385,13 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-202: gate set v2 adopted (BF4v2, BF9v2, BF14v2); prompt v2 frozen; D-199's reserve B closed
+  unused; ONE new call `D-202-northstar-base-figure-v2`, the last of the budget (2 calls, 1 sent); not yet attempted
+  (as of 2026-10-25).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-base-figure-d202.mjs`; the D-199 adapter now refuses A and B.
+  - **Gates.** v1 stays the record of A's rejection; v2 binds every later candidate. Review: `northstar-base-figure.mjs
+    --review <png> --out <dir outside the clones> --compare <A>`.
+  - See `project-state.md` **D-202**.
 - **Northstar base figure — D-201: A diagnosed; one real image fault (the base shorts are wider than the jeans at the
   hips and thighs, crotch too high) and three mis-constructed measurements (BF4, BF9, BF14); the neck line fixed in the
   recomposition; gate revisions PROPOSED, not adopted; prompt v2 drafted; no call (as of 2026-10-25).**
