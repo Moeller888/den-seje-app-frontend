@@ -180,6 +180,14 @@ cannot double-award.
   (`SUPABASE_SERVICE_ROLE_KEY`) first authenticate the caller and check their role, _then_ create a
   service-role client (`review-answer/index.ts:25-69`). The service-role key never reaches the
   frontend.
+- **SECURITY DEFINER RPCs that take a student id check the caller themselves** — the id is never an
+  authorisation. `get_concept_states(student_id)`: the student, the student's teacher
+  (`teacher_id` = caller and the caller's role is `teacher`) or a `super_admin`;
+  `evaluate_achievements()`: the signed-in student only. EXECUTE for `authenticated` only; the
+  internal database context (`session_user` `postgres`/`supabase_admin`, no JWT subject) may still
+  name a student for back-fills. Live since 2026-10-25 (D-204): repo file
+  `20261025120000_student_rpc_caller_scope.sql`, **remote ledger version `20261025172041`** (≠ the
+  repo filename, as with other D-110 migrations; stored SQL byte-identical to the file).
 - Some functions are intentionally **no-JWT** (e.g. `get-next-question`, `create-student`,
   `create-teacher`) per their documented contract; these must still validate input defensively.
 
