@@ -428,11 +428,13 @@ test("workflow: the test-job lock expression lists exactly the fast modes", () =
 });
 
 test("workflow: Playwright install/run/report steps run ONLY in full mode", () => {
+  // D-A4: the full-mode steps additionally stop on a stale (superseded or cancelled) run.
+  const FULL_ONLY = "if: steps.mode.outputs.mode == 'full' && steps.stale.outputs.stale != 'true'";
   for (const name of ["Install dependencies", "Install Playwright Browsers", "Run Playwright tests"]) {
     const at = WORKFLOW.indexOf("- name: " + name + "\n      if:");
     assert.notEqual(at, -1, "step not found: " + name);
     const line = WORKFLOW.slice(at, WORKFLOW.indexOf("\n", WORKFLOW.indexOf("if:", at)));
-    assert.ok(line.endsWith("if: steps.mode.outputs.mode == 'full'"), name + " condition changed: " + line);
+    assert.ok(line.endsWith(FULL_ONLY), name + " condition changed: " + line);
   }
   assert.ok(WORKFLOW.includes("run: npx playwright test\n"), "the full suite command changed");
 });
@@ -457,12 +459,25 @@ test("workflow: push events and unknown modes fail closed to full", () => {
   );
 });
 
-test("workflow: the unit job runs on every event with no mode condition", () => {
-  const at = WORKFLOW.indexOf("\n  unit:\n");
-  assert.notEqual(at, -1, "unit job not found");
-  const next = WORKFLOW.indexOf("\n  classify:\n", at);
-  const job = WORKFLOW.slice(at, next);
-  assert.ok(!job.includes("if:"), "the unit job must not be conditional");
-  assert.ok(!job.includes("needs:"), "the unit job must not depend on classification");
-  assert.ok(job.includes("run: npm run test:unit:ci"), "the unit job must run the unit suite");
+test("workflow: the unit suite runs on every event with no mode condition (sharded, A2)", () => {
+  // The suite runs in the `unit-shard` matrix: unconditional, independent of classification.
+  const at = WORKFLOW.indexOf("\n  unit-shard:\n");
+  assert.notEqual(at, -1, "unit-shard job not found");
+  const next = WORKFLOW.indexOf("\n  unit:\n", at);
+  const shardJob = WORKFLOW.slice(at, next);
+  assert.ok(!shardJob.includes("if:"), "the unit shards must not be conditional");
+  assert.ok(!shardJob.includes("needs:"), "the unit shards must not depend on classification");
+  assert.ok(shardJob.includes("run: npm run test:unit:ci"), "each shard must run the unit runner");
+  assert.ok(shardJob.includes("shard: [1, 2, 3]") && shardJob.includes("UNIT_SHARD: ${{ matrix.shard }}/3"),
+    "the matrix and UNIT_SHARD must agree on the shard count");
+  assert.ok(shardJob.includes("fail-fast: false"), "one failing shard must not hide the others' results");
+
+  // `unit` is the reporting check: it always runs and passes only if EVERY shard succeeded.
+  const u = WORKFLOW.indexOf("\n  unit:\n");
+  const uEnd = WORKFLOW.indexOf("\n  classify:\n", u);
+  const unitJob = WORKFLOW.slice(u, uEnd);
+  assert.ok(unitJob.includes("needs: unit-shard"), "unit must wait for the shards");
+  assert.ok(unitJob.includes("if: always()"), "unit must report even when a shard failed or was cancelled");
+  assert.ok(unitJob.includes("SHARDS: ${{ needs.unit-shard.result }}") && unitJob.includes('test "$SHARDS" = "success"'),
+    "unit must fail unless the shard matrix result is exactly success");
 });

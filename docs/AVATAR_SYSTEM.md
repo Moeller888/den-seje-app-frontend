@@ -347,6 +347,44 @@ art layer behind them can be upgraded without a rewrite.
   - **Limit.** Northstar's body and clothes are no evidence that other body shapes or clothing layers fit. They are not an R3
     asset.
   - **Promotion.** Nothing is promotable by passing checks. See `project-state.md` **D-194**.
+- **Shared upper-body framing 1.5× behind a flag — quiz and hub; OFF (D-195, as of 2026-10-23).**
+  - **Flag.** `AVATAR_FRAMING_UPPER = false` and `isAvatarFramingUpper()` live in `js/avatar-layers.js`. A browser can opt
+    in per device only with `localStorage.avatar_framing = "upper"`.
+  - **Class.** `app.js` (quiz `#avatar-display`) and `hub.html` (`.profile-avatar`) toggle `avatar-framing-upper` on the
+    avatar root before mounting.
+  - **Deploy skew.** Both read the flag through a namespace import (`import * as avatarLayersModule`). An older cached
+    `avatar-layers.js` without the new exports therefore leaves the framing off; a named import would be a module
+    SyntaxError that stops the whole quiz.
+  - **CSS, only under the class.**
+    - The root clips.
+    - Every layer box is `left: -25%; width/height: 150%`: one factor for all layers, hairstyles and render paths.
+    - The inline-positioned blink layer gets the same values with `!important`.
+  - **Why 1.5 rather than 1.6.** At 1.6 the live R2 afro keeps about 1 CSS px (quiz) and 0.5 px (hub) of side room; at
+    1.5 it keeps about 2.5 px and 3.5 px. The head is only about 6 % smaller.
+  - **Verified** with `tools/avatar/verify-framing-d195.mjs` (the real renderer in Chromium).
+    - Every layer and lid registers to within 0.006 px.
+    - With the flag off the view is identical to `origin/main`; only the self-animating aura differs from itself.
+    - No other localStorage value enables the framing.
+  - **Losses at 1.5.**
+    - Hair and headwear: none.
+    - Body: cut below the hips, as intended.
+    - **Unintended:** about 17 % of an aura in the quiz; wings about 66–72 %; capes about 50–61 %.
+  - **Status.** Off by default. Enabling it needs a separate owner decision that weighs the wide back layers. See
+    `project-state.md` **D-195**.
+- **Equipment-adaptive framing — quiz and hub; still behind the flag, OFF (D-196, as of 2026-10-24).**
+  - **Rule.** `avatarFramingOnFor(equippedSlots)` returns true only when the flag (or `localStorage.avatar_framing = "upper"`) is
+    on AND no item sits in `AVATAR_FRAMING_WIDE_SLOTS = ["back"]`.
+  - **Why the back slot.** Wings and capes are drawn across the whole canvas width or down to the feet, so any zoom cuts them.
+  - **What changes.**
+    - With a back item, the figure keeps today's whole-canvas view: nothing is lost, and the face is not enlarged.
+    - Otherwise it is framed at 1.5×. The face grows 1.5× (R3 quiz head about 16 → 25 CSS px), and hair and headwear lose
+      nothing.
+    - An aura alone keeps the framing; only its outermost glow at the sides is cut.
+  - **Where.** `app.js` and `hub.html` decide from the cosmetics actually mounted, right before `mountC2Avatar`, through the
+    namespace guard.
+  - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
+  - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
+  - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

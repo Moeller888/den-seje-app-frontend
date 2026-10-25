@@ -241,6 +241,40 @@ export function isAvatarV2() {
   }
 }
 
+// ── Shared upper-body framing flag (D-195) ─────────────────────────────────────
+// One framing for every hairstyle and render path on the two small surfaces (quiz
+// #avatar-display, hub .profile-avatar): the surface adds AVATAR_FRAMING_CLASS to
+// its avatar root and that page's CSS grows every layer box 1.5× about the box's
+// top centre and clips below the hips. Layer transforms are relative to their own
+// box, so they stay aligned. DEFAULT OFF — while off no class is added and the
+// surfaces render exactly as before. Per-browser opt-in for review WITHOUT a code
+// change: localStorage.setItem('avatar_framing','upper'). Returns false on any
+// error (no localStorage etc.).
+export const AVATAR_FRAMING_UPPER = false;
+export const AVATAR_FRAMING_CLASS = "avatar-framing-upper";
+export function isAvatarFramingUpper() {
+  if (AVATAR_FRAMING_UPPER) return true;
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem("avatar_framing") === "upper";
+  } catch (_e) {
+    return false;
+  }
+}
+
+// D-196: the framing adapts to what the avatar WEARS. Items in these slots are drawn across the
+// whole canvas width (wings 0–100 %) or down to the feet (capes), so ANY shared zoom cuts them
+// (D-195 measured up to 72 % of a wing lost at 1.5×). When one of them is equipped the figure keeps
+// today's whole-canvas view — nothing of the item is lost; the face simply stays at today's size.
+// The decision is per SLOT, never per item, and the figure is never scaled per layer.
+export const AVATAR_FRAMING_WIDE_SLOTS = Object.freeze(["back"]);
+// Should this surface frame the avatar? The flag (or opt-in) AND no wide-slot item equipped.
+// equippedSlots: { slot: itemId } as the surfaces already hold it; anything else counts as empty.
+export function avatarFramingOnFor(equippedSlots) {
+  if (!isAvatarFramingUpper()) return false;
+  const slots = (equippedSlots && typeof equippedSlots === "object") ? equippedSlots : {};
+  return !AVATAR_FRAMING_WIDE_SLOTS.some((s) => !!slots[s]);
+}
+
 // C2 base bodies — full body_type × skin_tone matrix. Each pair maps to a concrete
 // flat C2 SVG honoring the locked C2 geometry contract (head cx=80 cy=50 r=30, eyes
 // cx=68/92 cy=47, ears, neck, arm rects, hand anchors). Only the torso/shirt/shorts
