@@ -33,7 +33,17 @@ const REGISTER_REL = "docs/project-state.md";
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const CALLS = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
+// D-203 later recorded the one send and closed the call in place; preD203Calls reverses exactly that (proven canonical below).
+const CALLS_LIVE = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
+function preD203Calls(now) {
+  const c = structuredClone(now), e = c.authorisedCalls.calls[2], impl = c.adapterImplementations.entries[2];
+  e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["recordedBy", "neverReuse", "notAnActivePermission", "execution"]) delete e[k];
+  impl.mandateState = "UNSPENT"; impl.outcome = "NOT YET ATTEMPTED"; delete impl.recordedBy;
+  c.budget.actuallySent = 1; c.budget.remaining = 1; delete c.budget.d203;
+  return c;
+}
+const PRE_D203_CALLS_CANONICAL_SHA256 = "e75c4bc0a475bf09754968c11e52a6f482f477570fc7e1cdfc2b24a358563b78";   // the file at the D-202 merge 891f3a4
+const CALLS = preD203Calls(CALLS_LIVE);
 const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
 const ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-202** |"));
 const CALL = "D-202-northstar-base-figure-v2", CLAIM_ID = CALL + "-claim", CLAIM_FILE = CALL + ".claim.json", EVENTS_FILE = CALL + ".events.jsonl", APPROVAL = "--owner-approval=D-202";
@@ -127,7 +137,7 @@ function envFor(sb, extra) {
 function sgit(sb, args) { const r = spawnSync("git", ["-C", sb.repo, "-c", "user.name=d202-sandbox", "-c", "user.email=sandbox@example.invalid", "-c", "core.autocrlf=false", ...args], { env: envFor(sb), encoding: "utf8", windowsHide: true }); if (r.status !== 0) throw new Error("sandbox git " + args.join(" ") + ": " + r.stderr); return r.stdout.trim(); }
 const callsPath = (sb) => join(sb.repo, ...CALLS_REL.split("/")), registerPath = (sb) => join(sb.repo, ...REGISTER_REL.split("/"));
 const editCalls = (sb, fn) => { const c = JSON.parse(readFileSync(callsPath(sb), "utf8")); fn(c); writeFileSync(callsPath(sb), JSON.stringify(c, null, 2) + "\n"); };
-function sandbox({ base, branch = false } = {}) {
+function sandbox({ base, branch = false, live = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d202-sandbox-"))); ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"), gitconfig: join(root, "gitconfig"), png: join(root, "out.png"), body: join(root, "body.json"), mock: join(root, "mock.mjs") };
   const reg = join(sb.state, "DenSejeApp", "one-shot-claims", "Moeller888-den-seje-app-frontend"); sb.claim = join(reg, CLAIM_FILE); sb.events = join(reg, EVENTS_FILE);
@@ -135,6 +145,7 @@ function sandbox({ base, branch = false } = {}) {
   for (const d of [sb.repo, sb.state, sb.tmp, sb.home]) mkdirSync(d, { recursive: true });
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, PNG);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  if (!live) writeFileSync(callsPath(sb), JSON.stringify(CALLS, null, 2) + "\n");   // D-202 as committed
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (branch) { sgit(sb, ["checkout", "-q", "-b", "local-d202"]); editCalls(sb, (c) => { c.note = "not merged"; }); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "not merged"]); }
@@ -186,4 +197,29 @@ test("an uncertain dispatch never permits a further send: a transport error coun
   const d = deriveAttempt({ claimPresent: existsSync(sb.claim), eventsText: readFileSync(sb.events, "utf8"), callId: CALL });
   assert.deepEqual([d.dispatch, d.result, d.actuallySent], ["started", "unknown", 1]);
   assert.equal(runAdapter(sb, [...ARGS, ...SEND], KEY).status, 1); assert.equal(fetchLog(sb).length, 1);
+});
+
+// ── D-203: the one send recorded, the call closed, the budget spent ────────────────────────────────────────────────────
+test("D-203 changes exactly C's closure and the budget: the file as D-202 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(preD203Calls(CALLS_LIVE))), PRE_D203_CALLS_CANONICAL_SHA256);
+  const c = CALLS_LIVE.authorisedCalls.calls[2];
+  assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.neverReuse, c.notAnActivePermission], ["SPENT", "TECHNICAL_REJECT", "D-203", true, true]);
+  assert.deepEqual([c.execution.httpStatus, c.execution.fetches, c.execution.requestId], [200, 1, "req_bf10fc91b63849f5933b4b66a5fb4a8d"]);
+  assert.deepEqual(Object.keys(c.execution.bfResult.failed), ["BF9v2-BASE-TOP", "BF15-DRESS-BACK"]); assert.match(c.execution.bfResult.thresholds, /unchanged/);
+  assert.match(c.execution.visualReview, /NOT given/);
+  assert.deepEqual([CALLS_LIVE.budget.authorised, CALLS_LIVE.budget.actuallySent, CALLS_LIVE.budget.remaining], [2, 2, 0]);
+  assert.equal(CALLS_LIVE.authorisedCalls.calls.filter((e) => e.mandateState === "UNSPENT").length, 0, "no permission remains");
+});
+test("the D-203 register row: once, directly after D-202, the send and the rejection named, no mojibake", () => {
+  const lines = REGISTER.split("\n"), i = lines.findIndex((l) => l.startsWith("| **D-203** |"));
+  assert.equal(lines.filter((l) => l.startsWith("| **D-203** |")).length, 1); assert.ok(lines[i - 1].startsWith("| **D-202** |"));
+  for (const v of [CALL, "req_bf10fc91b63849f5933b4b66a5fb4a8d", "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818", "TECHNICAL_REJECT", "BF9v2", "BF15", "2/2"]) assert.ok(lines[i].includes(v), v);
+  assert.ok(!/Ã|�/.test(lines[i]));
+});
+test("THE RECORDED D-203 STATE: neither adapter can send anything — the budget is spent", () => {
+  const sb = sandbox({ live: true });
+  refusedBeforeClaim(sb, runAdapter(sb, [...ARGS, ...SEND], KEY), "authorisation");
+  refusedBeforeClaim(sb, runAdapter(sb, ARGS), "authorisation");
+  for (const id of ["a", "b"]) { const x = run(sb, OLD_ADAPTER_REL, ["--call-id=D-199-northstar-base-figure-" + id, "--claim-identity=D-199-northstar-base-figure-" + id + "-claim"], KEY); assert.equal(x.status, 1, x.out); }
+  assert.equal(fetchLog(sb).length, 0);
 });
