@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-201: A diagnosed; one real image fault (the base shorts are wider than the jeans at the
+  hips and thighs, crotch too high) and three mis-constructed measurements (BF4, BF9, BF14); the neck line fixed in the
+  recomposition; gate revisions PROPOSED, not adopted; prompt v2 drafted; no call (as of 2026-10-25).**
+  - **Seam rule for a generated body.** The candidate owns its neck below y 440; the head stack's leftover collar edge (its
+    antialiased pixels and a 3 px band above its lower boundary, no hair) is not composited over it. A: 126 line px → 0;
+    every BF verdict unchanged.
+  - **Proposals.** P-BF4 (bare soles inside the sneaker outsole band), P-BF9 (the candidate's own torso below the armpits),
+    P-BF14 (after the established dust cleanup, interior capped separately), each with Northstar-derived control stimuli.
+  - **Tool.** `northstar-base-figure.mjs --diagnose <png> --out <dir outside the clones>`.
+  - See `project-state.md` **D-201** and `docs/198-northstar-base-figure-contract.md` §8.
 - **Northstar base figure — D-200: call A sent once (HTTP 200, one 1024×1536 image, stored outside the clones) and
   TECHNICALLY REJECTED at BF4, BF5, BF9, BF14 and BF15; not visually reviewed; A closed; reserve B open but not sent
   (as of 2026-10-25).**

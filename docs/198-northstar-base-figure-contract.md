@@ -190,3 +190,22 @@ Autorisationen ligger i `tools/avatar/fixtures/northstar-wardrobe/base-figure-ca
 | **O2** | Maveblottende toppe, dybere halsudskæringer og kortere shorts/nederdele: forbliver uden for scope eller kræver eget hudmateriale. |
 | **O3** | Er sko krævet i et outfit, eller må figuren gå barfodet? |
 | **O4** | Antallet af billedkald til P0: anmodningen er **2** (A + betinget B). |
+
+## 8. D-201 — diagnosen af kald A
+
+A forbliver teknisk afvist efter den gældende kontrakt (D-200). Diagnosen skiller de fem fejl ad:
+
+| Kontrol | Fund | Art |
+|---|---|---|
+| BF4 | Fødderne står 7 px over gulvlinjen, men inde i sneakeren og på oversiden af dens ydersål på 17 rækker | Konstruktionsfejl i målingen |
+| BF5/BF15 | Shortsene er bredere end jeansene ved hofter og lår, og skridtet ligger for højt | **Reel billedfejl** |
+| BF9 | Hud over armhulen (tilsigtede ærmegab) og kantpixels langs en torso, der er smallere end T-shirten | Konstruktionsfejl i målingen |
+| BF14 | Usynligt kodestøv. Efter den etablerede støvrensning er andelen 2,06 % (Northstar 1,94 %) | Konstruktionsfejl i målingen |
+
+**Halsstregen** var R3-hovedets bagte kravekant og ikke en fejl i billedet. Den er rettet med en ny sømregel for genererede kroppe, hvor kandidaten ejer halsen under sømmen. Ingen BF-dom ændrer sig.
+
+**Foreslåede revisioner** (P-BF4, P-BF9 og P-BF14) står med begrundelse, konsekvens og kontrolstimuli i `base-figure-spec-v1.json` → `proposedRevisions`. De er **ikke vedtaget**. BF5 og BF15 revideres ikke.
+
+**Prompt v2 er et udkast:** v1 plus én sætning om shortsenes bredde og skridthøjde. Stil, positur og hudtone er uændrede.
+
+**Diagnoseværktøj:** `node tools/avatar/northstar-base-figure.mjs --diagnose <billede> --out <mappe uden for klonerne>`.
