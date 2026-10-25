@@ -94,5 +94,67 @@
     "V7 At app sizes (hub 110×165, quiz 52×78) the figure reads cleanly; no halo, no fringe on the real surface.",
     "V8 Dressed back in D-197's default items, it is visually the original Northstar."
   ],
-  "automaticVersusVisual": "BF1–BF15 are automatic and binding; a fail rejects the candidate, and nothing is retouched to pass them. V1–V8 need the owner's eyes; the gates cannot judge style, anatomy, child-appropriateness or the quality of a join, and a pass on BF never substitutes for them."
+  "automaticVersusVisual": "BF1–BF15 are automatic and binding; a fail rejects the candidate, and nothing is retouched to pass them. V1–V8 need the owner's eyes; the gates cannot judge style, anatomy, child-appropriateness or the quality of a join, and a pass on BF never substitutes for them.",
+  "recompositionD201": {
+    "rule": "For a GENERATED body the candidate owns its neck below the seam: the body layer is the candidate's pixels below y 440 (empty under the opaque head), and where the head stack only carries its leftover collar edge — the bald head's antialiased pixels and a 3 px band of nearly opaque pixels above its lower boundary, with no hair over them — the candidate's own pixel is the figure. D-194's FG.bodyLayer stays unchanged for Northstar itself.",
+    "why": "D-200 §4: the head stack's lower neck rows carry Northstar's skin-to-collar blend baked into their colour (e.g. 251,206,136 against 254,195,127 at alpha 254); over a continuous generated neck they draw a pale dotted line. Measured on A: 126 line px with the D-194 rule, 0 with the D-201 rule; the raw image has none.",
+    "effectOnA": "none on the verdicts: every BF1–BF15 verdict is identical with either rule (D-201 diagnosis)"
+  },
+  "proposedRevisions": {
+    "status": "PROPOSED by D-201 — NOT ADOPTED. The binding gates above are unchanged; A stays TECHNICAL_REJECT (D-200) unless the owner decides otherwise.",
+    "P-BF4-BARE-FEET": {
+      "replaces": "BF4's ground part for BARE feet (centre axis and hands unchanged)",
+      "rule": "each bare sole lies between the top of Northstar's sneaker outsole (17 light rows above the ground line, measured) and the ground line, i.e. y 1471–1488, and ≤ 0.5 % of the foot lies outside the sneaker + jeans silhouette (+2 px)",
+      "why": "BF4 compared a bare foot with the BOTTOM of a sneaker's outsole (±4 px). A bare foot inside a shoe stands on the insole, not under it: a foot whose sole is 7 px above the ground line is hidden by every sneaker and leaves room for a sandal sole.",
+      "consequence": "a barefoot view (deferred O3) would stand up to 17 px above shod figures; shoe items keep the ground line ±4",
+      "controls": {
+        "pass": [
+          "northstar"
+        ],
+        "fail": [
+          "feet-lifted-25",
+          "feet-below-ground-6",
+          "feet-too-wide"
+        ]
+      }
+    },
+    "P-BF9-CHEST-BAND": {
+      "replaces": "BF9's coverage band (colour and hem parts unchanged)",
+      "rule": "the band is the candidate's OWN torso, 4 px rim excluded, from 8 px below its armpits to the natural waist + 4 px; ≥ 99.5 % opaque, non-skin",
+      "why": "BF9's band was the t-shirt's columns from 60 px below the shoulders: it includes the shoulder skin a sleeveless top intentionally shows above the armpit, and the antialiased rim of a close-fitting torso that is narrower than the t-shirt. On A: 166 skin px above the armpit (armholes), 467 semi-transparent and 51 transparent rim px beside a narrower torso; 0 skin below the armpit.",
+      "consequence": "a top must still cover the chest from the armpits to the waist; armholes above the armpit become allowed",
+      "controls": {
+        "pass": [
+          "northstar"
+        ],
+        "fail": [
+          "top-cropped-at-700",
+          "top-side-skin-30"
+        ]
+      }
+    },
+    "P-BF14-ALPHA": {
+      "replaces": "BF14's single share",
+      "rule": "measured AFTER the project's established deterministic dust cleanup (cleanAlpha: alpha < 24 AND orphan-soft — D-112/D-115, applied to H1 by D-131): total semi-transparent share ≤ 6 % AND interior share (> 2 px from transparency) ≤ 1 %",
+      "why": "A's 7.79 % is 19,330 px of invisible encoder dust (alpha < 24); after the cleanup it is 2.06 % (Northstar 1.94 %) with an interior of 16 px (Northstar 23), and the edges look clean on white, near-black, magenta and grey. A single share also let a real interior fault pass: a translucent 60×60 patch passes BF14 but fails P-BF14.",
+      "consequence": "the cleanup becomes a documented step of the post-processing (it removes only invisible dust and is reported); a soft fringe or translucent interior still fails",
+      "controls": {
+        "pass": [
+          "northstar",
+          "encoder-dust"
+        ],
+        "fail": [
+          "halo-6-alpha-60",
+          "interior-patch-alpha-100"
+        ]
+      }
+    },
+    "unchanged": "BF5 and BF15 are NOT revised: the base shorts really are wider than the jeans at the hips and thighs (1,083 px visible when dressed back, 54 px outside the envelope) and their crotch sits above the jeans' crotch — an image fault, addressed by prompt v2 (draft)"
+  },
+  "promptV2Draft": {
+    "file": "tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v2-draft.txt",
+    "status": "DRAFT — not frozen, not authorised; one added sentence about the shorts' width and crotch height, everything else byte-identical to v1",
+    "sha256": "8262452eb0444518db0d435d9e2c203fcbd370a3bdc07597c49dcd3467395dd1",
+    "bytes": 2480
+  }
 }
