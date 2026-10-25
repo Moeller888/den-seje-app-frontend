@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-204: runtime layering proof for the D-202 candidate; BF15 had dressed a body that still held
+  the base garments; in the runtime model the 1,154 px vanish into background, but the body is up to 3 px wider than
+  Northstar's jeans at the hips and upper thighs; BF9v2's 1 px is no coverage problem; nothing adopted (as of 2026-10-25).**
+  - **Tools.** `northstar-base-figure.mjs --layers` (`separateBase`, `runtimeBody`, `layerProof`, proposed `bf15r`).
+  - See `project-state.md` **D-204** and `docs/198-northstar-base-figure-contract.md` §11.
 - **Northstar base figure — D-203: the D-202 call sent once (HTTP 200) and TECHNICALLY REJECTED under gate set v2 at
   BF9v2 (top hem y 785, 1 px above 786–798) and BF15 (the shorts run 6–7 px outside the jeans along the hips); not
   visually reviewed; the budget is spent (2 of 2) (as of 2026-10-25).**

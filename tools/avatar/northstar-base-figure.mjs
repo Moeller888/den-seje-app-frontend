@@ -13,6 +13,8 @@
 //        node tools/avatar/northstar-base-figure.mjs --diagnose <candidate.png> --out <empty dir OUTSIDE both clones>
 //             (D-201: localized pixel maps for BF4, BF5/BF15, BF9 and BF14, the neck seam before/after the fix, the proposed
 //              BF revisions — measurements and proposals only; nothing is re-classified)
+//        node tools/avatar/northstar-base-figure.mjs --layers <candidate.png> --out <empty dir OUTSIDE both clones>
+//             (D-204: the runtime layering proof — base garments separated from the body, the body dressed WITHOUT them)
 //        node tools/avatar/northstar-base-figure.mjs --review <candidate.png> --out <empty dir OUTSIDE both clones>
 //             (D-199: BF1–BF15 plus the review images of a generated candidate; refuses any directory inside the repository,
 //              because a figure in close-fitting base clothing is never tracked or published — D-127 §2)
@@ -382,6 +384,132 @@ export function proposalStimuli(w) {
   };
 }
 
+// ── D-204: the runtime layering proof ───────────────────────────────────────────────────────────────────────────────────
+/** Separate the base garments from the visible body of a registered candidate. The base region is every NON-skin pixel within
+ *  3 px of the base garments' colour components (their fill, their painted outline and its antialiasing); skin is never removed,
+ *  so no needed skin is cut away and the body contour is not moved. Nothing is painted. Returns label 1 top / 2 shorts / 0. */
+export function separateBase(R, Z) {
+  const G = garmentMask(R), topRgb = medianRgb(R, Z.topCore, "garment"), hipRgb = medianRgb(R, Z.hipCore, "garment"), core = baseGarments(R, G, Z, topRgb, hipRgb);
+  const near = Mo.dilate(Mo.or(...[1, 2].map((k) => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (core[i] === k) m[i] = 1; return m; })), 3), lab = new Uint8Array(N);
+  // top or shorts by POSITION, not colour (the top's dark outline is closer in colour to the shorts): per column, the seam is the
+  // first row from y 700 where five base pixels in a row are shorts-dark; above it top, below it shorts (default: the waist row)
+  const lum = (i) => 0.3 * R[i * 4] + 0.59 * R[i * 4 + 1] + 0.11 * R[i * 4 + 2], cut = hipRgb && topRgb ? (0.3 * (topRgb[0] + hipRgb[0]) + 0.59 * (topRgb[1] + hipRgb[1]) + 0.11 * (topRgb[2] + hipRgb[2])) / 2 : 130;
+  const seamY = new Int32Array(W).fill(loadSpec().targets.waistY);
+  for (let x = 0; x < W; x++) for (let y = 700; y < 900; y++) { let ok = true; for (let k = 0; k < 5 && ok; k++) { const i = (y + k) * W + x; ok = core[i] > 0 && lum(i) < cut; } if (ok) { seamY[x] = y; break; } }
+  for (let i = 0; i < N; i++) { if (!near[i] || !R[i * 4 + 3] || classify(R, i) === "skin" || (R[i * 4 + 3] >= 128 && skinish(R, i))) continue; lab[i] = ((i / W) | 0) < seamY[i % W] ? 1 : 2; }
+  return { lab, topRgb, hipRgb };
+}
+/** Skin shading the colour classifier calls "other": warm, saturated, light — never removed with the base garments. */
+const skinish = (P, i) => { const r = P[i * 4], g = P[i * 4 + 1], b = P[i * 4 + 2]; return r > 150 && r > g && g > b && r - b > 60; };
+/** The runtime body: the candidate below the seam with the base garments EMPTY (D-198), split into the body proper and the arms
+ *  with hands, so items can lie behind the arms (top body) and over them (sleeves). The arms are the runtime pixels CONNECTED to
+ *  Northstar's own arm and hand regions inside the arm columns (outside the torso, shoulder to hand bottom) — never a column cut,
+ *  which would lift the outer edge of a thigh into the arm layer and draw it over the bottoms. */
+export function runtimeBody(w, R, lab) {
+  const A = w.anchors, b = FG.loadSpec().body, L = w.base.layers, all = new Uint8ClampedArray(N * 4), body = new Uint8ClampedArray(N * 4), arms = new Uint8ClampedArray(N * 4), edge = neckEdgeMask(w);
+  let handBottom = 0; for (let i = 0; i < N; i++) if (L.hands[i * 4 + 3]) handBottom = Math.max(handBottom, ((i / W) | 0) + 12);
+  for (let y = b.seamY; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, j = i * 4; if (lab[i] || !R[j + 3] || (w.fg.bald[j + 3] > 0 && !edge[i])) continue; all.set(R.subarray(j, j + 4), j); }
+  const zone = (i) => { const x = i % W, y = (i / W) | 0; return y >= A.shoulder.y && y <= handBottom && (x < A.torsoX[0] || x > A.torsoX[1]); };
+  const seeds = []; for (let i = 0; i < N; i++) if (zone(i) && all[i * 4 + 3] >= 128 && (L.arms[i * 4 + 3] >= 128 || L.hands[i * 4 + 3] >= 128)) seeds.push([i % W, (i / W) | 0]);
+  const armM = NL.flood(seeds, (i) => zone(i) && all[i * 4 + 3] > 0);
+  for (let i = 0; i < N; i++) if (all[i * 4 + 3]) (armM[i] ? arms : body).set(all.subarray(i * 4, i * 4 + 4), i * 4);
+  return { body, arms };
+}
+/** Pixels of `m` connected (4-way, through pixels where `pass` holds) to the canvas border — what simply becomes background. */
+function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (let x = 0; x < W; x++) for (const y of [0, H - 1]) { const i = y * W + x; if (pass(i)) { o[i] = 1; st.push(i); } }
+  for (let y = 0; y < H; y++) for (const x of [0, W - 1]) { const i = y * W + x; if (pass(i) && !o[i]) { o[i] = 1; st.push(i); } }
+  while (st.length) { const i = st.pop(), x = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && !o[j] && Math.abs((j % W) - x) <= 1 && pass(j)) { o[j] = 1; st.push(j); } }
+  return Mo.and(o, m); }
+
+/** The layering proof with Northstar's D-197 defaults over the runtime body (base garments removed). */
+export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the bare thigh directly below their hem (D-204)
+export function layerProof(w, R, Z = zones(w), it = {}) {
+  const L = w.base.layers, { lab } = separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
+  const dressedRuntime = NL.overStack([body, I.shoes, I.pants, I.topBody, arms, I.sleeves, w.head]);
+  const items = NL.overStack([I.shoes, I.pants, I.topBody, I.sleeves]), covered = (i) => items[i * 4 + 3] >= 128;
+  const base = new Uint8Array(N); for (let i = 0; i < N; i++) if (lab[i]) base[i] = 1;
+  // only base pixels that were VISIBLE (alpha ≥ 128) can leave a hole; a semi-transparent rim pixel vanishes with its garment
+  const uncoveredBase = new Uint8Array(N); for (let i = 0; i < N; i++) if (base[i] && R[i * 4 + 3] >= 128 && !covered(i)) uncoveredBase[i] = 1;
+  const transparentOk = outsideConnected(uncoveredBase, (i) => dressedRuntime[i * 4 + 3] < 128), enclosed = Mo.and(uncoveredBase, Mo.not(transparentOk));
+  // cut skin: visible runtime skin that borders a removed base pixel the items leave open — an edge with no painted contour
+  const cutSkin = new Uint8Array(N); for (let i = W; i < N - W; i++) { if (!(body[i * 4 + 3] >= 128 || arms[i * 4 + 3] >= 128) || covered(i) || classify(R, i) !== "skin") continue; if ([i - 1, i + 1, i - W, i + W].some((j) => uncoveredBase[j])) cutSkin[i] = 1; }
+  // body wider than an item drawn for Northstar: visible skin directly outside the jeans' outline (≤ 3 px) in the leg rows
+  // any visible body pixel (skin or its painted contour) within 6 px OUTSIDE an item's opaque silhouette: the body is wider there
+  const itemM = Mo.toMask(items, 128), ring = Mo.and(Mo.dilate(itemM, 6), Mo.not(itemM)), slivers = new Uint8Array(N);
+  // only from the waistband to the shoe tops: there the item is meant to hide the body (the neck, the shoulders above a collar and
+  // the arms are legitimately outside a tee; the feet are inside the shoes)
+  for (let i = w.anchors.waistbandY * W; i < Math.min(w.anchors.shoeTopY.left, w.anchors.shoeTopY.right) * W; i++) if (ring[i] && body[i * 4 + 3] >= 128) slivers[i] = 1;
+  // open base pixels deeper than the fabric band inside the candidate's outer silhouette: there the body had to be, and no item
+  // and no skin is there — missing material (a cropped item), not fabric that may vanish
+  const exterior = outsideConnected(new Uint8Array(N).fill(1), (i) => R[i * 4 + 3] < 128), deep = Mo.and(uncoveredBase, Mo.not(Mo.dilate(exterior, FABRIC_BAND_PX)));
+  return { lab, body, arms, dressedRuntime, uncoveredBase, transparentOk, enclosed, cutSkin, slivers, deep };
+}
+
+/** PROPOSED BF15r (D-204, not adopted): the dress-back on the RUNTIME body, as D-198 defines it — base garments empty under the
+ *  item. (a) no enclosed hole; (b) ≤ 10 px exposed cut skin (antialias); (c) no open base pixel deeper than the fabric band —
+ *  otherwise body material is missing; (d) the silhouette below the seam within IoU 0.985 of Northstar's; and, reported for the
+ *  owner's threshold decision, (e) visible body outside the items' silhouette from the waistband to the shoe tops. */
+export function bf15r(w, P, { silhouette = true } = {}) { const c = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
+  let inter = 0, uni = 0; for (let i = 441 * W; i < N; i++) { const a = P.dressedRuntime[i * 4 + 3] >= 128, b = w.fg.master[i * 4 + 3] >= 128; if (a && b) inter++; if (a || b) uni++; }
+  const v = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), silhouetteIoU: +(inter / uni).toFixed(4), bodyOutsideItemsPx: c(P.slivers) };
+  return { ok: v.enclosedHolePx === 0 && v.exposedCutSkinPx <= 10 && v.deepOpenBasePx === 0 && (!silhouette || v.silhouetteIoU >= 0.985), value: v, status: "PROPOSED — not adopted; (e) bodyOutsideItemsPx has no threshold until the owner decides" }; }
+/** Control items for BF15r, cut from a figure's OWN base garments (never painted): items covering exactly the base shape (the
+ *  contract's minimum items — must pass), the same with a 60×60 px hole in the bottoms (an enclosed hole — must fail), and with
+ *  the bottoms cut off 60 px above their hem (missing material — must fail). Northstar itself is no positive case for a runtime
+ *  check: it has no body under its clothes. */
+export function bf15rControlItems(w, R, Z = zones(w)) {
+  const { lab } = separateBase(R, Z), top = new Uint8ClampedArray(N * 4), bot = new Uint8ClampedArray(N * 4), none = new Uint8ClampedArray(N * 4);
+  for (let i = 0; i < N; i++) { if (lab[i] === 1) top.set(R.subarray(i * 4, i * 4 + 4), i * 4); if (lab[i] === 2) bot.set(R.subarray(i * 4, i * 4 + 4), i * 4); }
+  let y0 = H, y1 = 0, x0 = W, x1 = 0; for (let i = 0; i < N; i++) if (lab[i] === 2) { const x = i % W, y = (i / W) | 0; y0 = Math.min(y0, y); y1 = Math.max(y1, y); x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+  const hole = new Uint8ClampedArray(bot), cropped = new Uint8ClampedArray(bot), cy = (y0 + y1) >> 1, cx = Math.round((x0 * 3 + x1) / 4);
+  for (let y = cy - 30; y < cy + 30; y++) for (let x = cx - 30; x < cx + 30; x++) hole[(y * W + x) * 4 + 3] = 0;
+  for (let i = (y1 - 60) * W; i < N; i++) cropped[i * 4 + 3] = 0;
+  const base = { shoes: w.base.layers.shoes, topBody: top, sleeves: none };
+  return { "exact-base-items": { expect: true, items: { ...base, pants: bot } }, "bottoms-with-hole": { expect: false, items: { ...base, pants: hole } }, "bottoms-cut-60-above-hem": { expect: false, items: { ...base, pants: cropped } } };
+}
+
+/** The planned MINIMUM areas of the contract v2 forms on this base (masks, not items): a sleeveless top = the base top + 1 px,
+ *  shorts = the base shorts + 1 px, sandals = no coverage (the bare feet stay visible; soles on the ground line ± 4). */
+export function minimumAreas(lab) { const t = new Uint8Array(N), b = new Uint8Array(N); for (let i = 0; i < N; i++) { if (lab[i] === 1) t[i] = 1; if (lab[i] === 2) b[i] = 1; } return { sleevelessTop: Mo.dilate(t, 1), shorts: Mo.dilate(b, 1) }; }
+
+export function layersReport(buf, OUT, spec = loadSpec()) {
+  if (!isOutsideRepo(OUT)) throw new Error("refusing to write layering material inside the repository (D-127 §2): " + OUT);
+  const img = decodePng(buf); if (!img.ok || !img.px || img.px.length !== N * 4) throw new Error("not a 1024×1536 RGBA PNG");
+  const raw = Uint8ClampedArray.from(img.px), w = WR.buildWardrobe(), Z = zones(w, spec), reg = register(raw, w.fg.master, spec); if (!reg.ok) throw new Error("not registered");
+  const R = dustCleaned(shift(raw, reg.dx, reg.dy)), P = layerProof(w, R, Z), L = w.base.layers, files = {};
+  const save = (n, im, what) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), w: im.w, h: im.h, what }; };
+  const bg = [236, 233, 226], FIGB = [250, 0, 774, 1536], half = (Q, c = bg) => down(flat(Q, c), 262, 768, FIGB), checker = (Q) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0, c = ((x >> 4) + (y >> 4)) & 1 ? 205 : 245, a = Q[i * 4 + 3] / 255; for (let k = 0; k < 3; k++) o[i * 4 + k] = Math.round(Q[i * 4 + k] * a + c * (1 - a)); o[i * 4 + 3] = 255; } return o; };
+  const both = NL.overStack([P.body, P.arms, w.head]);
+  save("l01-runtime-body.png", grid([down(checker(both), 262, 768, FIGB), half(both)], 2), "the runtime body: base top and base shorts removed (empty, checkerboard left), with the R3 head; nothing painted, no skin removed");
+  const masks = new Uint8ClampedArray(N * 4).fill(255); for (let i = 0; i < N; i++) { if (P.lab[i] === 1) masks.set([200, 60, 170, 255], i * 4); else if (P.lab[i] === 2) masks.set([0, 170, 200, 255], i * 4); else if (P.body[i * 4 + 3] >= 128) masks.set([250, 205, 160, 255], i * 4); else if (P.arms[i * 4 + 3] >= 128) masks.set([240, 170, 110, 255], i * 4); }
+  save("l02-layer-masks.png", half(masks), "layer masks: base top (magenta) and base shorts (cyan) — authoring only, removed at runtime; body (light skin), arms with hands (darker skin)");
+  const itemMask = new Uint8ClampedArray(N * 4).fill(255), it = [[L.shoes, [120, 120, 120]], [L.pants, [40, 80, 170]], [L["top-body"], [150, 150, 165]], [L["top-sleeves"], [190, 190, 205]]];
+  for (const [Ly, c] of it) for (let i = 0; i < N; i++) if (Ly[i * 4 + 3] >= 128) itemMask.set([...c, 255], i * 4);
+  save("l03-item-masks.png", half(itemMask), "item layer masks: D-197's defaults — sneakers, jeans, tee body (behind the arms), sleeves (over the arms)");
+  const withBase = NL.overStack([recompose(w, R, "generated").body, L.shoes, L.pants, L["top-body"], L["top-sleeves"], w.head]);
+  save("l04-dressed-runtime-vs-bf15.png", grid([half(P.dressedRuntime), half(withBase), half(NL.overStack([w.body, w.head]))], 3), "dressed: the runtime body WITHOUT base garments (left) · BF15's construction, defaults over the candidate WITH its base garments (middle) · the original Northstar (right)");
+  let U = flat(P.dressedRuntime, bg); U = tint(U, P.transparentOk, [0, 200, 120], 0.8); U = tint(U, P.enclosed, [255, 0, 0], 0.9); U = tint(U, Mo.dilate(P.cutSkin, 1), [255, 160, 0], 0.9); U = tint(U, Mo.dilate(P.slivers, 1), [230, 0, 200], 0.9);
+  save("l05-uncovered-hips-x2.png", crop(U, [300, 760, 724, 1060], 2), "hips and thighs ×2, dressed runtime: green = base pixels the jeans leave open that simply become background; red = enclosed holes; orange = exposed cut skin; magenta = visible body (skin or its contour) outside an item's silhouette");
+  save("l06-uncovered-full.png", half(U), "the same over the whole figure");
+  const MA = minimumAreas(P.lab); let Mn = flat(both, bg); Mn = tint(Mn, MA.sleevelessTop, [200, 60, 170], 0.55); Mn = outline(Mn, MA.sleevelessTop, [120, 0, 90]); Mn = tint(Mn, MA.shorts, [0, 170, 200], 0.55); Mn = outline(Mn, MA.shorts, [0, 90, 120]);
+  const A = w.anchors; for (let x = 330; x < 694; x++) for (const y of [A.groundY - spec.gates.groundTolPx, A.groundY + spec.gates.groundTolPx]) Mn.set([30, 160, 60, 255], (y * W + x) * 4);
+  save("l07-minimum-areas.png", half(Mn), "planned minimum areas on the runtime body (masks only — no GPT item exists or was tested): sleeveless top (magenta), shorts (cyan), sandals: no coverage, soles within the green ground band");
+  const count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
+  let tp = 0, sp = 0; for (let i = 0; i < N; i++) { if (P.lab[i] === 1) tp++; if (P.lab[i] === 2) sp++; }
+  let inter = 0, uni = 0; for (let i = 441 * W; i < N; i++) { const a = P.dressedRuntime[i * 4 + 3] >= 128, b = w.fg.master[i * 4 + 3] >= 128; if (a && b) inter++; if (a || b) uni++; }
+  // BF9: the waist seam, where the base top meets the base shorts
+  let Wst = flat(R, bg); const tm = new Uint8Array(N), sm = new Uint8Array(N); for (let i = 0; i < N; i++) { if (P.lab[i] === 1) tm[i] = 1; if (P.lab[i] === 2) sm[i] = 1; }
+  Wst = outline(Wst, tm, [200, 60, 170]); Wst = outline(Wst, sm, [0, 170, 200]); let gapSkin = 0; for (let x = A.torsoX[0] + 12; x <= A.torsoX[1] - 12; x++) { let lo = -1, hi = -1; for (let y = 700; y < 860; y++) { const i = y * W + x; if (tm[i]) lo = y; if (sm[i] && hi < 0) hi = y; } for (let y = lo + 1; y < hi; y++) if (classify(R, y * W + x) === "skin") { gapSkin++; Wst.set([255, 0, 0, 255], (y * W + x) * 4); } }
+  for (const y of [spec.targets.baseTopHemY[0]]) for (let x = 380; x < 644; x += 2) Wst.set([30, 160, 60, 255], (y * W + x) * 4);
+  save("l08-waist-seam-x3.png", crop(Wst, [380, 740, 644, 830], 3), "BF9: the waist ×3 — base top outline (magenta) meets the base shorts outline (cyan); red would be skin between them (none); the dotted green line is the hem limit y " + spec.targets.baseTopHemY[0]);
+  const report = { decision: "D-204", raw: { sha256: sha(buf) }, registration: reg, note: "Runtime layering proof (D-198's model: base garments empty under the item). Derived only: the established dust cleanup; nothing painted, deformed or cut from the skin. The binding results (D-203) are unchanged.",
+    basePx: { top: tp, shorts: sp }, dressedWithNorthstarDefaults: { uncoveredBasePx: count(P.uncoveredBase), becomesBackgroundPx: count(P.transparentOk), enclosedHolePx: count(P.enclosed), exposedCutSkinPx: count(P.cutSkin), bodyOutsideItemsPx: count(P.slivers), bodyOutsideItemsRows: (() => { const rows = []; for (let i = 0; i < N; i++) if (P.slivers[i]) rows.push((i / W) | 0); return rows.length ? [Math.min(...rows), Math.max(...rows)] : null; })(), bodyOutsideItemsMaxWidthPx: (() => { let m = 0; for (let y = 0; y < H; y++) { let run = 0; for (let x = 0; x < W; x++) { if (P.slivers[y * W + x]) { run++; m = Math.max(m, run); } else run = 0; } } return m; })(), silhouetteIoUBelowSeam: +(inter / uni).toFixed(4) },
+    minimumAreasPx: { sleevelessTop: count(MA.sleevelessTop), shorts: count(MA.shorts), sandals: 0 }, waistSeam: { skinBetweenTopAndShortsPx: gapSkin },
+    proposedBF15r: bf15r(w, P), bf15rControlsOnThisCandidate: Object.fromEntries(Object.entries(bf15rControlItems(w, R, Z)).map(([k, c]) => { const q = bf15r(w, layerProof(w, R, Z, c.items), { silhouette: false }); return [k, { expect: c.expect, ok: q.ok, value: q.value }]; })), files };
+  writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
+  return report;
+}
+
 /** D-201 — localized pixel maps of the failed checks, written ONLY outside the repository. The raw file is never changed. */
 export function diagnose(buf, OUT, spec = loadSpec()) {
   if (!isOutsideRepo(OUT)) throw new Error("refusing to write diagnosis material inside the repository (D-127 §2): " + OUT);
@@ -485,7 +613,14 @@ export function review(buf, OUT, spec = loadSpec(), opts = {}) {
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const a = process.argv.slice(2), oi = a.indexOf("--out"), ci = a.indexOf("--check"), ri = a.indexOf("--review"), di = a.indexOf("--diagnose");
+  const a = process.argv.slice(2), oi = a.indexOf("--out"), ci = a.indexOf("--check"), ri = a.indexOf("--review"), di = a.indexOf("--diagnose"), li = a.indexOf("--layers");
+  if (li >= 0) {
+    if (!a[li + 1] || oi < 0 || !a[oi + 1]) { console.error("usage: --layers <candidate.png> --out <empty dir outside both clones>"); process.exit(1); }
+    const OUT = resolve(a[oi + 1]);
+    if (!isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository; a base figure is never written there (D-127 §2)"); process.exit(1); }
+    if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
+    const r = layersReport(readFileSync(resolve(a[li + 1])), OUT); console.log(JSON.stringify({ basePx: r.basePx, dressed: r.dressedWithNorthstarDefaults, minimumAreasPx: r.minimumAreasPx }, null, 2)); process.exit(0);
+  }
   if (di >= 0) {
     if (!a[di + 1] || oi < 0 || !a[oi + 1]) { console.error("usage: --diagnose <candidate.png> --out <empty dir outside both clones>"); process.exit(1); }
     const OUT = resolve(a[oi + 1]);
