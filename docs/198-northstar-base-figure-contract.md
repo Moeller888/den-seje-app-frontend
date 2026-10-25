@@ -220,3 +220,18 @@ A forbliver teknisk afvist efter den gældende kontrakt (D-200). Diagnosen skill
 - Budgettet er 2 kald, og 1 er brugt.
 - Kaldet sendes kun på ejerens særskilte eksekveringsbesked efter merge.
 - Uanset udfaldet, også ved et usikkert afsendelsesresultat, kan der ikke sendes mere.
+
+## 10. D-203 — resultatet af det sidste kald
+
+Kaldet blev sendt én gang (HTTP 200). Med kontrolsæt v2 er resultatet **teknisk afvist**:
+
+| Kontrol | Resultat |
+|---|---|
+| BF9v2 | Brystbåndet er dækket 100 %, men toppens søm ligger ved y 785, 1 px over grænsen |
+| BF15 | Shortsene løber 6–7 px uden for jeansene langs hofterne. 1.154 px er synlige, når figuren klædes tilbage. |
+
+Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 px mod A's 54) og halsen.
+
+**Mod A:** Prompt v2 rettede shortsenes udsvaj ved benåbningerne og skridthøjden, men ikke bredden ved hofterne.
+
+**Budget:** Begge kald (2/2) er brugt, og der står intet kald tilbage. Billedet er ikke visuelt vurderet.

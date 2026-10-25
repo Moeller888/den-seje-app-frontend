@@ -9,10 +9,11 @@
     "ownerApproval": "D-199 (owner, 2026-10-25): at most 2 image calls for the base figure — A, and B only as a reserve; no automatic retries, no extra calls, no fallback model; B uses the same frozen request unless the owner approves a concrete change. Not the clothing pilot, not mass production.",
     "authorised": 2,
     "calls": { "A": 1, "B": "0-1 (reserve)" },
-    "actuallySent": 1,
+    "actuallySent": 2,
     "recordedBy": "D-200",
     "d202": "B closed unused; its slot passes to D-202-northstar-base-figure-v2 (prompt v2). Budget still at most 2 calls including A: at most ONE call remains, no retries, no fallback; an undetermined dispatch result never permits a further send.",
-    "remaining": 1,
+    "remaining": 0,
+    "d203": "D-202-northstar-base-figure-v2 sent once and recorded by D-203: the budget is spent (2 of 2). No call remains; a further attempt needs a new owner decision with new capacity.",
     "countingRule": "D-159: every call actually sent counts, whatever its outcome; a consumed claim excludes any further attempt under the same call id."
   },
   "authorisedCalls": {
@@ -91,8 +92,12 @@
         "decision": "D-202",
         "preparedBy": "D-201",
         "status": "AUTHORISED — the last call of the budget (prompt v2)",
-        "mandateState": "UNSPENT",
-        "outcome": "NOT YET ATTEMPTED",
+        "mandateState": "SPENT",
+        "outcome": "TECHNICAL_REJECT",
+        "recordedBy": "D-203",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "execution": {"sentFrom": "detached worktree at origin/main 891f3a4c5f56d3b2e968423960ae79af1371fe6b, after a passing dry run", "adapterSha256": "e5581dba8d3e2f620cc473dc75493c5c19ae2bb71b1a4e3220ae8dcf592f009f", "claimConsumedAt": "2026-10-25T15:26:48.469Z", "dispatchAt": "2026-10-25T15:26:48.480Z", "answerAt": "2026-10-25T15:27:15.174Z", "httpStatus": 200, "requestId": "req_bf10fc91b63849f5933b4b66a5fb4a8d", "fetches": 1, "rawResponse": {"bytes": 1734445, "sha256": "d692ecf1d141ef1d87f707c4d5da8c6ecd205aa777a12dad4746a7dfbd88900e"}, "image": {"bytes": 1300423, "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818", "size": [1024, 1536], "receipt": "RECEIVED_FOR_BF_CHECK"}, "storage": "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ — outside both clones, untracked, unpublished (D-127 §2); the raw image is unchanged", "bfResult": {"gateSet": "v2 (D-202)", "verdict": "TECHNICAL_REJECT", "failed": {"BF9v2-BASE-TOP": "the chest band is covered completely (coverage 1, armpit y 609), but the base top's hem is at y 785, 1 px above the range 786–798", "BF15-DRESS-BACK": "dressed in D-197's defaults, 1,154 base-shorts pixels stay visible: the shorts' outer outline runs 6–7 px outside the jeans along both hips (silhouette IoU 0.9851 passes)"}, "passed": ["BF1-FORMAT", "BF2-REGISTRATION (0/0, head IoU 0.9925)", "BF3-NECK-JOIN (1 px)", "BF4v2-POSE (soles y 1486/1486, 0 px outside the sneakers)", "BF5-ENVELOPE (0 px outside, A: 54)", "BF6-ARMS", "BF7-LEGS", "BF8-FEET", "BF10-BASE-SHORTS (hem y 956/955)", "BF11-SKIN-TONE (1.4)", "BF12-OUTLINE (0.941)", "BF13-SHARPNESS (0.794)", "BF14v2-ALPHA (2.09 % after the dust cleanup, interior 0)"], "thresholds": "unchanged: base-figure-spec-v1.json at origin/main 891f3a4", "neckLine": "0 px with the D-201 seam (127 px with the D-194 rule)", "v1ForComparison": "BF9, BF14 and BF15 fail under the superseded v1 set", "provenancePx": {"original-kept": 129874, "original-reference": 33825, "reconstructed": 107954, "new": 97155, "removed": 20617}}, "againstA": "prompt v2 removed the shorts' flare at the leg openings (BF5 54 → 0 px) and the high crotch, but not the extra width along the hips: 6–7 px per side (A 4–7 px); BF15 1,154 px (A 1,083)", "visualReview": "NOT given. A technical rejection is not a visual verdict; the owner has not reviewed V1–V8"},
         "replaces": "D-199-northstar-base-figure-b (closed unused)",
         "endpoint": "https://api.openai.com/v1/images/edits",
         "operation": "images.edits",
@@ -177,7 +182,7 @@
     "entries": [
       { "callId": "D-199-northstar-base-figure-a", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-A", "ownerApprovalFlag": "--owner-approval=D-199-A" }, "mandateState": "SPENT", "outcome": "TECHNICAL_REJECT", "recordedBy": "D-200", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
       { "callId": "D-199-northstar-base-figure-b", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-B", "ownerApprovalFlag": "--owner-approval=D-199-B" }, "mandateState": "CLOSED_UNUSED", "outcome": "NEVER SENT", "closedBy": "D-202", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
-      { "callId": "D-202-northstar-base-figure-v2", "decision": "D-202", "authorisedBy": "D-202", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d202.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-202", "ownerApprovalFlag": "--owner-approval=D-202" }, "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true }
+      { "callId": "D-202-northstar-base-figure-v2", "decision": "D-202", "authorisedBy": "D-202", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d202.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-202", "ownerApprovalFlag": "--owner-approval=D-202" }, "mandateState": "SPENT", "outcome": "TECHNICAL_REJECT", "recordedBy": "D-203", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true }
     ]
   }
 }

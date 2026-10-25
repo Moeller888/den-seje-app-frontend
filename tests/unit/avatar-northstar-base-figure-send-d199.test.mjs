@@ -43,7 +43,7 @@ function preD202Calls(now) {
   c.adapterImplementations.entries = c.adapterImplementations.entries.filter((e) => e.callId !== "D-202-northstar-base-figure-v2");
   b.mandateState = "UNSPENT"; b.outcome = "NOT YET ATTEMPTED"; for (const k of ["closedBy", "neverReuse", "notAnActivePermission"]) delete b[k];
   bi.mandateState = "UNSPENT"; bi.outcome = "NOT YET ATTEMPTED"; delete bi.closedBy;
-  delete c.budget.d202; delete c.budget.remaining;
+  delete c.budget.d202; delete c.budget.remaining; delete c.budget.d203; c.budget.actuallySent = 1;   // D-203 recorded C's send
   return c;
 }
 const PRE_D202_CALLS_CANONICAL_SHA256 = "e6696a4ba5cf7c52608d88b08f48aed75cb0865f518bde9270bd5805d5457284";   // the file at the D-201 merge d56a7ad
@@ -383,7 +383,7 @@ test("D-202 changes exactly B's closure, C's entry and the budget note: the file
   assert.equal(sha256(JSON.stringify(preD202Calls(CALLS_LIVE))), PRE_D202_CALLS_CANONICAL_SHA256);
   const b = CALLS_LIVE.authorisedCalls.calls[1];
   assert.deepEqual([b.mandateState, b.closedBy, b.neverReuse, b.notAnActivePermission], ["CLOSED_UNUSED", "D-202", true, true]);
-  assert.deepEqual([CALLS_LIVE.budget.authorised, CALLS_LIVE.budget.actuallySent, CALLS_LIVE.budget.remaining], [2, 1, 1]);
+  assert.equal(CALLS_LIVE.budget.authorised, 2); assert.ok(CALLS_LIVE.budget.actuallySent >= 1, "A counted; later sends are recorded by later decisions (D-203)");
 });
 test("THE LIVE D-202 STATE: the D-199 adapter refuses A and the closed B before any claim", () => {
   const sb = sandbox({ recorded: true });

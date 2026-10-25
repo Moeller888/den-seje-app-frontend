@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-203: the D-202 call sent once (HTTP 200) and TECHNICALLY REJECTED under gate set v2 at
+  BF9v2 (top hem y 785, 1 px above 786–798) and BF15 (the shorts run 6–7 px outside the jeans along the hips); not
+  visually reviewed; the budget is spent (2 of 2) (as of 2026-10-25).**
+  - **Progress against A.** BF5 54 → 0 px (no flare at the leg openings, crotch at the jeans' height); BF4v2, BF14v2 and the
+    neck pass. The hip width did not respond to the prompt (A 4–7 px, v2 6–7 px per side).
+  - See `project-state.md` **D-203**.
 - **Northstar base figure — D-202: gate set v2 adopted (BF4v2, BF9v2, BF14v2); prompt v2 frozen; D-199's reserve B closed
   unused; ONE new call `D-202-northstar-base-figure-v2`, the last of the budget (2 calls, 1 sent); not yet attempted
   (as of 2026-10-25).**
