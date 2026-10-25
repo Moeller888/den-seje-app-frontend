@@ -33,8 +33,20 @@ const REGISTER_REL = "docs/project-state.md";
 const NORTHSTAR_REL = "assets/avatar/reference/Northstar Master v2.png";
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8");
 const CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
-const CALLS_FILE = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
-const REGISTER = readFileSync(repoFile(REGISTER_REL), "utf8");
+// D-200 later recorded A's one send and closed A in place. D199 is the authorisation file exactly as D-199 committed it (D-200's
+// closure reversed, proven canonical below); the recorded D-200 state itself is tested at the end of this file.
+const CALLS_NOW = JSON.parse(readFileSync(repoFile(CALLS_REL), "utf8"));
+function preD200Calls(now) {
+  const c = structuredClone(now), a = c.authorisedCalls.calls[0], b = c.authorisedCalls.calls[1], impl = c.adapterImplementations.entries[0];
+  a.mandateState = "UNSPENT"; a.outcome = "NOT YET ATTEMPTED"; for (const k of ["recordedBy", "neverReuse", "notAnActivePermission", "execution"]) delete a[k];
+  delete b.gateState; impl.mandateState = "UNSPENT"; impl.outcome = "NOT YET ATTEMPTED"; delete impl.recordedBy;
+  c.budget.actuallySent = 0; delete c.budget.recordedBy;
+  return c;
+}
+const PRE_D200_CALLS_CANONICAL_SHA256 = "9331572085d5a3dd8b5d1f27048241afdea51bb46e6015f3cc67d2a0a80f933f";   // the file at the D-199 merge 8d7f4ec
+const CALLS_FILE = preD200Calls(CALLS_NOW);
+const REGISTER_NOW = readFileSync(repoFile(REGISTER_REL), "utf8");
+const REGISTER = REGISTER_NOW.split("\n").filter((l) => !l.startsWith("| **D-200** |")).join("\n");
 const ROW = REGISTER.split("\n").find((l) => l.startsWith("| **D-199** |"));
 const A = { call: "D-199-northstar-base-figure-a", claimId: "D-199-northstar-base-figure-a-claim", approval: "--owner-approval=D-199-A", slot: "a" };
 const B = { call: "D-199-northstar-base-figure-b", claimId: "D-199-northstar-base-figure-b-claim", approval: "--owner-approval=D-199-B", slot: "b" };
@@ -174,7 +186,7 @@ const recordARejected = (outcome = "TECHNICAL_REJECT", row = true) => (sb) => {
   if (row) writeFileSync(registerPath(sb), readFileSync(registerPath(sb), "utf8") + "| **D-200** | sandbox record: " + A.call + " sent once, " + outcome + ". |\n");
 };
 
-function sandbox({ base, layout = "main", top } = {}) {
+function sandbox({ base, layout = "main", top, recorded = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d199-sandbox-")));
   SANDBOX_ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"),
@@ -187,6 +199,7 @@ function sandbox({ base, layout = "main", top } = {}) {
   writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, "");
   writeFileSync(sb.png, PNGS.ok); writeFileSync(sb.png + ".wrongsize.png", PNGS.wrongsize);
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  if (!recorded) { writeFileSync(callsPath(sb), JSON.stringify(CALLS_FILE, null, 2) + "\n"); writeFileSync(registerPath(sb), REGISTER); }   // D-199 as committed
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   if (layout === "worktree") top(sb);
@@ -324,4 +337,30 @@ test("THE RESERVE: B opens only after A is recorded as rejected in the register;
     assert.equal(manifest(sb, "b").callId, B.call); assert.equal(existsSync(sb.claimA), false, "B never touches A's claim");
     assert.equal(runAdapter(sb, [...B.args, ...B.send], KEY_ENV).status, 1, "B is one-shot too"); assert.equal(fetchLog(sb).length, 1);
   }
+});
+
+// ── D-200: A was sent once and recorded as TECHNICAL_REJECT; A is closed, the reserve B is open but not sent ──────────────
+test("D-200 changes exactly A's closure, B's gate note and the sent count: the file as D-199 committed it is reproduced canonically", () => {
+  assert.equal(sha256(JSON.stringify(preD200Calls(CALLS_NOW))), PRE_D200_CALLS_CANONICAL_SHA256);
+  const a = CALLS_NOW.authorisedCalls.calls[0], b = CALLS_NOW.authorisedCalls.calls[1];
+  assert.deepEqual([a.mandateState, a.outcome, a.recordedBy, a.neverReuse, a.notAnActivePermission], ["SPENT", "TECHNICAL_REJECT", "D-200", true, true]);
+  assert.deepEqual([a.execution.httpStatus, a.execution.fetches, a.execution.requestId], [200, 1, "req_ff3e075f80e54418a8b24317bceb598f"]);
+  assert.deepEqual(Object.keys(a.execution.bfResult.failed), ["BF4-POSE", "BF5-ENVELOPE", "BF9-BASE-TOP", "BF14-ALPHA", "BF15-DRESS-BACK"]);
+  assert.match(a.execution.bfResult.thresholds, /unchanged/); assert.match(a.execution.visualReview, /NOT given/);
+  assert.match(a.execution.storage, /outside both clones/);
+  assert.deepEqual([b.mandateState, b.outcome], ["UNSPENT", "NOT YET ATTEMPTED"]); assert.match(b.gateState, /separate execution instruction/);
+  assert.deepEqual([CALLS_NOW.budget.authorised, CALLS_NOW.budget.actuallySent], [2, 1]);
+});
+test("the D-200 register row: once, directly after D-199 (kept verbatim), the send and the rejection named, no mojibake", () => {
+  const lines = REGISTER_NOW.split("\n"), i = lines.findIndex((l) => l.startsWith("| **D-200** |"));
+  assert.equal(lines.filter((l) => l.startsWith("| **D-200** |")).length, 1); assert.ok(lines[i - 1].startsWith("| **D-199** |")); assert.equal(lines[i - 1], ROW);
+  for (const v of [A.call, B.call, "req_ff3e075f80e54418a8b24317bceb598f", "e450dbf1c5795b068a60f48ac28a3b9b08a92a487e8267d6404c3d9ddafef645", "TECHNICAL_REJECT", "BF4", "BF5", "BF9", "BF14", "BF15", "særskilte eksekveringsbesked"]) assert.ok(lines[i].includes(v), v);
+  assert.ok(!/Ã|�/.test(lines[i]));
+});
+test("THE RECORDED D-200 STATE: A is refused before any claim; B's dry run passes with the real files and no credential", () => {
+  const sb = sandbox({ recorded: true });
+  assertRefusedBeforeClaim(sb, runAdapter(sb, [...A.args, ...A.send], KEY_ENV), "authorisation");
+  const r = runAdapter(sb, B.args);
+  assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/); assert.match(r.out, /call {5}: D-199-northstar-base-figure-b \(B\)/);
+  assert.equal(existsSync(sb.claimB) || existsSync(join(sb.home, "Documents")), false); assert.equal(fetchLog(sb).length, 0);
 });

@@ -9,7 +9,8 @@
     "ownerApproval": "D-199 (owner, 2026-10-25): at most 2 image calls for the base figure — A, and B only as a reserve; no automatic retries, no extra calls, no fallback model; B uses the same frozen request unless the owner approves a concrete change. Not the clothing pilot, not mass production.",
     "authorised": 2,
     "calls": { "A": 1, "B": "0-1 (reserve)" },
-    "actuallySent": 0,
+    "actuallySent": 1,
+    "recordedBy": "D-200",
     "countingRule": "D-159: every call actually sent counts, whatever its outcome; a consumed claim excludes any further attempt under the same call id."
   },
   "authorisedCalls": {
@@ -20,8 +21,12 @@
         "decision": "D-199",
         "preparedBy": "D-198",
         "status": "AUTHORISED — first attempt",
-        "mandateState": "UNSPENT",
-        "outcome": "NOT YET ATTEMPTED",
+        "mandateState": "SPENT",
+        "outcome": "TECHNICAL_REJECT",
+        "recordedBy": "D-200",
+        "neverReuse": true,
+        "notAnActivePermission": true,
+        "execution": {"sentFrom": "detached worktree at origin/main 8d7f4ec518b50d593a8fa6b5d838c4cc37c91c73, after a passing dry run", "adapterSha256": "432106bf0a06ab46222d9c2e2d44bde1e7002a8c9dc894588d32261049b4ff83", "claimConsumedAt": "2026-10-25T11:39:35.240Z", "dispatchAt": "2026-10-25T11:39:35.244Z", "answerAt": "2026-10-25T11:40:02.230Z", "httpStatus": 200, "requestId": "req_ff3e075f80e54418a8b24317bceb598f", "fetches": 1, "rawResponse": {"bytes": 1739529, "sha256": "1d02b001d939292cc8a83fe8441e561438b3449550511f8a58b735d00adf78b2"}, "image": {"bytes": 1304236, "sha256": "e450dbf1c5795b068a60f48ac28a3b9b08a92a487e8267d6404c3d9ddafef645", "size": [1024, 1536], "receipt": "RECEIVED_FOR_BF_CHECK"}, "storage": "<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/a/ — outside both clones, untracked, unpublished (D-127 §2); the raw image is unchanged", "bfResult": {"verdict": "TECHNICAL_REJECT", "failed": {"BF4-POSE": "both feet stand 7 px above the ground line (sole y 1481, line 1488, tolerance ±4); centre axis 511.9 vs 511.8 and hands IoU 0.964 / 0.944 pass", "BF5-ENVELOPE": "54 px outside Northstar's silhouette + 6 px (the base shorts flare beyond the jeans at the hips)", "BF9-BASE-TOP": "the base top covers 98.53 % of the chest band (minimum 99.5 %): the deep armholes leave skin at its sides; hem y 793 and colour pass", "BF14-ALPHA": "7.91 % semi-transparent pixels (maximum 6 %)", "BF15-DRESS-BACK": "dressed in D-197's defaults, 1,083 base-garment pixels stay visible beside the jeans at the hips; silhouette IoU 0.9844 (minimum 0.985)"}, "passed": ["BF1-FORMAT", "BF2-REGISTRATION (shift 0/0, head IoU 0.9921)", "BF3-NECK-JOIN (1 px)", "BF6-ARMS", "BF7-LEGS", "BF8-FEET", "BF10-BASE-SHORTS (hem y 957/957)", "BF11-SKIN-TONE (distance 1)", "BF12-OUTLINE (0.947)", "BF13-SHARPNESS (0.738)"], "thresholds": "unchanged: base-figure-spec-v1.json at origin/main 8d7f4ec", "provenancePx": {"original-kept": 129874, "original-reference": 33893, "reconstructed": 106547, "new": 96456, "removed": 23184}}, "toolFinding": "the recomposition (the D-194 seam rule FG.bodyLayer, which un-mixes the R3 head's antialiased edge out of the BODY pixels) leaves a faint pale line across the neck of the composed figure; the raw image does not have it. A tool defect of the recomposition for a generated body, not of the image; to be fixed before any adoption", "visualReview": "NOT given. A technical rejection is not a visual verdict; the owner has not reviewed V1–V8"},
         "endpoint": "https://api.openai.com/v1/images/edits",
         "operation": "images.edits",
         "model": "gpt-image-2.5-sunburst-2026-09-08",
@@ -49,6 +54,7 @@
         "decision": "D-199",
         "preparedBy": "D-198",
         "status": "AUTHORISED — RESERVE, locked until A is recorded as rejected",
+        "gateState": "OPEN since D-200 (A recorded as TECHNICAL_REJECT) — still needs the owner's separate execution instruction; same frozen request unless the owner approves a concrete change",
         "mandateState": "UNSPENT",
         "outcome": "NOT YET ATTEMPTED",
         "requiresA": { "mandateState": "SPENT", "outcomeOneOf": ["TECHNICAL_REJECT", "OWNER_VISUAL_REJECT"], "recordedBy": "a register row named in A's recordedBy field" },
@@ -79,7 +85,7 @@
   "adapterImplementations": {
     "isAuthorisation": false,
     "entries": [
-      { "callId": "D-199-northstar-base-figure-a", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-A", "ownerApprovalFlag": "--owner-approval=D-199-A" }, "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
+      { "callId": "D-199-northstar-base-figure-a", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-A", "ownerApprovalFlag": "--owner-approval=D-199-A" }, "mandateState": "SPENT", "outcome": "TECHNICAL_REJECT", "recordedBy": "D-200", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true },
       { "callId": "D-199-northstar-base-figure-b", "decision": "D-199", "authorisedBy": "D-199", "adapter": { "file": "tools/avatar/openai-send-northstar-base-figure-d199.mjs", "status": "IMPLEMENTED — NOT EXECUTED", "ownerApproval": "D-199-B", "ownerApprovalFlag": "--owner-approval=D-199-B" }, "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED", "mergeIsNotAnInstruction": true, "executionRequiresSeparateOwnerInstruction": true }
     ]
   }
