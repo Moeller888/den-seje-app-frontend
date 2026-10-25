@@ -1,0 +1,75 @@
+{
+  "decision": "D-198",
+  "status": "DRAFT TARGET — bound to the base figure only after the owner approves one; NOT a production standard",
+  "replaces": "contract-v1.json (D-197) as the target. v1 stays a documented experiment: its fit was shown with derivatives of Northstar's own clothing and simulated generated input, never with a GPT-generated item, and its rule 'every item covers Northstar's tee/jeans/sneakers' is NOT carried over.",
+  "base": "base-figure-spec-v1.json — one shared Northstar-style base figure in neutral, close-fitting base clothing (authoring only), continuous arms, legs and feet",
+  "canvas": { "w": 1024, "h": 1536, "coordinates": "Northstar v2 master, unchanged; every item is a full-canvas RGBA layer set, the app never places an item individually" },
+  "stack": [
+    { "layer": "back", "what": "item parts BEHIND the body: a hood's back, a skirt's or coat's inner back, a collar's back, a cape (D-196's back slot keeps its meaning)" },
+    { "layer": "body", "what": "BASE — torso, neck and shoulder skin, legs and feet; the base garments' regions are EMPTY" },
+    { "layer": "shoes", "what": "shoes and sandals; a sandal's straps lie over the feet" },
+    { "layer": "bottoms", "what": "shorts, skirts, trousers; under the top's hem; over the shoe tops" },
+    { "layer": "shoes-over", "what": "OPTIONAL — a boot shaft drawn over a trouser leg (trousers tucked into boots)" },
+    { "layer": "top-body", "what": "the top's trunk; BEHIND the arms" },
+    { "layer": "bottoms-over", "what": "OPTIONAL — a waistband over a tucked-in top, an overall's bib" },
+    { "layer": "arms", "what": "BASE — shoulders to wrists" },
+    { "layer": "top-sleeves", "what": "sleeves and straps that lie OVER the arms; behind the hands" },
+    { "layer": "hands", "what": "BASE" },
+    { "layer": "hands-over", "what": "OPTIONAL — gloves and cuffs that lie over the hands; each narrows the hand protect for that one item only (D-134)" },
+    { "layer": "head", "what": "the R3 head stack, which owns the neck above y 440" },
+    { "layer": "hair", "what": "R3 hair" },
+    { "layer": "headwear", "what": "hats, caps" }
+  ],
+  "categories": {
+    "top": {
+      "required": true,
+      "layers": ["top-body", "top-sleeves"],
+      "optionalLayers": ["back", "hands-over"],
+      "mustCover": "the base top's region + 1 px, opaque (≥ 250) — chest band from the neckline to the natural waist, with the straps",
+      "notRequired": "sleeves, the shoulders outside the straps, the neck, anything below the natural waist",
+      "allowed": "up to 14 px above the base neckline (the head stack hides a collar under the neck), out to 40 px beside the torso, down to 8 px above the crotch; sleeves anywhere in the sleeve zone up to the wrists",
+      "protect": "the head and its neck band above the collar limit, the hands (2 px guard), everything below the crotch band",
+      "forms": ["sleeveless", "short-sleeve", "long-sleeve", "waist-length", "hip-length", "hoodie"],
+      "outOfScope": ["midriff-baring tops (need an owner decision on midriff skin)", "necklines deeper than the base neckline", "off-shoulder and halter cuts that leave a base strap uncovered"]
+    },
+    "bottom": {
+      "required": true,
+      "layers": ["bottoms"],
+      "optionalLayers": ["bottoms-over", "back"],
+      "mustCover": "the base shorts' region + 1 px, opaque (≥ 250) — the natural waist to mid-thigh",
+      "notRequired": "the legs below the base shorts' hem",
+      "allowed": "30 px above the waist (under the top), 40 px beside the hips, down to 22 px above the ground; a skirt may flare out to 80 px beside the hips",
+      "protect": "the hands (bottoms lie under them), the ground band, the feet below the ankle band",
+      "forms": ["shorts", "skirt", "trousers", "wide trousers", "leggings"],
+      "outOfScope": ["shorts and skirts shorter than the base shorts"]
+    },
+    "shoes": {
+      "required": "PRODUCT CHOICE (open O3): technically optional, because the base has feet",
+      "layers": ["shoes"],
+      "optionalLayers": ["shoes-over"],
+      "mustCover": "nothing — sandals show the feet",
+      "groundRule": "the soles stand on the ground line y 1488 ± 4 for each foot",
+      "allowed": "the foot zone, 34 px beside it, up to 150 px above the ankle band",
+      "forms": ["sandals", "sneakers", "boots", "slip-ons"]
+    }
+  },
+  "seams": {
+    "neck": "The head stack owns the neck above y 440 and lies over every top, so a collar runs under the neck. A top never draws above the collar limit (base neckline − 14 px).",
+    "shoulders": "Sleeveless tops end at the straps' width; every top must cover the straps. The base has shoulder skin, so the armhole may be anywhere outside the straps.",
+    "arms": "Sleeves (any length from none to the wrist) lie over the arms; the trunk lies behind them; sleeves never cover the hands (2 px guard). Cuffs over the hands are hands-over, one approved item at a time.",
+    "waist": "The top's hem lies over the bottom's waistband. The two mustCover regions overlap by 4 px either side of the natural waist, so no combination opens a gap. A tucked-in top uses bottoms-over.",
+    "hips_and_hands": "Bottoms lie under the hands; a skirt flares behind them.",
+    "knees": "Shorts and skirts end anywhere between the base shorts' hem and the ankle; the base legs show below.",
+    "ankles": "Bottoms lie over the shoe tops down to 22 px above the ground; a boot drawn over the trousers uses shoes-over.",
+    "feet": "Shoes lie over the feet; a sandal's open parts show the base feet."
+  },
+  "hardCombinations": [
+    "sleeveless top + shorts + sandals (most skin; every base seam visible)",
+    "waist-length top + high-waist skirt (the waist overlap)",
+    "long-sleeve top + gloves (sleeves over arms, cuffs over hands)",
+    "hoodie + wide trousers + boots over the trousers (back, bottoms, shoes-over)",
+    "tucked-in shirt + shorts (bottoms-over)"
+  ],
+  "gatesPerItem": "D-197's I1–I8 (layers, coverage, envelope, protect, alpha, outline, sharpness, ground/sleeve split) apply unchanged, with mustCover, allowed and protect taken from this contract on the APPROVED base figure — never from Northstar's tee, jeans or sneakers.",
+  "boundTo": "nothing yet — the templates are built from the approved base figure's measured base garments; until then they exist only as the target ranges in base-figure-spec-v1.json"
+}

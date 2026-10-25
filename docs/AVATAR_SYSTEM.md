@@ -385,6 +385,37 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — one shared body in neutral, close-fitting base clothing with arms, legs and feet; contract v2;
+  first image attempt prepared, not authorised; no base figure exists (D-198, as of 2026-10-25).**
+  - **Why.** D-197's clothed base cannot carry sleeveless tops, short tops, shorts, skirts or sandals, so its rule that every
+    item covers Northstar's tee, jeans and sneakers is not the production contract. D-197 stays a documented experiment.
+  - **Base.** Northstar v2's body, pose and master coordinates; the existing R3 head stack is kept and recomposed over the
+    candidate's body (D-194 seam rule). The base garments (sleeveless top to the natural waist, shorts to mid-thigh, bare
+    feet) are authoring material only: they set the minimum every top and bottom must cover, and their region is empty at
+    runtime. D-127 §2 applies: a generated base figure is never tracked or placed under `assets/`. The H1 ban stands.
+  - **Contract v2.** Layers back · body · shoes · bottoms · shoes-over · top-body · bottoms-over · arms · top-sleeves · hands
+    · hands-over · head · hair · headwear; coverage is defined by seams, not by t-shirt or trouser length; shoes cover
+    nothing.
+  - **Check.** `tools/avatar/northstar-base-figure.mjs`: registration (integer shift ≤ 6 px or reject), recomposition, BF1–BF15
+    automatic gates, V1–V8 owner criteria. Shown on Northstar only: it fails exactly the limb and base-garment gates.
+  - **Pilot.** `pilot-plan-v2.json`: base figure first (2 image calls requested, not authorised), then a 0-call rig, then a
+    clothing pilot with a sleeveless top, shorts, a skirt and sandals.
+  - See `docs/198-northstar-base-figure-contract.md` and `project-state.md` **D-198**.
+- **Northstar wardrobe — DOCUMENTED EXPERIMENT (superseded as the goal by D-198): fit shown with derivatives of Northstar's own
+  clothing and simulated input, not with any GPT-generated item. One fixed body for generated clothing items; contract and local proof of concept; no image call (D-197, as of 2026-10-25).**
+  D-195/D-196 framing work is parked with its flag off.
+  - **Base.** Northstar Master v2 is one fixed body and pose, but only as a CLOTHED figure: there is no body under its painted
+    tee, jeans and sneakers. They become the default items of three mandatory categories (top, pants, shoes).
+  - **Rule.** An item replaces its category's default and must cover that default's region completely, so no body ever shows
+    and no bare or close-fitting figure exists. The H1 ban and D-127 §2 stand.
+  - **Coordinates and order.** Master coordinates, 1024×1536, with fixed anchors. Layer order: shoes · pants · top body · arms
+    · top sleeves · hands · head · hair. A top is two layers.
+  - **Fit.** Guaranteed by tools (registration, extraction, layer split, gates I1–I8), not by prompts.
+  - **Contract.** `docs/197-northstar-wardrobe-contract.md`, with the machine-readable
+    `tools/avatar/fixtures/northstar-wardrobe/contract-v1.json` and the pilot batch `pilot-batch-v1.json` (never authorised;
+    superseded by `pilot-plan-v2.json`).
+  - **Out of scope.** Sleeveless tops, shorts, skirts and sandals: they need limb material first.
+  - See `project-state.md` **D-197**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

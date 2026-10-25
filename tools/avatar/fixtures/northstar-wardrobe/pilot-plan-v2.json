@@ -1,0 +1,60 @@
+{
+  "decision": "D-198",
+  "status": "PREPARED, NOT AUTHORISED — no image call, no capacity, no claim",
+  "replaces": "pilot-batch-v1.json (D-197), whose 12 items and at most 24 calls were never authorised and are void as a plan: they tested only forms the clothed base could carry",
+  "order": "The base figure FIRST. No clothing call before the owner has approved one base figure and its rig is built.",
+  "phases": [
+    {
+      "id": "P0-base-figure",
+      "what": "the shared base figure (base-figure-spec-v1.json)",
+      "request": {
+        "endpoint": "https://api.openai.com/v1/images/edits",
+        "model": "gpt-image-2.5-sunburst-2026-09-08",
+        "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+        "verifiedBefore": "this model with exactly these parameters (1024x1536, high, n 1, png, transparent) returned HTTP 200 and a 1024×1536 RGBA image in D-160 and D-162 (two images each); the same model with Northstar v2 as the ONLY image returned HTTP 200 in D-175, D-177 and D-180 (1024x1024). gpt-image-2-2026-04-21 refuses background transparent (D-152, HTTP 400) and is therefore NOT used",
+        "images": ["assets/avatar/reference/Northstar Master v2.png (3daf32e7…), the only image"],
+        "never": ["mask", "input_fidelity", "a second reference image", "H1 or anything derived from it"],
+        "prompt": "tools/avatar/fixtures/northstar-wardrobe/base-figure-prompt-v1.txt (sha256 pinned by the unit test)"
+      },
+      "callsRequested": 2,
+      "callRule": "Call A first. Call B only if A is rejected by an automatic gate (BF1–BF15) or by the owner's visual review (V1–V8), and only after A is recorded. B sends the same frozen request unless the owner approves a prompt revision when A is recorded. Each call has its own one-shot claim (exclusive create, spent on any outcome, no retry, no fallback). At most 2 calls; nothing carries over.",
+      "adapter": "to be built in the authorisation task, derived from the closed D-183 adapter (dry run without credentials, clean HEAD = origin/main, one fetch, full raw preservation, output outside both clones per D-127 §2)",
+      "afterReceipt": [
+        "store the raw outside both clones with full provenance",
+        "BF1 format, BF2 registration (integer shift ≤ 6 px, otherwise reject — never warp)",
+        "recompose: R3 head stack over the candidate's body via the D-194 seam rule; no painting",
+        "BF3–BF15 (northstar-base-figure.mjs checkBaseFigure)",
+        "provenance map (original-kept / original-reference / reconstructed / new / removed)",
+        "review page: 1:1, ×2 joins, app sizes, dressed back in D-197's default items"
+      ],
+      "success": "all of BF1–BF15 pass without retouching AND the owner approves V1–V8. Only then may the base figure be adopted, by a separate decision."
+    },
+    {
+      "id": "P1-rig",
+      "what": "no image call: decompose the approved base into body / arms / hands / base-top / base-shorts, bind contract-v2's templates to the measured base garments, rebuild D-197's default items as the first three items on it (dress-back)",
+      "calls": 0
+    },
+    {
+      "id": "P2-clothing-pilot",
+      "what": "the first GPT-generated clothing items, ONLY after P0 and P1",
+      "items": [
+        { "id": "top-tank-teal", "category": "top", "form": "sleeveless", "tests": "straps, armholes, bare shoulders and upper arms" },
+        { "id": "top-waist-yellow", "category": "top", "form": "waist-length short-sleeve", "tests": "the waist overlap; no t-shirt length forced" },
+        { "id": "top-hoodie-green", "category": "top", "form": "long-sleeve hoodie", "tests": "sleeves to the wrists, hood in the back layer" },
+        { "id": "top-tee-red", "category": "top", "form": "t-shirt", "tests": "the D-197 reference form on the new base" },
+        { "id": "bottom-shorts-navy", "category": "bottom", "form": "shorts", "tests": "mid-thigh hem, bare knees and shins" },
+        { "id": "bottom-skirt-plum", "category": "bottom", "form": "skirt", "tests": "flare behind the hands, the base legs below" },
+        { "id": "bottom-trousers-khaki", "category": "bottom", "form": "long trousers", "tests": "the ankle overlap over the shoes" },
+        { "id": "bottom-wide-jeans", "category": "bottom", "form": "wide trousers", "tests": "width envelope, hands over the bottoms" },
+        { "id": "shoes-sandals-brown", "category": "shoes", "form": "sandals", "tests": "straps over the base feet, toes visible" },
+        { "id": "shoes-sneakers-white", "category": "shoes", "form": "sneakers", "tests": "the ground line" },
+        { "id": "shoes-boots-black", "category": "shoes", "form": "boots over trousers", "tests": "shoes-over" },
+        { "id": "shoes-slipon-checker", "category": "shoes", "form": "slip-ons", "tests": "a low shoe on bare ankles" }
+      ],
+      "calls": "NOT REQUESTED NOW — sized after P0/P1; planning estimate 12 (one per item) + at most 4 technical retakes",
+      "combinations": "all 4 × 4 × 4 = 64 outfits, plus contract-v2's hardCombinations, at 1:1 and app sizes",
+      "success": "≥ 8 of 12 pass I1–I8 on the v2 templates without retouching, the sleeveless top, the shorts, the skirt and the sandals among them, and the owner approves the look"
+    }
+  ],
+  "neverInThisPlan": ["mass production", "a production catalogue change", "R3 activation", "AVATAR_FRAMING_UPPER = true", "H1"]
+}

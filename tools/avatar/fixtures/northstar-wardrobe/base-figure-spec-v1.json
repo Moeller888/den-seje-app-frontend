@@ -1,0 +1,98 @@
+{
+  "decision": "D-198",
+  "status": "PREPARED — NO IMAGE CALL AUTHORISED — NO BASE FIGURE EXISTS",
+  "purpose": "The target and the acceptance contract for ONE shared Northstar-style base figure in neutral, close-fitting base clothing, with continuous arms, legs and feet, so short and open clothing forms become possible. It replaces D-197's clothed base as the goal; D-197 stays a documented experiment.",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50",
+    "role": "the only image input of the future call and the geometric reference of every gate"
+  },
+  "head": {
+    "rule": "The existing allowed head is kept: the Northstar-based R3 head stack (D-188/D-193/D-194, in master coordinates). The generated figure contributes only the body below the neck seam; the head is never taken from the generated image.",
+    "neckSeamY": 440,
+    "recomposition": "r3-northstar-figure.mjs bodyLayer(candidate, bald head, spec.body) — the D-194 seam rule, unchanged; no painting, no warp"
+  },
+  "notUsed": [
+    "H1 (fitting-base.H1.png) — never a source, a reference, a tracked, published or deployable file, a generator input or a comparison target (D-186)",
+    "anything derived from H1 (D-133 TRANSITION rows, r3-head-g1v3-v1.png)",
+    "the R2 base (a different figure, silhouette IoU 0.77)",
+    "any image call in D-198"
+  ],
+  "canvas": { "w": 1024, "h": 1536, "coordinates": "Northstar v2 master, unchanged" },
+  "pose": "Northstar v2's front-facing neutral standing pose, centre axis, scale and placement; arms hanging at the sides, hands open beside the thighs, feet on one ground line.",
+  "anchorsFrom": "northstar-wardrobe.mjs anchors() on Northstar v2 (measured, not typed): neck seam 440, shoulders 499, sleeve end 787, wrists 835/849, waistband 790, crotch 849, shoe top 1348/1349, ground 1488, centre 512",
+  "targets": {
+    "waistY": 790,
+    "baseTopHemY": [786, 798],
+    "baseNecklineCentreY": [495, 530],
+    "baseShortsHemY": [920, 990],
+    "kneeY": { "value": 1108, "kind": "ESTIMATE — the jeans hide the knees; midpoint of crotch 849 and ankle 1367; used for the prompt wording and review only, never as a gate" },
+    "why": "The base garments are the MINIMUM coverage every later item must hide. So the base top ends at the natural waist (tops may be waist-length, not t-shirt-length), the base shorts end at mid-thigh (shorts and skirts may be that short), and the neckline is a moderate round neck. The ranges also keep both base garments inside Northstar's own tee and jeans, so D-197's three default items can dress the new base back into the original Northstar look (BF15)."
+  },
+  "storage": {
+    "rule": "D-127 §2 applies unchanged to the generated figure: a drawn figure in close-fitting base clothing is never tracked in the public repository and never placed under assets/. Raw output, recomposed figure and its base-garment layers live outside both clones (e.g. C:\\Users\\Bruger\\Documents\\DenSejeApp-artefacts\\) with full provenance: sha256, byte count, request id, model, parameters, input order, prompt hash, timestamp.",
+    "tracked": "only this spec, the prompt, the tools and their tests, sha256 values and measured numbers",
+    "runtime": "OPEN OWNER DECISION O1 — which separated skin layers (arms, hands, legs, feet, neck and shoulders; never the base garments and never the regions they cover) may later be tracked and deployed"
+  },
+  "baseClothingStrategy": {
+    "rule": "The base garments are AUTHORING MATERIAL ONLY. They define the mandatory minimum coverage of the top and bottom categories and are never shipped or shown.",
+    "runtime": "The runtime body layer leaves the base garments' regions EMPTY (transparent). Every outfit must contain a top and a bottom whose opaque pixels cover the base top and base shorts regions (plus 1 px) completely; the resolver renders complete-or-null, so a figure without them never renders.",
+    "hidden": "Under every top and bottom: the top covers the base top, the bottom covers the base shorts.",
+    "replaced": "There is nothing to replace at runtime: the base garments are absent, the item takes their place.",
+    "extraction": "During item extraction the base figure WITH its base garments is the 'behind' picture, so an item is measured against exactly what it must hide."
+  },
+  "provenance": {
+    "classes": {
+      "original-kept": "the R3 head stack above the neck seam — existing allowed pixels, never regenerated",
+      "original-reference": "Northstar's visible neck, forearms and hands — redrawn by the generator and measured against the original (silhouette gates); the original pixels are not pasted back unless a later join check passes (D-131 found clearly unacceptable joins when pixel-identical v2 arms met generated upper arms)",
+      "reconstructed": "body that Northstar hides and the base shows: shoulders, upper arms, thighs, knees, shins, ankles, feet",
+      "new": "the base garments (base top, base shorts) — new authoring material, never shipped",
+      "removed": "Northstar clothing outside the new limbs (the excess width of sleeves, jeans and sneakers) — transparent in the base"
+    },
+    "map": "before the call: provenanceExpected() from Northstar's decomposition; after the call: provenanceMeasured() from the registered candidate"
+  },
+  "zones": {
+    "chestBelowShoulderPx": 60,
+    "torsoInsetPx": 12,
+    "hipInsetPx": 14,
+    "coreOverlapPx": 4,
+    "hipBelowCrotchPx": 20,
+    "armTopBelowShoulderPx": 40,
+    "legTopBelowShortsHemPx": 10,
+    "envelopePx": 6
+  },
+  "gates": {
+    "borderTransparentShare": 0.98,
+    "maxShiftPx": 6,
+    "minHeadIoU": 0.97,
+    "maxNeckEdgeDeltaPx": 2,
+    "centreTolPx": 4,
+    "groundTolPx": 4,
+    "minHandIoU": 0.94,
+    "maxOutsideEnvelopePx": 0,
+    "maxGarmentShareInLimbZone": 0.015,
+    "maxLimbWidthStepPx": 3,
+    "maxInkRowShare": 0.2,
+    "minLegWidthPx": 45,
+    "minCoreCoverage": 0.995,
+    "minGarmentSkinDistance": 60,
+    "minGarmentGarmentDistance": 30,
+    "maxSkinToneDistance": 30,
+    "minOutlineShare": 0.45,
+    "minSharpness": 0.7,
+    "maxHazeShare": 0.06,
+    "maxDressBackVisibleBasePx": 50,
+    "minDressBackIoU": 0.985
+  },
+  "visualCriteria": [
+    "V1 The same character: Northstar's painted style, line weight, soft shading and colours; the figure reads as Northstar without clothes over it, not as a new drawing style.",
+    "V2 Child-friendly and neutral: no nudity, no anatomical detail, no navel, no muscle definition, no body emphasis; the base garments read as plain sportswear.",
+    "V3 Natural joins at neck, shoulders, elbows, wrists, knees and ankles: no seams, steps, colour breaks or doubled outlines where reconstructed skin meets the original.",
+    "V4 Proportions consistent with the clothed Northstar: limbs neither thinner nor thicker than the clothing implies; both sides symmetric where Northstar is.",
+    "V5 Hands and feet in Northstar's style; simple stylised toes; feet flat on the ground line.",
+    "V6 Base garments plain: one colour each, no logos, text, patterns, folds or decoration.",
+    "V7 At app sizes (hub 110×165, quiz 52×78) the figure reads cleanly; no halo, no fringe on the real surface.",
+    "V8 Dressed back in D-197's default items, it is visually the original Northstar."
+  ],
+  "automaticVersusVisual": "BF1–BF15 are automatic and binding; a fail rejects the candidate, and nothing is retouched to pass them. V1–V8 need the owner's eyes; the gates cannot judge style, anatomy, child-appropriateness or the quality of a join, and a pass on BF never substitutes for them."
+}

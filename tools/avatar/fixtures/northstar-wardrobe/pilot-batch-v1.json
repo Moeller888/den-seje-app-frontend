@@ -1,0 +1,39 @@
+{
+  "id": "northstar-wardrobe-pilot-batch-v1",
+  "decision": "D-197",
+  "status": "SUPERSEDED, NOT AUTHORISED — replaced by pilot-plan-v2.json (D-198); no image call may ever be sent on this file. Its at most 24 calls were never approved.",
+  "purpose": "prove that GPT-drawn garments fit the ONE fixed Northstar v2 body through the tools (registration, extraction, layer split, gates) — not through prompts — and measure how many pass without retouching",
+  "model": { "name": "gpt-image-2-2026-04-21", "endpoint": "images/edits", "size": "1024x1536", "quality": "high", "n": 1, "background": "opaque (transparent output is refused by this model — D-151)", "mask": "none (maskless, as D-127 §1)" },
+  "inputs": {
+    "image1": "the category's reference picture from `node tools/avatar/northstar-wardrobe-poc.mjs --out <dir>` → ref-top.png / ref-pants.png / ref-shoes.png: the base figure wearing the category's default, every other category clipped to its guaranteed core, on the flat magenta key #FF00FF",
+    "imagesPerCall": 1,
+    "privacy": "the reference pictures contain the clothed Northstar figure only; never a bare or close-fitting body; H1 is never sent or used"
+  },
+  "calls": { "items": 12, "callsPerItem": 1, "retryBudget": "at most 1 retry per item and only after a TECHNICAL rejection (registration or I1–I5), never for taste", "maxCalls": 24 },
+  "promptTemplate": "Edit this picture. Repaint ONLY the {noun} the boy is wearing, as: {description}. Keep everything else exactly as it is: the same boy, face, hair, skin, arms, hands, pose, position and size, the other clothes, and the flat solid magenta background. Paint in exactly the same style as the picture: clean dark outlines, soft cel shading, the same light from the upper left, the same level of detail. {coverage} Do not use magenta or pink-magenta anywhere in the clothing. No text, letters, numbers, logos or brand marks. Everyday, age-appropriate school clothing that covers as much as the current {noun} or more.",
+  "coverage": {
+    "top": "The new top must cover at least everything the current T-shirt covers: sleeves at least to the current sleeve ends (longer is fine, ending at the wrists, never over the hands), a crew neckline or higher, the hem at or below the current hem but above the crotch, never tighter than the current T-shirt.",
+    "pants": "The new trousers must be full length and cover at least everything the current jeans cover: from the current waistband down to the shoe tops, each leg at least as wide as now; they may be wider and may cover the top of the shoes, never the soles.",
+    "shoes": "Both new shoes must stand on exactly the same ground line as the current sneakers and be at least as large as them; ankle height or higher is fine (a boot shaft goes under the trousers)."
+  },
+  "items": [
+    { "id": "top-hoodie-green", "category": "top", "noun": "T-shirt", "description": "a forest-green pullover hoodie with the hood down behind the neck, a kangaroo pocket and long sleeves ending at the wrists", "tests": "long sleeves over the arms; hood volume near the neck band (may exceed the envelope — a measured result either way)" },
+    { "id": "top-longsleeve-stripes", "category": "top", "noun": "T-shirt", "description": "a long-sleeved T-shirt with navy and white horizontal stripes", "tests": "pattern continuity across the body/sleeve layer split" },
+    { "id": "top-sweater-mustard", "category": "top", "noun": "T-shirt", "description": "a chunky mustard-yellow knitted sweater with ribbed cuffs and hem, slightly loose", "tests": "wider silhouette between body and arms; texture sharpness" },
+    { "id": "top-polo-teal", "category": "top", "noun": "T-shirt", "description": "a teal short-sleeved polo shirt with a white collar and two buttons", "tests": "a collar at the neck seam under the head stack" },
+    { "id": "pants-cargo-olive", "category": "pants", "noun": "jeans", "description": "olive cargo trousers with side pockets on the thighs", "tests": "wider thighs under the hands" },
+    { "id": "pants-chinos-beige", "category": "pants", "noun": "jeans", "description": "slim beige chinos with a belt loop waistband", "tests": "the tightest legal silhouette — coverage of the jeans core" },
+    { "id": "pants-track-black", "category": "pants", "noun": "jeans", "description": "black track pants with a white side stripe, elastic cuffs at the ankles resting on the shoes", "tests": "a gathered hem over the shoe tops" },
+    { "id": "pants-wide-jeans", "category": "pants", "noun": "jeans", "description": "light-blue wide-leg jeans whose hems partly cover the shoes", "tests": "a wide hem over the shoes, ground band respected" },
+    { "id": "shoes-hightop-red", "category": "shoes", "noun": "sneakers", "description": "red high-top canvas sneakers with white soles and white laces", "tests": "a shaft running up under the trousers" },
+    { "id": "shoes-boots-brown", "category": "shoes", "noun": "sneakers", "description": "chunky brown hiking boots with dark soles and red laces", "tests": "a larger, heavier shape on the same ground line" },
+    { "id": "shoes-running-blue", "category": "shoes", "noun": "sneakers", "description": "blue and white running shoes with a curved sole", "tests": "the same size class as the default" },
+    { "id": "shoes-slipon-checker", "category": "shoes", "noun": "sneakers", "description": "black and white checkered slip-on shoes", "tests": "a low profile — may fail coverage of the default sneaker core (a measured result)" }
+  ],
+  "acceptance": {
+    "technical": "per item: registration (≤ 6 px shift, mean Δ ≤ 6 on the protected figure) and gates I1–I8 of contract-v1 on the EXTRACTED layers, without retouching",
+    "visual": "owner review of every passing item in the outfit at 1:1 and at the app sizes (hub 110×165, quiz 52×78), and of mixed combinations of the pilot items (every top × every pants × every shoe = 64 outfits, rendered automatically)",
+    "pilotSucceeds": "if at least 8 of 12 items pass technically without retouching and the owner accepts their look; otherwise the failure causes decide the next step (prompt, reference picture, envelope or category rule)"
+  },
+  "notInThisFile": ["any credential", "a claim identity", "a send adapter"]
+}
