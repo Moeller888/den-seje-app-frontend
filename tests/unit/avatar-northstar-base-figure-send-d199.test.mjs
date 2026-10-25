@@ -111,7 +111,7 @@ test("the review tool refuses to write a base figure inside the repository (D-12
   assert.equal(isOutsideRepo(join(REPO, "tools", "avatar", "build", "x")), false);
   assert.equal(isOutsideRepo(REPO), false);
   assert.equal(isOutsideRepo(join(REPO, "..", "DenSejeApp-artefacts-test")), true);
-  const r = spawnSync(process.execPath, [repoFile(CHECKER_REL), "--review", repoFile(NORTHSTAR_REL), "--out", join(REPO, "tools", "avatar", "build", "d199-refusal-probe")], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, [repoFile(CHECKER_REL), "--review", repoFile(NORTHSTAR_REL), "--out", join(REPO, "tools", "avatar", "build", "d199-refusal-probe")], { env: { PATH: process.env.PATH || "", SystemRoot: process.env.SystemRoot || "" }, encoding: "utf8" });
   assert.equal(r.status, 1); assert.match(r.stderr, /REFUSED: --out is inside the repository/);
   assert.equal(existsSync(join(REPO, "tools", "avatar", "build", "d199-refusal-probe")), false);
 });
