@@ -1,0 +1,160 @@
+{
+  "decision": "D-205",
+  "status": "FROZEN DEVELOPMENT CANDIDATE — not production activation, not a final visual approval; the raw image and its history (D-203 TECHNICAL_REJECT under v2) stay as recorded",
+  "candidate": "C",
+  "raw": {
+    "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+    "bytes": 1300423,
+    "storage": "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ (outside both clones, untracked)"
+  },
+  "registration": {
+    "dx": 0,
+    "dy": 0,
+    "iou": 0.9925,
+    "ok": true
+  },
+  "derivation": "registration (integer shift), the established dust cleanup, separateBase (position split, skin never removed), runtimeBody (arms grown from the arm/hand regions); nothing painted or deformed",
+  "anchors": {
+    "coordinates": "Northstar v2 master, 1024×1536",
+    "neckSeamY": 440,
+    "armpitY": {
+      "left": 608,
+      "right": 609
+    },
+    "baseTop": {
+      "x0": 398,
+      "x1": 626,
+      "y0": 463,
+      "y1": 817
+    },
+    "baseShorts": {
+      "x0": 389,
+      "x1": 634,
+      "y0": 756,
+      "y1": 957
+    },
+    "waistSeam": {
+      "columns": 199,
+      "gapPx": 0
+    },
+    "soleY": {
+      "left": 1486,
+      "right": 1486
+    },
+    "groundLineY": 1488,
+    "centreX": 512
+  },
+  "layersPx": {
+    "body": 95431,
+    "arms": 46551,
+    "baseTop": 58274,
+    "baseShorts": 39812
+  },
+  "templatesPx": {
+    "top": {
+      "mustCover": 55724,
+      "allowed": 147912,
+      "protect": 140755
+    },
+    "bottom": {
+      "mustCover": 37218,
+      "allowed": 300846,
+      "protect": 197649
+    },
+    "shoes": {
+      "mustCover": 0,
+      "allowed": 114460,
+      "protect": 126993
+    }
+  },
+  "gateSetV3": {
+    "ok": true,
+    "failed": []
+  },
+  "compatibility": {
+    "axis": "compatibility",
+    "gate": false,
+    "enclosedHolePx": 0,
+    "exposedCutSkinPx": 2,
+    "bodyOutsideItemsPx": 147,
+    "silhouetteIoU": 0.9962,
+    "limitation": "C is up to ~3 px wider than Northstar's jeans at the hips and upper thighs (D-204): the old jeans show C's contour there. This is a compatibility limitation of the old item, not a licence for new items."
+  },
+  "externalArtefacts": {
+    "dir": "<Documents>/DenSejeApp-artefacts/base-figure-c-v1/",
+    "storage": "outside both clones (D-127 §2): the body, arm and base-garment layers and every mask stay private — never tracked, never published",
+    "rebuild": "node tools/avatar/northstar-base-figure-c.mjs --freeze <C raw> --out <empty dir outside both clones> (deterministic; the hashes below must match)",
+    "files": {
+      "layer-body.png": {
+        "sha256": "3e72242459623a4bc4969998636a01e33d21134a37c64339190b2e6b3036cfe4",
+        "bytes": 188896,
+        "what": "the runtime body below the neck seam, base garments removed (private)"
+      },
+      "layer-arms.png": {
+        "sha256": "64780345d0eb8194c9710190996d1c1385c33d388b5325abb5120be68b7adcd0",
+        "bytes": 106089,
+        "what": "arms with hands, grown from Northstar's arm/hand regions (private)"
+      },
+      "layer-base-top.png": {
+        "sha256": "54810c8bd1d0e714c49b72195761be6fc946b4c864689a740155b8e3c80d0588",
+        "bytes": 85547,
+        "what": "the base top — authoring only, never shipped (private)"
+      },
+      "layer-base-shorts.png": {
+        "sha256": "8bf3eee103d052991d9a46a5dc9a92c1efc3b08cc53cf5ecd79756e55c62bc5c",
+        "bytes": 57583,
+        "what": "the base shorts — authoring only, never shipped (private)"
+      },
+      "template-top-mustCover.png": {
+        "sha256": "24f24fe53830b43a491eddaf76fa56dfbb0806da285bd8bc97368371485ece64",
+        "bytes": 7327,
+        "what": "top mustCover (contract v3)"
+      },
+      "template-top-allowed.png": {
+        "sha256": "1ed5ecbe870b7aff7963ad166f7715c92ac3751338f305f83b0ba965fe3b72aa",
+        "bytes": 7428,
+        "what": "top allowed (contract v3)"
+      },
+      "template-top-protect.png": {
+        "sha256": "fbcf40e808d909029368441940121a2c04d62d02cdaf0159e226b417b09b8122",
+        "bytes": 8991,
+        "what": "top protect (contract v3)"
+      },
+      "template-bottom-mustCover.png": {
+        "sha256": "ba331ee3a1c98c092aa6c90d457726230a734a8920de2626ad17ad66bd663597",
+        "bytes": 7045,
+        "what": "bottom mustCover (contract v3)"
+      },
+      "template-bottom-allowed.png": {
+        "sha256": "c213dd943bdcfd97cefa96bf0a6870cb2577a7307671239f12fea3feae9f3af8",
+        "bytes": 8423,
+        "what": "bottom allowed (contract v3)"
+      },
+      "template-bottom-protect.png": {
+        "sha256": "40ba4d1842d6f953358b3be2ea10f26fd93567a3743f5d656c94e6cfc50108c9",
+        "bytes": 8187,
+        "what": "bottom protect (contract v3)"
+      },
+      "template-shoes-mustCover.png": {
+        "sha256": "a9337cac63e0534b7613af899de0ee55f96c48339eeff48df879b73787f5f85c",
+        "bytes": 6190,
+        "what": "shoes mustCover (contract v3)"
+      },
+      "template-shoes-allowed.png": {
+        "sha256": "187a9a8368930147a32f3625a64991f268143bfab21f37a035b6cbc7f4e37b7d",
+        "bytes": 7080,
+        "what": "shoes allowed (contract v3)"
+      },
+      "template-shoes-protect.png": {
+        "sha256": "5cc7a07f87fd7c8146b50f14d190b9c133734e659feedb877fb6e52ed8a89479",
+        "bytes": 8078,
+        "what": "shoes protect (contract v3)"
+      },
+      "template-top-sleeveZone.png": {
+        "sha256": "f779df856b2c0714ed54a5a25f61b2fda0085f09a3844a0f72e005fee6d67641",
+        "bytes": 8216,
+        "what": "top sleeve zone: C's arms + 14 px"
+      }
+    }
+  }
+}

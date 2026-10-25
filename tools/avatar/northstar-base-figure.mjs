@@ -151,7 +151,7 @@ export function neckLine(w, registered, figure, tol = 12) {
   return { linePx: n, maxDeviation: max };
 }
 
-const outlineShare = (P, y0) => { let edge = 0, dark = 0; for (let i = Math.max(W, y0 * W); i < N - W; i++) { if (P[i * 4 + 3] < 200) continue; if ([i - 1, i + 1, i - W, i + W].some((j) => P[j * 4 + 3] < 64)) { edge++; if (Math.max(P[i * 4], P[i * 4 + 1], P[i * 4 + 2]) < 110) dark++; } } return edge ? dark / edge : 0; };
+export const outlineShare = (P, y0) => { let edge = 0, dark = 0; for (let i = Math.max(W, y0 * W); i < N - W; i++) { if (P[i * 4 + 3] < 200) continue; if ([i - 1, i + 1, i - W, i + W].some((j) => P[j * 4 + 3] < 64)) { edge++; if (Math.max(P[i * 4], P[i * 4 + 1], P[i * 4 + 2]) < 110) dark++; } } return edge ? dark / edge : 0; };
 const sideOf = (x, cx, side) => (x < cx) === (side === "left");
 /** Per row: alpha ≥ 128 width and skin count in an x-range. */
 const rowStats = (P, y, xa, xb) => { let wd = 0, skin = 0, ink = 0; for (let x = xa; x < xb; x++) { const i = y * W + x, c = classify(P, i); if (c) { wd++; if (c === "skin") skin++; if (c === "ink") ink++; } } return { wd, skin, inkShare: wd ? ink / wd : 0 }; };
@@ -180,7 +180,30 @@ const hemAt = (lab, x, y0, k) => { let hem = -1; for (let y = y0; y < H; y++) if
 /** BF1–BF15 on a candidate base figure (full 1024×1536 RGBA, transparent background). Returns { registration, checks, ok }. */
 /** The gate sets. v1 = D-198's BF1–BF15 exactly (A's historical D-200 result). v2 = D-202: BF4, BF9 and BF14 replaced by the
  *  adopted D-201 revisions (BF4v2, BF9v2, BF14v2); every other gate and threshold unchanged. v2 binds every candidate after A. */
-export const GATE_SETS = Object.freeze({ v1: "D-198 BF1–BF15 (A's historical result, D-200)", v2: "D-202 binding set: BF4v2, BF9v2 and BF14v2 replace BF4, BF9 and BF14" });
+export const GATE_SETS = Object.freeze({ v1: "D-198 BF1–BF15 (A's historical result, D-200)", v2: "D-202: BF4v2, BF9v2 and BF14v2 replace BF4, BF9 and BF14 (C's historical result, D-203)",
+  v3: "D-205 binding set: v2 with BF9v3 (the waist seam closed instead of a hem row) and BF15v3 (the runtime composition with the minimum items, no base garments under them) — legacy dress-back is a compatibility report, not a gate" });
+/** BF9v3 — the waist seam: in every torso column (12 px inset) no skin and no transparent pixel lies between the base top and the
+ *  base shorts. The hem row range of v1/v2 was a proxy for exactly this closure; a gap would open the midriff in the minimum outfit. */
+export function waistSeam(R, lab, A) { let gap = 0, cols = 0;
+  for (let x = A.torsoX[0] + 12; x <= A.torsoX[1] - 12; x++) { let lo = -1, hi = -1; for (let y = 700; y < 900; y++) { const i = y * W + x; if (lab[i] === 1) lo = y; if (lab[i] === 2 && hi < 0) hi = y; } if (lo < 0 || hi < 0) continue; cols++;
+    for (let y = lo + 1; y < hi; y++) { const i = y * W + x; if (R[i * 4 + 3] < 128 || classify(R, i) === "skin") gap++; } }
+  return { columns: cols, gapPx: gap }; }
+/** The minimum items of a base: its own base top and base shorts cut out unchanged (the contract's smallest top and bottom), no shoes. */
+export function minimumItems(R, lab) { const top = new Uint8ClampedArray(N * 4), bot = new Uint8ClampedArray(N * 4);
+  for (let i = 0; i < N; i++) { if (lab[i] === 1) top.set(R.subarray(i * 4, i * 4 + 4), i * 4); if (lab[i] === 2) bot.set(R.subarray(i * 4, i * 4 + 4), i * 4); }
+  return { topBody: top, sleeves: new Uint8ClampedArray(N * 4), pants: bot, shoes: new Uint8ClampedArray(N * 4) }; }
+/** BF15v3 — the actual runtime composition (D-198): the body with its base garments REMOVED, dressed in the minimum items.
+ *  Limits and why: 0 enclosed holes (any hole shows background through the figure); ≤ 10 exposed cut-skin px (antialias where a
+ *  removed outline met skin: C 2 px, a bottom cut 60 px short 198 px); 0 open base px deeper than FABRIC_BAND_PX (4 px, the
+ *  measured fabric excess) inside the silhouette (deeper means missing body); arms shown over the top's body (≥ 0.99 of their
+ *  overlap; the contract order puts the arms in front). */
+export function bf15v3(w, R, Z, opts = {}) { const sep = separateBase(R, Z), P = layerProof(w, R, Z, minimumItems(R, sep.lab), { sep, ...opts }), c = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
+  // the order probe: an opaque top body behind the whole upper body (shoulders to the natural waist, full width) — every arm pixel
+  // must still be seen in front of it; the minimum items alone never overlap the arms, so they cannot test the order
+  const probe = new Uint8ClampedArray(N * 4); for (let y = w.anchors.shoulder.y; y <= loadSpec().targets.waistY; y++) for (let x = 0; x < W; x++) probe.set([128, 128, 128, 255], (y * W + x) * 4);
+  const O = layerProof(w, R, Z, { ...minimumItems(R, sep.lab), topBody: probe }, { sep, ...opts });
+  const v = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), armShownShare: O.order.armShownShare, armOverTopPx: O.order.armOverTopPx };
+  return { ok: v.enclosedHolePx === 0 && v.exposedCutSkinPx <= 10 && v.deepOpenBasePx === 0 && v.armOverTopPx > 0 && v.armShownShare >= 0.99, value: v, P, sep }; }
 export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam = "generated", gateSet = "v1") {
   const g = spec.gates, t = spec.targets, A = w.anchors, L = w.base.layers, master = w.fg.master, out = [], add = (id, ok, value, what) => out.push({ id, ok, value, what });
   // BF1 format and a transparent background
@@ -200,7 +223,7 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const ground = (P, side) => { let yb = -1; for (let y = 1300; y < H; y++) for (let x = 0; x < W; x++) if (sideOf(x, Z.cx, side) && P[(y * W + x) * 4 + 3] >= 128) { yb = y; break; } return yb; };
   const handIoU = (side) => { let i1 = 0, u = 0; for (let i = 0; i < N; i++) { if (!Z.handRegion[side][i]) continue; const a = R[i * 4 + 3] >= 128, b = master[i * 4 + 3] >= 128; if (a && b) i1++; if (a || b) u++; } return u ? i1 / u : 0; };
   const pose = { centreX: +centre(R).toFixed(1), northstarCentreX: +centre(master).toFixed(1), groundY: { left: ground(R, "left"), right: ground(R, "right") }, handIoU: { left: +handIoU("left").toFixed(4), right: +handIoU("right").toFixed(4) } };
-  const v2 = gateSet === "v2", P2 = v2 ? Object.fromEntries(proposedChecks(w, R, null, Z, spec).map((c) => [c.id, c])) : null;
+  const v3 = gateSet === "v3", v2 = gateSet === "v2" || v3, P2 = v2 ? Object.fromEntries(proposedChecks(w, R, null, Z, spec).map((c) => [c.id, c])) : null, S3 = v3 ? bf15v3(w, dustCleaned(R), Z) : null;
   if (v2) add("BF4v2-POSE", Math.abs(pose.centreX - pose.northstarCentreX) <= g.centreTolPx && ["left", "right"].every((s) => pose.handIoU[s] >= g.minHandIoU) && P2["P-BF4-BARE-FEET"].ok,
     { centreX: pose.centreX, northstarCentreX: pose.northstarCentreX, handIoU: pose.handIoU, bareFeet: P2["P-BF4-BARE-FEET"].value },
     "Northstar's centre axis (±" + g.centreTolPx + ") and hands (IoU ≥ " + g.minHandIoU + "); each bare sole between the top of the sneaker outsole and the ground line, the foot inside the sneaker (D-202, adopted P-BF4)");
@@ -226,7 +249,10 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const topRgb = medianRgb(R, Z.topCore, "garment"), hipRgb = medianRgb(R, Z.hipCore, "garment");
   const BG = baseGarments(R, G, Z, topRgb, hipRgb), topHem = topRgb ? hemAt(BG, Z.cx, A.shoulder.y, 1) : -1;
   const top = { coverage: +cover(Z.topCore).toFixed(4), rgb: topRgb, skinDistance: topRgb && Z.skinRef ? +dist(topRgb, Z.skinRef).toFixed(1) : null, hemY: topHem };
-  if (v2) add("BF9v2-BASE-TOP", P2["P-BF9-CHEST-BAND"].ok && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1],
+  if (v3) { const seam = waistSeam(dustCleaned(R), S3.sep.lab, A); add("BF9v3-BASE-TOP", P2["P-BF9-CHEST-BAND"].ok && top.skinDistance >= g.minGarmentSkinDistance && seam.columns > 0 && seam.gapPx === 0,
+    { chestBand: P2["P-BF9-CHEST-BAND"].value, rgb: topRgb, skinDistance: top.skinDistance, hemY: topHem, waistSeam: seam },
+    "the base top covers the torso below the armpits, is clearly not skin-coloured, and meets the base shorts with no skin and no transparency between them in any torso column (D-205)"); }
+  else if (v2) add("BF9v2-BASE-TOP", P2["P-BF9-CHEST-BAND"].ok && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1],
     { chestBand: P2["P-BF9-CHEST-BAND"].value, rgb: topRgb, skinDistance: top.skinDistance, hemY: topHem },
     "the base top covers the candidate's own torso from 8 px below its armpits to the natural waist (4 px rim excluded), opaque, clearly not skin-coloured, hem at y " + t.baseTopHemY.join("–") + " (D-202, adopted P-BF9)");
   else add("BF9-BASE-TOP", top.coverage >= g.minCoreCoverage && top.skinDistance >= g.minGarmentSkinDistance && topHem >= t.baseTopHemY[0] && topHem <= t.baseTopHemY[1], top, "the base top covers the chest band to the natural waist, opaque, clearly not skin-coloured, hem at y " + t.baseTopHemY.join("–"));
@@ -248,7 +274,8 @@ export function checkBaseFigure(w, cand, Z = zones(w), spec = loadSpec(), seam =
   const GB = garmentMask(body), seeds = []; for (let i = 0; i < N; i++) if (GB[i] && (Z.topCore[i] || Z.hipCore[i])) seeds.push([i % W, (i / W) | 0]);
   const baseG = NL.flood(seeds, (i) => GB[i] === 1);
   let visibleBase = 0, inter = 0, uni = 0; for (let i = 0; i < N; i++) { if (baseG[i] && cov[i * 4 + 3] < 128) visibleBase++; const a = dressed[i * 4 + 3] >= 128, b = w.body[i * 4 + 3] >= 128; if (a && b) inter++; if (a || b) uni++; }
-  add("BF15-DRESS-BACK", visibleBase <= g.maxDressBackVisibleBasePx && inter / uni >= g.minDressBackIoU, { visibleBaseGarmentPx: visibleBase, silhouetteIoU: +(inter / uni).toFixed(4) }, "dressed in D-197's tee, jeans and sneakers the base shows no base garment and Northstar's silhouette");
+  if (v3) add("BF15v3-RUNTIME", S3.ok, S3.value, "the body WITHOUT its base garments, dressed in the minimum items: no hole, ≤ 10 exposed cut-skin px, no missing body beyond the 4 px fabric band, the arms in front of the top's body (D-205)");
+  else add("BF15-DRESS-BACK", visibleBase <= g.maxDressBackVisibleBasePx && inter / uni >= g.minDressBackIoU, { visibleBaseGarmentPx: visibleBase, silhouetteIoU: +(inter / uni).toFixed(4) }, "dressed in D-197's tee, jeans and sneakers the base shows no base garment and Northstar's silhouette");
   return { registration: reg, checks: out, ok: out.every((x) => x.ok), registered: R, body, figure, gateSet };
 }
 
@@ -290,8 +317,8 @@ export function provenanceMeasured(w, checked) {
 
 // ── review material (from Northstar v2 only; no base figure exists) ───────────────────────────────────────────────────────
 const FIG = [250, 0, 774, 1536];
-const tint = (P, m, rgb, k = 0.55) => { const o = new Uint8ClampedArray(P); for (let i = 0; i < N; i++) if (m[i]) for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(o[i * 4 + c] * (1 - k) + rgb[c] * k); return o; };
-const outline = (P, m, rgb) => { const o = new Uint8ClampedArray(P); for (let i = W; i < N - W; i++) if (m[i] && [i - 1, i + 1, i - W, i + W].some((j) => !m[j])) o.set([...rgb, 255], i * 4); return o; };
+export const tint = (P, m, rgb, k = 0.55) => { const o = new Uint8ClampedArray(P); for (let i = 0; i < N; i++) if (m[i]) for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(o[i * 4 + c] * (1 - k) + rgb[c] * k); return o; };
+export const outline = (P, m, rgb) => { const o = new Uint8ClampedArray(P); for (let i = W; i < N - W; i++) if (m[i] && [i - 1, i + 1, i - W, i + W].some((j) => !m[j])) o.set([...rgb, 255], i * 4); return o; };
 const labelImage = (lab) => { const o = new Uint8ClampedArray(N * 4).fill(255); for (let i = 0; i < N; i++) if (lab[i]) o.set([...PROVENANCE[lab[i]], 255], i * 4); return o; };
 
 /** The stimuli the check is demonstrated on: Northstar itself, two shifts, a blur, and sleeves merely painted in skin colour. */
@@ -392,10 +419,12 @@ export function separateBase(R, Z) {
   const G = garmentMask(R), topRgb = medianRgb(R, Z.topCore, "garment"), hipRgb = medianRgb(R, Z.hipCore, "garment"), core = baseGarments(R, G, Z, topRgb, hipRgb);
   const near = Mo.dilate(Mo.or(...[1, 2].map((k) => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (core[i] === k) m[i] = 1; return m; })), 3), lab = new Uint8Array(N);
   // top or shorts by POSITION, not colour (the top's dark outline is closer in colour to the shorts): per column, the seam is the
-  // first row from y 700 where five base pixels in a row are shorts-dark; above it top, below it shorts (default: the waist row)
+  // first row of the waist band where five base pixels in a row are shorts-dark; above it top, below it shorts (default: the waist row)
   const lum = (i) => 0.3 * R[i * 4] + 0.59 * R[i * 4 + 1] + 0.11 * R[i * 4 + 2], cut = hipRgb && topRgb ? (0.3 * (topRgb[0] + hipRgb[0]) + 0.59 * (topRgb[1] + hipRgb[1]) + 0.11 * (topRgb[2] + hipRgb[2])) / 2 : 130;
   const seamY = new Int32Array(W).fill(loadSpec().targets.waistY);
-  for (let x = 0; x < W; x++) for (let y = 700; y < 900; y++) { let ok = true; for (let k = 0; k < 5 && ok; k++) { const i = (y + k) * W + x; ok = core[i] > 0 && lum(i) < cut; } if (ok) { seamY[x] = y; break; } }
+  // the search stays in the waist band (waist − 40 … waist + 30): lower down, a crotch-gap column would put the shorts' inner outline into the top
+  const wy = loadSpec().targets.waistY;
+  for (let x = 0; x < W; x++) for (let y = wy - 40; y < wy + 30; y++) { let ok = true; for (let k = 0; k < 5 && ok; k++) { const i = (y + k) * W + x; ok = core[i] > 0 && lum(i) < cut; } if (ok) { seamY[x] = y; break; } }
   for (let i = 0; i < N; i++) { if (!near[i] || !R[i * 4 + 3] || classify(R, i) === "skin" || (R[i * 4 + 3] >= 128 && skinish(R, i))) continue; lab[i] = ((i / W) | 0) < seamY[i % W] ? 1 : 2; }
   return { lab, topRgb, hipRgb };
 }
@@ -415,6 +444,8 @@ export function runtimeBody(w, R, lab) {
   for (let i = 0; i < N; i++) if (all[i * 4 + 3]) (armM[i] ? arms : body).set(all.subarray(i * 4, i * 4 + 4), i * 4);
   return { body, arms };
 }
+/** The canvas exterior of a figure: transparent pixels connected to the border. */
+export function outsideExterior(R) { return outsideConnected(new Uint8Array(N).fill(1), (i) => R[i * 4 + 3] < 128); }
 /** Pixels of `m` connected (4-way, through pixels where `pass` holds) to the canvas border — what simply becomes background. */
 function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (let x = 0; x < W; x++) for (const y of [0, H - 1]) { const i = y * W + x; if (pass(i)) { o[i] = 1; st.push(i); } }
   for (let y = 0; y < H; y++) for (const x of [0, W - 1]) { const i = y * W + x; if (pass(i) && !o[i]) { o[i] = 1; st.push(i); } }
@@ -423,14 +454,19 @@ function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (
 
 /** The layering proof with Northstar's D-197 defaults over the runtime body (base garments removed). */
 export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the bare thigh directly below their hem (D-204)
-export function layerProof(w, R, Z = zones(w), it = {}) {
-  const L = w.base.layers, { lab } = separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
-  const dressedRuntime = NL.overStack([body, I.shoes, I.pants, I.topBody, arms, I.sleeves, w.head]);
+export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null } = {}) {
+  const L = w.base.layers, { lab } = sep || separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
+  // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" exists only
+  // as a control stimulus: a composer that puts the arms under the top's body must be caught by the order check
+  const dressedRuntime = NL.overStack(order === "arms-under" ? [body, arms, I.shoes, I.pants, I.topBody, I.sleeves, w.head] : [body, I.shoes, I.pants, I.topBody, arms, I.sleeves, w.head]);
   const items = NL.overStack([I.shoes, I.pants, I.topBody, I.sleeves]), covered = (i) => items[i * 4 + 3] >= 128;
   const base = new Uint8Array(N); for (let i = 0; i < N; i++) if (lab[i]) base[i] = 1;
   // only base pixels that were VISIBLE (alpha ≥ 128) can leave a hole; a semi-transparent rim pixel vanishes with its garment
   const uncoveredBase = new Uint8Array(N); for (let i = 0; i < N; i++) if (base[i] && R[i * 4 + 3] >= 128 && !covered(i)) uncoveredBase[i] = 1;
   const transparentOk = outsideConnected(uncoveredBase, (i) => dressedRuntime[i * 4 + 3] < 128), enclosed = Mo.and(uncoveredBase, Mo.not(transparentOk));
+  // D-205: also every transparent pixel inside the filled silhouette of the garments (items ∪ base) — a hole in a garment itself
+  const garmentArea = Mo.or(Mo.toMask(items, 128), base), inside = Mo.not(outsideConnected(new Uint8Array(N).fill(1), (i) => !garmentArea[i]));
+  for (let i = 441 * W; i < N; i++) if (inside[i] && !garmentArea[i] && dressedRuntime[i * 4 + 3] < 128) enclosed[i] = 1;
   // cut skin: visible runtime skin that borders a removed base pixel the items leave open — an edge with no painted contour
   const cutSkin = new Uint8Array(N); for (let i = W; i < N - W; i++) { if (!(body[i * 4 + 3] >= 128 || arms[i * 4 + 3] >= 128) || covered(i) || classify(R, i) !== "skin") continue; if ([i - 1, i + 1, i - W, i + W].some((j) => uncoveredBase[j])) cutSkin[i] = 1; }
   // body wider than an item drawn for Northstar: visible skin directly outside the jeans' outline (≤ 3 px) in the leg rows
@@ -442,7 +478,9 @@ export function layerProof(w, R, Z = zones(w), it = {}) {
   // open base pixels deeper than the fabric band inside the candidate's outer silhouette: there the body had to be, and no item
   // and no skin is there — missing material (a cropped item), not fabric that may vanish
   const exterior = outsideConnected(new Uint8Array(N).fill(1), (i) => R[i * 4 + 3] < 128), deep = Mo.and(uncoveredBase, Mo.not(Mo.dilate(exterior, FABRIC_BAND_PX)));
-  return { lab, body, arms, dressedRuntime, uncoveredBase, transparentOk, enclosed, cutSkin, slivers, deep };
+  // the order check: where an arm lies over the top's body, the ARM must be what is seen (arms ∩ top-body, arm pixel visible)
+  let armOverTop = 0, armShown = 0; for (let i = 0; i < N; i++) if (arms[i * 4 + 3] >= 250 && I.topBody[i * 4 + 3] >= 128) { armOverTop++; if ([0, 1, 2].every((c) => Math.abs(dressedRuntime[i * 4 + c] - arms[i * 4 + c]) <= 2)) armShown++; }
+  return { lab, body, arms, dressedRuntime, uncoveredBase, transparentOk, enclosed, cutSkin, slivers, deep, items, I, order: { armOverTopPx: armOverTop, armShownShare: armOverTop ? +(armShown / armOverTop).toFixed(4) : 1 } };
 }
 
 /** PROPOSED BF15r (D-204, not adopted): the dress-back on the RUNTIME body, as D-198 defines it — base garments empty under the
