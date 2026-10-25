@@ -10,15 +10,18 @@
 // base figure outside both clones; this tool never writes one into the repository.
 // Usage: node tools/avatar/northstar-base-figure.mjs --out <empty dir>            (review material from Northstar v2 only)
 //        node tools/avatar/northstar-base-figure.mjs --check <candidate.png>       (a future candidate, read-only)
+//        node tools/avatar/northstar-base-figure.mjs --review <candidate.png> --out <empty dir OUTSIDE both clones>
+//             (D-199: BF1–BF15 plus the review images of a generated candidate; refuses any directory inside the repository,
+//              because a figure in close-fitting base clothing is never tracked or published — D-127 §2)
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodePng, decodePng } from "./r3-hair-tool-v2.mjs";
 import * as NL from "./r3-northstar-layers.mjs";
 import * as FG from "./r3-northstar-figure.mjs";
 import * as WR from "./northstar-wardrobe.mjs";
-import { recolour, flat, down, grid } from "./northstar-wardrobe-poc.mjs";
+import { recolour, flat, crop, down, grid } from "./northstar-wardrobe-poc.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-198";
@@ -260,12 +263,56 @@ export function run(OUT) {
   return report;
 }
 
+/** D-199 — the review of ONE generated candidate: BF1–BF15 and the review images, written ONLY outside the repository
+ *  (D-127 §2). The raw file is read, never changed. Nothing is painted; registration is the checker's integer shift. */
+export function isOutsideRepo(dir) { const rel = relative(REPO, resolve(dir)); return rel !== "" && (rel.startsWith("..") || isAbsolute(rel)); }
+export function review(buf, OUT, spec = loadSpec()) {
+  if (!isOutsideRepo(OUT)) throw new Error("refusing to write review material inside the repository (D-127 §2): " + OUT);
+  const img = decodePng(buf), raw = img.ok && img.px && img.px.length === N * 4 ? Uint8ClampedArray.from(img.px) : null;
+  const w = WR.buildWardrobe(), Z = zones(w, spec), files = {};
+  const save = (n, im, what) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), w: im.w, h: im.h, what }; };
+  const report = { decision: "D-199", raw: { sha256: sha(buf), bytes: buf.length, decodedAsRgba1024x1536: !!raw, header: img.header || null }, thresholds: spec.gates, targets: spec.targets,
+    note: "BF1–BF15 are measurements. They are never a visual approval: V1–V8 are the owner's. The raw image is unchanged; nothing was painted or retouched." };
+  if (!raw) { report.ok = false; report.checks = [{ id: "BF1-FORMAT", ok: false, value: { header: img.header || null, error: img.error || "not 8-bit RGBA" } }]; writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n"); return report; }
+  const r = checkBaseFigure(w, raw, Z, spec);
+  report.ok = r.ok; report.registration = r.registration; report.checks = r.checks.map(({ id, ok, value, what }) => ({ id, ok, value, what }));
+  const bg = [236, 233, 226], FIGB = [250, 0, 774, 1536], half = (P) => down(flat(P, bg), 262, 768, FIGB);
+  save("r01-raw-as-received.png", half(raw), "the raw result, unchanged, flattened on a neutral background at 1/2 size (the raw file itself is kept untouched)");
+  if (r.figure) {
+    const fig = r.figure, dressed = NL.overStack([r.body, w.base.layers.shoes, w.base.layers.pants, w.base.layers["top-body"], w.base.layers["top-sleeves"], w.head]);
+    const ns = NL.overStack([w.body, w.head]), F = flat(fig, bg);
+    save("r02-body-with-r3-head.png", half(fig), "the candidate's body (registered by the integer shift only) with the existing R3 head stack — D-194 seam rule, nothing painted");
+    const A = w.anchors, x2 = (box) => crop(F, box, 2);
+    save("r03-neck-shoulders-x2.png", x2([360, 420, 664, 600]), "neck, collar line and shoulders ×2");
+    save("r04-arms-hands-x2.png", grid([x2([290, 500, 420, 980]), x2([604, 500, 734, 980])], 2), "left and right arm with hand ×2");
+    save("r05-knees-x2.png", x2([370, 1020, 654, 1200]), "knees ×2 (the knee height is an estimate; the jeans hid it)");
+    save("r06-ankles-feet-x2.png", x2([330, 1300, 694, 1500]), "ankles and feet on the ground line ×2");
+    save("r07-dress-back.png", grid([half(dressed), half(ns)], 2), "dressed back in D-197's default items (left) beside the original Northstar (right)");
+    const app = (P, ww, hh) => down(flat(P, bg), ww, hh);
+    save("r08-app-sizes.png", grid([app(fig, 110, 165), app(dressed, 110, 165), app(fig, 52, 78), app(dressed, 52, 78)], 4, 6), "hub 110×165 and quiz 52×78: the base figure and the dressed-back figure");
+    const lab = provenanceMeasured(w, r), counts = {}; for (const k of lab) if (k) counts[k] = (counts[k] || 0) + 1;
+    save("r09-provenance-measured.png", half(labelImage(lab)), "measured provenance: original kept (blue), original reference (green), reconstructed (orange), new base garment (magenta), removed (dark grey)");
+    report.provenance = counts;
+  }
+  report.files = files; writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
+  return report;
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const a = process.argv.slice(2), oi = a.indexOf("--out"), ci = a.indexOf("--check");
+  const a = process.argv.slice(2), oi = a.indexOf("--out"), ci = a.indexOf("--check"), ri = a.indexOf("--review");
+  if (ri >= 0) {
+    if (!a[ri + 1] || oi < 0 || !a[oi + 1]) { console.error("usage: --review <candidate.png> --out <empty dir outside both clones>"); process.exit(1); }
+    const OUT = resolve(a[oi + 1]);
+    if (!isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository; a base figure is never written there (D-127 §2)"); process.exit(1); }
+    if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
+    const r = review(readFileSync(resolve(a[ri + 1])), OUT);
+    for (const c of r.checks) console.log((c.ok ? "PASS " : "FAIL ") + c.id + "  " + JSON.stringify(c.value));
+    console.log(r.ok ? "\nALL BF1–BF15 PASSED — a measurement, not a visual approval." : "\nTECHNICAL REJECT — at least one BF check failed."); process.exit(r.ok ? 0 : 2);
+  }
   if (ci >= 0 && a[ci + 1]) {
     const buf = readFileSync(resolve(a[ci + 1])), img = decodePng(buf);
-    if (!img.ok || img.px.length !== N * 4) { console.error("not a 1024×1536 RGBA PNG"); process.exit(1); }
+    if (!img.ok || !img.px || img.px.length !== N * 4) { console.error("not a 1024×1536 RGBA PNG"); process.exit(1); }
     const w = WR.buildWardrobe(), r = checkBaseFigure(w, Uint8ClampedArray.from(img.px));
     console.log(JSON.stringify({ sha256: sha(buf), ok: r.ok, registration: r.registration, checks: r.checks.map(({ id, ok, value }) => ({ id, ok, value })) }, null, 2)); process.exit(r.ok ? 0 : 2);
   }
