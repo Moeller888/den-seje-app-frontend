@@ -5,15 +5,16 @@
 // are INSERT-only; every skipped dual-timestamp twin is token-equivalent to the applied one (the one
 // known difference is a comment and ";;"); a blocked migration keeps schema validation failing; the
 // seed meets every global-setup health-check threshold and the question constraints, is
-// deterministic, idempotent and synthetic-only, and the purge runs before it.
+// deterministic, idempotent, synthetic-only and INSERT-only.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   planReplay, summarise, CONTENT_ONLY, DATA_PRECONDITION, NOT_IN_PRODUCTION, BLOCKED, MANUALLY_APPLIED_IN_PRODUCTION, TIMESTAMPED,
+  PRECONDITIONS, preconditionCheckSql,
 } from "../isolated/schema/replay-plan.mjs";
 import { forbiddenMigrationTokens } from "../../.github/ci/classify-changes.mjs";
-import { syntheticQuestions, syntheticQuestionsSql, contentPurgeSql, DOMAINS, PER_GRADE } from "../isolated/seed/synthetic-questions.mjs";
+import { syntheticQuestions, syntheticQuestionsSql, DOMAINS, PER_GRADE } from "../isolated/seed/synthetic-questions.mjs";
 
 const MIG = new URL("../../supabase/migrations/", import.meta.url);
 const files = readdirSync(MIG);
@@ -74,6 +75,21 @@ test("blocked migrations keep schema validation failing; none is silently skippe
   assert.ok(summarise(plan).blocked > 0 === Object.keys(BLOCKED).length > 0);
 });
 
+test("a migration with preconditions is applied only after its objects are verified to exist", () => {
+  const f = "20260919000000_review_answer_execute_lockdown.sql";
+  const p = plan.find((x) => x.file === f);
+  assert.equal(p.action, "apply");
+  assert.deepEqual(p.requires, ["public.review_answer(uuid,integer,text,uuid)", "public.review_answer(uuid,integer,text)"]);
+  const sql = preconditionCheckSql(f);
+  assert.match(sql, /to_regprocedure\('public\.review_answer\(uuid,integer,text,uuid\)'\) IS NULL/);
+  assert.match(sql, /to_regprocedure\('public\.review_answer\(uuid,integer,text\)'\) IS NULL/);
+  assert.equal(preconditionCheckSql("20260101000000_none.sql"), null);
+  // The file really does need them: it revokes on exactly these signatures.
+  const src = read(f);
+  for (const sig of ["review_answer(uuid, integer, text, uuid)", "review_answer(uuid, integer, text)"]) assert.ok(src.includes(sig), sig);
+  for (const k of Object.keys(PRECONDITIONS)) assert.ok(existsSync(new URL(k, MIG)), k);
+});
+
 test("not-in-production and manual lists carry catalog evidence, manual files are idempotent", () => {
   for (const r of Object.values(NOT_IN_PRODUCTION)) assert.match(r, /not applied in production/);
   assert.deepEqual(manual, Object.keys(MANUALLY_APPLIED_IN_PRODUCTION).sort());
@@ -123,11 +139,15 @@ test("every row satisfies the question constraints the app relies on", () => {
   assert.deepEqual([...formats].sort(), ["mc", "number", "text"]);
 });
 
-test("the seed is deterministic, idempotent SQL, and the purge empties the question tables first", () => {
+test("the seed is deterministic, idempotent and INSERT-only — no destructive SQL anywhere in the seed code", () => {
   assert.equal(JSON.stringify(syntheticQuestions()), JSON.stringify(rows));
   const sql = syntheticQuestionsSql();
-  assert.ok(sql.trimEnd().endsWith("ON CONFLICT DO NOTHING;"));
+  assert.ok(sql.startsWith("INSERT INTO public.questions") && sql.trimEnd().endsWith("ON CONFLICT DO NOTHING;"));
   assert.equal(syntheticQuestionsSql(), sql);
-  assert.equal(contentPurgeSql(), "TRUNCATE public.questions RESTART IDENTITY CASCADE;\n");
   assert.ok(!/\b(hotmail|@[a-z0-9-]+\.(dk|com))\b/i.test(sql), "no real address");
+  for (const f of ["../isolated/seed/synthetic-questions.mjs", "../isolated/seed/seed-guard.mjs"]) {
+    const src = readFileSync(new URL(f, import.meta.url), "utf8").split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
+    assert.ok(!/\b(TRUNCATE|DELETE\s+FROM)\b/i.test(src), `${f} must contain no TRUNCATE / DELETE`);
+    assert.ok(!/\bDROP\s+(TABLE|SCHEMA|DATABASE)\b/i.test(src), `${f} must not drop tables/schemas/databases`);
+  }
 });

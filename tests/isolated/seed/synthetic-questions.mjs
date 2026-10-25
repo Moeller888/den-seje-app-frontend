@@ -64,13 +64,9 @@ export function syntheticQuestions() {
   return rows;
 }
 
-// Run BEFORE the seed on a freshly replayed isolated database: some replayed migrations carry real
-// question-bank rows next to their schema change; none of them may reach a test. CASCADE clears the
-// rows that reference questions (question_instances, student_answers) as well. Never point this at
-// anything but a throwaway isolated database — the isolation guard refuses any non-loopback target.
-export function contentPurgeSql() {
-  return "TRUNCATE public.questions RESTART IDENTITY CASCADE;\n";
-}
+// INSERT-only by design: no DELETE, TRUNCATE or DROP anywhere in this module (pinned by a unit test).
+// Real question rows never land in the isolated database in the first place (the replay runs with
+// seed-guard.mjs contentFilterOnSql), and the seed runs only after seed-guard.mjs assertSeedTarget.
 
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const json = (o) => `${lit(JSON.stringify(o))}::jsonb`;

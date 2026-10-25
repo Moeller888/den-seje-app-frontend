@@ -21,12 +21,13 @@
 //   skip     not in production         — merged but, on catalog evidence, never applied there
 //
 // Some content migrations also carry schema (e.g. an ALTER TABLE between INSERTs) and are therefore
-// applied. Their rows never reach a test: the seed step empties the question tables first
-// (tests/isolated/seed/synthetic-questions.mjs contentPurgeSql) — the isolated E2E runs on synthetic
-// questions only.
+// applied. Their rows never land: the replay runs with a temporary insert filter on public.questions
+// (tests/isolated/seed/seed-guard.mjs contentFilterOnSql) — nothing is deleted or truncated, and the
+// isolated E2E runs on synthetic questions only.
 //   blocked  needs a definition that is not in the repository and awaits owner approval — a
 //            blocked file makes schema validation FAIL (never a silent skip)
-//   apply    everything else
+//   apply    everything else; a file with PRECONDITIONS is applied only after the runner has
+//            verified that the baseline created the objects it needs (else: FAIL)
 //
 // Non-timestamped files (prestige.sql) are never replayed by Supabase either (the CLI requires
 // <timestamp>_name.sql); they are reported, not applied.
@@ -66,10 +67,28 @@ export const MANUALLY_APPLIED_IN_PRODUCTION = Object.freeze({
     "applied by hand in production: prestige_weight, recalculate_prestige and student_progress.prestige_score exist there (catalog 2026-10-25)",
 });
 
-export const BLOCKED = Object.freeze({
-  "20260919000000_review_answer_execute_lockdown.sql":
-    "needs public.review_answer (both overloads), which exists only in production: pg_get_functiondef awaits owner approval",
+// Migrations whose definitions are not reproducible from the repository and that are therefore not
+// replayed. A blocked file makes schema validation FAIL. Empty since 2026-10-25: review_answer was
+// read with owner approval and moved into the (private) CI baseline — see PRECONDITIONS.
+export const BLOCKED = Object.freeze({});
+
+// Objects a migration needs that no repository migration creates: they must come from the CI
+// baseline. The runner checks each with to_regprocedure/to_regclass BEFORE applying the file and
+// fails if one is missing — a baseline without them can never produce a green replay.
+export const PRECONDITIONS = Object.freeze({
+  "20260919000000_review_answer_execute_lockdown.sql": [
+    "public.review_answer(uuid,integer,text,uuid)",
+    "public.review_answer(uuid,integer,text)",
+  ],
 });
+
+// SQL that returns one row per missing precondition object (empty result = all present).
+export function preconditionCheckSql(file) {
+  const objs = PRECONDITIONS[file] ?? [];
+  if (objs.length === 0) return null;
+  const rows = objs.map((o) => `SELECT ${"'" + o.replace(/'/g, "''") + "'"} AS missing WHERE to_regprocedure(${"'" + o.replace(/'/g, "''") + "'"}) IS NULL`);
+  return rows.join("\nUNION ALL\n") + ";";
+}
 
 export function planReplay(fileNames, readSql) {
   const files = [...fileNames].sort();
@@ -89,7 +108,7 @@ export function planReplay(fileNames, readSql) {
     else if (DATA_PRECONDITION[f]) d = { action: "skip", reason: DATA_PRECONDITION[f] };
     else if (NOT_IN_PRODUCTION[f]) d = { action: "skip", reason: NOT_IN_PRODUCTION[f] };
     else if (forbiddenMigrationTokens(sql).length === 0) d = { action: "skip", reason: "data-only (no schema token); synthetic data replaces it" };
-    else d = { action: "apply", reason: "" };
+    else d = { action: "apply", reason: "", requires: PRECONDITIONS[f] ?? [] };
     plan.push({ file: f, ...d });
   }
   const nonTimestamped = files.filter((f) => f.endsWith(".sql") && !TIMESTAMPED.test(f));
