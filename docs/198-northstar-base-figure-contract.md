@@ -235,3 +235,18 @@ Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 
 **Mod A:** Prompt v2 rettede shortsenes udsvaj ved benåbningerne og skridthøjden, men ikke bredden ved hofterne.
 
 **Budget:** Begge kald (2/2) er brugt, og der står intet kald tilbage. Billedet er ikke visuelt vurderet.
+
+## 11. D-204 — lagdelingsbeviset
+
+**BF15's konstruktion:** BF15 lagde standardtøjet over en krop, der stadig indeholdt basistøjet. I runtime-modellen fra §2 står basistøjet tomt.
+
+**Med basistøjet fjernet** (`--layers`):
+- Alle 2.478 åbne basistøjspixels bliver baggrund.
+- Der er 0 lukkede huller, 2 px hud uden kontur og silhuet-IoU 0,9962.
+- **Reel konflikt:** Kandidatens krop er op til 3 px bredere end Northstars jeans ved hofter og øvre lår (147 px synlig kontur, 595 px ved hofterne). BF5 tillader op til 6 px.
+
+**Manglende materiale:** Intet for den ærmeløse top, shortsene og sandalerne. Der mangler kun materiale for former, der er mindre end basistøjet (O2).
+
+**Forslag, ikke vedtaget:** BF15r med kontrolstimuli. Dækningskravet om hele basistøjet + 1 px er strengere end nødvendigt langs den ydre stofkant, men ændres ikke.
+
+**BF9v2:** Toppen møder shortsene uden hud imellem. Ingen revision foreslås.
