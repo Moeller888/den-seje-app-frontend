@@ -41,7 +41,7 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 // ── the decision ───────────────────────────────────────────────────────────────────────────────────────────────────────
 test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, each its own one-shot claim; C pinned and never tracked", () => {
   assert.equal(CALLS.decision, "D-207"); assert.equal(CALLS.meta.authorisesImageRequest, false);
-  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 10, "D-216"]); assert.match(CALLS.budget.stoppedBy, /D-216/);
+  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 11, "D-217"]); assert.match(CALLS.budget.stoppedBy, /D-217/);
   assert.match(CALLS.budget.rule, /an undetermined dispatch reserves its budget and is never repeated automatically/);
   assert.deepEqual([CALLS.reserveAmendment.decision, CALLS.reserveAmendment.outcome, CALLS.reserveAmendment.httpStatus, CALLS.reserveAmendment.items, CALLS.reserveAmendment.maxReserves], ["D-214", "HTTP_ERROR_NO_IMAGE", 429, ["bottom-skirt-plum"], 1]);
   assert.match(CALLS.reserveAmendment.rule, /never 12 plus replacements/);
@@ -53,10 +53,11 @@ test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, eac
   const S2 = { "top-tee-red": ["SENT_ONCE_GENERATION_OK", 200, 1], "top-sweater-green": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-trousers-khaki": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-skirt-plum": ["HTTP_ERROR_NO_IMAGE", 429, 0], "shoes-sneakers-white": ["HTTP_ERROR_NO_IMAGE", 429, 0], "shoes-boots-black": ["TECHNICAL_REJECT", 200, 1] };
   for (const c of CALLS.calls) { if (c.kind === "item" && S2[c.item]) { assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SPENT", ...S2[c.item].slice(0, 1), c.item === "top-tee-red" ? "D-213" : c.item === "shoes-sneakers-white" ? "D-215" : c.item === "shoes-boots-black" ? "D-216" : "D-212", ...S2[c.item].slice(1)], c.callId); continue; }
     const s1 = c.kind === "item" && c.stage === 1;
-    assert.equal(c.mandateState, s1 || c.callId === "D-207-reserve-1" ? "SPENT" : "UNSPENT", c.callId);
+    assert.equal(c.mandateState, s1 || c.callId === "D-207-reserve-1" || c.callId === "D-207-reserve-2" ? "SPENT" : "UNSPENT", c.callId);
     // D-214: reserve 1 assigned to the skirt under the amendment; the others free; the sandals parked
     if (c.kind === "reserve") assert.deepEqual([c.assignedTo, c.assignedBy || null], c.callId === "D-207-reserve-1" ? ["bottom-skirt-plum", "D-214"] : c.callId === "D-207-reserve-2" ? ["shoes-sneakers-white", "D-216"] : [null, null], c.callId);
     if (c.callId === "D-207-reserve-1") assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["TECHNICAL_REJECT", "D-216", 200, 1]);
+    if (c.callId === "D-207-reserve-2") assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["TECHNICAL_REJECT", "D-217", 200, 1]);
     if (c.item === "shoes-sandals-brown") assert.equal(c.parkedBy, "D-214");
     // D-210 re-recorded the sandals under the revised checks (FIT-6v2): a TECHNICAL_REJECT, its reserve not assigned
     if (s1) { assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], c.item === "shoes-sandals-brown" ? ["TECHNICAL_REJECT", "D-210", 200, 1] : ["SENT_ONCE_GENERATION_OK", "D-208", 200, 1]); assert.match(c.result.requestId, /^req_[0-9a-f]{32}$/); assert.match(c.result.imageSha256, /^[0-9a-f]{64}$/); } }
