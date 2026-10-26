@@ -9,8 +9,9 @@
     "authorised": 12,
     "planned": 9,
     "reserve": 3,
-    "actuallySent": 0,
-    "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools"
+    "actuallySent": 3,
+    "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools",
+    "recordedBy": "D-208"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -93,8 +94,18 @@
         "filename": "D-207-item-top-tank-teal.claim.json",
         "eventsFilename": "D-207-item-top-tank-teal.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-208",
+      "result": {
+        "dispatchedAt": "2026-10-26T09:36:12.387Z",
+        "httpStatus": 200,
+        "requestId": "req_0b7df9901e8649f082f2c09041f73d8a",
+        "imageSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-tank-teal/",
+        "note": "not a TECHNICAL_REJECT: no generation fault; the extraction faults were our tool's (fixed in D-208), the open FIT-5/FIT-6 results are contract findings for the owner — no reserve follows"
+      }
     },
     {
       "callId": "D-207-item-top-tee-red",
@@ -147,8 +158,18 @@
         "filename": "D-207-item-bottom-shorts-navy.claim.json",
         "eventsFilename": "D-207-item-bottom-shorts-navy.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-208",
+      "result": {
+        "dispatchedAt": "2026-10-26T09:36:53.806Z",
+        "httpStatus": 200,
+        "requestId": "req_d8c73e1cbdf74298b7b3dbdb91a19034",
+        "imageSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-shorts-navy/",
+        "note": "not a TECHNICAL_REJECT: no generation fault; the extraction faults were our tool's (fixed in D-208), the open FIT-5/FIT-6 results are contract findings for the owner — no reserve follows"
+      }
     },
     {
       "callId": "D-207-item-bottom-trousers-khaki",
@@ -201,8 +222,18 @@
         "filename": "D-207-item-shoes-sandals-brown.claim.json",
         "eventsFilename": "D-207-item-shoes-sandals-brown.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-208",
+      "result": {
+        "dispatchedAt": "2026-10-26T09:37:38.339Z",
+        "httpStatus": 200,
+        "requestId": "req_4de04e9f968d4d7d893c84ab89ca26eb",
+        "imageSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/",
+        "note": "not a TECHNICAL_REJECT: no generation fault; the extraction faults were our tool's (fixed in D-208), the open FIT-5/FIT-6 results are contract findings for the owner — no reserve follows"
+      }
     },
     {
       "callId": "D-207-item-shoes-sneakers-white",

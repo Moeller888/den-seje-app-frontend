@@ -385,6 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-208: stage 1 sent and inspected; stage 2 stays closed (as of 2026-10-26).**
+  - **Sent.** Tank, shorts and sandals, one call each. Generation OK. 3 of 12 calls spent, no reserves.
+  - **Fixed.** Two systematic extraction faults in our tool. Body contours redrawn 1–2 px off were extracted as
+    item, and brown leather was excluded as skin. Fixed with strong-change, opening and closing. The raws were
+    reprocessed without new calls.
+  - **Open.** FIT-5 (a waistband hidden under the top) and FIT-6 (skin meant to show at open forms) are contract
+    findings awaiting the owner.
+  - **Not METHOD_OK.** See `project-state.md` **D-208**.
 - **Northstar clothing pilot on C — D-207: at most 12 image calls authorised (9 items in two stages, at most 3 reserve
   calls), C sent as the reference for this pilot only, frozen prompts, one-shot claims; not yet attempted (as of
   2026-10-26).** D-206 is security PR #407.
