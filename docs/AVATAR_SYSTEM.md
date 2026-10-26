@@ -385,6 +385,26 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar item method — D-222: one pipeline, reproducible; method d222 (no calls).**
+  - **Entry.** `northstar-item-pilot.mjs --run <manifest>`: layers, skin shadow, body visibility, checks and review pictures
+    per item, then every outfit of technically passed items. Method, C, raws and code are pinned in `run.json`; two runs were
+    byte-identical.
+  - **Check fixes.** FIT-4 is measured against C's own exterior, and FIT-6v2 judges crossings by their shape (compact vs.
+    elongated). The skirt now passes; holes, too short bottoms and double contours still fail.
+  - **Extraction.** The skin shadow is judged by luminance, and the contour antialias over skin is unmixed. The khaki hem's
+    orange specks over boots went from 33 px to 7 px.
+  - **Result.** 8 of 9 items pass technically; the sandals are still rejected. 18 outfits are packaged.
+  - **Open.** A tee + khaki hip slit was found by manual review; no check runs on combinations yet.
+  - See `project-state.md` **D-222**.
+- **Northstar item method — D-221: the D-218 covering rule on the original D-207 raws (no calls).**
+  - **Sneakers and boots.** Resolved by local composition: under closed-footwear covering + VIS-3 both pass technically.
+    The rejections were the body's visibility, not missing shoe material.
+  - **Skirt.** The flagged strip is the picture's own thigh contour at the hem corner, not missing fabric. The gates are
+    unchanged, so the skirt stays rejected; changing a gate is an owner decision.
+  - **Sandals.** Need new image material: the generated foot is narrower than C's, and an open sandal hides nothing.
+  - **Records.** Results are recorded under a new method version (`item-method-results-d221.json`); D-207's outcomes are
+    unchanged and nothing is approved automatically.
+  - See `project-state.md` **D-221**.
 - **Northstar item method — D-218 (prepared, no calls): masked edit + controlled composition.**
   - **Masks.** A GPT Image mask is guidance only (OpenAI), so C is preserved by local composition.
   - **Three regions.** API mask, item allowed region and body visibility.

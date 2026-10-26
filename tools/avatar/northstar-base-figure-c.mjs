@@ -151,7 +151,7 @@ export const FIT_LIMITS_D210 = Object.freeze({
 const RANK = { body: 0, shoes: 1, pants: 2, topBody: 3, arms: 4, sleeves: 5, head: 6 };
 
 /** D-210 FIT-5v2 / FIT-6v2 / FIT-7v2 on a layer proof P (contract order or a control order). */
-function fitD210(w, base, T, category, layers, P, add, shadow = null) {
+function fitD210(w, base, T, category, layers, P, add, shadow = null, revision = "d210") {
   const own = Object.keys(layers), lim = FIT_LIMITS_D210;
   // FIT-5v2: every painted item pixel is either visible, or hidden by a layer the contract ranks ABOVE it within the tuck of a
   // visible part of the item; hidden by a layer ranked below it is a wrong order; hidden deeper is a detail the outfit never shows
@@ -174,12 +174,20 @@ function fitD210(w, base, T, category, layers, P, add, shadow = null) {
   for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441);
   // a strip along the garment's edge is a sliver; a piece no longer than SLIVER_PX in both directions is where the garment's
   // outline crosses the body's contour (a strap meeting the shoulder line) — reported, not counted
-  const seen = new Uint8Array(N), strip = new Uint8Array(N); let crossings = 0, crossingPx = 0;
+  const seen = new Uint8Array(N), strip = new Uint8Array(N), crossingShapes = []; let crossings = 0, crossingPx = 0;
   for (let s0 = 0; s0 < N; s0++) { if (!sl[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1;
     while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (sl[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
-    if (Math.max(x1 - x0 + 1, y1 - y0 + 1) <= SLIVER_PX) { crossings++; crossingPx += px.length; } else for (const i of px) strip[i] = 1; }
-  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background");
+    // D-222: a crossing is decided by its SHAPE, not only its size. Two contours meeting at an angle leave a COMPACT piece; a contour
+    // running along the garment (a limb wider than it, a double contour) leaves an ELONGATED one. Compact: the shorter side ≤
+    // SLIVER_PX and the longer ≤ 1.5 × the shorter (contours meeting at ≥ 34°); v3's square allowance stays (a piece ≤ SLIVER_PX in
+    // both directions). The skirt's hem corner meeting the thigh is 6 × 7
+    // px — over v3's square allowance (≤ SLIVER_PX × SLIVER_PX) by one row; the sandals' foot contour beside the sole is 2 × 12 px
+    // and stays a strip.
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lo = Math.min(bw, bh), hi = Math.max(bw, bh);
+    const crossing = hi <= SLIVER_PX || (revision === "d222" && lo <= SLIVER_PX && hi <= 1.5 * lo);   // v3's square allowance, and (D-222) compact
+    if (crossing) { crossings++; crossingPx += px.length; if (hi > SLIVER_PX) crossingShapes.push([bw, bh, px.length]); } else for (const i of px) strip[i] = 1; }
+  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx, ...(revision === "d222" ? { compactCrossingsOverSquare: crossingShapes } : {}) }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background" + (revision === "d222" ? " (D-222: a compact piece where two contours meet at an angle is a crossing, reported)" : ""));
   if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)), [lo, hi] = T.shoes.soleRange;
     add("fit", "FIT-7v2-GROUND", sb.y1 >= lo && sb.y1 <= hi, { soleY: sb.y1, range: [lo, hi] }, "the shoe ends between C's soles and a Northstar sneaker sole below them"); }
   return { hiddenDetail: detailM, slivers: strip, crossings: Mo.and(sl, Mo.not(strip)) };
@@ -193,12 +201,13 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   add("fit", "FIT-3-PROTECT", prot <= lim.protectPx.value, { protectPx: prot }, "nothing over the head or the hands");
   const min = BF.minimumItems(base.R, base.sep.lab), it = category === "top" ? { ...min, ...layers } : category === "bottom" ? { ...min, ...layers } : { ...min, shoes: layers.shoes };
   // D-213: the head as the runtime composes it (D-201's seam rule) — v3 / d210 keep the plain head for their records
-  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order, headSeam: revision === "d213" || revision === "d218" ? "d201" : "plain", hide: revision === "d218" ? hide : null }), c = (m) => count(m);
+  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order, headSeam: revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222" ? "d201" : "plain", hide: revision === "d218" || revision === "d221" || revision === "d222" ? hide : null,
+    enclosure: revision === "d222" ? "c-exterior" : "canvas" }), c = (m) => count(m);
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
-  let masks = null; if (revision === "d210" || revision === "d213" || revision === "d218") masks = fitD210(w, base, T, category, layers, P, add, shadow);
-  if (revision === "d218") { let hid = 0; if (hide) for (let i = 0; i < N; i++) if (hide[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) hid++;
+  let masks = null; if (revision === "d210" || revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222") masks = fitD210(w, base, T, category, layers, P, add, shadow, revision);
+  if (revision === "d218" || revision === "d221" || revision === "d222") { let hid = 0; if (hide) for (let i = 0; i < N; i++) if (hide[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) hid++;
     add("report", "VIS-1-HIDDEN-BODY", true, { hiddenBodyPx: hid }, "body pixels the item hides by its declared covering rule (never a gate; a hole it leaves is FIT-4's)");
     // VIS-2: what an item hides it must REPLACE — hidden body left as background within the item's own column span (top to bottom
     // pixel; below it is the space under a sole or an arch) ≤ 1 % of the hidden body (the remnant rule's share: an item replaces
@@ -206,7 +215,19 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
     if (hide) { const im2 = maskOf(NL.overStack(names.map((k) => layers[k])), 128); let lost = 0;
       for (let x = 0; x < W; x++) { let y0 = -1, y1 = -1; for (let y = 0; y < H; y++) if (im2[y * W + x]) { if (y0 < 0) y0 = y; y1 = y; } if (y0 < 0) continue;
         for (let y = y0; y <= y1; y++) { const i = y * W + x; if (hide[i] && P.dressedRuntime[i * 4 + 3] < 128) lost++; } }
-      add("fit", "VIS-2-REPLACES-HIDDEN-BODY", lost <= 0.01 * Math.max(1, hid), { vanishedInsidePx: lost, hiddenBodyPx: hid, share: +(lost / Math.max(1, hid)).toFixed(4) }, "a covering item replaces the body it hides: no more than 1 % of it left as background inside the item's own extent"); } }
+      add("fit", "VIS-2-REPLACES-HIDDEN-BODY", lost <= 0.01 * Math.max(1, hid), { vanishedInsidePx: lost, hiddenBodyPx: hid, share: +(lost / Math.max(1, hid)).toFixed(4) }, "a covering item replaces the body it hides: no more than 1 % of it left as background inside the item's own extent");
+      // VIS-3 (D-221, closed footwear): the shoe replaces the WHOLE foot inside it — on each side, C's body pixels below the shoe's
+      // solid top that still show (neither hidden nor covered: a toe or a heel beside a too small or too narrow shoe) ≤ 1 % of
+      // C's body pixels there (the same share: an item replaces what it removes)
+      if ((revision === "d221" || revision === "d222") && category === "shoes") { let footPx = 0, shown = 0;
+        // each column's own solid top (an ankle in a collar opening, above the tongue, is meant to show); a column the shoe does not
+        // reach takes the side's highest solid top (a toe or a heel sticking out beside the shoe)
+        for (const left of [true, false]) { const x0 = left ? 0 : W / 2, x1 = left ? W / 2 : W, colTop = new Int32Array(W).fill(H); let top = H;
+          for (let x = x0; x < x1; x++) for (let y = 0; y < H; y++) { let k = 0; while (y + k < H && im2[(y + k) * W + x]) k++; if (k >= SLIVER_PX) { colTop[x] = y; top = Math.min(top, y); break; } if (k) y += k; }
+          if (top >= H) continue;
+          for (let x = x0; x < x1; x++) { let has = false; for (let y = 0; y < H && !has; y++) if (im2[y * W + x]) has = true; const from = has ? colTop[x] : top; if (from >= H) continue;
+            for (let y = from; y < H; y++) { const i = y * W + x; if (!(base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) continue; footPx++; if (!hide[i] && !im2[i] && P.dressedRuntime[i * 4 + 3] >= 128) shown++; } } }
+        add("fit", "VIS-3-REPLACES-WHOLE-FOOT", shown <= 0.01 * Math.max(1, footPx), { footShownPx: shown, footPx, share: +(shown / Math.max(1, footPx)).toFixed(4) }, "a closed shoe replaces the whole foot below its solid top: no more than 1 % of C's foot there still showing (a too small or too narrow shoe)"); } } }
   else {
   let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
   add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");
