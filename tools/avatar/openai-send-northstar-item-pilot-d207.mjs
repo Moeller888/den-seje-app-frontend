@@ -269,7 +269,9 @@ function verifyAuthorisation(c, call, registerLines, prompts) {
     if (!target) problems.push("the reserve is not assigned to an item of the batch");
     else {
       const am = get(c, "reserveAmendment"), r0 = get(target, "result") || {};
-      const amended = !!am && Array.isArray(am.items) && am.items.includes(item) && am.outcome === "HTTP_ERROR_NO_IMAGE" && decides(am.decision, amendToken(item))
+      // D-216: an extension names further items, each through its own later decision's amendment token
+      const amendedBy = (d, items) => Array.isArray(items) && items.includes(item) && decides(d, amendToken(item));
+      const amended = !!am && am.outcome === "HTTP_ERROR_NO_IMAGE" && (amendedBy(am.decision, am.items) || (Array.isArray(am.extensions) && am.extensions.some((x) => x && amendedBy(x.decision, x.items))))
         && target.outcome === "HTTP_ERROR_NO_IMAGE" && r0.httpStatus === 429 && r0.images === 0;
       if (target.mandateState !== "SPENT" || !(target.outcome === "TECHNICAL_REJECT" || amended) || !rowOnce(target.recordedBy)) problems.push("a reserve only follows a TECHNICAL_REJECT of its item recorded by a register decision (or, by D-214's amendment, an HTTP 429 without an image of a named item)");
       if (target.parkedBy) problems.push("the item is parked (" + target.parkedBy + "): no reserve repeats its method");
