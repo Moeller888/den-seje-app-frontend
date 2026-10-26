@@ -1,4 +1,4 @@
-// RUNTIME proof for migration 20261026120000_repeat_answer_coin_reward (D-211). The SQL file is
+// RUNTIME proof for migration 20261026170000_repeat_answer_coin_reward (D-211). The SQL file is
 // executed UNMODIFIED against a real PostgreSQL (PGlite, in-process WebAssembly — no Docker, no
 // network), on top of the process_question_attempt body that 20261018143726 left live, and the
 // tests assert what the function DOES: a correct repeat now earns 1 coin + 2 XP, everything else
@@ -19,7 +19,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (f) => readFileSync(join(ROOT, "supabase", "migrations", f), "utf8");
-const MIGRATION = read("20261026120000_repeat_answer_coin_reward.sql");
+const MIGRATION = read("20261026170000_repeat_answer_coin_reward.sql");
 
 // The live predecessor: the CREATE OR REPLACE inside 20261018143726's EXECUTE $grading$ block.
 const PREVIOUS = (() => {

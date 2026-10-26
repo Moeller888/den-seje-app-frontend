@@ -359,7 +359,7 @@ test("the reviewed spelling migration is the only later definition of the repeat
   // suite (repeat-answer-coin-reward-migration-run) proves that and pins everything else.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
-     "20261026120000_repeat_answer_coin_reward.sql"]);
+     "20261026170000_repeat_answer_coin_reward.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {
