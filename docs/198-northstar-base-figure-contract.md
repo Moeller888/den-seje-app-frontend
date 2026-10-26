@@ -402,3 +402,16 @@ Se `project-state.md` D-216.
 **Resultat:** Fem items er bestået (tank, T-shirt, sweater, shorts og kakibukser). Fire er afvist (sandaler, støvler, nederdel og sneakers).
 
 Se `project-state.md` D-217.
+
+## 22. D-218 — tre områder og dækningsregel for lukket fodtøj
+
+**Tre områder pr. item:**
+1. API-masken, der styrer genereringen. Den er kun vejledende.
+2. Itemets tilladte område.
+3. Kroppens synlighed, styret af itemtypens dækningsregel.
+
+**Lukket fodtøj:** C's fod skjules fra skoens faste top og nedad, og VIS-2 kræver, at skoen erstatter det skjulte. Sandaler skjuler intet.
+
+**Forsøg:** Et maskeret forsøg på 3 kald er forberedt, men ikke autoriseret.
+
+Se `project-state.md` D-218.

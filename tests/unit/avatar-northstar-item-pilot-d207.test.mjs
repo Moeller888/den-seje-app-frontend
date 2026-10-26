@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng } from "../../tools/avatar/r3-hair-tool.mjs";
+import { decodePng } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import * as WR from "../../tools/avatar/northstar-wardrobe.mjs";
 import * as BF from "../../tools/avatar/northstar-base-figure.mjs";
 import * as BC from "../../tools/avatar/northstar-base-figure-c.mjs";
@@ -376,6 +377,34 @@ test("D-216 enclosed holes: a black boot over the base's dark contours is extrac
   for (let y = yc; y < top0; y++) { const [a0, a1] = run0(y); for (let x = a0 + 6; x <= a1 - 6; x++) { const i = y * W + x; if (!T.shoes.allowed[i]) continue; const edge = y < yc + 4 || x < a0 + 10 || x > a1 - 10; if (edge) frame.set([28, 27, 30, 255], i * 4); else win.push(i); } }
   const f = IP.processItem(w, base, T, "shoes", NL.overStack([LEGS, frame])); let filledWin = 0; for (const i of win) if (f.masks.ruleOf[i] === 7) filledWin++;
   assert.ok(win.length > 500); assert.equal(filledWin, 0, "the window onto the shin stays the body's");
+});
+// D-218: the three regions, closed-footwear covering, VIS-2 and the API mask
+test("D-218: closed footwear hides the foot from its solid top down (an arch shows background, the leg in a shaft opening stays C's); a sandal declared closed fails VIS-2; the API mask is guidance on its own region", () => {
+  const min = BF.minimumItems(base.R, base.sep.lab); let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const top0 = Math.min(A.shoeTopY.left, A.shoeTopY.right) - 30, foot = new Uint8Array(N); for (let y = top0; y <= fb; y++) for (let x = 0; x < W; x++) if (LEGS[(y * W + x) * 4 + 3] >= 128) foot[y * W + x] = 1;
+  // a boot 3 px wider than the stand-in's foot, with a NOTCH cut into its sole on each outer side (an arch): the base's foot shows
+  const wide = WR.maskOps.dilate(foot, 3), boot = new Uint8ClampedArray(N * 4), notch = [];
+  for (let i = top0 * W; i <= fb * W + W - 1; i++) if (wide[i] && T.shoes.allowed[i]) boot.set([28, 27, 30, 255], i * 4);
+  for (const left of [true, false]) { let x0 = W, x1 = -1; for (let x = left ? 0 : W / 2; x < (left ? W / 2 : W); x++) if (wide[(fb - 4) * W + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+    const xa = left ? x0 : x1 - 24; for (let y = fb - 14; y <= fb + 3; y++) for (let x = xa; x < xa + 25; x++) { boot.fill(0, (y * W + x) * 4, (y * W + x) * 4 + 4); notch.push(y * W + x); } }
+  // thin rim lines (2 px) of the shaft ABOVE the solid boot, across the leg
+  for (let y = top0 - 20; y < top0 - 18; y++) for (let x = 0; x < W; x++) if (foot[(y + 25) * W + x] || LEGS[(y * W + x) * 4 + 3] >= 128) { const i = y * W + x; if (T.shoes.allowed[i]) boot.set([20, 20, 22, 255], i * 4); }
+  const plain = BC.fitCheck(w, base, T, "shoes", { shoes: boot }, { revision: "d218" }), hide = BC.closedFootwearHidden(base, boot), closed = BC.fitCheck(w, base, T, "shoes", { shoes: boot }, { revision: "d218", hide });
+  const g = (r, id) => r.checks.find((c) => c.id === id);
+  let footInNotch = 0, footInNotchClosed = 0; for (const i of notch) { if (plain.composite[i * 4 + 3] >= 128) footInNotch++; if (closed.composite[i * 4 + 3] >= 128) footInNotchClosed++; }
+  assert.ok(footInNotch > 50 && footInNotchClosed === 0, "the base's foot in the notch: " + footInNotch + " px shown without the covering, " + footInNotchClosed + " with it");
+  assert.ok(g(closed, "FIT-6v2-SILHOUETTE").ok && g(closed, "VIS-2-REPLACES-HIDDEN-BODY").ok && g(closed, "FIT-4-COVERAGE").ok, JSON.stringify(closed.checks.filter((c) => !c.ok)));
+  let legKept = 0, legRows = 0; for (let y = top0 - 17; y < top0 - 2; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (base.body[i * 4 + 3] >= 128 && !boot[i * 4 + 3]) { legRows++; if (!hide[i]) legKept++; } }
+  assert.ok(legRows > 100 && legKept === legRows, "the leg between the rim lines and the solid boot stays C's: " + legKept + " of " + legRows);
+  // a sandal (straps only) declared closed: the foot it hides is not replaced — VIS-2 fails; declared open it hides nothing
+  const straps = new Uint8ClampedArray(N * 4); for (let y = fb - 40; y <= fb + 6; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (wide[i] && T.shoes.allowed[i] && (y > fb - 4 || (y >= fb - 30 && y < fb - 22))) straps.set([140, 86, 46, 255], i * 4); }
+  const mis = BC.fitCheck(w, base, T, "shoes", { shoes: straps }, { revision: "d218", hide: BC.closedFootwearHidden(base, straps) });
+  assert.equal(g(mis, "VIS-2-REPLACES-HIDDEN-BODY").ok, false, JSON.stringify(g(mis, "VIS-2-REPLACES-HIDDEN-BODY").value));
+  const open = BC.regionsC(w, base, T, "shoes", { covering: "open-footwear" }); assert.equal(open.hidden({ shoes: straps }), null);
+  // the three regions: the API edit region contains the item's allowed region, never the head or the hands; the mask is its alpha
+  for (const cat of ["top", "bottom", "shoes"]) { const rg = BC.regionsC(w, base, T, cat); let lost = 0, prot = 0; for (let i = 0; i < N; i++) { if (rg.itemAllowed[i] && !rg.apiEdit[i]) lost++; if (rg.apiEdit[i] && T[cat].protect[i]) prot++; }
+    assert.deepEqual([lost, prot], [0, 0], cat); }
+  const mask = decodePng(IP.apiMaskPng(w, base, T, "bottom")).px, rb = BC.regionsC(w, base, T, "bottom"); let wrong = 0; for (let i = 0; i < N; i++) if ((mask[i * 4 + 3] === 0) !== !!rb.apiEdit[i]) wrong++; assert.equal(wrong, 0, "alpha 0 exactly on the API edit region");
 });
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));

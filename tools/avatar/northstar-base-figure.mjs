@@ -457,8 +457,11 @@ export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the 
 /** D-213: the R3 head as the runtime composes it over a body that owns its neck — D-201's seam rule: the head's leftover collar
  *  edge (neckEdgeMask) is not drawn where the body is opaque; everywhere else the head is unchanged. */
 export function runtimeHead(w, body) { const h = new Uint8ClampedArray(w.head), edge = neckEdgeMask(w); for (let i = 0; i < N; i++) if (edge[i] && body[i * 4 + 3] > 0) h[i * 4 + 3] = 0; return h; }
-export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null, headSeam = "plain" } = {}) {
-  const L = w.base.layers, { lab } = sep || separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
+export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null, headSeam = "plain", hide = null } = {}) {
+  const L = w.base.layers, { lab } = sep || separateBase(R, Z), rb = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
+  // D-218: body VISIBILITY — a worn item may hide body pixels by a declared covering rule (closed footwear hides the foot inside its
+  // own outline); hidden pixels are simply not drawn this time; C itself is never changed
+  const body = hide ? rb.body.map((v, k) => (k % 4 === 3 && hide[k >> 2] ? 0 : v)) : rb.body, arms = hide ? rb.arms.map((v, k) => (k % 4 === 3 && hide[k >> 2] ? 0 : v)) : rb.arms;
   // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" and (D-210)
   // "bottoms-over-top" exist only as control stimuli: a composer that puts the arms under the top's body, or the bottoms over the
   // top, must be caught by the order checks. `stack` names the composed layers in the order used, bottom first.
