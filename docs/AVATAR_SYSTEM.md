@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar item method — D-218 (prepared, no calls): masked edit + controlled composition.**
+  - **Masks.** A GPT Image mask is guidance only (OpenAI), so C is preserved by local composition.
+  - **Three regions.** API mask, item allowed region and body visibility.
+  - **Closed footwear.** It hides the foot from the shoe's solid top down; VIS-2 makes the shoe replace what it hides.
+  - **Experiment.** Plan of 3 calls (skirt, sandals, sneakers control), not authorised.
+  - See `project-state.md` **D-218**.
 - **Northstar clothing pilot — D-217: the sneakers were generated and rejected (an instep arch); the pilot's sending is complete.**
   - **Calls.** 11 of 12 used.
   - **Passed.** Tank, tee, sweater, shorts and khaki trousers.

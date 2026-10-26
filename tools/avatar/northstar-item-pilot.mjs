@@ -23,6 +23,9 @@ import { flat, crop, down, grid } from "./northstar-wardrobe-poc.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
+/** D-218: each item's declared COVERING rule (body visibility when worn): closed footwear hides the foot inside its outline; sandals
+ *  are open and keep C's toes; no other item hides body. A rule of the item type, never of one picture. */
+export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear" });
 export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top", "top-sweater-green": "top", "bottom-shorts-navy": "bottom", "bottom-trousers-khaki": "bottom", "bottom-skirt-plum": "bottom", "shoes-sandals-brown": "shoes", "shoes-sneakers-white": "shoes", "shoes-boots-black": "shoes" });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
@@ -62,7 +65,7 @@ export function applyShadow(composite, stack, shadow) {
 const changedPx = (O, C, i) => { const a = O[i * 4 + 3], b = C[i * 4 + 3]; if (Math.abs(a - b) > CHANGE_TOL) return true; if (a < 128 && b < 128) return false; return [0, 1, 2].some((k) => Math.abs(O[i * 4 + k] - C[i * 4 + k]) > CHANGE_TOL); };
 
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
-export function processItem(w, base, T, category, raw) {
+export function processItem(w, base, T, category, raw, { itemId = null } = {}) {
   if (T.revision !== "d213") throw new Error("processItem needs templatesC(w, base, { revision: \"d213\" })");
   const reg = BF.register(raw, w.fg.master), gen = [], ext = [], obs = {};
   if (!reg.ok) return { registration: reg, ok: false, faults: { generation: ["G-1 registration: the head does not register within ±6 px — never warped"], extraction: [], fit: [] } };
@@ -172,14 +175,15 @@ export function processItem(w, base, T, category, raw) {
   let layers;
   if (category === "top") { const tb = empty(), sl = empty(); for (let i = 0; i < N; i++) if (im[i]) (base.arms[i * 4 + 3] >= 128 ? sl : tb).set(item.subarray(i * 4, i * 4 + 4), i * 4); layers = { topBody: tb, sleeves: sl }; }
   else layers = category === "bottom" ? { pants: item } : { shoes: item };
-  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d213", shadow: shadowPx ? shadow : null });
+  const covering = (itemId && COVERING[itemId]) || "none", hide = BC.regionsC(w, base, T, category, { covering }).hidden(layers);
+  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d218", shadow: shadowPx ? shadow : null, hide });
   const failedFit = fit.checks.filter((c) => c.axis === "fit" && !c.ok);
   // EXTRACTION: a hole in the outfit where the generated picture has opaque paint means the tool missed the item, not the model
-  const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201" });
+  const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201", hide });
   const missedM = new Uint8Array(N); let missedPaint = 0;   // P (below) also places the skin shadow for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) { missedPaint++; missedM[i] = 1; }
   if (missedPaint > 0) ext.push("E-1 " + missedPaint + " px of a hole lie where the generated picture has opaque paint — the extraction missed them");
   const fitFaults = failedFit.filter((c) => !(c.id === "FIT-4-COVERAGE" && missedPaint > 0)).map((c) => c.id + " " + JSON.stringify(c.value));
-  return { masks: { ...(fit.masks || {}), missedPaint: missedM, detached: detachedM, ruleOf }, registration: reg, observations: obs, layers, shadow: shadowPx ? shadow : null, composite: shadowPx ? applyShadow(fit.composite, P.stack, shadow) : fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
+  return { covering, hide, masks: { ...(fit.masks || {}), missedPaint: missedM, detached: detachedM, ruleOf }, registration: reg, observations: obs, layers, shadow: shadowPx ? shadow : null, composite: shadowPx ? applyShadow(fit.composite, P.stack, shadow) : fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
     faults: { generation: gen, extraction: ext, fit: fitFaults }, ok: gen.length === 0 && ext.length === 0 && fit.fitOk, O };
 }
 
@@ -191,7 +195,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
   if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
   const category = ITEMS[itemId]; if (!category) throw new Error("unknown item " + itemId);
   const img = decodePng(rawBuf); if (!img.ok || !img.px || img.px.length !== N * 4) throw new Error("not a 1024×1536 RGBA PNG");
-  const r = processItem(w, base, T, category, Uint8ClampedArray.from(img.px)), files = {};
+  const r = processItem(w, base, T, category, Uint8ClampedArray.from(img.px), { itemId }), files = {};
   const save = (n, im, what) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), w: im.w, h: im.h, what }; };
   save("p01-raw-as-received.png", half(Uint8ClampedArray.from(img.px)), "the raw result, unchanged (shown flattened)");
   if (r.layers) {
@@ -204,7 +208,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
     save("p05-body-changes.png", half(D), "red: pixels outside the item's envelope that differ from C by more than " + CHANGE_TOL + " (the body redrawn by the model)");
     save("p06-app-sizes.png", grid([down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 2, 6), "hub 110×165 and quiz 52×78");
   }
-  const report = { decision: DECISION, method: "D-216 extraction (D-214 + enclosed holes) + fitCheck revision d213", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
+  const report = { decision: DECISION, method: "D-216 extraction + D-218 covering (body visibility) + fitCheck revision d218", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
     checks: (r.checks || []).map(({ axis, id, ok, value }) => ({ axis, id, ok, value })), note: "A technical pass is never the owner's visual approval.", files };
   writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;
@@ -221,7 +225,8 @@ export function combine(w, base, processed, OUT) {
   for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) for (let c = 0; c < 3; c++) {
     const picks = [cats.top[a], cats.bottom[b], cats.shoes[c]], it = { ...min }, marks = [];
     for (const p of picks) { if (p && p.layers) Object.assign(it, p.layers); marks.push(!p || !p.layers ? [150, 150, 150] : p.ok ? [40, 170, 80] : [240, 140, 0]); }
-    const Pc = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, headSeam: "d201" }); let composed = Pc.dressedRuntime;
+    const shoesPick = picks[2], cov = shoesPick && shoesPick.layers ? COVERING[shoesPick.item] || "none" : "none", hideC = cov === "closed-footwear" ? BC.closedFootwearHidden(base, shoesPick.layers.shoes) : null;
+    const Pc = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, headSeam: "d201", hide: hideC }); let composed = Pc.dressedRuntime;
     for (const p of picks) if (p && p.layers && p.shadow) composed = applyShadow(composed, Pc.stack, p.shadow);   // D-214: each item's skin shadow
     // D-210: a PLACEHOLDER (C's own base garment, not a generated item) is hatched diagonally, so no tile passes for a tried outfit
     // (D-212: light stripes — dark ones vanished on the dark grey base shorts)
@@ -239,14 +244,59 @@ export function combine(w, base, processed, OUT) {
   return { tiles: tiles.length, generated: index.filter((o) => o.every((x) => !x.startsWith("missing"))).length, sha256: sha(b), index };
 }
 
+/** D-218 EVIDENCE for one generated picture — four separate measures, never one verdict: (1) what the MODEL changed in its raw
+ *  result against C (inside / outside the item's region, the protected hands and head); (2) which pixels the COMPOSITION uses
+ *  (item, skin shadow, C's visible body, background); (3) which body the item HIDES by its declared covering; (4) real defects at
+ *  seams and edges (FIT-4 holes, FIT-6v2 strips and crossings, VIS-2 vanished body). Local composition keeps C's pixels exactly
+ *  where C shows — that alone does not prove the garment fits; (4) and the owner's eyes do. Writes outside both clones only. */
+export function evidence(w, base, T, itemId, rawBuf, OUT) {
+  if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
+  const category = ITEMS[itemId]; if (!category) throw new Error("unknown item " + itemId);
+  const img = decodePng(rawBuf), raw = Uint8ClampedArray.from(img.px), r = processItem(w, base, T, category, raw, { itemId }), C = base.R, O = r.O, t = T[category];
+  const reg = BC.regionsC(w, base, T, category, { covering: r.covering });
+  const raw1 = { changedInsideItemRegionPx: 0, changedOutsideItemRegionPx: 0, changedProtectedPx: 0, apiEditPx: count(reg.apiEdit), itemAllowedPx: count(reg.itemAllowed) };
+  const D = flat(O, bg);
+  for (let i = 441 * W; i < N; i++) { if (!changedPx(O, C, i)) continue; if (t.protect[i]) { raw1.changedProtectedPx++; D.set([150, 0, 200, 255], i * 4); } else if (reg.itemAllowed[i]) raw1.changedInsideItemRegionPx++; else { raw1.changedOutsideItemRegionPx++; D.set([230, 30, 30, 255], i * 4); } }
+  const min = BF.minimumItems(base.R, base.sep.lab), P = BF.layerProof(w, base.R, base.Z, { ...min, ...r.layers }, { sep: base.sep, headSeam: "d201", hide: r.hide });
+  const own = Mo.toMask(NL.overStack(Object.values(r.layers)), 128), src = { itemPx: 0, skinShadowPx: 0, bodyVisiblePx: 0, bodyHiddenPx: 0, otherLayersPx: 0 }, S = flat(r.composite, bg);
+  for (let i = 441 * W; i < N; i++) { let top = null; for (const [n, L] of P.stack) if (L[i * 4 + 3] >= 128) top = n;
+    if (r.hide && r.hide[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) { src.bodyHiddenPx++; if (!own[i]) S.set([230, 0, 160, 255], i * 4); }
+    if (own[i] && (top === "shoes" || top === "pants" || top === "topBody" || top === "sleeves")) { src.itemPx++; continue; }
+    if (top === "body" || top === "arms") { if (r.shadow && r.shadow[i * 4 + 3]) { src.skinShadowPx++; S.set([0, 170, 220, 255], i * 4); } else src.bodyVisiblePx++; } else if (top) src.otherLayersPx++; }
+  const E = flat(r.composite, bg), m = r.masks || {}; let enclosed = 0;
+  for (let i = 0; i < N; i++) { if (P.enclosed[i]) { E.set([255, 0, 0, 255], i * 4); enclosed++; } else if (m.slivers && m.slivers[i]) E.set([255, 140, 0, 255], i * 4); else if (m.crossings && m.crossings[i]) E.set([240, 220, 0, 255], i * 4); }
+  const noHide = BF.layerProof(w, base.R, base.Z, { ...min, ...r.layers }, { sep: base.sep, headSeam: "d201" }).dressedRuntime;
+  const files = {}, save = (n, im, what) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), what }; };
+  save("e01-raw-changes.png", grid([down(D, 262, 768, FIGB)], 1), "the raw picture: red = changed against C OUTSIDE the item's region (the model redrew the body), purple = changed in a protected region");
+  save("e02-composition-sources.png", grid([down(S, 262, 768, FIGB)], 1), "the composite: cyan = skin shadow on C's body, magenta = C's body HIDDEN by the item's covering and not covered by it (background now); everything else is the item or C's own pixels");
+  const boxes = CLOSE[category], F1 = flat(noHide, bg), F2 = flat(r.composite, bg), tiles = []; for (const bx of boxes) tiles.push(crop(flat(O, bg), bx, 2), crop(F1, bx, 2), crop(F2, bx, 2));
+  save("e03-covering-before-after-x2.png", grid(tiles, 3), "close-ups: raw · composed WITHOUT the covering rule · composed WITH it (" + r.covering + ")");
+  save("e04-seam-defects.png", grid([down(E, 262, 768, FIGB), down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 3, 6), "red = FIT-4 enclosed hole, orange = FIT-6v2 strip, yellow = a crossing (reported); app sizes");
+  const report = { decision: "D-218", item: itemId, category, covering: r.covering, raw: { sha256: sha(rawBuf) }, measures: { modelRawChanges: raw1, compositionSources: src, hiddenBody: { hiddenBodyPx: src.bodyHiddenPx },
+    seams: { enclosedHolePx: enclosed, checks: (r.checks || []).filter((c) => /FIT-4|FIT-6|VIS-|FIT-7/.test(c.id)).map(({ id, ok, value }) => ({ id, ok, value })) } }, ok: r.ok, faults: r.faults,
+    note: "Local composition keeps C's pixels where C shows; it does not prove the garment fits. A technical pass is never the owner's visual approval.", files };
+  writeFileSync(join(OUT, "evidence.json"), JSON.stringify(report, null, 2) + "\n"); return report;
+}
+
+/** D-218: the API mask for a masked edit — the FIRST input image's size, RGBA, alpha 0 (transparent) exactly on regionsC().apiEdit
+ *  (the editable region), opaque elsewhere. Guidance only. Derived from C, so it is written outside both clones; its hash is pinned. */
+export function apiMaskPng(w, base, T, category) {
+  const reg = BC.regionsC(w, base, T, category), px = new Uint8ClampedArray(N * 4);
+  for (let i = 0; i < N; i++) px.set(reg.apiEdit[i] ? [0, 0, 0, 0] : [255, 255, 255, 255], i * 4);
+  return encodePng(W, H, px);
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const a = process.argv.slice(2), oi = a.indexOf("--out"), pi = a.indexOf("--process"), ii = a.indexOf("--item"), ci = a.indexOf("--combine"), OUT = oi >= 0 && a[oi + 1] ? resolve(a[oi + 1]) : null;
-  if (!OUT || (pi < 0 && ci < 0)) { console.error("usage: --process <png> --item <id> --out <dir> | --combine <dir> --out <dir>"); process.exit(1); }
+  const ei = a.indexOf("--evidence"), mi = a.indexOf("--api-mask");
+  if (!OUT || (pi < 0 && ci < 0 && ei < 0 && mi < 0)) { console.error("usage: --process <png> --item <id> --out <dir> | --combine <dir> --out <dir> | --evidence <png> --item <id> --out <dir> | --api-mask --item <id> --out <dir>"); process.exit(1); }
   if (!BF.isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository (D-127 §2)"); process.exit(1); }
   if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
   const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base, { revision: "d213" });
-  if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }
+  if (ei >= 0) { const r = evidence(w, base, T, a[ii + 1], readFileSync(resolve(a[ei + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, covering: r.covering, measures: r.measures }, null, 2)); }
+  else if (mi >= 0) { const id = a[ii + 1], b = apiMaskPng(w, base, T, ITEMS[id]); writeFileSync(join(OUT, "api-mask-" + ITEMS[id] + ".png"), b); console.log(JSON.stringify({ item: id, category: ITEMS[id], sha256: sha(b), bytes: b.length })); }
+  else if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }
   else {
     const root = resolve(a[ci + 1]), processed = {};
     for (const d of readdirSync(root)) { const rp = join(root, d, "report.json"); if (!existsSync(rp)) continue; const r = JSON.parse(readFileSync(rp, "utf8")); const layers = {};
