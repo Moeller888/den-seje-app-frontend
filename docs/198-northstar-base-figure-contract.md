@@ -328,3 +328,45 @@ Etape 2 forbliver lukket. Se `project-state.md` D-208.
 **Resultat:** Tank og shorts er i orden. Sandalerne er TECHNICAL_REJECT (FIT-6v2, anklen tegnet 3 px forskudt). Tålinjer i åbent fodtøj kræver manuel gennemgang.
 
 Se `project-state.md` D-210.
+
+## 16. D-212 — etape 2 til kreditten slap op
+
+**Sendt:** Fire kald med ét kald pr. item.
+- **T-shirt:** TECHNICAL_REJECT på FIT-6v2 (hak ved kraven).
+- **Sweater:** består. Manchetterne er skåret af håndværnet, hvilket er et manuelt fund.
+- **Kakibukser:** består.
+- **Nederdel:** HTTP 429, fordi kreditten var opbrugt. Intet billede.
+
+**Ikke sendt:** Sneakers og støvler. Der er brugt 7 af 12 kald og ingen reserver.
+
+**Outfits:** 6 af de 27 består kun af genererede items. Pladsholdere er skraveret.
+
+Se `project-state.md` D-212.
+
+## 17. D-213 — robust efterbehandling ved kraver, manchetter og åbent fodtøj
+
+**Manchetter:** Håndværnet for toppe begynder ved C's eget håndled og ikke 10 px over Northstars største håndledsanker. G-3 afviser maling over hånden.
+
+**Krave:** T-shirtens afvisning skyldtes vores værktøj, som tog halshud under hovedet. Den er rettet.
+
+**Lys streg på halsen:** Den var en sammensætningsfejl. Rettet med D-201's sømregel.
+
+**Sandaler:** De er fortsat afvist. Tålinjerne er en materialegrænse i råbilledet.
+
+Der er ingen billedkald, ingen reserver og ingen ændrede tærskler.
+
+Se `project-state.md` D-213.
+
+## 18. D-214 — genbrugelige items, skyggelag og reserveændring
+
+**Skygger på huden:** Slagskygger på huden, fx under en manchet, udtrækkes som et særskilt multiply-lag og bages ikke ind i stoffet.
+
+**Hudtoner:** Der er ingen godkendt omfarvning af C (D-132/D-040). Stoflagene er næsten hudfri, men genbrug på tværs af hudtoner er ubevist.
+
+**Sandaler:** Parkeret som afvist.
+
+**Reserveændring:** Én reserve er tildelt nederdelen (HTTP 429 uden billede), og loftet er fortsat 12 kald.
+
+**Klargjort:** Sneakers, støvler og nederdelens reserve afventer bekræftet kredit.
+
+Se `project-state.md` D-214.

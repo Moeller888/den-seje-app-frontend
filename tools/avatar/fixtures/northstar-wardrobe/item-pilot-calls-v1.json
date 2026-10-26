@@ -9,9 +9,10 @@
     "authorised": 12,
     "planned": 9,
     "reserve": 3,
-    "actuallySent": 3,
+    "actuallySent": 7,
     "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools",
-    "recordedBy": "D-208"
+    "recordedBy": "D-212",
+    "stoppedBy": "D-212: the API answered the 7th call with HTTP 429 insufficient_quota (credit_balance_exhausted); every further call would fail the same way and spend a claim, so sending stopped — 2 items and 3 reserves stay unspent; a further send needs the owner's credits and a new execution instruction"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -122,8 +123,18 @@
         "filename": "D-207-item-top-tee-red.claim.json",
         "eventsFilename": "D-207-item-top-tee-red.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-213",
+      "result": {
+        "dispatchedAt": "2026-10-26T12:09:05.467Z",
+        "httpStatus": 200,
+        "requestId": "req_407b884c668a4d7fb28f557ede5b0bec",
+        "imageSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-tee-red/",
+        "note": "D-213: re-recorded — D-212's FIT-6v2 rejection (22 px at the collar) was our tool: the edge-from-the-picture rule took the generated neck skin under the head into the item (the runtime body is empty there). Fixed; all checks pass; no reserve was assigned."
+      }
     },
     {
       "callId": "D-207-item-top-sweater-green",
@@ -140,8 +151,18 @@
         "filename": "D-207-item-top-sweater-green.claim.json",
         "eventsFilename": "D-207-item-top-sweater-green.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-212",
+      "result": {
+        "dispatchedAt": "2026-10-26T12:10:42.167Z",
+        "httpStatus": 200,
+        "requestId": "req_07df50e8473f46ea8918f00839ad1c6d",
+        "imageSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-sweater-green/",
+        "note": "D-213: the cuffs are kept to C's own wrist (the v3 hand guard began 10 px above Northstar's larger wrist anchor and cut 223 px of cuff and its outline); manual finding: a thin skin-coloured cast shadow under each cuff is generated paint in the item."
+      }
     },
     {
       "callId": "D-207-item-bottom-shorts-navy",
@@ -186,8 +207,18 @@
         "filename": "D-207-item-bottom-trousers-khaki.claim.json",
         "eventsFilename": "D-207-item-bottom-trousers-khaki.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-212",
+      "result": {
+        "dispatchedAt": "2026-10-26T12:12:15.982Z",
+        "httpStatus": 200,
+        "requestId": "req_01e11e7965324556b8a4bbe61caedcf6",
+        "imageSha256": "de62cb8331772eabe921eab5c097700a0285f18d8c31450e5b7d077d3b6ecada",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-trousers-khaki/",
+        "note": "all checks pass; the khaki legs are extracted whole (D-210's tolerance 40 — at 60 they would have been explained away as skin)."
+      }
     },
     {
       "callId": "D-207-item-bottom-skirt-plum",
@@ -204,8 +235,18 @@
         "filename": "D-207-item-bottom-skirt-plum.claim.json",
         "eventsFilename": "D-207-item-bottom-skirt-plum.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "HTTP_ERROR_NO_IMAGE",
+      "recordedBy": "D-212",
+      "result": {
+        "dispatchedAt": "2026-10-26T12:13:03.398Z",
+        "httpStatus": 429,
+        "requestId": "req_92556bd8cea44ffa891a88a30533881c",
+        "imageSha256": null,
+        "images": 0,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-skirt-plum/",
+        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent (budget rule), no retry, no fallback. Not a TECHNICAL_REJECT of the item."
+      }
     },
     {
       "callId": "D-207-item-shoes-sandals-brown",
@@ -232,8 +273,10 @@
         "imageSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/",
-        "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned."
-      }
+        "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned. D-213: still TECHNICAL_REJECT (FIT-6v2 ankle, 12 px). Material limit documented: the generated toes lie 1–8 px from C's, and the sole's inner edge follows the generated toes, so C's toes show beside it; no clean sandal on C from this raw without painting or baking the generated foot (skin) into the item."
+      },
+      "parkedBy": "D-214",
+      "parked": "rejected and parked: no reserve repeats the same method; open footwear gets a separate method trial later; the generated foot (skin) is never baked into the item"
     },
     {
       "callId": "D-207-item-shoes-sneakers-white",
@@ -274,18 +317,22 @@
     {
       "callId": "D-207-reserve-1",
       "kind": "reserve",
-      "item": null,
-      "category": null,
+      "item": "bottom-skirt-plum",
+      "category": "bottom",
       "stage": null,
-      "assignedTo": null,
-      "prompt": null,
+      "assignedTo": "bottom-skirt-plum",
+      "prompt": {
+        "item": "bottom-skirt-plum",
+        "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074"
+      },
       "claim": {
         "identity": "D-207-reserve-1-claim",
         "filename": "D-207-reserve-1.claim.json",
         "eventsFilename": "D-207-reserve-1.events.jsonl"
       },
       "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "outcome": "NOT YET ATTEMPTED",
+      "assignedBy": "D-214"
     },
     {
       "callId": "D-207-reserve-2",
@@ -327,5 +374,15 @@
     "ownerApprovalFlag": "--owner-approval=D-207",
     "mergeIsNotAnInstruction": true,
     "executionRequiresSeparateOwnerInstruction": true
+  },
+  "reserveAmendment": {
+    "decision": "D-214",
+    "outcome": "HTTP_ERROR_NO_IMAGE",
+    "httpStatus": 429,
+    "items": [
+      "bottom-skirt-plum"
+    ],
+    "maxReserves": 1,
+    "rule": "owner decision D-214: ONE of the three existing reserves may be assigned to the skirt, whose original call got HTTP 429 (no credit) and no image; the original claim stays spent, the reserve has its own claim; the cap stays 12 calls in all — never 12 plus replacements; no automatic repetition on an error or an undetermined dispatch"
   }
 }

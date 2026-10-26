@@ -385,6 +385,26 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-214: reusable items; skin shadows are their own multiply layer; sandals parked; one
+  reserve assigned to the skirt (bounded amendment for HTTP 429 without an image).**
+  - **Cross-skin-tone reuse.** Unproven: there is no approved recolouring of C (D-132/D-040). The fabric layers hold
+    practically no skin.
+  - **Prepared, not sent.** Sneakers, boots and the skirt's reserve wait for confirmed credit.
+  - See `project-state.md` **D-214**.
+- **Northstar clothing pilot — D-213: post-processing made robust at collars, cuffs and open footwear (no image calls).**
+  - **Cuffs.** The hand guard for tops starts at C's own wrist, and G-3 flags paint over the hand.
+  - **Collar.** The edge rule respects the head.
+  - **Head seam.** The D-201 head seam in the runtime composite removes the pale neck line.
+  - **Results.** Five of six items pass technically. The sandals stay rejected: their toe lines are a documented material
+    limit.
+  - See `project-state.md` **D-213**.
+- **Northstar clothing pilot — D-212: stage 2 ran until the API credit was exhausted (as of 2026-10-26).**
+  - **Generated.** The red tee (TECHNICAL_REJECT, FIT-6v2 collar notch), the green sweater (cuffs cut by the hand guard,
+    a manual finding) and the khaki trousers (clean).
+  - **Stopped.** The skirt returned HTTP 429 insufficient_quota. The sneakers and boots were not sent. 7 of 12 calls used,
+    no reserves.
+  - **Outfits.** 6 of 27 contain only generated items.
+  - See `project-state.md` **D-212**.
 - **Northstar clothing pilot — D-210: post-processing fixed and verified; stage 1 METHOD_OK; stage 2 open (as of 2026-10-26).**
   - **Extraction.** A shift-tolerant, chroma-aware difference (2 px, tolerance 40). The garment is the paint connected to it,
     and its edge comes from the picture. No thin-stripe filtering.

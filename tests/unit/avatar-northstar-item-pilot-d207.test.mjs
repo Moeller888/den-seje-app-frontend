@@ -41,13 +41,21 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 // ── the decision ───────────────────────────────────────────────────────────────────────────────────────────────────────
 test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, each its own one-shot claim; C pinned and never tracked", () => {
   assert.equal(CALLS.decision, "D-207"); assert.equal(CALLS.meta.authorisesImageRequest, false);
-  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 3, "D-208"]);
-  assert.match(CALLS.budget.rule, /an undetermined dispatch reserves its budget and is never repeated automatically/); assert.match(CALLS.budget.rule, /never for a fault of our own tools/);
+  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 7, "D-212"]); assert.match(CALLS.budget.stoppedBy, /insufficient_quota/);
+  assert.match(CALLS.budget.rule, /an undetermined dispatch reserves its budget and is never repeated automatically/);
+  assert.deepEqual([CALLS.reserveAmendment.decision, CALLS.reserveAmendment.outcome, CALLS.reserveAmendment.httpStatus, CALLS.reserveAmendment.items, CALLS.reserveAmendment.maxReserves], ["D-214", "HTTP_ERROR_NO_IMAGE", 429, ["bottom-skirt-plum"], 1]);
+  assert.match(CALLS.reserveAmendment.rule, /never 12 plus replacements/); assert.match(CALLS.budget.rule, /never for a fault of our own tools/);
   assert.equal(CALLS.calls.length, 12); assert.equal(new Set(CALLS.calls.map((c) => c.claim.identity)).size, 12);
   assert.deepEqual(CALLS.stages["1"].items, ["top-tank-teal", "bottom-shorts-navy", "shoes-sandals-brown"]); assert.deepEqual([CALLS.stages["2"].open, CALLS.stages["2"].openedBy], [true, "D-210"]); assert.equal(CALLS.stages["2"].items.length, 6);
   // D-208 recorded stage 1: the three stage-1 items sent once each, none a TECHNICAL_REJECT (so no reserve); everything else unspent
-  for (const c of CALLS.calls) { const s1 = c.kind === "item" && c.stage === 1;
-    assert.equal(c.mandateState, s1 ? "SPENT" : "UNSPENT", c.callId); if (c.kind === "reserve") assert.equal(c.assignedTo, null);
+  // D-212 recorded stage 2: tee, sweater, trousers sent (200), the skirt answered 429 (no credit) — spent; sneakers, boots unspent
+  const S2 = { "top-tee-red": ["SENT_ONCE_GENERATION_OK", 200, 1], "top-sweater-green": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-trousers-khaki": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-skirt-plum": ["HTTP_ERROR_NO_IMAGE", 429, 0] };
+  for (const c of CALLS.calls) { if (c.kind === "item" && S2[c.item]) { assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SPENT", ...S2[c.item].slice(0, 1), c.item === "top-tee-red" ? "D-213" : "D-212", ...S2[c.item].slice(1)], c.callId); continue; }
+    const s1 = c.kind === "item" && c.stage === 1;
+    assert.equal(c.mandateState, s1 ? "SPENT" : "UNSPENT", c.callId);
+    // D-214: reserve 1 assigned to the skirt under the amendment; the others free; the sandals parked
+    if (c.kind === "reserve") assert.deepEqual([c.assignedTo, c.assignedBy || null], c.callId === "D-207-reserve-1" ? ["bottom-skirt-plum", "D-214"] : [null, null], c.callId);
+    if (c.item === "shoes-sandals-brown") assert.equal(c.parkedBy, "D-214");
     // D-210 re-recorded the sandals under the revised checks (FIT-6v2): a TECHNICAL_REJECT, its reserve not assigned
     if (s1) { assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], c.item === "shoes-sandals-brown" ? ["TECHNICAL_REJECT", "D-210", 200, 1] : ["SENT_ONCE_GENERATION_OK", "D-208", 200, 1]); assert.match(c.result.requestId, /^req_[0-9a-f]{32}$/); assert.match(c.result.imageSha256, /^[0-9a-f]{64}$/); } }
   assert.deepEqual([CALLS.request.image.sha256, CALLS.request.image.tracked], [C_SHA, false]); assert.match(CALLS.request.image.approval, /THIS pilot only/);
@@ -111,8 +119,9 @@ function sandbox({ base, withC = HAVE_C } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, shape());
   if (withC) { const d = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(d, { recursive: true }); writeFileSync(join(d, "d202-base-figure-v2.image-1.png"), C_BUF); }
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
-  // the adapter is exercised on the authorisation as D-207 merged it (D-208 recorded the stage-1 sends as spent, D-210 opened stage 2)
-  editCalls(sb, (c) => { c.budget.actuallySent = 0; delete c.budget.recordedBy; c.stages["2"].open = false; c.stages["2"].openedBy = null; for (const e of c.calls) if (e.kind === "item") { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.recordedBy; delete e.result; } });
+  // the adapter is exercised on the authorisation as D-207 merged it (D-208/D-210/D-212 recorded the sends as spent, D-210 opened stage 2)
+  editCalls(sb, (c) => { c.budget.actuallySent = 0; delete c.budget.recordedBy; delete c.budget.stoppedBy; c.stages["2"].open = false; c.stages["2"].openedBy = null; delete c.reserveAmendment;
+    for (const e of c.calls) { delete e.parkedBy; delete e.parked; if (e.kind === "reserve") { e.item = null; e.category = null; e.assignedTo = null; delete e.assignedBy; e.prompt = null; } } for (const e of c.calls) if (e.kind === "item") { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.recordedBy; delete e.result; } });
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb;
@@ -183,10 +192,23 @@ test("stage 2 opens only through D-207's exact status token in a later decision'
   const two = reserve(true, status(tok("D-207-reserve-1"), tok("D-207-reserve-2"))); refused(two, run(two, [...argsOf("D-207-reserve-1"), ...SEND], KEY), "authorisation");
 });
 
+test("D-214 reserve amendment: the skirt's reserve opens only after its HTTP 429 without an image, only through the amendment token; never for another item, a parked item or twice", { skip: SKIP_C }, () => {
+  const status = (...seg) => "Status **`" + seg.join(" — ") + "`**.", AM = "D-207 RESERVE AMENDMENT: HTTP_ERROR_NO_IMAGE -> bottom-skirt-plum", TOK = "D-207 RESERVE: D-207-reserve-1 -> bottom-skirt-plum";
+  const rig = ({ outcome = "HTTP_ERROR_NO_IMAGE", http = 429, images = 0, items = ["bottom-skirt-plum"], row = status(AM, TOK), parked = false, second = false } = {}) => sandbox({ base: (s) => { editCalls(s, (c) => {
+    const t = c.calls.find((x) => x.kind === "item" && x.item === "bottom-skirt-plum"); Object.assign(t, { mandateState: "SPENT", outcome, recordedBy: "D-998", result: { httpStatus: http, images } }); if (parked) t.parkedBy = "D-998";
+    c.reserveAmendment = { decision: "D-999", outcome: "HTTP_ERROR_NO_IMAGE", httpStatus: 429, items, maxReserves: 1 };
+    for (const k of second ? [0, 1] : [0]) Object.assign(c.calls.filter((x) => x.kind === "reserve")[k], { item: "bottom-skirt-plum", category: "bottom", assignedTo: "bottom-skirt-plum", assignedBy: "D-999", prompt: { item: "bottom-skirt-plum", sha256: t.prompt.sha256 } }); });
+    addRow(s, "D-998", status("SKIRT HTTP 429")); addRow(s, "D-999", row); } });
+  const ok = rig(), r = run(ok, argsOf("D-207-reserve-1")); assert.equal(r.status, 0, r.out); assert.match(r.out, /DRY RUN PASSED/);
+  const sent = rig(), rs = run(sent, [...argsOf("D-207-reserve-1"), ...SEND], KEY); assert.equal(rs.status, 0, rs.out); assert.equal(fetchLog(sent)[0].prompt, PROMPTS.items["bottom-skirt-plum"].prompt, "the skirt's frozen request");
+  for (const [what, sb] of [["no amendment token", rig({ row: status(TOK) })], ["the amendment names another item", rig({ items: ["shoes-sneakers-white"] })], ["the item got an image", rig({ outcome: "SENT_ONCE_GENERATION_OK", http: 200, images: 1 })],
+    ["an HTTP error other than 429", rig({ http: 500 })], ["a parked item", rig({ parked: true })], ["a second reserve for the item", rig({ second: true })]]) { refused(sb, run(sb, [...argsOf("D-207-reserve-1"), ...SEND], KEY), "authorisation"); assert.ok(what); }
+});
+
 // ── the processing tool on the stand-in base ───────────────────────────────────────────────────────────────────────────
 const w = WR.buildWardrobe(), L = w.base.layers, A = w.anchors, M = w.fg.master, { W, N } = WR;
 const LEGS = (() => { const legs = new Uint8ClampedArray(L.pants); for (let i = 0; i < (A.crotchY + 10) * W; i++) legs[i * 4 + 3] = 0; return NL.overStack([M, recolour(legs, { h: 33, s: 0.51, vScale: 1.3 })]); })();
-const base = BC.prepareBase(w, LEGS), T = BC.templatesC(w, base, { revision: "d210" });
+const base = BC.prepareBase(w, LEGS), T = BC.templatesC(w, base, { revision: "d213" });
 const only = (k, P = LEGS) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) if (base.sep.lab[i] === k) o.set(P.subarray(i * 4, i * 4 + 4), i * 4); return o; };
 test("processing: a correctly regenerated garment is extracted and fits; a garment left half unreplaced is a GENERATION fault; a drift is rejected", () => {
   const bottoms = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));
@@ -250,7 +272,7 @@ test("D-210 extraction: body contours redrawn up to 2 px off are never item; thi
 
 // D-210 revision of FIT-5 / FIT-6 / FIT-7: what the contract intends passes, every fault stimulus still fails on its own check
 test("D-210 fit revision: intended overlap, open skin and a sole under the foot pass; wrong order, hidden detail, a too-narrow garment and a floating or sunken shoe fail", () => {
-  const min = BF.minimumItems(base.R, base.sep.lab), S = standInItems(w, base), fc = (cat, layers, o = {}) => BC.fitCheck(w, base, T, cat, layers, { revision: "d210", ...o });
+  const min = BF.minimumItems(base.R, base.sep.lab), S = standInItems(w, base), fc = (cat, layers, o = {}) => BC.fitCheck(w, base, T, cat, layers, { revision: "d213", ...o });
   const get = (r, id) => r.checks.find((c) => c.id === id), ok = (r, id) => get(r, id).ok;
   for (const id of ["min-sleeveless-top", "min-shorts"]) { const r = fc(S[id].category, S[id].layers); assert.ok(r.fitOk, id + " " + JSON.stringify(r.checks.filter((c) => !c.ok))); }
   // FIT-5v2 — a sleeve delivered in the body layer, hidden behind the arm: a hidden detail (v3's own stimulus)
@@ -276,6 +298,52 @@ test("D-210 fit revision: intended overlap, open skin and a sole under the foot 
   assert.ok(g7(0).ok, JSON.stringify(g7(0).value)); assert.ok(g7(20).ok, "a sole 20 px under the foot"); assert.equal(g7(-20).ok, false, "lifted 20 px"); assert.equal(g7(40).ok, false, "sunk 40 px");
   // v3 is unchanged for D-205's record
   assert.ok(BC.fitCheck(w, base, BC.templatesC(w, base), "bottom", S["min-shorts"].layers).checks.some((c) => c.id === "FIT-5-ORDER"));
+});
+// D-213: collars, the head seam, long sleeves, fingers and garment colours near skin
+test("D-213: a collar takes no neck skin under the head; the head's collar edge is not drawn over the neck; a long sleeve keeps its cuff to C's wrist; paint over the fingers is a G-3 fault; a light garment is new paint", () => {
+  const top = recolour(only(1), { h: 175, s: 0.55 }), rt = BF.runtimeHead(w, base.body);
+  // a collar: the edge-from-the-picture rule takes nothing under the runtime head (D-210's rule took the neck skin there — the tee's strip)
+  const r = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top])); let underHead = 0;
+  for (let i = 0; i < N; i++) if (rt[i * 4 + 3] >= 128 && r.masks.ruleOf[i] === 6) underHead++;   // the collar under the chin is garment (own base); the neck skin is not
+  assert.equal(underHead, 0, "the edge rule takes nothing under the head");
+  // the head seam: where the head's leftover collar edge lies over an opaque body, the runtime shows the body (D-201), v3 the head
+  const edge = BF.neckEdgeMask(w), P1 = BF.layerProof(w, base.R, base.Z, BF.minimumItems(base.R, base.sep.lab), { sep: base.sep, headSeam: "d201" });
+  const P0 = BF.layerProof(w, base.R, base.Z, BF.minimumItems(base.R, base.sep.lab), { sep: base.sep }); let n = 0, same = 0, differs = 0;
+  for (let i = 0; i < N; i++) if (edge[i] && P1.body[i * 4 + 3] >= 128) { n++; if ([0, 1, 2, 3].every((k) => P1.dressedRuntime[i * 4 + k] === P1.body[i * 4 + k])) same++; if ([0, 1, 2].some((k) => P0.dressedRuntime[i * 4 + k] !== P1.dressedRuntime[i * 4 + k])) differs++; }
+  assert.ok(n > 50 && same === n, "D-201 seam: the body wins on the collar edge (" + same + " of " + n + ")");
+  // runtimeHead drops exactly the collar edge over an opaque body and keeps the rest of the head (the stand-in's neck IS Northstar's,
+  // so the plain composite shows no line there; on C it drew the pale curve — d213-review)
+  let dropped = 0, keptElse = true; for (let i = 0; i < N; i++) { const e = edge[i] && P1.body[i * 4 + 3] > 0; if (e) { if (rt[i * 4 + 3] === 0) dropped++; } else if ([0, 1, 2, 3].some((k) => rt[i * 4 + k] !== w.head[i * 4 + k])) keptElse = false; }
+  assert.ok(dropped > 50 && keptElse, "runtimeHead: " + dropped + " collar-edge pixels dropped, the rest of the head unchanged"); assert.ok(differs >= 0);
+  // a long sleeve from the shoulder down to C's wrist: its cuff is kept to the wrist row (the v3 guard began 10 px above the
+  // larger Northstar wrist anchor); the same sleeve continued over the hand: the hand stays the base's and G-3 reports it
+  const wr = T.top.wristRows, sleeve = (toY) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= A.shoulder.y && y <= toY(x) && base.arms[i * 4 + 3] >= 128) o.set([40, 120, 60, 255], i * 4); } return o; };
+  const toWrist = sleeve((x) => wr[x < W / 2 ? "left" : "right"] - 3), cuff = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top, toWrist]));
+  let painted = 0, kept = 0; for (let i = 0; i < N; i++) { const y = (i / W) | 0; if (toWrist[i * 4 + 3] && y >= Math.min(wr.left, wr.right) - 12) { painted++; if (cuff.layers.sleeves[i * 4 + 3] || cuff.layers.topBody[i * 4 + 3]) kept++; } }
+  assert.ok(painted > 100 && kept === painted, "the cuff's last 12 rows above C's wrist are kept: " + kept + " of " + painted); assert.deepEqual(cuff.faults.generation, []);
+  const v3 = BC.templatesC(w, base); let v3cut = 0; for (let i = 0; i < N; i++) if (toWrist[i * 4 + 3] && v3.top.protect[i]) v3cut++; assert.ok(v3cut > 0, "v3's guard cut that cuff");
+  const overHand = sleeve((x) => wr[x < W / 2 ? "left" : "right"] + 30), oh = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top, overHand]));
+  let onHand = 0; for (let i = 0; i < N; i++) if (T.top.hands[i] && (oh.layers.sleeves[i * 4 + 3] || oh.layers.topBody[i * 4 + 3])) onHand++;
+  assert.equal(onHand, 0, "nothing over C's hand is extracted"); assert.ok(oh.faults.generation.some((f) => f.startsWith("G-3")), JSON.stringify(oh.faults));
+  // a light garment over the legs, ≈ 50 from the stand-in's leg colour in its largest channel: new paint, kept whole
+  let hem = 0; for (let i = 0; i < N; i++) if (base.sep.lab[i] === 2) hem = Math.max(hem, (i / W) | 0);
+  const legs = new Uint8ClampedArray(min_pants()); const leg = []; for (let y = hem; y < Math.min(A.shoeTopY.left, A.shoeTopY.right) - 20; y++) for (let x = 0; x < W; x++) { const i = y * W + x;
+    if (base.body[i * 4 + 3] >= 128 && !base.sep.lab[i] && BF.classify(base.R, i) !== "ink") { const c = base.R.subarray(i * 4, i * 4 + 3); legs.set([Math.min(255, c[0] + 50), Math.min(255, c[1] + 30), Math.min(255, c[2] + 20), 255], i * 4); leg.push(i); } }
+  const lt = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, legs])); let lk = 0; for (const i of leg) if (lt.layers.pants[i * 4 + 3]) lk++;
+  assert.ok(leg.length > 5000 && lk >= 0.99 * leg.length, "a light garment over the legs is new paint: " + lk + " of " + leg.length);
+  function min_pants() { return BF.minimumItems(base.R, base.sep.lab).pants; }
+});
+test("D-214 skin shadow: a cast shadow under a cuff is its own multiply layer and reproduces the picture on C; khaki and brown leather over the skin stay fabric", () => {
+  const top = recolour(only(1), { h: 175, s: 0.55 }), wr = T.top.wristRows, band = (k) => { const o = new Uint8ClampedArray(N * 4), px = [];
+    for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0, w0 = wr[x < W / 2 ? "left" : "right"]; if (base.arms[i * 4 + 3] >= 250 && BF.classify(base.R, i) === "skin" && y >= w0 - 14 && y < w0 - 8) { o.set([...k.map((v, c) => Math.round(base.R[i * 4 + c] * v)), 255], i * 4); px.push(i); } } return { o, px }; };
+  const cuff = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= A.shoulder.y && y < wr[x < W / 2 ? "left" : "right"] - 14 && base.arms[i * 4 + 3] >= 128) cuff.set([40, 120, 60, 255], i * 4); }
+  const sh = band([0.91, 0.77, 0.73]), pic = NL.overStack([LEGS, top, cuff, sh.o]), r = IP.processItem(w, base, T, "top", pic);
+  let inShadow = 0, inFabric = 0; for (const i of sh.px) { if (r.shadow && r.shadow[i * 4 + 3]) inShadow++; if (r.layers.sleeves[i * 4 + 3] || r.layers.topBody[i * 4 + 3]) inFabric++; }
+  // a shadow fainter than the new-paint tolerance (within STRONG_TOL of C there) is no new paint: C's own skin shows (documented)
+  let faint = 0; for (const i of sh.px) if (!(r.shadow && r.shadow[i * 4 + 3])) { let near = false; for (let dy = -IP.EXPLAIN_PX; dy <= IP.EXPLAIN_PX && !near; dy++) for (let dx = -IP.EXPLAIN_PX; dx <= IP.EXPLAIN_PX; dx++) if (IP.colourDist(pic, i, base.R, i + dy * W + dx) <= IP.STRONG_TOL) { near = true; break; } if (near) faint++; }
+  assert.ok(sh.px.length > 50 && inFabric === 0 && inShadow + faint === sh.px.length && inShadow >= 0.8 * sh.px.length, "the cast shadow: " + inShadow + " in the shadow layer, " + faint + " faint (C's skin), " + inFabric + " in the fabric, of " + sh.px.length);
+  let maxd = 0; for (const i of sh.px) for (let c = 0; c < 3; c++) if (r.shadow[i * 4 + 3]) maxd = Math.max(maxd, Math.abs(r.composite[i * 4 + c] - pic[i * 4 + c])); assert.ok(maxd <= 2, "composed, the shadow reproduces the picture (max " + maxd + ")");
+  for (const [what, k] of [["khaki", [0.75, 0.87, 0.97]], ["brown leather", [0.55, 0.44, 0.37]]]) { const b = band(k), q = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top, cuff, b.o])); let s0 = 0; for (const i of b.px) if (q.shadow && q.shadow[i * 4 + 3]) s0++; assert.equal(s0, 0, what + " is fabric, never a skin shadow"); }
 });
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));

@@ -47,6 +47,9 @@ const STAGE1 = Object.freeze(["top-tank-teal", "bottom-shorts-navy", "shoes-sand
 const CALL_IDS = Object.freeze([...ITEMS.map((i) => "D-207-item-" + i), "D-207-reserve-1", "D-207-reserve-2", "D-207-reserve-3"]);
 // D-210: the only status-code segments that open stage 2 or assign a reserve (see verifyAuthorisation)
 const STAGE2_TOKEN = "D-207 STAGE 1: METHOD_OK", reserveToken = (callId, item) => "D-207 RESERVE: " + callId + " -> " + item;
+// D-214 (owner decision): a bounded amendment — a reserve may also follow an item whose one call got HTTP 429 and NO image; only
+// for the items the amendment names, only through this exact status-code segment of the amending decision
+const amendToken = (item) => "D-207 RESERVE AMENDMENT: HTTP_ERROR_NO_IMAGE -> " + item;
 const OWNER_APPROVAL_FLAG = "--owner-approval=D-207";
 const callOf = (id) => ({ callId: id, claimIdentity: id + "-claim", claimFile: id + ".claim.json", eventsFile: id + ".events.jsonl", approvalFlag: OWNER_APPROVAL_FLAG });
 
@@ -265,7 +268,11 @@ function verifyAuthorisation(c, call, registerLines, prompts) {
     item = e.assignedTo; const target = calls.find((x) => x && x.kind === "item" && x.item === item);
     if (!target) problems.push("the reserve is not assigned to an item of the batch");
     else {
-      if (target.mandateState !== "SPENT" || target.outcome !== "TECHNICAL_REJECT" || !rowOnce(target.recordedBy)) problems.push("a reserve only follows a TECHNICAL_REJECT of its item recorded by a register decision");
+      const am = get(c, "reserveAmendment"), r0 = get(target, "result") || {};
+      const amended = !!am && Array.isArray(am.items) && am.items.includes(item) && am.outcome === "HTTP_ERROR_NO_IMAGE" && decides(am.decision, amendToken(item))
+        && target.outcome === "HTTP_ERROR_NO_IMAGE" && r0.httpStatus === 429 && r0.images === 0;
+      if (target.mandateState !== "SPENT" || !(target.outcome === "TECHNICAL_REJECT" || amended) || !rowOnce(target.recordedBy)) problems.push("a reserve only follows a TECHNICAL_REJECT of its item recorded by a register decision (or, by D-214's amendment, an HTTP 429 without an image of a named item)");
+      if (target.parkedBy) problems.push("the item is parked (" + target.parkedBy + "): no reserve repeats its method");
       if (!decides(e.assignedBy, reserveToken(call.callId, item))) problems.push("the reserve's assignment must be recorded by a later register decision whose status code holds " + reserveToken(call.callId, item));
       if (calls.filter((x) => x && x.kind === "reserve" && x.assignedTo === item).length !== 1) problems.push("at most one reserve per item");
     }
