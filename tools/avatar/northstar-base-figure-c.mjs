@@ -52,7 +52,17 @@ export function anchorsOf(w, base) {
  *  (FABRIC_BAND_PX of the silhouette's exterior): there is no skin under it, so an item must cover it or the body has a hole;
  *  the outer band may stay open (it becomes background) and the outfit's silhouette decides there. allowed / protect are the
  *  envelopes of contract v2 measured on C; the sleeve zone is C's own arms grown by 14 px. Nothing here is skin removed. */
-export function templatesC(w, base) {
+export function templatesC(w, base, { revision = "v3" } = {}) {
+  const T = templatesV3(w, base); if (revision !== "d210") return T;
+  // D-210: a sole under a bare foot reaches below C's soles — Northstar's own sneaker sole is NORTHSTAR_SOLE_PX thick — so the
+  // shoes envelope reaches C's lowest sole + that sole + the ground tolerance (v3 cut it at the ground line + 4 and so cut the
+  // generated sandals' soles off, while FIT-7 measured the cut item)
+  const sole = Math.max(T.shoes.soleY.left, T.shoes.soleY.right), low = sole + NORTHSTAR_SOLE_PX + FIT_LIMITS.groundTolPx.value, a = T.shoes.allowed, allowed = new Uint8Array(a);
+  let x0 = W, x1 = -1, y1 = -1; for (let i = 0; i < N; i++) if (a[i]) { const x = i % W; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y1 = Math.max(y1, (i / W) | 0); }
+  for (let y = y1 + 1; y <= Math.min(H - 1, low); y++) for (let x = x0; x <= x1; x++) allowed[y * W + x] = 1;
+  return { ...T, revision: "d210", shoes: { ...T.shoes, allowed, soleRange: [sole - FIT_LIMITS.groundTolPx.value, low] } };
+}
+function templatesV3(w, base) {
   const { R, sep, arms } = base, A = w.anchors, ext = BF.outsideExterior(R), band = Mo.dilate(ext, BF.FABRIC_BAND_PX);
   const lab = (k) => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (sep.lab[i] === k) m[i] = 1; return m; };
   const top = lab(1), bot = lab(2), tb = bbox(top), bb = bbox(bot), armM = maskOf(arms), handsM = Mo.and(armM, Mo.rect(0, Math.max(A.wristY.left, A.wristY.right) - 10, W, H));
@@ -80,7 +90,56 @@ export const FIT_LIMITS = Object.freeze({
   bodyOutsideItemPx: { value: 10, why: "a body contour visible just outside a garment that covers that body part is a double outline (Northstar's jeans on C: 147 px); 10 px allows antialias where two painted contours cross" },
   groundTolPx: { value: 4, why: "contract v2's shoe ground line ± 4" },
 });
-export function fitCheck(w, base, T, category, layers, { order = "contract" } = {}) {
+
+// D-210 revision of FIT-5, FIT-6 and FIT-7 (fitCheck(..., { revision: "d210" })); v3 stays as it was for D-205's record. The
+// stage-1 pilot showed that v3's FIT-5 counted overlap the contract intends (a garment under a layer above it) and its own
+// antialiased rim, FIT-6 counted skin meant to show at open forms (shoulders, the thigh below a hem, feet in sandals), and FIT-7
+// measured shoes cut at the envelope. The values below come from Northstar or from v3, never from the pilot pictures.
+export const NORTHSTAR_SOLE_PX = 28;   // Northstar's sneaker sole: the dark upper/sole seam at y1460, the bottom at y1488
+export const SLIVER_PX = 6;            // v3's FIT-6 ring: a body strip this narrow between a garment and the background
+export const tuckPx = (w) => w.anchors.waistHemY - w.anchors.waistbandY;   // Northstar's tee covers its jeans' waistband by 11 px
+export const FIT_LIMITS_D210 = Object.freeze({
+  wrongOrderShare: { value: 0.005, why: "v3's hiddenItemShare, now only for paint hidden by a layer the contract puts BELOW the item — a wrong composer order" },
+  hiddenDetailShare: { value: 0.005, why: "v3's hiddenItemShare for paint hidden by a layer above it deeper than the tuck (Northstar's tee over its jeans' waistband): a detail the outfit never shows" },
+  sliverPx: { value: 10, why: "v3's bodyOutsideItemPx, now only for body strips ≤ SLIVER_PX wide between the garment and the background in a row or a column and longer than SLIVER_PX along the edge — a limb wider than its garment or a double contour (Northstar's jeans on C); wide skin at an open form is meant, and a piece ≤ SLIVER_PX in both directions is where two painted contours cross (v3's own allowance), reported per crossing" },
+  soleRange: { value: NORTHSTAR_SOLE_PX, why: "the shoe's lowest pixel lies between C's soles − 4 and C's soles + Northstar's sole + 4: a shoe that encloses the foot or puts a sole under it, never floating above the foot or sinking deeper than a sneaker sole" },
+});
+const RANK = { body: 0, shoes: 1, pants: 2, topBody: 3, arms: 4, sleeves: 5, head: 6 };
+
+/** D-210 FIT-5v2 / FIT-6v2 / FIT-7v2 on a layer proof P (contract order or a control order). */
+function fitD210(w, base, T, category, layers, P, add) {
+  const own = Object.keys(layers), lim = FIT_LIMITS_D210;
+  // FIT-5v2: every painted item pixel is either visible, or hidden by a layer the contract ranks ABOVE it within the tuck of a
+  // visible part of the item; hidden by a layer ranked below it is a wrong order; hidden deeper is a detail the outfit never shows
+  const vis = new Uint8Array(N), over = new Uint8Array(N); let painted = 0, wrong = 0;
+  for (let i = 0; i < N; i++) { let L = null; for (const [n, Lr] of P.stack) if (own.includes(n) && layers[n] && Lr[i * 4 + 3] >= 250) L = n; if (!L) continue; painted++;
+    let top = null; for (const [n, Lr] of P.stack) if (Lr[i * 4 + 3] >= 128) top = n;
+    if (own.includes(top)) vis[i] = 1; else if (RANK[top] > RANK[L]) over[i] = 1; else wrong++; }
+  const tuck = Mo.dilate(vis, tuckPx(w)), detailM = new Uint8Array(N); let tucked = 0, detail = 0; for (let i = 0; i < N; i++) if (over[i]) { if (tuck[i]) tucked++; else { detail++; detailM[i] = 1; } }
+  add("fit", "FIT-5v2-ORDER", painted > 0 && wrong / painted <= lim.wrongOrderShare.value && detail / painted <= lim.hiddenDetailShare.value,
+    { paintedPx: painted, wrongOrderPx: wrong, tuckedPx: tucked, hiddenDetailPx: detail, tuckPx: tuckPx(w) }, "no paint hidden by a layer ranked below it; paint under a layer above it only as a tuck of a visible part");
+  // FIT-6v2: a body strip of at most SLIVER_PX between THIS garment and the background (a row or a column): the limb is wider
+  // than the garment there or its contour shows beside it. Hands and head are the base's (never counted).
+  const items = Mo.toMask(P.items, 128), im = Mo.toMask(NL.overStack(own.map((k) => layers[k])), 128), guard = T.top.protect;
+  const kind = (i) => im[i] ? 1 : P.dressedRuntime[i * 4 + 3] < 128 ? 2 : !items[i] && !guard[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128) ? 3 : 0;
+  const sl = new Uint8Array(N), K = new Uint8Array(N); for (let i = 441 * W; i < N; i++) K[i] = kind(i);
+  const scan = (start, step, len) => { let k = 0; while (k < len) { if (K[start + k * step] !== 3) { k++; continue; } let e = k; while (e < len && K[start + e * step] === 3) e++;
+    const a = k > 0 ? K[start + (k - 1) * step] : 2, b = e < len ? K[start + e * step] : 2;
+    if (e - k <= SLIVER_PX && ((a === 1 && b === 2) || (a === 2 && b === 1))) for (let q = k; q < e; q++) sl[start + q * step] = 1; k = e; } };
+  for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441);
+  // a strip along the garment's edge is a sliver; a piece no longer than SLIVER_PX in both directions is where the garment's
+  // outline crosses the body's contour (a strap meeting the shoulder line) — reported, not counted
+  const seen = new Uint8Array(N), strip = new Uint8Array(N); let crossings = 0, crossingPx = 0;
+  for (let s0 = 0; s0 < N; s0++) { if (!sl[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1;
+    while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (sl[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
+    if (Math.max(x1 - x0 + 1, y1 - y0 + 1) <= SLIVER_PX) { crossings++; crossingPx += px.length; } else for (const i of px) strip[i] = 1; }
+  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background");
+  if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)), [lo, hi] = T.shoes.soleRange;
+    add("fit", "FIT-7v2-GROUND", sb.y1 >= lo && sb.y1 <= hi, { soleY: sb.y1, range: [lo, hi] }, "the shoe ends between C's soles and a Northstar sneaker sole below them"); }
+  return { hiddenDetail: detailM, slivers: strip, crossings: Mo.and(sl, Mo.not(strip)) };
+}
+export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3" } = {}) {
   const t = T[category], out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), lim = FIT_LIMITS;
   const names = Object.keys(layers), itemAll = NL.overStack(names.map((k) => layers[k])), im = maskOf(itemAll, 1);
   add("fit", "FIT-1-LAYERS", JSON.stringify(names) === JSON.stringify(t.layers) && names.every((k) => layers[k].length === N * 4), names, "exactly the category's layers, full 1024×1536 RGBA");
@@ -92,6 +151,8 @@ export function fitCheck(w, base, T, category, layers, { order = "contract" } = 
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
+  let masks = null; if (revision === "d210") masks = fitD210(w, base, T, category, layers, P, add);
+  else {
   let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
   add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");
   // FIT-6: only where the item lies over REAL skin (a trouser leg over a thigh, a sleeve over an arm) — there the limb's own
@@ -101,11 +162,12 @@ export function fitCheck(w, base, T, category, layers, { order = "contract" } = 
   for (let i = 441 * W; i < N; i++) if (rowsOver[(i / W) | 0] && near[i] && extNear[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128) && P.dressedRuntime[i * 4 + 3] >= 128) outside++;
   add("fit", "FIT-6-SILHOUETTE", outside <= lim.bodyOutsideItemPx.value, { bodyOutsideItemPx: outside, rowsOverSkin: count(rowsOver) }, "where the garment lies over real skin, the limb's contour does not show just outside it at the outer silhouette");
   if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)); add("fit", "FIT-7-GROUND", Math.abs(sb.y1 - t.groundY) <= lim.groundTolPx.value, { soleY: sb.y1, groundY: t.groundY }, "the soles on the ground line ± 4"); }
+  }
   const q = WR.sharpness(itemAll), o = BF.outlineShare(itemAll, 0); let haze = 0, px = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3]) { px++; if (itemAll[i * 4 + 3] < 128) haze++; }
   add("quality", "Q-1-OUTLINE", o >= 0.45, { darkShare: +o.toFixed(3) }, "Northstar's dark painted contour (D-197 I6)");
   add("quality", "Q-2-SHARPNESS", q >= 0.7, { lapToGrad: +q.toFixed(3) }, "crisp painted detail (D-197 I7)");
   add("quality", "Q-3-ALPHA", haze <= 0.06 * px, { share: +(haze / Math.max(1, px)).toFixed(4) }, "a clean cut-out (D-197 I5)");
-  return { checks: out, fitOk: out.filter((x) => x.axis === "fit").every((x) => x.ok), qualityOk: out.filter((x) => x.axis === "quality").every((x) => x.ok), composite: P.dressedRuntime };
+  return { masks, checks: out, fitOk: out.filter((x) => x.axis === "fit").every((x) => x.ok), qualityOk: out.filter((x) => x.axis === "quality").every((x) => x.ok), composite: P.dressedRuntime };
 }
 
 /** COMPATIBILITY with Northstar's old clothing (D-197 defaults on C): a report, never a gate — D-204's documented limitation. */

@@ -310,3 +310,21 @@ De tre råbilleder er behandlet igen uden nye kald.
 Begge kræver ejerens beslutning. Ingen grænse er ændret.
 
 Etape 2 forbliver lukket. Se `project-state.md` D-208.
+
+## 15. D-210 — rettet efterbehandling og etape 1 METHOD_OK
+
+**Udtrækning.** En pixel er ny maling, hvis intet i C inden for 2 px forklarer den. Det vurderes på kanalforskel og kroma med tolerance 40, målt på etape 1's omtegning.
+- Beklædningen er den maling, der hænger sammen med basistøjets indre eller når sållinjen.
+- Løsrevne stykker er kroppens konturer og rapporteres. Tykke løsrevne stykker giver E-2.
+- Der filtreres ikke tynde striber væk.
+
+**Kontrollerne** findes i revision `d210`. v3 bevares.
+- **FIT-5v2:** skjult maling skelnes efter lagrang. Tilsigtet overlap på 11 px er tilladt; forkert rækkefølge og skjulte detaljer fejler.
+- **FIT-6v2:** kun strimler langs kanten tæller. Krydsningspunkter rapporteres.
+- **FIT-7v2:** sålen skal ligge mellem C's såler og en Northstar-sål (28 px) under dem.
+
+**Åbning af etape 2:** kun via segmentet `D-207 STAGE 1: METHOD_OK` i statuskoden for en senere beslutning. En reserve kræver `D-207 RESERVE: <call id> -> <item>`.
+
+**Resultat:** Tank og shorts er i orden. Sandalerne er TECHNICAL_REJECT (FIT-6v2, anklen tegnet 3 px forskudt). Tålinjer i åbent fodtøj kræver manuel gennemgang.
+
+Se `project-state.md` D-210.
