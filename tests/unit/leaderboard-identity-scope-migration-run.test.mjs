@@ -25,6 +25,8 @@ import { PGlite } from "@electric-sql/pglite";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const MIG = (f) => readFileSync(join(ROOT, "supabase", "migrations", f), "utf8").split("\r\n").join("\n");
 const FILE = "20261026120000_leaderboard_identity_scope.sql";
+// Temporary containment applied to production before D-209 (EXECUTE revoked from every API role).
+const CONTAINMENT = "20261026110000_leaderboard_execute_containment.sql";
 
 // One function statement out of a repository migration, verbatim.
 function fnStatement(file, name) {
@@ -78,6 +80,10 @@ const FIXTURE = `
   CREATE TABLE public.student_progress (student_id uuid PRIMARY KEY, prestige_score int NOT NULL DEFAULT 0, xp int NOT NULL DEFAULT 0);
   CREATE TABLE public.titles (id text PRIMARY KEY, name text, rarity text);
   INSERT INTO public.titles VALUES ('legend', 'Legenden', 'legendary'), ('rare', 'Opdageren', 'rare');
+  -- For the classroom tab (get_classroom_leaderboard, get_weekly_activity), which must stay unchanged.
+  CREATE TABLE public.teacher_spotlights (teacher_id uuid, student_id uuid, label text, message text, created_at timestamptz DEFAULT now());
+  CREATE TABLE public.question_instances (student_id uuid, answered_at timestamptz);
+  INSERT INTO public.question_instances VALUES ('${A1}', now()), ('${A1}', now()), ('${A2}', now());
   GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
   INSERT INTO auth.users VALUES
@@ -113,7 +119,11 @@ async function freshDb() {
     CREATE POLICY profiles_self_update ON public.profiles FOR UPDATE TO authenticated
       USING (id = auth.uid()) WITH CHECK (id = auth.uid() AND role = public.auth_profile_role());`);
   await db.exec(fnStatement("20260519000300_leaderboard.sql", "get_leaderboard"));
-  await db.exec(`GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO PUBLIC, anon, authenticated, service_role;`);
+  await db.exec(fnStatement("20260519000400_social.sql", "get_classroom_leaderboard"));
+  await db.exec(fnStatement("20260519000400_social.sql", "get_weekly_activity"));
+  // Production's ACL on all three today: PUBLIC, postgres, anon, authenticated, service_role.
+  await db.exec(`GRANT EXECUTE ON FUNCTION public.get_leaderboard(), public.get_classroom_leaderboard(), public.get_weekly_activity()
+    TO PUBLIC, anon, authenticated, service_role;`);
   return db;
 }
 
@@ -295,7 +305,70 @@ test("re-running the file changes nothing (grants and definition are idempotent)
   assert.deepEqual(await snap(), before);
 });
 
+// ── Production sequence: containment first, then D-209 ───────────────────────────────────────
+test("sequence: open → containment (no API role, no PUBLIC) → D-209 (authenticated only, identity-scoped); classroom tab unchanged", async () => {
+  const db = await freshDb();
+  const exec = async () => (await db.query(`SELECT
+      has_function_privilege('anon', 'public.get_leaderboard()', 'EXECUTE') anon,
+      has_function_privilege('authenticated', 'public.get_leaderboard()', 'EXECUTE') auth,
+      has_function_privilege('service_role', 'public.get_leaderboard()', 'EXECUTE') svc,
+      has_function_privilege('authenticator', 'public.get_leaderboard()', 'EXECUTE') authr,
+      has_function_privilege('postgres', 'public.get_leaderboard()', 'EXECUTE') pg,
+      EXISTS (SELECT 1 FROM pg_proc p, aclexplode(p.proacl) a WHERE p.oid = 'public.get_leaderboard()'::regprocedure AND a.grantee = 0) pub,
+      (SELECT proacl::text FROM pg_proc WHERE oid = 'public.get_leaderboard()'::regprocedure) acl,
+      (SELECT md5(prosrc) || ' ' || array_to_string(proconfig, ';') FROM pg_proc WHERE oid = 'public.get_leaderboard()'::regprocedure) body`)).rows[0];
+  const classroom = async () => (await db.query(`SELECT proname, prosrc, proacl::text acl, proconfig::text cfg FROM pg_proc
+      WHERE proname IN ('get_classroom_leaderboard', 'get_weekly_activity') ORDER BY 1`)).rows;
+  const classCalls = async () => [
+    await api(db, user(A1), "SELECT player_rank, display_name, xp FROM public.get_classroom_leaderboard() ORDER BY 1, 2"),
+    await api(db, user(A1), "SELECT display_name, weekly_answers FROM public.get_weekly_activity() ORDER BY 1"),
+  ];
+
+  // 1. Today's open model: every role reaches the function, PUBLIC included.
+  const open = await exec();
+  assert.deepEqual([open.anon, open.auth, open.svc, open.authr, open.pg, open.pub], [true, true, true, true, true, true]);
+  const classBefore = await classroom();
+  const callsBefore = await classCalls();
+  for (const c of callsBefore) assert.ok(c.ok, c.message);
+
+  // 2. Containment.
+  await db.exec(MIG(CONTAINMENT));
+
+  // 3. Effective privileges: no API role, no PUBLIC; the function body is untouched.
+  const c = await exec();
+  assert.deepEqual([c.anon, c.auth, c.svc, c.authr, c.pg, c.pub], [false, false, false, false, true, false]);
+  assert.equal(c.acl, "{postgres=X/postgres}");
+  assert.equal(c.body, open.body, "containment changes privileges only");
+  for (const who of [ANON, SERVICE, user(A1), user(TA), user(SA)]) refused(await api(db, who, LB), "42501", /permission denied/);
+  assert.deepEqual(await classroom(), classBefore);
+  assert.deepEqual(await classCalls(), callsBefore);
+  await db.exec(MIG(CONTAINMENT));
+  assert.equal((await exec()).acl, "{postgres=X/postgres}", "re-running the containment changes nothing");
+
+  // 4. The D-209 migration.
+  await db.exec(MIG(FILE));
+
+  // 5. The new model: authenticated only, names and ids scoped; the classroom tab still unchanged.
+  const d = await exec();
+  assert.deepEqual([d.anon, d.auth, d.svc, d.authr, d.pg, d.pub], [false, true, false, false, true, false]);
+  assert.equal(d.acl, "{postgres=X/postgres,authenticated=X/postgres}");
+  const rows = await board(db, A1);
+  assert.deepEqual(named(rows), ["navn-a1", "navn-a2"]);
+  assert.deepEqual(withId(rows), [A1]);
+  assertNoTrace(rows, [...classB, ...classC], "A1 after containment and D-209");
+  refused(await api(db, ANON, LB), "42501", /permission denied/);
+  refused(await api(db, user(NP), LB), "42501", /forbidden/);
+  assert.deepEqual(await classroom(), classBefore);
+  assert.deepEqual(await classCalls(), callsBefore);
+});
+
 // ── Boundaries ───────────────────────────────────────────────────────────────────────────────
+test("the containment migration only revokes EXECUTE on get_leaderboard from PUBLIC and the three API roles", () => {
+  const sql = MIG(CONTAINMENT).split("\n").filter((l) => !l.trimStart().startsWith("--")).join(" ").replace(/\s+/g, " ").trim();
+  assert.equal(sql, "REVOKE EXECUTE ON FUNCTION public.get_leaderboard() FROM PUBLIC, anon, authenticated, service_role;");
+  assert.ok(CONTAINMENT < FILE, "the containment sorts before the D-209 migration");
+});
+
 test("the migration touches only get_leaderboard: no D-206 function, no grant to anon", () => {
   const sql = MIG(FILE).split("\n").filter((l) => !l.trimStart().startsWith("--")).join("\n");
   assert.ok(!/get_concept_states|evaluate_achievements/.test(sql));
