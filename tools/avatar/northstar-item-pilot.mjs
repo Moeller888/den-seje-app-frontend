@@ -25,7 +25,8 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
 export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top", "top-sweater-green": "top", "bottom-shorts-navy": "bottom", "bottom-trousers-khaki": "bottom", "bottom-skirt-plum": "bottom", "shoes-sandals-brown": "shoes", "shoes-sneakers-white": "shoes", "shoes-boots-black": "shoes" });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
-export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this belongs to the item
+export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
+export const STRONG_TOL = 60;   // D-208: a change this large is new paint (a garment over skin or background), not redrawn body shading
 export const LIMITS = Object.freeze({
   remnantShare: { value: 0.01, why: "the item must replace the base garment: more than 1 % of the base interior left identical to C means the base shows through the item (a generation fault)" },
 });
@@ -49,13 +50,25 @@ export function processItem(w, base, T, category, raw) {
   obs.bodyChangedOutsideEnvelopePx = outside; obs.protectedChangedPx = inProtect; obs.headChangedPx = head; obs.comparedBodyPx = bodyPx;
   // the item: generated pixels that differ from C inside the envelope (never in a protected region), plus the base interior
   const item = empty(), im = new Uint8Array(N), own = category === "top" ? 1 : category === "bottom" ? 2 : 0; let remnant = 0, mc = 0;
-  // item pixels: (a) generated pixels that differ from C inside the envelope and are not skin (skin the model redraws is body,
-  // never item); (b) the whole base interior (it must be covered); (c) any opaque, non-skin pixel where C had THIS category's base garment —
-  // at runtime the base is gone, so whatever the picture shows there is the new garment (its outline may equal the old one).
-  // A base-interior pixel left unchanged and not ink is a remnant of the base fabric (a generation fault, G-2).
-  for (let i = 441 * W; i < N; i++) { const inMust = t.mustCover[i], cls = classify(O, i); if (inMust) { mc++; if (!changed[i] && cls !== "ink") remnant++; }
-    const take = inMust || (cls !== null && cls !== "skin" && ((changed[i] && t.allowed[i] && !t.protect[i]) || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)));
-    if (!take || O[i * 4 + 3] === 0) continue; item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; }
+  // D-208 extraction (stage 1 showed two systematic faults of the D-207 rule, both in this tool): the model redraws the body's
+  // contour lines 1–2 px off, and ink is not skin, so contour lines entered the item; and "never skin" by hue dropped brown and
+  // tan garment paint (sandal straps). The item is now the GARMENT REGION: (1) fill — pixels that changed STRONGLY from C (any
+  // channel > STRONG_TOL, or the alpha), lie inside the envelope and outside the protected regions, kept only where they survive
+  // a 2 px opening (a shifted body contour line or sliver, ≤ 4 px wide, vanishes; garment areas — dark shading included — stay); (2) the whole base interior
+  // and every opaque pixel where C had THIS category's base garment (the base is gone at runtime); (3) the garment's own outline
+  // and antialiasing: changed pixels within 3 px of (1)/(2); (4) below. A mildly changed pixel (24 … 60) elsewhere is redrawn body shading;
+  // a contour line farther than 3 px from the garment is the body's own. A base-interior pixel left unchanged and not ink is a
+  // remnant of the base fabric (a generation fault, G-2).
+  const strong = new Uint8Array(N); for (let i = 441 * W; i < N; i++) { if (!t.allowed[i] || t.protect[i] || O[i * 4 + 3] < 128) continue;
+    if (Math.abs(O[i * 4 + 3] - C[i * 4 + 3]) > 128 || [0, 1, 2].some((k) => Math.abs(O[i * 4 + k] - C[i * 4 + k]) > STRONG_TOL)) strong[i] = 1; }
+  const fill = Mo.dilate(Mo.not(Mo.dilate(Mo.not(strong), 2)), 2), core = new Uint8Array(N);
+  for (let i = 441 * W; i < N; i++) { if (t.mustCover[i]) { mc++; if (!changed[i] && classify(O, i) !== "ink") remnant++; }
+    if ((fill[i] && strong[i]) || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)) core[i] = 1; }
+  // (4) gaps up to 6 px inside the garment region (closing by 3 px) — where an old body contour crossed new paint of nearly the same
+  // darkness, the pixel did not "change", and C's line would show through the item — are taken from the generated picture too
+  const closed = Mo.not(Mo.dilate(Mo.not(Mo.dilate(core, 3)), 3)), near = Mo.dilate(core, 3);
+  for (let i = 441 * W; i < N; i++) { if (O[i * 4 + 3] === 0) continue; const inside = t.allowed[i] && !t.protect[i];
+    if (core[i] || (inside && closed[i]) || (near[i] && changed[i] && inside)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; } }
   obs.baseRemnantPx = remnant; obs.baseRemnantShare = +(remnant / Math.max(1, mc)).toFixed(4);
   if (mc && remnant / mc > LIMITS.remnantShare.value) gen.push("G-2 base remnant: " + remnant + " px of the base interior unchanged from C (" + (100 * remnant / mc).toFixed(1) + " %)");
   // the layer split: a top's pixels over C's arm pixels are sleeves, the rest its body

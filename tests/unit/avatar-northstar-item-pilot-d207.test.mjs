@@ -40,11 +40,14 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 // ── the decision ───────────────────────────────────────────────────────────────────────────────────────────────────────
 test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, each its own one-shot claim; C pinned and never tracked", () => {
   assert.equal(CALLS.decision, "D-207"); assert.equal(CALLS.meta.authorisesImageRequest, false);
-  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent], [12, 9, 3, 0]);
+  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 3, "D-208"]);
   assert.match(CALLS.budget.rule, /an undetermined dispatch reserves its budget and is never repeated automatically/); assert.match(CALLS.budget.rule, /never for a fault of our own tools/);
   assert.equal(CALLS.calls.length, 12); assert.equal(new Set(CALLS.calls.map((c) => c.claim.identity)).size, 12);
   assert.deepEqual(CALLS.stages["1"].items, ["top-tank-teal", "bottom-shorts-navy", "shoes-sandals-brown"]); assert.equal(CALLS.stages["2"].open, false); assert.equal(CALLS.stages["2"].items.length, 6);
-  for (const c of CALLS.calls) { assert.equal(c.mandateState, "UNSPENT"); if (c.kind === "reserve") assert.equal(c.assignedTo, null); }
+  // D-208 recorded stage 1: the three stage-1 items sent once each, none a TECHNICAL_REJECT (so no reserve); everything else unspent
+  for (const c of CALLS.calls) { const s1 = c.kind === "item" && c.stage === 1;
+    assert.equal(c.mandateState, s1 ? "SPENT" : "UNSPENT", c.callId); if (c.kind === "reserve") assert.equal(c.assignedTo, null);
+    if (s1) { assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SENT_ONCE_GENERATION_OK", "D-208", 200, 1]); assert.match(c.result.requestId, /^req_[0-9a-f]{32}$/); assert.match(c.result.imageSha256, /^[0-9a-f]{64}$/); } }
   assert.deepEqual([CALLS.request.image.sha256, CALLS.request.image.tracked], [C_SHA, false]); assert.match(CALLS.request.image.approval, /THIS pilot only/);
   assert.ok(!JSON.stringify(CALLS).includes("fitting-base") && !JSON.stringify(PROMPTS).includes("fitting-base"), "no H1");
   assert.equal(BC.loadFreeze().raw.sha256, C_SHA);
@@ -106,6 +109,8 @@ function sandbox({ base, withC = HAVE_C } = {}) {
   writeFileSync(sb.gitconfig, "[core]\n\tautocrlf = false\n[init]\n\tdefaultBranch = main\n"); writeFileSync(sb.mock, MOCK_SRC); writeFileSync(sb.log, ""); writeFileSync(sb.png, shape());
   if (withC) { const d = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(d, { recursive: true }); writeFileSync(join(d, "d202-base-figure-v2.image-1.png"), C_BUF); }
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the adapter is exercised on the authorisation as D-207 merged it (D-208 has since recorded the stage-1 sends as spent)
+  editCalls(sb, (c) => { c.budget.actuallySent = 0; delete c.budget.recordedBy; for (const e of c.calls) if (e.kind === "item") { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.recordedBy; delete e.result; } });
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb;
@@ -145,13 +150,16 @@ test("an uncertain dispatch is spent and never repeated", { skip: SKIP_C }, () =
   assert.equal(run(sb, [...argsOf(id), ...SEND], KEY).status, 1); assert.equal(fetchLog(sb).length, 1);
 });
 test("stage 2 opens only through a recorded METHOD_OK decision; a reserve only for a recorded TECHNICAL_REJECT, once per item, same prompt", { skip: SKIP_C }, () => {
-  const open = sandbox({ base: (s) => { editCalls(s, (c) => { c.stages["2"].open = true; c.stages["2"].openedBy = "D-208"; }); addRow(s, "D-208", "stage 1 METHOD_OK"); } });
+  // the sandbox's hypothetical later decision is D-999 — the real D-208 row exists and must never open stage 2 (asserted below)
+  const open = sandbox({ base: (s) => { editCalls(s, (c) => { c.stages["2"].open = true; c.stages["2"].openedBy = "D-999"; }); addRow(s, "D-999", "stage 1 METHOD_OK"); } });
   assert.equal(run(open, argsOf(idOf("top-tee-red"))).status, 0);
-  const notOk = sandbox({ base: (s) => { editCalls(s, (c) => { c.stages["2"].open = true; c.stages["2"].openedBy = "D-208"; }); addRow(s, "D-208", "stage 1 inspected"); } });
+  const notOk = sandbox({ base: (s) => { editCalls(s, (c) => { c.stages["2"].open = true; c.stages["2"].openedBy = "D-999"; }); addRow(s, "D-999", "stage 1 inspected"); } });
   refused(notOk, run(notOk, [...argsOf(idOf("top-tee-red")), ...SEND], KEY), "authorisation");
-  const reserve = (assign2) => sandbox({ base: (s) => { editCalls(s, (c) => { const t = c.calls.find((x) => x.item === "top-tank-teal"); t.mandateState = "SPENT"; t.outcome = "TECHNICAL_REJECT"; t.recordedBy = "D-208";
-    for (const k of assign2 ? [0, 1] : [0]) { const r = c.calls.filter((x) => x.kind === "reserve")[k]; r.assignedTo = "top-tank-teal"; r.assignedBy = "D-208"; r.item = "top-tank-teal"; r.prompt = { item: "top-tank-teal", sha256: t.prompt.sha256 }; } });
-    addRow(s, "D-208", "top-tank-teal TECHNICAL_REJECT; D-207-reserve-1 D-207-reserve-2 assigned"); } });
+  const d208 = sandbox({ base: (s) => editCalls(s, (c) => { c.stages["2"].open = true; c.stages["2"].openedBy = "D-208"; }) });
+  refused(d208, run(d208, [...argsOf(idOf("top-tee-red")), ...SEND], KEY), "authorisation"); assert.ok(!REGISTER.split("\n").find((l) => l.startsWith("| **D-208** |")).includes("METHOD_OK"), "D-208 records stage 1 as not method-approved");
+  const reserve = (assign2) => sandbox({ base: (s) => { editCalls(s, (c) => { const t = c.calls.find((x) => x.item === "top-tank-teal"); t.mandateState = "SPENT"; t.outcome = "TECHNICAL_REJECT"; t.recordedBy = "D-999";
+    for (const k of assign2 ? [0, 1] : [0]) { const r = c.calls.filter((x) => x.kind === "reserve")[k]; r.assignedTo = "top-tank-teal"; r.assignedBy = "D-999"; r.item = "top-tank-teal"; r.prompt = { item: "top-tank-teal", sha256: t.prompt.sha256 }; } });
+    addRow(s, "D-999", "top-tank-teal TECHNICAL_REJECT; D-207-reserve-1 D-207-reserve-2 assigned"); } });
   const one = reserve(false), r = run(one, [...argsOf("D-207-reserve-1"), ...SEND], KEY); assert.equal(r.status, 0, r.out);
   assert.equal(fetchLog(one)[0].prompt, PROMPTS.items["top-tank-teal"].prompt, "the reserve sends the item's frozen request");
   const spentItem = reserve(false); refused(spentItem, run(spentItem, [...argsOf(idOf("top-tank-teal")), ...SEND], KEY), "authorisation");
@@ -177,6 +185,27 @@ test("processing: a redrawn hand is reported, never extracted into the item; a t
   assert.ok(r.observations.protectedChangedPx > 0); let inItem = 0; for (let i = 0; i < N; i++) if (T.top.protect[i] && (r.layers.topBody[i * 4 + 3] || r.layers.sleeves[i * 4 + 3])) inItem++; assert.equal(inItem, 0);
   const sleeve = new Uint8ClampedArray(N * 4); for (let y = 650; y < 720; y++) for (let x = 0; x < W; x++) if (base.arms[(y * W + x) * 4 + 3] >= 128) sleeve.set([40, 140, 120, 255], (y * W + x) * 4);
   const s = IP.processItem(w, base, T, "top", NL.overStack([LEGS, recolour(only(1), { h: 175, s: 0.55 }), sleeve])); let sl = 0; for (let i = 0; i < N; i++) if (s.layers.sleeves[i * 4 + 3]) sl++; assert.ok(sl > 1000, "the paint over the arm is in the sleeve layer");
+});
+// D-208's measured limit: a 3 px contour redrawn 2 px off leaves a ≥ 5 px changed band that survives the 2 px opening (the
+// stand-in's right shin keeps a ~6 px stripe); stage 1's real pictures showed no such stripe below the hems — recorded, not hidden.
+// The 2 px opening also trims a strap's corner where it crosses a dark line (28 of 3,437 px on the stand-in's sneaker lines)
+test("D-208 extraction: a body contour redrawn 1 px off is never item; a brown strap with dark shading is kept whole", () => {
+  const shorts = recolour(only(2), { h: 120, s: 0.5 }); let hem = 0; for (let i = 0; i < N; i++) if (shorts[i * 4 + 3]) hem = Math.max(hem, (i / W) | 0);
+  const yLo = hem + 12, yHi = hem + 140, moved = new Uint8ClampedArray(LEGS);
+  for (let y = yLo; y < yHi; y++) for (let x = W - 1; x >= 1; x--) moved.set(LEGS.subarray((y * W + x - 1) * 4, (y * W + x) * 4), (y * W + x) * 4);
+  let exercised = 0; for (let y = yLo; y < yHi; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (T.bottom.allowed[i] && !T.bottom.protect[i] && moved[i * 4 + 3] !== LEGS[i * 4 + 3]) exercised++; }
+  assert.ok(exercised > 0, "the shifted contour lies inside the bottoms envelope, so the old rule would have taken it");
+  const r = IP.processItem(w, base, T, "bottom", NL.overStack([moved, shorts])); let stray = 0;
+  for (let y = yLo; y < yHi; y++) for (let x = 0; x < W; x++) if (r.layers.pants[(y * W + x) * 4 + 3]) stray++;
+  assert.equal(stray, 0, "a redrawn body contour below the garment is the body's own, never the item's");
+  let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const sandal = new Uint8ClampedArray(N * 4); let painted = 0;
+  for (let y = fb - 40; y < fb - 26; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (LEGS[i * 4 + 3] < 128 || !T.shoes.allowed[i] || T.shoes.protect[i]) continue;
+    sandal.set(y >= fb - 36 && y < fb - 32 ? [70, 42, 24, 255] : [140, 86, 46, 255], i * 4); painted++; }
+  assert.ok(painted > 500, "the strap lies on the feet inside the shoes envelope");
+  const s = IP.processItem(w, base, T, "shoes", NL.overStack([LEGS, sandal])); let kept = 0;
+  for (let i = 0; i < N; i++) if (sandal[i * 4 + 3] && s.layers.shoes[i * 4 + 3]) kept++;
+  assert.ok(kept >= 0.99 * painted, kept + " of " + painted + ": brown leather and its dark shading are garment paint, not skin or ink"); assert.deepEqual(s.faults.extraction, []);
 });
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));

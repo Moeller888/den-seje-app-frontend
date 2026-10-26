@@ -290,3 +290,23 @@ Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 
 **Behandling:** Registrering, udtrækning mod C, opdeling i lag samt kontrol af ændret krop, rester af basistøj, pasform (contract v3) og kvalitet. Fejl klassificeres som generering, udtrækning eller pasform.
 
 Kørsel kræver ejerens særskilte eksekveringsbesked. D-206 er sikkerheds-PR #407.
+
+## 14. D-208 — etape 1 kørt og inspiceret (ikke METHOD_OK)
+
+**Afsendt:** Tank, shorts og sandaler blev sendt én gang hver. 3 af 12 kald er brugt, og der er ingen reserver.
+
+**Generering:** I orden. Basistøjsresterne er 13, 12 og 0 px.
+
+**Udtrækning:** To systematiske fejl i vores værktøj er rettet:
+- Forskudte kropskonturer kom med som item.
+- Brunt læder blev udelukket som hud.
+
+De tre råbilleder er behandlet igen uden nye kald.
+
+**Pasform (åbne fund):**
+- FIT-5 tæller en linning, som med rette ligger under toppen.
+- FIT-6 tæller hud, som er ment at være synlig ved åbne former.
+
+Begge kræver ejerens beslutning. Ingen grænse er ændret.
+
+Etape 2 forbliver lukket. Se `project-state.md` D-208.
