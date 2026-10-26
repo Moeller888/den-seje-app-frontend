@@ -1,0 +1,140 @@
+{
+  "decision": "D-218",
+  "track": "Northstar item method — the masked-edit experiment on C (D-218 plan, owner GO)",
+  "meta": {
+    "authorisesImageRequest": false,
+    "rule": "Only an entry below, verified field by field from origin/main by tools/avatar/openai-send-northstar-mask-d218.mjs, can be sent; the owner's D-218 GO message is the execution instruction for exactly these three calls."
+  },
+  "budget": {
+    "authorised": 3,
+    "reserve": 0,
+    "actuallySent": 0,
+    "rule": "exactly three image calls (M-1, M-2, M-3), one generation each; no variant, no reserve, no retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "mask",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "image": {
+      "name": "d202-base-figure-v2.image-1.png",
+      "role": "Image 1 — C, the frozen base (D-205); the mask applies to it",
+      "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+      "bytes": 1300423,
+      "tracked": false
+    },
+    "prompts": "tools/avatar/fixtures/northstar-wardrobe/item-pilot-prompts-v1.json (D-207, unchanged)",
+    "onlyVariable": "the mask — every other field equals the item's D-207 request"
+  },
+  "calls": [
+    {
+      "callId": "D-218-mask-M-1",
+      "case": "M-1",
+      "item": "bottom-skirt-plum",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-skirt-plum",
+        "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074"
+      },
+      "mask": {
+        "dir": "bottom-skirt-plum",
+        "sha256": "31cf690b5d30b33d5e0e14c6bee5623b99c8c64ff3bd81b98a37950e71ac4f46",
+        "bytes": 10761,
+        "editPx": 316078,
+        "location": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/masks/bottom-skirt-plum/api-mask-bottom.png",
+        "tracked": false
+      },
+      "claim": {
+        "identity": "D-218-mask-M-1-claim",
+        "filename": "D-218-mask-M-1.claim.json",
+        "eventsFilename": "D-218-mask-M-1.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-218-mask-M-2",
+      "case": "M-2",
+      "item": "shoes-sandals-brown",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-sandals-brown",
+        "sha256": "ee12ec55b360440e909acbc4e8f12c2ab921cde56dee27ebbe26e91d559e070c"
+      },
+      "mask": {
+        "dir": "shoes-sandals-brown",
+        "sha256": "b472d661b4c782a9523186a0c66f88e2cd44efcfb29a5ac3d72bb876cd16399f",
+        "bytes": 9523,
+        "editPx": 136148,
+        "location": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/masks/shoes-sandals-brown/api-mask-shoes.png",
+        "tracked": false
+      },
+      "claim": {
+        "identity": "D-218-mask-M-2-claim",
+        "filename": "D-218-mask-M-2.claim.json",
+        "eventsFilename": "D-218-mask-M-2.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-218-mask-M-3",
+      "case": "M-3",
+      "item": "shoes-sneakers-white",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-sneakers-white",
+        "sha256": "79dc423dcfea0dd0d9588a9300cd299a79371cc13c3a9deee4cbfaefed072159"
+      },
+      "mask": {
+        "dir": "shoes-sneakers-white",
+        "sha256": "b472d661b4c782a9523186a0c66f88e2cd44efcfb29a5ac3d72bb876cd16399f",
+        "bytes": 9523,
+        "editPx": 136148,
+        "location": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/masks/shoes-sneakers-white/api-mask-shoes.png",
+        "tracked": false
+      },
+      "claim": {
+        "identity": "D-218-mask-M-3-claim",
+        "filename": "D-218-mask-M-3.claim.json",
+        "eventsFilename": "D-218-mask-M-3.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    }
+  ],
+  "outputs": {
+    "dir": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/<call id>/",
+    "storage": "OUTSIDE both clones (D-127 §2); never tracked, never published"
+  },
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-mask-d218.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-218",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
