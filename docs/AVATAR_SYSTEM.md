@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-215: the sneakers' call again got HTTP 429 (no credit) after the owner's confirmation;
+  sending stopped.**
+  - **Calls.** 8 of 12 used. The boots and the skirt's reserve are unspent and prepared.
+  - **Results.** Unchanged from D-214.
+  - See `project-state.md` **D-215**.
 - **Northstar clothing pilot — D-214: reusable items; skin shadows are their own multiply layer; sandals parked; one
   reserve assigned to the skirt (bounded amendment for HTTP 429 without an image).**
   - **Cross-skin-tone reuse.** Unproven: there is no approved recolouring of C (D-132/D-040). The fabric layers hold
