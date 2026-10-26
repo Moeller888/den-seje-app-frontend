@@ -188,13 +188,12 @@ cannot double-award.
   name a student for back-fills. Live since 2026-10-25 (D-206): repo file
   `20261025120000_student_rpc_caller_scope.sql`, **remote ledger version `20261025172041`** (≠ the
   repo filename, as with other D-110 migrations; stored SQL byte-identical to the file).
-- **The global leaderboard (`get_leaderboard`, the "Alle" tab) is temporarily unavailable**: since
-  2026-10-26 11:35 UTC no API role may call it (containment `20261026110000_leaderboard_execute_containment.sql`,
-  remote ledger version `20261026113548`; EXECUTE revoked from PUBLIC, `anon`, `authenticated` and
-  `service_role`). The tab shows "Kunne ikke hente rangliste"; the "Min klasse" tab is unaffected.
-- **The global leaderboard will be identity-scoped** (D-209, migration
-  `20261026120000_leaderboard_identity_scope.sql`, **not yet applied**; it lifts the containment by
-  granting EXECUTE to `authenticated` only): the ranking covers every
+- **The global leaderboard (`get_leaderboard`, the "Alle" tab) is identity-scoped** (D-209). Live since
+  2026-10-26 16:17 UTC: repo file `20261026120000_leaderboard_identity_scope.sql`, **remote ledger
+  version `20261026161704`** (stored SQL byte-identical to the file). It replaced the temporary
+  containment `20261026110000_leaderboard_execute_containment.sql` (remote `20261026113548`, 11:35 UTC),
+  which had revoked EXECUTE from every API role. Database-verified; not yet verified through real
+  Supabase Auth (D-219). The ranking covers every
   student, but names are returned only for the caller and their classmates (a teacher: their own
   pupils; a `super_admin`: none) and `user_id` only on the caller's own row; every other row is
   `'Elev'` / NULL. A caller without a profile is refused; EXECUTE for `authenticated` only. Rank,
