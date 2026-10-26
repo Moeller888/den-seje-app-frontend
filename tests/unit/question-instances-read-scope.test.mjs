@@ -256,6 +256,14 @@ const REVIEWED_LATER_READERS = {
     "answered_at, id) and returns a band, never instance data. Its only write is to the new table " +
     "student_band_state (RLS on, no policies, no client privileges). No policy, RLS, table privilege or " +
     "existing function on question_instances is touched (proven in question-format-mix-migration-run.test.mjs).",
+  "20261025120000_student_rpc_caller_scope.sql":
+    "re-creates get_concept_states with its exact aggregate read of question_instances (one student's answered " +
+    "rows, returned only as concept → state labels) behind a NEW caller check: the pupil themself, the pupil's " +
+    "teacher (profiles.teacher_id = auth.uid() and the caller's role is 'teacher'), a super_admin, or the internal database context (session_user " +
+    "postgres/supabase_admin without a JWT subject) — everyone else gets 'forbidden'. EXECUTE only for " +
+    "authenticated (revoked from PUBLIC, anon and service_role). It NARROWS who can reach the read; " +
+    "no policy, RLS or table privilege on question_instances is touched (proven in " +
+    "student-rpc-caller-scope-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -381,7 +389,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261016150000_analytics_views_lockdown.sql",
      "20261016160000_answer_keys_server_side_rpcs.sql",
      "20261018143726_fix_danish_question_bank_text.sql",
-     "20261019150000_question_format_mix.sql"],
+     "20261019150000_question_format_mix.sql",
+     "20261025120000_student_rpc_caller_scope.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

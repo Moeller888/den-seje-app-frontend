@@ -387,7 +387,7 @@ art layer behind them can be upgraded without a rewrite.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
 - **Northstar clothing pilot on C — D-207: at most 12 image calls authorised (9 items in two stages, at most 3 reserve
   calls), C sent as the reference for this pilot only, frozen prompts, one-shot claims; not yet attempted (as of
-  2026-10-26).** D-206 is reserved for security PR #407.
+  2026-10-26).** D-206 is security PR #407.
   - **Tools.** `openai-send-northstar-item-pilot-d207.mjs` (send) and `northstar-item-pilot.mjs` (`--process`, `--combine`).
   - See `project-state.md` **D-207**.
 - **Northstar base figure — D-205: C frozen as the development candidate (numbers tracked, pixels outside the clones);

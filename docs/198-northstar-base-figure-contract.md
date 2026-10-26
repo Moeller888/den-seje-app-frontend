@@ -289,4 +289,4 @@ Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 
 
 **Behandling:** Registrering, udtrækning mod C, opdeling i lag samt kontrol af ændret krop, rester af basistøj, pasform (contract v3) og kvalitet. Fejl klassificeres som generering, udtrækning eller pasform.
 
-Kørsel kræver ejerens særskilte eksekveringsbesked. D-206 er reserveret til sikkerheds-PR #407.
+Kørsel kræver ejerens særskilte eksekveringsbesked. D-206 er sikkerheds-PR #407.
