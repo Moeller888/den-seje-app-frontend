@@ -342,3 +342,17 @@ Se `project-state.md` D-210.
 **Outfits:** 6 af de 27 består kun af genererede items. Pladsholdere er skraveret.
 
 Se `project-state.md` D-212.
+
+## 17. D-213 — robust efterbehandling ved kraver, manchetter og åbent fodtøj
+
+**Manchetter:** Håndværnet for toppe begynder ved C's eget håndled og ikke 10 px over Northstars største håndledsanker. G-3 afviser maling over hånden.
+
+**Krave:** T-shirtens afvisning skyldtes vores værktøj, som tog halshud under hovedet. Den er rettet.
+
+**Lys streg på halsen:** Den var en sammensætningsfejl. Rettet med D-201's sømregel.
+
+**Sandaler:** De er fortsat afvist. Tålinjerne er en materialegrænse i råbilledet.
+
+Der er ingen billedkald, ingen reserver og ingen ændrede tærskler.
+
+Se `project-state.md` D-213.

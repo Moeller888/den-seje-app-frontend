@@ -124,8 +124,8 @@
         "eventsFilename": "D-207-item-top-tee-red.events.jsonl"
       },
       "mandateState": "SPENT",
-      "outcome": "TECHNICAL_REJECT",
-      "recordedBy": "D-212",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-213",
       "result": {
         "dispatchedAt": "2026-10-26T12:09:05.467Z",
         "httpStatus": 200,
@@ -133,7 +133,7 @@
         "imageSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973",
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-tee-red/",
-        "note": "generation OK, extraction OK; FIT-6v2 fails — 22 px where the collar meets C's neck contour at a slant (a diagonal junction longer than 6 px; visually a small notch). Limits unchanged; a reserve is allowed by the batch rules but NOT assigned."
+        "note": "D-213: re-recorded — D-212's FIT-6v2 rejection (22 px at the collar) was our tool: the edge-from-the-picture rule took the generated neck skin under the head into the item (the runtime body is empty there). Fixed; all checks pass; no reserve was assigned."
       }
     },
     {
@@ -161,7 +161,7 @@
         "imageSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-sweater-green/",
-        "note": "all checks pass; manual finding: the cuffs' last 4–5 rows (223 px, their bottom outline included) lie in the hand guard (from y837; the model ends the cuffs at y841) and are cut flat — a contract limit for long sleeves, no check catches it."
+        "note": "D-213: the cuffs are kept to C's own wrist (the v3 hand guard began 10 px above Northstar's larger wrist anchor and cut 223 px of cuff and its outline); manual finding: a thin skin-coloured cast shadow under each cuff is generated paint in the item."
       }
     },
     {
@@ -273,7 +273,7 @@
         "imageSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/",
-        "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned."
+        "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned. D-213: still TECHNICAL_REJECT (FIT-6v2 ankle, 12 px). Material limit documented: the generated toes lie 1–8 px from C's, and the sole's inner edge follows the generated toes, so C's toes show beside it; no clean sandal on C from this raw without painting or baking the generated foot (skin) into the item."
       }
     },
     {
