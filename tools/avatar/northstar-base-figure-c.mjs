@@ -127,7 +127,7 @@ export const FIT_LIMITS_D210 = Object.freeze({
 const RANK = { body: 0, shoes: 1, pants: 2, topBody: 3, arms: 4, sleeves: 5, head: 6 };
 
 /** D-210 FIT-5v2 / FIT-6v2 / FIT-7v2 on a layer proof P (contract order or a control order). */
-function fitD210(w, base, T, category, layers, P, add) {
+function fitD210(w, base, T, category, layers, P, add, shadow = null) {
   const own = Object.keys(layers), lim = FIT_LIMITS_D210;
   // FIT-5v2: every painted item pixel is either visible, or hidden by a layer the contract ranks ABOVE it within the tuck of a
   // visible part of the item; hidden by a layer ranked below it is a wrong order; hidden deeper is a detail the outfit never shows
@@ -140,7 +140,8 @@ function fitD210(w, base, T, category, layers, P, add) {
     { paintedPx: painted, wrongOrderPx: wrong, tuckedPx: tucked, hiddenDetailPx: detail, tuckPx: tuckPx(w) }, "no paint hidden by a layer ranked below it; paint under a layer above it only as a tuck of a visible part");
   // FIT-6v2: a body strip of at most SLIVER_PX between THIS garment and the background (a row or a column): the limb is wider
   // than the garment there or its contour shows beside it. Hands and head are the base's (never counted).
-  const items = Mo.toMask(P.items, 128), im = Mo.toMask(NL.overStack(own.map((k) => layers[k])), 128), guard = T.top.protect;
+  // D-214: the item's skin shadow (a multiply layer) is the item's material too — composed, it shows exactly the picture's pixel
+  const sh = shadow ? Mo.toMask(shadow, 128) : new Uint8Array(N), items = Mo.or(Mo.toMask(P.items, 128), sh), im = Mo.or(Mo.toMask(NL.overStack(own.map((k) => layers[k])), 128), sh), guard = T.top.protect;
   const kind = (i) => im[i] ? 1 : P.dressedRuntime[i * 4 + 3] < 128 ? 2 : !items[i] && !guard[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128) ? 3 : 0;
   const sl = new Uint8Array(N), K = new Uint8Array(N); for (let i = 441 * W; i < N; i++) K[i] = kind(i);
   const scan = (start, step, len) => { let k = 0; while (k < len) { if (K[start + k * step] !== 3) { k++; continue; } let e = k; while (e < len && K[start + e * step] === 3) e++;
@@ -159,7 +160,7 @@ function fitD210(w, base, T, category, layers, P, add) {
     add("fit", "FIT-7v2-GROUND", sb.y1 >= lo && sb.y1 <= hi, { soleY: sb.y1, range: [lo, hi] }, "the shoe ends between C's soles and a Northstar sneaker sole below them"); }
   return { hiddenDetail: detailM, slivers: strip, crossings: Mo.and(sl, Mo.not(strip)) };
 }
-export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3" } = {}) {
+export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3", shadow = null } = {}) {
   const t = T[category], out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), lim = FIT_LIMITS;
   const names = Object.keys(layers), itemAll = NL.overStack(names.map((k) => layers[k])), im = maskOf(itemAll, 1);
   add("fit", "FIT-1-LAYERS", JSON.stringify(names) === JSON.stringify(t.layers) && names.every((k) => layers[k].length === N * 4), names, "exactly the category's layers, full 1024×1536 RGBA");
@@ -172,7 +173,7 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
-  let masks = null; if (revision === "d210" || revision === "d213") masks = fitD210(w, base, T, category, layers, P, add);
+  let masks = null; if (revision === "d210" || revision === "d213") masks = fitD210(w, base, T, category, layers, P, add, shadow);
   else {
   let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
   add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");

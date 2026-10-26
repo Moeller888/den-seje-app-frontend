@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-214: reusable items; skin shadows are their own multiply layer; sandals parked; one
+  reserve assigned to the skirt (bounded amendment for HTTP 429 without an image).**
+  - **Cross-skin-tone reuse.** Unproven: there is no approved recolouring of C (D-132/D-040). The fabric layers hold
+    practically no skin.
+  - **Prepared, not sent.** Sneakers, boots and the skirt's reserve wait for confirmed credit.
+  - See `project-state.md` **D-214**.
 - **Northstar clothing pilot — D-213: post-processing made robust at collars, cuffs and open footwear (no image calls).**
   - **Cuffs.** The hand guard for tops starts at C's own wrist, and G-3 flags paint over the hand.
   - **Collar.** The edge rule respects the head.

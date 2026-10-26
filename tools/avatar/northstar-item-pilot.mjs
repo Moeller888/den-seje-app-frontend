@@ -45,6 +45,20 @@ export function readC() {
  *  grey antialiased contour differs by only 50 in its largest channel but by 54 in chroma. */
 export const colourDist = (O, i, C, j) => { let m = 0; for (let k = 0; k < 4; k++) m = Math.max(m, Math.abs(O[i * 4 + k] - C[j * 4 + k]));
   return Math.max(m, Math.abs((O[i * 4] - O[i * 4 + 1]) - (C[j * 4] - C[j * 4 + 1])), Math.abs((O[i * 4 + 1] - O[i * 4 + 2]) - (C[j * 4 + 1] - C[j * 4 + 2]))); };
+/** D-214: C's own skin-shading floor — the 10th percentile of the red ratio of C's shaded skin pixels to C's base skin tone (the
+ *  median skin colour of C's body); measured on C (cached on the prepared base), never on an item. */
+export function shadeFloorC(base) {
+  if (base._shadeFloor !== undefined) return base._shadeFloor; const C = base.R, sk = [];
+  for (let i = 441 * W; i < N; i++) if ((base.body[i * 4 + 3] >= 250 || base.arms[i * 4 + 3] >= 250) && classify(C, i) === "skin") sk.push(i);
+  const med = (c) => { const v = sk.map((i) => C[i * 4 + c]).sort((a, b) => a - b); return v[v.length >> 1] || 1; }, B = [med(0), med(1), med(2)];
+  const kr = sk.map((i) => C[i * 4] / B[0]).filter((v) => v < 0.98).sort((a, b) => a - b);
+  return (base._shadeFloor = kr.length ? kr[Math.floor(0.1 * (kr.length - 1))] : 1); }
+/** D-214: multiply a skin-shadow layer onto a composed figure, only where the body or the arms are the topmost layer. */
+export function applyShadow(composite, stack, shadow) {
+  const o = new Uint8ClampedArray(composite);
+  for (let i = 0; i < N; i++) { const a = shadow[i * 4 + 3]; if (!a) continue; let top = null; for (const [n, L] of stack) if (L[i * 4 + 3] >= 128) top = n; if (top !== "body" && top !== "arms") continue;
+    for (let c = 0; c < 3; c++) o[i * 4 + c] = Math.round(composite[i * 4 + c] * (1 - a / 255 + (a / 255) * shadow[i * 4 + c] / 255)); }
+  return o; }
 const changedPx = (O, C, i) => { const a = O[i * 4 + 3], b = C[i * 4 + 3]; if (Math.abs(a - b) > CHANGE_TOL) return true; if (a < 128 && b < 128) return false; return [0, 1, 2].some((k) => Math.abs(O[i * 4 + k] - C[i * 4 + k]) > CHANGE_TOL); };
 
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
@@ -124,18 +138,32 @@ export function processItem(w, base, T, category, raw) {
   }
   obs.baseRemnantPx = remnant; obs.baseRemnantShare = +(remnant / Math.max(1, mc)).toFixed(4);
   if (mc && remnant / mc > LIMITS.remnantShare.value) gen.push("G-2 base remnant: " + remnant + " px of the base interior unchanged from C (" + (100 * remnant / mc).toFixed(1) + " %)");
+  // D-214 SKIN SHADOW: a shadow the garment casts on C's skin (the cast shadow under a cuff) is no fabric — baked into the fabric
+  // layer it is C's skin tone, wrong on any other. It is kept as its own material, a MULTIPLY layer (the face's blush is one,
+  // D-016/D-022: the body owns skin): an item pixel over C's skin, outside the base interior and this category's base, whose
+  // colour is C's own skin there darkened the way C itself shades skin — every channel ratio k = O/C ≤ 1.02, red ≥ C's own
+  // shading floor (its 10th percentile, measured on C; darker is contour antialias or brown garment paint), warm order
+  // kR ≥ kG ≥ kB (± 0.02 / 0.04; khaki over skin has the opposite order) and darker than C (kR < 0.98). Its value is the multiply
+  // factor 255·k; composed only where the body is the topmost layer, it reproduces the picture on C. Nothing is painted.
+  const shade = shadeFloorC(base), shadow = empty(); let shadowPx = 0;
+  for (let i = 441 * W; i < N; i++) { if (!im[i] || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own) || O[i * 4 + 3] < 128) continue;
+    if (!(base.body[i * 4 + 3] >= 250 || base.arms[i * 4 + 3] >= 250) || classify(C, i) !== "skin" || classify(O, i) !== "skin") continue;
+    const k = [0, 1, 2].map((c) => O[i * 4 + c] / Math.max(1, C[i * 4 + c]));
+    if (k.some((v) => v > 1.02) || k[0] < shade || k[0] >= 0.98 || k[0] < k[1] - 0.02 || k[1] < k[2] - 0.04) continue;
+    shadow.set([...k.map((v) => Math.round(255 * Math.min(1, v))), O[i * 4 + 3]], i * 4); item.fill(0, i * 4, i * 4 + 4); im[i] = 0; shadowPx++; }
+  obs.skinShadowPx = shadowPx;
   // the layer split: a top's pixels over C's arm pixels are sleeves, the rest its body
   let layers;
   if (category === "top") { const tb = empty(), sl = empty(); for (let i = 0; i < N; i++) if (im[i]) (base.arms[i * 4 + 3] >= 128 ? sl : tb).set(item.subarray(i * 4, i * 4 + 4), i * 4); layers = { topBody: tb, sleeves: sl }; }
   else layers = category === "bottom" ? { pants: item } : { shoes: item };
-  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d213" });
+  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d213", shadow: shadowPx ? shadow : null });
   const failedFit = fit.checks.filter((c) => c.axis === "fit" && !c.ok);
   // EXTRACTION: a hole in the outfit where the generated picture has opaque paint means the tool missed the item, not the model
   const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201" });
-  const missedM = new Uint8Array(N); let missedPaint = 0; for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) { missedPaint++; missedM[i] = 1; }
+  const missedM = new Uint8Array(N); let missedPaint = 0;   // P (below) also places the skin shadow for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) { missedPaint++; missedM[i] = 1; }
   if (missedPaint > 0) ext.push("E-1 " + missedPaint + " px of a hole lie where the generated picture has opaque paint — the extraction missed them");
   const fitFaults = failedFit.filter((c) => !(c.id === "FIT-4-COVERAGE" && missedPaint > 0)).map((c) => c.id + " " + JSON.stringify(c.value));
-  return { masks: { ...(fit.masks || {}), missedPaint: missedM, detached: detachedM, ruleOf }, registration: reg, observations: obs, layers, composite: fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
+  return { masks: { ...(fit.masks || {}), missedPaint: missedM, detached: detachedM, ruleOf }, registration: reg, observations: obs, layers, shadow: shadowPx ? shadow : null, composite: shadowPx ? applyShadow(fit.composite, P.stack, shadow) : fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
     faults: { generation: gen, extraction: ext, fit: fitFaults }, ok: gen.length === 0 && ext.length === 0 && fit.fitOk, O };
 }
 
@@ -152,6 +180,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
   save("p01-raw-as-received.png", half(Uint8ClampedArray.from(img.px)), "the raw result, unchanged (shown flattened)");
   if (r.layers) {
     for (const [k, L] of Object.entries(r.layers)) writeFileSync(join(OUT, "layer-" + k + ".png"), encodePng(W, H, L));
+    if (r.shadow) writeFileSync(join(OUT, "shadow-multiply.png"), encodePng(W, H, r.shadow));   // D-214: the skin shadow, its own material
     save("p02-item-layers.png", grid(Object.values(r.layers).map((L) => down(checker(L), 262, 768, FIGB)), Object.keys(r.layers).length), "the extracted layer(s) on a checkerboard: " + Object.keys(r.layers).join(" · "));
     save("p03-on-c.png", grid([half(r.composite), half(NL.overStack([r.O, w.head]))], 2), "the item on C's runtime body (contract order, other categories in the minimum items) beside the raw picture with the R3 head");
     const F = flat(r.composite, bg); save("p04-close-ups-x2.png", grid(CLOSE[category].map((b) => crop(F, b, 2)), CLOSE[category].length > 2 ? 2 : CLOSE[category].length), "the seams ×2");
@@ -159,7 +188,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
     save("p05-body-changes.png", half(D), "red: pixels outside the item's envelope that differ from C by more than " + CHANGE_TOL + " (the body redrawn by the model)");
     save("p06-app-sizes.png", grid([down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 2, 6), "hub 110×165 and quiz 52×78");
   }
-  const report = { decision: DECISION, method: "D-213 extraction + fitCheck revision d213", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
+  const report = { decision: DECISION, method: "D-214 extraction (D-213 + skin-shadow layer) + fitCheck revision d213", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
     checks: (r.checks || []).map(({ axis, id, ok, value }) => ({ axis, id, ok, value })), note: "A technical pass is never the owner's visual approval.", files };
   writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;
@@ -176,7 +205,8 @@ export function combine(w, base, processed, OUT) {
   for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) for (let c = 0; c < 3; c++) {
     const picks = [cats.top[a], cats.bottom[b], cats.shoes[c]], it = { ...min }, marks = [];
     for (const p of picks) { if (p && p.layers) Object.assign(it, p.layers); marks.push(!p || !p.layers ? [150, 150, 150] : p.ok ? [40, 170, 80] : [240, 140, 0]); }
-    const composed = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, headSeam: "d201" }).dressedRuntime;
+    const Pc = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, headSeam: "d201" }); let composed = Pc.dressedRuntime;
+    for (const p of picks) if (p && p.layers && p.shadow) composed = applyShadow(composed, Pc.stack, p.shadow);   // D-214: each item's skin shadow
     // D-210: a PLACEHOLDER (C's own base garment, not a generated item) is hatched diagonally, so no tile passes for a tried outfit
     // (D-212: light stripes — dark ones vanished on the dark grey base shorts)
     const hatchOf = { 0: [min.topBody], 1: [min.pants], 2: [] }; picks.forEach((p, k) => { if (p && p.layers) return; for (const Lr of hatchOf[k]) for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (Lr[i * 4 + 3] >= 128 && composed[i * 4 + 3] >= 128 && (x + y) % 12 < 4) composed.set([245, 245, 245, 255], i * 4); } });
@@ -205,7 +235,8 @@ if (isMain) {
     const root = resolve(a[ci + 1]), processed = {};
     for (const d of readdirSync(root)) { const rp = join(root, d, "report.json"); if (!existsSync(rp)) continue; const r = JSON.parse(readFileSync(rp, "utf8")); const layers = {};
       for (const f of readdirSync(join(root, d))) if (f.startsWith("layer-")) layers[f.slice(6, -4)] = Uint8ClampedArray.from(decodePng(readFileSync(join(root, d, f))).px);
-      processed[r.item] = { item: r.item, ok: r.ok, layers: Object.keys(layers).length ? layers : null }; }
+      const sp = join(root, d, "shadow-multiply.png"), shadow = existsSync(sp) ? Uint8ClampedArray.from(decodePng(readFileSync(sp)).px) : null;
+      processed[r.item] = { item: r.item, ok: r.ok, layers: Object.keys(layers).length ? layers : null, shadow }; }
     console.log(JSON.stringify(combine(w, base, processed, OUT).index.length));
   }
 }

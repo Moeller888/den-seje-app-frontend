@@ -356,3 +356,17 @@ Se `project-state.md` D-212.
 Der er ingen billedkald, ingen reserver og ingen ændrede tærskler.
 
 Se `project-state.md` D-213.
+
+## 18. D-214 — genbrugelige items, skyggelag og reserveændring
+
+**Skygger på huden:** Slagskygger på huden, fx under en manchet, udtrækkes som et særskilt multiply-lag og bages ikke ind i stoffet.
+
+**Hudtoner:** Der er ingen godkendt omfarvning af C (D-132/D-040). Stoflagene er næsten hudfri, men genbrug på tværs af hudtoner er ubevist.
+
+**Sandaler:** Parkeret som afvist.
+
+**Reserveændring:** Én reserve er tildelt nederdelen (HTTP 429 uden billede), og loftet er fortsat 12 kald.
+
+**Klargjort:** Sneakers, støvler og nederdelens reserve afventer bekræftet kredit.
+
+Se `project-state.md` D-214.
