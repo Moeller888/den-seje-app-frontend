@@ -456,9 +456,12 @@ function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (
 export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the bare thigh directly below their hem (D-204)
 export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null } = {}) {
   const L = w.base.layers, { lab } = sep || separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
-  // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" exists only
-  // as a control stimulus: a composer that puts the arms under the top's body must be caught by the order check
-  const dressedRuntime = NL.overStack(order === "arms-under" ? [body, arms, I.shoes, I.pants, I.topBody, I.sleeves, w.head] : [body, I.shoes, I.pants, I.topBody, arms, I.sleeves, w.head]);
+  // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" and (D-210)
+  // "bottoms-over-top" exist only as control stimuli: a composer that puts the arms under the top's body, or the bottoms over the
+  // top, must be caught by the order checks. `stack` names the composed layers in the order used, bottom first.
+  const named = { body, shoes: I.shoes, pants: I.pants, topBody: I.topBody, arms, sleeves: I.sleeves, head: w.head };
+  const orderNames = order === "arms-under" ? ["body", "arms", "shoes", "pants", "topBody", "sleeves", "head"] : order === "bottoms-over-top" ? ["body", "shoes", "topBody", "pants", "arms", "sleeves", "head"] : ["body", "shoes", "pants", "topBody", "arms", "sleeves", "head"];
+  const stack = orderNames.map((n) => [n, named[n]]), dressedRuntime = NL.overStack(stack.map(([, L]) => L));
   const items = NL.overStack([I.shoes, I.pants, I.topBody, I.sleeves]), covered = (i) => items[i * 4 + 3] >= 128;
   const base = new Uint8Array(N); for (let i = 0; i < N; i++) if (lab[i]) base[i] = 1;
   // only base pixels that were VISIBLE (alpha ≥ 128) can leave a hole; a semi-transparent rim pixel vanishes with its garment
@@ -480,7 +483,7 @@ export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", se
   const exterior = outsideConnected(new Uint8Array(N).fill(1), (i) => R[i * 4 + 3] < 128), deep = Mo.and(uncoveredBase, Mo.not(Mo.dilate(exterior, FABRIC_BAND_PX)));
   // the order check: where an arm lies over the top's body, the ARM must be what is seen (arms ∩ top-body, arm pixel visible)
   let armOverTop = 0, armShown = 0; for (let i = 0; i < N; i++) if (arms[i * 4 + 3] >= 250 && I.topBody[i * 4 + 3] >= 128) { armOverTop++; if ([0, 1, 2].every((c) => Math.abs(dressedRuntime[i * 4 + c] - arms[i * 4 + c]) <= 2)) armShown++; }
-  return { lab, body, arms, dressedRuntime, uncoveredBase, transparentOk, enclosed, cutSkin, slivers, deep, items, I, order: { armOverTopPx: armOverTop, armShownShare: armOverTop ? +(armShown / armOverTop).toFixed(4) : 1 } };
+  return { lab, body, arms, dressedRuntime, stack, uncoveredBase, transparentOk, enclosed, cutSkin, slivers, deep, items, I, order: { armOverTopPx: armOverTop, armShownShare: armOverTop ? +(armShown / armOverTop).toFixed(4) : 1 } };
 }
 
 /** PROPOSED BF15r (D-204, not adopted): the dress-back on the RUNTIME body, as D-198 defines it — base garments empty under the
