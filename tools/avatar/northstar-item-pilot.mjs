@@ -176,7 +176,7 @@ export function processItem(w, base, T, category, raw, { itemId = null } = {}) {
   if (category === "top") { const tb = empty(), sl = empty(); for (let i = 0; i < N; i++) if (im[i]) (base.arms[i * 4 + 3] >= 128 ? sl : tb).set(item.subarray(i * 4, i * 4 + 4), i * 4); layers = { topBody: tb, sleeves: sl }; }
   else layers = category === "bottom" ? { pants: item } : { shoes: item };
   const covering = (itemId && COVERING[itemId]) || "none", hide = BC.regionsC(w, base, T, category, { covering }).hidden(layers);
-  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d218", shadow: shadowPx ? shadow : null, hide });
+  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d221", shadow: shadowPx ? shadow : null, hide });
   const failedFit = fit.checks.filter((c) => c.axis === "fit" && !c.ok);
   // EXTRACTION: a hole in the outfit where the generated picture has opaque paint means the tool missed the item, not the model
   const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201", hide });
@@ -208,7 +208,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
     save("p05-body-changes.png", half(D), "red: pixels outside the item's envelope that differ from C by more than " + CHANGE_TOL + " (the body redrawn by the model)");
     save("p06-app-sizes.png", grid([down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 2, 6), "hub 110×165 and quiz 52×78");
   }
-  const report = { decision: DECISION, method: "D-216 extraction + D-218 covering (body visibility) + fitCheck revision d218", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
+  const report = { decision: DECISION, method: "D-221 — extraction D-216, covering D-218, fitCheck revision d221 (VIS-3)", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
     checks: (r.checks || []).map(({ axis, id, ok, value }) => ({ axis, id, ok, value })), note: "A technical pass is never the owner's visual approval.", files };
   writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;

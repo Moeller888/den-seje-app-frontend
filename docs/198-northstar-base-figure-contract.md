@@ -415,3 +415,17 @@ Se `project-state.md` D-217.
 **Forsøg:** Et maskeret forsøg på 3 kald er forberedt, men ikke autoriseret.
 
 Se `project-state.md` D-218.
+
+## 23. D-221 — dækningsreglen på de oprindelige råbilleder
+
+**Ny metodeversion d221:** Dækning som i D-218. Hertil kommer VIS-3: en lukket sko skal erstatte hele foden under sin faste top.
+
+**Sneakers og støvler:** De løses ved lokal sammensætning. Afvisningen skyldtes kroppens synlighed, ikke manglende skomateriale.
+
+**Nederdel:** Den markerede stribe er billedets egen lårkontur ved sømmens hjørne og ikke manglende stof. Grænserne er uændrede, så nederdelen forbliver afvist.
+
+**Sandaler:** De kræver nyt billedmateriale, fordi den genererede fod er smallere end C's.
+
+D-207's udfald er ikke omskrevet, og der er ikke sendt nogen billedkald.
+
+Se `project-state.md` D-221.
