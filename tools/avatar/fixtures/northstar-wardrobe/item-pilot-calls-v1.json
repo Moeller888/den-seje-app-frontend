@@ -1,0 +1,300 @@
+{
+  "decision": "D-207",
+  "track": "Northstar wardrobe — the first GPT clothing pilot on the frozen base C (D-205)",
+  "meta": {
+    "authorisesImageRequest": false,
+    "rule": "Only an entry below, verified field by field from origin/main by tools/avatar/openai-send-northstar-item-pilot-d207.mjs, can be sent — and only on the owner's separate execution instruction after D-207 is merged. Merging is not an instruction to run."
+  },
+  "budget": {
+    "authorised": 12,
+    "planned": 9,
+    "reserve": 3,
+    "actuallySent": 0,
+    "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "image": {
+      "name": "d202-base-figure-v2.image-1.png",
+      "role": "Image 1 — C, the frozen base (D-205)",
+      "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+      "bytes": 1300423,
+      "location": "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/d202-base-figure-v2.image-1.png",
+      "tracked": false,
+      "approval": "the owner approved sending C as the reference of THIS pilot only (D-207); not publishing C, not tracking private layers, not H1"
+    },
+    "prompts": "tools/avatar/fixtures/northstar-wardrobe/item-pilot-prompts-v1.json"
+  },
+  "stages": {
+    "1": {
+      "items": [
+        "top-tank-teal",
+        "bottom-shorts-navy",
+        "shoes-sandals-brown"
+      ],
+      "open": true
+    },
+    "2": {
+      "items": [
+        "top-tee-red",
+        "top-sweater-green",
+        "bottom-trousers-khaki",
+        "bottom-skirt-plum",
+        "shoes-sneakers-white",
+        "shoes-boots-black"
+      ],
+      "open": false,
+      "openedBy": null,
+      "rule": "opens only when a later register decision records stage 1 as METHOD_OK after an actual inspection of the three results and their combination (not only the registration on the head: skin, hands, feet, seams, edges, stray remnants)"
+    }
+  },
+  "outputs": {
+    "dir": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/<call id>/",
+    "storage": "OUTSIDE both clones (D-127 §2): C, its layers and every result stay private — never tracked, never published"
+  },
+  "calls": [
+    {
+      "callId": "D-207-item-top-tank-teal",
+      "kind": "item",
+      "item": "top-tank-teal",
+      "category": "top",
+      "stage": 1,
+      "prompt": {
+        "item": "top-tank-teal",
+        "sha256": "6e34c3bcad9e57a5309271fbd50eb30242d9711aab573a88bab8995166243f17"
+      },
+      "claim": {
+        "identity": "D-207-item-top-tank-teal-claim",
+        "filename": "D-207-item-top-tank-teal.claim.json",
+        "eventsFilename": "D-207-item-top-tank-teal.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-top-tee-red",
+      "kind": "item",
+      "item": "top-tee-red",
+      "category": "top",
+      "stage": 2,
+      "prompt": {
+        "item": "top-tee-red",
+        "sha256": "1a3e896e5a537272df3963188c3f2a607f7055794743dc21e2861a8b24dff03f"
+      },
+      "claim": {
+        "identity": "D-207-item-top-tee-red-claim",
+        "filename": "D-207-item-top-tee-red.claim.json",
+        "eventsFilename": "D-207-item-top-tee-red.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-top-sweater-green",
+      "kind": "item",
+      "item": "top-sweater-green",
+      "category": "top",
+      "stage": 2,
+      "prompt": {
+        "item": "top-sweater-green",
+        "sha256": "200b3f07e3a0b8e74bc7781d156598156ccd793582e924ac2d86cb137ffc5906"
+      },
+      "claim": {
+        "identity": "D-207-item-top-sweater-green-claim",
+        "filename": "D-207-item-top-sweater-green.claim.json",
+        "eventsFilename": "D-207-item-top-sweater-green.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-bottom-shorts-navy",
+      "kind": "item",
+      "item": "bottom-shorts-navy",
+      "category": "bottom",
+      "stage": 1,
+      "prompt": {
+        "item": "bottom-shorts-navy",
+        "sha256": "cdc8f6b67f658889f8fa64cec5d3edd80443b833b1b5c7476d46a1f6a82180fc"
+      },
+      "claim": {
+        "identity": "D-207-item-bottom-shorts-navy-claim",
+        "filename": "D-207-item-bottom-shorts-navy.claim.json",
+        "eventsFilename": "D-207-item-bottom-shorts-navy.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-bottom-trousers-khaki",
+      "kind": "item",
+      "item": "bottom-trousers-khaki",
+      "category": "bottom",
+      "stage": 2,
+      "prompt": {
+        "item": "bottom-trousers-khaki",
+        "sha256": "8adb19f50f697ec1f60d2165d555a13380c11d961d552254a15ebe7596a87358"
+      },
+      "claim": {
+        "identity": "D-207-item-bottom-trousers-khaki-claim",
+        "filename": "D-207-item-bottom-trousers-khaki.claim.json",
+        "eventsFilename": "D-207-item-bottom-trousers-khaki.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-bottom-skirt-plum",
+      "kind": "item",
+      "item": "bottom-skirt-plum",
+      "category": "bottom",
+      "stage": 2,
+      "prompt": {
+        "item": "bottom-skirt-plum",
+        "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074"
+      },
+      "claim": {
+        "identity": "D-207-item-bottom-skirt-plum-claim",
+        "filename": "D-207-item-bottom-skirt-plum.claim.json",
+        "eventsFilename": "D-207-item-bottom-skirt-plum.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-shoes-sandals-brown",
+      "kind": "item",
+      "item": "shoes-sandals-brown",
+      "category": "shoes",
+      "stage": 1,
+      "prompt": {
+        "item": "shoes-sandals-brown",
+        "sha256": "ee12ec55b360440e909acbc4e8f12c2ab921cde56dee27ebbe26e91d559e070c"
+      },
+      "claim": {
+        "identity": "D-207-item-shoes-sandals-brown-claim",
+        "filename": "D-207-item-shoes-sandals-brown.claim.json",
+        "eventsFilename": "D-207-item-shoes-sandals-brown.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-shoes-sneakers-white",
+      "kind": "item",
+      "item": "shoes-sneakers-white",
+      "category": "shoes",
+      "stage": 2,
+      "prompt": {
+        "item": "shoes-sneakers-white",
+        "sha256": "79dc423dcfea0dd0d9588a9300cd299a79371cc13c3a9deee4cbfaefed072159"
+      },
+      "claim": {
+        "identity": "D-207-item-shoes-sneakers-white-claim",
+        "filename": "D-207-item-shoes-sneakers-white.claim.json",
+        "eventsFilename": "D-207-item-shoes-sneakers-white.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-item-shoes-boots-black",
+      "kind": "item",
+      "item": "shoes-boots-black",
+      "category": "shoes",
+      "stage": 2,
+      "prompt": {
+        "item": "shoes-boots-black",
+        "sha256": "fba5012d995ae1084e32e2c26764282df5342dd70475fa70cb63e228b6405b8e"
+      },
+      "claim": {
+        "identity": "D-207-item-shoes-boots-black-claim",
+        "filename": "D-207-item-shoes-boots-black.claim.json",
+        "eventsFilename": "D-207-item-shoes-boots-black.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-reserve-1",
+      "kind": "reserve",
+      "item": null,
+      "category": null,
+      "stage": null,
+      "assignedTo": null,
+      "prompt": null,
+      "claim": {
+        "identity": "D-207-reserve-1-claim",
+        "filename": "D-207-reserve-1.claim.json",
+        "eventsFilename": "D-207-reserve-1.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-reserve-2",
+      "kind": "reserve",
+      "item": null,
+      "category": null,
+      "stage": null,
+      "assignedTo": null,
+      "prompt": null,
+      "claim": {
+        "identity": "D-207-reserve-2-claim",
+        "filename": "D-207-reserve-2.claim.json",
+        "eventsFilename": "D-207-reserve-2.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "D-207-reserve-3",
+      "kind": "reserve",
+      "item": null,
+      "category": null,
+      "stage": null,
+      "assignedTo": null,
+      "prompt": null,
+      "claim": {
+        "identity": "D-207-reserve-3-claim",
+        "filename": "D-207-reserve-3.claim.json",
+        "eventsFilename": "D-207-reserve-3.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-item-pilot-d207.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-207",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}

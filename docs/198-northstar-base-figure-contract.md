@@ -275,3 +275,18 @@ Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 
 - C består kontrolsæt v3. Afvisningerne under v1 og v2 bevares i historikken.
 
 **Tøjpilot på C** (`pilot-plan-v3.json`): 9 items og en anbefalet batch på 12 kald. Den er forberedt, men ikke autoriseret.
+
+## 13. D-207 — den første tøjpilot på C (autoriseret, ikke kørt)
+
+**Ramme:** Højst 12 billedkald: 9 items i to etaper og højst 3 reservekald.
+- Hvert kald har sit eget engangsclaim. En usikker afsendelse tæller som brugt.
+- Reserver bruges kun efter en registreret teknisk afvisning, med samme frosne request.
+- C sendes som reference i netop denne pilot, læst uden for klonerne og kontrolleret med hash.
+
+**Etaper:**
+1. Ærmeløs top, shorts og sandaler.
+2. De øvrige seks items. Etape 2 åbner kun efter en registreret inspektion med METHOD_OK.
+
+**Behandling:** Registrering, udtrækning mod C, opdeling i lag samt kontrol af ændret krop, rester af basistøj, pasform (contract v3) og kvalitet. Fejl klassificeres som generering, udtrækning eller pasform.
+
+Kørsel kræver ejerens særskilte eksekveringsbesked. D-206 er reserveret til sikkerheds-PR #407.
