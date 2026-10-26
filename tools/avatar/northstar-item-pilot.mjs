@@ -92,7 +92,7 @@ export function processItem(w, base, T, category, raw) {
     const inside = t.allowed[i] && !t.protect[i];
     if ((inside && O[i * 4 + 3] >= 128 && near2[i] > STRONG_TOL) || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)) core[i] = 1; }
   const closed = Mo.not(Mo.dilate(Mo.not(Mo.dilate(core, 3)), 3)), near = Mo.dilate(core, 3);
-  const ruleOf = new Uint8Array(N);   // which rule took each item pixel: 1 new paint · 2 base interior / own base · 3 closing · 4 outline band · 6 edge from the picture (reported in masks)
+  const ruleOf = new Uint8Array(N);   // which rule took each item pixel: 1 new paint · 2 base interior / own base · 3 closing · 4 outline band · 6 edge from the picture · 7 enclosed hole (D-216)
   for (let i = 441 * W; i < N; i++) { if (O[i * 4 + 3] === 0) continue; const inside = t.allowed[i] && !t.protect[i] && !other[i];
     if (core[i] || (inside && closed[i]) || (inside && near[i] && near2[i] > CHANGE_TOL)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = core[i] ? (near2[i] > STRONG_TOL && O[i * 4 + 3] >= 128 ? 1 : 2) : closed[i] ? 3 : 4; } }
   // (5) the garment is the paint CONNECTED to it: to the base interior (a top, a bottom) or reaching C's sole line (shoes). A
@@ -117,6 +117,22 @@ export function processItem(w, base, T, category, raw) {
   const ring = Mo.dilate(im, 3), headRt = BF.runtimeHead(w, base.body); let edgeFilled = 0;
   for (let i = 441 * W; i < N; i++) if (ring[i] && !im[i] && O[i * 4 + 3] >= 128 && t.allowed[i] && !t.protect[i] && !other[i] && base.body[i * 4 + 3] < 128 && base.arms[i * 4 + 3] < 128 && headRt[i * 4 + 3] < 128) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = 6; edgeFilled++; }
   obs.edgeFromPicturePx = edgeFilled;
+  // (7) D-216 ENCLOSED HOLES: a hole of the item wholly enclosed by the garment (4-connected, never reaching the canvas border
+  // through non-item pixels) is the garment's own paint, taken from the picture — unless the hole shows the BODY: any pixel of it
+  // the picture paints as skin that C explains (an opening — the toes in a sandal) keeps the whole hole C's. Black boots showed
+  // why: their dark paint next to C's dark foot contours was explained by those contours, and C's foot skin showed through
+  // specks along the soles (rule (4) closes only gaps up to 6 px). Never in a protected region or another category's base.
+  { const out = new Uint8Array(N), st = [];
+    const seed = (i) => { if (!im[i] && !out[i]) { out[i] = 1; st.push(i); } };
+    for (let x = 0; x < W; x++) { seed(x); seed((H - 1) * W + x); } for (let y = 0; y < H; y++) { seed(y * W); seed(y * W + W - 1); }
+    while (st.length) { const i = st.pop(), x = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && Math.abs((j % W) - x) <= 1 && !im[j] && !out[j]) { out[j] = 1; st.push(j); } }
+    const seen = new Uint8Array(N); let filledHoles = 0, openings = 0, holePx = 0;
+    for (let s0 = 441 * W; s0 < N; s0++) { if (im[s0] || out[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let body = false;
+      while (q.length) { const i = q.pop(); px.push(i); if (O[i * 4 + 3] >= 128 && classify(O, i) === "skin" && near2[i] <= STRONG_TOL) body = true; const x = i % W;
+        for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && Math.abs((j % W) - x) <= 1 && !im[j] && !out[j] && !seen[j]) { seen[j] = 1; q.push(j); } }
+      if (body) { openings++; continue; } filledHoles++;
+      for (const i of px) if (O[i * 4 + 3] > 0 && t.allowed[i] && !t.protect[i] && !other[i]) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = 7; holePx++; } }
+    obs.enclosedHolesFilled = filledHoles; obs.enclosedHolePxFromPicture = holePx; obs.bodyOpenings = openings; }
   let unexplained = 0; for (let i = 441 * W; i < N; i++) if (!t.allowed[i] && !t.protect[i] && O[i * 4 + 3] >= 128 && changed[i]) { const x = i % W; let ok = false;
     for (let dy = -EXPLAIN_PX; dy <= EXPLAIN_PX && !ok; dy++) for (let dx = -EXPLAIN_PX; dx <= EXPLAIN_PX && !ok; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N) continue;
       if (colourDist(O, i, C, j) <= STRONG_TOL) ok = true; }
@@ -188,7 +204,7 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
     save("p05-body-changes.png", half(D), "red: pixels outside the item's envelope that differ from C by more than " + CHANGE_TOL + " (the body redrawn by the model)");
     save("p06-app-sizes.png", grid([down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 2, 6), "hub 110×165 and quiz 52×78");
   }
-  const report = { decision: DECISION, method: "D-214 extraction (D-213 + skin-shadow layer) + fitCheck revision d213", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
+  const report = { decision: DECISION, method: "D-216 extraction (D-214 + enclosed holes) + fitCheck revision d213", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
     checks: (r.checks || []).map(({ axis, id, ok, value }) => ({ axis, id, ok, value })), note: "A technical pass is never the owner's visual approval.", files };
   writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;

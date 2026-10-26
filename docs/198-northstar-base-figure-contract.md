@@ -378,3 +378,17 @@ Sneakers-kaldet blev sendt én gang efter ejerens kreditbekræftelse. API'et sva
 Afsendelsen er stoppet. Der er brugt 8 af 12 kald. Støvlerne og nederdelens reserve er ubrugte og fortsat klargjort.
 
 Se `project-state.md` D-215.
+
+## 20. D-216 — støvler og nederdel; sneakers-reserve
+
+Støvlerne og nederdelens reserve er sendt. Begge er teknisk afvist for reelle pasformsfejl:
+- **Støvler:** hælbuen viser C's hæl.
+- **Nederdel:** C's lårkontur ses ved sømmens hjørne.
+
+**Ny udtrækningsregel:** Et omsluttet hul i beklædningen tages fra billedet, medmindre det viser kroppen.
+
+**Sneakers:** De har fået én reserve. Afsendelsen kræver en særskilt eksekveringsbesked.
+
+Der er brugt 10 af 12 kald.
+
+Se `project-state.md` D-216.
