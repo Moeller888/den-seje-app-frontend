@@ -246,6 +246,77 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   return { masks, checks: out, fitOk: out.filter((x) => x.axis === "fit").every((x) => x.ok), qualityOk: out.filter((x) => x.axis === "quality").every((x) => x.ok), composite: P.dressedRuntime };
 }
 
+/** D-223 THE OUTFIT CHECK — the finished outfit on C (a layer proof of several items over C's minimum items), judged at the seams
+ *  between categories. Every item was checked alone over C's minimum items; this checks what only the combination shows. It never
+ *  asks the outfit to follow C's base garments' outer silhouette: a garment may be wider than C (the khaki at the hip) — background
+ *  counts only as a narrow slit BETWEEN GARMENTS or a hole, never as a rim that vanishes, and C's own narrow gaps are intended.
+ *    COMBO-1a background through a seam: a run of ≤ SLIVER_PX transparent pixels (a row or a column) with garments of two
+ *            DIFFERENT categories on its ends (a gap between a limb and a garment is an opening; within one garment — between its
+ *            legs, a wide sleeve near its body — it is the item's own shape, FIT-4's), unless C itself has a narrow gap
+ *            there (≤ SLIVER_PX between C's own opaque pixels: the armpit). A pixel with alpha ≥ 128 is not background (normal
+ *            antialias). Pieces as FIT-6v2 (D-222): ≤ SLIVER_PX × SLIVER_PX or compact (two outlines meeting at a corner) are
+ *            reported crossings; an elongated piece along a seam is a slit and fails.
+ *    COMBO-1b an enclosed hole (D-222's enclosure against C's own exterior) fails.
+ *    COMBO-1c missing overlap: C's base left open deeper than the fabric band (4 px) inside the figure — a gap between a top and
+ *            bottoms that do not meet — fails.
+ *    COMBO-1d a cut inside ONE garment: a body strip ≤ SLIVER_PX with that same garment on both ends (a sleeve cut at the wrist).
+ *            Footwear is exempt — what of the foot shows is its covering rule's (D-218, VIS-2/VIS-3: an ankle in a collar opening,
+ *            a sandal's openings). Pieces as in 1a.
+ *    COMBO-2  a double contour: the outlines of garments of two DIFFERENT categories 1–3 px apart with no contour between, running together
+ *            longer than a crossing (the tee's leftover base line beside the khaki's outline; a skirt's waistband edge just below a
+ *            sweater's hem). A garment beside the body is FIT-6v2's (the leg inside a boot shaft is intended).
+ *    COMBO-3  the order: where two items overlap, the visible one is the one the contract ranks higher (shoes < bottoms < top
+ *            body < sleeves). Under the contract order this always holds; it catches a composer that stacks them otherwise.
+ *  Each finding names its seam from the layers around it (neck/collar, waist/hip, sleeve/wrist, leg/shoe, hem/leg). */
+export const SEAM_OF = Object.freeze({ "head|topBody": "neck/collar", "head|sleeves": "neck/collar", "pants|topBody": "waist/hip", "pants|sleeves": "waist/hip", "arms|sleeves": "sleeve/wrist", "arms|topBody": "sleeve/wrist", "pants|shoes": "leg/shoe", "body|shoes": "leg/shoe", "body|pants": "hem/leg", "body|topBody": "waist/hip" });
+export function outfitCheck(w, base, P) {
+  const out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), R = base.R, D = P.dressedRuntime;
+  const top = new Array(N).fill(null); for (const [n, L] of P.stack) for (let i = 0; i < N; i++) if (L[i * 4 + 3] >= 128) top[i] = n;
+  const seamOf = (names) => { const k = [...new Set(names.filter(Boolean))].sort().join("|"); return SEAM_OF[k] || (k ? "other:" + k : "other"); };
+  // pieces of a mask, judged like FIT-6v2's: crossing (≤ S × S or compact) or strip; with the layers at their run ends → the seam
+  const pieces = (m, ends) => { const seen = new Uint8Array(N), res = [];
+    for (let s0 = 0; s0 < N; s0++) { if (!m[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1; const names = [];
+      while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); if (ends[i]) names.push(...ends[i]);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (m[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lo = Math.min(bw, bh), hi = Math.max(bw, bh), crossing = hi <= SLIVER_PX || (lo <= SLIVER_PX && hi <= 1.5 * lo);
+      res.push({ px: px.length, box: [x0, y0, bw, bh], crossing, seam: seamOf(names) }); }
+    return res; };
+  // runs of `inRun` pixels ≤ SLIVER_PX with `endOk` pixels on both ends, in rows and columns; ends[i] = the layers at the two ends
+  const runs = (inRun, endOk) => { const m = new Uint8Array(N), ends = {};
+    const scan = (start, step, len) => { let k = 0; while (k < len) { if (!inRun(start + k * step)) { k++; continue; } let e = k; while (e < len && inRun(start + e * step)) e++;
+      if (k > 0 && e < len && e - k <= SLIVER_PX) { const a = start + (k - 1) * step, b = start + e * step; if (endOk(a, b)) for (let q = k; q < e; q++) { const i = start + q * step; m[i] = 1; ends[i] = [top[a], top[b]]; } } k = e; } };
+    for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441); return { m, ends }; };
+  const opaque = (i) => D[i * 4 + 3] >= 128;
+  // COMBO-1a
+  const CAT = { shoes: "shoes", pants: "bottom", topBody: "top", sleeves: "top" }, isG = (i) => !!CAT[top[i]], seam2 = (a, b) => isG(a) && isG(b) && CAT[top[a]] !== CAT[top[b]];
+  // C's own narrow gaps (≤ SLIVER_PX between C's opaque pixels, rows or columns): intended, whatever the outfit does around them
+  const cGap = new Uint8Array(N); { const sc = (start, step, len) => { let k = 0; while (k < len) { if (R[(start + k * step) * 4 + 3] >= 128) { k++; continue; } let e = k; while (e < len && R[(start + e * step) * 4 + 3] < 128) e++;
+      if (k > 0 && e < len && e - k <= SLIVER_PX) for (let q = k; q < e; q++) cGap[start + q * step] = 1; k = e; } }; for (let y = 441; y < H; y++) sc(y * W, 1, W); for (let x = 0; x < W; x++) sc(441 * W + x, W, H - 441); }
+  const bg = runs((i) => !opaque(i) && !cGap[i], seam2), bgP = pieces(bg.m, bg.ends), slits = bgP.filter((p) => !p.crossing);
+  add("fit", "COMBO-1a-SEAM-BACKGROUND", slits.length === 0, { slitPx: slits.reduce((t, p) => t + p.px, 0), slits, crossings: bgP.filter((p) => p.crossing) }, "no background slit through a seam where C is opaque (corners where two outlines meet are reported)");
+  let enc = 0, deep = 0; for (let i = 0; i < N; i++) { if (P.enclosed[i]) enc++; if (P.deep[i]) deep++; }
+  add("fit", "COMBO-1b-ENCLOSED-HOLE", enc === 0, { enclosedHolePx: enc }, "no hole in the outfit (against C's own exterior)");
+  add("fit", "COMBO-1c-MISSING-OVERLAP", deep === 0, { openBaseDeeperThanFabricBandPx: deep }, "no gap between garments deeper than the fabric band");
+  // COMBO-1d
+  const items = ["pants", "topBody", "sleeves"], sameItem = (a, b) => items.includes(top[a]) && top[a] === top[b];
+  const cut = runs((i) => top[i] === "body" || top[i] === "arms", sameItem), cutP = pieces(cut.m, cut.ends), cuts = cutP.filter((p) => !p.crossing);
+  add("fit", "COMBO-1d-CUT-IN-GARMENT", cuts.length === 0, { cutPx: cuts.reduce((t, p) => t + p.px, 0), cuts, crossings: cutP.filter((p) => p.crossing) }, "no strip of body through one garment (intended openings exempt)");
+  // COMBO-2: contour of layer A, 1–3 px without contour, contour of layer B ≠ A — in rows and columns; counted where it runs on
+  const ink = new Uint8Array(N); for (let i = 441 * W; i < N; i++) if (opaque(i) && BF.classify(D, i) === "ink") ink[i] = 1;
+  const dbl = new Uint8Array(N), dEnds = {};
+  const scan2 = (start, step, len) => { for (let k = 1; k < len - 1; k++) { const i = start + k * step; if (!ink[i] || ink[i + step]) continue; let g = 1; while (g <= 3 && k + g < len && !ink[start + (k + g) * step]) g++;
+      if (g > 3 || k + g >= len) continue; const j = start + (k + g) * step; if (!seam2(i, j)) continue; if ([...Array(g - 1)].some((_, q) => !opaque(start + (k + 1 + q) * step))) continue;
+      dbl[i] = 1; dbl[j] = 1; dEnds[i] = dEnds[j] = [top[i], top[j]]; } };
+  for (let y = 441; y < H; y++) scan2(y * W, 1, W); for (let x = 0; x < W; x++) scan2(441 * W + x, W, H - 441);
+  const dP = pieces(dbl, dEnds), doubles = dP.filter((p) => !p.crossing);
+  add("fit", "COMBO-2-DOUBLE-CONTOUR", doubles.length === 0, { doubles, corners: dP.filter((p) => p.crossing).length }, "no two outlines of different layers running side by side 1–3 px apart");
+  // COMBO-3
+  let wrong = 0; for (let i = 441 * W; i < N; i++) { let best = null, n = 0; for (const [nm, L] of P.stack) if (RANK[nm] !== undefined && ["shoes", "pants", "topBody", "sleeves"].includes(nm) && L[i * 4 + 3] >= 250) { n++; if (!best || RANK[nm] > RANK[best]) best = nm; }
+    if (n >= 2 && top[i] !== best) wrong++; }
+  add("fit", "COMBO-3-ORDER", wrong === 0, { wrongOrderPx: wrong }, "where items overlap, the one the contract ranks higher is seen");
+  return { checks: out, ok: out.every((c) => c.ok), masks: { slits: bg.m, cuts: cut.m, doubles: dbl } };
+}
+
 /** COMPATIBILITY with Northstar's old clothing (D-197 defaults on C): a report, never a gate — D-204's documented limitation. */
 export function legacyReport(w, base) {
   const P = BF.layerProof(w, base.R, base.Z, {}, { sep: base.sep }), c = (m) => count(m); let inter = 0, uni = 0;

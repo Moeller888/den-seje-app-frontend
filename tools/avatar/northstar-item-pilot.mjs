@@ -78,8 +78,9 @@ const changedPx = (O, C, i) => { const a = O[i * 4 + 3], b = C[i * 4 + 3]; if (M
 export const METHODS = Object.freeze({
   d221: { fitRevision: "d221", shadowDarkness: "red", what: "D-221 — extraction D-216, skin shadow D-214 (darker = red ratio < 0.98), covering D-218, fitCheck d221 (VIS-3)" },
   d222: { fitRevision: "d222", shadowDarkness: "luminance", what: "D-222 — extraction D-216, skin shadow D-222 (darker = mean channel ratio < 0.98), covering D-218, fitCheck d222 (VIS-3, FIT-4 against C's own exterior, FIT-6v2 garment end)" },
+  d223: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, what: "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base" },
 });
-export const METHOD = "d222";
+export const METHOD = "d223";
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
 export function processItem(w, base, T, category, raw, { itemId = null, method = METHOD } = {}) {
   if (T.revision !== "d213") throw new Error("processItem needs templatesC(w, base, { revision: \"d213\" })");
@@ -107,14 +108,26 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
     for (let dy = -EXPLAIN_PX; dy <= EXPLAIN_PX && best > 0; dy++) for (let dx = -EXPLAIN_PX; dx <= EXPLAIN_PX; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N) continue;
       const m = colourDist(O, i, C, j); if (m < best) best = m; }
     near2[i] = best; }
-  const core = new Uint8Array(N), other = new Uint8Array(N); for (let i = 0; i < N; i++) if (base.sep.lab[i] && base.sep.lab[i] !== own) other[i] = 1;
+  const core = new Uint8Array(N), other = new Uint8Array(N), ownRim = new Uint8Array(N); for (let i = 0; i < N; i++) if (base.sep.lab[i] && base.sep.lab[i] !== own) other[i] = 1;
   for (let i = 441 * W; i < N; i++) { if (t.mustCover[i]) { mc++; if (!changed[i] && classify(O, i) !== "ink") remnant++; }
     const inside = t.allowed[i] && !t.protect[i];
-    if ((inside && O[i * 4 + 3] >= 128 && near2[i] > STRONG_TOL) || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)) core[i] = 1; }
+    // D-223 (A): outside the base interior, a pixel of the item's own base garment that C EXPLAINS (within EXPLAIN_PX, STRONG_TOL) is that base garment's rim redrawn by the
+    // model (the tee is shorter at the side than C's base top: C's base side contour hung below the tee's hem as a dark line into
+    // the trousers worn with it). It is the base, gone at runtime — not the item.
+    // Only BEYOND the item's own outline: a rim within EXPLAIN_PX + 1 of its new paint or base interior is its outline (the khaki's
+    // side contour follows C's base shorts contour exactly) and stays.
+    const ownBase = own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128, rim = ownBase && M.ownBaseRim === "beyond-outline" && !t.mustCover[i] && near2[i] <= STRONG_TOL;
+    if (rim) ownRim[i] = 1; else if ((inside && O[i * 4 + 3] >= 128 && near2[i] > STRONG_TOL) || t.mustCover[i] || ownBase) core[i] = 1; }
+  if (M.ownBaseRim === "beyond-outline") { const outline = Mo.dilate(core, EXPLAIN_PX + 1); let left = 0; for (let i = 0; i < N; i++) if (ownRim[i]) { if (outline[i]) core[i] = 1; else left++; } obs.ownBaseRimLeftPx = left; }
   const closed = Mo.not(Mo.dilate(Mo.not(Mo.dilate(core, 3)), 3)), near = Mo.dilate(core, 3);
   const ruleOf = new Uint8Array(N);   // which rule took each item pixel: 1 new paint · 2 base interior / own base · 3 closing · 4 outline band · 6 edge from the picture · 7 enclosed hole (D-216)
+  // D-223 (B): the closing — a gap of ≤ 6 px with the item's OWN core on both sides — may cross another category's base: the
+  // khaki's side outline and its antialias over C's base-top column, explained by C's base contour, left a 1 px gap that showed
+  // background under a shorter top. The outline band (4) still never enters another category's base (D-210: there the model
+  // redraws that garment — a top's hem, the shorts' side seams).
   for (let i = 441 * W; i < N; i++) { if (O[i * 4 + 3] === 0) continue; const inside = t.allowed[i] && !t.protect[i] && !other[i];
-    if (core[i] || (inside && closed[i]) || (inside && near[i] && near2[i] > CHANGE_TOL)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = core[i] ? (near2[i] > STRONG_TOL && O[i * 4 + 3] >= 128 ? 1 : 2) : closed[i] ? 3 : 4; } }
+    const insideClose = inside || (M.closeOverOtherBase && t.allowed[i] && !t.protect[i] && other[i]);
+    if (core[i] || (insideClose && closed[i]) || (inside && near[i] && near2[i] > CHANGE_TOL)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = core[i] ? (near2[i] > STRONG_TOL && O[i * 4 + 3] >= 128 ? 1 : 2) : closed[i] ? 3 : 4; } }
   // (5) the garment is the paint CONNECTED to it: to the base interior (a top, a bottom) or reaching C's sole line (shoes). A
   // detached piece of new paint is the body's contour redrawn more than EXPLAIN_PX off (a forearm, a knee, a toe line); it is
   // reported, never extracted. A detached piece thicker than a contour line (a pixel deeper than EXPLAIN_PX + 1 inside it) could be
@@ -153,6 +166,13 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
       if (body) { openings++; continue; } filledHoles++;
       for (const i of px) if (O[i * 4 + 3] > 0 && t.allowed[i] && !t.protect[i] && !other[i]) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = 7; holePx++; } }
     obs.enclosedHolesFilled = filledHoles; obs.enclosedHolePxFromPicture = holePx; obs.bodyOpenings = openings; }
+  // D-223 (A) continued: a base rim left out may only VANISH — at the figure's outline, reaching C's exterior or the canvas through
+  // transparent pixels (as D-222's FIT-4 judges it). A rim the item and C's minimum items would enclose is seam material between
+  // garments (the shorts' side contour under the top at the hip): it is restored, or the item would have a hole.
+  if (M.ownBaseRim === "beyond-outline" && obs.ownBaseRimLeftPx) {
+    const P0 = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...(category === "top" ? { topBody: item, sleeves: empty() } : { pants: item }) }, { sep: base.sep, headSeam: "d201", enclosure: "c-exterior" });
+    let restored = 0; for (let i = 0; i < N; i++) if (ownRim[i] && !im[i] && P0.enclosed[i]) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; ruleOf[i] = 2; restored++; }
+    obs.ownBaseRimRestoredPx = restored; obs.ownBaseRimLeftPx -= restored; }
   let unexplained = 0; for (let i = 441 * W; i < N; i++) if (!t.allowed[i] && !t.protect[i] && O[i * 4 + 3] >= 128 && changed[i]) { const x = i % W; let ok = false;
     for (let dy = -EXPLAIN_PX; dy <= EXPLAIN_PX && !ok; dy++) for (let dx = -EXPLAIN_PX; dx <= EXPLAIN_PX && !ok; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N) continue;
       if (colourDist(O, i, C, j) <= STRONG_TOL) ok = true; }
@@ -310,9 +330,9 @@ export function validateManifest(m) {
     const cov = it.category === "shoes" ? COVERING_BY_TYPE[it.type] : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
     if (typeof it.raw !== "string" || !/^[0-9a-f]{64}$/.test(it.rawSha256 || "")) throw new Error("manifest: " + it.id + " needs a raw path and its pinned sha256"); }
   return true; }
-export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null } = {}) {
+export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null, register = null } = {}) {
   if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
-  validateManifest(manifest); const method = manifest.method, items = {}, processed = {};
+  validateManifest(manifest); if (register) validateRegister(register); const method = manifest.method, items = {}, processed = {};
   // every raw is checked against its pin BEFORE anything is processed
   const raws = manifest.items.map((it) => { const b = readRaw(it.raw); if (sha(b) !== it.rawSha256) throw new Error(it.id + ": the raw picture does not match its pinned sha256"); return b; });
   manifest.items.forEach((it, k) => { const d = join(OUT, "items", it.id); mkdirSync(d, { recursive: true });
@@ -320,36 +340,64 @@ export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null
     const layers = {}; for (const f of Object.keys(rep.files)) if (f.startsWith("layer-")) layers[f.slice(6, -4)] = Uint8ClampedArray.from(decodePng(readFileSync(join(d, f))).px);
     const shadow = rep.files["shadow-multiply.png"] ? Uint8ClampedArray.from(decodePng(readFileSync(join(d, "shadow-multiply.png"))).px) : null;
     processed[it.id] = { item: it.id, category: it.category, ok: rep.ok, layers, shadow, faults: rep.faults };
-    items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
-  const pkgDir = join(OUT, "package"); mkdirSync(pkgDir, { recursive: true }); const pkg = packageOutfits(w, base, manifest, processed, pkgDir);
-  const run = { decision: "D-222", method, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
-    note: "Technically OK is not visual approval. The same manifest, raws, C and code give the same bytes (no timestamps, no per-picture settings)." };
+    const openF = openFindingsFor(register, [it.id]).filter((id) => !register.findings.find((f) => f.id === id).subject.with);
+    items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, status: !rep.ok ? "rejected" : openF.length ? "technically-ok-open-finding" : "technically-ok", openFindings: openF, faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
+  const pkgDir = join(OUT, "package"); mkdirSync(pkgDir, { recursive: true }); const pkg = packageOutfits(w, base, manifest, processed, pkgDir, { register });
+  const run = { decision: "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
+    note: "Technically OK is not visual approval; an open finding keeps an item or outfit from being ready. The same manifest, register, raws, C and code give the same bytes (no timestamps, no per-picture settings)." };
   writeFileSync(join(OUT, "run.json"), JSON.stringify(run, null, 2) + "\n"); return run; }
-/** D-222: every outfit of TECHNICALLY PASSED items only (top × bottom × shoes, in manifest order), full size and the app sizes; the
- *  rejected items on their own sheet with their faults. A passed item is not visually approved by this. */
-export function packageOutfits(w, base, manifest, processed, OUT) {
+/** D-223: the seams an outfit is looked at closely (×2): neck/collar, both hips, both wrists, the legs and shoes. */
+export const SEAM_BOXES = Object.freeze({ "neck/collar": [400, 420, 624, 540], "waist/hip left": [340, 730, 500, 880], "waist/hip right": [524, 730, 684, 880], "sleeve/wrist left": [280, 780, 420, 960], "sleeve/wrist right": [604, 780, 744, 960], "leg/shoe": [330, 1290, 694, 1510] });
+/** D-223 FINDINGS REGISTER: one entry per finding — on an item, an item worn with another, or one combination. An OPEN finding
+ *  keeps whatever it applies to from being shown as ready, however technically OK. */
+export const FINDING_STATUS = Object.freeze(["open", "resolved", "accepted-by-owner"]);
+export function validateRegister(reg) {
+  if (!reg || !Array.isArray(reg.findings)) throw new Error("register: no findings");
+  const seen = new Set(); for (const f of reg.findings) {
+    if (!f || !/^F-\d{3}$/.test(f.id || "") || seen.has(f.id)) throw new Error("register: a missing or repeated finding id"); seen.add(f.id);
+    if (!FINDING_STATUS.includes(f.status)) throw new Error("register: " + f.id + " has an unknown status " + f.status);
+    if (!f.subject || !(f.subject.item || f.subject.combination)) throw new Error("register: " + f.id + " names no item or combination");
+    if (!METHODS[f.foundUnder] && f.foundUnder !== "d207" && f.foundUnder !== "d218") throw new Error("register: " + f.id + " has no method version");
+    if (f.status === "resolved" && !METHODS[f.resolvedBy]) throw new Error("register: " + f.id + " is resolved by no method version");
+    if (f.status === "accepted-by-owner" && !f.ownerDecision) throw new Error("register: " + f.id + " is accepted without the owner's decision");
+    if (typeof f.where !== "string" || typeof f.image !== "string" || typeof f.what !== "string") throw new Error("register: " + f.id + " needs where, image and what"); }
+  return true; }
+/** The open findings that apply to an item or to an outfit (its items, an item worn with another of them, or the outfit itself). */
+export function openFindingsFor(reg, items) { const names = items.join("+");
+  return (reg ? reg.findings : []).filter((f) => f.status === "open" && (f.subject.combination ? f.subject.combination === names : items.includes(f.subject.item) && (!f.subject.with || items.includes(f.subject.with)))).map((f) => f.id); }
+/** D-222/D-223: every outfit of technically passed items (top × bottom × shoes, in manifest order), CHECKED AS A COMBINATION
+ *  (BC.outfitCheck) and against the findings register; full size, the app sizes and the seams ×2 with every finding framed (red: a
+ *  fault — a slit, a cut, a double contour; yellow: a reported crossing). Passed and rejected outfits apart; the rejected items
+ *  apart too. A passed outfit is not visually approved by this. */
+export function packageOutfits(w, base, manifest, processed, OUT, { register = null } = {}) {
   const min = BF.minimumItems(base.R, base.sep.lab), pick = (cat) => manifest.items.filter((it) => it.category === cat && processed[it.id] && processed[it.id].ok).map((it) => processed[it.id]);
-  const tops = pick("top"), bottoms = pick("bottom"), shoes = pick("shoes"), outfits = [], files = {}, tiles = [], apps = [], combination = {};
+  const tops = pick("top"), bottoms = pick("bottom"), shoes = pick("shoes"), outfits = {}, files = {}, tiles = { passed: [], rejected: [] }, apps = { passed: [], rejected: [] };
   const save = (n, im) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = sha(b); };
+  const frame = (F, box, rgb) => { const [x0, y0, bw, bh] = box, a = Math.max(0, x0 - 3), b = Math.max(0, y0 - 3), c = Math.min(W - 1, x0 + bw + 2), d = Math.min(H - 1, y0 + bh + 2);
+    for (let x = a; x <= c; x++) for (const y of [b, d]) F.set([...rgb, 255], (y * W + x) * 4); for (let y = b; y <= d; y++) for (const x of [a, c]) F.set([...rgb, 255], (y * W + x) * 4); };
   for (const t of tops) for (const b of bottoms) for (const s of shoes) {
     const hideC = COVERING[s.item] === "closed-footwear" ? BC.closedFootwearHidden(base, s.layers.shoes) : null;
     const P = BF.layerProof(w, base.R, base.Z, { ...min, ...t.layers, ...b.layers, ...s.layers }, { sep: base.sep, headSeam: "d201", hide: hideC, enclosure: "c-exterior" }); let comp = P.dressedRuntime;
     for (const p of [t, b, s]) if (p.shadow) comp = applyShadow(comp, P.stack, p.shadow);
-    // the COMBINATION measured (a report, never a gate: each item was checked over C's minimum items, not over the others) — an
-    // enclosed hole; C's base left open that becomes background (a seam neither item covers: the tee's flared hem over the khaki's
-    // side left a 1 px background slit there); body showing within 6 px outside the items
-    const name = [t.item, b.item, s.item].join("+"), F = flat(comp, bg); let openBase = 0, enc = 0, near = 0; for (let i = 0; i < N; i++) { if (P.enclosed[i]) enc++; if (P.transparentOk[i]) openBase++; if (P.slivers[i]) near++; }
-    outfits.push(name); combination[name] = { enclosedHolePx: enc, openBaseBecomesBackgroundPx: openBase, bodyWithin6pxOutsideItemsPx: near };
-    save("outfit-" + name + ".full.png", crop(F, FIGB, 1)); save("outfit-" + name + ".app.png", grid([down(F, 110, 165), down(F, 52, 78)], 2, 6));
-    tiles.push(half(comp)); apps.push(down(F, 110, 165)); }
-  if (tiles.length) { save("o01-all-outfits-half.png", grid(tiles, Math.min(6, tiles.length))); save("o02-all-outfits-hub-110x165.png", grid(apps, Math.min(9, apps.length), 6)); }
+    const ids = [t.item, b.item, s.item], name = ids.join("+"), oc = BC.outfitCheck(w, base, P), open = openFindingsFor(register, ids);
+    const value = (id) => oc.checks.find((c) => c.id === id).value, faults = [...value("COMBO-1a-SEAM-BACKGROUND").slits, ...value("COMBO-1d-CUT-IN-GARMENT").cuts, ...value("COMBO-2-DOUBLE-CONTOUR").doubles];
+    const corners = [...value("COMBO-1a-SEAM-BACKGROUND").crossings, ...value("COMBO-1d-CUT-IN-GARMENT").crossings];
+    const status = !oc.ok ? "rejected" : open.length ? "technically-ok-open-finding" : "technically-ok";
+    outfits[name] = { status, openFindings: open, failedChecks: oc.checks.filter((c) => !c.ok).map((c) => c.id), faults: faults.map((f) => ({ seam: f.seam, box: f.box, px: f.px })), reportedCrossings: corners.length };
+    const F = flat(comp, bg), M = new Uint8ClampedArray(F); for (const c of corners) frame(M, c.box, [235, 200, 0]); for (const f of faults) frame(M, f.box, [230, 0, 0]);
+    const pre = status === "rejected" ? "rejected-outfit-" : "outfit-";
+    save(pre + name + ".full.png", crop(F, FIGB, 1)); save(pre + name + ".app.png", grid([down(F, 110, 165), down(F, 52, 78)], 2, 6));
+    save(pre + name + ".seams-x2.png", grid(Object.values(SEAM_BOXES).map((bx) => crop(M, bx, 2)), 3));
+    const k = status === "rejected" ? "rejected" : "passed"; tiles[k].push(half(comp)); apps[k].push(down(F, 110, 165)); }
+  for (const k of ["passed", "rejected"]) if (tiles[k].length) { save("o01-" + k + "-outfits-half.png", grid(tiles[k], Math.min(6, tiles[k].length))); save("o02-" + k + "-outfits-hub-110x165.png", grid(apps[k], Math.min(9, apps[k].length), 6)); }
   const rejected = manifest.items.filter((it) => processed[it.id] && !processed[it.id].ok).map((it) => ({ item: it.id, faults: processed[it.id].faults }));
   // the rejected items APART: each on C over the minimum items (with its own covering), whole figure and its category's seams ×2
   for (const r of rejected) { const p = processed[r.item]; if (!p.layers || !Object.keys(p.layers).length) continue;
     const hideR = COVERING[r.item] === "closed-footwear" ? BC.closedFootwearHidden(base, p.layers.shoes) : null;
     const P = BF.layerProof(w, base.R, base.Z, { ...min, ...p.layers }, { sep: base.sep, headSeam: "d201", hide: hideR }); let comp = P.dressedRuntime; if (p.shadow) comp = applyShadow(comp, P.stack, p.shadow);
     const F = flat(comp, bg); save("rejected-" + r.item + ".png", grid([half(comp), ...CLOSE[p.category].map((bx) => crop(F, bx, 2))], 1 + CLOSE[p.category].length)); }
-  return { passed: { top: tops.map((p) => p.item), bottom: bottoms.map((p) => p.item), shoes: shoes.map((p) => p.item) }, outfits, combination, rejected, files }; }
+  const count = (st) => Object.values(outfits).filter((o) => o.status === st).length;
+  return { passed: { top: tops.map((p) => p.item), bottom: bottoms.map((p) => p.item), shoes: shoes.map((p) => p.item) }, outfits, summary: { technicallyOk: count("technically-ok"), technicallyOkOpenFinding: count("technically-ok-open-finding"), rejected: count("rejected") }, rejected, files }; }
 
 /** D-218 EVIDENCE for one generated picture — four separate measures, never one verdict: (1) what the MODEL changed in its raw
  *  result against C (inside / outside the item's region, the protected hands and head); (2) which pixels the COMPOSITION uses
@@ -402,8 +450,9 @@ if (isMain) {
   if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
   const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base, { revision: "d213" });
   if (ri >= 0) { const man = JSON.parse(readFileSync(resolve(a[ri + 1]), "utf8")), root = resolve(homedir(), "Documents", "DenSejeApp-artefacts", man.rawRoot);
-    const r = runPipeline(w, base, T, man, (rel) => readFileSync(join(root, rel)), OUT, { cSha256: BC.C_RAW_SHA256 });
-    console.log(JSON.stringify({ method: r.method, items: Object.fromEntries(Object.entries(r.items).map(([k, v]) => [k, v.technicallyOk])), outfits: r.package.outfits.length, rejected: r.package.rejected.map((x) => x.item) }, null, 2)); }
+    const register = man.findingsRegister ? JSON.parse(readFileSync(join(REPO, ...man.findingsRegister.split("/")), "utf8")) : null;
+    const r = runPipeline(w, base, T, man, (rel) => readFileSync(join(root, rel)), OUT, { cSha256: BC.C_RAW_SHA256, register });
+    console.log(JSON.stringify({ method: r.method, items: Object.fromEntries(Object.entries(r.items).map(([k, v]) => [k, v.status])), outfits: r.package.summary, rejectedItems: r.package.rejected.map((x) => x.item) }, null, 2)); }
   else if (ei >= 0) { const r = evidence(w, base, T, a[ii + 1], readFileSync(resolve(a[ei + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, covering: r.covering, measures: r.measures }, null, 2)); }
   else if (mi >= 0) { const id = a[ii + 1], b = apiMaskPng(w, base, T, ITEMS[id]); writeFileSync(join(OUT, "api-mask-" + ITEMS[id] + ".png"), b); console.log(JSON.stringify({ item: id, category: ITEMS[id], sha256: sha(b), bytes: b.length })); }
   else if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }

@@ -441,3 +441,15 @@ Se `project-state.md` D-221.
 **Resultat:** 8 af 9 items består teknisk, og sandalerne er stadig afvist. Der køres endnu ingen kontrol på kombinationer.
 
 Se `project-state.md` D-222.
+
+## 25. D-223 — kombinationskontrol og fundregister
+
+**Kombinationskontrol:** Det færdige outfit undersøges ved samlingerne mellem kategorier: hals/krave, talje/hofte, ærme/håndled, ben/sko og søm/ben. Kontrollen skelner mellem utilsigtet baggrund, tilsigtede åbninger, normal antialiasing, dobbelte konturer og forkert lagrækkefølge.
+
+**Udtrækning (d223):** En efterladt basekant uden for itemets kontur hører til basen og ikke til itemet, medmindre den lukker et hul. Lukningen må krydse en anden kategoris base.
+
+**Fundregister:** Et åbent fund forhindrer, at et item eller outfit vises som klar.
+
+**Resultat:** 10 af 18 outfits er teknisk OK, 3 er teknisk OK med åbne fund, og 5 er afvist.
+
+Se `project-state.md` D-223.
