@@ -45,6 +45,8 @@ const REQUIRED_DECISIONS = Object.freeze(["D-127", "D-159", "D-205", "D-207"]);
 const ITEMS = Object.freeze(["top-tank-teal", "top-tee-red", "top-sweater-green", "bottom-shorts-navy", "bottom-trousers-khaki", "bottom-skirt-plum", "shoes-sandals-brown", "shoes-sneakers-white", "shoes-boots-black"]);
 const STAGE1 = Object.freeze(["top-tank-teal", "bottom-shorts-navy", "shoes-sandals-brown"]);
 const CALL_IDS = Object.freeze([...ITEMS.map((i) => "D-207-item-" + i), "D-207-reserve-1", "D-207-reserve-2", "D-207-reserve-3"]);
+// D-210: the only status-code segments that open stage 2 or assign a reserve (see verifyAuthorisation)
+const STAGE2_TOKEN = "D-207 STAGE 1: METHOD_OK", reserveToken = (callId, item) => "D-207 RESERVE: " + callId + " -> " + item;
 const OWNER_APPROVAL_FLAG = "--owner-approval=D-207";
 const callOf = (id) => ({ callId: id, claimIdentity: id + "-claim", claimFile: id + ".claim.json", eventsFile: id + ".events.jsonl", approvalFlag: OWNER_APPROVAL_FLAG });
 
@@ -235,6 +237,11 @@ function verifyAuthorisation(c, call, registerLines, prompts) {
   const problems = [];
   const eq = (path, got, want) => { if (!same(got, want)) problems.push(`${path}: ${JSON.stringify(got)}, expected ${JSON.stringify(want)}`); };
   const rowOnce = (id) => /^D-\d{3}$/.test(id || "") && registerLines.filter((l) => l.startsWith("| **" + id + "** |")).length === 1;
+  // D-210: a decision opens stage 2 or assigns a reserve only through an exact SEGMENT of its row's status code (the text between
+  // "Status **`" and "`**", split at " — "), from a decision LATER than D-207 — never through a word anywhere in the row, so a
+  // mention, a negation ("NOT …") or another decision's token opens nothing
+  const statusOf = (id) => { const l = registerLines.find((x) => x.startsWith("| **" + id + "** |")) || "", m = l.match(/Status \*\*`([^`]+)`\*\*/); return m ? m[1].split(" — ").map((x) => x.trim()) : []; };
+  const decides = (id, token) => rowOnce(id) && Number(id.slice(2)) > 207 && statusOf(id).includes(token);
   if (c.decision !== DECISION) problems.push("the authorisation file is not D-207's");
   if (get(c, "meta", "authorisesImageRequest") !== false) problems.push("meta.authorisesImageRequest must stay false; authorisation is never a general boolean");
   eq("budget.authorised", get(c, "budget", "authorised"), 12); eq("budget.planned", get(c, "budget", "planned"), 9); eq("budget.reserve", get(c, "budget", "reserve"), 3);
@@ -253,13 +260,13 @@ function verifyAuthorisation(c, call, registerLines, prompts) {
   if (e.kind === "item") {
     item = e.item; if (!ITEMS.includes(item) || call.callId !== "D-207-item-" + item) problems.push("the entry's item does not match its call id");
     const stage = STAGE1.includes(item) ? 1 : 2; eq("stage", e.stage, stage);
-    if (stage === 2) { const s2 = get(c, "stages", "2"); if (!s2 || s2.open !== true || !rowOnce(s2.openedBy) || !registerLines.find((l) => l.startsWith("| **" + s2.openedBy + "** |")).includes("METHOD_OK")) problems.push("stage 2 is closed: it opens only when a later register decision records stage 1 as METHOD_OK"); }
+    if (stage === 2) { const s2 = get(c, "stages", "2"); if (!s2 || s2.open !== true || !decides(s2.openedBy, STAGE2_TOKEN)) problems.push("stage 2 is closed: it opens only when a later register decision records stage 1 as METHOD_OK"); }
   } else if (e.kind === "reserve") {
     item = e.assignedTo; const target = calls.find((x) => x && x.kind === "item" && x.item === item);
     if (!target) problems.push("the reserve is not assigned to an item of the batch");
     else {
       if (target.mandateState !== "SPENT" || target.outcome !== "TECHNICAL_REJECT" || !rowOnce(target.recordedBy)) problems.push("a reserve only follows a TECHNICAL_REJECT of its item recorded by a register decision");
-      if (!rowOnce(e.assignedBy) || !registerLines.find((l) => l.startsWith("| **" + e.assignedBy + "** |")).includes(call.callId)) problems.push("the reserve's assignment must be recorded by a register decision naming " + call.callId);
+      if (!decides(e.assignedBy, reserveToken(call.callId, item))) problems.push("the reserve's assignment must be recorded by a later register decision whose status code holds " + reserveToken(call.callId, item));
       if (calls.filter((x) => x && x.kind === "reserve" && x.assignedTo === item).length !== 1) problems.push("at most one reserve per item");
     }
   } else problems.push("unknown entry kind");

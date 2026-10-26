@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-210: post-processing fixed and verified; stage 1 METHOD_OK; stage 2 open (as of 2026-10-26).**
+  - **Extraction.** A shift-tolerant, chroma-aware difference (2 px, tolerance 40). The garment is the paint connected to it,
+    and its edge comes from the picture. No thin-stripe filtering.
+  - **Checks.** FIT-5v2 (overlap by layer rank and tuck), FIT-6v2 (strips along the edge, crossings reported) and FIT-7v2 (sole
+    range) were revised. v3 is kept for D-205's record.
+  - **Stage-2 gate.** It opens only on an exact status token.
+  - **Stage-1 results.** Tank and shorts are clean. The sandals are TECHNICAL_REJECT (FIT-6v2, the ankle redrawn 3 px off).
+  - **Known limit.** In open footwear, redrawn toe lines need manual review.
+  - See `project-state.md` **D-210**.
 - **Northstar clothing pilot — D-208: stage 1 sent and inspected; stage 2 stays closed (as of 2026-10-26).**
   - **Sent.** Tank, shorts and sandals, one call each. Generation OK. 3 of 12 calls spent, no reserves.
   - **Fixed.** Two systematic extraction faults in our tool. Body contours redrawn 1–2 px off were extracted as

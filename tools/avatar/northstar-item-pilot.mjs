@@ -26,7 +26,11 @@ export const DECISION = "D-207";
 export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top", "top-sweater-green": "top", "bottom-shorts-navy": "bottom", "bottom-trousers-khaki": "bottom", "bottom-skirt-plum": "bottom", "shoes-sandals-brown": "shoes", "shoes-sneakers-white": "shoes", "shoes-boots-black": "shoes" });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
-export const STRONG_TOL = 60;   // D-208: a change this large is new paint (a garment over skin or background), not redrawn body shading
+export const STRONG_TOL = 40;   // D-210 (D-208: 60): new paint when no pixel of C within EXPLAIN_PX lies within this of it (see colourDist).
+// Stage 1's redraw, measured outside the envelopes, stays explained within 2 px at 60 / 50 / 40 / 30 for 98.6 / 97.7 / 96.2 /
+// 93.6 % (tank) and 99.1 / 98.9 / 98.2 / 96.6 % (shorts); 40 is the lowest that keeps ≥ 96 %, and a light garment is ≈ 58 from
+// C's skin (253,195,124) — at 60 it would be explained away. A garment closer to skin than 40 is a known limit (manual review).
+export const EXPLAIN_PX = 2;    // D-210: the model moves the body's contours by up to this much when it redraws it (see processItem)
 export const LIMITS = Object.freeze({
   remnantShare: { value: 0.01, why: "the item must replace the base garment: more than 1 % of the base interior left identical to C means the base shows through the item (a generation fault)" },
 });
@@ -37,10 +41,15 @@ export function readC() {
   const f = resolve(homedir(), "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure", "d202-base-figure-v2.image-1.png"), buf = readFileSync(f);
   if (sha(buf) !== BC.C_RAW_SHA256) throw new Error("C does not match its pinned sha256"); return buf;
 }
+/** D-210: the larger of the largest channel difference (alpha included) and the chroma difference (R−G, G−B) — brown against a
+ *  grey antialiased contour differs by only 50 in its largest channel but by 54 in chroma. */
+export const colourDist = (O, i, C, j) => { let m = 0; for (let k = 0; k < 4; k++) m = Math.max(m, Math.abs(O[i * 4 + k] - C[j * 4 + k]));
+  return Math.max(m, Math.abs((O[i * 4] - O[i * 4 + 1]) - (C[j * 4] - C[j * 4 + 1])), Math.abs((O[i * 4 + 1] - O[i * 4 + 2]) - (C[j * 4 + 1] - C[j * 4 + 2]))); };
 const changedPx = (O, C, i) => { const a = O[i * 4 + 3], b = C[i * 4 + 3]; if (Math.abs(a - b) > CHANGE_TOL) return true; if (a < 128 && b < 128) return false; return [0, 1, 2].some((k) => Math.abs(O[i * 4 + k] - C[i * 4 + k]) > CHANGE_TOL); };
 
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
 export function processItem(w, base, T, category, raw) {
+  if (T.revision !== "d210") throw new Error("processItem needs templatesC(w, base, { revision: \"d210\" })");
   const reg = BF.register(raw, w.fg.master), gen = [], ext = [], obs = {};
   if (!reg.ok) return { registration: reg, ok: false, faults: { generation: ["G-1 registration: the head does not register within ±6 px — never warped"], extraction: [], fit: [] } };
   const O = BF.dustCleaned(BF.shift(raw, reg.dx, reg.dy)), C = base.R, t = T[category];
@@ -50,39 +59,67 @@ export function processItem(w, base, T, category, raw) {
   obs.bodyChangedOutsideEnvelopePx = outside; obs.protectedChangedPx = inProtect; obs.headChangedPx = head; obs.comparedBodyPx = bodyPx;
   // the item: generated pixels that differ from C inside the envelope (never in a protected region), plus the base interior
   const item = empty(), im = new Uint8Array(N), own = category === "top" ? 1 : category === "bottom" ? 2 : 0; let remnant = 0, mc = 0;
-  // D-208 extraction (stage 1 showed two systematic faults of the D-207 rule, both in this tool): the model redraws the body's
-  // contour lines 1–2 px off, and ink is not skin, so contour lines entered the item; and "never skin" by hue dropped brown and
-  // tan garment paint (sandal straps). The item is now the GARMENT REGION: (1) fill — pixels that changed STRONGLY from C (any
-  // channel > STRONG_TOL, or the alpha), lie inside the envelope and outside the protected regions, kept only where they survive
-  // a 2 px opening (a shifted body contour line or sliver, ≤ 4 px wide, vanishes; garment areas — dark shading included — stay); (2) the whole base interior
-  // and every opaque pixel where C had THIS category's base garment (the base is gone at runtime); (3) the garment's own outline
-  // and antialiasing: changed pixels within 3 px of (1)/(2); (4) below. A mildly changed pixel (24 … 60) elsewhere is redrawn body shading;
-  // a contour line farther than 3 px from the garment is the body's own. A base-interior pixel left unchanged and not ink is a
-  // remnant of the base fabric (a generation fault, G-2).
-  const strong = new Uint8Array(N); for (let i = 441 * W; i < N; i++) { if (!t.allowed[i] || t.protect[i] || O[i * 4 + 3] < 128) continue;
-    if (Math.abs(O[i * 4 + 3] - C[i * 4 + 3]) > 128 || [0, 1, 2].some((k) => Math.abs(O[i * 4 + k] - C[i * 4 + k]) > STRONG_TOL)) strong[i] = 1; }
-  const fill = Mo.dilate(Mo.not(Mo.dilate(Mo.not(strong), 2)), 2), core = new Uint8Array(N);
+  // D-210 extraction (replaces D-208's 2 px opening, which removed every thin stripe — wanted straps and edges too — and still let
+  // a 3 px body contour redrawn 2 px off through as a ≥ 5 px band). A generated pixel is NEW PAINT only if no pixel of C within
+  // EXPLAIN_PX explains it (colourDist — channels incl. alpha, and chroma — above the tolerance for each of them): the model redraws the
+  // whole body and moves its contours by up to 2 px (measured on stage 1 outside the envelopes, where nothing new belongs: see
+  // STRONG_TOL), but a garment's colour over skin or background is explained by no shift of C. The item: (1) new paint (tolerance STRONG_TOL) inside the envelope, outside the protected regions; (2) the base
+  // interior and the opaque pixels of THIS category's base garment (the base is gone at runtime); (3) the garment's outline and
+  // antialias: new paint at CHANGE_TOL within 3 px of (1)/(2); (4) gaps up to 6 px inside it (closing by 3 px) — where an old body
+  // contour crossed paint of nearly its darkness. (3) and (4) never reach into ANOTHER category's base garment: there the model
+  // redraws that garment (a top's hem, the shorts' side seams), which is not this item. A base-interior pixel left unchanged and not
+  // ink is a remnant of the base fabric (a generation fault, G-2).
+  const near2 = new Uint8Array(N).fill(255); for (let i = 441 * W; i < N; i++) { if (!t.allowed[i] || O[i * 4 + 3] < 128) continue; const x = i % W; let best = 255;
+    for (let dy = -EXPLAIN_PX; dy <= EXPLAIN_PX && best > 0; dy++) for (let dx = -EXPLAIN_PX; dx <= EXPLAIN_PX; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N) continue;
+      const m = colourDist(O, i, C, j); if (m < best) best = m; }
+    near2[i] = best; }
+  const core = new Uint8Array(N), other = new Uint8Array(N); for (let i = 0; i < N; i++) if (base.sep.lab[i] && base.sep.lab[i] !== own) other[i] = 1;
   for (let i = 441 * W; i < N; i++) { if (t.mustCover[i]) { mc++; if (!changed[i] && classify(O, i) !== "ink") remnant++; }
-    if ((fill[i] && strong[i]) || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)) core[i] = 1; }
-  // (4) gaps up to 6 px inside the garment region (closing by 3 px) — where an old body contour crossed new paint of nearly the same
-  // darkness, the pixel did not "change", and C's line would show through the item — are taken from the generated picture too
+    const inside = t.allowed[i] && !t.protect[i];
+    if ((inside && O[i * 4 + 3] >= 128 && near2[i] > STRONG_TOL) || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own && O[i * 4 + 3] >= 128)) core[i] = 1; }
   const closed = Mo.not(Mo.dilate(Mo.not(Mo.dilate(core, 3)), 3)), near = Mo.dilate(core, 3);
-  for (let i = 441 * W; i < N; i++) { if (O[i * 4 + 3] === 0) continue; const inside = t.allowed[i] && !t.protect[i];
-    if (core[i] || (inside && closed[i]) || (near[i] && changed[i] && inside)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; } }
+  for (let i = 441 * W; i < N; i++) { if (O[i * 4 + 3] === 0) continue; const inside = t.allowed[i] && !t.protect[i] && !other[i];
+    if (core[i] || (inside && closed[i]) || (inside && near[i] && near2[i] > CHANGE_TOL)) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; } }
+  // (5) the garment is the paint CONNECTED to it: to the base interior (a top, a bottom) or reaching C's sole line (shoes). A
+  // detached piece of new paint is the body's contour redrawn more than EXPLAIN_PX off (a forearm, a knee, a toe line); it is
+  // reported, never extracted. A detached piece thicker than a contour line (a pixel deeper than EXPLAIN_PX + 1 inside it) could be
+  // garment the tool cannot place: E-2 for manual review — nothing is dropped silently.
+  const compOf = new Int32Array(N).fill(-1), comps = [], sole = category === "shoes" ? t.soleRange : null;
+  for (let s0 = 441 * W; s0 < N; s0++) { if (!im[s0] || compOf[s0] >= 0) continue; const q = [s0], px = []; compOf[s0] = comps.length; let keep = false, x0 = W, x1 = -1, y0 = H, y1 = -1;
+    while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      if (sole ? y >= sole[0] : t.mustCover[i]) keep = true;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (im[j] && compOf[j] < 0) { compOf[j] = comps.length; q.push(j); } } }
+    comps.push({ px, keep, box: [x0, y0, x1, y1] }); }
+  const detachedM = new Uint8Array(N); let detachedPx = 0, detachedPieces = 0; for (const c of comps) { if (c.keep) continue; detachedPx += c.px.length; detachedPieces++; for (const i of c.px) { im[i] = 0; detachedM[i] = 1; item.fill(0, i * 4, i * 4 + 4); }
+    // thicker than a contour line: some pixel lies more than EXPLAIN_PX + 1 inside the piece (a diagonal line has a square box)
+    const inC = new Set(c.px), r = EXPLAIN_PX + 1, thick = c.px.some((i) => { const x = i % W; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (x + dx < 0 || x + dx >= W || !inC.has(i + dy * W + dx)) return false; return true; });
+    if (thick) ext.push("E-2 detached paint (" + c.px.length + " px at x" + c.box[0] + " y" + c.box[1] + ") is thicker than a contour line and not connected to the garment — manual review"); }
+  obs.detachedPaintPx = detachedPx; obs.detachedPieces = detachedPieces;
+  // (6) a pixel the picture paints, next to the garment (≤ 3 px), where the runtime figure would show background (no body, no
+  // arm, no other garment): the garment's own edge there — the model drew the foot or the limb a little wider than C, so the shift
+  // test explained it away; it comes from the picture, never painted
+  const ring = Mo.dilate(im, 3); let edgeFilled = 0;
+  for (let i = 441 * W; i < N; i++) if (ring[i] && !im[i] && O[i * 4 + 3] >= 128 && t.allowed[i] && !t.protect[i] && !other[i] && base.body[i * 4 + 3] < 128 && base.arms[i * 4 + 3] < 128) { item.set(O.subarray(i * 4, i * 4 + 4), i * 4); im[i] = 1; edgeFilled++; }
+  obs.edgeFromPicturePx = edgeFilled;
+  let unexplained = 0; for (let i = 441 * W; i < N; i++) if (!t.allowed[i] && !t.protect[i] && O[i * 4 + 3] >= 128 && changed[i]) { const x = i % W; let ok = false;
+    for (let dy = -EXPLAIN_PX; dy <= EXPLAIN_PX && !ok; dy++) for (let dx = -EXPLAIN_PX; dx <= EXPLAIN_PX && !ok; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i + dy * W + dx; if (j < 0 || j >= N) continue;
+      if (colourDist(O, i, C, j) <= STRONG_TOL) ok = true; }
+    if (!ok) unexplained++; }
+  obs.unexplainedOutsideEnvelopePx = unexplained;
   obs.baseRemnantPx = remnant; obs.baseRemnantShare = +(remnant / Math.max(1, mc)).toFixed(4);
   if (mc && remnant / mc > LIMITS.remnantShare.value) gen.push("G-2 base remnant: " + remnant + " px of the base interior unchanged from C (" + (100 * remnant / mc).toFixed(1) + " %)");
   // the layer split: a top's pixels over C's arm pixels are sleeves, the rest its body
   let layers;
   if (category === "top") { const tb = empty(), sl = empty(); for (let i = 0; i < N; i++) if (im[i]) (base.arms[i * 4 + 3] >= 128 ? sl : tb).set(item.subarray(i * 4, i * 4 + 4), i * 4); layers = { topBody: tb, sleeves: sl }; }
   else layers = category === "bottom" ? { pants: item } : { shoes: item };
-  const fit = BC.fitCheck(w, base, T, category, layers);
+  const fit = BC.fitCheck(w, base, T, category, layers, { revision: "d210" });
   const failedFit = fit.checks.filter((c) => c.axis === "fit" && !c.ok);
   // EXTRACTION: a hole in the outfit where the generated picture has opaque paint means the tool missed the item, not the model
   const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep });
-  let missedPaint = 0; for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) missedPaint++;
+  const missedM = new Uint8Array(N); let missedPaint = 0; for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) { missedPaint++; missedM[i] = 1; }
   if (missedPaint > 0) ext.push("E-1 " + missedPaint + " px of a hole lie where the generated picture has opaque paint — the extraction missed them");
   const fitFaults = failedFit.filter((c) => !(c.id === "FIT-4-COVERAGE" && missedPaint > 0)).map((c) => c.id + " " + JSON.stringify(c.value));
-  return { registration: reg, observations: obs, layers, composite: fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
+  return { masks: { ...(fit.masks || {}), missedPaint: missedM, detached: detachedM }, registration: reg, observations: obs, layers, composite: fit.composite, checks: fit.checks, fitOk: fit.fitOk, qualityOk: fit.qualityOk,
     faults: { generation: gen, extraction: ext, fit: fitFaults }, ok: gen.length === 0 && ext.length === 0 && fit.fitOk, O };
 }
 
@@ -106,14 +143,15 @@ export function processToDir(w, base, T, itemId, rawBuf, OUT) {
     save("p05-body-changes.png", half(D), "red: pixels outside the item's envelope that differ from C by more than " + CHANGE_TOL + " (the body redrawn by the model)");
     save("p06-app-sizes.png", grid([down(flat(r.composite, bg), 110, 165), down(flat(r.composite, bg), 52, 78)], 2, 6), "hub 110×165 and quiz 52×78");
   }
-  const report = { decision: DECISION, item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
+  const report = { decision: DECISION, method: "D-210 extraction + fitCheck revision d210", item: itemId, category, raw: { sha256: sha(rawBuf) }, registration: r.registration, ok: r.ok, observations: r.observations || null, faults: r.faults,
     checks: (r.checks || []).map(({ axis, id, ok, value }) => ({ axis, id, ok, value })), note: "A technical pass is never the owner's visual approval.", files };
   writeFileSync(join(OUT, "report.json"), JSON.stringify(report, null, 2) + "\n");
   return report;
 }
 
 /** The 3 × 3 × 3 outfits on C. A missing or rejected item is replaced by the minimum item of its category and MARKED: each tile
- *  carries three bars (top, bottom, shoes): green = the item passed FIT, orange = shown but failed FIT, grey = missing (minimum). */
+ *  carries three bars (top, bottom, shoes): green = the item passed FIT, orange = shown but failed FIT, grey = missing (minimum).
+ *  D-210: a placeholder is hatched in the picture too, and every outfit of generated items only is saved on its own (c03-…). */
 export function combine(w, base, processed, OUT) {
   if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
   const min = BF.minimumItems(base.R, base.sep.lab), cats = { top: [], bottom: [], shoes: [] };
@@ -122,14 +160,20 @@ export function combine(w, base, processed, OUT) {
   for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) for (let c = 0; c < 3; c++) {
     const picks = [cats.top[a], cats.bottom[b], cats.shoes[c]], it = { ...min }, marks = [];
     for (const p of picks) { if (p && p.layers) Object.assign(it, p.layers); marks.push(!p || !p.layers ? [150, 150, 150] : p.ok ? [40, 170, 80] : [240, 140, 0]); }
-    const tile = half(BF.layerProof(w, base.R, base.Z, it, { sep: base.sep }).dressedRuntime);
+    const composed = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep }).dressedRuntime;
+    // D-210: a PLACEHOLDER (C's own base garment, not a generated item) is hatched diagonally, so no tile passes for a tried outfit
+    const hatchOf = { 0: [min.topBody], 1: [min.pants], 2: [] }; picks.forEach((p, k) => { if (p && p.layers) return; for (const Lr of hatchOf[k]) for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (Lr[i * 4 + 3] >= 128 && composed[i * 4 + 3] >= 128 && (x + y) % 14 < 4) composed.set([90, 90, 90, 255], i * 4); } });
+    if (picks.every((p) => p && p.layers)) { const F = flat(composed, bg), im = grid([half(composed), crop(F, CLOSE.top[0], 2), crop(F, CLOSE.bottom[1], 2), crop(F, CLOSE.shoes[0], 2), down(F, 110, 165), down(F, 52, 78)], 3, 8);
+      writeFileSync(join(OUT, "c03-generated-outfit-" + picks.map((p) => p.item).join("+") + ".png"), encodePng(im.w, im.h, im.px)); }
+    const tile = half(composed);
     marks.forEach((rgb, k) => { for (let y = 2; y < 10; y++) for (let x = 4 + k * 86; x < 84 + k * 86; x++) tile.px.set([...rgb, 255], (y * tile.w + x) * 4); });
-    tiles.push(tile); index.push(picks.map((p) => (p ? p.item + (p.ok ? "" : " (failed)") : "missing → minimum")));
+    tiles.push(tile); index.push(picks.map((p) => (p && p.layers ? p.item + (p.ok ? "" : " (failed)") : "missing → placeholder (C's base garment)")));
   }
   const g = grid(tiles, 9), b = encodePng(g.w, g.h, g.px); writeFileSync(join(OUT, "c01-27-outfits.png"), b);
   const app = grid(tiles.map((t) => t), 9);
-  writeFileSync(join(OUT, "c02-27-outfits-index.json"), JSON.stringify({ legend: "bars per tile: top · bottom · shoes — green passed FIT, orange shown but failed FIT, grey missing (minimum item)", outfits: index }, null, 2) + "\n");
-  return { tiles: tiles.length, sha256: sha(b), index };
+  const generated = index.filter((o) => o.every((x) => !x.startsWith("missing"))).length;
+  writeFileSync(join(OUT, "c02-27-outfits-index.json"), JSON.stringify({ legend: "bars per tile: top · bottom · shoes — green passed FIT, orange shown but failed FIT, grey missing: a PLACEHOLDER (C's own base garment, hatched diagonally), not a generated item", tilesWithOnlyGeneratedItems: generated, tilesWithPlaceholders: index.length - generated, outfits: index }, null, 2) + "\n");
+  return { tiles: tiles.length, generated: index.filter((o) => o.every((x) => !x.startsWith("missing"))).length, sha256: sha(b), index };
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -138,7 +182,7 @@ if (isMain) {
   if (!OUT || (pi < 0 && ci < 0)) { console.error("usage: --process <png> --item <id> --out <dir> | --combine <dir> --out <dir>"); process.exit(1); }
   if (!BF.isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository (D-127 §2)"); process.exit(1); }
   if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
-  const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base);
+  const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base, { revision: "d210" });
   if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }
   else {
     const root = resolve(a[ci + 1]), processed = {};
