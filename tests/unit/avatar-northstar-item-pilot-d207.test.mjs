@@ -47,8 +47,8 @@ test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, eac
   assert.deepEqual(CALLS.stages["1"].items, ["top-tank-teal", "bottom-shorts-navy", "shoes-sandals-brown"]); assert.deepEqual([CALLS.stages["2"].open, CALLS.stages["2"].openedBy], [true, "D-210"]); assert.equal(CALLS.stages["2"].items.length, 6);
   // D-208 recorded stage 1: the three stage-1 items sent once each, none a TECHNICAL_REJECT (so no reserve); everything else unspent
   // D-212 recorded stage 2: tee, sweater, trousers sent (200), the skirt answered 429 (no credit) — spent; sneakers, boots unspent
-  const S2 = { "top-tee-red": ["TECHNICAL_REJECT", 200, 1], "top-sweater-green": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-trousers-khaki": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-skirt-plum": ["HTTP_ERROR_NO_IMAGE", 429, 0] };
-  for (const c of CALLS.calls) { if (c.kind === "item" && S2[c.item]) { assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SPENT", ...S2[c.item].slice(0, 1), "D-212", ...S2[c.item].slice(1)], c.callId); continue; }
+  const S2 = { "top-tee-red": ["SENT_ONCE_GENERATION_OK", 200, 1], "top-sweater-green": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-trousers-khaki": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-skirt-plum": ["HTTP_ERROR_NO_IMAGE", 429, 0] };
+  for (const c of CALLS.calls) { if (c.kind === "item" && S2[c.item]) { assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SPENT", ...S2[c.item].slice(0, 1), c.item === "top-tee-red" ? "D-213" : "D-212", ...S2[c.item].slice(1)], c.callId); continue; }
     const s1 = c.kind === "item" && c.stage === 1;
     assert.equal(c.mandateState, s1 ? "SPENT" : "UNSPENT", c.callId); if (c.kind === "reserve") assert.equal(c.assignedTo, null);
     // D-210 re-recorded the sandals under the revised checks (FIT-6v2): a TECHNICAL_REJECT, its reserve not assigned
@@ -189,7 +189,7 @@ test("stage 2 opens only through D-207's exact status token in a later decision'
 // ── the processing tool on the stand-in base ───────────────────────────────────────────────────────────────────────────
 const w = WR.buildWardrobe(), L = w.base.layers, A = w.anchors, M = w.fg.master, { W, N } = WR;
 const LEGS = (() => { const legs = new Uint8ClampedArray(L.pants); for (let i = 0; i < (A.crotchY + 10) * W; i++) legs[i * 4 + 3] = 0; return NL.overStack([M, recolour(legs, { h: 33, s: 0.51, vScale: 1.3 })]); })();
-const base = BC.prepareBase(w, LEGS), T = BC.templatesC(w, base, { revision: "d210" });
+const base = BC.prepareBase(w, LEGS), T = BC.templatesC(w, base, { revision: "d213" });
 const only = (k, P = LEGS) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) if (base.sep.lab[i] === k) o.set(P.subarray(i * 4, i * 4 + 4), i * 4); return o; };
 test("processing: a correctly regenerated garment is extracted and fits; a garment left half unreplaced is a GENERATION fault; a drift is rejected", () => {
   const bottoms = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));
@@ -253,7 +253,7 @@ test("D-210 extraction: body contours redrawn up to 2 px off are never item; thi
 
 // D-210 revision of FIT-5 / FIT-6 / FIT-7: what the contract intends passes, every fault stimulus still fails on its own check
 test("D-210 fit revision: intended overlap, open skin and a sole under the foot pass; wrong order, hidden detail, a too-narrow garment and a floating or sunken shoe fail", () => {
-  const min = BF.minimumItems(base.R, base.sep.lab), S = standInItems(w, base), fc = (cat, layers, o = {}) => BC.fitCheck(w, base, T, cat, layers, { revision: "d210", ...o });
+  const min = BF.minimumItems(base.R, base.sep.lab), S = standInItems(w, base), fc = (cat, layers, o = {}) => BC.fitCheck(w, base, T, cat, layers, { revision: "d213", ...o });
   const get = (r, id) => r.checks.find((c) => c.id === id), ok = (r, id) => get(r, id).ok;
   for (const id of ["min-sleeveless-top", "min-shorts"]) { const r = fc(S[id].category, S[id].layers); assert.ok(r.fitOk, id + " " + JSON.stringify(r.checks.filter((c) => !c.ok))); }
   // FIT-5v2 — a sleeve delivered in the body layer, hidden behind the arm: a hidden detail (v3's own stimulus)
@@ -279,6 +279,40 @@ test("D-210 fit revision: intended overlap, open skin and a sole under the foot 
   assert.ok(g7(0).ok, JSON.stringify(g7(0).value)); assert.ok(g7(20).ok, "a sole 20 px under the foot"); assert.equal(g7(-20).ok, false, "lifted 20 px"); assert.equal(g7(40).ok, false, "sunk 40 px");
   // v3 is unchanged for D-205's record
   assert.ok(BC.fitCheck(w, base, BC.templatesC(w, base), "bottom", S["min-shorts"].layers).checks.some((c) => c.id === "FIT-5-ORDER"));
+});
+// D-213: collars, the head seam, long sleeves, fingers and garment colours near skin
+test("D-213: a collar takes no neck skin under the head; the head's collar edge is not drawn over the neck; a long sleeve keeps its cuff to C's wrist; paint over the fingers is a G-3 fault; a light garment is new paint", () => {
+  const top = recolour(only(1), { h: 175, s: 0.55 }), rt = BF.runtimeHead(w, base.body);
+  // a collar: the edge-from-the-picture rule takes nothing under the runtime head (D-210's rule took the neck skin there — the tee's strip)
+  const r = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top])); let underHead = 0;
+  for (let i = 0; i < N; i++) if (rt[i * 4 + 3] >= 128 && r.masks.ruleOf[i] === 6) underHead++;   // the collar under the chin is garment (own base); the neck skin is not
+  assert.equal(underHead, 0, "the edge rule takes nothing under the head");
+  // the head seam: where the head's leftover collar edge lies over an opaque body, the runtime shows the body (D-201), v3 the head
+  const edge = BF.neckEdgeMask(w), P1 = BF.layerProof(w, base.R, base.Z, BF.minimumItems(base.R, base.sep.lab), { sep: base.sep, headSeam: "d201" });
+  const P0 = BF.layerProof(w, base.R, base.Z, BF.minimumItems(base.R, base.sep.lab), { sep: base.sep }); let n = 0, same = 0, differs = 0;
+  for (let i = 0; i < N; i++) if (edge[i] && P1.body[i * 4 + 3] >= 128) { n++; if ([0, 1, 2, 3].every((k) => P1.dressedRuntime[i * 4 + k] === P1.body[i * 4 + k])) same++; if ([0, 1, 2].some((k) => P0.dressedRuntime[i * 4 + k] !== P1.dressedRuntime[i * 4 + k])) differs++; }
+  assert.ok(n > 50 && same === n, "D-201 seam: the body wins on the collar edge (" + same + " of " + n + ")");
+  // runtimeHead drops exactly the collar edge over an opaque body and keeps the rest of the head (the stand-in's neck IS Northstar's,
+  // so the plain composite shows no line there; on C it drew the pale curve — d213-review)
+  let dropped = 0, keptElse = true; for (let i = 0; i < N; i++) { const e = edge[i] && P1.body[i * 4 + 3] > 0; if (e) { if (rt[i * 4 + 3] === 0) dropped++; } else if ([0, 1, 2, 3].some((k) => rt[i * 4 + k] !== w.head[i * 4 + k])) keptElse = false; }
+  assert.ok(dropped > 50 && keptElse, "runtimeHead: " + dropped + " collar-edge pixels dropped, the rest of the head unchanged"); assert.ok(differs >= 0);
+  // a long sleeve from the shoulder down to C's wrist: its cuff is kept to the wrist row (the v3 guard began 10 px above the
+  // larger Northstar wrist anchor); the same sleeve continued over the hand: the hand stays the base's and G-3 reports it
+  const wr = T.top.wristRows, sleeve = (toY) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= A.shoulder.y && y <= toY(x) && base.arms[i * 4 + 3] >= 128) o.set([40, 120, 60, 255], i * 4); } return o; };
+  const toWrist = sleeve((x) => wr[x < W / 2 ? "left" : "right"] - 3), cuff = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top, toWrist]));
+  let painted = 0, kept = 0; for (let i = 0; i < N; i++) { const y = (i / W) | 0; if (toWrist[i * 4 + 3] && y >= Math.min(wr.left, wr.right) - 12) { painted++; if (cuff.layers.sleeves[i * 4 + 3] || cuff.layers.topBody[i * 4 + 3]) kept++; } }
+  assert.ok(painted > 100 && kept === painted, "the cuff's last 12 rows above C's wrist are kept: " + kept + " of " + painted); assert.deepEqual(cuff.faults.generation, []);
+  const v3 = BC.templatesC(w, base); let v3cut = 0; for (let i = 0; i < N; i++) if (toWrist[i * 4 + 3] && v3.top.protect[i]) v3cut++; assert.ok(v3cut > 0, "v3's guard cut that cuff");
+  const overHand = sleeve((x) => wr[x < W / 2 ? "left" : "right"] + 30), oh = IP.processItem(w, base, T, "top", NL.overStack([LEGS, top, overHand]));
+  let onHand = 0; for (let i = 0; i < N; i++) if (T.top.hands[i] && (oh.layers.sleeves[i * 4 + 3] || oh.layers.topBody[i * 4 + 3])) onHand++;
+  assert.equal(onHand, 0, "nothing over C's hand is extracted"); assert.ok(oh.faults.generation.some((f) => f.startsWith("G-3")), JSON.stringify(oh.faults));
+  // a light garment over the legs, ≈ 50 from the stand-in's leg colour in its largest channel: new paint, kept whole
+  let hem = 0; for (let i = 0; i < N; i++) if (base.sep.lab[i] === 2) hem = Math.max(hem, (i / W) | 0);
+  const legs = new Uint8ClampedArray(min_pants()); const leg = []; for (let y = hem; y < Math.min(A.shoeTopY.left, A.shoeTopY.right) - 20; y++) for (let x = 0; x < W; x++) { const i = y * W + x;
+    if (base.body[i * 4 + 3] >= 128 && !base.sep.lab[i] && BF.classify(base.R, i) !== "ink") { const c = base.R.subarray(i * 4, i * 4 + 3); legs.set([Math.min(255, c[0] + 50), Math.min(255, c[1] + 30), Math.min(255, c[2] + 20), 255], i * 4); leg.push(i); } }
+  const lt = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, legs])); let lk = 0; for (const i of leg) if (lt.layers.pants[i * 4 + 3]) lk++;
+  assert.ok(leg.length > 5000 && lk >= 0.99 * leg.length, "a light garment over the legs is new paint: " + lk + " of " + leg.length);
+  function min_pants() { return BF.minimumItems(base.R, base.sep.lab).pants; }
 });
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));

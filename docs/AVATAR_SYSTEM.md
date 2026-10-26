@@ -385,6 +385,13 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-213: post-processing made robust at collars, cuffs and open footwear (no image calls).**
+  - **Cuffs.** The hand guard for tops starts at C's own wrist, and G-3 flags paint over the hand.
+  - **Collar.** The edge rule respects the head.
+  - **Head seam.** The D-201 head seam in the runtime composite removes the pale neck line.
+  - **Results.** Five of six items pass technically. The sandals stay rejected: their toe lines are a documented material
+    limit.
+  - See `project-state.md` **D-213**.
 - **Northstar clothing pilot — D-212: stage 2 ran until the API credit was exhausted (as of 2026-10-26).**
   - **Generated.** The red tee (TECHNICAL_REJECT, FIT-6v2 collar notch), the green sweater (cuffs cut by the hand guard,
     a manual finding) and the khaki trousers (clean).

@@ -454,12 +454,17 @@ function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (
 
 /** The layering proof with Northstar's D-197 defaults over the runtime body (base garments removed). */
 export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the bare thigh directly below their hem (D-204)
-export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null } = {}) {
+/** D-213: the R3 head as the runtime composes it over a body that owns its neck — D-201's seam rule: the head's leftover collar
+ *  edge (neckEdgeMask) is not drawn where the body is opaque; everywhere else the head is unchanged. */
+export function runtimeHead(w, body) { const h = new Uint8ClampedArray(w.head), edge = neckEdgeMask(w); for (let i = 0; i < N; i++) if (edge[i] && body[i * 4 + 3] > 0) h[i * 4 + 3] = 0; return h; }
+export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null, headSeam = "plain" } = {}) {
   const L = w.base.layers, { lab } = sep || separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
   // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" and (D-210)
   // "bottoms-over-top" exist only as control stimuli: a composer that puts the arms under the top's body, or the bottoms over the
   // top, must be caught by the order checks. `stack` names the composed layers in the order used, bottom first.
-  const named = { body, shoes: I.shoes, pants: I.pants, topBody: I.topBody, arms, sleeves: I.sleeves, head: w.head };
+  // headSeam "plain" (v3): the whole R3 head over the body — its leftover collar edge drew a pale line across C's neck (D-213);
+  // "d201": the head as the runtime composes it (runtimeHead)
+  const named = { body, shoes: I.shoes, pants: I.pants, topBody: I.topBody, arms, sleeves: I.sleeves, head: headSeam === "d201" ? runtimeHead(w, body) : w.head };
   const orderNames = order === "arms-under" ? ["body", "arms", "shoes", "pants", "topBody", "sleeves", "head"] : order === "bottoms-over-top" ? ["body", "shoes", "topBody", "pants", "arms", "sleeves", "head"] : ["body", "shoes", "pants", "topBody", "arms", "sleeves", "head"];
   const stack = orderNames.map((n) => [n, named[n]]), dressedRuntime = NL.overStack(stack.map(([, L]) => L));
   const items = NL.overStack([I.shoes, I.pants, I.topBody, I.sleeves]), covered = (i) => items[i * 4 + 3] >= 128;

@@ -53,7 +53,8 @@ export function anchorsOf(w, base) {
  *  the outer band may stay open (it becomes background) and the outfit's silhouette decides there. allowed / protect are the
  *  envelopes of contract v2 measured on C; the sleeve zone is C's own arms grown by 14 px. Nothing here is skin removed. */
 export function templatesC(w, base, { revision = "v3" } = {}) {
-  const T = templatesV3(w, base); if (revision !== "d210") return T;
+  const T = templatesV3(w, base); if (revision !== "d210" && revision !== "d213") return T;
+  if (revision === "d213") return templatesD213(w, base, templatesC(w, base, { revision: "d210" }));
   // D-210: a sole under a bare foot reaches below C's soles — Northstar's own sneaker sole is NORTHSTAR_SOLE_PX thick — so the
   // shoes envelope reaches C's lowest sole + that sole + the ground tolerance (v3 cut it at the ground line + 4 and so cut the
   // generated sandals' soles off, while FIT-7 measured the cut item)
@@ -61,6 +62,25 @@ export function templatesC(w, base, { revision = "v3" } = {}) {
   let x0 = W, x1 = -1, y1 = -1; for (let i = 0; i < N; i++) if (a[i]) { const x = i % W; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y1 = Math.max(y1, (i / W) | 0); }
   for (let y = y1 + 1; y <= Math.min(H - 1, low); y++) for (let x = x0; x <= x1; x++) allowed[y * W + x] = 1;
   return { ...T, revision: "d210", shoes: { ...T.shoes, allowed, soleRange: [sole - FIT_LIMITS.groundTolPx.value, low] } };
+}
+/** D-213 (tops only): the hand guard begins at C's OWN wrist on each side — where C's arm widens into the hand: the lower end of
+ *  the narrow plateau (width ≤ the narrowest + 1 px) within ±40 px of Northstar's wrist anchor — instead of 10 px above the larger of Northstar's two wrist anchors (837 on C, while C's wrists are at
+ *  y≈844): v3 cut the last rows of a long sleeve's cuff off on C's forearm. Below the wrist the hand stays the base's; the head
+ *  guard, the other categories and every other envelope are unchanged. */
+export function wristRowsC(w, base) {
+  const o = {}; for (const side of ["left", "right"]) { const a0 = w.anchors.wristY[side], wd = {}; let best = Infinity, at = a0;
+    for (let y = a0 - 40; y <= a0 + 40; y++) { let n = 0; for (let x = 0; x < W; x++) if ((side === "left" ? x < W / 2 : x >= W / 2) && base.arms[(y * W + x) * 4 + 3] >= 128) n++; wd[y] = n; if (n > 0 && n < best) { best = n; at = y; } }
+    let row = at; while (row + 1 <= a0 + 40 && wd[row + 1] > 0 && wd[row + 1] <= best + 1) row++;   // the narrow plateau's lower end
+    o[side] = row; } return o; }
+function templatesD213(w, base, T) {
+  const wr = wristRowsC(w, base), hands = new Uint8Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (base.arms[i * 4 + 3] >= 128 && y >= wr[x < W / 2 ? "left" : "right"]) hands[i] = 1; }
+  const top = new Uint8Array(N); for (let i = 0; i < N; i++) if (base.sep.lab[i] === 1) top[i] = 1;
+  const tb = bbox(top), head = Mo.and(maskOf(w.head, 1), Mo.rect(0, 0, W, tb.y0 - 15));   // v3's head guard, unchanged
+  // the sleeve zone of the envelope likewise reaches C's own wrist on each side (v3: Northstar's larger wrist anchor, y849)
+  const sleeveTo = new Uint8Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (base.arms[i * 4 + 3] >= 128 && y >= w.anchors.shoulder.y - 60 && y < wr[x < W / 2 ? "left" : "right"]) sleeveTo[i] = 1; }
+  const allowed = Mo.or(T.top.allowed, Mo.and(Mo.dilate(sleeveTo, 14), Mo.not(Mo.dilate(hands, 2))));
+  const handGuard = Mo.dilate(hands, 2);
+  return { ...T, revision: "d213", top: { ...T.top, allowed, protect: Mo.or(head, handGuard), hands, handGuard, wristRows: wr } };
 }
 function templatesV3(w, base) {
   const { R, sep, arms } = base, A = w.anchors, ext = BF.outsideExterior(R), band = Mo.dilate(ext, BF.FABRIC_BAND_PX);
@@ -147,11 +167,12 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   add("fit", "FIT-2-ENVELOPE", env <= lim.envelopePx.value, { outsidePx: env }, "inside the category's envelope on C");
   add("fit", "FIT-3-PROTECT", prot <= lim.protectPx.value, { protectPx: prot }, "nothing over the head or the hands");
   const min = BF.minimumItems(base.R, base.sep.lab), it = category === "top" ? { ...min, ...layers } : category === "bottom" ? { ...min, ...layers } : { ...min, shoes: layers.shoes };
-  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order }), c = (m) => count(m);
+  // D-213: the head as the runtime composes it (D-201's seam rule) — v3 / d210 keep the plain head for their records
+  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order, headSeam: revision === "d213" ? "d201" : "plain" }), c = (m) => count(m);
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
-  let masks = null; if (revision === "d210") masks = fitD210(w, base, T, category, layers, P, add);
+  let masks = null; if (revision === "d210" || revision === "d213") masks = fitD210(w, base, T, category, layers, P, add);
   else {
   let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
   add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");
