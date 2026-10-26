@@ -178,5 +178,16 @@
     "mustCover": "contract-v2 requires every item to cover the whole base garment + 1 px. In the runtime model that is necessary in the interior (there is no skin under the base garments) but stricter than necessary along the outer fabric rim, where an open base pixel becomes background; BF15r's hole / cut-skin / depth tests express the actual requirement. NOT changed.",
     "missingMaterial": "for the planned forms (a sleeveless top = the base top, shorts = the base shorts, sandals = bare feet) nothing is missing: the minimum items cover exactly the regions without skin. Material is missing only for forms smaller than the base garments (midriff, deeper necklines, shorter shorts — O2) and wherever an item is cut shorter than the base.",
     "bf9": "the top's hem lies at y 785 against the limit 786, but the top meets the shorts in every torso column with 0 skin px between (shared outline) and both lie inside Northstar's tee and jeans: no coverage or overlap problem. The hem range is a proxy for that requirement; no revision is proposed — the 1 px rejection stands."
+  },
+  "gatesV3": {
+    "decision": "D-205",
+    "status": "ADOPTED — binding for base candidates after C; v1 (A, D-200) and v2 (C, D-203) stay the records of those results",
+    "replaces": {
+      "BF9v2-BASE-TOP": "BF9v3-BASE-TOP",
+      "BF15-DRESS-BACK": "BF15v3-RUNTIME"
+    },
+    "BF9v3-BASE-TOP": "the chest band of BF9v2 and the colour distance, and the waist seam: in every torso column (12 px inset) no skin and no transparent pixel between the base top and the base shorts. The hem row range was a proxy for this closure (D-204: C's top ends 1 px above it and meets the shorts with 0 px between).",
+    "BF15v3-RUNTIME": "the runtime composition (D-198): the body WITHOUT its base garments, dressed in the minimum items; 0 enclosed holes (any hole shows background); ≤ 10 exposed cut-skin px (antialias; C 0 px, a bottom cut 60 px short 198 px); 0 open base px deeper than the 4 px fabric band (deeper is missing body); with an opaque probe behind the whole upper body, ≥ 0.99 of the arm pixels seen in front (the contract order). Northstar's old clothing is no longer part of this gate: legacy compatibility is a report (contract-v3 axes).",
+    "controls": "a transparent hole in a base garment; a composer that puts the arms under the top's body; the stand-in fault items of contract v3"
   }
 }
