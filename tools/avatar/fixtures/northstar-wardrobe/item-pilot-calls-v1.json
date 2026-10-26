@@ -69,8 +69,8 @@
         "shoes-sneakers-white",
         "shoes-boots-black"
       ],
-      "open": false,
-      "openedBy": null,
+      "open": true,
+      "openedBy": "D-210",
       "rule": "opens only when a later register decision records stage 1 as METHOD_OK after an actual inspection of the three results and their combination (not only the registration on the head: skin, hands, feet, seams, edges, stray remnants)"
     }
   },
@@ -223,8 +223,8 @@
         "eventsFilename": "D-207-item-shoes-sandals-brown.events.jsonl"
       },
       "mandateState": "SPENT",
-      "outcome": "SENT_ONCE_GENERATION_OK",
-      "recordedBy": "D-208",
+      "outcome": "TECHNICAL_REJECT",
+      "recordedBy": "D-210",
       "result": {
         "dispatchedAt": "2026-10-26T09:37:38.339Z",
         "httpStatus": 200,
@@ -232,7 +232,7 @@
         "imageSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/",
-        "note": "not a TECHNICAL_REJECT: no generation fault; the extraction faults were our tool's (fixed in D-208), the open FIT-5/FIT-6 results are contract findings for the owner — no reserve follows"
+        "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned."
       }
     },
     {
