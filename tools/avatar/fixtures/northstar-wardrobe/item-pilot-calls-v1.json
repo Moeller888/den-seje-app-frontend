@@ -9,10 +9,10 @@
     "authorised": 12,
     "planned": 9,
     "reserve": 3,
-    "actuallySent": 7,
+    "actuallySent": 10,
     "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools",
-    "recordedBy": "D-212",
-    "stoppedBy": "D-212: the API answered the 7th call with HTTP 429 insufficient_quota (credit_balance_exhausted); every further call would fail the same way and spend a claim, so sending stopped — 2 items and 3 reserves stay unspent; a further send needs the owner's credits and a new execution instruction"
+    "recordedBy": "D-216",
+    "stoppedBy": "D-216: the boots and D-207-reserve-1 (skirt) were sent once each after the owner's credit and execution message — both HTTP 200 with one image; 2 claims remain of 12 (D-207-reserve-2 assigned to the sneakers under D-216's amendment extension, D-207-reserve-3 free); the sneakers' reserve needs its own execution message after D-216's merge"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -245,7 +245,7 @@
         "imageSha256": null,
         "images": 0,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-skirt-plum/",
-        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent (budget rule), no retry, no fallback. Not a TECHNICAL_REJECT of the item."
+        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent (budget rule), no retry, no fallback. Not a TECHNICAL_REJECT of the item. D-216: its reserve (D-207-reserve-1) was sent and is recorded there."
       }
     },
     {
@@ -293,8 +293,18 @@
         "filename": "D-207-item-shoes-sneakers-white.claim.json",
         "eventsFilename": "D-207-item-shoes-sneakers-white.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "HTTP_ERROR_NO_IMAGE",
+      "recordedBy": "D-215",
+      "result": {
+        "dispatchedAt": "2026-10-26T13:19:05.499Z",
+        "httpStatus": 429,
+        "requestId": "req_05c636285d964abda698a88bf4801462",
+        "imageSha256": null,
+        "images": 0,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sneakers-white/",
+        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent, no retry, no fallback. Not a TECHNICAL_REJECT; D-214's reserve amendment names only the skirt, so no reserve follows without a new owner decision."
+      }
     },
     {
       "callId": "D-207-item-shoes-boots-black",
@@ -311,8 +321,18 @@
         "filename": "D-207-item-shoes-boots-black.claim.json",
         "eventsFilename": "D-207-item-shoes-boots-black.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "TECHNICAL_REJECT",
+      "recordedBy": "D-216",
+      "result": {
+        "dispatchedAt": "2026-10-26T13:35:11.730Z",
+        "httpStatus": 200,
+        "requestId": "req_5f313fcc727a462db12266d5f9dca0e3",
+        "imageSha256": "1caaa56779f97f3e4c9a35a25cc8a7cf40894d8a5d844d737c68d015770dc38f",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-boots-black/",
+        "note": "generation OK; extraction OK after D-216's enclosed-hole rule (195 px of dark boot paint had been explained by C's foot contours — specks of C's skin along the soles); FIT-6v2 64 px: the boots' heel arch leaves C's bare heel visible on both feet (the boot does not enclose the foot) — a fit fault of this item, not our tools"
+      }
     },
     {
       "callId": "D-207-reserve-1",
@@ -330,25 +350,39 @@
         "filename": "D-207-reserve-1.claim.json",
         "eventsFilename": "D-207-reserve-1.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED",
-      "assignedBy": "D-214"
+      "mandateState": "SPENT",
+      "outcome": "TECHNICAL_REJECT",
+      "assignedBy": "D-214",
+      "recordedBy": "D-216",
+      "result": {
+        "dispatchedAt": "2026-10-26T13:35:54.026Z",
+        "httpStatus": 200,
+        "requestId": "req_05f857585a4541d2a32576151bae7459",
+        "imageSha256": "c0d4e6e61f8679059f1b7fe4230084f5cb0372a50d4cc6ac0929d3fb40ec1670",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-reserve-1/",
+        "note": "the skirt: generation OK (hands in front of the skirt by the contract order); FIT-6v2 24 px: C's thigh contour shows 1–3 px beside the hem's right corner (a real, small fit fault); FIT-4 9 px is a check artefact — a 1 px column of C's side seam next to the arm–torso background gap, which the flared skirt closes at the hand (invisible; 0 px with the sweater, 8 with the tee, 211 with the tank along the tank's side)"
+      }
     },
     {
       "callId": "D-207-reserve-2",
       "kind": "reserve",
-      "item": null,
-      "category": null,
+      "item": "shoes-sneakers-white",
+      "category": "shoes",
       "stage": null,
-      "assignedTo": null,
-      "prompt": null,
+      "assignedTo": "shoes-sneakers-white",
+      "prompt": {
+        "item": "shoes-sneakers-white",
+        "sha256": "79dc423dcfea0dd0d9588a9300cd299a79371cc13c3a9deee4cbfaefed072159"
+      },
       "claim": {
         "identity": "D-207-reserve-2-claim",
         "filename": "D-207-reserve-2.claim.json",
         "eventsFilename": "D-207-reserve-2.events.jsonl"
       },
       "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "outcome": "NOT YET ATTEMPTED",
+      "assignedBy": "D-216"
     },
     {
       "callId": "D-207-reserve-3",
@@ -383,6 +417,15 @@
       "bottom-skirt-plum"
     ],
     "maxReserves": 1,
-    "rule": "owner decision D-214: ONE of the three existing reserves may be assigned to the skirt, whose original call got HTTP 429 (no credit) and no image; the original claim stays spent, the reserve has its own claim; the cap stays 12 calls in all — never 12 plus replacements; no automatic repetition on an error or an undetermined dispatch"
+    "rule": "owner decision D-214: ONE of the three existing reserves may be assigned to the skirt, whose original call got HTTP 429 (no credit) and no image; the original claim stays spent, the reserve has its own claim; the cap stays 12 calls in all — never 12 plus replacements; no automatic repetition on an error or an undetermined dispatch",
+    "extensions": [
+      {
+        "decision": "D-216",
+        "items": [
+          "shoes-sneakers-white"
+        ],
+        "rule": "owner decision D-216: one further existing reserve may follow the sneakers' HTTP 429 without an image, same frozen prompt, its own claim; the original claim stays spent; the cap stays 12"
+      }
+    ]
   }
 }
