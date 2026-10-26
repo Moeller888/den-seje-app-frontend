@@ -2,6 +2,9 @@
 // the lock, before anything expensive runs. Two questions, both answered only on POSITIVE evidence:
 //
 //   1. SUPERSEDED — a pull_request run whose PR has since moved to a newer commit, or was closed.
+//      Or a push run on main/master whose branch has since moved STRICTLY AHEAD of this commit, when
+//      the newer head already has its own push run of this workflow: that run tests everything this
+//      one would (it contains this commit), so only the newest main commit spends the lock.
 //   2. CANCELLED  — this run was cancelled while it waited for the lock.
 //
 // Why here and not with `if: cancelled()`: `test` is `if: always()` (so the required check always
@@ -17,8 +20,13 @@
 //
 // FAIL-OPEN TOWARDS TESTING: any doubt (API error, missing data, unexpected shape) → run the suite.
 //
-//   node .github/ci/superseded-check.mjs   (env: EVENT_NAME, PR_NUMBER, EVENT_HEAD_SHA, GITHUB_RUN_ID,
-//                                           GITHUB_REPOSITORY, GITHUB_TOKEN, GITHUB_OUTPUT)
+//   node .github/ci/superseded-check.mjs   (env: EVENT_NAME, PR_NUMBER, EVENT_HEAD_SHA, PUSH_REF, PUSH_SHA,
+//                                           GITHUB_RUN_ID, GITHUB_REPOSITORY, GITHUB_TOKEN, GITHUB_OUTPUT)
+//
+// RACES (push): main may move after this check — then this run tests an older commit in full and the
+// newer run decides for itself at its own lock acquisition. The newest commit is never superseded: no
+// newer head exists to supersede it. A newer head WITHOUT its own push run (not created yet, or a
+// [skip ci] commit) never supersedes, so no commit is left untested because of this check.
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,6 +44,48 @@ export function decideSuperseded({ eventName, eventHeadSha, pr }) {
   if (current === null || !SHA.test(current)) return { superseded: false, reason: "current head SHA unreadable → run" };
   if (current !== eventHeadSha) return { superseded: true, reason: `superseded: the pull request's head is now ${current.slice(0, 7)}, this run tests ${eventHeadSha.slice(0, 7)}` };
   return { superseded: false, reason: `current: this run tests the pull request's head ${current.slice(0, 7)}` };
+}
+
+const MAIN_REF = /^refs\/heads\/(main|master)$/;
+const REPO = /^[\w.-]+\/[\w.-]+$/;
+
+// Pure decision about a push run on main/master. Positive evidence only: the branch head (read now)
+// differs from this run's commit, GitHub's compare says the head is strictly AHEAD of this commit
+// (contains it), and a push run of this same workflow exists for that head. Anything else → run.
+export function decideMainSuperseded({ eventName, ref, sha, head, compare, newerRun, workflowId }) {
+  if (eventName !== "push") return { superseded: false, reason: `event ${eventName || "unknown"}: not a push run` };
+  if (typeof ref !== "string" || !MAIN_REF.test(ref)) return { superseded: false, reason: `push to ${ref || "unknown ref"}: not main/master → run` };
+  if (typeof sha !== "string" || !SHA.test(sha)) return { superseded: false, reason: "this run's commit SHA unreadable → run" };
+  if (typeof head !== "string" || !SHA.test(head)) return { superseded: false, reason: "branch head unreadable → run" };
+  if (head === sha) return { superseded: false, reason: `current: this run tests the branch head ${sha.slice(0, 7)}` };
+  if (!compare || typeof compare !== "object" || compare.status !== "ahead" || !(compare.ahead_by >= 1) || compare.behind_by !== 0) {
+    return { superseded: false, reason: `branch head ${head.slice(0, 7)} is not strictly ahead of ${sha.slice(0, 7)} (compare: ${compare && compare.status}) → run` };
+  }
+  if (!Number.isInteger(workflowId) || !newerRun || typeof newerRun !== "object" || newerRun.head_sha !== head ||
+      newerRun.event !== "push" || newerRun.workflow_id !== workflowId) {
+    return { superseded: false, reason: `no push run of this workflow for the newer head ${head.slice(0, 7)} → run` };
+  }
+  return { superseded: true, reason: `superseded: ${ref.slice(11)} is now ${head.slice(0, 7)}, ${compare.ahead_by} commit(s) ahead of ${sha.slice(0, 7)}; run ${newerRun.id} tests it` };
+}
+
+export async function readBranchHead({ repository, ref, token, fetchImpl = fetch }) {
+  if (!REPO.test(repository || "") || typeof ref !== "string" || !MAIN_REF.test(ref)) return null;
+  const doc = await getJson(`https://api.github.com/repos/${repository}/git/ref/${ref.slice(5)}`, { token, fetchImpl });
+  const sha = doc && doc.object && typeof doc.object.sha === "string" ? doc.object.sha : null;
+  return sha && SHA.test(sha) ? sha : null;
+}
+
+export async function readCompare({ repository, base, head, token, fetchImpl = fetch }) {
+  if (!REPO.test(repository || "") || !SHA.test(base || "") || !SHA.test(head || "")) return null;
+  return getJson(`https://api.github.com/repos/${repository}/compare/${base}...${head}?per_page=1`, { token, fetchImpl });
+}
+
+// A push run of `workflowId` for `sha`, or null.
+export async function readPushRun({ repository, workflowId, sha, token, fetchImpl = fetch }) {
+  if (!REPO.test(repository || "") || !Number.isInteger(workflowId) || !SHA.test(sha || "")) return null;
+  const doc = await getJson(`https://api.github.com/repos/${repository}/actions/workflows/${workflowId}/runs?event=push&head_sha=${sha}&per_page=5`, { token, fetchImpl });
+  const runs = doc && Array.isArray(doc.workflow_runs) ? doc.workflow_runs : [];
+  return runs.find((r) => r && r.head_sha === sha && r.event === "push" && r.workflow_id === workflowId) || null;
 }
 
 // Pure decision about cancellation, from the run's own record and its jobs. Positive evidence only:
@@ -86,8 +136,16 @@ if (invoked) {
   const pr = env.EVENT_NAME === "pull_request"
     ? await readPullRequest({ repository: env.GITHUB_REPOSITORY, number: env.PR_NUMBER, token })
     : null;
-  const sup = decideSuperseded({ eventName: env.EVENT_NAME, eventHeadSha: env.EVENT_HEAD_SHA, pr });
   const { run, jobs } = await readRun({ repository: env.GITHUB_REPOSITORY, runId: env.GITHUB_RUN_ID, token });
+  let sup = decideSuperseded({ eventName: env.EVENT_NAME, eventHeadSha: env.EVENT_HEAD_SHA, pr });
+  if (env.EVENT_NAME === "push") {
+    const workflowId = run && Number.isInteger(run.workflow_id) ? run.workflow_id : null;
+    const head = await readBranchHead({ repository: env.GITHUB_REPOSITORY, ref: env.PUSH_REF, token });
+    const differs = head !== null && SHA.test(env.PUSH_SHA || "") && head !== env.PUSH_SHA;
+    const compare = differs ? await readCompare({ repository: env.GITHUB_REPOSITORY, base: env.PUSH_SHA, head, token }) : null;
+    const newerRun = differs && workflowId !== null ? await readPushRun({ repository: env.GITHUB_REPOSITORY, workflowId, sha: head, token }) : null;
+    sup = decideMainSuperseded({ eventName: env.EVENT_NAME, ref: env.PUSH_REF, sha: env.PUSH_SHA, head, compare, newerRun, workflowId });
+  }
   const can = decideCancelled({ run, jobs });
   console.log("superseded check: " + sup.reason);
   console.log("cancel check: " + can.reason);
