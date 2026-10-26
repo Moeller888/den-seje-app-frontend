@@ -1,0 +1,233 @@
+{
+  "decision": "D-221",
+  "method": "D-221 — extraction D-216, covering D-218 (closed footwear from the shoe's solid top down; open footwear and every other item hide nothing), fitCheck revision d221 (VIS-3: a closed shoe replaces the whole foot below its solid top)",
+  "recordsResultsOnly": true,
+  "rewritesD207": false,
+  "imageCalls": 0,
+  "note": "results of the existing D-207 raws under a new method version. D-207's outcomes stay as recorded in item-pilot-calls-v1.json; the raws are unchanged (sha256 below). Technically OK is not visual approval — no item is approved automatically.",
+  "conclusion": {
+    "localCompositionResolves": [
+      "shoes-sneakers-white",
+      "shoes-boots-black"
+    ],
+    "notMissingMaterialButGateUnchanged": [
+      "bottom-skirt-plum"
+    ],
+    "needsNewImageMaterial": [
+      "shoes-sandals-brown"
+    ]
+  },
+  "reviewImages": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/d221-review/ (raw · item layer · body visibility · before · after; feet ×2; with shorts and trousers; the skirt's hem corner ×6)",
+  "items": {
+    "top-tank-teal": {
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-tank-teal/d207.image-1.png",
+      "rawSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      }
+    },
+    "top-tee-red": {
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-tee-red/d207.image-1.png",
+      "rawSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      }
+    },
+    "top-sweater-green": {
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-top-sweater-green/d207.image-1.png",
+      "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      }
+    },
+    "bottom-shorts-navy": {
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-shorts-navy/d207.image-1.png",
+      "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      }
+    },
+    "bottom-trousers-khaki": {
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-bottom-trousers-khaki/d207.image-1.png",
+      "rawSha256": "de62cb8331772eabe921eab5c097700a0285f18d8c31450e5b7d077d3b6ecada",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      }
+    },
+    "bottom-skirt-plum": {
+      "d207Outcome": "TECHNICAL_REJECT",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-reserve-1/d207.image-1.png",
+      "rawSha256": "c0d4e6e61f8679059f1b7fe4230084f5cb0372a50d4cc6ac0929d3fb40ec1670",
+      "methodD221": {
+        "technicallyOk": false,
+        "failedFitChecks": [
+          "FIT-4-COVERAGE",
+          "FIT-6v2-SILHOUETTE"
+        ]
+      },
+      "classification": "NOT_MISSING_MATERIAL_CHECK_FLAGS_THE_SEAM",
+      "finding": "the 24 px FIT-6v2 strip (x 623–628, y 990–996) is the hem's rounded right corner meeting the thigh: the generated picture draws the same thigh contour at the same place (C's outer thigh x 627–628, the picture's x 627–628); 22 of 24 px show skin or contour in the picture too, 2–3 px are the extraction's antialiased hem edge. The fabric must NOT hide it (it is the leg below the hem) and the item is not too narrow. The piece is 6 × 7 px — one pixel over FIT-6v2's crossing allowance (≤ 6 × 6), which is why it counts as a strip. FIT-4 9 px is D-207's recorded check artefact (a 1 px side-seam column next to the arm–torso gap). Under the unchanged gates the skirt stays technically rejected; changing a gate is an owner decision and is not made here."
+    },
+    "shoes-sandals-brown": {
+      "d207Outcome": "TECHNICAL_REJECT",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/d207.image-1.png",
+      "rawSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
+      "methodD221": {
+        "technicallyOk": false,
+        "failedFitChecks": [
+          "FIT-6v2-SILHOUETTE"
+        ]
+      },
+      "classification": "NEEDS_NEW_IMAGE_MATERIAL",
+      "finding": "open footwear hides nothing (the toes and the openings between the straps stay C's, by design). The 12 px FIT-6v2 strip (x 458–459, y 1368–1379) is C's own foot contour where the picture shows background or strap: the generated foot is narrower than C's, so in an open sandal C's foot shows beside the sole. Hiding it would cut a foot that is meant to show; only new image material whose foot matches C can fix it."
+    },
+    "shoes-boots-black": {
+      "d207Outcome": "TECHNICAL_REJECT",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-boots-black/d207.image-1.png",
+      "rawSha256": "1caaa56779f97f3e4c9a35a25cc8a7cf40894d8a5d844d737c68d015770dc38f",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "classification": "LOCAL_COMPOSITION_RESOLVES",
+      "finding": "the rejection was the body's visibility: C's bare heel showed in the heel arch. Under the covering the arch shows background, the leg in the shaft opening stays C's (as intended), the boot's paint is unchanged and VIS-3 finds no foot beside the boot. No boot material is missing.",
+      "evidence": {
+        "vis3": {
+          "ok": true,
+          "footShownPx": 0,
+          "footPx": 22332,
+          "share": 0
+        },
+        "vis2": {
+          "ok": true,
+          "vanishedInsidePx": 0,
+          "hiddenBodyPx": 22332,
+          "share": 0
+        },
+        "fit6v2": {
+          "ok": true,
+          "sliverPx": 0,
+          "sliverWidthPx": 6,
+          "crossings": 0,
+          "crossingPx": 0
+        },
+        "fit7v2": {
+          "ok": true,
+          "soleY": 1509,
+          "range": [
+            1482,
+            1518
+          ]
+        },
+        "fit6v2BeforeCovering": 64,
+        "q1BareFootShown": {
+          "before": 2341,
+          "after": 2277
+        },
+        "q1FootContourShown": {
+          "before": 118,
+          "after": 83
+        },
+        "q2ShoePxShown": {
+          "of": 32001,
+          "before": 32001,
+          "after": 32001
+        },
+        "q3Hidden": {
+          "total": 23122,
+          "aboveSolidTop": 0,
+          "outsideShoeColumns": 0,
+          "belowAnkleLine": 20148,
+          "legInsideShaft": 2974
+        }
+      }
+    },
+    "shoes-sneakers-white": {
+      "d207Outcome": "TECHNICAL_REJECT",
+      "d207OutcomeUnchanged": true,
+      "raw": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-reserve-2/d207.image-1.png",
+      "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "classification": "LOCAL_COMPOSITION_RESOLVES",
+      "finding": "the rejection was the body's visibility: C's foot showed in the instep arch below the shoe's solid top. Under the closed-footwear covering (D-218) the arch shows background, the shoe's painted edge and arch stay whole (every shoe pixel shown before and after), the hidden pixels lie only at or below the solid top inside the shoe's own columns, and VIS-3 finds no foot beside the shoe. No shoe material is missing.",
+      "evidence": {
+        "vis3": {
+          "ok": true,
+          "footShownPx": 0,
+          "footPx": 19705,
+          "share": 0
+        },
+        "vis2": {
+          "ok": true,
+          "vanishedInsidePx": 0,
+          "hiddenBodyPx": 19705,
+          "share": 0
+        },
+        "fit6v2": {
+          "ok": true,
+          "sliverPx": 0,
+          "sliverWidthPx": 6,
+          "crossings": 3,
+          "crossingPx": 17
+        },
+        "fit7v2": {
+          "ok": true,
+          "soleY": 1500,
+          "range": [
+            1482,
+            1518
+          ]
+        },
+        "fit6v2BeforeCovering": 20,
+        "q1BareFootShown": {
+          "before": 922,
+          "after": 896
+        },
+        "q1FootContourShown": {
+          "before": 107,
+          "after": 90
+        },
+        "q2ShoePxShown": {
+          "of": 26492,
+          "before": 26492,
+          "after": 26492
+        },
+        "q3Hidden": {
+          "total": 20328,
+          "aboveSolidTop": 0,
+          "outsideShoeColumns": 0,
+          "belowAnkleLine": 19751,
+          "legInsideShaft": 577
+        }
+      }
+    }
+  },
+  "observations": [
+    {
+      "item": "bottom-trousers-khaki",
+      "with": "shoes-boots-black",
+      "finding": "33 px of skin-toned fragments in the khaki layer's hem edge show as small orange dashes over the boot's shaft (a high shoe under the hem). They are identical with and without the closed-footwear covering (0 px differ in the hem band), so they belong to the trousers' extraction (D-216), not to D-221's rule. Over bare skin they are invisible. Recorded, not changed here; the khaki outcome is unchanged."
+    }
+  ]
+}

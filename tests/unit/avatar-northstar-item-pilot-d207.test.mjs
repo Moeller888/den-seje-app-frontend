@@ -406,6 +406,43 @@ test("D-218: closed footwear hides the foot from its solid top down (an arch sho
     assert.deepEqual([lost, prot], [0, 0], cat); }
   const mask = decodePng(IP.apiMaskPng(w, base, T, "bottom")).px, rb = BC.regionsC(w, base, T, "bottom"); let wrong = 0; for (let i = 0; i < N; i++) if ((mask[i * 4 + 3] === 0) !== !!rb.apiEdit[i]) wrong++; assert.equal(wrong, 0, "alpha 0 exactly on the API edit region");
 });
+// D-221: the covering rule is per category — a closed shoe must replace the whole foot below its solid top; it never passes a too
+// small, too narrow, sole-less or floating shoe, too short bottoms, and never hides a sandal's intended openings
+test("D-221: VIS-3 passes a closed shoe that replaces the whole foot; a too small or too narrow shoe, a missing sole, a floating shoe and too short bottoms fail; a sandal's openings stay C's", () => {
+  let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const top0 = Math.min(A.shoeTopY.left, A.shoeTopY.right) - 30, foot = new Uint8Array(N); for (let y = top0; y <= fb; y++) for (let x = 0; x < W; x++) if (LEGS[(y * W + x) * 4 + 3] >= 128) foot[y * W + x] = 1;
+  const paint = (m, keep = () => true) => { const o = new Uint8ClampedArray(N * 4); for (let i = top0 * W; i < N; i++) if (m[i] && T.shoes.allowed[i] && keep(i)) o.set([28, 27, 30, 255], i * 4); return o; };
+  const run = (shoe) => BC.fitCheck(w, base, T, "shoes", { shoes: shoe }, { revision: "d221", hide: BC.closedFootwearHidden(base, shoe) }), g = (r, id) => r.checks.find((c) => c.id === id);
+  const good = paint(WR.maskOps.dilate(foot, 3)), rg = run(good);
+  assert.ok(rg.fitOk, JSON.stringify(rg.checks.filter((c) => !c.ok))); assert.equal(g(rg, "VIS-3-REPLACES-WHOLE-FOOT").value.footShownPx, 0);
+  // too narrow: 4 px inside the foot on each side — the foot's own edge shows beside the shoe
+  const narrow = run(paint(WR.maskOps.erode(foot, 4))); assert.equal(g(narrow, "VIS-3-REPLACES-WHOLE-FOOT").ok, false, JSON.stringify(g(narrow, "VIS-3-REPLACES-WHOLE-FOOT").value));
+  // too small: the shoe covers only the inner 60 % of each foot's width — the toes (outer part) stick out beside it
+  const span = {}; for (let i = 0; i < N; i++) if (foot[i]) { const x = i % W, s = x < W / 2 ? "l" : "r"; span[s] = span[s] || [W, -1]; span[s][0] = Math.min(span[s][0], x); span[s][1] = Math.max(span[s][1], x); }
+  const inner = (i) => { const x = i % W, [a, b] = span[x < W / 2 ? "l" : "r"], cut = Math.round((b - a) * 0.4); return x < W / 2 ? x >= a + cut : x <= b - cut; };
+  const small = run(paint(WR.maskOps.dilate(foot, 3), inner)); assert.equal(g(small, "VIS-3-REPLACES-WHOLE-FOOT").ok, false, JSON.stringify(g(small, "VIS-3-REPLACES-WHOLE-FOOT").value));
+  // a missing sole (the bottom 20 rows cut away) and the same shoe floating 20 px: the shoe no longer reaches the ground
+  const soleless = run(paint(WR.maskOps.dilate(foot, 3), (i) => ((i / W) | 0) <= fb + 3 - 20)); assert.equal(g(soleless, "FIT-7v2-GROUND").ok, false, JSON.stringify(g(soleless, "FIT-7v2-GROUND").value));
+  const lift = (S, dy) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const j = i + dy * W; if (j >= 0 && j < N) o.set(S.subarray(j * 4, j * 4 + 4), i * 4); } return o; };
+  const floating = run(lift(good, 20)); assert.equal(g(floating, "FIT-7v2-GROUND").ok, false, JSON.stringify(g(floating, "FIT-7v2-GROUND").value));
+  // too short bottoms under d221 (D-205's stand-in): the base interior shows — FIT-4
+  const S = standInItems(w, base), short = BC.fitCheck(w, base, T, "bottom", S["FAULT-shorts-too-short"].layers, { revision: "d221" });
+  assert.equal(g(short, "FIT-4-COVERAGE").ok, false, JSON.stringify(g(short, "FIT-4-COVERAGE").value));
+  // a sandal (open footwear) hides nothing: the foot between its straps stays C's, VIS-3 is never applied to it
+  const straps = new Uint8ClampedArray(N * 4), wide = WR.maskOps.dilate(foot, 3); for (let y = fb - 40; y <= fb + 6; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (wide[i] && T.shoes.allowed[i] && (y > fb - 4 || (y >= fb - 30 && y < fb - 22))) straps.set([140, 86, 46, 255], i * 4); }
+  const hideOpen = BC.regionsC(w, base, T, "shoes", { covering: "open-footwear" }).hidden({ shoes: straps }); assert.equal(hideOpen, null);
+  const sandal = BC.fitCheck(w, base, T, "shoes", { shoes: straps }, { revision: "d221", hide: hideOpen }); let between = 0;
+  for (let y = fb - 21; y <= fb - 5; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (foot[i] && base.body[i * 4 + 3] >= 128 && sandal.composite[i * 4 + 3] >= 128 && !straps[i * 4 + 3]) between++; }
+  assert.ok(between > 100, "the foot shows between the straps: " + between + " px"); assert.equal(g(sandal, "VIS-3-REPLACES-WHOLE-FOOT"), undefined);
+});
+test("D-221 records results under a new method version: the D-207 raws and outcomes stay as recorded, no image call, no automatic approval", () => {
+  const RES = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/northstar-wardrobe/item-method-results-d221.json"), "utf8"));
+  assert.deepEqual([RES.decision, RES.recordsResultsOnly, RES.rewritesD207, RES.imageCalls], ["D-221", true, false, 0]); assert.match(RES.note, /not visual approval/);
+  for (const [item, r] of Object.entries(RES.items)) { const sent = CALLS.calls.filter((e) => e.item === item && e.result && e.result.imageSha256);
+    assert.equal(sent.length, 1, item); assert.equal(r.rawSha256, sent[0].result.imageSha256, item + ": the unchanged D-207 raw"); assert.equal(r.d207Outcome, sent[0].outcome, item + ": D-207's outcome as recorded"); }
+  assert.deepEqual(RES.conclusion, { localCompositionResolves: ["shoes-sneakers-white", "shoes-boots-black"], notMissingMaterialButGateUnchanged: ["bottom-skirt-plum"], needsNewImageMaterial: ["shoes-sandals-brown"] });
+  assert.equal(REGISTER.split("\n").filter((l) => l.startsWith("| **D-221** |")).length, 1);
+});
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));
   const out = join(realpathSync.native(mkdtempSync(join(tmpdir(), "d207-sandbox-"))), "combine"); ROOTS.push(dirname(out)); mkdirSync(out);

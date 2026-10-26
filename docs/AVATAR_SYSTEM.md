@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar item method — D-221: the D-218 covering rule on the original D-207 raws (no calls).**
+  - **Sneakers and boots.** Resolved by local composition: under closed-footwear covering + VIS-3 both pass technically.
+    The rejections were the body's visibility, not missing shoe material.
+  - **Skirt.** The flagged strip is the picture's own thigh contour at the hem corner, not missing fabric. The gates are
+    unchanged, so the skirt stays rejected; changing a gate is an owner decision.
+  - **Sandals.** Need new image material: the generated foot is narrower than C's, and an open sandal hides nothing.
+  - **Records.** Results are recorded under a new method version (`item-method-results-d221.json`); D-207's outcomes are
+    unchanged and nothing is approved automatically.
+  - See `project-state.md` **D-221**.
 - **Northstar item method — D-218 (prepared, no calls): masked edit + controlled composition.**
   - **Masks.** A GPT Image mask is guidance only (OpenAI), so C is preserved by local composition.
   - **Three regions.** API mask, item allowed region and body visibility.
