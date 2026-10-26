@@ -370,3 +370,11 @@ Se `project-state.md` D-213.
 **Klargjort:** Sneakers, støvler og nederdelens reserve afventer bekræftet kredit.
 
 Se `project-state.md` D-214.
+
+## 19. D-215 — sneakers fik HTTP 429 igen
+
+Sneakers-kaldet blev sendt én gang efter ejerens kreditbekræftelse. API'et svarede HTTP 429, fordi kreditten var opbrugt, og der kom intet billede.
+
+Afsendelsen er stoppet. Der er brugt 8 af 12 kald. Støvlerne og nederdelens reserve er ubrugte og fortsat klargjort.
+
+Se `project-state.md` D-215.

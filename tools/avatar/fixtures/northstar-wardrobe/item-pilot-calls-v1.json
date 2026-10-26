@@ -9,10 +9,10 @@
     "authorised": 12,
     "planned": 9,
     "reserve": 3,
-    "actuallySent": 7,
+    "actuallySent": 8,
     "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools",
-    "recordedBy": "D-212",
-    "stoppedBy": "D-212: the API answered the 7th call with HTTP 429 insufficient_quota (credit_balance_exhausted); every further call would fail the same way and spend a claim, so sending stopped — 2 items and 3 reserves stay unspent; a further send needs the owner's credits and a new execution instruction"
+    "recordedBy": "D-215",
+    "stoppedBy": "D-215: after the owner reported the credit available, the 8th call (sneakers) still got HTTP 429 insufficient_quota (credit_balance_exhausted); sending stopped again — the boots and D-207-reserve-1 (skirt) stay unspent and prepared; 4 claims remain of 12; a further send needs credit the API itself accepts and a new owner execution instruction (no image call as a credit test)"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -293,8 +293,18 @@
         "filename": "D-207-item-shoes-sneakers-white.claim.json",
         "eventsFilename": "D-207-item-shoes-sneakers-white.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "HTTP_ERROR_NO_IMAGE",
+      "recordedBy": "D-215",
+      "result": {
+        "dispatchedAt": "2026-10-26T13:19:05.499Z",
+        "httpStatus": 429,
+        "requestId": "req_05c636285d964abda698a88bf4801462",
+        "imageSha256": null,
+        "images": 0,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sneakers-white/",
+        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent, no retry, no fallback. Not a TECHNICAL_REJECT; D-214's reserve amendment names only the skirt, so no reserve follows without a new owner decision."
+      }
     },
     {
       "callId": "D-207-item-shoes-boots-black",
