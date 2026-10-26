@@ -274,7 +274,9 @@
         "images": 1,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sandals-brown/",
         "note": "D-210 (revised checks, D-210 extraction): generation OK, extraction OK; FIT-6v2 fails — 12 px of C's own ankle contour beside the heel strap, the model drew the ankle 3 px off (a fit fault of this item, not our tools); left foot: the redrawn toe lines touch the sole and stay in the item (open footwear, manual review). A reserve is allowed by the batch rules but NOT assigned. D-213: still TECHNICAL_REJECT (FIT-6v2 ankle, 12 px). Material limit documented: the generated toes lie 1–8 px from C's, and the sole's inner edge follows the generated toes, so C's toes show beside it; no clean sandal on C from this raw without painting or baking the generated foot (skin) into the item."
-      }
+      },
+      "parkedBy": "D-214",
+      "parked": "rejected and parked: no reserve repeats the same method; open footwear gets a separate method trial later; the generated foot (skin) is never baked into the item"
     },
     {
       "callId": "D-207-item-shoes-sneakers-white",
@@ -315,18 +317,22 @@
     {
       "callId": "D-207-reserve-1",
       "kind": "reserve",
-      "item": null,
-      "category": null,
+      "item": "bottom-skirt-plum",
+      "category": "bottom",
       "stage": null,
-      "assignedTo": null,
-      "prompt": null,
+      "assignedTo": "bottom-skirt-plum",
+      "prompt": {
+        "item": "bottom-skirt-plum",
+        "sha256": "0e316198d816d3b349cc52400b125bb163a7bc2179f90978ae01450af9df7074"
+      },
       "claim": {
         "identity": "D-207-reserve-1-claim",
         "filename": "D-207-reserve-1.claim.json",
         "eventsFilename": "D-207-reserve-1.events.jsonl"
       },
       "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "outcome": "NOT YET ATTEMPTED",
+      "assignedBy": "D-214"
     },
     {
       "callId": "D-207-reserve-2",
@@ -368,5 +374,15 @@
     "ownerApprovalFlag": "--owner-approval=D-207",
     "mergeIsNotAnInstruction": true,
     "executionRequiresSeparateOwnerInstruction": true
+  },
+  "reserveAmendment": {
+    "decision": "D-214",
+    "outcome": "HTTP_ERROR_NO_IMAGE",
+    "httpStatus": 429,
+    "items": [
+      "bottom-skirt-plum"
+    ],
+    "maxReserves": 1,
+    "rule": "owner decision D-214: ONE of the three existing reserves may be assigned to the skirt, whose original call got HTTP 429 (no credit) and no image; the original claim stays spent, the reserve has its own claim; the cap stays 12 calls in all — never 12 plus replacements; no automatic repetition on an error or an undetermined dispatch"
   }
 }
