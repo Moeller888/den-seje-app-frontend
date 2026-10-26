@@ -30,14 +30,16 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 const ids = ["D-218-mask-M-1", "D-218-mask-M-2", "D-218-mask-M-3"], argsOf = (id) => ["--call-id=" + id, "--claim-identity=" + id + "-claim"], SEND = ["--send", "--owner-approval=D-218"], KEY = { OPENAI_API_KEY: "sk-d218-sandbox-dummy-key-not-a-credential" };
 
 test("D-218 authorisation: exactly three calls, one per plan case, the D-207 request plus ONE mask field; the token in D-218's status code", () => {
-  assert.deepEqual([CALLS.decision, CALLS.meta.authorisesImageRequest, CALLS.budget.authorised, CALLS.budget.reserve, CALLS.budget.actuallySent], ["D-218", false, 3, 0, 0]);
+  assert.deepEqual([CALLS.decision, CALLS.meta.authorisesImageRequest, CALLS.budget.authorised, CALLS.budget.reserve, CALLS.budget.actuallySent], ["D-218", false, 3, 0, 3]);
+  // the recorded result: M-1 blocked by moderation (no image), M-2 rejected, M-3 sent — every mandate spent
+  assert.deepEqual(CALLS.calls.map((e) => [e.mandateState, e.outcome, e.result.httpStatus]), [["SPENT", "HTTP_ERROR_NO_IMAGE", 400], ["SPENT", "TECHNICAL_REJECT", 200], ["SPENT", "SENT_ONCE_GENERATION_OK", 200]]);
   assert.deepEqual(CALLS.calls.map((e) => e.callId), ids); assert.equal(new Set(CALLS.calls.map((e) => e.claim.identity)).size, 3);
   assert.deepEqual(CALLS.request.fieldOrder, ["model", "image[]", "mask", "prompt", "size", "quality", "n", "output_format", "background"]); assert.ok(!CALLS.request.neverSentFields.includes("mask"));
   assert.deepEqual([CALLS.request.model, CALLS.request.parameters], ["gpt-image-2.5-sunburst-2026-09-08", { size: "1024x1536", quality: "high", n: 1, output_format: "png", background: "transparent" }]);
   assert.equal(CALLS.request.image.sha256, C_SHA);
   for (const e of CALLS.calls) { const pc = PLAN.cases.find((c) => c.id === e.case); assert.ok(pc, e.case);
     assert.deepEqual([pc.item, pc.prompt.sha256, pc.mask.sha256, pc.mask.bytes], [e.item, e.prompt.sha256, e.mask.sha256, e.mask.bytes], e.callId);
-    assert.equal(e.prompt.sha256, PROMPTS.items[e.item].sha256, "the frozen D-207 prompt, unchanged"); assert.equal(e.mandateState, "UNSPENT"); assert.equal(e.mask.tracked, false); }
+    assert.equal(e.prompt.sha256, PROMPTS.items[e.item].sha256, "the frozen D-207 prompt, unchanged"); assert.equal(e.mask.tracked, false); }
   assert.ok(ROW && /Status \*\*`[^`]*D-218 MASK EXPERIMENT: 3 CALLS AUTHORISED[^`]*`\*\*/.test(ROW), "the token is a segment of D-218's status code");
   for (const n of [...ids, "--owner-approval=D-218", "gpt-image-2.5-sunburst-2026-09-08", ADAPTER_REL, C_SHA, "a23dbedd9e3d76435dc0abe50930da9225a67c49dfa910da9d5d5741b6a472ce", "1024x1536"]) assert.ok(ROW.includes(n), n);
   assert.ok(!JSON.stringify(CALLS).includes("fitting-base"), "no H1");
@@ -84,6 +86,7 @@ function sandbox({ base, mask } = {}) {
   const cd = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(cd, { recursive: true }); writeFileSync(join(cd, "d202-base-figure-v2.image-1.png"), C_BUF);
   for (const e of CALLS.calls) { const d = join(sb.out, "masks", e.mask.dir); mkdirSync(d, { recursive: true }); const f = join(d, "api-mask-" + e.category + ".png"); writeFileSync(f, mask && mask[e.callId] ? mask[e.callId] : readFileSync(maskFile(e))); }
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  editCalls(sb, (c) => { c.budget.actuallySent = 0; delete c.budget.recordedBy; delete c.budget.closed; for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.recordedBy; delete e.result; } });
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }

@@ -8,8 +8,10 @@
   "budget": {
     "authorised": 3,
     "reserve": 0,
-    "actuallySent": 0,
-    "rule": "exactly three image calls (M-1, M-2, M-3), one generation each; no variant, no reserve, no retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically"
+    "actuallySent": 3,
+    "rule": "exactly three image calls (M-1, M-2, M-3), one generation each; no variant, no reserve, no retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically",
+    "recordedBy": "D-218",
+    "closed": "D-218: all three calls sent once each; the experiment is complete — no further call"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -71,8 +73,18 @@
         "filename": "D-218-mask-M-1.claim.json",
         "eventsFilename": "D-218-mask-M-1.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "HTTP_ERROR_NO_IMAGE",
+      "recordedBy": "D-218",
+      "result": {
+        "httpStatus": 400,
+        "requestId": "req_27ae12b4471d4c2a9ab1b73e2c101231",
+        "images": 0,
+        "imageSha256": null,
+        "error": "image_generation_user_error / moderation_blocked — the request was rejected by the safety system",
+        "note": "the same skirt prompt WITHOUT a mask was answered with an image (D-216); the masked edit of the skirt region on the child figure was blocked — no image, the claim is spent, no retry",
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/D-218-mask-M-1/"
+      }
     },
     {
       "callId": "D-218-mask-M-2",
@@ -96,8 +108,17 @@
         "filename": "D-218-mask-M-2.claim.json",
         "eventsFilename": "D-218-mask-M-2.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "TECHNICAL_REJECT",
+      "recordedBy": "D-218",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_5e1da4831bfb42ac9a4f99a2a64545d5",
+        "images": 1,
+        "note": "worse than the unmasked baseline: FIT-6v2 98 px (baseline 12); the model drew a larger foot with other toes, so on C the toes no longer match and C's foot shows beside the sole; body redrawn outside the item's region 17,823 px (baseline 16,945)",
+        "imageSha256": "ab7ca4494361516f1fb832de5dc21e94fa4cfb1fbf573db6c90556ec66efb794",
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/D-218-mask-M-2/"
+      }
     },
     {
       "callId": "D-218-mask-M-3",
@@ -121,8 +142,17 @@
         "filename": "D-218-mask-M-3.claim.json",
         "eventsFilename": "D-218-mask-M-3.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "SENT_ONCE_GENERATION_OK",
+      "recordedBy": "D-218",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_e571f658b2c949f2933b2559b59d5acd",
+        "images": 1,
+        "note": "fit not worse: FIT-4/FIT-6v2/FIT-7v2/VIS-2 pass under the closed-footwear covering (VIS-2 0.18 %); E-2 for manual review: a detached 733 px piece = the model's shin contour moved ~4 px (reported, not extracted; C's leg shows); body redrawn outside the item's region 17,802 px (baseline 16,151) — the mask did not reduce the redraw",
+        "imageSha256": "170e68cf426742b7a815a46cc70acd712c4b14749120b5f486a418de2096f49c",
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-218-mask-experiment/D-218-mask-M-3/"
+      }
     }
   ],
   "outputs": {
