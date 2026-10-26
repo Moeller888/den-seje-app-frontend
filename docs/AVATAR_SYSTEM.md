@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot on C — D-207: at most 12 image calls authorised (9 items in two stages, at most 3 reserve
+  calls), C sent as the reference for this pilot only, frozen prompts, one-shot claims; not yet attempted (as of
+  2026-10-26).** D-206 is security PR #407.
+  - **Tools.** `openai-send-northstar-item-pilot-d207.mjs` (send) and `northstar-item-pilot.mjs` (`--process`, `--combine`).
+  - See `project-state.md` **D-207**.
 - **Northstar base figure — D-205: C frozen as the development candidate (numbers tracked, pixels outside the clones);
   contract v3 with three axes — FIT to C (binding), COMPATIBILITY with old Northstar clothing (a report), QUALITY;
   gate set v3 (BF9v3 waist seam, BF15v3 runtime composition); category templates and fitCheck; a 9-item clothing pilot
