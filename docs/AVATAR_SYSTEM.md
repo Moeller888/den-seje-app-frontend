@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar clothing pilot — D-217: the sneakers were generated and rejected (an instep arch); the pilot's sending is complete.**
+  - **Calls.** 11 of 12 used.
+  - **Passed.** Tank, tee, sweater, shorts and khaki trousers.
+  - **Rejected.** Sandals, boots, skirt and sneakers. Every rejection sits where the garment ends against the body.
+  - See `project-state.md` **D-217**.
 - **Northstar clothing pilot — D-216: the boots and the skirt (reserve) were generated and are both TECHNICAL_REJECT.**
   - **Boots.** The heel arch shows C's bare heel.
   - **Skirt.** A thigh contour shows at the hem corner.

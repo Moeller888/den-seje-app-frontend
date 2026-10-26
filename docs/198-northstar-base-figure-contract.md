@@ -392,3 +392,13 @@ Støvlerne og nederdelens reserve er sendt. Begge er teknisk afvist for reelle p
 Der er brugt 10 af 12 kald.
 
 Se `project-state.md` D-216.
+
+## 21. D-217 — pilotens afsendelse afsluttet
+
+**Sneakers:** De er teknisk afvist. C's fodkontur ses i svangbuen.
+
+**Forbrug:** Der er brugt 11 af 12 kald.
+
+**Resultat:** Fem items er bestået (tank, T-shirt, sweater, shorts og kakibukser). Fire er afvist (sandaler, støvler, nederdel og sneakers).
+
+Se `project-state.md` D-217.
