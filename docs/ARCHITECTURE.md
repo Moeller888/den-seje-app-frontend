@@ -188,6 +188,13 @@ cannot double-award.
   name a student for back-fills. Live since 2026-10-25 (D-206): repo file
   `20261025120000_student_rpc_caller_scope.sql`, **remote ledger version `20261025172041`** (≠ the
   repo filename, as with other D-110 migrations; stored SQL byte-identical to the file).
+- **The global leaderboard (`get_leaderboard`, the "Alle" tab) is identity-scoped** (D-209, migration
+  `20261026120000_leaderboard_identity_scope.sql`, **not yet applied**): the ranking covers every
+  student, but names are returned only for the caller and their classmates (a teacher: their own
+  pupils; a `super_admin`: none) and `user_id` only on the caller's own row; every other row is
+  `'Elev'` / NULL. A caller without a profile is refused; EXECUTE for `authenticated` only. Rank,
+  prestige, exact XP and title of other classes' rows are still returned — pseudonymisation, not
+  anonymisation (residual risk in D-209).
 - Some functions are intentionally **no-JWT** (e.g. `get-next-question`, `create-student`,
   `create-teacher`) per their documented contract; these must still validate input defensively.
 
