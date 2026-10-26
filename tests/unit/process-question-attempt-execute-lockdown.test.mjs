@@ -94,12 +94,15 @@ test("the header explains why: SECURITY DEFINER, trusted p_student_id, process-e
 test("this migration does not count as a (re)definition of process_question_attempt", () => {
   // The lockdown still changes no body. The reviewed spelling migration is now the latest
   // definition; its runtime suite pins the old reward body and proves preserved EXECUTE grants.
+  // D-211 then re-creates it with only the repeat award changed (1 coin + 2 XP); its runtime suite
+  // (repeat-answer-coin-reward-migration-run) proves EXECUTE stays service_role only, not PUBLIC.
   const defining = readdirSync(join(REPO, "supabase", "migrations")).filter((f) => f.endsWith(".sql")).sort()
     .filter((f) => /CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.process_question_attempt\s*\(/i
       .test(readFileSync(join(REPO, "supabase", "migrations", f), "utf8")));
   assert.equal(defining.includes(FILE), false);
   assert.deepEqual(defining.filter(f => f > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
-    ["20261018143726_fix_danish_question_bank_text.sql"]);
+    ["20261018143726_fix_danish_question_bank_text.sql",
+     "20261026120000_repeat_answer_coin_reward.sql"]);
 });
 
 // ── The caller chain this lockdown relies on ────────────────────────────────────────────────────
