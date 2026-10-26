@@ -328,3 +328,17 @@ Etape 2 forbliver lukket. Se `project-state.md` D-208.
 **Resultat:** Tank og shorts er i orden. Sandalerne er TECHNICAL_REJECT (FIT-6v2, anklen tegnet 3 px forskudt). Tålinjer i åbent fodtøj kræver manuel gennemgang.
 
 Se `project-state.md` D-210.
+
+## 16. D-212 — etape 2 til kreditten slap op
+
+**Sendt:** Fire kald med ét kald pr. item.
+- **T-shirt:** TECHNICAL_REJECT på FIT-6v2 (hak ved kraven).
+- **Sweater:** består. Manchetterne er skåret af håndværnet, hvilket er et manuelt fund.
+- **Kakibukser:** består.
+- **Nederdel:** HTTP 429, fordi kreditten var opbrugt. Intet billede.
+
+**Ikke sendt:** Sneakers og støvler. Der er brugt 7 af 12 kald og ingen reserver.
+
+**Outfits:** 6 af de 27 består kun af genererede items. Pladsholdere er skraveret.
+
+Se `project-state.md` D-212.

@@ -162,7 +162,8 @@ export function combine(w, base, processed, OUT) {
     for (const p of picks) { if (p && p.layers) Object.assign(it, p.layers); marks.push(!p || !p.layers ? [150, 150, 150] : p.ok ? [40, 170, 80] : [240, 140, 0]); }
     const composed = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep }).dressedRuntime;
     // D-210: a PLACEHOLDER (C's own base garment, not a generated item) is hatched diagonally, so no tile passes for a tried outfit
-    const hatchOf = { 0: [min.topBody], 1: [min.pants], 2: [] }; picks.forEach((p, k) => { if (p && p.layers) return; for (const Lr of hatchOf[k]) for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (Lr[i * 4 + 3] >= 128 && composed[i * 4 + 3] >= 128 && (x + y) % 14 < 4) composed.set([90, 90, 90, 255], i * 4); } });
+    // (D-212: light stripes — dark ones vanished on the dark grey base shorts)
+    const hatchOf = { 0: [min.topBody], 1: [min.pants], 2: [] }; picks.forEach((p, k) => { if (p && p.layers) return; for (const Lr of hatchOf[k]) for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (Lr[i * 4 + 3] >= 128 && composed[i * 4 + 3] >= 128 && (x + y) % 12 < 4) composed.set([245, 245, 245, 255], i * 4); } });
     if (picks.every((p) => p && p.layers)) { const F = flat(composed, bg), im = grid([half(composed), crop(F, CLOSE.top[0], 2), crop(F, CLOSE.bottom[1], 2), crop(F, CLOSE.shoes[0], 2), down(F, 110, 165), down(F, 52, 78)], 3, 8);
       writeFileSync(join(OUT, "c03-generated-outfit-" + picks.map((p) => p.item).join("+") + ".png"), encodePng(im.w, im.h, im.px)); }
     const tile = half(composed);
