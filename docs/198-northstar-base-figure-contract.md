@@ -250,3 +250,28 @@ Alt andet består, også fødderne (BF4v2), kanterne (BF14v2), omridset (BF5: 0 
 **Forslag, ikke vedtaget:** BF15r med kontrolstimuli. Dækningskravet om hele basistøjet + 1 px er strengere end nødvendigt langs den ydre stofkant, men ændres ikke.
 
 **BF9v2:** Toppen møder shortsene uden hud imellem. Ingen revision foreslås.
+
+## 12. D-205 — C som fast udviklingskandidat og kontrakt v3
+
+**Fastfrysning:** C er fastfrosset som `base-figure-c-v1`.
+- Repoet tracker kun tal: råbilledets hash, registrering, ankre, lagtal og hashes for 14 eksterne filer.
+- Krop, arme, basistøj og skabelonmasker ligger kun uden for klonerne.
+- Genbygningen er deterministisk.
+- Fastfrysningen er hverken en produktionsaktivering eller en endelig visuel godkendelse.
+
+**Kontrakt v3 har tre akser:**
+
+| Akse | Status | Indhold |
+|---|---|---|
+| Pasform til C | Bindende for nye items | FIT-1 … FIT-7. Hver grænse er begrundet i `FIT_LIMITS`. |
+| Kompatibilitet med gammelt Northstar-tøj | En rapport, aldrig en kontrol | De gamle jeans, T-shirten og sneakerne passer ikke C. Det er en dokumenteret begrænsning og ingen tilladelse til tilsvarende fejl i nye items. |
+| Kvalitet | Måles | Kontur, skarphed og alfa. Udseendet vurderer ejeren. |
+
+**Dækning:** Et item skal dække basistøjets *indre*, så kroppen ikke får huller. Den ydre kant vurderes ud fra outfittets silhuet, og nødvendig hud klippes aldrig væk.
+
+**Kontrolsæt v3:**
+- BF9v3 tester taljesømmen.
+- BF15v3 tester den faktiske sammensætning uden basistøj.
+- C består kontrolsæt v3. Afvisningerne under v1 og v2 bevares i historikken.
+
+**Tøjpilot på C** (`pilot-plan-v3.json`): 9 items og en anbefalet batch på 12 kald. Den er forberedt, men ikke autoriseret.

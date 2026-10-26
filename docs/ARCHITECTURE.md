@@ -185,7 +185,7 @@ cannot double-award.
   (`teacher_id` = caller and the caller's role is `teacher`) or a `super_admin`;
   `evaluate_achievements()`: the signed-in student only. EXECUTE for `authenticated` only; the
   internal database context (`session_user` `postgres`/`supabase_admin`, no JWT subject) may still
-  name a student for back-fills. Live since 2026-10-25 (D-205): repo file
+  name a student for back-fills. Live since 2026-10-25 (D-206): repo file
   `20261025120000_student_rpc_caller_scope.sql`, **remote ledger version `20261025172041`** (≠ the
   repo filename, as with other D-110 migrations; stored SQL byte-identical to the file).
 - Some functions are intentionally **no-JWT** (e.g. `get-next-question`, `create-student`,

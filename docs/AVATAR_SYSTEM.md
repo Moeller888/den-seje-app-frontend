@@ -385,6 +385,13 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar base figure — D-205: C frozen as the development candidate (numbers tracked, pixels outside the clones);
+  contract v3 with three axes — FIT to C (binding), COMPATIBILITY with old Northstar clothing (a report), QUALITY;
+  gate set v3 (BF9v3 waist seam, BF15v3 runtime composition); category templates and fitCheck; a 9-item clothing pilot
+  on C prepared, not authorised (12 calls recommended) (as of 2026-10-25).**
+  - **Tools.** `northstar-base-figure-c.mjs` (`--freeze`, `templatesC`, `fitCheck`, `legacyReport`) and
+    `northstar-base-figure-c-proof.mjs` (`--fit-proof`, stand-in items and fault stimuli only).
+  - See `project-state.md` **D-205** and `docs/198-northstar-base-figure-contract.md` §12.
 - **Northstar base figure — D-204: runtime layering proof for the D-202 candidate; BF15 had dressed a body that still held
   the base garments; in the runtime model the 1,154 px vanish into background, but the body is up to 3 px wider than
   Northstar's jeans at the hips and upper thighs; BF9v2's 1 px is no coverage problem; nothing adopted (as of 2026-10-25).**

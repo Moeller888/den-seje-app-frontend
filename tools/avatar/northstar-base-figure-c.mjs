@@ -1,0 +1,151 @@
+// NORTHSTAR BASE FIGURE C (D-205) — the frozen development candidate for the new item system, its category templates and the
+// three separate item assessments of contract v3: FIT to C (binding for new items), COMPATIBILITY with Northstar's old clothing
+// (a report, never a gate) and artistic QUALITY (measured; the look is the owner's).
+//
+// C is D-202's one raw result (sha256 10f4a4b9…, stored outside both clones). Freezing derives — deterministically, with nothing
+// painted, deformed or cut from the skin — its runtime layers (body, arms with hands, base top, base shorts), the masks and the
+// category templates, and writes them ONLY outside the repository (D-127 §2: a figure in close-fitting base clothing and its
+// skin layers are never tracked or published). The repository tracks the numbers: hashes, anchors, pixel counts. Freezing is
+// not production activation and not a visual approval; D-200 and D-203 stay as recorded.
+// Usage: node tools/avatar/northstar-base-figure-c.mjs --freeze <C.png> --out <empty dir OUTSIDE both clones>
+//        node tools/avatar/northstar-base-figure-c-proof.mjs --fit-proof <C.png> --out <empty dir OUTSIDE both clones>
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { encodePng, decodePng } from "./r3-hair-tool-v2.mjs";
+import * as NL from "./r3-northstar-layers.mjs";
+import * as WR from "./northstar-wardrobe.mjs";
+import * as BF from "./northstar-base-figure.mjs";
+import { flat, crop, down, grid } from "./northstar-wardrobe-poc.mjs";
+
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+export const DECISION = "D-205";
+export const FREEZE_FILE = "tools/avatar/fixtures/northstar-wardrobe/base-figure-c-v1.json";
+export const CONTRACT_FILE = "tools/avatar/fixtures/northstar-wardrobe/contract-v3.json";
+export const PILOT_FILE = "tools/avatar/fixtures/northstar-wardrobe/pilot-plan-v3.json";
+export const C_RAW_SHA256 = "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818";
+const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex");
+const rd = (f) => JSON.parse(readFileSync(join(REPO, ...f.split("/")), "utf8"));
+export const loadFreeze = () => rd(FREEZE_FILE), loadContractV3 = () => rd(CONTRACT_FILE), loadPilotV3 = () => rd(PILOT_FILE);
+const count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
+const maskOf = (P, t = 128) => Mo.toMask(P, t);
+const bbox = (m) => { let x0 = W, x1 = -1, y0 = H, y1 = -1; for (let i = 0; i < N; i++) if (m[i]) { const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } return { x0, x1, y0, y1 }; };
+
+/** The base prepared once: registration (integer shift, never a warp), the established dust cleanup, the base separation and the
+ *  runtime body. Any base works — C locally, a Northstar-derived stand-in in CI. */
+export function prepareBase(w, raw, Z = BF.zones(w)) {
+  const reg = BF.register(raw, w.fg.master); if (!reg.ok) throw new Error("the base does not register on Northstar");
+  const R = BF.dustCleaned(BF.shift(raw, reg.dx, reg.dy)), sep = BF.separateBase(R, Z), { body, arms } = BF.runtimeBody(w, R, sep.lab);
+  return { reg, R, sep, body, arms, Z };
+}
+
+/** C's anchors, measured on the base itself (not typed): the neck seam, armpits, the base garments' extent, soles and centre. */
+export function anchorsOf(w, base) {
+  const { R, sep } = base, A = w.anchors, t = new Uint8Array(N), b = new Uint8Array(N); for (let i = 0; i < N; i++) { if (sep.lab[i] === 1) t[i] = 1; if (sep.lab[i] === 2) b[i] = 1; }
+  const sole = (side) => { let yb = -1; for (let i = 1300 * W; i < N; i++) if (((i % W) < 512) === (side === "left") && R[i * 4 + 3] >= 128) yb = Math.max(yb, (i / W) | 0); return yb; };
+  return { coordinates: "Northstar v2 master, 1024×1536", neckSeamY: 440, armpitY: { left: BF.armpitY(R, "left"), right: BF.armpitY(R, "right") }, baseTop: bbox(t), baseShorts: bbox(b),
+    waistSeam: BF.waistSeam(R, sep.lab, A), soleY: { left: sole("left"), right: sole("right") }, groundLineY: A.groundY, centreX: A.centreX };
+}
+
+/** Category templates on C (contract v3). mustCover is the base garment's INTERIOR — the base minus its outer fabric band
+ *  (FABRIC_BAND_PX of the silhouette's exterior): there is no skin under it, so an item must cover it or the body has a hole;
+ *  the outer band may stay open (it becomes background) and the outfit's silhouette decides there. allowed / protect are the
+ *  envelopes of contract v2 measured on C; the sleeve zone is C's own arms grown by 14 px. Nothing here is skin removed. */
+export function templatesC(w, base) {
+  const { R, sep, arms } = base, A = w.anchors, ext = BF.outsideExterior(R), band = Mo.dilate(ext, BF.FABRIC_BAND_PX);
+  const lab = (k) => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (sep.lab[i] === k) m[i] = 1; return m; };
+  const top = lab(1), bot = lab(2), tb = bbox(top), bb = bbox(bot), armM = maskOf(arms), handsM = Mo.and(armM, Mo.rect(0, Math.max(A.wristY.left, A.wristY.right) - 10, W, H));
+  const crotch = A.crotchY, ground = A.groundY, sleeveZone = Mo.and(Mo.dilate(armM, 14), Mo.rect(0, A.shoulder.y - 60, W, Math.max(A.wristY.left, A.wristY.right)));
+  const head = Mo.and(maskOf(w.head, 1), Mo.rect(0, 0, W, tb.y0 - 15));
+  const feet = Mo.and(maskOf(R), Mo.rect(0, Math.min(A.shoeTopY.left, A.shoeTopY.right), W, H)), fb = bbox(feet);
+  return {
+    top: { layers: ["topBody", "sleeves"], mustCover: Mo.and(top, Mo.not(band)), allowed: Mo.or(Mo.rect(tb.x0 - 40, tb.y0 - 14, tb.x1 + 40, crotch - 8), sleeveZone), protect: Mo.or(head, Mo.dilate(handsM, 2)), sleeveZone },
+    bottom: { layers: ["pants"], mustCover: Mo.and(bot, Mo.not(band)), allowed: Mo.rect(bb.x0 - 80, bb.y0 - 30, bb.x1 + 80, ground - 22), protect: Mo.or(head, Mo.rect(0, ground - 21, W, H)) },
+    shoes: { layers: ["shoes"], mustCover: new Uint8Array(N), allowed: Mo.rect(fb.x0 - 34, fb.y0 - 150, fb.x1 + 34, ground + 4), protect: head, groundY: ground, groundTolPx: 4, soleY: { left: anchorsOf(w, base).soleY.left, right: anchorsOf(w, base).soleY.right } },
+  };
+}
+
+/** The item assessments of contract v3. FIT (binding for a new item on C): layers, envelope, protect, coverage (no hole, no
+ *  exposed cut skin, no missing body), order (every painted item pixel stays visible), silhouette (no body contour visible just
+ *  outside a garment meant to cover it), ground (shoes). QUALITY: outline, sharpness, clean alpha (measures; the look is the
+ *  owner's). The other categories are dressed in the minimum items, so a top is judged with the base shorts, and so on. */
+export const FIT_LIMITS = Object.freeze({
+  envelopePx: { value: 0, why: "the allowed envelope already includes the margins of contract v2; a pixel beyond it is outside the category" },
+  protectPx: { value: 0, why: "head and hands are drawn by the base; an item pixel there covers them" },
+  enclosedHolePx: { value: 0, why: "any hole inside the outfit shows background through the figure" },
+  exposedCutSkinPx: { value: 10, why: "antialias where a removed base outline met skin: C with its minimum items 0 px, C dressed in Northstar's defaults 2 px; a bottom cut 60 px short 198 px" },
+  deepOpenBasePx: { value: 0, why: "an open base pixel deeper than the 4 px fabric band (the base shorts' measured excess over the bare thigh) is body with no material" },
+  hiddenItemShare: { value: 0.005, why: "every pixel the generator painted was visible in its picture; hidden after composing means a wrong layer — 0.5 % allows the antialiased rim under an arm's outline" },
+  bodyOutsideItemPx: { value: 10, why: "a body contour visible just outside a garment that covers that body part is a double outline (Northstar's jeans on C: 147 px); 10 px allows antialias where two painted contours cross" },
+  groundTolPx: { value: 4, why: "contract v2's shoe ground line ± 4" },
+});
+export function fitCheck(w, base, T, category, layers, { order = "contract" } = {}) {
+  const t = T[category], out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), lim = FIT_LIMITS;
+  const names = Object.keys(layers), itemAll = NL.overStack(names.map((k) => layers[k])), im = maskOf(itemAll, 1);
+  add("fit", "FIT-1-LAYERS", JSON.stringify(names) === JSON.stringify(t.layers) && names.every((k) => layers[k].length === N * 4), names, "exactly the category's layers, full 1024×1536 RGBA");
+  let env = 0, prot = 0; for (let i = 0; i < N; i++) if (im[i]) { if (!t.allowed[i]) env++; if (t.protect[i]) prot++; }
+  add("fit", "FIT-2-ENVELOPE", env <= lim.envelopePx.value, { outsidePx: env }, "inside the category's envelope on C");
+  add("fit", "FIT-3-PROTECT", prot <= lim.protectPx.value, { protectPx: prot }, "nothing over the head or the hands");
+  const min = BF.minimumItems(base.R, base.sep.lab), it = category === "top" ? { ...min, ...layers } : category === "bottom" ? { ...min, ...layers } : { ...min, shoes: layers.shoes };
+  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order }), c = (m) => count(m);
+  const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
+  const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
+  add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
+  let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
+  add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");
+  // FIT-6: only where the item lies over REAL skin (a trouser leg over a thigh, a sleeve over an arm) — there the limb's own
+  // contour must not show just outside the garment at the outfit's outer silhouette; skin beside a sleeveless top's strap is meant
+  const skinUnder = new Uint8Array(N), rowsOver = new Uint8Array(H); for (let i = 441 * W; i < N; i++) if (im[i] && !base.sep.lab[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) { skinUnder[i] = 1; rowsOver[(i / W) | 0] = 1; }
+  const near = Mo.and(Mo.dilate(im, 6), Mo.not(im)), extNear = Mo.dilate(BF.outsideExterior(P.dressedRuntime), 3); let outside = 0;
+  for (let i = 441 * W; i < N; i++) if (rowsOver[(i / W) | 0] && near[i] && extNear[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128) && P.dressedRuntime[i * 4 + 3] >= 128) outside++;
+  add("fit", "FIT-6-SILHOUETTE", outside <= lim.bodyOutsideItemPx.value, { bodyOutsideItemPx: outside, rowsOverSkin: count(rowsOver) }, "where the garment lies over real skin, the limb's contour does not show just outside it at the outer silhouette");
+  if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)); add("fit", "FIT-7-GROUND", Math.abs(sb.y1 - t.groundY) <= lim.groundTolPx.value, { soleY: sb.y1, groundY: t.groundY }, "the soles on the ground line ± 4"); }
+  const q = WR.sharpness(itemAll), o = BF.outlineShare(itemAll, 0); let haze = 0, px = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3]) { px++; if (itemAll[i * 4 + 3] < 128) haze++; }
+  add("quality", "Q-1-OUTLINE", o >= 0.45, { darkShare: +o.toFixed(3) }, "Northstar's dark painted contour (D-197 I6)");
+  add("quality", "Q-2-SHARPNESS", q >= 0.7, { lapToGrad: +q.toFixed(3) }, "crisp painted detail (D-197 I7)");
+  add("quality", "Q-3-ALPHA", haze <= 0.06 * px, { share: +(haze / Math.max(1, px)).toFixed(4) }, "a clean cut-out (D-197 I5)");
+  return { checks: out, fitOk: out.filter((x) => x.axis === "fit").every((x) => x.ok), qualityOk: out.filter((x) => x.axis === "quality").every((x) => x.ok), composite: P.dressedRuntime };
+}
+
+/** COMPATIBILITY with Northstar's old clothing (D-197 defaults on C): a report, never a gate — D-204's documented limitation. */
+export function legacyReport(w, base) {
+  const P = BF.layerProof(w, base.R, base.Z, {}, { sep: base.sep }), c = (m) => count(m); let inter = 0, uni = 0;
+  for (let i = 441 * W; i < N; i++) { const a = P.dressedRuntime[i * 4 + 3] >= 128, b = w.fg.master[i * 4 + 3] >= 128; if (a && b) inter++; if (a || b) uni++; }
+  return { axis: "compatibility", gate: false, enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), bodyOutsideItemsPx: c(P.slivers), silhouetteIoU: +(inter / uni).toFixed(4),
+    limitation: "C is up to ~3 px wider than Northstar's jeans at the hips and upper thighs (D-204): the old jeans show C's contour there. This is a compatibility limitation of the old item, not a licence for new items." };
+}
+
+const png = (P) => encodePng(W, H, P), maskPng = (m) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) if (m[i]) o.set([255, 255, 255, 255], i * 4); return encodePng(W, H, o); };
+/** Freeze C: the derived layers, masks and templates OUTSIDE the repository, and the numbers for the tracked record. */
+export function freeze(buf, OUT) {
+  if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write the frozen base inside the repository (D-127 §2): " + OUT);
+  if (sha(buf) !== C_RAW_SHA256) throw new Error("not C: the raw sha256 is " + sha(buf));
+  const img = decodePng(buf), w = WR.buildWardrobe(), base = prepareBase(w, Uint8ClampedArray.from(img.px)), T = templatesC(w, base), files = {};
+  const put = (n, b, what) => { writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), bytes: b.length, what }; };
+  const lab = (k) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) if (base.sep.lab[i] === k) o.set(base.R.subarray(i * 4, i * 4 + 4), i * 4); return o; };
+  put("layer-body.png", png(base.body), "the runtime body below the neck seam, base garments removed (private)");
+  put("layer-arms.png", png(base.arms), "arms with hands, grown from Northstar's arm/hand regions (private)");
+  put("layer-base-top.png", png(lab(1)), "the base top — authoring only, never shipped (private)");
+  put("layer-base-shorts.png", png(lab(2)), "the base shorts — authoring only, never shipped (private)");
+  for (const [k, t] of Object.entries(T)) for (const m of ["mustCover", "allowed", "protect"]) put(`template-${k}-${m}.png`, maskPng(t[m]), `${k} ${m} (contract v3)`);
+  put("template-top-sleeveZone.png", maskPng(T.top.sleeveZone), "top sleeve zone: C's arms + 14 px");
+  const v3 = BF.checkBaseFigure(w, Uint8ClampedArray.from(img.px), base.Z, BF.loadSpec(), "generated", "v3");
+  const record = { decision: DECISION, candidate: "C", raw: { sha256: C_RAW_SHA256, bytes: buf.length, storage: "<Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ (outside both clones, untracked)" }, registration: base.reg,
+    derivation: "registration (integer shift), the established dust cleanup, separateBase (position split, skin never removed), runtimeBody (arms grown from the arm/hand regions); nothing painted or deformed",
+    anchors: anchorsOf(w, base), layersPx: { body: count(maskOf(base.body)), arms: count(maskOf(base.arms)), baseTop: base.sep.lab.filter((v) => v === 1).length, baseShorts: base.sep.lab.filter((v) => v === 2).length },
+    templatesPx: Object.fromEntries(Object.entries(T).map(([k, t]) => [k, { mustCover: count(t.mustCover), allowed: count(t.allowed), protect: count(t.protect) }])),
+    gateSetV3: { ok: v3.ok, failed: v3.checks.filter((c) => !c.ok).map((c) => c.id) }, compatibility: legacyReport(w, base), externalFiles: files };
+  writeFileSync(join(OUT, "manifest.json"), JSON.stringify(record, null, 2) + "\n");
+  return record;
+}
+
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  const a = process.argv.slice(2), oi = a.indexOf("--out"), fi = a.indexOf("--freeze");
+  const OUT = oi >= 0 && a[oi + 1] ? resolve(a[oi + 1]) : null;
+  if (!OUT || fi < 0) { console.error("usage: --freeze <C.png> --out <empty dir outside both clones>"); process.exit(1); }
+  if (!BF.isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository; a base figure is never written there (D-127 §2)"); process.exit(1); }
+  if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
+  const r = freeze(readFileSync(resolve(a[fi + 1])), OUT); console.log(JSON.stringify({ anchors: r.anchors, layersPx: r.layersPx, templatesPx: r.templatesPx, gateSetV3: r.gateSetV3, compatibility: r.compatibility }, null, 2));
+}
