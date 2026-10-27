@@ -264,7 +264,7 @@ const REVIEWED_LATER_READERS = {
     "authenticated (revoked from PUBLIC, anon and service_role). It NARROWS who can reach the read; " +
     "no policy, RLS or table privilege on question_instances is touched (proven in " +
     "student-rpc-caller-scope-migration-run.test.mjs).",
-  "20261026170000_repeat_answer_coin_reward.sql":
+  "20261027120000_repeat_answer_coin_reward.sql":
     "D-211: re-creates process_question_attempt from the exact live body of 20261018143726 (guarded on " +
     "md5(prosrc)), changing ONLY the repeat award to 1 coin + 2 XP. The single read of question_instances " +
     "is unchanged — one instance matched on BOTH id and student_id — and CREATE OR REPLACE keeps EXECUTE " +
@@ -397,7 +397,7 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261018143726_fix_danish_question_bank_text.sql",
      "20261019150000_question_format_mix.sql",
      "20261025120000_student_rpc_caller_scope.sql",
-     "20261026170000_repeat_answer_coin_reward.sql"],
+     "20261027120000_repeat_answer_coin_reward.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

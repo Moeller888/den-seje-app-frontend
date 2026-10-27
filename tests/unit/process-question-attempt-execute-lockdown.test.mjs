@@ -102,7 +102,7 @@ test("this migration does not count as a (re)definition of process_question_atte
   assert.equal(defining.includes(FILE), false);
   assert.deepEqual(defining.filter(f => f > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
     ["20261018143726_fix_danish_question_bank_text.sql",
-     "20261026170000_repeat_answer_coin_reward.sql"]);
+     "20261027120000_repeat_answer_coin_reward.sql"]);
 });
 
 // ── The caller chain this lockdown relies on ────────────────────────────────────────────────────
