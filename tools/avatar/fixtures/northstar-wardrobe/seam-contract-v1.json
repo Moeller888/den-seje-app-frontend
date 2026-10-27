@@ -1,0 +1,90 @@
+{
+  "decision": "D-225",
+  "version": "seam-contract-v1",
+  "status": "RECORDED — not yet validated by any generated item",
+  "figure": "C only (base-figure-c-v1.json); never H1",
+  "parameters": {
+    "version": "seam-contract-v1",
+    "waistbandMaxPx": 12,
+    "linesFreeToPx": 54,
+    "topHemMinPx": 18,
+    "topHemMaxPx": 48,
+    "topHipOverhangPx": 8,
+    "bottomsHipMaxPx": 3,
+    "cuffBandPx": 10,
+    "shaftMaxAboveAnklePx": 56,
+    "envelopeFromPx": 30,
+    "shoeEnvelopePx": 8,
+    "trouserOverhangPx": 10,
+    "croppedMinAboveAnklePx": 68,
+    "fullHemMinBelowAnklePx": 6,
+    "fullHemMaxBelowAnklePx": 12
+  },
+  "lines": {
+    "W": "C's waist line: the lowest row of C's base top per column (a median over 7 columns). C's base shorts start on the next row — C has no overlap of its own and no skin under its base garments",
+    "A": "C's ankle row per side (w.anchors.ankleY: 1367 / 1368)",
+    "wrist": "C's own wrist row per arm (templatesC d213: 852 / 849)",
+    "legContour": "C's leg outline per row (runtime body)",
+    "hipOutline": "C's base-shorts outline per row"
+  },
+  "zones": {
+    "waist/hip": {
+      "order": "top body over bottoms (contract v2)",
+      "visibleEdgeOwner": "the top's hem",
+      "top": {
+        "delivers": "material over all of C's base top, the hip corners included, down to its hem",
+        "hem": "either the whole hem ON W (± 1: the edges merge into one line) or the whole hem at a hip station W + [18, 48]",
+        "atHipStation": "at least C's base-shorts outline ± 8 wide down to the hem"
+      },
+      "bottoms": {
+        "delivers": "material from C's base-shorts top (W + 1 at the torso) down — never higher: the bottoms' picture shows C's base top above",
+        "hiddenUnderTop": "their upper edge and everything a top covers",
+        "lines": "no horizontal detail line between W + 12 and W + 54 (a waistband seam or belt within W + 12)",
+        "width": "within C's base-shorts outline ± 3 between W and W + 54"
+      },
+      "bodyAndShadow": "no body under C's base garments — a bare midriff (crop top) is outside v1; no shadow from one item onto another in either picture; a skin shadow only on C's skin (D-214)",
+      "intendedOpenings": "none at the waist"
+    },
+    "sleeve/wrist": {
+      "order": "sleeves over C's arms; C's hand is the base's (FIT-3 protect)",
+      "visibleEdgeOwner": "the sleeve's cuff",
+      "longSleeve": "ends in the cuff band: C's wrist − 10 … C's wrist; never over the hand",
+      "shortSleeve": "ends higher (the arm shows — intended)",
+      "bodyAndShadow": "C's arm and hand below the cuff are C's (intended); a cuff's cast shadow on the skin is the item's multiply layer (D-214)"
+    },
+    "trousers/shoes": {
+      "order": "shoes under bottoms",
+      "visibleEdgeOwner": "a full hem; for cropped bottoms the shoe's collar",
+      "shoes": {
+        "delivers": "the foot from the sole up to at least A (collar ≤ A); no shaft above A − 56",
+        "envelope": "within C's leg ± 8 from A − 30 down to A + 6 (a full hem covers it)",
+        "covering": "closed footwear hides C's foot from the solid top down (D-218); open footwear hides nothing"
+      },
+      "bottoms": {
+        "cropped": "hem ≤ A − 68 (12 px above the highest allowed shaft): the leg shows above any shoe — intended",
+        "full": "hem bottom in A + [6, 12], square, at least C's leg ± 10 wide from A − 30 down to the hem",
+        "between": "no hem between the two classes (it would meet some shoe edge to edge)"
+      },
+      "bodyAndShadow": "the ankle above a shoe under cropped bottoms is C's (intended); no shadow from the hem onto the shoe in either picture"
+    }
+  },
+  "modelDraws": {
+    "top": "Replace the figure's grey base top completely — no grey left anywhere, also not at the lower side corners at the hips. Either end the hem exactly where the grey base top ends, or as a straight hip-length hem one third to one hand-width below it, the same distance across the whole width, and then at least a finger wider than the shorts at the hips. Long sleeves end just above the wrist and never touch the hand. No shadow on the trousers.",
+    "bottoms": "Start exactly where the grey base top ends and draw nothing above it. Keep any waistband seam or belt within a finger-width of the top edge; no other horizontal line across the hips. At the hips stay as wide as the grey base shorts. Either end clearly above the ankle (shorts, skirts, capri: the leg shows above any shoe), or end just below the ankle with a straight, square hem that is wider than the leg on both sides.",
+    "shoes": "Cover the foot up to at least the ankle. A boot shaft may go up to about one hand-width above the ankle, not higher, and stays close to the leg (no flared shaft). No shadow from trousers on the shoe."
+  },
+  "compositionEnforces": [
+    "the contract layer order (body · shoes · bottoms · top body · arms · sleeves · head)",
+    "the covering rule per shoe type (D-218)",
+    "skin shadows as multiply layers on C's skin only (D-214)",
+    "extraction rules per method version (d223: an own-base rim beyond the outline is base; the closing may cross another base)",
+    "contractCheck per item (seam-contract-v1)",
+    "outfitCheck per combination (revision d225)",
+    "the findings register (an open finding keeps an outfit from being ready)"
+  ],
+  "limits": [
+    "a template that complies proves the RULES combine; it does not prove that a model can draw such an item",
+    "a bare midriff, tunics longer than W + 48, mid-calf or higher boots, flared boot shafts and trousers between the two length classes are outside v1",
+    "the contract is stricter than the outfit check: on C two of five violation templates combine without a visible fault — compliance is sufficient, not necessary"
+  ]
+}

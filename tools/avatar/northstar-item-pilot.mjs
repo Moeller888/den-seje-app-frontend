@@ -78,9 +78,10 @@ const changedPx = (O, C, i) => { const a = O[i * 4 + 3], b = C[i * 4 + 3]; if (M
 export const METHODS = Object.freeze({
   d221: { fitRevision: "d221", shadowDarkness: "red", what: "D-221 — extraction D-216, skin shadow D-214 (darker = red ratio < 0.98), covering D-218, fitCheck d221 (VIS-3)" },
   d222: { fitRevision: "d222", shadowDarkness: "luminance", what: "D-222 — extraction D-216, skin shadow D-222 (darker = mean channel ratio < 0.98), covering D-218, fitCheck d222 (VIS-3, FIT-4 against C's own exterior, FIT-6v2 garment end)" },
-  d223: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, what: "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base" },
+  d223: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d223", what: "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base" },
+  d225: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d225", what: "D-225 — D-223's extraction and checks; the outfit check's double contour with gaps up to 3 px as written (D-223 stopped at 2); items are also measured against the seam contract (seam-contract-v1)" },
 });
-export const METHOD = "d223";
+export const METHOD = "d225";
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
 export function processItem(w, base, T, category, raw, { itemId = null, method = METHOD } = {}) {
   if (T.revision !== "d213") throw new Error("processItem needs templatesC(w, base, { revision: \"d213\" })");
@@ -341,9 +342,12 @@ export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null
     const shadow = rep.files["shadow-multiply.png"] ? Uint8ClampedArray.from(decodePng(readFileSync(join(d, "shadow-multiply.png"))).px) : null;
     processed[it.id] = { item: it.id, category: it.category, ok: rep.ok, layers, shadow, faults: rep.faults };
     const openF = openFindingsFor(register, [it.id]).filter((id) => !register.findings.find((f) => f.id === id).subject.with);
-    items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, status: !rep.ok ? "rejected" : openF.length ? "technically-ok-open-finding" : "technically-ok", openFindings: openF, faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
+    // D-225: each item measured against the seam contract — a report for these pilot pictures, made before the contract existed
+    const sc = method === "d225" && Object.keys(layers).length ? BC.contractCheck(w, base, T, it.category, layers) : null;
+    items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, status: !rep.ok ? "rejected" : openF.length ? "technically-ok-open-finding" : "technically-ok", openFindings: openF,
+      ...(sc ? { seamContract: { version: sc.version, complies: sc.ok, failed: sc.checks.filter((c) => !c.ok).map((c) => ({ id: c.id, value: c.value })) } } : {}), faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
   const pkgDir = join(OUT, "package"); mkdirSync(pkgDir, { recursive: true }); const pkg = packageOutfits(w, base, manifest, processed, pkgDir, { register });
-  const run = { decision: "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
+  const run = { decision: method === "d225" ? "D-225" : "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
     note: "Technically OK is not visual approval; an open finding keeps an item or outfit from being ready. The same manifest, register, raws, C and code give the same bytes (no timestamps, no per-picture settings)." };
   writeFileSync(join(OUT, "run.json"), JSON.stringify(run, null, 2) + "\n"); return run; }
 /** D-223: the seams an outfit is looked at closely (×2): neck/collar, both hips, both wrists, the legs and shoes. */
@@ -379,7 +383,7 @@ export function packageOutfits(w, base, manifest, processed, OUT, { register = n
     const hideC = COVERING[s.item] === "closed-footwear" ? BC.closedFootwearHidden(base, s.layers.shoes) : null;
     const P = BF.layerProof(w, base.R, base.Z, { ...min, ...t.layers, ...b.layers, ...s.layers }, { sep: base.sep, headSeam: "d201", hide: hideC, enclosure: "c-exterior" }); let comp = P.dressedRuntime;
     for (const p of [t, b, s]) if (p.shadow) comp = applyShadow(comp, P.stack, p.shadow);
-    const ids = [t.item, b.item, s.item], name = ids.join("+"), oc = BC.outfitCheck(w, base, P), open = openFindingsFor(register, ids);
+    const ids = [t.item, b.item, s.item], name = ids.join("+"), oc = BC.outfitCheck(w, base, P, { revision: METHODS[manifest.method].outfitRevision || "d223" }), open = openFindingsFor(register, ids);
     const value = (id) => oc.checks.find((c) => c.id === id).value, faults = [...value("COMBO-1a-SEAM-BACKGROUND").slits, ...value("COMBO-1d-CUT-IN-GARMENT").cuts, ...value("COMBO-2-DOUBLE-CONTOUR").doubles];
     const corners = [...value("COMBO-1a-SEAM-BACKGROUND").crossings, ...value("COMBO-1d-CUT-IN-GARMENT").crossings];
     const status = !oc.ok ? "rejected" : open.length ? "technically-ok-open-finding" : "technically-ok";

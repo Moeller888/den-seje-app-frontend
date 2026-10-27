@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar seam contract — D-225: seam-contract-v1 between categories on C (no calls).**
+  - **Stations.** Tops end on C's waist line or at a hip station W + [18, 48], cover the hip corners and overhang the hips.
+    Bottoms start at C's base shorts, draw no line between W + 12 and W + 54, and are cropped (hem ≤ A − 68) or full
+    (A + [6, 12], square, leg ± 10). Shoes cover up to the ankle, with no shaft above A − 56, within leg ± 8. Long sleeves end in
+    the cuff band.
+  - **Tools.** `contractCheck`, `seamLines`, and TEMPLATE items (`northstar-seam-templates.mjs`). The outfit check's double
+    contour now covers 3 px gaps (revision d225); method d225.
+  - **Evidence.** 12 of 12 compliant template outfits pass on the stand-in and on C. Of the pilot items only the sneakers comply.
+    The contract explains F-006, F-007 and F-010 to F-012.
+  - **Next.** A six-item validation plan, not authorised. See `docs/decisions/D-225.md`.
 - **Northstar outfits on C — D-223: outfit check at the seams, method d223, findings register (no calls).**
   - **Outfit check.** `outfitCheck` covers background through a seam between two categories, holes, missing overlap, a cut in one
     garment, double contours and order; corners are only reported. It does not require C's base silhouette.
