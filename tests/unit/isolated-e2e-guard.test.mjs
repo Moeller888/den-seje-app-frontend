@@ -143,8 +143,14 @@ test("the egress blackhole covers the production project, the site, mail and AI 
 test("no false green, and the order that makes the job fail-closed", () => {
   const wf = read(".github/workflows/isolated-e2e.yml");
   assert.ok(!wf.includes("continue-on-error"), "a failing step must never be masked");
-  assert.ok(!/\|\|\s*true/.test(wf.split("Diagnostics (on failure)")[0].split("Stop local Supabase")[0].replace(/curl[^\n]*\|\| true\)/g, "")),
-    "no `|| true` before the diagnostics, except around curl probes that are evaluated afterwards");
+  const beforeDiagnostics = wf.split("Diagnostics (on failure)")[0].split("Stop local Supabase")[0]
+    .replace(/curl[^\n]*\|\| true\)/g, "")
+    .replace("supabase stop --no-backup > /dev/null 2>&1 || true\n            [ \"$attempt\" = 4 ] && { echo \"local stack did not start after 4 attempts\" >&2; exit 1; }", "");
+  assert.ok(!/\|\|\s*true/.test(beforeDiagnostics),
+    "no `|| true` before the diagnostics, except curl probes evaluated afterwards and the stop between start attempts (whose last failure exits 1)");
+  // The only retry is the stack start (image pulls); it is bounded and ends in a hard failure.
+  assert.equal((wf.match(/for attempt in/g) || []).length, 1);
+  assert.match(wf, /for attempt in 1 2 3 4; do\n\s+if supabase start /);
   const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
   const at = (s) => { const i = job.indexOf(s); assert.ok(i > 0, s); return i; };
   const order = [

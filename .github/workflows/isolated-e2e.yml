@@ -101,12 +101,23 @@ jobs:
 
       - name: Start a bare local Supabase (no migrations, no Edge Runtime yet)
         id: start
+        env:
+          RUN: ${{ matrix.run }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/held-migrations"
           mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"
           t0=$(date +%s)
-          supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime
+          # N runners pull the same images at once and the registry rate-limits them
+          # ("toomanyrequests"). Stagger by run number and retry ONLY the start/pull, at most 4 times;
+          # nothing after this step is ever retried.
+          sleep $(( (RUN - 1) * 15 ))
+          for attempt in 1 2 3 4; do
+            if supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime; then break; fi
+            supabase stop --no-backup > /dev/null 2>&1 || true
+            [ "$attempt" = 4 ] && { echo "local stack did not start after 4 attempts" >&2; exit 1; }
+            sleep $(( attempt * 45 + RUN * 7 ))
+          done
           mv "$RUNNER_TEMP/held-migrations/"* supabase/migrations/
           echo "start_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
           supabase status -o env > "$RUNNER_TEMP/stack.env"
