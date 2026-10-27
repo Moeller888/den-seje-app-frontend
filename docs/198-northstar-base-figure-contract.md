@@ -453,3 +453,17 @@ Se `project-state.md` D-222.
 **Resultat:** 10 af 18 outfits er teknisk OK, 3 er teknisk OK med åbne fund, og 5 er afvist.
 
 Se `project-state.md` D-223.
+
+## 26. D-225 — fælles pasformskontrakt (seam-contract-v1)
+
+**Linjer fra C:** taljelinjen W, anklen A, håndleddet og konturerne af ben og basisshorts.
+
+**Stationer:**
+- **Toppe:** sømmen ligger på W eller på en hoftestation W + [18, 48]. De dækker hoftehjørnerne og er ved hoften mindst basisshorts' kontur ± 8 brede.
+- **Underdele:** de starter ved basisshorts' overkant og har ingen vandret linje mellem W + 12 og W + 54. De er enten korte (≤ A − 68) eller lange (A + [6, 12], firkantede, benet ± 10).
+- **Sko:** de går op til mindst A, har intet skaft over A − 56 og holder sig inden for benet ± 8.
+- **Lange ærmer:** de ender i manchetbåndet.
+
+**Ejerskab:** Den øverste kategori ejer den synlige kant. En synlig ankel under korte underdele er tilsigtet.
+
+Se `docs/decisions/D-225.md`.

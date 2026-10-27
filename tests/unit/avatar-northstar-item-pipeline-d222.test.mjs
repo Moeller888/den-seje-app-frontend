@@ -188,13 +188,15 @@ test("D-223 findings register: every finding names its subject, place, picture, 
   assert.deepEqual(IP.openFindingsFor(reg, ["top-tee-red", "bottom-trousers-khaki", "shoes-boots-black"]).sort(), ["F-001", "F-006", "F-011"]);
   assert.deepEqual(IP.openFindingsFor(reg, ["top-tee-red", "bottom-trousers-khaki", "shoes-sneakers-white"]).sort(), ["F-010", "F-011"], "with sneakers the boot findings do not apply");
   assert.deepEqual(IP.openFindingsFor(reg, ["top-tank-teal", "bottom-shorts-navy", "shoes-sneakers-white"]), [], "an outfit with no open finding");
-  const man = fixture("item-pipeline-manifest-d223.json"); assert.equal(man.method, IP.METHOD); assert.ok(IP.validateManifest(man)); assert.equal(man.findingsRegister, "tools/avatar/fixtures/northstar-wardrobe/findings-register.json");
+  const man = fixture("item-pipeline-manifest-d223.json"); assert.equal(man.method, "d223", "D-223's record keeps its method version"); assert.ok(IP.validateManifest(man)); assert.equal(man.findingsRegister, "tools/avatar/fixtures/northstar-wardrobe/findings-register.json");
 });
 
 test("D-223 records results under method d223: the known slit is found on the d222 items and gone on d223; open findings keep outfits from being ready; earlier records unchanged", () => {
   const RES = fixture("item-method-results-d223.json"), reg = fixture("findings-register.json");
   assert.deepEqual([RES.decision, RES.method, RES.recordsResultsOnly, RES.rewritesEarlierRecords, RES.imageCalls], ["D-223", "d223", true, false, 0]);
-  assert.equal(RES.reproducibility.registerSha256, sha(Buffer.from(JSON.stringify(reg))), "the run used this register");
+  // D-225 only adds a `classification` to some findings; without it the register is byte for byte the one D-223 ran with
+  const regD223 = { ...reg, findings: reg.findings.map(({ classification, ...f }) => f) };
+  assert.equal(RES.reproducibility.registerSha256, sha(Buffer.from(JSON.stringify(regD223))), "the run used this register");
   const k = "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white";
   assert.deepEqual([RES.d222VsD223[k].d222.ok, RES.d222VsD223[k].d222.failed, RES.d222VsD223[k].d223.ok], [false, ["COMBO-1a-SEAM-BACKGROUND"], true], "the outfit check finds the known slit on the d222 items, not on d223");
   assert.equal(RES.outfits[k].status, "technically-ok-open-finding"); assert.deepEqual(RES.outfits[k].openFindings.sort(), IP.openFindingsFor(reg, k.split("+")).sort());

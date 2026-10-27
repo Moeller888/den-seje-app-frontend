@@ -88,7 +88,20 @@
       "foundBy": "check COMBO-2",
       "foundUnder": "d223",
       "status": "open",
-      "decision": "D-223"
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "insufficient overlap at the trousers/shoes seam",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the khaki's hem is rounded at its outer corners (from C's leg ± 11 at A + 14 to ± 2 at A + 20) and ends at A + 27; the boot shaft is wider than C's leg + 8 there, so the boot's outline runs 1–3 px beside the hem corner",
+        "contractRules": [
+          "SC-L1 (khaki: neither class)",
+          "SC-L3 (boots: outside the envelope)"
+        ]
+      }
     },
     {
       "id": "F-007",
@@ -102,7 +115,19 @@
       "foundBy": "check COMBO-2",
       "foundUnder": "d223",
       "status": "open",
-      "decision": "D-223"
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "two horizontal lines of different items 1–3 px apart",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the sweater ends at W + 20 (a hip station); the skirt's own waistband seam lies at W + 21 … W + 24 — inside the band where tops end",
+        "contractRules": [
+          "SC-W4 (skirt: a line at W + 24)"
+        ]
+      }
     },
     {
       "id": "F-008",
@@ -143,7 +168,19 @@
       "foundBy": "manual",
       "foundUnder": "d223",
       "status": "open",
-      "decision": "D-223"
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "background corners between a rounded hem and a shoe",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the khaki's rounded hem corners end above the sneaker's outline where it widens (from A + 8); the background between them is outside C (11 px) — not hidden body, not the covering rule",
+        "contractRules": [
+          "SC-L1 (khaki: hem not square, not in A + [6, 12])"
+        ]
+      }
     },
     {
       "id": "F-011",
@@ -157,7 +194,19 @@
       "foundBy": "manual",
       "foundUnder": "d223",
       "status": "open",
-      "decision": "D-223"
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "a corner of C's base top that no item covers",
+        "missingFabric": true,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": true,
+        "cause": "the tee is narrower than C's base top in its outermost 3 columns at the hip; the khaki's outline there coincides with C's base contour, so the extraction cannot tell them apart (the khaki picture has the paint)",
+        "contractRules": [
+          "SC-W2 (tee: hip corners)"
+        ]
+      }
     },
     {
       "id": "F-012",
@@ -171,7 +220,19 @@
       "foundBy": "manual",
       "foundUnder": "d223",
       "status": "open",
-      "decision": "D-223"
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "a corner of C's base top that no item covers",
+        "missingFabric": true,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": true,
+        "cause": "as F-011 under the sweater (its outermost 3 columns at each hip)",
+        "contractRules": [
+          "SC-W2 (sweater: hip corners)"
+        ]
+      }
     }
   ]
 }
