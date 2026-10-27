@@ -8,6 +8,8 @@ production — the 2026-06-15 "C2 not active / flag OFF" statements below are an
 open questions remain historically unchanged.** Canonical current avatar/activation state lives in
 [`AVATAR_SYSTEM.md`](./AVATAR_SYSTEM.md); cross-track status in [`ROADMAP.md`](./ROADMAP.md)._
 _Platform / Services track completion added 2026-07-01 (Section 157S) — see the section immediately below._
+_**D-register frozen at D-223** (2026-10-26, D-224): the rows below stay verbatim, and no row above D-223 may be added here.
+New decisions are one file each, `docs/decisions/D-NNN.md` — see [`decisions/README.md`](./decisions/README.md)._
 
 ---
 
