@@ -9,10 +9,10 @@
     "authorised": 12,
     "planned": 9,
     "reserve": 3,
-    "actuallySent": 10,
+    "actuallySent": 11,
     "rule": "at most 12 image calls: 9 items and at most 3 reserve calls; a reserve only after a recorded TECHNICAL rejection of that item, at most one per item, with the item's frozen request unchanged; no other retry, no fallback model; every claim consumed counts as spent — an undetermined dispatch reserves its budget and is never repeated automatically; never for a fault of our own tools",
-    "recordedBy": "D-216",
-    "stoppedBy": "D-216: the boots and D-207-reserve-1 (skirt) were sent once each after the owner's credit and execution message — both HTTP 200 with one image; 2 claims remain of 12 (D-207-reserve-2 assigned to the sneakers under D-216's amendment extension, D-207-reserve-3 free); the sneakers' reserve needs its own execution message after D-216's merge"
+    "recordedBy": "D-217",
+    "stoppedBy": "D-217: the pilot's sending is complete — D-207-reserve-2 (sneakers) sent once on the owner's separate execution message, HTTP 200 with one image; 11 of 12 claims used; D-207-reserve-3 stays unspent and unassigned, and no further image call is made without a new owner decision"
   },
   "request": {
     "endpoint": "https://api.openai.com/v1/images/edits",
@@ -303,7 +303,7 @@
         "imageSha256": null,
         "images": 0,
         "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-item-shoes-sneakers-white/",
-        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent, no retry, no fallback. Not a TECHNICAL_REJECT; D-214's reserve amendment names only the skirt, so no reserve follows without a new owner decision."
+        "note": "HTTP 429 insufficient_quota / credit_balance_exhausted: the server answered, no image; the claim is spent, no retry, no fallback. Not a TECHNICAL_REJECT; D-214's reserve amendment names only the skirt, so no reserve follows without a new owner decision. D-217: its reserve (D-207-reserve-2) was sent and is recorded there."
       }
     },
     {
@@ -380,9 +380,19 @@
         "filename": "D-207-reserve-2.claim.json",
         "eventsFilename": "D-207-reserve-2.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED",
-      "assignedBy": "D-216"
+      "mandateState": "SPENT",
+      "outcome": "TECHNICAL_REJECT",
+      "assignedBy": "D-216",
+      "recordedBy": "D-217",
+      "result": {
+        "dispatchedAt": "2026-10-26T14:13:51.724Z",
+        "httpStatus": 200,
+        "requestId": "req_3c17747a44854cedb1eb40af7816be19",
+        "imageSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+        "images": 1,
+        "rawStoredUnchanged": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/D-207-reserve-2/",
+        "note": "white sneakers: generation OK (clean Northstar paint, laces, sole), extraction OK (D-216: 60 px of enclosed holes from the picture), FIT-7v2 sole y1500 within 1482–1518; FIT-6v2 20 px: in the instep arch of the left shoe C's foot contour shows 1–2 px where the sole curves up — the same kind of fault as the boots' heel arch, much smaller, a real fit fault"
+      }
     },
     {
       "callId": "D-207-reserve-3",

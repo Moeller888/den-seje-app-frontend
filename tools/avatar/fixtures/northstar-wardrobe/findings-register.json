@@ -1,0 +1,238 @@
+{
+  "decision": "D-223",
+  "note": "every finding on an item, an item worn with another, or one combination; an OPEN finding keeps what it applies to from being shown as ready, however technically OK. Statuses: open | resolved (by a method version) | accepted-by-owner (only with the owner's decision). Earlier records (D-207 … D-222) are kept as they are; this register points to them.",
+  "findings": [
+    {
+      "id": "F-001",
+      "subject": {
+        "item": "bottom-trousers-khaki",
+        "with": "shoes-boots-black"
+      },
+      "where": "the hem over the boot shaft, y ≈ 1385–1395",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/rejected-outfit-top-tee-red+bottom-trousers-khaki+shoes-boots-black.seams-x2.png",
+      "what": "orange specks along the trouser hem over the boot: the hem's cast shadow and the contour's antialias against skin, taken as fabric. d222 took them out by rule (33 → 7 px); the 7 left are a mix of the contour with the picture's SHADOWED skin, which the rule leaves as fabric",
+      "foundBy": "manual",
+      "foundUnder": "d221",
+      "status": "open",
+      "decision": "D-221 found, D-222 reduced"
+    },
+    {
+      "id": "F-002",
+      "subject": {
+        "item": "top-tee-red",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "right hip, x 625–626, y ≈ 790–816",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-tee-red+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "a 1 px background slit between the khaki's fabric and its side contour below the tee's hem, with the tee's leftover base line beside it (a double contour). Cause: the tee took C's base-top side contour below its own hem (rule 2); the khaki lost its own outline over C's base-top column (explained by C; rules 3/4 never entered another base). Fixed by d223 (A) + (B); a 1 × 3 px corner at the tee's hem is left, a reported crossing",
+      "foundBy": "manual",
+      "foundUnder": "d222",
+      "status": "resolved",
+      "resolvedBy": "d223",
+      "decision": "D-222 found, D-223 fixed"
+    },
+    {
+      "id": "F-003",
+      "subject": {
+        "item": "top-sweater-green",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "right hip, x 626–627, y ≈ 791–798",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "the same background slit as F-002 under the sweater — not seen by eye; found by COMBO-1a on the d222 items",
+      "foundBy": "check COMBO-1a",
+      "foundUnder": "d222",
+      "status": "resolved",
+      "resolvedBy": "d223",
+      "decision": "D-223"
+    },
+    {
+      "id": "F-004",
+      "subject": {
+        "item": "top-tank-teal",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "left hip, x 395–398, y ≈ 798–810",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "a double contour at the left hip (the top's leftover base line beside the khaki's outline), found by COMBO-2 on the d222 items; gone under d223 (A)",
+      "foundBy": "check COMBO-2",
+      "foundUnder": "d222",
+      "status": "resolved",
+      "resolvedBy": "d223",
+      "decision": "D-223"
+    },
+    {
+      "id": "F-005",
+      "subject": {
+        "item": "top-sweater-green",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "left hip, x 395–398, y ≈ 798–810",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "the same left-hip double contour as F-004 under the sweater; gone under d223",
+      "foundBy": "check COMBO-2",
+      "foundUnder": "d222",
+      "status": "resolved",
+      "resolvedBy": "d223",
+      "decision": "D-223"
+    },
+    {
+      "id": "F-006",
+      "subject": {
+        "item": "bottom-trousers-khaki",
+        "with": "shoes-boots-black"
+      },
+      "where": "the hem over the boot shaft, x 449–455, y 1389–1392",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/rejected-outfit-top-tee-red+bottom-trousers-khaki+shoes-boots-black.seams-x2.png",
+      "what": "a double contour: the trouser hem's outline 1–3 px above the boot's top rim over 7 px. The two pictures place hem and boot top this way; no rule makes them meet without painting. The three outfits with khaki and boots are rejected",
+      "foundBy": "check COMBO-2",
+      "foundUnder": "d223",
+      "status": "open",
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "insufficient overlap at the trousers/shoes seam",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the khaki's hem is rounded at its outer corners (from C's leg ± 11 at A + 14 to ± 2 at A + 20) and ends at A + 27; the boot shaft is wider than C's leg + 8 there, so the boot's outline runs 1–3 px beside the hem corner",
+        "contractRules": [
+          "SC-L1 (khaki: neither class)",
+          "SC-L3 (boots: outside the envelope)"
+        ]
+      }
+    },
+    {
+      "id": "F-007",
+      "subject": {
+        "item": "top-sweater-green",
+        "with": "bottom-skirt-plum"
+      },
+      "where": "right hip, x 601–607, y 798–801",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/rejected-outfit-top-sweater-green+bottom-skirt-plum+shoes-boots-black.seams-x2.png",
+      "what": "a double contour: the skirt's waistband edge 2–3 px below the sweater's hem over 7 px. The two outfits with the sweater and the skirt are rejected",
+      "foundBy": "check COMBO-2",
+      "foundUnder": "d223",
+      "status": "open",
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "two horizontal lines of different items 1–3 px apart",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the sweater ends at W + 20 (a hip station); the skirt's own waistband seam lies at W + 21 … W + 24 — inside the band where tops end",
+        "contractRules": [
+          "SC-W4 (skirt: a line at W + 24)"
+        ]
+      }
+    },
+    {
+      "id": "F-008",
+      "subject": {
+        "item": "shoes-sandals-brown"
+      },
+      "where": "both feet, the strip x 458–459, y 1368–1379; the toes",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/rejected-shoes-sandals-brown.png",
+      "what": "C's foot is wider than the generated foot: in an open sandal C's foot contour shows beside the sole and the toes do not match (FIT-6v2 12 px). Needs new image material; parked",
+      "foundBy": "check FIT-6v2",
+      "foundUnder": "d207",
+      "status": "open",
+      "decision": "D-207, D-221"
+    },
+    {
+      "id": "F-009",
+      "subject": {
+        "item": "bottom-skirt-plum"
+      },
+      "where": "the hem's right corner, x 623–628, y 990–996",
+      "image": "<Documents>/DenSejeApp-artefacts/d-207-item-pilot/d221-review/bottom-skirt-plum.hem-corner-x6.png",
+      "what": "the thigh contour meeting the hem's rounded corner (6 × 7 px) — the picture draws the same; D-221 found it is not missing fabric, d222's FIT-6v2 counts it as a compact crossing",
+      "foundBy": "check FIT-6v2",
+      "foundUnder": "d207",
+      "status": "resolved",
+      "resolvedBy": "d222",
+      "decision": "D-221, D-222"
+    },
+    {
+      "id": "F-010",
+      "subject": {
+        "item": "bottom-trousers-khaki",
+        "with": "shoes-sneakers-white"
+      },
+      "where": "where the hem meets the sneaker collar, both legs (x ≈ 438, 468, 600, 630; y ≈ 1384–1390)",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-tee-red+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "small white ticks (1–3 px of background) at the corners where the trouser hem meets the sneaker's collar. COMBO-1a reports them as crossings (corners where two outlines meet), so the check passes; seen at ×2, not at the app sizes. Cosmetic — the owner's judgement",
+      "foundBy": "manual",
+      "foundUnder": "d223",
+      "status": "open",
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "background corners between a rounded hem and a shoe",
+        "missingFabric": false,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": false,
+        "cause": "the khaki's rounded hem corners end above the sneaker's outline where it widens (from A + 8); the background between them is outside C (11 px) — not hidden body, not the covering rule",
+        "contractRules": [
+          "SC-L1 (khaki: hem not square, not in A + [6, 12])"
+        ]
+      }
+    },
+    {
+      "id": "F-011",
+      "subject": {
+        "item": "top-tee-red",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "right hip, the tee's hem corner, x 625, y ≈ 790–792",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-tee-red+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "a 1 × 3 px background corner left of F-002 where the tee's hem corner meets the khaki's side outline (C explains the khaki's outline there, so no rule takes it); a reported crossing; one light pixel seen at ×2",
+      "foundBy": "manual",
+      "foundUnder": "d223",
+      "status": "open",
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "a corner of C's base top that no item covers",
+        "missingFabric": true,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": true,
+        "cause": "the tee is narrower than C's base top in its outermost 3 columns at the hip; the khaki's outline there coincides with C's base contour, so the extraction cannot tell them apart (the khaki picture has the paint)",
+        "contractRules": [
+          "SC-W2 (tee: hip corners)"
+        ]
+      }
+    },
+    {
+      "id": "F-012",
+      "subject": {
+        "item": "top-sweater-green",
+        "with": "bottom-trousers-khaki"
+      },
+      "where": "right hip, the sweater's hem corner, x ≈ 626, y ≈ 790",
+      "image": "<Documents>/DenSejeApp-artefacts/d-223-outfit-check/final-1/package/outfit-top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white.seams-x2.png",
+      "what": "the same 1–3 px background corner as F-011 under the sweater; a reported crossing; one light pixel seen at ×2",
+      "foundBy": "manual",
+      "foundUnder": "d223",
+      "status": "open",
+      "decision": "D-223",
+      "classification": {
+        "by": "D-225",
+        "kind": "a corner of C's base top that no item covers",
+        "missingFabric": true,
+        "intendedBodyRejected": false,
+        "layerOrder": "correct",
+        "extractionRemnant": true,
+        "cause": "as F-011 under the sweater (its outermost 3 columns at each hip)",
+        "contractRules": [
+          "SC-W2 (sweater: hip corners)"
+        ]
+      }
+    }
+  ]
+}

@@ -392,3 +392,78 @@ Støvlerne og nederdelens reserve er sendt. Begge er teknisk afvist for reelle p
 Der er brugt 10 af 12 kald.
 
 Se `project-state.md` D-216.
+
+## 21. D-217 — pilotens afsendelse afsluttet
+
+**Sneakers:** De er teknisk afvist. C's fodkontur ses i svangbuen.
+
+**Forbrug:** Der er brugt 11 af 12 kald.
+
+**Resultat:** Fem items er bestået (tank, T-shirt, sweater, shorts og kakibukser). Fire er afvist (sandaler, støvler, nederdel og sneakers).
+
+Se `project-state.md` D-217.
+
+## 22. D-218 — tre områder og dækningsregel for lukket fodtøj
+
+**Tre områder pr. item:**
+1. API-masken, der styrer genereringen. Den er kun vejledende.
+2. Itemets tilladte område.
+3. Kroppens synlighed, styret af itemtypens dækningsregel.
+
+**Lukket fodtøj:** C's fod skjules fra skoens faste top og nedad, og VIS-2 kræver, at skoen erstatter det skjulte. Sandaler skjuler intet.
+
+**Forsøg:** Et maskeret forsøg på 3 kald er forberedt, men ikke autoriseret.
+
+Se `project-state.md` D-218.
+
+## 23. D-221 — dækningsreglen på de oprindelige råbilleder
+
+**Ny metodeversion d221:** Dækning som i D-218. Hertil kommer VIS-3: en lukket sko skal erstatte hele foden under sin faste top.
+
+**Sneakers og støvler:** De løses ved lokal sammensætning. Afvisningen skyldtes kroppens synlighed, ikke manglende skomateriale.
+
+**Nederdel:** Den markerede stribe er billedets egen lårkontur ved sømmens hjørne og ikke manglende stof. Grænserne er uændrede, så nederdelen forbliver afvist.
+
+**Sandaler:** De kræver nyt billedmateriale, fordi den genererede fod er smallere end C's.
+
+D-207's udfald er ikke omskrevet, og der er ikke sendt nogen billedkald.
+
+Se `project-state.md` D-221.
+
+## 24. D-222 — én pipeline og metodeversion d222
+
+**Indgang:** `northstar-item-pilot.mjs --run <manifest>`. Råbillede og metadata går ind; itemlag, skyggelag, kropsdækning, kontrolresultater og reviewbilleder kommer ud, efterfulgt af pakken med outfits. Versioner og hashes er fastlåst, og samme input giver samme bytes.
+
+**Kontroller:** FIT-4 måles mod C's egen yderside. FIT-6v2 skelner krydsende konturer (kompakte stykker) fra dobbelte konturer (aflange stykker).
+
+**Udtrækning:** Skygge afgøres ud fra luminans, og konturens kantudglatning mod C's hud skilles ad i blæk og alfa.
+
+**Resultat:** 8 af 9 items består teknisk, og sandalerne er stadig afvist. Der køres endnu ingen kontrol på kombinationer.
+
+Se `project-state.md` D-222.
+
+## 25. D-223 — kombinationskontrol og fundregister
+
+**Kombinationskontrol:** Det færdige outfit undersøges ved samlingerne mellem kategorier: hals/krave, talje/hofte, ærme/håndled, ben/sko og søm/ben. Kontrollen skelner mellem utilsigtet baggrund, tilsigtede åbninger, normal antialiasing, dobbelte konturer og forkert lagrækkefølge.
+
+**Udtrækning (d223):** En efterladt basekant uden for itemets kontur hører til basen og ikke til itemet, medmindre den lukker et hul. Lukningen må krydse en anden kategoris base.
+
+**Fundregister:** Et åbent fund forhindrer, at et item eller outfit vises som klar.
+
+**Resultat:** 10 af 18 outfits er teknisk OK, 3 er teknisk OK med åbne fund, og 5 er afvist.
+
+Se `project-state.md` D-223.
+
+## 26. D-225 — fælles pasformskontrakt (seam-contract-v1)
+
+**Linjer fra C:** taljelinjen W, anklen A, håndleddet og konturerne af ben og basisshorts.
+
+**Stationer:**
+- **Toppe:** sømmen ligger på W eller på en hoftestation W + [18, 48]. De dækker hoftehjørnerne og er ved hoften mindst basisshorts' kontur ± 8 brede.
+- **Underdele:** de starter ved basisshorts' overkant og har ingen vandret linje mellem W + 12 og W + 54. De er enten korte (≤ A − 68) eller lange (A + [6, 12], firkantede, benet ± 10).
+- **Sko:** de går op til mindst A, har intet skaft over A − 56 og holder sig inden for benet ± 8.
+- **Lange ærmer:** de ender i manchetbåndet.
+
+**Ejerskab:** Den øverste kategori ejer den synlige kant. En synlig ankel under korte underdele er tilsigtet.
+
+Se `docs/decisions/D-225.md`.

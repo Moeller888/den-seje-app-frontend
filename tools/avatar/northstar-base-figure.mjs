@@ -451,27 +451,40 @@ function outsideConnected(m, pass) { const o = new Uint8Array(N), st = []; for (
   for (let y = 0; y < H; y++) for (const x of [0, W - 1]) { const i = y * W + x; if (pass(i) && !o[i]) { o[i] = 1; st.push(i); } }
   while (st.length) { const i = st.pop(), x = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && !o[j] && Math.abs((j % W) - x) <= 1 && pass(j)) { o[j] = 1; st.push(j); } }
   return Mo.and(o, m); }
+const borderMask = () => { const b = new Uint8Array(N); for (let x = 0; x < W; x++) { b[x] = 1; b[(H - 1) * W + x] = 1; } for (let y = 0; y < H; y++) { b[y * W] = 1; b[y * W + W - 1] = 1; } return b; };
+/** D-222: pixels of `m` connected (4-way, through pixels where `pass` holds) to any seed pixel where `pass` holds. */
+function reachFrom(seed, pass, m) { const o = new Uint8Array(N), st = []; for (let i = 0; i < N; i++) if (seed[i] && pass(i)) { o[i] = 1; st.push(i); }
+  while (st.length) { const i = st.pop(), x = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && !o[j] && Math.abs((j % W) - x) <= 1 && pass(j)) { o[j] = 1; st.push(j); } }
+  return Mo.and(o, m); }
 
 /** The layering proof with Northstar's D-197 defaults over the runtime body (base garments removed). */
 export const FABRIC_BAND_PX = 4;   // the base shorts' measured excess over the bare thigh directly below their hem (D-204)
 /** D-213: the R3 head as the runtime composes it over a body that owns its neck — D-201's seam rule: the head's leftover collar
  *  edge (neckEdgeMask) is not drawn where the body is opaque; everywhere else the head is unchanged. */
 export function runtimeHead(w, body) { const h = new Uint8ClampedArray(w.head), edge = neckEdgeMask(w); for (let i = 0; i < N; i++) if (edge[i] && body[i * 4 + 3] > 0) h[i * 4 + 3] = 0; return h; }
-export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null, headSeam = "plain" } = {}) {
-  const L = w.base.layers, { lab } = sep || separateBase(R, Z), { body, arms } = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
-  // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under" and (D-210)
+export function layerProof(w, R, Z = zones(w), it = {}, { order = "contract", sep = null, headSeam = "plain", hide = null, enclosure = "canvas" } = {}) {
+  const L = w.base.layers, { lab } = sep || separateBase(R, Z), rb = runtimeBody(w, R, lab), I = { shoes: L.shoes, pants: L.pants, topBody: L["top-body"], sleeves: L["top-sleeves"], ...it };
+  // D-218: body VISIBILITY — a worn item may hide body pixels by a declared covering rule (closed footwear hides the foot inside its
+  // own outline); hidden pixels are simply not drawn this time; C itself is never changed
+  const body = hide ? rb.body.map((v, k) => (k % 4 === 3 && hide[k >> 2] ? 0 : v)) : rb.body, arms = hide ? rb.arms.map((v, k) => (k % 4 === 3 && hide[k >> 2] ? 0 : v)) : rb.arms;
+  // the contract order (D-198 contract v2): body · shoes · bottoms · top-body · ARMS · top-sleeves · head. "arms-under", (D-223) "shoes-over-bottoms" and (D-210)
   // "bottoms-over-top" exist only as control stimuli: a composer that puts the arms under the top's body, or the bottoms over the
   // top, must be caught by the order checks. `stack` names the composed layers in the order used, bottom first.
   // headSeam "plain" (v3): the whole R3 head over the body — its leftover collar edge drew a pale line across C's neck (D-213);
   // "d201": the head as the runtime composes it (runtimeHead)
   const named = { body, shoes: I.shoes, pants: I.pants, topBody: I.topBody, arms, sleeves: I.sleeves, head: headSeam === "d201" ? runtimeHead(w, body) : w.head };
-  const orderNames = order === "arms-under" ? ["body", "arms", "shoes", "pants", "topBody", "sleeves", "head"] : order === "bottoms-over-top" ? ["body", "shoes", "topBody", "pants", "arms", "sleeves", "head"] : ["body", "shoes", "pants", "topBody", "arms", "sleeves", "head"];
+  const orderNames = order === "arms-under" ? ["body", "arms", "shoes", "pants", "topBody", "sleeves", "head"] : order === "bottoms-over-top" ? ["body", "shoes", "topBody", "pants", "arms", "sleeves", "head"] : order === "shoes-over-bottoms" ? ["body", "pants", "shoes", "topBody", "arms", "sleeves", "head"] : ["body", "shoes", "pants", "topBody", "arms", "sleeves", "head"];
   const stack = orderNames.map((n) => [n, named[n]]), dressedRuntime = NL.overStack(stack.map(([, L]) => L));
   const items = NL.overStack([I.shoes, I.pants, I.topBody, I.sleeves]), covered = (i) => items[i * 4 + 3] >= 128;
   const base = new Uint8Array(N); for (let i = 0; i < N; i++) if (lab[i]) base[i] = 1;
   // only base pixels that were VISIBLE (alpha ≥ 128) can leave a hole; a semi-transparent rim pixel vanishes with its garment
   const uncoveredBase = new Uint8Array(N); for (let i = 0; i < N; i++) if (base[i] && R[i * 4 + 3] >= 128 && !covered(i)) uncoveredBase[i] = 1;
-  const transparentOk = outsideConnected(uncoveredBase, (i) => dressedRuntime[i * 4 + 3] < 128), enclosed = Mo.and(uncoveredBase, Mo.not(transparentOk));
+  // D-222 enclosure "c-exterior": an open base pixel that reaches C's OWN exterior (the gap between an arm and the torso) through
+  // transparent pixels is the figure's outline, not a hole — a flared skirt reaching the hand closes that gap from below, and the
+  // canvas-border test (v3 … d221, "canvas") then counted C's 1 px side seam beside it as enclosed. A hole inside a garment never
+  // touches C's exterior, so it stays enclosed.
+  const pass = (i) => dressedRuntime[i * 4 + 3] < 128;
+  const transparentOk = enclosure === "c-exterior" ? reachFrom(Mo.or(borderMask(), outsideExterior(R)), pass, uncoveredBase) : outsideConnected(uncoveredBase, pass), enclosed = Mo.and(uncoveredBase, Mo.not(transparentOk));
   // D-205: also every transparent pixel inside the filled silhouette of the garments (items ∪ base) — a hole in a garment itself
   const garmentArea = Mo.or(Mo.toMask(items, 128), base), inside = Mo.not(outsideConnected(new Uint8Array(N).fill(1), (i) => !garmentArea[i]));
   for (let i = 441 * W; i < N; i++) if (inside[i] && !garmentArea[i] && dressedRuntime[i * 4 + 3] < 128) enclosed[i] = 1;

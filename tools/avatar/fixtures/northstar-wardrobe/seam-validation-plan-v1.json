@@ -1,0 +1,110 @@
+{
+  "decision": "D-225",
+  "status": "PLAN — not authorised; no call, no claim, no prompt sent",
+  "authorisesImageRequest": false,
+  "calls": 0,
+  "maxNewItems": 6,
+  "purpose": "test whether a model can draw items that meet seam-contract-v1 at the seams D-223 found failing, and whether they combine freely with each other and with the compliant existing items",
+  "items": [
+    {
+      "id": "V1-top-hip-station",
+      "category": "top",
+      "tests": "SC-W1 (hip station), SC-W2 (hip corners), SC-W5 (hip overhang)",
+      "seams": [
+        "waist/hip"
+      ],
+      "reuse": [
+        "bottom-shorts-navy",
+        "V4",
+        "V5",
+        "V3"
+      ],
+      "why": "F-007 / F-011 / F-012: every pilot top left C's hip corners open and none sat cleanly on a station"
+    },
+    {
+      "id": "V2-longsleeve-on-waistline",
+      "category": "top",
+      "tests": "SC-W1 (hem ON W), SC-S1 (cuff band)",
+      "seams": [
+        "waist/hip",
+        "sleeve/wrist"
+      ],
+      "reuse": [
+        "bottom-shorts-navy",
+        "V4",
+        "V5",
+        "V3"
+      ],
+      "why": "the merge station (the tank's) and the wrist seam in one item"
+    },
+    {
+      "id": "V3-trousers-full-square",
+      "category": "bottom",
+      "tests": "SC-L1 full class (square, ± 10, hem A + [6, 12]), SC-W3, SC-W4, SC-W6",
+      "seams": [
+        "waist/hip",
+        "trousers/shoes"
+      ],
+      "reuse": [
+        "shoes-sneakers-white",
+        "V6",
+        "top-tank-teal",
+        "V1",
+        "V2"
+      ],
+      "why": "F-006 / F-010: the khaki's rounded hem met both shoes edge to edge"
+    },
+    {
+      "id": "V4-cropped-capri",
+      "category": "bottom",
+      "tests": "SC-L1 cropped class (hem ≤ A − 68: the ankle shows — intended), SC-W3, SC-W6",
+      "seams": [
+        "waist/hip",
+        "trousers/shoes"
+      ],
+      "reuse": [
+        "shoes-sneakers-white",
+        "V6",
+        "V1",
+        "V2"
+      ],
+      "why": "a visible ankle between a hem and a shoe must pass, not fail"
+    },
+    {
+      "id": "V5-skirt-waistband-high",
+      "category": "bottom",
+      "tests": "SC-W4 (waistband seam within W + 12), SC-W6",
+      "seams": [
+        "waist/hip"
+      ],
+      "reuse": [
+        "top-sweater-green",
+        "V1",
+        "V2"
+      ],
+      "why": "F-007: the skirt's waistband seam at W + 24 met the sweater's hem"
+    },
+    {
+      "id": "V6-ankle-boot-in-envelope",
+      "category": "shoes",
+      "tests": "SC-L2 (collar ≤ A, shaft ≤ A − 56), SC-L3 (within the leg ± 8)",
+      "seams": [
+        "trousers/shoes"
+      ],
+      "reuse": [
+        "V3",
+        "V4",
+        "bottom-shorts-navy"
+      ],
+      "why": "F-006: the boots' shaft is wider than any full hem's overhang"
+    }
+  ],
+  "reuseMatrix": "tops {tank, tee, sweater, V1, V2} × bottoms {shorts, V3, V4, V5} × shoes {sneakers, V6} = 40 outfits, 30 of them with at least one new item; every new item meets at least two other new or existing items at its seam",
+  "successCriteria": [
+    "each item: technically OK (pipeline d225) AND seam contract complied",
+    "every outfit of compliant items: outfit check OK",
+    "no new open finding at a seam the contract covers",
+    "a failure is classified: the model did not follow the instruction (generation), the rule was not measured right (tool) or the contract is incomplete (contract)"
+  ],
+  "rules": "one-shot claims, no retry, no fallback, no reserve; the D-207 adapter's rules; a new owner decision before anything is prepared"
+}

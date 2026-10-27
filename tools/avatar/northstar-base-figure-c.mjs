@@ -82,6 +82,30 @@ function templatesD213(w, base, T) {
   const handGuard = Mo.dilate(hands, 2);
   return { ...T, revision: "d213", top: { ...T.top, allowed, protect: Mo.or(head, handGuard), hands, handGuard, wristRows: wr } };
 }
+/** D-218 — the THREE regions of an item on C, kept apart:
+ *  (1) apiEdit: where the image API is ASKED to paint — the item's allowed region grown by API_MASK_MARGIN_PX, never the head or
+ *      the hands. A GPT Image mask is guidance only (OpenAI: "the model uses the mask as guidance, but may not follow its exact
+ *      shape"); it preserves nothing.
+ *  (2) itemAllowed: where the finished item may have pixels — the category's envelope minus its protected regions (extraction and
+ *      FIT-2/FIT-3 enforce it).
+ *  (3) hidden(layers): the body pixels a WORN item hides by its declared covering rule — closed footwear hides C's foot inside the
+ *      shoe's solid extent, column by column (an arch, a heel gap or a side notch shows background, not C's bare foot); open footwear
+ *      and every other item hide nothing. C is never changed; a hole this leaves inside the item is FIT-4's (missing material). */
+export const API_MASK_MARGIN_PX = 8;
+export function closedFootwearHidden(base, shoes) {
+  // column by column: everything of C's foot from where the shoe's SOLID material begins in that column (the first run of at
+  // least SLIVER_PX opaque shoe pixels — a thinner run is an outline, e.g. the rim of a boot's shaft or a sneaker's collar seen
+  // above the leg) DOWN to the canvas bottom: a shoe's sole lifts the foot (C's bare sole stands on the ground line, a shoe's
+  // sole lies below it), so under an arch, a heel gap or a side notch C's bare foot would show. The leg above the shoe's solid
+  // top — also inside a shaft or a collar opening — stays C's. A gap left inside the shoe's outline is FIT-4's / VIS-2's.
+  const hide = new Uint8Array(N);
+  for (let x = 0; x < W; x++) { let top = -1;
+    for (let y = 0; y < H && top < 0; y++) { let k = 0; while (y + k < H && shoes[((y + k) * W + x) * 4 + 3] >= 128) k++; if (k >= SLIVER_PX) top = y; else y += k; }
+    if (top < 0) continue; for (let y = top; y < H; y++) { const i = y * W + x; if (base.body[i * 4 + 3] > 0 || base.arms[i * 4 + 3] > 0) hide[i] = 1; } }
+  return hide; }
+export function regionsC(w, base, T, category, { covering = "none" } = {}) {
+  const t = T[category], itemAllowed = Mo.and(t.allowed, Mo.not(t.protect)), apiEdit = Mo.and(Mo.dilate(itemAllowed, API_MASK_MARGIN_PX), Mo.not(t.protect));
+  return { apiEdit, itemAllowed, covering, hidden: (layers) => (covering === "closed-footwear" && layers.shoes ? closedFootwearHidden(base, layers.shoes) : null) }; }
 function templatesV3(w, base) {
   const { R, sep, arms } = base, A = w.anchors, ext = BF.outsideExterior(R), band = Mo.dilate(ext, BF.FABRIC_BAND_PX);
   const lab = (k) => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (sep.lab[i] === k) m[i] = 1; return m; };
@@ -127,7 +151,7 @@ export const FIT_LIMITS_D210 = Object.freeze({
 const RANK = { body: 0, shoes: 1, pants: 2, topBody: 3, arms: 4, sleeves: 5, head: 6 };
 
 /** D-210 FIT-5v2 / FIT-6v2 / FIT-7v2 on a layer proof P (contract order or a control order). */
-function fitD210(w, base, T, category, layers, P, add, shadow = null) {
+function fitD210(w, base, T, category, layers, P, add, shadow = null, revision = "d210") {
   const own = Object.keys(layers), lim = FIT_LIMITS_D210;
   // FIT-5v2: every painted item pixel is either visible, or hidden by a layer the contract ranks ABOVE it within the tuck of a
   // visible part of the item; hidden by a layer ranked below it is a wrong order; hidden deeper is a detail the outfit never shows
@@ -142,7 +166,7 @@ function fitD210(w, base, T, category, layers, P, add, shadow = null) {
   // than the garment there or its contour shows beside it. Hands and head are the base's (never counted).
   // D-214: the item's skin shadow (a multiply layer) is the item's material too — composed, it shows exactly the picture's pixel
   const sh = shadow ? Mo.toMask(shadow, 128) : new Uint8Array(N), items = Mo.or(Mo.toMask(P.items, 128), sh), im = Mo.or(Mo.toMask(NL.overStack(own.map((k) => layers[k])), 128), sh), guard = T.top.protect;
-  const kind = (i) => im[i] ? 1 : P.dressedRuntime[i * 4 + 3] < 128 ? 2 : !items[i] && !guard[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128) ? 3 : 0;
+  const kind = (i) => im[i] ? 1 : P.dressedRuntime[i * 4 + 3] < 128 ? 2 : !items[i] && !guard[i] && (P.body[i * 4 + 3] >= 128 || P.arms[i * 4 + 3] >= 128) ? 3 : 0;
   const sl = new Uint8Array(N), K = new Uint8Array(N); for (let i = 441 * W; i < N; i++) K[i] = kind(i);
   const scan = (start, step, len) => { let k = 0; while (k < len) { if (K[start + k * step] !== 3) { k++; continue; } let e = k; while (e < len && K[start + e * step] === 3) e++;
     const a = k > 0 ? K[start + (k - 1) * step] : 2, b = e < len ? K[start + e * step] : 2;
@@ -150,17 +174,25 @@ function fitD210(w, base, T, category, layers, P, add, shadow = null) {
   for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441);
   // a strip along the garment's edge is a sliver; a piece no longer than SLIVER_PX in both directions is where the garment's
   // outline crosses the body's contour (a strap meeting the shoulder line) — reported, not counted
-  const seen = new Uint8Array(N), strip = new Uint8Array(N); let crossings = 0, crossingPx = 0;
+  const seen = new Uint8Array(N), strip = new Uint8Array(N), crossingShapes = []; let crossings = 0, crossingPx = 0;
   for (let s0 = 0; s0 < N; s0++) { if (!sl[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1;
     while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (sl[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
-    if (Math.max(x1 - x0 + 1, y1 - y0 + 1) <= SLIVER_PX) { crossings++; crossingPx += px.length; } else for (const i of px) strip[i] = 1; }
-  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background");
+    // D-222: a crossing is decided by its SHAPE, not only its size. Two contours meeting at an angle leave a COMPACT piece; a contour
+    // running along the garment (a limb wider than it, a double contour) leaves an ELONGATED one. Compact: the shorter side ≤
+    // SLIVER_PX and the longer ≤ 1.5 × the shorter (contours meeting at ≥ 34°); v3's square allowance stays (a piece ≤ SLIVER_PX in
+    // both directions). The skirt's hem corner meeting the thigh is 6 × 7
+    // px — over v3's square allowance (≤ SLIVER_PX × SLIVER_PX) by one row; the sandals' foot contour beside the sole is 2 × 12 px
+    // and stays a strip.
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lo = Math.min(bw, bh), hi = Math.max(bw, bh);
+    const crossing = hi <= SLIVER_PX || (revision === "d222" && lo <= SLIVER_PX && hi <= 1.5 * lo);   // v3's square allowance, and (D-222) compact
+    if (crossing) { crossings++; crossingPx += px.length; if (hi > SLIVER_PX) crossingShapes.push([bw, bh, px.length]); } else for (const i of px) strip[i] = 1; }
+  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx, ...(revision === "d222" ? { compactCrossingsOverSquare: crossingShapes } : {}) }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background" + (revision === "d222" ? " (D-222: a compact piece where two contours meet at an angle is a crossing, reported)" : ""));
   if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)), [lo, hi] = T.shoes.soleRange;
     add("fit", "FIT-7v2-GROUND", sb.y1 >= lo && sb.y1 <= hi, { soleY: sb.y1, range: [lo, hi] }, "the shoe ends between C's soles and a Northstar sneaker sole below them"); }
   return { hiddenDetail: detailM, slivers: strip, crossings: Mo.and(sl, Mo.not(strip)) };
 }
-export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3", shadow = null } = {}) {
+export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3", shadow = null, hide = null } = {}) {
   const t = T[category], out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), lim = FIT_LIMITS;
   const names = Object.keys(layers), itemAll = NL.overStack(names.map((k) => layers[k])), im = maskOf(itemAll, 1);
   add("fit", "FIT-1-LAYERS", JSON.stringify(names) === JSON.stringify(t.layers) && names.every((k) => layers[k].length === N * 4), names, "exactly the category's layers, full 1024×1536 RGBA");
@@ -169,11 +201,33 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   add("fit", "FIT-3-PROTECT", prot <= lim.protectPx.value, { protectPx: prot }, "nothing over the head or the hands");
   const min = BF.minimumItems(base.R, base.sep.lab), it = category === "top" ? { ...min, ...layers } : category === "bottom" ? { ...min, ...layers } : { ...min, shoes: layers.shoes };
   // D-213: the head as the runtime composes it (D-201's seam rule) — v3 / d210 keep the plain head for their records
-  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order, headSeam: revision === "d213" ? "d201" : "plain" }), c = (m) => count(m);
+  const P = BF.layerProof(w, base.R, base.Z, it, { sep: base.sep, order, headSeam: revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222" ? "d201" : "plain", hide: revision === "d218" || revision === "d221" || revision === "d222" ? hide : null,
+    enclosure: revision === "d222" ? "c-exterior" : "canvas" }), c = (m) => count(m);
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
-  let masks = null; if (revision === "d210" || revision === "d213") masks = fitD210(w, base, T, category, layers, P, add, shadow);
+  let masks = null; if (revision === "d210" || revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222") masks = fitD210(w, base, T, category, layers, P, add, shadow, revision);
+  if (revision === "d218" || revision === "d221" || revision === "d222") { let hid = 0; if (hide) for (let i = 0; i < N; i++) if (hide[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) hid++;
+    add("report", "VIS-1-HIDDEN-BODY", true, { hiddenBodyPx: hid }, "body pixels the item hides by its declared covering rule (never a gate; a hole it leaves is FIT-4's)");
+    // VIS-2: what an item hides it must REPLACE — hidden body left as background within the item's own column span (top to bottom
+    // pixel; below it is the space under a sole or an arch) ≤ 1 % of the hidden body (the remnant rule's share: an item replaces
+    // what it removes). A sandal declared closed loses its toes here.
+    if (hide) { const im2 = maskOf(NL.overStack(names.map((k) => layers[k])), 128); let lost = 0;
+      for (let x = 0; x < W; x++) { let y0 = -1, y1 = -1; for (let y = 0; y < H; y++) if (im2[y * W + x]) { if (y0 < 0) y0 = y; y1 = y; } if (y0 < 0) continue;
+        for (let y = y0; y <= y1; y++) { const i = y * W + x; if (hide[i] && P.dressedRuntime[i * 4 + 3] < 128) lost++; } }
+      add("fit", "VIS-2-REPLACES-HIDDEN-BODY", lost <= 0.01 * Math.max(1, hid), { vanishedInsidePx: lost, hiddenBodyPx: hid, share: +(lost / Math.max(1, hid)).toFixed(4) }, "a covering item replaces the body it hides: no more than 1 % of it left as background inside the item's own extent");
+      // VIS-3 (D-221, closed footwear): the shoe replaces the WHOLE foot inside it — on each side, C's body pixels below the shoe's
+      // solid top that still show (neither hidden nor covered: a toe or a heel beside a too small or too narrow shoe) ≤ 1 % of
+      // C's body pixels there (the same share: an item replaces what it removes)
+      if ((revision === "d221" || revision === "d222") && category === "shoes") { let footPx = 0, shown = 0;
+        // each column's own solid top (an ankle in a collar opening, above the tongue, is meant to show); a column the shoe does not
+        // reach takes the side's highest solid top (a toe or a heel sticking out beside the shoe)
+        for (const left of [true, false]) { const x0 = left ? 0 : W / 2, x1 = left ? W / 2 : W, colTop = new Int32Array(W).fill(H); let top = H;
+          for (let x = x0; x < x1; x++) for (let y = 0; y < H; y++) { let k = 0; while (y + k < H && im2[(y + k) * W + x]) k++; if (k >= SLIVER_PX) { colTop[x] = y; top = Math.min(top, y); break; } if (k) y += k; }
+          if (top >= H) continue;
+          for (let x = x0; x < x1; x++) { let has = false; for (let y = 0; y < H && !has; y++) if (im2[y * W + x]) has = true; const from = has ? colTop[x] : top; if (from >= H) continue;
+            for (let y = from; y < H; y++) { const i = y * W + x; if (!(base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) continue; footPx++; if (!hide[i] && !im2[i] && P.dressedRuntime[i * 4 + 3] >= 128) shown++; } } }
+        add("fit", "VIS-3-REPLACES-WHOLE-FOOT", shown <= 0.01 * Math.max(1, footPx), { footShownPx: shown, footPx, share: +(shown / Math.max(1, footPx)).toFixed(4) }, "a closed shoe replaces the whole foot below its solid top: no more than 1 % of C's foot there still showing (a too small or too narrow shoe)"); } } }
   else {
   let painted = 0, hidden = 0; for (let i = 0; i < N; i++) if (itemAll[i * 4 + 3] >= 250) { painted++; if ([0, 1, 2].some((k) => Math.abs(P.dressedRuntime[i * 4 + k] - itemAll[i * 4 + k]) > 2)) hidden++; }
   add("fit", "FIT-5-ORDER", painted > 0 && hidden / painted <= lim.hiddenItemShare.value, { paintedPx: painted, hiddenPx: hidden, share: +(hidden / Math.max(1, painted)).toFixed(4) }, "every painted pixel stays visible in the contract order (sleeves over the arms, the top's body behind them)");
@@ -190,6 +244,148 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   add("quality", "Q-2-SHARPNESS", q >= 0.7, { lapToGrad: +q.toFixed(3) }, "crisp painted detail (D-197 I7)");
   add("quality", "Q-3-ALPHA", haze <= 0.06 * px, { share: +(haze / Math.max(1, px)).toFixed(4) }, "a clean cut-out (D-197 I5)");
   return { masks, checks: out, fitOk: out.filter((x) => x.axis === "fit").every((x) => x.ok), qualityOk: out.filter((x) => x.axis === "quality").every((x) => x.ok), composite: P.dressedRuntime };
+}
+
+/** D-223 THE OUTFIT CHECK — the finished outfit on C (a layer proof of several items over C's minimum items), judged at the seams
+ *  between categories. Every item was checked alone over C's minimum items; this checks what only the combination shows. It never
+ *  asks the outfit to follow C's base garments' outer silhouette: a garment may be wider than C (the khaki at the hip) — background
+ *  counts only as a narrow slit BETWEEN GARMENTS or a hole, never as a rim that vanishes, and C's own narrow gaps are intended.
+ *    COMBO-1a background through a seam: a run of ≤ SLIVER_PX transparent pixels (a row or a column) with garments of two
+ *            DIFFERENT categories on its ends (a gap between a limb and a garment is an opening; within one garment — between its
+ *            legs, a wide sleeve near its body — it is the item's own shape, FIT-4's), unless C itself has a narrow gap
+ *            there (≤ SLIVER_PX between C's own opaque pixels: the armpit). A pixel with alpha ≥ 128 is not background (normal
+ *            antialias). Pieces as FIT-6v2 (D-222): ≤ SLIVER_PX × SLIVER_PX or compact (two outlines meeting at a corner) are
+ *            reported crossings; an elongated piece along a seam is a slit and fails.
+ *    COMBO-1b an enclosed hole (D-222's enclosure against C's own exterior) fails.
+ *    COMBO-1c missing overlap: C's base left open deeper than the fabric band (4 px) inside the figure — a gap between a top and
+ *            bottoms that do not meet — fails.
+ *    COMBO-1d a cut inside ONE garment: a body strip ≤ SLIVER_PX with that same garment on both ends (a sleeve cut at the wrist).
+ *            Footwear is exempt — what of the foot shows is its covering rule's (D-218, VIS-2/VIS-3: an ankle in a collar opening,
+ *            a sandal's openings). Pieces as in 1a.
+ *    COMBO-2  a double contour: the outlines of garments of two DIFFERENT categories 1–3 px apart with no contour between, running together
+ *            longer than a crossing (the tee's leftover base line beside the khaki's outline; a skirt's waistband edge just below a
+ *            sweater's hem). A garment beside the body is FIT-6v2's (the leg inside a boot shaft is intended).
+ *    COMBO-3  the order: where two items overlap, the visible one is the one the contract ranks higher (shoes < bottoms < top
+ *            body < sleeves). Under the contract order this always holds; it catches a composer that stacks them otherwise.
+ *  Each finding names its seam from the layers around it (neck/collar, waist/hip, sleeve/wrist, leg/shoe, hem/leg). */
+export const SEAM_OF = Object.freeze({ "head|topBody": "neck/collar", "head|sleeves": "neck/collar", "pants|topBody": "waist/hip", "pants|sleeves": "waist/hip", "arms|sleeves": "sleeve/wrist", "arms|topBody": "sleeve/wrist", "pants|shoes": "leg/shoe", "body|shoes": "leg/shoe", "body|pants": "hem/leg", "body|topBody": "waist/hip" });
+export function outfitCheck(w, base, P, { revision = "d225" } = {}) {
+  const out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), R = base.R, D = P.dressedRuntime;
+  const top = new Array(N).fill(null); for (const [n, L] of P.stack) for (let i = 0; i < N; i++) if (L[i * 4 + 3] >= 128) top[i] = n;
+  const seamOf = (names) => { const k = [...new Set(names.filter(Boolean))].sort().join("|"); return SEAM_OF[k] || (k ? "other:" + k : "other"); };
+  // pieces of a mask, judged like FIT-6v2's: crossing (≤ S × S or compact) or strip; with the layers at their run ends → the seam
+  const pieces = (m, ends) => { const seen = new Uint8Array(N), res = [];
+    for (let s0 = 0; s0 < N; s0++) { if (!m[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1; const names = [];
+      while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); if (ends[i]) names.push(...ends[i]);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (m[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lo = Math.min(bw, bh), hi = Math.max(bw, bh), crossing = hi <= SLIVER_PX || (lo <= SLIVER_PX && hi <= 1.5 * lo);
+      res.push({ px: px.length, box: [x0, y0, bw, bh], crossing, seam: seamOf(names) }); }
+    return res; };
+  // runs of `inRun` pixels ≤ SLIVER_PX with `endOk` pixels on both ends, in rows and columns; ends[i] = the layers at the two ends
+  const runs = (inRun, endOk) => { const m = new Uint8Array(N), ends = {};
+    const scan = (start, step, len) => { let k = 0; while (k < len) { if (!inRun(start + k * step)) { k++; continue; } let e = k; while (e < len && inRun(start + e * step)) e++;
+      if (k > 0 && e < len && e - k <= SLIVER_PX) { const a = start + (k - 1) * step, b = start + e * step; if (endOk(a, b)) for (let q = k; q < e; q++) { const i = start + q * step; m[i] = 1; ends[i] = [top[a], top[b]]; } } k = e; } };
+    for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441); return { m, ends }; };
+  const opaque = (i) => D[i * 4 + 3] >= 128;
+  // COMBO-1a
+  const CAT = { shoes: "shoes", pants: "bottom", topBody: "top", sleeves: "top" }, isG = (i) => !!CAT[top[i]], seam2 = (a, b) => isG(a) && isG(b) && CAT[top[a]] !== CAT[top[b]];
+  // C's own narrow gaps (≤ SLIVER_PX between C's opaque pixels, rows or columns): intended, whatever the outfit does around them
+  const cGap = new Uint8Array(N); { const sc = (start, step, len) => { let k = 0; while (k < len) { if (R[(start + k * step) * 4 + 3] >= 128) { k++; continue; } let e = k; while (e < len && R[(start + e * step) * 4 + 3] < 128) e++;
+      if (k > 0 && e < len && e - k <= SLIVER_PX) for (let q = k; q < e; q++) cGap[start + q * step] = 1; k = e; } }; for (let y = 441; y < H; y++) sc(y * W, 1, W); for (let x = 0; x < W; x++) sc(441 * W + x, W, H - 441); }
+  const bg = runs((i) => !opaque(i) && !cGap[i], seam2), bgP = pieces(bg.m, bg.ends), slits = bgP.filter((p) => !p.crossing);
+  add("fit", "COMBO-1a-SEAM-BACKGROUND", slits.length === 0, { slitPx: slits.reduce((t, p) => t + p.px, 0), slits, crossings: bgP.filter((p) => p.crossing) }, "no background slit through a seam where C is opaque (corners where two outlines meet are reported)");
+  let enc = 0, deep = 0; for (let i = 0; i < N; i++) { if (P.enclosed[i]) enc++; if (P.deep[i]) deep++; }
+  add("fit", "COMBO-1b-ENCLOSED-HOLE", enc === 0, { enclosedHolePx: enc }, "no hole in the outfit (against C's own exterior)");
+  add("fit", "COMBO-1c-MISSING-OVERLAP", deep === 0, { openBaseDeeperThanFabricBandPx: deep }, "no gap between garments deeper than the fabric band");
+  // COMBO-1d
+  const items = ["pants", "topBody", "sleeves"], sameItem = (a, b) => items.includes(top[a]) && top[a] === top[b];
+  const cut = runs((i) => top[i] === "body" || top[i] === "arms", sameItem), cutP = pieces(cut.m, cut.ends), cuts = cutP.filter((p) => !p.crossing);
+  add("fit", "COMBO-1d-CUT-IN-GARMENT", cuts.length === 0, { cutPx: cuts.reduce((t, p) => t + p.px, 0), cuts, crossings: cutP.filter((p) => p.crossing) }, "no strip of body through one garment (intended openings exempt)");
+  // COMBO-2: contour of layer A, 1–3 px without contour, contour of layer B ≠ A — in rows and columns; counted where it runs on
+  const ink = new Uint8Array(N); for (let i = 441 * W; i < N; i++) if (opaque(i) && BF.classify(D, i) === "ink") ink[i] = 1;
+  const dbl = new Uint8Array(N), dEnds = {};
+  // D-225: a gap of up to 3 px between the lines, as written (D-223's loop stopped at 2 — kept for its record as revision "d223")
+  const maxGap = revision === "d223" ? 2 : 3;
+  const scan2 = (start, step, len) => { for (let k = 1; k < len - 1; k++) { const i = start + k * step; if (!ink[i] || ink[i + step]) continue; let g = 1; while (g <= maxGap + 1 && k + g < len && !ink[start + (k + g) * step]) g++;
+      if (g > maxGap + 1 || k + g >= len) continue; const j = start + (k + g) * step; if (!seam2(i, j)) continue; if ([...Array(g - 1)].some((_, q) => !opaque(start + (k + 1 + q) * step))) continue;
+      dbl[i] = 1; dbl[j] = 1; dEnds[i] = dEnds[j] = [top[i], top[j]]; } };
+  for (let y = 441; y < H; y++) scan2(y * W, 1, W); for (let x = 0; x < W; x++) scan2(441 * W + x, W, H - 441);
+  const dP = pieces(dbl, dEnds), doubles = dP.filter((p) => !p.crossing);
+  add("fit", "COMBO-2-DOUBLE-CONTOUR", doubles.length === 0, { doubles, corners: dP.filter((p) => p.crossing).length }, "no two outlines of different layers running side by side 1–3 px apart");
+  // COMBO-3
+  let wrong = 0; for (let i = 441 * W; i < N; i++) { let best = null, n = 0; for (const [nm, L] of P.stack) if (RANK[nm] !== undefined && ["shoes", "pants", "topBody", "sleeves"].includes(nm) && L[i * 4 + 3] >= 250) { n++; if (!best || RANK[nm] > RANK[best]) best = nm; }
+    if (n >= 2 && top[i] !== best) wrong++; }
+  add("fit", "COMBO-3-ORDER", wrong === 0, { wrongOrderPx: wrong }, "where items overlap, the one the contract ranks higher is seen");
+  return { checks: out, ok: out.every((c) => c.ok), masks: { slits: bg.m, cuts: cut.m, doubles: dbl } };
+}
+
+/** D-225 THE SEAM CONTRACT (v1) between categories on C — what every item must deliver at its seams so that ANY compliant top,
+ *  bottoms and shoes combine. Lengths and shaft heights may differ, but they snap to STATIONS: an edge of one category never runs
+ *  1–SLIVER_PX px beside an edge of another (D-223's double contours and slits). All lines come from C (never from an item):
+ *    W(x)  C's waist line — the lowest row of C's base top in each column (C's base shorts start on the next row: C has no
+ *          overlap of its own there, and no skin under its base garments — a bare midriff is outside v1).
+ *    A     C's ankle row (w.anchors.ankleY per side); C's leg contour per row.
+ *    wrist C's own wrist row (templatesC d213).
+ *  WAIST/HIP (the top over the bottoms; the top owns the visible edge)
+ *    bottoms deliver material from W+1 down (their upper edge on C's waist line; the picture shows C's base top above it) and draw
+ *            no horizontal detail line (a waistband seam, a belt) between W + waistbandMaxPx and W + linesFreeToPx;
+ *    tops    end ON the waist line (|hem − W| ≤ 1: the edges merge into one) or at a hip station W + [topHemMinPx, topHemMaxPx] in
+ *            every column, and cover C's base top down to its hem in every column, the hip corners included. At a hip station the
+ *            top is at least C's base-shorts outline ± topHipOverhangPx wide down to its hem, and bottoms stay within that outline ±
+ *            bottomsHipMaxPx there: the bottoms' side edge lies under the top (a straight-hanging top beside flared shorts left the
+ *            shorts' side outline 3 px outside it — a double contour).
+ *  SLEEVE/WRIST (the sleeve over C's arm; C's hand is the base's, never covered — FIT-3)
+ *    a long sleeve ends in the cuff band: wrist − cuffBandPx ≤ cuff ≤ wrist. Below it C's arm and hand show — intended.
+ *  TROUSERS/SHOES (the bottoms over the shoes)
+ *    shoes   cover the foot from the sole up to at least A (collar ≤ A), no shaft above A − shaftMaxAboveAnklePx, and stay within C's
+ *            leg contour ± shoeEnvelopePx from A − envelopeFromPx down to A + fullHemMinBelowAnklePx;
+ *    bottoms are CROPPED (hem ≤ A − croppedMinAboveAnklePx: the leg shows above any shoe — intended) or FULL (hem bottom in
+ *            A + [fullHemMinBelowAnklePx, fullHemMaxBelowAnklePx], square, at least C's leg ± trouserOverhangPx wide from
+ *            A − envelopeFromPx down to the hem): the full hem always covers every compliant shoe's collar and sides.
+ *  What the MODEL must draw (generation instructions) and what the COMPOSITION enforces (layer order, covering, outfit check) are
+ *  listed in seam-contract-v1.json. A template that complies proves the rules combine; it does not prove a model can draw it. */
+export const SEAM_CONTRACT_V1 = Object.freeze({ version: "seam-contract-v1", waistbandMaxPx: 12, linesFreeToPx: 54, topHemMinPx: 18, topHemMaxPx: 48, topHipOverhangPx: 8, bottomsHipMaxPx: 3, cuffBandPx: 10,
+  shaftMaxAboveAnklePx: 56, envelopeFromPx: 30, shoeEnvelopePx: 8, trouserOverhangPx: 10, croppedMinAboveAnklePx: 68, fullHemMinBelowAnklePx: 6, fullHemMaxBelowAnklePx: 12 });
+export function seamLines(w, base, T) {
+  // W(x): a median over 7 columns — a stray pixel of the base top's label (one column 14 px low on the stand-in) is no waist line
+  const lab = base.sep.lab, raw = {}, waist = {}; for (let x = 0; x < W; x++) { let th = -1, sb = -1; for (let y = 600; y < H; y++) { const i = y * W + x; if (lab[i] === 1) th = y; if (sb < 0 && lab[i] === 2) sb = y; } if (th >= 0 && sb >= 0) raw[x] = th; }
+  for (const k of Object.keys(raw)) { const x = Number(k), v = []; for (let d = -3; d <= 3; d++) if (raw[x + d] !== undefined) v.push(raw[x + d]); v.sort((p, q) => p - q); waist[x] = v[v.length >> 1]; }
+  const leg = { left: {}, right: {} }; for (let y = w.anchors.crotchY + 1; y < H; y++) for (const side of ["left", "right"]) { let x0 = -1, x1 = -1; for (let x = side === "left" ? 0 : W / 2; x < (side === "left" ? W / 2 : W); x++) if (base.body[(y * W + x) * 4 + 3] >= 128) { if (x0 < 0) x0 = x; x1 = x; } if (x0 >= 0) leg[side][y] = [x0, x1]; }
+  // C's base shorts per column (their top) and per row (their outline) — what the bottoms start from and the hip width reference
+  const shortsTop = {}, hip = {}; for (let i = 0; i < N; i++) if (lab[i] === 2 && base.R[i * 4 + 3] >= 128) { const x = i % W, y = (i / W) | 0; if (shortsTop[x] === undefined) shortsTop[x] = y; if (!hip[y]) hip[y] = [x, x]; else { hip[y][0] = Math.min(hip[y][0], x); hip[y][1] = Math.max(hip[y][1], x); } }
+  return { waist, rawWaist: raw, shortsTop, hip, ankle: { left: w.anchors.ankleY.left, right: w.anchors.ankleY.right }, wrist: T.top.wristRows, leg }; }
+export function contractCheck(w, base, T, category, layers, { contract = SEAM_CONTRACT_V1 } = {}) {
+  const K = contract, Ln = seamLines(w, base, T), out = [], add = (id, ok, value, what) => out.push({ id, ok, value, what }), a = (M, i) => M && M[i * 4 + 3] >= 128;
+  const cols = Object.keys(Ln.waist).map(Number);
+  if (category === "top") { const tb = layers.topBody; let merge = 0, station = 0, mergeAll = true, stationAll = true; const badCols = [];
+    // every column ON the waist line (C's own line, raw or smoothed, ± 1), or every column at a hip station — one may be both
+    for (const x of cols) { let hem = -1; for (let y = 600; y < H; y++) if (a(tb, y * W + x)) hem = y; const d = hem - Ln.waist[x], m = Math.abs(hem - Ln.rawWaist[x]) <= 1 || Math.abs(d) <= 1, st = d >= K.topHemMinPx && d <= K.topHemMaxPx;
+      if (m) merge++; if (st) station++; if (!m) mergeAll = false; if (!st) stationAll = false; if (!m && !st) badCols.push([x, d]); }
+    add("SC-W1-TOP-HEM-STATION", mergeAll || stationAll, { onWaistLineCols: merge, atStationCols: station, columns: cols.length, offBothCols: badCols.length, sample: badCols.filter((v, k) => k % Math.max(1, Math.ceil(badCols.length / 6)) === 0) }, "the whole hem on C's waist line, or the whole hem at a hip station W + [" + K.topHemMinPx + ", " + K.topHemMaxPx + "]");
+    let open = 0; const oc = new Set(); for (const x of cols) for (let y = Ln.waist[x] - 24; y <= Ln.waist[x]; y++) { const i = y * W + x; if (base.sep.lab[i] === 1 && !a(tb, i) && !a(layers.sleeves, i)) { open++; oc.add(x); } }
+    add("SC-W2-TOP-COVERS-HIP", open === 0, { uncoveredPx: open, columns: [...oc].sort((p, q) => p - q) }, "the top covers C's base top down to its hem in every column, the hip corners included");
+    // at a hip station: as wide as C's base-shorts outline ± topHipOverhangPx in every row down to the station
+    if (stationAll && !mergeAll) { let narrow = 0; const wl = Math.max(...cols.map((x) => Ln.waist[x])); for (let y = wl + 1; y <= Math.min(...cols.map((x) => Ln.waist[x])) + K.topHemMinPx; y++) { const h = Ln.hip[y]; if (!h) continue; for (const x of [h[0] - K.topHipOverhangPx, h[1] + K.topHipOverhangPx]) if (!a(tb, y * W + x)) narrow++; }
+      add("SC-W5-TOP-HIP-OVERHANG", narrow === 0, { narrowRowsPx: narrow }, "a hip-length top is C's base-shorts outline ± " + K.topHipOverhangPx + " wide down to its station"); }
+    const sl = layers.sleeves; for (const side of ["left", "right"]) { let cuff = -1; for (let y = 600; y < H; y++) for (let x = side === "left" ? 0 : W / 2; x < (side === "left" ? W / 2 : W); x++) if (a(sl, y * W + x)) cuff = Math.max(cuff, y);
+      const wr = Ln.wrist[side], long = cuff > wr - 60; add("SC-S1-CUFF-" + side.toUpperCase(), !long || (cuff <= wr && cuff >= wr - K.cuffBandPx), { cuffY: cuff, wristY: wr, long }, "a long sleeve ends in the cuff band (wrist − " + K.cuffBandPx + " … wrist); a short one ends higher"); } }
+  if (category === "bottom") { const P = layers.pants; let above = 0, lines = 0; const lineRows = new Set();
+    for (const x of cols) { let top = -1; for (let y = 600; y < H; y++) if (a(P, y * W + x)) { top = y; break; } if (top > Math.max(Ln.waist[x] + 1, Ln.shortsTop[x] ?? 0)) above++; }
+    add("SC-W3-BOTTOMS-REACH-WAIST", above === 0, { columnsStartingLower: above }, "the bottoms reach up to C's base shorts' top in every column (W + 1 at the torso)");
+    let wide = 0; const wl = Math.min(...cols.map((x) => Ln.waist[x])); for (let y = wl + 1; y <= wl + K.linesFreeToPx; y++) { const h = Ln.hip[y]; if (!h) continue; for (let x = 0; x < W; x++) if (a(P, y * W + x) && (x < h[0] - K.bottomsHipMaxPx || x > h[1] + K.bottomsHipMaxPx)) wide++; }
+    add("SC-W6-BOTTOMS-HIP-WIDTH", wide === 0, { outsidePx: wide }, "where tops end, the bottoms stay within C's base-shorts outline ± " + K.bottomsHipMaxPx + " (their side edge under a hip-length top)");
+    for (let y = 700; y < 1000; y++) { let run = 0; for (const x of cols) { const i = y * W + x, d = y - Ln.waist[x]; const ink = d > K.waistbandMaxPx && d <= K.linesFreeToPx && a(P, i) && BF.classify(P, i) === "ink" && a(P, i - 2 * W) && a(P, i + 2 * W); run = ink ? run + 1 : 0; if (run === 8) { lines++; lineRows.add(d); } } }
+    add("SC-W4-BOTTOMS-NO-LINE-IN-HEM-ZONE", lines === 0, { lines, rowsBelowW: [...lineRows].sort((p, q) => p - q) }, "no horizontal detail line (≥ 8 px) between W + " + K.waistbandMaxPx + " and W + " + K.linesFreeToPx + " (where tops end)");
+    const res = {}; let full = true, cropped = true, square = true; for (const side of ["left", "right"]) { const A = Ln.ankle[side]; let hem = -1; for (let y = 1000; y < H; y++) for (let x = side === "left" ? 0 : W / 2; x < (side === "left" ? W / 2 : W); x++) if (a(P, y * W + x)) hem = Math.max(hem, y);
+      res[side] = { hemY: hem, ankleY: A }; if (hem > A - K.croppedMinAboveAnklePx) cropped = false; if (hem < A + K.fullHemMinBelowAnklePx || hem > A + K.fullHemMaxBelowAnklePx) full = false;
+      let short = 0; for (let y = A - K.envelopeFromPx; y <= Math.min(hem - 2, A + K.fullHemMinBelowAnklePx); y++) { const lg = Ln.leg[side][y]; if (!lg) continue; for (const x of [lg[0] - K.trouserOverhangPx, lg[1] + K.trouserOverhangPx]) if (!a(P, y * W + x)) short++; } res[side].hemNotSquarePx = short; if (short) square = false; }
+    add("SC-L1-BOTTOMS-LENGTH-CLASS", cropped || (full && square), { cropped, full, square, ...res }, "cropped (hem ≤ A − " + K.croppedMinAboveAnklePx + ") or full (hem in A + [" + K.fullHemMinBelowAnklePx + ", " + K.fullHemMaxBelowAnklePx + "], square, C's leg ± " + K.trouserOverhangPx + " down to the hem)"); }
+  if (category === "shoes") { const S = layers.shoes; for (const side of ["left", "right"]) { const A = Ln.ankle[side]; let top = H, wide = 0;
+      for (let y = 1200; y < H; y++) for (let x = side === "left" ? 0 : W / 2; x < (side === "left" ? W / 2 : W); x++) if (a(S, y * W + x)) top = Math.min(top, y);
+      for (let y = A - K.envelopeFromPx; y <= A + K.fullHemMinBelowAnklePx; y++) { const lg = Ln.leg[side][y]; if (!lg) continue; for (let x = side === "left" ? 0 : W / 2; x < (side === "left" ? W / 2 : W); x++) if (a(S, y * W + x) && (x < lg[0] - K.shoeEnvelopePx || x > lg[1] + K.shoeEnvelopePx)) wide++; }
+      add("SC-L2-SHOE-COLLAR-" + side.toUpperCase(), top <= A && top >= A - K.shaftMaxAboveAnklePx, { topY: top, ankleY: A }, "the shoe covers the foot up to at least C's ankle (collar ≤ A) and no shaft above A − " + K.shaftMaxAboveAnklePx);
+      add("SC-L3-SHOE-ENVELOPE-" + side.toUpperCase(), wide === 0, { outsidePx: wide }, "above the full-length hem the shoe stays within C's leg ± " + K.shoeEnvelopePx + " (the full hem, ± " + K.trouserOverhangPx + ", covers it)"); } }
+  return { version: contract.version, checks: out, ok: out.every((c) => c.ok) };
 }
 
 /** COMPATIBILITY with Northstar's old clothing (D-197 defaults on C): a report, never a gate — D-204's documented limitation. */

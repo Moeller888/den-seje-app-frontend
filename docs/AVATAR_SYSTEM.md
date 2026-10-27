@@ -385,6 +385,65 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar seam validation — D-228: six frozen calls authorised, not executed.**
+  - **Request.** One call per item of D-225's plan (V1 … V6), in order, with the model of D-207 and D-218 unchanged. Image 1 is
+    C. Image 2 is the category's C-derived reference sheet (seam zones as colour marks, `--seam-reference`, local only). Each
+    frozen prompt is D-207's template plus the contract's `modelDraws` plus one sentence explaining the sheet.
+  - **Adapter.** `openai-send-northstar-seam-d228.mjs`: one-shot claims and at most 6 calls, with no reserve or retry. Order
+    and stop rules are structural: credit, uncertain dispatch, request shape, format, a second moderation block, or a stop file.
+  - **Acceptance.** Frozen before sending: technical, contract, combination fit and visual quality are reported apart, with a
+    pre-registered verdict (Q1–Q3) and the 40-outfit reuse matrix. Sending needs the owner's separate instruction. See
+    `docs/decisions/D-228.md`.
+- **Northstar seam contract — D-225: seam-contract-v1 between categories on C (no calls).**
+  - **Stations.** Tops end on C's waist line or at a hip station W + [18, 48], cover the hip corners and overhang the hips.
+    Bottoms start at C's base shorts, draw no line between W + 12 and W + 54, and are cropped (hem ≤ A − 68) or full
+    (A + [6, 12], square, leg ± 10). Shoes cover up to the ankle, with no shaft above A − 56, within leg ± 8. Long sleeves end in
+    the cuff band.
+  - **Tools.** `contractCheck`, `seamLines`, and TEMPLATE items (`northstar-seam-templates.mjs`). The outfit check's double
+    contour now covers 3 px gaps (revision d225); method d225.
+  - **Evidence.** 12 of 12 compliant template outfits pass on the stand-in and on C. Of the pilot items only the sneakers comply.
+    The contract explains F-006, F-007 and F-010 to F-012.
+  - **Next.** A six-item validation plan; authorised as six frozen calls by D-228 (not executed). See `docs/decisions/D-225.md`.
+- **Northstar outfits on C — D-223: outfit check at the seams, method d223, findings register (no calls).**
+  - **Outfit check.** `outfitCheck` covers background through a seam between two categories, holes, missing overlap, a cut in one
+    garment, double contours and order; corners are only reported. It does not require C's base silhouette.
+  - **Fix.** The tee + khaki hip slit came from two shared extraction rules (the top's leftover base rim; the bottoms' outline over
+    another base). d223 fixes both without masks or painting.
+  - **Register.** `findings-register.json` holds 12 findings; an open one keeps an item or outfit from being ready.
+  - **Result.** 10 of 18 outfits are technically OK, 3 more are OK with an open finding, and 5 are rejected (khaki + boots and
+    sweater + skirt seams). Two runs were byte-identical.
+  - See `project-state.md` **D-223**.
+- **Northstar item method — D-222: one pipeline, reproducible; method d222 (no calls).**
+  - **Entry.** `northstar-item-pilot.mjs --run <manifest>`: layers, skin shadow, body visibility, checks and review pictures
+    per item, then every outfit of technically passed items. Method, C, raws and code are pinned in `run.json`; two runs were
+    byte-identical.
+  - **Check fixes.** FIT-4 is measured against C's own exterior, and FIT-6v2 judges crossings by their shape (compact vs.
+    elongated). The skirt now passes; holes, too short bottoms and double contours still fail.
+  - **Extraction.** The skin shadow is judged by luminance, and the contour antialias over skin is unmixed. The khaki hem's
+    orange specks over boots went from 33 px to 7 px.
+  - **Result.** 8 of 9 items pass technically; the sandals are still rejected. 18 outfits are packaged.
+  - **Open.** A tee + khaki hip slit was found by manual review; no check runs on combinations yet.
+  - See `project-state.md` **D-222**.
+- **Northstar item method — D-221: the D-218 covering rule on the original D-207 raws (no calls).**
+  - **Sneakers and boots.** Resolved by local composition: under closed-footwear covering + VIS-3 both pass technically.
+    The rejections were the body's visibility, not missing shoe material.
+  - **Skirt.** The flagged strip is the picture's own thigh contour at the hem corner, not missing fabric. The gates are
+    unchanged, so the skirt stays rejected; changing a gate is an owner decision.
+  - **Sandals.** Need new image material: the generated foot is narrower than C's, and an open sandal hides nothing.
+  - **Records.** Results are recorded under a new method version (`item-method-results-d221.json`); D-207's outcomes are
+    unchanged and nothing is approved automatically.
+  - See `project-state.md` **D-221**.
+- **Northstar item method — D-218 (prepared, no calls): masked edit + controlled composition.**
+  - **Masks.** A GPT Image mask is guidance only (OpenAI), so C is preserved by local composition.
+  - **Three regions.** API mask, item allowed region and body visibility.
+  - **Closed footwear.** It hides the foot from the shoe's solid top down; VIS-2 makes the shoe replace what it hides.
+  - **Experiment.** Plan of 3 calls (skirt, sandals, sneakers control), not authorised.
+  - See `project-state.md` **D-218**.
+- **Northstar clothing pilot — D-217: the sneakers were generated and rejected (an instep arch); the pilot's sending is complete.**
+  - **Calls.** 11 of 12 used.
+  - **Passed.** Tank, tee, sweater, shorts and khaki trousers.
+  - **Rejected.** Sandals, boots, skirt and sneakers. Every rejection sits where the garment ends against the body.
+  - See `project-state.md` **D-217**.
 - **Northstar clothing pilot — D-216: the boots and the skirt (reserve) were generated and are both TECHNICAL_REJECT.**
   - **Boots.** The heel arch shows C's bare heel.
   - **Skirt.** A thigh contour shows at the hem corner.

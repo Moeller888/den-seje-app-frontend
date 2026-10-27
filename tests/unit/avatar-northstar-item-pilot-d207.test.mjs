@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { parseEvents } from "../../tools/avatar/r3-face-neutral-attempt-ledger.mjs";
 import { encodePng } from "../../tools/avatar/r3-hair-tool.mjs";
+import { decodePng } from "../../tools/avatar/r3-hair-tool-v2.mjs";
 import * as WR from "../../tools/avatar/northstar-wardrobe.mjs";
 import * as BF from "../../tools/avatar/northstar-base-figure.mjs";
 import * as BC from "../../tools/avatar/northstar-base-figure-c.mjs";
@@ -41,7 +42,7 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 // ── the decision ───────────────────────────────────────────────────────────────────────────────────────────────────────
 test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, each its own one-shot claim; C pinned and never tracked", () => {
   assert.equal(CALLS.decision, "D-207"); assert.equal(CALLS.meta.authorisesImageRequest, false);
-  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 10, "D-216"]); assert.match(CALLS.budget.stoppedBy, /D-216/);
+  assert.deepEqual([CALLS.budget.authorised, CALLS.budget.planned, CALLS.budget.reserve, CALLS.budget.actuallySent, CALLS.budget.recordedBy], [12, 9, 3, 11, "D-217"]); assert.match(CALLS.budget.stoppedBy, /D-217/);
   assert.match(CALLS.budget.rule, /an undetermined dispatch reserves its budget and is never repeated automatically/);
   assert.deepEqual([CALLS.reserveAmendment.decision, CALLS.reserveAmendment.outcome, CALLS.reserveAmendment.httpStatus, CALLS.reserveAmendment.items, CALLS.reserveAmendment.maxReserves], ["D-214", "HTTP_ERROR_NO_IMAGE", 429, ["bottom-skirt-plum"], 1]);
   assert.match(CALLS.reserveAmendment.rule, /never 12 plus replacements/);
@@ -53,10 +54,11 @@ test("D-207: at most 12 calls — 9 items in two stages and 3 reserve calls, eac
   const S2 = { "top-tee-red": ["SENT_ONCE_GENERATION_OK", 200, 1], "top-sweater-green": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-trousers-khaki": ["SENT_ONCE_GENERATION_OK", 200, 1], "bottom-skirt-plum": ["HTTP_ERROR_NO_IMAGE", 429, 0], "shoes-sneakers-white": ["HTTP_ERROR_NO_IMAGE", 429, 0], "shoes-boots-black": ["TECHNICAL_REJECT", 200, 1] };
   for (const c of CALLS.calls) { if (c.kind === "item" && S2[c.item]) { assert.deepEqual([c.mandateState, c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["SPENT", ...S2[c.item].slice(0, 1), c.item === "top-tee-red" ? "D-213" : c.item === "shoes-sneakers-white" ? "D-215" : c.item === "shoes-boots-black" ? "D-216" : "D-212", ...S2[c.item].slice(1)], c.callId); continue; }
     const s1 = c.kind === "item" && c.stage === 1;
-    assert.equal(c.mandateState, s1 || c.callId === "D-207-reserve-1" ? "SPENT" : "UNSPENT", c.callId);
+    assert.equal(c.mandateState, s1 || c.callId === "D-207-reserve-1" || c.callId === "D-207-reserve-2" ? "SPENT" : "UNSPENT", c.callId);
     // D-214: reserve 1 assigned to the skirt under the amendment; the others free; the sandals parked
     if (c.kind === "reserve") assert.deepEqual([c.assignedTo, c.assignedBy || null], c.callId === "D-207-reserve-1" ? ["bottom-skirt-plum", "D-214"] : c.callId === "D-207-reserve-2" ? ["shoes-sneakers-white", "D-216"] : [null, null], c.callId);
     if (c.callId === "D-207-reserve-1") assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["TECHNICAL_REJECT", "D-216", 200, 1]);
+    if (c.callId === "D-207-reserve-2") assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], ["TECHNICAL_REJECT", "D-217", 200, 1]);
     if (c.item === "shoes-sandals-brown") assert.equal(c.parkedBy, "D-214");
     // D-210 re-recorded the sandals under the revised checks (FIT-6v2): a TECHNICAL_REJECT, its reserve not assigned
     if (s1) { assert.deepEqual([c.outcome, c.recordedBy, c.result.httpStatus, c.result.images], c.item === "shoes-sandals-brown" ? ["TECHNICAL_REJECT", "D-210", 200, 1] : ["SENT_ONCE_GENERATION_OK", "D-208", 200, 1]); assert.match(c.result.requestId, /^req_[0-9a-f]{32}$/); assert.match(c.result.imageSha256, /^[0-9a-f]{64}$/); } }
@@ -375,6 +377,71 @@ test("D-216 enclosed holes: a black boot over the base's dark contours is extrac
   for (let y = yc; y < top0; y++) { const [a0, a1] = run0(y); for (let x = a0 + 6; x <= a1 - 6; x++) { const i = y * W + x; if (!T.shoes.allowed[i]) continue; const edge = y < yc + 4 || x < a0 + 10 || x > a1 - 10; if (edge) frame.set([28, 27, 30, 255], i * 4); else win.push(i); } }
   const f = IP.processItem(w, base, T, "shoes", NL.overStack([LEGS, frame])); let filledWin = 0; for (const i of win) if (f.masks.ruleOf[i] === 7) filledWin++;
   assert.ok(win.length > 500); assert.equal(filledWin, 0, "the window onto the shin stays the body's");
+});
+// D-218: the three regions, closed-footwear covering, VIS-2 and the API mask
+test("D-218: closed footwear hides the foot from its solid top down (an arch shows background, the leg in a shaft opening stays C's); a sandal declared closed fails VIS-2; the API mask is guidance on its own region", () => {
+  const min = BF.minimumItems(base.R, base.sep.lab); let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const top0 = Math.min(A.shoeTopY.left, A.shoeTopY.right) - 30, foot = new Uint8Array(N); for (let y = top0; y <= fb; y++) for (let x = 0; x < W; x++) if (LEGS[(y * W + x) * 4 + 3] >= 128) foot[y * W + x] = 1;
+  // a boot 3 px wider than the stand-in's foot, with a NOTCH cut into its sole on each outer side (an arch): the base's foot shows
+  const wide = WR.maskOps.dilate(foot, 3), boot = new Uint8ClampedArray(N * 4), notch = [];
+  for (let i = top0 * W; i <= fb * W + W - 1; i++) if (wide[i] && T.shoes.allowed[i]) boot.set([28, 27, 30, 255], i * 4);
+  for (const left of [true, false]) { let x0 = W, x1 = -1; for (let x = left ? 0 : W / 2; x < (left ? W / 2 : W); x++) if (wide[(fb - 4) * W + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+    const xa = left ? x0 : x1 - 24; for (let y = fb - 14; y <= fb + 3; y++) for (let x = xa; x < xa + 25; x++) { boot.fill(0, (y * W + x) * 4, (y * W + x) * 4 + 4); notch.push(y * W + x); } }
+  // thin rim lines (2 px) of the shaft ABOVE the solid boot, across the leg
+  for (let y = top0 - 20; y < top0 - 18; y++) for (let x = 0; x < W; x++) if (foot[(y + 25) * W + x] || LEGS[(y * W + x) * 4 + 3] >= 128) { const i = y * W + x; if (T.shoes.allowed[i]) boot.set([20, 20, 22, 255], i * 4); }
+  const plain = BC.fitCheck(w, base, T, "shoes", { shoes: boot }, { revision: "d218" }), hide = BC.closedFootwearHidden(base, boot), closed = BC.fitCheck(w, base, T, "shoes", { shoes: boot }, { revision: "d218", hide });
+  const g = (r, id) => r.checks.find((c) => c.id === id);
+  let footInNotch = 0, footInNotchClosed = 0; for (const i of notch) { if (plain.composite[i * 4 + 3] >= 128) footInNotch++; if (closed.composite[i * 4 + 3] >= 128) footInNotchClosed++; }
+  assert.ok(footInNotch > 50 && footInNotchClosed === 0, "the base's foot in the notch: " + footInNotch + " px shown without the covering, " + footInNotchClosed + " with it");
+  assert.ok(g(closed, "FIT-6v2-SILHOUETTE").ok && g(closed, "VIS-2-REPLACES-HIDDEN-BODY").ok && g(closed, "FIT-4-COVERAGE").ok, JSON.stringify(closed.checks.filter((c) => !c.ok)));
+  let legKept = 0, legRows = 0; for (let y = top0 - 17; y < top0 - 2; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (base.body[i * 4 + 3] >= 128 && !boot[i * 4 + 3]) { legRows++; if (!hide[i]) legKept++; } }
+  assert.ok(legRows > 100 && legKept === legRows, "the leg between the rim lines and the solid boot stays C's: " + legKept + " of " + legRows);
+  // a sandal (straps only) declared closed: the foot it hides is not replaced — VIS-2 fails; declared open it hides nothing
+  const straps = new Uint8ClampedArray(N * 4); for (let y = fb - 40; y <= fb + 6; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (wide[i] && T.shoes.allowed[i] && (y > fb - 4 || (y >= fb - 30 && y < fb - 22))) straps.set([140, 86, 46, 255], i * 4); }
+  const mis = BC.fitCheck(w, base, T, "shoes", { shoes: straps }, { revision: "d218", hide: BC.closedFootwearHidden(base, straps) });
+  assert.equal(g(mis, "VIS-2-REPLACES-HIDDEN-BODY").ok, false, JSON.stringify(g(mis, "VIS-2-REPLACES-HIDDEN-BODY").value));
+  const open = BC.regionsC(w, base, T, "shoes", { covering: "open-footwear" }); assert.equal(open.hidden({ shoes: straps }), null);
+  // the three regions: the API edit region contains the item's allowed region, never the head or the hands; the mask is its alpha
+  for (const cat of ["top", "bottom", "shoes"]) { const rg = BC.regionsC(w, base, T, cat); let lost = 0, prot = 0; for (let i = 0; i < N; i++) { if (rg.itemAllowed[i] && !rg.apiEdit[i]) lost++; if (rg.apiEdit[i] && T[cat].protect[i]) prot++; }
+    assert.deepEqual([lost, prot], [0, 0], cat); }
+  const mask = decodePng(IP.apiMaskPng(w, base, T, "bottom")).px, rb = BC.regionsC(w, base, T, "bottom"); let wrong = 0; for (let i = 0; i < N; i++) if ((mask[i * 4 + 3] === 0) !== !!rb.apiEdit[i]) wrong++; assert.equal(wrong, 0, "alpha 0 exactly on the API edit region");
+});
+// D-221: the covering rule is per category — a closed shoe must replace the whole foot below its solid top; it never passes a too
+// small, too narrow, sole-less or floating shoe, too short bottoms, and never hides a sandal's intended openings
+test("D-221: VIS-3 passes a closed shoe that replaces the whole foot; a too small or too narrow shoe, a missing sole, a floating shoe and too short bottoms fail; a sandal's openings stay C's", () => {
+  let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const top0 = Math.min(A.shoeTopY.left, A.shoeTopY.right) - 30, foot = new Uint8Array(N); for (let y = top0; y <= fb; y++) for (let x = 0; x < W; x++) if (LEGS[(y * W + x) * 4 + 3] >= 128) foot[y * W + x] = 1;
+  const paint = (m, keep = () => true) => { const o = new Uint8ClampedArray(N * 4); for (let i = top0 * W; i < N; i++) if (m[i] && T.shoes.allowed[i] && keep(i)) o.set([28, 27, 30, 255], i * 4); return o; };
+  const run = (shoe) => BC.fitCheck(w, base, T, "shoes", { shoes: shoe }, { revision: "d221", hide: BC.closedFootwearHidden(base, shoe) }), g = (r, id) => r.checks.find((c) => c.id === id);
+  const good = paint(WR.maskOps.dilate(foot, 3)), rg = run(good);
+  assert.ok(rg.fitOk, JSON.stringify(rg.checks.filter((c) => !c.ok))); assert.equal(g(rg, "VIS-3-REPLACES-WHOLE-FOOT").value.footShownPx, 0);
+  // too narrow: 4 px inside the foot on each side — the foot's own edge shows beside the shoe
+  const narrow = run(paint(WR.maskOps.erode(foot, 4))); assert.equal(g(narrow, "VIS-3-REPLACES-WHOLE-FOOT").ok, false, JSON.stringify(g(narrow, "VIS-3-REPLACES-WHOLE-FOOT").value));
+  // too small: the shoe covers only the inner 60 % of each foot's width — the toes (outer part) stick out beside it
+  const span = {}; for (let i = 0; i < N; i++) if (foot[i]) { const x = i % W, s = x < W / 2 ? "l" : "r"; span[s] = span[s] || [W, -1]; span[s][0] = Math.min(span[s][0], x); span[s][1] = Math.max(span[s][1], x); }
+  const inner = (i) => { const x = i % W, [a, b] = span[x < W / 2 ? "l" : "r"], cut = Math.round((b - a) * 0.4); return x < W / 2 ? x >= a + cut : x <= b - cut; };
+  const small = run(paint(WR.maskOps.dilate(foot, 3), inner)); assert.equal(g(small, "VIS-3-REPLACES-WHOLE-FOOT").ok, false, JSON.stringify(g(small, "VIS-3-REPLACES-WHOLE-FOOT").value));
+  // a missing sole (the bottom 20 rows cut away) and the same shoe floating 20 px: the shoe no longer reaches the ground
+  const soleless = run(paint(WR.maskOps.dilate(foot, 3), (i) => ((i / W) | 0) <= fb + 3 - 20)); assert.equal(g(soleless, "FIT-7v2-GROUND").ok, false, JSON.stringify(g(soleless, "FIT-7v2-GROUND").value));
+  const lift = (S, dy) => { const o = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const j = i + dy * W; if (j >= 0 && j < N) o.set(S.subarray(j * 4, j * 4 + 4), i * 4); } return o; };
+  const floating = run(lift(good, 20)); assert.equal(g(floating, "FIT-7v2-GROUND").ok, false, JSON.stringify(g(floating, "FIT-7v2-GROUND").value));
+  // too short bottoms under d221 (D-205's stand-in): the base interior shows — FIT-4
+  const S = standInItems(w, base), short = BC.fitCheck(w, base, T, "bottom", S["FAULT-shorts-too-short"].layers, { revision: "d221" });
+  assert.equal(g(short, "FIT-4-COVERAGE").ok, false, JSON.stringify(g(short, "FIT-4-COVERAGE").value));
+  // a sandal (open footwear) hides nothing: the foot between its straps stays C's, VIS-3 is never applied to it
+  const straps = new Uint8ClampedArray(N * 4), wide = WR.maskOps.dilate(foot, 3); for (let y = fb - 40; y <= fb + 6; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (wide[i] && T.shoes.allowed[i] && (y > fb - 4 || (y >= fb - 30 && y < fb - 22))) straps.set([140, 86, 46, 255], i * 4); }
+  const hideOpen = BC.regionsC(w, base, T, "shoes", { covering: "open-footwear" }).hidden({ shoes: straps }); assert.equal(hideOpen, null);
+  const sandal = BC.fitCheck(w, base, T, "shoes", { shoes: straps }, { revision: "d221", hide: hideOpen }); let between = 0;
+  for (let y = fb - 21; y <= fb - 5; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (foot[i] && base.body[i * 4 + 3] >= 128 && sandal.composite[i * 4 + 3] >= 128 && !straps[i * 4 + 3]) between++; }
+  assert.ok(between > 100, "the foot shows between the straps: " + between + " px"); assert.equal(g(sandal, "VIS-3-REPLACES-WHOLE-FOOT"), undefined);
+});
+test("D-221 records results under a new method version: the D-207 raws and outcomes stay as recorded, no image call, no automatic approval", () => {
+  const RES = JSON.parse(readFileSync(repoFile("tools/avatar/fixtures/northstar-wardrobe/item-method-results-d221.json"), "utf8"));
+  assert.deepEqual([RES.decision, RES.recordsResultsOnly, RES.rewritesD207, RES.imageCalls], ["D-221", true, false, 0]); assert.match(RES.note, /not visual approval/);
+  for (const [item, r] of Object.entries(RES.items)) { const sent = CALLS.calls.filter((e) => e.item === item && e.result && e.result.imageSha256);
+    assert.equal(sent.length, 1, item); assert.equal(r.rawSha256, sent[0].result.imageSha256, item + ": the unchanged D-207 raw"); assert.equal(r.d207Outcome, sent[0].outcome, item + ": D-207's outcome as recorded"); }
+  assert.deepEqual(RES.conclusion, { localCompositionResolves: ["shoes-sneakers-white", "shoes-boots-black"], notMissingMaterialButGateUnchanged: ["bottom-skirt-plum"], needsNewImageMaterial: ["shoes-sandals-brown"] });
+  assert.equal(REGISTER.split("\n").filter((l) => l.startsWith("| **D-221** |")).length, 1);
 });
 test("the 27 outfits mark missing and failed items and never hide them", () => {
   const ok = IP.processItem(w, base, T, "bottom", NL.overStack([LEGS, recolour(only(2), { h: 120, s: 0.5 })]));
