@@ -107,13 +107,15 @@ test("the server stays inside its root and refuses an unrewritten production ref
   }
 });
 
-test("the PoC workflow: no secrets, no shared lock, guard first, no production URL", () => {
-  const wf = read(".github/workflows/isolated-e2e-poc.yml");
+test("the isolated workflow: no secrets, no repository variable, no shared lock, guard first, no production URL", () => {
+  const wf = read(".github/workflows/isolated-e2e.yml");
   assert.ok(!wf.includes("secrets."), "the isolated workflow must not reference any secret");
   assert.ok(!wf.includes("vars."), "nor any repository variable (PROD_BASE_URL lives there)");
   assert.ok(!wf.includes("e2e-shared-supabase"), "it must not take the shared E2E lock");
-  assert.ok(!/supabase\.co|xn--lrlig-sra|lærlig/.test(wf.replace(/supabase\.co"/g, "").split("\n").filter((l) => !l.trim().startsWith("#") && !l.includes("grep -q \"supabase.co\"")).join("\n")));
-  const steps = wf.split("\n      - ").slice(1);
+  const code = wf.split("\n").filter((l) => !l.trim().startsWith("#") && !l.includes('grep -q "supabase.co"')).join("\n");
+  assert.ok(!/supabase\.co|xn--lrlig-sra|lærlig/.test(code), "no production host outside comments and the negative bundle check");
+  const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
+  const steps = job.split("\n      - ").slice(1);
   const firstRun = steps.findIndex((s) => s.includes("run:"));
   assert.ok(steps[firstRun].startsWith("name: Guard"), "the guard is the first step that runs anything");
   assert.match(wf, /permissions:\n  contents: read/);
@@ -138,20 +140,33 @@ test("the egress blackhole covers the production project, the site, mail and AI 
   assert.ok(lines.every((l) => /^0\.0\.0\.0 [a-z0-9.-]+$/.test(l)));
 });
 
-test("no false green: no continue-on-error, schema validation is its own failing-visible job", () => {
-  const wf = read(".github/workflows/isolated-e2e-poc.yml");
+test("no false green, and the order that makes the job fail-closed", () => {
+  const wf = read(".github/workflows/isolated-e2e.yml");
   assert.ok(!wf.includes("continue-on-error"), "a failing step must never be masked");
-  const smoke = wf.slice(wf.indexOf("\n  isolated-smoke:\n"), wf.indexOf("\n  schema-replay:\n"));
-  const replay = wf.slice(wf.indexOf("\n  schema-replay:\n"));
-  assert.ok(smoke.length > 0 && replay.length > 0);
-  assert.ok(smoke.includes("prototype — no app schema"), "the smoke job's name says what it does NOT test");
-  assert.ok(!smoke.includes("db reset") && smoke.includes('mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"'),
-    "the smoke job runs on a bare stack and does not claim schema coverage");
-  assert.ok(replay.includes("exit $rc"), "the replay job fails when the replay fails");
-  for (const job of [smoke, replay]) {
-    const guard = job.indexOf("Guard — refuse anything that is not isolated");
-    const egress = job.indexOf("node tests/isolated/egress-blackhole.mjs --verify");
-    const firstSupabase = job.indexOf("supabase start");
-    assert.ok(guard > 0 && egress > guard && firstSupabase > egress, "guard, then verified egress block, then the stack");
+  assert.ok(!/\|\|\s*true/.test(wf.split("Diagnostics (on failure)")[0].split("Stop local Supabase")[0].replace(/curl[^\n]*\|\| true\)/g, "")),
+    "no `|| true` before the diagnostics, except around curl probes that are evaluated afterwards");
+  const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
+  const at = (s) => { const i = job.indexOf(s); assert.ok(i > 0, s); return i; };
+  const order = [
+    "Guard — refuse anything that is not isolated",
+    "node tests/isolated/egress-blackhole.mjs --verify",
+    "supabase start",
+    "bootstrapMarkerSql",
+    "node tests/isolated/schema/replay.mjs",
+    "node tests/isolated/seed/seed.mjs",
+    "supabase functions serve",
+    "egress-firewall.sh lock",
+    "egress-firewall.sh verify",
+    "playwright.isolated.config.mjs",
+    "node tests/isolated/run-suite.mjs",
+  ].map(at);
+  for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `step ${i} in order`);
+  // Tests run as the locked-down user, never as the runner user.
+  for (const line of job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l))) {
+    assert.ok(/sudo -E -u "\$ISOLATED_USER"/.test(line) || /^\s+(npx playwright test|node tests\/isolated\/run-suite)/.test(line), line);
   }
+  assert.equal((job.match(/sudo -E -u "\$ISOLATED_USER"/g) || []).length, 2);
+  // Matrix: each run is its own job (own runner, own stack); no fail-fast cancelling a sibling.
+  assert.match(job, /fail-fast: false/);
+  assert.match(job, /run: \$\{\{ fromJSON\(needs\.plan\.outputs\.runs\) \}\}/);
 });

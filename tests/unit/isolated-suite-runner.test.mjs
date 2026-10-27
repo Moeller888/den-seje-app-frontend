@@ -1,0 +1,101 @@
+// D-110: the existing Playwright suite runs against the isolated stack only through
+// tests/isolated/run-suite.mjs, which builds the suite's environment from the local stack and refuses
+// anything else; every browser goes through a refusing tripwire proxy.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { request } from "node:http";
+import { connect } from "node:net";
+import { readFileSync } from "node:fs";
+import { buildSuiteEnv, suiteViolations, SUITE_VARS } from "../isolated/run-suite.mjs";
+import { startTripwire } from "../isolated/tripwire-proxy.mjs";
+import { workerRoute } from "../isolated/serve-build.mjs";
+import { isolationViolations, FORBIDDEN_VARS } from "../isolated/isolation-guard.mjs";
+
+const RUNNER = Object.freeze({
+  ISOLATED_E2E: "1",
+  ISOLATED_BASE_URL: "http://127.0.0.1:8788",
+  ISOLATED_SUPABASE_URL: "http://127.0.0.1:54321",
+  ISOLATED_SUPABASE_ANON_KEY: "local-anon-key-0123456789abcdef",
+  ISOLATED_SUPABASE_SERVICE_KEY: "local-service-key-0123456789abcdef",
+  PATH: "/usr/bin",
+});
+const TRIP = "http://127.0.0.1:41234";
+
+test("the runner environment itself passes the isolation guard (no suite variable present yet)", () => {
+  assert.deepEqual(isolationViolations(RUNNER), []);
+});
+
+test("buildSuiteEnv: suite variables point at the local stack, synthetic accounts, generated passwords", () => {
+  const env = buildSuiteEnv(RUNNER, { runId: "abcd1234", tripwire: TRIP });
+  assert.equal(env.PROD_BASE_URL, RUNNER.ISOLATED_BASE_URL);
+  assert.equal(env.SUPABASE_URL, RUNNER.ISOLATED_SUPABASE_URL);
+  assert.equal(env.SUPABASE_SERVICE_ROLE_KEY, RUNNER.ISOLATED_SUPABASE_SERVICE_KEY);
+  assert.equal(env.SUPABASE_PUBLISHABLE_KEY, RUNNER.ISOLATED_SUPABASE_ANON_KEY);
+  assert.equal(env.TEST_STUDENT_EMAIL, "pupil-abcd1234@e2e.invalid");
+  assert.equal(env.TEST_TEACHER_EMAIL, "teacher-abcd1234@e2e.invalid");
+  assert.equal(env.TEST_STUDENT2_EMAIL, "pupil2-abcd1234@e2e.invalid");
+  for (const v of ["TEST_STUDENT_PASSWORD", "TEST_TEACHER_PASSWORD", "TEST_STUDENT2_PASSWORD"]) assert.ok(env[v].length >= 24, v);
+  assert.notEqual(env.TEST_STUDENT_PASSWORD, env.TEST_TEACHER_PASSWORD, "independent passwords");
+  assert.notEqual(buildSuiteEnv(RUNNER, { tripwire: TRIP }).TEST_STUDENT_PASSWORD, env.TEST_STUDENT_PASSWORD, "fresh per run");
+  assert.deepEqual(suiteViolations(env), []);
+});
+
+test("buildSuiteEnv drops E2E_SLOT: production account slots never apply to an isolated run", () => {
+  assert.equal("E2E_SLOT" in buildSuiteEnv({ ...RUNNER, E2E_SLOT: "2" }, { tripwire: TRIP }), false);
+});
+
+const bad = (mut) => { const env = buildSuiteEnv(RUNNER, { tripwire: TRIP }); mut(env); return suiteViolations(env); };
+
+test("suiteViolations refuses every way the suite could reach production or a real account", () => {
+  assert.ok(bad((e) => { e.PROD_BASE_URL = "https://xn--lrlig-sra.dk"; }).length > 0);
+  assert.ok(bad((e) => { e.SUPABASE_URL = "https://example.org"; }).some((v) => v.startsWith("SUPABASE_URL")));
+  assert.ok(bad((e) => { e.TEST_TEACHER_EMAIL = "teacher-test@hotmail.com"; }).some((v) => v.startsWith("TEST_TEACHER_EMAIL")));
+  assert.ok(bad((e) => { e.TEST_STUDENT_PASSWORD = "short"; }).some((v) => v.startsWith("TEST_STUDENT_PASSWORD")));
+  assert.ok(bad((e) => { e.SUPABASE_SERVICE_ROLE_KEY = "some-other-service-key-0123456789"; }).some((v) => v.startsWith("SUPABASE_SERVICE_ROLE_KEY")));
+  assert.ok(bad((e) => { e.RESEND_API_KEY = "x"; }).includes("RESEND_API_KEY must not be set"));
+  assert.ok(bad((e) => { e.OPENAI_API_KEY = "x"; }).includes("OPENAI_API_KEY must not be set"));
+  assert.ok(bad((e) => { e.SOMETHING = "postgres://db.tjzbehwfagiwpwodsgwg.supabase.co"; }).includes("SOMETHING refers to a production host or project"));
+  assert.ok(bad((e) => { e.ISOLATED_TRIPWIRE_PROXY = "http://10.0.0.5:3128"; }).length > 0);
+  assert.ok(bad((e) => { delete e.ISOLATED_SUITE; }).length > 0);
+});
+
+test("only the suite's own variable names are exempt from FORBIDDEN_VARS, and only in the suite environment", () => {
+  const exempt = FORBIDDEN_VARS.filter((v) => SUITE_VARS.includes(v)).sort();
+  assert.deepEqual(exempt, ["PROD_BASE_URL", "TEST_STUDENT2_PASSWORD", "TEST_STUDENT_PASSWORD", "TEST_TEACHER_PASSWORD"]);
+  // The runner's own environment must still not carry them.
+  assert.ok(isolationViolations({ ...RUNNER, PROD_BASE_URL: "http://127.0.0.1:8788" }).includes("PROD_BASE_URL must not be set in an isolated run"));
+});
+
+test("the tripwire refuses and records plain HTTP and CONNECT (HTTPS) requests, host only", async () => {
+  const t = await startTripwire();
+  const port = Number(new URL(t.url).port);
+  const status = await new Promise((ok, ko) => {
+    const r = request({ host: "127.0.0.1", port, method: "GET", path: "http://example.org/secret/path?x=1" }, (res) => { res.resume(); ok(res.statusCode); });
+    r.on("error", ko); r.end();
+  });
+  assert.equal(status, 403);
+  const reply = await new Promise((ok, ko) => {
+    const s = connect(port, "127.0.0.1", () => s.write("CONNECT api.openai.com:443 HTTP/1.1\r\nHost: api.openai.com:443\r\n\r\n"));
+    let buf = ""; s.on("data", (d) => { buf += d; }); s.on("end", () => ok(buf)); s.on("error", ko);
+  });
+  assert.match(reply, /^HTTP\/1\.1 403/);
+  assert.deepEqual(t.hits, ["example.org", "api.openai.com:443"]);
+  await t.close();
+});
+
+test("the bundle server answers the Worker's dynamic routes exactly like the Worker without Azure or R2", () => {
+  assert.deepEqual(workerRoute("POST", "/api/tts"), { status: 503, body: { error: "azure_not_configured" } });
+  assert.deepEqual(workerRoute("GET", "/api/tts"), { status: 405, body: { error: "method_not_allowed" } });
+  assert.deepEqual(workerRoute("GET", "/tts/v1/" + "a".repeat(64) + ".mp3"), { status: 503, body: { error: "tts_not_configured" } });
+  assert.equal(workerRoute("GET", "/login.html"), null);
+  const worker = readFileSync(new URL("../../worker/index.js", import.meta.url), "utf8");
+  assert.match(worker, /azure_not_configured: 503/);
+  assert.match(worker, /if \(!env\.TTS_BUCKET\) return json\(503, \{ error: "tts_not_configured" \}\)/);
+});
+
+test("the suite config refuses unless started by the runner, and proxies every browser project", () => {
+  const cfg = readFileSync(new URL("../isolated/playwright.suite.config.ts", import.meta.url), "utf8");
+  assert.match(cfg, /process\.env\.ISOLATED_SUITE !== "1"/);
+  assert.match(cfg, /\^http:\\\/\\\/127\\\.0\\\.0\\\.1:\\d\+\$/);
+  assert.match(cfg, /projects: \(base\.projects \?\? \[\]\)\.map\(\(p\) => \(\{ \.\.\.p, use: \{ \.\.\.\(p\.use \?\? \{\}\), proxy \} \}\)\)/);
+});

@@ -36,8 +36,27 @@ export function resolveInside(root, urlPath) {
   return abs.startsWith(rootAbs) ? abs : null;
 }
 
+// The production Worker (worker/index.js) answers two dynamic routes before the asset layer:
+// POST /api/tts and GET /tts/v<N>/…. Isolated runs have no Azure key and no R2 bucket, so this server
+// answers both exactly as the Worker does in that state — 503 azure_not_configured /
+// tts_not_configured — and the frontend takes its fail-soft path (no 🔊). No request ever leaves the
+// runner; read-aloud SUCCESS is therefore not covered by the isolated suite.
+export function workerRoute(method, pathname) {
+  if (pathname === "/api/tts") {
+    return method === "POST" ? { status: 503, body: { error: "azure_not_configured" } } : { status: 405, body: { error: "method_not_allowed" } };
+  }
+  if (/^\/tts\/v\d+\//.test(pathname)) return { status: 503, body: { error: "tts_not_configured" } };
+  return null;
+}
+
 export function startServer({ root, port, supabaseUrl, anonKey }) {
   const server = createServer((req, res) => {
+    const worker = workerRoute(req.method, (req.url || "/").split("?")[0]);
+    if (worker) {
+      res.writeHead(worker.status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify(worker.body));
+      return;
+    }
     const file = resolveInside(root, req.url || "/");
     if (!file || !existsSync(file) || !statSync(file).isFile()) { res.writeHead(404); res.end("not found"); return; }
     const ext = extname(file).toLowerCase();

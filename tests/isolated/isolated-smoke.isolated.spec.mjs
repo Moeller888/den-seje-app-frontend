@@ -7,7 +7,7 @@
 // isolated backend; sign-in goes to the local Auth; a mail-producing Auth flow lands in the local
 // mail catcher, never in a real inbox. It does NOT yet prove the app's data flows — those need the
 // application schema, which the repository cannot reproduce today (D-110; see the replay step in
-// .github/workflows/isolated-e2e-poc.yml).
+// .github/workflows/isolated-e2e.yml).
 import { test, expect } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { assertIsolated, installProdTripwire, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";

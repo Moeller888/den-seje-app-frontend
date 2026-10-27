@@ -1,0 +1,202 @@
+name: Isolated E2E
+# D-110 — the EXISTING Playwright suite against a throwaway local Supabase stack, per job, with no shared
+# database, no shared E2E lock, no production account, secret or repository variable.
+#
+# Every matrix entry is a complete, independent environment on its own runner: its own Postgres
+# (schema built from the repository: tests/isolated/schema/), its own Auth with synthetic @e2e.invalid
+# accounts, its own Edge Runtime serving the repository's Edge Functions, its own mail catcher. N
+# entries run at the same time and share nothing — that is the whole point (nine terminals, nine PRs).
+#
+# Fail-closed towards production, in layers:
+#   guard        tests/isolated/isolation-guard.mjs refuses any environment that names production,
+#                carries a provider key or a production secret NAME;
+#   hosts        production and provider host names resolve to 0.0.0.0 on the runner;
+#   firewall     after all downloads, the test user and every container may reach loopback and
+#                private (Docker) addresses only — verified, or the job fails;
+#   tripwire     every browser goes through a refusing proxy; one request fails the run;
+#   seed guard   schema and seed run only against the database carrying this run's token and id.
+# Providers: no OpenAI/Azure/Resend key exists here. Edge Functions take their "not configured" paths;
+# the bundle server answers /api/tts like the Worker without an Azure key (503 azure_not_configured).
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "tests/isolated/**"
+      - ".github/workflows/isolated-e2e.yml"
+  push:
+    branches: [ "d110/**" ]
+  workflow_dispatch:
+    inputs:
+      parallel:
+        description: "Independent isolated runs at the same time"
+        type: choice
+        options: [ "1", "3", "9" ]
+        default: "3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ISOLATED_E2E: "1"
+  ISOLATED_BASE_URL: http://127.0.0.1:8788
+  ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
+  ISOLATED_MAIL_URL: http://127.0.0.1:54324
+  ISOLATED_USER: e2eiso
+  PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      runs: ${{ steps.n.outputs.runs }}
+    steps:
+      - id: n
+        env:
+          PARALLEL: ${{ github.event.inputs.parallel }}
+        run: |
+          n="${PARALLEL:-3}"
+          case "$n" in 1|3|9) ;; *) echo "invalid parallel: $n" >&2; exit 1 ;; esac
+          echo "runs=$(node -e "console.log(JSON.stringify(Array.from({length: $n}, (_, i) => i + 1)))")" >> "$GITHUB_OUTPUT"
+
+  isolated-e2e:
+    needs: plan
+    name: isolated-e2e (run ${{ matrix.run }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        run: ${{ fromJSON(needs.plan.outputs.runs) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Guard — refuse anything that is not isolated
+        run: |
+          node --input-type=module -e "import('./tests/isolated/isolation-guard.mjs').then(m => { m.assertIsolated(process.env); console.log('isolation guard: OK'); })"
+
+      - name: Egress — blackhole production and provider host names
+        run: |
+          set -euo pipefail
+          node tests/isolated/egress-blackhole.mjs --hosts-lines | sudo tee -a /etc/hosts > /dev/null
+          node tests/isolated/egress-blackhole.mjs --verify
+
+      - name: Install dependencies and browsers
+        run: |
+          set -euo pipefail
+          npm ci
+          sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH" && sudo chown "$USER" "$PLAYWRIGHT_BROWSERS_PATH"
+          npx playwright install --with-deps chromium firefox webkit
+          docker pull curlimages/curl:8.11.1 > /dev/null
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      - name: Start a bare local Supabase (no migrations, no Edge Runtime yet)
+        id: start
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/held-migrations"
+          mv supabase/migrations/* "$RUNNER_TEMP/held-migrations/"
+          t0=$(date +%s)
+          supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,postgres-meta,edge-runtime
+          mv "$RUNNER_TEMP/held-migrations/"* supabase/migrations/
+          echo "start_seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+          supabase status -o env > "$RUNNER_TEMP/stack.env"
+          get() { grep -E "^($1)=" "$RUNNER_TEMP/stack.env" | head -1 | cut -d= -f2- | tr -d '"'; }
+          anon=$(get 'ANON_KEY|PUBLISHABLE_KEY'); service=$(get 'SERVICE_ROLE_KEY|SECRET_KEY'); db=$(get 'DB_URL')
+          echo "::add-mask::$anon"; echo "::add-mask::$service"
+          {
+            echo "ISOLATED_SUPABASE_ANON_KEY=$anon"
+            echo "ISOLATED_SUPABASE_SERVICE_KEY=$service"
+            echo "ISOLATED_DB_URL=$db"
+          } >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/stack.env"
+
+      - name: Bootstrap — mark this run's database (token + cluster id), enable pg_cron
+        run: |
+          set -euo pipefail
+          token=$(openssl rand -hex 32)
+          echo "::add-mask::$token"
+          node --input-type=module -e "import('./tests/isolated/seed/seed-guard.mjs').then(m => process.stdout.write(m.bootstrapMarkerSql(process.argv[1])))" "$token" \
+            | psql "$ISOLATED_DB_URL" -X -q -v ON_ERROR_STOP=1 -f -
+          psql "$ISOLATED_DB_URL" -X -q -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_cron;"
+          sysid=$(psql "$ISOLATED_DB_URL" -X -A -t -c "SELECT system_identifier FROM pg_control_system()")
+          { echo "ISOLATED_DB_TOKEN=$token"; echo "ISOLATED_DB_SYSID=$sysid"; } >> "$GITHUB_ENV"
+
+      - name: Schema — CI baseline, CI stubs and the replay plan (fails on any error)
+        run: node tests/isolated/schema/replay.mjs --db-url "$ISOLATED_DB_URL" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Seed — synthetic questions (INSERT-only, behind the target check)
+        run: node tests/isolated/seed/seed.mjs --db-url "$ISOLATED_DB_URL"
+
+      - name: Edge Functions — serve this commit's functions locally, warm every module
+        run: |
+          set -euo pipefail
+          nohup supabase functions serve > "$RUNNER_TEMP/functions.log" 2>&1 &
+          for i in $(seq 1 90); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS "$ISOLATED_SUPABASE_URL/functions/v1/get-next-question" || true)
+            [ "$code" != "000" ] && [ "$code" != "502" ] && [ "$code" != "503" ] && break
+            sleep 2
+          done
+          for d in supabase/functions/*/; do
+            fn=$(basename "$d"); [ -f "$d/index.ts" ] || continue
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 120 -X OPTIONS "$ISOLATED_SUPABASE_URL/functions/v1/$fn" || true)
+            echo "warm $fn: $code"
+          done
+
+      - name: Build this commit's deploy bundle and serve it on loopback
+        run: |
+          set -euo pipefail
+          node tools/cloudflare-build-static.mjs
+          nohup node tests/isolated/serve-build.mjs > "$RUNNER_TEMP/serve.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
+          curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "$ISOLATED_SUPABASE_URL"
+          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
+
+      - name: Network lock — test user and containers reach loopback/private only (verified)
+        run: |
+          set -euo pipefail
+          sudo useradd --create-home --shell /bin/bash "$ISOLATED_USER"
+          sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
+          bash tests/isolated/egress-firewall.sh lock
+          bash tests/isolated/egress-firewall.sh verify
+
+      - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
+        run: |
+          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" \
+            npx playwright test -c tests/isolated/playwright.isolated.config.mjs
+
+      - name: Existing Playwright suite against the isolated stack
+        id: suite
+        run: |
+          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" \
+            node tests/isolated/run-suite.mjs
+
+      - name: Diagnostics (on failure)
+        if: failure()
+        run: |
+          tail -80 "$RUNNER_TEMP/functions.log" || true
+          tail -40 "$RUNNER_TEMP/serve.log" || true
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-report-run-${{ matrix.run }}
+          path: |
+            playwright-report-isolated/
+            test-results-isolated/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup || true
