@@ -385,7 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Northstar independent validation — D-235: six new frozen calls authorised, not executed.**
+- **Northstar independent validation results — D-238: six new calls sent, decision: targeted correction.**
+  - **Result.** Under d232 as frozen, all six new items are technically OK (T 6/6) and 30 of 48 planned outfits pass (K 30;
+    missing and rejected stay in the denominator). There are two manual findings, both in the black trousers (skin-coloured
+    pieces along the hem; a notch at the hips). Contract v2 is met in full by none (C 0/6).
+  - **Rule.** The pre-registered rule gives a targeted correction as a new method version, then a new small independent test.
+    The candidates are COMBO-1d without the limb exit (all 12 N2 outfits), dark-outline and hem-antialias extraction, and
+    SC-W4 on black fabric. See `docs/decisions/D-238.md`.
+- **Northstar independent validation — D-235: six new frozen calls authorised, executed and closed by D-238.**
   - **Why.** D-232's 38/40 re-evaluated pictures that shaped the method. D-235 tests d232 and seam-contract-v2 on six new
     designs: two tops, two bottoms and two closed shoes (three light, skin-near; three dark).
   - **Frozen.** Method d232 is pinned with its definition and code. Image 2 is the v2 sheet; the shoe sheet is D-228's. The
