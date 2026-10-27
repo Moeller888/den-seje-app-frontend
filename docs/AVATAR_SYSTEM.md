@@ -385,6 +385,243 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar independent validation results — D-238: six new calls sent, decision: targeted correction.**
+  - **Result.** Under d232 as frozen, all six new items are technically OK (T 6/6) and 30 of 48 planned outfits pass (K 30;
+    missing and rejected stay in the denominator). There are two manual findings, both in the black trousers (skin-coloured
+    pieces along the hem; a notch at the hips). Contract v2 is met in full by none (C 0/6).
+  - **Rule.** The pre-registered rule gives a targeted correction as a new method version, then a new small independent test.
+    The candidates are COMBO-1d without the limb exit (all 12 N2 outfits), dark-outline and hem-antialias extraction, and
+    SC-W4 on black fabric. See `docs/decisions/D-238.md`.
+- **Northstar independent validation — D-235: six new frozen calls authorised, executed and closed by D-238.**
+  - **Why.** D-232's 38/40 re-evaluated pictures that shaped the method. D-235 tests d232 and seam-contract-v2 on six new
+    designs: two tops, two bottoms and two closed shoes (three light, skin-near; three dark).
+  - **Frozen.** Method d232 is pinned with its definition and code. Image 2 is the v2 sheet; the shoe sheet is D-228's. The
+    prompts are D-207's template plus v2's (= v1's) instructions; only the garments are new. A 48-outfit matrix with old d232-OK
+    items counts missing and rejected items in the denominator.
+  - **Acceptance.** Five axes are kept apart (technical, contract, combination fit, manual findings, visual quality). The
+    pre-registered decision is a larger batch, a targeted correction, or a fundamental method change. Adapter:
+    `openai-send-northstar-independent-d235.mjs`. Sending needs the owner's separate instruction. See
+    `docs/decisions/D-235.md`.
+- **Northstar limits corrected — D-232: method d232 and seam-contract-v2 (no calls).**
+  - **Limb exit.** A contour line hanging below a hem or a cuff leaves the item, and FIT-6v2 reports a limb leaving a garment at
+    its end. D-231's V2 cuff "pass" was the hanging contour.
+  - **Colours.** A skin shadow shifts the hue no more than C's own shading, so orange fabric is fabric. G-2 compares chroma, so
+    dark olive is not grey.
+  - **Hip lanes.** These are re-derived from the outfit check: top ≥ + 6, bottoms ≤ + 6 (v1: + 8 / + 3).
+  - **Result.** The pilot's statuses are unchanged; three khaki + boots outfits now pass the check. The D-228 matrix has
+    11/11 items technically OK and 38/40 outfits pass (only V1 + V5, as predicted). D-231's verdict stands.
+
+    See `docs/decisions/D-232.md`.
+- **Northstar seam validation results — D-231: six calls sent, verdict partial.**
+  - **Sent.** V1 … V6 once each, with no stop. D-228 is closed and no further calls follow. Method d225 on the 40-outfit
+    matrix; two runs were byte-identical.
+  - **Result.** Technically OK: the hip tee V1 (the first top to cover the hip corners) and the ankle boot V6. V2–V5 are
+    rejected on FIT-6v2 strips at a hem or cuff corner. Q1 0/6, Q2 1/2, Q3 8/8 available outfits; the frozen rule gives partial.
+  - **Reading.** The seams between categories held: one seam fault in 40 diagnostic outfits (V1 + V5 at the hip, which
+    SC-W6 predicts). What blocks now:
+    - edge corners a few px narrower than C's limbs;
+    - extraction of skin-like and dark colours;
+    - hip width and long hems; SC-W6 is stricter than needed.
+
+    See `docs/decisions/D-231.md`.
+- **Northstar seam validation — D-228: six frozen calls authorised (executed and closed by D-231).**
+  - **Request.** One call per item of D-225's plan (V1 … V6), in order, with the model of D-207 and D-218 unchanged. Image 1 is
+    C. Image 2 is the category's C-derived reference sheet (seam zones as colour marks, `--seam-reference`, local only). Each
+    frozen prompt is D-207's template plus the contract's `modelDraws` plus one sentence explaining the sheet.
+  - **Adapter.** `openai-send-northstar-seam-d228.mjs`: one-shot claims and at most 6 calls, with no reserve or retry. Order
+    and stop rules are structural: credit, uncertain dispatch, request shape, format, a second moderation block, or a stop file.
+  - **Acceptance.** Frozen before sending: technical, contract, combination fit and visual quality are reported apart, with a
+    pre-registered verdict (Q1–Q3) and the 40-outfit reuse matrix. Sending needs the owner's separate instruction. See
+    `docs/decisions/D-228.md`.
+- **Northstar seam contract — D-225: seam-contract-v1 between categories on C (no calls).**
+  - **Stations.** Tops end on C's waist line or at a hip station W + [18, 48], cover the hip corners and overhang the hips.
+    Bottoms start at C's base shorts, draw no line between W + 12 and W + 54, and are cropped (hem ≤ A − 68) or full
+    (A + [6, 12], square, leg ± 10). Shoes cover up to the ankle, with no shaft above A − 56, within leg ± 8. Long sleeves end in
+    the cuff band.
+  - **Tools.** `contractCheck`, `seamLines`, and TEMPLATE items (`northstar-seam-templates.mjs`). The outfit check's double
+    contour now covers 3 px gaps (revision d225); method d225.
+  - **Evidence.** 12 of 12 compliant template outfits pass on the stand-in and on C. Of the pilot items only the sneakers comply.
+    The contract explains F-006, F-007 and F-010 to F-012.
+  - **Next.** A six-item validation plan; authorised as six frozen calls by D-228 (not executed). See `docs/decisions/D-225.md`.
+- **Northstar outfits on C — D-223: outfit check at the seams, method d223, findings register (no calls).**
+  - **Outfit check.** `outfitCheck` covers background through a seam between two categories, holes, missing overlap, a cut in one
+    garment, double contours and order; corners are only reported. It does not require C's base silhouette.
+  - **Fix.** The tee + khaki hip slit came from two shared extraction rules (the top's leftover base rim; the bottoms' outline over
+    another base). d223 fixes both without masks or painting.
+  - **Register.** `findings-register.json` holds 12 findings; an open one keeps an item or outfit from being ready.
+  - **Result.** 10 of 18 outfits are technically OK, 3 more are OK with an open finding, and 5 are rejected (khaki + boots and
+    sweater + skirt seams). Two runs were byte-identical.
+  - See `project-state.md` **D-223**.
+- **Northstar item method — D-222: one pipeline, reproducible; method d222 (no calls).**
+  - **Entry.** `northstar-item-pilot.mjs --run <manifest>`: layers, skin shadow, body visibility, checks and review pictures
+    per item, then every outfit of technically passed items. Method, C, raws and code are pinned in `run.json`; two runs were
+    byte-identical.
+  - **Check fixes.** FIT-4 is measured against C's own exterior, and FIT-6v2 judges crossings by their shape (compact vs.
+    elongated). The skirt now passes; holes, too short bottoms and double contours still fail.
+  - **Extraction.** The skin shadow is judged by luminance, and the contour antialias over skin is unmixed. The khaki hem's
+    orange specks over boots went from 33 px to 7 px.
+  - **Result.** 8 of 9 items pass technically; the sandals are still rejected. 18 outfits are packaged.
+  - **Open.** A tee + khaki hip slit was found by manual review; no check runs on combinations yet.
+  - See `project-state.md` **D-222**.
+- **Northstar item method — D-221: the D-218 covering rule on the original D-207 raws (no calls).**
+  - **Sneakers and boots.** Resolved by local composition: under closed-footwear covering + VIS-3 both pass technically.
+    The rejections were the body's visibility, not missing shoe material.
+  - **Skirt.** The flagged strip is the picture's own thigh contour at the hem corner, not missing fabric. The gates are
+    unchanged, so the skirt stays rejected; changing a gate is an owner decision.
+  - **Sandals.** Need new image material: the generated foot is narrower than C's, and an open sandal hides nothing.
+  - **Records.** Results are recorded under a new method version (`item-method-results-d221.json`); D-207's outcomes are
+    unchanged and nothing is approved automatically.
+  - See `project-state.md` **D-221**.
+- **Northstar item method — D-218 (prepared, no calls): masked edit + controlled composition.**
+  - **Masks.** A GPT Image mask is guidance only (OpenAI), so C is preserved by local composition.
+  - **Three regions.** API mask, item allowed region and body visibility.
+  - **Closed footwear.** It hides the foot from the shoe's solid top down; VIS-2 makes the shoe replace what it hides.
+  - **Experiment.** Plan of 3 calls (skirt, sandals, sneakers control), not authorised.
+  - See `project-state.md` **D-218**.
+- **Northstar clothing pilot — D-217: the sneakers were generated and rejected (an instep arch); the pilot's sending is complete.**
+  - **Calls.** 11 of 12 used.
+  - **Passed.** Tank, tee, sweater, shorts and khaki trousers.
+  - **Rejected.** Sandals, boots, skirt and sneakers. Every rejection sits where the garment ends against the body.
+  - See `project-state.md` **D-217**.
+- **Northstar clothing pilot — D-216: the boots and the skirt (reserve) were generated and are both TECHNICAL_REJECT.**
+  - **Boots.** The heel arch shows C's bare heel.
+  - **Skirt.** A thigh contour shows at the hem corner.
+  - **Extraction fix.** Enclosed holes of a garment come from the picture unless they show the body (dark boots).
+  - **Sneakers.** A reserve is assigned; it needs its own execution message.
+  - **Calls.** 10 of 12 used.
+  - See `project-state.md` **D-216**.
+- **Northstar clothing pilot — D-215: the sneakers' call again got HTTP 429 (no credit) after the owner's confirmation;
+  sending stopped.**
+  - **Calls.** 8 of 12 used. The boots and the skirt's reserve are unspent and prepared.
+  - **Results.** Unchanged from D-214.
+  - See `project-state.md` **D-215**.
+- **Northstar clothing pilot — D-214: reusable items; skin shadows are their own multiply layer; sandals parked; one
+  reserve assigned to the skirt (bounded amendment for HTTP 429 without an image).**
+  - **Cross-skin-tone reuse.** Unproven: there is no approved recolouring of C (D-132/D-040). The fabric layers hold
+    practically no skin.
+  - **Prepared, not sent.** Sneakers, boots and the skirt's reserve wait for confirmed credit.
+  - See `project-state.md` **D-214**.
+- **Northstar clothing pilot — D-213: post-processing made robust at collars, cuffs and open footwear (no image calls).**
+  - **Cuffs.** The hand guard for tops starts at C's own wrist, and G-3 flags paint over the hand.
+  - **Collar.** The edge rule respects the head.
+  - **Head seam.** The D-201 head seam in the runtime composite removes the pale neck line.
+  - **Results.** Five of six items pass technically. The sandals stay rejected: their toe lines are a documented material
+    limit.
+  - See `project-state.md` **D-213**.
+- **Northstar clothing pilot — D-212: stage 2 ran until the API credit was exhausted (as of 2026-10-26).**
+  - **Generated.** The red tee (TECHNICAL_REJECT, FIT-6v2 collar notch), the green sweater (cuffs cut by the hand guard,
+    a manual finding) and the khaki trousers (clean).
+  - **Stopped.** The skirt returned HTTP 429 insufficient_quota. The sneakers and boots were not sent. 7 of 12 calls used,
+    no reserves.
+  - **Outfits.** 6 of 27 contain only generated items.
+  - See `project-state.md` **D-212**.
+- **Northstar clothing pilot — D-210: post-processing fixed and verified; stage 1 METHOD_OK; stage 2 open (as of 2026-10-26).**
+  - **Extraction.** A shift-tolerant, chroma-aware difference (2 px, tolerance 40). The garment is the paint connected to it,
+    and its edge comes from the picture. No thin-stripe filtering.
+  - **Checks.** FIT-5v2 (overlap by layer rank and tuck), FIT-6v2 (strips along the edge, crossings reported) and FIT-7v2 (sole
+    range) were revised. v3 is kept for D-205's record.
+  - **Stage-2 gate.** It opens only on an exact status token.
+  - **Stage-1 results.** Tank and shorts are clean. The sandals are TECHNICAL_REJECT (FIT-6v2, the ankle redrawn 3 px off).
+  - **Known limit.** In open footwear, redrawn toe lines need manual review.
+  - See `project-state.md` **D-210**.
+- **Northstar clothing pilot — D-208: stage 1 sent and inspected; stage 2 stays closed (as of 2026-10-26).**
+  - **Sent.** Tank, shorts and sandals, one call each. Generation OK. 3 of 12 calls spent, no reserves.
+  - **Fixed.** Two systematic extraction faults in our tool. Body contours redrawn 1–2 px off were extracted as
+    item, and brown leather was excluded as skin. Fixed with strong-change, opening and closing. The raws were
+    reprocessed without new calls.
+  - **Open.** FIT-5 (a waistband hidden under the top) and FIT-6 (skin meant to show at open forms) are contract
+    findings awaiting the owner.
+  - **Not METHOD_OK.** See `project-state.md` **D-208**.
+- **Northstar clothing pilot on C — D-207: at most 12 image calls authorised (9 items in two stages, at most 3 reserve
+  calls), C sent as the reference for this pilot only, frozen prompts, one-shot claims; not yet attempted (as of
+  2026-10-26).** D-206 is security PR #407.
+  - **Tools.** `openai-send-northstar-item-pilot-d207.mjs` (send) and `northstar-item-pilot.mjs` (`--process`, `--combine`).
+  - See `project-state.md` **D-207**.
+- **Northstar base figure — D-205: C frozen as the development candidate (numbers tracked, pixels outside the clones);
+  contract v3 with three axes — FIT to C (binding), COMPATIBILITY with old Northstar clothing (a report), QUALITY;
+  gate set v3 (BF9v3 waist seam, BF15v3 runtime composition); category templates and fitCheck; a 9-item clothing pilot
+  on C prepared, not authorised (12 calls recommended) (as of 2026-10-25).**
+  - **Tools.** `northstar-base-figure-c.mjs` (`--freeze`, `templatesC`, `fitCheck`, `legacyReport`) and
+    `northstar-base-figure-c-proof.mjs` (`--fit-proof`, stand-in items and fault stimuli only).
+  - See `project-state.md` **D-205** and `docs/198-northstar-base-figure-contract.md` §12.
+- **Northstar base figure — D-204: runtime layering proof for the D-202 candidate; BF15 had dressed a body that still held
+  the base garments; in the runtime model the 1,154 px vanish into background, but the body is up to 3 px wider than
+  Northstar's jeans at the hips and upper thighs; BF9v2's 1 px is no coverage problem; nothing adopted (as of 2026-10-25).**
+  - **Tools.** `northstar-base-figure.mjs --layers` (`separateBase`, `runtimeBody`, `layerProof`, proposed `bf15r`).
+  - See `project-state.md` **D-204** and `docs/198-northstar-base-figure-contract.md` §11.
+- **Northstar base figure — D-203: the D-202 call sent once (HTTP 200) and TECHNICALLY REJECTED under gate set v2 at
+  BF9v2 (top hem y 785, 1 px above 786–798) and BF15 (the shorts run 6–7 px outside the jeans along the hips); not
+  visually reviewed; the budget is spent (2 of 2) (as of 2026-10-25).**
+  - **Progress against A.** BF5 54 → 0 px (no flare at the leg openings, crotch at the jeans' height); BF4v2, BF14v2 and the
+    neck pass. The hip width did not respond to the prompt (A 4–7 px, v2 6–7 px per side).
+  - See `project-state.md` **D-203**.
+- **Northstar base figure — D-202: gate set v2 adopted (BF4v2, BF9v2, BF14v2); prompt v2 frozen; D-199's reserve B closed
+  unused; ONE new call `D-202-northstar-base-figure-v2`, the last of the budget (2 calls, 1 sent); not yet attempted
+  (as of 2026-10-25).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-base-figure-d202.mjs`; the D-199 adapter now refuses A and B.
+  - **Gates.** v1 stays the record of A's rejection; v2 binds every later candidate. Review: `northstar-base-figure.mjs
+    --review <png> --out <dir outside the clones> --compare <A>`.
+  - See `project-state.md` **D-202**.
+- **Northstar base figure — D-201: A diagnosed; one real image fault (the base shorts are wider than the jeans at the
+  hips and thighs, crotch too high) and three mis-constructed measurements (BF4, BF9, BF14); the neck line fixed in the
+  recomposition; gate revisions PROPOSED, not adopted; prompt v2 drafted; no call (as of 2026-10-25).**
+  - **Seam rule for a generated body.** The candidate owns its neck below y 440; the head stack's leftover collar edge (its
+    antialiased pixels and a 3 px band above its lower boundary, no hair) is not composited over it. A: 126 line px → 0;
+    every BF verdict unchanged.
+  - **Proposals.** P-BF4 (bare soles inside the sneaker outsole band), P-BF9 (the candidate's own torso below the armpits),
+    P-BF14 (after the established dust cleanup, interior capped separately), each with Northstar-derived control stimuli.
+  - **Tool.** `northstar-base-figure.mjs --diagnose <png> --out <dir outside the clones>`.
+  - See `project-state.md` **D-201** and `docs/198-northstar-base-figure-contract.md` §8.
+- **Northstar base figure — D-200: call A sent once (HTTP 200, one 1024×1536 image, stored outside the clones) and
+  TECHNICALLY REJECTED at BF4, BF5, BF9, BF14 and BF15; not visually reviewed; A closed; reserve B open but not sent
+  (as of 2026-10-25).**
+  - **Failures.** Feet 7 px above the ground line; base shorts flare beyond the jeans at the hips (envelope, dress-back);
+    deep armholes leave skin in the chest band (98.53 % < 99.5 %); 7.91 % semi-transparent pixels (> 6 %). Thresholds
+    unchanged.
+  - **Tool finding.** The D-194 seam recomposition leaves a faint pale line across the neck of a generated body; the raw
+    image has none. Fix before any adoption.
+  - See `project-state.md` **D-200**.
+- **Northstar base figure — D-199: at most two image calls authorised (A; B only as a reserve after A is recorded as
+  rejected); not yet attempted (as of 2026-10-25).**
+  - **Calls.** `D-199-northstar-base-figure-a` and `-b`, each with its own one-shot claim; the same frozen D-198 request
+    (Northstar v2 as the only image, `base-figure-prompt-v1.txt`, `gpt-image-2.5-sunburst-2026-09-08`, 1024x1536,
+    transparent). Authorisation file `tools/avatar/fixtures/northstar-wardrobe/base-figure-calls-v1.json` (separate from the
+    R3 budget); adapter `tools/avatar/openai-send-northstar-base-figure-d199.mjs`. Each send needs a separate owner
+    instruction after the merge.
+  - **Storage.** Output only under `<Documents>/DenSejeApp-artefacts/d-199-northstar-base-figure/` (D-127 §2); the review
+    tool `northstar-base-figure.mjs --review` refuses any directory inside the repository.
+  - See `project-state.md` **D-199**.
+- **Northstar base figure — one shared body in neutral, close-fitting base clothing with arms, legs and feet; contract v2;
+  first image attempt prepared, not authorised; no base figure exists (D-198, as of 2026-10-25).**
+  - **Why.** D-197's clothed base cannot carry sleeveless tops, short tops, shorts, skirts or sandals, so its rule that every
+    item covers Northstar's tee, jeans and sneakers is not the production contract. D-197 stays a documented experiment.
+  - **Base.** Northstar v2's body, pose and master coordinates; the existing R3 head stack is kept and recomposed over the
+    candidate's body (D-194 seam rule). The base garments (sleeveless top to the natural waist, shorts to mid-thigh, bare
+    feet) are authoring material only: they set the minimum every top and bottom must cover, and their region is empty at
+    runtime. D-127 §2 applies: a generated base figure is never tracked or placed under `assets/`. The H1 ban stands.
+  - **Contract v2.** Layers back · body · shoes · bottoms · shoes-over · top-body · bottoms-over · arms · top-sleeves · hands
+    · hands-over · head · hair · headwear; coverage is defined by seams, not by t-shirt or trouser length; shoes cover
+    nothing.
+  - **Check.** `tools/avatar/northstar-base-figure.mjs`: registration (integer shift ≤ 6 px or reject), recomposition, BF1–BF15
+    automatic gates, V1–V8 owner criteria. Shown on Northstar only: it fails exactly the limb and base-garment gates.
+  - **Pilot.** `pilot-plan-v2.json`: base figure first (2 image calls requested, not authorised), then a 0-call rig, then a
+    clothing pilot with a sleeveless top, shorts, a skirt and sandals.
+  - See `docs/198-northstar-base-figure-contract.md` and `project-state.md` **D-198**.
+- **Northstar wardrobe — DOCUMENTED EXPERIMENT (superseded as the goal by D-198): fit shown with derivatives of Northstar's own
+  clothing and simulated input, not with any GPT-generated item. One fixed body for generated clothing items; contract and local proof of concept; no image call (D-197, as of 2026-10-25).**
+  D-195/D-196 framing work is parked with its flag off.
+  - **Base.** Northstar Master v2 is one fixed body and pose, but only as a CLOTHED figure: there is no body under its painted
+    tee, jeans and sneakers. They become the default items of three mandatory categories (top, pants, shoes).
+  - **Rule.** An item replaces its category's default and must cover that default's region completely, so no body ever shows
+    and no bare or close-fitting figure exists. The H1 ban and D-127 §2 stand.
+  - **Coordinates and order.** Master coordinates, 1024×1536, with fixed anchors. Layer order: shoes · pants · top body · arms
+    · top sleeves · hands · head · hair. A top is two layers.
+  - **Fit.** Guaranteed by tools (registration, extraction, layer split, gates I1–I8), not by prompts.
+  - **Contract.** `docs/197-northstar-wardrobe-contract.md`, with the machine-readable
+    `tools/avatar/fixtures/northstar-wardrobe/contract-v1.json` and the pilot batch `pilot-batch-v1.json` (never authorised;
+    superseded by `pilot-plan-v2.json`).
+  - **Out of scope.** Sleeveless tops, shorts, skirts and sandals: they need limb material first.
+  - See `project-state.md` **D-197**.
 - **R3 face-neutral — three attempts spent; parts method adopted and extended; first parts sheet: nose rejected, brows and mouth kept for review; first nose attempt technically rejected; no live permission (D-158 … D-168, as of 2026-10-19).**
   D-159 prepared a direct transparent face layer (two complete brows, nose and mouth) and its output checks; the
   separate send adapter `tools/avatar/openai-send-r3-face-neutral-d160.mjs` was merged inactive (PR #322), and D-160

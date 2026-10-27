@@ -355,8 +355,11 @@ test("the reviewed spelling migration is the only later definition of the repeat
   assert.ok(touching.includes("20261002000000_quiz_repeat_when_pool_exhausted.sql"));
   // The spelling runtime suite proves every changed answer on repeats and pins the rest
   // of the complete function byte-for-byte, including all reward and idempotency logic.
+  // D-211 (owner decision 2026-10-26) changes ONLY the repeat award to 1 coin + 2 XP; its runtime
+  // suite (repeat-answer-coin-reward-migration-run) proves that and pins everything else.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
-    ["20261018143726_fix_danish_question_bank_text.sql"]);
+    ["20261018143726_fix_danish_question_bank_text.sql",
+     "20261027120000_repeat_answer_coin_reward.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

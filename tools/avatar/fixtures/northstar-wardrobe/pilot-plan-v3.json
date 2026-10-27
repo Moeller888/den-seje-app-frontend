@@ -1,0 +1,111 @@
+{
+  "decision": "D-205",
+  "status": "PREPARED, NOT AUTHORISED — no image call; a batch authorisation needs a separate owner decision with capacity, one-shot claims and a send adapter",
+  "base": "C (base-figure-c-v1.json); every item is generated ON C and fitted to C",
+  "replaces": "pilot-plan-v2.json phase P2 (planned for a base that did not exist yet)",
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "images": [
+      "Image 1: C's raw image (sha256 10f4a4b9…), read at send time from outside both clones and verified by its hash; never tracked (precedent: D-151 sent a private base the same way) — sending C to the API is an explicit point of the batch authorisation"
+    ],
+    "never": [
+      "mask",
+      "input_fidelity",
+      "a second image",
+      "H1"
+    ],
+    "promptTemplate": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: {GARMENT}. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. {COVERAGE} Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+    "coverage": {
+      "top": "The new top replaces the grey sleeveless top completely and covers everything it covered.",
+      "bottom": "The new bottom replaces the dark grey shorts completely and covers everything they covered.",
+      "shoes": "Keep the grey top and the dark grey shorts unchanged."
+    }
+  },
+  "items": [
+    {
+      "id": "top-tank-teal",
+      "category": "top",
+      "garment": "a plain teal sleeveless tank top with wide shoulder straps, ending at the natural waist",
+      "tests": "the minimum top form: straps, armholes, bare shoulders"
+    },
+    {
+      "id": "top-tee-red",
+      "category": "top",
+      "garment": "a plain red t-shirt with short sleeves, ending at the hips",
+      "tests": "sleeves over the upper arms (sleeve layer), the waist overlap"
+    },
+    {
+      "id": "top-sweater-green",
+      "category": "top",
+      "garment": "a plain green long-sleeved sweater with ribbed cuffs at the wrists, ending at the hips",
+      "tests": "sleeves to the wrists, cuffs next to the hands (protect)"
+    },
+    {
+      "id": "bottom-shorts-navy",
+      "category": "bottom",
+      "garment": "plain navy shorts ending just above the knees",
+      "tests": "the shorts form; bare knees and shins"
+    },
+    {
+      "id": "bottom-trousers-khaki",
+      "category": "bottom",
+      "garment": "plain khaki long trousers down to the ankles",
+      "tests": "a long form over real skin: FIT-6 silhouette over the thighs and shins"
+    },
+    {
+      "id": "bottom-skirt-plum",
+      "category": "bottom",
+      "garment": "a plain plum skirt ending just above the knees",
+      "tests": "a flared form; the legs below; the hands over it"
+    },
+    {
+      "id": "shoes-sandals-brown",
+      "category": "shoes",
+      "garment": "simple brown sandals with straps; the toes stay visible",
+      "tests": "straps over the bare feet; the ground line"
+    },
+    {
+      "id": "shoes-sneakers-white",
+      "category": "shoes",
+      "garment": "simple white sneakers",
+      "tests": "closed shoes around C's feet (unlike Northstar's old sneakers)"
+    },
+    {
+      "id": "shoes-boots-black",
+      "category": "shoes",
+      "garment": "simple black ankle boots",
+      "tests": "a taller shoe under trousers"
+    }
+  ],
+  "calls": {
+    "recommended": 12,
+    "items": 9,
+    "reserve": 3,
+    "rule": "one call per item; a reserve call only after a TECHNICAL rejection of that item (receipt or FIT), at most one per item and three in total; no retry otherwise; an undetermined dispatch counts as sent and never triggers another send; each call its own one-shot claim"
+  },
+  "afterEachCall": [
+    "store the raw response and image outside both clones with provenance",
+    "register on C (integer shift ≤ 6 px, otherwise reject — never warp)",
+    "extract: the item is every pixel that differs from C by more than 24 (D-197's changeTol) inside the category's allowed envelope, plus the base interior it must cover; a changed pixel outside the envelope (the body redrawn) rejects the item; the antialiased rim is un-mixed against C's pixel (skin or transparency); the established dust cleanup is applied, nothing is painted",
+    "split a top into topBody and sleeves by C's arm pixels",
+    "fitCheck (FIT-1 … FIT-7) and the quality measures; legacyReport is not run on new items",
+    "local review material outside the clones: the item on C, close-ups of every seam, app sizes"
+  ],
+  "combinationReview": "all 3 × 3 × 3 = 27 outfits from the passing items composed on C's runtime body in the contract order, at 1:1 and at the app sizes, plus the hard cases: tank + shorts + sandals (most skin), sweater + trousers + boots, tee + skirt + sneakers",
+  "success": "≥ 7 of 9 items pass FIT-1 … FIT-7 without retouching — the sleeveless top, the shorts and the sandals among them — and the owner approves the look in the 27 combinations",
+  "neverInThisPlan": [
+    "mass production",
+    "a production catalogue change",
+    "R3 activation",
+    "H1",
+    "publishing C or any skin layer"
+  ]
+}

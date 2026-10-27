@@ -1,0 +1,871 @@
+{
+  "decision": "D-231",
+  "records": "D-228's seam validation — executed 2026-10-27",
+  "imageCalls": 6,
+  "budget": {
+    "authorised": 6,
+    "sent": 6,
+    "reserve": 0,
+    "retries": 0,
+    "stops": 0,
+    "claimsConsumed": 6
+  },
+  "executedFrom": {
+    "originMain": "93ce31d68488e855ced19f388bd94b1ad36c7c59",
+    "adapter": "tools/avatar/openai-send-northstar-seam-d228.mjs",
+    "dryRunBeforeEachSend": true,
+    "processedBeforeNextSend": true
+  },
+  "sends": [
+    {
+      "callId": "D-228-seam-V1",
+      "item": "top-tee-hip-blue",
+      "httpStatus": 200,
+      "requestId": "req_e0d1772d4fae41e287dc2ac679380583",
+      "usage": {
+        "input_tokens": 3422,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 350
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4794
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15",
+      "imageBytes": 1313666,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    },
+    {
+      "callId": "D-228-seam-V2",
+      "item": "top-longsleeve-waist-purple",
+      "httpStatus": 200,
+      "requestId": "req_cd1732d51af4499e977a5e8531093093",
+      "usage": {
+        "input_tokens": 3429,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 357
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4801
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "c20f6955f1c7092bef8a9bcf4a3416c83ae3873bdbb987dbd0844afd7848ca29",
+      "imageBytes": 1288560,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    },
+    {
+      "callId": "D-228-seam-V3",
+      "item": "bottom-trousers-square-olive",
+      "httpStatus": 200,
+      "requestId": "req_2e3dfdbc711b4747a8cc6c086e725634",
+      "usage": {
+        "input_tokens": 3342,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 270
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4714
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00",
+      "imageBytes": 1287897,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    },
+    {
+      "callId": "D-228-seam-V4",
+      "item": "bottom-capri-lightblue",
+      "httpStatus": 200,
+      "requestId": "req_83ac7c18132a4a0fb4b0d7ff678c4f08",
+      "usage": {
+        "input_tokens": 3339,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 267
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4711
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f",
+      "imageBytes": 1340058,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    },
+    {
+      "callId": "D-228-seam-V5",
+      "item": "bottom-skirt-band-orange",
+      "httpStatus": 200,
+      "requestId": "req_7d33c407a6c743d987be5f60d8f284d2",
+      "usage": {
+        "input_tokens": 3346,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 274
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4718
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "a4d76771b29aafbea445445c8602afe7a41a1a406f2f96d251a095b7e077f438",
+      "imageBytes": 1325219,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    },
+    {
+      "callId": "D-228-seam-V6",
+      "item": "shoes-ankleboots-brown",
+      "httpStatus": 200,
+      "requestId": "req_9667ee4789d647799fc5c94d5ecb97d5",
+      "usage": {
+        "input_tokens": 3345,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 273
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4717
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c",
+      "imageBytes": 1314106,
+      "receipt": "RECEIVED_FOR_BF_CHECK",
+      "backgroundNote": "the picture came back with an opaque light background, not transparent; registration and extraction handled it (V1 and V6 technically OK)"
+    }
+  ],
+  "stopRulesHit": [],
+  "commonMethodFailure": "none: no registration failure, no reference-sheet colour drawn into any picture (0 px of each mark colour beyond C's own); the FIT-6v2 strips lie at four different item edges",
+  "method": {
+    "pipeline": "d225 (unchanged)",
+    "manifest": "item-pipeline-manifest-d228.json (pins from the receipts)",
+    "runs": 2,
+    "byteIdentical": true,
+    "files": 157,
+    "code": {
+      "northstar-item-pilot.mjs": "ad6d3abf9f98ce8b12221e6735bdbc55d52bdedf81dcd9cede6de94bf9de18cd",
+      "northstar-base-figure-c.mjs": "10ac256919fbece14595b868383fe4305104fd929c3fd5f0c14b5f4ce33d8858",
+      "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+      "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+      "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+      "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+    },
+    "registerSha256": "4bebd2f65b562e6bf89e0792cd73e75089724d9417263b176bc8d4f0f28fd96d",
+    "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818"
+  },
+  "axes": {
+    "technical": {
+      "top-tank-teal": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-tee-red": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-sweater-green": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-tee-hip-blue": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-longsleeve-waist-purple": {
+        "status": "rejected",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":27,\"sliverWidthPx\":6,\"crossings\":0,\"crossingPx\":0,\"compactCrossingsOverSquare\":[]}"
+          ]
+        }
+      },
+      "bottom-shorts-navy": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "bottom-trousers-square-olive": {
+        "status": "rejected",
+        "faults": {
+          "generation": [
+            "G-2 base remnant: 1149 px of the base interior unchanged from C (3.1 %)"
+          ],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":28,\"sliverWidthPx\":6,\"crossings\":3,\"crossingPx\":13,\"compactCrossingsOverSquare\":[]}"
+          ]
+        }
+      },
+      "bottom-capri-lightblue": {
+        "status": "rejected",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":24,\"sliverWidthPx\":6,\"crossings\":1,\"crossingPx\":3,\"compactCrossingsOverSquare\":[]}"
+          ]
+        }
+      },
+      "bottom-skirt-band-orange": {
+        "status": "rejected",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":27,\"sliverWidthPx\":6,\"crossings\":0,\"crossingPx\":0,\"compactCrossingsOverSquare\":[]}"
+          ]
+        }
+      },
+      "shoes-sneakers-white": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "shoes-ankleboots-brown": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      }
+    },
+    "contract": {
+      "top-tank-teal": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION",
+          "SC-W2-TOP-COVERS-HIP"
+        ],
+        "targetRules": null,
+        "targetRulesMet": null
+      },
+      "top-tee-red": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION",
+          "SC-W2-TOP-COVERS-HIP"
+        ],
+        "targetRules": null,
+        "targetRulesMet": null
+      },
+      "top-sweater-green": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION",
+          "SC-W2-TOP-COVERS-HIP"
+        ],
+        "targetRules": null,
+        "targetRulesMet": null
+      },
+      "top-tee-hip-blue": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION"
+        ],
+        "targetRules": [
+          "SC-W1",
+          "SC-W2",
+          "SC-W5"
+        ],
+        "targetRulesMet": false
+      },
+      "top-longsleeve-waist-purple": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION",
+          "SC-W2-TOP-COVERS-HIP"
+        ],
+        "targetRules": [
+          "SC-W1",
+          "SC-S1"
+        ],
+        "targetRulesMet": false
+      },
+      "bottom-shorts-navy": {
+        "complies": false,
+        "failed": [
+          "SC-W6-BOTTOMS-HIP-WIDTH"
+        ],
+        "targetRules": null,
+        "targetRulesMet": null
+      },
+      "bottom-trousers-square-olive": {
+        "complies": false,
+        "failed": [
+          "SC-W6-BOTTOMS-HIP-WIDTH",
+          "SC-L1-BOTTOMS-LENGTH-CLASS"
+        ],
+        "targetRules": [
+          "SC-L1",
+          "SC-W3",
+          "SC-W4",
+          "SC-W6"
+        ],
+        "targetRulesMet": false
+      },
+      "bottom-capri-lightblue": {
+        "complies": false,
+        "failed": [
+          "SC-W6-BOTTOMS-HIP-WIDTH"
+        ],
+        "targetRules": [
+          "SC-L1",
+          "SC-W3",
+          "SC-W6"
+        ],
+        "targetRulesMet": false
+      },
+      "bottom-skirt-band-orange": {
+        "complies": false,
+        "failed": [
+          "SC-W6-BOTTOMS-HIP-WIDTH"
+        ],
+        "targetRules": [
+          "SC-W4",
+          "SC-W6"
+        ],
+        "targetRulesMet": false
+      },
+      "shoes-sneakers-white": {
+        "complies": true,
+        "failed": [],
+        "targetRules": null,
+        "targetRulesMet": null
+      },
+      "shoes-ankleboots-brown": {
+        "complies": false,
+        "failed": [
+          "SC-L2-SHOE-COLLAR-LEFT",
+          "SC-L3-SHOE-ENVELOPE-LEFT",
+          "SC-L2-SHOE-COLLAR-RIGHT",
+          "SC-L3-SHOE-ENVELOPE-RIGHT"
+        ],
+        "targetRules": [
+          "SC-L2",
+          "SC-L3"
+        ],
+        "targetRulesMet": false
+      }
+    },
+    "combinationFit": {
+      "available": 8,
+      "outfitCheckOk": 8,
+      "openFinding": 0,
+      "outfits": {
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 15
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 15
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 19
+        },
+        "top-tee-red+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 19
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 21
+        },
+        "top-sweater-green+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 21
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 11
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-ankleboots-brown": {
+          "status": "technically-ok",
+          "openFindings": [],
+          "failedChecks": [],
+          "faults": [],
+          "reportedCrossings": 11
+        }
+      },
+      "notComposable": [
+        {
+          "outfit": "top-tank-teal+bottom-trousers-square-olive+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tank-teal+bottom-trousers-square-olive+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tank-teal+bottom-capri-lightblue+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-band-orange+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-tank-teal+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-trousers-square-olive+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-trousers-square-olive+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-capri-lightblue+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-capri-lightblue+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-skirt-band-orange+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-tee-red+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-trousers-square-olive+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-trousers-square-olive+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-capri-lightblue+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-capri-lightblue+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-skirt-band-orange+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-sweater-green+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-trousers-square-olive+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-trousers-square-olive+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-capri-lightblue+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-sneakers-white",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-shorts-navy+shoes-sneakers-white",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-shorts-navy+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-trousers-square-olive+shoes-sneakers-white",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-trousers-square-olive+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-trousers-square-olive"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-capri-lightblue+shoes-sneakers-white",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-capri-lightblue+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-capri-lightblue"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-skirt-band-orange+shoes-sneakers-white",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-skirt-band-orange"
+          ]
+        },
+        {
+          "outfit": "top-longsleeve-waist-purple+bottom-skirt-band-orange+shoes-ankleboots-brown",
+          "rejectedItems": [
+            "top-longsleeve-waist-purple",
+            "bottom-skirt-band-orange"
+          ]
+        }
+      ]
+    },
+    "visualQuality": "the owner's review — not inferred. Observed only: V1, V3, V4, V5 and V6 read as clean garments in the raw pictures; V2 shows grey base-top corners under its hem at both hips"
+  },
+  "diagnostic": {
+    "note": "OUTSIDE the verdict: all 40 outfits composed from the same processed layers without the technical filter; an outfit with a rejected item is never available",
+    "counts": {
+      "available/outfitCheckOk": 8,
+      "withRejectedItem/outfitCheckOk": 12,
+      "withRejectedItem/outfitCheckFails": 20
+    },
+    "seamFaults": [
+      {
+        "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-sneakers-white",
+        "faults": [
+          {
+            "seam": "waist/hip",
+            "box": [
+              626,
+              810,
+              1,
+              8
+            ],
+            "px": 8
+          },
+          {
+            "seam": "waist/hip",
+            "box": [
+              628,
+              810,
+              3,
+              8
+            ],
+            "px": 8
+          }
+        ]
+      },
+      {
+        "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-ankleboots-brown",
+        "faults": [
+          {
+            "seam": "waist/hip",
+            "box": [
+              626,
+              810,
+              1,
+              8
+            ],
+            "px": 8
+          },
+          {
+            "seam": "waist/hip",
+            "box": [
+              628,
+              810,
+              3,
+              8
+            ],
+            "px": 8
+          }
+        ]
+      }
+    ],
+    "itemInternalFaults": {
+      "bottom-capri-lightblue": "COMBO-1d 1 × 10 px at 547,1173 in every outfit (the contour piece kept below the hem)",
+      "bottom-skirt-band-orange": "COMBO-1d five cuts at y 950 … 1004 in every outfit (the extraction holes over the thighs)"
+    },
+    "reading": "between categories the seams held: of 40 outfits one seam fault — the hip-length tee V1 over the 72 px too wide skirt V5 (a double contour at the right hip, 626,810), the fault SC-W6 predicts; the trousers V3 combine with all five tops and both shoes without a fault, the long-sleeve V2 with the shorts and V3"
+  },
+  "classification": {
+    "top-tee-hip-blue": {
+      "technical": "OK",
+      "contract": "SC-W2 hip corners PASS (first top to cover them); SC-S1 pass; SC-W1 fails on 5 of 229 columns (the rounded hem's outer corner columns, d = 3 … 16) — so SC-W5 is not measured",
+      "classes": {
+        "generation": "5 rounded corner columns off the station"
+      },
+      "markColoursDrawn": false
+    },
+    "top-longsleeve-waist-purple": {
+      "technical": "REJECTED — FIT-6v2 27 px: C's arm contour beside the left cuff (box 350,835 4×11)",
+      "contract": "SC-W1 fails (hem at W + 13: neither on W nor at a station), SC-W2 fails (70 px of C's grey base top open at both hip corners — visible), SC-S1 PASS both cuffs",
+      "classes": {
+        "generation": "hem drawn 13 px below the waist line; the hip corners left grey; the cuff a few px narrower than the wrist contour"
+      },
+      "markColoursDrawn": false
+    },
+    "bottom-trousers-square-olive": {
+      "technical": "REJECTED — G-2 1149 px and FIT-6v2 28 px (right hem corner, 625,1378 4×9)",
+      "contract": "SC-W3, SC-W4 pass; SC-L1 fails (square, but the hem at A + 17 / A + 24, past A + 12); SC-W6 fails (31 px wider than the shorts' outline ± 3 at the hips)",
+      "classes": {
+        "generation": "hem 5–12 px too long; hips wider than C's shorts",
+        "extraction": "G-2: the dark olive shading lies within CHANGE_TOL 24 of C's dark grey (1698 such px in the shorts' area) — the picture has no grey fabric; a tool ambiguity, not a base remnant"
+      },
+      "markColoursDrawn": false
+    },
+    "bottom-capri-lightblue": {
+      "technical": "REJECTED — FIT-6v2 24 px (right hem corner, 634,1174 3×8)",
+      "contract": "SC-L1 PASS (cropped), SC-W3, SC-W4 pass; SC-W6 fails (44 px)",
+      "classes": {
+        "generation": "hips wider than C's shorts",
+        "extraction": "a 1 × 10 px piece of C's leg contour kept in the layer below the hem corner (COMBO-1d in every diagnostic outfit)"
+      },
+      "markColoursDrawn": false
+    },
+    "bottom-skirt-band-orange": {
+      "technical": "REJECTED — FIT-6v2 27 px (right hem corner, 625,996 3×10)",
+      "contract": "SC-L1 PASS (cropped), SC-W3, SC-W4 PASS (no line in the hem zone — F-007's seam); SC-W6 fails (72 px)",
+      "classes": {
+        "generation": "hips 72 px wider than C's shorts",
+        "extraction": "two large holes in the layer over C's thighs above the hem: the orange fabric is read as explained by C's skin (the raw picture has the fabric) — the COMBO-1d cuts in every diagnostic outfit"
+      },
+      "markColoursDrawn": false
+    },
+    "shoes-ankleboots-brown": {
+      "technical": "OK (covering: closed footwear)",
+      "contract": "SC-L2 fails (shaft top A − 66, limit A − 56); SC-L3 fails (13 / 44 px outside C's leg ± 8)",
+      "classes": {
+        "generation": "the shaft 10 px too high and wider than the envelope"
+      },
+      "markColoursDrawn": false
+    }
+  },
+  "fit6Strips": {
+    "V2": [
+      350,
+      835,
+      4,
+      11
+    ],
+    "V3": [
+      625,
+      1378,
+      4,
+      9
+    ],
+    "V4": [
+      634,
+      1174,
+      3,
+      8
+    ],
+    "V5": [
+      625,
+      996,
+      3,
+      10
+    ]
+  },
+  "questions": {
+    "Q1": {
+      "met": 0,
+      "of": 6,
+      "items": {
+        "top-tee-hip-blue": false,
+        "top-longsleeve-waist-purple": false,
+        "bottom-trousers-square-olive": false,
+        "bottom-capri-lightblue": false,
+        "bottom-skirt-band-orange": false,
+        "shoes-ankleboots-brown": false
+      }
+    },
+    "Q2": {
+      "met": 1,
+      "of": 2,
+      "baseline": "0 of 3 pilot tops"
+    },
+    "Q3": {
+      "available": 8,
+      "pass": 8,
+      "share": 1,
+      "baseline": "13 of 18 (D-225)",
+      "note": "only 8 of 40 outfits available: four of six new items were technically rejected, so reuse across the planned matrix is barely tested by the frozen rule"
+    }
+  },
+  "verdict": {
+    "byFrozenRule": "partial",
+    "rule": {
+      "improves": "Q2 2 of 2 AND Q1 at least 4 of 6 AND Q3 at least 90 % of available outfits",
+      "doesNotImprove": "Q2 0 of 2 AND Q1 at most 2 of 6",
+      "otherwise": "partial — the failing seams and their classes named; no conclusion beyond them"
+    }
+  },
+  "contractFindings": [
+    "SC-W6 (bottoms within C's shorts outline ± 3 at the hips) failed for all three new bottoms (31 / 44 / 72 px) and for the pilot shorts (6 px), yet V3 (31) and V4 (44) combine with every top without a seam fault: the rule is stricter than the fit needs — a contract finding, not a visible fault. V5 (72) does show against V1",
+    "the hem-corner and cuff-corner strips (FIT-6v2, four of six items) are not covered by any seam rule: a garment edge a few px narrower than the limb it ends on"
+  ],
+  "toolFindings": [
+    "extraction reads skin-like fabric (orange) as explained by C's skin and leaves holes (V5)",
+    "G-2 counts dark fabric shading within CHANGE_TOL of C's dark grey as base remnant (V3)"
+  ],
+  "proposedFindings": "recorded here only — the findings register is unchanged (its hash pins D-223's and D-225's records)",
+  "noExpansion": "no further calls; the owner's visual approval is separate"
+}
