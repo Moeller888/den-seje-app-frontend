@@ -116,7 +116,7 @@ test("D-222 pipeline: one manifest in, everything out; the same input gives the 
 });
 
 test("D-222 the tracked manifest pins the nine original D-207 pictures by the hashes D-207 recorded; covering follows the item's type", () => {
-  const man = fixture("item-pipeline-manifest-d222.json"), calls = fixture("item-pilot-calls-v1.json"); assert.ok(IP.validateManifest(man)); assert.equal(man.method, IP.METHOD);
+  const man = fixture("item-pipeline-manifest-d222.json"), calls = fixture("item-pilot-calls-v1.json"); assert.ok(IP.validateManifest(man)); assert.equal(man.method, "d222", "D-222's record keeps its method version");
   assert.deepEqual(man.items.map((it) => it.id).sort(), Object.keys(IP.ITEMS).sort());
   for (const it of man.items) { const e = calls.calls.find((c) => c.callId === it.sourceCall); assert.equal(e.result.imageSha256, it.rawSha256, it.id); assert.equal(e.outcome, it.d207Outcome, it.id); assert.equal(it.raw, it.sourceCall + "/d207.image-1.png"); }
   assert.deepEqual(man.items.filter((it) => it.category === "shoes").map((it) => [it.type, it.covering]), [["sandals", "open-footwear"], ["boots", "closed-footwear"], ["sneakers", "closed-footwear"]]);
@@ -130,4 +130,75 @@ test("D-222 records results under a new method version: D-207's outcomes and D-2
   assert.deepEqual(Object.entries(RES.items).filter(([, r]) => !r.methodD222.technicallyOk).map(([k]) => k), ["shoes-sandals-brown"], "the sandals still fail");
   assert.deepEqual(RES.reproducibility.code && Object.keys(RES.reproducibility.code), [...IP.PIPELINE_CODE]);
   const REG = readFileSync(join(REPO, "docs", "project-state.md"), "utf8"); assert.equal(REG.split("\n").filter((l) => l.startsWith("| **D-222** |")).length, 1);
+});
+
+// ── D-223: the outfit check at the seams between categories, its fault stimuli both ways, and the findings register ─────────
+const outfit = (layers, opts = {}) => BC.outfitCheck(w, base, BF.layerProof(w, base.R, base.Z, { ...min, ...layers }, { sep: base.sep, headSeam: "d201", enclosure: "c-exterior", ...opts }));
+const okOf = (r, id) => r.checks.find((c) => c.id === id).ok;
+const seamRow = (() => { let s = 0; for (let i = 0; i < N; i++) if (base.sep.lab[i] === 1) s = Math.max(s, (i / W) | 0); return s; })();
+const rows = (L, y0, y1, f) => { const o = new Uint8ClampedArray(L); for (let y = y0; y <= y1; y++) for (let x = 0; x < W; x++) f(o, y * W + x); return o; };
+
+test("D-223 outfit check: C's minimum items, C's own gaps and intended openings pass; a sandal's openings are its covering's, not a cut", () => {
+  const r = outfit({}); assert.ok(r.ok, JSON.stringify(r.checks.filter((c) => !c.ok)));
+  // a sandal (straps only) over the minimum items: its openings show the foot — no cut, no slit
+  let fb = 0; for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128) fb = Math.max(fb, (i / W) | 0);
+  const straps = new Uint8ClampedArray(N * 4); for (let y = fb - 40; y <= fb + 6; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (T.shoes.allowed[i] && LEGS[i * 4 + 3] >= 128 && (y > fb - 4 || (y >= fb - 30 && y < fb - 22))) straps.set([140, 86, 46, 255], i * 4); }
+  assert.ok(outfit({ shoes: straps }).ok, "a sandal's openings are intended");
+  // normal antialias: the top's hem row half transparent (alpha 140) over the shorts is no background
+  const aa = rows(min.topBody, seamRow, seamRow, (o, i) => { if (o[i * 4 + 3]) o[i * 4 + 3] = 140; }); assert.ok(okOf(outfit({ topBody: aa }), "COMBO-1a-SEAM-BACKGROUND"));
+});
+
+test("D-223 outfit check: a shifted waistband (a slit between top and bottoms) and a missing overlap fail; a hole at the wrist is a cut; a wrong shoe/bottoms order fails", () => {
+  // the shorts start k px below the top's lower edge in each column (they no longer reach under it): background between them
+  const topEnd = new Int32Array(W).fill(-1); for (let i = 0; i < N; i++) if (min.topBody[i * 4 + 3] >= 128) topEnd[i % W] = Math.max(topEnd[i % W], (i / W) | 0);
+  const drop = (k) => { const o = new Uint8ClampedArray(min.pants); for (let i = 0; i < N; i++) { const x = i % W; if (topEnd[x] >= 0 && ((i / W) | 0) <= topEnd[x] + k) o.fill(0, i * 4, i * 4 + 4); } return o; };
+  // 4 px: a slit along the waist between two categories
+  const lowered = drop(4);
+  const slit = outfit({ pants: lowered }); assert.equal(okOf(slit, "COMBO-1a-SEAM-BACKGROUND"), false, JSON.stringify(slit.checks[0].value).slice(0, 300));
+  assert.ok(slit.checks[0].value.slits.some((p) => p.seam === "waist/hip"), "named as the waist/hip seam");
+  // 14 px: no narrow slit any more, but open base deeper than the fabric band — missing overlap
+  const gap = outfit({ pants: drop(14) });
+  assert.equal(okOf(gap, "COMBO-1c-MISSING-OVERLAP"), false, JSON.stringify(gap.checks[2].value));
+  // a long sleeve over the arm with a 3 px band cut out above the cuff: the arm shows through one garment
+  const sleeve = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= A.shoulder.y && y < wristOf(x) - 14 && base.arms[i * 4 + 3] >= 128) sleeve.set([40, 120, 60, 255], i * 4); }
+  const cutS = new Uint8ClampedArray(sleeve); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= wristOf(x) - 40 && y < wristOf(x) - 37) cutS.fill(0, i * 4, i * 4 + 4); }
+  assert.ok(okOf(outfit({ sleeves: sleeve }), "COMBO-1d-CUT-IN-GARMENT"), "the whole sleeve: no cut");
+  const cut = outfit({ sleeves: cutS }); assert.equal(okOf(cut, "COMBO-1d-CUT-IN-GARMENT"), false, JSON.stringify(cut.checks[3].value).slice(0, 300));
+  // trousers reaching over the shoe tops: under the contract order the trousers are seen; a composer putting shoes over them fails
+  const S = standInItems(w, base), sh = L.shoes, trousers = new Uint8ClampedArray(min.pants); for (let i = 0; i < N; i++) if (LEGS[i * 4 + 3] >= 128 && sh[i * 4 + 3] >= 128 && !base.sep.lab[i]) trousers.set([150, 130, 90, 255], i * 4);
+  assert.ok(okOf(outfit({ pants: trousers, shoes: sh }), "COMBO-3-ORDER"));
+  assert.equal(okOf(outfit({ pants: trousers, shoes: sh }, { order: "shoes-over-bottoms" }), "COMBO-3-ORDER"), false);
+  assert.ok(S["min-shorts"]);
+});
+
+test("D-223 outfit check: a garment's leftover line 1–3 px beside another category's outline along a seam is a double contour; one outline alone is not", () => {
+  const ink = [20, 15, 10, 255], longTop = rows(min.topBody, seamRow + 1, seamRow + 3, (o, i) => { if (base.sep.lab[i] === 2 && LEGS[i * 4 + 3] >= 128) o.set(i < (seamRow + 3) * W ? [60, 150, 150, 255] : ink, i * 4); });
+  const lined = rows(min.pants, seamRow + 6, seamRow + 6, (o, i) => { if (o[i * 4 + 3]) o.set(ink, i * 4); });
+  assert.ok(okOf(outfit({ topBody: longTop }), "COMBO-2-DOUBLE-CONTOUR"), "the top's hem line alone");
+  const d = outfit({ topBody: longTop, pants: lined }); assert.equal(okOf(d, "COMBO-2-DOUBLE-CONTOUR"), false, JSON.stringify(d.checks[4].value).slice(0, 300));
+});
+
+test("D-223 findings register: every finding names its subject, place, picture, status and method version; an open finding keeps an outfit from being ready", () => {
+  const reg = fixture("findings-register.json"); assert.ok(IP.validateRegister(reg));
+  assert.throws(() => IP.validateRegister({ findings: [{ ...reg.findings[0], status: "done" }] }), /unknown status/);
+  assert.throws(() => IP.validateRegister({ findings: [{ ...reg.findings[0], status: "accepted-by-owner" }] }), /owner/);
+  assert.throws(() => IP.validateRegister({ findings: [{ ...reg.findings[1], resolvedBy: "d999" }] }), /resolved by no method/);
+  const byId = Object.fromEntries(reg.findings.map((f) => [f.id, f]));
+  assert.deepEqual([byId["F-002"].status, byId["F-002"].resolvedBy, byId["F-008"].status], ["resolved", "d223", "open"], "the tee + khaki slit is resolved by d223; the sandals stay open");
+  assert.deepEqual(IP.openFindingsFor(reg, ["top-tee-red", "bottom-trousers-khaki", "shoes-boots-black"]).sort(), ["F-001", "F-006", "F-011"]);
+  assert.deepEqual(IP.openFindingsFor(reg, ["top-tee-red", "bottom-trousers-khaki", "shoes-sneakers-white"]).sort(), ["F-010", "F-011"], "with sneakers the boot findings do not apply");
+  assert.deepEqual(IP.openFindingsFor(reg, ["top-tank-teal", "bottom-shorts-navy", "shoes-sneakers-white"]), [], "an outfit with no open finding");
+  const man = fixture("item-pipeline-manifest-d223.json"); assert.equal(man.method, IP.METHOD); assert.ok(IP.validateManifest(man)); assert.equal(man.findingsRegister, "tools/avatar/fixtures/northstar-wardrobe/findings-register.json");
+});
+
+test("D-223 records results under method d223: the known slit is found on the d222 items and gone on d223; open findings keep outfits from being ready; earlier records unchanged", () => {
+  const RES = fixture("item-method-results-d223.json"), reg = fixture("findings-register.json");
+  assert.deepEqual([RES.decision, RES.method, RES.recordsResultsOnly, RES.rewritesEarlierRecords, RES.imageCalls], ["D-223", "d223", true, false, 0]);
+  assert.equal(RES.reproducibility.registerSha256, sha(Buffer.from(JSON.stringify(reg))), "the run used this register");
+  const k = "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white";
+  assert.deepEqual([RES.d222VsD223[k].d222.ok, RES.d222VsD223[k].d222.failed, RES.d222VsD223[k].d223.ok], [false, ["COMBO-1a-SEAM-BACKGROUND"], true], "the outfit check finds the known slit on the d222 items, not on d223");
+  assert.equal(RES.outfits[k].status, "technically-ok-open-finding"); assert.deepEqual(RES.outfits[k].openFindings.sort(), IP.openFindingsFor(reg, k.split("+")).sort());
+  for (const [name, o] of Object.entries(RES.outfits)) if (o.status === "technically-ok") assert.deepEqual(IP.openFindingsFor(reg, name.split("+")), [], name + " is ready only without an open finding");
+  assert.deepEqual(RES.summary, { technicallyOk: 10, technicallyOkOpenFinding: 3, rejected: 5 }); assert.equal(RES.items["shoes-sandals-brown"].status, "rejected");
+  const REG = readFileSync(join(REPO, "docs", "project-state.md"), "utf8"); assert.equal(REG.split("\n").filter((l) => l.startsWith("| **D-223** |")).length, 1);
 });

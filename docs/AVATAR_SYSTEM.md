@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar outfits on C — D-223: outfit check at the seams, method d223, findings register (no calls).**
+  - **Outfit check.** `outfitCheck` covers background through a seam between two categories, holes, missing overlap, a cut in one
+    garment, double contours and order; corners are only reported. It does not require C's base silhouette.
+  - **Fix.** The tee + khaki hip slit came from two shared extraction rules (the top's leftover base rim; the bottoms' outline over
+    another base). d223 fixes both without masks or painting.
+  - **Register.** `findings-register.json` holds 12 findings; an open one keeps an item or outfit from being ready.
+  - **Result.** 10 of 18 outfits are technically OK, 3 more are OK with an open finding, and 5 are rejected (khaki + boots and
+    sweater + skirt seams). Two runs were byte-identical.
+  - See `project-state.md` **D-223**.
 - **Northstar item method — D-222: one pipeline, reproducible; method d222 (no calls).**
   - **Entry.** `northstar-item-pilot.mjs --run <manifest>`: layers, skin shadow, body visibility, checks and review pictures
     per item, then every outfit of technically passed items. Method, C, raws and code are pinned in `run.json`; two runs were
