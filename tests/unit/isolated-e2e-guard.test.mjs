@@ -168,11 +168,14 @@ test("no false green, and the order that makes the job fail-closed", () => {
     "node tests/isolated/run-suite.mjs",
   ].map(at);
   for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `step ${i} in order`);
-  // Tests run as the locked-down user, never as the runner user.
-  for (const line of job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l))) {
-    assert.ok(/sudo -E -u "\$ISOLATED_USER"/.test(line) || /^\s+(npx playwright test|node tests\/isolated\/run-suite)/.test(line), line);
-  }
-  assert.equal((job.match(/sudo -E -u "\$ISOLATED_USER"/g) || []).length, 2);
+  // Tests run with the locked-down group as primary group, never with the runner's own group.
+  const testLines = job.split("\n").filter((l) => /playwright test|run-suite\.mjs/.test(l) && !l.trim().startsWith("#"));
+  assert.equal(testLines.length, 2);
+  for (const line of testLines) assert.match(line, /^\s+sg "\$ISOLATED_GROUP" -c "(npx playwright test|node tests\/isolated\/run-suite\.mjs)/, line);
+  const fw = read("tests/isolated/egress-firewall.sh");
+  assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER\n/);
+  assert.match(fw, /-m owner --gid-owner "\$GROUP_NAME" -j ISO_EGRESS_USER6/);
+  assert.match(fw, /-I DOCKER-USER 1 -j ISO_EGRESS_DOCKER/);
   // Matrix: each run is its own job (own runner, own stack); no fail-fast cancelling a sibling.
   assert.match(job, /fail-fast: false/);
   assert.match(job, /run: \$\{\{ fromJSON\(needs\.plan\.outputs\.runs\) \}\}/);

@@ -11,7 +11,7 @@ name: Isolated E2E
 #   guard        tests/isolated/isolation-guard.mjs refuses any environment that names production,
 #                carries a provider key or a production secret NAME;
 #   hosts        production and provider host names resolve to 0.0.0.0 on the runner;
-#   firewall     after all downloads, the test user and every container may reach loopback and
+#   firewall     after all downloads, the test group and every container may reach loopback and
 #                private (Docker) addresses only — verified, or the job fails;
 #   tripwire     every browser goes through a refusing proxy; one request fails the run;
 #   seed guard   schema and seed run only against the database carrying this run's token and id.
@@ -45,7 +45,7 @@ env:
   ISOLATED_BASE_URL: http://127.0.0.1:8788
   ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
   ISOLATED_MAIL_URL: http://127.0.0.1:54324
-  ISOLATED_USER: e2eiso
+  ISOLATED_GROUP: e2eiso
   # Supabase's images from Docker Hub instead of public.ecr.aws: N runners pulling at once were
   # rate-limited there ("toomanyrequests"); Docker Hub does not rate-limit GitHub-hosted runners.
   SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
@@ -199,28 +199,22 @@ jobs:
           ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
           ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "https://cdn.jsdelivr.net"
 
-      - name: Network lock — test user and containers reach loopback/private only (verified)
+      - name: Network lock — test group and containers reach loopback/private only (verified)
         run: |
           set -euo pipefail
-          sudo useradd --create-home --shell /bin/bash "$ISOLATED_USER"
-          sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
-          # The browsers live in the runner user's cache; the test user may read, never write them.
-          chmod o+x "$HOME" "$HOME/.cache" && chmod -R o+rX "$HOME/.cache/ms-playwright"
-          # The test user's own runtime directory (browsers write there; the runner's is not theirs).
-          sudo install -d -m 700 -o "$ISOLATED_USER" "/tmp/$ISOLATED_USER-runtime"
+          sudo groupadd "$ISOLATED_GROUP"
+          sudo usermod -a -G "$ISOLATED_GROUP" "$USER"
           bash tests/isolated/egress-firewall.sh lock
           bash tests/isolated/egress-firewall.sh verify
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
         run: |
-          sudo -E -u "$ISOLATED_USER" env -u DBUS_SESSION_BUS_ADDRESS "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" "XDG_RUNTIME_DIR=/tmp/$ISOLATED_USER-runtime" \
-            npx playwright test -c tests/isolated/playwright.isolated.config.mjs
+          sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
       - name: Existing Playwright suite against the isolated stack
         id: suite
         run: |
-          sudo -E -u "$ISOLATED_USER" env -u DBUS_SESSION_BUS_ADDRESS "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" "XDG_RUNTIME_DIR=/tmp/$ISOLATED_USER-runtime" \
-            node tests/isolated/run-suite.mjs
+          sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
 
       - name: Diagnostics (on failure)
         if: failure()
