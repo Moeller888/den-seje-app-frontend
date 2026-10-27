@@ -51,7 +51,8 @@ test("D-225 the outfit check's double contour finds a 3 px gap as written; D-223
   const v = TP.violating["VIOLATION-bottom-full-rounded"], P = compose(TP.compliant["TEMPLATE-top-hip"], v.item, TP.compliant["TEMPLATE-shoes-low"]);
   const d225 = BC.outfitCheck(w, base, P), d223 = BC.outfitCheck(w, base, P, { revision: "d223" }), g = (r) => r.checks.find((c) => c.id === "COMBO-2-DOUBLE-CONTOUR").ok;
   assert.deepEqual([g(d223), g(d225)], [true, false]);
-  assert.equal(IP.METHODS.d223.outfitRevision, "d223"); assert.equal(IP.METHODS.d225.outfitRevision, "d225"); assert.equal(IP.METHOD, "d225");
+  // D-225's method stays recorded as it ran (the current default is a later method — D-232's test pins it)
+  assert.equal(IP.METHODS.d223.outfitRevision, "d223"); assert.equal(IP.METHODS.d225.outfitRevision, "d225"); assert.equal(IP.METHODS.d225.fitRevision, "d222");
 });
 
 test("D-225 seam lines come from C, not from an item: the waist line is robust to a stray label pixel; C's own base top meets the waist rule", () => {

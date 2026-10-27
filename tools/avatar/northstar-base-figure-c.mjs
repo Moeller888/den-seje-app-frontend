@@ -151,7 +151,7 @@ export const FIT_LIMITS_D210 = Object.freeze({
 const RANK = { body: 0, shoes: 1, pants: 2, topBody: 3, arms: 4, sleeves: 5, head: 6 };
 
 /** D-210 FIT-5v2 / FIT-6v2 / FIT-7v2 on a layer proof P (contract order or a control order). */
-function fitD210(w, base, T, category, layers, P, add, shadow = null, revision = "d210") {
+function fitD210(w, base, T, category, layers, P, add, shadow = null, revision = "d210", limbExit = false) {
   const own = Object.keys(layers), lim = FIT_LIMITS_D210;
   // FIT-5v2: every painted item pixel is either visible, or hidden by a layer the contract ranks ABOVE it within the tuck of a
   // visible part of the item; hidden by a layer ranked below it is a wrong order; hidden deeper is a detail the outfit never shows
@@ -174,7 +174,7 @@ function fitD210(w, base, T, category, layers, P, add, shadow = null, revision =
   for (let y = 441; y < H; y++) scan(y * W, 1, W); for (let x = 0; x < W; x++) scan(441 * W + x, W, H - 441);
   // a strip along the garment's edge is a sliver; a piece no longer than SLIVER_PX in both directions is where the garment's
   // outline crosses the body's contour (a strap meeting the shoulder line) — reported, not counted
-  const seen = new Uint8Array(N), strip = new Uint8Array(N), crossingShapes = []; let crossings = 0, crossingPx = 0;
+  const seen = new Uint8Array(N), strip = new Uint8Array(N), crossingShapes = [], exits = []; let crossings = 0, crossingPx = 0, exitPx = 0;
   for (let s0 = 0; s0 < N; s0++) { if (!sl[s0] || seen[s0]) continue; const q = [s0], px = []; seen[s0] = 1; let x0 = W, x1 = -1, y0 = H, y1 = -1;
     while (q.length) { const i = q.pop(); px.push(i); const x = i % W, y = (i / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const j = i + dy * W + dx; if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue; if (sl[j] && !seen[j]) { seen[j] = 1; q.push(j); } } }
@@ -186,13 +186,26 @@ function fitD210(w, base, T, category, layers, P, add, shadow = null, revision =
     // and stays a strip.
     const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lo = Math.min(bw, bh), hi = Math.max(bw, bh);
     const crossing = hi <= SLIVER_PX || (revision === "d222" && lo <= SLIVER_PX && hi <= 1.5 * lo);   // v3's square allowance, and (D-222) compact
-    if (crossing) { crossings++; crossingPx += px.length; if (hi > SLIVER_PX) crossingShapes.push([bw, bh, px.length]); } else for (const i of px) strip[i] = 1; }
-  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx, ...(revision === "d222" ? { compactCrossingsOverSquare: crossingShapes } : {}) }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background" + (revision === "d222" ? " (D-222: a compact piece where two contours meet at an angle is a crossing, reported)" : ""));
+    // D-232 LIMB EXIT: where a hem or a cuff ENDS on a limb, the limb leaves the garment and its contour continues below. At a
+    // rounded corner the limb's contour runs a few rows beside the corner before the garment's end — an elongated piece, not a limb
+    // wider than its garment along the edge. It is one only when the piece is a contour line with its antialias (< SLIVER_PX
+    // wide, ≤ 2 × SLIVER_PX long), its lowest row lies within SLIVER_PX of the garment's lowest row in its columns (± SLIVER_PX) —
+    // the contour leaves at the garment's end and runs on below it — and the body continues on the row below it. Tops and bottoms
+    // only: a shoe's end is its sole (the sandals' foot contour beside the strap stays a strip).
+    let exit = false;
+    if (!crossing && limbExit && (category === "top" || category === "bottom") && lo < SLIVER_PX && hi <= 2 * SLIVER_PX) {
+      let end = -1; for (let x = Math.max(0, x0 - SLIVER_PX); x <= Math.min(W - 1, x1 + SLIVER_PX); x++) for (let y = y0 - 2 * SLIVER_PX; y < H; y++) if (im[y * W + x]) end = Math.max(end, y);
+      let below = false; if (y1 + 1 < H) for (let x = x0; x <= x1; x++) { const j = (y1 + 1) * W + x; if (P.body[j * 4 + 3] >= 128 || P.arms[j * 4 + 3] >= 128) below = true; }
+      exit = end >= 0 && Math.abs(y1 - end) <= SLIVER_PX && below; }
+    if (crossing) { crossings++; crossingPx += px.length; if (hi > SLIVER_PX) crossingShapes.push([bw, bh, px.length]); } else if (exit) { exits.push([x0, y0, bw, bh]); exitPx += px.length; } else for (const i of px) strip[i] = 1; }
+  add("fit", "FIT-6v2-SILHOUETTE", count(strip) <= lim.sliverPx.value, { sliverPx: count(strip), sliverWidthPx: SLIVER_PX, crossings, crossingPx, ...(revision === "d222" ? { compactCrossingsOverSquare: crossingShapes } : {}), ...(limbExit ? { limbExits: exits, limbExitPx: exitPx } : {}) }, "no body strip ≤ " + SLIVER_PX + " px wide along the garment's edge between it and the background" + (revision === "d222" ? " (D-222: a compact piece where two contours meet at an angle is a crossing, reported)" : "") + (limbExit ? " (D-232: a limb leaving a hem or a cuff at its end is a limb exit, reported)" : ""));
   if (category === "shoes") { const sb = bbox(maskOf(layers.shoes)), [lo, hi] = T.shoes.soleRange;
     add("fit", "FIT-7v2-GROUND", sb.y1 >= lo && sb.y1 <= hi, { soleY: sb.y1, range: [lo, hi] }, "the shoe ends between C's soles and a Northstar sneaker sole below them"); }
   return { hiddenDetail: detailM, slivers: strip, crossings: Mo.and(sl, Mo.not(strip)) };
 }
 export function fitCheck(w, base, T, category, layers, { order = "contract", revision = "v3", shadow = null, hide = null } = {}) {
+  // D-232: revision "d232" is "d222" exactly, plus FIT-6v2's limb exit (a limb leaving a hem or a cuff at its end is reported)
+  const limbExit = revision === "d232"; if (limbExit) revision = "d222";
   const t = T[category], out = [], add = (axis, id, ok, value, what) => out.push({ axis, id, ok, value, what }), lim = FIT_LIMITS;
   const names = Object.keys(layers), itemAll = NL.overStack(names.map((k) => layers[k])), im = maskOf(itemAll, 1);
   add("fit", "FIT-1-LAYERS", JSON.stringify(names) === JSON.stringify(t.layers) && names.every((k) => layers[k].length === N * 4), names, "exactly the category's layers, full 1024×1536 RGBA");
@@ -206,7 +219,7 @@ export function fitCheck(w, base, T, category, layers, { order = "contract", rev
   const own = new Uint8Array(N); for (let i = 0; i < N; i++) if (t.mustCover[i] && P.dressedRuntime[i * 4 + 3] < 128) own[i] = 1;
   const cov = { enclosedHolePx: c(P.enclosed), exposedCutSkinPx: c(P.cutSkin), deepOpenBasePx: c(P.deep), mustCoverOpenPx: c(own) };
   add("fit", "FIT-4-COVERAGE", cov.enclosedHolePx <= lim.enclosedHolePx.value && cov.exposedCutSkinPx <= lim.exposedCutSkinPx.value && cov.deepOpenBasePx <= lim.deepOpenBasePx.value && cov.mustCoverOpenPx === 0, cov, "no hole in the body: the base interior covered, no exposed cut skin, no missing body");
-  let masks = null; if (revision === "d210" || revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222") masks = fitD210(w, base, T, category, layers, P, add, shadow, revision);
+  let masks = null; if (revision === "d210" || revision === "d213" || revision === "d218" || revision === "d221" || revision === "d222") masks = fitD210(w, base, T, category, layers, P, add, shadow, revision, limbExit);
   if (revision === "d218" || revision === "d221" || revision === "d222") { let hid = 0; if (hide) for (let i = 0; i < N; i++) if (hide[i] && (base.body[i * 4 + 3] >= 128 || base.arms[i * 4 + 3] >= 128)) hid++;
     add("report", "VIS-1-HIDDEN-BODY", true, { hiddenBodyPx: hid }, "body pixels the item hides by its declared covering rule (never a gate; a hole it leaves is FIT-4's)");
     // VIS-2: what an item hides it must REPLACE — hidden body left as background within the item's own column span (top to bottom
@@ -346,6 +359,13 @@ export function outfitCheck(w, base, P, { revision = "d225" } = {}) {
  *  listed in seam-contract-v1.json. A template that complies proves the rules combine; it does not prove a model can draw it. */
 export const SEAM_CONTRACT_V1 = Object.freeze({ version: "seam-contract-v1", waistbandMaxPx: 12, linesFreeToPx: 54, topHemMinPx: 18, topHemMaxPx: 48, topHipOverhangPx: 8, bottomsHipMaxPx: 3, cuffBandPx: 10,
   shaftMaxAboveAnklePx: 56, envelopeFromPx: 30, shoeEnvelopePx: 8, trouserOverhangPx: 10, croppedMinAboveAnklePx: 68, fullHemMinBelowAnklePx: 6, fullHemMaxBelowAnklePx: 12 });
+/** D-232: seam-contract-v2 — v1 with the hip lanes re-derived from the outfit check itself (a TEMPLATE sweep on C: a hip-station
+ *  top t px outside C's base-shorts outline over bottoms b px outside it). The double contour appears only where the bottoms stand
+ *  3–8 px further out than the top's hem (b − t ≥ 3); a top as wide as the bottoms or wider, or within 2 px of them, merges or
+ *  covers. v1's lanes (top ≥ + 8, bottoms ≤ + 3) are one safe pair; (+ 6, + 6) is another, and it holds the bottoms a model
+ *  draws (+ 4 … + 7 at the hips). Every other rule is v1's: the full-length band stays A + [6, 12] — it is coupled to the shoe
+ *  envelope (leg ± 8 down to A + 6), and a deeper band would need the envelope deeper, where real sneakers flare (F-010). */
+export const SEAM_CONTRACT_V2 = Object.freeze({ ...SEAM_CONTRACT_V1, version: "seam-contract-v2", topHipOverhangPx: 6, bottomsHipMaxPx: 6 });
 export function seamLines(w, base, T) {
   // W(x): a median over 7 columns — a stray pixel of the base top's label (one column 14 px low on the stand-in) is no waist line
   const lab = base.sep.lab, raw = {}, waist = {}; for (let x = 0; x < W; x++) { let th = -1, sb = -1; for (let y = 600; y < H; y++) { const i = y * W + x; if (lab[i] === 1) th = y; if (sb < 0 && lab[i] === 2) sb = y; } if (th >= 0 && sb >= 0) raw[x] = th; }
