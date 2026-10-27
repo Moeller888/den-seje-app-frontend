@@ -211,3 +211,23 @@ test("catalog data files write only to catalog tables (plus the one documented p
     assert.doesNotMatch(sql, /\bDELETE\b|\bTRUNCATE\b/i, `${f} deletes nothing`);
   }
 });
+
+// The replay CLI runs assertSeedTarget BEFORE the schema exists (public.questions absent).
+const GUARD_ENV = Object.freeze({
+  ISOLATED_E2E: "1", ISOLATED_BASE_URL: "http://127.0.0.1:8788", ISOLATED_SUPABASE_URL: "http://127.0.0.1:54321",
+  ISOLATED_DB_TOKEN: TOKEN,
+});
+
+test("target check before the schema: an empty public schema with this run's marker passes", async () => {
+  const { assertSeedTarget } = await import("../isolated/seed/seed-guard.mjs");
+  const d = await platformDb();
+  const r = await assertSeedTarget({ query: async (s) => (await d.query(s)).rows, env: GUARD_ENV });
+  assert.deepEqual(r, { ok: true, questions: 0, users: 0 });
+});
+
+test("target check before the schema: public with tables but no questions table is refused, nothing executed", async () => {
+  const { assertSeedTarget } = await import("../isolated/seed/seed-guard.mjs");
+  const d = await platformDb();
+  await d.exec("CREATE TABLE public.some_real_table (id int)");
+  await assert.rejects(assertSeedTarget({ query: async (s) => (await d.query(s)).rows, env: GUARD_ENV }), /public has tables but no questions table/);
+});

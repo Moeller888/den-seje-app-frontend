@@ -72,9 +72,19 @@ export async function assertSeedTarget({ query, env }) {
     if (sys?.[0]?.id !== String(env.ISOLATED_DB_SYSID)) refuse("PostgreSQL cluster identifier differs from the one captured at bootstrap");
   }
 
+  // Before the schema is built (the replay's own check) public.questions does not exist yet. That is
+  // accepted ONLY when public holds no table at all — a real database never looks like that.
+  const shape = await query(
+    `SELECT to_regclass('public.questions') IS NOT NULL AS has_questions,
+            (SELECT count(*) FROM pg_tables WHERE schemaname = 'public')::int AS public_tables`);
+  if (!shape?.[0]) refuse("schema check returned nothing");
+  if (!shape[0].has_questions && shape[0].public_tables !== 0) refuse("public has tables but no questions table — not a database this run created");
+  const questionCounts = shape[0].has_questions
+    ? `(SELECT count(*) FROM public.questions WHERE coalesce(metadata->>'synthetic', '') <> 'true')::int AS real_questions,
+            (SELECT count(*) FROM public.questions)::int AS questions,`
+    : `0 AS real_questions, 0 AS questions,`;
   const content = await query(
-    `SELECT (SELECT count(*) FROM public.questions WHERE coalesce(metadata->>'synthetic', '') <> 'true')::int AS real_questions,
-            (SELECT count(*) FROM public.questions)::int AS questions,
+    `SELECT ${questionCounts}
             (SELECT count(*) FROM auth.users WHERE coalesce(email, '') NOT LIKE ${lit("%@" + SYNTHETIC_EMAIL_DOMAIN)})::int AS real_users,
             (SELECT count(*) FROM auth.users)::int AS users`);
   const c = content?.[0];
