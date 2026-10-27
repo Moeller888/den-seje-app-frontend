@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar targeted correction — D-239: method d239 (development, not a validation; no calls).**
+  - **Corrected diagnoses.** N2's cut was a remnant of the limb's contour below the cuff, removed in the extraction. MF-2 is
+    the top's open hip corner, not the trousers. MF-1 was shaded-skin antialias (corrected) plus a real gap between hem and
+    shoe (now checked).
+  - **Outfit check d239.** Partial-alpha edges are the item's own. COMBO-5 catches skin between a hem and a shoe; COMBO-6
+    catches a notch where C's base is left uncovered at the waist. SC-W4 now judges lines by contrast. Manual findings live in
+    the review register (F-013 … F-019).
+  - **Result.** Every status change was reviewed: 0 false rejections, 0 regressions. Ready (technically OK, no open finding):
+    15/48 in D-235, 6/40 in D-228, 0/18 in the pilot — only outfits with the corner-covering tops N1 and V1. Byte identity is
+    verified for the pilot only. See `docs/decisions/D-239.md`.
 - **Northstar independent validation results — D-238: six new calls sent, decision: targeted correction.**
   - **Result.** Under d232 as frozen, all six new items are technically OK (T 6/6) and 30 of 48 planned outfits pass (K 30;
     missing and rejected stay in the denominator). There are two manual findings, both in the black trousers (skin-coloured

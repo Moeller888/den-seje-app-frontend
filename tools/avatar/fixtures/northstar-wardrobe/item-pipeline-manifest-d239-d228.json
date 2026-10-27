@@ -1,0 +1,120 @@
+{
+  "decision": "D-239",
+  "method": "d239",
+  "rawRoot": ".",
+  "note": "D-228's 40-outfit matrix, pins unchanged, re-evaluated with method d239 (development of a targeted correction — D-235's six pictures are development material now, this is no validation). The item-pipeline-manifest-d232-validation.json record stays. Run: node tools/avatar/northstar-item-pilot.mjs --run <this file> --out <empty dir outside both clones>.",
+  "items": [
+    {
+      "id": "top-tank-teal",
+      "category": "top",
+      "type": "tank",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-tank-teal",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "d-207-item-pilot/D-207-item-top-tank-teal/d207.image-1.png",
+      "rawSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf"
+    },
+    {
+      "id": "top-tee-red",
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-tee-red",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "d-207-item-pilot/D-207-item-top-tee-red/d207.image-1.png",
+      "rawSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973"
+    },
+    {
+      "id": "top-sweater-green",
+      "category": "top",
+      "type": "sweater",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-sweater-green",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "d-207-item-pilot/D-207-item-top-sweater-green/d207.image-1.png",
+      "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b"
+    },
+    {
+      "id": "top-tee-hip-blue",
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V1",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V1/d228.image-1.png",
+      "rawSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15"
+    },
+    {
+      "id": "top-longsleeve-waist-purple",
+      "category": "top",
+      "type": "longsleeve",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V2",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V2/d228.image-1.png",
+      "rawSha256": "c20f6955f1c7092bef8a9bcf4a3416c83ae3873bdbb987dbd0844afd7848ca29"
+    },
+    {
+      "id": "bottom-shorts-navy",
+      "category": "bottom",
+      "type": "shorts",
+      "covering": "none",
+      "sourceCall": "D-207-item-bottom-shorts-navy",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "d-207-item-pilot/D-207-item-bottom-shorts-navy/d207.image-1.png",
+      "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167"
+    },
+    {
+      "id": "bottom-trousers-square-olive",
+      "category": "bottom",
+      "type": "trousers",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V3",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V3/d228.image-1.png",
+      "rawSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00"
+    },
+    {
+      "id": "bottom-capri-lightblue",
+      "category": "bottom",
+      "type": "capri",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V4",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V4/d228.image-1.png",
+      "rawSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f"
+    },
+    {
+      "id": "bottom-skirt-band-orange",
+      "category": "bottom",
+      "type": "skirt",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V5",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V5/d228.image-1.png",
+      "rawSha256": "a4d76771b29aafbea445445c8602afe7a41a1a406f2f96d251a095b7e077f438"
+    },
+    {
+      "id": "shoes-sneakers-white",
+      "category": "shoes",
+      "type": "sneakers",
+      "covering": "closed-footwear",
+      "sourceCall": "D-207-reserve-2",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "d-207-item-pilot/D-207-reserve-2/d207.image-1.png",
+      "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611"
+    },
+    {
+      "id": "shoes-ankleboots-brown",
+      "category": "shoes",
+      "type": "boots",
+      "covering": "closed-footwear",
+      "sourceCall": "D-228-seam-V6",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V6/d228.image-1.png",
+      "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c"
+    }
+  ],
+  "findingsRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register.json",
+  "reviewRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json"
+}
