@@ -38,10 +38,13 @@ const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.st
 const ids = ["V1", "V2", "V3", "V4", "V5", "V6"].map((v) => "D-228-seam-" + v), argsOf = (id) => ["--call-id=" + id, "--claim-identity=" + id + "-claim"], SEND = ["--send", "--owner-approval=D-228"], KEY = { OPENAI_API_KEY: "sk-d228-sandbox-dummy-key-not-a-credential" };
 
 test("D-228 authorisation: six calls in the plan's order, one per plan item, D-207's request with two images and no mask; the token in D-228's status", () => {
-  assert.deepEqual([CALLS.decision, CALLS.meta.authorisesImageRequest, CALLS.budget.authorised, CALLS.budget.reserve, CALLS.budget.retries, CALLS.budget.fallback, CALLS.budget.actuallySent], ["D-228", false, 6, 0, 0, 0, 0]);
+  assert.deepEqual([CALLS.decision, CALLS.meta.authorisesImageRequest, CALLS.budget.authorised, CALLS.budget.reserve, CALLS.budget.retries, CALLS.budget.fallback, CALLS.budget.actuallySent], ["D-228", false, 6, 0, 0, 0, 6]);
+  // the recorded execution (D-231): six calls sent once each, every entry spent and closed — no further call under D-228
+  assert.deepEqual([CALLS.budget.closed, CALLS.budget.recordedBy], [true, "D-231"]);
+  assert.deepEqual(CALLS.calls.map((e) => [e.mandateState, e.outcome, e.result.httpStatus, e.closedBy]), ids.map(() => ["SPENT", "RECEIVED_FOR_BF_CHECK", 200, "D-231"]));
   assert.deepEqual(CALLS.calls.map((e) => e.callId), ids); assert.deepEqual(CALLS.calls.map((e) => e.plan), PLAN.items.map((p) => p.id)); assert.deepEqual(CALLS.calls.map((e) => e.order), [1, 2, 3, 4, 5, 6]);
   for (const e of CALLS.calls) { const p = PLAN.items.find((x) => x.id === e.plan); assert.equal(e.category, p.category, e.callId); assert.equal(e.reference, e.category);
-    assert.deepEqual([e.mandateState, e.outcome], ["UNSPENT", "NOT YET ATTEMPTED"]); assert.equal(e.prompt.sha256, PROMPTS.items[e.item].sha256); assert.equal(IP.ITEM_CATEGORY[e.item], e.category, "registered in the pipeline");
+    assert.match(e.result.imageSha256, /^[0-9a-f]{64}$/); assert.equal(e.prompt.sha256, PROMPTS.items[e.item].sha256); assert.equal(IP.ITEM_CATEGORY[e.item], e.category, "registered in the pipeline");
     assert.deepEqual(e.targetRules, p.tests.match(/SC-[A-Z]\d/g)); }
   assert.deepEqual([CALLS.request.model, CALLS.request.parameters], [MODEL, { size: "1024x1536", quality: "high", n: 1, output_format: "png", background: "transparent" }]);
   assert.deepEqual(CALLS.request.fieldOrder, ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"]); assert.ok(CALLS.request.neverSentFields.includes("mask"));
@@ -138,6 +141,9 @@ function sandbox({ base, sheet } = {}) {
   const cd = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(cd, { recursive: true }); writeFileSync(join(cd, "d202-base-figure-v2.image-1.png"), C_BUF);
   for (const cat of ["top", "bottom", "shoes"]) { const d = join(sb.out, "references", "v1", cat); mkdirSync(d, { recursive: true }); writeFileSync(join(d, CALLS.request.references[cat].name), sheet && sheet[cat] ? sheet[cat] : readFileSync(sheetFile(cat))); }
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the sandbox starts from the authorisation as merged: the recorded execution (D-231) is undone in the copy only
+  { const cp = join(sb.repo, ...CALLS_REL.split("/")), c = JSON.parse(readFileSync(cp, "utf8")); c.budget.actuallySent = 0; delete c.budget.closed; delete c.budget.recordedBy;
+    for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.result; delete e.recordedBy; delete e.closedBy; } writeFileSync(cp, JSON.stringify(c, null, 2) + "\n"); }
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }

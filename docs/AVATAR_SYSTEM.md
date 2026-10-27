@@ -385,7 +385,19 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Northstar seam validation — D-228: six frozen calls authorised, not executed.**
+- **Northstar seam validation results — D-231: six calls sent, verdict partial.**
+  - **Sent.** V1 … V6 once each, with no stop. D-228 is closed and no further calls follow. Method d225 on the 40-outfit
+    matrix; two runs were byte-identical.
+  - **Result.** Technically OK: the hip tee V1 (the first top to cover the hip corners) and the ankle boot V6. V2–V5 are
+    rejected on FIT-6v2 strips at a hem or cuff corner. Q1 0/6, Q2 1/2, Q3 8/8 available outfits; the frozen rule gives partial.
+  - **Reading.** The seams between categories held: one seam fault in 40 diagnostic outfits (V1 + V5 at the hip, which
+    SC-W6 predicts). What blocks now:
+    - edge corners a few px narrower than C's limbs;
+    - extraction of skin-like and dark colours;
+    - hip width and long hems; SC-W6 is stricter than needed.
+
+    See `docs/decisions/D-231.md`.
+- **Northstar seam validation — D-228: six frozen calls authorised (executed and closed by D-231).**
   - **Request.** One call per item of D-225's plan (V1 … V6), in order, with the model of D-207 and D-218 unchanged. Image 1 is
     C. Image 2 is the category's C-derived reference sheet (seam zones as colour marks, `--seam-reference`, local only). Each
     frozen prompt is D-207's template plus the contract's `modelDraws` plus one sentence explaining the sheet.
