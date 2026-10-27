@@ -51,3 +51,47 @@ export function seamTemplates(w, base, T, { contract = BC.SEAM_CONTRACT_V1 } = {
       "VIOLATION-shoes-boot-wide": { item: shoe([190, 150, 100], { collar: K.shaftMaxAboveAnklePx - 6, width: K.trouserOverhangPx + 7 }), breaks: "SC-L3 (shaft wider than the full hem's overhang)", partner: "TEMPLATE-bottom-full" } } };
 }
 export const CATEGORY_OF = (id) => (/top/.test(id) ? "top" : /bottom/.test(id) ? "bottom" : "shoes");
+
+/** D-228: the REFERENCE SHEET of one category — C's own picture (the edit input) with the category's seam zones drawn on it as
+ *  colour marks, for a model to read next to C (a second input image). The marks only: what each colour means is the prompt's
+ *  (SHEET_COLOURS). Derived from C, so it is kept outside both clones (D-127 §2). A sheet guides; it proves nothing. */
+export const SHEET_COLOURS = Object.freeze({ magenta: [230, 0, 200], cyan: [0, 190, 240], green: [0, 200, 80], red: [240, 40, 40], yellow: [250, 210, 0] });
+export function seamReferenceSheet(w, base, T, category, { contract = BC.SEAM_CONTRACT_V1, img = base.R } = {}) {
+  const K = contract, Ln = BC.seamLines(w, base, T), lab = base.sep.lab, cols = Object.keys(Ln.waist).map(Number), o = new Uint8ClampedArray(img), C = SHEET_COLOURS;
+  const put = (x, y, rgb, a = 1) => { if (x < 0 || x >= W || y < 0 || y >= H) return; const i = (y * W + x) * 4, k = o[i + 3] / 255;
+    for (let c = 0; c < 3; c++) o[i + c] = Math.round(a * rgb[c] + (1 - a) * (k * o[i + c] + (1 - k) * rgb[c])); o[i + 3] = Math.max(o[i + 3], Math.round(255 * Math.max(a, k))); };
+  const hline = (x0, x1, y, rgb, t = 3) => { for (let x = x0; x <= x1; x++) for (let d = 0; d < t; d++) put(x, y + d - (t >> 1), rgb); };
+  const band = (x0, x1, y0, y1, rgb) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(x, y, rgb, 0.5); };
+  const waistLine = (rgb) => { for (const x of cols) for (let d = -1; d <= 1; d++) put(x, Ln.waist[x] + d, rgb); };
+  const lo = Math.min(...cols), hi = Math.max(...cols), wTop = Math.min(...cols.map((x) => Ln.waist[x])), wBot = Math.max(...cols.map((x) => Ln.waist[x]));
+  const hipAt = (y) => Ln.hip[y] || Ln.hip[wBot + 1] || [lo, hi];
+  const legAt = (side, y) => { for (let d = 0; d < 40; d++) if (Ln.leg[side][y + d]) return Ln.leg[side][y + d]; return null; };
+  if (category === "top") {
+    for (let i = 0; i < N; i++) if (lab[i] === 1) put(i % W, (i / W) | 0, C.magenta, 0.5);               // C's base top: cover all of it, corners too
+    for (let y = wTop + K.topHemMinPx; y <= wBot + K.topHemMaxPx; y++) { const h = hipAt(y); for (const x of cols) { const d = y - Ln.waist[x]; if (d >= K.topHemMinPx && d <= K.topHemMaxPx) put(x, y, C.green, 0.5); }
+      for (let x = h[0] - K.topHipOverhangPx; x < lo; x++) if (y - Ln.waist[lo] >= K.topHemMinPx && y - Ln.waist[lo] <= K.topHemMaxPx) put(x, y, C.green, 0.5);
+      for (let x = hi + 1; x <= h[1] + K.topHipOverhangPx; x++) if (y - Ln.waist[hi] >= K.topHemMinPx && y - Ln.waist[hi] <= K.topHemMaxPx) put(x, y, C.green, 0.5); }
+    waistLine(C.cyan);                                                                                      // a waist-length hem ends ON this line
+    // the arm at C's wrist row: the outermost opaque run of C's own picture on that side (the hand hangs beside the shorts)
+    for (const side of ["left", "right"]) { const wr = Ln.wrist[side], step = side === "left" ? 1 : -1, op = (x) => img[(wr * W + x) * 4 + 3] >= 200; let x = side === "left" ? 0 : W - 1;
+      while (x >= 0 && x < W && !op(x)) x += step; const xa = x; while (x >= 0 && x < W && op(x)) x += step; const xb = x - step;
+      if (xa >= 0 && xa < W) band(Math.min(xa, xb) - 3, Math.max(xa, xb) + 3, wr - K.cuffBandPx, wr, C.cyan); }   // long sleeves end in this band
+  }
+  if (category === "bottom") {
+    waistLine(C.cyan);                                                                                      // the bottoms start on the row below this line
+    for (let y = wTop + K.waistbandMaxPx + 1; y <= wBot + K.linesFreeToPx; y++) { const h = hipAt(y); for (let x = h[0] - K.bottomsHipMaxPx; x <= h[1] + K.bottomsHipMaxPx; x++) { const xc = Math.min(hi, Math.max(lo, x)), d = y - Ln.waist[xc]; if (d > K.waistbandMaxPx && d <= K.linesFreeToPx) put(x, y, C.red, 0.5); } }
+    for (let y = wTop; y <= wBot + K.linesFreeToPx; y++) { const h = hipAt(y); for (const x of [h[0] - K.bottomsHipMaxPx, h[1] + K.bottomsHipMaxPx]) for (let d = -1; d <= 1; d++) put(x + d, y, C.magenta); }   // the hip width
+    for (const side of ["left", "right"]) { const A = Ln.ankle[side], lc = legAt(side, A - K.croppedMinAboveAnklePx), lf = legAt(side, A);
+      if (lc) hline(lc[0] - K.trouserOverhangPx - 6, lc[1] + K.trouserOverhangPx + 6, A - K.croppedMinAboveAnklePx, C.yellow);   // a cropped hem ends above this line
+      for (let y = A - K.envelopeFromPx; y <= A + K.fullHemMaxBelowAnklePx; y++) { const lg = legAt(side, Math.min(y, A)) || lf; if (!lg) continue;
+        for (const x of [lg[0] - K.trouserOverhangPx, lg[1] + K.trouserOverhangPx]) for (let d = -1; d <= 1; d++) put(x + d, y, C.green); }   // a full hem is at least this wide
+      if (lf) band(lf[0] - K.trouserOverhangPx, lf[1] + K.trouserOverhangPx, A + K.fullHemMinBelowAnklePx, A + K.fullHemMaxBelowAnklePx, C.green); }   // and ends square in this band
+  }
+  if (category === "shoes") {
+    for (const side of ["left", "right"]) { const A = Ln.ankle[side], lg = legAt(side, A); if (!lg) continue;
+      hline(lg[0] - K.shoeEnvelopePx - 6, lg[1] + K.shoeEnvelopePx + 6, A, C.cyan);                         // the shoe covers the foot up to at least here
+      const ls = legAt(side, A - K.shaftMaxAboveAnklePx) || lg; hline(ls[0] - K.shoeEnvelopePx - 6, ls[1] + K.shoeEnvelopePx + 6, A - K.shaftMaxAboveAnklePx, C.magenta);   // no shaft above here
+      for (let y = A - K.envelopeFromPx; y <= A + K.fullHemMinBelowAnklePx; y++) { const l = legAt(side, y) || lg; for (const x of [l[0] - K.shoeEnvelopePx, l[1] + K.shoeEnvelopePx]) for (let d = -1; d <= 1; d++) put(x + d, y, C.green); } }   // within the leg ± 8
+  }
+  return o;
+}

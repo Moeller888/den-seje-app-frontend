@@ -8,6 +8,7 @@
 // clones (D-127 §2). C is read from <Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ and verified by its hash.
 // Usage: node tools/avatar/northstar-item-pilot.mjs --run <manifest.json> --out <empty dir outside both clones>   (D-222: the one entry)
 //        node tools/avatar/northstar-item-pilot.mjs --process <generated.png> --item <item id> --out <empty dir outside both clones>
+//        node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> --out <empty dir outside both clones>   (D-228)
 //        node tools/avatar/northstar-item-pilot.mjs --combine <dir holding the processed item dirs> --out <empty dir outside both clones>
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -19,6 +20,7 @@ import * as NL from "./r3-northstar-layers.mjs";
 import * as WR from "./northstar-wardrobe.mjs";
 import * as BF from "./northstar-base-figure.mjs";
 import * as BC from "./northstar-base-figure-c.mjs";
+import * as ST from "./northstar-seam-templates.mjs";
 const classify = BF.classify;
 import { flat, crop, down, grid } from "./northstar-wardrobe-poc.mjs";
 
@@ -26,7 +28,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
 /** D-218: each item's declared COVERING rule (body visibility when worn): closed footwear hides the foot inside its outline; sandals
  *  are open and keep C's toes; no other item hides body. A rule of the item type, never of one picture. */
-export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear" });
+export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear" });
 /** D-222: the rules every item of a category gets — none is set per picture. Shoes take their covering from the item's TYPE. */
 export const CATEGORY_RULES = Object.freeze({
   top: { layers: ["topBody", "sleeves"], split: "a top's pixels over C's arms are sleeves", extraction: "D-216 rules 1–7 + D-213 G-3 hand guard", skinShadow: "D-222", contourEdgeUnmix: "D-222", covering: "none", checks: ["FIT-1…FIT-5v2", "FIT-6v2 (D-222 compact crossing)", "FIT-4 (D-222 C's exterior)", "VIS-1", "VIS-2", "Q-1…Q-3"] },
@@ -35,6 +37,10 @@ export const CATEGORY_RULES = Object.freeze({
 });
 export const COVERING_BY_TYPE = Object.freeze({ sneakers: "closed-footwear", boots: "closed-footwear", sandals: "open-footwear" });
 export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top", "top-sweater-green": "top", "bottom-shorts-navy": "bottom", "bottom-trousers-khaki": "bottom", "bottom-skirt-plum": "bottom", "shoes-sandals-brown": "shoes", "shoes-sneakers-white": "shoes", "shoes-boots-black": "shoes" });
+/** D-228: the six items of the seam validation (seam-validation-plan-v1.json, V1 … V6) — ruled by their category and type like the
+ *  pilot's nine; ITEMS stays the pilot's nine (its 3 × 3 × 3 sheet), ITEM_CATEGORY knows all fifteen. */
+export const VALIDATION_ITEMS = Object.freeze({ "top-tee-hip-blue": "top", "top-longsleeve-waist-purple": "top", "bottom-trousers-square-olive": "bottom", "bottom-capri-lightblue": "bottom", "bottom-skirt-band-orange": "bottom", "shoes-ankleboots-brown": "shoes" });
+export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
 export const STRONG_TOL = 40;   // D-210 (D-208: 60): new paint when no pixel of C within EXPLAIN_PX lies within this of it (see colourDist).
@@ -258,7 +264,7 @@ const CLOSE = { top: [[360, 420, 664, 620], [290, 600, 420, 980], [604, 600, 734
 const RULE_NAMES = { 1: "new paint", 2: "base interior / own base garment", 3: "closing (gaps ≤ 6 px)", 4: "outline band", 6: "edge from the picture", 7: "enclosed hole from the picture" };
 export function processToDir(w, base, T, itemId, rawBuf, OUT, { method = METHOD } = {}) {
   if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
-  const category = ITEMS[itemId]; if (!category) throw new Error("unknown item " + itemId);
+  const category = ITEM_CATEGORY[itemId]; if (!category) throw new Error("unknown item " + itemId);
   const img = decodePng(rawBuf); if (!img.ok || !img.px || img.px.length !== N * 4) throw new Error("not a 1024×1536 RGBA PNG");
   const r = processItem(w, base, T, category, Uint8ClampedArray.from(img.px), { itemId, method }), files = {};
   const save = (n, im, what) => { const b = encodePng(im.w, im.h, im.px); writeFileSync(join(OUT, n), b); files[n] = { sha256: sha(b), w: im.w, h: im.h, what }; };
@@ -327,7 +333,7 @@ export function validateManifest(m) {
   if (!METHODS[m.method]) throw new Error("manifest: unknown method " + m.method);
   const seen = new Set(); for (const it of m.items) {
     if (!it || typeof it.id !== "string" || seen.has(it.id)) throw new Error("manifest: a missing or repeated item id"); seen.add(it.id);
-    if (ITEMS[it.id] !== it.category) throw new Error("manifest: " + it.id + " is not a " + it.category);
+    if (ITEM_CATEGORY[it.id] !== it.category) throw new Error("manifest: " + it.id + " is not a " + it.category);
     const cov = it.category === "shoes" ? COVERING_BY_TYPE[it.type] : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
     if (typeof it.raw !== "string" || !/^[0-9a-f]{64}$/.test(it.rawSha256 || "")) throw new Error("manifest: " + it.id + " needs a raw path and its pinned sha256"); }
   return true; }
@@ -410,7 +416,7 @@ export function packageOutfits(w, base, manifest, processed, OUT, { register = n
  *  where C shows — that alone does not prove the garment fits; (4) and the owner's eyes do. Writes outside both clones only. */
 export function evidence(w, base, T, itemId, rawBuf, OUT) {
   if (!BF.isOutsideRepo(OUT)) throw new Error("refusing to write inside the repository (D-127 §2)");
-  const category = ITEMS[itemId]; if (!category) throw new Error("unknown item " + itemId);
+  const category = ITEM_CATEGORY[itemId]; if (!category) throw new Error("unknown item " + itemId);
   const img = decodePng(rawBuf), raw = Uint8ClampedArray.from(img.px), r = processItem(w, base, T, category, raw, { itemId }), C = base.R, O = r.O, t = T[category];
   const reg = BC.regionsC(w, base, T, category, { covering: r.covering });
   const raw1 = { changedInsideItemRegionPx: 0, changedOutsideItemRegionPx: 0, changedProtectedPx: 0, apiEditPx: count(reg.apiEdit), itemAllowedPx: count(reg.itemAllowed) };
@@ -448,8 +454,9 @@ export function apiMaskPng(w, base, T, category) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const a = process.argv.slice(2), oi = a.indexOf("--out"), pi = a.indexOf("--process"), ii = a.indexOf("--item"), ci = a.indexOf("--combine"), OUT = oi >= 0 && a[oi + 1] ? resolve(a[oi + 1]) : null;
-  const ei = a.indexOf("--evidence"), mi = a.indexOf("--api-mask"), ri = a.indexOf("--run");
-  if (!OUT || (pi < 0 && ci < 0 && ei < 0 && mi < 0 && ri < 0)) { console.error("usage: --run <manifest.json> --out <dir> | --process <png> --item <id> --out <dir> | --combine <dir> --out <dir> | --evidence <png> --item <id> --out <dir> | --api-mask --item <id> --out <dir>"); process.exit(1); }
+  const ei = a.indexOf("--evidence"), mi = a.indexOf("--api-mask"), ri = a.indexOf("--run"), si = a.indexOf("--seam-reference");
+  if (!OUT || (pi < 0 && ci < 0 && ei < 0 && mi < 0 && ri < 0 && si < 0)) { console.error("usage: --run <manifest.json> --out <dir> | --process <png> --item <id> --out <dir> | --combine <dir> --out <dir> | --evidence <png> --item <id> --out <dir> | --api-mask --item <id> --out <dir> | --seam-reference <top|bottom|shoes> --out <dir>"); process.exit(1); }
+  if (si >= 0 && !["top", "bottom", "shoes"].includes(a[si + 1])) { console.error("--seam-reference needs top, bottom or shoes"); process.exit(1); }
   if (!BF.isOutsideRepo(OUT)) { console.error("REFUSED: --out is inside the repository (D-127 §2)"); process.exit(1); }
   if (existsSync(OUT) && readdirSync(OUT).length) { console.error("--out must be empty"); process.exit(1); } mkdirSync(OUT, { recursive: true });
   const w = WR.buildWardrobe(), base = BC.prepareBase(w, Uint8ClampedArray.from(decodePng(readC()).px)), T = BC.templatesC(w, base, { revision: "d213" });
@@ -458,7 +465,8 @@ if (isMain) {
     const r = runPipeline(w, base, T, man, (rel) => readFileSync(join(root, rel)), OUT, { cSha256: BC.C_RAW_SHA256, register });
     console.log(JSON.stringify({ method: r.method, items: Object.fromEntries(Object.entries(r.items).map(([k, v]) => [k, v.status])), outfits: r.package.summary, rejectedItems: r.package.rejected.map((x) => x.item) }, null, 2)); }
   else if (ei >= 0) { const r = evidence(w, base, T, a[ii + 1], readFileSync(resolve(a[ei + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, covering: r.covering, measures: r.measures }, null, 2)); }
-  else if (mi >= 0) { const id = a[ii + 1], b = apiMaskPng(w, base, T, ITEMS[id]); writeFileSync(join(OUT, "api-mask-" + ITEMS[id] + ".png"), b); console.log(JSON.stringify({ item: id, category: ITEMS[id], sha256: sha(b), bytes: b.length })); }
+  else if (si >= 0) { const cat = a[si + 1], b = encodePng(W, H, ST.seamReferenceSheet(w, base, T, cat, { img: Uint8ClampedArray.from(decodePng(readC()).px) })); writeFileSync(join(OUT, "seam-reference-" + cat + ".png"), b); console.log(JSON.stringify({ category: cat, sha256: sha(b), bytes: b.length })); }
+  else if (mi >= 0) { const id = a[ii + 1], b = apiMaskPng(w, base, T, ITEM_CATEGORY[id]); writeFileSync(join(OUT, "api-mask-" + ITEM_CATEGORY[id] + ".png"), b); console.log(JSON.stringify({ item: id, category: ITEM_CATEGORY[id], sha256: sha(b), bytes: b.length })); }
   else if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }
   else {
     const root = resolve(a[ci + 1]), processed = {};

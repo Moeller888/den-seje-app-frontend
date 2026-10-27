@@ -385,6 +385,15 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar seam validation — D-228: six frozen calls authorised, not executed.**
+  - **Request.** One call per item of D-225's plan (V1 … V6), in order, with the model of D-207 and D-218 unchanged. Image 1 is
+    C. Image 2 is the category's C-derived reference sheet (seam zones as colour marks, `--seam-reference`, local only). Each
+    frozen prompt is D-207's template plus the contract's `modelDraws` plus one sentence explaining the sheet.
+  - **Adapter.** `openai-send-northstar-seam-d228.mjs`: one-shot claims and at most 6 calls, with no reserve or retry. Order
+    and stop rules are structural: credit, uncertain dispatch, request shape, format, a second moderation block, or a stop file.
+  - **Acceptance.** Frozen before sending: technical, contract, combination fit and visual quality are reported apart, with a
+    pre-registered verdict (Q1–Q3) and the 40-outfit reuse matrix. Sending needs the owner's separate instruction. See
+    `docs/decisions/D-228.md`.
 - **Northstar seam contract — D-225: seam-contract-v1 between categories on C (no calls).**
   - **Stations.** Tops end on C's waist line or at a hip station W + [18, 48], cover the hip corners and overhang the hips.
     Bottoms start at C's base shorts, draw no line between W + 12 and W + 54, and are cropped (hem ≤ A − 68) or full
@@ -394,7 +403,7 @@ art layer behind them can be upgraded without a rewrite.
     contour now covers 3 px gaps (revision d225); method d225.
   - **Evidence.** 12 of 12 compliant template outfits pass on the stand-in and on C. Of the pilot items only the sneakers comply.
     The contract explains F-006, F-007 and F-010 to F-012.
-  - **Next.** A six-item validation plan, not authorised. See `docs/decisions/D-225.md`.
+  - **Next.** A six-item validation plan; authorised as six frozen calls by D-228 (not executed). See `docs/decisions/D-225.md`.
 - **Northstar outfits on C — D-223: outfit check at the seams, method d223, findings register (no calls).**
   - **Outfit check.** `outfitCheck` covers background through a seam between two categories, holes, missing overlap, a cut in one
     garment, double contours and order; corners are only reported. It does not require C's base silhouette.
