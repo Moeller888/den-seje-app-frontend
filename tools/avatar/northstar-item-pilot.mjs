@@ -71,6 +71,15 @@ export function shadeFloorC(base) {
   const med = (c) => { const v = sk.map((i) => C[i * 4 + c]).sort((a, b) => a - b); return v[v.length >> 1] || 1; }, B = [med(0), med(1), med(2)];
   const kr = sk.map((i) => C[i * 4] / B[0]).filter((v) => v < 0.98).sort((a, b) => a - b);
   return (base._shadeFloor = kr.length ? kr[Math.floor(0.1 * (kr.length - 1))] : 1); }
+/** D-232: C's own skin-shading hue shift — the largest green-minus-blue ratio difference (kG − kB) over C's shaded skin pixels
+ *  (mean ratio < 0.98 against C's median skin colour). A cast shadow darkens like C's own shading; fabric of a skin-like colour
+ *  (orange: kG − kB ≈ 0.4) does not. Measured on C (cached on the prepared base), never on an item. */
+export function shadeHueC(base) {
+  if (base._shadeHue !== undefined) return base._shadeHue; const C = base.R, sk = [];
+  for (let i = 441 * W; i < N; i++) if ((base.body[i * 4 + 3] >= 250 || base.arms[i * 4 + 3] >= 250) && classify(C, i) === "skin") sk.push(i);
+  const med = (c) => { const v = sk.map((i) => C[i * 4 + c]).sort((a, b) => a - b); return v[v.length >> 1] || 1; }, B = [med(0), med(1), med(2)];
+  let m = 0; for (const i of sk) { const k = [0, 1, 2].map((c) => C[i * 4 + c] / B[c]); if ((k[0] + k[1] + k[2]) / 3 < 0.98) m = Math.max(m, k[1] - k[2]); }
+  return (base._shadeHue = m); }
 /** D-214: multiply a skin-shadow layer onto a composed figure, only where the body or the arms are the topmost layer. */
 export function applyShadow(composite, stack, shadow) {
   const o = new Uint8ClampedArray(composite);
@@ -86,8 +95,9 @@ export const METHODS = Object.freeze({
   d222: { fitRevision: "d222", shadowDarkness: "luminance", what: "D-222 — extraction D-216, skin shadow D-222 (darker = mean channel ratio < 0.98), covering D-218, fitCheck d222 (VIS-3, FIT-4 against C's own exterior, FIT-6v2 garment end)" },
   d223: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d223", what: "D-223 — D-222's method, and at a seam between categories: (2) a rim of the item's own base garment that C explains and that lies beyond the item's own outline (> EXPLAIN_PX + 1 from its new paint and base interior) is the base garment redrawn, gone at runtime — not the item; (3) the closing — a gap ≤ 6 px between the item's own core — may cross another category's base" },
   d225: { fitRevision: "d222", shadowDarkness: "luminance", ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d225", what: "D-225 — D-223's extraction and checks; the outfit check's double contour with gaps up to 3 px as written (D-223 stopped at 2); items are also measured against the seam contract (seam-contract-v1)" },
+  d232: { fitRevision: "d232", shadowDarkness: "luminance", shadowHue: "c-own", remnantChroma: true, limbExit: true, ownBaseRim: "beyond-outline", closeOverOtherBase: true, outfitRevision: "d225", contract: "seam-contract-v2", what: "D-232 — D-225's method, with three general corrections: a skin shadow shifts the hue no more than C's own skin shading does (orange fabric over skin is fabric); G-2 counts a base pixel as unchanged only when its chroma is unchanged too (dark fabric shading is no grey remnant); a thin contour line hanging below a hem or a cuff is the limb's redrawn contour, not garment, and FIT-6v2 reports a limb leaving a garment at its end (fitCheck d232). Items are measured against seam-contract-v2" },
 });
-export const METHOD = "d225";
+export const METHOD = "d232";
 /** Process one generated picture of one item on a prepared base (C, or a stand-in in CI). */
 export function processItem(w, base, T, category, raw, { itemId = null, method = METHOD } = {}) {
   if (T.revision !== "d213") throw new Error("processItem needs templatesC(w, base, { revision: \"d213\" })");
@@ -116,7 +126,7 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
       const m = colourDist(O, i, C, j); if (m < best) best = m; }
     near2[i] = best; }
   const core = new Uint8Array(N), other = new Uint8Array(N), ownRim = new Uint8Array(N); for (let i = 0; i < N; i++) if (base.sep.lab[i] && base.sep.lab[i] !== own) other[i] = 1;
-  for (let i = 441 * W; i < N; i++) { if (t.mustCover[i]) { mc++; if (!changed[i] && classify(O, i) !== "ink") remnant++; }
+  for (let i = 441 * W; i < N; i++) { if (t.mustCover[i]) { mc++; if (!changed[i] && classify(O, i) !== "ink" && (!M.remnantChroma || colourDist(O, i, C, i) <= CHANGE_TOL)) remnant++; }
     const inside = t.allowed[i] && !t.protect[i];
     // D-223 (A): outside the base interior, a pixel of the item's own base garment that C EXPLAINS (within EXPLAIN_PX, STRONG_TOL) is that base garment's rim redrawn by the
     // model (the tee is shorter at the side than C's base top: C's base side contour hung below the tee's hem as a dark line into
@@ -211,14 +221,37 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
   // D-222: "darker" is the mean of the three ratios, not red alone — a cast shadow under a trouser hem keeps C's red and drops green
   // and blue (249,156,95 on C's 250,193,124: k 1.00 / 0.81 / 0.77); D-214's red test let it through as fabric, and over a boot it
   // showed as orange specks along the hem.
-  const shade = shadeFloorC(base), shadow = empty(); let shadowPx = 0;
+  const shade = shadeFloorC(base), hue = M.shadowHue === "c-own" ? shadeHueC(base) : 1, shadow = empty(); let shadowPx = 0;
   for (let i = 441 * W; i < N; i++) { if (!im[i] || t.mustCover[i] || (own > 0 && base.sep.lab[i] === own) || O[i * 4 + 3] < 128) continue;
     if (!(base.body[i * 4 + 3] >= 250 || base.arms[i * 4 + 3] >= 250) || classify(C, i) !== "skin" || classify(O, i) !== "skin") continue;
     const k = [0, 1, 2].map((c) => O[i * 4 + c] / Math.max(1, C[i * 4 + c]));
     const darker = M.shadowDarkness === "luminance" ? (k[0] + k[1] + k[2]) / 3 < 0.98 : k[0] < 0.98;
     if (k.some((v) => v > 1.02) || k[0] < shade || !darker || k[0] < k[1] - 0.02 || k[1] < k[2] - 0.04) continue;
+    if (M.shadowHue === "c-own" && k[1] - k[2] > hue) continue;   // D-232: a hue shift C's own shading never shows is fabric
     shadow.set([...k.map((v) => Math.round(255 * Math.min(1, v))), O[i * 4 + 3]], i * 4); item.fill(0, i * 4, i * 4 + 4); im[i] = 0; shadowPx++; }
   obs.skinShadowPx = shadowPx;
+  // D-232 LIMB EXIT: below a hem or a cuff the picture continues the limb — the model redraws its contour 1–3 px off C's, and rule
+  // (6) took that contour where C shows background beside it (the capri's inner hem corner: a 1 × 10 px ink line and its skin
+  // antialias hanging below the hem, over any other item a stray line). A pixel of the item in a row run no wider than a contour
+  // line (EXPLAIN_PX + 1), hanging from the garment (connected upward through such runs to a wider run), with no wider run of
+  // the item below it in its columns (± 2) and not of the garment's own fabric colour (farther than STRONG_TOL from the median of
+  // its wide, non-ink runs — contour ink, skin and their grey antialias against the background), is the limb's contour: it leaves
+  // the item. Straps (a wider run below them) and fabric-coloured details are untouched; shoes are not concerned (their end is the sole).
+  // It runs after the skin shadow: a shadow pixel beside a hanging line is no garment, so the line's own run is judged alone.
+  if (M.limbExit && (category === "top" || category === "bottom")) {
+    const thin = EXPLAIN_PX + 1, runW = new Uint16Array(N), lastWide = new Int32Array(W).fill(-1), hang = new Uint8Array(N); let removed = 0;
+    for (let y = 441; y < H; y++) { let x = 0; while (x < W) { if (!im[y * W + x]) { x++; continue; } let e = x; while (e < W && im[y * W + e]) e++; for (let k = x; k < e; k++) runW[y * W + k] = e - x; x = e; } }
+    for (let i = 441 * W; i < N; i++) if (im[i] && runW[i] > thin) lastWide[i % W] = Math.max(lastWide[i % W], (i / W) | 0);
+    const fab = [[], [], []]; for (let i = 441 * W; i < N; i += 7) if (im[i] && runW[i] > thin && classify(O, i) !== "ink") for (let c = 0; c < 3; c++) fab[c].push(O[i * 4 + c]);
+    const F = new Uint8ClampedArray(4); for (let c = 0; c < 3; c++) { const v = fab[c].sort((a, b) => a - b); F[c] = v[v.length >> 1] || 0; } F[3] = 255;
+    for (let y = 442; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (!im[i] || runW[i] > thin) continue;
+      for (let dx = -1; dx <= 1 && !hang[i]; dx++) { if (x + dx < 0 || x + dx >= W) continue; const j = i - W + dx; if (im[j] && (runW[j] > thin || hang[j])) hang[i] = 1; } }
+    // a limb's contour lies over skin or background — never over a base garment (a top's hip corner over C's base top stays)
+    for (let i = 441 * W; i < N; i++) { if (!hang[i] || t.mustCover[i] || base.sep.lab[i]) continue; const x = i % W, y = (i / W) | 0; let wideBelow = false;
+      for (let dx = -2; dx <= 2; dx++) if (x + dx >= 0 && x + dx < W && lastWide[x + dx] > y) wideBelow = true;
+      if (wideBelow || colourDist(O, i, F, 0) <= STRONG_TOL) continue;
+      item.fill(0, i * 4, i * 4 + 4); im[i] = 0; ruleOf[i] = 0; removed++; }
+    obs.limbExitRemovedPx = removed; }
   // D-222 CONTOUR EDGE OVER SKIN: the garment's outline is antialiased against C's skin in the picture — a pixel there is a MIX of the
   // contour's ink and the skin below it. Taken as it is, it carries skin colour into the item, and over another item (a trouser hem
   // over a boot) it shows as a reddish dotted line. At the garment's edge (its antialias: ≤ 1 px from C's visible, opaque skin outside the item), a pixel
@@ -249,7 +282,7 @@ export function processItem(w, base, T, category, raw, { itemId = null, method =
   const fit = BC.fitCheck(w, base, T, category, layers, { revision: M.fitRevision, shadow: shadowPx ? shadow : null, hide });
   const failedFit = fit.checks.filter((c) => c.axis === "fit" && !c.ok);
   // EXTRACTION: a hole in the outfit where the generated picture has opaque paint means the tool missed the item, not the model
-  const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201", hide, enclosure: M.fitRevision === "d222" ? "c-exterior" : "canvas" });
+  const P = BF.layerProof(w, base.R, base.Z, { ...BF.minimumItems(base.R, base.sep.lab), ...layers }, { sep: base.sep, headSeam: "d201", hide, enclosure: M.fitRevision === "d222" || M.fitRevision === "d232" ? "c-exterior" : "canvas" });
   const missedM = new Uint8Array(N); let missedPaint = 0;   // P (below) also places the skin shadow for (let i = 0; i < N; i++) if (P.enclosed[i] && O[i * 4 + 3] >= 128) { missedPaint++; missedM[i] = 1; }
   if (missedPaint > 0) ext.push("E-1 " + missedPaint + " px of a hole lie where the generated picture has opaque paint — the extraction missed them");
   const fitFaults = failedFit.filter((c) => !(c.id === "FIT-4-COVERAGE" && missedPaint > 0)).map((c) => c.id + " " + JSON.stringify(c.value));
@@ -349,11 +382,11 @@ export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null
     processed[it.id] = { item: it.id, category: it.category, ok: rep.ok, layers, shadow, faults: rep.faults };
     const openF = openFindingsFor(register, [it.id]).filter((id) => !register.findings.find((f) => f.id === id).subject.with);
     // D-225: each item measured against the seam contract — a report for these pilot pictures, made before the contract existed
-    const sc = method === "d225" && Object.keys(layers).length ? BC.contractCheck(w, base, T, it.category, layers) : null;
+    const sc = (method === "d225" || method === "d232") && Object.keys(layers).length ? BC.contractCheck(w, base, T, it.category, layers, { contract: method === "d232" ? BC.SEAM_CONTRACT_V2 : BC.SEAM_CONTRACT_V1 }) : null;
     items[it.id] = { category: it.category, type: it.type, covering: it.covering, rawSha256: it.rawSha256, technicallyOk: rep.ok, status: !rep.ok ? "rejected" : openF.length ? "technically-ok-open-finding" : "technically-ok", openFindings: openF,
       ...(sc ? { seamContract: { version: sc.version, complies: sc.ok, failed: sc.checks.filter((c) => !c.ok).map((c) => ({ id: c.id, value: c.value })) } } : {}), faults: rep.faults, extractionRulePx: rep.extractionRulePx, files: Object.fromEntries(Object.entries(rep.files).map(([n, f]) => [n, f.sha256])), reportSha256: sha(readFileSync(join(d, "report.json"))) }; });
   const pkgDir = join(OUT, "package"); mkdirSync(pkgDir, { recursive: true }); const pkg = packageOutfits(w, base, manifest, processed, pkgDir, { register });
-  const run = { decision: method === "d225" ? "D-225" : "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
+  const run = { decision: method === "d232" ? "D-232" : method === "d225" ? "D-225" : "D-223", method, registerSha256: register ? sha(Buffer.from(JSON.stringify(register))) : null, methodWhat: METHODS[method].what, c: { sha256: cSha256 }, manifestSha256: sha(Buffer.from(JSON.stringify(manifest))), code: codeHashes(), items, package: pkg,
     note: "Technically OK is not visual approval; an open finding keeps an item or outfit from being ready. The same manifest, register, raws, C and code give the same bytes (no timestamps, no per-picture settings)." };
   writeFileSync(join(OUT, "run.json"), JSON.stringify(run, null, 2) + "\n"); return run; }
 /** D-223: the seams an outfit is looked at closely (×2): neck/collar, both hips, both wrists, the legs and shoes. */

@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar limits corrected — D-232: method d232 and seam-contract-v2 (no calls).**
+  - **Limb exit.** A contour line hanging below a hem or a cuff leaves the item, and FIT-6v2 reports a limb leaving a garment at
+    its end. D-231's V2 cuff "pass" was the hanging contour.
+  - **Colours.** A skin shadow shifts the hue no more than C's own shading, so orange fabric is fabric. G-2 compares chroma, so
+    dark olive is not grey.
+  - **Hip lanes.** These are re-derived from the outfit check: top ≥ + 6, bottoms ≤ + 6 (v1: + 8 / + 3).
+  - **Result.** The pilot's statuses are unchanged; three khaki + boots outfits now pass the check. The D-228 matrix has
+    11/11 items technically OK and 38/40 outfits pass (only V1 + V5, as predicted). D-231's verdict stands.
+
+    See `docs/decisions/D-232.md`.
 - **Northstar seam validation results — D-231: six calls sent, verdict partial.**
   - **Sent.** V1 … V6 once each, with no stop. D-228 is closed and no further calls follow. Method d225 on the 40-outfit
     matrix; two runs were byte-identical.

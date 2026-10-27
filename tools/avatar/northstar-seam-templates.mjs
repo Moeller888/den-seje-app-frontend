@@ -42,6 +42,8 @@ export function seamTemplates(w, base, T, { contract = BC.SEAM_CONTRACT_V1 } = {
         for (let x = x0; x <= x1; x++) m[y * W + x] = 1; } }
     return { shoes: paintMask(m, rgb) }; };
   return {
+    // D-232: the template builders themselves, for sweeps over a seam's parameter (hem depth, hip width) — TEMPLATE items only
+    build: { top, cropped, full, shoe },
     compliant: { "TEMPLATE-top-waist": top(0, [70, 110, 170]), "TEMPLATE-top-hip": top(K.topHemMinPx + 6, [170, 70, 70]), "TEMPLATE-bottom-cropped": cropped([60, 60, 90]), "TEMPLATE-bottom-waistband": cropped([90, 50, 80], K.waistbandMaxPx),
       "TEMPLATE-bottom-full": full([150, 130, 90]), "TEMPLATE-shoes-low": shoe([235, 235, 235]), "TEMPLATE-shoes-boot": shoe([40, 38, 40], { collar: K.shaftMaxAboveAnklePx - 6 }) },
     violating: { "VIOLATION-top-hem-W+10": { item: top(K.waistbandMaxPx - 2, [120, 160, 80]), breaks: "SC-W1 (hem off station)", partner: "TEMPLATE-bottom-waistband" },
