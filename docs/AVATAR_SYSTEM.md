@@ -385,6 +385,16 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar independent validation — D-235: six new frozen calls authorised, not executed.**
+  - **Why.** D-232's 38/40 re-evaluated pictures that shaped the method. D-235 tests d232 and seam-contract-v2 on six new
+    designs: two tops, two bottoms and two closed shoes (three light, skin-near; three dark).
+  - **Frozen.** Method d232 is pinned with its definition and code. Image 2 is the v2 sheet; the shoe sheet is D-228's. The
+    prompts are D-207's template plus v2's (= v1's) instructions; only the garments are new. A 48-outfit matrix with old d232-OK
+    items counts missing and rejected items in the denominator.
+  - **Acceptance.** Five axes are kept apart (technical, contract, combination fit, manual findings, visual quality). The
+    pre-registered decision is a larger batch, a targeted correction, or a fundamental method change. Adapter:
+    `openai-send-northstar-independent-d235.mjs`. Sending needs the owner's separate instruction. See
+    `docs/decisions/D-235.md`.
 - **Northstar limits corrected — D-232: method d232 and seam-contract-v2 (no calls).**
   - **Limb exit.** A contour line hanging below a hem or a cuff leaves the item, and FIT-6v2 reports a limb leaving a garment at
     its end. D-231's V2 cuff "pass" was the hanging contour.

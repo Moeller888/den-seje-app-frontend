@@ -8,7 +8,7 @@
 // clones (D-127 §2). C is read from <Documents>/DenSejeApp-artefacts/d-202-northstar-base-figure/ and verified by its hash.
 // Usage: node tools/avatar/northstar-item-pilot.mjs --run <manifest.json> --out <empty dir outside both clones>   (D-222: the one entry)
 //        node tools/avatar/northstar-item-pilot.mjs --process <generated.png> --item <item id> --out <empty dir outside both clones>
-//        node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> --out <empty dir outside both clones>   (D-228)
+//        node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> [--contract v1|v2] --out <empty dir outside both clones>   (D-228, D-235)
 //        node tools/avatar/northstar-item-pilot.mjs --combine <dir holding the processed item dirs> --out <empty dir outside both clones>
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -28,7 +28,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
 /** D-218: each item's declared COVERING rule (body visibility when worn): closed footwear hides the foot inside its outline; sandals
  *  are open and keep C's toes; no other item hides body. A rule of the item type, never of one picture. */
-export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear" });
+export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear", "shoes-sneakers-beige": "closed-footwear", "shoes-boots-laceup-black": "closed-footwear" });
 /** D-222: the rules every item of a category gets — none is set per picture. Shoes take their covering from the item's TYPE. */
 export const CATEGORY_RULES = Object.freeze({
   top: { layers: ["topBody", "sleeves"], split: "a top's pixels over C's arms are sleeves", extraction: "D-216 rules 1–7 + D-213 G-3 hand guard", skinShadow: "D-222", contourEdgeUnmix: "D-222", covering: "none", checks: ["FIT-1…FIT-5v2", "FIT-6v2 (D-222 compact crossing)", "FIT-4 (D-222 C's exterior)", "VIS-1", "VIS-2", "Q-1…Q-3"] },
@@ -40,7 +40,9 @@ export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top
 /** D-228: the six items of the seam validation (seam-validation-plan-v1.json, V1 … V6) — ruled by their category and type like the
  *  pilot's nine; ITEMS stays the pilot's nine (its 3 × 3 × 3 sheet), ITEM_CATEGORY knows all fifteen. */
 export const VALIDATION_ITEMS = Object.freeze({ "top-tee-hip-blue": "top", "top-longsleeve-waist-purple": "top", "bottom-trousers-square-olive": "bottom", "bottom-capri-lightblue": "bottom", "bottom-skirt-band-orange": "bottom", "shoes-ankleboots-brown": "shoes" });
-export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS });
+/** D-235: the six new items of the independent validation of method d232 and seam-contract-v2 (N1 … N6). */
+export const INDEPENDENT_ITEMS = Object.freeze({ "top-tee-hip-cream": "top", "top-longsleeve-waist-navy": "top", "bottom-trousers-black": "bottom", "bottom-skirt-sand": "bottom", "shoes-sneakers-beige": "shoes", "shoes-boots-laceup-black": "shoes" });
+export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
 export const STRONG_TOL = 40;   // D-210 (D-208: 60): new paint when no pixel of C within EXPLAIN_PX lies within this of it (see colourDist).
@@ -498,7 +500,10 @@ if (isMain) {
     const r = runPipeline(w, base, T, man, (rel) => readFileSync(join(root, rel)), OUT, { cSha256: BC.C_RAW_SHA256, register });
     console.log(JSON.stringify({ method: r.method, items: Object.fromEntries(Object.entries(r.items).map(([k, v]) => [k, v.status])), outfits: r.package.summary, rejectedItems: r.package.rejected.map((x) => x.item) }, null, 2)); }
   else if (ei >= 0) { const r = evidence(w, base, T, a[ii + 1], readFileSync(resolve(a[ei + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, covering: r.covering, measures: r.measures }, null, 2)); }
-  else if (si >= 0) { const cat = a[si + 1], b = encodePng(W, H, ST.seamReferenceSheet(w, base, T, cat, { img: Uint8ClampedArray.from(decodePng(readC()).px) })); writeFileSync(join(OUT, "seam-reference-" + cat + ".png"), b); console.log(JSON.stringify({ category: cat, sha256: sha(b), bytes: b.length })); }
+  // D-235: --contract v2 draws seam-contract-v2's lanes (default v1, D-228's sheets)
+  else if (si >= 0) { const kv = a.indexOf("--contract"), K = kv >= 0 && a[kv + 1] === "v2" ? BC.SEAM_CONTRACT_V2 : BC.SEAM_CONTRACT_V1;
+    if (kv >= 0 && !["v1", "v2"].includes(a[kv + 1])) { console.error("--contract needs v1 or v2"); process.exit(1); }
+    const cat = a[si + 1], b = encodePng(W, H, ST.seamReferenceSheet(w, base, T, cat, { contract: K, img: Uint8ClampedArray.from(decodePng(readC()).px) })); writeFileSync(join(OUT, "seam-reference-" + cat + ".png"), b); console.log(JSON.stringify({ category: cat, sha256: sha(b), bytes: b.length })); }
   else if (mi >= 0) { const id = a[ii + 1], b = apiMaskPng(w, base, T, ITEM_CATEGORY[id]); writeFileSync(join(OUT, "api-mask-" + ITEM_CATEGORY[id] + ".png"), b); console.log(JSON.stringify({ item: id, category: ITEM_CATEGORY[id], sha256: sha(b), bytes: b.length })); }
   else if (pi >= 0) { const r = processToDir(w, base, T, a[ii + 1], readFileSync(resolve(a[pi + 1])), OUT); console.log(JSON.stringify({ item: r.item, ok: r.ok, faults: r.faults, observations: r.observations }, null, 2)); }
   else {
