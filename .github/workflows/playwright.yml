@@ -33,7 +33,9 @@ on:
 #
 # MAIN STILL RUNS THE FULL SUITE ON PUSH. `main` has no branch protection (no required check, direct
 # pushes allowed), so a green PR run does not prove what lands on main. Removing the push run is
-# only safe once that protection exists.
+# only safe once that protection exists. Only the NEWEST main commit spends the lock: an older push
+# run whose commit main has moved strictly past (to a head with its own push run) stops at lock
+# acquisition, red (.github/ci/superseded-check.mjs).
 
 jobs:
   # ── Classify — no shared lock (touches no Supabase state) ───────────────────
@@ -518,8 +520,10 @@ jobs:
     # STALE RUN (D-A4). This job runs unconditionally so the required check always reports, and GitHub
     # runs such jobs EVEN AFTER THEIR RUN IS CANCELLED (measured 2026-10-23: three cancelled runs took
     # the lock and ran the full suite). A pull_request run whose PR moved to a newer commit or was
-    # closed stops here — RED (a skipped required check would read as passing). It decides only about
-    # itself and cancels nothing; any doubt → run the suite (.github/ci/superseded-check.mjs).
+    # closed stops here — RED (a skipped required check would read as passing). So does a push run on
+    # main whose branch moved strictly ahead to a commit with its own push run: only the newest main
+    # commit spends the lock. It decides only about itself and cancels nothing; any doubt → run the
+    # suite (.github/ci/superseded-check.mjs).
     # LIMIT, measured 2026-10-24 (run ids in docs/ROADMAP.md, D-A4): a plain cancel of a QUEUED run is
     # invisible from inside the job — cancelled() stays false and the run's API record stays
     # status=pending, conclusion=null. Only a cancel that also cancelled a sibling job (i.e. within the
@@ -532,6 +536,8 @@ jobs:
         EVENT_NAME: ${{ github.event_name }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PUSH_REF: ${{ github.ref }}
+        PUSH_SHA: ${{ github.sha }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: node .github/ci/superseded-check.mjs
     - name: Install dependencies
