@@ -161,6 +161,7 @@ test("no false green, and the order that makes the job fail-closed", () => {
     "node tests/isolated/schema/replay.mjs",
     "node tests/isolated/seed/seed.mjs",
     "supabase functions serve",
+    "node tests/isolated/cdn-mirror.mjs --fetch",
     "egress-firewall.sh lock",
     "egress-firewall.sh verify",
     "playwright.isolated.config.mjs",

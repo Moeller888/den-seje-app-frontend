@@ -14,6 +14,7 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, normalize, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertIsolated, mentionsProd, PROD_PROJECT_REF } from "./isolation-guard.mjs";
+import { loadMirror, rewriteCdnUrls, rewriteModule, urlForMirrorPath, MIRROR_PREFIX } from "./cdn-mirror.mjs";
 
 export const PROD_SUPABASE_URL = `https://${PROD_PROJECT_REF}.supabase.co`;
 // The production publishable key is public (it ships in the frontend); it is replaced, not hidden.
@@ -24,7 +25,7 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
 const TEXT = new Set([".html", ".js", ".css", ".svg", ".xml", ".json"]);
 
 export function rewriteForLocal(text, { supabaseUrl, anonKey }) {
-  return text.split(PROD_SUPABASE_URL).join(supabaseUrl).replace(PROD_PUBLISHABLE_KEY_RE, anonKey);
+  return rewriteCdnUrls(text.split(PROD_SUPABASE_URL).join(supabaseUrl).replace(PROD_PUBLISHABLE_KEY_RE, anonKey));
 }
 
 export function resolveInside(root, urlPath) {
@@ -49,8 +50,18 @@ export function workerRoute(method, pathname) {
   return null;
 }
 
-export function startServer({ root, port, supabaseUrl, anonKey }) {
+export function startServer({ root, port, supabaseUrl, anonKey, mirror = null }) {
   const server = createServer((req, res) => {
+    // CDN modules (cdn-mirror.mjs): served from the mirror fetched before the network lock; a module
+    // that is not in it is a 404 — never a network fetch.
+    if ((req.url || "").startsWith(MIRROR_PREFIX)) {
+      const url = urlForMirrorPath(req.url);
+      const hit = url && mirror?.index[url];
+      if (!hit) { res.writeHead(404); res.end("not in the CDN mirror"); return; }
+      res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "*" });
+      res.end(rewriteModule(mirror.read(hit.key), url));
+      return;
+    }
     const worker = workerRoute(req.method, (req.url || "/").split("?")[0]);
     if (worker) {
       res.writeHead(worker.status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
@@ -82,6 +93,8 @@ if (invoked) {
   const port = Number(new URL(process.env.ISOLATED_BASE_URL).port || 80);
   const anonKey = process.env.ISOLATED_SUPABASE_ANON_KEY;
   if (typeof anonKey !== "string" || anonKey.length < 20) { console.error("ISOLATED_SUPABASE_ANON_KEY missing"); process.exit(1); }
-  await startServer({ root, port, supabaseUrl: process.env.ISOLATED_SUPABASE_URL, anonKey });
+  const mirror = loadMirror(process.env.ISOLATED_CDN_MIRROR);
+  if (!mirror) { console.error("ISOLATED_CDN_MIRROR missing or empty: run tests/isolated/cdn-mirror.mjs --fetch first"); process.exit(1); }
+  await startServer({ root, port, supabaseUrl: process.env.ISOLATED_SUPABASE_URL, anonKey, mirror });
   console.log(`serving dist-cloudflare/ on 127.0.0.1:${port} → local Supabase`);
 }

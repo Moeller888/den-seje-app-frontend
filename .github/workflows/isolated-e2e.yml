@@ -189,10 +189,15 @@ jobs:
         run: |
           set -euo pipefail
           node tools/cloudflare-build-static.mjs
-          nohup node tests/isolated/serve-build.mjs > "$RUNNER_TEMP/serve.log" 2>&1 &
+          # The CDN modules the frontend imports (supabase-js), fetched once before the network lock and
+          # served from loopback (tests/isolated/cdn-mirror.mjs).
+          node tests/isolated/cdn-mirror.mjs --fetch dist-cloudflare "$RUNNER_TEMP/cdn-mirror"
+          echo "ISOLATED_CDN_MIRROR=$RUNNER_TEMP/cdn-mirror" >> "$GITHUB_ENV"
+          ISOLATED_CDN_MIRROR="$RUNNER_TEMP/cdn-mirror" nohup node tests/isolated/serve-build.mjs > "$RUNNER_TEMP/serve.log" 2>&1 &
           for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
           curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "$ISOLATED_SUPABASE_URL"
           ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
+          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "https://cdn.jsdelivr.net"
 
       - name: Network lock — test user and containers reach loopback/private only (verified)
         run: |
@@ -201,18 +206,20 @@ jobs:
           sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
           # The browsers live in the runner user's cache; the test user may read, never write them.
           chmod o+x "$HOME" "$HOME/.cache" && chmod -R o+rX "$HOME/.cache/ms-playwright"
+          # The test user's own runtime directory (browsers write there; the runner's is not theirs).
+          sudo install -d -m 700 -o "$ISOLATED_USER" "/tmp/$ISOLATED_USER-runtime"
           bash tests/isolated/egress-firewall.sh lock
           bash tests/isolated/egress-firewall.sh verify
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
         run: |
-          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" \
+          sudo -E -u "$ISOLATED_USER" env -u DBUS_SESSION_BUS_ADDRESS "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" "XDG_RUNTIME_DIR=/tmp/$ISOLATED_USER-runtime" \
             npx playwright test -c tests/isolated/playwright.isolated.config.mjs
 
       - name: Existing Playwright suite against the isolated stack
         id: suite
         run: |
-          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" \
+          sudo -E -u "$ISOLATED_USER" env -u DBUS_SESSION_BUS_ADDRESS "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" "XDG_RUNTIME_DIR=/tmp/$ISOLATED_USER-runtime" \
             node tests/isolated/run-suite.mjs
 
       - name: Diagnostics (on failure)
