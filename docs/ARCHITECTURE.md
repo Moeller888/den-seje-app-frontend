@@ -199,6 +199,12 @@ cannot double-award.
   `'Elev'` / NULL. A caller without a profile is refused; EXECUTE for `authenticated` only. Rank,
   prestige, exact XP and title of other classes' rows are still returned — pseudonymisation, not
   anonymisation (residual risk in D-209).
+- **`recalculate_prestige(p_user_id)` will be caller-scoped** (D-220, migration
+  `20261026180000_recalculate_prestige_caller_scope.sql`, **not yet applied**): the signed-in user for
+  their own id only; no `auth.uid()` → `not_authenticated`, another id → `forbidden`; the internal
+  database context may still back-fill (same rule as D-206). EXECUTE for `authenticated` only. Until it
+  is applied, production lets a call without a JWT subject (anon, service_role) recalculate and read
+  any id's prestige score; the stored value can only become the correctly computed one.
 - Some functions are intentionally **no-JWT** (e.g. `get-next-question`, `create-student`,
   `create-teacher`) per their documented contract; these must still validate input defensively.
 
