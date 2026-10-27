@@ -88,6 +88,7 @@ jobs:
           node tests/isolated/egress-blackhole.mjs --verify
 
       - name: Install dependencies and browsers
+        timeout-minutes: 12
         run: |
           set -euo pipefail
           npm ci
