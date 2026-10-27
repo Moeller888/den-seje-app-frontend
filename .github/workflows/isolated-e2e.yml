@@ -46,7 +46,9 @@ env:
   ISOLATED_SUPABASE_URL: http://127.0.0.1:54321
   ISOLATED_MAIL_URL: http://127.0.0.1:54324
   ISOLATED_USER: e2eiso
-  PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+  # Supabase's images from Docker Hub instead of public.ecr.aws: N runners pulling at once were
+  # rate-limited there ("toomanyrequests"); Docker Hub does not rate-limit GitHub-hosted runners.
+  SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
 
 jobs:
   plan:
@@ -87,13 +89,32 @@ jobs:
           node tests/isolated/egress-blackhole.mjs --hosts-lines | sudo tee -a /etc/hosts > /dev/null
           node tests/isolated/egress-blackhole.mjs --verify
 
-      - name: Install dependencies and browsers
-        timeout-minutes: 12
+      - name: Install dependencies
+        run: npm ci
+
+      # Browsers + apt .debs from the main workflow's cache entry (same key, same paths — read only;
+      # main writes it). The Ubuntu mirror stalled here for 12+ minutes on a miss.
+      - name: Playwright and runner image versions
+        id: pwver
+        run: |
+          v="$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")"
+          echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
+      - name: Restore Playwright browser and apt cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/pw-apt
+          key: ${{ steps.pwver.outputs.key }}
+      - name: Install Playwright browsers
+        timeout-minutes: 15
         run: |
           set -euo pipefail
-          npm ci
-          sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH" && sudo chown "$USER" "$PLAYWRIGHT_BROWSERS_PATH"
-          npx playwright install --with-deps chromium firefox webkit
+          mkdir -p ~/.cache/pw-apt
+          seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
+          if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
+          echo "apt: seeded ${seeded} cached .deb file(s)"
+          npx playwright install --with-deps
           docker pull curlimages/curl:8.11.1 > /dev/null
 
       - uses: supabase/setup-cli@v1
@@ -178,18 +199,20 @@ jobs:
           set -euo pipefail
           sudo useradd --create-home --shell /bin/bash "$ISOLATED_USER"
           sudo chmod -R a+rwX "$GITHUB_WORKSPACE"
+          # The browsers live in the runner user's cache; the test user may read, never write them.
+          chmod o+x "$HOME" "$HOME/.cache" && chmod -R o+rX "$HOME/.cache/ms-playwright"
           bash tests/isolated/egress-firewall.sh lock
           bash tests/isolated/egress-firewall.sh verify
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
         run: |
-          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" \
+          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" \
             npx playwright test -c tests/isolated/playwright.isolated.config.mjs
 
       - name: Existing Playwright suite against the isolated stack
         id: suite
         run: |
-          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" \
+          sudo -E -u "$ISOLATED_USER" env "PATH=$PATH" "HOME=/home/$ISOLATED_USER" "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" \
             node tests/isolated/run-suite.mjs
 
       - name: Diagnostics (on failure)
