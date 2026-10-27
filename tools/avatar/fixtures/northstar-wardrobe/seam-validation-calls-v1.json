@@ -1,6 +1,6 @@
 {
   "decision": "D-228",
-  "status": "AUTHORISED BY THE OWNER (2026-10-27) — at most 6 calls, one per item of seam-validation-plan-v1.json; NOT EXECUTED; execution needs the owner's separate instruction after this file is merged",
+  "status": "EXECUTED 2026-10-27 — 6 of 6 calls sent once each, no stop; every entry SPENT and closed by D-231; no further call under D-228",
   "meta": {
     "authorisesImageRequest": false,
     "why": "authorisation is the exact token in D-228's decision status plus this file's unspent entries, never a general boolean",
@@ -11,8 +11,10 @@
     "reserve": 0,
     "retries": 0,
     "fallback": 0,
-    "actuallySent": 0,
-    "oneCallPerItem": true
+    "actuallySent": 6,
+    "oneCallPerItem": true,
+    "closed": true,
+    "recordedBy": "D-231"
   },
   "privacy": {
     "cSentToApi": "allowed for this experiment only (owner, 2026-10-27)",
@@ -125,8 +127,15 @@
         "eventsFilename": "D-228-seam-V1.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V1/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_e0d1772d4fae41e287dc2ac679380583",
+        "imageSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     },
     {
       "callId": "D-228-seam-V2",
@@ -154,8 +163,15 @@
         "eventsFilename": "D-228-seam-V2.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V2/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_cd1732d51af4499e977a5e8531093093",
+        "imageSha256": "c20f6955f1c7092bef8a9bcf4a3416c83ae3873bdbb987dbd0844afd7848ca29"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     },
     {
       "callId": "D-228-seam-V3",
@@ -185,8 +201,15 @@
         "eventsFilename": "D-228-seam-V3.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V3/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_2e3dfdbc711b4747a8cc6c086e725634",
+        "imageSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     },
     {
       "callId": "D-228-seam-V4",
@@ -215,8 +238,15 @@
         "eventsFilename": "D-228-seam-V4.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V4/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_83ac7c18132a4a0fb4b0d7ff678c4f08",
+        "imageSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     },
     {
       "callId": "D-228-seam-V5",
@@ -244,8 +274,15 @@
         "eventsFilename": "D-228-seam-V5.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V5/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_7d33c407a6c743d987be5f60d8f284d2",
+        "imageSha256": "a4d76771b29aafbea445445c8602afe7a41a1a406f2f96d251a095b7e077f438"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     },
     {
       "callId": "D-228-seam-V6",
@@ -273,8 +310,15 @@
         "eventsFilename": "D-228-seam-V6.events.jsonl"
       },
       "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V6/d228.image-1.png",
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_9667ee4789d647799fc5c94d5ecb97d5",
+        "imageSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
     }
   ],
   "acceptance": {
