@@ -1,0 +1,1126 @@
+{
+  "decision": "D-238",
+  "records": "D-235's independent validation of method d232 and seam-contract-v2 — executed 2026-10-27",
+  "imageCalls": 6,
+  "budget": {
+    "authorised": 6,
+    "sent": 6,
+    "reserve": 0,
+    "retries": 0,
+    "stops": 0,
+    "claimsConsumed": 6
+  },
+  "executedFrom": {
+    "originMain": "6730a920d1707fbdbdd17b8508672aecd1748d44",
+    "authorisationMerge": "f86d2616feaca11ba56797cd9beef5c1e76dbdbc",
+    "codeEqualsFrozen": true,
+    "dryRunBeforeEachSend": true,
+    "processedBeforeNextSend": true
+  },
+  "sends": [
+    {
+      "callId": "D-235-new-N1",
+      "item": "top-tee-hip-cream",
+      "httpStatus": 200,
+      "requestId": "req_68d62be646bb4671914b3da24a453645",
+      "usage": {
+        "input_tokens": 3423,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 351
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4795
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    },
+    {
+      "callId": "D-235-new-N2",
+      "item": "top-longsleeve-waist-navy",
+      "httpStatus": 200,
+      "requestId": "req_dec50756ce5243d0975a8760ab610a74",
+      "usage": {
+        "input_tokens": 3429,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 357
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4801
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "4654e46d7387d67d7a66f166d3467cc668e4b9e45989ff042172e67fca2c20bf",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    },
+    {
+      "callId": "D-235-new-N3",
+      "item": "bottom-trousers-black",
+      "httpStatus": 200,
+      "requestId": "req_c5664f2d35ef473a84ede73718f38ebe",
+      "usage": {
+        "input_tokens": 3341,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 269
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4713
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "c21b18ebfc5d00f064023c58f8df225fcd1f1ad8bfb211798bd37c36c2d96646",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    },
+    {
+      "callId": "D-235-new-N4",
+      "item": "bottom-skirt-sand",
+      "httpStatus": 200,
+      "requestId": "req_57a6cf97cfb244d98962b5f3e1cc7c0a",
+      "usage": {
+        "input_tokens": 3349,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 277
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4721
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "fbd992ecc1131ebb976353fd308d6243612b097322918e0e7ae300967ec44976",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    },
+    {
+      "callId": "D-235-new-N5",
+      "item": "shoes-sneakers-beige",
+      "httpStatus": 200,
+      "requestId": "req_b5738eb4fc854e27a53026a7152988f9",
+      "usage": {
+        "input_tokens": 3337,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 265
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4709
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "471a5c2e8a06cd25e4959701268e46fc351d116f99e93ea22d688f1a58a55644",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    },
+    {
+      "callId": "D-235-new-N6",
+      "item": "shoes-boots-laceup-black",
+      "httpStatus": 200,
+      "requestId": "req_da7fc13de05f4d15b7060bf881117eee",
+      "usage": {
+        "input_tokens": 3346,
+        "input_tokens_details": {
+          "image_tokens": 3072,
+          "text_tokens": 274
+        },
+        "output_tokens": 1372,
+        "output_tokens_details": {
+          "image_tokens": 1372,
+          "text_tokens": 0
+        },
+        "total_tokens": 4718
+      },
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "actuallySent": 1,
+      "dispatchUndetermined": 0,
+      "imageSha256": "0b73a1fb3ad15c0f85ff4557f64149ce5f04ba2687e74ad0c707193193db1cd7",
+      "receipt": "RECEIVED_FOR_BF_CHECK"
+    }
+  ],
+  "stopRulesHit": [],
+  "commonMethodFailure": "none: every registration OK; 0 px of any sheet colour drawn into any picture beyond C's own",
+  "method": {
+    "frozen": "d232",
+    "contract": "seam-contract-v2",
+    "manifest": "item-pipeline-manifest-d235.json (pins from the receipts)",
+    "runs": 2,
+    "byteIdentical": true,
+    "files": 274,
+    "code": {
+      "northstar-item-pilot.mjs": "965d108da2f4c71942196be0398d55acf56f72665be5c11be4202eafe5323a55",
+      "northstar-base-figure-c.mjs": "4522903634f51daeabe8ceac8b1cabcc7e39c23fd3ff28501e5e25a3da04a9fc",
+      "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+      "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+      "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+      "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+    },
+    "registerSha256": "4bebd2f65b562e6bf89e0792cd73e75089724d9417263b176bc8d4f0f28fd96d",
+    "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+    "corrections": "none — the method was not changed during the validation"
+  },
+  "inspections": {
+    "top-tee-hip-cream": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    },
+    "top-longsleeve-waist-navy": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    },
+    "bottom-trousers-black": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    },
+    "bottom-skirt-sand": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    },
+    "shoes-sneakers-beige": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    },
+    "shoes-boots-laceup-black": {
+      "registration": true,
+      "limbExits": [],
+      "markColourPxBeyondC": {
+        "magenta": 0,
+        "cyan": 0,
+        "green": 0,
+        "red": 0,
+        "yellow": 0
+      }
+    }
+  },
+  "axes": {
+    "technical": {
+      "top-tee-hip-cream": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-longsleeve-waist-navy": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-tank-teal": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "top-tee-hip-blue": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "bottom-trousers-black": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "bottom-skirt-sand": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "bottom-shorts-navy": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "bottom-capri-lightblue": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "shoes-sneakers-beige": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "shoes-boots-laceup-black": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      },
+      "shoes-sneakers-white": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        }
+      }
+    },
+    "contract": {
+      "top-tee-hip-cream": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION"
+        ],
+        "targetRules": [
+          "SC-W1",
+          "SC-W2",
+          "SC-W5"
+        ],
+        "targetRulesMet": false
+      },
+      "top-longsleeve-waist-navy": {
+        "complies": false,
+        "failed": [
+          "SC-W1-TOP-HEM-STATION",
+          "SC-W2-TOP-COVERS-HIP"
+        ],
+        "targetRules": [
+          "SC-W1",
+          "SC-W2",
+          "SC-S1"
+        ],
+        "targetRulesMet": false
+      },
+      "bottom-trousers-black": {
+        "complies": false,
+        "failed": [
+          "SC-W4-BOTTOMS-NO-LINE-IN-HEM-ZONE",
+          "SC-L1-BOTTOMS-LENGTH-CLASS"
+        ],
+        "targetRules": [
+          "SC-L1",
+          "SC-W3",
+          "SC-W4",
+          "SC-W6"
+        ],
+        "targetRulesMet": false
+      },
+      "bottom-skirt-sand": {
+        "complies": false,
+        "failed": [
+          "SC-W6-BOTTOMS-HIP-WIDTH"
+        ],
+        "targetRules": [
+          "SC-L1",
+          "SC-W3",
+          "SC-W4",
+          "SC-W6"
+        ],
+        "targetRulesMet": false
+      },
+      "shoes-sneakers-beige": {
+        "complies": false,
+        "failed": [
+          "SC-L3-SHOE-ENVELOPE-LEFT",
+          "SC-L3-SHOE-ENVELOPE-RIGHT"
+        ],
+        "targetRules": [
+          "SC-L2",
+          "SC-L3"
+        ],
+        "targetRulesMet": false
+      },
+      "shoes-boots-laceup-black": {
+        "complies": false,
+        "failed": [
+          "SC-L2-SHOE-COLLAR-LEFT",
+          "SC-L3-SHOE-ENVELOPE-LEFT",
+          "SC-L2-SHOE-COLLAR-RIGHT",
+          "SC-L3-SHOE-ENVELOPE-RIGHT"
+        ],
+        "targetRules": [
+          "SC-L2",
+          "SC-L3"
+        ],
+        "targetRulesMet": false
+      }
+    },
+    "combinationFit": {
+      "planned": 48,
+      "pass": 30,
+      "rejected": 18,
+      "missing": 0,
+      "outfits": {
+        "top-tee-hip-cream+bottom-trousers-black+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "leg/shoe",
+              "box": [
+                456,
+                1374,
+                3,
+                7
+              ],
+              "px": 10
+            },
+            {
+              "seam": "leg/shoe",
+              "box": [
+                461,
+                1374,
+                1,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-trousers-black+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-trousers-black+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-skirt-sand+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-cream+bottom-capri-lightblue+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT",
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            },
+            {
+              "seam": "leg/shoe",
+              "box": [
+                456,
+                1374,
+                3,
+                7
+              ],
+              "px": 10
+            },
+            {
+              "seam": "leg/shoe",
+              "box": [
+                461,
+                1374,
+                1,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-boots-laceup-black": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-trousers-black+shoes-sneakers-white": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-skirt-sand+shoes-sneakers-white": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-longsleeve-waist-navy+bottom-capri-lightblue+shoes-sneakers-white": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-1d-CUT-IN-GARMENT"
+          ],
+          "faults": [
+            {
+              "seam": "other:sleeves",
+              "box": [
+                317,
+                837,
+                2,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "leg/shoe",
+              "box": [
+                456,
+                1374,
+                3,
+                7
+              ],
+              "px": 10
+            },
+            {
+              "seam": "leg/shoe",
+              "box": [
+                461,
+                1374,
+                1,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-trousers-black+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-skirt-sand+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": false
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tank-teal+bottom-capri-lightblue+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": false
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "leg/shoe",
+              "box": [
+                456,
+                1374,
+                3,
+                7
+              ],
+              "px": 10
+            },
+            {
+              "seam": "leg/shoe",
+              "box": [
+                461,
+                1374,
+                1,
+                7
+              ],
+              "px": 7
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-trousers-black+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "waist/hip",
+              "box": [
+                626,
+                807,
+                1,
+                10
+              ],
+              "px": 10
+            },
+            {
+              "seam": "waist/hip",
+              "box": [
+                628,
+                807,
+                3,
+                10
+              ],
+              "px": 10
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "waist/hip",
+              "box": [
+                626,
+                807,
+                1,
+                10
+              ],
+              "px": 10
+            },
+            {
+              "seam": "waist/hip",
+              "box": [
+                628,
+                807,
+                3,
+                10
+              ],
+              "px": 10
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white": {
+          "status": "rejected",
+          "failedChecks": [
+            "COMBO-2-DOUBLE-CONTOUR"
+          ],
+          "faults": [
+            {
+              "seam": "waist/hip",
+              "box": [
+                626,
+                807,
+                1,
+                10
+              ],
+              "px": 10
+            },
+            {
+              "seam": "waist/hip",
+              "box": [
+                628,
+                807,
+                3,
+                10
+              ],
+              "px": 10
+            }
+          ],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-shorts-navy+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": false
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-beige": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-boots-laceup-black": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": true
+        },
+        "top-tee-hip-blue+bottom-capri-lightblue+shoes-sneakers-white": {
+          "status": "technically-ok",
+          "failedChecks": [],
+          "faults": [],
+          "withNewItem": false
+        }
+      },
+      "groups": [
+        {
+          "what": "every outfit with N2 (12): COMBO-1d, a 2 × 7 px body strip through the left sleeve at its cuff corner (317, 837)",
+          "outfits": 12,
+          "class": "check",
+          "note": "composed it looks as the picture: the arm leaving the cuff at its corner — the limb exit D-232 allowed in FIT-6v2 and in extraction, but not in the outfit check's COMBO-1d"
+        },
+        {
+          "what": "N3 + N5 (3 more; 4 with N2): COMBO-2 at the leg / shoe — C's ankle skin and two dark lines between the black hem and the beige collar",
+          "outfits": 3,
+          "class": "generation",
+          "note": "the hem at A + 13 / A + 22 (SC-L1) meets the flared low shoe (SC-L3); a real, visible fault the check catches"
+        },
+        {
+          "what": "V1 + N4 (3): COMBO-2 at the right hip",
+          "outfits": 3,
+          "class": "contract (predicted)",
+          "note": "N4 is 33 px wide of SC-W6, V1 breaks SC-W1 at its corners — the contract predicted it"
+        }
+      ]
+    },
+    "manualFindings": {
+      "counted": 2,
+      "findings": [
+        {
+          "id": "MF-1",
+          "item": "bottom-trousers-black",
+          "what": "skin-coloured pieces along the hem: an orange wedge between the hem and a white sneaker's collar, orange dots between the hem and the black boots",
+          "seenIn": [
+            "top-tank-teal+bottom-trousers-black+shoes-sneakers-white",
+            "top-tee-hip-cream+bottom-trousers-black+shoes-boots-laceup-black",
+            "top-tee-hip-blue+bottom-trousers-black+shoes-boots-laceup-black"
+          ],
+          "reportedByACheck": false,
+          "class": "extraction / composition (the hem's skin antialias and C's ankle between hem and collar)"
+        },
+        {
+          "id": "MF-2",
+          "item": "bottom-trousers-black",
+          "what": "a notch in the trousers' outline at both hips (about 3 × 5 px) just below a waist-length top",
+          "seenIn": [
+            "top-tank-teal+bottom-trousers-black+shoes-sneakers-white",
+            "top-tank-teal+bottom-trousers-black+shoes-boots-laceup-black"
+          ],
+          "reportedByACheck": false,
+          "class": "extraction (the black outline coincides with C's base-shorts contour)"
+        }
+      ],
+      "observedNotCounted": [
+        "a 1–2 px dark speck inside N4 at the left hip — visible only at × 6, not at × 2 or app size",
+        "N2's grey hip corners — visible, but reported by SC-W2 (contract)",
+        "N2's sleeve strip — reported (COMBO-1d), not visible"
+      ],
+      "method": "every composable outfit with a new item at × 2 (seams) and at app size; × 6 zoom only to classify"
+    },
+    "visualQuality": "the owner's review — not inferred"
+  },
+  "measures": {
+    "T": 6,
+    "K": 30,
+    "C": 0,
+    "MF": 2,
+    "CMF": false
+  },
+  "decisionByPreRegisteredRule": {
+    "result": "targetedCorrection",
+    "rule": {
+      "largerBatch": "T ≥ 5 AND K ≥ 39 (≥ 80 % of 48) AND MF = 0 AND no common method failure",
+      "fundamentalMethodChange": "T ≤ 3 OR K < 24 (< 50 % of 48) OR MF ≥ 3 OR a common method failure",
+      "otherwise": "a targeted correction (a named rule, as a new method version) and then a new small independent test — no larger batch"
+    },
+    "reading": "T = 6 (≥ 5), K = 30 of 48 (< 39, ≥ 24), MF = 2 (> 0, < 3), no common method failure: neither a larger batch nor a fundamental method change — a targeted correction as a new method version, then a new small independent test"
+  },
+  "targetedCorrectionCandidates": [
+    "check: the outfit check's COMBO-1d does not know D-232's limb exit — it alone rejects all 12 N2 outfits",
+    "extraction: a dark garment's outline where it coincides with C's base-shorts contour (MF-2) and skin-coloured antialias along a hem over a shoe (MF-1)",
+    "check: SC-W4 counts black fabric as 'ink' lines (N3: 63 'lines' the picture does not have)",
+    "generation (instructions or sheets; untested without calls): long hems again too long (N3 A + 13 / A + 22), tops' hip corners (N1 corner columns, N2 open corners), shoes outside the envelope (N5, N6), the boot shaft too high (N6 A − 71 / A − 76)"
+  ],
+  "limits": [
+    "six designs, one picture each: no estimate of a rate",
+    "one model, one figure (C), one prompt template",
+    "the old items in the matrix took part in the method's development; only outfits with a new item test it",
+    "no control without sheets",
+    "the result under d232 is kept as it is; any correction is a new method version and never counts as this validation"
+  ],
+  "noExpansion": "no further calls; no larger batch follows automatically; the owner's visual approval is separate"
+}
