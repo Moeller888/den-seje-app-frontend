@@ -250,3 +250,13 @@ test("negative controls run in every job, before and after the lock, and never n
     "an IPv4-only mapping fails the both-families check", "seed guard refuses a foreign database token",
     "inside the test group the internet is not", "the tripwire refuses and records"]) assert.ok(sh.includes(c), c);
 });
+
+test("Edge Functions step fails closed: a runtime that never serves, or any function behind a gateway error, fails the job", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const step = wf.split("- name: Edge Functions")[1].split("\n      - name:")[0];
+  assert.match(step, /gateway_down\(\) \{ case "\$1" in 000\|502\|503\|504\) return 0 ;; \*\) return 1 ;; esac; \}/);
+  assert.match(step, /for attempt in 1 2 3; do/, "bounded: at most 3 server starts");
+  assert.match(step, /\[ "\$ready" = yes \] \|\| \{ echo "Edge Runtime did not serve after 3 start attempts" >&2; exit 1; \}/);
+  assert.match(step, /\[ "\$down" = 0 \] \|\| \{ echo "\$down function\(s\) not served by the Edge Runtime" >&2; exit 1; \}/);
+  assert.doesNotMatch(step, /playwright/, "only the server start is retried, never a test");
+});

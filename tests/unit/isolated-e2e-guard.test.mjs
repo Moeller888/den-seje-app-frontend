@@ -152,9 +152,13 @@ test("no false green, and the order that makes the job fail-closed", () => {
     .replace("supabase stop --no-backup > /dev/null 2>&1 || true\n            [ \"$attempt\" = 4 ] && { echo \"local stack did not start after 4 attempts\" >&2; exit 1; }", "");
   assert.ok(!/\|\|\s*true/.test(beforeDiagnostics),
     "no `|| true` before the diagnostics, except curl probes evaluated afterwards and the stop between start attempts (whose last failure exits 1)");
-  // The only retry is the stack start (image pulls); it is bounded and ends in a hard failure.
-  assert.equal((wf.match(/for attempt in/g) || []).length, 1);
+  // The only retries are two infrastructure starts — the stack (image pulls) and the Edge Runtime
+  // server (its container can die booting: SIGBUS, run 40650983690). Each is bounded and ends in a
+  // hard failure; no test is ever retried here.
+  assert.equal((wf.match(/for attempt in/g) || []).length, 2);
   assert.match(wf, /for attempt in 1 2 3 4; do\n\s+if supabase start /);
+  assert.match(wf, /for attempt in 1 2 3; do\n\s+nohup supabase functions serve /);
+  assert.match(wf, /\[ "\$ready" = yes \] \|\| \{ echo "Edge Runtime did not serve after 3 start attempts" >&2; exit 1; \}/);
   const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
   const at = (s) => { const i = job.indexOf(s); assert.ok(i > 0, s); return i; };
   const order = [
