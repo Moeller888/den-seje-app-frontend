@@ -27,6 +27,8 @@ export function parseJobLog(text) {
   const sysids = [...new Set([...log.matchAll(/ISOLATED_DB_SYSID: (\d+)/g)].map((m) => m[1]))];
   const pupil = log.match(/isolated suite: primary pupil ([0-9a-f-]{36}) provisioned/)?.[1] ?? null;
   const tripwire = log.match(/\| browser requests refused by the tripwire \| (\d+)/)?.[1];
+  const edgeStart = log.match(/edge-runtime: serving after start attempt (\d)/)?.[1];
+  const controls = (log.match(/negative controls \((pre|post)-lock\): all protections refused/g) ?? []).length;
   const count = (word) => {
     const all = [...log.matchAll(new RegExp(`^\\S*\\s+(\\d+) ${word}\\b`, "gm"))].map((m) => Number(m[1]));
     return all.length ? all.at(-1) : 0;
@@ -34,6 +36,7 @@ export function parseJobLog(text) {
   return {
     sysids, pupil,
     tripwire: tripwire === undefined ? null : Number(tripwire),
+    edgeStart: edgeStart === undefined ? null : Number(edgeStart), controls,
     passed: count("passed"), failed: count("failed"), flaky: count("flaky"),
   };
 }
@@ -81,9 +84,9 @@ export function report(rows) {
   const pupils = rows.map((r) => r.pupil).filter(Boolean);
   const first = Math.min(...rows.map((r) => r.created)), last = Math.max(...rows.map((r) => r.completed));
   const lines = [
-    "| run | branch | job | result | queued | job start–end | suite start–end | job min | DB sysid | primary pupil | passed/failed/flaky | tripwire |",
-    "|---|---|---|---|---|---|---|---|---|---|---|---|",
-    ...rows.map((r) => `| ${r.runId} | ${r.branch} | ${r.job} | ${r.conclusion} | ${min(r.started - r.created)} min | ${hhmm(r.started)}–${hhmm(r.completed)} | ${hhmm(r.suiteStart)}–${hhmm(r.suiteEnd)} | ${min(r.completed - r.started)} | ${r.sysids.join(", ") || "–"} | ${r.pupil ?? "–"} | ${r.passed}/${r.failed}/${r.flaky} | ${r.tripwire ?? "–"} |`),
+    "| run | branch | job | result | queued | job start–end | suite start–end | job min | DB sysid | primary pupil | passed/failed/flaky | tripwire | edge start attempt | negative controls |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...rows.map((r) => `| ${r.runId} | ${r.branch} | ${r.job} | ${r.conclusion} | ${min(r.started - r.created)} min | ${hhmm(r.started)}–${hhmm(r.completed)} | ${hhmm(r.suiteStart)}–${hhmm(r.suiteEnd)} | ${min(r.completed - r.started)} | ${r.sysids.join(", ") || "–"} | ${r.pupil ?? "–"} | ${r.passed}/${r.failed}/${r.flaky} | ${r.tripwire ?? "–"} | ${r.edgeStart ?? "–"} | ${r.controls}/2 |`),
     "",
     `- jobs: ${rows.length}; workflow runs: ${new Set(rows.map((r) => r.runId)).size}; branches: ${new Set(rows.map((r) => r.branch)).size}`,
     `- peak suites running at the same instant: ${suites.peak}; window in which ALL suites ran at once: ${min(suites.commonMs)} min`,

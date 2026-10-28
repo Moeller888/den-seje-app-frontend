@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
 import { connect } from "node:net";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { buildSuiteEnv, suiteViolations, SUITE_VARS } from "../isolated/run-suite.mjs";
 import { startTripwire } from "../isolated/tripwire-proxy.mjs";
 import { workerRoute } from "../isolated/serve-build.mjs";
@@ -215,9 +215,13 @@ test("measure-parallel: a job log yields its database cluster, its pupil, its co
     "2026-10-28T05:35:00.2Z   1 flaky",
     "2026-10-28T05:35:00.3Z   989 passed (38.7m)",
     "2026-10-28T05:35:01.0Z | browser requests refused by the tripwire | 0 |",
+    "2026-10-28T04:55:00.0Z edge-runtime: serving after start attempt 2",
+    "2026-10-28T04:57:00.0Z negative controls (pre-lock): all protections refused the wrong configuration",
+    "2026-10-28T04:58:00.0Z negative controls (post-lock): all protections refused the wrong configuration",
   ].join("\n");
   assert.deepEqual(parseJobLog(log), {
-    sysids: ["7701577688261992492"], pupil: "3ed45ea1-3b95-4fc1-90df-a51bdf14740e", tripwire: 0, passed: 989, failed: 4, flaky: 1,
+    sysids: ["7701577688261992492"], pupil: "3ed45ea1-3b95-4fc1-90df-a51bdf14740e", tripwire: 0,
+    edgeStart: 2, controls: 2, passed: 989, failed: 4, flaky: 1,
   });
   assert.equal(parseJobLog("").tripwire, null, "no tripwire line = no evidence, never 0");
 });
@@ -254,9 +258,20 @@ test("negative controls run in every job, before and after the lock, and never n
 test("Edge Functions step fails closed: a runtime that never serves, or any function behind a gateway error, fails the job", () => {
   const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
   const step = wf.split("- name: Edge Functions")[1].split("\n      - name:")[0];
-  assert.match(step, /gateway_down\(\) \{ case "\$1" in 000\|502\|503\|504\) return 0 ;; \*\) return 1 ;; esac; \}/);
   assert.match(step, /for attempt in 1 2 3; do/, "bounded: at most 3 server starts");
   assert.match(step, /\[ "\$ready" = yes \] \|\| \{ echo "Edge Runtime did not serve after 3 start attempts" >&2; exit 1; \}/);
-  assert.match(step, /\[ "\$down" = 0 \] \|\| \{ echo "\$down function\(s\) not served by the Edge Runtime" >&2; exit 1; \}/);
+  assert.match(step, /\[ "\$down" = 0 \] \|\| \{ echo "\$down function\(s\) not served correctly by the Edge Runtime" >&2; exit 1; \}/);
+  // Readiness is the function's own documented preflight answer (200 + "ok"), not "any non-gateway status".
+  assert.match(step, /\[ "\$\(printf '%s' "\$reply" \| tail -n 1\)" = "200" \] && \[ "\$\(printf '%s' "\$reply" \| head -n 1\)" = "ok" \]/);
+  const gnq = readFileSync(new URL("../../supabase/functions/get-next-question/index.ts", import.meta.url), "utf8");
+  assert.match(gnq, /if \(req\.method === "OPTIONS"\) \{\s+return new Response\("ok", \{ headers: corsHeaders \}\);/);
+  // A function with a preflight handler must answer 2xx; the attempt that served is logged per job.
+  assert.match(step, /if grep -qE 'method === "OPTIONS"' "\$d\/index\.ts"; then\n\s+echo "warm \$fn: \$code \(preflight handler: 2xx required\)"\n\s+if \[ "\$\{code#2\}" = "\$code" \]; then down=\$\(\(down \+ 1\)\); fi/);
+  // At least most functions are held to 2xx (a check that excluded everything would be vacuous).
+  const fns = readdirSync(new URL("../../supabase/functions/", import.meta.url), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(new URL(`../../supabase/functions/${d.name}/index.ts`, import.meta.url)));
+  const withHandler = fns.filter((d) => /method === "OPTIONS"/.test(readFileSync(new URL(`../../supabase/functions/${d.name}/index.ts`, import.meta.url), "utf8")));
+  assert.ok(withHandler.length >= 14 && withHandler.some((d) => d.name === "process-event") && withHandler.some((d) => d.name === "get-next-question"));
+  assert.match(step, /echo "edge-runtime: serving after start attempt \$attempt"/);
   assert.doesNotMatch(step, /playwright/, "only the server start is retried, never a test");
 });
