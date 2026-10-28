@@ -1,0 +1,75 @@
+{
+  "decision": "D-240",
+  "method": "d240",
+  "imageCalls": 0,
+  "status": "the assistant's review, not the owner's approval: K01 … K19 await the owner's final review",
+  "ownerFeedback": "the entries \"K01 G, K02 G, K03 Æ: venstre hofte\" were example text — withdrawn; the history is kept in the local owner-feedback-log.txt; no owner verdict is recorded",
+  "change": "d240 = d239 plus coverFromPicture: where the covering rule hides C's foot under a closed shoe, the picture paints opaquely and the paint joins the shoe, the shoe's own pixel is the item (D-218: an item replaces what it hides). Nothing is painted; open footwear is not concerned",
+  "shoes": {
+    "shoes-ankleboots-brown": {
+      "coverFromPicturePx": 40,
+      "layerPxChanged": 40,
+      "technical": "OK → OK"
+    },
+    "shoes-boots-black": {
+      "coverFromPicturePx": 0,
+      "layerPxChanged": 0,
+      "technical": "OK → OK"
+    },
+    "shoes-sneakers-white": {
+      "coverFromPicturePx": 0,
+      "layerPxChanged": 0,
+      "technical": "OK → OK"
+    },
+    "shoes-sneakers-beige": {
+      "coverFromPicturePx": 0,
+      "layerPxChanged": 0,
+      "technical": "OK → OK"
+    },
+    "shoes-boots-laceup-black": {
+      "coverFromPicturePx": 0,
+      "layerPxChanged": 0,
+      "technical": "OK → OK"
+    },
+    "shoes-sandals-brown": {
+      "coverFromPicturePx": null,
+      "layerPxChanged": 0,
+      "technical": "rejected → rejected (open footwear, not concerned)"
+    }
+  },
+  "outfits": {
+    "manifest": "item-pipeline-manifest-d240-boots.json",
+    "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+    "result": "6 of 6 technically OK, no open finding; the three without the boot byte-identical to d239's pictures; the three with it change in 40 px, x 445–449, y 1468–1481 only",
+    "runs": 1,
+    "byteIdentity": "not verified by a second run; the change is bounded by the comparison with d239"
+  },
+  "review": [
+    {
+      "point": "1 brown ankle boots' sole edge (K16, K18, K19)",
+      "disposition": "fixed",
+      "finding": "an extraction fault: at the left boot's arch the picture paints the boot opaquely (its dark outline and leather over C's equally dark foot contour), C explained it away, no rule took it, and the covering hid C's foot — background and a few partial edge pixels showed as light, jagged remnants. d240 takes those 40 px from the picture; the arch step and the sole's painted edge as drawn. The right boot was clean and is unchanged",
+      "before": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/review2/v6-before-after-d239-d240.png"
+    },
+    {
+      "point": "2 trousers against white sneakers (K17)",
+      "disposition": "correct and kept",
+      "finding": "a triangle of about 5 × 6 px between the V3 hem corner and the sneaker's collar: C's own ankle skin with the trousers' cast shadow from the picture (the multiply layer) — no skin in the trousers' layer (only their antialiased edge), no extraction or composition fault. It is the two shapes meeting (the hem's height and the collar's dip); COMBO-5 reports it as a crossing (≤ 6 × 6). Nothing lengthened"
+    },
+    {
+      "point": "3 beige sneakers' collar (K01, K04, K07, K10, K13)",
+      "disposition": "correct and kept",
+      "finding": "the dark orange wedge inside the collar at the ankle is C's ankle skin under the shoe's skin-shadow layer; composed it reproduces the picture (e.g. picture 240,153,80, composed 247,166,99); no generated skin in the shoe's layer"
+    },
+    {
+      "point": "4 detail crops",
+      "disposition": "fixed",
+      "finding": "the \"cuff\" crops showed the wrists also for short-sleeved tees; the review now crops the actual sleeve ends and the upper arm (from each top's sleeve layer) and names the wrist crops \"håndled\""
+    },
+    {
+      "point": "5 no unneeded design changes",
+      "disposition": "kept",
+      "finding": "the step between the tee's hem and the skirt (K01 … K03) is no fault — a top may hang over the bottoms; no silhouette was smoothed, nothing made more uniform"
+    }
+  ]
+}

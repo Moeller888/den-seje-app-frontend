@@ -1,0 +1,9 @@
+Draw ONLY the hair of the boy in Image 1, isolated on a fully transparent background, as one clean cut-out hair piece on a 1024x1024 sheet.
+Image 1 controls the painting: copy its cartoon style, line weight, shading, shadow shapes and zigzag light streaks.
+Image 2 controls the fit and the lock structure: follow its outline, size and position on the sheet exactly, lock by lock - the V-shaped parting at the top of the face opening, the long central lock pointing straight down, the separate temple lock on each side with its own tip, and at each side a short lower edge ending ABOVE the ear with a clear inner corner towards the face.
+Do NOT copy from Image 1 where its hair ends: no sideburns in front of the ears, no lock below the ears and no lock at the neck.
+Do NOT copy the look of Image 2: it is a flat diagram, so do not reproduce its plain flat fill or its thin guide lines - paint the hair fully in the style of Image 1.
+One connected piece: no loose strands, no separate small pieces.
+Render it in neutral greyscale only (no colour, no brown, no tint): a near-black outline, dark grey shadow areas, mid-grey main hair tone and a few near-white zigzag light streaks, so it can be recoloured later.
+Front view, never mirrored. Keep the wide transparent margin of Image 2: no part of the hair closer than 64 pixels to any edge.
+No face, skin, eyes, eyebrows, ears, head, neck, body, scalp, background, text or marks.

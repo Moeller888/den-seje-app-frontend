@@ -1,0 +1,424 @@
+{
+  "decision": "D-222",
+  "method": "d222",
+  "methodWhat": "D-222 — extraction D-216, skin shadow D-222 (darker = mean channel ratio < 0.98), covering D-218, fitCheck d222 (VIS-3, FIT-4 against C's own exterior, FIT-6v2 garment end)",
+  "recordsResultsOnly": true,
+  "rewritesD207": false,
+  "rewritesD221": false,
+  "imageCalls": 0,
+  "note": "results of the nine original D-207 pictures through the one pipeline (item-pipeline-manifest-d222.json). D-207's outcomes and D-221's results stay as recorded. Technically OK is not visual approval — no item is approved automatically.",
+  "reproducibility": {
+    "runs": 2,
+    "filesPerRun": 142,
+    "byteIdentical": true,
+    "pinned": "the manifest (raw sha256 per item), C's sha256, the method version and the sha256 of every pipeline code file (run.json)",
+    "code": {
+      "northstar-item-pilot.mjs": "72f583c4f4cbec1958e82705fe8bb8de86b980734172107a885318d80b80cfad",
+      "northstar-base-figure-c.mjs": "c1e7a0e4db87895b0f64776e36e4310ed97481ffa2ca73826e0643179137eacb",
+      "northstar-base-figure.mjs": "754846ddb5dd63766b2e360e296dee80c004eb8d8faf2db4c35c26ed3dd67037",
+      "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+      "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+      "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+    },
+    "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818"
+  },
+  "checkFixes": {
+    "FIT-4": "measured against C's own exterior (enclosure c-exterior): an open base pixel that reaches C's exterior through transparent pixels is C's outline. The skirt's 9 px (x 622, y 773–781: C's side seam beside the arm–torso gap the flared skirt closes at the hand) → 0. A hole inside a garment never touches C's exterior: a 12 × 12 hole (144 px) and too short bottoms still fail (test).",
+    "FIT-6v2": "a crossing by its SHAPE: besides v3's square allowance (≤ 6 × 6), a COMPACT piece — shorter side ≤ 6, longer ≤ 1.5 × shorter (two contours meeting at ≥ 34°) — is a reported crossing. The skirt's hem corner (6 × 7, 24 px) → crossing. An elongated strip along the garment (3 × 20) and a too narrow garment still fail (test); the sandals' 2 × 12 px strip still fails. Limit: an edge bite of the same compact shape cannot be told from a crossing by geometry alone — every compact piece over the square is listed (compactCrossingsOverSquare) for manual review.",
+    "skinShadow": "darker = mean channel ratio < 0.98 (D-214: red < 0.98). The khaki hem's cast shadow on the ankle (249,156,95 on C's 250,193,124: k 1.00/0.81/0.77) was taken as fabric and showed as orange specks over the boot. Khaki and brown leather stay fabric (test). Known limit: an orange garment edge over skin can read as shadow.",
+    "contourEdgeUnmix": "a garment pixel within 1 px of C's visible, opaque skin that is a mix of the nearest contour ink K and C's own pixel (every channel within 12) becomes K at alpha a: composed on C it is the picture (≤ 12), over another item it is the contour. Not under a closed shoe (the foot is hidden there). Fabric is never unmixed (test)."
+  },
+  "khakiHemOverBoot": {
+    "cause": "the cast shadow under the hem (taken as fabric by D-214's red test) and the contour's antialias against skin",
+    "skinTonedPxBefore": 33,
+    "skinTonedPxAfter": 2,
+    "orangeishPxRemaining": 7,
+    "remainingWhy": "a mix of the contour with the SHADOWED skin of the picture, not a clean two-colour mix with C — kept as fabric by the rule (nothing is changed without that evidence)"
+  },
+  "items": {
+    "top-tank-teal": {
+      "category": "top",
+      "type": "tank",
+      "covering": "none",
+      "rawSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 749,
+        "new paint": 55734,
+        "base interior / own base garment": 2232,
+        "closing (gaps ≤ 6 px)": 38,
+        "edge from the picture": 11
+      },
+      "manualEffort": "no per-picture setting, paint or mask; reviewed in the outfit overview and app sizes"
+    },
+    "top-tee-red": {
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "rawSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "edge from the picture": 77,
+        "outline band": 1220,
+        "new paint": 82567,
+        "closing (gaps ≤ 6 px)": 578,
+        "base interior / own base garment": 537
+      },
+      "manualEffort": "no per-picture setting, paint or mask; sleeves and hem zoomed ×5 — clean; the right hip seam with the khaki trousers zoomed (see combinationFindings)"
+    },
+    "top-sweater-green": {
+      "category": "top",
+      "type": "sweater",
+      "covering": "none",
+      "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 1382,
+        "new paint": 113444,
+        "edge from the picture": 72,
+        "closing (gaps ≤ 6 px)": 1285,
+        "base interior / own base garment": 443,
+        "enclosed hole from the picture": 40
+      },
+      "manualEffort": "no per-picture setting, paint or mask; reviewed in the full-size outfit with the skirt and boots"
+    },
+    "bottom-shorts-navy": {
+      "category": "bottom",
+      "type": "shorts",
+      "covering": "none",
+      "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "new paint": 34219,
+        "outline band": 1424,
+        "base interior / own base garment": 5835,
+        "closing (gaps ≤ 6 px)": 139,
+        "edge from the picture": 108
+      },
+      "manualEffort": "no per-picture setting, paint or mask; reviewed in the outfit overview and app sizes"
+    },
+    "bottom-trousers-khaki": {
+      "category": "bottom",
+      "type": "trousers",
+      "covering": "none",
+      "rawSha256": "de62cb8331772eabe921eab5c097700a0285f18d8c31450e5b7d077d3b6ecada",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 2964,
+        "new paint": 120868,
+        "base interior / own base garment": 736,
+        "closing (gaps ≤ 6 px)": 4163,
+        "edge from the picture": 149
+      },
+      "manualEffort": "no per-picture setting, paint or mask; the hem over the boot shaft zoomed ×4 (33 → 7 px) and the hip with the tee zoomed ×5"
+    },
+    "bottom-skirt-plum": {
+      "category": "bottom",
+      "type": "skirt",
+      "covering": "none",
+      "rawSha256": "c0d4e6e61f8679059f1b7fe4230084f5cb0372a50d4cc6ac0929d3fb40ec1670",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "methodD221": {
+        "technicallyOk": false,
+        "failedFitChecks": [
+          "FIT-4-COVERAGE",
+          "FIT-6v2-SILHOUETTE"
+        ]
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 1952,
+        "new paint": 56862,
+        "base interior / own base garment": 187,
+        "closing (gaps ≤ 6 px)": 401,
+        "edge from the picture": 115,
+        "enclosed hole from the picture": 12
+      },
+      "manualEffort": "no per-picture setting, paint or mask; the hem corner measured row by row (D-221) and zoomed ×6; reviewed full size with the sweater and boots"
+    },
+    "shoes-sandals-brown": {
+      "category": "shoes",
+      "type": "sandals",
+      "covering": "open-footwear",
+      "rawSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "methodD221": {
+        "technicallyOk": false,
+        "failedFitChecks": [
+          "FIT-6v2-SILHOUETTE"
+        ]
+      },
+      "methodD222": {
+        "technicallyOk": false,
+        "failedFitChecks": [
+          "FIT-6v2-SILHOUETTE"
+        ]
+      },
+      "extractionRulePx": {
+        "outline band": 1390,
+        "new paint": 13298,
+        "closing (gaps ≤ 6 px)": 2191,
+        "edge from the picture": 87,
+        "enclosed hole from the picture": 58
+      },
+      "manualEffort": "no per-picture setting, paint or mask; the 12 px strip classified pixel by pixel (picture vs C) — C's foot is wider than the generated foot"
+    },
+    "shoes-boots-black": {
+      "category": "shoes",
+      "type": "boots",
+      "covering": "closed-footwear",
+      "rawSha256": "1caaa56779f97f3e4c9a35a25cc8a7cf40894d8a5d844d737c68d015770dc38f",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 1490,
+        "new paint": 26656,
+        "edge from the picture": 111,
+        "closing (gaps ≤ 6 px)": 4641,
+        "enclosed hole from the picture": 195
+      },
+      "manualEffort": "no per-picture setting, paint or mask; feet ×2 and with shorts and trousers reviewed (D-221)"
+    },
+    "shoes-sneakers-white": {
+      "category": "shoes",
+      "type": "sneakers",
+      "covering": "closed-footwear",
+      "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "methodD221": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "methodD222": {
+        "technicallyOk": true,
+        "failedFitChecks": []
+      },
+      "extractionRulePx": {
+        "outline band": 917,
+        "new paint": 26253,
+        "closing (gaps ≤ 6 px)": 219,
+        "edge from the picture": 37,
+        "enclosed hole from the picture": 60
+      },
+      "manualEffort": "no per-picture setting, paint or mask; feet ×2 reviewed (D-221)"
+    }
+  },
+  "package": {
+    "outfits": [
+      "top-tank-teal+bottom-shorts-navy+shoes-boots-black",
+      "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white",
+      "top-tank-teal+bottom-trousers-khaki+shoes-boots-black",
+      "top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white",
+      "top-tank-teal+bottom-skirt-plum+shoes-boots-black",
+      "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white",
+      "top-tee-red+bottom-shorts-navy+shoes-boots-black",
+      "top-tee-red+bottom-shorts-navy+shoes-sneakers-white",
+      "top-tee-red+bottom-trousers-khaki+shoes-boots-black",
+      "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white",
+      "top-tee-red+bottom-skirt-plum+shoes-boots-black",
+      "top-tee-red+bottom-skirt-plum+shoes-sneakers-white",
+      "top-sweater-green+bottom-shorts-navy+shoes-boots-black",
+      "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white",
+      "top-sweater-green+bottom-trousers-khaki+shoes-boots-black",
+      "top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white",
+      "top-sweater-green+bottom-skirt-plum+shoes-boots-black",
+      "top-sweater-green+bottom-skirt-plum+shoes-sneakers-white"
+    ],
+    "passed": {
+      "top": [
+        "top-tank-teal",
+        "top-tee-red",
+        "top-sweater-green"
+      ],
+      "bottom": [
+        "bottom-shorts-navy",
+        "bottom-trousers-khaki",
+        "bottom-skirt-plum"
+      ],
+      "shoes": [
+        "shoes-boots-black",
+        "shoes-sneakers-white"
+      ]
+    },
+    "rejected": [
+      {
+        "item": "shoes-sandals-brown",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":12,\"sliverWidthPx\":6,\"crossings\":0,\"crossingPx\":0,\"compactCrossingsOverSquare\":[]}"
+          ]
+        }
+      }
+    ],
+    "combinationReport": {
+      "top-tank-teal+bottom-shorts-navy+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 334,
+        "bodyWithin6pxOutsideItemsPx": 2712
+      },
+      "top-tank-teal+bottom-shorts-navy+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 334,
+        "bodyWithin6pxOutsideItemsPx": 1474
+      },
+      "top-tank-teal+bottom-trousers-khaki+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 214,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-tank-teal+bottom-trousers-khaki+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 214,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-tank-teal+bottom-skirt-plum+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 238,
+        "bodyWithin6pxOutsideItemsPx": 3001
+      },
+      "top-tank-teal+bottom-skirt-plum+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 238,
+        "bodyWithin6pxOutsideItemsPx": 1763
+      },
+      "top-tee-red+bottom-shorts-navy+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 98,
+        "bodyWithin6pxOutsideItemsPx": 2712
+      },
+      "top-tee-red+bottom-shorts-navy+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 98,
+        "bodyWithin6pxOutsideItemsPx": 1474
+      },
+      "top-tee-red+bottom-trousers-khaki+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 11,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 11,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-tee-red+bottom-skirt-plum+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 8,
+        "bodyWithin6pxOutsideItemsPx": 3001
+      },
+      "top-tee-red+bottom-skirt-plum+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 8,
+        "bodyWithin6pxOutsideItemsPx": 1763
+      },
+      "top-sweater-green+bottom-shorts-navy+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 94,
+        "bodyWithin6pxOutsideItemsPx": 2712
+      },
+      "top-sweater-green+bottom-shorts-navy+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 94,
+        "bodyWithin6pxOutsideItemsPx": 1474
+      },
+      "top-sweater-green+bottom-trousers-khaki+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 7,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-sweater-green+bottom-trousers-khaki+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 7,
+        "bodyWithin6pxOutsideItemsPx": 0
+      },
+      "top-sweater-green+bottom-skirt-plum+shoes-boots-black": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 4,
+        "bodyWithin6pxOutsideItemsPx": 3001
+      },
+      "top-sweater-green+bottom-skirt-plum+shoes-sneakers-white": {
+        "enclosedHolePx": 0,
+        "openBaseBecomesBackgroundPx": 4,
+        "bodyWithin6pxOutsideItemsPx": 1763
+      }
+    },
+    "combinationNote": "a report, never a gate: openBaseBecomesBackgroundPx counts C's base pixels that become background in the outfit — mostly intended (base rims a tank or a skirt does not cover) and therefore not able to single out a fault; bodyWithin6pxOutsideItemsPx is mostly open skin (legs under shorts and skirt)."
+  },
+  "combinationFindings": [
+    {
+      "outfits": [
+        "top-tee-red+bottom-trousers-khaki+shoes-boots-black",
+        "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white"
+      ],
+      "where": "right hip, y ≈ 790–816, x ≈ 624–627",
+      "finding": "a 1 px background slit between the khaki's fabric and its side contour below the tee's flared hem, seen as a broken double line at full size (not at the app sizes). The column lies in C's base-top region: the khaki does not take another category's base area (D-210), and the tee does not reach it. Each item passes alone over C's minimum items; no check runs on combinations. Found by manual review, not by a check.",
+      "status": "open — needs a combination check before a larger batch"
+    }
+  ],
+  "visualReview": {
+    "by": "Claude (not the owner)",
+    "approvedAtAppSizes": 18,
+    "approvedFullSize": 16,
+    "flaggedFullSize": [
+      "top-tee-red+bottom-trousers-khaki+shoes-boots-black",
+      "top-tee-red+bottom-trousers-khaki+shoes-sneakers-white"
+    ],
+    "note": "my visual judgement on the local pictures; the owner's visual approval is separate and has not been given"
+  },
+  "reviewImages": "<Documents>/DenSejeApp-artefacts/d-222-item-pipeline/final-1/ (items/<id>/p01–p07, layers, shadow, covering-hidden; package/outfit-*.full.png and .app.png, o01 overview, o02 hub size, rejected-shoes-sandals-brown.png)"
+}

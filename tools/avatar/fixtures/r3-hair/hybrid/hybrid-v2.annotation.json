@@ -1,0 +1,129 @@
+{
+  "schema": "r3-hair-hybrid-annotation-v1",
+  "kind": "CONSTRUCTION — the points are drawn vertices of the edit geometry, NOT readings of a sheet; D-179's hidden second reading applies to the raw-sheet method only and is not claimed here",
+  "reviewStatus": "DRAFT — owner review pending",
+  "derivation": {
+    "id": "r3-hair-hybrid-v2",
+    "specSha256": "66d5426ad1ace78054730c56eda76b3e43849328c79f9eab8ffee6cd19cf4e8f",
+    "generator": "tools/avatar/r3-hair-hybrid.mjs",
+    "source": {
+      "file": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.png",
+      "sha256": "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d",
+      "report": "tools/avatar/fixtures/r3-hair/hybrid/source-r3-hair-d183.check.json",
+      "reportSha256": "e0a7a537ad4ca1985e9c727a3faf31f5a3a4901556d202dd052431baf16cbefc"
+    },
+    "derivedPixelSha256": "298b1cdd0bbbfa07b4de57c0de6df771a0c7e5e24751be1f524f7c4cb2b150e0"
+  },
+  "units": "sheet-px",
+  "transform": {
+    "from": "guide-hair-v1 (the approved targets mapped into the sheet)",
+    "sheetToMaster": {
+      "s": 0.5714285714285714,
+      "tx": 215.42857142857144,
+      "ty": -121.32142857142856
+    }
+  },
+  "fitPoints": {
+    "centreHairline": {
+      "xy": [
+        629.25,
+        562.3125
+      ],
+      "boundTo": "guide vertex A4 = the approved target centreHairline, drawn by the edit geometry",
+      "definition": "r3-hair-v2:A4-parting-apex",
+      "crop": {
+        "pixelSha256": "f0b487c05865880cd92d0ddee35970cc615009151a09916bdd9bfde589e2d680",
+        "size": [
+          192,
+          192
+        ],
+        "note": "the rasterised derived sheet around the point, x4, red cross on the point"
+      }
+    },
+    "leftEarTopJunction": {
+      "xy": [
+        237.25,
+        758.3125
+      ],
+      "boundTo": "guide vertex A9 = the approved target leftEarTopJunction, drawn by the edit geometry",
+      "definition": "r3-hair-v2:A9-ear-top-junction",
+      "crop": {
+        "pixelSha256": "212397af390f3f048926d240dbc41f42dd2e1b8a3a5b5b86a27f895b2df7d713",
+        "size": [
+          192,
+          192
+        ],
+        "note": "the rasterised derived sheet around the point, x4, red cross on the point"
+      }
+    },
+    "rightEarTopJunction": {
+      "xy": [
+        757,
+        773.1875
+      ],
+      "boundTo": "guide vertex A10 = the approved target rightEarTopJunction, drawn by the edit geometry",
+      "definition": "r3-hair-v2:A10-ear-top-junction",
+      "crop": {
+        "pixelSha256": "bcdfe4ae52a5ec79df84c4e05a5c169c7a17c09191d18625c2d97c02022069d1",
+        "size": [
+          192,
+          192
+        ],
+        "note": "the rasterised derived sheet around the point, x4, red cross on the point"
+      }
+    }
+  },
+  "locks": {
+    "leftTempleLock": {
+      "tip": [
+        316,
+        700.5625
+      ],
+      "flankingNotches": [
+        [
+          365,
+          625.3125
+        ],
+        [
+          288,
+          677.8125
+        ]
+      ],
+      "boundTo": "guide vertices A7, A7-n-face, A7-n-side; the raw lock between the left-ear cut and the face-opening cut",
+      "crop": {
+        "pixelSha256": "eec4aa870cb75401056d7250992d7d31cc1af90d73ff44e5976286e92a54c95d",
+        "size": [
+          192,
+          192
+        ],
+        "note": "the rasterised derived sheet around the point, x4, red cross on the point"
+      }
+    },
+    "rightTempleLock": {
+      "tip": [
+        724.5,
+        641.5
+      ],
+      "flankingNotches": [
+        [
+          680,
+          586.8125
+        ],
+        [
+          751.75,
+          618.3125
+        ]
+      ],
+      "boundTo": "notches at guide vertices A8-n-face and A8-n-side; the tip is the rasterised lowest pixel of the raw lock on the near side of the drawn wedge cut A8 -> A8-n-side",
+      "crop": {
+        "pixelSha256": "87ac392c45cb67d4265ac37d7f56657653fa3c5c72df495846063f6ce9387687",
+        "size": [
+          192,
+          192
+        ],
+        "note": "the rasterised derived sheet around the point, x4, red cross on the point"
+      }
+    }
+  },
+  "validationNote": "A seat residual of zero is a property of the construction (the drawn vertices ARE the targets), not an independent validation. What the checks still prove is functional: coverage, holes, brows, eyes, ears, fragments and lock separation on the actual derived pixels."
+}

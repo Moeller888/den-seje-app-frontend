@@ -1,0 +1,483 @@
+{
+  "decision": "D-228",
+  "status": "EXECUTED 2026-10-27 — 6 of 6 calls sent once each, no stop; every entry SPENT and closed by D-231; no further call under D-228",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-228's decision status plus this file's unspent entries, never a general boolean",
+    "kind": "a method experiment, not production: no catalogue, no runtime, no activation"
+  },
+  "budget": {
+    "authorised": 6,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": 0,
+    "actuallySent": 6,
+    "oneCallPerItem": true,
+    "closed": true,
+    "recordedBy": "D-231"
+  },
+  "privacy": {
+    "cSentToApi": "allowed for this experiment only (owner, 2026-10-27)",
+    "referenceSheetsSentToApi": "allowed for this experiment only (C-derived)",
+    "publishOrTrack": "never — C, the sheets and every result stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "modelNote": "the model of D-207 and D-218, unchanged; never switched silently — another model is a new decision",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "bytes": 1300423,
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tracked": false
+      }
+    ],
+    "image2": "the reference sheet of the call's category (references below): C with seam-contract-v1's zones as colour marks",
+    "references": {
+      "top": {
+        "name": "seam-reference-top.png",
+        "bytes": 1866558,
+        "sha256": "55f2c17a2eb1edf5bb08f21b8b193a18e1c2421c1397622129fd4f0a07399594",
+        "tracked": false
+      },
+      "bottom": {
+        "name": "seam-reference-bottom.png",
+        "bytes": 1887124,
+        "sha256": "d7c2fe30ca1a794c9969edc6a5a669fca498de8496d72867d441fa1feaa0c765",
+        "tracked": false
+      },
+      "shoes": {
+        "name": "seam-reference-shoes.png",
+        "bytes": 1892886,
+        "sha256": "521460153f2abb20ef779680aa8dd1519699f97abaff0ba2765a86a873230037",
+        "tracked": false
+      }
+    },
+    "referenceLocation": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/references/v1/<category>/seam-reference-<category>.png",
+    "referenceGenerator": "node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> --out <empty dir> (ST.seamReferenceSheet, seam-contract-v1; deterministic)",
+    "prompts": {
+      "file": "seam-validation-prompts-v1.json",
+      "sha256": "2c159e2678f13377e55701b2ab1ad9ef5820e2f041435403f4977fba89e0a894"
+    }
+  },
+  "order": "V1, V2, V3, V4, V5, V6 — a call is refused unless every earlier call has a claim and a written outcome that does not stop the run",
+  "stopRules": [
+    "credit or access: HTTP 401, 403 or 429, or an error code naming quota or billing",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx",
+    "format: a received picture that is not a 1024x1536 RGBA PNG (TECHNICAL_REJECT at receipt)",
+    "moderation: a second moderation block",
+    "the executor's stop file D-228-STOP.json (a common method failure found after a receipt)"
+  ],
+  "stopProcedure": "after each received picture the executor runs `northstar-item-pilot.mjs --process` for that item (registration and extraction, method d225) before the next call. A COMMON METHOD FAILURE — the same failure not tied to one item in two calls (registration G-1, or Image 2's marks drawn into the picture) — is written as D-228-STOP.json in the output root, which the adapter refuses on. An item-specific failure (a fit fault, a contract break) never stops the run.",
+  "calls": [
+    {
+      "callId": "D-228-seam-V1",
+      "order": 1,
+      "case": "V1",
+      "plan": "V1-top-hip-station",
+      "item": "top-tee-hip-blue",
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "tests": "SC-W1 (hip station), SC-W2 (hip corners), SC-W5 (hip overhang)",
+      "targetRules": [
+        "SC-W1",
+        "SC-W2",
+        "SC-W5"
+      ],
+      "prompt": {
+        "item": "top-tee-hip-blue",
+        "sha256": "07292db8eae91d5640d2c15182591b737667d50cdbda20644022664b79a64576",
+        "bytes": 1496
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "D-228-seam-V1-claim",
+        "filename": "D-228-seam-V1.claim.json",
+        "eventsFilename": "D-228-seam-V1.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V1/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_e0d1772d4fae41e287dc2ac679380583",
+        "imageSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    },
+    {
+      "callId": "D-228-seam-V2",
+      "order": 2,
+      "case": "V2",
+      "plan": "V2-longsleeve-on-waistline",
+      "item": "top-longsleeve-waist-purple",
+      "category": "top",
+      "type": "longsleeve",
+      "covering": "none",
+      "tests": "SC-W1 (hem ON W), SC-S1 (cuff band)",
+      "targetRules": [
+        "SC-W1",
+        "SC-S1"
+      ],
+      "prompt": {
+        "item": "top-longsleeve-waist-purple",
+        "sha256": "a9f6b00b7ad3f89723f2782b5cf966ed93d8c595add14e83bc17d0153bdbfdde",
+        "bytes": 1526
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "D-228-seam-V2-claim",
+        "filename": "D-228-seam-V2.claim.json",
+        "eventsFilename": "D-228-seam-V2.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V2/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_cd1732d51af4499e977a5e8531093093",
+        "imageSha256": "c20f6955f1c7092bef8a9bcf4a3416c83ae3873bdbb987dbd0844afd7848ca29"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    },
+    {
+      "callId": "D-228-seam-V3",
+      "order": 3,
+      "case": "V3",
+      "plan": "V3-trousers-full-square",
+      "item": "bottom-trousers-square-olive",
+      "category": "bottom",
+      "type": "trousers",
+      "covering": "none",
+      "tests": "SC-L1 full class (square, ± 10, hem A + [6, 12]), SC-W3, SC-W4, SC-W6",
+      "targetRules": [
+        "SC-L1",
+        "SC-W3",
+        "SC-W4",
+        "SC-W6"
+      ],
+      "prompt": {
+        "item": "bottom-trousers-square-olive",
+        "sha256": "0eaed574c31afcf7f36ac18be9a9f59b6666a7758534449fe3ff54f517791030",
+        "bytes": 1133
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "D-228-seam-V3-claim",
+        "filename": "D-228-seam-V3.claim.json",
+        "eventsFilename": "D-228-seam-V3.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V3/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_2e3dfdbc711b4747a8cc6c086e725634",
+        "imageSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    },
+    {
+      "callId": "D-228-seam-V4",
+      "order": 4,
+      "case": "V4",
+      "plan": "V4-cropped-capri",
+      "item": "bottom-capri-lightblue",
+      "category": "bottom",
+      "type": "capri",
+      "covering": "none",
+      "tests": "SC-L1 cropped class (hem ≤ A − 68: the ankle shows — intended), SC-W3, SC-W6",
+      "targetRules": [
+        "SC-L1",
+        "SC-W3",
+        "SC-W6"
+      ],
+      "prompt": {
+        "item": "bottom-capri-lightblue",
+        "sha256": "7d9db8ba60a1ae44239543ec9f9407e24bfaba5b181301f88fe56b8be8a3ec6c",
+        "bytes": 1103
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "D-228-seam-V4-claim",
+        "filename": "D-228-seam-V4.claim.json",
+        "eventsFilename": "D-228-seam-V4.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V4/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_83ac7c18132a4a0fb4b0d7ff678c4f08",
+        "imageSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    },
+    {
+      "callId": "D-228-seam-V5",
+      "order": 5,
+      "case": "V5",
+      "plan": "V5-skirt-waistband-high",
+      "item": "bottom-skirt-band-orange",
+      "category": "bottom",
+      "type": "skirt",
+      "covering": "none",
+      "tests": "SC-W4 (waistband seam within W + 12), SC-W6",
+      "targetRules": [
+        "SC-W4",
+        "SC-W6"
+      ],
+      "prompt": {
+        "item": "bottom-skirt-band-orange",
+        "sha256": "dc09158998836738e59f1e56833eb1c28e26a02272fcdbf826cb299497e95e48",
+        "bytes": 1142
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "D-228-seam-V5-claim",
+        "filename": "D-228-seam-V5.claim.json",
+        "eventsFilename": "D-228-seam-V5.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V5/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_7d33c407a6c743d987be5f60d8f284d2",
+        "imageSha256": "a4d76771b29aafbea445445c8602afe7a41a1a406f2f96d251a095b7e077f438"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    },
+    {
+      "callId": "D-228-seam-V6",
+      "order": 6,
+      "case": "V6",
+      "plan": "V6-ankle-boot-in-envelope",
+      "item": "shoes-ankleboots-brown",
+      "category": "shoes",
+      "type": "boots",
+      "covering": "closed-footwear",
+      "tests": "SC-L2 (collar ≤ A, shaft ≤ A − 56), SC-L3 (within the leg ± 8)",
+      "targetRules": [
+        "SC-L2",
+        "SC-L3"
+      ],
+      "prompt": {
+        "item": "shoes-ankleboots-brown",
+        "sha256": "8ed360d0d19d918f3855a34b65c93811f8d2c47530f9c3ad7b5a648c67752664",
+        "bytes": 1094
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "D-228-seam-V6-claim",
+        "filename": "D-228-seam-V6.claim.json",
+        "eventsFilename": "D-228-seam-V6.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/d-228-seam-validation/D-228-seam-V6/d228.image-1.png",
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_9667ee4789d647799fc5c94d5ecb97d5",
+        "imageSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c"
+      },
+      "recordedBy": "D-231",
+      "closedBy": "D-231"
+    }
+  ],
+  "acceptance": {
+    "frozen": "before any call; never adjusted during or after the experiment to make a result pass",
+    "axes": {
+      "technical": "pipeline method d225 (D-223's extraction, fitCheck d222, covering D-218, skin shadow D-222) — the item is technically OK or rejected; unchanged rules",
+      "contract": "BC.contractCheck(seam-contract-v1) per item: every SC rule recorded; the item's targetRules are the ones it was designed to meet",
+      "combinationFit": "BC.outfitCheck revision d225 per outfit of the reuse matrix whose three items are technically OK; the findings register applies (an open finding keeps an outfit from being ready)",
+      "visualQuality": "the owner's own review — never inferred from any check here"
+    },
+    "separation": "the contract is sufficient, not necessary: a contract break is NOT by itself a visible outfit fault, and a contract pass is not a visual approval. The three axes are reported apart and never merged into one verdict per item.",
+    "questions": {
+      "Q1": "seams: does each item meet its targetRules? (count of 6)",
+      "Q2": "hip corners: SC-W2 for V1 and V2 (D-225 pilot baseline: 0 of 3 tops)",
+      "Q3": "reuse: of the reuse matrix's available outfits, the share that passes the outfit check; per new item, the share of its own outfits (D-225 pilot baseline: 13 of 18 outfits pass the outfit check)"
+    },
+    "verdict": {
+      "improves": "Q2 2 of 2 AND Q1 at least 4 of 6 AND Q3 at least 90 % of available outfits",
+      "doesNotImprove": "Q2 0 of 2 AND Q1 at most 2 of 6",
+      "otherwise": "partial — the failing seams and their classes named; no conclusion beyond them"
+    },
+    "failureClasses": {
+      "generation": "the model did not follow the instruction or redrew the body (registration, base left, wrong length or width as drawn)",
+      "extraction": "the tool missed paint or kept base (the picture has the material, the layer does not)",
+      "composition": "layer order, covering, shadow or alignment in the combination",
+      "contract": "the rule is incomplete or wrong: a visible fault no rule catches, or a rule break with no visible consequence anywhere"
+    },
+    "limits": [
+      "six items, one picture each: no estimate of how often a model hits a seam",
+      "no control without reference sheets: a pass shows the contract can be met with them, not that the sheet caused it",
+      "a technical or contract pass is never the owner's visual approval"
+    ],
+    "noExpansion": "no further calls follow automatically, whatever the result"
+  },
+  "evaluation": {
+    "method": "d225",
+    "findingsRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register.json",
+    "rawRoot": ".",
+    "reuseMatrix": {
+      "tops": [
+        "top-tank-teal",
+        "top-tee-red",
+        "top-sweater-green",
+        "top-tee-hip-blue",
+        "top-longsleeve-waist-purple"
+      ],
+      "bottoms": [
+        "bottom-shorts-navy",
+        "bottom-trousers-square-olive",
+        "bottom-capri-lightblue",
+        "bottom-skirt-band-orange"
+      ],
+      "shoes": [
+        "shoes-sneakers-white",
+        "shoes-ankleboots-brown"
+      ],
+      "outfits": 40
+    },
+    "existingItems": [
+      {
+        "id": "top-tank-teal",
+        "category": "top",
+        "type": "tank",
+        "covering": "none",
+        "raw": "d-207-item-pilot/D-207-item-top-tank-teal/d207.image-1.png",
+        "rawSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf"
+      },
+      {
+        "id": "top-tee-red",
+        "category": "top",
+        "type": "tee",
+        "covering": "none",
+        "raw": "d-207-item-pilot/D-207-item-top-tee-red/d207.image-1.png",
+        "rawSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973"
+      },
+      {
+        "id": "top-sweater-green",
+        "category": "top",
+        "type": "sweater",
+        "covering": "none",
+        "raw": "d-207-item-pilot/D-207-item-top-sweater-green/d207.image-1.png",
+        "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b"
+      },
+      {
+        "id": "bottom-shorts-navy",
+        "category": "bottom",
+        "type": "shorts",
+        "covering": "none",
+        "raw": "d-207-item-pilot/D-207-item-bottom-shorts-navy/d207.image-1.png",
+        "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167"
+      },
+      {
+        "id": "shoes-sneakers-white",
+        "category": "shoes",
+        "type": "sneakers",
+        "covering": "closed-footwear",
+        "raw": "d-207-item-pilot/D-207-reserve-2/d207.image-1.png",
+        "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611"
+      }
+    ],
+    "newItems": [
+      {
+        "id": "top-tee-hip-blue",
+        "category": "top",
+        "type": "tee",
+        "covering": "none",
+        "raw": "d-228-seam-validation/D-228-seam-V1/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      },
+      {
+        "id": "top-longsleeve-waist-purple",
+        "category": "top",
+        "type": "longsleeve",
+        "covering": "none",
+        "raw": "d-228-seam-validation/D-228-seam-V2/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      },
+      {
+        "id": "bottom-trousers-square-olive",
+        "category": "bottom",
+        "type": "trousers",
+        "covering": "none",
+        "raw": "d-228-seam-validation/D-228-seam-V3/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      },
+      {
+        "id": "bottom-capri-lightblue",
+        "category": "bottom",
+        "type": "capri",
+        "covering": "none",
+        "raw": "d-228-seam-validation/D-228-seam-V4/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      },
+      {
+        "id": "bottom-skirt-band-orange",
+        "category": "bottom",
+        "type": "skirt",
+        "covering": "none",
+        "raw": "d-228-seam-validation/D-228-seam-V5/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      },
+      {
+        "id": "shoes-ankleboots-brown",
+        "category": "shoes",
+        "type": "boots",
+        "covering": "closed-footwear",
+        "raw": "d-228-seam-validation/D-228-seam-V6/d228.image-1.png",
+        "rawSha256": "from the call's receipt"
+      }
+    ],
+    "display": "every available outfit of the matrix is shown; an outfit rejected by the outfit check is marked (red frame, 'rejected-outfit-'), an outfit with an open finding is named, an item rejected by the pipeline is shown apart and its outfits are listed as not composable",
+    "postProcessing": "the same versioned pipeline for every item; no individual retouch, no special mask, no per-item rule"
+  },
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-seam-d228.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-228",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}

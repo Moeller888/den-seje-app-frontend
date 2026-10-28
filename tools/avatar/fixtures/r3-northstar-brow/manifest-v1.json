@@ -1,0 +1,178 @@
+{
+  "id": "r3-northstar-brow-v1",
+  "decision": "D-190",
+  "status": "REVIEW VARIANT (D-190) — the image-left brow completed by the D-158 mirroring on the D-189 baseline (the filled part is reconstructed, not observed); not approved, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+  },
+  "baseline": {
+    "decision": "D-189",
+    "mergeCommit": "cb2fa202a8fdcaa26d9bd69d195a4036b5982464",
+    "manifest": "tools/avatar/fixtures/r3-northstar-head/manifest-v1.json",
+    "manifestSha256": "59b58f4bbab3338600334567f7640a42849881c7687ae34cc3d316b89d962ae1",
+    "headPixelSha256": "d50b38a78d4c7f3818c5fa60e2c5af829b43fcaaafd8a83016ad60b270dcc01a",
+    "baldHeadPixelSha256": "89a08eac41adc61ef597fb896cc12a403c4c8c8ce424e48d2807c8a78a438706"
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-brow/spec-v1.json",
+    "sha256": "5ff078a1ed17be02a845d8be6b23732a10ac8b7695ee3d22c55b1d541e902c40"
+  },
+  "generator": {
+    "file": "tools/avatar/r3-northstar-brow.mjs",
+    "review": "node tools/avatar/r3-review-pack.mjs --variant northstar-brow --out <empty dir>"
+  },
+  "compositeOrder": [
+    "cranium",
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "layers": {
+    "browL": {
+      "file": "tools/avatar/fixtures/r3-northstar-brow/layers/browL.png",
+      "sha256": "3de06444158c3a59c1ccba58365eba577807394d7ffb94040e69462b6ee54fba",
+      "pixelSha256": "192d61d4d723eb12e28eec25afe3ebae60360d678b244000acc0f393b9c30a7e",
+      "bytes": 10437
+    }
+  },
+  "reused": {
+    "cranium": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/cranium.png",
+      "sha256": "b7f0269cacb10a10366e3d076daae2405bc8f02bf1d123f6c8930b8edc17aa50",
+      "pixelSha256": "81e842b94707e22266cf2b5ae391410ede54f35777f49ad1afb4da08e358d22a"
+    },
+    "skin": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/skin.png",
+      "sha256": "8554b270d16cb7628d49c21c77443ddb7204db793bdc0dfc57a5745f4a020c6e",
+      "pixelSha256": "7ba372c462d57061de57289470689cecb11ae1a7b6fc844e93f2d566097c001c"
+    },
+    "hairShadow": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/hairShadow.png",
+      "sha256": "c2d097918a88a2674325cd1ed96bf79d4d4019ff5ac9211352ce6f82a0422d1c",
+      "pixelSha256": "e018b3de1c4681b3f72e41a0f008af026e365faa38cac668abb01125ecc40c1f"
+    },
+    "browR": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/browR.png",
+      "sha256": "1f4824882691b4f590ccb21b069f05b441807a4522eeb09842747fdf708571d4",
+      "pixelSha256": "0e19da87cc9d4953310211bf5dfb3baddcf525c1108b4ed8e14dd4ba3719e988"
+    },
+    "nose": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/nose.png",
+      "sha256": "359e86d8bf3a353bc3771103101065ef8810bb1d1af6d525b6a92ade812da956",
+      "pixelSha256": "383c7b812f7f005a4cc34347d4a7a1850217bfd2b1469c9fdb84dc12cc6ade47"
+    },
+    "mouth": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/mouth.png",
+      "sha256": "c34edbda81618d9a5200d9704787caa4f10707647102577a575ed3640dd50657",
+      "pixelSha256": "5387d370da3a8ebb4aaacfaf28778acd859c50180c4e09e72d20cbfbb62946d3"
+    },
+    "iris": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/iris.png",
+      "sha256": "e43d0d98e785aa77783cccc0c78a01322efc8ee92208f6503a00de3aac9d4134",
+      "pixelSha256": "c92badf10ae363f2291086c04bcf9883220c92f5c59077bf8b63b6e0ef04425f"
+    },
+    "eyesFixed": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/eyesFixed.png",
+      "sha256": "2b7faf8b756a30d08e0596b89df69e71edf920738b09dfa1bdb396aaa8d91049",
+      "pixelSha256": "d935696ace61d310e314231c6ea4e0bad1da7e1f8cbdf159e71d1a3cff19ae69"
+    },
+    "hair": {
+      "from": "D-189",
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/hair.png",
+      "sha256": "34cde32d2ff6ef5bdcba8c0cdeef1e3f07a34f7ddf3954da269dcdf7bf16e18a",
+      "pixelSha256": "f49b71ca2495a37ac72f0e4b2a4b7f8c8bae17c743a949a00653768f9a53272d"
+    }
+  },
+  "masks": {
+    "brow-observed": {
+      "file": "tools/avatar/fixtures/r3-northstar-brow/masks/brow-observed.png",
+      "sha256": "4a5ddcad651e6d7a9a8ea09cb6b9d8218a887de11ded5e29277857fcd7d68a0b",
+      "pixelSha256": "c87e3092fc2702beb98dd3e2e0b4a2bd0711e5a0cb78fafabaf91170260ab4cc",
+      "bytes": 6395
+    },
+    "brow-mirror-fitted": {
+      "file": "tools/avatar/fixtures/r3-northstar-brow/masks/brow-mirror-fitted.png",
+      "sha256": "d88220b1cf788dc5e0d791661eed2bee254906567ff6b9bd4cfda57921363319",
+      "pixelSha256": "85a728edb5a8a7336e3441f60751497cdbaf66d0763ff196e35b66909802d982",
+      "bytes": 6340
+    },
+    "brow-mirror-fill": {
+      "file": "tools/avatar/fixtures/r3-northstar-brow/masks/brow-mirror-fill.png",
+      "sha256": "86ef6b1a481e5e6f6da5a90aa4d5849d1965a2b67b9d77a98b60e412d39a880c",
+      "pixelSha256": "ed92bf90ca0582fa3d521f8d3fd876f7664af3daecc7592c441ac103cb493323",
+      "bytes": 6448
+    },
+    "brow-safe-skin": {
+      "file": "tools/avatar/fixtures/r3-northstar-brow/masks/brow-safe-skin.png",
+      "sha256": "7741cee6a5efcaff527cbc8db9b7711e7ea1d1d6c0a7c39e590a198f57af7261",
+      "pixelSha256": "9d17630e240aabfcbac3ec713ae2e891f470df9d27728a76c784819e00c05f8a",
+      "bytes": 6649
+    }
+  },
+  "composite": {
+    "headPixelSha256": "c1f4d7ac135ba67b36cff70e9cebf378831bd6be2afd44d9878987b59cc935ff",
+    "baldHeadPixelSha256": "79ecda24986c915149f6c1c3c53f0d76254057f0bf2303ca6f146563f3d8bed6"
+  },
+  "stats": {
+    "axis": 509.79,
+    "mirroredCentroid": [
+      444.263,
+      254.862
+    ],
+    "sourceBrowPx": 1122,
+    "observedBrowPx": 691,
+    "raw": {
+      "tx": 0,
+      "ty": 0,
+      "rotationDeg": 0,
+      "scale": 1,
+      "skin": 10,
+      "iou": 0.7002,
+      "recall": 0.8857,
+      "dev": 0
+    },
+    "fit": {
+      "stage": "translation",
+      "tx": -3,
+      "ty": 4,
+      "rotationDeg": 0,
+      "scale": 1,
+      "skinPx": 0,
+      "iou": 0.8623,
+      "recall": 0.9247
+    },
+    "filledPx": 496
+  },
+  "changesVsD189": {
+    "layerPxChanged": 496,
+    "layerPxOutsideFill": 0,
+    "compositeWithHair": {
+      "changedPx": 444,
+      "maxRgb": 2,
+      "maxAlpha": 0,
+      "outsideFillPx": 0,
+      "underNonOpaqueHairPx": 0
+    }
+  },
+  "notUsed": [
+    "H1 (fitting-base.H1.png)",
+    "freehand correction",
+    "non-linear deformation",
+    "any image call"
+  ]
+}

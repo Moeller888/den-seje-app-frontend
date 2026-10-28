@@ -1,0 +1,314 @@
+{
+  "tool": "openai-send-r3-face-parts-d165",
+  "callId": "D-165-r3-face-parts-sheet-v1",
+  "check": "D-164 RAW-1..5 (raw parts sheet)",
+  "image": {
+    "file": "tools/avatar/build/r3-face-parts-d165/r3-face-parts-d165.image-1.png",
+    "sha256": "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d"
+  },
+  "verdict": "PASS_TO_ANNOTATION",
+  "firstFailure": null,
+  "auto": [
+    {
+      "id": "RAW-1",
+      "name": "PNG decodes",
+      "status": "PASS",
+      "detail": "ok"
+    },
+    {
+      "id": "RAW-2",
+      "name": "sheet 1024x1024",
+      "status": "PASS",
+      "detail": "1024x1024"
+    },
+    {
+      "id": "RAW-3",
+      "name": "RGBA 8-bit, not interlaced",
+      "status": "PASS",
+      "detail": "colour type 6, bit depth 8, interlace 0"
+    },
+    {
+      "id": "RAW-4",
+      "name": "every fixed cell has content (alpha > 0)",
+      "status": "PASS",
+      "detail": "4 of 4 cells"
+    },
+    {
+      "id": "RAW-5",
+      "name": "nothing cut at a cell boundary (alpha = 0 on every cell's outermost ring, incl. the sheet's centre lines)",
+      "status": "PASS",
+      "detail": "0 px"
+    }
+  ],
+  "diag": [
+    {
+      "id": "RDIAG-1",
+      "part": "browLeft",
+      "name": "stray pixels outside the largest 8-connected component",
+      "value": {
+        "components": 37,
+        "strayPx": 62
+      },
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-2",
+      "part": "browLeft",
+      "name": "minimum distance from content to the cell edge (px)",
+      "value": 8,
+      "flagged": null,
+      "note": "reported only; no margin threshold is approved"
+    },
+    {
+      "id": "RDIAG-3",
+      "part": "browLeft",
+      "name": "guide-marker colours (cyan/magenta ±8)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-4",
+      "part": "browLeft",
+      "name": "skin-like solid pixels (ΔE76 ≤ 6 to U1 skin)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-5",
+      "part": "browLeft",
+      "name": "near-white solid pixels (L* ≥ 90, chroma ≤ 8) — eye whites? (the nose highlight is also white)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-1",
+      "part": "browRight",
+      "name": "stray pixels outside the largest 8-connected component",
+      "value": {
+        "components": 42,
+        "strayPx": 91
+      },
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-2",
+      "part": "browRight",
+      "name": "minimum distance from content to the cell edge (px)",
+      "value": 5,
+      "flagged": null,
+      "note": "reported only; no margin threshold is approved"
+    },
+    {
+      "id": "RDIAG-3",
+      "part": "browRight",
+      "name": "guide-marker colours (cyan/magenta ±8)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-4",
+      "part": "browRight",
+      "name": "skin-like solid pixels (ΔE76 ≤ 6 to U1 skin)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-5",
+      "part": "browRight",
+      "name": "near-white solid pixels (L* ≥ 90, chroma ≤ 8) — eye whites? (the nose highlight is also white)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-1",
+      "part": "nose",
+      "name": "stray pixels outside the largest 8-connected component",
+      "value": {
+        "components": 20,
+        "strayPx": 27
+      },
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-2",
+      "part": "nose",
+      "name": "minimum distance from content to the cell edge (px)",
+      "value": 6,
+      "flagged": null,
+      "note": "reported only; no margin threshold is approved"
+    },
+    {
+      "id": "RDIAG-3",
+      "part": "nose",
+      "name": "guide-marker colours (cyan/magenta ±8)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-4",
+      "part": "nose",
+      "name": "skin-like solid pixels (ΔE76 ≤ 6 to U1 skin)",
+      "value": 875,
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-5",
+      "part": "nose",
+      "name": "near-white solid pixels (L* ≥ 90, chroma ≤ 8) — eye whites? (the nose highlight is also white)",
+      "value": 356,
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-1",
+      "part": "mouth",
+      "name": "stray pixels outside the largest 8-connected component",
+      "value": {
+        "components": 143,
+        "strayPx": 600
+      },
+      "flagged": true
+    },
+    {
+      "id": "RDIAG-2",
+      "part": "mouth",
+      "name": "minimum distance from content to the cell edge (px)",
+      "value": 9,
+      "flagged": null,
+      "note": "reported only; no margin threshold is approved"
+    },
+    {
+      "id": "RDIAG-3",
+      "part": "mouth",
+      "name": "guide-marker colours (cyan/magenta ±8)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-4",
+      "part": "mouth",
+      "name": "skin-like solid pixels (ΔE76 ≤ 6 to U1 skin)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-5",
+      "part": "mouth",
+      "name": "near-white solid pixels (L* ≥ 90, chroma ≤ 8) — eye whites? (the nose highlight is also white)",
+      "value": 0,
+      "flagged": false
+    },
+    {
+      "id": "RDIAG-6",
+      "name": "wrong part in a cell / text / eyes / hair / blush",
+      "value": "NOT APPLICABLE automatically",
+      "flagged": null,
+      "note": "visual review only"
+    }
+  ],
+  "cells": {
+    "browLeft": {
+      "supportBox": [
+        41,
+        45,
+        503,
+        415
+      ],
+      "solidBox": [
+        87,
+        197,
+        430,
+        306
+      ],
+      "supportPx": 20572,
+      "solidPx": 18297,
+      "faintPx": 2275,
+      "boundaryPx": 0,
+      "minEdgeDistancePx": 8,
+      "components": 37,
+      "largestComponentPx": 20510,
+      "strayPx": 62,
+      "markerColourPx": 0,
+      "skinLikeSolidPx": 0,
+      "nearWhiteSolidPx": 0
+    },
+    "browRight": {
+      "supportBox": [
+        5,
+        53,
+        481,
+        397
+      ],
+      "solidBox": [
+        83,
+        193,
+        426,
+        297
+      ],
+      "supportPx": 19814,
+      "solidPx": 17843,
+      "faintPx": 1971,
+      "boundaryPx": 0,
+      "minEdgeDistancePx": 5,
+      "components": 42,
+      "largestComponentPx": 19723,
+      "strayPx": 91,
+      "markerColourPx": 0,
+      "skinLikeSolidPx": 0,
+      "nearWhiteSolidPx": 0
+    },
+    "nose": {
+      "supportBox": [
+        69,
+        119,
+        505,
+        471
+      ],
+      "solidBox": [
+        234,
+        185,
+        276,
+        298
+      ],
+      "supportPx": 4250,
+      "solidPx": 3466,
+      "faintPx": 784,
+      "boundaryPx": 0,
+      "minEdgeDistancePx": 6,
+      "components": 20,
+      "largestComponentPx": 4223,
+      "strayPx": 27,
+      "markerColourPx": 0,
+      "skinLikeSolidPx": 875,
+      "nearWhiteSolidPx": 356
+    },
+    "mouth": {
+      "supportBox": [
+        9,
+        151,
+        491,
+        447
+      ],
+      "solidBox": [
+        84,
+        224,
+        441,
+        284
+      ],
+      "supportPx": 6172,
+      "solidPx": 3271,
+      "faintPx": 2901,
+      "boundaryPx": 0,
+      "minEdgeDistancePx": 9,
+      "components": 143,
+      "largestComponentPx": 5572,
+      "strayPx": 600,
+      "markerColourPx": 0,
+      "skinLikeSolidPx": 0,
+      "nearWhiteSolidPx": 0
+    }
+  },
+  "rawSha256": "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d",
+  "candidateWritten": false,
+  "annotation": "none — source points are proposed later as DRAFT, bound to this image's SHA-256, and only the owner sets APPROVED",
+  "note": "A REJECT means no candidate may exist. PASS_TO_ANNOTATION means ONLY that the sheet may go to the owner's visual review and to DRAFT source annotation; it does not approve its appearance."
+}

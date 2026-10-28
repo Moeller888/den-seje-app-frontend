@@ -27,8 +27,10 @@ track 164x/166x/167x). The discipline:
 4. **Implement** the single change, full-file (§5 commits / §6 code rules).
 5. **Test** before and after (§3).
 6. **Commit only on green** (§3, §6).
-7. **Record the decision** if it changes architecture or avatar direction (D-xxx register in
-   `docs/project-state.md`; cross-track status in [ROADMAP.md](./ROADMAP.md)).
+7. **Record the decision** if it changes architecture or avatar direction: reserve a number with
+   `node tools/decisions/reserve.mjs`, then add `docs/decisions/D-NNN.md`
+   ([decisions/README.md](./decisions/README.md); the table in `docs/project-state.md` is frozen at
+   D-223); cross-track status in [ROADMAP.md](./ROADMAP.md).
 
 Each section must have an explicit **completion criterion** ("done" condition). For test-driven
 sections, "done" = all tests pass. Do not stop early; do not stop mid-loop (CLAUDE.md rules 45–46).
@@ -129,7 +131,7 @@ Tests are the **gatekeeper** and **ground truth** (CLAUDE.md rules 1, 34, 41–4
 - [ ] Tests run **before and after**; full suite green; no test weakened.
 - [ ] Behind a default-off flag if it's new/risky behaviour; rollback path identified.
 - [ ] Two clones in sync; correct deploy path (Cloudflare / functions deploy / migration).
-- [ ] Decisions recorded (D-xxx in `project-state.md`; status in [ROADMAP.md](./ROADMAP.md)); docs
+- [ ] Decisions recorded (`docs/decisions/D-NNN.md` via `tools/decisions/reserve.mjs`; status in [ROADMAP.md](./ROADMAP.md)); docs
       point to a single source of truth (no duplication/contradiction).
 
 ## 8. Prompt conventions (working with Claude on this repo)

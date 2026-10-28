@@ -145,6 +145,15 @@
       pointer-events: none;
     }
 
+    /* D-195 shared upper-body framing — only when the AVATAR_FRAMING_UPPER flag adds
+       .avatar-framing-upper (default OFF). Every layer box grows 1.5x about the box's
+       top centre, so each layer's own transform (relative to its own box) stays
+       aligned; the box clips below the hips. The blink layer is positioned inline,
+       hence !important on its rule only. */
+    #avatar-display.avatar-framing-upper { overflow: hidden; }
+    #avatar-display.avatar-framing-upper .quiz-avatar-layer { left: -25%; width: 150%; height: 150%; }
+    #avatar-display.avatar-framing-upper #avatar-blink-layer { left: -25% !important; width: 150% !important; height: 150% !important; }
+
     /* Secondary motion — back items (capes) drift with cloth inertia */
     .avatar-slot-back {
       transform-origin: 50% 0%;

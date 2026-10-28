@@ -1,0 +1,79 @@
+{
+  "id": "r3-underlay-headneck-v1",
+  "decision": "D-186",
+  "status": "REVIEW CANDIDATE — NOT production-approved, not promoted, not wired to runtime. R3 stays default OFF.",
+  "method": "A — deterministic drawing without an image call (owner decision D-186)",
+  "sourcePolicy": {
+    "allowed": [
+      "the approved head geometry G1V3 + E2 (D-148), rows <= 424, unchanged",
+      "the K4 contour (D-148), unchanged",
+      "U1 (D-149), only to verify the geometry and read the adopted medium skin colour",
+      "the self-written spec headneck-v1.spec.json (N1 neck geometry, skin model, drawn contours)"
+    ],
+    "forbidden": [
+      "H1 (fitting-base.H1.png): never a source, never tracked, never published, never copied into generator dependencies or deployable files",
+      "r3-head-g1v3-v1.png: its rows 425-445 hold D-133's H1-derived TRANSITION silhouette",
+      "Northstar pixels: visual reading only, never extracted or traced",
+      "paint from any rejected underlay call (D-139, D-142, D-143, D-151, D-153)"
+    ],
+    "privateComparisons": "Northstar comparisons and the composed whole-head review are made locally under the gitignored tools/avatar/build/ and are never sources of this asset"
+  },
+  "generator": "tools/avatar/r3-underlay-headneck.mjs",
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-underlay-headneck/headneck-v1.spec.json",
+    "sha256": "fa11cc02db97a059d5f694dc635b7bb7ce1cef70345b5fc04e91792d4cf907ca"
+  },
+  "rebuild": "node tools/avatar/r3-underlay-headneck.mjs --spec tools/avatar/fixtures/r3-underlay-headneck/headneck-v1.spec.json --out <empty dir>; verified byte-identical in a separate directory (all three PNGs and the check report)",
+  "outputs": {
+    "luminance": {
+      "file": "tools/avatar/fixtures/r3-underlay-headneck/r3-underlay-headneck-v1-luminance.png",
+      "sha256": "afc8245e403027d09431983701478d5e8f57f99d469d4b6037ffac1ea3b85276",
+      "pixelSha256": "98559e16d12c81e01fdb9ef86dd85493c9b737eb135829809dfe5d1d8d2b9d65",
+      "role": "the shading factor (grey = round(255 * f)) with the asset's alpha; skin-tone independent"
+    },
+    "ink": {
+      "file": "tools/avatar/fixtures/r3-underlay-headneck/r3-underlay-headneck-v1-ink.png",
+      "sha256": "7507789685758416c4004fe398d6d33a2f206c60c5d280885b5bed57ce961f4a",
+      "pixelSha256": "7165dfdfb66131d04cd37ee9b5b1c65637e74b50b0bf4e0d03b2a9587b325cec",
+      "role": "K4 unchanged plus the drawn chin, neck and ear lines in K4's ink colour"
+    },
+    "medium": {
+      "file": "tools/avatar/fixtures/r3-underlay-headneck/r3-underlay-headneck-v1-medium.png",
+      "sha256": "8b16158457472b6b254e51e9e6f48bee55b01ef65813406bfb0666a9d7157bc7",
+      "pixelSha256": "75a385c741649a24d25ba37844005faae24ba4a96b198d9335891962fb120d1e",
+      "role": "the medium skin render: skin token x luminance (warm shadows) with the ink over it"
+    },
+    "checkReport": {
+      "file": "tools/avatar/fixtures/r3-underlay-headneck/r3-underlay-headneck-v1.checks.json",
+      "sha256": "f38017c5de72bebc29427a7a42450d37018fcb9a90c686bff4933e0b487aeddd"
+    }
+  },
+  "pngBytesNote": "the binding identity is pixelSha256; PNG bytes depend on the zlib build",
+  "checks": {
+    "passed": ["UN-HEAD (0 differing px in rows <= 424)", "UN-ATTACH (step 4, bound 4 = |S(G,423) symdiff S(G,424)|)", "UN-SHAPE (1 component, 0 holes)", "UN-EXTENT (last row 479 < 480)", "UN-LUMINANCE (chroma 0)"],
+    "notApplicable": {
+      "pre.join-continuity": "compares a generated head's row 424 with H1's row 425 (D-141); this asset has no H1 handover",
+      "pre.transition-silhouette": "requires rows 425-445 identical to H1's TRANSITION silhouette (D-133); this asset replaces that continuation with the self-drawn N1"
+    },
+    "unchanged": "no threshold, bound or earlier result of either gate is changed; both stay binding wherever an H1 handover exists"
+  },
+  "wholeHeadReview": {
+    "composedWith": [
+      "D-185 r3-hair-hybrid-v2 (placed pixel e506555e5a4481772467a4972ca24df9142f3e1f0ca711e346cee43fd765199e), ramp B brown",
+      "D-165 brows and mouth (DRAFT) and the existing nose placeholder (the local face review layer)",
+      "eyes prototype v5 (DRAFT)"
+    ],
+    "hairChecksOnTheNewPixels": "HP4, HP5, HP6, HP7, HP8 and HP-FRAG pass with headPx = this asset's alpha and the local face layer, eyes v5 and iris (HP6/HP7 run locally; they need untracked DRAFT layers and are NOT RUN in CI). Rows <= 424 are the unchanged geometry, so the results equal the G1V3 run; the hair touches no chin or neck pixel (0 of 4,504).",
+    "diagnostics": "ear zone (rows 294-380, x <= 380 or x >= 643): 600 of 5,070 skin px and 446 of 3,618 shaded or inked ear px lie under solid hair",
+    "views": "Northstar and the composite at the same head size; ear x4; jaw/neck x3; 360x540 and 180x270 — local, gitignored"
+  },
+  "d185Correction": "D-185's productionGaps say 'U1 is not the finished underlay: it has no ears and no neck'. Corrected by D-186: G1V3/U1 already has ear silhouettes (1,079 px a side); what was missing was the drawn ear detail and a neck, because the neck used to be H1's. The D-185 row and key stay verbatim.",
+  "productionGaps": [
+    "the owner's visual review of the whole head is pending",
+    "only the medium skin tone is rendered; light and dark follow from the same luminance layer later",
+    "brows, mouth and the nose are provisional (D-165 DRAFT, nose placeholder); the eyes are the v5 prototype",
+    "the nape lock is a separate, later authoring part and is not drawn",
+    "the neck stops at row 480; the body/tee join is not part of this asset and has its own later check",
+    "not a production asset, not promoted, not wired to runtime"
+  ]
+}
