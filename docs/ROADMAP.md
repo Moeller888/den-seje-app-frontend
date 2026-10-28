@@ -563,7 +563,9 @@ _Last reviewed: 2026-07-01._
   - 9 jobs i ét workflow: 7 × 1002/0/0 og 2 × 1001/0/1. De to flaky er WebKit-navigationskapløb i specsene.
   - **9 uafhængige workflows** (`d110/par-1`…`par-9`, ét job hver, som ni terminalers PR'er): 9 × 1002/0/0. Alle ni
     suiter kørte samtidig i 20,6 min, uden kø, med 28,3 min gennemløb og 233,5 runner-minutter.
-  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0, Edge Runtime i første forsøg.
+  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0.
+  - Edge Runtime kom op i første forsøg i alle 18 jobs i de to afsluttende 9-målinger. Startforsøg registreres først
+    fra `3602dd7`. Et tidligere 9-forsøg havde 2 SIGBUS-nedbrud ved opstart; det står i D-241.
 
   **Status: bevist i CI, ikke taget i brug.** Den gamle fulde suite under `e2e-shared-supabase` er uændret, og
   overgangen kræver ejerens særskilte GO; planen står i D-241. password-help-driften mellem repository og produktion er
