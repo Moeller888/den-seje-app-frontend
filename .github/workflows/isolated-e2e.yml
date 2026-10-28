@@ -18,11 +18,11 @@ name: Isolated E2E
 # Providers: no OpenAI/Azure/Resend key exists here. Edge Functions take their "not configured" paths;
 # the bundle server answers /api/tts like the Worker without an Azure key (503 azure_not_configured).
 on:
+  # Every pull request to main gets one isolated job, `isolated-e2e (run 1)` (D-241 transition step A:
+  # observation next to the old suite; no paths filter, so the check exists on every PR — a required
+  # check that a PR never receives would make it unmergeable).
   pull_request:
     branches: [ main ]
-    paths:
-      - "tests/isolated/**"
-      - ".github/workflows/isolated-e2e.yml"
   push:
     branches: [ "d110/**" ]
   workflow_dispatch:
