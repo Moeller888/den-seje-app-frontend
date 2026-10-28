@@ -135,8 +135,10 @@ test("every row satisfies the question constraints the app relies on", () => {
     assert.equal(r.metadata.synthetic, true);
     assert.ok(r.content.question.startsWith("Syntetisk "), "synthetic by construction");
   }
-  const formats = new Set(rows.map((r) => r.answer_format));
-  assert.deepEqual([...formats].sort(), ["mc", "number", "text"]);
+  // Production's active pool: multiple choice plus exactly two typed questions, world_war_2 grade 7.
+  const typed = rows.filter((r) => r.answer_format !== "mc");
+  assert.deepEqual(typed.map((r) => [r.answer_format, r.learning_objective, r.target_grade]),
+    [["text", "world_war_2", 7], ["text", "world_war_2", 7]]);
 });
 
 test("the seed is deterministic, idempotent and INSERT-only — no destructive SQL anywhere in the seed code", () => {

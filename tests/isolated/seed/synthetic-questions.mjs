@@ -5,8 +5,8 @@
 // Sized and shaped for what the suite checks before it starts (tests/global-setup.ts, Section 133):
 // ≥ 450 active questions; per grade 3..9 at least 15/28/25/25/110/100/145; ≥ 35 per history domain
 // (learning_objective = the domain); every grade ≥ 2 difficulty bands with ≥ 3 questions each.
-// Shapes follow the question contract (packages/question-contract: mc_single, text_input,
-// number_input) and the questions table's constraints (active ⇒ question_type 'auto'; auto ⇒
+// Shapes follow the question contract (packages/question-contract: mc_single, text_input)
+// and the questions table's constraints (active ⇒ question_type 'auto'; auto ⇒
 // learning_objective and content.correct; mc ⇒ ≥ 2 options; text ⇒ no options; unique question text).
 
 export const DOMAINS = Object.freeze([
@@ -17,7 +17,14 @@ export const DOMAINS = Object.freeze([
 // every domain gets the same share within a grade).
 export const PER_GRADE = Object.freeze({ 3: 22, 4: 44, 5: 33, 6: 33, 7: 132, 8: 121, 9: 176 });
 
-const FORMATS = ["mc", "mc", "mc", "mc", "mc", "mc", "mc", "text", "number", "mc"]; // 70 % mc, 10 % text, 10 % number
+// Format mix shaped like production's active pool: multiple choice throughout, plus exactly two
+// active typed ("Stav til") questions, both world_war_2 at grade 7 — the state
+// 20261011094747_stav_til_first_questions.sql establishes and asserts (it refuses if any other
+// active text question exists). Quiz specs click the first answer button and rely on that shape;
+// a pupil served a typed question there would wait forever.
+export const TEXT_QUESTIONS = Object.freeze({ grade: 7, domain: "world_war_2", count: 2 });
+const formatFor = (grade, domain, textSoFar) =>
+  grade === TEXT_QUESTIONS.grade && domain === TEXT_QUESTIONS.domain && textSoFar < TEXT_QUESTIONS.count ? "text" : "mc";
 
 // Bands: 1..5 cycled within a grade; difficulty inside the band's range (1..1000 scale).
 const band = (i) => (i % 5) + 1;
@@ -25,14 +32,14 @@ const difficulty = (b, i) => (b - 1) * 200 + 1 + ((i * 37) % 199);
 
 export function syntheticQuestions() {
   const rows = [];
-  let serial = 0;
+  let textSoFar = 0;
   for (const [g, count] of Object.entries(PER_GRADE)) {
     const grade = Number(g);
     for (let i = 0; i < count; i++) {
       const domain = DOMAINS[i % DOMAINS.length];
       const b = band(Math.floor(i / DOMAINS.length) + i);
-      const format = FORMATS[serial % FORMATS.length];
-      serial++;
+      const format = formatFor(grade, domain, textSoFar);
+      if (format === "text") textSoFar++;
       const tag = `G${grade}-${domain}-${String(i).padStart(3, "0")}`;
       let content, type;
       if (format === "mc") {
@@ -41,16 +48,11 @@ export function syntheticQuestions() {
         content = { question: `Syntetisk spørgsmål ${tag}: hvilket svar er rigtigt?`, options, correct,
           accepted_answers: [correct], review_text: `Det rigtige svar er ${correct}.` };
         type = "mc_single";
-      } else if (format === "text") {
+      } else {
         const correct = `ord${i}`;
         content = { question: `Syntetisk stav-til ${tag}: skriv ordet ${correct}`, correct,
           accepted_answers: [correct], review_text: `Ordet staves ${correct}.` };
         type = "text_input";
-      } else {
-        const correct = String(1000 + ((i * 7 + grade) % 999));
-        content = { question: `Syntetisk tal ${tag}: hvilket årstal står her: ${correct}?`, correct,
-          accepted_answers: [correct], review_text: `Årstallet er ${correct}.` };
-        type = "number_input";
       }
       rows.push({
         type, content, difficulty: difficulty(b, i), is_active: true, question_type: "auto",
