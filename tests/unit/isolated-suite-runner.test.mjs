@@ -221,7 +221,7 @@ test("measure-parallel: a job log yields its database cluster, its pupil, its co
   ].join("\n");
   assert.deepEqual(parseJobLog(log), {
     sysids: ["7701577688261992492"], pupil: "3ed45ea1-3b95-4fc1-90df-a51bdf14740e", tripwire: 0,
-    edgeStart: 2, controls: 2, passed: 989, failed: 4, flaky: 1,
+    edgeStart: 2, restarts: 0, sigbus: 0, controls: 2, passed: 989, failed: 4, flaky: 1,
   });
   assert.equal(parseJobLog("").tripwire, null, "no tripwire line = no evidence, never 0");
 });
@@ -274,4 +274,25 @@ test("Edge Functions step fails closed: a runtime that never serves, or any func
   assert.ok(withHandler.length >= 14 && withHandler.some((d) => d.name === "process-event") && withHandler.some((d) => d.name === "get-next-question"));
   assert.match(step, /echo "edge-runtime: serving after start attempt \$attempt"/);
   assert.doesNotMatch(step, /playwright/, "only the server start is retried, never a test");
+});
+
+test("measure-parallel counts runtime events only, never the workflow's echoed source text", async () => {
+  const { parseJobLog } = await import("../isolated/measure-parallel.mjs");
+  // Lines Actions echoes from the step's script (seen in run 40654226681): none of them is an event.
+  const source = [
+    '2026-10-28T08:05:00.1Z \x1b[36;1m# The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:\x1b[0m',
+    '2026-10-28T08:05:00.2Z \x1b[36;1m  echo "::warning::Edge Runtime not serving (start attempt $attempt): $(tail -n 3 x)"\x1b[0m',
+    '2026-10-28T08:05:00.3Z \x1b[36;1m  if [ "$ready" = yes ]; then echo "edge-runtime: serving after start attempt $attempt"; break; fi\x1b[0m',
+    '2026-10-28T08:05:00.4Z \x1b[36;1mecho "negative controls ($1): all protections refused the wrong configuration"\x1b[0m',
+  ];
+  assert.deepEqual((({ restarts, sigbus, edgeStart, controls }) => ({ restarts, sigbus, edgeStart, controls }))(parseJobLog(source.join("\n"))),
+    { restarts: 0, sigbus: 0, edgeStart: null, controls: 0 });
+  // Real events: the runtime's own line (job + functions.log timestamps), GitHub's rendered annotation.
+  const events = [...source,
+    "2026-10-28T07:39:01.9Z 2026-10-28T07:39:01.826276609Z Bus error (core dumped)",
+    "2026-10-28T07:39:02.0Z ##[warning]Edge Runtime not serving (start attempt 1): Bus error (core dumped)",
+    "2026-10-28T07:39:40.0Z edge-runtime: serving after start attempt 2",
+  ];
+  const r = parseJobLog(events.join("\n"));
+  assert.deepEqual([r.restarts, r.sigbus, r.edgeStart], [1, 1, 2]);
 });
