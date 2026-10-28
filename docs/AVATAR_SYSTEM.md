@@ -385,6 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, local opt-in only; not activated for
+  pupils; no calls.**
+  - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
+    the pipeline's own arithmetic (`northstarCompose`). Any load failure or other equipped slot → today's avatar, whole.
+  - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`).
+    All 19 K outfits are byte-identical to the pipeline. With the flag off, 54 browser pages are pixel-identical to main.
+  - **Opt-in.** `avatar.html?northstar=1`, then a K outfit in the panel (localStorage only).
+  - **Limits.** No blink and neutral expression only; no hair/skin/eye variation; no head items. See `docs/decisions/D-242.md`.
 - **Northstar assistant review — D-240: method d240 (the assistant's review, not the owner's approval; no calls).**
   - **Fixed.** The brown ankle boot's arch (K16, K18, K19): what a closed shoe hides is taken from the picture's own opaque
     pixels joined to the shoe (`coverFromPicture`, 40 px). Nothing is painted; open footwear is untouched; the other five

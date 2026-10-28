@@ -670,6 +670,13 @@
        globals are unaffected. neutral uses the theme default (no rule). */
     #avatarWrap[data-gender="boy"]  { --avatar-inner: #b8d4f8; --avatar-outer: #0d2a5a; }
     #avatarWrap[data-gender="girl"] { --avatar-inner: #f8b8d4; --avatar-outer: #5a0d2a; }
+    /* D-242: the local Northstar wardrobe opt-in panel (shown only in an opted-in browser) */
+    .northstar-panel { margin-top: 12px; }
+    .northstar-outfits { display: flex; flex-wrap: wrap; gap: 6px; }
+    .northstar-outfit { font: inherit; font-size: 13px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border-btn); background: var(--btn-bg); color: var(--text-dim); cursor: pointer; }
+    .northstar-outfit:hover { background: var(--btn-bg-hover); }
+    .northstar-outfit[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--text-bright); }
+    .northstar-status { font-size: 13px; color: var(--text-dim); margin: 8px 0 0; }
   </style>
 </head>
 <body>
@@ -691,6 +698,9 @@
       <div class="avatar-aura"></div>
       <div id="avatar-preview"><!-- layers injected by JS --></div>
     </div>
+
+    <!-- D-242: local opt-in only (js/avatar-northstar-panel.js); hidden for everyone else -->
+    <div class="northstar-panel" id="northstarPanel" hidden></div>
 
     <div class="slot-list" id="slotList"><!-- slot rows injected by JS --></div>
     <div class="synergy-active-badge" id="synergyBadge" style="display:none"></div>
@@ -744,6 +754,14 @@ import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar
 import { ExpressionEngine } from "./js/avatar-expression-engine.js";
 import { PresenceEngine }   from "./js/avatar-presence-engine.js";
 import { BlinkEngine }      from "./js/avatar-blink-engine.js";
+
+// D-242: the Northstar wardrobe opt-in (local, default off). Loaded dynamically and fail-soft, so this
+// page never depends on the module: without it the page is exactly as before.
+try {
+  const ns = await import("./js/avatar-northstar-panel.js");
+  ns.applyNorthstarUrlOptIn(location.search);
+  ns.mountNorthstarPanel(document.getElementById("northstarPanel"), document.getElementById("avatar-preview"));
+} catch (_e) { /* no panel */ }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 

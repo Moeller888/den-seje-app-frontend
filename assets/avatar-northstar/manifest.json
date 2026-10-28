@@ -1,0 +1,857 @@
+{
+  "decision": "D-242",
+  "authorisation": "owner 2026-10-28: at most 41 derived runtime layers tracked in the public repository and deployed under assets/avatar-northstar/ as a specific exception to D-127 §2 — not C, raw generations, reference sheets, review files or H1",
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "flag": "AVATAR_NORTHSTAR_WARDROBE (js/avatar-layers.js), false",
+  "counts": {
+    "files": 31,
+    "shadows": 12,
+    "maxFiles": 41,
+    "maxShadows": 20
+  },
+  "outfits": {
+    "K01": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-beige",
+      "reviewFullPngSha256": "e6ff45014c768fe6b22fdce01188dc7df11dd847d3c796abe91b611f5877f31c"
+    },
+    "K02": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-boots-laceup-black",
+      "reviewFullPngSha256": "2c343861d4fe46a3c9e7e2ab2a9735a6f3e8cad65b278387f6f34ed385c62b13"
+    },
+    "K03": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-skirt-sand",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "7cc965d5fcfa2660b5afe7452f6aed8e491824f917751fe4cda12ddcfc56d946"
+    },
+    "K04": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-sneakers-beige",
+      "reviewFullPngSha256": "4f8d0096e50ddf11174f88c0775ac545b33f6265b93fa9e4eb554141da9a6642"
+    },
+    "K05": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "reviewFullPngSha256": "d966d9b34a42bfaa85bae34085d97ed07db2bf1393c15f6ca8825666b19d6a1f"
+    },
+    "K06": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "0a2ffa2d4fab9aeccefc9319bf309c4ffdf587dcaad5cf5628c33a6805d59d93"
+    },
+    "K07": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "reviewFullPngSha256": "4bafb4e517e20544bf4429b7c4930a067083a9929761259576a958fddd010b09"
+    },
+    "K08": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "reviewFullPngSha256": "8be6a7a4632d9ed6fe716f765d7808945c3cf96a144785b283d83157f17a9637"
+    },
+    "K09": {
+      "top": "top-tee-hip-cream",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "a0979b21dcf099f68370d3153e6bf9a306abc63c266655379b7f342f45c61212"
+    },
+    "K10": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-sneakers-beige",
+      "reviewFullPngSha256": "20594cfd17d846f31c044c4131593026672f8e6c8db379c0ead57742afaa7a13"
+    },
+    "K11": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-boots-laceup-black",
+      "reviewFullPngSha256": "7ca551a06f33156a8d6580b23beb7ced2f6bee67b6d2463888ddac9f74a0d599"
+    },
+    "K12": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "6adfc3fa2353ddadf354184b36aba128bf710ccc800f905c0f961cd2404e0a70"
+    },
+    "K13": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-beige",
+      "reviewFullPngSha256": "879426d8f373659648d315e6348bcdf41173971f9a628888adc789cb5e3df26a"
+    },
+    "K14": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-boots-laceup-black",
+      "reviewFullPngSha256": "5b3fe11a86c032b9df27980a51818a3ebf47fcd7e9678cbe973132a36a60f49c"
+    },
+    "K15": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "6912986aa04786c70d30a4061d6d239e13741c4214ab7cf49ea5286e7b9a8f22"
+    },
+    "K16": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-shorts-navy",
+      "shoes": "shoes-ankleboots-brown",
+      "reviewFullPngSha256": "9e38904c961142f2b3f086b4bc34d5305a46a6ae9761397c7baf0780e9ae1a6d"
+    },
+    "K17": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-sneakers-white",
+      "reviewFullPngSha256": "2ca7a9d7e57bbdb2a50c5c046e641d55033d0ea308bca8c43b26ddfaf6436805"
+    },
+    "K18": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-trousers-square-olive",
+      "shoes": "shoes-ankleboots-brown",
+      "reviewFullPngSha256": "a3c93111c0ec6e7b2f8a2d81901e16d9459002a7ebde75dbae6779569e4219a3"
+    },
+    "K19": {
+      "top": "top-tee-hip-blue",
+      "bottom": "bottom-capri-lightblue",
+      "shoes": "shoes-ankleboots-brown",
+      "reviewFullPngSha256": "8588a01ed9f6f20a3c0dbfa8fe47e560579d929632e21b022022169aa60b05b9"
+    }
+  },
+  "knownFaulty": [
+    "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-beige",
+    "top-tee-hip-blue+bottom-skirt-sand+shoes-boots-laceup-black",
+    "top-tee-hip-blue+bottom-skirt-sand+shoes-sneakers-white"
+  ],
+  "equivalence": {
+    "what": "northstarCompose(northstarCanvasPlan(K)) — the browser's function — against the pipeline composite (layerProof + applyShadow), RGBA bytes that differ",
+    "outfits": {
+      "K01": {
+        "bytesDiffering": 0
+      },
+      "K02": {
+        "bytesDiffering": 0
+      },
+      "K03": {
+        "bytesDiffering": 0
+      },
+      "K04": {
+        "bytesDiffering": 0
+      },
+      "K05": {
+        "bytesDiffering": 0
+      },
+      "K06": {
+        "bytesDiffering": 0
+      },
+      "K07": {
+        "bytesDiffering": 0
+      },
+      "K08": {
+        "bytesDiffering": 0
+      },
+      "K09": {
+        "bytesDiffering": 0
+      },
+      "K10": {
+        "bytesDiffering": 0
+      },
+      "K11": {
+        "bytesDiffering": 0
+      },
+      "K12": {
+        "bytesDiffering": 0
+      },
+      "K13": {
+        "bytesDiffering": 0
+      },
+      "K14": {
+        "bytesDiffering": 0
+      },
+      "K15": {
+        "bytesDiffering": 0
+      },
+      "K16": {
+        "bytesDiffering": 0
+      },
+      "K17": {
+        "bytesDiffering": 0
+      },
+      "K18": {
+        "bytesDiffering": 0
+      },
+      "K19": {
+        "bytesDiffering": 0
+      }
+    }
+  },
+  "files": [
+    {
+      "file": "bottom-capri-lightblue-pants-v1.webp",
+      "purpose": "the item layer pants of bottom-capri-lightblue, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f",
+          "files": {
+            "layer-pants.png": "e773b5466ebe854e71b39db92f40ba329ca9612e35b6219469df838651cd2a0c",
+            "shadow-multiply.png": "50c51daa0f779de44a8bff3bcc462c2fefe5e2e662c3bda140d9180f1833a1e7"
+          }
+        }
+      },
+      "sha256": "2ab62d08714abe2e0a454d5c6afec0726fcef57e85633add5a2c98f133535409",
+      "bytes": 68054,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-capri-lightblue-shadow-body-v1.webp",
+      "purpose": "the skin shadow of bottom-capri-lightblue on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f",
+          "files": {
+            "layer-pants.png": "e773b5466ebe854e71b39db92f40ba329ca9612e35b6219469df838651cd2a0c",
+            "shadow-multiply.png": "50c51daa0f779de44a8bff3bcc462c2fefe5e2e662c3bda140d9180f1833a1e7"
+          }
+        }
+      },
+      "sha256": "fb580b9828562a8f5c850800b241abd30663b02b9aeb51b9f451853e699aa6a9",
+      "bytes": 2242,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-shorts-navy-pants-v1.webp",
+      "purpose": "the item layer pants of bottom-shorts-navy, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167",
+          "files": {
+            "layer-pants.png": "d5a6919ef373f8627aea829240120870bd495f91c6ce13d215b6063abda1da42",
+            "shadow-multiply.png": "3e39f4f414d4779eddbfd45ba298dee4f864d4402084da360a97e0f648b75086"
+          }
+        }
+      },
+      "sha256": "2d1728bd30b4c6f673414d7740e3aaf8459ecee667c7ee14d04a717606b3cf05",
+      "bytes": 28848,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-shorts-navy-shadow-body-v1.webp",
+      "purpose": "the skin shadow of bottom-shorts-navy on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167",
+          "files": {
+            "layer-pants.png": "d5a6919ef373f8627aea829240120870bd495f91c6ce13d215b6063abda1da42",
+            "shadow-multiply.png": "3e39f4f414d4779eddbfd45ba298dee4f864d4402084da360a97e0f648b75086"
+          }
+        }
+      },
+      "sha256": "9c8a02747ec7ac0b0692fd4f817d4e4d32de26d02273b9c95a5f9174f32cfd1d",
+      "bytes": 680,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-skirt-sand-pants-v1.webp",
+      "purpose": "the item layer pants of bottom-skirt-sand, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d239)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "fbd992ecc1131ebb976353fd308d6243612b097322918e0e7ae300967ec44976",
+          "files": {
+            "layer-pants.png": "d7949977762229b5a81bd11976810098cad3eda3b7d5e9a8b4fb1cc2ec1b8642",
+            "shadow-multiply.png": "171f65eb369b5607710d37c248d881a09f1f457e5338dd9117c225e80044ce15"
+          }
+        }
+      },
+      "sha256": "c7e70399ac1aefc916af378dafee691e2699d5eda9195cd18e4952776f3a8b3d",
+      "bytes": 45656,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-skirt-sand-shadow-arms-v1.webp",
+      "purpose": "the skin shadow of bottom-skirt-sand on C's arms (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "fbd992ecc1131ebb976353fd308d6243612b097322918e0e7ae300967ec44976",
+          "files": {
+            "layer-pants.png": "d7949977762229b5a81bd11976810098cad3eda3b7d5e9a8b4fb1cc2ec1b8642",
+            "shadow-multiply.png": "171f65eb369b5607710d37c248d881a09f1f457e5338dd9117c225e80044ce15"
+          }
+        }
+      },
+      "sha256": "f561ddb48b09cfec3e7eeb0aab0708f1459305e194ea72f8cf9b832e2a251b42",
+      "bytes": 406,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-skirt-sand-shadow-body-v1.webp",
+      "purpose": "the skin shadow of bottom-skirt-sand on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "fbd992ecc1131ebb976353fd308d6243612b097322918e0e7ae300967ec44976",
+          "files": {
+            "layer-pants.png": "d7949977762229b5a81bd11976810098cad3eda3b7d5e9a8b4fb1cc2ec1b8642",
+            "shadow-multiply.png": "171f65eb369b5607710d37c248d881a09f1f457e5338dd9117c225e80044ce15"
+          }
+        }
+      },
+      "sha256": "4f3df2a53371291a463f69d34d6db5b2aa7bd9cf6577582afb15654a8729af2a",
+      "bytes": 2552,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-trousers-square-olive-pants-v1.webp",
+      "purpose": "the item layer pants of bottom-trousers-square-olive, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00",
+          "files": {
+            "layer-pants.png": "314f134565f5d35e0a158e69f276d523d870586576d26b9b2852ab24095d7fef",
+            "shadow-multiply.png": "d9ff96ef018a5b44f056e179d12077d4128eb53a5da744c63c5962df54e4c2a1"
+          }
+        }
+      },
+      "sha256": "ef5097b26feba74dddfb7ba74bde7a9aa54491802a868e326094721bc644ae45",
+      "bytes": 81600,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "bottom-trousers-square-olive-shadow-body-v1.webp",
+      "purpose": "the skin shadow of bottom-trousers-square-olive on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00",
+          "files": {
+            "layer-pants.png": "314f134565f5d35e0a158e69f276d523d870586576d26b9b2852ab24095d7fef",
+            "shadow-multiply.png": "d9ff96ef018a5b44f056e179d12077d4128eb53a5da744c63c5962df54e4c2a1"
+          }
+        }
+      },
+      "sha256": "9a29ccce089a839cddf5cd8f8125742c26fc9ff6909571825088db74c570ee76",
+      "bytes": 1694,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "figure-arms-v1.webp",
+      "purpose": "C's forearms and hands, drawn above the top's body and below its sleeves",
+      "origin": {
+        "source": "C (D-202 base figure v2, private)",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "layerProof"
+      },
+      "sha256": "8768ad63ec64350fd3468668b471c385284c969f08c73330e46ddd4b726b36c6",
+      "bytes": 54820,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "figure-body-v1.webp",
+      "purpose": "C's runtime body: neck, shoulders, upper arms, legs and feet; the torso and hips are empty (covered by the mandatory top and bottom)",
+      "origin": {
+        "source": "C (D-202 base figure v2, private)",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure.mjs layerProof (headSeam d201, enclosure c-exterior)"
+      },
+      "sha256": "6e73444b8a5d5112c59cef4ed9b1812f396f17e4affa50eb3398d9d5b9c743b6",
+      "bytes": 96458,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "figure-head-v1.webp",
+      "purpose": "the head: the R3 head stack of Northstar Master v2 with its neck seam cut where C's body lies (runtimeHead)",
+      "origin": {
+        "source": "assets/avatar/reference/Northstar Master v2.png (tracked) + C's body alpha",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tool": "northstar-base-figure.mjs runtimeHead"
+      },
+      "sha256": "0e80e65abb1caa620dd647cfe728474a7593a0256d9e792a0ba6f21c8a030671",
+      "bytes": 157148,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-ankleboots-brown-v1.webp",
+      "purpose": "what the closed shoe hides of C's foot (D-218 covering); cut out of C's body before the shoe is drawn",
+      "origin": {
+        "source": "C's body + shoes-ankleboots-brown",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c",
+          "files": {
+            "layer-shoes.png": "2fd52a8c255dc197b628b9d12f365c88487175cc37b6964797b4e2f13ee6e266",
+            "shadow-multiply.png": "2e286a017a0d41dc3f966f41638ce64e32fa8330d050471b9e968e41c1e784db"
+          }
+        },
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden"
+      },
+      "sha256": "5178a2b0c67e5966af7aac2c52632e410785fb2fe7f15f0677b7ead1e25876fd",
+      "bytes": 640,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-boots-laceup-black-v1.webp",
+      "purpose": "what the closed shoe hides of C's foot (D-218 covering); cut out of C's body before the shoe is drawn",
+      "origin": {
+        "source": "C's body + shoes-boots-laceup-black",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "0b73a1fb3ad15c0f85ff4557f64149ce5f04ba2687e74ad0c707193193db1cd7",
+          "files": {
+            "layer-shoes.png": "296a0a2a5c6bb5b72c05086b9c28c8a5a6c1e70d308525a62a70a6262f2bcab1",
+            "shadow-multiply.png": "c6df070126d97d40a466b1c5bcdd9ddd36acd237ee4f192585a3e2100a0141bb"
+          }
+        },
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden"
+      },
+      "sha256": "f3433e9f8d1ac4aa4e22730a2edf0a48fcf269c9f9be121bccd4ba42ecf295d1",
+      "bytes": 634,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-sneakers-beige-v1.webp",
+      "purpose": "what the closed shoe hides of C's foot (D-218 covering); cut out of C's body before the shoe is drawn",
+      "origin": {
+        "source": "C's body + shoes-sneakers-beige",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "471a5c2e8a06cd25e4959701268e46fc351d116f99e93ea22d688f1a58a55644",
+          "files": {
+            "layer-shoes.png": "a5aaec89e0745fec8f28c2b4e70b5f41b99f0d58d229c87fc80ac22ccb4ea894",
+            "shadow-multiply.png": "1c9f68644e53eadad774cef9a2c9ae0f56c22346ad8913171cdcb0444d15d786"
+          }
+        },
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden"
+      },
+      "sha256": "5ac93c08ae55eec24ee21da0945c1f6faf54a8ebd4df00e7e9ebece68e272a19",
+      "bytes": 648,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "hide-shoes-sneakers-white-v1.webp",
+      "purpose": "what the closed shoe hides of C's foot (D-218 covering); cut out of C's body before the shoe is drawn",
+      "origin": {
+        "source": "C's body + shoes-sneakers-white",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+          "files": {
+            "layer-shoes.png": "4476d22757d326c44fd73a007777cd0e73b40fa80191bdf3be5658e76780014b",
+            "shadow-multiply.png": "0f90fd83c7ba2a9cd4c560fa20e7207b9e28eb5e13d6974e0a589757eeb15659"
+          }
+        },
+        "tool": "northstar-base-figure-c.mjs closedFootwearHidden"
+      },
+      "sha256": "e416748eb5b72ea4967f5c44dbb80dbc41e05cfb439cd3d03d4380057b3d46eb",
+      "bytes": 630,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-ankleboots-brown-shadow-body-v1.webp",
+      "purpose": "the skin shadow of shoes-ankleboots-brown on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c",
+          "files": {
+            "layer-shoes.png": "2fd52a8c255dc197b628b9d12f365c88487175cc37b6964797b4e2f13ee6e266",
+            "shadow-multiply.png": "2e286a017a0d41dc3f966f41638ce64e32fa8330d050471b9e968e41c1e784db"
+          }
+        }
+      },
+      "sha256": "ccb794ac518d2f7d6a776b8389958f00b2763fa051342db66b5cbdbffabe73fc",
+      "bytes": 416,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-ankleboots-brown-shoes-v1.webp",
+      "purpose": "the item layer shoes of shoes-ankleboots-brown, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c",
+          "files": {
+            "layer-shoes.png": "2fd52a8c255dc197b628b9d12f365c88487175cc37b6964797b4e2f13ee6e266",
+            "shadow-multiply.png": "2e286a017a0d41dc3f966f41638ce64e32fa8330d050471b9e968e41c1e784db"
+          }
+        }
+      },
+      "sha256": "4d2f92ac543cb488a7c4e39d125a341e1c8b51b873bc1aae414ab3926f1acfab",
+      "bytes": 32898,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-boots-laceup-black-shadow-body-v1.webp",
+      "purpose": "the skin shadow of shoes-boots-laceup-black on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "0b73a1fb3ad15c0f85ff4557f64149ce5f04ba2687e74ad0c707193193db1cd7",
+          "files": {
+            "layer-shoes.png": "296a0a2a5c6bb5b72c05086b9c28c8a5a6c1e70d308525a62a70a6262f2bcab1",
+            "shadow-multiply.png": "c6df070126d97d40a466b1c5bcdd9ddd36acd237ee4f192585a3e2100a0141bb"
+          }
+        }
+      },
+      "sha256": "41911700feeffc043cfb368b7e876db79a36f4d969a7eaa345a7d857ae364850",
+      "bytes": 216,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-boots-laceup-black-shoes-v1.webp",
+      "purpose": "the item layer shoes of shoes-boots-laceup-black, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d239)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "0b73a1fb3ad15c0f85ff4557f64149ce5f04ba2687e74ad0c707193193db1cd7",
+          "files": {
+            "layer-shoes.png": "296a0a2a5c6bb5b72c05086b9c28c8a5a6c1e70d308525a62a70a6262f2bcab1",
+            "shadow-multiply.png": "c6df070126d97d40a466b1c5bcdd9ddd36acd237ee4f192585a3e2100a0141bb"
+          }
+        }
+      },
+      "sha256": "ded3a14e519afe5abe479a72a6eba118d157ba5dc0bd34868d7ff4133818622c",
+      "bytes": 41628,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-beige-shadow-body-v1.webp",
+      "purpose": "the skin shadow of shoes-sneakers-beige on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "471a5c2e8a06cd25e4959701268e46fc351d116f99e93ea22d688f1a58a55644",
+          "files": {
+            "layer-shoes.png": "a5aaec89e0745fec8f28c2b4e70b5f41b99f0d58d229c87fc80ac22ccb4ea894",
+            "shadow-multiply.png": "1c9f68644e53eadad774cef9a2c9ae0f56c22346ad8913171cdcb0444d15d786"
+          }
+        }
+      },
+      "sha256": "dc4e0a36f4c625a2a618fe8762fd51d4035a777221567f579ddf8f509aa589f9",
+      "bytes": 892,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-beige-shoes-v1.webp",
+      "purpose": "the item layer shoes of shoes-sneakers-beige, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d239)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "471a5c2e8a06cd25e4959701268e46fc351d116f99e93ea22d688f1a58a55644",
+          "files": {
+            "layer-shoes.png": "a5aaec89e0745fec8f28c2b4e70b5f41b99f0d58d229c87fc80ac22ccb4ea894",
+            "shadow-multiply.png": "1c9f68644e53eadad774cef9a2c9ae0f56c22346ad8913171cdcb0444d15d786"
+          }
+        }
+      },
+      "sha256": "045524c04dae0e675b936d868f6e2d28f4d29a67e3927db285a80ef0f9aeee10",
+      "bytes": 39078,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-white-shadow-body-v1.webp",
+      "purpose": "the skin shadow of shoes-sneakers-white on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+          "files": {
+            "layer-shoes.png": "4476d22757d326c44fd73a007777cd0e73b40fa80191bdf3be5658e76780014b",
+            "shadow-multiply.png": "0f90fd83c7ba2a9cd4c560fa20e7207b9e28eb5e13d6974e0a589757eeb15659"
+          }
+        }
+      },
+      "sha256": "af36c7ec438a4244f6aa2475d0ecdb13a9b0788beae7f0c3947ee26a4f7023f5",
+      "bytes": 800,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "shoes-sneakers-white-shoes-v1.webp",
+      "purpose": "the item layer shoes of shoes-sneakers-white, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611",
+          "files": {
+            "layer-shoes.png": "4476d22757d326c44fd73a007777cd0e73b40fa80191bdf3be5658e76780014b",
+            "shadow-multiply.png": "0f90fd83c7ba2a9cd4c560fa20e7207b9e28eb5e13d6974e0a589757eeb15659"
+          }
+        }
+      },
+      "sha256": "2d533c2537798dad46fbfbbe45d650c3d3c3a2af78274ae503fd11da9b06e322",
+      "bytes": 39008,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-shadow-arms-v1.webp",
+      "purpose": "the skin shadow of top-tee-hip-blue on C's arms (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15",
+          "files": {
+            "layer-topBody.png": "bb286e91c7643d930a9656e3592ccac0d085da6160ee7dcec89279de0e686c2b",
+            "layer-sleeves.png": "1eefbc9b16cfa443c2c63ff3bd3b4d31e30a86ad732147b65973f7318c0194f6",
+            "shadow-multiply.png": "1e6ce92b38b3594393d8400123dbe593c715930d1a47fc2a62bf7c6006992009"
+          }
+        }
+      },
+      "sha256": "ccc563c7f9273cad92b48046a43be3431806d535d74fd07061ca3dfd078bf231",
+      "bytes": 950,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-sleeves-v1.webp",
+      "purpose": "the item layer sleeves of top-tee-hip-blue, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15",
+          "files": {
+            "layer-topBody.png": "bb286e91c7643d930a9656e3592ccac0d085da6160ee7dcec89279de0e686c2b",
+            "layer-sleeves.png": "1eefbc9b16cfa443c2c63ff3bd3b4d31e30a86ad732147b65973f7318c0194f6",
+            "shadow-multiply.png": "1e6ce92b38b3594393d8400123dbe593c715930d1a47fc2a62bf7c6006992009"
+          }
+        }
+      },
+      "sha256": "b97dc0aeef981831c793faf5492361dd4430d11d0a2a74d999f16bfae55e23bf",
+      "bytes": 10732,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-blue-top-body-v1.webp",
+      "purpose": "the item layer top-body of top-tee-hip-blue, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d240)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-240-shoe-cover/run-1",
+          "method": "d240",
+          "rawSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15",
+          "files": {
+            "layer-topBody.png": "bb286e91c7643d930a9656e3592ccac0d085da6160ee7dcec89279de0e686c2b",
+            "layer-sleeves.png": "1eefbc9b16cfa443c2c63ff3bd3b4d31e30a86ad732147b65973f7318c0194f6",
+            "shadow-multiply.png": "1e6ce92b38b3594393d8400123dbe593c715930d1a47fc2a62bf7c6006992009"
+          }
+        }
+      },
+      "sha256": "0ee105df6ba9e3705de1978eb254ed68c2bbd97d5e77ed0b1143512fa18b95cc",
+      "bytes": 55402,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-cream-shadow-arms-v1.webp",
+      "purpose": "the skin shadow of top-tee-hip-cream on C's arms (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+          "files": {
+            "layer-topBody.png": "60fe29abc9e813ae1974306d495c32583928562dccbf97fd6e980b83157cfb46",
+            "layer-sleeves.png": "9707179b8dd1fa017cf40748f94bbc54cf38218d6b1549cb56bf70d943a7639a",
+            "shadow-multiply.png": "7b8c4557d04754ac88afeb1b4a18c7dbc2a9de755837c4705baeb6d007f75651"
+          }
+        }
+      },
+      "sha256": "1e267616e12c0d418f36791edd07da6627426349905249a89faa8862f515ba7b",
+      "bytes": 1854,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-cream-shadow-body-v1.webp",
+      "purpose": "the skin shadow of top-tee-hip-cream on C's body (multiply, D-214)",
+      "origin": {
+        "source": "the item's skin shadow",
+        "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+          "files": {
+            "layer-topBody.png": "60fe29abc9e813ae1974306d495c32583928562dccbf97fd6e980b83157cfb46",
+            "layer-sleeves.png": "9707179b8dd1fa017cf40748f94bbc54cf38218d6b1549cb56bf70d943a7639a",
+            "shadow-multiply.png": "7b8c4557d04754ac88afeb1b4a18c7dbc2a9de755837c4705baeb6d007f75651"
+          }
+        }
+      },
+      "sha256": "b1632268d54946e60595848143c4e0189487f1f3ec4fd2f18a79f4b3a2c81c47",
+      "bytes": 120,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-cream-sleeves-v1.webp",
+      "purpose": "the item layer sleeves of top-tee-hip-cream, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d239)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+          "files": {
+            "layer-topBody.png": "60fe29abc9e813ae1974306d495c32583928562dccbf97fd6e980b83157cfb46",
+            "layer-sleeves.png": "9707179b8dd1fa017cf40748f94bbc54cf38218d6b1549cb56bf70d943a7639a",
+            "shadow-multiply.png": "7b8c4557d04754ac88afeb1b4a18c7dbc2a9de755837c4705baeb6d007f75651"
+          }
+        }
+      },
+      "sha256": "195980c3b70b66ae0f3f47e44ac6319f9b2f4cc49d34d2591dfa452cd35eda01",
+      "bytes": 11390,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    },
+    {
+      "file": "top-tee-hip-cream-top-body-v1.webp",
+      "purpose": "the item layer top-body of top-tee-hip-cream, unchanged from its run",
+      "origin": {
+        "source": "the item's extraction (method d239)",
+        "item": {
+          "run": "<Documents>/DenSejeApp-artefacts/d-239-targeted-correction/final1-d235",
+          "method": "d239",
+          "rawSha256": "9c7e2215905099f33914c2addce072c06c62669e93090341a56695e41041f770",
+          "files": {
+            "layer-topBody.png": "60fe29abc9e813ae1974306d495c32583928562dccbf97fd6e980b83157cfb46",
+            "layer-sleeves.png": "9707179b8dd1fa017cf40748f94bbc54cf38218d6b1549cb56bf70d943a7639a",
+            "shadow-multiply.png": "7b8c4557d04754ac88afeb1b4a18c7dbc2a9de755837c4705baeb6d007f75651"
+          }
+        }
+      },
+      "sha256": "c928c2c7a2e375201a06e1ea291359d0f4ebd740194c7a890bd5377d23639baf",
+      "bytes": 61992,
+      "width": 1024,
+      "height": 1536,
+      "encoding": "WebP lossless (cwebp -lossless -exact -z 9 -metadata none)"
+    }
+  ]
+}
