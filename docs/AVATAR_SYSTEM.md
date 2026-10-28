@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar batch production flow — D-244: batch b1 (24 designs) planned, NOT authorised; no calls.**
+  - **Flow.** `tools/avatar/northstar-batch.mjs`: design file → frozen prompts → unauthorised call plan with cost → chunked
+    `runPipeline` runs → status register (afvist / kræver-gennemgang / kandidat / godkendt / uafprøvet; a technical pass is never an
+    approval; nothing hidden) → private export in D-242's format. The pipeline registers batch items from design files.
+  - **Finding.** D-228/D-235 sent their five bottom prompts with "undefined" instead of the bottoms' contract sentence; b1 sends it.
+  - **Ask.** At most 28 calls, $10 ceiling (estimate $1.89–$7.91). See `docs/decisions/D-244.md`.
 - **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, local opt-in only; not activated for
   pupils; no calls.**
   - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with

@@ -894,8 +894,15 @@ const _nsSrc = (file) => NORTHSTAR_BASE_PATH + "/" + file;
 // are the items' skin shadows, applied after the stack in item order (top, bottom, shoes).
 export function northstarCanvasPlan(key) {
   const o = typeof key === "string" && Object.prototype.hasOwnProperty.call(NORTHSTAR_OUTFITS, key) ? NORTHSTAR_OUTFITS[key] : null;
-  if (!o) return null;
-  const ids = [o.top, o.bottom, o.shoes], items = ids.map((id) => NORTHSTAR_ITEMS[id]);
+  return o ? northstarPlanFor(o) : null;
+}
+// D-244: the same plan for any outfit { top, bottom, shoes } over an item table of the NORTHSTAR_ITEMS shape (category, layers,
+// shadows, closed) and a layer directory — what the batch export checks its layers with. Null for an incomplete outfit or a
+// known-faulty combination.
+export function northstarPlanFor(o, itemTable = NORTHSTAR_ITEMS, basePath = NORTHSTAR_BASE_PATH) {
+  if (!o || typeof o !== "object") return null;
+  const _nsSrc = (file) => basePath + "/" + file;
+  const ids = [o.top, o.bottom, o.shoes], items = ids.map((id) => (typeof id === "string" && Object.prototype.hasOwnProperty.call(itemTable, id) ? itemTable[id] : null));
   if (items.some((it) => !it)) return null;
   if (items[0].category !== "top" || items[1].category !== "bottom" || items[2].category !== "shoes") return null;
   if (NORTHSTAR_KNOWN_FAULTY.indexOf(ids.join("+")) !== -1) return null;
@@ -906,9 +913,9 @@ export function northstarCanvasPlan(key) {
     figure(NORTHSTAR_FIGURE.body),
     ...items[2].layers.map((l) => layer(o.shoes, l)),
     ...items[1].layers.map((l) => layer(o.bottom, l)),
-    layer(o.top, "top-body"),
+    ...items[0].layers.filter((l) => l !== "sleeves").map((l) => layer(o.top, l)),
     figure(NORTHSTAR_FIGURE.arms),
-    layer(o.top, "sleeves"),
+    ...items[0].layers.filter((l) => l === "sleeves").map((l) => layer(o.top, l)),   // a sleeveless top has none
     { op: "draw", src: _nsSrc(NORTHSTAR_FIGURE.head) },
     ...ids.flatMap((id, k) => items[k].shadows.map((part) => ({ op: "shade", src: _nsSrc(id + "-shadow-" + part + "-v1.webp") }))),
   ];

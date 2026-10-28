@@ -1,0 +1,773 @@
+{
+  "decision": "D-244",
+  "batch": "b1",
+  "status": "PREPARED — NOT AUTHORISED: no call may be sent. A separate owner authorisation (its own D-number and token) must name the calls, the reserve, the budget ceiling and the send adapter.",
+  "meta": {
+    "authorisesImageRequest": false,
+    "kind": "a production-readiness batch: no catalogue, no runtime, no activation"
+  },
+  "budget": {
+    "requested": 24,
+    "reserveRequested": 4,
+    "maxCalls": 28,
+    "authorised": 0,
+    "actuallySent": 0,
+    "reusesEarlierPermissions": false,
+    "oneCallPerDesign": true
+  },
+  "cost": {
+    "currency": "USD",
+    "calls": 28,
+    "perCall": {
+      "A": 0.0675,
+      "B": 0.2825
+    },
+    "total": {
+      "A": 1.8906,
+      "B": 7.9101
+    },
+    "usage": {
+      "calls": 12,
+      "imageInputTokens": 3072,
+      "textInputTokensMax": 357,
+      "imageOutputTokens": 1372,
+      "source": "response.json usage of D-228 V1–V6 and D-235 N1–N6 (identical image token counts in all 12)"
+    },
+    "rates": {
+      "A": {
+        "what": "GPT-Image-2.0 token rates",
+        "imageInputPerM": 8,
+        "textInputPerM": 5,
+        "imageOutputPerM": 30,
+        "perPicture": null
+      },
+      "B": {
+        "what": "ceiling: gpt-image-1 high 1024×1536 per picture + gpt-image-1 input rates",
+        "imageInputPerM": 10,
+        "textInputPerM": 5,
+        "imageOutputPerM": null,
+        "perPicture": 0.25
+      }
+    }
+  },
+  "privacy": {
+    "cSentToApi": "only under the future authorisation",
+    "referenceSheetsSentToApi": "only under the future authorisation (C-derived, the D-235 v2 sheets)",
+    "publishOrTrack": "never — C, the sheets and every result stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "method": "d240",
+    "contract": "seam-contract-v2",
+    "outfitRevision": "d239",
+    "prompts": {
+      "file": "b1-prompts-v1.json",
+      "sha256": "156bd0a155c5deea0a1e54c6ad1afcc71cabe0a2f5a8c2cac9d4b0af99240548"
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "modelNote": "the model of D-207, D-218 and D-228, unchanged; never switched silently — another model is a new decision",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "bytes": 1300423,
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tracked": false
+      }
+    ],
+    "image2": "the reference sheet of the call's category drawn for seam-contract-v2",
+    "references": {
+      "top": {
+        "name": "seam-reference-top.png",
+        "bytes": 1866765,
+        "sha256": "46cbc4059c1a6022e9a57aa7753cc38909e6f10c6f3063c7f4eaf1f3e51be938",
+        "tracked": false
+      },
+      "bottom": {
+        "name": "seam-reference-bottom.png",
+        "bytes": 1886937,
+        "sha256": "cf878a951dabfe168c7c0bf429a885f33bd7d55865964ee2c9cd30069ac55f68",
+        "tracked": false
+      },
+      "shoes": {
+        "name": "seam-reference-shoes.png",
+        "bytes": 1892886,
+        "sha256": "521460153f2abb20ef779680aa8dd1519699f97abaff0ba2765a86a873230037",
+        "tracked": false
+      }
+    },
+    "referenceLocation": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/references/v2/<category>/seam-reference-<category>.png",
+    "referenceGenerator": "node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> --contract v2 --out <empty dir> (deterministic; v1 redrawn gives D-228's pins byte for byte)",
+    "prompts": {
+      "file": "independent-validation-prompts-v1.json",
+      "sha256": "a6c6489b92d9ef410ebe7dc870f0e1a28f86c6f329703adb8a876c3fdd5bf184"
+    }
+  },
+  "reserveRule": "at most 4 reserve calls, each only to resend a design whose RECEIPT failed for a reason that is not the design: a picture that is not a 1024x1536 RGBA PNG, a first moderation block, or a registration failure (G-1). Never for a look that is disliked, never twice for one design.",
+  "stopRules": [
+    "credit or access: HTTP 401, 403 or 429, or an error code naming quota or billing",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx",
+    "format: a received picture that is not a 1024x1536 RGBA PNG (TECHNICAL_REJECT at receipt)",
+    "moderation: a second moderation block",
+    "the executor's stop file B1-STOP.json (a common method failure after a receipt: G-1 in two calls, or reference marks drawn into two pictures)",
+    "quality checkpoint after call 6 (two per category): if 3 or more of the first 6 are technically rejected by the item pipeline, stop and report — a method problem, not chance",
+    "if technical rejections reach 9 of the calls sent (over a third of 24), stop"
+  ],
+  "calls": [
+    {
+      "callId": "B1-top-polo-navy",
+      "order": 1,
+      "item": "top-polo-navy",
+      "category": "top",
+      "type": "polo",
+      "tone": "dark",
+      "pattern": "solid",
+      "tests": [
+        "a collar at the head's neck seam (protected zone)",
+        "dark fabric shading vs the skin-shadow rule"
+      ],
+      "prompt": {
+        "item": "top-polo-navy",
+        "sha256": "29377b2f32fa4ec4efd14244f48adcb0bbd7152ba93322c9245bca5dbcd13b22",
+        "bytes": 1554
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-polo-navy-claim",
+        "filename": "B1-top-polo-navy.claim.json",
+        "eventsFilename": "B1-top-polo-navy.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-polo-navy/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-jeans-straight-indigo",
+      "order": 2,
+      "item": "bottom-jeans-straight-indigo",
+      "category": "bottom",
+      "type": "jeans",
+      "tone": "dark",
+      "pattern": "contrast stitching",
+      "tests": [
+        "a long square hem over every shoe (hem–shoe seam)",
+        "stitching lines vs the waistband rule"
+      ],
+      "prompt": {
+        "item": "bottom-jeans-straight-indigo",
+        "sha256": "dc12480a7ba3bb379da51d2d7822cf10f912f2660f50080bca56d9e6751bc115",
+        "bytes": 1567
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-jeans-straight-indigo-claim",
+        "filename": "B1-bottom-jeans-straight-indigo.claim.json",
+        "eventsFilename": "B1-bottom-jeans-straight-indigo.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-jeans-straight-indigo/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-hightop-canvas-red",
+      "order": 3,
+      "item": "shoes-hightop-canvas-red",
+      "category": "shoes",
+      "type": "sneakers",
+      "tone": "mid",
+      "pattern": "white toe caps and laces",
+      "tests": [
+        "a shaft just above the ankle (shaft limit)",
+        "laces and toe caps"
+      ],
+      "prompt": {
+        "item": "shoes-hightop-canvas-red",
+        "sha256": "7efb6fbe3246569c5bf0cb708e00cd8ef7457e9bb2de1b431233839f280b8476",
+        "bytes": 1151
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-hightop-canvas-red-claim",
+        "filename": "B1-shoes-hightop-canvas-red.claim.json",
+        "eventsFilename": "B1-shoes-hightop-canvas-red.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-hightop-canvas-red/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-breton-longsleeve",
+      "order": 4,
+      "item": "top-breton-longsleeve",
+      "category": "top",
+      "type": "longsleeve",
+      "tone": "light",
+      "pattern": "horizontal stripes",
+      "tests": [
+        "a regular pattern across the body/sleeve layer split",
+        "long sleeves ending above the wrist"
+      ],
+      "prompt": {
+        "item": "top-breton-longsleeve",
+        "sha256": "fedf9713a2e98cc2eebb696485bcd4b10033d9b7c18ebbc92bbb9d8b8cafeaa4",
+        "bytes": 1537
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-breton-longsleeve-claim",
+        "filename": "B1-top-breton-longsleeve.claim.json",
+        "eventsFilename": "B1-top-breton-longsleeve.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-breton-longsleeve/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-joggers-heather",
+      "order": 5,
+      "item": "bottom-joggers-heather",
+      "category": "bottom",
+      "type": "joggers",
+      "tone": "mid",
+      "pattern": "solid",
+      "tests": [
+        "a gathered cuff above the ankle (cropped-hem rule)",
+        "a soft, wide silhouette at the hips"
+      ],
+      "prompt": {
+        "item": "bottom-joggers-heather",
+        "sha256": "dd88a13c4b2e9262b543ed7039360ad1442666d300de970582772796001558d3",
+        "bytes": 1575
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-joggers-heather-claim",
+        "filename": "B1-bottom-joggers-heather.claim.json",
+        "eventsFilename": "B1-bottom-joggers-heather.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-joggers-heather/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-chelsea-black",
+      "order": 6,
+      "item": "shoes-chelsea-black",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "dark",
+      "pattern": "elastic side panels",
+      "tests": [
+        "glossy highlights vs remnant rules",
+        "black next to dark trousers"
+      ],
+      "prompt": {
+        "item": "shoes-chelsea-black",
+        "sha256": "541bee48dc7a9e958d172d318b4f951bcf8682f207768115ee157e1787b7ef77",
+        "bytes": 1136
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-chelsea-black-claim",
+        "filename": "B1-shoes-chelsea-black.claim.json",
+        "eventsFilename": "B1-shoes-chelsea-black.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-chelsea-black/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-flannel-check",
+      "order": 7,
+      "item": "top-flannel-check",
+      "category": "top",
+      "type": "shirt",
+      "tone": "dark",
+      "pattern": "buffalo check",
+      "tests": [
+        "a large check pattern across seams",
+        "collar + button placket",
+        "dark red near C's skin hue"
+      ],
+      "prompt": {
+        "item": "top-flannel-check",
+        "sha256": "98ce8654f802f3a2826cd5ca3b1b02fec1f1e3b2c8b9edf903b18412d3ec3443",
+        "bytes": 1545
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-flannel-check-claim",
+        "filename": "B1-top-flannel-check.claim.json",
+        "eventsFilename": "B1-top-flannel-check.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-flannel-check/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-cargo-shorts-khaki",
+      "order": 8,
+      "item": "bottom-cargo-shorts-khaki",
+      "category": "bottom",
+      "type": "shorts",
+      "tone": "skin-near",
+      "pattern": "flap pockets",
+      "tests": [
+        "skin-near colour next to bare legs",
+        "pockets widening the silhouette at the side"
+      ],
+      "prompt": {
+        "item": "bottom-cargo-shorts-khaki",
+        "sha256": "4d2955863a8615aa53ba6cd418d09f3f1f9af65eacdbccef25d494ce04cdc04f",
+        "bytes": 1543
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-cargo-shorts-khaki-claim",
+        "filename": "B1-bottom-cargo-shorts-khaki.claim.json",
+        "eventsFilename": "B1-bottom-cargo-shorts-khaki.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-cargo-shorts-khaki/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-desert-boots-tan",
+      "order": 9,
+      "item": "shoes-desert-boots-tan",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "skin-near",
+      "pattern": "solid",
+      "tests": [
+        "skin-near suede next to bare ankles (covering + extraction)"
+      ],
+      "prompt": {
+        "item": "shoes-desert-boots-tan",
+        "sha256": "24baadf06adffa574b51bc3f372618d4273690b07b39a1fe3d6bbc4fa9ceb01b",
+        "bytes": 1113
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-desert-boots-tan-claim",
+        "filename": "B1-shoes-desert-boots-tan.claim.json",
+        "eventsFilename": "B1-shoes-desert-boots-tan.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-desert-boots-tan/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-cableknit-oat",
+      "order": 10,
+      "item": "top-cableknit-oat",
+      "category": "top",
+      "type": "sweater",
+      "tone": "skin-near",
+      "pattern": "cable-knit texture",
+      "tests": [
+        "skin-near colour vs C's skin (extraction)",
+        "a thick knit silhouette within the envelope",
+        "texture vs the remnant rules"
+      ],
+      "prompt": {
+        "item": "top-cableknit-oat",
+        "sha256": "32af6a2f55b0caa2f85195cfdcbff27a706bc012c52364014fda3df41c8c1682",
+        "bytes": 1525
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-cableknit-oat-claim",
+        "filename": "B1-top-cableknit-oat.claim.json",
+        "eventsFilename": "B1-top-cableknit-oat.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-cableknit-oat/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-pleated-skirt-tartan",
+      "order": 11,
+      "item": "bottom-pleated-skirt-tartan",
+      "category": "bottom",
+      "type": "skirt",
+      "tone": "dark",
+      "pattern": "tartan",
+      "tests": [
+        "a tartan pattern with pleats",
+        "a flared hem vs the envelope"
+      ],
+      "prompt": {
+        "item": "bottom-pleated-skirt-tartan",
+        "sha256": "e4caf91dba123a56ce27afb78e647c371ff49519238f446976ba0711d1826cb5",
+        "bytes": 1526
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-pleated-skirt-tartan-claim",
+        "filename": "B1-bottom-pleated-skirt-tartan.claim.json",
+        "eventsFilename": "B1-bottom-pleated-skirt-tartan.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-pleated-skirt-tartan/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-hiking-boots-grey",
+      "order": 12,
+      "item": "shoes-hiking-boots-grey",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "mid",
+      "pattern": "contrast laces",
+      "tests": [
+        "a chunky sole vs the shoe envelope",
+        "several materials on one shoe"
+      ],
+      "prompt": {
+        "item": "shoes-hiking-boots-grey",
+        "sha256": "163acacd37fd91e479ea0226da9f5f50a242ad9da7eaba82a5ff930c44d9193d",
+        "bytes": 1123
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-hiking-boots-grey-claim",
+        "filename": "B1-shoes-hiking-boots-grey.claim.json",
+        "eventsFilename": "B1-shoes-hiking-boots-grey.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-hiking-boots-grey/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-crop-boxy-peach",
+      "order": 13,
+      "item": "top-crop-boxy-peach",
+      "category": "top",
+      "type": "tee",
+      "tone": "skin-near",
+      "pattern": "solid",
+      "tests": [
+        "a waist-length hem at the contract line",
+        "skin-near colour next to bare arms"
+      ],
+      "prompt": {
+        "item": "top-crop-boxy-peach",
+        "sha256": "a35c8532cc608869e49c1d1c6572737164c650a62285e032e6c4dfb99c178cda",
+        "bytes": 1524
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-crop-boxy-peach-claim",
+        "filename": "B1-top-crop-boxy-peach.claim.json",
+        "eventsFilename": "B1-top-crop-boxy-peach.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-crop-boxy-peach/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-cord-trousers-brown",
+      "order": 14,
+      "item": "bottom-cord-trousers-brown",
+      "category": "bottom",
+      "type": "trousers",
+      "tone": "dark",
+      "pattern": "corduroy ribs",
+      "tests": [
+        "dark brown next to dark shoes",
+        "fine vertical texture"
+      ],
+      "prompt": {
+        "item": "bottom-cord-trousers-brown",
+        "sha256": "5656b4f9fbb6bbaf02281e007bbe2974db35b8fd15523a15383eb0324975b8ba",
+        "bytes": 1572
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-cord-trousers-brown-claim",
+        "filename": "B1-bottom-cord-trousers-brown.claim.json",
+        "eventsFilename": "B1-bottom-cord-trousers-brown.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-cord-trousers-brown/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-rain-boots-yellow",
+      "order": 15,
+      "item": "shoes-rain-boots-yellow",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "light",
+      "pattern": "solid",
+      "tests": [
+        "a saturated light colour",
+        "a smooth glossy surface"
+      ],
+      "prompt": {
+        "item": "shoes-rain-boots-yellow",
+        "sha256": "c095fb390a29d6eaada9f02b4a4c5adad4f63fc0a48c85775acf391c1e5b0ae1",
+        "bytes": 1127
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-rain-boots-yellow-claim",
+        "filename": "B1-shoes-rain-boots-yellow.claim.json",
+        "eventsFilename": "B1-shoes-rain-boots-yellow.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-rain-boots-yellow/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-raglan-colourblock",
+      "order": 16,
+      "item": "top-raglan-colourblock",
+      "category": "top",
+      "type": "tee",
+      "tone": "mid",
+      "pattern": "colour block",
+      "tests": [
+        "a diagonal raglan seam vs the body/sleeve layer split",
+        "two colours on one item"
+      ],
+      "prompt": {
+        "item": "top-raglan-colourblock",
+        "sha256": "af6d6ebb873a433dee73069130564c53a5c4489d1466f7038adee7a081ccd9ef",
+        "bytes": 1546
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-raglan-colourblock-claim",
+        "filename": "B1-top-raglan-colourblock.claim.json",
+        "eventsFilename": "B1-top-raglan-colourblock.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-raglan-colourblock/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-wideleg-linen-white",
+      "order": 17,
+      "item": "bottom-wideleg-linen-white",
+      "category": "bottom",
+      "type": "trousers",
+      "tone": "light",
+      "pattern": "solid",
+      "tests": [
+        "a wide hem vs the trouser envelope",
+        "a light colour against the light page"
+      ],
+      "prompt": {
+        "item": "bottom-wideleg-linen-white",
+        "sha256": "2cbee30118b5868d243d04d4ae0fb180467d5fe9155ec73a5135c21dfe4e5828",
+        "bytes": 1553
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-wideleg-linen-white-claim",
+        "filename": "B1-bottom-wideleg-linen-white.claim.json",
+        "eventsFilename": "B1-bottom-wideleg-linen-white.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-wideleg-linen-white/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-runners-panels",
+      "order": 18,
+      "item": "shoes-runners-panels",
+      "category": "shoes",
+      "type": "sneakers",
+      "tone": "light",
+      "pattern": "colour panels",
+      "tests": [
+        "multicolour panels",
+        "a thick light sole against the light page"
+      ],
+      "prompt": {
+        "item": "shoes-runners-panels",
+        "sha256": "3b14ae7ed7bd1de87f352548c4f1542c8e0e3486be15d727c3280da2d8be2e56",
+        "bytes": 1125
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-runners-panels-claim",
+        "filename": "B1-shoes-runners-panels.claim.json",
+        "eventsFilename": "B1-shoes-runners-panels.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-runners-panels/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-track-jacket-green",
+      "order": 19,
+      "item": "top-track-jacket-green",
+      "category": "top",
+      "type": "jacket",
+      "tone": "dark",
+      "pattern": "sleeve stripes",
+      "tests": [
+        "a stand collar at the neck seam",
+        "sheen material",
+        "stripes along the sleeves"
+      ],
+      "prompt": {
+        "item": "top-track-jacket-green",
+        "sha256": "7485a6182e280056fa9e1a62e09f4dca0a529eb46c8092b538cc8c1f0e436c53",
+        "bytes": 1573
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-track-jacket-green-claim",
+        "filename": "B1-top-track-jacket-green.claim.json",
+        "eventsFilename": "B1-top-track-jacket-green.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-track-jacket-green/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-denim-skirt-light",
+      "order": 20,
+      "item": "bottom-denim-skirt-light",
+      "category": "bottom",
+      "type": "skirt",
+      "tone": "light",
+      "pattern": "contrast stitching",
+      "tests": [
+        "an A-line flare",
+        "light denim texture"
+      ],
+      "prompt": {
+        "item": "bottom-denim-skirt-light",
+        "sha256": "528965dfef456598ec493d99a0453cbb13576bed4e07ebdf22c1f74ad82d8430",
+        "bytes": 1538
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-denim-skirt-light-claim",
+        "filename": "B1-bottom-denim-skirt-light.claim.json",
+        "eventsFilename": "B1-bottom-denim-skirt-light.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-denim-skirt-light/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-checker-midtop",
+      "order": 21,
+      "item": "shoes-checker-midtop",
+      "category": "shoes",
+      "type": "sneakers",
+      "tone": "light",
+      "pattern": "checkerboard",
+      "tests": [
+        "a high-contrast checkerboard pattern vs the outline rules"
+      ],
+      "prompt": {
+        "item": "shoes-checker-midtop",
+        "sha256": "e6bef807040364665738bb4146433e8de9c19150eca818f83070422b0376cec3",
+        "bytes": 1121
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-checker-midtop-claim",
+        "filename": "B1-shoes-checker-midtop.claim.json",
+        "eventsFilename": "B1-shoes-checker-midtop.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-checker-midtop/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-top-camp-shirt-dots",
+      "order": 22,
+      "item": "top-camp-shirt-dots",
+      "category": "top",
+      "type": "shirt",
+      "tone": "mid",
+      "pattern": "small polka dots",
+      "tests": [
+        "a small dense pattern vs the remnant and hole rules",
+        "an open collar near the neck"
+      ],
+      "prompt": {
+        "item": "top-camp-shirt-dots",
+        "sha256": "66256b398800fb81330035569e32f78d45cc6f7146cc92d7f5b7d2e63dacd352",
+        "bytes": 1554
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-camp-shirt-dots-claim",
+        "filename": "B1-top-camp-shirt-dots.claim.json",
+        "eventsFilename": "B1-top-camp-shirt-dots.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-top-camp-shirt-dots/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-bottom-sport-shorts-stripe",
+      "order": 23,
+      "item": "bottom-sport-shorts-stripe",
+      "category": "bottom",
+      "type": "shorts",
+      "tone": "dark",
+      "pattern": "side stripe",
+      "tests": [
+        "black fabric vs dark contour lines",
+        "a stripe on the outer edge"
+      ],
+      "prompt": {
+        "item": "bottom-sport-shorts-stripe",
+        "sha256": "89c46bf9524ea3f5753b226f877014c669f4e9fb4eb0988e07f1056e8d776405",
+        "bytes": 1551
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-sport-shorts-stripe-claim",
+        "filename": "B1-bottom-sport-shorts-stripe.claim.json",
+        "eventsFilename": "B1-bottom-sport-shorts-stripe.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-bottom-sport-shorts-stripe/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    },
+    {
+      "callId": "B1-shoes-winter-boots-navy",
+      "order": 24,
+      "item": "shoes-winter-boots-navy",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "dark",
+      "pattern": "fur cuff",
+      "tests": [
+        "a fuzzy edge at the shaft (alpha extraction)",
+        "white fur next to skin"
+      ],
+      "prompt": {
+        "item": "shoes-winter-boots-navy",
+        "sha256": "0ca161de6522777fca87a94dcb3ecfe1b3af769b4665bb6537cd5d2b535bdc87",
+        "bytes": 1131
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-winter-boots-navy-claim",
+        "filename": "B1-shoes-winter-boots-navy.claim.json",
+        "eventsFilename": "B1-shoes-winter-boots-navy.events.jsonl"
+      },
+      "output": "<Documents>/DenSejeApp-artefacts/b1-batch/B1-shoes-winter-boots-navy/b1.image-1.png",
+      "mandateState": "UNAUTHORISED"
+    }
+  ]
+}
