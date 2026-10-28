@@ -26,6 +26,8 @@ function fakeDb(state) {
     if (/to_regclass\('isolated_ci\.environment'\)/.test(sql)) return [{ has_marker: state.marker !== undefined }];
     if (/FROM isolated_ci\.environment/.test(sql)) return state.marker === undefined ? [] : state.marker.map((t) => ({ token: t }));
     if (/pg_control_system/.test(sql)) return [{ id: state.sysid }];
+    // The pre-schema shape check: the seed runs after the replay, so public.questions exists.
+    if (/to_regclass\('public\.questions'\)/.test(sql)) return [{ has_questions: state.hasQuestions ?? true, public_tables: state.publicTables ?? 9 }];
     if (/real_questions/.test(sql)) return [{ real_questions: state.realQ ?? 0, questions: state.q ?? 0, real_users: state.realU ?? 0, users: state.u ?? 0 }];
     throw new Error("unexpected query: " + sql.slice(0, 60));
   };
@@ -151,4 +153,11 @@ test("PGlite: the replay content filter discards question rows, then is removed"
   await r.db.exec(contentFilterOffSql());
   await r.db.exec(`INSERT INTO public.questions (content, metadata) VALUES ('{"question":"after"}', '{"synthetic":true}')`);
   assert.equal((await r.query("SELECT count(*)::int n FROM public.questions"))[0].n, 1);
+});
+
+test("pre-schema shape: no questions table is accepted only when public holds no table at all", async () => {
+  await refused({ ...GOOD, hasQuestions: false, publicTables: 3 }, ENV, /public has tables but no questions table/);
+  const db = fakeDb({ ...GOOD, hasQuestions: false, publicTables: 0 });
+  await seedSyntheticQuestions({ ...db, env: ENV, sql: "SELECT 1;" });
+  assert.equal(db.execs.length, 1, "an empty, freshly bootstrapped database passes");
 });
