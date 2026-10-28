@@ -23,6 +23,9 @@
 //     (`northstar-batch.mjs checkpoint`);
 //   · a reserve call names its design (--for=) and is refused unless that design's call ended in a reason in the API's answer — a
 //     picture that is not a 1024x1536 RGBA PNG, a moderation block, or a registration failure G-1 — and no other reserve resent it.
+// D-247: the owner closed ONE uncertain dispatch — B1-bottom-jeans-straight-indigo ("fetch failed", server state unknown) — as SPENT
+// and NEVER RESENT, and let the batch continue under the same rules. Only that call id, only with D-247's token and its closed entry
+// in the authorisation file; any other uncertain dispatch still stops the batch, and no reserve can resend it.
 // THE OUTPUT IS STORED OUTSIDE BOTH CLONES (D-127 §2): <Documents>/DenSejeApp-artefacts/b1-batch/<call id>/.
 //
 // Every check runs inside main(), before the claim (D-142). A dry run stops before the claim and reads no credential.
@@ -89,6 +92,11 @@ const OWNER_APPROVAL_FLAG = "--owner-approval=D-246";
 const STOP_FILE = "B1-STOP.json";
 const CHECKPOINT_FILE = "B1-CHECKPOINT.json";
 const CHECKPOINT_RULE_IDS = Object.freeze(["C1", "C2", "C3", "C4", "C5"]);
+// D-247: the one uncertain dispatch the owner closed (spent, never resent); the batch continues past it, never past another
+const CLOSURE_DECISION = "D-247";
+const CLOSURE_FILE = "docs/decisions/D-247.md";
+const CLOSURE_TOKEN = "D-247 b1 CONTINUES: B1-bottom-jeans-straight-indigo CLOSED AS SPENT, NEVER RESENT";
+const CLOSED_UNCERTAIN = Object.freeze(["B1-bottom-jeans-straight-indigo"]);
 const callOf = (id) => ({ callId: id, claimIdentity: id + "-claim", claimFile: id + ".claim.json", eventsFile: id + ".events.jsonl", approvalFlag: OWNER_APPROVAL_FLAG, reserve: RESERVE_IDS.includes(id) });
 
 // ── the request (the same for every call; only the prompt and Image 2's category differ) ────────────────────────────
@@ -109,6 +117,7 @@ const TRACKED = Object.freeze({
   legacyRegister: "docs/project-state.md",
   decision: DECISION_FILE,
   planDecision: "docs/decisions/D-245.md",
+  closure: CLOSURE_FILE,
   calls: FX + "batches/b1-authorisation-v1.json",
   plan: FX + "batches/b1-calls-v1.json",
   prompts: FX + "batches/b1-prompts-v1.json",
@@ -349,6 +358,8 @@ function verifyDecisions(blobs) {
   if (lines.some((l) => l.startsWith("| **" + DECISION + "** |"))) problems.push(DECISION + " has a row in the frozen legacy table; it must be a decision file only (D-224)");
   const plan = frontMatter(blobs.planDecision.toString("utf8"));
   if (!plan || plan.fields.d !== "D-245") problems.push("docs/decisions/D-245.md on origin/main is not D-245's decision file (the corrected plan)");
+  const closure = frontMatter(blobs.closure.toString("utf8"));
+  if (!closure || closure.fields.d !== CLOSURE_DECISION || !String(closure.fields.status || "").split(" — ").map((x) => x.trim()).includes(CLOSURE_TOKEN)) problems.push(CLOSURE_FILE + " on origin/main does not hold " + CLOSURE_TOKEN);
   const doc = frontMatter(blobs.decision.toString("utf8"));
   if (!doc || doc.fields.d !== DECISION) return { ok: false, problems: [...problems, DECISION_FILE + " on origin/main is not " + DECISION + "'s decision file"] };
   if (!String(doc.fields.status || "").split(" — ").map((x) => x.trim()).includes(AUTH_TOKEN)) problems.push("the origin/main " + DECISION + " status does not hold " + AUTH_TOKEN);
@@ -377,6 +388,9 @@ function verifyAuthorisation(c, call, design) {
   eq("checkpoint.designs", get(c, "checkpoint", "designs"), CHECKPOINT_IDS.map((id) => DESIGN_CALLS.find((d) => d.callId === id).item));
   const calls = Array.isArray(c.calls) ? c.calls : [];
   eq("call ids", calls.map((e) => e && e.callId), CALL_IDS);
+  // D-247: an uncertain dispatch counts as closed only when its entry says so exactly (spent, closed by D-247, never resent)
+  const closed = CLOSED_UNCERTAIN.filter((id) => { const x = calls.find((y) => y && y.callId === id) || {};
+    return same({ mandateState: x.mandateState, outcome: x.outcome, closedBy: x.closedBy, neverResent: x.neverResent }, { mandateState: "SPENT", outcome: "DISPATCHED_RESULT_UNKNOWN", closedBy: CLOSURE_DECISION, neverResent: true }); });
   const e = calls.find((x) => x && x.callId === call.callId);
   if (!e) return { ok: false, problems: [...problems, "no entry for " + call.callId] };
   eq("mandateState", e.mandateState, "UNSPENT"); eq("outcome", e.outcome, "NOT YET ATTEMPTED");
@@ -385,7 +399,7 @@ function verifyAuthorisation(c, call, design) {
   eq("order", e.order, CALL_IDS.indexOf(call.callId) + 1);
   if (call.reserve) { eq("reserve", e.reserve, true); eq("reserve item", e.item, null); }
   else { eq("item", e.item, design.item); eq("category", e.category, design.category); eq("reference", e.reference, design.category); eq("checkpoint", e.checkpoint, CHECKPOINT_IDS.includes(call.callId)); }
-  return { ok: problems.length === 0, problems };
+  return { ok: problems.length === 0, problems, closed };
 }
 
 /** The implementation block (D-145: no adapter hash pinned). */
@@ -448,7 +462,7 @@ function resolveOutputs(call) {
 
 const readJson = (f) => { try { return JSON.parse(readFileSync(f, "utf8")); } catch (_) { return null; } };
 /** The order, the stop rules, the processing records, the checkpoint gate and the reserve rule. Returns the claims consumed. */
-function verifyOrderAndStops(call, loc, target) {
+function verifyOrderAndStops(call, loc, target, closed = []) {
   const problems = [], root = outputRoot();
   const consumed = CALL_IDS.filter((id) => pathExists(join(loc.dir, id + ".claim.json")));
   if (consumed.length >= MAX_CALLS) return { ok: false, stage: "budget", problems: ["b1's " + MAX_CALLS + " calls are spent; there is no automatic extension"], consumed };
@@ -463,7 +477,8 @@ function verifyOrderAndStops(call, loc, target) {
     if (!m) { problems.push("stop (uncertain dispatch): " + id + " is claimed but has no readable outcome"); continue; }
     const cls = get(m, "outcome", "classification"), st = get(m, "response", "httpStatus"), code = String(get(m, "response", "error", "code") || "") + " " + String(get(m, "response", "error", "type") || "");
     outcomes[id] = { cls, item: m.item, reserveFor: m.reserveFor || null, moderation: false, g1: false };
-    if (["DISPATCHED_RESULT_UNKNOWN", "NOT_DISPATCHED", "RESPONSE_BODY_UNREADABLE", "UNEXPECTED"].includes(cls)) problems.push("stop (uncertain dispatch): " + id + " ended " + cls + " — never resent");
+    if (cls === "DISPATCHED_RESULT_UNKNOWN" && closed.includes(id)) { /* D-247: closed as spent, never resent; it does not stop the batch */ }
+    else if (["DISPATCHED_RESULT_UNKNOWN", "NOT_DISPATCHED", "RESPONSE_BODY_UNREADABLE", "UNEXPECTED"].includes(cls)) problems.push("stop (uncertain dispatch): " + id + " ended " + cls + " — never resent");
     else if (cls === "TECHNICAL_REJECT") format++;
     else if (cls === "HTTP_ERROR") {
       if (st === 401 || st === 403 || st === 429 || /quota|billing/i.test(code)) problems.push("stop (credit or access): " + id + " HTTP " + st + " " + code.trim());
@@ -636,7 +651,7 @@ async function main(argv) {
   if (!loc.ok) return refuse("claim-location", [loc.why]);
   if (pathExists(loc.claim)) return refuse("claim-exists", ["the mandate is already spent: " + loc.claimDisplay]);
   if (pathExists(loc.events)) return refuse("events-exist", ["an event log already exists for this call: " + loc.eventsDisplay]);
-  const order = verifyOrderAndStops(call, loc, args.target);
+  const order = verifyOrderAndStops(call, loc, args.target, auth.closed);
   if (!order.ok) return refuse(order.stage, order.problems);
   console.log("  budget   : " + order.consumed.length + " of " + MAX_CALLS + " claims consumed before this call; every earlier call has an outcome that does not stop the batch");
   const out = resolveOutputs(call);

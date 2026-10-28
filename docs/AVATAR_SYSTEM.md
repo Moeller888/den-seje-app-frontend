@@ -391,6 +391,8 @@ art layer behind them can be upgraded without a rewrite.
     9 technical rejections, `B1-STOP.json`, the checkpoint gate (`B1-CHECKPOINT.json`, C1–C5) and the reserve rule.
   - **Files.** Authorisation in `batches/b1-authorisation-v1.json`; the plan stays unauthorised. Technical pass = candidate only;
     nothing published. See `docs/decisions/D-246.md`.
+  - **D-247.** Call 1 received (technically rejected, G-2). Call 2 (jeans) was an uncertain dispatch: closed as spent, never resent;
+    the batch continues under D-246's rules. See `docs/decisions/D-247.md`.
 - **b1 plan corrected — D-245 (before any authorisation; no calls).**
   - **Prompts.** Strict lookups and `validatePrompt` on every finished prompt; readable `batches/b1-prompts-v1.md`.
   - **Prompt defect.** The five bottom calls of D-228/D-235 were sent with "undefined" instead of the bottoms instruction
