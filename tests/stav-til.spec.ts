@@ -107,6 +107,9 @@ async function openStavTil(page: any, replies: Reply[], question: unknown = FIXT
   await page.fill('input[type="email"]', process.env.TEST_STUDENT_EMAIL!);
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
   await page.click('button');
+  // A pupil always lands on the Hub after login; the quiz is one step further (Spil -> index.html).
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`, { waitUntil: 'domcontentloaded' });
 
   await expect(page.locator('#question')).toHaveAttribute('data-state', 'ready', { timeout: 20000 });
   await expect(page.locator('#question')).toContainText(String((question as any).content.question));

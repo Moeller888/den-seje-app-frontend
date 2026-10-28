@@ -34,6 +34,9 @@ test("1. Quiz reaches ready state — no error or stuck state on normal load", a
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
+  // A pupil always lands on the Hub after login; the quiz is one step further (Spil -> index.html).
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 
   // State machine must reach "ready" — never "error" or "loading" indefinitely
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 25000 });
@@ -76,6 +79,9 @@ test("3. Session recovery — student can return to login at any time", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
+  // A pupil always lands on the Hub after login; the quiz is one step further (Spil -> index.html).
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 25000 });
 
   // Session recovery: the universal recovery path is direct navigation to login.html.

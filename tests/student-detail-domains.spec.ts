@@ -27,7 +27,7 @@ test.describe('student-detail.html — auth guards', () => {
     await page.fill('#email', STUDENT_EMAIL);
     await page.fill('#password', STUDENT_PASSWORD);
     await page.locator('#loginBtn').click();
-    await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+    await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
     // Navigate to student-detail as a student (not teacher) — must redirect
     await page.goto(`${PROD}/student-detail.html?id=00000000-0000-0000-0000-000000000000`, {

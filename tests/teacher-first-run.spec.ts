@@ -396,13 +396,31 @@ test("7c. the e-mail recovery reset (not forced) still changes the password and 
   expect(profilesWrites(log)).toEqual([]);
 });
 
-test("8b. an unflagged pupil goes straight to the app, not to the reset", async ({ page }) => {
-  await page.route("**/index.html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<p>app</p>" }));
+test("8b. an unflagged pupil goes straight to the Hub, not to the reset", async ({ page }) => {
+  await page.route("**/hub.html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<p>hub</p>" }));
   await open(page, "/login.html", { session: null, profile: { role: "student", must_reset_password: false } });
   await page.locator("#email").fill("maja@skole.dk");
   await page.locator("#password").fill(TEMP_PW);
   await page.locator("#loginBtn").click();
-  await expect(page).toHaveURL(/\/index\.html$/);
+  await expect(page).toHaveURL(/\/hub\.html$/);
+});
+
+test("8c. a pupil's very first login (no grade, no identity, no placement) also lands on the Hub, never in the quiz", async ({ page }) => {
+  const quizRequests: string[] = [];
+  page.on("request", (r) => { if (/\/(index\.html|app\.js)(\?|$)/.test(new URL(r.url()).pathname)) quizRequests.push(r.url()); });
+  await page.route("**/hub.html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<p>hub</p>" }));
+  await open(page, "/login.html", {
+    session: null,
+    profile: {
+      role: "student", must_reset_password: false,
+      selected_grade: null, placement_band: null, current_band: null, avatar_identity: null,
+    },
+  });
+  await page.locator("#email").fill("maja@skole.dk");
+  await page.locator("#password").fill(TEMP_PW);
+  await page.locator("#loginBtn").click();
+  await expect(page).toHaveURL(/\/hub\.html$/);
+  expect(quizRequests, "login never loads the quiz (and so never starts the placement test)").toEqual([]);
 });
 
 // ── 9. auth on teacher.html is unchanged ─────────────────────────────────────────────────────

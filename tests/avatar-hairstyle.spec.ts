@@ -156,7 +156,9 @@ async function loginAsStudent(page: any) {
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 async function gotoLoginReduced(page: any) {
@@ -335,7 +337,7 @@ test("golden: avatar page braid hairstyle matches baseline", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
@@ -355,7 +357,7 @@ test("golden: avatar page short hairstyle matches baseline", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
@@ -377,7 +379,7 @@ test("golden: avatar page headwear over braid matches baseline", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/avatar.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#identityButtons .identity-btn", { timeout: 15000 });
@@ -397,7 +399,7 @@ test("golden: hub avatar braid hairstyle matches baseline", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 
   await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
@@ -417,7 +419,9 @@ test("golden: quiz avatar braid hairstyle matches baseline", async ({
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 
   await page.waitForSelector("#options button", { timeout: 30000 });
   await waitForImages(page, "#avatar-display");

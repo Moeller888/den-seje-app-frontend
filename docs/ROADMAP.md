@@ -15,6 +15,20 @@ _Last reviewed: 2026-07-01._
 
 ---
 
+## Elevens startside er Hub'en (ejerbeslutning 2026-10-22)
+
+- **Ejerbeslutning 2026-10-22:** en elev lander **altid** på `hub.html` efter login — også ved det
+  allerførste login. Før gik `js/login.js` direkte til quizzen (`index.html`), så identitetsprompt,
+  klassetrinsvalg og placeringstesten var det første, en ny elev mødte. De kører stadig, men først
+  når eleven går fra Hub'en til quizzen ("Spil").
+- Uændret: lærer → `teacher.html`, super_admin → `admin.html`, `must_reset_password` →
+  `reset-password.html?forced=1` (som efter skiftet sender tilbage til login og dermed til Hub'en).
+- Næste skridt (ikke bygget): måle-spørgsmål i **alle** fag. I dag måler placeringstesten kun
+  historie og gemmer ét fælles `profiles.placement_band`. Et designforslag kommer før kode og skal
+  passe med sværhedsskalaen 1–10.000 (niveau pr. fag, B1; udfasning af placeringstesten udskudt, B9).
+
+---
+
 ## Public website / landing track — Model A implemented, NOT deployed (2026-08-08)
 
 - **Owner decision: Model A.** A new public front page `landing.html` was added and `/` now

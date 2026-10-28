@@ -8,6 +8,10 @@ test('Login and answer question flow works', async ({ page }) => {
   await page.fill('input[type="password"]', process.env.TEST_STUDENT_PASSWORD!);
   await page.click('button');
 
+  // A pupil always lands on the Hub after login; the quiz is one step further (Spil -> index.html).
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  await page.goto(`${PROD}/index.html`);
+
   // Wait for state machine to reach AWAITING_ANSWER (question fully loaded)
   // logout-btn is intentionally hidden in the mobile redesign — use the state machine as the loaded signal
   await page.waitForSelector('#question[data-state="ready"]', { timeout: 15000 });

@@ -65,7 +65,9 @@ async function loginReduced(page: any) {
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 // Wait for the app render-complete signal + assert the R2 stack (not C2) is active,
@@ -108,7 +110,7 @@ test("golden: R2 quiz avatar (neutral-medium) matches baseline", async ({ page, 
   test.skip(browserName !== "chromium", "golden baselines are chromium-only");
   await setIdentity(NEUTRAL_MEDIUM());
   await loginReduced(page);
-  // Already on index.html (quiz) after login; the quiz avatar mounts on #avatar-display.
+  // loginReduced ends on index.html (quiz); the quiz avatar mounts on #avatar-display.
   await waitForR2(page, "#avatar-display");
   await expect(page.locator("#avatar-display")).toHaveScreenshot("r2-quiz-avatar-neutral-medium.png", { maxDiffPixels: 120, animations: "disabled" });
 });

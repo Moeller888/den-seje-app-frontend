@@ -129,7 +129,9 @@ async function loginAsStudent(page: any) {
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
   await page.locator("#loginBtn").click();
-  await page.waitForURL(`${PROD}/index.html`, { timeout: 20000 });
+  await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
+  // A pupil always lands on the Hub; the quiz is one step further (Spil -> index.html).
+  await page.goto(`${PROD}/index.html`, { waitUntil: "domcontentloaded" });
 }
 
 async function gotoLoginReduced(page: any) {
@@ -252,7 +254,7 @@ test("structure: hair layer renders on all four surfaces", async ({
   // C2: the decoupled hair layer is an INLINE <svg> (data-c2-layer="hair"), present
   // on all four render surfaces.
 
-  // Quiz (login lands here)
+  // Quiz (loginAsStudent opens it after the Hub)
   await page.waitForSelector("#avatar-display img", { timeout: 15000 });
   await expect(
     page.locator('#avatar-display [data-c2-layer="hair"] svg')
