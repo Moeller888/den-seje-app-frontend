@@ -17,11 +17,14 @@ const HERE = dirname(fileURLToPath(import.meta.url)), REPO = resolve(HERE, "..",
 const sha256 = (b) => createHash("sha256").update(b).digest("hex"), repoFile = (rel) => join(REPO, ...rel.split("/")), FX = "tools/avatar/fixtures/northstar-wardrobe/";
 const ADAPTER_REL = "tools/avatar/openai-send-northstar-batch-b1.mjs", DECISION_REL = "docs/decisions/D-246.md";
 const AUTH_REL = FX + "batches/b1-authorisation-v1.json", PLAN_REL = FX + "batches/b1-calls-v1.json", PROMPTS_REL = FX + "batches/b1-prompts-v1.json", DESIGNS_REL = FX + "batches/b1-designs-v1.json";
-const TRACKED = [ADAPTER_REL, "tools/avatar/r3-face-neutral-attempt-ledger.mjs", "docs/project-state.md", DECISION_REL, "docs/decisions/D-245.md", AUTH_REL, PLAN_REL, PROMPTS_REL, DESIGNS_REL,
+const TRACKED = [ADAPTER_REL, "tools/avatar/r3-face-neutral-attempt-ledger.mjs", "docs/project-state.md", DECISION_REL, "docs/decisions/D-245.md", "docs/decisions/D-247.md", AUTH_REL, PLAN_REL, PROMPTS_REL, DESIGNS_REL,
   FX + "independent-validation-prompts-v1.json", FX + "seam-contract-v2.json", FX + "base-figure-c-v1.json", "tools/avatar/northstar-item-pilot.mjs", "tools/avatar/northstar-seam-templates.mjs"];
 const SRC = readFileSync(repoFile(ADAPTER_REL), "utf8"), CODE = SRC.split("\n").filter((l) => !l.trimStart().startsWith("//")).join("\n");
 const json = (rel) => JSON.parse(readFileSync(repoFile(rel), "utf8"));
-const AUTH = json(AUTH_REL), PLAN = json(PLAN_REL), PROMPTS = json(PROMPTS_REL), B1 = NB.loadBatch("b1"), DECISION = readFileSync(repoFile(DECISION_REL), "utf8");
+// the authorisation as merged by D-246: the execution records (D-247) undone — the sandbox starts from it
+const unspent = (a, { keepClosure = false } = {}) => { const c = JSON.parse(JSON.stringify(a)); c.budget.actuallySent = 0;
+  for (const e of c.calls) { if (keepClosure && e.closedBy) continue; e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; for (const k of ["result", "recordedBy", "closedBy", "neverResent"]) delete e[k]; } return c; };
+const AUTH_RECORDED = json(AUTH_REL), AUTH = unspent(AUTH_RECORDED), PLAN = json(PLAN_REL), PROMPTS = json(PROMPTS_REL), B1 = NB.loadBatch("b1"), DECISION = readFileSync(repoFile(DECISION_REL), "utf8");
 const TOKEN = "D-246 BATCH b1: 24 CALLS AND 4 RESERVE CALLS AUTHORISED", C_SHA = "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818";
 const C_PATH = process.env.ITEM_PILOT_C_PATH, C_BUF = C_PATH && existsSync(C_PATH) ? readFileSync(C_PATH) : null;
 const SHEET_ROOT = join(homedir(), "Documents", "DenSejeApp-artefacts", "d-235-independent-validation", "references", "v2");
@@ -75,7 +78,7 @@ function envFor(sb, extra) { const env = {}; for (const k of ["PATH", "Path", "S
   return Object.assign(env, { LOCALAPPDATA: sb.state, XDG_STATE_HOME: sb.state, HOME: sb.home, USERPROFILE: sb.home, TEMP: sb.tmp, TMP: sb.tmp, TMPDIR: sb.tmp, HTTP_PROXY: "http://127.0.0.1:9", HTTPS_PROXY: "http://127.0.0.1:9",
     GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: sb.gitconfig, D246_MOCK_LOG: sb.log, D246_MOCK_PNG: sb.png, D246_MOCK_BAD: sb.bad, D246_MOCK_MODE: "ok" }, extra || {}); }
 function sgit(sb, args) { const r = spawnSync("git", ["-C", sb.repo, "-c", "user.name=d246-sandbox", "-c", "user.email=sandbox@example.invalid", "-c", "core.autocrlf=false", ...args], { env: envFor(sb), encoding: "utf8", windowsHide: true }); if (r.status !== 0) throw new Error("sandbox git " + args.join(" ") + ": " + r.stderr); return r.stdout.trim(); }
-function sandbox({ base, withC = true } = {}) {
+function sandbox({ base, withC = true, closure = false } = {}) {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), "d246-sandbox-"))); ROOTS.push(root);
   const sb = { root, repo: join(root, "repo"), state: join(root, "state"), tmp: join(root, "tmp"), home: join(root, "home"), log: join(root, "fetch.log"), gitconfig: join(root, "gitconfig"), png: join(root, "out.png"), bad: join(root, "bad.png"), mock: join(root, "mock.mjs") };
   sb.claimDir = join(sb.state, "DenSejeApp", "one-shot-claims", "Moeller888-den-seje-app-frontend"); sb.out = join(sb.home, "Documents", "DenSejeApp-artefacts", "b1-batch");
@@ -84,6 +87,7 @@ function sandbox({ base, withC = true } = {}) {
   if (withC && C_BUF) { const cd = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(cd, { recursive: true }); writeFileSync(join(cd, "d202-base-figure-v2.image-1.png"), C_BUF);
     for (const cat of ["top", "bottom", "shoes"]) { const d = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-235-independent-validation", "references", "v2", cat); mkdirSync(d, { recursive: true }); copyFileSync(sheetFile(cat), join(d, AUTH.request.references[cat].name)); } }
   for (const rel of [...TRACKED, ".gitignore"]) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  writeFileSync(join(sb.repo, ...AUTH_REL.split("/")), JSON.stringify(unspent(AUTH_RECORDED, { keepClosure: !!closure }), null, 2) + "\n");
   if (base) base(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
@@ -183,4 +187,24 @@ test("D-246 the pipeline record: from the item pipeline's report — ok, fault c
   assert.deepEqual(NB.pipelineRecord("B1-top-polo-navy", "top-polo-navy", rep), { callId: "B1-top-polo-navy", item: "top-polo-navy", method: "d240", ok: false, faultClass: "generation", faults: rep.faults, g1: true, rawSha256: "x" });
   assert.equal(NB.pipelineRecord("B1-x", "top-polo-navy", { ...rep, ok: true, faults: { generation: [], extraction: [], fit: [] }, registration: { ok: true } }).faultClass, null);
   assert.throws(() => NB.pipelineRecord("B1-x", "top-flannel-check", rep), /the report is not top-flannel-check's/);
+});
+
+test("D-247 the recorded execution: call 1 received, call 2 closed as spent and never resent; every other entry still unspent", () => {
+  const by = Object.fromEntries(AUTH_RECORDED.calls.map((e) => [e.callId, e]));
+  assert.deepEqual([by["B1-top-breton-longsleeve"].mandateState, by["B1-top-breton-longsleeve"].outcome, by["B1-top-breton-longsleeve"].recordedBy], ["SPENT", "RECEIVED_FOR_BF_CHECK", "D-247"]);
+  assert.deepEqual([by["B1-bottom-jeans-straight-indigo"].mandateState, by["B1-bottom-jeans-straight-indigo"].outcome, by["B1-bottom-jeans-straight-indigo"].closedBy, by["B1-bottom-jeans-straight-indigo"].neverResent], ["SPENT", "DISPATCHED_RESULT_UNKNOWN", "D-247", true]);
+  assert.equal(AUTH_RECORDED.calls.filter((e) => e.mandateState === "UNSPENT").length, 26); assert.equal(AUTH_RECORDED.budget.actuallySent, 2); assert.equal(AUTH_RECORDED.budget.authorised, 28);
+  assert.match(readFileSync(repoFile("docs/decisions/D-247.md"), "utf8"), /^status: RECORDED — D-247 b1 CONTINUES: B1-bottom-jeans-straight-indigo CLOSED AS SPENT, NEVER RESENT — /m);
+  assert.match(CODE, /const CLOSED_UNCERTAIN = Object\.freeze\(\["B1-bottom-jeans-straight-indigo"\]\);/);
+});
+
+test("D-247 with C: the closed uncertain dispatch lets call 3 pass; unclosed it stops; no reserve resends it", { skip: SKIP }, () => {
+  const [c1, c2, c3] = DESIGN_IDS, simulate = (sb) => { mkdirSync(sb.claimDir, { recursive: true });
+    for (const [id, cls] of [[c1, "RECEIVED_FOR_BF_CHECK"], [c2, "DISPATCHED_RESULT_UNKNOWN"]]) { writeFileSync(join(sb.claimDir, id + ".claim.json"), "{}"); mkdirSync(join(sb.out, id), { recursive: true });
+      writeFileSync(join(sb.out, id, "b1.request.json"), JSON.stringify({ item: itemOf(id), outcome: { classification: cls }, response: cls === "RECEIVED_FOR_BF_CHECK" ? { httpStatus: 200 } : { transportError: "fetch failed" } })); }
+    record(sb, c1, null, { ok: false, faultClass: "generation" }); };
+  const closed = sandbox({ closure: true }); simulate(closed); const ok = run(closed, argsOf(c3)); assert.equal(ok.status, 0, ok.out); assert.match(ok.out, /2 of 28 claims consumed/);
+  refused(closed, run(closed, argsOf("B1-reserve-1", c2)), "stopped", 0, /ended DISPATCHED_RESULT_UNKNOWN — a reserve only resends/);
+  refused(closed, run(closed, argsOf(c2)), "authorisation", 0, /mandateState: "SPENT", expected "UNSPENT"/);
+  const open = sandbox(); simulate(open); refused(open, run(open, argsOf(c3)), "stopped", 0, /uncertain dispatch[\s\S]*never resent/);
 });
