@@ -33,8 +33,9 @@ const CUFF = [40, 120, 60];
 const cuff = new Uint8ClampedArray(N * 4); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (y >= A.shoulder.y && y < wristOf(x) - 14 && base.arms[i * 4 + 3] >= 128) cuff.set([...CUFF, 255], i * 4); }
 const armSpan = (y) => { let a = -1, b = -1; for (let x = 0; x < W / 2; x++) if (base.arms[(y * W + x) * 4 + 3] >= 250 && BF.classify(base.R, y * W + x) === "skin") { if (a < 0) a = x; b = x; } return [a, b]; };
 
-test("D-239 method: d239 is the default; d221 … d232 stay recorded as they ran", () => {
-  assert.equal(IP.METHOD, "d239"); const m = IP.METHODS.d239;
+test("D-239 method: d239 as D-239 defined it; d221 … d232 stay recorded as they ran", () => {
+  // d239 was the default when D-239 recorded it; a later method (D-240's test pins the default) leaves its definition unchanged
+  const m = IP.METHODS.d239; assert.ok(!m.coverFromPicture);
   assert.deepEqual([m.fitRevision, m.limbExit, m.limbExitDetached, m.unmixPictureSkin, m.outfitRevision, m.contract, m.contractRevision], ["d232", true, true, true, "d239", "seam-contract-v2", "d239"]);
   for (const k of ["d221", "d222", "d223", "d225", "d232"]) assert.ok(!IP.METHODS[k].limbExitDetached && !IP.METHODS[k].unmixPictureSkin && IP.METHODS[k].outfitRevision !== "d239", k + " unchanged");
 });

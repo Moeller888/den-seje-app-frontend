@@ -1,0 +1,70 @@
+{
+  "decision": "D-240",
+  "method": "d240",
+  "rawRoot": ".",
+  "note": "D-240: the items of D-239's ready outfits K16 … K19 (the hip tee V1; the navy shorts, V3, V4; the white sneakers and the brown ankle boots V6), pins unchanged, with method d240 — the review of the boot's arch. Run: node tools/avatar/northstar-item-pilot.mjs --run <this file> --out <empty dir outside both clones>.",
+  "items": [
+    {
+      "id": "top-tee-hip-blue",
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V1",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V1/d228.image-1.png",
+      "rawSha256": "97ec8d034e7f19ac51c5ff2497cb2773a741315b3ecdd964fa78cd5c8faeae15"
+    },
+    {
+      "id": "bottom-shorts-navy",
+      "category": "bottom",
+      "type": "shorts",
+      "covering": "none",
+      "sourceCall": "D-207-item-bottom-shorts-navy",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "d-207-item-pilot/D-207-item-bottom-shorts-navy/d207.image-1.png",
+      "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167"
+    },
+    {
+      "id": "bottom-trousers-square-olive",
+      "category": "bottom",
+      "type": "trousers",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V3",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V3/d228.image-1.png",
+      "rawSha256": "b7423207432780f2e1be5e49f94a2bf0888c785e7c918d117119d76f5a777d00"
+    },
+    {
+      "id": "bottom-capri-lightblue",
+      "category": "bottom",
+      "type": "capri",
+      "covering": "none",
+      "sourceCall": "D-228-seam-V4",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V4/d228.image-1.png",
+      "rawSha256": "c5869cb7761c7633579c92c791ce833c6696c6d911871faccd678b1e8d53155f"
+    },
+    {
+      "id": "shoes-sneakers-white",
+      "category": "shoes",
+      "type": "sneakers",
+      "covering": "closed-footwear",
+      "sourceCall": "D-207-reserve-2",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "d-207-item-pilot/D-207-reserve-2/d207.image-1.png",
+      "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611"
+    },
+    {
+      "id": "shoes-ankleboots-brown",
+      "category": "shoes",
+      "type": "boots",
+      "covering": "closed-footwear",
+      "sourceCall": "D-228-seam-V6",
+      "receiptVerdict": "RECEIVED_FOR_BF_CHECK",
+      "raw": "d-228-seam-validation/D-228-seam-V6/d228.image-1.png",
+      "rawSha256": "98d4a08fc038db0575ed37774682b372504a4b376040240cde05f372f3c90b2c"
+    }
+  ],
+  "findingsRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register.json",
+  "reviewRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json"
+}
