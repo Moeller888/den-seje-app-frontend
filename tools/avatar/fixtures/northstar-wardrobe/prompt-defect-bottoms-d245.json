@@ -1,0 +1,52 @@
+{
+  "decision": "D-245",
+  "what": "The five bottom calls of D-228 and D-235 were sent with the word \"undefined\" where seam-contract-v2's bottoms instruction belonged (modelDraws looked up under \"bottom\"; the key is \"bottoms\"). Their pictures, layers and recorded results stand; only conclusions that read a missing waistband, hip-width or hem instruction into the model's behaviour are corrected (docs/decisions/D-245.md).",
+  "missingInstruction": "Start exactly where the grey base top ends and draw nothing above it. Keep any waistband seam or belt within a finger-width of the top edge; no other horizontal line across the hips. At the hips stay as wide as the grey base shorts. Either end clearly above the ankle (shorts, skirts, capri: the leg shows above any shoe), or end just below the ankle with a straight, square hem that is wider than the leg on both sides.",
+  "calls": [
+    {
+      "callId": "D-228-seam-V3",
+      "decision": "D-228",
+      "item": "bottom-trousers-square-olive",
+      "promptFile": "seam-validation-prompts-v1.json",
+      "promptSha256": "0eaed574c31afcf7f36ac18be9a9f59b6666a7758534449fe3ff54f517791030",
+      "mandateState": "SPENT",
+      "sentWithUndefined": true
+    },
+    {
+      "callId": "D-228-seam-V4",
+      "decision": "D-228",
+      "item": "bottom-capri-lightblue",
+      "promptFile": "seam-validation-prompts-v1.json",
+      "promptSha256": "7d9db8ba60a1ae44239543ec9f9407e24bfaba5b181301f88fe56b8be8a3ec6c",
+      "mandateState": "SPENT",
+      "sentWithUndefined": true
+    },
+    {
+      "callId": "D-228-seam-V5",
+      "decision": "D-228",
+      "item": "bottom-skirt-band-orange",
+      "promptFile": "seam-validation-prompts-v1.json",
+      "promptSha256": "dc09158998836738e59f1e56833eb1c28e26a02272fcdbf826cb299497e95e48",
+      "mandateState": "SPENT",
+      "sentWithUndefined": true
+    },
+    {
+      "callId": "D-235-new-N3",
+      "decision": "D-235",
+      "item": "bottom-trousers-black",
+      "promptFile": "independent-validation-prompts-v1.json",
+      "promptSha256": "95ad9e10b631a076909fd445b41c03307088b6debd02f5d21adead44f0215843",
+      "mandateState": "SPENT",
+      "sentWithUndefined": true
+    },
+    {
+      "callId": "D-235-new-N4",
+      "decision": "D-235",
+      "item": "bottom-skirt-sand",
+      "promptFile": "independent-validation-prompts-v1.json",
+      "promptSha256": "eebbe877ab5de427f03062e75be3f89262ce52a1364f0f40f47dc6c3cbd9fd4d",
+      "mandateState": "SPENT",
+      "sentWithUndefined": true
+    }
+  ]
+}

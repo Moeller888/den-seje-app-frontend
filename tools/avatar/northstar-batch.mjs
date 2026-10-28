@@ -1,18 +1,22 @@
-// D-244 NORTHSTAR BATCH — the production flow for a batch of items on the fixed figure C, built from the existing tools (no second
-// system): design file → frozen prompts and an UNAUTHORISED call plan with a cost estimate → (a separate authorisation and a send
-// adapter of the D-235 pattern) → raw pictures with receipts → item-pipeline runs in chunks (northstar-item-pilot.mjs runPipeline,
-// method and outfit check as pinned) → a status register → an export of APPROVED items in D-242's runtime format to a PRIVATE
-// directory (buildLayerSet / writeLayerSet). It sends nothing and never authorises a call.
+// D-244/D-245 NORTHSTAR BATCH — the production flow for a batch of items on the fixed figure C, built from the existing tools (no
+// second system): design file → frozen, VALIDATED prompts (and a readable overview) → an UNAUTHORISED call plan with its documented
+// price, an enforceable call cap and a fixed checkpoint → (a separate authorisation and a send adapter of the D-235 pattern) → raw
+// pictures with receipts → item-pipeline runs in chunks (northstar-item-pilot.mjs runPipeline) → a status register with the freely
+// combinable set → an export of APPROVED items in D-242's runtime format to a PRIVATE directory. It sends nothing and never
+// authorises a call.
 //
 // STATUS (never inferred upwards): "afvist" — technically rejected, or rejected in review; "kræver-gennemgang" — technically OK
 // with an open finding, an approval that no longer matches the layers, or (outfits) an item that needs review; "kandidat" —
 // technically OK, not yet approved; "godkendt" — ONLY an owner entry in the batch's review file whose pinned hashes match the
-// current layers (outfits: and all three items approved); "uafprøvet" — never run. A technical pass is never an approval, and
-// every combination keeps its status in the register and the export: a rejected one is listed, never dropped.
+// current layers (outfits: and all three items approved); "uafprøvet" — never run. The assistant may reject (with a reason) and
+// recommend, never approve. Every combination keeps its status; none is dropped.
+// THE CATALOGUE ("one size fits all"): only the FREELY COMBINABLE SET — approved items of which EVERY top × bottom × shoes
+// combination is approved — may be offered as freely combinable. Usable candidates and that set are reported apart; an approved
+// item outside the set is listed with the partners it fails with, never hidden, and no matching set is made the default.
 //
 // Usage:
-//   node tools/avatar/northstar-batch.mjs plan --batch b1                       writes b1-prompts-v1.json and b1-calls-v1.json
-//   node tools/avatar/northstar-batch.mjs manifests --batch b1 --receipts <dir> --out <dir outside the repo>   one per bottom
+//   node tools/avatar/northstar-batch.mjs plan --batch b1                writes b1-prompts-v1.json, b1-prompts-v1.md, b1-calls-v1.json
+//   node tools/avatar/northstar-batch.mjs manifests --batch b1 --receipts <file> --out <dir outside the repo>   one per bottom
 //   node tools/avatar/northstar-batch.mjs status --batch b1 --runs <dir>[,<dir>…] --out <file outside the repo>
 //   node tools/avatar/northstar-batch.mjs export --batch b1 --runs <dirs> --out <dir outside the repo> --cwebp <exe> --dwebp <exe>
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
@@ -42,6 +46,20 @@ export function loadBatch(name) {
 /** What makes a design different: its cut, material and pattern. Colour and tone alone never do. */
 export const signature = (d) => [d.cut, d.material, d.pattern].map((x) => String(x || "").trim().toLowerCase()).join(" | ");
 const FORBIDDEN_WORDS = /\b(text|logos?|letters?|numbers?|brand(ed)?|slogan|sandals?|flip-?flops?|open[- ]toe)\b/i;
+/** D-245 SCOPE: what C's existing picture and the layer contract can carry. C's runtime body has no skin under the base top
+ *  (torso and hips are empty), the head stack and its neck band are protected and drawn above the top, a top is ONE garment
+ *  (no layer under an opening), bottoms stay within the hip and hem envelope, and a shoe's edge is a painted outline inside its
+ *  envelope. A design that needs more is a new body or a new method, not a batch item. */
+export const SCOPE_RULES = Object.freeze([
+  { category: "top", re: /\b(v-?neck|scoop|open (collar|front|neck)|unbuttoned|open jacket|crop(ped)?|midriff|belly|off[- ]the[- ]shoulder|off[- ]shoulder|strapless)\b/i, why: "shows torso skin that C's runtime body does not have (the torso is empty under the base top)" },
+  { category: "top", re: /\b(stand(-| )?up collar|stand collar|turtle-?neck|polo neck|mock neck|hood(ie|ed)?|scarf)\b/i, why: "rises into the protected neck band under the head stack" },
+  { category: "top", re: /\b(over a|layered|under a|jacket over|vest over|open over)\b/i, why: "two garments: a top is one layer" },
+  { category: "bottom", re: /\b(wide[- ]leg|flared?|bell[- ]bottoms?|palazzo|a-line|full skirt|circle skirt|puffy|balloon)\b/i, why: "wider than the hip and hem envelope (seam-contract-v2)" },
+  { category: "bottom", re: /\b(low[- ]rise|hip[- ]huggers?|high[- ]waist(ed)?|belt with|belted)\b/i, why: "moves the waist seam or adds a line in the waistband zone" },
+  { category: "shoes", re: /\b(fur|faux-?fur|fluffy|fuzzy|shearling|feathers?|tassels?|fringe)\b/i, why: "a soft, see-through edge the extraction does not separate from C's leg" },
+  { category: "shoes", re: /\b(chunky|platform|thick sole|wedge|high heels?|stiletto|knee-high|tall shaft|over the knee)\b/i, why: "outside the shoe envelope or above the shaft limit" },
+]);
+export function scopeErrors(d) { return SCOPE_RULES.filter((r) => r.category === d.category && r.re.test([d.cut, d.material, d.pattern, d.garment].join(" "))).map((r) => d.id + ": out of scope — " + r.why); }
 /** Errors (the batch may not be planned) and the distribution per category. Every rule is general, never per design. */
 export function validateBatch(b) {
   const errors = [], ids = new Set(), byCat = Object.fromEntries(CATS.map((c) => [c, []]));
@@ -57,10 +75,15 @@ export function validateBatch(b) {
     if (d.category === "shoes" && d.covering !== "closed-footwear") errors.push(tag + ": shoes must be closed footwear");
     if (!IP.BATCH_ITEMS[d.id] || IP.BATCH_ITEMS[d.id].category !== d.category) errors.push(tag + ": not registered in the pipeline (northstar-item-pilot.mjs BATCH_ITEMS)");
     if (!Array.isArray(d.tests) || !d.tests.length) errors.push(tag + ": name what the design tests");
+    if (typeof d.scope !== "string" || !d.scope.trim()) errors.push(tag + ": state why it fits C's picture and the layer contract (scope)");
+    errors.push(...scopeErrors(d));
     if (byCat[d.category]) byCat[d.category].push(d); }
   for (const c of CATS) { const seen = new Map();
     for (const d of byCat[c]) { const s = signature(d), other = seen.get(s);
       if (other && !(other.existing && d.existing)) errors.push(d.id + ": the same cut, material and pattern as " + other.id + " — a colour change alone is not a new design"); else if (!other) seen.set(s, d); } }
+  const cp = b.checkpoint || [];
+  if (cp.length !== 6 || new Set(cp).size !== 6 || cp.some((id) => !ids.has(id))) errors.push("checkpoint: six distinct designs of the batch");
+  else for (const c of CATS) if (cp.filter((id) => b.designs.find((d) => d.id === id).category === c).length !== 2) errors.push("checkpoint: two designs per category");
   const distribution = Object.fromEntries(CATS.map((c) => { const ds = byCat[c].filter((d) => !d.existing);
     return [c, { designs: ds.length, tones: Object.fromEntries(TONES.map((t) => [t, ds.filter((d) => d.tone === t).length])), patterned: ds.filter((d) => d.pattern.toLowerCase() !== "solid").length }]; }));
   for (const [c, x] of Object.entries(distribution)) { if (!x.designs) continue;
@@ -69,64 +92,109 @@ export function validateBatch(b) {
   return { errors, distribution };
 }
 
-// ── 2. frozen prompts ────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── 2. frozen, validated prompts ─────────────────────────────────────────────────────────────────────────────────────────────
 export const FROZEN = Object.freeze({ prompts: "independent-validation-prompts-v1.json", contract: "seam-contract-v2.json" });
-const MODEL_DRAWS_KEY = Object.freeze({ top: "top", bottom: "bottoms", shoes: "shoes" });
-/** D-235's composition: template(GARMENT, COVERAGE) + modelDraws + the reference-sheet sentence of the category — with the bottoms'
- *  contract sentence that D-228 and D-235 looked up under "bottom" and therefore SENT as the word "undefined" (D-244 finding). */
-export function composePrompt(design) {
-  const P = json(join(FX, FROZEN.prompts)), C = json(join(FX, FROZEN.contract));
-  return P.template.replace("{GARMENT}", design.garment).replace("{COVERAGE}", P.coverage[design.category]) + " " + C.modelDraws[MODEL_DRAWS_KEY[design.category]] + " " + P.reference[design.category];
+/** Category → the contract's modelDraws key. D-228 and D-235 looked the bottoms' sentence up under "bottom" (the key is "bottoms")
+ *  and SENT the word "undefined" in its place (D-244 finding, D-245). Every lookup is now strict. */
+export const MODEL_DRAWS_KEY = Object.freeze({ top: "top", bottom: "bottoms", shoes: "shoes" });
+const need = (obj, key, what) => { const v = obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+  if (typeof v !== "string" || !v.trim()) throw new Error("prompt part missing: " + what + "[" + JSON.stringify(key) + "]"); return v; };
+export function frozenParts() { return { P: json(join(FX, FROZEN.prompts)), C: json(join(FX, FROZEN.contract)) }; }
+/** D-235's composition — template(GARMENT, COVERAGE) + modelDraws + the category's reference-sheet sentence — with strict lookups:
+ *  a missing, empty or non-string part throws instead of becoming "undefined". */
+export function composePrompt(design, parts = frozenParts(), keys = MODEL_DRAWS_KEY) {
+  const { P, C } = parts, cat = design && design.category;
+  if (!CATS.includes(cat)) throw new Error("prompt part missing: category " + JSON.stringify(cat));
+  const garment = need(design, "garment", "design");
+  return need(P, "template", "prompts").replace("{GARMENT}", garment).replace("{COVERAGE}", need(P.coverage, cat, "coverage"))
+    + " " + need(C.modelDraws, keys[cat], "modelDraws") + " " + need(P.reference, cat, "reference");
+}
+/** Every finished prompt is checked, not only the template: its own category's coverage, contract instruction and sheet sentence
+ *  are present exactly once, no other category's are, the garment is there, and nothing unresolved is left. */
+export function validatePrompt(prompt, design, parts = frozenParts()) {
+  const { P, C } = parts, cat = design.category, errors = [];
+  if (typeof prompt !== "string" || prompt.length < 200) return ["not a prompt"];
+  const bad = prompt.match(/\b(undefined|null|NaN)\b|\[object Object\]|\{[A-Z_]+\}|\$\{|<[A-Z_]+>/);
+  if (bad) errors.push("unresolved or missing part: " + JSON.stringify(bad[0]));
+  const once = (s, what) => { const n = s ? prompt.split(s).length - 1 : 0; if (n !== 1) errors.push(what + " appears " + n + " times"); };
+  once(design.garment, "the garment"); once(P.coverage[cat], "the " + cat + " coverage sentence"); once(C.modelDraws[MODEL_DRAWS_KEY[cat]], "the " + cat + " contract instruction"); once(P.reference[cat], "the " + cat + " reference-sheet sentence");
+  for (const o of CATS.filter((c) => c !== cat)) for (const [s, what] of [[C.modelDraws[MODEL_DRAWS_KEY[o]], o + " contract instruction"], [P.reference[o], o + " reference-sheet sentence"]]) if (s && prompt.includes(s)) errors.push("contains the " + what);
+  if (/\s{2,}/.test(prompt) || prompt !== prompt.trim()) errors.push("stray whitespace (an empty part)");
+  return errors;
 }
 export function buildPrompts(b) {
-  const sources = Object.fromEntries(Object.values(FROZEN).map((f) => [f, sha(readFileSync(join(FX, f)))]));
-  const items = Object.fromEntries(b.designs.map((d) => { const prompt = composePrompt(d), buf = Buffer.from(prompt, "utf8");
-    return [d.id, { category: d.category, garment: d.garment, prompt, sha256: sha(buf), bytes: buf.length }]; }));
-  return { decision: b.decision, batch: b.batch, status: "FROZEN when planned — D-235's composition and sentences; only the garment differs, and the bottoms carry seam-contract-v2's modelDraws.bottoms sentence that D-228/D-235 sent as \"undefined\" (D-244). Never adjusted during a batch.", composition: "template({GARMENT}, {COVERAGE}) + ' ' + modelDraws[category] + ' ' + reference[category]", sources, items };
+  const parts = frozenParts(), sources = Object.fromEntries(Object.values(FROZEN).map((f) => [f, sha(readFileSync(join(FX, f)))]));
+  const items = Object.fromEntries(b.designs.map((d) => { const prompt = composePrompt(d, parts), errors = validatePrompt(prompt, d, parts);
+    if (errors.length) throw new Error(d.id + ": " + errors.join("; ")); const buf = Buffer.from(prompt, "utf8");
+    return [d.id, { category: d.category, garment: d.garment, prompt, sha256: sha(buf), bytes: buf.length, checks: "validatePrompt: OK" }]; }));
+  return { decision: b.decision, batch: b.batch, status: "FROZEN when planned — D-235's composition and sentences with strict lookups; every prompt validated (D-245). The bottoms carry seam-contract-v2's modelDraws.bottoms sentence that D-228/D-235 sent as \"undefined\". Never adjusted during a batch.", composition: "template({GARMENT}, {COVERAGE}) + ' ' + modelDraws[MODEL_DRAWS_KEY[category]] + ' ' + reference[category]", sources, items };
+}
+/** The readable overview of the actual prompts (reviewed before their hashes are pinned by an authorisation). */
+export function promptsOverview(b, prompts) {
+  const { C } = frozenParts(), lines = ["# Batch " + b.batch + " — de faktiske prompts", "", "Genereret af `tools/avatar/northstar-batch.mjs plan` (D-245). Hver prompt er kontrolleret af `validatePrompt`: kategoriens dækningssætning, kontraktinstruktion og referencearksætning findes præcis én gang, ingen anden kategoris, og intet uløst (`undefined`, `null`, pladsholdere).", ""];
+  for (const cat of CATS) { lines.push("## " + { top: "Overdele", bottom: "Underdele", shoes: "Lukket fodtøj" }[cat], "", "Kontraktinstruktion (`modelDraws." + MODEL_DRAWS_KEY[cat] + "`):", "", "> " + C.modelDraws[MODEL_DRAWS_KEY[cat]], "");
+    for (const d of b.designs.filter((x) => x.category === cat)) { const it = prompts.items[d.id];
+      lines.push("### " + d.id + (b.checkpoint.includes(d.id) ? " (checkpoint)" : ""), "", "- Tester: " + d.tests.join("; "), "- Scope: " + d.scope, "- sha256 `" + it.sha256 + "`, " + it.bytes + " bytes", "", "```text", it.prompt, "```", ""); } }
+  return lines.join("\n").replace(/\n+$/, "");   // one final newline when written (git diff --check)
 }
 
-// ── 3. the call plan and its cost (never an authorisation) ───────────────────────────────────────────────────────────────────
-/** Measured on the 12 calls of D-228 and D-235 (their response.json "usage", <Documents>/DenSejeApp-artefacts/d-228-…, d-235-…):
- *  the same request shape (C + one reference sheet, 1024x1536, high). */
-export const MEASURED_USAGE = Object.freeze({ calls: 12, imageInputTokens: 3072, textInputTokensMax: 357, imageOutputTokens: 1372, source: "response.json usage of D-228 V1–V6 and D-235 N1–N6 (identical image token counts in all 12)" });
-/** Two price scenarios in USD — ASSUMPTIONS: the price of gpt-image-2.5-sunburst-2026-09-08 is published nowhere the project could
- *  read. A: GPT-Image-2.0's token rates (OpenAI help-center rate card as quoted in a web search, 2026-10-28: $8 / 1M image input,
- *  $5 / 1M text input, $30 / 1M image output). B (ceiling): the dearest known per-picture price, gpt-image-1 high 1024×1536 ≈ $0.25
- *  (pricepertoken.com: $0.167 at 1024×1024, ×1.5 for portrait), plus input at gpt-image-1's $10 / 1M image and $5 / 1M text. */
-export const RATE_SCENARIOS = Object.freeze({
-  A: { what: "GPT-Image-2.0 token rates", imageInputPerM: 8, textInputPerM: 5, imageOutputPerM: 30, perPicture: null },
-  B: { what: "ceiling: gpt-image-1 high 1024×1536 per picture + gpt-image-1 input rates", imageInputPerM: 10, textInputPerM: 5, imageOutputPerM: null, perPicture: 0.25 },
-});
-export function costEstimate(calls, usage = MEASURED_USAGE, rates = RATE_SCENARIOS) {
-  const per = Object.fromEntries(Object.entries(rates).map(([k, r]) => [k, (usage.imageInputTokens * r.imageInputPerM + usage.textInputTokensMax * r.textInputPerM) / 1e6 + (r.perPicture ?? usage.imageOutputTokens * r.imageOutputPerM / 1e6)]));
-  const round = (x) => Math.round(x * 10000) / 10000;
-  return { currency: "USD", calls, perCall: Object.fromEntries(Object.entries(per).map(([k, v]) => [k, round(v)])), total: Object.fromEntries(Object.entries(per).map(([k, v]) => [k, round(v * calls)])), usage, rates };
+// ── 3. the call plan: documented price, enforceable cap, fixed checkpoint (never an authorisation) ────────────────────────────
+/** Measured on the 12 calls of D-228 and D-235 (their response.json "usage"): the same request shape (C + one reference sheet,
+ *  1024x1536, high). Text tokens were 3.7–4.3 bytes of prompt per token; the bound used here is bytes / 3. */
+export const MEASURED_USAGE = Object.freeze({ calls: 12, imageInputTokens: 3072, imageOutputTokens: 1372, textBytesPerTokenMin: 3, source: "response.json usage of D-228 V1–V6 and D-235 N1–N6 (identical image token counts in all 12; text 265–357 tokens for 1080–1500-byte prompts)" });
+/** DOCUMENTED price: OpenAI API pricing page (developers.openai.com/api/docs/pricing, read 2026-10-28), Standard, per 1M tokens:
+ *  gpt-image-2.5-sunburst — image input $8.00, image output $30.00, text input $5.00. The request names the dated snapshot
+ *  gpt-image-2.5-sunburst-2026-09-08; the page lists the model name without a snapshot price — the snapshot is assumed to carry it. */
+export const PRICE = Object.freeze({ model: "gpt-image-2.5-sunburst", source: "https://developers.openai.com/api/docs/pricing (Standard, read 2026-10-28)", imageInputPerM: 8, textInputPerM: 5, imageOutputPerM: 30, snapshotAssumption: "the request's snapshot gpt-image-2.5-sunburst-2026-09-08 is billed at the listed gpt-image-2.5-sunburst price" });
+export function costOfCall(promptBytes, usage = MEASURED_USAGE, price = PRICE) {
+  const text = Math.ceil(promptBytes / usage.textBytesPerTokenMin);
+  return (usage.imageInputTokens * price.imageInputPerM + text * price.textInputPerM + usage.imageOutputTokens * price.imageOutputPerM) / 1e6;
 }
-/** Interleaved order (top, bottom, shoes, top, …) so an early stop has seen every category. */
-export const interleave = (b) => { const by = CATS.map((c) => b.designs.filter((d) => d.category === c)), out = []; for (let i = 0; by.some((l) => l[i]); i++) for (const l of by) if (l[i]) out.push(l[i]); return out; };
+export function costEstimate(prompts, reserve, usage = MEASURED_USAGE, price = PRICE) {
+  const per = Object.fromEntries(Object.entries(prompts.items).map(([id, it]) => [id, costOfCall(it.bytes, usage, price)]));
+  const max = Math.max(...Object.values(per)), r = (x) => Math.round(x * 10000) / 10000;
+  return { currency: "USD", documented: { price, usage }, perCallMax: r(max), designs: r(Object.values(per).reduce((a, b) => a + b, 0)), reserveMax: r(reserve * max), totalMax: r(Object.values(per).reduce((a, b) => a + b, 0) + reserve * max),
+    enforceable: "the CALL COUNT (one-shot claims per call id; a spent claim is never repeated), not a dollar amount — the project cannot stop OpenAI billing at a sum",
+    uncertainty: "token counts are measured on 12 calls of the same request shape, not guaranteed; the price is the published list price, not an invoice — every response's usage is recorded and checked at the checkpoint (C5); the billed amount is for the owner to read on the OpenAI usage page" };
+}
+/** The fixed checkpoint, then the rest interleaved (top, bottom, shoes, …). */
+export function callOrder(b) {
+  const cp = b.checkpoint.map((id) => b.designs.find((d) => d.id === id)), rest = b.designs.filter((d) => !b.checkpoint.includes(d.id)), il = (list) => { const by = CATS.map((c) => list.filter((d) => d.category === c)), out = []; for (let i = 0; by.some((l) => l[i]); i++) for (const l of by) if (l[i]) out.push(l[i]); return out; };
+  return [...il(cp), ...il(rest)];
+}
+export const CHECKPOINT_RULES = Object.freeze([
+  "PROMPT: before every send the adapter re-composes the prompt, checks validatePrompt and its pinned sha256; any failure stops the WHOLE batch (our tool's fault: no reserve, no resend)",
+  "AFTER THE SIX CHECKPOINT CALLS the six are processed (method d240, outfit check d239) with the existing items, BEFORE call 7 is sent; the batch stops when ANY of these holds:",
+  "  C1 two or more of the six are technically rejected for the same fault class (generation, extraction or fit), or three or more in all",
+  "  C2 a checkpoint bottom fails a rule its now-sent instruction names: SC-W3 (waistband zone), SC-W6 (hip width) or SC-L1 (hem band) — the corrected instruction is not followed",
+  "  C3 a received picture carries reference marks, fails registration (G-1), or is not a 1024x1536 RGBA PNG twice",
+  "  C4 the outfits of the six with the existing items: fewer than half technically OK",
+  "  C5 the token usage in the six responses (response.json usage) × the documented price exceeds 6 × the documented per-call maximum by more than 50 % (the price assumption is wrong)",
+  "otherwise the remaining 18 are sent in order without further owner input",
+]);
 export function buildCallPlan(b, prompts, { reserve = 4 } = {}) {
-  const d235 = json(join(FX, "independent-validation-calls-v1.json")), order = interleave(b), n = order.length;
-  return { decision: b.decision, batch: b.batch, status: "PREPARED — NOT AUTHORISED: no call may be sent. A separate owner authorisation (its own D-number and token) must name the calls, the reserve, the budget ceiling and the send adapter.",
+  const d235 = json(join(FX, "independent-validation-calls-v1.json")), order = callOrder(b), n = order.length;
+  return { decision: b.decision, batch: b.batch, status: "PREPARED — NOT AUTHORISED: no call may be sent. A separate owner authorisation (its own D-number and token) must name the calls, the reserve and the send adapter.",
     meta: { authorisesImageRequest: false, kind: "a production-readiness batch: no catalogue, no runtime, no activation" },
     budget: { requested: n, reserveRequested: reserve, maxCalls: n + reserve, authorised: 0, actuallySent: 0, reusesEarlierPermissions: false, oneCallPerDesign: true },
-    cost: costEstimate(n + reserve),
+    cost: costEstimate(prompts, reserve),
     privacy: { cSentToApi: "only under the future authorisation", referenceSheetsSentToApi: "only under the future authorisation (C-derived, the D-235 v2 sheets)", publishOrTrack: "never — C, the sheets and every result stay outside both clones (D-127 §2)", h1: "never used" },
     frozen: { method: b.method, contract: b.contract, outfitRevision: b.outfitRevision, prompts: { file: b.batch + "-prompts-v1.json", sha256: sha(Buffer.from(JSON.stringify(prompts, null, 2) + "\n", "utf8")) } },
     request: d235.request,
-    reserveRule: "at most " + reserve + " reserve calls, each only to resend a design whose RECEIPT failed for a reason that is not the design: a picture that is not a 1024x1536 RGBA PNG, a first moderation block, or a registration failure (G-1). Never for a look that is disliked, never twice for one design.",
+    checkpoint: { designs: b.checkpoint, rules: CHECKPOINT_RULES },
+    reserveRule: "at most " + reserve + " reserve calls, each only to resend a design whose RECEIPT failed for a reason in the API's answer, not in the design and not in our tools: a picture that is not a 1024x1536 RGBA PNG, a first moderation block, or a registration failure (G-1) of the received picture. Never for a disliked look, a prompt or tool fault, or an uncertain dispatch (DISPATCHED_RESULT_UNKNOWN and the like are spent and never resent automatically); never twice for one design.",
     stopRules: [...d235.stopRules.filter((r) => !/STOP\.json/.test(r)),
-      "the executor's stop file " + b.batch.toUpperCase() + "-STOP.json (a common method failure after a receipt: G-1 in two calls, or reference marks drawn into two pictures)",
-      "quality checkpoint after call 6 (two per category): if 3 or more of the first 6 are technically rejected by the item pipeline, stop and report — a method problem, not chance",
-      "if technical rejections reach 9 of the calls sent (over a third of 24), stop"],
-    calls: order.map((d, i) => ({ callId: b.batch.toUpperCase() + "-" + d.id, order: i + 1, item: d.id, category: d.category, type: d.type, tone: d.tone, pattern: d.pattern, tests: d.tests,
+      "the executor's stop file " + b.batch.toUpperCase() + "-STOP.json (a common method failure after a receipt)",
+      "the checkpoint rules C1–C5 after call 6",
+      "after the checkpoint: technical rejections reaching 9 of the calls sent"],
+    calls: order.map((d, i) => ({ callId: b.batch.toUpperCase() + "-" + d.id, order: i + 1, checkpoint: b.checkpoint.includes(d.id), item: d.id, category: d.category, type: d.type, tone: d.tone, pattern: d.pattern, tests: d.tests,
       prompt: { item: d.id, sha256: prompts.items[d.id].sha256, bytes: prompts.items[d.id].bytes }, reference: d.category,
       claim: { identity: b.batch.toUpperCase() + "-" + d.id + "-claim", filename: b.batch.toUpperCase() + "-" + d.id + ".claim.json", eventsFilename: b.batch.toUpperCase() + "-" + d.id + ".events.jsonl" },
       output: "<Documents>/DenSejeApp-artefacts/" + b.batch + "-batch/" + b.batch.toUpperCase() + "-" + d.id + "/" + b.batch + ".image-1.png", mandateState: "UNAUTHORISED" })) };
 }
 
 // ── 4. the combination matrix and the chunked runs ──────────────────────────────────────────────────────────────────────────
-/** Every combination of the batch's designs and its existing items (each category: existing + new); one chunk per bottom, so a
- *  run holds all tops, one bottom and all shoes (memory stays bounded; the item layers are deterministic across chunks). */
+/** Every combination of the batch's designs and its existing items; one chunk per bottom (all tops, one bottom, all shoes). */
 export function matrix(b) {
   const of = (c) => [...(b.existing || []).filter((e) => e.category === c).map((e) => e.id), ...b.designs.filter((d) => d.category === c).map((d) => d.id)];
   const tops = of("top"), bottoms = of("bottom"), shoes = of("shoes"), outfits = [];
@@ -139,8 +207,7 @@ export function existingRawPins() {
     for (const it of m.items) if (!out[it.id]) out[it.id] = { raw: it.raw, rawSha256: it.rawSha256, sourceCall: it.sourceCall, type: it.type, covering: it.covering }; }
   return out;
 }
-/** One runPipeline manifest per chunk. receipts: { id: { raw (relative to <Documents>/DenSejeApp-artefacts), rawSha256, sourceCall } }
- *  for the designs whose receipt passed; a design without one is absent (its combinations stay "afvist"/"uafprøvet" by its status). */
+/** One runPipeline manifest per chunk. receipts: { id: { raw (relative to <Documents>/DenSejeApp-artefacts), rawSha256, sourceCall } }. */
 export function chunkManifests(b, receipts) {
   const m = matrix(b), pins = existingRawPins(), typeOf = Object.fromEntries(b.designs.map((d) => [d.id, d]));
   const entry = (id) => { const d = typeOf[id], p = d ? receipts[id] : pins[id]; if (!p) return null;
@@ -151,12 +218,27 @@ export function chunkManifests(b, receipts) {
     if (items.some((i) => i.category === "bottom")) IP.validateManifest(man); return man; });
 }
 
-// ── 5. the status register ───────────────────────────────────────────────────────────────────────────────────────────────────
+// ── 5. the status register and the freely combinable set ────────────────────────────────────────────────────────────────────
 const layerHashes = (files) => Object.fromEntries(Object.entries(files || {}).filter(([n]) => /^layer-|^shadow-multiply/.test(n)).sort());
+/** The FREELY COMBINABLE SET: from the approved items, remove — one at a time, the item with the largest share of non-approved
+ *  combinations (ties: id order) — until every top × bottom × shoes combination of what remains is approved. Deterministic. Each
+ *  removed item is listed with the combinations it failed in at its removal; nothing is hidden. */
+export function freelyCombinable(approvedItems, outfitStatus, categoryOf) {
+  const S = Object.fromEntries(CATS.map((c) => [c, approvedItems.filter((id) => categoryOf(id) === c).sort()])), excluded = [];
+  const triples = () => { const out = []; for (const t of S.top) for (const bo of S.bottom) for (const s of S.shoes) out.push([t, bo, s]); return out; };
+  for (;;) { const all = triples(); if (!all.length) break; const bad = all.filter((x) => outfitStatus(x.join("+")) !== STATUS.APPROVED); if (!bad.length) break;
+    const share = {}; for (const x of all) for (const id of x) share[id] = share[id] || { bad: 0, all: 0 }; for (const x of all) for (const id of x) share[id].all++; for (const x of bad) for (const id of x) share[id].bad++;
+    const worst = Object.keys(share).sort((a, b) => share[b].bad / share[b].all - share[a].bad / share[a].all || (a < b ? -1 : 1))[0];
+    excluded.push({ id: worst, failsWith: bad.filter((x) => x.includes(worst)).map((x) => x.join("+")) });
+    S[categoryOf(worst)] = S[categoryOf(worst)].filter((id) => id !== worst); }
+  const n = S.top.length * S.bottom.length * S.shoes.length;
+  return { tops: S.top, bottoms: S.bottom, shoes: S.shoes, combinations: n, excluded };
+}
 /** runs: [{ dir (relative to <Documents>/DenSejeApp-artefacts), run (run.json) }]; review: the batch's review file ({ entries }). */
 export function statusRegister(b, runs, review = { entries: [] }) {
   const m = matrix(b), items = {}, outfits = {}, entries = Array.isArray(review && review.entries) ? review.entries : [];
   const verdict = (kind, id) => entries.filter((e) => e && e.kind === kind && e.id === id);
+  const assistant = (kind, id) => verdict(kind, id).filter((e) => e.by === "assistant" && /^(recommend-approve|recommend-reject|uncertain)$/.test(e.verdict)).map((e) => ({ verdict: e.verdict, reason: e.reason || "" }));
   for (const { dir, run } of runs) for (const [id, it] of Object.entries(run.items || {})) {
     const h = layerHashes(it.files), prev = items[id];
     if (prev && JSON.stringify(prev.layers) !== JSON.stringify(h)) throw new Error(id + ": its layers differ between runs " + prev.run + " and " + dir);
@@ -166,35 +248,39 @@ export function statusRegister(b, runs, review = { entries: [] }) {
     let st;
     if (!it) { st = STATUS.UNTESTED; reasons.push("not processed (no call, or its receipt failed)"); }
     else if (it.technical === "rejected" || it.technical === "technically-rejected") { st = STATUS.REJECTED; reasons.push("technically rejected"); }
-    else { const rej = verdict("item", id).filter((e) => e.verdict === "rejected"), ok = verdict("item", id).filter((e) => e.verdict === "approved" && e.by === "owner");
+    else { const rej = verdict("item", id).filter((e) => e.verdict === "rejected" && (e.by === "owner" || e.by === "assistant")), ok = verdict("item", id).filter((e) => e.verdict === "approved" && e.by === "owner");
       if (rej.length) { st = STATUS.REJECTED; reasons.push("rejected in review: " + rej.map((e) => e.by + " " + (e.reason || "")).join("; ")); }
       else if (it.openFindings.length) { st = STATUS.REVIEW; reasons.push("open findings " + it.openFindings.join(", ")); }
       else if (ok.length) { const match = ok.some((e) => JSON.stringify(e.layers) === JSON.stringify(it.layers));
         st = match ? STATUS.APPROVED : STATUS.REVIEW; reasons.push(match ? "approved by the owner (" + ok.map((e) => e.ref || e.date).join(", ") + ")" : "an approval that no longer matches the layers"); }
       else { st = STATUS.CANDIDATE; reasons.push("technically OK, not reviewed"); } }
-    itemStatus[id] = { status: st, reasons, ...(it ? { run: it.run, method: it.method, layers: it.layers } : {}) }; }
+    itemStatus[id] = { status: st, reasons, assistant: assistant("item", id), ...(it ? { run: it.run, method: it.method, layers: it.layers } : {}) }; }
   const runOutfit = {}; for (const { dir, run } of runs) for (const [name, o] of Object.entries((run.package && run.package.outfits) || {})) if (!runOutfit[name]) runOutfit[name] = { ...o, run: dir, fullPngSha256: (run.package.files || {})["outfit-" + name + ".full.png"] || (run.package.files || {})["rejected-outfit-" + name + ".full.png"] || null };
   for (const name of m.outfits) { const ids = name.split("+"), st = ids.map((id) => itemStatus[id].status), o = runOutfit[name], reasons = [];
     let s;
     if (st.includes(STATUS.REJECTED)) { s = STATUS.REJECTED; reasons.push("contains a rejected item: " + ids.filter((id, k) => st[k] === STATUS.REJECTED).join(", ")); }
     else if (!o) { s = STATUS.UNTESTED; reasons.push(st.includes(STATUS.UNTESTED) ? "an item was never processed" : "not run"); }
     else if (o.status === "rejected") { s = STATUS.REJECTED; reasons.push("combination check: " + (o.failedChecks || []).join(", ")); }
-    else { const rej = verdict("outfit", name).filter((e) => e.verdict === "rejected"), ok = verdict("outfit", name).filter((e) => e.verdict === "approved" && e.by === "owner");
+    else { const rej = verdict("outfit", name).filter((e) => e.verdict === "rejected" && (e.by === "owner" || e.by === "assistant")), ok = verdict("outfit", name).filter((e) => e.verdict === "approved" && e.by === "owner");
       if (rej.length) { s = STATUS.REJECTED; reasons.push("rejected in review: " + rej.map((e) => e.by + " " + (e.reason || "")).join("; ")); }
       else if (o.status === "technically-ok-open-finding" || st.includes(STATUS.REVIEW)) { s = STATUS.REVIEW; reasons.push(o.status === "technically-ok-open-finding" ? "open findings " + (o.openFindings || []).join(", ") : "an item needs review"); }
       else if (ok.length && st.every((x) => x === STATUS.APPROVED) && ok.some((e) => e.fullPngSha256 === o.fullPngSha256)) { s = STATUS.APPROVED; reasons.push("approved by the owner"); }
       else { s = STATUS.CANDIDATE; reasons.push(ok.length ? "an approval that no longer matches, or an item not approved" : "technically OK, not reviewed"); } }
-    outfits[name] = { status: s, reasons, ...(o ? { run: o.run, fullPngSha256: o.fullPngSha256 } : {}) }; }
+    outfits[name] = { status: s, reasons, assistant: assistant("outfit", name), ...(o ? { run: o.run, fullPngSha256: o.fullPngSha256 } : {}) }; }
   const count = (map) => Object.fromEntries(Object.values(STATUS).map((v) => [v, Object.values(map).filter((x) => x.status === v).length]));
   const approvedItems = Object.keys(itemStatus).filter((id) => itemStatus[id].status === STATUS.APPROVED);
+  const free = freelyCombinable(approvedItems, (n) => (outfits[n] ? outfits[n].status : STATUS.UNTESTED), (id) => IP.ITEM_CATEGORY[id]);
   const amongApproved = m.outfits.filter((n) => n.split("+").every((id) => approvedItems.includes(id)));
-  return { decision: b.decision, batch: b.batch, rule: "a technical pass is never an approval; every combination keeps its status — none is hidden", items: itemStatus, outfits,
-    summary: { items: count(itemStatus), outfits: count(outfits), combinationsOfApprovedItems: amongApproved.length, approvedAmongThem: amongApproved.filter((n) => outfits[n].status === STATUS.APPROVED).length } };
+  return { decision: b.decision, batch: b.batch, rule: "a technical pass is never an approval; every combination keeps its status — none is hidden; only the freely combinable set may be offered as freely combinable", items: itemStatus, outfits,
+    summary: { items: count(itemStatus), outfits: count(outfits),
+      usableCandidates: { what: "items a person may use at all (approved), whatever they combine with", approvedItems: approvedItems.length },
+      investigation: { what: "a measurement, not a production approval", combinationsOfApprovedItems: amongApproved.length, approvedAmongThem: amongApproved.filter((n) => outfits[n].status === STATUS.APPROVED).length },
+      freelyCombinable: { what: "the set the catalogue may offer as freely combinable: every top × bottom × shoes of it is approved", ...free } } };
 }
 
 // ── 6. the export of approved items (runtime format, PRIVATE) ────────────────────────────────────────────────────────────────
-/** D-242's runtime format for the approved items and outfits, written OUTSIDE both clones: publishing new layers needs a new owner
- *  permission (D-242's exception covers its 31 files only). The manifest carries the whole register, rejected combinations included. */
+/** D-242's runtime format for the approved outfits, written OUTSIDE both clones: publishing new layers needs a new owner permission
+ *  (D-242's exception covers its 31 files only). The manifest carries the whole register and the freely combinable set. */
 export async function exportApproved(b, register, outDir, { cwebp, dwebp }) {
   if (!outsideRepo(outDir)) throw new Error("the export holds C-derived layers: write it outside the repository (D-127 §2; D-242's public exception is not extended)");
   const approved = Object.entries(register.outfits).filter(([, o]) => o.status === STATUS.APPROVED).map(([n]) => n);
@@ -206,7 +292,7 @@ export async function exportApproved(b, register, outDir, { cwebp, dwebp }) {
   const { files, itemTable, equivalence } = B.buildLayerSet({ P, origin, outfits, figureNames: L.NORTHSTAR_FIGURE, planOf: (o, t) => L.northstarPlanFor(o, t), compose: L.northstarCompose });
   const entries = B.writeLayerSet(files, outDir, { cwebp, dwebp });
   const manifest = { decision: b.decision, batch: b.batch, private: true, note: "runtime format of D-242; NOT for tracking or deployment without a new owner permission", items: itemTable,
-    outfits: Object.fromEntries(outfits), combinations: Object.fromEntries(Object.entries(register.outfits).map(([n, o]) => [n, o.status])), summary: register.summary, equivalence, files: entries };
+    outfits: Object.fromEntries(outfits), freelyCombinable: register.summary.freelyCombinable, combinations: Object.fromEntries(Object.entries(register.outfits).map(([n, o]) => [n, o.status])), summary: register.summary, equivalence, files: entries };
   mkdirSync(outDir, { recursive: true }); writeFileSync(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   return { files: entries.length, outfits: outfits.length };
 }
@@ -218,8 +304,9 @@ async function main() {
   const runsOf = () => (arg("--runs") || "").split(",").filter(Boolean).map((d) => ({ dir: relative(ARTEFACTS, resolve(d)).split("\\").join("/"), run: json(join(resolve(d), "run.json")) }));
   const reviewFile = join(BATCHES, b.batch + "-review-v1.json"), review = existsSync(reviewFile) ? json(reviewFile) : { entries: [] };
   if (cmd === "plan") { const prompts = buildPrompts(b), calls = buildCallPlan(b, prompts);
-    writeFileSync(join(BATCHES, b.batch + "-prompts-v1.json"), JSON.stringify(prompts, null, 2) + "\n"); writeFileSync(join(BATCHES, b.batch + "-calls-v1.json"), JSON.stringify(calls, null, 2) + "\n");
-    console.log(JSON.stringify({ designs: b.designs.length, distribution: v.distribution, calls: calls.budget, cost: calls.cost.total, combinations: matrix(b).outfits.length })); return; }
+    writeFileSync(join(BATCHES, b.batch + "-prompts-v1.json"), JSON.stringify(prompts, null, 2) + "\n"); writeFileSync(join(BATCHES, b.batch + "-prompts-v1.md"), promptsOverview(b, prompts) + "\n");
+    writeFileSync(join(BATCHES, b.batch + "-calls-v1.json"), JSON.stringify(calls, null, 2) + "\n");
+    console.log(JSON.stringify({ designs: b.designs.length, distribution: v.distribution, calls: calls.budget, cost: { perCallMax: calls.cost.perCallMax, totalMax: calls.cost.totalMax }, combinations: matrix(b).outfits.length })); return; }
   const out = arg("--out"); if (!out || !outsideRepo(out)) throw new Error("--out must be outside the repository");
   if (cmd === "manifests") { const receipts = json(resolve(arg("--receipts"))); mkdirSync(out, { recursive: true });
     for (const m of chunkManifests(b, receipts)) writeFileSync(join(out, "manifest-" + m.chunk + ".json"), JSON.stringify(m, null, 2) + "\n"); return; }
