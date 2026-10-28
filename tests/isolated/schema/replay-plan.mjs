@@ -111,7 +111,7 @@ export const NOT_IN_PRODUCTION = Object.freeze({
 // recorded as an open production task; nothing here changes production.
 export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
   "20260808010000_password_help_reserve_rpc.sql":
-    "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-241",
+    "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-243",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),

@@ -66,7 +66,7 @@ koden selv erklærer. Den skal ikke kopiere produktionens historiske afvigelser.
   - Ifølge ejeren har den deployede version 3 af `request-password-help` hidtil ikke brugt
     RPC'en. Det er ikke undersøgt i D-110. Driften er derfor **ikke** en bekræftet
     produktionsfejl: den betyder, at repositoryets funktion ikke kan deployes uden migrationen.
-  - **Udestående produktionsopgave (D-241):** afstem skema og funktion mellem repository og
+  - **Udestående produktionsopgave (D-243):** afstem skema og funktion mellem repository og
     produktion. Det kræver ejerens særskilte GO. Intet i D-110 ændrer produktionen.
   - Unit-testen `isolated-schema-replay.test.mjs` beviser på syntetiske rækker: RPC'ens krop er
     migrationens egen, kun `service_role` må kalde den, reservation, cooldown og dagligt loft

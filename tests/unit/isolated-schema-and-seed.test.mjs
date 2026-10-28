@@ -92,7 +92,7 @@ test("a migration with preconditions is applied only after its objects are verif
 
 test("not-in-production and manual lists carry catalog evidence, manual files are idempotent", () => {
   for (const r of Object.values(NOT_IN_PRODUCTION)) assert.match(r, /not applied in production/);
-  for (const r of Object.values(REPO_AHEAD_OF_PRODUCTION)) assert.match(r, /^repository ahead of production: .*open production task D-241/);
+  for (const r of Object.values(REPO_AHEAD_OF_PRODUCTION)) assert.match(r, /^repository ahead of production: .*open production task D-243/);
   assert.deepEqual(manual, Object.keys(MANUALLY_APPLIED_IN_PRODUCTION).sort());
   assert.deepEqual(notReplayed, []);
   for (const f of manual) {
