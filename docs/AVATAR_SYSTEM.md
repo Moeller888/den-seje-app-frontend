@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Northstar assistant review — D-240: method d240 (the assistant's review, not the owner's approval; no calls).**
+  - **Fixed.** The brown ankle boot's arch (K16, K18, K19): what a closed shoe hides is taken from the picture's own opaque
+    pixels joined to the shoe (`coverFromPicture`, 40 px). Nothing is painted; open footwear is untouched; the other five
+    shoes are byte-identical.
+  - **Correct and kept.** K17's ankle triangle and the beige sneakers' collar wedge are C's own skin with the picture's
+    shadow. The K01–K03 hem step is not a fault. All K01–K19 await the owner. See `docs/decisions/D-240.md`.
 - **Northstar targeted correction — D-239: method d239 (development, not a validation; no calls).**
   - **Corrected diagnoses.** N2's cut was a remnant of the limb's contour below the cuff, removed in the extraction. MF-2 is
     the top's open hip corner, not the trousers. MF-1 was shaded-skin antialias (corrected) plus a real gap between hem and
