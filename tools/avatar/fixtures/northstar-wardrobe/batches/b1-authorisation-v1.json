@@ -13,8 +13,18 @@
     "reserve": 4,
     "retries": 0,
     "automaticExtension": false,
-    "actuallySent": 2,
-    "enforcedLimit": "the call count; the price is an estimate (b1-calls-v1.json cost)"
+    "actuallySent": 6,
+    "enforcedLimit": "the call count; the price is an estimate (b1-calls-v1.json cost)",
+    "closed": {
+      "by": "D-248",
+      "reason": "checkpoint STOP (C1)",
+      "spent": 6,
+      "received": 5,
+      "uncertain": 1,
+      "closedUnused": 22,
+      "countedAsSent": false,
+      "reopen": "never automatically; only a new owner decision"
+    }
   },
   "privacy": {
     "cSentToApi": "allowed for this batch only (owner, 2026-10-28)",
@@ -208,8 +218,15 @@
         "filename": "B1-shoes-hightop-canvas-red.claim.json",
         "eventsFilename": "B1-shoes-hightop-canvas-red.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_e4371377cfe04ab7a830cd11d8607e63",
+        "imageSha256": "f5cad4c7b54a0511c63cd36e9986289057143795476542addb8e4a6c22b326dc",
+        "pipeline": "technically rejected: FIT-4 a 1 px hole (a real extraction hole between the laces)"
+      },
+      "recordedBy": "D-248"
     },
     {
       "callId": "B1-top-waist-boxy-peach",
@@ -228,8 +245,15 @@
         "filename": "B1-top-waist-boxy-peach.claim.json",
         "eventsFilename": "B1-top-waist-boxy-peach.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_3c7d689cc4e04b82b11d263a767fe64f",
+        "imageSha256": "b37cde195a4f12af0d32bae8f27305d5cf31450d32f3b9711bb6a21f7dee4195",
+        "pipeline": "technically rejected: E-2 detached paint; the sleeves over C's arms lost (skin-near colour explained as C)"
+      },
+      "recordedBy": "D-248"
     },
     {
       "callId": "B1-bottom-pleated-skirt-tartan",
@@ -248,8 +272,15 @@
         "filename": "B1-bottom-pleated-skirt-tartan.claim.json",
         "eventsFilename": "B1-bottom-pleated-skirt-tartan.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_662f5619a3c248e6a6b23032eb0fefdf",
+        "imageSha256": "b4fb9393db2c55fad01b59222468de2f4fe90a96724649b76413f8f778797348",
+        "pipeline": "technically OK"
+      },
+      "recordedBy": "D-248"
     },
     {
       "callId": "B1-shoes-desert-boots-tan",
@@ -268,8 +299,15 @@
         "filename": "B1-shoes-desert-boots-tan.claim.json",
         "eventsFilename": "B1-shoes-desert-boots-tan.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "SPENT",
+      "outcome": "RECEIVED_FOR_BF_CHECK",
+      "result": {
+        "httpStatus": 200,
+        "requestId": "req_5e00ca8eba2b4a889391b6b6033b578f",
+        "imageSha256": "d3c569322a054fe6a3314e220f8dbf0da58cde0a857e8872ec7c695a59f1ad4b",
+        "pipeline": "technically rejected: FIT-4/VIS-2 8,946 px holes; the suede over C's foot lost (skin-near colour explained as C)"
+      },
+      "recordedBy": "D-248"
     },
     {
       "callId": "B1-top-polo-navy",
@@ -288,8 +326,10 @@
         "filename": "B1-top-polo-navy.claim.json",
         "eventsFilename": "B1-top-polo-navy.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-joggers-heather",
@@ -308,8 +348,10 @@
         "filename": "B1-bottom-joggers-heather.claim.json",
         "eventsFilename": "B1-bottom-joggers-heather.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-chelsea-black",
@@ -328,8 +370,10 @@
         "filename": "B1-shoes-chelsea-black.claim.json",
         "eventsFilename": "B1-shoes-chelsea-black.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-top-flannel-check",
@@ -348,8 +392,10 @@
         "filename": "B1-top-flannel-check.claim.json",
         "eventsFilename": "B1-top-flannel-check.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-cargo-shorts-khaki",
@@ -368,8 +414,10 @@
         "filename": "B1-bottom-cargo-shorts-khaki.claim.json",
         "eventsFilename": "B1-bottom-cargo-shorts-khaki.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-hiking-boots-grey",
@@ -388,8 +436,10 @@
         "filename": "B1-shoes-hiking-boots-grey.claim.json",
         "eventsFilename": "B1-shoes-hiking-boots-grey.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-top-cableknit-oat",
@@ -408,8 +458,10 @@
         "filename": "B1-top-cableknit-oat.claim.json",
         "eventsFilename": "B1-top-cableknit-oat.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-cord-trousers-brown",
@@ -428,8 +480,10 @@
         "filename": "B1-bottom-cord-trousers-brown.claim.json",
         "eventsFilename": "B1-bottom-cord-trousers-brown.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-rain-boots-yellow",
@@ -448,8 +502,10 @@
         "filename": "B1-shoes-rain-boots-yellow.claim.json",
         "eventsFilename": "B1-shoes-rain-boots-yellow.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-top-raglan-colourblock",
@@ -468,8 +524,10 @@
         "filename": "B1-top-raglan-colourblock.claim.json",
         "eventsFilename": "B1-top-raglan-colourblock.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-linen-straight-white",
@@ -488,8 +546,10 @@
         "filename": "B1-bottom-linen-straight-white.claim.json",
         "eventsFilename": "B1-bottom-linen-straight-white.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-runners-panels",
@@ -508,8 +568,10 @@
         "filename": "B1-shoes-runners-panels.claim.json",
         "eventsFilename": "B1-shoes-runners-panels.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-top-track-jacket-green",
@@ -528,8 +590,10 @@
         "filename": "B1-top-track-jacket-green.claim.json",
         "eventsFilename": "B1-top-track-jacket-green.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-denim-skirt-light",
@@ -548,8 +612,10 @@
         "filename": "B1-bottom-denim-skirt-light.claim.json",
         "eventsFilename": "B1-bottom-denim-skirt-light.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-checker-midtop",
@@ -568,8 +634,10 @@
         "filename": "B1-shoes-checker-midtop.claim.json",
         "eventsFilename": "B1-shoes-checker-midtop.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-top-dot-shirt-red",
@@ -588,8 +656,10 @@
         "filename": "B1-top-dot-shirt-red.claim.json",
         "eventsFilename": "B1-top-dot-shirt-red.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-bottom-sport-shorts-stripe",
@@ -608,8 +678,10 @@
         "filename": "B1-bottom-sport-shorts-stripe.claim.json",
         "eventsFilename": "B1-bottom-sport-shorts-stripe.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-shoes-winter-boots-navy",
@@ -628,8 +700,10 @@
         "filename": "B1-shoes-winter-boots-navy.claim.json",
         "eventsFilename": "B1-shoes-winter-boots-navy.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-reserve-1",
@@ -643,8 +717,10 @@
         "filename": "B1-reserve-1.claim.json",
         "eventsFilename": "B1-reserve-1.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-reserve-2",
@@ -658,8 +734,10 @@
         "filename": "B1-reserve-2.claim.json",
         "eventsFilename": "B1-reserve-2.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-reserve-3",
@@ -673,8 +751,10 @@
         "filename": "B1-reserve-3.claim.json",
         "eventsFilename": "B1-reserve-3.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     },
     {
       "callId": "B1-reserve-4",
@@ -688,8 +768,10 @@
         "filename": "B1-reserve-4.claim.json",
         "eventsFilename": "B1-reserve-4.events.jsonl"
       },
-      "mandateState": "UNSPENT",
-      "outcome": "NOT YET ATTEMPTED"
+      "mandateState": "CLOSED_UNUSED",
+      "outcome": "NOT SENT — closed unused after the checkpoint STOP",
+      "closedBy": "D-248",
+      "neverReopened": true
     }
   ],
   "adapterImplementations": {
