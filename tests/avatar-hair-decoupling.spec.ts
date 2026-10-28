@@ -16,7 +16,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -136,6 +136,7 @@ async function loginAsStudent(page: any) {
 
 async function gotoLoginReduced(page: any) {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
 }
 

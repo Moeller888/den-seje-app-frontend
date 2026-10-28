@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { PROD } from "./helpers.js";
+import { PROD, serveCheckoutLogin } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -30,6 +30,7 @@ test("1. Quiz reaches ready state — no error or stuck state on normal load", a
 }) => {
   test.skip(browserName !== "chromium", "dedup");
 
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
@@ -75,6 +76,7 @@ test("3. Session recovery — student can return to login at any time", async ({
   test.skip(browserName !== "chromium", "dedup");
 
   // Start a quiz session
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
@@ -87,6 +89,7 @@ test("3. Session recovery — student can return to login at any time", async ({
   // Session recovery: the universal recovery path is direct navigation to login.html.
   // (The in-app logout button is intentionally aria-hidden by the avatar presence
   // engine — it does not render as a visible UI element during the quiz.)
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
 
   // Login page must render cleanly without crashing or redirecting away

@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { PROD } from './helpers.js';
+import { PROD, serveCheckoutLogin } from './helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -57,6 +57,7 @@ test('Shows empty state when no questions are available', async ({ page }) => {
     });
   });
 
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`);
 
   await page.fill('input[type="email"]', TEST_STUDENT_EMAIL);

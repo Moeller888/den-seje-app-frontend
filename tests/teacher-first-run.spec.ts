@@ -423,6 +423,20 @@ test("8c. a pupil's very first login (no grade, no identity, no placement) also 
   expect(quizRequests, "login never loads the quiz (and so never starts the placement test)").toEqual([]);
 });
 
+for (const [role, target] of [["teacher", "teacher"], ["super_admin", "admin"]]) {
+  test(`8d. a ${role} still lands on ${target}.html — never on the Hub`, async ({ page }) => {
+    const hubRequests: string[] = [];
+    page.on("request", (r) => { if (new URL(r.url()).pathname.endsWith("/hub.html")) hubRequests.push(r.url()); });
+    await page.route(`**/${target}.html`, (r) => r.fulfill({ status: 200, contentType: "text/html", body: `<p>${target}</p>` }));
+    await open(page, "/login.html", { session: null, profile: { role, must_reset_password: false } });
+    await page.locator("#email").fill("laerer@skole.dk");
+    await page.locator("#password").fill(TEMP_PW);
+    await page.locator("#loginBtn").click();
+    await expect(page).toHaveURL(new RegExp(`/${target}\\.html$`));
+    expect(hubRequests, `${role} is never sent to the Hub`).toEqual([]);
+  });
+}
+
 // ── 9. auth on teacher.html is unchanged ─────────────────────────────────────────────────────
 
 test("9. teacher.html still sends a non-teacher, and a signed-out visitor, back to login", async ({ page }) => {

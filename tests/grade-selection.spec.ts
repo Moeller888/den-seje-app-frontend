@@ -12,7 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -43,6 +43,7 @@ test.afterAll(async () => {
 
 // Helper: log in as student (lands on the Hub), then open the quiz (index.html).
 async function loginAndWaitForApp(page: any): Promise<void> {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);

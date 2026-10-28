@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { findAuthUserByEmail, PROD, TEACHER_EMAIL, TEACHER_PASSWORD } from "./helpers.js";
+import { findAuthUserByEmail, PROD, serveCheckoutLogin, TEACHER_EMAIL, TEACHER_PASSWORD } from "./helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -80,6 +80,7 @@ async function setIdentity(identity: any) {
 }
 
 async function loginAsStudent(page: any) {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", STUDENT_EMAIL);
   await page.fill("#password", STUDENT_PASS);
@@ -190,6 +191,7 @@ test("4. 'Vælg senere' dismisses without writing and re-prompts next login", as
 test("5. Teachers never see the identity prompt", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "UI dedup");
 
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: "domcontentloaded" });
   await page.fill("#email", TEACHER_EMAIL);
   await page.fill("#password", TEACHER_PASSWORD);

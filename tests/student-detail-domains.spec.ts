@@ -6,7 +6,7 @@
  * cover the auth guard — the only paths exercisable without teacher credentials.
  */
 import { test, expect } from '@playwright/test';
-import { PROD } from './helpers.js';
+import { PROD, serveCheckoutLogin } from './helpers.js';
 
 const STUDENT_EMAIL    = process.env.TEST_STUDENT_EMAIL!;
 const STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD!;
@@ -23,6 +23,7 @@ test.describe('student-detail.html — auth guards', () => {
 
   test('2. Student role (non-teacher) access redirects to login', async ({ page }) => {
     // Log in as the student account
+    await serveCheckoutLogin(page);
     await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
     await page.fill('#email', STUDENT_EMAIL);
     await page.fill('#password', STUDENT_PASSWORD);

@@ -7,7 +7,7 @@
  * Chromium + WebKit only.
  */
 import { test, expect } from '@playwright/test';
-import { PROD } from './helpers.js';
+import { PROD, serveCheckoutLogin } from './helpers.js';
 
 // Skip entire file on Firefox — isMobile is not supported
 test.beforeEach(async ({}, testInfo) => {
@@ -36,6 +36,7 @@ const iPhoneSE = {
 };
 
 async function loginAndWait(page: any) {
+  await serveCheckoutLogin(page);
   await page.goto(`${PROD}/login.html`, { waitUntil: 'domcontentloaded' });
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
