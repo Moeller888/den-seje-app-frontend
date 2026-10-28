@@ -181,3 +181,12 @@ test("engagement-panel finds student2's row by its own address, not the producti
   assert.doesNotMatch(spec, /hasText: "student-teacher-test"/);
   assert.match(spec, /const STUDENT2_DISPLAY_NAME = STUDENT2_EMAIL\.split\("@"\)\[0\];/);
 });
+
+test("every iptables/ip6tables call waits for the xtables lock (Docker holds it while containers start)", () => {
+  for (const f of ["../../.github/workflows/isolated-e2e.yml", "../isolated/egress-firewall.sh"]) {
+    const src = readFileSync(new URL(f, import.meta.url), "utf8");
+    const calls = src.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n").match(/\bip6?tables\b[^\n]*/g) ?? [];
+    assert.ok(calls.length > 0, f);
+    for (const c of calls) assert.match(c, /^ip6?tables -w 30 /, `${f}: ${c}`);
+  }
+});

@@ -188,6 +188,8 @@ jobs:
       - name: Build this commit's deploy bundle and serve it on loopback
         run: |
           set -euo pipefail
+          # Traced: a failing check here must name its command (keys and URLs are masked by Actions).
+          set -x
           node tools/cloudflare-build-static.mjs
           # The CDN modules the frontend imports (supabase-js), fetched once before the network lock and
           # served from loopback (tests/isolated/cdn-mirror.mjs).
@@ -198,7 +200,7 @@ jobs:
           # answer those two hosts locally with the same mirrored bytes (tests/isolated/cdn-https.mjs).
           openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=cdn.jsdelivr.net" -addext "subjectAltName=DNS:cdn.jsdelivr.net,DNS:esm.sh"             -keyout "$RUNNER_TEMP/cdn-key.pem" -out "$RUNNER_TEMP/cdn-cert.pem" 2> /dev/null
           nohup node tests/isolated/cdn-https.mjs "$RUNNER_TEMP/cdn-mirror" "$RUNNER_TEMP/cdn-cert.pem" "$RUNNER_TEMP/cdn-key.pem" 8443 > "$RUNNER_TEMP/cdn.log" 2>&1 &
-          sudo iptables -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to-ports 8443
+          sudo iptables -w 30 -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to-ports 8443
           echo "127.0.0.1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts > /dev/null
           for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
           # Fetch to a file first, then grep: under pipefail `curl | grep -q` can fail on SIGPIPE, and the
@@ -235,6 +237,7 @@ jobs:
         run: |
           tail -80 "$RUNNER_TEMP/functions.log" || true
           tail -40 "$RUNNER_TEMP/serve.log" || true
+          tail -20 "$RUNNER_TEMP/cdn.log" || true
 
       - name: Upload report
         if: always()

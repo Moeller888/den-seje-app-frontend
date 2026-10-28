@@ -18,22 +18,22 @@ GROUP_NAME="${ISOLATED_GROUP:-e2eiso}"
 PRIVATE_NETS=(127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16)
 
 lock() {
-  sudo iptables -N ISO_EGRESS_USER
-  sudo iptables -A ISO_EGRESS_USER -o lo -j RETURN
-  for n in "${PRIVATE_NETS[@]}"; do sudo iptables -A ISO_EGRESS_USER -d "$n" -j RETURN; done
-  sudo iptables -A ISO_EGRESS_USER -j REJECT
-  sudo iptables -I OUTPUT 1 -m owner --gid-owner "$GROUP_NAME" -j ISO_EGRESS_USER
+  sudo iptables -w 30 -N ISO_EGRESS_USER
+  sudo iptables -w 30 -A ISO_EGRESS_USER -o lo -j RETURN
+  for n in "${PRIVATE_NETS[@]}"; do sudo iptables -w 30 -A ISO_EGRESS_USER -d "$n" -j RETURN; done
+  sudo iptables -w 30 -A ISO_EGRESS_USER -j REJECT
+  sudo iptables -w 30 -I OUTPUT 1 -m owner --gid-owner "$GROUP_NAME" -j ISO_EGRESS_USER
 
-  sudo ip6tables -N ISO_EGRESS_USER6
-  sudo ip6tables -A ISO_EGRESS_USER6 -o lo -j RETURN
-  sudo ip6tables -A ISO_EGRESS_USER6 -j REJECT
-  sudo ip6tables -I OUTPUT 1 -m owner --gid-owner "$GROUP_NAME" -j ISO_EGRESS_USER6
+  sudo ip6tables -w 30 -N ISO_EGRESS_USER6
+  sudo ip6tables -w 30 -A ISO_EGRESS_USER6 -o lo -j RETURN
+  sudo ip6tables -w 30 -A ISO_EGRESS_USER6 -j REJECT
+  sudo ip6tables -w 30 -I OUTPUT 1 -m owner --gid-owner "$GROUP_NAME" -j ISO_EGRESS_USER6
 
-  sudo iptables -N ISO_EGRESS_DOCKER
-  sudo iptables -A ISO_EGRESS_DOCKER -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
-  for n in "${PRIVATE_NETS[@]}"; do sudo iptables -A ISO_EGRESS_DOCKER -d "$n" -j RETURN; done
-  sudo iptables -A ISO_EGRESS_DOCKER -j REJECT
-  sudo iptables -I DOCKER-USER 1 -j ISO_EGRESS_DOCKER
+  sudo iptables -w 30 -N ISO_EGRESS_DOCKER
+  sudo iptables -w 30 -A ISO_EGRESS_DOCKER -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+  for n in "${PRIVATE_NETS[@]}"; do sudo iptables -w 30 -A ISO_EGRESS_DOCKER -d "$n" -j RETURN; done
+  sudo iptables -w 30 -A ISO_EGRESS_DOCKER -j REJECT
+  sudo iptables -w 30 -I DOCKER-USER 1 -j ISO_EGRESS_DOCKER
   echo "egress lock: installed for group $GROUP_NAME and all containers"
 }
 
