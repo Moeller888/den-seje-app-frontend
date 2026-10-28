@@ -97,5 +97,27 @@ test("the suite config refuses unless started by the runner, and proxies every b
   const cfg = readFileSync(new URL("../isolated/playwright.suite.config.ts", import.meta.url), "utf8");
   assert.match(cfg, /process\.env\.ISOLATED_SUITE !== "1"/);
   assert.match(cfg, /\^http:\\\/\\\/127\\\.0\\\.0\\\.1:\\d\+\$/);
-  assert.match(cfg, /projects: \(base\.projects \?\? \[\]\)\.map\(\(p\) => \(\{ \.\.\.p, use: \{ \.\.\.\(p\.use \?\? \{\}\), proxy \} \}\)\)/);
+  assert.match(cfg, /projects: \(base\.projects \?\? \[\]\)\.map\(\(p\) => \(\{ \.\.\.p, use: \{ \.\.\.\(p\.use \?\? \{\}\), proxy, ignoreHTTPSErrors: true \} \}\)\)/);
+  // Only loopback and the two locally served CDN hosts bypass the tripwire.
+  assert.match(cfg, /bypass: "127\.0\.0\.1,localhost,::1,cdn\.jsdelivr\.net,esm\.sh"/);
+});
+
+test("the local CDN stand-in answers only the two CDN hosts, only with mirrored modules", async () => {
+  const { lookup, CDN_HOSTS } = await import("../isolated/cdn-https.mjs");
+  assert.deepEqual(CDN_HOSTS, ["cdn.jsdelivr.net", "esm.sh"]);
+  const mirror = { index: { "https://cdn.jsdelivr.net/npm/a@1/+esm": { key: "k", type: "text/javascript" } }, read: () => "export const a = 1;" };
+  assert.deepEqual(lookup(mirror, "cdn.jsdelivr.net", "/npm/a@1/+esm"), { body: "export const a = 1;", type: "text/javascript" });
+  assert.deepEqual(lookup(mirror, "CDN.JSDELIVR.NET:443", "/npm/a@1/+esm")?.body, "export const a = 1;");
+  assert.equal(lookup(mirror, "cdn.jsdelivr.net", "/npm/b@1/+esm"), null, "not mirrored → 404");
+  assert.equal(lookup(mirror, "evil.example", "/npm/a@1/+esm"), null, "another host → 404");
+});
+
+test("the workflow maps the CDN hosts to loopback only after the mirror is fetched, and checks it", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const fetchAt = wf.indexOf("cdn-mirror.mjs --fetch");
+  const hostsAt = wf.indexOf('echo "127.0.0.1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts');
+  const lockAt = wf.indexOf("egress-firewall.sh lock");
+  assert.ok(fetchAt > 0 && hostsAt > fetchAt && lockAt > hostsAt);
+  assert.match(wf, /getent hosts cdn\.jsdelivr\.net/);
+  assert.match(wf, /-subj "\/CN=cdn\.jsdelivr\.net"\s+-addext "subjectAltName=DNS:cdn\.jsdelivr\.net,DNS:esm\.sh"/);
 });
