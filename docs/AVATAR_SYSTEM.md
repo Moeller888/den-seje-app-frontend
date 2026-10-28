@@ -385,6 +385,12 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Batch b1 authorised — D-246: at most 24 + 4 calls; NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-batch-b1.mjs`, the D-235 one-shot model. Before every send it re-composes and
+    validates the prompt. It enforces the order, a pipeline record per received picture, the second format/moderation/G-1 stops,
+    9 technical rejections, `B1-STOP.json`, the checkpoint gate (`B1-CHECKPOINT.json`, C1–C5) and the reserve rule.
+  - **Files.** Authorisation in `batches/b1-authorisation-v1.json`; the plan stays unauthorised. Technical pass = candidate only;
+    nothing published. See `docs/decisions/D-246.md`.
 - **b1 plan corrected — D-245 (before any authorisation; no calls).**
   - **Prompts.** Strict lookups and `validatePrompt` on every finished prompt; readable `batches/b1-prompts-v1.md`.
   - **Prompt defect.** The five bottom calls of D-228/D-235 were sent with "undefined" instead of the bottoms instruction

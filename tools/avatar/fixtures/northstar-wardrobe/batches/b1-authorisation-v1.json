@@ -1,0 +1,688 @@
+{
+  "decision": "D-246",
+  "batch": "b1",
+  "status": "AUTHORISED by D-246 (D-246 BATCH b1: 24 CALLS AND 4 RESERVE CALLS AUTHORISED): each entry is ONE single-use call; the plan b1-calls-v1.json stays the unauthorised plan it was",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-246's decision status plus this file's unspent entries, never a general boolean",
+    "kind": "a production-readiness batch: no catalogue, no runtime, no activation"
+  },
+  "budget": {
+    "authorised": 28,
+    "designs": 24,
+    "reserve": 4,
+    "retries": 0,
+    "automaticExtension": false,
+    "actuallySent": 0,
+    "enforcedLimit": "the call count; the price is an estimate (b1-calls-v1.json cost)"
+  },
+  "privacy": {
+    "cSentToApi": "allowed for this batch only (owner, 2026-10-28)",
+    "referenceSheetsSentToApi": "allowed for this batch only (C-derived, the D-235 v2 sheets)",
+    "publishOrTrack": "never — C, the sheets, the raw results and every export stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "method": "d240",
+    "contract": "seam-contract-v2",
+    "outfitRevision": "d239",
+    "planDecision": "D-245",
+    "files": {
+      "b1-designs-v1.json": "4a7ab556f51a180aac4f3c036ec4794b0e29598a79a0199fa4664603faf7dc62",
+      "b1-prompts-v1.json": "414c00967c4f38f5ded1b20f3ecb5db45b82327ae24fe105614dfa2b50507d90",
+      "b1-prompts-v1.md": "d277c71e192401dfc62228c245b34685440347c167b5bb8d999ab08189136d7a",
+      "b1-calls-v1.json": "8fc4bbabf3be570ceb4b84023bbe421da3168ba32e42a9cef516322ec559cadf"
+    }
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "modelNote": "the model of D-207, D-218 and D-228, unchanged; never switched silently — another model is a new decision",
+    "parameters": {
+      "size": "1024x1536",
+      "quality": "high",
+      "n": 1,
+      "output_format": "png",
+      "background": "transparent"
+    },
+    "fieldOrder": [
+      "model",
+      "image[]",
+      "image[]",
+      "prompt",
+      "size",
+      "quality",
+      "n",
+      "output_format",
+      "background"
+    ],
+    "neverSentFields": [
+      "mask",
+      "input_fidelity",
+      "output_compression",
+      "response_format",
+      "moderation"
+    ],
+    "images": [
+      {
+        "role": "Image 1",
+        "what": "C",
+        "name": "d202-base-figure-v2.image-1.png",
+        "bytes": 1300423,
+        "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818",
+        "tracked": false
+      }
+    ],
+    "image2": "the reference sheet of the call's category drawn for seam-contract-v2",
+    "references": {
+      "top": {
+        "name": "seam-reference-top.png",
+        "bytes": 1866765,
+        "sha256": "46cbc4059c1a6022e9a57aa7753cc38909e6f10c6f3063c7f4eaf1f3e51be938",
+        "tracked": false
+      },
+      "bottom": {
+        "name": "seam-reference-bottom.png",
+        "bytes": 1886937,
+        "sha256": "cf878a951dabfe168c7c0bf429a885f33bd7d55865964ee2c9cd30069ac55f68",
+        "tracked": false
+      },
+      "shoes": {
+        "name": "seam-reference-shoes.png",
+        "bytes": 1892886,
+        "sha256": "521460153f2abb20ef779680aa8dd1519699f97abaff0ba2765a86a873230037",
+        "tracked": false
+      }
+    },
+    "referenceLocation": "<Documents>/DenSejeApp-artefacts/d-235-independent-validation/references/v2/<category>/seam-reference-<category>.png",
+    "referenceGenerator": "node tools/avatar/northstar-item-pilot.mjs --seam-reference <top|bottom|shoes> --contract v2 --out <empty dir> (deterministic; v1 redrawn gives D-228's pins byte for byte)",
+    "prompts": {
+      "file": "independent-validation-prompts-v1.json",
+      "sha256": "a6c6489b92d9ef410ebe7dc870f0e1a28f86c6f329703adb8a876c3fdd5bf184"
+    }
+  },
+  "stopRules": [
+    "credit or access: HTTP 401, 403 or 429, or an error code naming quota or billing",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx",
+    "format: a second received picture that is not a 1024x1536 RGBA PNG (the first may be resent with a reserve)",
+    "moderation: a second moderation block (the first may be resent with a reserve)",
+    "registration: a second registration failure G-1 in the pipeline records (the first may be resent with a reserve)",
+    "processing: a received picture without its pipeline record (b1.pipeline.json) stops the next call until it is processed",
+    "technical rejections: 9 of the pipeline records",
+    "checkpoint: no call after the six checkpoint calls without B1-CHECKPOINT.json whose verdict is CONTINUE with C1–C5 passed",
+    "the executor's stop file B1-STOP.json (a common method failure, e.g. reference marks drawn into two pictures)"
+  ],
+  "checkpoint": {
+    "designs": [
+      "top-breton-longsleeve",
+      "bottom-jeans-straight-indigo",
+      "shoes-hightop-canvas-red",
+      "top-waist-boxy-peach",
+      "bottom-pleated-skirt-tartan",
+      "shoes-desert-boots-tan"
+    ],
+    "rules": [
+      "PROMPT: before every send the adapter re-composes the prompt, checks validatePrompt and its pinned sha256; any failure stops the WHOLE batch (our tool's fault: no reserve, no resend)",
+      "AFTER THE SIX CHECKPOINT CALLS the six are processed (method d240, outfit check d239) with the existing items, BEFORE call 7 is sent; the batch stops when ANY of these holds:",
+      "  C1 two or more of the six are technically rejected for the same fault class (generation, extraction or fit), or three or more in all",
+      "  C2 a checkpoint bottom fails a rule its now-sent instruction names: SC-W3 (waistband zone), SC-W6 (hip width) or SC-L1 (hem band) — the corrected instruction is not followed",
+      "  C3 a received picture carries reference marks, fails registration (G-1), or is not a 1024x1536 RGBA PNG twice",
+      "  C4 the outfits of the six with the existing items: fewer than half technically OK",
+      "  C5 the token usage in the six responses (response.json usage) × the documented price exceeds 6 × the documented per-call maximum by more than 50 % (the price assumption is wrong)",
+      "otherwise the remaining 18 are sent in order without further owner input"
+    ],
+    "verdictFile": "B1-CHECKPOINT.json"
+  },
+  "reserveRule": "at most 4 reserve calls, each only to resend a design whose RECEIPT failed for a reason in the API's answer, not in the design and not in our tools: a picture that is not a 1024x1536 RGBA PNG, a first moderation block, or a registration failure (G-1) of the received picture. Never for a disliked look, a prompt or tool fault, or an uncertain dispatch (DISPATCHED_RESULT_UNKNOWN and the like are spent and never resent automatically); never twice for one design.",
+  "calls": [
+    {
+      "callId": "B1-top-breton-longsleeve",
+      "order": 1,
+      "checkpoint": true,
+      "item": "top-breton-longsleeve",
+      "category": "top",
+      "prompt": {
+        "item": "top-breton-longsleeve",
+        "sha256": "fedf9713a2e98cc2eebb696485bcd4b10033d9b7c18ebbc92bbb9d8b8cafeaa4",
+        "bytes": 1537
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-breton-longsleeve-claim",
+        "filename": "B1-top-breton-longsleeve.claim.json",
+        "eventsFilename": "B1-top-breton-longsleeve.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-jeans-straight-indigo",
+      "order": 2,
+      "checkpoint": true,
+      "item": "bottom-jeans-straight-indigo",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-jeans-straight-indigo",
+        "sha256": "dc12480a7ba3bb379da51d2d7822cf10f912f2660f50080bca56d9e6751bc115",
+        "bytes": 1567
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-jeans-straight-indigo-claim",
+        "filename": "B1-bottom-jeans-straight-indigo.claim.json",
+        "eventsFilename": "B1-bottom-jeans-straight-indigo.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-hightop-canvas-red",
+      "order": 3,
+      "checkpoint": true,
+      "item": "shoes-hightop-canvas-red",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-hightop-canvas-red",
+        "sha256": "7efb6fbe3246569c5bf0cb708e00cd8ef7457e9bb2de1b431233839f280b8476",
+        "bytes": 1151
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-hightop-canvas-red-claim",
+        "filename": "B1-shoes-hightop-canvas-red.claim.json",
+        "eventsFilename": "B1-shoes-hightop-canvas-red.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-waist-boxy-peach",
+      "order": 4,
+      "checkpoint": true,
+      "item": "top-waist-boxy-peach",
+      "category": "top",
+      "prompt": {
+        "item": "top-waist-boxy-peach",
+        "sha256": "cc365f072781d25b5b92ffa11f3b10937b9b1e7fdbca6fe0b5f4464d1cef26ef",
+        "bytes": 1549
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-waist-boxy-peach-claim",
+        "filename": "B1-top-waist-boxy-peach.claim.json",
+        "eventsFilename": "B1-top-waist-boxy-peach.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-pleated-skirt-tartan",
+      "order": 5,
+      "checkpoint": true,
+      "item": "bottom-pleated-skirt-tartan",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-pleated-skirt-tartan",
+        "sha256": "875c6cb51d94b84ce7c01fe96b09a1525ef20ac4dae493c847edef92516d92b5",
+        "bytes": 1609
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-pleated-skirt-tartan-claim",
+        "filename": "B1-bottom-pleated-skirt-tartan.claim.json",
+        "eventsFilename": "B1-bottom-pleated-skirt-tartan.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-desert-boots-tan",
+      "order": 6,
+      "checkpoint": true,
+      "item": "shoes-desert-boots-tan",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-desert-boots-tan",
+        "sha256": "24baadf06adffa574b51bc3f372618d4273690b07b39a1fe3d6bbc4fa9ceb01b",
+        "bytes": 1113
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-desert-boots-tan-claim",
+        "filename": "B1-shoes-desert-boots-tan.claim.json",
+        "eventsFilename": "B1-shoes-desert-boots-tan.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-polo-navy",
+      "order": 7,
+      "checkpoint": false,
+      "item": "top-polo-navy",
+      "category": "top",
+      "prompt": {
+        "item": "top-polo-navy",
+        "sha256": "7b036f49ca418db63b1cf8ece847c7e1d5605c7ec2206fc1a21e31aaf62d1eb7",
+        "bytes": 1594
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-polo-navy-claim",
+        "filename": "B1-top-polo-navy.claim.json",
+        "eventsFilename": "B1-top-polo-navy.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-joggers-heather",
+      "order": 8,
+      "checkpoint": false,
+      "item": "bottom-joggers-heather",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-joggers-heather",
+        "sha256": "dd88a13c4b2e9262b543ed7039360ad1442666d300de970582772796001558d3",
+        "bytes": 1575
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-joggers-heather-claim",
+        "filename": "B1-bottom-joggers-heather.claim.json",
+        "eventsFilename": "B1-bottom-joggers-heather.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-chelsea-black",
+      "order": 9,
+      "checkpoint": false,
+      "item": "shoes-chelsea-black",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-chelsea-black",
+        "sha256": "541bee48dc7a9e958d172d318b4f951bcf8682f207768115ee157e1787b7ef77",
+        "bytes": 1136
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-chelsea-black-claim",
+        "filename": "B1-shoes-chelsea-black.claim.json",
+        "eventsFilename": "B1-shoes-chelsea-black.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-flannel-check",
+      "order": 10,
+      "checkpoint": false,
+      "item": "top-flannel-check",
+      "category": "top",
+      "prompt": {
+        "item": "top-flannel-check",
+        "sha256": "2e68a3b975aacfaa0cbad6d6b4f2d66579edb28d2919781000af2421a53d2e32",
+        "bytes": 1566
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-flannel-check-claim",
+        "filename": "B1-top-flannel-check.claim.json",
+        "eventsFilename": "B1-top-flannel-check.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-cargo-shorts-khaki",
+      "order": 11,
+      "checkpoint": false,
+      "item": "bottom-cargo-shorts-khaki",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-cargo-shorts-khaki",
+        "sha256": "3a74a204edc15c7a6fa06a15fc2a54dcfdf8456e20fab77e1708ab4827673e82",
+        "bytes": 1548
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-cargo-shorts-khaki-claim",
+        "filename": "B1-bottom-cargo-shorts-khaki.claim.json",
+        "eventsFilename": "B1-bottom-cargo-shorts-khaki.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-hiking-boots-grey",
+      "order": 12,
+      "checkpoint": false,
+      "item": "shoes-hiking-boots-grey",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-hiking-boots-grey",
+        "sha256": "6b4683cecc5749a983a15c38458d593528d87bb1f2636686c9b38830283db288",
+        "bytes": 1139
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-hiking-boots-grey-claim",
+        "filename": "B1-shoes-hiking-boots-grey.claim.json",
+        "eventsFilename": "B1-shoes-hiking-boots-grey.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-cableknit-oat",
+      "order": 13,
+      "checkpoint": false,
+      "item": "top-cableknit-oat",
+      "category": "top",
+      "prompt": {
+        "item": "top-cableknit-oat",
+        "sha256": "c502aba40498b4ec42f3ed31ee52a41966d550baec5b15ef76cf8b855d87928e",
+        "bytes": 1548
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-cableknit-oat-claim",
+        "filename": "B1-top-cableknit-oat.claim.json",
+        "eventsFilename": "B1-top-cableknit-oat.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-cord-trousers-brown",
+      "order": 14,
+      "checkpoint": false,
+      "item": "bottom-cord-trousers-brown",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-cord-trousers-brown",
+        "sha256": "5656b4f9fbb6bbaf02281e007bbe2974db35b8fd15523a15383eb0324975b8ba",
+        "bytes": 1572
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-cord-trousers-brown-claim",
+        "filename": "B1-bottom-cord-trousers-brown.claim.json",
+        "eventsFilename": "B1-bottom-cord-trousers-brown.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-rain-boots-yellow",
+      "order": 15,
+      "checkpoint": false,
+      "item": "shoes-rain-boots-yellow",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-rain-boots-yellow",
+        "sha256": "c095fb390a29d6eaada9f02b4a4c5adad4f63fc0a48c85775acf391c1e5b0ae1",
+        "bytes": 1127
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-rain-boots-yellow-claim",
+        "filename": "B1-shoes-rain-boots-yellow.claim.json",
+        "eventsFilename": "B1-shoes-rain-boots-yellow.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-raglan-colourblock",
+      "order": 16,
+      "checkpoint": false,
+      "item": "top-raglan-colourblock",
+      "category": "top",
+      "prompt": {
+        "item": "top-raglan-colourblock",
+        "sha256": "af6d6ebb873a433dee73069130564c53a5c4489d1466f7038adee7a081ccd9ef",
+        "bytes": 1546
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-raglan-colourblock-claim",
+        "filename": "B1-top-raglan-colourblock.claim.json",
+        "eventsFilename": "B1-top-raglan-colourblock.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-linen-straight-white",
+      "order": 17,
+      "checkpoint": false,
+      "item": "bottom-linen-straight-white",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-linen-straight-white",
+        "sha256": "eed0e272e5b8879f87f66652c4f24b1ad1568d0352b02638d850fe48af17ce88",
+        "bytes": 1565
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-linen-straight-white-claim",
+        "filename": "B1-bottom-linen-straight-white.claim.json",
+        "eventsFilename": "B1-bottom-linen-straight-white.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-runners-panels",
+      "order": 18,
+      "checkpoint": false,
+      "item": "shoes-runners-panels",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-runners-panels",
+        "sha256": "332f91851ec8e132cb6e412088b1615bfa3321fe691c021d372cf1843627c214",
+        "bytes": 1119
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-runners-panels-claim",
+        "filename": "B1-shoes-runners-panels.claim.json",
+        "eventsFilename": "B1-shoes-runners-panels.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-track-jacket-green",
+      "order": 19,
+      "checkpoint": false,
+      "item": "top-track-jacket-green",
+      "category": "top",
+      "prompt": {
+        "item": "top-track-jacket-green",
+        "sha256": "ad62d550e736fe71cfbb3df0b2571a42be15f1f9590d2cae63ed0b05e4569fea",
+        "bytes": 1577
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-track-jacket-green-claim",
+        "filename": "B1-top-track-jacket-green.claim.json",
+        "eventsFilename": "B1-top-track-jacket-green.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-denim-skirt-light",
+      "order": 20,
+      "checkpoint": false,
+      "item": "bottom-denim-skirt-light",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-denim-skirt-light",
+        "sha256": "7aae2335689efb76bd77d569a3bb16ca40b0b91bf32d4bbe4a410cfc8b91536f",
+        "bytes": 1540
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-denim-skirt-light-claim",
+        "filename": "B1-bottom-denim-skirt-light.claim.json",
+        "eventsFilename": "B1-bottom-denim-skirt-light.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-checker-midtop",
+      "order": 21,
+      "checkpoint": false,
+      "item": "shoes-checker-midtop",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-checker-midtop",
+        "sha256": "e6bef807040364665738bb4146433e8de9c19150eca818f83070422b0376cec3",
+        "bytes": 1121
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-checker-midtop-claim",
+        "filename": "B1-shoes-checker-midtop.claim.json",
+        "eventsFilename": "B1-shoes-checker-midtop.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-top-dot-shirt-red",
+      "order": 22,
+      "checkpoint": false,
+      "item": "top-dot-shirt-red",
+      "category": "top",
+      "prompt": {
+        "item": "top-dot-shirt-red",
+        "sha256": "d2950c5fb386becd9920d779f62ee5e9dd24a487a69328fbb98371c036c1b27c",
+        "bytes": 1556
+      },
+      "reference": "top",
+      "claim": {
+        "identity": "B1-top-dot-shirt-red-claim",
+        "filename": "B1-top-dot-shirt-red.claim.json",
+        "eventsFilename": "B1-top-dot-shirt-red.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-bottom-sport-shorts-stripe",
+      "order": 23,
+      "checkpoint": false,
+      "item": "bottom-sport-shorts-stripe",
+      "category": "bottom",
+      "prompt": {
+        "item": "bottom-sport-shorts-stripe",
+        "sha256": "89c46bf9524ea3f5753b226f877014c669f4e9fb4eb0988e07f1056e8d776405",
+        "bytes": 1551
+      },
+      "reference": "bottom",
+      "claim": {
+        "identity": "B1-bottom-sport-shorts-stripe-claim",
+        "filename": "B1-bottom-sport-shorts-stripe.claim.json",
+        "eventsFilename": "B1-bottom-sport-shorts-stripe.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-shoes-winter-boots-navy",
+      "order": 24,
+      "checkpoint": false,
+      "item": "shoes-winter-boots-navy",
+      "category": "shoes",
+      "prompt": {
+        "item": "shoes-winter-boots-navy",
+        "sha256": "22ee3f868a27e3538bb622ee66bd18b5361d9f2dda044e2d903979854b948c3c",
+        "bytes": 1128
+      },
+      "reference": "shoes",
+      "claim": {
+        "identity": "B1-shoes-winter-boots-navy-claim",
+        "filename": "B1-shoes-winter-boots-navy.claim.json",
+        "eventsFilename": "B1-shoes-winter-boots-navy.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-reserve-1",
+      "order": 25,
+      "reserve": true,
+      "item": null,
+      "category": null,
+      "for": "a design call named at the send (--for=), only by the reserve rule",
+      "claim": {
+        "identity": "B1-reserve-1-claim",
+        "filename": "B1-reserve-1.claim.json",
+        "eventsFilename": "B1-reserve-1.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-reserve-2",
+      "order": 26,
+      "reserve": true,
+      "item": null,
+      "category": null,
+      "for": "a design call named at the send (--for=), only by the reserve rule",
+      "claim": {
+        "identity": "B1-reserve-2-claim",
+        "filename": "B1-reserve-2.claim.json",
+        "eventsFilename": "B1-reserve-2.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-reserve-3",
+      "order": 27,
+      "reserve": true,
+      "item": null,
+      "category": null,
+      "for": "a design call named at the send (--for=), only by the reserve rule",
+      "claim": {
+        "identity": "B1-reserve-3-claim",
+        "filename": "B1-reserve-3.claim.json",
+        "eventsFilename": "B1-reserve-3.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    },
+    {
+      "callId": "B1-reserve-4",
+      "order": 28,
+      "reserve": true,
+      "item": null,
+      "category": null,
+      "for": "a design call named at the send (--for=), only by the reserve rule",
+      "claim": {
+        "identity": "B1-reserve-4-claim",
+        "filename": "B1-reserve-4.claim.json",
+        "eventsFilename": "B1-reserve-4.events.jsonl"
+      },
+      "mandateState": "UNSPENT",
+      "outcome": "NOT YET ATTEMPTED"
+    }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-batch-b1.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-246",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}
