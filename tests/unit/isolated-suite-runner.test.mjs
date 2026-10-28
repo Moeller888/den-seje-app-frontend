@@ -195,3 +195,40 @@ test("every iptables/ip6tables call waits for the xtables lock (Docker holds it 
     for (const c of calls) assert.match(c, /^ip6?tables -w 30 /, `${f}: ${c}`);
   }
 });
+
+test("measure-parallel: overlap counts the peak and the window in which ALL suites ran at once", async () => {
+  const { overlap } = await import("../isolated/measure-parallel.mjs");
+  assert.deepEqual(overlap([{ start: 0, end: 10 }, { start: 5, end: 15 }, { start: 8, end: 20 }]), { peak: 3, commonMs: 2 });
+  assert.deepEqual(overlap([{ start: 0, end: 5 }, { start: 5, end: 9 }]), { peak: 1, commonMs: 0 }, "touching is not overlapping");
+  assert.deepEqual(overlap([{ start: 0, end: 5 }, { start: NaN, end: NaN }]), { peak: 1, commonMs: 5 }, "a skipped suite is no interval");
+  assert.deepEqual(overlap([]), { peak: 0, commonMs: 0 });
+});
+
+test("measure-parallel: a job log yields its database cluster, its pupil, its counts and the tripwire", async () => {
+  const { parseJobLog } = await import("../isolated/measure-parallel.mjs");
+  const log = [
+    "2026-10-28T04:56:00.1Z   ISOLATED_DB_SYSID: 7701577688261992492",
+    "2026-10-28T04:57:00.1Z   ISOLATED_DB_SYSID: 7701577688261992492",
+    "2026-10-28T04:58:00.1Z   4 passed (13.3s)",
+    "2026-10-28T04:59:00.1Z isolated suite: primary pupil 3ed45ea1-3b95-4fc1-90df-a51bdf14740e provisioned (owner teacher x)",
+    "2026-10-28T05:35:00.1Z   \x1b[31m4 failed\x1b[39m",
+    "2026-10-28T05:35:00.2Z   1 flaky",
+    "2026-10-28T05:35:00.3Z   989 passed (38.7m)",
+    "2026-10-28T05:35:01.0Z | browser requests refused by the tripwire | 0 |",
+  ].join("\n");
+  assert.deepEqual(parseJobLog(log), {
+    sysids: ["7701577688261992492"], pupil: "3ed45ea1-3b95-4fc1-90df-a51bdf14740e", tripwire: 0, passed: 989, failed: 4, flaky: 1,
+  });
+  assert.equal(parseJobLog("").tripwire, null, "no tripwire line = no evidence, never 0");
+});
+
+test("plan: one isolated job per PR and per d110/par-* branch; dispatch chooses 1/3/6/9", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  assert.match(wf, /if \[ "\$EVENT" = "pull_request" \]; then default=1; fi/);
+  assert.match(wf, /case "\$REF_NAME" in d110\/par-\*\) default=1 ;; esac/);
+  assert.match(wf, /n="\$\{PARALLEL:-\$default\}"/);
+  assert.match(wf, /case "\$n" in 1\|3\|6\|9\) ;; \*\) echo "invalid parallel: \$n" >&2; exit 1 ;; esac/);
+  // Each workflow run has its own concurrency group (its ref) and never the production E2E lock.
+  assert.match(wf, /group: isolated-e2e-\$\{\{ github\.ref \}\}/);
+  assert.doesNotMatch(wf, /e2e-shared-supabase/);
+});
