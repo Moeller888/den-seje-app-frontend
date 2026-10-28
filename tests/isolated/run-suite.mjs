@@ -9,7 +9,9 @@
 //    set to the LOCAL stack, synthetic @e2e.invalid accounts and passwords generated for this run
 //    only. No value comes from a repository secret or variable.
 // 3. suiteViolations() re-checks that environment; any violation refuses before Playwright starts.
-// 4. Every browser goes through the tripwire proxy; a single refused request fails the run even if
+// 4. The primary test pupil is provisioned with the standing state specs rely on
+//    (seed/primary-account.mjs), on the checked local stack only.
+// 5. Every browser goes through the tripwire proxy; a single refused request fails the run even if
 //    every test passed.
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -18,6 +20,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertIsolated, isLoopbackHttpUrl, mentionsProd, FORBIDDEN_VARS, SYNTHETIC_EMAIL_DOMAIN } from "./isolation-guard.mjs";
 import { startTripwire } from "./tripwire-proxy.mjs";
+import { provisionPrimaryAccount } from "./seed/primary-account.mjs";
+import { createClient } from "@supabase/supabase-js";
 
 // The suite's own variable names. Only these may appear in the suite environment although the
 // isolation guard forbids them in the runner's — and only with the values buildSuiteEnv sets.
@@ -74,9 +78,14 @@ export function suiteViolations(env) {
 async function main(args) {
   assertIsolated(process.env);
   const tripwire = await startTripwire();
-  const env = buildSuiteEnv(process.env, { tripwire: tripwire.url });
+  const runId = randomBytes(4).toString("hex");
+  const env = buildSuiteEnv(process.env, { runId, tripwire: tripwire.url });
   const v = suiteViolations(env);
   if (v.length) { await tripwire.close(); throw new Error("REFUSED — suite environment:\n  " + v.join("\n  ")); }
+  const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
+  const { ownerId, pupilId } = await provisionPrimaryAccount(admin, { runId, studentEmail: env.TEST_STUDENT_EMAIL, studentPassword: env.TEST_STUDENT_PASSWORD })
+    .catch(async (e) => { await tripwire.close(); throw e; });
+  console.log(`isolated suite: primary pupil ${pupilId} provisioned (owner teacher ${ownerId})`);
   console.log(`isolated suite: accounts on @${SYNTHETIC_EMAIL_DOMAIN}, target ${env.PROD_BASE_URL}, tripwire ${tripwire.url}`);
   const t0 = Date.now();
   const code = await new Promise((ok) => {

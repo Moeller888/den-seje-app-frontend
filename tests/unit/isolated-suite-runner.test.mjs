@@ -97,7 +97,10 @@ test("the suite config refuses unless started by the runner, and proxies every b
   const cfg = readFileSync(new URL("../isolated/playwright.suite.config.ts", import.meta.url), "utf8");
   assert.match(cfg, /process\.env\.ISOLATED_SUITE !== "1"/);
   assert.match(cfg, /\^http:\\\/\\\/127\\\.0\\\.0\\\.1:\\d\+\$/);
-  assert.match(cfg, /projects: \(base\.projects \?\? \[\]\)\.map\(\(p\) => \(\{ \.\.\.p, use: \{ \.\.\.\(p\.use \?\? \{\}\), proxy, ignoreHTTPSErrors: true \} \}\)\)/);
+  assert.match(cfg, /projects: \(base\.projects \?\? \[\]\)\.map\(\(p\) => \(\{ \.\.\.p, use: projectUse\(p\) \}\)\)/);
+  assert.match(cfg, /\.\.\.\(p\.use \?\? \{\}\),\s+proxy,\s+ignoreHTTPSErrors: true,/);
+  // Local Network Access is lifted for Chromium projects only (the permission is Chromium-specific).
+  assert.match(cfg, /\.\.\.\(isChromium\(p\) \? \{ permissions: \[\.\.\.\(p\.use\?\.permissions \?\? \[\]\), "local-network-access"\] \} : \{\}\)/);
   // Only loopback and the two locally served CDN hosts bypass the tripwire.
   assert.match(cfg, /bypass: "127\.0\.0\.1,localhost,::1,cdn\.jsdelivr\.net,esm\.sh"/);
 });
@@ -120,4 +123,61 @@ test("the workflow maps the CDN hosts to loopback only after the mirror is fetch
   assert.ok(fetchAt > 0 && hostsAt > fetchAt && lockAt > hostsAt);
   assert.match(wf, /getent hosts cdn\.jsdelivr\.net/);
   assert.match(wf, /-subj "\/CN=cdn\.jsdelivr\.net"\s+-addext "subjectAltName=DNS:cdn\.jsdelivr\.net,DNS:esm\.sh"/);
+});
+
+// A fake service-role client: records every write, answers the catalog lookup, can fail one step.
+function fakeAdmin({ catalog = ["aura-gold"], failOn = null } = {}) {
+  const writes = [];
+  let n = 0;
+  const result = (step) => ({ error: failOn === step ? { message: `${step} refused` } : null });
+  const from = (table) => ({
+    select: () => ({ eq: (_c, id) => ({ maybeSingle: async () => ({ data: catalog.includes(id) ? { id } : null, error: null }) }) }),
+    upsert: async (row, opts) => { writes.push({ table, op: "upsert", row, opts }); return result(`${table}.upsert`); },
+    insert: async (row) => { writes.push({ table, op: "insert", row }); return result(`${table}.insert`); },
+  });
+  const auth = { admin: { createUser: async (attrs) => {
+    writes.push({ table: "auth.users", op: "create", row: attrs });
+    if (failOn === "createUser") return { data: null, error: { message: "createUser refused" } };
+    return { data: { user: { id: `id-${++n}` } }, error: null };
+  } } };
+  return { from, auth, writes };
+}
+
+test("primary account: a password-less owner teacher, the pupil under it, 1 correct answer, owns aura-gold", async () => {
+  const { provisionPrimaryAccount, OWNED_ITEM_ID } = await import("../isolated/seed/primary-account.mjs");
+  const admin = fakeAdmin();
+  const ids = await provisionPrimaryAccount(admin, { runId: "abcd1234", studentEmail: "pupil-abcd1234@e2e.invalid", studentPassword: "x".repeat(24) });
+  assert.deepEqual(ids, { ownerId: "id-1", pupilId: "id-2" });
+  const [owner, ownerProfile, pupil, pupilProfile, progress, item] = admin.writes;
+  assert.deepEqual(owner.row, { email: "owner-abcd1234@e2e.invalid", email_confirm: true }, "no password: nobody can sign in as the owner");
+  assert.equal(ownerProfile.row.role, "teacher");
+  assert.equal(pupil.row.email, "pupil-abcd1234@e2e.invalid");
+  assert.deepEqual([pupilProfile.row.role, pupilProfile.row.teacher_id], ["student", "id-1"]);
+  assert.deepEqual([progress.table, progress.row.correct_answers], ["student_progress", 1]);
+  assert.deepEqual([item.table, item.row], ["user_items", { user_id: "id-2", item_id: OWNED_ITEM_ID }]);
+  assert.equal(OWNED_ITEM_ID, "aura-gold");
+});
+
+test("primary account fails loud: missing catalog item, non-synthetic address, any refused write", async () => {
+  const { provisionPrimaryAccount } = await import("../isolated/seed/primary-account.mjs");
+  const args = { runId: "abcd1234", studentEmail: "pupil-abcd1234@e2e.invalid", studentPassword: "x".repeat(24) };
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin({ catalog: [] }), args), /aura-gold is not in the catalog/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, studentEmail: "student-test@hotmail.com" }), /must be on @e2e\.invalid/);
+  await assert.rejects(provisionPrimaryAccount(fakeAdmin(), { ...args, runId: "" }), /runId missing/);
+  for (const step of ["createUser", "profiles.upsert", "student_progress.upsert", "user_items.insert"]) {
+    await assert.rejects(provisionPrimaryAccount(fakeAdmin({ failOn: step }), args), /primary-account: .* failed/, step);
+  }
+});
+
+test("the workflow never pipes into grep -q (pipefail + SIGPIPE fails a passing check, and a negated one could pass)", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const code = wf.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
+  assert.doesNotMatch(code, /\|\s*grep -q/);
+  assert.match(wf, /curl -sf "\$ISOLATED_BASE_URL\/js\/supabase\.js" -o "\$RUNNER_TEMP\/served-supabase\.js"/);
+});
+
+test("engagement-panel finds student2's row by its own address, not the production default", () => {
+  const spec = readFileSync(new URL("../engagement-panel.spec.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(spec, /hasText: "student-teacher-test"/);
+  assert.match(spec, /const STUDENT2_DISPLAY_NAME = STUDENT2_EMAIL\.split\("@"\)\[0\];/);
 });

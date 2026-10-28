@@ -21,6 +21,19 @@ if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(server)) throw new Error("REFUSED — IS
 // would hit the network lock instead — never the internet.
 const proxy = { server, bypass: "127.0.0.1,localhost,::1,cdn.jsdelivr.net,esm.sh" };
 
+// Chromium's Local Network Access check: a document a spec fulfils through page.route (stav-til serves
+// the checked-out index.html that way) has no address space of its own and counts as public, so its
+// fetches to the loopback backend are refused. In production every origin is public and the check
+// never fires; here the backend is 127.0.0.1. The permission lifts only that check (Chromium-only,
+// so it is added to Chromium projects alone); the network lock is unaffected.
+const isChromium = (p) => (p.use?.defaultBrowserType ?? p.use?.browserName) === "chromium";
+const projectUse = (p) => ({
+  ...(p.use ?? {}),
+  proxy,
+  ignoreHTTPSErrors: true,
+  ...(isChromium(p) ? { permissions: [...(p.use?.permissions ?? []), "local-network-access"] } : {}),
+});
+
 export default {
   ...base,
   testDir: resolve(ROOT, "tests"),
@@ -29,5 +42,5 @@ export default {
   reporter: [["list"], ["html", { open: "never", outputFolder: resolve(ROOT, "playwright-report-isolated") }], [resolve(ROOT, "tests", "support", "timing-reporter.mjs")]],
   // ignoreHTTPSErrors: only the local CDN stand-in speaks HTTPS here, with a self-signed certificate.
   use: { ...base.use, proxy, ignoreHTTPSErrors: true },
-  projects: (base.projects ?? []).map((p) => ({ ...p, use: { ...(p.use ?? {}), proxy, ignoreHTTPSErrors: true } })),
+  projects: (base.projects ?? []).map((p) => ({ ...p, use: projectUse(p) })),
 };

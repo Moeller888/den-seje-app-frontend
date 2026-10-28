@@ -201,12 +201,16 @@ jobs:
           sudo iptables -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to-ports 8443
           echo "127.0.0.1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts > /dev/null
           for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
-          curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "$ISOLATED_SUPABASE_URL"
-          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "supabase.co"
-          ! curl -sf "$ISOLATED_BASE_URL/js/supabase.js" | grep -q "https://cdn.jsdelivr.net"
+          # Fetch to a file first, then grep: under pipefail `curl | grep -q` can fail on SIGPIPE, and the
+          # negated form could pass on a failed fetch.
+          curl -sf "$ISOLATED_BASE_URL/js/supabase.js" -o "$RUNNER_TEMP/served-supabase.js"
+          grep -q "$ISOLATED_SUPABASE_URL" "$RUNNER_TEMP/served-supabase.js"
+          ! grep -q "supabase.co" "$RUNNER_TEMP/served-supabase.js"
+          ! grep -q "https://cdn.jsdelivr.net" "$RUNNER_TEMP/served-supabase.js"
           for i in $(seq 1 15); do curl -skf "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" > /dev/null && break; sleep 1; done
           [ "$(getent hosts cdn.jsdelivr.net | awk '{print $1}')" = "127.0.0.1" ]
-          curl -skf "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" | grep -q "createClient"
+          curl -skf "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" -o "$RUNNER_TEMP/cdn-supabase.js"
+          grep -q "createClient" "$RUNNER_TEMP/cdn-supabase.js"
           curl -skf "https://esm.sh/@supabase/supabase-js@2" > /dev/null
 
       - name: Network lock — test group and containers reach loopback/private only (verified)
