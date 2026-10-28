@@ -24,6 +24,10 @@
 //   apply    schema part only          — data part needs production rows, schema part is applied
 //                                         verbatim (SCHEMA_PART, exact markers)
 //   skip     not in production         — merged but, on catalog evidence, never applied there
+//   apply    repository ahead of prod  — never applied in production either, but the repository's
+//                                         own code depends on it (REPO_AHEAD_OF_PRODUCTION; owner
+//                                         decision 2026-10-28): the real file is applied, the drift
+//                                         is recorded as an open production task
 //
 // Some content migrations also carry schema (e.g. an ALTER TABLE between INSERTs) and are therefore
 // applied. Their rows never land: the replay runs with a temporary insert filter on public.questions
@@ -96,10 +100,18 @@ export function extractSchemaPart(file, sql) {
 // 2026-10-25). CI mirrors production, so they are not replayed; a PR that applies one of them must
 // remove it from this list in the same change.
 export const NOT_IN_PRODUCTION = Object.freeze({
-  "20260808010000_password_help_reserve_rpc.sql":
-    "not applied in production: public.reserve_password_help does not exist there (the request-password-help Edge Function calls it — reported to the owner)",
   "20261020120000_difficulty_scale_a.sql":
     "not applied in production (owner decision pending): student_subject_level and difficulty_level_from_grade_band do not exist there",
+});
+
+// Merged in the repository, NOT applied in production, and APPLIED here anyway — by owner decision
+// (2026-10-28, option B): the isolated CI tests the repository's code against the schema that code
+// declares, so where the repository's own code depends on such a migration, CI applies the real
+// migration file (never a stub). Each entry is schema drift between the repository and production,
+// recorded as an open production task; nothing here changes production.
+export const REPO_AHEAD_OF_PRODUCTION = Object.freeze({
+  "20260808010000_password_help_reserve_rpc.sql":
+    "repository ahead of production: the repository's request-password-help calls public.reserve_password_help, which production does not have (catalog, 2026-10-25) — open production task D-241",
 });
 
 // Non-timestamped files the Supabase CLI never replays, but which production has (applied by hand),
@@ -155,6 +167,7 @@ export function planReplay(fileNames, readSql) {
     else if (DATA_PRECONDITION[f]) d = { action: "skip", reason: DATA_PRECONDITION[f] };
     else if (SCHEMA_PART[f]) d = { action: "apply", part: true, reason: SCHEMA_PART[f].reason, requires: PRECONDITIONS[f] ?? [] };
     else if (NOT_IN_PRODUCTION[f]) d = { action: "skip", reason: NOT_IN_PRODUCTION[f] };
+    else if (REPO_AHEAD_OF_PRODUCTION[f]) d = { action: "apply", reason: REPO_AHEAD_OF_PRODUCTION[f], requires: PRECONDITIONS[f] ?? [] };
     else if (CATALOG_DATA[f]) d = { action: "apply", reason: `app catalog data: ${CATALOG_DATA[f]}`, requires: [] };
     else if (forbiddenMigrationTokens(sql).length === 0) d = { action: "skip", reason: "data-only (no schema token); synthetic data replaces it" };
     else d = { action: "apply", reason: "", requires: PRECONDITIONS[f] ?? [] };

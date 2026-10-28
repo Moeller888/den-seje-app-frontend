@@ -51,8 +51,26 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20260808010000_password_help_reserve_rpc` og
-  `20261020120000_difficulty_scale_a`, ifølge kataloget. CI spejler produktionen.
+- **Ikke anvendt i produktionen:** `20261020120000_difficulty_scale_a`, ifølge kataloget. Den
+  springes over (ejerbeslutning om selve migrationen udestår).
+
+## Repositoryet er foran produktionen (anvendes alligevel)
+Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
+koden selv erklærer. Den skal ikke kopiere produktionens historiske afvigelser.
+
+- **`20260808010000_password_help_reserve_rpc`** anvendes med den rigtige migrationsfil, ikke en stub.
+  - Repositoryets `request-password-help` afhænger af RPC'en `public.reserve_password_help`. Den
+    bruges til cooldown, dagligt loft og reservation, før der må sendes mail. Uden RPC'en skrives
+    der ingen audit-række, og E2E-testen `password-help` test 1 fejler.
+  - Ifølge produktionens katalog (2026-10-25) findes RPC'en ikke i produktionen.
+  - Ifølge ejeren har den deployede version 3 af `request-password-help` hidtil ikke brugt
+    RPC'en. Det er ikke undersøgt i D-110. Driften er derfor **ikke** en bekræftet
+    produktionsfejl: den betyder, at repositoryets funktion ikke kan deployes uden migrationen.
+  - **Udestående produktionsopgave (D-241):** afstem skema og funktion mellem repository og
+    produktion. Det kræver ejerens særskilte GO. Intet i D-110 ændrer produktionen.
+  - Unit-testen `isolated-schema-replay.test.mjs` beviser på syntetiske rækker: RPC'ens krop er
+    migrationens egen, kun `service_role` må kalde den, reservation, cooldown og dagligt loft
+    giver hver sin audit-række, og ugyldigt input afvises uden at skrive noget.
 
 ## Hvad CI-stubbene ikke beviser
 Se hovedet af `ci-function-stubs.sql`. Kort fortalt:

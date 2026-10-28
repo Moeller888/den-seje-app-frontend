@@ -231,3 +231,43 @@ test("target check before the schema: public with tables but no questions table 
   await d.exec("CREATE TABLE public.some_real_table (id int)");
   await assert.rejects(assertSeedTarget({ query: async (s) => (await d.query(s)).rows, env: GUARD_ENV }), /public has tables but no questions table/);
 });
+
+// Owner decision 2026-10-28 (option B): the repository's request-password-help depends on
+// public.reserve_password_help, so the isolated schema carries the REAL migration (not a stub) —
+// recorded as repository-ahead-of-production drift. Its behaviour, on synthetic rows.
+test("reserve_password_help: the real migration is replayed, as drift, and locked to service_role", async () => {
+  const p = result.plan.find((s) => s.file === "20260808010000_password_help_reserve_rpc.sql");
+  assert.equal(p.action, "apply");
+  assert.match(p.reason, /repository ahead of production/);
+  const src = readFileSync(join(ROOT, "supabase", "migrations", "20260808010000_password_help_reserve_rpc.sql"), "utf8");
+  const f = await one(db, `SELECT prosrc FROM pg_proc WHERE oid = 'public.reserve_password_help(uuid,uuid,integer,integer)'::regprocedure`);
+  assert.ok(src.includes(f.prosrc.trim()), "the replayed body is the migration's own");
+  for (const [role, want] of [["anon", false], ["authenticated", false], ["service_role", true]]) {
+    assert.equal((await one(db, `SELECT has_function_privilege('${role}', 'public.reserve_password_help(uuid,uuid,integer,integer)', 'EXECUTE') x`)).x, want, role);
+  }
+});
+
+test("reserve_password_help: reservation, cooldown, daily cap — each audited — and refused bad input", async () => {
+  const pupil = "00000000-0000-4000-8000-00000000a001", teacher = "00000000-0000-4000-8000-00000000a002";
+  await db.exec(`INSERT INTO auth.users (id, email) VALUES ('${pupil}', 'ph-pupil@e2e.invalid'), ('${teacher}', 'ph-teacher@e2e.invalid')`);
+  const reserve = (cool, cap) => one(db, `SELECT decision, request_id FROM public.reserve_password_help('${pupil}', '${teacher}', ${cool}, ${cap})`);
+  const rows = async () => (await db.query(`SELECT status, failure_reason FROM public.password_help_requests WHERE student_id = '${pupil}' ORDER BY created_at, id`)).rows;
+
+  const first = await reserve(60, 3);
+  assert.equal(first.decision, "reserved");
+  assert.ok(first.request_id);
+  assert.equal((await reserve(60, 3)).decision, "suppressed_cooldown", "a second request inside the cooldown");
+  assert.equal((await reserve(0, 1)).decision, "suppressed_daily_cap", "the reservation counts against the cap");
+  const audit = await rows();
+  assert.deepEqual(audit.map((r) => r.status).sort(), ["reserved", "suppressed_cooldown", "suppressed_daily_cap"]);
+  assert.ok(audit.some((r) => r.failure_reason === "cooldown_60m"));
+  assert.ok(audit.some((r) => r.failure_reason === "cap_1_per_24h"));
+
+  // Suppressions are audit facts, not attempts: with cooldown 0 the budget still has room.
+  assert.equal((await reserve(0, 3)).decision, "reserved");
+
+  await assert.rejects(db.query(`SELECT * FROM public.reserve_password_help(NULL, '${teacher}', 60, 3)`), /student id is required/);
+  await assert.rejects(db.query(`SELECT * FROM public.reserve_password_help('${pupil}', '${teacher}', -1, 3)`), /invalid rate-limit parameters/);
+  await assert.rejects(db.query(`SELECT * FROM public.reserve_password_help('${pupil}', '${teacher}', 60, 0)`), /invalid rate-limit parameters/);
+  assert.equal((await rows()).length, 4, "a refused call writes nothing");
+});

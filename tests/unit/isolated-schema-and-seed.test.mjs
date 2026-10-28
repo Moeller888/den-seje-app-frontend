@@ -10,7 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
-  planReplay, summarise, CONTENT_ONLY, DATA_PRECONDITION, NOT_IN_PRODUCTION, BLOCKED, MANUALLY_APPLIED_IN_PRODUCTION, TIMESTAMPED,
+  planReplay, summarise, CONTENT_ONLY, DATA_PRECONDITION, NOT_IN_PRODUCTION, REPO_AHEAD_OF_PRODUCTION, BLOCKED, MANUALLY_APPLIED_IN_PRODUCTION, TIMESTAMPED,
   PRECONDITIONS, preconditionCheckSql,
 } from "../isolated/schema/replay-plan.mjs";
 import { forbiddenMigrationTokens } from "../../.github/ci/classify-changes.mjs";
@@ -41,7 +41,7 @@ test("the empty base migration (D-110 root) is skipped as empty", () => {
 });
 
 test("every named list entry exists — a stale entry would silently change what CI replays", () => {
-  for (const list of [CONTENT_ONLY, DATA_PRECONDITION, NOT_IN_PRODUCTION, BLOCKED, MANUALLY_APPLIED_IN_PRODUCTION]) {
+  for (const list of [CONTENT_ONLY, DATA_PRECONDITION, NOT_IN_PRODUCTION, REPO_AHEAD_OF_PRODUCTION, BLOCKED, MANUALLY_APPLIED_IN_PRODUCTION]) {
     for (const f of Object.keys(list)) assert.ok(existsSync(new URL(f, MIG)), `${f} listed but missing`);
   }
 });
@@ -92,6 +92,7 @@ test("a migration with preconditions is applied only after its objects are verif
 
 test("not-in-production and manual lists carry catalog evidence, manual files are idempotent", () => {
   for (const r of Object.values(NOT_IN_PRODUCTION)) assert.match(r, /not applied in production/);
+  for (const r of Object.values(REPO_AHEAD_OF_PRODUCTION)) assert.match(r, /^repository ahead of production: .*open production task D-241/);
   assert.deepEqual(manual, Object.keys(MANUALLY_APPLIED_IN_PRODUCTION).sort());
   assert.deepEqual(notReplayed, []);
   for (const f of manual) {
