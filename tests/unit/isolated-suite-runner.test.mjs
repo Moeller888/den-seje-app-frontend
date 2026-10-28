@@ -296,3 +296,10 @@ test("measure-parallel counts runtime events only, never the workflow's echoed s
   const r = parseJobLog(events.join("\n"));
   assert.deepEqual([r.restarts, r.sigbus, r.edgeStart], [1, 1, 2]);
 });
+
+test("transition step A: every pull request to main runs the isolated suite (no paths filter)", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const triggers = wf.slice(wf.indexOf("\non:\n"), wf.indexOf("\npermissions:"));
+  assert.match(triggers, /\n  pull_request:\n    branches: \[ main \]\n  push:/);
+  assert.doesNotMatch(triggers, /paths(-ignore)?:/);
+});
