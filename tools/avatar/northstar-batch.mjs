@@ -135,7 +135,7 @@ export function promptsOverview(b, prompts) {
   for (const cat of CATS) { lines.push("## " + { top: "Overdele", bottom: "Underdele", shoes: "Lukket fodtøj" }[cat], "", "Kontraktinstruktion (`modelDraws." + MODEL_DRAWS_KEY[cat] + "`):", "", "> " + C.modelDraws[MODEL_DRAWS_KEY[cat]], "");
     for (const d of b.designs.filter((x) => x.category === cat)) { const it = prompts.items[d.id];
       lines.push("### " + d.id + (b.checkpoint.includes(d.id) ? " (checkpoint)" : ""), "", "- Tester: " + d.tests.join("; "), "- Scope: " + d.scope, "- sha256 `" + it.sha256 + "`, " + it.bytes + " bytes", "", "```text", it.prompt, "```", ""); } }
-  return lines.join("\n");
+  return lines.join("\n").replace(/\n+$/, "");   // one final newline when written (git diff --check)
 }
 
 // ── 3. the call plan: documented price, enforceable cap, fixed checkpoint (never an authorisation) ────────────────────────────
