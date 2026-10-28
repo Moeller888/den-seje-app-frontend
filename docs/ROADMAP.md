@@ -792,6 +792,11 @@ udfasning af `profiles.teacher_id`. Klassearbejdet venter på sikkerhedssporet n
 - Rækkefølge (#351 er merget 2026-10-21): migration A (additiv) → migration B → Edge bag flag →
   `LEVEL_ENGINE` til → indhold indsat inaktivt → stikprøvekontrol → aktivering pr. portion.
 - Løser det tidligere fund om `LIMIT 50` uden `ORDER BY`, når flaget er slået til.
+- **Fagopdelt indplacering og progression (forslag 2026-10-28, ikke besluttet):**
+  [`docs/subject-placement-design.md`](subject-placement-design.md). Indplaceringen bliver de første,
+  adaptivt stoppede svar i hvert fag, og både startniveau og progression er fagopdelt fra første svar
+  (ejerens krav: ét fag må ikke påvirke et andet). Det bygges sammen med niveaumotoren. Afventer
+  ejerbeslutning om P1–P8 og konflikterne i designets §12.
 
 ### Platform / services track (from the 157A audit)
 
