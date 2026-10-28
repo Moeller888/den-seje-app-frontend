@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { loadMirror, MIRRORED_ORIGINS } from "./cdn-mirror.mjs";
 
 export const CDN_HOSTS = Object.freeze(MIRRORED_ORIGINS.map((o) => new URL(o).host));
+export const LOOPBACK_HOSTS = Object.freeze(["127.0.0.1", "::1"]);
 
 // Host header + path → the mirrored module, or null.
 export function lookup(mirror, host, path) {
@@ -40,6 +41,10 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   const [dir, certPath, keyPath, port] = process.argv.slice(2);
   const mirror = loadMirror(dir);
   if (!mirror || !certPath || !keyPath || !port) { console.error("usage: cdn-https.mjs <mirror-dir> <cert.pem> <key.pem> <port>"); process.exit(1); }
-  await startCdnServer({ mirror, cert: readFileSync(certPath), key: readFileSync(keyPath), port: Number(port) });
-  console.log(`cdn stand-in: ${CDN_HOSTS.join(", ")} on 127.0.0.1:${port}, ${Object.keys(mirror.index).length} module(s)`);
+  // Both loopback families: the runner maps the CDN names to 127.0.0.1 AND ::1, so an IPv6 lookup
+  // never falls through to DNS (the real CDN).
+  for (const host of LOOPBACK_HOSTS) {
+    await startCdnServer({ mirror, cert: readFileSync(certPath), key: readFileSync(keyPath), port: Number(port), host });
+  }
+  console.log(`cdn stand-in: ${CDN_HOSTS.join(", ")} on ${LOOPBACK_HOSTS.map((h) => `[${h}]:${port}`).join(" and ")}, ${Object.keys(mirror.index).length} module(s)`);
 }

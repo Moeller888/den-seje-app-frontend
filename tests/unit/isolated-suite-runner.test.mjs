@@ -121,7 +121,12 @@ test("the workflow maps the CDN hosts to loopback only after the mirror is fetch
   const hostsAt = wf.indexOf('echo "127.0.0.1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts');
   const lockAt = wf.indexOf("egress-firewall.sh lock");
   assert.ok(fetchAt > 0 && hostsAt > fetchAt && lockAt > hostsAt);
-  assert.match(wf, /getent hosts cdn\.jsdelivr\.net/);
+  // Both address families are mapped, redirected and verified (IPv4-only let AAAA fall through to DNS).
+  assert.ok(wf.indexOf('echo "::1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts') > fetchAt);
+  assert.match(wf, /ip6tables -w 30 -t nat -A OUTPUT -o lo -d ::1 -p tcp --dport 443 -j REDIRECT --to-ports 8443/);
+  assert.match(wf, /getent ahostsv4 "\$h" \| awk '\{print \$1\}' \| sort -u\)" = "127\.0\.0\.1" \]/);
+  assert.match(wf, /getent ahostsv6 "\$h" \| awk '\{print \$1\}' \| sort -u\)" = "::1" \]/);
+  assert.match(wf, /curl -6 -sk "https:\/\/\$h\/" -o \/dev\/null -w '%\{remote_ip\}'\)" = "::1" \]/);
   assert.match(wf, /-subj "\/CN=cdn\.jsdelivr\.net"\s+-addext "subjectAltName=DNS:cdn\.jsdelivr\.net,DNS:esm\.sh"/);
 });
 

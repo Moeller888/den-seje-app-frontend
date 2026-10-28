@@ -136,8 +136,12 @@ test("the egress blackhole covers the production project, the site, mail and AI 
     assert.ok(BLACKHOLE_HOSTS.includes(h), h);
   }
   const lines = hostsLines().trim().split("\n").filter((l) => !l.startsWith("#"));
-  assert.equal(lines.length, BLACKHOLE_HOSTS.length);
-  assert.ok(lines.every((l) => /^0\.0\.0\.0 [a-z0-9.-]+$/.test(l)));
+  // Both families per host: an IPv4-only line lets an AAAA lookup fall through to DNS.
+  assert.equal(lines.length, 2 * BLACKHOLE_HOSTS.length);
+  for (const h of BLACKHOLE_HOSTS) {
+    assert.ok(lines.includes(`0.0.0.0 ${h}`), `${h} IPv4`);
+    assert.ok(lines.includes(`:: ${h}`), `${h} IPv6`);
+  }
 });
 
 test("no false green, and the order that makes the job fail-closed", () => {

@@ -200,8 +200,12 @@ jobs:
           # answer those two hosts locally with the same mirrored bytes (tests/isolated/cdn-https.mjs).
           openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=cdn.jsdelivr.net" -addext "subjectAltName=DNS:cdn.jsdelivr.net,DNS:esm.sh"             -keyout "$RUNNER_TEMP/cdn-key.pem" -out "$RUNNER_TEMP/cdn-cert.pem" 2> /dev/null
           nohup node tests/isolated/cdn-https.mjs "$RUNNER_TEMP/cdn-mirror" "$RUNNER_TEMP/cdn-cert.pem" "$RUNNER_TEMP/cdn-key.pem" 8443 > "$RUNNER_TEMP/cdn.log" 2>&1 &
+          # Both address families: with an IPv4 line only, an IPv6 lookup falls through to DNS and gets
+          # the real CDN (CI, 2026-10-28) — map, redirect and serve ::1 as well as 127.0.0.1.
           sudo iptables -w 30 -t nat -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to-ports 8443
+          sudo ip6tables -w 30 -t nat -A OUTPUT -o lo -d ::1 -p tcp --dport 443 -j REDIRECT --to-ports 8443
           echo "127.0.0.1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts > /dev/null
+          echo "::1 cdn.jsdelivr.net esm.sh" | sudo tee -a /etc/hosts > /dev/null
           for i in $(seq 1 30); do curl -sf "$ISOLATED_BASE_URL/login.html" > /dev/null && break; sleep 1; done
           # Fetch to a file first, then grep: under pipefail `curl | grep -q` can fail on SIGPIPE, and the
           # negated form could pass on a failed fetch.
@@ -210,7 +214,13 @@ jobs:
           ! grep -q "supabase.co" "$RUNNER_TEMP/served-supabase.js"
           ! grep -q "https://cdn.jsdelivr.net" "$RUNNER_TEMP/served-supabase.js"
           for i in $(seq 1 15); do curl -skf "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" > /dev/null && break; sleep 1; done
-          [ "$(getent hosts cdn.jsdelivr.net | awk '{print $1}')" = "127.0.0.1" ]
+          for h in cdn.jsdelivr.net esm.sh; do
+            [ "$(getent ahostsv4 "$h" | awk '{print $1}' | sort -u)" = "127.0.0.1" ]
+            [ "$(getent ahostsv6 "$h" | awk '{print $1}' | sort -u)" = "::1" ]
+            # Each family is answered by the local stand-in (the root path is a 404 from it: -f is off).
+            [ "$(curl -4 -sk "https://$h/" -o /dev/null -w '%{remote_ip}')" = "127.0.0.1" ]
+            [ "$(curl -6 -sk "https://$h/" -o /dev/null -w '%{remote_ip}')" = "::1" ]
+          done
           curl -skf "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" -o "$RUNNER_TEMP/cdn-supabase.js"
           grep -q "createClient" "$RUNNER_TEMP/cdn-supabase.js"
           curl -skf "https://esm.sh/@supabase/supabase-js@2" > /dev/null
