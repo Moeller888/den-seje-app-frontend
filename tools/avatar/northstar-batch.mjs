@@ -16,6 +16,10 @@
 //
 // Usage:
 //   node tools/avatar/northstar-batch.mjs plan --batch b1                writes b1-prompts-v1.json, b1-prompts-v1.md, b1-calls-v1.json
+//   node tools/avatar/northstar-batch.mjs authorise --batch b1 --decision D-246 --token "<token>" --adapter <path>   (D-246)
+//   node tools/avatar/northstar-batch.mjs record --batch b1 --call <call id> --item <item> --report <report.json>   b1.pipeline.json
+//   node tools/avatar/northstar-batch.mjs checkpoint-manifest --batch b1 --receipts <file> --out <file outside the repo>
+//   node tools/avatar/northstar-batch.mjs checkpoint --batch b1 --run <checkpoint run dir> [--marks <item,…>]   B1-CHECKPOINT.json
 //   node tools/avatar/northstar-batch.mjs manifests --batch b1 --receipts <file> --out <dir outside the repo>   one per bottom
 //   node tools/avatar/northstar-batch.mjs status --batch b1 --runs <dir>[,<dir>…] --out <file outside the repo>
 //   node tools/avatar/northstar-batch.mjs export --batch b1 --runs <dirs> --out <dir outside the repo> --cwebp <exe> --dwebp <exe>
@@ -297,6 +301,82 @@ export async function exportApproved(b, register, outDir, { cwebp, dwebp }) {
   return { files: entries.length, outfits: outfits.length };
 }
 
+// ── 7. the authorisation file, per-call pipeline records and the checkpoint verdict (D-246) ────────────────────────────────
+/** The send adapter's stop rules for a batch — D-235's, reconciled with the frozen reserve rule and checkpoint C3: a FIRST picture
+ *  that is not a 1024x1536 RGBA PNG, a FIRST moderation block and a FIRST registration failure may be resent with a reserve; the
+ *  second of any of them stops the batch. Every rule below is enforced by the adapter before a claim. */
+export function adapterStopRules(b) {
+  const B = b.batch.toUpperCase();
+  return ["credit or access: HTTP 401, 403 or 429, or an error code naming quota or billing",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome — never resent",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx",
+    "format: a second received picture that is not a 1024x1536 RGBA PNG (the first may be resent with a reserve)",
+    "moderation: a second moderation block (the first may be resent with a reserve)",
+    "registration: a second registration failure G-1 in the pipeline records (the first may be resent with a reserve)",
+    "processing: a received picture without its pipeline record (" + b.batch + ".pipeline.json) stops the next call until it is processed",
+    "technical rejections: 9 of the pipeline records",
+    "checkpoint: no call after the six checkpoint calls without " + B + "-CHECKPOINT.json whose verdict is CONTINUE with C1–C5 passed",
+    "the executor's stop file " + B + "-STOP.json (a common method failure, e.g. reference marks drawn into two pictures)"];
+}
+export const reserveIds = (b, n) => Array.from({ length: n }, (_, k) => b.batch.toUpperCase() + "-reserve-" + (k + 1));
+/** The authorisation file of a batch (the plan file stays the unauthorised plan): every design call and every reserve slot as an
+ *  UNSPENT, single-use entry with its own claim identity; the request, the frozen inputs and their hashes. */
+export function buildAuthorisation(b, prompts, plan, { decision, token, adapter, reserve = 4 }) {
+  const fileSha = (f) => sha(readFileSync(join(BATCHES, f)));
+  const entry = (callId, extra) => ({ callId, ...extra, claim: { identity: callId + "-claim", filename: callId + ".claim.json", eventsFilename: callId + ".events.jsonl" }, mandateState: "UNSPENT", outcome: "NOT YET ATTEMPTED" });
+  return { decision, batch: b.batch, status: "AUTHORISED by " + decision + " (" + token + "): each entry is ONE single-use call; the plan " + b.batch + "-calls-v1.json stays the unauthorised plan it was",
+    meta: { authorisesImageRequest: false, why: "authorisation is the exact token in " + decision + "'s decision status plus this file's unspent entries, never a general boolean", kind: "a production-readiness batch: no catalogue, no runtime, no activation" },
+    budget: { authorised: plan.budget.maxCalls, designs: plan.budget.requested, reserve, retries: 0, automaticExtension: false, actuallySent: 0, enforcedLimit: "the call count; the price is an estimate (" + b.batch + "-calls-v1.json cost)" },
+    privacy: { cSentToApi: "allowed for this batch only (owner, 2026-10-28)", referenceSheetsSentToApi: "allowed for this batch only (C-derived, the D-235 v2 sheets)", publishOrTrack: "never — C, the sheets, the raw results and every export stay outside both clones (D-127 §2)", h1: "never used" },
+    frozen: { method: b.method, contract: b.contract, outfitRevision: b.outfitRevision, planDecision: b.decision,
+      files: Object.fromEntries([b.batch + "-designs-v1.json", b.batch + "-prompts-v1.json", b.batch + "-prompts-v1.md", b.batch + "-calls-v1.json"].map((f) => [f, fileSha(f)])) },
+    request: plan.request, stopRules: adapterStopRules(b),
+    checkpoint: { designs: b.checkpoint, rules: CHECKPOINT_RULES, verdictFile: b.batch.toUpperCase() + "-CHECKPOINT.json" },
+    reserveRule: plan.reserveRule,
+    calls: [...plan.calls.map((c) => entry(c.callId, { order: c.order, checkpoint: c.checkpoint, item: c.item, category: c.category, prompt: c.prompt, reference: c.reference })),
+      ...reserveIds(b, reserve).map((id, k) => entry(id, { order: plan.calls.length + k + 1, reserve: true, item: null, category: null, for: "a design call named at the send (--for=), only by the reserve rule" }))],
+    adapterImplementations: { isAuthorisation: false, adapter, status: "IMPLEMENTED — NOT EXECUTED", ownerApprovalFlag: "--owner-approval=" + decision, mergeIsNotAnInstruction: true, executionRequiresSeparateOwnerInstruction: true } };
+}
+/** The pipeline record of one received picture (from northstar-item-pilot.mjs --process … report.json), written next to the
+ *  call's outputs: what the adapter needs to enforce the technical-rejection, registration and reserve rules. */
+export function pipelineRecord(callId, item, report) {
+  if (!report || report.item !== item) throw new Error("the report is not " + item + "'s");
+  const f = report.faults || {}, cls = (f.generation || []).length ? "generation" : (f.extraction || []).length ? "extraction" : (f.fit || []).length ? "fit" : null;
+  return { callId, item, method: report.method, ok: report.ok === true, faultClass: report.ok === true ? null : cls || "unknown", faults: f, g1: !!(report.registration && report.registration.ok === false), rawSha256: report.raw && report.raw.sha256 };
+}
+/** The checkpoint run: the existing items and the six checkpoint designs (one manifest; every combination of them). */
+export function checkpointManifest(b, receipts) {
+  const pins = existingRawPins(), typeOf = Object.fromEntries(b.designs.map((d) => [d.id, d]));
+  const ids = [...(b.existing || []).map((e) => e.id), ...b.checkpoint.filter((id) => receipts[id])];
+  const items = ids.map((id) => { const d = typeOf[id], p = d ? receipts[id] : pins[id];
+    return { id, category: IP.ITEM_CATEGORY[id], type: d ? d.type : p.type, covering: IP.ITEM_CATEGORY[id] === "shoes" ? IP.COVERING[id] : "none", sourceCall: p.sourceCall, raw: p.raw, rawSha256: p.rawSha256 }; });
+  const man = { decision: b.decision, batch: b.batch, chunk: "checkpoint", method: b.method, rawRoot: "<Documents>/DenSejeApp-artefacts", note: "the existing items and the checkpoint designs", items,
+    findingsRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register.json", reviewRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json" };
+  IP.validateManifest(man); return man;
+}
+/** C1–C5 on the six checkpoint designs. outcomes: { design id: classification of its LAST call (incl. a reserve) }; records: { design
+ *  id: pipelineRecord }; run: the checkpoint run.json; usage: [response usage of every checkpoint call]; marks: design ids whose
+ *  received picture carries reference marks (the assistant's receipt check). A design without a received picture counts as rejected. */
+export function evaluateCheckpoint(b, { outcomes, records, run, usage, marks = [] }, plan) {
+  const cp = b.checkpoint, rules = {};
+  const rej = cp.filter((id) => !records[id] || !records[id].ok), byClass = {};
+  for (const id of rej) { const c = records[id] ? records[id].faultClass : "no picture"; byClass[c] = (byClass[c] || 0) + 1; }
+  rules.C1 = { pass: rej.length < 3 && !Object.entries(byClass).some(([c, n]) => c !== "no picture" && n >= 2), rejected: rej, byClass };
+  const bottoms = cp.filter((id) => IP.ITEM_CATEGORY[id] === "bottom"), broke = {};
+  for (const id of bottoms) { const it = run.items && run.items[id], failed = ((it && it.seamContract && it.seamContract.failed) || []).map((x) => x.id).filter((x) => /^SC-(W3|W6|L1)\b/.test(x)); if (failed.length) broke[id] = failed; }
+  rules.C2 = { pass: !Object.keys(broke).length, bottoms, broken: broke, note: "SC-W3 waistband zone, SC-W6 hip width, SC-L1 hem band — rules the now-sent instruction names" };
+  const format = Object.values(outcomes).filter((c) => c === "TECHNICAL_REJECT").length, g1 = cp.filter((id) => records[id] && records[id].g1).length;
+  rules.C3 = { pass: format < 2 && g1 < 2 && marks.length < 2, format, g1, marks };
+  const names = Object.keys((run.package && run.package.outfits) || {}).filter((n) => n.split("+").some((id) => cp.includes(id)));
+  const okN = names.filter((n) => run.package.outfits[n].status !== "rejected").length;
+  rules.C4 = { pass: names.length > 0 && okN / names.length >= 0.5, outfits: names.length, technicallyOk: okN };
+  const cost = usage.reduce((s, u) => s + ((u.input_tokens_details?.image_tokens || 0) * PRICE.imageInputPerM + (u.input_tokens_details?.text_tokens || 0) * PRICE.textInputPerM + (u.output_tokens_details?.image_tokens || u.output_tokens || 0) * PRICE.imageOutputPerM) / 1e6, 0);
+  const cap = 6 * plan.cost.perCallMax * 1.5;
+  rules.C5 = { pass: cost <= cap, usdAtListPrice: Math.round(cost * 1e4) / 1e4, limit: Math.round(cap * 1e4) / 1e4, calls: usage.length };
+  const complete = cp.every((id) => outcomes[id] !== undefined);
+  return { batch: b.batch, verdict: complete && Object.values(rules).every((r) => r.pass) ? "CONTINUE" : "STOP", complete, calls: cp, rules, evaluatedAt: new Date().toISOString(), note: "CONTINUE lets the adapter send call 7 onwards; it approves no item" };
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2), arg = (k) => { const i = rest.indexOf(k); return i >= 0 ? rest[i + 1] : null; };
@@ -307,11 +387,29 @@ async function main() {
     writeFileSync(join(BATCHES, b.batch + "-prompts-v1.json"), JSON.stringify(prompts, null, 2) + "\n"); writeFileSync(join(BATCHES, b.batch + "-prompts-v1.md"), promptsOverview(b, prompts) + "\n");
     writeFileSync(join(BATCHES, b.batch + "-calls-v1.json"), JSON.stringify(calls, null, 2) + "\n");
     console.log(JSON.stringify({ designs: b.designs.length, distribution: v.distribution, calls: calls.budget, cost: { perCallMax: calls.cost.perCallMax, totalMax: calls.cost.totalMax }, combinations: matrix(b).outfits.length })); return; }
+  // D-246: the authorisation file, the per-call pipeline record and the checkpoint verdict (the last two outside the repository)
+  const batchRoot = join(ARTEFACTS, b.batch + "-batch"), B = b.batch.toUpperCase();
+  if (cmd === "authorise") { const prompts = json(join(BATCHES, b.batch + "-prompts-v1.json")), plan = json(join(BATCHES, b.batch + "-calls-v1.json"));
+    const a = buildAuthorisation(b, prompts, plan, { decision: arg("--decision"), token: arg("--token"), adapter: arg("--adapter") });
+    writeFileSync(join(BATCHES, b.batch + "-authorisation-v1.json"), JSON.stringify(a, null, 2) + "\n"); console.log(JSON.stringify(a.budget)); return; }
+  if (cmd === "record") { const callId = arg("--call"), item = arg("--item"), rec = pipelineRecord(callId, item, json(resolve(arg("--report"))));
+    const f = join(batchRoot, callId, b.batch + ".pipeline.json"); if (existsSync(f)) throw new Error("a pipeline record exists already: " + f);
+    writeFileSync(f, JSON.stringify(rec, null, 2) + "\n", { flag: "wx" }); console.log(JSON.stringify(rec)); return; }
+  if (cmd === "checkpoint") { const auth = json(join(BATCHES, b.batch + "-authorisation-v1.json")), plan = json(join(BATCHES, b.batch + "-calls-v1.json"));
+    const outcomes = {}, records = {}, usage = [];
+    for (const e of auth.calls) { const d = join(batchRoot, e.callId), mf = join(d, b.batch + ".request.json"); if (!existsSync(mf)) continue; const m = json(mf), item = m.item;
+      if (!b.checkpoint.includes(item)) continue; outcomes[item] = m.outcome && m.outcome.classification; if (m.response && m.response.usage) usage.push(m.response.usage);
+      const pf = join(d, b.batch + ".pipeline.json"); if (existsSync(pf)) records[item] = json(pf); else delete records[item]; }
+    const v = evaluateCheckpoint(b, { outcomes, records, run: json(join(resolve(arg("--run")), "run.json")), usage, marks: (arg("--marks") || "").split(",").filter(Boolean) }, plan);
+    const f = join(batchRoot, B + "-CHECKPOINT.json"); if (existsSync(f)) throw new Error("the checkpoint verdict exists already: " + f);
+    writeFileSync(f, JSON.stringify(v, null, 2) + "\n", { flag: "wx" }); console.log(JSON.stringify({ verdict: v.verdict, rules: Object.fromEntries(Object.entries(v.rules).map(([k, r]) => [k, r.pass])) })); return; }
+  if (cmd === "checkpoint-manifest") { const out = arg("--out"); if (!out || !outsideRepo(out)) throw new Error("--out must be outside the repository");
+    writeFileSync(out, JSON.stringify(checkpointManifest(b, json(resolve(arg("--receipts")))), null, 2) + "\n"); return; }
   const out = arg("--out"); if (!out || !outsideRepo(out)) throw new Error("--out must be outside the repository");
   if (cmd === "manifests") { const receipts = json(resolve(arg("--receipts"))); mkdirSync(out, { recursive: true });
     for (const m of chunkManifests(b, receipts)) writeFileSync(join(out, "manifest-" + m.chunk + ".json"), JSON.stringify(m, null, 2) + "\n"); return; }
   if (cmd === "status") { const reg = statusRegister(b, runsOf(), review); writeFileSync(out, JSON.stringify(reg, null, 2) + "\n"); console.log(JSON.stringify(reg.summary)); return; }
   if (cmd === "export") { const reg = statusRegister(b, runsOf(), review); console.log(JSON.stringify(await exportApproved(b, reg, out, { cwebp: arg("--cwebp"), dwebp: arg("--dwebp") }))); return; }
-  throw new Error("commands: plan | manifests | status | export");
+  throw new Error("commands: plan | authorise | record | checkpoint-manifest | checkpoint | manifests | status | export");
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((e) => { console.error("REFUSED: " + e.message); process.exit(1); });
