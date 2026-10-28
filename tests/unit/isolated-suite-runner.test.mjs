@@ -232,3 +232,21 @@ test("plan: one isolated job per PR and per d110/par-* branch; dispatch chooses 
   assert.match(wf, /group: isolated-e2e-\$\{\{ github\.ref \}\}/);
   assert.doesNotMatch(wf, /e2e-shared-supabase/);
 });
+
+test("negative controls run in every job, before and after the lock, and never name a production URL as a target", () => {
+  const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8");
+  const pre = wf.indexOf("negative-controls.sh pre-lock"), lock = wf.indexOf("egress-firewall.sh lock");
+  const post = wf.indexOf("negative-controls.sh post-lock"), verify = wf.indexOf("egress-firewall.sh verify");
+  const smoke = wf.indexOf("playwright.isolated.config.mjs");
+  assert.ok(pre > 0 && pre < lock && verify < post && post < smoke, "pre-lock → lock → verify → post-lock → smoke");
+  const sh = readFileSync(new URL("../isolated/negative-controls.sh", import.meta.url), "utf8");
+  // A control that does not fail must fail the job.
+  assert.match(sh, /if \[ "\$failures" -gt 0 \]; then echo "negative controls: \$failures failed"; exit 1; fi/);
+  // Production names appear only as guard input (env assignments), never as a curl / fetch target.
+  for (const line of sh.split("\n").filter((l) => /curl|fetch\(|verify\(\[/.test(l))) {
+    assert.doesNotMatch(line, /xn--lrlig-sra|tjzbehwfagiwpwodsgwg|PROD_SITE|PROD_DB/, line);
+  }
+  for (const c of ["guard refuses PROD_BASE_URL", "suite config refuses without run-suite", "blackhole verify reports an unprotected name",
+    "an IPv4-only mapping fails the both-families check", "seed guard refuses a foreign database token",
+    "inside the test group the internet is not", "the tripwire refuses and records"]) assert.ok(sh.includes(c), c);
+});

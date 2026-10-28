@@ -232,6 +232,11 @@ jobs:
           grep -q "createClient" "$RUNNER_TEMP/cdn-supabase.js"
           curl -skf "https://esm.sh/@supabase/supabase-js@2" > /dev/null
 
+      # Every protection run against a deliberately wrong configuration must refuse it; a control that
+      # passes fails the job (a vacuous check is caught in every run). No control contacts production.
+      - name: Negative controls — before the lock
+        run: bash tests/isolated/negative-controls.sh pre-lock
+
       - name: Network lock — test group and containers reach loopback/private only (verified)
         run: |
           set -euo pipefail
@@ -239,6 +244,9 @@ jobs:
           sudo usermod -a -G "$ISOLATED_GROUP" "$USER"
           bash tests/isolated/egress-firewall.sh lock
           bash tests/isolated/egress-firewall.sh verify
+
+      - name: Negative controls — after the lock
+        run: bash tests/isolated/negative-controls.sh post-lock
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
         run: |
