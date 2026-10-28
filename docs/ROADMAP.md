@@ -552,6 +552,23 @@ _Last reviewed: 2026-07-01._
   which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
   its lock — a separate change.
 
+  **Isoleret E2E — D-110 løst i CI (2026-10-28, D-241).** `.github/workflows/isolated-e2e.yml` kører hele den
+  eksisterende Playwright-suite (de samme 1291 tests og de samme 289 browserbetingede spring) mod en lokal Supabase
+  pr. job. Hvert job har sin egen database, sine egne syntetiske konti og commit'ets egne Edge Functions.
+  Pipelinen er fail-closed over for produktionen i fem lag, og negative kontroller i hvert job beviser, at lagene
+  ikke er tomme. Den bruger ingen fælles lås og ingen produktionskonto.
+
+  Målt:
+  - 3 og 6 samtidige jobs, hver med 1002 bestået og 0 fejl.
+  - 9 jobs i ét workflow: 7 × 1002/0/0 og 2 × 1001/0/1. De to flaky er WebKit-navigationskapløb i specsene.
+  - **9 uafhængige workflows** (`d110/par-1`…`par-9`, ét job hver, som ni terminalers PR'er): 9 × 1002/0/0. Alle ni
+    suiter kørte samtidig i 20,6 min, uden kø, med 28,3 min gennemløb og 233,5 runner-minutter.
+  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0, Edge Runtime i første forsøg.
+
+  **Status: bevist i CI, ikke taget i brug.** Den gamle fulde suite under `e2e-shared-supabase` er uændret, og
+  overgangen kræver ejerens særskilte GO; planen står i D-241. password-help-driften mellem repository og produktion er
+  en separat opgave: D-243.
+
 ## Completed sections
 
 **Avatar / art track** (condensed — full register in `docs/project-state.md`):
