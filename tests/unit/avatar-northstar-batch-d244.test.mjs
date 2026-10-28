@@ -28,8 +28,8 @@ test("D-244 b1 designs: 24 valid designs, 8 tops / 8 bottoms / 8 closed shoes, e
 test("D-244 design rules: a colour change alone is not a design; sandals, text and logos are refused; every design names what it tests", () => {
   const b = clone(B1), d = clone(b.designs.find((x) => x.id === "top-polo-navy")); d.id = "top-polo-red"; d.tone = "mid"; d.garment = d.garment.replace("navy-blue", "red"); b.designs.push(d);
   assert.ok(NB.validateBatch(b).errors.some((e) => /top-polo-red: the same cut, material and pattern as top-polo-navy — a colour change alone/.test(e)));
-  const e2 = clone(B1); e2.designs.find((x) => x.id === "top-tee-hip-cream" || x.id === "top-crop-boxy-peach").cut = "short-sleeve crew-neck tee, hip length"; e2.designs.find((x) => x.id === "top-crop-boxy-peach").material = "cotton jersey";
-  assert.ok(NB.validateBatch(e2).errors.some((e) => /top-crop-boxy-peach: the same cut, material and pattern as top-tee-hip-cream/.test(e)), "also against the existing items");
+  const e2 = clone(B1), peach = e2.designs.find((x) => x.id === "top-waist-boxy-peach"); peach.cut = "short-sleeve crew-neck tee, hip length"; peach.material = "cotton jersey"; peach.garment = "a peach-coloured t-shirt with short sleeves and a straight hip-length hem";
+  assert.ok(NB.validateBatch(e2).errors.some((e) => /top-waist-boxy-peach: the same cut, material and pattern as top-tee-hip-cream/.test(e)), "also against the existing items");
   const s = clone(B1); s.designs.find((x) => x.category === "shoes").type = "sandals"; assert.ok(NB.validateBatch(s).errors.some((e) => /sandals are parked/.test(e)));
   const t = clone(B1); t.designs[0].garment += " with a small logo"; assert.ok(NB.validateBatch(t).errors.some((e) => /no text, logo/.test(e)));
   const o = clone(B1); o.designs.find((x) => x.category === "shoes").covering = "open-footwear"; assert.ok(NB.validateBatch(o).errors.some((e) => /closed footwear/.test(e)));
@@ -62,9 +62,9 @@ test("D-244 call plan: PREPARED, NOT AUTHORISED — no token, 0 authorised, ever
   assert.deepEqual(C.calls.slice(0, 6).map((c) => c.category), ["top", "bottom", "shoes", "top", "bottom", "shoes"]);
   assert.equal(new Set(C.calls.map((c) => c.item)).size, 24);
   // usage measured on the 12 D-228/D-235 receipts; two price scenarios with their assumptions written down
-  const k = NB.costEstimate(1); assert.equal(k.perCall.A, Math.round(((3072 * 8 + 357 * 5) / 1e6 + 1372 * 30 / 1e6) * 1e4) / 1e4); assert.equal(k.perCall.B, Math.round(((3072 * 10 + 357 * 5) / 1e6 + 0.25) * 1e4) / 1e4);
-  assert.ok(C.cost.total.B < 10, "the ceiling scenario stays under 10 USD for 28 calls: " + C.cost.total.B);
-  assert.ok(C.stopRules.some((r) => /quality checkpoint after call 6/.test(r)) && C.stopRules.some((r) => /9 of the calls sent/.test(r)));
+  // D-245: the documented price (gpt-image-2.5-sunburst, OpenAI pricing page) × measured usage; tested in avatar-northstar-batch-d245
+  assert.ok(C.cost.totalMax < 2.5 && C.cost.perCallMax > 0.06, "28 calls at the documented price: " + C.cost.totalMax);
+  assert.ok(C.stopRules.some((r) => /checkpoint rules C1–C5 after call 6/.test(r)) && C.stopRules.some((r) => /9 of the calls sent/.test(r)));
 });
 
 test("D-244 matrix: 10 tops × 12 bottoms × 12 shoes = 1440 combinations, each in exactly one chunk; chunk manifests pass the pipeline's validation", () => {
@@ -92,7 +92,7 @@ test("D-244 status register: technical pass = kandidat, never godkendt; owner ap
   const approve = (by, extra = {}) => ({ entries: [...[T, Bo, S].map((id) => ({ kind: "item", id, verdict: "approved", by, layers: base.items[id].layers, ...extra })), { kind: "outfit", id: o1, verdict: "approved", by, fullPngSha256: base.outfits[o1].fullPngSha256 }] });
   assert.equal(NB.statusRegister(B1, [{ dir: "x/run-1", run }], approve("assistant")).outfits[o1].status, "kandidat", "only the owner approves");
   const ok = NB.statusRegister(B1, [{ dir: "x/run-1", run }], approve("owner")); assert.equal(ok.outfits[o1].status, "godkendt"); assert.equal(ok.items[T].status, "godkendt");
-  assert.deepEqual([ok.summary.combinationsOfApprovedItems, ok.summary.approvedAmongThem], [1, 1]);
+  assert.deepEqual([ok.summary.investigation.combinationsOfApprovedItems, ok.summary.investigation.approvedAmongThem], [1, 1]);
   const stale = approve("owner"); stale.entries[0].layers = { "layer-topBody.png": sha("other") };
   const st = NB.statusRegister(B1, [{ dir: "x/run-1", run }], stale); assert.equal(st.items[T].status, "kræver-gennemgang", "an approval that no longer matches the layers"); assert.equal(st.outfits[o1].status, "kræver-gennemgang");
   const two = approve("owner"); two.entries.splice(2, 1);   // the outfit and two of its three items approved
