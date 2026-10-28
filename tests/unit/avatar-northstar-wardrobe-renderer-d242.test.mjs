@@ -124,7 +124,7 @@ test("D-242 wiring: the renderer tries the figure first and atomically, never th
   assert.match(R, /const img = await _loadImage\(src\);/); assert.ok(!/_loadImage\(cdnUrl/.test(R), "the layers load from the origin");
   assert.match(R, /img\.src = layer\.origin \? layer\.src : cdnUrl\(layer\.src\);/);
   assert.match(read("js/avatar-blink-engine.js"), /avatarRenderPath === 'northstar'\) return;/);
-  assert.match(read("js/avatar-expression-engine.js"), /avatarRenderPath === "northstar"\) \{\s*this\._overlay = null;/);
+  assert.match(read("js/avatar-expression-engine.js"), /avatarRenderPath === "northstar"\) \{\s*this\._overlay = null;\s*return;/);
   const H = read("avatar.html");
   assert.match(H, /<div class="northstar-panel" id="northstarPanel" hidden><\/div>/);
   assert.match(H, /try \{\s*const ns = await import\("\.\/js\/avatar-northstar-panel\.js"\);[\s\S]*?\} catch \(_e\) \{ \/\* no panel \*\/ \}/);
