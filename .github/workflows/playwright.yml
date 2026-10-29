@@ -292,11 +292,13 @@ jobs:
             .write();
 
   # ── Required check `test` — dynamic per-mode job-level lock ──────────────────
-  # Always runs (if: always()) so the required `test` check reports in every mode, even if
-  # classify failed. Job-level concurrency comes from classify; missing/invalid → shared lock.
+  # Runs on push to main and manual dispatch, in every mode, even if classify failed. NOT on pull
+  # requests since D-241 step C: a PR's E2E check is `isolated-e2e (run 1)` (isolated-e2e.yml, required
+  # by the main ruleset with `unit`), so PRs no longer queue on the shared lock. Job-level concurrency
+  # comes from classify; missing/invalid → shared lock.
   test:
     needs: classify
-    if: always()
+    if: always() && github.event_name != 'pull_request'
     # 90, not 60: the suite outgrew the old ceiling. Measured on 860d653 — 816 tests, 705 resolved
     # (454 passed, 251 skipped) and **0 failures** when the job was killed at 60 minutes. It was a
     # clock limit, not a test result. `workers: 1` stays because every e2e test shares ONE Supabase
