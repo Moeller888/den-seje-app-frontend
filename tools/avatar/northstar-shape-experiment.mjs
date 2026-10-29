@@ -48,8 +48,8 @@ async function main() {
   const unionOf = (layers) => { const u = new Uint8ClampedArray(N * 4); for (const L of Object.values(layers)) for (let i = 0; i < N; i++) if (L[i * 4 + 3]) u.set(L.subarray(i * 4, i * 4 + 4), i * 4); return u; };
   const code = { "northstar-shape-extract.mjs": sha(readFileSync(join(ROOT, "tools", "avatar", "northstar-shape-extract.mjs"))), "northstar-item-pilot.mjs": sha(readFileSync(join(ROOT, "tools", "avatar", "northstar-item-pilot.mjs"))) };
   const report = { decision: "D-250", experiment: "A (shape-based extraction)", revision: SX.SHAPE_REVISION, rules: SX.SHAPE_RULES, set, method: IP.METHOD, code, items: {}, note: "existing pictures only; dev = the five b1 cases the rules were shaped on; regression = earlier items, seen before — not an independent validation" };
-  const outfitIds = (arg("--outfits") || "").split(",").filter(Boolean), kept = {};
-  for (const it of inputs(set)) {
+  const outfitIds = (arg("--outfits") || "").split(",").filter(Boolean), kept = {}, only = args.includes("--only-outfit-items");
+  for (const it of inputs(set)) { if (only && !outfitIds.includes(it.id)) continue;
     const buf = readFileSync(join(A, ...it.raw.split("/"))); if (sha(buf) !== it.rawSha256) throw new Error(it.id + ": the raw is not its pinned picture");
     const O = Uint8ClampedArray.from(decodePng(buf).px), t = T[it.category];
     const t0 = process.hrtime.bigint(), rss0 = process.memoryUsage().rss;
@@ -59,13 +59,16 @@ async function main() {
     const t1 = process.hrtime.bigint(); IP.processItem(w, base, T, it.category, O, { itemId: it.id }); const msProd = Number(process.hrtime.bigint() - t1) / 1e6;
     const P = unionOf(r.r0.layers), Q = unionOf(r.layers);
     // repainted fabric in the envelope (colourDist > CHANGE_TOL) the layer does NOT hold; and C-like pixels the layer DOES hold
-    let lostP = 0, lostQ = 0, likeC_P = 0, likeC_Q = 0, addedLikeC = 0;
+    let lostP = 0, lostQ = 0, likeC_P = 0, likeC_Q = 0, addedLikeC = 0, onHands = 0, onOtherBase = 0;
+    // false inclusions by place: added pixels on C's hands, and on ANOTHER category's base garment (the waist line of the base top)
+    const own = it.category === "top" ? 1 : it.category === "bottom" ? 2 : 0, hands = w.base.layers.hands;
+    for (let i = 0; i < N; i++) if (r.masks.added[i]) { if (hands[i * 4 + 3] >= 128) onHands++; if (base.sep.lab[i] && base.sep.lab[i] !== own) onOtherBase++; }
     for (let i = 441 * W; i < N; i++) { if (!t.allowed[i] || t.protect[i] || O[i * 4 + 3] < 128) continue; const d = IP.colourDist(O, i, C, i);
       if (d > IP.CHANGE_TOL) { if (!P[i * 4 + 3]) lostP++; if (!Q[i * 4 + 3]) lostQ++; }
       else { if (P[i * 4 + 3] >= 128) likeC_P++; if (Q[i * 4 + 3] >= 128) likeC_Q++; if (r.masks.added[i]) addedLikeC++; } }
     report.items[it.id] = { set: it.set, category: it.category, covering: r.covering,
       production: { ok: r.r0.ok, faults: r.r0.faults, layerPx: P.reduce((s, v, k) => s + (k % 4 === 3 && v >= 128 ? 1 : 0), 0), repaintedNotInLayerPx: lostP, cLikeInLayerPx: likeC_P, ms: Math.round(msProd) },
-      a: { ok: r.ok, faults: r.faults, layerPx: Q.reduce((s, v, k) => s + (k % 4 === 3 && v >= 128 ? 1 : 0), 0), repaintedNotInLayerPx: lostQ, cLikeInLayerPx: likeC_Q, addedCLikePx: addedLikeC, ...r.stats, ms: Math.round(ms), rssMB: Math.round(rss / 1048576), rssDeltaMB: Math.round((rss - rss0) / 1048576) } };
+      a: { ok: r.ok, faults: r.faults, layerPx: Q.reduce((s, v, k) => s + (k % 4 === 3 && v >= 128 ? 1 : 0), 0), repaintedNotInLayerPx: lostQ, cLikeInLayerPx: likeC_Q, addedCLikePx: addedLikeC, addedOnHandsPx: onHands, addedOnOtherBasePx: onOtherBase, ...r.stats, ms: Math.round(ms), rssMB: Math.round(rss / 1048576), rssDeltaMB: Math.round((rss - rss0) / 1048576) } };
     // the sheet: raw | production layer | A layer | marks (added green, uncertain enclosed yellow, uncertain open orange)
     const marks = new Uint8ClampedArray(flat(O, bg)); for (let i = 0; i < N; i++) { if (r.masks.added[i]) marks.set([20, 170, 70, 255], i * 4); else if (r.masks.uncertainEnclosed[i]) marks.set([235, 200, 0, 255], i * 4); else if (r.masks.uncertainOpen[i]) marks.set([255, 130, 0, 255], i * 4); }
     const g = grid([half(O), half(checker(P)), half(checker(Q)), half(marks)], 4, 10); writeFileSync(join(OUT, it.id + ".png"), encodePng(g.w, g.h, g.px));
