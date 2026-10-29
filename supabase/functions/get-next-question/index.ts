@@ -219,7 +219,7 @@ serve(async (req) => {
 
     if (route.newQuestions === "level" || route.newQuestions === "level+mix") {
       // LEVEL_ENGINE=v1: the pupil's server-owned level for the subject, nearest-level candidates, no
-      // grade ceiling (migration 20261022120000; ./level-flow.ts). Needs migrations #351, A and B.
+      // grade ceiling (migration 20261029120000; ./level-flow.ts). Needs migrations #351, A and B.
       const { ordered, level, mixKind } = await loadLevelPlan(admin() as unknown as LevelReadClient, {
         studentId: student_id,
         subject: scope.subject,
@@ -351,7 +351,7 @@ serve(async (req) => {
       // v2: "exhausted" means no SERVABLE unserved question is left — the same rule the v2 candidate
       // window uses (public.question_is_servable), so a pool that holds only formats the client cannot
       // show still reaches repeats instead of "no questions". Every other guard is identical.
-      // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261022120000).
+      // LEVEL_ENGINE=v1: the same guards over the level engine's pool (20261029120000).
       const { data: repeatId, error: repeatError } = route.repeatArgs !== "student+domains"
         ? (mixEngine === "v2"
           ? await admin().rpc(

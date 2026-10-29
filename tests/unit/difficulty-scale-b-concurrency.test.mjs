@@ -1,4 +1,4 @@
-// REAL concurrency proof for migration 20261022120000 (the level engine) on a real PostgreSQL server with
+// REAL concurrency proof for migration 20261029120000 (the level engine) on a real PostgreSQL server with
 // several simultaneous connections — the one property PGlite (single connection) cannot show.
 //
 // Runs only when LEVEL_ENGINE_PG_URL points at a disposable PostgreSQL server where the user may create

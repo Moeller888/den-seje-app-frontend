@@ -69,7 +69,7 @@ CREATE INDEX idx_student_level_fold_log_student
 
 COMMENT ON TABLE public.student_level_fold_log IS
   'One row per question instance whose verdict moved the pupil''s level (advance_student_level): the '
-  'primary key makes the level update exactly-once. Server-only. See 20261022120000.';
+  'primary key makes the level update exactly-once. Server-only. See 20261029120000.';
 
 ALTER TABLE public.student_level_fold_log ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.student_level_fold_log FROM PUBLIC, anon, authenticated;
@@ -206,7 +206,7 @@ $$;
 COMMENT ON FUNCTION public.advance_student_level(uuid, text, smallint) IS
   'Folds each new first, auto-graded verdict of a subject exactly once (student_level_fold_log) into the '
   'pupil''s level 1-10000: +max(15, round(150/sqrt(n+1))) if correct, −3× if not. Seed per §4.2, fixed at '
-  'creation. service_role only, SECURITY INVOKER. See 20261022120000.';
+  'creation. service_role only, SECURITY INVOKER. See 20261029120000.';
 
 REVOKE ALL ON FUNCTION public.advance_student_level(uuid, text, smallint) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.advance_student_level(uuid, text, smallint) TO service_role;
@@ -356,7 +356,7 @@ $$;
 COMMENT ON FUNCTION public.get_level_questions_for_student(uuid, integer, text[], integer) IS
   'Level engine candidates: active, levelled, servable, never-served questions in the domains, nearest '
   'difficulty_level first, then md5(student_id||question_id). No grade ceiling. service_role only, '
-  'SECURITY INVOKER. See 20261022120000.';
+  'SECURITY INVOKER. See 20261029120000.';
 
 REVOKE ALL ON FUNCTION public.get_level_questions_for_student(uuid, integer, text[], integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_level_questions_for_student(uuid, integer, text[], integer) TO service_role;
@@ -447,7 +447,7 @@ $$;
 
 COMMENT ON FUNCTION public.request_repeat_level_question_for_student(uuid, text[]) IS
   'Level engine repeat: #351''s servable repeat without the grade ceiling, over levelled questions only. '
-  'service_role only, SECURITY INVOKER. See 20261022120000.';
+  'service_role only, SECURITY INVOKER. See 20261029120000.';
 
 REVOKE ALL ON FUNCTION public.request_repeat_level_question_for_student(uuid, text[]) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.request_repeat_level_question_for_student(uuid, text[]) TO service_role;

@@ -162,7 +162,7 @@ test("the admin client is used only for the instance insert and the server-only 
     // (migration 20261019150000; service_role only, same student-scoped guards).
     "rpc:request_repeat_question_servable_for_student",
     "rpc:request_repeat_question_for_student",
-    // LEVEL_ENGINE "v1" only: the repeat over the level engine's pool (migration 20261022120000;
+    // LEVEL_ENGINE "v1" only: the repeat over the level engine's pool (migration 20261029120000;
     // service_role only, SECURITY INVOKER, same student-scoped guards).
     "rpc:request_repeat_level_question_for_student",
     "from:question_instances",

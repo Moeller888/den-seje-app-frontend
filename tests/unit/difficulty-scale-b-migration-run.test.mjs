@@ -1,7 +1,7 @@
-// RUNTIME proof for migration 20261022120000_difficulty_scale_b (the level engine), executed UNMODIFIED on
+// RUNTIME proof for migration 20261029120000_difficulty_scale_b (the level engine), executed UNMODIFIED on
 // a real PostgreSQL (PGlite, in-process — no Docker, no network) in production order:
 //   production-faithful base schema (helpers/prod-base-schema.mjs, read from the live catalog)
-//   → 20261019150000 (#351) → 20261020120000 (A) → 20261022120000 (B), with inactive, levelled rows
+//   → 20261019150000 (#351) → 20261020120000 (A) → 20261029120000 (B), with inactive, levelled rows
 //   shaped like the content PRs (#358…#365, inserted INACTIVE with metadata.level_batch).
 // The live get_unserved_questions_for_student / request_repeat_question_for_student are read unmodified
 // from 20261016160000 so the four flag combinations run against real SQL.

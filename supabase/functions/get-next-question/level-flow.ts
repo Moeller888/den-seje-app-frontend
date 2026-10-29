@@ -5,7 +5,7 @@
 // THE FLOW, per request, through the BACKEND client and always for the verified student id:
 //   1. advance_student_level(student, subject, grade) — creates the pupil's level for the subject on
 //      first use and folds every new first, auto-graded verdict into it exactly once (migration
-//      20261022120000; the only write, and only to student_subject_level / student_level_fold_log);
+//      20261029120000; the only write, and only to student_subject_level / student_level_fold_log);
 //   2. get_level_questions_for_student(student, level, domains) — active, levelled, servable, never
 //      served questions, nearest level first (no grade ceiling);
 //   3. ordering: the candidates are re-expressed as a band RELATIVE to the pupil

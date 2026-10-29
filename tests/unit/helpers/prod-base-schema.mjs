@@ -4,7 +4,7 @@
 // has_table_privilege, pg_default_acl) on 2026-10-21/22 — catalog only, no rows.
 //
 // Integration order for the level engine: PROD_BASE_SQL → 20261019150000 (#351) → 20261020120000 (A)
-// → 20261022120000 (B). Content migrations can be loaded on top to prove they satisfy the live
+// → 20261029120000 (B). Content migrations can be loaded on top to prove they satisfy the live
 // constraints (content_valid_check, questions_answer_format_check, the unique indexes …).
 //
 // HONEST LIMITS: PGlite is PostgreSQL 18.x (production 17.6) and runs as a superuser, so function
@@ -136,5 +136,5 @@ export const PROD_BASE_SQL = `
 export const LEVEL_ENGINE_MIGRATIONS = Object.freeze([
   "20261019150000_question_format_mix.sql",
   "20261020120000_difficulty_scale_a.sql",
-  "20261022120000_difficulty_scale_b.sql",
+  "20261029120000_difficulty_scale_b.sql",
 ]);

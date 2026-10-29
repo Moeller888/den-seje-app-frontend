@@ -512,7 +512,7 @@ limits from the registry.
 **Status:** design approved (`docs/difficulty-scale-design.md`, owner decisions B1–B8, E1–E5, path A).
 Code behind the Edge secret `LEVEL_ENGINE`; unset = `off` = today's selection, unchanged. Needs, in
 order, `20261019150000` (#351), `20261020120000` (A: `questions.difficulty_level`,
-`student_subject_level`) and `20261022120000` (B) — **none applied**. Rollout, rollback and query
+`student_subject_level`) and `20261029120000` (B) — **none applied**. Rollout, rollback and query
 plans: [`docs/operations/level-engine-rollout.md`](./operations/level-engine-rollout.md).
 
 **Model.** Every question has a `difficulty_level` 1–10.000 (A backfills grade × band via

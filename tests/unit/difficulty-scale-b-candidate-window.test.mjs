@@ -1,4 +1,4 @@
-// RUNTIME proof that get_level_questions_for_student's candidate WINDOW (migration 20261022120000) returns
+// RUNTIME proof that get_level_questions_for_student's candidate WINDOW (migration 20261029120000) returns
 // exactly what the full search returns — the same ids in the same order — and that the fast path really
 // is fast: it reads through idx_questions_objective_level and calls question_is_servable on at most the
 // window, never on the whole subject. Executed UNMODIFIED on PGlite in production order
