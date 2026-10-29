@@ -211,13 +211,15 @@ export function existingRawPins() {
     for (const it of m.items) if (!out[it.id]) out[it.id] = { raw: it.raw, rawSha256: it.rawSha256, sourceCall: it.sourceCall, type: it.type, covering: it.covering }; }
   return out;
 }
-/** One runPipeline manifest per chunk. receipts: { id: { raw (relative to <Documents>/DenSejeApp-artefacts), rawSha256, sourceCall } }. */
+/** One runPipeline manifest per chunk. receipts: { id: { raw (relative to <Documents>/DenSejeApp-artefacts), rawSha256, sourceCall } }.
+ *  rawRoot is "." — northstar-item-pilot.mjs --run reads <Documents>/DenSejeApp-artefacts/<rawRoot>/<raw> (D-248: a placeholder
+ *  there broke the b1 checkpoint run). */
 export function chunkManifests(b, receipts) {
   const m = matrix(b), pins = existingRawPins(), typeOf = Object.fromEntries(b.designs.map((d) => [d.id, d]));
   const entry = (id) => { const d = typeOf[id], p = d ? receipts[id] : pins[id]; if (!p) return null;
     return { id, category: IP.ITEM_CATEGORY[id], type: d ? d.type : p.type, covering: IP.ITEM_CATEGORY[id] === "shoes" ? IP.COVERING[id] : "none", sourceCall: p.sourceCall, raw: p.raw, rawSha256: p.rawSha256 }; };
   return m.chunks.map((c) => { const items = c.items.map(entry).filter(Boolean);
-    const man = { decision: b.decision, batch: b.batch, chunk: c.bottom, method: b.method, rawRoot: "<Documents>/DenSejeApp-artefacts", note: "one bottom, every top and shoe of the batch matrix", items,
+    const man = { decision: b.decision, batch: b.batch, chunk: c.bottom, method: b.method, rawRoot: ".", note: "one bottom, every top and shoe of the batch matrix", items,
       findingsRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register.json", reviewRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json" };
     if (items.some((i) => i.category === "bottom")) IP.validateManifest(man); return man; });
 }
@@ -350,7 +352,7 @@ export function checkpointManifest(b, receipts) {
   const ids = [...(b.existing || []).map((e) => e.id), ...b.checkpoint.filter((id) => receipts[id])];
   const items = ids.map((id) => { const d = typeOf[id], p = d ? receipts[id] : pins[id];
     return { id, category: IP.ITEM_CATEGORY[id], type: d ? d.type : p.type, covering: IP.ITEM_CATEGORY[id] === "shoes" ? IP.COVERING[id] : "none", sourceCall: p.sourceCall, raw: p.raw, rawSha256: p.rawSha256 }; });
-  const man = { decision: b.decision, batch: b.batch, chunk: "checkpoint", method: b.method, rawRoot: "<Documents>/DenSejeApp-artefacts", note: "the existing items and the checkpoint designs", items,
+  const man = { decision: b.decision, batch: b.batch, chunk: "checkpoint", method: b.method, rawRoot: ".", note: "the existing items and the checkpoint designs", items,
     findingsRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register.json", reviewRegister: "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json" };
   IP.validateManifest(man); return man;
 }

@@ -385,6 +385,11 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Batch b1 closed after the checkpoint STOP — D-248.** 6 calls spent (5 pictures, jeans uncertain), 22 closed unused; C1
+  failed. Only the tartan skirt was technically OK (with the blue tee). Skin-near colours over C's skin are lost by the
+  colour-based extraction, and stripe edges trigger G-2 falsely. `rawRoot` fixed. Method note: the current extraction cannot reach
+  thousands of freely combinable items; next, test contour-based (colour-independent) identification offline on the existing
+  pictures. See `docs/decisions/D-248.md`.
 - **Batch b1 authorised — D-246: at most 24 + 4 calls; NOT EXECUTED (the execution is a separate owner instruction).**
   - **Adapter.** `tools/avatar/openai-send-northstar-batch-b1.mjs`, the D-235 one-shot model. Before every send it re-composes and
     validates the prompt. It enforces the order, a pipeline record per received picture, the second format/moderation/G-1 stops,
