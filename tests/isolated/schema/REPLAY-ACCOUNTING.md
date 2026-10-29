@@ -43,6 +43,7 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
 |---|---|---|
 | `20261026170000_recalculate_prestige_execute_containment` | `recalculate_prestige` findes ikke | `prestige.sql`, som er anvendt manuelt i produktionen, kørte til sidst. Den anvendes nu på sin plads, lige før `20260519000300_leaderboard`. |
 | `20261027120000_repeat_answer_coin_reward` | md5-vagten: "process_question_attempt er ændret" | Følgefejl af #16. Løst. |
+| `20261029150000_mc_grading_compensation` | `MC_GRADING_COMP: forventede præcis én instans …, fandt 0` | Datadelen kompenserer to rigtige forsøg i produktionen (D-254) og afbryder, når de mangler. **Kun skemadelen anvendes, ordret:** den låste tabel `public.progress_corrections` med RLS og `REVOKE ALL` (`SCHEMA_PART` med eksakte markører). |
 
 ## Hvad springes over, og hvorfor (kategorier)
 - **Tom fil:** `20260317165405_remote_schema.sql` er 0 bytes. Det er roden til D-110.

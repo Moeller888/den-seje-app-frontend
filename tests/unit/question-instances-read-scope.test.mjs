@@ -282,6 +282,13 @@ const REVIEWED_LATER_READERS = {
     "student_level_fold_log (RLS on, no policies, no client privileges). It also adds the plain index " +
     "idx_qi_student_answered. No policy, RLS, table privilege or existing function on question_instances " +
     "is touched (proven in difficulty-scale-b-migration-run.test.mjs).",
+  "20261029150000_mc_grading_compensation.sql":
+    "a one-off, owner-run data fix (D-254) in an anonymous DO block — no function, nothing a client can " +
+    "call. It reads question_instances only to resolve two attempts of one question by SHA-256 of their id " +
+    "(id, student_id) and returns nothing to anyone. Its writes go to student_progress and the new table " +
+    "progress_corrections (RLS on, no policies, REVOKE ALL from PUBLIC, anon, authenticated and " +
+    "service_role). No policy, RLS, table privilege or row of question_instances is touched (proven in " +
+    "mc-grading-compensation-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -410,7 +417,8 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261019150000_question_format_mix.sql",
      "20261025120000_student_rpc_caller_scope.sql",
      "20261027120000_repeat_answer_coin_reward.sql",
-     "20261029120000_difficulty_scale_b.sql"],
+     "20261029120000_difficulty_scale_b.sql",
+     "20261029150000_mc_grading_compensation.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

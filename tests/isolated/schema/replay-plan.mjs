@@ -82,6 +82,11 @@ export const SCHEMA_PART = Object.freeze({
     end: "$grading$;",
     reason: "data part rewrites production question rows and raises when they are absent; its schema part — process_question_attempt, created via EXECUTE $grading$ — is applied verbatim",
   },
+  "20261029150000_mc_grading_compensation.sql": {
+    start: "docs/migration-workflow-policy.md).",
+    end: "DO $mc_grading_compensation$",
+    reason: "data part compensates two production attempts (D-254) and raises when they are absent; its schema part — the locked public.progress_corrections table (RLS, REVOKE ALL) — is applied verbatim",
+  },
 });
 
 // The schema part of a SCHEMA_PART file, verbatim. Throws unless both markers occur exactly once.

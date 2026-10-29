@@ -61,10 +61,15 @@ async function freshDatabase() {
   const u = new globalThis.URL(URL);
   u.pathname = `/${name}`;
   const dbUrl = u.toString();
+  // Every session gets a statement_timeout, so a wrong expectation fails the test instead of hanging the
+  // job. Its backend pid is read at connect time: the pg client queues queries per connection, so a pid
+  // asked for while that connection is blocked would only arrive after the block.
   const connect = async () => {
     const c = new pg.Client({ connectionString: dbUrl });
     opened.push(c);
     await c.connect();
+    await c.query("SET statement_timeout = '30s'");
+    c.pid = (await c.query("SELECT pg_backend_pid() AS p")).rows[0].p;
     return c;
   };
   const setup = await connect();
@@ -95,7 +100,6 @@ async function waitsOnLock(observer, pid) {
   }
   return false;
 }
-const pidOf = async (c) => (await c.query("SELECT pg_backend_pid() AS p")).rows[0].p;
 
 test("real PostgreSQL: compensation under simultaneous sessions", { skip: SKIP, timeout: 120000 }, async (t) => {
   t.after(teardown);
@@ -106,10 +110,11 @@ test("real PostgreSQL: compensation under simultaneous sessions", { skip: SKIP, 
     const pupil = await connect(), migr = await connect();
     await pupil.query("BEGIN");
     await pupil.query(ANSWER, [PUPIL_A]);
-    const running = migr.query(withTargets());
-    assert.equal(await waitsOnLock(setup, await pidOf(migr)), true, "the migration must wait for the pupil's row");
+    const running = migr.query(withTargets()).then(() => "ok", (e) => e);
+    const waited = await waitsOnLock(setup, migr.pid);
     await pupil.query("COMMIT");
-    await running;
+    assert.equal(await running, "ok");
+    assert.equal(waited, true, "the migration must wait for the pupil's row");
     assert.deepEqual(await row(setup, PUPIL_A), {
       xp: base.xp + 20, coins: base.coins + 10,
       correct_answers: base.correct_answers + 2, total_correct_answers: base.total_correct_answers + 2,
@@ -123,10 +128,11 @@ test("real PostgreSQL: compensation under simultaneous sessions", { skip: SKIP, 
     const pupil = await connect(), migr = await connect();
     await migr.query("BEGIN");
     await migr.query(withTargets());
-    const answering = pupil.query(ANSWER, [PUPIL_B]);
-    assert.equal(await waitsOnLock(setup, await pidOf(pupil)), true, "the answer must wait for the migration");
+    const answering = pupil.query(ANSWER, [PUPIL_B]).then(() => "ok", (e) => e);
+    const waited = await waitsOnLock(setup, pupil.pid);
     await migr.query("COMMIT");
-    await answering;
+    assert.equal(await answering, "ok");
+    assert.equal(waited, true, "the answer must wait for the migration");
     assert.deepEqual(await row(setup, PUPIL_B), {
       xp: base.xp + 20, coins: base.coins + 10,
       correct_answers: base.correct_answers + 2, total_correct_answers: base.total_correct_answers + 2,
