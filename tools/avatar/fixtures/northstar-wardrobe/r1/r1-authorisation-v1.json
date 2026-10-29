@@ -1,0 +1,108 @@
+{
+  "decision": "D-255",
+  "experiment": "R1 (D-253): the garment generated apart from the body",
+  "status": "AUTHORISED by D-255 (D-255 R1: 3 CALLS AUTHORISED): each entry is ONE single-use call; no earlier permission is reused; the plan r1-plan-v1.json stays the unauthorised plan it was",
+  "meta": {
+    "authorisesImageRequest": false,
+    "why": "authorisation is the exact token in D-255's decision status plus this file's unspent entries, never a general boolean",
+    "kind": "a bounded method experiment: no catalogue, no runtime, no activation, no item approval"
+  },
+  "budget": {
+    "authorised": 3,
+    "reserve": 0,
+    "retries": 0,
+    "fallback": false,
+    "reusesEarlierPermissions": false,
+    "automaticExtension": false,
+    "separateFrom": "every earlier budget (D-207, D-218, D-228, D-235, D-246 b1): all closed and not reused",
+    "enforcedLimit": "the call count (three one-shot claims); the price is an estimate",
+    "price": {
+      "verifiedAt": "2026-10-29",
+      "source": "https://developers.openai.com/api/docs/pricing (Standard, gpt-image-2.5-sunburst: text input $5.00, image input $8.00, image output $30.00 per 1M tokens) — the same as the documented basis of 2026-10-28",
+      "perCallEstimate": 0.0687,
+      "totalEstimate": 0.2062,
+      "note": "an estimate, not a guaranteed maximum: the token counts are measured on another request shape; the billed amount is read on the OpenAI usage page"
+    }
+  },
+  "privacy": {
+    "cSentToApi": "allowed for these three calls only (owner, 2026-10-29)",
+    "canvasesSentToApi": "allowed for these three calls only (the cuts' private template canvases, derived from generated items on C)",
+    "publishOrTrack": "never — C, the canvases, the raw results and every review sheet stay outside both clones (D-127 §2)",
+    "h1": "never used"
+  },
+  "frozen": {
+    "plan": { "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-plan-v1.json", "sha256": "250b6001220bd6d6c602fc68d330a5fe7e0fb51377ce1042cb1a4fe745140d63" },
+    "prompts": { "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-prompts-v1.json", "sha256": "4c253de4de2af56f2e610cc594c53d33067e04b0797525172129f7b93247a25b" },
+    "method": "r1-v1",
+    "production": "d240",
+    "outfitRevision": "d239",
+    "evaluation": "tools/avatar/northstar-r1-evaluate.mjs (the automatic measures, the review sheets and the record the adapter requires before the next call)",
+    "noChangeDuringTheExperiment": "the method, its limits, the checks and their thresholds are not changed while the experiment runs; any later correction is a new method version"
+  },
+  "request": {
+    "endpoint": "https://api.openai.com/v1/images/edits",
+    "model": "gpt-image-2.5-sunburst-2026-09-08",
+    "parameters": { "size": "1024x1536", "quality": "high", "n": 1, "output_format": "png", "background": "transparent" },
+    "fieldOrder": ["model", "image[]", "image[]", "prompt", "size", "quality", "n", "output_format", "background"],
+    "neverSentFields": ["mask", "input_fidelity", "output_compression", "response_format", "moderation"],
+    "images": [
+      { "role": "Image 1", "what": "the call's cut canvas (request.canvases)" },
+      { "role": "Image 2", "what": "C", "name": "d202-base-figure-v2.image-1.png", "bytes": 1300423, "sha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818", "tracked": false }
+    ],
+    "canvases": {
+      "tee-hip": { "name": "image-1.tee-hip.png", "bytes": 73293, "sha256": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa", "tracked": false },
+      "trousers-square": { "name": "image-1.trousers-square.png", "bytes": 113809, "sha256": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c", "tracked": false },
+      "ankleboot": { "name": "image-1.ankleboot.png", "bytes": 49601, "sha256": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89", "tracked": false }
+    },
+    "canvasLocation": "<Documents>/DenSejeApp-artefacts/r1-calls/references/<cut>/image-1.<cut>.png",
+    "canvasGenerator": "node tools/avatar/northstar-r1-proof.mjs --out <dir outside the repo> (deterministic; identical bytes in four runs)"
+  },
+  "acceptance": {
+    "automatic": "the plan's measures: registration within ±16 px and not at the window edge, template core holes ≤ 0.5 %, paint outside ≤ 25 % of the core, fitCheck (d232 fit revision) passed, every partner outfit with the template item's result",
+    "beyondAlpha": [
+      "the whole cut is covered with usable material: core holes, partial-alpha core pixels and core opaque share are measured; a hole is never filled and never counted as passed",
+      "neckband, cuffs, pocket, waistband and collar fit the cut visually",
+      "no second outline inside the cut's contour, no doubled fold shading, no clipped detail where the material meets the cut's contour and shading (the second-outline ink inside the edge is measured)",
+      "the pattern is kept across body and sleeves",
+      "no skin or background is drawn into the material"
+    ],
+    "review": "the assistant reviews every item and its critical seams visually (the evaluation's sheets); review is not manual effort",
+    "classes": {
+      "automaticallyUsable": "every automatic measure passed AND the visual review finds none of the defects above",
+      "technicallyRejected": "placement, holes, fit or format failed",
+      "requiresManualDecision": "anything else, reported apart"
+    },
+    "combo2Pattern": "the known COMBO-2 sensitivity to a high-contrast pattern below a hem (D-253) is reported apart as its own finding; the check is not changed"
+  },
+  "stopRules": [
+    "credit or access: HTTP 401, 403 or 429, or an error code naming quota or billing",
+    "uncertain dispatch: DISPATCHED_RESULT_UNKNOWN, NOT_DISPATCHED, RESPONSE_BODY_UNREADABLE, UNEXPECTED, or a claim without a written outcome",
+    "request shape: HTTP 400 that is not a moderation block, or any HTTP 5xx",
+    "moderation: a moderation block (that call is spent)",
+    "template ignored: an R1 record whose coverage of the template core is below 0.80",
+    "processing: a received picture without its R1 record (northstar-r1-evaluate.mjs) stops the next call until it is evaluated",
+    "the executor's stop file R1-STOP.json"
+  ],
+  "calls": [
+    { "callId": "R1-1-top-tee-hip-apricot-jersey", "order": 1, "category": "top", "cut": "tee-hip", "canvas": "906e7bc18a2f5e41cbb1fb8a56e2272386b1df0a86284f42a83a02d62f92f4aa",
+      "prompt": { "sha256": "ad81aa616d5e01774e4e6be9d7fe73531ba6cc3f901fe197290b2db6ef45df1e" },
+      "claim": { "identity": "R1-1-top-tee-hip-apricot-jersey-claim", "filename": "R1-1-top-tee-hip-apricot-jersey.claim.json", "eventsFilename": "R1-1-top-tee-hip-apricot-jersey.events.jsonl" },
+      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" },
+    { "callId": "R1-2-bottom-trousers-houndstooth", "order": 2, "category": "bottom", "cut": "trousers-square", "canvas": "fb65bf04b4e8619adaa0dd138d7e189db3aa7924abf846ca2a78178ea595a15c",
+      "prompt": { "sha256": "420b9843e7339abdfac430c911a9b9f3c0fe2dcb62da4c40f24cd2bae5dae4d3" },
+      "claim": { "identity": "R1-2-bottom-trousers-houndstooth-claim", "filename": "R1-2-bottom-trousers-houndstooth.claim.json", "eventsFilename": "R1-2-bottom-trousers-houndstooth.events.jsonl" },
+      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" },
+    { "callId": "R1-3-shoes-ankleboot-nude-leather", "order": 3, "category": "shoes", "cut": "ankleboot", "canvas": "9ba302a15669cc3d3b01a7b98c6d08f45c4006ebb96779218865804be62dcd89",
+      "prompt": { "sha256": "073ff0d8d57b397ccbe60702df957c6a956f43b67c5ed140a2f16c4213464da9" },
+      "claim": { "identity": "R1-3-shoes-ankleboot-nude-leather-claim", "filename": "R1-3-shoes-ankleboot-nude-leather.claim.json", "eventsFilename": "R1-3-shoes-ankleboot-nude-leather.events.jsonl" },
+      "mandateState": "UNSPENT", "outcome": "NOT YET ATTEMPTED" }
+  ],
+  "adapterImplementations": {
+    "isAuthorisation": false,
+    "adapter": "tools/avatar/openai-send-northstar-r1-d255.mjs",
+    "status": "IMPLEMENTED — NOT EXECUTED",
+    "ownerApprovalFlag": "--owner-approval=D-255",
+    "mergeIsNotAnInstruction": true,
+    "executionRequiresSeparateOwnerInstruction": true
+  }
+}

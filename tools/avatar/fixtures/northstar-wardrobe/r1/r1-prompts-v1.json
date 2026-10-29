@@ -1,0 +1,31 @@
+{
+  "decision": "D-255",
+  "plan": {
+    "file": "tools/avatar/fixtures/northstar-wardrobe/r1/r1-plan-v1.json",
+    "sha256": "250b6001220bd6d6c602fc68d330a5fe7e0fb51377ce1042cb1a4fe745140d63"
+  },
+  "composition": "promptFrame with {noun} and {design} of the call replaced once each; nothing else",
+  "items": {
+    "R1-1-top-tee-hip-apricot-jersey": {
+      "category": "top",
+      "cut": "tee-hip",
+      "prompt": "Image 1 is a garment template: one short-sleeved T-shirt on a transparent background, painted flat grey with its fold shading, at its exact position and size on a 1024x1536 canvas. Image 2 shows the cartoon character it is made for; use Image 2 only for the drawing style (clean dark outlines, soft cel shading, light from the upper left). Do not draw the character or any part of a body: no skin, head, neck, arms, hands, legs or feet. Repaint the grey template as the garment described below. Fill the entire grey silhouette, keep its outline, position and size exactly, keep its folds as the fabric's shading, and paint nothing outside it. The background stays fully transparent. Garment: a short-sleeved, hip-length T-shirt in soft apricot-peach cotton jersey (a colour close to light skin), with a slightly darker peach ribbed crew neckband, ribbed sleeve cuffs, a small patch pocket on the wearer's left chest with visible top-stitching, and a double-stitched hem.",
+      "bytes": 970,
+      "sha256": "ad81aa616d5e01774e4e6be9d7fe73531ba6cc3f901fe197290b2db6ef45df1e"
+    },
+    "R1-2-bottom-trousers-houndstooth": {
+      "category": "bottom",
+      "cut": "trousers-square",
+      "prompt": "Image 1 is a garment template: one pair of straight-leg trousers on a transparent background, painted flat grey with its fold shading, at its exact position and size on a 1024x1536 canvas. Image 2 shows the cartoon character it is made for; use Image 2 only for the drawing style (clean dark outlines, soft cel shading, light from the upper left). Do not draw the character or any part of a body: no skin, head, neck, arms, hands, legs or feet. Repaint the grey template as the garment described below. Fill the entire grey silhouette, keep its outline, position and size exactly, keep its folds as the fabric's shading, and paint nothing outside it. The background stays fully transparent. Garment: straight-leg trousers in a black-and-cream houndstooth wool pattern, with a solid black waistband carrying five belt loops, slanted front pocket openings with top-stitching, and a centre front crease.",
+      "bytes": 900,
+      "sha256": "420b9843e7339abdfac430c911a9b9f3c0fe2dcb62da4c40f24cd2bae5dae4d3"
+    },
+    "R1-3-shoes-ankleboot-nude-leather": {
+      "category": "shoes",
+      "cut": "ankleboot",
+      "prompt": "Image 1 is a garment template: one pair of closed ankle boots on a transparent background, painted flat grey with its fold shading, at its exact position and size on a 1024x1536 canvas. Image 2 shows the cartoon character it is made for; use Image 2 only for the drawing style (clean dark outlines, soft cel shading, light from the upper left). Do not draw the character or any part of a body: no skin, head, neck, arms, hands, legs or feet. Repaint the grey template as the garment described below. Fill the entire grey silhouette, keep its outline, position and size exactly, keep its folds as the fabric's shading, and paint nothing outside it. The background stays fully transparent. Garment: a pair of closed ankle boots in smooth nude-beige leather (a colour close to light skin), with a darker tan elastic side panel, a small pull loop at the back of the collar, visible stitching along the welt and a thin light-brown sole.",
+      "bytes": 931,
+      "sha256": "073ff0d8d57b397ccbe60702df957c6a956f43b67c5ed140a2f16c4213464da9"
+    }
+  }
+}

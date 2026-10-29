@@ -385,6 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **R1 experiment authorised — D-255: three one-shot calls, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-r1-d255.mjs`, the D-235 pattern: Image 1 is the cut's private canvas, Image 2
+    is C. Prompts, canvases, plan and model are pinned. There is no retry, reserve or fallback.
+  - **Gate.** Each received picture needs its R1 record (`northstar-r1-evaluate.mjs`) before the next call. Coverage of the template
+    core below 0.80 stops the run.
+  - **Acceptance.** It goes beyond the fixed alpha: real material over the core, details against the cut, double outlines, pattern
+    across body and sleeves, and no skin or background. COMBO-2's pattern sensitivity is reported apart.
+  - **Cost.** About $0.21 (an estimate; prices re-verified 2026-10-29). See `docs/decisions/D-255.md`.
 - **R1, the garment generated apart from the body — D-253 (plan only; no call sent; production stays d240).**
   - **Method.** `tools/avatar/northstar-r1-garment.mjs` (`r1-v1`). A cut is a fixed garment form taken once from an existing
     extracted item: silhouette, alpha, fold shading, contour, layer split, shadow and covering. A generated item supplies only
