@@ -385,6 +385,18 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **R1, the garment generated apart from the body — D-253 (plan only; no call sent; production stays d240).**
+  - **Method.** `tools/avatar/northstar-r1-garment.mjs` (`r1-v1`). A cut is a fixed garment form taken once from an existing
+    extracted item: silhouette, alpha, fold shading, contour, layer split, shadow and covering. A generated item supplies only
+    the material inside it.
+  - **Post-processing.** One integer translation, the template's alpha, and the cut's contour. Holes are measured and never
+    filled. Nothing is done per item.
+  - **Local proof.** `tools/avatar/northstar-r1-proof.mjs` runs simulated outputs only. Shifts are recovered exactly, alpha is
+    identical, and fitCheck is OK for skin-coloured material too. 18 of 20 outfits match the template item; the other two show
+    that COMBO-2 is sensitive to patterns at seams.
+  - **Plan.** `fixtures/northstar-wardrobe/r1/r1-plan-v1.json`: three calls (skin-near top, houndstooth bottom, skin-near
+    ankle boot), at most $0.21. It is NOT authorised.
+  - **Recommendation.** Run the three calls after a separate authorisation. See `docs/decisions/D-253.md`.
 - **Contour experiment A closed — D-252: not fit for general automatic extraction in its current form; production stays d240.**
   - **Finding.** a2 takes C's own body contour into the item (neck and shoulder line beyond a neckline, the arm line under a
     sleeve hem, the leg line above a shoe collar) on 14 of 26 items. The cause is a1's bounding-line rule, and it also explains
@@ -441,13 +453,16 @@ art layer behind them can be upgraded without a rewrite.
     approval; nothing hidden) → private export in D-242's format. The pipeline registers batch items from design files.
   - **Finding.** D-228/D-235 sent their five bottom prompts with "undefined" instead of the bottoms' contract sentence; b1 sends it.
   - **Ask.** At most 28 calls, $10 ceiling (estimate $1.89–$7.91). See `docs/decisions/D-244.md`.
-- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, local opt-in only; not activated for
+- **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, browser opt-in; not activated for
   pupils; no calls.**
+  - **Where (corrected by D-253).** It can be tried on lærlig.dk through a browser opt-in (`avatar.html?northstar=1`), not
+    only locally. All 31 layers and the panel are served (checked 2026-10-29). The owner's approval of the prototype's look and
+    test function stands; it is not a production approval.
   - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
     the pipeline's own arithmetic (`northstarCompose`). Any load failure or other equipped slot → today's avatar, whole.
   - **Assets.** 31 lossless WebP layers in `assets/avatar-northstar/` (owner exception to D-127 §2, public; `manifest.json`).
     All 19 K outfits are byte-identical to the pipeline. With the flag off, 54 browser pages are pixel-identical to main.
-  - **Opt-in.** `avatar.html?northstar=1`, then a K outfit in the panel (localStorage only).
+  - **Opt-in.** `avatar.html?northstar=1` (on lærlig.dk or locally), then a K outfit in the panel (stored in localStorage only).
   - **Limits.** No blink and neutral expression only; no hair/skin/eye variation; no head items. See `docs/decisions/D-242.md`.
 - **Northstar assistant review — D-240: method d240 (the assistant's review, not the owner's approval; no calls).**
   - **Fixed.** The brown ankle boot's arch (K16, K18, K19): what a closed shoe hides is taken from the picture's own opaque
