@@ -1,4 +1,4 @@
-// REAL concurrency proof for migration 20261029150000 (D-254) on a real PostgreSQL server with several
+// REAL concurrency proof for migration 20261029170000 (D-254) on a real PostgreSQL server with several
 // simultaneous connections — what PGlite (one connection) cannot show.
 //
 // Same switch as the level engine's test: runs only when LEVEL_ENGINE_PG_URL points at a disposable

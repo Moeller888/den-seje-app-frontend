@@ -1,4 +1,4 @@
-// Shared fixture for migration 20261029150000 (D-254): the tables the compensation reads and writes,
+// Shared fixture for migration 20261029170000 (D-254): the tables the compensation reads and writes,
 // as they are live (student_progress columns, NOT NULLs, CHECKs, FK, RLS policies and table grants
 // read from the catalog 2026-10-29), plus the reward tables it must leave alone.
 //
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-export const MIGRATION_FILE = "20261029150000_mc_grading_compensation.sql";
+export const MIGRATION_FILE = "20261029170000_mc_grading_compensation.sql";
 export const SQL = readFileSync(join(ROOT, "supabase", "migrations", MIGRATION_FILE), "utf8");
 export const QUESTION = "57c0e3db-090d-40fd-9a9b-a5609590f09a";
 const TARGETS_RE = /\$targets\$([\s\S]*?)\$targets\$/;

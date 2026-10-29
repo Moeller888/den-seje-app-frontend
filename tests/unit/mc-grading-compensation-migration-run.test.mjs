@@ -1,4 +1,4 @@
-// RUNTIME proof for migration 20261029150000_mc_grading_compensation.sql (D-254): executes the file
+// RUNTIME proof for migration 20261029170000_mc_grading_compensation.sql (D-254): executes the file
 // against PGlite (in-process PostgreSQL) on the production-faithful base schema plus the live shape of
 // student_progress and the reward tables. Real concurrency is in mc-grading-compensation-concurrency.
 //
@@ -67,7 +67,7 @@ test("compensates each of the two pupils exactly once: +10 xp, +5 coins, +1 and 
     [[PUPIL_A, INST_A, QUESTION], [PUPIL_B, INST_B, QUESTION]]);
   for (const r of rows) {
     assert.deepEqual([r.xp_delta, r.coins_delta, r.correct_answers_delta, r.total_correct_answers_delta], [10, 5, 1, 1]);
-    assert.equal(r.source_migration, "20261029150000_mc_grading_compensation");
+    assert.equal(r.source_migration, "20261029170000_mc_grading_compensation");
     assert.match(r.reason, /^D-254: /);
   }
 });

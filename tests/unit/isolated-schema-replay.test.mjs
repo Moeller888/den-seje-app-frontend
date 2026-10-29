@@ -167,7 +167,7 @@ test("SCHEMA_PART: markers occur exactly once; the applied part is the schema st
     assert.ok(sql.includes(got.trim().replace(/;$/, "")), file);
     assert.match(got.replace(/--[^\n]*/g, "").trim(), /^(CREATE OR REPLACE FUNCTION|alter table|CREATE TABLE IF NOT EXISTS)/i, file);
     assert.doesNotMatch(got, /\bfrom public\.avatar_generation_jobs\b|_d107_targets/i, `${file}: no data part`);
-    if (file === "20261029150000_mc_grading_compensation.sql") {
+    if (file === "20261029170000_mc_grading_compensation.sql") {
       // D-254: only the locked table — never the DO block that writes student_progress and the audit rows.
       assert.doesNotMatch(got, /\bDO \$|\bstudent_progress\b|\bINSERT\s+INTO\b/i, `${file}: no data part`);
       assert.match(got, /REVOKE ALL ON TABLE public\.progress_corrections FROM PUBLIC, anon, authenticated, service_role;/, `${file}: lockdown`);

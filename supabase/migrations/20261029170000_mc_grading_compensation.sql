@@ -55,7 +55,7 @@ COMMENT ON TABLE public.progress_corrections IS
 DO $mc_grading_compensation$
 DECLARE
   question   CONSTANT uuid    := '57c0e3db-090d-40fd-9a9b-a5609590f09a';
-  source     CONSTANT text    := '20261029150000_mc_grading_compensation';
+  source     CONSTANT text    := '20261029170000_mc_grading_compensation';
   why        CONSTANT text    := 'D-254: rigtigt MC-svar bedømt forkert, fordi facit afveg fra svarmuligheden (rettet af 20261022120000)';
   xp_add     CONSTANT integer := 10;
   coins_add  CONSTANT integer := 5;
