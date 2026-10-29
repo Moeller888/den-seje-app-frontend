@@ -385,6 +385,14 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Experiment A revision a2 — D-251 (experiment only; production stays d240).**
+  - **Method.** `tools/avatar/northstar-shape-extract-a2.mjs`: the layer contract decides which lines may close a region. C's
+    pixels of the layers in front of the category never join the item, and their lines never close.
+  - **Result.** On the 26 existing pictures (seen before, so not a validation): 0 px added in front, no regression of the 20, and
+    breton and high-tops OK. Skin-near fabric is kept. Outfits: 152 of 153 comparable combinations are identical to production; one
+    3 px hole appears at a shoe edge in an outfit that production already rejects.
+  - **Decision.** a2 is fit for a later independent validation, which needs new pictures and a separate authorisation. See
+    `docs/decisions/D-251.md`.
 - **Experiment A, shape-based extraction offline — D-250 (experiment only; production stays d240).**
   - **Method.** `tools/avatar/northstar-shape-extract.mjs` (`a1`) adds, on top of the production layer, only repainted regions
     closed by the item or a drawn line. Regions left as C are uncertain and never filled; open ones are never filled.
