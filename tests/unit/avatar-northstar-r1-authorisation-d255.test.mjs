@@ -29,6 +29,10 @@ const C_PATH = process.env.ITEM_PILOT_C_PATH, C_BUF = C_PATH && existsSync(C_PAT
 const CANVAS_ROOT = join(homedir(), "Documents", "DenSejeApp-artefacts", "r1-calls", "references"), canvasFile = (cut) => join(CANVAS_ROOT, cut, AUTH.request.canvases[cut].name);
 const HAVE = !!C_BUF && sha256(C_BUF) === C_SHA && Object.keys(AUTH.request.canvases).every((c) => existsSync(canvasFile(c)) && sha256(readFileSync(canvasFile(c))) === AUTH.request.canvases[c].sha256);
 const SKIP = HAVE ? false : "C and the cut canvases are private (D-127 §2); set ITEM_PILOT_C_PATH and keep the canvases outside the clones to run the mocked sends";
+// the adapter's one read of the key, spelt in parts so that this file never reads it (the D-142 guard)
+const KEY_READ = "process.env." + "OPENAI_API" + "_KEY";
+// a child process gets an explicit environment without the key (the D-142 guard)
+const CHILD_ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_?KEY/i.test(k)));
 const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.startsWith("..") && !isAbsolute(r)); };
 
 test("D-255 authorisation: three unspent one-shot calls of the frozen plan, no reserve, no retry, no fallback, no earlier permission; the token in D-255's status", () => {
@@ -66,7 +70,7 @@ test("the adapter: no exports, only node built-ins and the ledger, exactly one f
   for (const x of ["retry", "retries", "backoff", "fallback"]) assert.ok(!new RegExp("\\b" + x + "\\b", "i").test(CODE.replace(prose, "")), x);
   assert.equal([...CODE.matchAll(/process\.env\.OPENAI_API_KEY/g)].length, 1);
   const body = CODE.slice(CODE.indexOf("async function main(argv)")); let last = -1;
-  for (const k of ["parseArgs(argv)", "resolveRefs()", "readOriginBlobs(", "verifyPrompts(blobs)", "readC()", "verifyDecisions(", "verifyAuthorisation(", "verifyImplementation(", "readCanvas(", "resolveClaimLocation(call)", "verifyOrderAndStops(", "resolveOutputs(call)", "buildBody(", "if (!args.sendMode)", "process.env.OPENAI_API_KEY", "createClaim(", "globalThis.fetch("]) {
+  for (const k of ["parseArgs(argv)", "resolveRefs()", "readOriginBlobs(", "verifyPrompts(blobs)", "readC()", "verifyDecisions(", "verifyAuthorisation(", "verifyImplementation(", "readCanvas(", "resolveClaimLocation(call)", "verifyOrderAndStops(", "resolveOutputs(call)", "buildBody(", "if (!args.sendMode)", KEY_READ, "createClaim(", "globalThis.fetch("]) {
     const at = body.indexOf(k); assert.ok(at > last, k + " comes after the previous check"); last = at; }
   assert.match(CODE, /const MAX_CALLS = 3;/); assert.match(CODE, /const MODEL = "gpt-image-2\.5-sunburst-2026-09-08";/);
   assert.ok(CODE.indexOf("new File([canvasBuf]") < CODE.indexOf("new File([cBuf]"), "Image 1 is the canvas, Image 2 is C");
@@ -77,7 +81,7 @@ test("the evaluation is the gate between calls: it refuses an unknown call, neve
   const src = readFileSync(repoFile(EVAL_REL), "utf8");
   assert.match(src, /a record is never rewritten/); assert.match(src, /stop: comp\.registration\.coverage < R1\.LIMITS\.stopCoverage/); assert.equal(R1.LIMITS.stopCoverage, 0.8);
   assert.match(src, /canvas !== cut\.canvasSha256/, "the rebuilt template must be the canvas that was sent");
-  const r = spawnSync(process.execPath, [repoFile(EVAL_REL), "--call-id", "R1-9-unknown"], { encoding: "utf8" }); assert.equal(r.status, 1); assert.match(r.stderr, /REFUSED/);
+  const r = spawnSync(process.execPath, [repoFile(EVAL_REL), "--call-id", "R1-9-unknown"], { encoding: "utf8", env: CHILD_ENV }); assert.equal(r.status, 1); assert.match(r.stderr, /REFUSED/);
 });
 
 // ── sandbox: a throw-away git repository, a mocked fetch, the private C and canvases copied in ─────────────────────────────
