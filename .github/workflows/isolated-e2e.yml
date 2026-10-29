@@ -55,7 +55,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       runs: ${{ steps.n.outputs.runs }}
+      scope: ${{ steps.scope.outputs.scope }}
+      files_b64: ${{ steps.scope.outputs.files_b64 }}
     steps:
+      # Depth 2: the pull_request checkout is the PR's merge commit; its two parents are the base and
+      # the PR head, so `HEAD^1..HEAD` is exactly the PR's change set — no token, no API.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      # Pure-Markdown docs PRs take a fast, re-validated path; everything else, and every doubt, takes
+      # the full isolated suite (tests/isolated/scope.mjs). The job below runs on both paths, so the
+      # check `isolated-e2e (run 1)` reports on every pull request.
+      - id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tests/isolated/scope.mjs plan
       - id: n
         env:
           PARALLEL: ${{ github.event.inputs.parallel }}
@@ -90,23 +105,36 @@ jobs:
         run: |
           node --input-type=module -e "import('./tests/isolated/isolation-guard.mjs').then(m => { m.assertIsolated(process.env); console.log('isolation guard: OK'); })"
 
+      # Fast path, ONLY when plan said exactly "docs-md": re-validate the very list it used; any
+      # disagreement fails this job (red, never green). Every step below runs unless scope is exactly
+      # "docs-md" — an empty, missing or unexpected value always means the full suite.
+      - name: Docs-only fast path — re-validate that every changed path is Markdown under docs/
+        if: needs.plan.outputs.scope == 'docs-md'
+        env:
+          FILES_B64: ${{ needs.plan.outputs.files_b64 }}
+        run: node tests/isolated/scope.mjs recheck
+
       - name: Egress — blackhole production and provider host names
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           set -euo pipefail
           node tests/isolated/egress-blackhole.mjs --hosts-lines | sudo tee -a /etc/hosts > /dev/null
           node tests/isolated/egress-blackhole.mjs --verify
 
       - name: Install dependencies
+        if: needs.plan.outputs.scope != 'docs-md'
         run: npm ci
 
       # Browsers + apt .debs from the main workflow's cache entry (same key, same paths — read only;
       # main writes it). The Ubuntu mirror stalled here for 12+ minutes on a miss.
       - name: Playwright and runner image versions
+        if: needs.plan.outputs.scope != 'docs-md'
         id: pwver
         run: |
           v="$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")"
           echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser and apt cache
+        if: needs.plan.outputs.scope != 'docs-md'
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -114,6 +142,7 @@ jobs:
             ~/.cache/pw-apt
           key: ${{ steps.pwver.outputs.key }}
       - name: Install Playwright browsers
+        if: needs.plan.outputs.scope != 'docs-md'
         timeout-minutes: 15
         run: |
           set -euo pipefail
@@ -125,10 +154,12 @@ jobs:
           docker pull curlimages/curl:8.11.1 > /dev/null
 
       - uses: supabase/setup-cli@v1
+        if: needs.plan.outputs.scope != 'docs-md'
         with:
           version: 2.101.0
 
       - name: Start a bare local Supabase (no migrations, no Edge Runtime yet)
+        if: needs.plan.outputs.scope != 'docs-md'
         id: start
         env:
           RUN: ${{ matrix.run }}
@@ -161,6 +192,7 @@ jobs:
           rm -f "$RUNNER_TEMP/stack.env"
 
       - name: Bootstrap — mark this run's database (token + cluster id), enable pg_cron
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           set -euo pipefail
           token=$(openssl rand -hex 32)
@@ -172,12 +204,15 @@ jobs:
           { echo "ISOLATED_DB_TOKEN=$token"; echo "ISOLATED_DB_SYSID=$sysid"; } >> "$GITHUB_ENV"
 
       - name: Schema — CI baseline, CI stubs and the replay plan (fails on any error)
+        if: needs.plan.outputs.scope != 'docs-md'
         run: node tests/isolated/schema/replay.mjs --db-url "$ISOLATED_DB_URL" --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Seed — synthetic questions (INSERT-only, behind the target check)
+        if: needs.plan.outputs.scope != 'docs-md'
         run: node tests/isolated/seed/seed.mjs --db-url "$ISOLATED_DB_URL"
 
       - name: Edge Functions — serve this commit's functions locally, warm every module
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           set -euo pipefail
           # The edge-runtime container can die while booting (SIGBUS, "Bus error (core dumped)", exit 135:
@@ -226,6 +261,7 @@ jobs:
           [ "$down" = 0 ] || { echo "$down function(s) not served correctly by the Edge Runtime" >&2; exit 1; }
 
       - name: Build this commit's deploy bundle and serve it on loopback
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           set -euo pipefail
           # Traced: a failing check here must name its command (keys and URLs are masked by Actions).
@@ -268,9 +304,11 @@ jobs:
       # Every protection run against a deliberately wrong configuration must refuse it; a control that
       # passes fails the job (a vacuous check is caught in every run). No control contacts production.
       - name: Negative controls — before the lock
+        if: needs.plan.outputs.scope != 'docs-md'
         run: bash tests/isolated/negative-controls.sh pre-lock
 
       - name: Network lock — test group and containers reach loopback/private only (verified)
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           set -euo pipefail
           sudo groupadd "$ISOLATED_GROUP"
@@ -279,26 +317,29 @@ jobs:
           bash tests/isolated/egress-firewall.sh verify
 
       - name: Negative controls — after the lock
+        if: needs.plan.outputs.scope != 'docs-md'
         run: bash tests/isolated/negative-controls.sh post-lock
 
       - name: Isolated smoke — login against local Auth, recovery mail into the local catcher
+        if: needs.plan.outputs.scope != 'docs-md'
         run: |
           sg "$ISOLATED_GROUP" -c "npx playwright test -c tests/isolated/playwright.isolated.config.mjs"
 
       - name: Existing Playwright suite against the isolated stack
+        if: needs.plan.outputs.scope != 'docs-md'
         id: suite
         run: |
           sg "$ISOLATED_GROUP" -c "node tests/isolated/run-suite.mjs"
 
       - name: Diagnostics (on failure)
-        if: failure()
+        if: failure() && needs.plan.outputs.scope != 'docs-md'
         run: |
           tail -80 "$RUNNER_TEMP/functions.log" || true
           tail -40 "$RUNNER_TEMP/serve.log" || true
           tail -20 "$RUNNER_TEMP/cdn.log" || true
 
       - name: Upload report
-        if: always()
+        if: always() && needs.plan.outputs.scope != 'docs-md'
         uses: actions/upload-artifact@v4
         with:
           name: isolated-report-run-${{ matrix.run }}
@@ -309,5 +350,5 @@ jobs:
           if-no-files-found: ignore
 
       - name: Stop local Supabase
-        if: always()
+        if: always() && needs.plan.outputs.scope != 'docs-md'
         run: supabase stop --no-backup || true
