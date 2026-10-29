@@ -28,7 +28,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DECISION = "D-207";
 /** D-218: each item's declared COVERING rule (body visibility when worn): closed footwear hides the foot inside its outline; sandals
  *  are open and keep C's toes; no other item hides body. A rule of the item type, never of one picture. */
-export const COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear", "shoes-sneakers-beige": "closed-footwear", "shoes-boots-laceup-black": "closed-footwear" });
+const BUILT_IN_COVERING = Object.freeze({ "shoes-sneakers-white": "closed-footwear", "shoes-boots-black": "closed-footwear", "shoes-sandals-brown": "open-footwear", "shoes-ankleboots-brown": "closed-footwear", "shoes-sneakers-beige": "closed-footwear", "shoes-boots-laceup-black": "closed-footwear" });
 /** D-222: the rules every item of a category gets — none is set per picture. Shoes take their covering from the item's TYPE. */
 export const CATEGORY_RULES = Object.freeze({
   top: { layers: ["topBody", "sleeves"], split: "a top's pixels over C's arms are sleeves", extraction: "D-216 rules 1–7 + D-213 G-3 hand guard", skinShadow: "D-222", contourEdgeUnmix: "D-222", covering: "none", checks: ["FIT-1…FIT-5v2", "FIT-6v2 (D-222 compact crossing)", "FIT-4 (D-222 C's exterior)", "VIS-1", "VIS-2", "Q-1…Q-3"] },
@@ -42,7 +42,24 @@ export const ITEMS = Object.freeze({ "top-tank-teal": "top", "top-tee-red": "top
 export const VALIDATION_ITEMS = Object.freeze({ "top-tee-hip-blue": "top", "top-longsleeve-waist-purple": "top", "bottom-trousers-square-olive": "bottom", "bottom-capri-lightblue": "bottom", "bottom-skirt-band-orange": "bottom", "shoes-ankleboots-brown": "shoes" });
 /** D-235: the six new items of the independent validation of method d232 and seam-contract-v2 (N1 … N6). */
 export const INDEPENDENT_ITEMS = Object.freeze({ "top-tee-hip-cream": "top", "top-longsleeve-waist-navy": "top", "bottom-trousers-black": "bottom", "bottom-skirt-sand": "bottom", "shoes-sneakers-beige": "shoes", "shoes-boots-laceup-black": "shoes" });
-export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS });
+/** D-244: items registered by a batch design file (fixtures/northstar-wardrobe/batches/<batch>-designs-v<n>.json) — the scalable
+ *  successor of the tables above: each design declares its category and, for shoes, its covering; it is ruled by its category like
+ *  every item above. A batch can never redefine a known item, and open footwear (sandals) stays parked. Read once, in file order. */
+export const BATCH_DIR = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "northstar-wardrobe", "batches");
+export const BATCH_ITEMS = (() => {
+  const out = {}, known = { ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS };
+  const files = existsSync(BATCH_DIR) ? readdirSync(BATCH_DIR).filter((f) => /^[a-z0-9]+-designs-v\d+\.json$/.test(f)).sort() : [];
+  for (const f of files) { const b = JSON.parse(readFileSync(join(BATCH_DIR, f), "utf8"));
+    for (const d of b.designs || []) {
+      if (!d || typeof d.id !== "string" || known[d.id] || out[d.id]) throw new Error(f + ": a missing or repeated item id " + (d && d.id));
+      if (!["top", "bottom", "shoes"].includes(d.category) || !d.id.startsWith(d.category + "-")) throw new Error(f + ": " + d.id + " has no valid category");
+      const covering = d.category === "shoes" ? d.covering : "none";
+      if (d.category === "shoes" && covering !== "closed-footwear") throw new Error(f + ": " + d.id + " — only closed footwear (sandals are parked)");
+      out[d.id] = Object.freeze({ batch: b.batch, category: d.category, type: d.type, covering }); } }
+  return Object.freeze(out);
+})();
+export const COVERING = Object.freeze({ ...BUILT_IN_COVERING, ...Object.fromEntries(Object.entries(BATCH_ITEMS).filter(([, d]) => d.category === "shoes").map(([id, d]) => [id, d.covering])) });
+export const ITEM_CATEGORY = Object.freeze({ ...ITEMS, ...VALIDATION_ITEMS, ...INDEPENDENT_ITEMS, ...Object.fromEntries(Object.entries(BATCH_ITEMS).map(([id, d]) => [id, d.category])) });
 const { W, H, N } = WR, Mo = WR.maskOps, sha = (b) => createHash("sha256").update(b).digest("hex"), count = (m) => { let n = 0; for (let i = 0; i < N; i++) if (m[i]) n++; return n; };
 export const CHANGE_TOL = 24;   // D-197's changeTol: a generated pixel differing from C by more than this has changed
 export const STRONG_TOL = 40;   // D-210 (D-208: 60): new paint when no pixel of C within EXPLAIN_PX lies within this of it (see colourDist).
@@ -398,7 +415,7 @@ export function validateManifest(m) {
   const seen = new Set(); for (const it of m.items) {
     if (!it || typeof it.id !== "string" || seen.has(it.id)) throw new Error("manifest: a missing or repeated item id"); seen.add(it.id);
     if (ITEM_CATEGORY[it.id] !== it.category) throw new Error("manifest: " + it.id + " is not a " + it.category);
-    const cov = it.category === "shoes" ? COVERING_BY_TYPE[it.type] : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
+    const cov = it.category === "shoes" ? (BATCH_ITEMS[it.id] ? BATCH_ITEMS[it.id].covering : COVERING_BY_TYPE[it.type]) : "none"; if (!cov || cov !== it.covering || (COVERING[it.id] || "none") !== cov) throw new Error("manifest: " + it.id + " covering " + it.covering + " is not its type's rule");
     if (typeof it.raw !== "string" || !/^[0-9a-f]{64}$/.test(it.rawSha256 || "")) throw new Error("manifest: " + it.id + " needs a raw path and its pinned sha256"); }
   return true; }
 export function runPipeline(w, base, T, manifest, readRaw, OUT, { cSha256 = null, register = null } = {}) {

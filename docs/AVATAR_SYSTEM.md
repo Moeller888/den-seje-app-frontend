@@ -385,6 +385,35 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **Batch b1 closed after the checkpoint STOP — D-248.** 6 calls spent (5 pictures, jeans uncertain), 22 closed unused; C1
+  failed. Only the tartan skirt was technically OK (with the blue tee). Skin-near colours over C's skin are lost by the
+  colour-based extraction, and stripe edges trigger G-2 falsely. `rawRoot` fixed. Method note: the current extraction cannot reach
+  thousands of freely combinable items; next, test contour-based (colour-independent) identification offline on the existing
+  pictures. See `docs/decisions/D-248.md`.
+- **Batch b1 authorised — D-246: at most 24 + 4 calls; NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter.** `tools/avatar/openai-send-northstar-batch-b1.mjs`, the D-235 one-shot model. Before every send it re-composes and
+    validates the prompt. It enforces the order, a pipeline record per received picture, the second format/moderation/G-1 stops,
+    9 technical rejections, `B1-STOP.json`, the checkpoint gate (`B1-CHECKPOINT.json`, C1–C5) and the reserve rule.
+  - **Files.** Authorisation in `batches/b1-authorisation-v1.json`; the plan stays unauthorised. Technical pass = candidate only;
+    nothing published. See `docs/decisions/D-246.md`.
+  - **D-247.** Call 1 received (technically rejected, G-2). Call 2 (jeans) was an uncertain dispatch: closed as spent, never resent;
+    the batch continues under D-246's rules. See `docs/decisions/D-247.md`.
+- **b1 plan corrected — D-245 (before any authorisation; no calls).**
+  - **Prompts.** Strict lookups and `validatePrompt` on every finished prompt; readable `batches/b1-prompts-v1.md`.
+  - **Prompt defect.** The five bottom calls of D-228/D-235 were sent with "undefined" instead of the bottoms instruction
+    (`prompt-defect-bottoms-d245.json`). Their results stand; conclusions in D-231/D-232/D-238/D-239 are corrected by notes.
+  - **Catalogue.** Usable candidates, the investigation rate and the freely combinable set (every combination approved) are
+    reported apart; only the set is offered as freely combinable.
+  - **Scope and checkpoint.** Scope rules against C's picture and the layer contract (no torso skin, no neck band, one garment,
+    the envelopes); a fixed six-call checkpoint C1–C5.
+  - **Price and review.** Documented `gpt-image-2.5-sunburst` price; the enforceable cap is 28 calls (≈ $1.91); the assistant
+    reviews first, the owner decides a short list. See `docs/decisions/D-245.md`.
+- **Northstar batch production flow — D-244: batch b1 (24 designs) planned, NOT authorised; no calls.**
+  - **Flow.** `tools/avatar/northstar-batch.mjs`: design file → frozen prompts → unauthorised call plan with cost → chunked
+    `runPipeline` runs → status register (afvist / kræver-gennemgang / kandidat / godkendt / uafprøvet; a technical pass is never an
+    approval; nothing hidden) → private export in D-242's format. The pipeline registers batch items from design files.
+  - **Finding.** D-228/D-235 sent their five bottom prompts with "undefined" instead of the bottoms' contract sentence; b1 sends it.
+  - **Ask.** At most 28 calls, $10 ceiling (estimate $1.89–$7.91). See `docs/decisions/D-244.md`.
 - **Northstar wardrobe in the renderer — D-242: flag `AVATAR_NORTHSTAR_WARDROBE = false`, local opt-in only; not activated for
   pupils; no calls.**
   - **Path.** `mountC2Avatar` tries the C figure first (quiz, hub, avatar; aura/back only), composing it once at 1024×1536 with
