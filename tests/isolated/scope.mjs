@@ -16,9 +16,11 @@ import { classify, MODES, MAX_CHANGED_FILES, validateFastPayload } from "../../.
 
 export const DOCS_MD = "docs-md";
 export const FULL = "full";
-// GitHub's pull-request file statuses that are plain content changes. "changed" (e.g. a mode bit such
-// as +x), "copied" and anything unknown are not treated as plain → full.
+// Plain content changes. "changed" (a type change, e.g. file ↔ symlink), "copied" and anything
+// unknown are not treated as plain → full.
 const PLAIN_STATUSES = Object.freeze(["added", "modified", "removed", "renamed"]);
+const NUL = String.fromCharCode(0);
+const NEWLINE = String.fromCharCode(10);
 
 const isDocsMarkdown = (p) => p.startsWith("docs/") && p.toLowerCase().endsWith(".md");
 
@@ -33,13 +35,13 @@ export function pathsOf(files) {
   return out;
 }
 
-// files: GitHub's pull-request files (filename, status, previous_filename). expectedCount: the PR's
-// own `changed_files`. Returns { scope, reason }.
+// files: [{ filename, status, previous_filename? }]. expectedCount: an independent count of the same
+// change set. Returns { scope, reason }.
 export function scopeFor({ files, expectedCount } = {}) {
   const full = (reason) => ({ scope: FULL, reason });
   if (!Array.isArray(files) || files.length === 0) return full("no file list");
   if (!Number.isInteger(expectedCount) || expectedCount !== files.length) return full("file list incomplete or count unknown");
-  if (files.length >= MAX_CHANGED_FILES) return full("file list at GitHub's cap — may be truncated");
+  if (files.length >= MAX_CHANGED_FILES) return full("file list at the classifier's cap — may be truncated");
   for (const f of files) {
     if (!f || typeof f !== "object") return full("malformed file entry");
     if (!PLAIN_STATUSES.includes(f.status)) return full(`file status ${JSON.stringify(f.status)} is not a plain change`);
@@ -64,39 +66,65 @@ export function recheck(b64) {
   return r.scope === DOCS_MD ? { ok: true, reason: r.reason } : { ok: false, reason: r.reason };
 }
 
-// Read-only GitHub API calls through gh (GH_TOKEN). Any failure is thrown and becomes "full".
-function fetchPr(repo, pr, gh) {
-  const meta = JSON.parse(gh(["api", `repos/${repo}/pulls/${pr}`]));
+// The pull_request checkout is GitHub's merge commit of the PR head into the current base, so
+// `HEAD^1..HEAD` is exactly what the PR changes on top of main. No token and no API: plain git on the
+// checkout (fetch-depth 2). git's --name-status letters map onto the statuses above; anything else
+// stays unknown and therefore full.
+const GIT_STATUS = Object.freeze({ A: "added", M: "modified", D: "removed", R: "renamed", C: "copied", T: "changed" });
+
+// `git diff --name-status -z -M` output → [{ filename, status, previous_filename? }]. Throws on any
+// record it cannot read completely.
+export function parseNameStatus(z) {
+  const parts = String(z ?? "").split(NUL);
+  if (parts.length && parts[parts.length - 1] === "") parts.pop();
   const files = [];
-  for (let page = 1; page <= 31; page++) {
-    const batch = JSON.parse(gh(["api", `repos/${repo}/pulls/${pr}/files?per_page=100&page=${page}`]));
-    if (!Array.isArray(batch)) throw new Error("files page is not an array");
-    files.push(...batch.map((f) => ({ filename: f.filename, status: f.status, previous_filename: f.previous_filename })));
-    if (batch.length < 100) break;
+  for (let i = 0; i < parts.length; ) {
+    const code = parts[i++];
+    const letter = code.charAt(0);
+    const status = GIT_STATUS[letter] ?? `unknown:${code}`;
+    if (letter === "R" || letter === "C") {
+      const previous_filename = parts[i++], filename = parts[i++];
+      if (previous_filename === undefined || filename === undefined) throw new Error("rename/copy record without both paths");
+      files.push({ filename, status, previous_filename });
+    } else {
+      const filename = parts[i++];
+      if (filename === undefined) throw new Error("record without a path");
+      files.push({ filename, status });
+    }
   }
-  return { files, expectedCount: meta.changed_files };
+  return files;
 }
 
-export function planScope({ event, repo, pr, gh }) {
+// git(args) → stdout. Returns { files, expectedCount } for the PR merge commit, or throws.
+function changedFiles(git, headSha) {
+  const parents = git(["rev-list", "--parents", "-n", "1", "HEAD"]).trim().split(/\s+/);
+  if (parents.length !== 3) throw new Error("HEAD is not the pull request's merge commit");
+  if (!/^[0-9a-f]{40}$/.test(String(headSha ?? "")) || parents[2] !== headSha) throw new Error("merge commit's second parent is not the PR head");
+  const files = parseNameStatus(git(["diff", "--name-status", "-z", "-M", "--no-color", "HEAD^1", "HEAD"]));
+  // Independent count of the same diff, so a parsing slip can never shorten the list unnoticed.
+  const expectedCount = git(["diff", "--name-only", "-z", "-M", "--no-color", "HEAD^1", "HEAD"]).split(NUL).filter((x) => x !== "").length;
+  return { files, expectedCount };
+}
+
+export function planScope({ event, headSha, git }) {
   if (event !== "pull_request") return { scope: FULL, reason: `event ${event}: always full`, files: [] };
-  if (!/^[\w.-]+\/[\w.-]+$/.test(String(repo ?? "")) || !/^\d+$/.test(String(pr ?? ""))) return { scope: FULL, reason: "repository or PR number missing", files: [] };
   try {
-    const { files, expectedCount } = fetchPr(repo, pr, gh);
+    const { files, expectedCount } = changedFiles(git, headSha);
     return { ...scopeFor({ files, expectedCount }), files };
   } catch (e) {
-    return { scope: FULL, reason: "GitHub API error: " + String(e?.message ?? e).split("\n")[0], files: [] };
+    return { scope: FULL, reason: "changed files unreadable: " + String(e?.message ?? e).split(NEWLINE)[0], files: [] };
   }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const mode = process.argv[2];
   if (mode === "plan") {
-    const gh = (args) => execFileSync("gh", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-    const r = planScope({ event: process.env.EVENT, repo: process.env.REPO, pr: process.env.PR, gh });
+    const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    const r = planScope({ event: process.env.EVENT, headSha: process.env.HEAD_SHA, git });
     const b64 = r.scope === DOCS_MD ? Buffer.from(JSON.stringify(r.files)).toString("base64") : "";
     console.log(`isolated scope: ${r.scope} — ${r.reason}`);
     if (!process.env.GITHUB_OUTPUT) { console.error("GITHUB_OUTPUT not set"); process.exit(1); }
-    appendFileSync(process.env.GITHUB_OUTPUT, `scope=${r.scope}\nfiles_b64=${b64}\n`);
+    appendFileSync(process.env.GITHUB_OUTPUT, `scope=${r.scope}${NEWLINE}files_b64=${b64}${NEWLINE}`);
   } else if (mode === "recheck") {
     const r = recheck(process.env.FILES_B64);
     console.log(`isolated scope re-check: ${r.ok ? "docs-md confirmed" : "REFUSED"} — ${r.reason}`);

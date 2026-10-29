@@ -53,25 +53,23 @@ env:
 jobs:
   plan:
     runs-on: ubuntu-latest
-    # pull-requests: read — scope.mjs lists the PR's changed files (read-only).
-    permissions:
-      contents: read
-      pull-requests: read
     outputs:
       runs: ${{ steps.n.outputs.runs }}
       scope: ${{ steps.scope.outputs.scope }}
       files_b64: ${{ steps.scope.outputs.files_b64 }}
     steps:
+      # Depth 2: the pull_request checkout is the PR's merge commit; its two parents are the base and
+      # the PR head, so `HEAD^1..HEAD` is exactly the PR's change set — no token, no API.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       # Pure-Markdown docs PRs take a fast, re-validated path; everything else, and every doubt, takes
       # the full isolated suite (tests/isolated/scope.mjs). The job below runs on both paths, so the
       # check `isolated-e2e (run 1)` reports on every pull request.
       - id: scope
         env:
-          GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
-          REPO: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node tests/isolated/scope.mjs plan
       - id: n
         env:

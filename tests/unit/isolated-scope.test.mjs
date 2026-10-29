@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { scopeFor, recheck, planScope, pathsOf, DOCS_MD, FULL } from "../isolated/scope.mjs";
+import { scopeFor, recheck, planScope, pathsOf, parseNameStatus, DOCS_MD, FULL } from "../isolated/scope.mjs";
 
 const f = (filename, status = "modified", previous_filename) => ({ filename, status, ...(previous_filename ? { previous_filename } : {}) });
 const scope = (files, expectedCount = files.length) => scopeFor({ files, expectedCount }).scope;
@@ -67,19 +67,50 @@ test("an incomplete or unverifiable list is full", () => {
   assert.equal(scope(many), FULL, "at GitHub's 3000-file cap the list may be truncated");
 });
 
-test("API errors and non-PR events are full; the plan never throws", () => {
-  const broken = () => { throw new Error("HTTP 502: Bad Gateway"); };
-  assert.equal(planScope({ event: "pull_request", repo: "o/r", pr: "7", gh: broken }).scope, FULL);
-  assert.equal(planScope({ event: "pull_request", repo: "o/r", pr: "7", gh: () => "not json" }).scope, FULL);
-  assert.equal(planScope({ event: "pull_request", repo: "o/r", pr: "7", gh: (a) => (a[1].includes("/files") ? '{"message":"x"}' : '{"changed_files":1}') }).scope, FULL, "files page is not an array");
-  assert.equal(planScope({ event: "push", repo: "o/r", pr: "", gh: broken }).scope, FULL);
-  assert.equal(planScope({ event: "workflow_dispatch", repo: "o/r", pr: "", gh: broken }).scope, FULL);
-  assert.equal(planScope({ event: "pull_request", repo: "o/r", pr: "", gh: broken }).scope, FULL, "no PR number");
-  // A working API with a docs-only PR → docs-md, and the list it returns is what the job re-checks.
-  const ok = (a) => (a[1].includes("/files") ? JSON.stringify([{ filename: "docs/a.md", status: "modified", sha: "x" }]) : '{"changed_files":1}');
-  const r = planScope({ event: "pull_request", repo: "o/r", pr: "7", gh: ok });
+// A fake git for the PR merge commit: rev-list answers with HEAD + two parents, diff with the given
+// NUL-separated output (and the independent --name-only count).
+const NUL = String.fromCharCode(0);
+const HEAD = "a".repeat(40), BASE = "b".repeat(40), PRHEAD = "c".repeat(40);
+const fakeGit = ({ parents = `${HEAD} ${BASE} ${PRHEAD}`, nameStatus, nameOnly, fail } = {}) => (args) => {
+  if (fail === args[0]) throw new Error("fatal: bad revision 'HEAD^1'");
+  if (args[0] === "rev-list") return parents + "\n";
+  if (args.includes("--name-status")) return nameStatus;
+  if (args.includes("--name-only")) return nameOnly;
+  throw new Error("unexpected git call " + args.join(" "));
+};
+const z = (...parts) => parts.join(NUL) + NUL;
+
+test("git listing: merge commit of the PR head → its exact change set; renames keep both paths", () => {
+  assert.deepEqual(parseNameStatus(z("M", "docs/a.md", "R087", "docs/old.md", "docs/new.md", "D", "docs/gone.md", "A", "docs/n.md")), [
+    { filename: "docs/a.md", status: "modified" },
+    { filename: "docs/new.md", status: "renamed", previous_filename: "docs/old.md" },
+    { filename: "docs/gone.md", status: "removed" },
+    { filename: "docs/n.md", status: "added" },
+  ]);
+  assert.deepEqual(parseNameStatus(z("T", "docs/a.md", "C100", "docs/a.md", "docs/b.md", "X", "docs/c.md")).map((f) => f.status),
+    ["changed", "copied", "unknown:X"]);
+  assert.throws(() => parseNameStatus("R100" + NUL + "docs/old.md" + NUL), /without both paths/);
+  assert.deepEqual(parseNameStatus(""), []);
+  const git = fakeGit({ nameStatus: z("M", "docs/a.md", "R100", "docs/x.md", "docs/y.md"), nameOnly: z("docs/a.md", "docs/y.md") });
+  const r = planScope({ event: "pull_request", headSha: PRHEAD, git });
   assert.equal(r.scope, DOCS_MD);
-  assert.deepEqual(r.files, [{ filename: "docs/a.md", status: "modified", previous_filename: undefined }]);
+  assert.equal(r.files.length, 2);
+});
+
+test("listing errors and non-PR events are full; the plan never throws", () => {
+  const ok = { nameStatus: z("M", "docs/a.md"), nameOnly: z("docs/a.md") };
+  const plan = (o, headSha = PRHEAD, event = "pull_request") => planScope({ event, headSha, git: fakeGit({ ...ok, ...o }) }).scope;
+  assert.equal(plan({}), DOCS_MD, "control: the same PR is docs-md when everything checks out");
+  assert.equal(plan({ parents: `${HEAD} ${BASE}` }), FULL, "HEAD is not a merge commit");
+  assert.equal(plan({}, "d".repeat(40)), FULL, "the merge commit is not of this PR's head");
+  assert.equal(plan({}, ""), FULL, "PR head unknown");
+  assert.equal(plan({ fail: "diff" }), FULL, "git diff fails");
+  assert.equal(plan({ fail: "rev-list" }), FULL, "git rev-list fails");
+  assert.equal(plan({ nameOnly: z("docs/a.md", "app.js") }), FULL, "independent count disagrees (a path went missing in parsing)");
+  assert.equal(plan({ nameStatus: "R100" + NUL + "docs/a.md" + NUL }), FULL, "truncated record");
+  assert.equal(plan({}, PRHEAD, "push"), FULL);
+  assert.equal(plan({}, PRHEAD, "workflow_dispatch"), FULL);
+  assert.equal(plan({}, PRHEAD, null), FULL, "no event");
 });
 
 test("the fast-path re-check refuses anything but a valid docs-md list (red, never green)", () => {
@@ -108,8 +139,12 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
     assert.match(s, /\n        if: (?:(?:always|failure)\(\) && )?needs\.plan\.outputs\.scope != 'docs-md'\n/, n);
   }
   assert.ok(steps.findIndex((s) => name(s).startsWith("Guard —")) < steps.findIndex((s) => name(s).startsWith("Docs-only fast path")));
-  // The plan lists PR files read-only, and its scope is computed by scope.mjs alone.
-  assert.match(wf, /    permissions:\n      contents: read\n      pull-requests: read\n/);
+  // The plan reads the change set from the merge commit (depth 2) — no token, no secret, no extra
+  // permission; its scope is computed by scope.mjs alone.
+  const plan = wf.slice(wf.indexOf("\n  plan:\n"), wf.indexOf("\n  isolated-e2e:\n"));
+  assert.match(plan, /- uses: actions\/checkout@v4\n        with:\n          fetch-depth: 2\n/);
+  assert.match(plan, /HEAD_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/);
+  assert.doesNotMatch(plan, /TOKEN|secrets\.|permissions:/);
   assert.match(wf, /run: node tests\/isolated\/scope\.mjs plan/);
   assert.match(wf, /scope: \$\{\{ steps\.scope\.outputs\.scope \}\}/);
 });
