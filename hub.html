@@ -131,6 +131,16 @@
       pointer-events: none;
     }
 
+    /* D-195 shared upper-body framing — only when the AVATAR_FRAMING_UPPER flag adds
+       .avatar-framing-upper (default OFF). Every layer box (base stack and the
+       expression overlay's .quiz-avatar-layer) grows 1.5x about the box's top centre,
+       so each layer's own transform stays aligned; the box clips below the hips. The
+       blink layer is positioned inline, hence !important on its rule only. */
+    .profile-avatar.avatar-framing-upper { overflow: hidden; }
+    .profile-avatar.avatar-framing-upper .profile-avatar-layer,
+    .profile-avatar.avatar-framing-upper .quiz-avatar-layer { left: -25%; width: 150%; height: 150%; }
+    .profile-avatar.avatar-framing-upper #avatar-blink-layer { left: -25% !important; width: 150% !important; height: 150% !important; }
+
     /* ── Profile info block ──────────────────────────── */
 
     .profile-info {
@@ -1236,6 +1246,9 @@
   import { showToast } from "./js/toast.js";
   import { playSound } from "./js/audio.js";
   import { ALL_SLOTS, SLOT_Z, baseLayersFor, RARITY_ORDER, RARITY_ICONS, isAvatarV2, r2ExpressionOverlayAllowedFor, blinkConfigFor } from "./js/avatar-layers.js";
+  // D-195: the framing flag through a NAMESPACE import — a missing export in an older cached
+  // avatar-layers.js is then undefined (framing off), never a module SyntaxError that stops the hub.
+  import * as avatarLayersModule from "./js/avatar-layers.js";
   import { mountC2Avatar, c2CosmeticLayers, markAvatarRendered } from "./js/avatar-render-c2.js";
   import { ExpressionEngine } from "./js/avatar-expression-engine.js";
   import { PresenceEngine }   from "./js/avatar-presence-engine.js";
@@ -1579,6 +1592,10 @@
     // no-ops on the missing base, so the (!blinkEngine) guard prevents a double init.
     if (isAvatarV2()) {
       const cosmetics = c2CosmeticLayers(equippedSlots, id => allShopItems.find(i => i.id === id)?.image_url);
+      // D-195/D-196: shared upper-body framing, only with the flag (default OFF → no class) and only when
+      // no wide-slot item (wings, capes) is mounted. Decided from the cosmetics actually mounted, before
+      // any layer mounts. Namespace guard: an older avatar-layers.js without the function → no framing.
+      if (typeof avatarLayersModule.avatarFramingOnFor === "function") avatarEl.classList.toggle(avatarLayersModule.AVATAR_FRAMING_CLASS, avatarLayersModule.avatarFramingOnFor(Object.fromEntries(cosmetics.map((c) => [c.slot, true]))) === true);
       const renderPath = await mountC2Avatar(avatarEl, avatarIdentity, { layerClass: "profile-avatar-layer", cosmetics, surface: "hub" });
       if (renderPath === "aborted") return; // a newer render superseded this one
       showcaseEl.dataset.rarity = getHighestEquippedRarity() ?? "";

@@ -1,0 +1,88 @@
+{
+  "decision": "D-235",
+  "status": "FROZEN by D-235 — D-207's template and coverage sentences (item-pilot-prompts-v1.json, unchanged), seam-contract-v2's modelDraws per category (the same text as v1's) and D-228's reference-sheet sentence per category (unchanged); only the garment differs. Never adjusted during the experiment.",
+  "composition": "template({GARMENT}, {COVERAGE}) + ' ' + modelDraws[category] + ' ' + reference[category]",
+  "template": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: {GARMENT}. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. {COVERAGE} Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent.",
+  "coverage": {
+    "top": "The new top replaces the grey sleeveless top completely and covers everything it covered.",
+    "bottom": "The new bottom replaces the dark grey shorts completely and covers everything they covered.",
+    "shoes": "Keep the grey top and the dark grey shorts unchanged."
+  },
+  "modelDraws": {
+    "top": "Replace the figure's grey base top completely — no grey left anywhere, also not at the lower side corners at the hips. Either end the hem exactly where the grey base top ends, or as a straight hip-length hem one third to one hand-width below it, the same distance across the whole width, and then at least a finger wider than the shorts at the hips. Long sleeves end just above the wrist and never touch the hand. No shadow on the trousers.",
+    "bottoms": "Start exactly where the grey base top ends and draw nothing above it. Keep any waistband seam or belt within a finger-width of the top edge; no other horizontal line across the hips. At the hips stay as wide as the grey base shorts. Either end clearly above the ankle (shorts, skirts, capri: the leg shows above any shoe), or end just below the ankle with a straight, square hem that is wider than the leg on both sides.",
+    "shoes": "Cover the foot up to at least the ankle. A boot shaft may go up to about one hand-width above the ankle, not higher, and stays close to the leg (no flared shaft). No shadow from trousers on the shoe."
+  },
+  "reference": {
+    "top": "Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the magenta area is the grey top that the new top must cover completely, its lower side corners included; the cyan line is where a waist-length hem ends; the green band is where a hip-length hem ends and how wide it must be at the hips; the cyan bars at the wrists are where long sleeves end.",
+    "bottom": "Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan line is where the grey top ends and the bottoms start; the red band is where no waistband seam, belt or other horizontal line may be; the magenta lines show how wide the bottoms may be at the hips; the yellow lines are the lowest a short or cropped hem may end; the green marks show how wide a long hem must be and the band where it ends, square.",
+    "shoes": "Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan lines are the ankle height the shoes must cover up to; the magenta lines are the highest a boot shaft may go; the green lines show how close to the leg the shoe must stay."
+  },
+  "sources": {
+    "template": "item-pilot-prompts-v1.json",
+    "modelDraws": "seam-contract-v2.json",
+    "reference": "seam-validation-prompts-v1.json (D-228)"
+  },
+  "items": {
+    "top-tee-hip-cream": {
+      "plan": "N1",
+      "category": "top",
+      "type": "tee",
+      "tone": "light",
+      "garment": "a plain cream-coloured t-shirt with short sleeves and a straight hip-length hem",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain cream-coloured t-shirt with short sleeves and a straight hip-length hem. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new top replaces the grey sleeveless top completely and covers everything it covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. Replace the figure's grey base top completely — no grey left anywhere, also not at the lower side corners at the hips. Either end the hem exactly where the grey base top ends, or as a straight hip-length hem one third to one hand-width below it, the same distance across the whole width, and then at least a finger wider than the shorts at the hips. Long sleeves end just above the wrist and never touch the hand. No shadow on the trousers. Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the magenta area is the grey top that the new top must cover completely, its lower side corners included; the cyan line is where a waist-length hem ends; the green band is where a hip-length hem ends and how wide it must be at the hips; the cyan bars at the wrists are where long sleeves end.",
+      "sha256": "6cdbcf5425b2468fdf015251bc9e5686a5fc7fae0cddb64c52bb23cf90bea73a",
+      "bytes": 1500
+    },
+    "top-longsleeve-waist-navy": {
+      "plan": "N2",
+      "category": "top",
+      "type": "longsleeve",
+      "tone": "dark",
+      "garment": "a plain dark navy long-sleeved top with narrow cuffs at the wrists, ending exactly at the natural waist",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain dark navy long-sleeved top with narrow cuffs at the wrists, ending exactly at the natural waist. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new top replaces the grey sleeveless top completely and covers everything it covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. Replace the figure's grey base top completely — no grey left anywhere, also not at the lower side corners at the hips. Either end the hem exactly where the grey base top ends, or as a straight hip-length hem one third to one hand-width below it, the same distance across the whole width, and then at least a finger wider than the shorts at the hips. Long sleeves end just above the wrist and never touch the hand. No shadow on the trousers. Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the magenta area is the grey top that the new top must cover completely, its lower side corners included; the cyan line is where a waist-length hem ends; the green band is where a hip-length hem ends and how wide it must be at the hips; the cyan bars at the wrists are where long sleeves end.",
+      "sha256": "444a70e32c9a3721c0508a3a32c2f99e97613a27193b78fcf5ea5fde242a26e6",
+      "bytes": 1524
+    },
+    "bottom-trousers-black": {
+      "plan": "N3",
+      "category": "bottom",
+      "type": "trousers",
+      "tone": "dark",
+      "garment": "plain black long straight trousers with a square hem just below the ankles",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: plain black long straight trousers with a square hem just below the ankles. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new bottom replaces the dark grey shorts completely and covers everything they covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. undefined Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan line is where the grey top ends and the bottoms start; the red band is where no waistband seam, belt or other horizontal line may be; the magenta lines show how wide the bottoms may be at the hips; the yellow lines are the lowest a short or cropped hem may end; the green marks show how wide a long hem must be and the band where it ends, square.",
+      "sha256": "95ad9e10b631a076909fd445b41c03307088b6debd02f5d21adead44f0215843",
+      "bytes": 1127
+    },
+    "bottom-skirt-sand": {
+      "plan": "N4",
+      "category": "bottom",
+      "type": "skirt",
+      "tone": "light",
+      "garment": "a plain light sand-coloured skirt with a narrow waistband at its top edge, ending just above the knees",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: a plain light sand-coloured skirt with a narrow waistband at its top edge, ending just above the knees. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. The new bottom replaces the dark grey shorts completely and covers everything they covered. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. undefined Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan line is where the grey top ends and the bottoms start; the red band is where no waistband seam, belt or other horizontal line may be; the magenta lines show how wide the bottoms may be at the hips; the yellow lines are the lowest a short or cropped hem may end; the green marks show how wide a long hem must be and the band where it ends, square.",
+      "sha256": "eebbe877ab5de427f03062e75be3f89262ce52a1364f0f40f47dc6c3cbd9fd4d",
+      "bytes": 1155
+    },
+    "shoes-sneakers-beige": {
+      "plan": "N5",
+      "category": "shoes",
+      "type": "sneakers",
+      "tone": "light",
+      "garment": "simple light beige low sneakers",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: simple light beige low sneakers. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. Keep the grey top and the dark grey shorts unchanged. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. Cover the foot up to at least the ankle. A boot shaft may go up to about one hand-width above the ankle, not higher, and stays close to the leg (no flared shaft). No shadow from trousers on the shoe. Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan lines are the ankle height the shoes must cover up to; the magenta lines are the highest a boot shaft may go; the green lines show how close to the leg the shoe must stay.",
+      "sha256": "331a22be4d22a7cbc52201ff0a67927306980e0c6770430a045e42601fab8258",
+      "bytes": 1061
+    },
+    "shoes-boots-laceup-black": {
+      "plan": "N6",
+      "category": "shoes",
+      "type": "boots",
+      "tone": "dark",
+      "garment": "simple black lace-up ankle boots with a slim shaft close to the leg",
+      "prompt": "Edit the stylised avatar illustration in Image 1. Keep the character exactly as it is: the same head, hair, face, expression, skin tone, body, pose, arms, hands, legs and feet, in the same position and size. Change only the clothing named here: simple black lace-up ankle boots with a slim shaft close to the leg. Draw it in exactly the same painting style, outline weight and soft shading as Image 1. Keep the grey top and the dark grey shorts unchanged. Do not change anything the new garment does not cover. No text, letters, numbers, logos or patterns unless named. Keep the background transparent. Cover the foot up to at least the ankle. A boot shaft may go up to about one hand-width above the ankle, not higher, and stays close to the leg (no flared shaft). No shadow from trousers on the shoe. Image 2 is Image 1 with coloured guide marks; use it only to place the seams and never draw its colours or marks: the cyan lines are the ankle height the shoes must cover up to; the magenta lines are the highest a boot shaft may go; the green lines show how close to the leg the shoe must stay.",
+      "sha256": "4cd6cd56ec0b4e8a0cc7d348d4d92b9593a3fdff37612fa291633faba6f8a1bc",
+      "bytes": 1097
+    }
+  }
+}

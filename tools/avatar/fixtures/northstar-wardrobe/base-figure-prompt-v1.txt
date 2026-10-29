@@ -1,0 +1,26 @@
+Edit the stylised avatar illustration in Image 1.
+
+This is a painted character illustration used as an internal technical reference for constructing avatar clothing. It is not a photograph and not an anatomical study. Keep it a stylised illustration in exactly the same painting style, outline weight, soft shading and colours as Image 1.
+
+KEEP EXACTLY AS THEY ARE IN IMAGE 1:
+- The same character: the same face, eyes, eyebrows, mouth, expression, hair, head shape and head size.
+- The same front-facing neutral standing pose, the same centre axis, camera angle, placement and scale on the canvas. The head stays exactly where it is.
+- The same skin tone everywhere skin is visible.
+- The same neck, forearms, wrists and hands, in the same positions and with the same outline.
+- Both feet stand on the same ground line, in the same positions as the shoes in Image 1.
+
+CHANGE ONLY THE CLOTHING, TO A PLAIN BASE OUTFIT:
+- Replace the t-shirt with a plain, opaque, close-fitting, light grey sleeveless sports top with a round neckline and wide shoulder straps. Its hem ends at the natural waist, at the height of the waistband of the jeans in Image 1.
+- Replace the jeans with plain, opaque, close-fitting, dark grey sports shorts. They start at the natural waist, just under the hem of the top, and end at mid-thigh.
+- Replace the shoes and socks with bare feet in the same positions, with simple, stylised toes.
+- The shoulders, upper arms, thighs, knees, shins and ankles are covered by clothing in Image 1. Draw them as skin with the same skin tone, outline weight and soft shading as the visible forearms, and join them smoothly to the forearms and to the neck. Keep the limbs within the outline of the clothing in Image 1.
+
+THE BASE OUTFIT MUST BE:
+- One plain colour per garment, clearly different from the skin tone and from each other.
+- Fully opaque, simple in cut, with plain edges.
+- Free of logos, text, numbers, patterns, prints, stripes, seams, folds, fastenings and decoration.
+
+DO NOT:
+- Do not add anatomical detail or body emphasis of any kind. No navel, no muscle definition.
+- Do not change the pose, the head, the face, the hair or the hands.
+- Do not add a background, floor, shadow, frame, text, signature or any other object. Keep the background transparent.

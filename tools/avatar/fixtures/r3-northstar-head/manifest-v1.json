@@ -1,0 +1,285 @@
+{
+  "id": "r3-northstar-head-v1",
+  "decision": "D-189",
+  "status": "REVIEW VARIANT (D-189) — reconstructed head under the hair (design, not observed pixels) and cleaned feature edges on the D-188 baseline; not approved, not promotable",
+  "source": {
+    "file": "assets/avatar/reference/Northstar Master v2.png",
+    "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50"
+  },
+  "baseline": {
+    "decision": "D-188",
+    "mergeCommit": "0eecda0955904e1d9152dc38b279ea386cd47ffa",
+    "manifest": "tools/avatar/fixtures/r3-northstar-layers/manifest-v1.json",
+    "manifestSha256": "e913d46d0eeb4c426f43a81a404268464f989ecae083a7172c4bfc053df07149",
+    "headPixelSha256": "71ba5b1217be91f3ccbe9e97ac1e8016be50c64909b811b0f03d9afe0f1326c3",
+    "unchanged": "every D-188 file stays byte-identical; this variant reads it, verified by its pins"
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-head/spec-v1.json",
+    "sha256": "2211b14f359464784a1a76b0dea2c5d77232ee3d2add8f5f666c4b9807f23912"
+  },
+  "generator": {
+    "file": "tools/avatar/r3-northstar-head.mjs",
+    "entrypoint": "node tools/avatar/r3-northstar-head.mjs --out <empty dir>",
+    "review": "node tools/avatar/r3-review-pack.mjs --variant northstar-head --out <empty dir>"
+  },
+  "compositeOrder": [
+    "cranium",
+    "skin",
+    "hairShadow",
+    "browL",
+    "browR",
+    "nose",
+    "mouth",
+    "iris",
+    "eyesFixed",
+    "hair"
+  ],
+  "layers": {
+    "cranium": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/cranium.png",
+      "sha256": "b7f0269cacb10a10366e3d076daae2405bc8f02bf1d123f6c8930b8edc17aa50",
+      "pixelSha256": "81e842b94707e22266cf2b5ae391410ede54f35777f49ad1afb4da08e358d22a",
+      "bytes": 35060
+    },
+    "skin": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/skin.png",
+      "sha256": "8554b270d16cb7628d49c21c77443ddb7204db793bdc0dfc57a5745f4a020c6e",
+      "pixelSha256": "7ba372c462d57061de57289470689cecb11ae1a7b6fc844e93f2d566097c001c",
+      "bytes": 85434
+    },
+    "browL": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/browL.png",
+      "sha256": "363f695dc09e5ecdc7129d6267071a4312e285fa4689dfb40621aca9baec816b",
+      "pixelSha256": "a0c8d7bb199b02947110d14c47e9a1cb957c83d2ffee807f72162dea9ca2952b",
+      "bytes": 8664
+    },
+    "browR": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/browR.png",
+      "sha256": "1f4824882691b4f590ccb21b069f05b441807a4522eeb09842747fdf708571d4",
+      "pixelSha256": "0e19da87cc9d4953310211bf5dfb3baddcf525c1108b4ed8e14dd4ba3719e988",
+      "bytes": 10250
+    },
+    "nose": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/nose.png",
+      "sha256": "359e86d8bf3a353bc3771103101065ef8810bb1d1af6d525b6a92ade812da956",
+      "pixelSha256": "383c7b812f7f005a4cc34347d4a7a1850217bfd2b1469c9fdb84dc12cc6ade47",
+      "bytes": 7113
+    },
+    "mouth": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/mouth.png",
+      "sha256": "c34edbda81618d9a5200d9704787caa4f10707647102577a575ed3640dd50657",
+      "pixelSha256": "5387d370da3a8ebb4aaacfaf28778acd859c50180c4e09e72d20cbfbb62946d3",
+      "bytes": 7120
+    },
+    "hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/layers/hair.png",
+      "sha256": "34cde32d2ff6ef5bdcba8c0cdeef1e3f07a34f7ddf3954da269dcdf7bf16e18a",
+      "pixelSha256": "f49b71ca2495a37ac72f0e4b2a4b7f8c8bae17c743a949a00653768f9a53272d",
+      "bytes": 183802
+    }
+  },
+  "reusedFromD188": {
+    "hairShadow": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/hairShadow.png",
+      "sha256": "c2d097918a88a2674325cd1ed96bf79d4d4019ff5ac9211352ce6f82a0422d1c",
+      "pixelSha256": "e018b3de1c4681b3f72e41a0f008af026e365faa38cac668abb01125ecc40c1f"
+    },
+    "iris": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/iris.png",
+      "sha256": "e43d0d98e785aa77783cccc0c78a01322efc8ee92208f6503a00de3aac9d4134",
+      "pixelSha256": "c92badf10ae363f2291086c04bcf9883220c92f5c59077bf8b63b6e0ef04425f"
+    },
+    "eyesFixed": {
+      "from": "D-188",
+      "file": "tools/avatar/fixtures/r3-northstar-layers/layers/eyesFixed.png",
+      "sha256": "2b7faf8b756a30d08e0596b89df69e71edf920738b09dfa1bdb396aaa8d91049",
+      "pixelSha256": "d935696ace61d310e314231c6ea4e0bad1da7e1f8cbdf159e71d1a3cff19ae69"
+    }
+  },
+  "masks": {
+    "cranium-region": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/cranium-region.png",
+      "sha256": "e19a2fd80eb4af98930e4666452e7063554772f565ff34c7e413393e4ad24afe",
+      "pixelSha256": "b6ce927b8490849432b2181a44be5ab15997f5ed420a382c2e1fa02a785e50ee",
+      "bytes": 7148
+    },
+    "cranium-visible-new": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/cranium-visible-new.png",
+      "sha256": "35af8487ad3499a9de7feb8a9e0fd3a43f9500b6cbc44cc00bd18108818a550e",
+      "pixelSha256": "100c3fa9874557cef7c29faea20198ec6a8c8cf1477ac152de5d8665aa3205bc",
+      "bytes": 7698
+    },
+    "feature-edit": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/feature-edit.png",
+      "sha256": "0d3186e3000e8160d2c7fb09f0014f038bb6efa4e532f407a7a5637e8b752302",
+      "pixelSha256": "67276361001ae900dd56b4f4774102e153a97e07040fd25932400dc18c979457",
+      "bytes": 7152
+    },
+    "halo-removed": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/halo-removed.png",
+      "sha256": "5945fde5add9e2f0c4246d5ff6c64d388a58a604c836474e977f5d2eaaf1eaab",
+      "pixelSha256": "224d9772f39c18d631d5ea87d8b9e514eaf1ae590d73581951e55613abf23ee4",
+      "bytes": 6930
+    },
+    "skin-to-hair": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/skin-to-hair.png",
+      "sha256": "4dce556b9ce4c8a5df9d96248fd36de4d8e206d7553bdda6273085b00395b011",
+      "pixelSha256": "55f140c085061f89b5ef67037c58bdd41fc4afb990b46a651f323200351606b0",
+      "bytes": 6239
+    },
+    "source-categories": {
+      "file": "tools/avatar/fixtures/r3-northstar-head/masks/source-categories.png",
+      "sha256": "a2ef8c1c2b597c55d860834de58687c938c9fe40c61c2339fa978d7712a12677",
+      "pixelSha256": "c693bbcf4d2fbecd681715c1b0bdc2242e7e8706a7d9fa5150f63d4a8ff9368c",
+      "bytes": 19106
+    }
+  },
+  "composite": {
+    "headPixelSha256": "d50b38a78d4c7f3818c5fa60e2c5af829b43fcaaafd8a83016ad60b270dcc01a",
+    "baldHeadPixelSha256": "89a08eac41adc61ef597fb896cc12a403c4c8c8ce424e48d2807c8a78a438706",
+    "withComparisonBodyPixelSha256": "c21e17b3ff6d0a23fb061564b256f6dd51e67cc6a1384492a4fa1967067ccc68",
+    "deviationFromOriginal": {
+      "visiblePx": 391180,
+      "bitIdenticalPx": 340563,
+      "rgb": {
+        "0": 350014,
+        "1-2": 40014,
+        "3-5": 560,
+        "6-16": 446,
+        ">16": 146
+      },
+      "alpha": {
+        "0": 341327,
+        "1-2": 49819,
+        "3-5": 34,
+        ">5": 0
+      },
+      "maxRgb": 47,
+      "maxAlpha": 5
+    }
+  },
+  "changesVsD188": {
+    "byCause": {
+      "cranium under opaque hair (hair alpha 253–254 lets 0.4–0.8 % through)": {
+        "px": 25666,
+        "rgb": {
+          "0": 761,
+          "1-2": 24905,
+          "3-5": 0,
+          "6-16": 0,
+          ">16": 0
+        },
+        "maxRgb": 2,
+        "maxAlpha": 3
+      },
+      "cranium under visible skin (skin alpha 253–254)": {
+        "px": 10824,
+        "rgb": {
+          "0": 5256,
+          "1-2": 5568,
+          "3-5": 0,
+          "6-16": 0,
+          ">16": 0
+        },
+        "maxRgb": 2,
+        "maxAlpha": 2
+      },
+      "hair-edge residue moved from skin to hair": {
+        "px": 15,
+        "rgb": {
+          "0": 9,
+          "1-2": 6,
+          "3-5": 0,
+          "6-16": 0,
+          ">16": 0
+        },
+        "maxRgb": 1,
+        "maxAlpha": 1
+      },
+      "feature edges (shared hair ink removed, halo and rims re-projected)": {
+        "px": 1676,
+        "rgb": {
+          "0": 6,
+          "1-2": 541,
+          "3-5": 536,
+          "6-16": 444,
+          ">16": 149
+        },
+        "maxRgb": 46,
+        "maxAlpha": 2
+      }
+    },
+    "outsideEditMasksPx": 0,
+    "perLayerOutsideEditMaskPx": {
+      "skin": 0,
+      "hair": 0,
+      "browL": 0,
+      "browR": 0,
+      "nose": 0,
+      "mouth": 0,
+      "cranium": 0,
+      "hairShadow": 0,
+      "iris": 0,
+      "eyesFixed": 0
+    }
+  },
+  "stats": {
+    "parts": {
+      "browL": {
+        "sharedHairInkRemovedPx": 122,
+        "shadeCorePx": 4,
+        "corePx": 668,
+        "edgePx": 123,
+        "changedPx": 122,
+        "removedPx": 47,
+        "haloRemovedPx": 39,
+        "keptNoCorePx": 1
+      },
+      "browR": {
+        "sharedHairInkRemovedPx": 0,
+        "shadeCorePx": 0,
+        "corePx": 1080,
+        "edgePx": 688,
+        "changedPx": 688,
+        "removedPx": 518,
+        "haloRemovedPx": 359,
+        "keptNoCorePx": 0
+      },
+      "nose": {
+        "sharedHairInkRemovedPx": 0,
+        "shadeCorePx": 51,
+        "corePx": 97,
+        "edgePx": 240,
+        "changedPx": 232,
+        "removedPx": 131,
+        "haloRemovedPx": 98,
+        "keptNoCorePx": 8
+      },
+      "mouth": {
+        "sharedHairInkRemovedPx": 0,
+        "shadeCorePx": 0,
+        "corePx": 112,
+        "edgePx": 531,
+        "changedPx": 531,
+        "removedPx": 407,
+        "haloRemovedPx": 280,
+        "keptNoCorePx": 0
+      }
+    },
+    "cranium": {
+      "regionPx": 41937,
+      "visibleNewPx": 25828,
+      "inkPx": 1938,
+      "bandPx": 11445
+    },
+    "skinToHairPx": 15
+  },
+  "notUsed": [
+    "H1 (fitting-base.H1.png)",
+    "G1V3 / E2 / K4 or any R3 target to shape the cranium",
+    "any image call"
+  ]
+}

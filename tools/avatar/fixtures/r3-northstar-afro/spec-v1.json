@@ -1,0 +1,27 @@
+{
+  "id": "r3-northstar-afro-v1",
+  "decision": "D-192",
+  "status": "REVIEW DERIVATIVE — an afro for the Northstar v2 head from the full-resolution R2 afro original; not approved, not an R3 production asset, not promotable",
+  "source": {
+    "file": "tools/avatar/fixtures/r2-hair/afro-cleaned.png",
+    "sha256": "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd",
+    "provenance": "D-111's generated afro candidate (gpt-image-2-2026-04-21, delivered at 1024x1536, achromatic luminance + alpha), alpha-cleaned and owner-approved at render scale, tracked by D-113 beside the untouched raw afro-original.png (14a037a0…). The served R2 webp (hair-afro-v1.webp) is its ÷2 downscale.",
+    "resolutionEvidence": "a ÷2 box downscale of it matches the webp decode (mean |Δ| 0.70 grey+alpha); the detail lost by ÷2 + bilinear ×2 is 4.08 against 1.72 for a known ×2 upscale of the 512 decode — it holds real detail beyond 512x768, so it is the full-resolution original, not an upscale"
+  },
+  "baseline": { "decision": "D-191", "manifest": "tools/avatar/fixtures/r3-northstar-hairstyles/manifest-v1.json", "mergeCommit": "269a01861c9ffc6ac3fed661947917b4d29f4020", "head": "the D-191 bald head (unchanged): its brows, face, ears and canvas are the fit" },
+  "placement": {
+    "rule": "one uniform scale + translation of the 1024x1536 original (v2 = s·(x + 0.5) + t, bilinear on premultiplied grey + alpha): centred on the face axis and 8 px below the canvas top, so nothing is cut",
+    "s": 0.86, "axisX": 510, "sourceCentreX": 510.5, "sourceTopY": 35, "topMarginPx": 8,
+    "why": "s 0.86 keeps the volume of the owner-approved R2 afro (D-113 placed it at ÷2 of this file in R2's space; D-191's best fit was 0.858 in this file's scale); the head, the brows and the avatar keep their scale — only the hair is placed"
+  },
+  "hairline": {
+    "rule": "a smooth radial displacement field (centre (511.5, 330)) moves the afro's own inner hairline out of the face to a target superellipse |x/122|^3 + |y/125|^3 = 1 about that centre — high over the brows (top y 205), steeply down just outside the brow tips (x ≈ 394 / 629 at y 270), close to the face edge at the temples. The shift per angle is the target minus the DEEPEST scallop within ±4° (so every scallop clears the brows), smoothed over the angle; the full shift applies up to the hairline band and falls linearly to 0 at the afro's outer silhouette, which stays where it is. Nothing is cut: the curls, their scallops and their soft edge move together. Above the ear line only (full up to y 360, none from y 400).",
+    "centre": [511.5, 330], "radii": [122, 125], "exponent": 3, "fadeY": [360, 400], "scallopWindowSamples": 8, "smoothSamples": 8, "angularSamples": 720
+  },
+  "backHair": {
+    "rule": "NEW DRAWN CONTENT, documented: a back-hair fill BEHIND the head, only in the D-191 head's own slits — pixels inside a 3 px closing of its silhouette that are neither head nor opaque afro, in the ear band y 300–430 (the 1–2 px gap between ear and face below the D-189 ear-root wedge, y ≈ 340–380, through which the background would show). Filled harmonically from the adjacent opaque afro grey (the shadowed inside of the afro); never drawn on the face or over the hair. The notch between ear lobe and jaw is NOT filled: an earlier iteration closed it and drew hard, flat dark blocks below the hair; background showing there is natural (as with short).",
+    "headClosingPx": 3, "headBandY": [300, 430]
+  },
+  "shadow": "none. Northstar's cast shadow belongs to its fringe, which lies on the forehead; this afro's hairline sits above the forehead with no hanging lock, so a cast shadow would be new drawn content without a source. Left out deliberately, documented as an open point.",
+  "tint": "the derivative keeps R2's grey luminance + alpha; review images tint it as the R2 runtime does (token base × luminance; brown #5A3D28)"
+}

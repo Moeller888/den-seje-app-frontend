@@ -1,0 +1,121 @@
+{
+  "id": "r3-northstar-afro-v1",
+  "decision": "D-192",
+  "status": "REVIEW DERIVATIVE (D-192) — an afro for the Northstar v2 head from the full-resolution R2 original; not approved, not an R3 production asset, not promotable",
+  "source": {
+    "file": "tools/avatar/fixtures/r2-hair/afro-cleaned.png",
+    "sha256": "0dacc5ce56f9915bb1fb2abe2774355f8ebda60319b2daa8e4779cfd07fa6bfd",
+    "decision": "D-113",
+    "note": "read only; the untouched raw afro-original.png (D-113) is not used"
+  },
+  "baseline": {
+    "decision": "D-191",
+    "mergeCommit": "269a01861c9ffc6ac3fed661947917b4d29f4020",
+    "manifest": "tools/avatar/fixtures/r3-northstar-hairstyles/manifest-v1.json",
+    "manifestSha256": "e4c240d9a2508a55ec672cbf4d23444fd6ced7ccc99e5260ac3a6c46975975a6",
+    "situations": {
+      "bald": "abed61b4089700a52a5b74026289037b85afb65e5de65391ab991c84d0362890",
+      "northstar": "5a23142ce4a7700a0e68a8030700fa4cb2664dc866f3c46e4a1a4c3ec148f69e",
+      "short": "0a420f5c8c92f8ed492ee310f284f22cf9014bd76d4bbe38355a8391221775d2",
+      "afro": "06651351fe92e44b6cb7eaa330c0c5912f00ebaaa23aedd56f9148c02ed099f5"
+    }
+  },
+  "spec": {
+    "file": "tools/avatar/fixtures/r3-northstar-afro/spec-v1.json",
+    "sha256": "6b936a02f6508d24b172186f324b82596fd6294c2bdc058fb01a3ab3070edfd9"
+  },
+  "generator": {
+    "file": "tools/avatar/r3-northstar-afro.mjs",
+    "review": "node tools/avatar/r3-review-pack.mjs --variant northstar-afro --out <empty dir>"
+  },
+  "compositeOrder": [
+    "backHair",
+    "D-191 bald head (unchanged)",
+    "afro"
+  ],
+  "layers": {
+    "afro": {
+      "file": "tools/avatar/fixtures/r3-northstar-afro/layers/afro.png",
+      "sha256": "e3e4cae7ae3d1ddd5c4e1f8dbb8188c6b423bd03177948763fdf068a17fa6c9b",
+      "pixelSha256": "e57cf69e34efcd1130841dc99843f56efe6ff9862c7906111fd264375cf0110d",
+      "bytes": 193037
+    },
+    "backHair": {
+      "file": "tools/avatar/fixtures/r3-northstar-afro/layers/backHair.png",
+      "sha256": "95a564db01524e11a9cb0047dbc390f4cf025742e0c7b9c699befc444eccc742",
+      "pixelSha256": "6bcd3b687a24bcfc8dd30e30877c9e31be0ad9f136176539481fcbedf224c8b3",
+      "bytes": 6360
+    }
+  },
+  "masks": {
+    "hairline-shift": {
+      "file": "tools/avatar/fixtures/r3-northstar-afro/masks/hairline-shift.png",
+      "sha256": "8d5fced9e03f40e9ed9de70c8eb58e75b78d7e095e33b577ddaa341c4950a6b5",
+      "pixelSha256": "86fd2c42f6df7e26301b316053c092b24c6d26c710f43f3109a597fec7f6d505",
+      "bytes": 8705
+    },
+    "head-slit-fill": {
+      "file": "tools/avatar/fixtures/r3-northstar-afro/masks/head-slit-fill.png",
+      "sha256": "e9c7a028f229a3dfa9a38a9706ea51fc6c10a2228a3abecb2e133f40d5e17d67",
+      "pixelSha256": "f22d217ab9de55bcaddf858712dc7b4ac45f461553682cf44ff736bb82b02f35",
+      "bytes": 6388
+    }
+  },
+  "composite": {
+    "afroPixelSha256": "e9bd5bebbe8f7b63bc7afeb6a57d6355d83f1c89787972dc10e8665d8ddf41ea",
+    "tint": "HS.HAIR_TOKEN_BROWN (#5A3D28), review only",
+    "shadow": "none"
+  },
+  "measurements": {
+    "browCoverage": {
+      "browL": {
+        "browPx": 1108,
+        "coveredPx": 0
+      },
+      "browR": {
+        "browPx": 1122,
+        "coveredPx": 0
+      }
+    },
+    "cranium": {
+      "foreheadWindowPx": 4968,
+      "scallopBandPx": 1980,
+      "scallopBandCoveredPx": 1690,
+      "beyondBandPx": 18880,
+      "beyondBandCoveredPx": 18880
+    },
+    "canvas": {
+      "topRow": 8,
+      "pxWithin4OfEdge": 0
+    },
+    "components": {
+      "count": 1,
+      "largest": 118783,
+      "smallUnder50": 0
+    },
+    "hairlineRoughnessPx": {
+      "before": 1.31,
+      "after": 1.32
+    },
+    "stats": {
+      "maxHairlineShiftPx": 28.03,
+      "hairlineShiftPx": 116108,
+      "headSlitFillPx": 107
+    }
+  },
+  "visualAssessment": "Visuelt egnet som reviewafledning (ejerens dom udestår): krøllernes malede kvalitet er bevaret, fordi den fuldopløselige original nedskaleres (0,86) i stedet for at opskaleres; hårgrænsen er afroens egne krøllebuer, flyttet blødt ud af ansigtet til et højt pandevindue over brynene uden udskæring; toppen har 8 px luft; afroen dækker kraniet og lægger sig ind over tindinger og ører, så kun ørespidserne ses; volumen svarer til den ejergodkendte R2-afro og læses tydeligt ned til 52×78. Begrænsninger: krøllerne ved hårgrænsen er trykket op til 28 px udad (synligt som lidt tættere krøller over panden ved forstørrelse); ørerne er stort set dækket; under højre øreflip ses få mørke konturpixels fra D-191-hovedet; 107 px nytegnet baghår lukker D-191-hovedets sprække ved øret (D-191 selv er uændret og har stadig sprækken i bald/short).",
+  "findings": [
+    "D-191's bald head has a 1–2 px transparent slit between ear and face below the D-189 ear-root wedge (y ≈ 340–380); visible in D-191's bald and short situations; closed only inside this derivative (head-slit-fill), D-191 unchanged"
+  ],
+  "stats": {
+    "maxHairlineShiftPx": 28.03,
+    "hairlineShiftPx": 116108,
+    "headSlitFillPx": 107
+  },
+  "notUsed": [
+    "H1 (fitting-base.H1.png)",
+    "Northstar's hair cast shadow",
+    "the D-191 UNSUITABLE afro derivative (kept unchanged)",
+    "any image call"
+  ]
+}

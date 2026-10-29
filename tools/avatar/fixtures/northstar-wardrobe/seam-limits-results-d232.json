@@ -1,0 +1,598 @@
+{
+  "decision": "D-232",
+  "method": "d232",
+  "imageCalls": 0,
+  "what": "the three limits D-231 found, corrected as general rules (method d232, fitCheck d232, seam-contract-v2) and re-run on the same pictures: the nine D-207 pilot pictures and D-228's 40-outfit matrix; no new picture, no retouch, no per-item rule",
+  "corrections": {
+    "edgeExit": {
+      "rule": "extraction: a contour-thin line of the item hanging below a hem or a cuff, not of the garment's fabric colour and never over a base garment, is the limb's redrawn contour — it leaves the item (after the skin shadow); FIT-6v2 d232: a limb leaving a top or bottom at its end (a contour-wide piece within SLIVER_PX of the garment's lowest row, the body continuing below) is a reported exit, not a strip",
+      "evidence": "D-228's V2 … V5 strips (3–4 × 8–11 px) all end at the garment's lowest row (0 / −6 rows); the sandals' strip lies 109 rows above its shoe's end (shoes are not concerned); half of each strip's pixels differed from the picture — the model drew the limb's contour 2–3 px off C's and rule (6) took it as garment edge",
+      "sideEffect": "V2's cuff: d225 measured SC-S1 on the hanging contour (cuffY 845 / 839); its fabric ends at 837 / 834 — D-231's \"SC-S1 pass\" was that artefact"
+    },
+    "skinLikeAndDark": {
+      "shadowHue": "a skin shadow may shift the hue (kG − kB) no more than C's own shading does (its maximum on C: 0.199; the pilot's and D-228's genuine shadows: p99 ≤ 0.20; the orange skirt: median 0.41)",
+      "remnantChroma": "G-2 counts a base pixel unchanged only when its chroma (D-210 colourDist) is unchanged too: V3's dark olive 1133 → 0 px, the plum skirt's 307 → 0, the tank's real grey 56 → 55"
+    },
+    "hipLanes": {
+      "contract": "seam-contract-v2: top at a station ≥ shorts + 6 (v1 + 8), bottoms ≤ shorts + 6 (v1 + 3), from a TEMPLATE sweep of the outfit check on C; every other rule v1's (the full-length band stays: it is coupled to the shoe envelope)"
+    }
+  },
+  "runs": {
+    "pilot": {
+      "manifest": "item-pipeline-manifest-d232.json",
+      "byteIdentical": true,
+      "files": 162
+    },
+    "validation": {
+      "manifest": "item-pipeline-manifest-d232-validation.json",
+      "byteIdentical": true,
+      "files": 251
+    },
+    "code": {
+      "northstar-item-pilot.mjs": "5b5f5f17cd8cd181bbbfd1fe2d8293910e8af8a04d5019b1968b0d1860965d53",
+      "northstar-base-figure-c.mjs": "4522903634f51daeabe8ceac8b1cabcc7e39c23fd3ff28501e5e25a3da04a9fc",
+      "northstar-base-figure.mjs": "a99235c19e7d69c9b4d3f37856be3bad41028860b340031df60596cb2b418b47",
+      "northstar-wardrobe.mjs": "3ab2b98e4eabfb8a76a7f31643cd8e568158775a0f3a7614d3cf4b4cc1e7ce0b",
+      "northstar-wardrobe-poc.mjs": "62440bb7a5e12eafd7cc6286720e3c27449cc001cd4972dab8c486fe3df6d877",
+      "r3-northstar-layers.mjs": "ce298af988ae4db2f5fb91b37be56d4b47dad88b9f50511dcfd8f158e4026cc3",
+      "r3-northstar-figure.mjs": "047efb4f5bd8d8e73bff12f52ed01c597dbaa62457f87d7858dc6889890154a6",
+      "r3-hair-tool-v2.mjs": "824bedc1fd1b717126022183ff7cb5fcfd0ecc8dc9af18a045bf07249ad6d5d2",
+      "clean-r2-hair-alpha.mjs": "239c69e8a9ffc8621e6a5f17584143f7103c9ea6bf86974c664ce7c2304defbe"
+    },
+    "cSha256": "10f4a4b9baf9886e8f230e09b2ab4e69bfebd6795c2a1222eb84f8db3884e818"
+  },
+  "registerSha256": "4bebd2f65b562e6bf89e0792cd73e75089724d9417263b176bc8d4f0f28fd96d",
+  "pilot": {
+    "summary": {
+      "technicallyOk": 10,
+      "technicallyOkOpenFinding": 6,
+      "rejected": 2
+    },
+    "rejectedItems": [
+      "shoes-sandals-brown"
+    ],
+    "items": {
+      "top-tank-teal": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 1,
+        "baseRemnantPx": 13,
+        "limbExitRemovedPx": 0,
+        "limbExits": []
+      },
+      "top-tee-red": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 474,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 15,
+        "limbExits": [
+          [
+            345,
+            619,
+            5,
+            8
+          ],
+          [
+            674,
+            619,
+            5,
+            8
+          ]
+        ]
+      },
+      "top-sweater-green": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 205,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 28,
+        "limbExits": []
+      },
+      "bottom-shorts-navy": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": true,
+          "failed": []
+        },
+        "skinShadowPx": 27,
+        "baseRemnantPx": 7,
+        "limbExitRemovedPx": 38,
+        "limbExits": []
+      },
+      "bottom-trousers-khaki": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W6-BOTTOMS-HIP-WIDTH",
+            "SC-L1-BOTTOMS-LENGTH-CLASS"
+          ]
+        },
+        "skinShadowPx": 292,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 37,
+        "limbExits": []
+      },
+      "bottom-skirt-plum": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W6-BOTTOMS-HIP-WIDTH",
+            "SC-W4-BOTTOMS-NO-LINE-IN-HEM-ZONE"
+          ]
+        },
+        "skinShadowPx": 675,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 131,
+        "limbExits": []
+      },
+      "shoes-sandals-brown": {
+        "status": "rejected",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": [
+            "FIT-6v2-SILHOUETTE {\"sliverPx\":12,\"sliverWidthPx\":6,\"crossings\":0,\"crossingPx\":0,\"compactCrossingsOverSquare\":[],\"limbExits\":[],\"limbExitPx\":0}"
+          ]
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-L2-SHOE-COLLAR-LEFT",
+            "SC-L2-SHOE-COLLAR-RIGHT"
+          ]
+        },
+        "skinShadowPx": 737,
+        "baseRemnantPx": 0,
+        "limbExits": []
+      },
+      "shoes-boots-black": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-L3-SHOE-ENVELOPE-LEFT",
+            "SC-L3-SHOE-ENVELOPE-RIGHT"
+          ]
+        },
+        "skinShadowPx": 14,
+        "baseRemnantPx": 0,
+        "limbExits": []
+      },
+      "shoes-sneakers-white": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": true,
+          "failed": []
+        },
+        "skinShadowPx": 59,
+        "baseRemnantPx": 0,
+        "limbExits": []
+      }
+    },
+    "changedVsD225": [
+      {
+        "outfit": "top-tank-teal+bottom-trousers-khaki+shoes-boots-black",
+        "d225": "rejected",
+        "d232": "technically-ok-open-finding",
+        "d225Failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      {
+        "outfit": "top-tee-red+bottom-trousers-khaki+shoes-boots-black",
+        "d225": "rejected",
+        "d232": "technically-ok-open-finding",
+        "d225Failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      },
+      {
+        "outfit": "top-sweater-green+bottom-trousers-khaki+shoes-boots-black",
+        "d225": "rejected",
+        "d232": "technically-ok-open-finding",
+        "d225Failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ]
+      }
+    ],
+    "note": "every item's status as under d225 (the sandals still rejected: a shoe is not concerned); three outfits khaki + boots pass the outfit check now — the khaki's hanging hem contour (33 px, D-221) left the item — and stay not ready on the open finding F-006. A faint orange dotted line along the khaki hem over the black boot remains: it lies along the hem, not hanging below it"
+  },
+  "validation": {
+    "summary": {
+      "technicallyOk": 38,
+      "technicallyOkOpenFinding": 0,
+      "rejected": 2
+    },
+    "rejectedItems": [],
+    "items": {
+      "top-tank-teal": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 1,
+        "baseRemnantPx": 13,
+        "limbExitRemovedPx": 0,
+        "limbExits": []
+      },
+      "top-tee-red": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 474,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 15,
+        "limbExits": [
+          [
+            345,
+            619,
+            5,
+            8
+          ],
+          [
+            674,
+            619,
+            5,
+            8
+          ]
+        ]
+      },
+      "top-sweater-green": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP"
+          ]
+        },
+        "skinShadowPx": 205,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 28,
+        "limbExits": []
+      },
+      "top-tee-hip-blue": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION"
+          ]
+        },
+        "skinShadowPx": 142,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 18,
+        "limbExits": []
+      },
+      "top-longsleeve-waist-purple": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W1-TOP-HEM-STATION",
+            "SC-W2-TOP-COVERS-HIP",
+            "SC-S1-CUFF-RIGHT"
+          ]
+        },
+        "skinShadowPx": 165,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 73,
+        "limbExits": [
+          [
+            350,
+            839,
+            4,
+            7
+          ]
+        ]
+      },
+      "bottom-shorts-navy": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": true,
+          "failed": []
+        },
+        "skinShadowPx": 27,
+        "baseRemnantPx": 7,
+        "limbExitRemovedPx": 38,
+        "limbExits": []
+      },
+      "bottom-trousers-square-olive": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-L1-BOTTOMS-LENGTH-CLASS"
+          ]
+        },
+        "skinShadowPx": 622,
+        "baseRemnantPx": 2,
+        "limbExitRemovedPx": 44,
+        "limbExits": [
+          [
+            625,
+            1378,
+            4,
+            9
+          ]
+        ]
+      },
+      "bottom-capri-lightblue": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": true,
+          "failed": []
+        },
+        "skinShadowPx": 761,
+        "baseRemnantPx": 3,
+        "limbExitRemovedPx": 75,
+        "limbExits": [
+          [
+            633,
+            1170,
+            4,
+            12
+          ]
+        ]
+      },
+      "bottom-skirt-band-orange": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-W6-BOTTOMS-HIP-WIDTH"
+          ]
+        },
+        "skinShadowPx": 1069,
+        "baseRemnantPx": 0,
+        "limbExitRemovedPx": 72,
+        "limbExits": [
+          [
+            625,
+            994,
+            3,
+            12
+          ]
+        ]
+      },
+      "shoes-sneakers-white": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": true,
+          "failed": []
+        },
+        "skinShadowPx": 59,
+        "baseRemnantPx": 0,
+        "limbExits": []
+      },
+      "shoes-ankleboots-brown": {
+        "status": "technically-ok",
+        "faults": {
+          "generation": [],
+          "extraction": [],
+          "fit": []
+        },
+        "contractV2": {
+          "complies": false,
+          "failed": [
+            "SC-L2-SHOE-COLLAR-LEFT",
+            "SC-L3-SHOE-ENVELOPE-LEFT",
+            "SC-L2-SHOE-COLLAR-RIGHT",
+            "SC-L3-SHOE-ENVELOPE-RIGHT"
+          ]
+        },
+        "skinShadowPx": 10,
+        "baseRemnantPx": 0,
+        "limbExits": []
+      }
+    },
+    "rejectedOutfits": [
+      {
+        "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-sneakers-white",
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ],
+        "faults": [
+          {
+            "seam": "waist/hip",
+            "box": [
+              626,
+              810,
+              1,
+              8
+            ],
+            "px": 8
+          },
+          {
+            "seam": "waist/hip",
+            "box": [
+              628,
+              810,
+              3,
+              8
+            ],
+            "px": 8
+          }
+        ]
+      },
+      {
+        "outfit": "top-tee-hip-blue+bottom-skirt-band-orange+shoes-ankleboots-brown",
+        "failed": [
+          "COMBO-2-DOUBLE-CONTOUR"
+        ],
+        "faults": [
+          {
+            "seam": "waist/hip",
+            "box": [
+              626,
+              810,
+              1,
+              8
+            ],
+            "px": 8
+          },
+          {
+            "seam": "waist/hip",
+            "box": [
+              628,
+              810,
+              3,
+              8
+            ],
+            "px": 8
+          }
+        ]
+      }
+    ],
+    "vsD231": {
+      "d225": {
+        "technicallyOkItems": 7,
+        "available": 8,
+        "pass": 8,
+        "diagnosticFails": 20
+      },
+      "d232": {
+        "technicallyOkItems": 11,
+        "available": 40,
+        "pass": 38
+      }
+    },
+    "questionsUnderD232": {
+      "note": "informative only — D-228's frozen rule was registered for method d225 and seam-contract-v1",
+      "Q1": "1 of 6 (against v2)",
+      "Q2": "1 of 2",
+      "Q3": "38 of 40"
+    }
+  },
+  "d231VerdictStands": "D-228's frozen verdict \"partial\" (D-231) stands: it was registered for method d225 and seam-contract-v1. d232 is a later method; its results re-evaluate the same pictures, they are no new verdict",
+  "remaining": [
+    "generation: V1's rounded hem corners (SC-W1, 5 columns), V2's hem at W + 13, open hip corners and cuffs 3–5 px short, V3's hem at A + 17 / A + 24, V5's skirt 72 px wide (it shows against V1), V6's shaft at A − 66 and outside the envelope",
+    "the khaki's faint dotted line along its hem over a black boot (along the hem, not hanging)",
+    "tops narrower than the bottoms (a tucked look) are outside the contract's lanes"
+  ],
+  "limits": [
+    "the corrections are general rules; each was checked on every pilot and D-228 picture and on stand-in stimuli, never tuned per item",
+    "no image call: whether a model draws inside the v2 lanes is untested",
+    "a technical or contract pass is not the owner's visual approval"
+  ]
+}

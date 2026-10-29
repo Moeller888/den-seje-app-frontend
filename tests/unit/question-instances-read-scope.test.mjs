@@ -256,6 +256,32 @@ const REVIEWED_LATER_READERS = {
     "answered_at, id) and returns a band, never instance data. Its only write is to the new table " +
     "student_band_state (RLS on, no policies, no client privileges). No policy, RLS, table privilege or " +
     "existing function on question_instances is touched (proven in question-format-mix-migration-run.test.mjs).",
+  "20261025120000_student_rpc_caller_scope.sql":
+    "re-creates get_concept_states with its exact aggregate read of question_instances (one student's answered " +
+    "rows, returned only as concept → state labels) behind a NEW caller check: the pupil themself, the pupil's " +
+    "teacher (profiles.teacher_id = auth.uid() and the caller's role is 'teacher'), a super_admin, or the internal database context (session_user " +
+    "postgres/supabase_admin without a JWT subject) — everyone else gets 'forbidden'. EXECUTE only for " +
+    "authenticated (revoked from PUBLIC, anon and service_role). It NARROWS who can reach the read; " +
+    "no policy, RLS or table privilege on question_instances is touched (proven in " +
+    "student-rpc-caller-scope-migration-run.test.mjs).",
+  "20261027120000_repeat_answer_coin_reward.sql":
+    "D-211: re-creates process_question_attempt from the exact live body of 20261018143726 (guarded on " +
+    "md5(prosrc)), changing ONLY the repeat award to 1 coin + 2 XP. The single read of question_instances " +
+    "is unchanged — one instance matched on BOTH id and student_id — and CREATE OR REPLACE keeps EXECUTE " +
+    "backend only; no policy, RLS or privilege on question_instances is touched (proven in " +
+    "repeat-answer-coin-reward-migration-run.test.mjs).",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds new functions only, each SECURITY INVOKER with search_path public, pg_temp and EXECUTE revoked " +
+    "from PUBLIC, anon and authenticated, granted to service_role only — so even a caller who obtained " +
+    "EXECUTE would read with its own privileges and RLS. get_level_questions_for_student reads " +
+    "question_instances only in a NOT EXISTS (qi.student_id = the given id AND qi.question_id = q.id) and " +
+    "returns no instance column. request_repeat_level_question_for_student is #351's servable repeat with " +
+    "the same reads and the same single UPDATE scoped to id AND student_id; it returns only an id. " +
+    "advance_student_level reads only the given student's own first, auto-graded verdicts (id, was_correct) " +
+    "and returns a level, never instance data; its writes go to student_subject_level and the new table " +
+    "student_level_fold_log (RLS on, no policies, no client privileges). It also adds the plain index " +
+    "idx_qi_student_answered. No policy, RLS, table privilege or existing function on question_instances " +
+    "is touched (proven in difficulty-scale-b-migration-run.test.mjs).",
 };
 
 // Later migrations that touch question_instances policies/privileges ONLY to take INSERT away from
@@ -381,7 +407,10 @@ test("reviewed later readers are exactly the named files, and change reads only"
      "20261016150000_analytics_views_lockdown.sql",
      "20261016160000_answer_keys_server_side_rpcs.sql",
      "20261018143726_fix_danish_question_bank_text.sql",
-     "20261019150000_question_format_mix.sql"],
+     "20261019150000_question_format_mix.sql",
+     "20261025120000_student_rpc_caller_scope.sql",
+     "20261027120000_repeat_answer_coin_reward.sql",
+     "20261029120000_difficulty_scale_b.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   const ACCESS_PATTERNS = READ_SCOPE_PATTERNS.slice(0, 3); // policy, RLS, privileges
   for (const [name, reason] of Object.entries(REVIEWED_LATER_READERS)) {

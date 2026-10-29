@@ -1,0 +1,60 @@
+{
+  "id": "r3-review-pack-v1",
+  "decision": "D-187",
+  "status": "REVIEW PACK — for the owner's visual review only. Not a production composition, not a promotion, no runtime. R3 stays default OFF.",
+  "mode": {
+    "name": "review-pack",
+    "accepts": ["DRAFT", "DESIGNFORSLAG", "DESIGNPROTOTYPE", "REVIEW CANDIDATE"],
+    "rule": "Only this explicit review mode may compose DRAFT parts. The production paths are unchanged and keep refusing them: r3-face-parts-tool composeFromSources / validateAnnotation in production mode (APPROVED only), r3-eyes-tool composeEyes (a passed eyes-fixed sheet and an APPROVED annotation), r3-hair-tool-v2 composeHair (a passed raw sheet and an APPROVED annotation). Versioning a file never changes its status."
+  },
+  "layerOrder": {
+    "source": "the contract's zModel (D-135): base 0 < face 3 < eyes 4 (iris first, eyes-fixed second, approvedTies) < hair 40",
+    "order": ["base", "face", "eyesIris", "eyesFixed", "hair"]
+  },
+  "parts": {
+    "base": {
+      "status": "REVIEW CANDIDATE (D-186)",
+      "spec": "tools/avatar/fixtures/r3-underlay-headneck/headneck-v1.spec.json",
+      "generator": "tools/avatar/r3-underlay-headneck.mjs",
+      "provenance": "deterministic drawing on the approved G1V3 + E2 + K4 geometry; no H1, no Northstar pixels"
+    },
+    "hair": {
+      "status": "REVIEW CANDIDATE (D-185) + DRAFT nape lock (D-187)",
+      "spec": "tools/avatar/fixtures/r3-hair/hybrid/hybrid-v2.edits.json",
+      "generator": "tools/avatar/r3-hair-hybrid.mjs",
+      "napeLock": "tools/avatar/fixtures/r3-review-pack/nape-lock-v1.spec.json",
+      "provenance": "hybrid derivation (D-185) of the generated D-183 sheet under its construction annotation — raw-sheet rules are not applied to the derivation; the nape lock is a deterministic drawing merged under it at authoring time"
+    },
+    "face": {
+      "status": "DRAFT (brows and mouth: D-165 sheet with DRAFT anchors) + DESIGNFORSLAG (nose)",
+      "provenance": "brows and mouth resampled from their own cells of the untouched generated D-165 sheet with their DRAFT anchors onto the APPROVED D-164 targets (one positive uniform scale + translation per part, least squares); the nose is the authored vector nose-design-v1 rasterised analytically (8x8) on the same targets; order browLeft > browRight > nose > mouth",
+      "targets": { "file": "tools/avatar/fixtures/r3-face-parts/targets-v1.json", "sha256": "f6fe9f82ed57de32c6a7abdc96b5ea7c4154362a490fb3ac1799fbecb67ac3fd", "status": "APPROVED (D-164)" }
+    },
+    "eyes": {
+      "status": "DESIGNPROTOTYPE v5 (not approved)",
+      "provenance": "authored vector prototype (no Northstar pixels): the two SVGs are the source; the two PNG layers are their render with headless Chromium (Playwright 1.59.1) and are pinned by hash. The unit CI has no browser, so CI verifies the pinned layers; --render-eyes re-renders them locally and compares pixel hashes."
+    }
+  },
+  "sources": {
+    "d165Sheet": { "file": "tools/avatar/fixtures/r3-review-pack/sources/face-d165/r3-face-parts-d165.image-1.png", "sha256": "d300466081acf9595fd06b73a04682815d5248c6f3c4204f0a77aeb0a424055d", "status": "generated raw sheet, RAW-1..5 passed (D-166); brows and mouth kept for review", "copyOf": "the D-165 raw recorded in the contract (authorisedCalls D-165 execution.raw)" },
+    "d165CheckReport": { "file": "tools/avatar/fixtures/r3-review-pack/sources/face-d165/r3-face-parts-d165.check.json", "sha256": "7287d7bd49bc1046f303dbb2064ff113ab263adfa8ea40624d89b3e0d781ad3e", "status": "the original check report (D-166)" },
+    "browLeft": { "file": "tools/avatar/fixtures/r3-review-pack/sources/face-d165/browLeft.json", "sha256": "8195cc7b1f16cfcd8218800978858af10f465f35973d7b8832f0ba1f183803b8", "status": "DRAFT" },
+    "browRight": { "file": "tools/avatar/fixtures/r3-review-pack/sources/face-d165/browRight.json", "sha256": "485993b337587f317ab07991e87eb9c223e512246b0362ff4377fd09d75f273d", "status": "DRAFT" },
+    "mouth": { "file": "tools/avatar/fixtures/r3-review-pack/sources/face-d165/mouth.json", "sha256": "ff0a11221abd81de43adfc9e4aacf152393117e1d31a2e126834b74ea1e16099", "status": "DRAFT" },
+    "noseSvg": { "file": "tools/avatar/fixtures/r3-review-pack/sources/nose/nose-design-v1.svg", "sha256": "309f6f77dee65a1392c25f77b236202b3c5c6d4908e90abbcb53d0767620a95c", "status": "DESIGNFORSLAG" },
+    "noseDesign": { "file": "tools/avatar/fixtures/r3-review-pack/sources/nose/design.json", "sha256": "fecb81985be28fcf45dbf75ee19a41967a1ddc1c2dc98bbd68a26fcc8abd0792", "status": "DESIGNFORSLAG" },
+    "eyesParams": { "file": "tools/avatar/fixtures/r3-review-pack/sources/eyes-v5/params.json", "sha256": "130ceb15bca03e058e0f44c5517543d350d20c3334e8b0e3c5f6041b5ad5e46f", "status": "DESIGNPROTOTYPE v5" },
+    "eyesFixedSvg": { "file": "tools/avatar/fixtures/r3-review-pack/sources/eyes-v5/proto-eyes-fixed.svg", "sha256": "cea2cca33ba277df928f3886f22ce80df0a32e9081c144b6aba100c430839e83", "status": "DESIGNPROTOTYPE v5" },
+    "irisSvg": { "file": "tools/avatar/fixtures/r3-review-pack/sources/eyes-v5/proto-iris-luminance.svg", "sha256": "3a7d2105697b6ac4aa3c8cb236bc55ae8721530359aece8f9f2a9089eb49b5e3", "status": "DESIGNPROTOTYPE v5" },
+    "eyesFixedPng": { "file": "tools/avatar/fixtures/r3-review-pack/sources/eyes-v5/proto-eyes-fixed-1024x1536.png", "sha256": "d188d5a23e77bb5a98a326692f89ec5133d913869384e8d0fd1fd6577e21e967", "status": "DESIGNPROTOTYPE v5 (render of the fixed SVG)" },
+    "irisPng": { "file": "tools/avatar/fixtures/r3-review-pack/sources/eyes-v5/proto-iris-luminance-1024x1536.png", "sha256": "5ea7c8cf331561eeee30aba825cb6d7ed3672a5d74ea9fbf361341ae512202eb", "status": "DESIGNPROTOTYPE v5 (render of the iris SVG)" },
+    "eyesGenerator": { "file": null, "sha256": "149c441cf6f8688b2a0fdfc9ff2c7434c7d6a3e4b126eb8e651c8273ff0cffa2", "status": "provenance only: generate-v5.mjs (local, gitignored) wrote the SVGs and params; it is not needed to rebuild the pack" }
+  },
+  "neverUsed": ["H1 (fitting-base.H1.png)", "r3-head-g1v3-v1.png", "Northstar pixels as a source (Northstar is shown beside the result for visual comparison only)", "D-165's rejected nose", "paint from any rejected call"],
+  "tokens": {
+    "skin": { "medium": { "rgb": [254, 197, 128], "status": "ADOPTED (D-149 S1)" }, "light": { "rgb": [255, 224, 196], "status": "FORSLAG — no adopted R3 light token; the swatch used in earlier R3 reviews" }, "dark": { "rgb": [120, 72, 46], "status": "FORSLAG — no adopted R3 dark token; the swatch used in earlier R3 reviews" } },
+    "iris": { "brown": { "rgb": [163, 74, 15], "status": "ADOPTED R3_IRIS_DEFAULT #A34A0F (D-136)" }, "blue": { "rgb": [47, 111, 181], "status": "REVIEW TINT from eyes v5 params (#2F6FB5), not adopted" }, "green": { "rgb": [63, 143, 74], "status": "REVIEW TINT from eyes v5 params (#3F8F4A), not adopted" } },
+    "hair": { "source": "js/avatar-layers.js HAIR_COLOR_TOKENS (8 colours) through tonal ramp B (applyTonalRampB) — method B planned for R3, not wired to runtime", "default": "brown" }
+  },
+  "headBox": [240, 0, 790, 520]
+}

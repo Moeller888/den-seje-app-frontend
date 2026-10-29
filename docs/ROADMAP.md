@@ -498,6 +498,78 @@ _Last reviewed: 2026-07-01._
   its `test` job **started 15:01:48Z and completed `success` 15:01:57Z (~9 s)** — Playwright, browser
   install and `npm ci` all skipped, required `test` green — i.e. docs-mode **finished before** the main
   run, never queuing behind the shared lock.
+  **E2E account slots + FIFO queue + maintainer label (2026-10-22, built, NOT activated).**
+  (1) **Four E2E account slots** (`0`–`3`): each has its own primary pupil, test teacher, the
+  teacher's pupil, and a password-less "owner" teacher that only anchors the primary pupil's
+  `teacher_id` (password-help needs the pupil to have a teacher; teacher-password-reset needs it NOT
+  to be the test teacher). Slot 0 = today's accounts, unchanged. Slots 1–3 derive every address by
+  inserting `+e2e-slot-<n>` before the `@` and reuse the existing password secrets; global-setup
+  creates them idempotently with `email_confirm` and an `app_metadata` marker, and refuses (never
+  resets) an existing account without that marker. Routing (`.github/ci/e2e-slot.mjs`): PR →
+  `number % E2E_SLOT_COUNT`; push and every other automatic event → slot 0; a manual
+  `workflow_dispatch` picks slot 0–3 independent of the switch, so a slot can be provisioned and
+  verified BEFORE PRs are routed to it, but a slot 1–3 that is not yet active additionally needs the
+  input `confirm_provisioning` = `provision-slot-<n>`. Anything else is rejected (the run fails,
+  never slot 0), and a guard step in the `test` job stops it before any Supabase call. The live
+  password-help spec refuses any call with the pupil's address unless the deployed function
+  provably cannot mail the teacher (no teacher, or a fresh cooldown row;
+  `tests/support/mail-guard.ts`); lock `e2e-shared-supabase` for slot 0
+  (kept, so old-workflow branches and the goldens regen still serialise with it) and
+  `e2e-shared-supabase-slot-<n>` for 1–3. **Switch:** repository variable `E2E_SLOT_COUNT`; unset =
+  1 slot = exactly the old behaviour, so merging creates no production users. A static audit
+  (`tests/unit/e2e-writes-slot-scoped.test.mjs`) proves every E2E write is keyed to a slot account;
+  none writes global state today. (2) **`queue: max`** on every E2E lock (supersedes PR #333): waiting
+  runs queue FIFO instead of displacing each other. (3) **Label `ci:e2e-not-required`**: skips
+  Playwright only if a write/maintain/admin user applied it, every file is under `tests/unit/`,
+  `tests/fixtures/` (not read by a spec), `tools/question-quality/`, `docs/` or
+  `supabase/migrations/`, every migration is data-only and has an executable PGlite
+  `*-migration-run.test.mjs` naming it, and the unit suite passes inside the required `test` job;
+  anything unclear → full suite. (4) **The push-to-main full run stays:** `main` has **no branch
+  protection** (no required check, direct pushes allowed), so a green PR does not prove what lands
+  on main; removing it waits for that protection.
+  **E2E lock: apt packages from the cache, stale runs stop red (2026-10-24, D-A4).**
+  (1) `npx playwright install --with-deps` runs inside the shared E2E lock, and its apt half hit a
+  slow Ubuntu mirror in 8 of 90 full runs (5.7–47 min; once 117 MB at 42 kB/s) while every queued run
+  waited; the browsers themselves always came in seconds. The `.deb` files apt downloads and the
+  browsers are now kept in the Actions cache (key = runner image + Playwright version); on a hit apt
+  installs without downloading (still verified against its signed index). Only push runs (main)
+  write the ~557 MB entry; pull requests restore it, so nine parallel PRs cannot crowd the 10 GB
+  repository cache. The install step is bounded to 15 min. **The official Playwright image was tried and rejected for now:** the pull took
+  29 s, but Chromium renders 1 px differently in it (11 golden screenshots failed, run 40079704807;
+  Firefox/WebKit green) — adopting it needs new owner-approved baselines. It remains the natural base
+  for the isolated E2E track. (2) **Stale runs stop red at lock acquisition.** The job is unconditional so the
+  required check always reports, and GitHub runs such jobs even after a cancel (measured 2026-10-23:
+  three cancelled runs still took the lock and ran the full suite). Inside the job `cancelled()`
+  stays **false** after a queued cancel (measured 2026-10-24, run 40079620782), so a status-function
+  guard cannot work; instead `.github/ci/superseded-check.mjs` reads the PR and the run's own API
+  record: a `pull_request` run whose PR moved to a newer commit or was closed stops in seconds and
+  **fails red** (a skipped required check would read as passing). Read-only, decides only about
+  itself, any doubt → run. Proven in CI: superseded run 40079689289 stopped red in 14 s. **Limit:**
+  a plain cancel of a queued run stays invisible to the job (the API keeps `status=pending`,
+  `conclusion=null`, run 40083437376); it is caught only if it also cancelled a sibling job (within
+  the first minutes). Otherwise push/close the PR or have the owner force-cancel. A cancel during the suite does not stop it (the suite finishes, afterAll
+  restores the accounts, the result is real). Pinned by `tests/unit/ci-e2e-lock-setup.test.mjs`,
+  which evaluates the workflow's own `if:` conditions per scenario. `update-avatar-goldens.yml` (manual, Chromium only) still installs under
+  its lock — a separate change.
+
+  **Isoleret E2E — D-110 løst i CI (2026-10-28, D-241).** `.github/workflows/isolated-e2e.yml` kører hele den
+  eksisterende Playwright-suite (de samme 1291 tests og de samme 289 browserbetingede spring) mod en lokal Supabase
+  pr. job. Hvert job har sin egen database, sine egne syntetiske konti og commit'ets egne Edge Functions.
+  Pipelinen er fail-closed over for produktionen i fem lag, og negative kontroller i hvert job beviser, at lagene
+  ikke er tomme. Den bruger ingen fælles lås og ingen produktionskonto.
+
+  Målt:
+  - 3 og 6 samtidige jobs, hver med 1002 bestået og 0 fejl.
+  - 9 jobs i ét workflow: 7 × 1002/0/0 og 2 × 1001/0/1. De to flaky er WebKit-navigationskapløb i specsene.
+  - **9 uafhængige workflows** (`d110/par-1`…`par-9`, ét job hver, som ni terminalers PR'er): 9 × 1002/0/0. Alle ni
+    suiter kørte samtidig i 20,6 min, uden kø, med 28,3 min gennemløb og 233,5 runner-minutter.
+  - Overalt: separate PostgreSQL-clustere og elevkonti, tripwire 0.
+  - Edge Runtime kom op i første forsøg i alle 18 jobs i de to afsluttende 9-målinger. Startforsøg registreres først
+    fra `3602dd7`. Et tidligere 9-forsøg havde 2 SIGBUS-nedbrud ved opstart; det står i D-241.
+
+  **Status: bevist i CI, ikke taget i brug.** Den gamle fulde suite under `e2e-shared-supabase` er uændret, og
+  overgangen kræver ejerens særskilte GO; planen står i D-241. password-help-driften mellem repository og produktion er
+  en separat opgave: D-243.
 
 ## Completed sections
 
@@ -1023,7 +1095,7 @@ production**; activation waits for a staging target (free local stack at first; 
 | Brud (Spil-menuen) | ✅ Live (2026-10-02, PR #282) | Breakout porteret fra Nord-minigames (`src/game/brud-engine.ts`). Pladen styres med pil/A-D på computer (musen styrer ikke, ejerønske 2026-10-09) og med fingeren på touch; klik/mellemrum skyder. Bolden bliver 6 % hurtigere for hvert slag med pladen (loft 900) så en runde ikke trækker ud. En klods ramt direkte fra pladen (ingen væg imellem) = perfekt; ryddet mur → ny mur og hurtigere bold. Kører i en fast verden på 360×420, der skaleres ind i canvas, så en ændring af vinduets størrelse ikke flytter klodserne. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord (`dsj_brud_best`). `brud.html` + `js/brud.js` + `js/brud-logic.js`. Med Brud er alle Nord-minigames porteret undtagen Drej og Vig (ejerbeslutning). |
 | Slope (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-19) | Kugle-ned-ad-bakken-spil, bygget fra bunden i samme form som de øvrige minigames (Nord-minigames har ingen Slope-kilde — Grok-arkivet indeholder kun Prisma, Nål, Kløft, Hop, Drej, Brud, Husk og Vig). Kuglen triller selv og bliver hurtigere (9 → 19 enheder/s); styr med pil/A-D, de to knapper under banen eller ved at holde fingeren på venstre/højre side af banen. Hver række klodser har et hul på mindst 1,5 enheder; tæt forbi en klods (under 0,3) = perfekt. Ud over kanten eller ind i en klods = slut. Banen er deterministisk pr. runde (seed = rundetæller i browseren); en unit-test lader en autopilot køre 40 rækker på 12 seeds. Perspektiv tegnet på canvas i temaets farver. **Ingen mønter, ingen XP** (ejerbeslutning 2026-10-02) — kun lokal rekord i meter (`dsj_slope_best`). `slope.html` + `js/slope.js` + `js/slope-logic.js`. |
 | Minigames-fane (Spil-menuen) | 🟡 Bygget, afventer merge (2026-10-19) | `spil.html` har to faner: **Fag** (Historie, Engelsk) og **Minigames** (Stabel, Husk, Nål, Kløft, Hop, Brud, Slope). Den åbne fane står i adressen som `?fane=minigames`; alle minigames sender tilbage til `spil.html?fane=minigames`. Quizzen sender fortsat tilbage til `spil.html` (Fag). |
-| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`); live siden 2026-10-15 med 2 aktive spørgsmål (Polen, Norge). Instansoprettelsen er serverejet siden 2026-10-16 (2-0C), så facit kan ikke længere sættes af eleven — det fundament, alle kommende opgaveformer bygger på. **Fordeling af opgaveformer** (2026-10-19): stratificeret kandidatvindue pr. elev, serverafledt niveau og formatblanding er bygget bag Edge-hemmeligheden `QUESTION_MIX_ENGINE` (standard = dagens udvælgelse) — **ikke aktiveret**; migrationen `20261019150000` venter på sikkerhedsreview og særskilt D-110-godkendelse. Se [ARCHITECTURE.md → Question selection & the format mix](./ARCHITECTURE.md#question-selection--the-format-mix-fordeling-af-opgaveformer--prepared-2026-10-19-not-active). |
+| Opgaveformer (Question Interaction) | 🟡 Fase 0 foundation bygget (2026-10-02) | 16 planlagte former, arkitekturmodel og rækkefølge i [Opgaveformer](#opgaveformer--question-interaction-track). Autoritativ tekst-evaluator (eksakt + `accepted_answers`) i `_shared/answer-evaluation.ts`; live i prod (`process-event` v28, 2026-10-02). Første vertikale form, **stav til**: renderer bygget (`js/answer-input.js`); live siden 2026-10-15 med 2 aktive spørgsmål (Polen, Norge). Instansoprettelsen er serverejet siden 2026-10-16 (2-0C), så facit kan ikke længere sættes af eleven — det fundament, alle kommende opgaveformer bygger på. **Fordeling af opgaveformer** (2026-10-19): stratificeret kandidatvindue pr. elev, serverafledt niveau og formatblanding er bygget bag Edge-hemmeligheden `QUESTION_MIX_ENGINE` (standard = dagens udvælgelse). **Shadow siden 2026-10-22** (D-182): migrationen `20261019150000` er anvendt med remote-versionen `20261022053442`, `get-next-question` er deployet, og `QUESTION_MIX_ENGINE=shadow` logger v2's valg, mens eleverne stadig får v1. **v2 er ikke aktiveret** og kræver særskilt ejergodkendelse. Se [ARCHITECTURE.md → Question selection & the format mix](./ARCHITECTURE.md#question-selection--the-format-mix-fordeling-af-opgaveformer--shadow-since-2026-10-22-v2-not-active). |
 | STT (Whisper) | ⏸ Deferred | 157P feasibility decision. |
 | Image CDN (Cloudinary) | ✅ Foundation (157G), default-off | `js/cloudinary.js` fetch-mode, no secret, raster-only, fail-soft to origin; Storage stays source of truth. Set `ENABLE_CLOUDINARY=true` + cloud name (after 167a raster). |
 

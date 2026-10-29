@@ -1,0 +1,100 @@
+{
+  "decision": "D-239",
+  "method": "d239",
+  "rawRoot": "d-207-item-pilot",
+  "note": "the nine D-207 pilot pictures, pins unchanged, re-evaluated with method d239 (development of a targeted correction — D-235's six pictures are development material now, this is no validation). The item-pipeline-manifest-d232.json record stays. Run: node tools/avatar/northstar-item-pilot.mjs --run <this file> --out <empty dir outside both clones>.",
+  "items": [
+    {
+      "id": "top-tank-teal",
+      "category": "top",
+      "type": "tank",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-tank-teal",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "D-207-item-top-tank-teal/d207.image-1.png",
+      "rawSha256": "8adde72ef5ace15dbf602cf0d6079760b5f40c41f988edbd16d2c2a29ed39fcf"
+    },
+    {
+      "id": "top-tee-red",
+      "category": "top",
+      "type": "tee",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-tee-red",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "D-207-item-top-tee-red/d207.image-1.png",
+      "rawSha256": "eb9aa26f3581754c577137cd3308b3063386787f7e51abab68363885cb8df973"
+    },
+    {
+      "id": "top-sweater-green",
+      "category": "top",
+      "type": "sweater",
+      "covering": "none",
+      "sourceCall": "D-207-item-top-sweater-green",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "D-207-item-top-sweater-green/d207.image-1.png",
+      "rawSha256": "de8d5d14559bf217a8fee5c0e403922942e241a51eec6819983e1f53fedf3c0b"
+    },
+    {
+      "id": "bottom-shorts-navy",
+      "category": "bottom",
+      "type": "shorts",
+      "covering": "none",
+      "sourceCall": "D-207-item-bottom-shorts-navy",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "D-207-item-bottom-shorts-navy/d207.image-1.png",
+      "rawSha256": "8873f84111da1ad6a7ad0b733d016565861fac9d2bf93233500af39c5d815167"
+    },
+    {
+      "id": "bottom-trousers-khaki",
+      "category": "bottom",
+      "type": "trousers",
+      "covering": "none",
+      "sourceCall": "D-207-item-bottom-trousers-khaki",
+      "d207Outcome": "SENT_ONCE_GENERATION_OK",
+      "raw": "D-207-item-bottom-trousers-khaki/d207.image-1.png",
+      "rawSha256": "de62cb8331772eabe921eab5c097700a0285f18d8c31450e5b7d077d3b6ecada"
+    },
+    {
+      "id": "bottom-skirt-plum",
+      "category": "bottom",
+      "type": "skirt",
+      "covering": "none",
+      "sourceCall": "D-207-reserve-1",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "D-207-reserve-1/d207.image-1.png",
+      "rawSha256": "c0d4e6e61f8679059f1b7fe4230084f5cb0372a50d4cc6ac0929d3fb40ec1670"
+    },
+    {
+      "id": "shoes-sandals-brown",
+      "category": "shoes",
+      "type": "sandals",
+      "covering": "open-footwear",
+      "sourceCall": "D-207-item-shoes-sandals-brown",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "D-207-item-shoes-sandals-brown/d207.image-1.png",
+      "rawSha256": "5a203e424d81dc9b8af57a5e3e664ffa405f964fa92816f2159f34435e4d4dfe"
+    },
+    {
+      "id": "shoes-boots-black",
+      "category": "shoes",
+      "type": "boots",
+      "covering": "closed-footwear",
+      "sourceCall": "D-207-item-shoes-boots-black",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "D-207-item-shoes-boots-black/d207.image-1.png",
+      "rawSha256": "1caaa56779f97f3e4c9a35a25cc8a7cf40894d8a5d844d737c68d015770dc38f"
+    },
+    {
+      "id": "shoes-sneakers-white",
+      "category": "shoes",
+      "type": "sneakers",
+      "covering": "closed-footwear",
+      "sourceCall": "D-207-reserve-2",
+      "d207Outcome": "TECHNICAL_REJECT",
+      "raw": "D-207-reserve-2/d207.image-1.png",
+      "rawSha256": "85970a93faf4d2dad4fc370bf3cfe9b80e9a6eb74b66ca7ae8ead7df4a518611"
+    }
+  ],
+  "findingsRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register.json",
+  "reviewRegister": "tools/avatar/fixtures/northstar-wardrobe/findings-register-review.json"
+}

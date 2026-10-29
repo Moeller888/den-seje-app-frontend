@@ -1,0 +1,97 @@
+{
+  "tool": "openai-send-r3-hair-d183",
+  "callId": "D-183-r3-hair-northstar-v4",
+  "check": "D-174 raw hair sheet r3-hair-sheet-v1 (H1..H5, thresholds as hairMethod.thresholds)",
+  "thresholds": {
+    "visibleAlphaMin": 16,
+    "lowAlphaReportedMax": 15,
+    "borderPx": 16,
+    "chromaMax": 12,
+    "dominantComponentMinFraction": 0.95,
+    "visibleAreaFractionRange": [
+      0.15,
+      0.8
+    ],
+    "residualFitMaxPx": 3,
+    "scaleRange": [
+      0.35,
+      0.85
+    ],
+    "hairTouchAlphaMin": 8,
+    "hairSolidAlphaMin": 250,
+    "holeAlphaBelow": 128,
+    "crownMaxY": 199,
+    "browEndCoveredMinFraction": 0.5,
+    "earAllowanceGrowPx": 3,
+    "envelopeGrowPx": 24,
+    "napeGrowPx": 8
+  },
+  "image": {
+    "file": "tools/avatar/build/r3-hair-d183/r3-hair-d183.image-1.png",
+    "sha256": "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d"
+  },
+  "verdict": "PASS_TO_ANNOTATION",
+  "firstFailure": null,
+  "auto": [
+    {
+      "id": "H1",
+      "name": "PNG decodes, 1024x1024, 8-bit RGBA, not interlaced",
+      "result": "PASS",
+      "detail": "1024x1024, colour type 6, bit depth 8, interlace 0"
+    },
+    {
+      "id": "H2",
+      "name": "no pixel with alpha >= 16 in the 16 px border",
+      "result": "PASS",
+      "detail": "0 px"
+    },
+    {
+      "id": "H3",
+      "name": "achromatic: max(R,G,B) - min(R,G,B) <= 12 at alpha >= 16",
+      "result": "PASS",
+      "detail": "max chroma 9"
+    },
+    {
+      "id": "H4",
+      "name": "one dominant 8-connected component holds >= 0.95 of the visible pixels",
+      "result": "PASS",
+      "detail": "1 components, largest 241625 of 241625 (1.0000)"
+    },
+    {
+      "id": "H5",
+      "name": "visible area fraction in 0.15..0.8",
+      "result": "PASS",
+      "detail": "0.2304"
+    }
+  ],
+  "diag": [
+    {
+      "id": "H-LOWALPHA",
+      "name": "pixels with alpha 1..15 (reported, never rejected)",
+      "value": 10482
+    },
+    {
+      "id": "H-TONES",
+      "name": "visible pixels by ramp-B tone band (ink < 40, shadow < 115, base < 200, light) — the B convention is judged visually",
+      "value": [
+        23969,
+        68504,
+        148123,
+        1029
+      ]
+    },
+    {
+      "id": "H-VISUAL",
+      "name": "Northstar's hairstyle incl. the lock under the image-right ear, complete lock tips, clean lower edge at the ears, no face/skin/scalp",
+      "value": "visual review only",
+      "flagged": null
+    }
+  ],
+  "rawSha256": "7b36e05481dc0389a71a362b9f7501c7eaca35b2d3771c24624eefa797f2d66d",
+  "candidateWritten": false,
+  "annotation": "none — the v2 source annotation (annotation-hair-v2) is made later as DRAFT, bound to this image's SHA-256: A4 with the tool's proposal as a review aid only, A9 and A10 each read twice under the same point definition, the second time with the first reading hidden, each with its marked crop, and both temple locks with tip, notches and evidence; only the owner sets APPROVED",
+  "placement": "none — D-179's checks (HP1v2 seat residual and aspect, HP2, HP-LOCK, HP4v2..HP8, HP-FRAG) need that owner-APPROVED annotation and are NOT run on the raw sheet; placement is done later ONLY by tools/avatar/r3-hair-compose-v2.mjs; no free manual moving, scaling or pixel repair",
+  "lowAlpha": "alpha 1..15 is reported only (D-174); no threshold is changed after the result",
+  "visualReview": "Northstar's hairstyle with two separate temple locks, readable ear transitions, a V-shaped parting, no lock below the ears or at the neck, one connected piece, complete lock tips, the margin, not mirrored, no face, skin, scalp or ears, and ramp B's tone convention are reviewed by the owner; no check approves them",
+  "note": "A REJECT means no candidate may exist. PASS_TO_ANNOTATION means ONLY that the sheet may go to the owner's visual review and to DRAFT source annotation; it does not approve its appearance."
+}

@@ -289,6 +289,9 @@ export class BlinkEngine {
   // One blink: close both lids (right asymmetrically delayed), hold briefly, open
   async _doBlink() {
     if (!this._lidL || !this._lidR || this._destroyed) return;
+    // D-242: no lid profile is measured for the Northstar figure's own eyes, so it does not blink; the lids
+    // stay retracted (scaleY(0), invisible) while that figure is mounted and blink again on any other path.
+    if (this._container && this._container.dataset && this._container.dataset.avatarRenderPath === 'northstar') return;
 
     // Asymmetric timing: right eye lags behind left (natural human physiology)
     const asyncClose = 16 + Math.floor(Math.random() * 20); // 16–35ms

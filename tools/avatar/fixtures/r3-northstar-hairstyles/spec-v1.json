@@ -1,0 +1,28 @@
+{
+  "id": "r3-northstar-hairstyles-v1",
+  "decision": "D-191",
+  "status": "REVIEW VARIANT — the Northstar head's reconstructed areas finished and reviewed with alternative hairstyles on the D-190 baseline; not approved, not promotable",
+  "source": { "file": "assets/avatar/reference/Northstar Master v2.png", "sha256": "3daf32e76bff9a53ec7d25cf148a230073cfd0da6a003d02a23c4292d139ff50" },
+  "baseline": { "decision": "D-190", "manifest": "tools/avatar/fixtures/r3-northstar-brow/manifest-v1.json", "mergeCommit": "d5dd3dc748badd3ba5148d86ecd0689599ca41b6" },
+  "browResidue": {
+    "what": "D-190 kept the dark hair-lock remnants at the image-left brow's upper right as observed brow pixels; the short-hair review showed they are the hair lock's edge. They move to the Northstar hair layer and the D-190 mirror fills under them.",
+    "rule": "a D-190 browL pixel that is (1) outside the fitted mirror (D-190 brow-mirror-fitted), (2) above it in its own column (a fitted pixel within 8 px below), (3) within 3 px of D-188's overlap-ink-hair-features, and (4) in a 8-connected group that reaches x 460–472 (the documented remnants). Groups elsewhere along the brow's top edge (x 404–431) meet (1)–(3) but are the brow's own outline and stay.",
+    "documentedX": [460, 472]
+  },
+  "earHair": {
+    "what": "sideburn tips that D-188 left in the skin layer inside its ear zones (the hair flood was barred from those zones): hair-coloured pixels between each ear's front edge and the face line. They move to the Northstar hair layer; the skin under them is refilled from the neighbouring skin.",
+    "rule": "a skin pixel with alpha >= 250, not ink (max channel >= 50), with the D-188 hair colour ratios (r < 200, g < 0.58 r, b < 0.27 r), inside D-188's earInL/earInR zones, 8-connected to the hair layer through such pixels",
+    "refill": "harmonic fill from the neighbouring opaque skin of class S/O with blue < 170 (ink and hair are not boundaries)"
+  },
+  "litSkinRefit": {
+    "what": "D-188 lifted the hair's cast shadow off the forehead over a lit-skin estimate filled only from below (the hair side was a free edge), which left light spots and mottled temples on the bare head. The lit skin in D-188's shadow-lit mask is refilled with two fixed boundaries — the original visible skin and D-189's painted cranium — and the hair-shadow layer is lifted again exactly as D-188 did, so the composite with Northstar's hair keeps its pixels.",
+    "lift": "per pixel, the composite of the D-190 skin and hair-shadow is the target; the new shadow pixel is the minimal-alpha colour that reproduces it over the new lit skin (alpha 0 below 0.02, 1 above 0.75), as D-188"
+  },
+  "hairstyles": {
+    "rule": "R2's webp originals stay untouched. Each style is decoded once at its native 512x768 (headless Chromium, no resampling) into a tracked PNG pinned by its pixel hash; the review derivative is that PNG placed on the v2 head by one similarity (uniform scale k from 512-space, translation) with bilinear sampling, kept as R2's grey luminance + alpha, and tinted only for review images as the R2 runtime does (token base x luminance; brown #5A3D28). The start is the similarity fitted on the shared Northstar hairstyle (R2 hair-northstar-v1 onto v2's own hair: k 1.77, tx 61, ty −15, silhouette IoU 0.862); each style is then searched on its own fit to the head.",
+    "fitOrder": "lexicographic: (1) no hair on the brows (dilated 3 px) and none on the eyes, (2) the least reconstructed cranium left bare above y 225, (3) the smallest deviation from the start; the whole style must stay inside the canvas (rows >= 4, columns 4–1020)",
+    "short": { "status": "REVIEW DERIVATIVE", "transform": { "k": 1.77, "tx": 53, "ty": -11 }, "result": "translation only (−8, +4) from the start: no hair on brows or eyes and no bare cranium above y 225" },
+    "afro": { "status": "UNSUITABLE — not an R3 asset", "transform": { "k": 1.7169, "tx": 69, "ty": -25 }, "why": "no placement inside the canvas clears the brows: the best keeps about 1,000 px of hair on the brows' outer ends; the placement that clears them (k 1.947, tx 9, ty −83) pushes the top 50 px off the canvas; an elliptical hairline mask clears the brows but cuts hard straight edges through the curls at the temples and bares the background beside the ears. The afro needs its own drawing for the v2 face; the derivative is kept only to show the limit." },
+    "shadow": "the D-188 hair-shadow layer belongs to Northstar's hair only; neither derivative gets it, and no shadow is made for them"
+  }
+}

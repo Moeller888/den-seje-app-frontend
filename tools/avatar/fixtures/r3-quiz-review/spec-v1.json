@@ -1,0 +1,37 @@
+{
+  "id": "r3-quiz-review-v1",
+  "decision": "D-193",
+  "status": "REVIEW HARNESS — the R3 head in a copy of the quiz identity strip's avatar box; not the active quiz, no runtime change",
+  "sources": {
+    "page": "index.html",
+    "selectors": ["#avatar-display", "#avatar-display::before", ".quiz-avatar-layer", ".game-identity"],
+    "themes": "css/theme.css",
+    "hairTokens": "js/avatar-layers.js",
+    "rule": "the rules are copied verbatim from the page (only their animation declarations removed, so every screenshot is one deterministic frame — the page itself turns them off under prefers-reduced-motion); the theme file is inlined whole; nothing is restyled"
+  },
+  "box": { "cssW": 52, "cssH": 78 },
+  "dprs": [1, 2, 3],
+  "themes": ["default", "pearl", "inferno", "forest"],
+  "styles": [
+    { "id": "northstar", "label": "Northstar", "hair": "own painted colour (not tintable)" },
+    { "id": "short-black", "label": "short · black", "style": "short", "colour": "black" },
+    { "id": "short-blonde", "label": "short · blonde", "style": "short", "colour": "blonde" },
+    { "id": "afro-black", "label": "afro · black", "style": "afro", "colour": "black" },
+    { "id": "afro-blonde", "label": "afro · blonde", "style": "afro", "colour": "blonde" }
+  ],
+  "colourRule": "black (#2B2622) and blonde (#C99A5B) are the darkest and the lightest natural base tokens of HAIR_COLOR_TOKENS; short and afro are tinted as the R2 runtime does (base × luminance). Northstar's hair is painted art and shows in its own colour.",
+  "placement": "every hairstyle is the same 1024x1536 canvas on the same D-193 head, drawn by the page's own .quiz-avatar-layer rule (absolute, 100 % × 100 %, object-fit: contain): one placement and one scale for all; no per-style crop or zoom",
+  "proposal": {
+    "id": "theme-backdrop-v1",
+    "what": "ONE shared, discreet backdrop behind every avatar: a soft ellipse behind the head area in a lighter mix of the theme's OWN --avatar-inner (color-mix with white, at half opacity), inside the box and under the avatar images (z-index −1 in the box's own stacking context). It reads the theme token, it never redefines it; it never touches the hair assets or the hair tokens; it is not a glow or an outline on the figure.",
+    "css": "#avatar-display.r3-proposal::after { content: \"\"; position: absolute; inset: 0; border-radius: 6px; z-index: -1; pointer-events: none; opacity: 0.5; background: radial-gradient(ellipse 21px 19px at 50% 17%, color-mix(in srgb, var(--avatar-inner) 45%, #ffffff) 0%, color-mix(in srgb, var(--avatar-inner) 45%, #ffffff) 50%, transparent 100%); }",
+    "status": "UI DESIGN PROPOSAL in the review harness only — not a change to the active quiz",
+    "iterations": [
+      { "id": "A neutral-grey-soft", "css": "radial-gradient(ellipse 20px 18px at 50% 18%, rgba(128,128,136,0.30) 0%, rgba(128,128,136,0.22) 50%, transparent 100%)", "result": "sits between the hair edges in luminance: dark hair gains, light hair and Northstar lose" },
+      { "id": "B neutral-grey-strong", "css": "radial-gradient(ellipse 22px 20px at 50% 17%, rgba(176,176,184,0.55) 0%, rgba(176,176,184,0.45) 55%, transparent 100%)", "result": "dark hair doubles; blonde short drops on dark themes; a grey cast on inferno and forest — reads as a spotlight" },
+      { "id": "D theme-plate", "css": "opacity 0.55; radial-gradient(ellipse 25px 22px at 50% 17%, color-mix(in srgb, var(--avatar-inner) 35%, #fff) 0%, same 72%, transparent 100%)", "result": "the only one that separates every hairstyle (dark hair about 1.2 → 3.5, light hair about unchanged, Northstar up) — but it turns the box into a large pale plate: a visible redesign, not discreet" }
+    ],
+    "finding": "every hairstyle's OUTER edge is dark (luminance ≤ about 0.07, even blonde: the painted curl and strand outlines), so a backdrop helps all of them only when it is clearly lighter than all edges out to the silhouette — which is a large light plate. A discreet backdrop trades dark hair against light hair."
+  },
+  "bodyMissing": "The R3 figure has no body yet: the head sits at the top of an otherwise empty canvas. Head size in the box, the top margin and where the backdrop should sit depend on the final figure composition, which is NOT validated here."
+}

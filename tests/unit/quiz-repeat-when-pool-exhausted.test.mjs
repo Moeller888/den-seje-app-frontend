@@ -320,12 +320,21 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "(question_is_servable). It reads and bumps repeat_count exactly as before, keeps every guard (one open " +
     "instance, scope, auto-graded only, never teacher-graded), and redefines neither request_repeat_question, " +
     "process_question_attempt nor release_open_question_outside — the award stays this migration's.",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds request_repeat_level_question_for_student, #351's request_repeat_question_servable_for_student " +
+    "over the level engine's pool (active, levelled, servable questions in the given domains; no grade " +
+    "ceiling). It reads and bumps repeat_count exactly as before and keeps every guard (one open instance, " +
+    "auto-graded only, never teacher-graded, lost race → NULL). advance_student_level only READS " +
+    "repeat_count (first answers only). It redefines neither request_repeat_question, " +
+    "process_question_attempt nor release_open_question_outside, and alters no table — the award stays " +
+    "this migration's.",
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
-    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql"],
+    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
+      "20261029120000_difficulty_scale_b.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
@@ -355,8 +364,11 @@ test("the reviewed spelling migration is the only later definition of the repeat
   assert.ok(touching.includes("20261002000000_quiz_repeat_when_pool_exhausted.sql"));
   // The spelling runtime suite proves every changed answer on repeats and pins the rest
   // of the complete function byte-for-byte, including all reward and idempotency logic.
+  // D-211 (owner decision 2026-10-26) changes ONLY the repeat award to 1 coin + 2 XP; its runtime
+  // suite (repeat-answer-coin-reward-migration-run) proves that and pins everything else.
   assert.deepEqual(touching.filter(n => n > "20261002000000_quiz_repeat_when_pool_exhausted.sql"),
-    ["20261018143726_fix_danish_question_bank_text.sql"]);
+    ["20261018143726_fix_danish_question_bank_text.sql",
+     "20261027120000_repeat_answer_coin_reward.sql"]);
 });
 
 test("the migration version is not shared with any other migration", () => {

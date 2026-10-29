@@ -1,0 +1,3 @@
+# Byte-exact copies of earlier local review files. Their sha256 is the binding identity in review-pack-v1.json, so
+# git must never normalise or convert them: every file here is stored and checked out as binary, byte for byte.
+* binary
