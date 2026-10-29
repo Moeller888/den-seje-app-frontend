@@ -507,6 +507,58 @@ limits from the registry.
 `QUESTION_MIX_ENGINE=shadow`, compare `FORMAT_MIX:` logs → `v2`. Rollback: unset the secret (back to
 `v1` without a deploy); the function can stay.
 
+### Difficulty scale 1–10.000 & the level engine — prepared 2026-10-22, NOT active
+
+**Status:** design approved (`docs/difficulty-scale-design.md`, owner decisions B1–B8, E1–E5, path A).
+Code behind the Edge secret `LEVEL_ENGINE`; unset = `off` = today's selection, unchanged. Needs, in
+order, `20261019150000` (#351), `20261020120000` (A: `questions.difficulty_level`,
+`student_subject_level`) and `20261029120000` (B) — **none applied**. Rollout, rollback and query
+plans: [`docs/operations/level-engine-rollout.md`](./operations/level-engine-rollout.md).
+
+**Model.** Every question has a `difficulty_level` 1–10.000 (A backfills grade × band via
+`difficulty_level_from_grade_band`, 35 equal cells; new content carries its own). Every pupil has one
+level **per subject** (`student_subject_level`, server-owned: clients read their own rows, nothing
+else). The grade only seeds the start; it is never a ceiling or a reset.
+
+**Flow** (`get-next-question`, `LEVEL_ENGINE=v1`; steps 1 and the insert path unchanged):
+2. `level-flow.ts`: `advance_student_level(student, subject, grade)` → `get_level_questions_for_student
+   (student, level, domains)` — active, **levelled**, servable, never-served questions, nearest level
+   first, then `md5(student_id || question_id)`, no grade ceiling. Fast path: per domain the nearest
+   300 active questions above and below the level (ordered scans of `idx_questions_objective_level`)
+   are filtered first; when that window cannot prove the answer, the full search runs — same result
+   either way (runbook §4). The candidates' band is re-expressed
+   **relative to the pupil** (3 = the pupil's cell, ±1 per cell of 10000/35 levels), so the existing
+   orderings work unchanged: with `QUESTION_MIX_ENGINE=v2` the format mix picks the kind
+   (`planNextQuestions`, target band 3); otherwise `orderByLevel` (level tier ±1 cell first, wave score
+   inside a tier, nearest level as the stable tie-breaker);
+3. repeat: `request_repeat_level_question_for_student` — #351's servable repeat over the level pool
+   (levelled, active, servable; no grade), all guards kept.
+Route per flag combination: `chooseSelectionRoute(mix, level)` (both off → v1; only mix → mix; only
+level → level; both → level+mix). `shadow` is inert while the level engine serves.
+
+**The level update** (`advance_student_level`, called at the start of step 2): each first (repeat_count
+0), auto-graded (verdict set, not long, no teacher score) answer of the subject moves the level once:
+`step = max(15, round(150/√(n+1)))`, `+step` if correct, `−3·step` if not, clamped 1..10.000 (B3: the
+pupil settles at ~75 % correct). **Exactly once** is a property of the new table
+`student_level_fold_log` — primary key = the question instance — not of timestamps: a retry, a double
+submit or a concurrent call cannot fold an instance twice; a row lock on the pupil's
+`student_subject_level` row serialises concurrent calls. The log is also the first per-attempt record
+since 2026-03-08 (level before/after). Seed (fixed at creation): historie — a completed placement
+band (placement measures history only); otherwise the grade's start band; level =
+`difficulty_level_from_grade_band(grade, band)`, 143 without a grade. `level-flow.ts foldLevel` is the
+TS twin, pinned equal to the SQL in PGlite.
+
+**Privileges.** All three functions are `SECURITY INVOKER`, `search_path = public, pg_temp`, `EXECUTE`
+for `service_role` only. `service_role` already holds the table rights they need (verified read-only
+2026-10-22), so no `SECURITY DEFINER` is required; a client that obtained `EXECUTE` would still run
+with its own rights and could not write a level. `student_level_fold_log`: RLS on, no policies, no
+client privileges.
+
+**Tests** (PGlite, production-faithful base schema `tests/unit/helpers/prod-base-schema.mjs` read from
+the live catalog → #351 → A → B): `difficulty-scale-b-migration-run.test.mjs` (privileges, candidates,
+fold parity, exactly-once, repeat, the four flag combinations against real SQL) and
+`level-flow.test.mjs` (route matrix, step rule, ordering, RPC sequence).
+
 ## 7. Adaptive learning engine
 
 - **Event-driven progression** (`js/progression.js`): no direct coin/XP mutation — state is a pure
@@ -545,6 +597,9 @@ Cloudinary delivery/optimisation layer is **audited but not implemented** (§13)
 
 ## 10. Feature flags
 
+- **`LEVEL_ENGINE`** (Edge secret for `get-next-question`, default unset → `off`). `"v1"` (exactly)
+  turns on the difficulty-scale level engine (§6, "Difficulty scale 1–10.000"); anything else leaves
+  the selection unchanged. Needs migrations #351, A and B. Rollback = unset the secret, no deploy.
 - **`AVATAR_V2`** (`js/avatar-layers.js:230`, currently `true`). `isAvatarV2()` returns `true` if the
   constant is on, else honours a per-browser override `localStorage.avatar_v2 === "1"` — used for
   staged manual testing.

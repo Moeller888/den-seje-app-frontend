@@ -51,8 +51,9 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261020120000_difficulty_scale_a`, ifølge kataloget. Den
-  springes over (ejerbeslutning om selve migrationen udestår).
+- **Ikke anvendt i produktionen:** `20261020120000_difficulty_scale_a`, ifølge kataloget, og
+  `20261029120000_difficulty_scale_b` (niveaumotoren, PR #371), som bygger på A's
+  `student_subject_level`. Begge springes over (ejerbeslutning om migrationerne udestår).
 
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,

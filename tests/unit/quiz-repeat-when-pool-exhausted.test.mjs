@@ -320,12 +320,21 @@ const REVIEWED_LATER_REPEAT_USERS = {
     "(question_is_servable). It reads and bumps repeat_count exactly as before, keeps every guard (one open " +
     "instance, scope, auto-graded only, never teacher-graded), and redefines neither request_repeat_question, " +
     "process_question_attempt nor release_open_question_outside — the award stays this migration's.",
+  "20261029120000_difficulty_scale_b.sql":
+    "adds request_repeat_level_question_for_student, #351's request_repeat_question_servable_for_student " +
+    "over the level engine's pool (active, levelled, servable questions in the given domains; no grade " +
+    "ceiling). It reads and bumps repeat_count exactly as before and keeps every guard (one open instance, " +
+    "auto-graded only, never teacher-graded, lost race → NULL). advance_student_level only READS " +
+    "repeat_count (first answers only). It redefines neither request_repeat_question, " +
+    "process_question_attempt nor release_open_question_outside, and alters no table — the award stays " +
+    "this migration's.",
 };
 
 test("reviewed later repeat users redefine none of this migration's functions", () => {
   const dir = join(REPO, "supabase", "migrations");
   assert.deepEqual(Object.keys(REVIEWED_LATER_REPEAT_USERS),
-    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql"],
+    ["20261016160000_answer_keys_server_side_rpcs.sql", "20261019150000_question_format_mix.sql",
+      "20261029120000_difficulty_scale_b.sql"],
     "adding an exception is a reviewed decision — extend this list deliberately, never by pattern");
   for (const [name, reason] of Object.entries(REVIEWED_LATER_REPEAT_USERS)) {
     assert.ok(typeof reason === "string" && reason.length > 0, `${name} must state why it is safe`);
