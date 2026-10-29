@@ -385,7 +385,17 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Experiment A revision a2 — D-251 (experiment only; production stays d240).**
+- **Contour experiment A closed — D-252: not fit for general automatic extraction in its current form; production stays d240.**
+  - **Finding.** a2 takes C's own body contour into the item (neck and shoulder line beyond a neckline, the arm line under a
+    sleeve hem, the leg line above a shoe collar) on 14 of 26 items. The cause is a1's bounding-line rule, and it also explains
+    the 3 px outfit hole.
+  - **Why it was missed.** D-251's check covered only the front zone (hands, arms, base garments), and the visual review was too
+    narrow.
+  - **D-251.** Its recommendation of an independent validation is withdrawn; its measurements stand as history.
+  - **The four-call validation.** It was never authorised or sent. No image permission is active.
+  - **What comes next.** The requirements for a future method and two directions for a later owner decision are recorded in
+    `docs/decisions/D-252.md`.
+- **Experiment A revision a2 — D-251 (experiment only; production stays d240; recommendation WITHDRAWN by D-252).**
   - **Method.** `tools/avatar/northstar-shape-extract-a2.mjs`: the layer contract decides which lines may close a region. C's
     pixels of the layers in front of the category never join the item, and their lines never close.
   - **Result.** On the 26 existing pictures (seen before, so not a validation): 0 px added in front, no regression of the 20, and
