@@ -32,13 +32,15 @@ export function buildManifest(p: Project, urlPrefix = "assets/"): MediaManifest 
     if (a === undefined || a.kind === "font") continue;
     const base = { kind: a.kind, bytes: a.bytes, hash: `sha256:${a.sha256}`, ...(a.language !== undefined ? { language: a.language } : {}), ...(a.atlas !== undefined ? { atlas: a.atlas } : {}) };
     const alternatives = a.alternatives ?? [];
-    out[id] =
+    const entry: ManifestEntry =
       alternatives.length === 0
         ? { ...base, url: `${urlPrefix}${a.file}` }
         : {
             ...base,
             formats: [{ url: `${urlPrefix}${a.file}`, type: a.type, bytes: a.bytes, hash: `sha256:${a.sha256}` }, ...alternatives.map((x) => ({ url: `${urlPrefix}${x.file}`, type: x.type, bytes: x.bytes, hash: `sha256:${x.sha256}` }))],
           };
+    // defineProperty: an asset id never becomes a prototype, whatever it is.
+    Object.defineProperty(out, id, { value: entry, enumerable: true, writable: true, configurable: true });
   }
   return out;
 }

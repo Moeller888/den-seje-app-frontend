@@ -152,7 +152,8 @@ describe("browser stores with fakes", () => {
   });
 
   /** A tiny in-memory IndexedDB: requests and transactions complete in microtasks. */
-  function fakeIdb(options: { failOpen?: boolean; failTx?: boolean; failRead?: boolean; preset?: Record<string, unknown> } = {}) {
+  function fakeIdb(options: { failOpen?: boolean; failTx?: boolean; failRead?: boolean; throwTxOnce?: boolean; preset?: Record<string, unknown> } = {}) {
+    let throwNext = options.throwTxOnce === true;
     const records = new Map<string, unknown>(Object.entries(options.preset ?? {}));
     const commits: string[][] = [];
     let closed = false;
@@ -177,6 +178,11 @@ describe("browser stores with fakes", () => {
         return {};
       },
       transaction: (_store, mode): IdbTransactionLike => {
+        if (mode === "readwrite" && throwNext) {
+          // A closed connection throws synchronously (InvalidStateError in browsers).
+          throwNext = false;
+          throw new Error("connection lost");
+        }
         const ops: string[] = [];
         const tx: IdbTransactionLike = {
           oncomplete: null,
@@ -238,6 +244,20 @@ describe("browser stores with fakes", () => {
     expect(idb.records.get("engine:harbour:slot1")).toBe(raw);
     store.close();
     expect(idb.isClosed()).toBe(true);
+  });
+
+  it("IndexedDbMirror: a commit that throws synchronously is reported, flush says false once, later commits still reach the store", async () => {
+    const idb = fakeIdb({ throwTxOnce: true });
+    const store = await IndexedDbMirror.open(idb.factory);
+    const errors: unknown[] = [];
+    store.onError = (e) => errors.push(e);
+    store.set("a", "1");
+    expect(await store.flush()).toBe(false);
+    expect(errors.map((e) => (e as Error).message)).toEqual(["connection lost"]);
+    store.set("b", "2");
+    expect(await store.flush()).toBe(true);
+    expect(idb.records.get("b")).toBe("2");
+    expect(idb.records.has("a")).toBe(false);
   });
 
   it("IndexedDbMirror: failed open rejects (the app falls back to localStorage); failed commits are reported", async () => {

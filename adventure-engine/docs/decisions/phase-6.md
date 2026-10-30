@@ -286,3 +286,18 @@ pnpm content schema --out <mappe> [--check] [--json]
 - **Recovery:** én kladde ad gangen.
 - **Preview:** viser spillets egne skærme (titelskærm osv.) og starter ikke direkte i en valgt scene. Devtools-buildet er beregnet til det.
 - **Ingen fremmede formater:** der findes ingen import af andre spils data, og det er bevidst.
+
+## 16. Kodegennemgang af PR #469
+
+Fund og rettelser står i `docs/release-readiness.md` §15. Kort sagt gør rettelserne følgende:
+
+- Id'er, der bliver filnavne, skal matche `FILE_ID` (§2), og CLI'en skriver kun inden for sin mål-mappe.
+- Editoren sletter kun filer, den ejer.
+- IndexedDB-fejl stopper ikke senere gem, og "Gemt" vises først, når skrivningen er bekræftet.
+- Projekter med schemafejl åbnes ikke.
+- Clean-room-scriptet afgør tekst efter indhold.
+- Dybt indlejrede saves afvises.
+- `?dev=1` kan ikke længere slå checksum-tjekket fra.
+- En annulleret `game.save` giver et fejlet gem.
+- Back-forward-cache river ikke spillet ned.
+- Der er en separat CI-workflow for `adventure-engine/`.

@@ -93,7 +93,7 @@ packages/
                     src/model/ (rene UI-modeller), src/demo/ (syntetisk indhold og manifest), public/assets/ (SVG)
 e2e/                Playwright-specs (e2e/editor/ for editoren) og Chromium-screenshots; tools/e2e-serve.mjs starter serverne
 docs/decisions/     phase-1.md … phase-6.md: beslutninger, afvigelser, TS-mapping, udskudte krav
-tools/check-clean-room.mjs  CR-02 og CR-01 (ekstern denylist); tests i tools/test/
+tools/check-clean-room.mjs  CR-02 og CR-01 (ekstern denylist); tools/check-build-boundary.mjs  devtools/editor-grænsen i buildene; tests i tools/test/
 ```
 
 Dataflow: indhold → `loadContent` (validering) → `Engine` → `Runtime` udsender kommandoer → `PresentationAdapter`. Adapteren svarer med `reply(done | choice | failed)`, eller core afslutter selv kommandoen, når adapteren returnerer `{kind: "auto"}`. `Say` og `Choose` bliver aldrig afsluttet automatisk.
@@ -221,6 +221,16 @@ Se `docs/decisions/phase-6.md` for formater, schema-strategi, isolation og begr�
   - Fund vises som fil og linje plus listens linjenummer, aldrig værdien.
 
 Release-status: se `docs/release-readiness.md`.
+
+## CI
+
+`.github/workflows/adventure-engine.yml` (i værtsrepoet) kører ved ændringer i `adventure-engine/`. Workflowen er ikke en required check.
+
+| Job | Hvad det gør | Hvornår |
+|---|---|---|
+| `check` | typecheck, lint med CR-02, coverage, scenarier, content-CLI, de tre builds og `node tools/check-build-boundary.mjs` | ved hver ændring |
+| `e2e` | Playwright, uden skærmbilleder (`E2E_SCREENSHOTS=off`, fordi baselines er lavet på Windows) | Chromium på PR; alle tre browsere ved manuel start |
+| `cr01` | CR-01 med den eksterne denylist | kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1` |
 
 ## Indhold og testdata
 

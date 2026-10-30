@@ -133,13 +133,17 @@ export const IDB_STORE = "slots";
  * IndexedDB with an in-memory mirror. `open` reads every record once; writes
  * update the mirror at once and are committed in order; a `transaction` is
  * committed as one IDB transaction. `flush()` resolves when every commit has
- * finished; a failed commit is reported through `onError`.
+ * finished, with `false` when a commit since the previous flush failed; every
+ * failed commit is also reported through `onError`. A failure (also one that
+ * is thrown synchronously, e.g. a closed connection) never stops later commits.
  */
 export class IndexedDbMirror implements SaveStorage {
   private readonly db: IdbDatabaseLike;
   private readonly mirror: Map<string, string>;
   private batch: Array<["put", string, string] | ["delete", string]> | null = null;
   private chain: Promise<void> = Promise.resolve();
+  /** A commit failed since the last flush(). */
+  private failedSinceFlush = false;
   onError: (err: unknown) => void = () => {};
 
   private constructor(db: IdbDatabaseLike, mirror: Map<string, string>) {
@@ -204,9 +208,14 @@ export class IndexedDbMirror implements SaveStorage {
       return;
     }
     if (ops.length === 0) return;
-    this.chain = this.chain.then(
-      () =>
-        new Promise<void>((resolve) => {
+    const commit = (): Promise<void> =>
+      new Promise<void>((resolve) => {
+        const fail = (err: unknown): void => {
+          this.failedSinceFlush = true;
+          this.onError(err);
+          resolve();
+        };
+        try {
           const tx = this.db.transaction(IDB_STORE, "readwrite");
           const store = tx.objectStore(IDB_STORE);
           for (const op of ops) {
@@ -214,17 +223,21 @@ export class IndexedDbMirror implements SaveStorage {
             else store.delete(op[1]);
           }
           tx.oncomplete = () => resolve();
-          tx.onerror = tx.onabort = () => {
-            this.onError(new Error("IndexedDB transaction failed"));
-            resolve();
-          };
-        }),
-    );
+          tx.onerror = tx.onabort = () => fail(new Error("IndexedDB transaction failed"));
+        } catch (err) {
+          // Thrown synchronously (closed connection, uncloneable value): reported, and the chain goes on.
+          fail(err);
+        }
+      });
+    this.chain = this.chain.then(commit, commit);
   }
 
-  /** Resolves when every queued commit has finished. */
-  flush(): Promise<void> {
-    return this.chain;
+  /** Resolves when every queued commit has finished: true when all commits since the previous flush succeeded. */
+  async flush(): Promise<boolean> {
+    await this.chain;
+    const ok = !this.failedSinceFlush;
+    this.failedSinceFlush = false;
+    return ok;
   }
 
   close(): void {

@@ -34,6 +34,7 @@ import type {
   SceneDef,
   SoundDef,
 } from "@adventure-engine/content";
+import { ASSET_ID, FILE_ID } from "./limits.ts";
 import { PROJECT_FORMAT, PROJECT_FORMAT_VERSION, SCHEMAS } from "./schema.ts";
 import { validateSchema } from "./jsonschema.ts";
 
@@ -127,7 +128,11 @@ export interface ReadOptions {
 }
 
 export interface ReadResult {
-  /** Null when the project cannot be assembled (missing or unparsable files, wrong shapes). */
+  /**
+   * Null when the project cannot be assembled safely: missing or unparsable
+   * files, wrong shapes, schema errors, unsafe file names. Only warnings (such
+   * as unknown fields without --strict) leave a project.
+   */
   readonly project: Project | null;
   readonly problems: readonly Problem[];
 }
@@ -254,6 +259,7 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
         continue;
       }
       const item = value as T;
+      if (!FILE_ID.test(stem(path))) add(ProjectCode.FileName, "error", path, "", `"${stem(path)}" is not a valid file name id (${FILE_ID.source})`);
       if (item.id !== stem(path)) add(ProjectCode.FileName, "error", path, "id", `id "${String(item.id)}" must match the file name "${stem(path)}"`);
       byId.set(stem(path), item);
     }
@@ -285,12 +291,22 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
       broken = true;
       continue;
     }
-    i18n[stem(path)] = value as Record<string, string>;
+    if (!FILE_ID.test(stem(path))) {
+      add(ProjectCode.FileName, "error", path, "", `"${stem(path)}" is not a valid language file name (${FILE_ID.source})`);
+      continue;
+    }
+    Object.defineProperty(i18n, stem(path), { value: value as Record<string, string>, enumerable: true, writable: true, configurable: true });
+  }
+  const manifest = parsed.get("assets.manifest.json");
+  if (typeof manifest === "object" && manifest !== null && !Array.isArray(manifest)) {
+    for (const key of Object.keys(manifest).sort()) {
+      if (!ASSET_ID.test(key)) add(ProjectCode.Schema, "error", "assets.manifest.json", key, `asset id "${key}" must match ${ASSET_ID.source}`);
+    }
   }
   const media = objectOr<{ animations?: AnimationDef[]; sounds?: SoundDef[] }>("media.json", {});
   const game = objectOr<GameDef | null>("game.json", null);
   const result: Project | null =
-    broken || game === null || problems.some((p) => p.code === ProjectCode.Missing)
+    broken || game === null || problems.some((p) => p.level === "error")
       ? null
       : {
           game,
@@ -311,6 +327,14 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
 
 /** The JSON files of a project, canonical. Asset bytes are not included (see `withAssets`). */
 export function projectToFiles(p: Project): Map<string, string> {
+  // Ids that become file names are checked here as well, so no caller can write outside the project.
+  for (const [what, ids] of [
+    ["scene", p.scenes.map((s) => s.id)],
+    ["graph", p.graphs.map((g) => g.id)],
+    ["language", Object.keys(p.i18n)],
+  ] as const) {
+    for (const x of ids) if (!FILE_ID.test(x)) throw new RangeError(`${what} id "${x}" cannot be a file name (${FILE_ID.source})`);
+  }
   const files = new Map<string, string>();
   files.set("project.json", prettyCanonical({ format: PROJECT_FORMAT, formatVersion: PROJECT_FORMAT_VERSION, order: { scenes: p.scenes.map((s) => s.id), graphs: p.graphs.map((g) => g.id) } }));
   files.set("game.json", prettyCanonical(p.game));
@@ -382,4 +406,18 @@ export function buildContent(p: Project): ContentPackage {
     ...(p.sounds.length > 0 ? { sounds: p.sounds } : {}),
     ...(p.migrations.length > 0 ? { saveMigrations: p.migrations } : {}),
   };
+}
+
+/** Project JSON files the editor writes itself. */
+const OWNED_JSON = /^(scenes|graphs|i18n)\/[^/]+\.json$|^(media|migrations|editor)\.json$/;
+
+/**
+ * Files of a project folder that the editor may later remove when they leave
+ * the project: its own JSON files and the asset files registered in the
+ * manifest. Anything else (notes, source artwork, unregistered files under
+ * assets/) is never deleted.
+ */
+export function ownedFiles(project: Project, paths: Iterable<string>): Set<string> {
+  const registered = new Set(Object.values(project.assets).flatMap((a) => [a.file, ...(a.alternatives ?? []).map((x) => x.file)].map((f) => `assets/${f}`)));
+  return new Set([...paths].filter((path) => OWNED_JSON.test(path) || registered.has(path)));
 }

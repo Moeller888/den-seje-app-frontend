@@ -68,8 +68,13 @@ export class EditorStore {
     for (const f of this.listeners) f();
   }
 
+  /** Never throws: an unexpected failure of the validator is shown as a problem instead of breaking the editor. */
   validate(): void {
-    this.problems = validateProject(withAssets(this.project, this.files)).problems;
+    try {
+      this.problems = validateProject(withAssets(this.project, this.files)).problems;
+    } catch (err) {
+      this.problems = [{ code: "E-EDITOR-VALIDATE", level: "error", file: "", path: "", message: `validation failed: ${err instanceof Error ? err.message : String(err)}` }];
+    }
   }
 
   /** Run an edit as one undoable command. Errors are returned as text and leave the document unchanged. */

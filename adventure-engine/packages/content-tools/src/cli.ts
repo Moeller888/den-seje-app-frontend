@@ -13,9 +13,9 @@
  */
 
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { buildBundle, validateBundle, validateProject } from "./build.ts";
-import { checkFileSet } from "./limits.ts";
+import { checkFileSet, isSafeRelativePath } from "./limits.ts";
 import { encodeText, prettyCanonical, projectToFiles, type Problem } from "./project.ts";
 import { SCHEMAS } from "./schema.ts";
 
@@ -62,6 +62,17 @@ export function writeAtomic(path: string, data: Uint8Array | string): void {
     if (existsSync(tmp)) unlinkSync(tmp);
     throw err;
   }
+}
+
+/**
+ * Write a project-relative file atomically below `root`; a path that would
+ * leave `root` (absolute, "..", drive letters) is refused before anything is written.
+ */
+export function writeInside(root: string, rel: string, data: Uint8Array | string): void {
+  const target = resolve(root, ...rel.split("/"));
+  const back = relative(resolve(root), target);
+  if (!isSafeRelativePath(rel) || back.startsWith("..") || isAbsolute(back)) throw new Error(`refusing to write outside ${root}: ${rel}`);
+  writeAtomic(target, data);
 }
 
 const sameBytes = (a: Uint8Array, b: Uint8Array): boolean => a.length === b.length && a.every((x, i) => x === b[i]);
@@ -201,7 +212,7 @@ function build(args: Args, io: CliIo, emit: (v: unknown) => void): number {
   }
   const written: string[] = [];
   for (const [rel, data] of assets) {
-    writeAtomic(join(outDir, rel), data);
+    writeInside(outDir, rel, data);
     written.push(rel);
   }
   // The bundle comes last: it only appears once everything it refers to is in place.
@@ -231,7 +242,7 @@ function format(args: Args, io: CliIo, emit: (v: unknown) => void): number {
     const old = files.get(rel);
     if (old !== undefined && sameBytes(old, bytes)) continue;
     changed.push(rel);
-    if (!args.check) writeAtomic(join(path, ...rel.split("/")), bytes);
+    if (!args.check) writeInside(path, rel, bytes);
   }
   if (args.json) emit({ ok: !args.check || changed.length === 0, changed });
   else io.out(changed.length === 0 ? "all files are formatted" : `${args.check ? "not formatted" : "formatted"}: ${changed.join(", ")}`);

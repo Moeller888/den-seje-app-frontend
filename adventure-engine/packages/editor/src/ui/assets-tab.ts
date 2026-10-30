@@ -164,7 +164,10 @@ function atlasGrid(ctx: Ctx, id: string, a: ProjectAsset): HTMLElement {
   const cols = atlas.columns ?? atlas.frames;
   const url = ctx.urls.forAsset(ctx.store, id);
   const box = el("div", { class: "atlas", style: `width:${Math.min(cols, 8) * 72}px` });
-  for (let f = 0; f < atlas.frames; f++) {
+  // At most 256 frames are drawn; the schema allows up to 4096 per atlas.
+  const shown = Math.min(atlas.frames, 256);
+  if (shown < atlas.frames) box.append(el("p", { class: "muted", text: `Viser de første ${shown} af ${atlas.frames} rammer.` }));
+  for (let f = 0; f < shown; f++) {
     const cx = (f % cols) * atlas.frameWidth;
     const cy = Math.floor(f / cols) * atlas.frameHeight;
     const scale = 64 / Math.max(atlas.frameWidth, atlas.frameHeight);

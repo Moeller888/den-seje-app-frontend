@@ -608,3 +608,85 @@ describe("save edge cases", () => {
     expect(resolveSound(loadContent(noSounds, { mode: "lenient" }), "quay", "waves")).toBeUndefined();
   });
 });
+
+describe("review fixes (PR #469)", () => {
+  it("a deeply nested save is refused as a schema error, never a stack overflow; saveIntegrity calls it damaged", () => {
+    let deep = "0";
+    for (let i = 0; i < 200_000; i++) deep = `[${deep}]`;
+    const raw = `{"format":"engine.save","formatVersion":1,"x":${deep}}`;
+    const r = parseSave(raw, content);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatchObject({ kind: "schema", message: expect.stringContaining("nested deeper") });
+    expect(saveIntegrity(raw)).toBe("corrupt");
+    const { e } = engine();
+    expect(e.load(raw)).toMatchObject({ ok: false, error: { kind: "schema" } });
+  });
+
+  it("negative format versions are damage; only format 0 is accepted without a checksum", () => {
+    const neg = JSON.stringify({ format: "engine.save", formatVersion: -1 });
+    expect(saveIntegrity(neg)).toBe("corrupt");
+    const r = parseSave(neg, content);
+    expect(!r.ok && r.error.kind).toBe("schema");
+    expect(saveIntegrity(JSON.stringify({ format: "engine.save", formatVersion: 0 }))).toBe("ok");
+  });
+
+  it("content migrations look renames up as own keys only", () => {
+    const c = loadContent(pkg({ game: { ...pkg().game, version: "2.0.0" }, saveMigrations: [{ fromVersion: "1.2.0", rename: { lamp_lit: "lamp_on" } }] }), { mode: "lenient" });
+    const { e } = engine();
+    e.setGlobal("constructor", 7);
+    const d = JSON.parse(saveJson(e)) as SaveData;
+    const r = parseSave(saveJsonWith(d, { content: { ...d.content, version: "1.2.0" } }), c);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.globals["constructor"]).toBe(7);
+      expect(r.data.globals["lamp_on"]).toBe(false);
+    }
+  });
+
+  it("ambient loop volumes are clamped to [0, 1] when a save is read", () => {
+    const { e } = engine();
+    e.run("g#loops");
+    const d = JSON.parse(saveJson(e)) as SaveData;
+    const loops = d.ambient.loops.map((l) => ({ ...l, volume: l.sound === "waves" ? 1000 : -3 }));
+    const r = parseSave(saveJsonWith(d, { ambient: { ...d.ambient, loops } }), content);
+    expect(r.ok && r.data.ambient.loops.map((l) => l.volume)).toEqual([1, 0]);
+  });
+
+  it("a game.save run that is cancelled is reported as a failed save, not as a snapshot", () => {
+    const waiting = loadContent(
+      pkg({
+        graphs: [
+          { id: "game", kind: "logic", nodes: [{ id: "g0", type: "entry", name: "main", next: ["g1"] }, { id: "g1", type: "guard", expr: { eq: [{ var: "$action" }, { const: "game.save" }] }, next: ["g2"] }, { id: "g2", type: "delay", minMs: 100, maxMs: 100, mode: "block" }] },
+          { id: "talk", kind: "dialog", nodes: [{ id: "h0", type: "entry", name: "hello", next: ["h1"] }, { id: "h1", type: "say", speaker: "gull", textKey: "t" }] },
+        ],
+      }),
+      { mode: "lenient" },
+    );
+    const e = new Engine(waiting, { seed: "s", adapter: new TestAdapter() });
+    e.newGame();
+    const outs: SaveOutcome[] = [];
+    e.requestSave((o) => outs.push(o));
+    expect(outs).toEqual([]);
+    e.backToTitle();
+    expect(outs).toEqual([{ ok: false, reason: "cancelled", blockers: [] }]);
+    expect(e.trace.some((t) => t.kind === "save.rejected" && JSON.stringify(t["blockers"]) === '["cancelled"]')).toBe(true);
+  });
+
+  it("allowSaveChecksumMismatch is separate from devMode: a front end can keep the check on in a dev-mode engine", () => {
+    const { e } = engine();
+    const d = JSON.parse(saveJson(e)) as SaveData;
+    const tampered = JSON.stringify({ ...d, playTimeMs: d.playTimeMs + 1 });
+    const strict = new Engine(content, { seed: "s", adapter: new TestAdapter(), devMode: true, allowSaveChecksumMismatch: false });
+    strict.newGame();
+    expect(strict.load(tampered)).toMatchObject({ ok: false, error: { kind: "checksum" } });
+    const dev = new Engine(content, { seed: "s", adapter: new TestAdapter(), devMode: true });
+    dev.newGame();
+    expect(dev.load(tampered).ok).toBe(true);
+  });
+});
+
+/** A save text with some top-level fields replaced and a fresh, valid checksum. */
+function saveJsonWith(d: SaveData, change: Partial<SaveData>): string {
+  const body = { ...d, ...change };
+  return JSON.stringify({ ...body, checksum: saveChecksum(body) });
+}

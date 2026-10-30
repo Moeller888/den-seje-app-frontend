@@ -283,7 +283,8 @@ test.describe("content editor (phase 6)", () => {
 });
 
 test.describe("editor screenshots (Chromium)", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "screenshots are Chromium-only");
+  // Baselines are made on Windows; CI on Linux runs the functional specs with E2E_SCREENSHOTS=off.
+  test.skip(({ browserName }) => browserName !== "chromium" || process.env["E2E_SCREENSHOTS"] === "off", "screenshots are Chromium-only (and off where the baselines' platform differs)");
 
   test("scene editor with the fixture", async ({ page }) => {
     await openFixture(page);

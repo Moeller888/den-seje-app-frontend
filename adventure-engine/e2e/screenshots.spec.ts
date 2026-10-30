@@ -6,7 +6,8 @@ import { activateHotspot, clickItem, confirmLine, game, start, waitIdle } from "
  * animations off (?motion=off), fonts loaded and the engine idle, so the
  * picture depends only on the world state, not on timing.
  */
-test.skip(({ browserName }) => browserName !== "chromium", "screenshots are Chromium-only");
+// Baselines are made on Windows; CI on Linux runs the functional specs with E2E_SCREENSHOTS=off.
+test.skip(({ browserName }) => browserName !== "chromium" || process.env["E2E_SCREENSHOTS"] === "off", "screenshots are Chromium-only (and off where the baselines' platform differs)");
 
 async function settle(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready.then(() => undefined));

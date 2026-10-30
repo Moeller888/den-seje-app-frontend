@@ -62,8 +62,10 @@ describe("speech bubble placement (spec 06 F5, TS-D12)", () => {
 describe("settings and formatting", () => {
   const env = { dev: false, prefersReducedMotion: false };
   it("reads URL flags defensively", () => {
-    expect(readSettings("", env, ["da", "en"])).toEqual({ language: null, reducedMotion: false, dev: false, zones: false, seed: "demo" });
-    expect(readSettings("?lang=en&motion=off&dev=1&zones=1&seed=x", env, ["da", "en"])).toEqual({ language: "en", reducedMotion: true, dev: true, zones: true, seed: "x" });
+    expect(readSettings("", env, ["da", "en"])).toEqual({ language: null, reducedMotion: false, dev: false, devBuild: false, zones: false, seed: "demo" });
+    // ?dev=1 gives dev behaviour, but never a dev build (saves with a wrong checksum stay refused).
+    expect(readSettings("?lang=en&motion=off&dev=1&zones=1&seed=x", env, ["da", "en"])).toEqual({ language: "en", reducedMotion: true, dev: true, devBuild: false, zones: true, seed: "x" });
+    expect(readSettings("", { dev: true, prefersReducedMotion: false }, ["da"])).toMatchObject({ dev: true, devBuild: true });
     expect(readSettings("?lang=fr&zones=1&seed=", env, ["da", "en"])).toMatchObject({ language: null, zones: false, seed: "demo" });
     expect(readSettings("", { dev: true, prefersReducedMotion: true }, ["da"])).toMatchObject({ dev: true, reducedMotion: true });
   });

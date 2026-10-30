@@ -65,8 +65,8 @@ export interface SaveServices {
   readonly storage: SaveStorage;
   /** "indexeddb" | "localstorage" | "memory", mirrored as data-storage. */
   readonly kind: string;
-  /** Resolves when every write so far has reached the store. */
-  flush(): Promise<void>;
+  /** Resolves when every write so far has finished: true when they all reached the store. */
+  flush(): Promise<boolean>;
 }
 
 export class Game {
@@ -126,6 +126,8 @@ export class Game {
       seed: settings.seed,
       adapter: this.adapter,
       devMode: settings.dev,
+      // Only a development build may load saves with a wrong checksum; ?dev=1 never can.
+      allowSaveChecksumMismatch: settings.devBuild,
       // Save timestamps are real time in the browser; core itself never reads a clock.
       wallClock: () => new Date().toISOString(),
       ...(settings.language !== null ? { language: settings.language } : {}),
@@ -334,7 +336,10 @@ export class Game {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden" && this.started) this.autosaver.request("hidden");
     });
-    window.addEventListener("pagehide", () => this.destroy());
+    // A page kept in the back-forward cache comes back as it was; only a page that is really unloaded is torn down.
+    window.addEventListener("pagehide", (ev) => {
+      if (!ev.persisted) this.destroy();
+    });
     this.rafId = requestAnimationFrame((now) => {
       this.lastFrame = now;
       this.frame(now);
@@ -408,11 +413,17 @@ export class Game {
       return;
     }
     const seq = ++this.saveSeq;
-    void this.store.flush().then(() => {
-      this.root.dataset["lastSave"] = `${slot}:${seq}`;
-    });
-    if (announce) this.showNotice(this.engine.text.t("ui.saved"), false);
     this.menu.refresh();
+    // "Gemt" only once the write really reached the store; a failed commit is reported as failed.
+    void this.store.flush().then((ok) => {
+      if (!ok) {
+        this.root.dataset["lastSave"] = `${slot}:failed`;
+        this.showNotice(format(this.engine.text.t("ui.save_failed"), { reason: "storage" }), false);
+        return;
+      }
+      this.root.dataset["lastSave"] = `${slot}:${seq}`;
+      if (announce) this.showNotice(this.engine.text.t("ui.saved"), false);
+    });
   }
 
   /** Save from the menu: only when idle (spec 05 E3.1); otherwise the player is told why not. */
@@ -461,7 +472,14 @@ export class Game {
     const transitionBefore = this.fadeNode.style.transition;
     this.fadeNode.style.transition = "none";
     this.fadeNode.style.opacity = "1";
-    const out = this.engine.load(raw);
+    let out: ReturnType<Engine["load"]>;
+    try {
+      out = this.engine.load(raw);
+    } catch (err) {
+      // Never a black screen: an unexpected failure is shown like a rejected save.
+      console.error("[save] load failed", err);
+      out = { ok: false, error: { kind: "schema", code: "E-SAVE-SCHEMA", message: err instanceof Error ? err.message : String(err) }, warnings: [] };
+    }
     if (!out.ok) {
       this.fadeNode.style.opacity = fadeBefore;
       this.fadeNode.style.transition = transitionBefore;

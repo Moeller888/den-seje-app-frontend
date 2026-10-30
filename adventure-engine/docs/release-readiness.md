@@ -33,23 +33,28 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 
 | Område | Hvordan | Resultat |
 |---|---|---|
-| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **413 bestået** (38 filer) |
+| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **437 bestået** (40 filer) |
 | Scenarier med goldens | `pnpm scenarios` | **9/9 PASS** |
 | Content-CLI | validate, build, `--check`, format, schema i unit-tests og manuelt på fixturen | grøn |
-| Clean-room-script | `tools/test/clean-room.test.mjs` med syntetisk denylist | 6/6 |
+| Clean-room-script og build-grænse | `tools/test/clean-room.test.mjs` (syntetisk denylist) og `tools/test/build-boundary.test.mjs` | 10/10 |
 | Typecheck | headless og browser-tsconfig | grøn |
 | Lint og CR-02 | `pnpm lint` | grøn |
 | E2E (Playwright, én worker, sekventielt) | spil, editor og devtools | se §5 |
+| CI | `.github/workflows/adventure-engine.yml` (se §15) | ny |
 
 ## 4. Coverage
 
-`pnpm coverage`: **99,49 % lines, 96,85 % branches, 99,79 % functions**. Alle tærskler i `vitest.config.ts` er opfyldt.
+`pnpm coverage`: **99,49 % lines, 96,87 % branches, 99,79 % functions**. Alle tærskler i `vitest.config.ts` er opfyldt.
 
 - 100 % for runtime, scheduler, expression, modal, geometri, media, audio, save-pakken, save-format, schema, JSON Schema-validator og polygon/nav-preview.
 - `content-tools` samlet: 99,2 % lines og 95,6 % branches.
 - UI-koden (renderer, app-UI, editor-UI, devtools) dækkes af Playwright.
 
-## 5. Browserresultater (efter release-rettelserne)
+## 5. Browserresultater
+
+Efter rettelserne fra kodegennemgangen (§15), kørt i den isolerede worktree på PR-branchen (et frisk LF-checkout): Chromium **45 bestået**, Firefox **39 bestået** + 6 skips, WebKit **39 bestået** + 6 skips, uden fejl, retries eller ændrede timeouts.
+
+Første release-gennemgang:
 
 | Browser | Resultat |
 |---|---|
@@ -155,10 +160,11 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 
 ## 12. Release blockers
 
-- **Ingen tekniske blockers for en lokal commit.** WebKit er genbekræftet (§5).
+- **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15).
 - **Før en offentlig udgivelse:**
   1. CR-01 skal køres med den eksterne denylist (`REQUIRE_CLEAN_ROOM_DENYLIST=1`).
   2. Dev-værktøjerne bør opgraderes (§10).
+  3. Den nye CI-workflow skal have kørt grønt på GitHub; dens E2E-job kører på Linux uden skærmbilledtests (baselines er lavet på Windows).
 
 ## 13. Buildartefakter
 
@@ -175,3 +181,38 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 **KLAR TIL COMMIT** (lokal commit). Fase 1–6 kan gemmes som en ren, reviewbar første version efter commit-planen i slutrapporten. Alle tests er grønne i alle tre browsere. Der er ikke staged, committet eller pushet.
 
 CR-01 er **ikke** bestået, fordi den eksterne denylist mangler. Det skal fremgå af commitbeskeden og løses før en offentlig udgivelse.
+
+## 15. Kodegennemgang af PR #469 og rettelser
+
+En uafhængig read-only gennemgang af PR #469 fandt nedenstående. Alle fund er rettet med regressionstests, undtagen de to sidste lave fund (se "Ikke rettet").
+
+| Fund | Rettelse | Regressionstest |
+|---|---|---|
+| **H1** `content format` kunne skrive uden for projektmappen via et scene- eller graf-id | Id'er, der bliver filnavne (scener, grafer, sprog), skal matche `FILE_ID` (`^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$`) i schema, `readProject`, `rename` og `projectToFiles`. CLI'en skriver kun via `writeInside`, der afviser stier uden for roden | `content-tools/test/review-fixes.test.ts` |
+| **H2** Editorens Gem slettede uregistrerede filer under `assets/` | Kun filer, editoren ejer (egne JSON-filer og assets registreret i manifestet), kan slettes (`ownedFiles`) | `review-fixes.test.ts` |
+| **H3** En synkront kastende IndexedDB-transaktion stoppede alle senere gem uden at sige det | Commit-kæden kan ikke forgiftes; fejl rapporteres via `onError`; `flush()` returnerer `false` efter en fejlet commit | `save/test/save-package.test.ts` |
+| **H4** Clean-room-scriptet kunne give falsk PASS (`.py`, `.gitignore`, mapper ved navn `dist`/`coverage` alle steder) | Tekst afgøres efter indhold (ingen NUL-byte), binære filer matches uden forskel på store/små ASCII-bogstaver, genererede mapper springes kun over ved deres kendte stier, CR-02 scanner alle tekstfiler, symlinks følges ikke | `tools/test/clean-room.test.mjs` |
+| **M1** Omdøbning tillod `/`, `..` og `__proto__` | Se H1; sprogkoder i projektfanen valideres | `review-fixes.test.ts` |
+| **M2** Projekter med schemafejl blev samlet og kunne få validatoren til at kaste | Enhver fejl ved læsning giver intet projekt; editorens validering kaster aldrig; atlas har maksimum 4096 rammer (og højst 256 vises) | `review-fixes.test.ts` |
+| **M3** En dybt indlejret save gav stack overflow og sort skærm | Saves dybere end 64 niveauer afvises, før noget behandles rekursivt; `loadRaw` fanger uventede fejl og gendanner skærmen | `core/test/save.test.ts` |
+| **M4** `?dev=1` slog checksum-tjekket fra i produktion | Ny `EngineOptions.allowSaveChecksumMismatch`; spillet sætter den kun i et udviklingsbuild (`AppSettings.devBuild`) | `save.test.ts`, `app/test/models.test.ts` |
+| **M5** Et annulleret `game.save` blev rapporteret som gemt | Svarer `{ok:false, reason:"cancelled"}` | `save.test.ts` |
+| **M6** Spillet frøs efter back-forward-cache | `pagehide` river kun ned, når siden ikke gemmes i cachen | – (ræsonneret; ikke testbart i Playwright) |
+| **M7** "Gemt" blev vist, selvom commit til IndexedDB fejlede | "Gemt" og `data-last-save` vises først, når `flush()` bekræfter skrivningen | `save-package.test.ts` |
+| **M8** Værtens CI kørte ingen adventure-engine-test | Ny workflow `.github/workflows/adventure-engine.yml` | – |
+| Lav: `i18n/__proto__.json`, asset-id `__proto__`, felter som `constructor` | Afvises eller gemmes som almindelige nøgler; skemaopslag bruger egne nøgler | `review-fixes.test.ts` |
+| Lav: SVG-filteret kunne omgås | Tegnreferencer afkodes og whitespace fjernes før kontrol; navnerumspræfikser fanges | `review-fixes.test.ts` |
+| Lav: negative format-versioner sprang checksummen over | Negative versioner er skade; kun format 0 er uden checksum | `save.test.ts` |
+| Lav: migration slog omdøbninger op via prototypen; ambient-volumen ukontrolleret | Egne nøgler; volumen klampes til [0, 1] | `save.test.ts` |
+
+**Ikke rettet (lave):**
+- En gemmeplads vises som "ok", når checksummen passer, også hvis indholdet ikke længere kan indlæses (fx efter en indholdsopdatering). Indlæsning afviser stadig sikkert.
+- SVG kontrolleres med en blokliste, ikke en allowlist. Visning sker altid via `<img>`/`<image>`, så scripts kører ikke.
+
+**CI-workflow (`.github/workflows/adventure-engine.yml`):**
+- **Udløses af:** ændringer i `adventure-engine/` eller selve workflowen.
+- **Jobs:**
+  - `check`: typecheck, lint med CR-02, coverage, scenarier, content-CLI, de tre builds og `tools/check-build-boundary.mjs`.
+  - `e2e`: Chromium på pull requests, alle tre browsere ved manuel start.
+  - `cr01`: kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1`, med listen fra secret `CLEAN_ROOM_DENYLIST`.
+- **Ikke required:** workflowen er ikke en required check. Med path-filteret får PR'er uden ændringer i `adventure-engine/` den aldrig, så den skal ikke gøres required uden at fjerne filteret.

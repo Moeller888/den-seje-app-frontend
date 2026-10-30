@@ -16,16 +16,23 @@
  * Denylist format (UTF-8): one literal entry per line; surrounding whitespace
  * is trimmed; empty lines and lines starting with "#" are ignored; entries
  * need at least 3 characters. Matching is a case-insensitive literal substring
- * test on text files and a byte-exact test (UTF-8 bytes of the entry) on other
- * files. Reports name the file, the line (text files) and the entry's number
- * in the denylist, never the entry itself.
+ * test: per line in text files (reported with the line number), and over the
+ * raw bytes in binary files (ASCII case-insensitive, reported as "binary").
+ * Reports name the file, the line and the entry's number in the denylist,
+ * never the entry itself.
  *
- * Scanned: every file of the project except generated folders (node_modules,
- * coverage, dist, dist-devtools, test-results, playwright-report, .git).
+ * Text or binary is decided by content, not by file name: a file is text when
+ * its first 8 KB contain no NUL byte. CR-02 scans every text file.
+ *
+ * Scanned: every file of the project except the generated folders at their
+ * known places (root: node_modules, .git, coverage, test-results,
+ * playwright-report; packages/<name>/: node_modules, dist, dist-devtools).
+ * A folder with one of those names anywhere else is scanned. Symbolic links
+ * are not followed.
  * Exit code 1 on a hit, on an invalid denylist, or on a missing denylist when
  * it is required; a missing denylist otherwise prints "CR-01: SKIP".
  */
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,31 +49,50 @@ export const FORBIDDEN = [
   { id: "analysis-dir", re: /-analysis[\\/]/i },
 ];
 
-export const SKIP_DIRS = new Set(["node_modules", "coverage", ".git", "dist", "dist-devtools", "test-results", "playwright-report"]);
-export const TEXT = /\.(ts|mts|cts|js|mjs|cjs|json|jsonl|md|yaml|yml|txt|html|css|svg)$/i;
+/** Generated folders, skipped only at these root-relative places. */
+export const ROOT_SKIP = new Set(["node_modules", ".git", "coverage", "test-results", "playwright-report"]);
+export const PACKAGE_SKIP = new Set(["node_modules", "dist", "dist-devtools"]);
 
-/** All files below `root` (project-relative POSIX paths), generated folders skipped. */
+/** Whether a project-relative directory path is a generated folder. */
+export function isGenerated(rel) {
+  const parts = rel.split("/");
+  if (parts.length === 1) return ROOT_SKIP.has(parts[0]);
+  return parts.length === 3 && parts[0] === "packages" && PACKAGE_SKIP.has(parts[2]);
+}
+
+/** Text if the first 8 KB contain no NUL byte (decided by content, not by name). */
+export function isText(buf) {
+  return !buf.subarray(0, 8192).includes(0);
+}
+
+/** All files below `root` (project-relative POSIX paths); generated folders and symbolic links skipped. */
 export function walk(root) {
   const out = [];
   const go = (dir) => {
     for (const name of readdirSync(dir).sort()) {
-      if (SKIP_DIRS.has(name)) continue;
       const p = join(dir, name);
-      if (statSync(p).isDirectory()) go(p);
-      else out.push(relative(root, p).split(sep).join("/"));
+      const rel = relative(root, p).split(sep).join("/");
+      const st = lstatSync(p);
+      if (st.isSymbolicLink()) continue;
+      if (st.isDirectory()) {
+        if (!isGenerated(rel)) go(p);
+      } else out.push(rel);
     }
   };
   go(root);
   return out;
 }
 
-/** CR-02 over the text files of `root`. */
+/** CR-02 over every text file of `root`. */
 export function scan(root = ROOT) {
   const self = relative(root, here).split(sep).join("/");
   const hits = [];
   for (const rel of walk(root)) {
-    if (!TEXT.test(rel) || rel === self || rel === "pnpm-lock.yaml") continue;
-    readFileSync(join(root, rel), "utf8")
+    if (rel === self || rel === "pnpm-lock.yaml") continue;
+    const buf = readFileSync(join(root, rel));
+    if (!isText(buf)) continue;
+    buf
+      .toString("utf8")
       .split(/\r?\n/)
       .forEach((line, i) => {
         for (const f of FORBIDDEN) if (f.re.test(line)) hits.push({ file: rel, line: i + 1, rule: f.id });
@@ -82,7 +108,7 @@ export function parseDenylist(text) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) return;
     if ([...line].length < 3) throw new Error(`denylist line ${i + 1}: entries need at least 3 characters`);
-    entries.push({ n: entries.length + 1, line: i + 1, lower: line.toLowerCase(), bytes: Buffer.from(line, "utf8") });
+    entries.push({ n: entries.length + 1, line: i + 1, lower: line.toLowerCase() });
   });
   return entries;
 }
@@ -92,7 +118,7 @@ export function scanDenylist(root, entries) {
   const hits = [];
   for (const rel of walk(root)) {
     const buf = readFileSync(join(root, rel));
-    if (TEXT.test(rel)) {
+    if (isText(buf)) {
       buf
         .toString("utf8")
         .split(/\r?\n/)
@@ -101,7 +127,9 @@ export function scanDenylist(root, entries) {
           for (const e of entries) if (l.includes(e.lower)) hits.push({ file: rel, line: i + 1, entry: e.n });
         });
     } else {
-      for (const e of entries) if (buf.includes(e.bytes)) hits.push({ file: rel, line: null, entry: e.n });
+      // Binary: ASCII case-insensitive search over the raw bytes (latin1 keeps every byte as one character).
+      const raw = buf.toString("latin1").toLowerCase();
+      for (const e of entries) if (raw.includes(Buffer.from(e.lower, "utf8").toString("latin1"))) hits.push({ file: rel, line: null, entry: e.n });
     }
   }
   return hits;

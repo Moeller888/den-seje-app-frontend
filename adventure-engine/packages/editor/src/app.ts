@@ -5,7 +5,7 @@
  * the control with the same `data-key`.
  */
 
-import { buildBundle, newProject, readProject, validateProject, type Project } from "@adventure-engine/content-tools";
+import { buildBundle, newProject, ownedFiles, readProject, validateProject, type Project } from "@adventure-engine/content-tools";
 import { announce, button, download, el } from "./dom.ts";
 import { clearDraft, filesFromInput, filesFromZip, hasFsAccess, isEmptyDirectory, loadDraft, pickDirectory, readDirectory, saveDraft, writeDirectory, zipOf, type FsDirHandle } from "./io.ts";
 import { stopPreview } from "./ui/preview-tab.ts";
@@ -225,7 +225,7 @@ export class EditorApp {
     }
     this.urls.clear();
     this.store.open(r.project, files, name);
-    this.known = new Set(files.keys());
+    this.known = ownedFiles(r.project, files.keys());
     announce(`Projektet "${r.project.game.id}" er åbnet`);
     return null;
   }
@@ -268,7 +268,7 @@ export class EditorApp {
       }
       if (this.dir !== null) {
         await writeDirectory(this.dir, files, this.known);
-        this.known = new Set(files.keys());
+        this.known = ownedFiles(this.store.project, files.keys());
         announce(`Gemt i mappen "${this.dir.name}"`);
       } else {
         download(`${this.store.project.game.id}-project.zip`, zipOf(files), "application/zip");

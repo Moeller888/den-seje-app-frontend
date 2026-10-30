@@ -5,7 +5,7 @@
  */
 
 import type { Project } from "@adventure-engine/content-tools";
-import { button, el, field, heading, numberInput, select, textInput } from "../dom.ts";
+import { announce, button, el, field, heading, numberInput, select, textInput } from "../dom.ts";
 import { hasFsAccess } from "../io.ts";
 import { clean } from "./scene-tab.ts";
 import { actorIds, entryRefs, moved, picker, problemList, type Ctx } from "./ctx.ts";
@@ -76,6 +76,12 @@ export function renderProject(ctx: Ctx): HTMLElement {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s !== "");
+    // Languages become file names (i18n/<lang>.json): only safe language codes are accepted.
+    const bad = list.find((l) => !/^[a-z]{2,3}(-[A-Za-z0-9]{1,8})?$/.test(l));
+    if (bad !== undefined || list.length === 0) {
+      announce(bad === undefined ? "Angiv mindst ét sprog." : `"${bad}" er ikke en gyldig sprogkode (fx da, en eller en-GB).`);
+      return;
+    }
     ctx.apply("Ret sprog", (q) => ({ ...q, game: { ...q.game, languages: list }, i18n: Object.fromEntries(list.map((l) => [l, q.i18n[l] ?? {}])) }));
   }, { "data-key": "game-languages", name: "game-languages" });
   const settings = el("section", { class: "card" }, [

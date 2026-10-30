@@ -28,6 +28,8 @@ export const CONTENT_FORMAT_VERSION = 1;
 const ref = (name: string): Schema => ({ $ref: `#/definitions/${name}` });
 const str: Schema = { type: "string" };
 const id: Schema = { type: "string", minLength: 1 };
+/** Ids that become file names in a project (scenes, graphs, languages); see FILE_ID in limits.ts. */
+const fileId: Schema = { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$" };
 const bool: Schema = { type: "boolean" };
 const num: Schema = { type: "number" };
 const nonNeg: Schema = { type: "number", minimum: 0 };
@@ -120,7 +122,7 @@ export function nodeVariants(): Schema[] {
 const node: Schema = { oneOf: nodeVariants(), discriminator: { propertyName: "type" } };
 
 const graph: Schema = obj(
-  { id, kind: enumOf(["logic", "dialog"]), owner: id, actors: arr(id), nodes: arr(ref("node")) },
+  { id: fileId, kind: enumOf(["logic", "dialog"]), owner: id, actors: arr(id), nodes: arr(ref("node")) },
   ["id", "kind", "nodes"],
 );
 
@@ -134,7 +136,7 @@ const layer: Schema = obj({ id, depth: num, assets: rec(id) }, ["id", "depth"]);
 
 const scene: Schema = obj(
   {
-    id,
+    id: fileId,
     nameKey: id,
     size,
     entry: nullable(id),
@@ -246,7 +248,7 @@ const game: Schema = obj(
     id,
     version: id,
     formatVersion: { type: "integer", minimum: 1 },
-    languages: arr(id, { minItems: 1 }),
+    languages: arr(fileId, { minItems: 1 }),
     defaultLanguage: id,
     fallbackLanguage: id,
     player: obj({ actor: id }, ["actor"]),
@@ -280,10 +282,10 @@ const contentPackage: Schema = obj(
 
 const atlas: Schema = obj(
   {
-    frameWidth: pos,
-    frameHeight: pos,
-    frames: { type: "integer", minimum: 1 },
-    columns: { type: "integer", minimum: 1 },
+    frameWidth: { type: "number", exclusiveMinimum: 0, maximum: 16384 },
+    frameHeight: { type: "number", exclusiveMinimum: 0, maximum: 16384 },
+    frames: { type: "integer", minimum: 1, maximum: 4096 },
+    columns: { type: "integer", minimum: 1, maximum: 4096 },
     anchor: point,
     layers: rec(obj({ dx: num, dy: num }, ["dx", "dy"])),
   },

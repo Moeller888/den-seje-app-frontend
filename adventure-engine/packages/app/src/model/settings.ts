@@ -12,6 +12,8 @@ export interface AppSettings {
   readonly language: string | null;
   readonly reducedMotion: boolean;
   readonly dev: boolean;
+  /** A development build (not a URL flag): only then may saves with a wrong checksum load. */
+  readonly devBuild: boolean;
   readonly zones: boolean;
   readonly seed: string;
 }
@@ -25,6 +27,7 @@ export function readSettings(search: string, env: { readonly dev: boolean; reado
     language: lang !== null && languages.includes(lang) ? lang : null,
     reducedMotion: env.prefersReducedMotion || q.get("motion") === "off",
     dev,
+    devBuild: env.dev,
     zones: dev && q.get("zones") === "1",
     seed: seed !== null && seed.length > 0 ? seed : "demo",
   };

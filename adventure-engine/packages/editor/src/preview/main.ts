@@ -19,7 +19,7 @@ window.addEventListener("message", (ev: MessageEvent<ToPreview>) => {
   started = true;
   try {
     const { bundle, urls } = ev.data;
-    const game = new Game(bundle.content, localManifest(bundle.manifest, urls), { language: null, reducedMotion: false, dev: true, zones: false, seed: "preview" }, previewServices());
+    const game = new Game(bundle.content, localManifest(bundle.manifest, urls), { language: null, reducedMotion: false, dev: true, devBuild: false, zones: false, seed: "preview" }, previewServices());
     game.setLanguage(game.engine.text.language, false);
     void game.mount().then(() => {
       document.documentElement.dataset["preview"] = "running";

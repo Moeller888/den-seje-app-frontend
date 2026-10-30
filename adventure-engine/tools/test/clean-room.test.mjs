@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { ROOT, parseDenylist, runCr01, scan, scanDenylist } from "../check-clean-room.mjs";
+import { ROOT, isGenerated, isText, parseDenylist, runCr01, scan, scanDenylist } from "../check-clean-room.mjs";
 
 const base = mkdtempSync(join(tmpdir(), "clean-room-"));
 afterAll(() => rmSync(base, { recursive: true, force: true }));
@@ -37,15 +37,35 @@ describe("CR-01: external denylist", () => {
     const dir = project("hits", {
       "src/a.ts": "const x = 1;\nconst name = 'FNORDELWICK';\n",
       "docs/b.md": "nothing here\n",
-      "assets/pic.png": Buffer.concat([Buffer.from([0x89, 0x50]), Buffer.from("Zyxquat-77", "utf8"), Buffer.from([0])]),
-      "assets/case.png": Buffer.from("zyxquat-77"),
-      "dist/out.js": "Fnordelwick",
+      "assets/pic.png": Buffer.concat([Buffer.from([0x89, 0x50]), Buffer.from("ZYXQUAT-77", "utf8"), Buffer.from([0])]),
+      "packages/app/dist/out.js": "Fnordelwick",
       "node_modules/x/index.js": "Fnordelwick",
     });
     expect(scanDenylist(dir, parseDenylist(DENY))).toEqual([
       { file: "assets/pic.png", line: null, entry: 2 },
       { file: "src/a.ts", line: 2, entry: 1 },
     ]);
+  });
+
+  it("text is decided by content, not by name; generated folder names elsewhere are scanned (review fix H4)", () => {
+    const dir = project("by-content", {
+      "tools/gen.py": "name = 'fnordelwick'\n",
+      ".gitignore": "zyxquat-77\n",
+      notes: "plain text without extension: QPX\n",
+      "src/dist/secret.ts": "// FnordelWick\n",
+      "docs/coverage/report.md": "Zyxquat-77\n",
+      "packages/editor/node_modules/x.js": "Fnordelwick",
+    });
+    expect(scanDenylist(dir, parseDenylist(DENY))).toEqual([
+      { file: ".gitignore", line: 1, entry: 2 },
+      { file: "docs/coverage/report.md", line: 1, entry: 2 },
+      { file: "notes", line: 1, entry: 3 },
+      { file: "src/dist/secret.ts", line: 1, entry: 1 },
+      { file: "tools/gen.py", line: 1, entry: 1 },
+    ]);
+    expect(isText(Buffer.from("abc"))).toBe(true);
+    expect(isText(Buffer.from([0x61, 0, 0x62]))).toBe(false);
+    expect([isGenerated("node_modules"), isGenerated("packages/app/dist"), isGenerated("src/dist"), isGenerated("packages/app/src/dist")]).toEqual([true, true, false, false]);
   });
 
   it("runCr01: SKIP without a denylist, ERROR when required, PASS/FAIL with one; values are not printed", () => {
@@ -81,8 +101,13 @@ describe("CR-02", () => {
     expect(scan(ROOT)).toEqual([]);
   });
 
+  it("scans every text file, also files without a known extension (review fix H4)", () => {
+    // The forbidden strings are assembled at run time so this test file itself stays clean.
+    const dir = project("cr02-py", { "tools/gen.py": `open("${"inventory"}${".json"}")\n`, "src/dist/x.ts": `// ${"30-spor"}${"barhed"}\n` });
+    expect(scan(dir).map((h) => `${h.file}:${h.rule}`)).toEqual(["src/dist/x.ts:trace-doc", "tools/gen.py:analysis-inventory"]);
+  });
+
   it("finds a forbidden reference in a synthetic folder", () => {
-    // Assembled at run time so this test file itself stays clean.
     const dir = project("cr02", { "notes.md": `see ${"inventory"}${".json"} for details\n` });
     expect(scan(dir)).toEqual([{ file: "notes.md", line: 1, rule: "analysis-inventory" }]);
   });

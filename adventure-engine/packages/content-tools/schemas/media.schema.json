@@ -295,18 +295,22 @@
           "type": "array"
         },
         "columns": {
+          "maximum": 4096,
           "minimum": 1,
           "type": "integer"
         },
         "frameHeight": {
           "exclusiveMinimum": 0,
+          "maximum": 16384,
           "type": "number"
         },
         "frameWidth": {
           "exclusiveMinimum": 0,
+          "maximum": 16384,
           "type": "number"
         },
         "frames": {
+          "maximum": 4096,
           "minimum": 1,
           "type": "integer"
         },
@@ -780,7 +784,7 @@
         },
         "languages": {
           "items": {
-            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
             "type": "string"
           },
           "minItems": 1,
@@ -845,7 +849,7 @@
           "type": "array"
         },
         "id": {
-          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
           "type": "string"
         },
         "kind": {
@@ -2370,7 +2374,7 @@
           ]
         },
         "id": {
-          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$",
           "type": "string"
         },
         "layers": {

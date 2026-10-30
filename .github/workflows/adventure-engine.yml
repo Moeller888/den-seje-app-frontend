@@ -1,0 +1,128 @@
+# Adventure engine (adventure-engine/): its own checks, separate from the host app's CI.
+#
+# Runs only when adventure-engine/ (or this file) changes. Not a required check: with the paths
+# filter, PRs that do not touch adventure-engine/ never receive it (see
+# adventure-engine/docs/release-readiness.md before making it required).
+#
+# Jobs:
+#   check   typecheck, lint + CR-02, unit/property tests with coverage thresholds, 9 scenarios with
+#           golden traces, content CLI (validate/build/schema), production builds and the
+#           devtools build boundary.
+#   cr01    CR-01 against the external denylist. Runs when the repository variable
+#           REQUIRE_CLEAN_ROOM_DENYLIST is "1"; the list comes from the secret CLEAN_ROOM_DENYLIST and is
+#           written to the runner's temp folder (never into the checkout). A missing secret fails the job.
+#   e2e     Playwright, functional specs, one worker. Chromium on pull requests; all three browsers when
+#           started by hand. The screenshot baselines are made on Windows, so screenshot tests are
+#           switched off here (E2E_SCREENSHOTS=off); they run in the documented local workflow.
+name: Adventure engine
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ "adventure-engine/**", ".github/workflows/adventure-engine.yml" ]
+  push:
+    branches: [ main ]
+    paths: [ "adventure-engine/**", ".github/workflows/adventure-engine.yml" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adventure-engine-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: adventure-engine
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+
+jobs:
+  check:
+    name: adventure-engine / check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies (pnpm 9.15.4, frozen lockfile)
+        run: corepack pnpm@9.15.4 install --frozen-lockfile
+      - name: Typecheck
+        run: corepack pnpm@9.15.4 typecheck
+      - name: Lint, CR-02 and CR-01 (SKIP without the external denylist)
+        run: corepack pnpm@9.15.4 lint
+      - name: Unit and property tests with coverage thresholds
+        run: corepack pnpm@9.15.4 coverage
+      - name: Scenarios and golden traces
+        run: corepack pnpm@9.15.4 scenarios
+      - name: Content CLI on the editor fixture
+        run: |
+          corepack pnpm@9.15.4 content validate packages/content-tools/fixtures/editor-demo --strict
+          corepack pnpm@9.15.4 content format packages/content-tools/fixtures/editor-demo --check
+          corepack pnpm@9.15.4 content build packages/content-tools/fixtures/editor-demo --out "$RUNNER_TEMP/bundle/bundle.json" --strict
+          corepack pnpm@9.15.4 content validate "$RUNNER_TEMP/bundle/bundle.json" --strict
+          corepack pnpm@9.15.4 content schema --out packages/content-tools/schemas --check
+      - name: Production builds (game, devtools game, editor)
+        run: |
+          corepack pnpm@9.15.4 build
+          DEV_TOOLS=true corepack pnpm@9.15.4 build
+          corepack pnpm@9.15.4 --filter @adventure-engine/editor build
+      - name: Build boundary (no devtools or editor in the production game)
+        run: node tools/check-build-boundary.mjs
+
+  cr01:
+    name: adventure-engine / CR-01
+    if: vars.REQUIRE_CLEAN_ROOM_DENYLIST == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: CR-01 against the external denylist
+        env:
+          DENYLIST: ${{ secrets.CLEAN_ROOM_DENYLIST }}
+          REQUIRE_CLEAN_ROOM_DENYLIST: "1"
+        run: |
+          if [ -n "$DENYLIST" ]; then
+            printf '%s\n' "$DENYLIST" > "$RUNNER_TEMP/clean-room-denylist.txt"
+            export CLEAN_ROOM_DENYLIST_PATH="$RUNNER_TEMP/clean-room-denylist.txt"
+          fi
+          node tools/check-clean-room.mjs
+
+  e2e:
+    name: adventure-engine / e2e (${{ matrix.browser }})
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '["chromium","firefox","webkit"]' || '["chromium"]') }}
+    env:
+      E2E_SCREENSHOTS: "off"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies (pnpm 9.15.4, frozen lockfile)
+        run: corepack pnpm@9.15.4 install --frozen-lockfile
+      - name: Install the Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Playwright (one worker)
+        run: npx playwright test --project=${{ matrix.browser }} --workers=1
+      - name: Upload the report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adventure-engine-playwright-${{ matrix.browser }}
+          path: |
+            adventure-engine/playwright-report
+            adventure-engine/test-results
+          retention-days: 7

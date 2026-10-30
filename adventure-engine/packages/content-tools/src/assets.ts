@@ -9,7 +9,7 @@
  */
 
 import { sha256Bytes } from "@adventure-engine/core";
-import { IMPORT_LIMITS } from "./limits.ts";
+import { ASSET_ID, IMPORT_LIMITS } from "./limits.ts";
 import { ProjectCode, decodeText, type AssetKind, type Problem, type Project, type ProjectAsset, type ProjectFiles } from "./project.ts";
 
 export interface Detected {
@@ -39,7 +39,14 @@ export function detectAsset(name: string, bytes: Uint8Array): Detected | { reado
       return null;
     }
     if (!/<svg[\s>]/i.test(text)) return null;
-    if (/<script|\bon[a-z]+\s*=|javascript:|<foreignObject/i.test(text)) return { forbidden: "SVG pictures with scripts, event handlers or embedded HTML are not imported" };
+    // Character references are decoded and whitespace removed first, so "&#106;avascript:" or "java\tscript:" cannot hide.
+    const plain = text
+      .replace(/&#x([0-9a-f]+);?/gi, (_, h: string) => String.fromCodePoint(Number.parseInt(h, 16) % 0x110000))
+      .replace(/&#([0-9]+);?/g, (_, d: string) => String.fromCodePoint(Number(d) % 0x110000));
+    const compact = plain.replace(/[\s\u0000-\u001f]+/g, "");
+    if (/<([\w.-]+:)?script\b|\bon[a-z]+\s*=|<([\w.-]+:)?foreignObject\b/i.test(plain) || /(java|vb)script:|data:text\/html/i.test(compact)) {
+      return { forbidden: "SVG pictures with scripts, event handlers or embedded HTML are not imported" };
+    }
     // DOCTYPE/ENTITY declarations allow entity expansion ("billion laughs"); pictures never need them.
     if (/<!DOCTYPE|<!ENTITY/i.test(text)) return { forbidden: "SVG pictures with DOCTYPE or ENTITY declarations are not imported" };
     return { ext, type: "image/svg+xml", kinds: IMAGE };
@@ -59,7 +66,7 @@ export function detectAsset(name: string, bytes: Uint8Array): Detected | { reado
   return null;
 }
 
-export const ASSET_ID = /^[a-z0-9][a-z0-9._-]*$/;
+export { ASSET_ID };
 
 /** A stable asset id from a file name ("Tove Walk.PNG" → "tove-walk"). */
 export function slugId(name: string): string {

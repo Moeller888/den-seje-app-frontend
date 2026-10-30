@@ -19,8 +19,8 @@ export type FromPreview =
   | { readonly type: "error"; readonly message: string };
 
 /** The preview's save services: memory only, never the browser's persistent stores. */
-export function previewServices(): { readonly storage: SaveStorage; readonly kind: string; flush(): Promise<void> } {
-  return { storage: new MemoryStorage(), kind: "memory", flush: () => Promise.resolve() };
+export function previewServices(): { readonly storage: SaveStorage; readonly kind: string; flush(): Promise<boolean> } {
+  return { storage: new MemoryStorage(), kind: "memory", flush: () => Promise.resolve(true) };
 }
 
 /** The bundle's manifest with every asset url replaced by the editor's object URL for that file. */

@@ -24,11 +24,11 @@ async function openStorage(): Promise<SaveServices> {
     const probe = "engine:probe";
     localStorage.setItem(probe, "1");
     localStorage.removeItem(probe);
-    return { storage: new WebStorage(localStorage), kind: "localstorage", flush: () => Promise.resolve() };
+    return { storage: new WebStorage(localStorage), kind: "localstorage", flush: () => Promise.resolve(true) };
   } catch (err) {
     console.warn("[save] localStorage is not available; saves last only for this page", err);
   }
-  return { storage: new MemoryStorage(), kind: "memory", flush: () => Promise.resolve() };
+  return { storage: new MemoryStorage(), kind: "memory", flush: () => Promise.resolve(true) };
 }
 
 async function boot(): Promise<void> {

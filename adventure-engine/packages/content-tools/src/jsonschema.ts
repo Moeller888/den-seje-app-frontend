@@ -116,7 +116,8 @@ function check(schema: Schema, v: unknown, path: string, defs: Defs, out: Schema
         out.push({ kind: "invalid", path: join(path, key), message: 'the key "__proto__" is not allowed' });
         continue;
       }
-      const p = props[key];
+      // Own keys only: "constructor" or "toString" must not find Object.prototype members.
+      const p = Object.hasOwn(props, key) ? props[key] : undefined;
       if (p !== undefined) check(p, o[key], join(path, key), defs, out);
       else if (additional === false) out.push({ kind: "unknown", path: join(path, key), message: `unknown field "${key}"` });
       else if (typeof additional === "object" && additional !== null) check(additional as Schema, o[key], join(path, key), defs, out);

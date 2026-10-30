@@ -7,6 +7,7 @@
  */
 
 import type { ContainerRef, Expr, GraphDef, NodeDef } from "@adventure-engine/content";
+import { ASSET_ID, FILE_ID } from "./limits.ts";
 import type { Project } from "./project.ts";
 
 export type RefKind = "scene" | "entity" | "portal" | "graph" | "entry" | "node" | "textKey" | "asset" | "sound" | "animation" | "spot" | "variant" | "var";
@@ -312,6 +313,10 @@ export type RenameResult = { readonly ok: true; readonly project: Project; reado
 
 const ID_RULES: Partial<Record<RefKind, RegExp>> = {
   var: /^[a-z][a-z0-9_.]*$/,
+  // These ids become file names (scenes/<id>.json, graphs/<id>.json).
+  scene: FILE_ID,
+  graph: FILE_ID,
+  asset: ASSET_ID,
 };
 
 /**
@@ -319,7 +324,7 @@ const ID_RULES: Partial<Record<RefKind, RegExp>> = {
  * id, an id that is already defined, and entry/var names that break the rules.
  */
 export function rename(p: Project, t: RefTarget, to: string): RenameResult {
-  if (to === "" || /[#\s]/.test(to)) return { ok: false, message: `"${to}" is not a valid id` };
+  if (to === "" || /[#\s]/.test(to) || to === "__proto__") return { ok: false, message: `"${to}" is not a valid id` };
   const rule = ID_RULES[t.kind];
   if (rule !== undefined && !rule.test(to)) return { ok: false, message: `"${to}" does not match ${rule.source}` };
   if ((t.kind === "spot" || t.kind === "variant") && t.scope === undefined) return { ok: false, message: `renaming a ${t.kind} needs its scene or entity` };

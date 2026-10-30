@@ -40,6 +40,11 @@ export interface EngineOptions {
   readonly adapter: PresentationAdapter;
   /** Dev build: enables the watchdog (spec 01 A7.2). Default false. */
   readonly devMode?: boolean;
+  /**
+   * Load saves whose checksum does not match (with a warning). Default: `devMode`.
+   * Production front ends pass `false` explicitly so no runtime switch can turn the check off.
+   */
+  readonly allowSaveChecksumMismatch?: boolean;
   /** Watchdog limit in simulated ms. Default 60 000. */
   readonly watchdogMs?: number;
   /** Record a trace (disable for bulk statistics). Default true. */
@@ -58,7 +63,9 @@ export type SaveBlocker = "modal" | "transition" | "running";
 
 export type SaveOutcome =
   | { readonly ok: true; readonly data: SaveData; readonly json: string }
-  | { readonly ok: false; readonly reason: "not-idle"; readonly blockers: readonly SaveBlocker[] };
+  | { readonly ok: false; readonly reason: "not-idle"; readonly blockers: readonly SaveBlocker[] }
+  /** The `game.save` logic was cancelled (load, new game, back to title) before the snapshot. */
+  | { readonly ok: false; readonly reason: "cancelled"; readonly blockers: readonly SaveBlocker[] };
 
 export type LoadOutcome =
   | { readonly ok: true; readonly warnings: readonly SaveWarning[] }
@@ -158,6 +165,7 @@ export class Engine {
   readonly ambient: AmbientTracker;
   private readonly wallClock: () => string;
   private readonly devMode: boolean;
+  private readonly allowSaveChecksumMismatch: boolean;
   private createdAt = "";
   private playBaseMs = 0;
   private sessionStartMs = 0;
@@ -172,6 +180,7 @@ export class Engine {
     this.adapter = options.adapter;
     this.ambient = new AmbientTracker(content);
     this.devMode = options.devMode ?? false;
+    this.allowSaveChecksumMismatch = options.allowSaveChecksumMismatch ?? this.devMode;
     this.wallClock = options.wallClock ?? (() => isoFromSimulatedMs(this.sched.now));
     this.tracer = new Tracer(() => this.sched.now, options.trace ?? true);
     this.rng = Rng.fromSeed(options.seed);
@@ -363,7 +372,13 @@ export class Engine {
       done({ ok: false, reason: "not-idle", blockers });
       return;
     }
-    this.event(GAME_RECEIVER, "game.save", {}, () => {
+    this.event(GAME_RECEIVER, "game.save", {}, (result) => {
+      // A cancelled game.save run means the world is being torn down: no snapshot of that state.
+      if (result === "cancelled") {
+        this.tracer.emit("save.rejected", { blockers: ["cancelled"] });
+        done({ ok: false, reason: "cancelled", blockers: [] });
+        return;
+      }
       const data = this.snapshot();
       this.tracer.emit("save", { checksum: data.checksum });
       done({ ok: true, data, json: canonicalJson(data) });
@@ -414,7 +429,7 @@ export class Engine {
    * W-SAVE-REPAIRED warnings; a rejected save leaves the current game untouched.
    */
   load(raw: string): LoadOutcome {
-    const parsed = parseSave(raw, this.content, { allowChecksumMismatch: this.devMode });
+    const parsed = parseSave(raw, this.content, { allowChecksumMismatch: this.allowSaveChecksumMismatch });
     for (const w of parsed.warnings) this.warn(RuntimeCode.SaveRepaired, `${w.kind}: ${w.message}`, null, null);
     if (!parsed.ok) {
       this.tracer.emit("load.rejected", { error: parsed.error.kind, code: parsed.error.code });

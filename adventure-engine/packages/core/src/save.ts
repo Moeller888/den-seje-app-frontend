@@ -272,7 +272,10 @@ function withDefaults(d: Record<string, unknown>): SaveData {
       scene: isStr(amb["scene"]) ? amb["scene"] : null,
       ...(isObj(amb["music"]) && isStr(amb["music"]["sound"]) && isNum(amb["music"]["volumeFraction"]) ? { music: { sound: amb["music"]["sound"], volumeFraction: amb["music"]["volumeFraction"] } } : {}),
       loops: Array.isArray(amb["loops"])
-        ? (amb["loops"] as unknown[]).filter((l): l is { entity: string; sound: string; volume: number } => isObj(l) && isStr(l["entity"]) && isStr(l["sound"]) && isNum(l["volume"]))
+        ? (amb["loops"] as unknown[])
+            .filter((l): l is { entity: string; sound: string; volume: number } => isObj(l) && isStr(l["entity"]) && isStr(l["sound"]) && isNum(l["volume"]))
+            // Volumes are fractions; anything outside [0, 1] in a file is clamped.
+            .map((l) => ({ entity: l.entity, sound: l.sound, volume: Math.min(1, Math.max(0, l.volume)) }))
         : [],
     },
     checksum: isStr(d["checksum"]) ? d["checksum"] : "",
@@ -289,7 +292,8 @@ function applyContentMigrations(data: SaveData, content: LoadedContent, warnings
   let d = data;
   for (const m of content.pkg.saveMigrations ?? []) {
     if (compareVersions(d.content.version, m.fromVersion) > 0) continue;
-    const ren = (id: string): string => m.rename?.[id] ?? id;
+    // Own keys only: an id such as "constructor" must not resolve to an Object.prototype member.
+    const ren = (id: string): string => (m.rename !== undefined && Object.hasOwn(m.rename, id) ? (m.rename[id] as string) : id);
     const gone = new Set(m.remove ?? []);
     const renContainer = (c: ContainerRef): ContainerRef => (c.kind === "none" ? c : { kind: c.kind, id: ren(c.id) });
     d = {
@@ -397,13 +401,17 @@ export function parseSave(raw: string, content: LoadedContent, options: { allowC
     return fail("parse", `the save is not valid JSON (${(err as SyntaxError).message})`, warnings);
   }
   if (!isObj(parsed) || parsed["format"] !== SAVE_FORMAT || !Number.isInteger(parsed["formatVersion"])) return fail("schema", "not an engine.save file", warnings);
+  // Bounded structure before any recursive processing (checksum, migration): a deeply nested file is refused, not a stack overflow.
+  if (nestedDeeperThan(parsed, MAX_SAVE_DEPTH)) return fail("schema", `the save is nested deeper than ${MAX_SAVE_DEPTH} levels`, warnings);
   let d = parsed;
   const version = d["formatVersion"] as number;
+  if (version < 0) return fail("schema", `invalid format version ${version}`, warnings);
   if (version > SAVE_FORMAT_VERSION) return fail("newer-format", `format version ${version} needs a newer engine (this one reads ≤ ${SAVE_FORMAT_VERSION})`, warnings);
   const migrated = version < SAVE_FORMAT_VERSION;
   for (let v = version; v < SAVE_FORMAT_VERSION; v++) {
-    const step = FORMAT_MIGRATIONS[v];
-    if (step === undefined) return fail("schema", `no migration from format version ${v}`, warnings);
+    // Invariant: v is in 0 … SAVE_FORMAT_VERSION − 1 (negative versions were refused above), and
+    // FORMAT_MIGRATIONS has a step for each of them.
+    const step = FORMAT_MIGRATIONS[v] as (d: Record<string, unknown>) => Record<string, unknown>;
     d = step(d);
   }
   if (migrated) warnings.push({ kind: "format-migrated", message: `format ${version} migrated to ${SAVE_FORMAT_VERSION}` });
@@ -419,6 +427,21 @@ export function parseSave(raw: string, content: LoadedContent, options: { allowC
   if (problem !== null) return fail("schema", problem, warnings);
   const data = withDefaults(d);
   return repair(applyContentMigrations(data, content, warnings), content, warnings);
+}
+
+/** Deepest nesting a save may have (a real save is about 5 levels deep). */
+export const MAX_SAVE_DEPTH = 64;
+
+/** Whether a JSON value is nested deeper than `max` levels (iterative, so it cannot overflow the stack). */
+export function nestedDeeperThan(value: unknown, max: number): boolean {
+  const stack: Array<[unknown, number]> = [[value, 1]];
+  while (stack.length > 0) {
+    const [v, depth] = stack.pop() as [unknown, number];
+    if (typeof v !== "object" || v === null) continue;
+    if (depth > max) return true;
+    for (const child of Array.isArray(v) ? v : Object.values(v)) stack.push([child, depth + 1]);
+  }
+  return false;
 }
 
 /** Value at a dotted path with `[n]` indices and `[key=value]` selectors (saves and scenario steps). */
@@ -479,6 +502,10 @@ export function saveIntegrity(raw: string | null): "ok" | "corrupt" {
     return "corrupt";
   }
   if (!isObj(d) || d["format"] !== SAVE_FORMAT || !Number.isInteger(d["formatVersion"])) return "corrupt";
-  if ((d["formatVersion"] as number) < 1) return "ok";
+  if (nestedDeeperThan(d, MAX_SAVE_DEPTH)) return "corrupt";
+  const version = d["formatVersion"] as number;
+  // Only the known checksum-less draft format 0 is accepted without a checksum; negative versions are damage.
+  if (version < 0) return "corrupt";
+  if (version === 0) return "ok";
   return d["checksum"] === saveChecksum(d as unknown as SaveData) ? "ok" : "corrupt";
 }

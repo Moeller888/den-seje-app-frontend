@@ -15,6 +15,16 @@ export const IMPORT_LIMITS = {
   maxPathLength: 260,
 } as const;
 
+/**
+ * Ids that become file names (scenes/<id>.json, graphs/<id>.json, i18n/<lang>.json):
+ * letters, digits, "_", "." and "-", starting with a letter or digit, at most 64
+ * characters. No "/", "\\", "..", leading dots or "__proto__" can pass.
+ */
+export const FILE_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+
+/** Asset ids (keys of assets.manifest.json). */
+export const ASSET_ID = /^[a-z0-9][a-z0-9._-]*$/;
+
 export class ImportLimitError extends Error {
   readonly code = "E-IMPORT-LIMIT";
 

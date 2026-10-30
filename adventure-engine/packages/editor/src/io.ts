@@ -75,8 +75,6 @@ export async function isEmptyDirectory(dir: FsDirHandle): Promise<boolean> {
 }
 
 /** Project JSON files the editor owns (they may be removed when they are no longer part of the project). */
-const OWNED = /^(scenes|graphs|i18n)\/[^/]+\.json$|^(media|migrations|editor)\.json$/;
-
 async function dirFor(root: FsDirHandle, path: string): Promise<{ dir: FsDirHandle; name: string }> {
   const parts = path.split("/");
   const name = parts.pop() as string;
@@ -86,9 +84,9 @@ async function dirFor(root: FsDirHandle, path: string): Promise<{ dir: FsDirHand
 }
 
 /**
- * Write a project into a folder. `previous` are the files the folder held when
- * it was opened: editor-owned JSON files and registered assets that are gone
- * from the project are removed afterwards.
+ * Write a project into a folder. `previous` are the files the editor owns in
+ * that folder (see `ownedFiles`); those that are gone from the project are
+ * removed afterwards. No other file is ever deleted.
  */
 export async function writeDirectory(root: FsDirHandle, files: ReadonlyMap<string, Uint8Array>, previous: ReadonlySet<string>): Promise<void> {
   const ordered = [...files.keys()].sort((a, b) => (a === "project.json" ? 1 : b === "project.json" ? -1 : a < b ? -1 : 1));
@@ -105,7 +103,7 @@ export async function writeDirectory(root: FsDirHandle, files: ReadonlyMap<strin
     }
   }
   for (const path of previous) {
-    if (files.has(path) || !(OWNED.test(path) || path.startsWith("assets/"))) continue;
+    if (files.has(path)) continue;
     const { dir, name } = await dirFor(root, path);
     await dir.removeEntry(name).catch(() => undefined);
   }
