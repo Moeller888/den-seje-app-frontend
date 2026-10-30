@@ -385,7 +385,19 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
-- **Generated material on the tee master — D-267 (prepared and authorised: 2 single-use calls; NOT executed; 0 calls sent).**
+- **Generated material on the tee master, result — D-268 (both D-267 calls sent once and received; D-267 closed; no further call).**
+  - **Automatic.** Both images passed every material check, and the master check on C held: fingerprint matched, 0 holes, fit OK, outfits 8/8.
+    Both were classified as requiring visual review.
+  - **Visual: TMG-1 swatch.** It is clean and seamless with 4×4 repeats.
+    On the master it is practically identical to the local twin; the only difference is a faint woven grain, visible only in close-ups.
+    The wavy, stepped band edges, the neck-rib line showing through and the dark ticks at the cuffs appear on the twin too, so they are mapping faults (D-264).
+    Answer: no visible value over the local pattern.
+  - **Visual: TMG-2 print.** It is clean and transparent, with no halo or shadow, and in Northstar's cartoon style.
+    It reads as a planet at full size and at 110×165, but the face is lost at app size and it is a spot at 52×78.
+    Answer: a usable new design, with the anchor's size as its limit.
+  - **Recommendation.** Leave patterned fabric to local patterns. Keep GPT for prints and other illustrated details.
+    The next step is an owner decision about a small print family. No call is authorised. See `docs/decisions/D-268.md`.
+- **Generated material on the tee master — D-267 (2 single-use calls authorised; executed and closed by D-268: 2 spent and received).**
   - **The two calls.** Both are `images/generations` with no image or reference sent (C is never sent):
     - TMG-1: a seamless gingham swatch, 4×4 repeats, opaque;
     - TMG-2: a standalone chest print on a transparent background.
@@ -399,7 +411,7 @@ art layer behind them can be upgraded without a rewrite.
     They were tested on SYNTHETIC positive and negative examples.
   - **Local twin.** A gingham through the same master separates material faults from mapping faults.
   - **Visual criteria.** These are never automatic.
-  - **Execution.** Needs a separate owner instruction. See `docs/decisions/D-267.md`.
+  - **Execution.** Done on a separate owner instruction and recorded in D-268. See `docs/decisions/D-267.md`.
 - **Tee master — D-264 (offline prototype; no call; recommendation 1: promising enough for a later generated-material test).**
   - **What.** `northstar-tee-master.mjs`: one-time data for the tee-hip cut. It has:
     - a panel map split at the drawn armhole seams, not at C's arm mask;
