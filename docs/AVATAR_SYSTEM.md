@@ -385,6 +385,19 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **r1-m1 quality reference — D-262 (offline; no call; recommendation 2: a limited product family).**
+  - **Clean reference.** Clean material (approved K-set colours and SYNTHETIC seamless stripes and tartan) laid on the tee-hip cut
+    shows which faults come from the source swatches and which from the method.
+  - **Source-swatch faults, fixed by a clean seamless swatch with wrap tiling.** Ghost pocket, pleats, mirror axis, painted fold
+    strokes.
+  - **Method limits.**
+    - Patterns read as a flat print.
+    - Pattern breaks run down the chest side, because the sleeve boundary is C's arm mask and not the armhole.
+    - Northstar's crisp fold strokes are lost, because lines and fold strokes cannot be separated in a finished picture.
+    - A ratio shade restores the shading strength.
+  - **Swatch checks.** New checks on the swatch itself (seam, flatness, faint details) catch the ghost pocket and the cut-out seam.
+    Painted fold strokes and pleats are left to the eye.
+  - **Next.** No image test now: first decide per-cut panel maps, layered source art and UV. See `docs/decisions/D-262.md`.
 - **Geometry-free material laid on by the cut — D-260 (offline hypothesis r1-m1; no call).**
   - **Method.** `northstar-r1-material.mjs`: the model would deliver only a flat fabric swatch, a trim swatch and separate details.
     The cut supplies silhouette, fold shade, sleeve split, bands, construction lines and detail anchors. Swatches are mirror-tiled
