@@ -1,0 +1,18 @@
+{
+  "format": "adventure-engine.project",
+  "formatVersion": 1,
+  "order": {
+    "graphs": [
+      "game",
+      "cellar",
+      "lamp",
+      "wick",
+      "attic",
+      "bo_talk"
+    ],
+    "scenes": [
+      "cellar",
+      "attic"
+    ]
+  }
+}

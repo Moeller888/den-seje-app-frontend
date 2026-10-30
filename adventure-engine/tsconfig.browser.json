@@ -1,0 +1,9 @@
+{
+  "//": "Browser packages (renderer, app) and the Playwright suite: DOM types are only available here.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["packages/render-pixi/src/**/*.ts", "packages/app/src/**/*.ts", "packages/app/vite.config.ts", "packages/editor/src/**/*.ts", "packages/editor/vite.config.ts", "e2e/**/*.ts", "playwright.config.ts"]
+}
