@@ -3,7 +3,8 @@
 **Status (2026-10-30):** #351 er anvendt (`20261022053442 question_format_mix`, 2026-10-22). Migration
 A er anvendt og verificeret (`20261030045204 difficulty_scale_a`, 2026-10-30, trin 4). Migration B er
 anvendt og verificeret (`20261030094958 difficulty_scale_b`, 2026-10-30, første del af trin 5).
-Niveaumotoren er **ikke** deployet: `get-next-question` er version 179, som hverken indeholder eller
+Rettelsen af tabelkommentaren er anvendt og verificeret (`20261030182931 student_subject_level_comment`,
+2026-10-30, §2.4). Niveaumotoren er **ikke** deployet: `get-next-question` er version 179, som hverken indeholder eller
 kalder B's funktioner, så motoren er effektivt inaktiv. Arkitektur:
 [`docs/ARCHITECTURE.md` §6 "Difficulty scale 1–10.000"](../ARCHITECTURE.md). Design og beslutninger:
 `docs/difficulty-scale-design.md` (B1–B8, E1–E5, vej A).
@@ -87,12 +88,15 @@ findes med `prosecdef = false`, `search_path=public, pg_temp`, EXECUTE kun for `
 indeks er som i filen. `student_subject_level` og `student_level_fold_log` har 0 rækker. A og #351 er
 uændrede, og `get-next-question` er stadig version 179.
 
-**Kommentarrettelse forberedt, ikke anvendt (2026-10-30).** A gav `student_subject_level` kommentaren
+**Kommentarrettelse anvendt og verificeret (2026-10-30).** A gav `student_subject_level` kommentaren
 "written only by SECURITY DEFINER functions", men B skriver gennem `advance_student_level`, som er
 `SECURITY INVOKER`. Rettelsen er en ny, separat migration efter B,
-`20261030120000_student_subject_level_comment.sql`, med kun ét `COMMENT ON TABLE`. A og B ændres ikke.
-Den kræver sin egen ejergodkendelse og står i `NOT_IN_PRODUCTION`, indtil den er anvendt og verificeret.
-Efterkontrol:
+`20261030120000_student_subject_level_comment.sql`, med kun ét `COMMENT ON TABLE`. A og B er ikke
+ændret. Den er anvendt som produktionspost `20261030182931 student_subject_level_comment`, ordret fra
+`main` (SHA-256 `beda3783777d4f961e67358ed543cf7e849e91187408b3a9d81d4361ae1286f0`, lig SHA-256 af den
+sætning, migrationsloggen gemte). Den læsende efterkontrol viste den nye tekst ordret; B's funktioner,
+ACL, grants, RLS, policies, kolonner, indeks og constraints var identiske med øjebliksbilledet før, og
+begge niveautabeller havde 0 rækker. Efterkontrol:
 ```sql
 SELECT obj_description('public.student_subject_level'::regclass, 'pg_class');
 -- Forvent den nye tekst ("Elevens niveau 1–10.000 pr. fag. Serverejet: …"); alt andet uændret.

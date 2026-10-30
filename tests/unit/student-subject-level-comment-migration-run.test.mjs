@@ -1,16 +1,17 @@
-// The comment-only correction of student_subject_level (20261030120000), on top of production's schema.
+// The comment-only correction of student_subject_level (20261030120000), as production has it.
 //
-// The isolated replay mirrors production, where this file is NOT applied yet (NOT_IN_PRODUCTION), so the
-// replay itself runs #351 → A → B and skips it. This test then applies the real file on that schema —
-// #351 → A → B → comment — and proves it changes the table comment and nothing else: function bodies,
-// SECURITY INVOKER, ACLs and grants, RLS and policies, tables, columns, indexes and rows are identical.
+// Applied in production as remote 20261030182931 student_subject_level_comment (2026-10-30), so the
+// isolated replay applies it too: #351 → A → B → comment. This test compares that replay with the same
+// replay stopped just before the file, and proves the file changes the table comment and nothing else:
+// function bodies, SECURITY INVOKER, ACLs and grants, RLS and policies, tables, columns, indexes and rows
+// are identical.
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { replaySchema } from "../isolated/schema/replay.mjs";
+import { replaySchema, migrationFiles, readMigration } from "../isolated/schema/replay.mjs";
 import { NOT_IN_PRODUCTION } from "../isolated/schema/replay-plan.mjs";
 import { bootstrapMarkerSql } from "../isolated/seed/seed-guard.mjs";
 
@@ -78,14 +79,20 @@ const otherComments = (db) => rows(db, `SELECT classoid::regclass::text k, objoi
                                         ORDER BY 1, 2, 3`);
 const tableComment = async (db) => (await one(db, `SELECT obj_description('public.student_subject_level'::regclass, 'pg_class') c`)).c;
 
-let db, replay, before_;
+async function replayed(files) {
+  const d = new PGlite();
+  await d.exec(PLATFORM);
+  await d.exec(bootstrapMarkerSql("0123456789abcdef0123456789abcdef"));
+  const r = await replaySchema({ exec: (s) => d.exec(s), query: async (s) => (await d.query(s)).rows, files, readSql: readMigration });
+  return { d, r };
+}
+
+// db: the production replay (#351 → A → B → comment). prior: the same replay without this file.
+let db, replay, prior, before_;
 before(async () => {
-  db = new PGlite();
-  await db.exec(PLATFORM);
-  await db.exec(bootstrapMarkerSql("0123456789abcdef0123456789abcdef"));
-  replay = await replaySchema({ exec: (s) => db.exec(s), query: async (s) => (await db.query(s)).rows });
-  before_ = { schema: await schemaFingerprint(db), level: await levelState(db), comments: await otherComments(db), comment: await tableComment(db) };
-  await db.exec(SQL);
+  ({ d: db, r: replay } = await replayed(migrationFiles()));
+  ({ d: prior } = await replayed(migrationFiles().filter((f) => f !== FILE)));
+  before_ = { schema: await schemaFingerprint(prior), level: await levelState(prior), comments: await otherComments(prior), comment: await tableComment(prior) };
 });
 
 test("the file is exactly one COMMENT ON TABLE public.student_subject_level, with the owner's text", () => {
@@ -95,16 +102,14 @@ test("the file is exactly one COMMENT ON TABLE public.student_subject_level, wit
   assert.equal((code.match(/;/g) || []).length, 1, "one statement");
 });
 
-test("the production replay runs #351 → A → B and skips this file as not applied in production", () => {
+test("the production replay runs #351 → A → B → this file, each applied without failure", () => {
   assert.deepEqual(replay.failures, []);
+  assert.equal(NOT_IN_PRODUCTION[FILE], undefined);
   const order = replay.plan.filter((p) => p.action === "apply").map((p) => p.file);
-  const at = ["20261019150000_question_format_mix.sql", "20261020120000_difficulty_scale_a.sql", "20261029120000_difficulty_scale_b.sql"].map((f) => order.indexOf(f));
-  assert.ok(at[0] >= 0 && at[0] < at[1] && at[1] < at[2], `#351 → A → B, got positions ${at}`);
-  const p = replay.plan.find((x) => x.file === FILE);
-  assert.equal(p.action, "skip");
-  assert.equal(p.reason, NOT_IN_PRODUCTION[FILE]);
-  assert.ok(replay.plan.indexOf(p) > replay.plan.findIndex((x) => x.file === "20261029120000_difficulty_scale_b.sql"), "after B");
-  // Before this file, the replayed table carries A's (wrong) comment — as production does.
+  const at = ["20261019150000_question_format_mix.sql", "20261020120000_difficulty_scale_a.sql", "20261029120000_difficulty_scale_b.sql", FILE].map((f) => order.indexOf(f));
+  assert.ok(at[0] >= 0 && at[0] < at[1] && at[1] < at[2] && at[2] < at[3], `#351 → A → B → comment, got positions ${at}`);
+  assert.ok(replay.steps.some((s) => s.name === FILE && s.ok), "the file is a replay step");
+  // Without this file the replayed table carries A's (wrong) comment — as production did before it.
   assert.equal(before_.comment, A_COMMENT);
 });
 
