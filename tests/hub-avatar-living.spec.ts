@@ -184,8 +184,11 @@ async function loginAsStudent(page: any) {
   await page.waitForURL(`${PROD}/hub.html`, { timeout: 20000 });
 }
 
+// The pupil login lands on hub.html (#446), so the hub is already open: wait for that load
+// instead of navigating again. A second load would find the daily reward and the achievement
+// already consumed by the first one, so the modal and the reaction would never show.
 async function openHubPage(page: any) {
-  await page.goto(`${PROD}/hub.html`, { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(`${PROD}/hub.html`);
   // At least one avatar layer — signals renderProfileAvatar() (and engine init) ran.
   await page.waitForSelector("#profileAvatar img", { timeout: 15000 });
 }
