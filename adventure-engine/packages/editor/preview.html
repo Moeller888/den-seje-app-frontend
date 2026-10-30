@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Preview</title>
+  </head>
+  <body>
+    <!-- The same layers as the game page (packages/app/index.html). -->
+    <div id="game" role="application" aria-roledescription="eventyrspil" tabindex="-1">
+      <div id="stage"></div>
+      <div id="surface" aria-hidden="true"></div>
+      <div id="overlay">
+        <div id="speech-layer" class="layer"></div>
+        <div id="ui-layer" class="layer">
+          <section id="hotspots" class="hotspots"></section>
+          <div id="langbar" class="langbar"></div>
+          <div id="menu" class="menu" hidden></div>
+          <nav id="inventory" class="inventory"></nav>
+          <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+        </div>
+        <div id="fade" class="layer fade"></div>
+        <div id="screens" class="layer">
+          <div id="cutscene" class="cutscene" hidden></div>
+          <div id="title-screen" class="title-screen"></div>
+          <div id="game-menu" class="game-menu-backdrop" hidden></div>
+          <div id="loading" class="loading" role="status" hidden></div>
+          <div id="notice" class="notice" role="alert" hidden></div>
+        </div>
+        <div id="cursor" class="layer-cursor" aria-hidden="true" hidden></div>
+      </div>
+      <div id="live" class="sr-only" aria-live="polite"></div>
+    </div>
+    <script type="module" src="./src/preview/main.ts"></script>
+  </body>
+</html>

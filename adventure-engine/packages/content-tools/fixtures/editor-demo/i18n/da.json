@@ -1,0 +1,19 @@
+{
+  "a.bo": "Bo",
+  "a.mira": "Mira",
+  "bo.ask_light": "Har du set noget lys?",
+  "bo.bye": "Vi ses.",
+  "bo.hello": "Godmorgen, Mira.",
+  "bo.light": "Solen står op om lidt.",
+  "cut.dawn": "Solen står op over taget.",
+  "line.draft": "Der trækker fra trappen.",
+  "line.intro": "Her er mørkt. Jeg må finde lys.",
+  "line.lamp_lit": "Så er der lys!",
+  "line.lamp_taken": "En gammel lampe uden væge.",
+  "o.lamp": "Lampe",
+  "o.wick": "Væge",
+  "p.down": "Ned i kælderen",
+  "p.up": "Op ad trappen",
+  "s.attic": "Loftet",
+  "s.cellar": "Kælderen"
+}

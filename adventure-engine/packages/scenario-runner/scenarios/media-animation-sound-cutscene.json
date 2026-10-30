@@ -1,0 +1,1277 @@
+{
+ "scenario": "media-animation-sound-cutscene",
+ "description": "Fase 4: finite/loop-animation, signal, stille seek, timeout, finite/loop-lyd, stop, annullering, cutscene-sprogvalg, skip, hold/clear og sceneoprydning af loop-lyde. Syntetisk.",
+ "covers": [
+  "TS-F01",
+  "TS-F02",
+  "TS-F03",
+  "TS-F04",
+  "TS-F05",
+  "TS-F06"
+ ],
+ "harness": "media-headless",
+ "content": {
+  "game": {
+   "id": "media-test",
+   "version": "0.0.1",
+   "formatVersion": 1,
+   "languages": [
+    "da",
+    "en"
+   ],
+   "defaultLanguage": "da",
+   "player": {
+    "actor": "hero"
+   },
+   "entry": null,
+   "globals": {}
+  },
+  "scenes": [
+   {
+    "id": "hall",
+    "nameKey": "s.hall",
+    "size": {
+     "width": 1280,
+     "height": 720
+    },
+    "entry": null,
+    "walkSpeed": 400,
+    "spots": {
+     "a": {
+      "x": 200,
+      "y": 650
+     },
+     "door": {
+      "x": 1200,
+      "y": 650
+     }
+    },
+    "defaultSpot": "a",
+    "walkable": [
+     [
+      [
+       0,
+       600
+      ],
+      [
+       1280,
+       600
+      ],
+      [
+       1280,
+       720
+      ],
+      [
+       0,
+       720
+      ]
+     ]
+    ],
+    "sounds": {
+     "hum": "s.hum",
+     "theme": "s.theme"
+    },
+    "cutscenes": {
+     "intro": {
+      "variants": {
+       "da": {
+        "timeline": [
+         {
+          "atMs": 0,
+          "textKey": "c.da1"
+         },
+         {
+          "atMs": 300,
+          "textKey": "c.da2"
+         }
+        ],
+        "durationMs": 1500
+       },
+       "default": {
+        "timeline": [
+         {
+          "atMs": 0,
+          "textKey": "c.def"
+         }
+        ],
+        "durationMs": 1500
+       }
+      },
+      "skippable": true,
+      "skipAfterMs": 1000
+     },
+     "storm": {
+      "variants": {
+       "sv": {
+        "timeline": [
+         {
+          "atMs": 0,
+          "textKey": "c.sv"
+         }
+        ],
+        "durationMs": 200
+       }
+      }
+     },
+     "finale": {
+      "variants": {
+       "default": {
+        "timeline": [
+         {
+          "atMs": 0,
+          "textKey": "c.f1"
+         },
+         {
+          "atMs": 100,
+          "textKey": "c.f2"
+         }
+        ],
+        "durationMs": 400
+       }
+      },
+      "hold": true
+     },
+     "longone": {
+      "variants": {
+       "default": {
+        "timeline": [
+         {
+          "atMs": 0,
+          "textKey": "c.long"
+         }
+        ],
+        "durationMs": 5000
+       }
+      }
+     }
+    }
+   },
+   {
+    "id": "yard",
+    "nameKey": "s.yard",
+    "size": {
+     "width": 1280,
+     "height": 720
+    },
+    "entry": null,
+    "spots": {
+     "b": {
+      "x": 100,
+      "y": 650
+     }
+    },
+    "defaultSpot": "b",
+    "walkable": [
+     [
+      [
+       0,
+       600
+      ],
+      [
+       1280,
+       600
+      ],
+      [
+       1280,
+       720
+      ],
+      [
+       0,
+       720
+      ]
+     ]
+    ]
+   }
+  ],
+  "portals": [
+   {
+    "id": "p_out",
+    "from": "hall",
+    "to": "yard",
+    "entry": null,
+    "exitSpot": "door",
+    "arrivalSpot": "b"
+   },
+   {
+    "id": "p_in",
+    "from": "yard",
+    "to": "hall",
+    "entry": null,
+    "exitSpot": "b",
+    "arrivalSpot": "a"
+   }
+  ],
+  "actors": [
+   {
+    "id": "hero",
+    "nameKey": "a.hero",
+    "scene": "hall",
+    "spot": "a",
+    "entry": null,
+    "variants": {
+     "default": {
+      "animations": {
+       "wave": "a.wave",
+       "idle": "a.idle",
+       "slow": "a.slow",
+       "march": "a.march"
+      }
+     }
+    }
+   },
+   {
+    "id": "owl",
+    "nameKey": "a.owl",
+    "scene": "hall",
+    "spot": "a",
+    "entry": "owl#main",
+    "sounds": {
+     "chirp": "s.chirp"
+    },
+    "variants": {
+     "default": {}
+    }
+   }
+  ],
+  "animations": [
+   {
+    "id": "a.wave",
+    "atlas": "atlas.hero",
+    "instructions": [
+     {
+      "op": "fps",
+      "n": 10
+     },
+     {
+      "op": "play",
+      "from": 0,
+      "to": 3
+     },
+     {
+      "op": "signal",
+      "entity": "owl",
+      "name": "hello"
+     },
+     {
+      "op": "wait",
+      "frames": 1
+     }
+    ]
+   },
+   {
+    "id": "a.idle",
+    "atlas": "atlas.hero",
+    "instructions": [
+     {
+      "op": "fps",
+      "n": 10
+     },
+     {
+      "op": "frame",
+      "n": 4
+     },
+     {
+      "op": "loopRange",
+      "from": 4,
+      "to": 6
+     }
+    ]
+   },
+   {
+    "id": "a.slow",
+    "atlas": "atlas.hero",
+    "instructions": [
+     {
+      "op": "fps",
+      "n": 5
+     },
+     {
+      "op": "play",
+      "from": 0,
+      "to": 9
+     }
+    ],
+    "maxDuration": 500
+   },
+   {
+    "id": "a.march",
+    "atlas": "atlas.hero",
+    "instructions": [
+     {
+      "op": "signal",
+      "entity": "owl",
+      "name": "early"
+     },
+     {
+      "op": "fps",
+      "n": 10
+     },
+     {
+      "op": "play",
+      "from": 0,
+      "to": 1
+     },
+     {
+      "op": "signal",
+      "entity": "owl",
+      "name": "late"
+     }
+    ]
+   }
+  ],
+  "sounds": [
+   {
+    "id": "s.hum",
+    "asset": "snd.hum",
+    "channel": "ambient",
+    "durationMs": 1000
+   },
+   {
+    "id": "s.theme",
+    "asset": "snd.theme",
+    "channel": "music",
+    "durationMs": 4000,
+    "persistAcrossScenes": true
+   },
+   {
+    "id": "s.chirp",
+    "asset": "snd.chirp",
+    "channel": "sfx",
+    "durationMs": 300
+   }
+  ],
+  "graphs": [
+   {
+    "id": "g",
+    "kind": "logic",
+    "nodes": [
+     {
+      "id": "anim_finite_e",
+      "type": "entry",
+      "name": "anim_finite",
+      "modal": false,
+      "next": [
+       "anim_finite_0"
+      ]
+     },
+     {
+      "type": "play_animation",
+      "entity": "hero",
+      "animation": "wave",
+      "id": "anim_finite_0",
+      "next": [
+       "anim_finite_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "wave_done",
+      "value": true,
+      "id": "anim_finite_1",
+      "next": []
+     },
+     {
+      "id": "anim_loop_e",
+      "type": "entry",
+      "name": "anim_loop",
+      "modal": false,
+      "next": [
+       "anim_loop_0"
+      ]
+     },
+     {
+      "type": "play_animation",
+      "entity": "hero",
+      "animation": "idle",
+      "id": "anim_loop_0",
+      "next": [
+       "anim_loop_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "idle_done",
+      "value": true,
+      "id": "anim_loop_1",
+      "next": []
+     },
+     {
+      "id": "anim_timeout_e",
+      "type": "entry",
+      "name": "anim_timeout",
+      "modal": false,
+      "next": [
+       "anim_timeout_0"
+      ]
+     },
+     {
+      "type": "play_animation",
+      "entity": "hero",
+      "animation": "slow",
+      "id": "anim_timeout_0",
+      "next": [
+       "anim_timeout_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "slow_done",
+      "value": true,
+      "id": "anim_timeout_1",
+      "next": []
+     },
+     {
+      "id": "sound_finite_e",
+      "type": "entry",
+      "name": "sound_finite",
+      "modal": false,
+      "next": [
+       "sound_finite_0"
+      ]
+     },
+     {
+      "type": "sound_play",
+      "entity": "owl",
+      "sound": "chirp",
+      "times": 2,
+      "id": "sound_finite_0",
+      "next": [
+       "sound_finite_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "chirp_done",
+      "value": true,
+      "id": "sound_finite_1",
+      "next": []
+     },
+     {
+      "id": "sound_loops_e",
+      "type": "entry",
+      "name": "sound_loops",
+      "modal": false,
+      "next": [
+       "sound_loops_0"
+      ]
+     },
+     {
+      "type": "sound_play",
+      "entity": "hall",
+      "sound": "hum",
+      "times": "loop",
+      "id": "sound_loops_0",
+      "next": [
+       "sound_loops_1"
+      ]
+     },
+     {
+      "type": "sound_play",
+      "entity": "hall",
+      "sound": "theme",
+      "times": "loop",
+      "id": "sound_loops_1",
+      "next": [
+       "sound_loops_2"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "loops_started",
+      "value": true,
+      "id": "sound_loops_2",
+      "next": []
+     },
+     {
+      "id": "hum_only_e",
+      "type": "entry",
+      "name": "hum_only",
+      "modal": false,
+      "next": [
+       "hum_only_0"
+      ]
+     },
+     {
+      "type": "sound_play",
+      "entity": "hall",
+      "sound": "hum",
+      "times": "loop",
+      "id": "hum_only_0",
+      "next": []
+     },
+     {
+      "id": "stop_hum_e",
+      "type": "entry",
+      "name": "stop_hum",
+      "modal": false,
+      "next": [
+       "stop_hum_0"
+      ]
+     },
+     {
+      "type": "sound_stop",
+      "entity": "hall",
+      "sound": "hum",
+      "id": "stop_hum_0",
+      "next": [
+       "stop_hum_1"
+      ]
+     },
+     {
+      "type": "sound_stop",
+      "entity": "hall",
+      "sound": "hum",
+      "id": "stop_hum_1",
+      "next": []
+     },
+     {
+      "id": "doomed_e",
+      "type": "entry",
+      "name": "doomed",
+      "modal": false,
+      "next": [
+       "doomed_0"
+      ]
+     },
+     {
+      "type": "sound_play",
+      "entity": "owl",
+      "sound": "chirp",
+      "times": "loop",
+      "id": "doomed_0",
+      "next": [
+       "doomed_1"
+      ]
+     },
+     {
+      "type": "play_animation",
+      "entity": "hero",
+      "animation": "slow",
+      "id": "doomed_1",
+      "next": [
+       "doomed_2"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "doomed_done",
+      "value": true,
+      "id": "doomed_2",
+      "next": []
+     },
+     {
+      "id": "doomed_cut_e",
+      "type": "entry",
+      "name": "doomed_cut",
+      "modal": false,
+      "next": [
+       "doomed_cut_0"
+      ]
+     },
+     {
+      "type": "cutscene",
+      "name": "longone",
+      "id": "doomed_cut_0",
+      "next": [
+       "doomed_cut_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "long_done",
+      "value": true,
+      "id": "doomed_cut_1",
+      "next": []
+     },
+     {
+      "id": "cut_intro_e",
+      "type": "entry",
+      "name": "cut_intro",
+      "modal": false,
+      "next": [
+       "cut_intro_0"
+      ]
+     },
+     {
+      "type": "cutscene",
+      "name": "intro",
+      "id": "cut_intro_0",
+      "next": [
+       "cut_intro_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "intro_done",
+      "value": true,
+      "id": "cut_intro_1",
+      "next": []
+     },
+     {
+      "id": "cut_storm_e",
+      "type": "entry",
+      "name": "cut_storm",
+      "modal": false,
+      "next": [
+       "cut_storm_0"
+      ]
+     },
+     {
+      "type": "cutscene",
+      "name": "storm",
+      "id": "cut_storm_0",
+      "next": [
+       "cut_storm_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "storm_done",
+      "value": true,
+      "id": "cut_storm_1",
+      "next": []
+     },
+     {
+      "id": "cut_finale_e",
+      "type": "entry",
+      "name": "cut_finale",
+      "modal": false,
+      "next": [
+       "cut_finale_0"
+      ]
+     },
+     {
+      "type": "cutscene",
+      "name": "finale",
+      "id": "cut_finale_0",
+      "next": [
+       "cut_finale_1"
+      ]
+     },
+     {
+      "type": "set",
+      "var": "finale_done",
+      "value": true,
+      "id": "cut_finale_1",
+      "next": []
+     },
+     {
+      "id": "clear_e",
+      "type": "entry",
+      "name": "clear",
+      "modal": false,
+      "next": [
+       "clear_0"
+      ]
+     },
+     {
+      "type": "cutscene_clear",
+      "id": "clear_0",
+      "next": []
+     },
+     {
+      "id": "leave_e",
+      "type": "entry",
+      "name": "leave",
+      "modal": true,
+      "next": [
+       "leave_0"
+      ]
+     },
+     {
+      "type": "portal_use",
+      "portal": "p_out",
+      "id": "leave_0",
+      "next": []
+     }
+    ]
+   },
+   {
+    "id": "owl",
+    "kind": "logic",
+    "nodes": [
+     {
+      "id": "owl_e",
+      "type": "entry",
+      "name": "main",
+      "next": [
+       "owl_g"
+      ]
+     },
+     {
+      "id": "owl_g",
+      "type": "guard",
+      "expr": {
+       "eq": [
+        {
+         "var": "$action"
+        },
+        {
+         "const": "signal"
+        }
+       ]
+      },
+      "next": [
+       "owl_s"
+      ]
+     },
+     {
+      "id": "owl_s",
+      "type": "set",
+      "var": "owl_heard",
+      "value": true,
+      "next": []
+     }
+    ]
+   }
+  ],
+  "i18n": {
+   "da": {
+    "s.hall": "Hal",
+    "s.yard": "Gård",
+    "a.hero": "Helt",
+    "a.owl": "Ugle",
+    "c.da1": "Først",
+    "c.da2": "Så",
+    "c.def": "Neutral",
+    "c.sv": "Svensk",
+    "c.f1": "Slut 1",
+    "c.f2": "Slut 2",
+    "c.long": "Lang"
+   },
+   "en": {
+    "s.hall": "Hall",
+    "s.yard": "Yard",
+    "a.hero": "Hero",
+    "a.owl": "Owl",
+    "c.da1": "First",
+    "c.da2": "Then",
+    "c.def": "Neutral",
+    "c.sv": "Swedish",
+    "c.f1": "End 1",
+    "c.f2": "End 2",
+    "c.long": "Long"
+   }
+  }
+ },
+ "steps": [
+  {
+   "do": "newGame"
+  },
+  {
+   "expect": "warning",
+   "code": "W-ANIM-DURATION",
+   "phase": "validation",
+   "note": "a.slow varer 2000 ms, men maxDuration er 500"
+  },
+  {
+   "do": "run",
+   "entry": "g#anim_finite"
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "name": "wave",
+   "status": "playing",
+   "frame": 0
+  },
+  {
+   "expect": "mediaPending",
+   "count": 1
+  },
+  {
+   "do": "advance",
+   "ms": 399
+  },
+  {
+   "expect": "signalCount",
+   "entity": "owl",
+   "name": "hello",
+   "count": 0
+  },
+  {
+   "expect": "globals",
+   "lacks": [
+    "wave_done"
+   ]
+  },
+  {
+   "do": "advance",
+   "ms": 1
+  },
+  {
+   "expect": "signalCount",
+   "entity": "owl",
+   "name": "hello",
+   "count": 1
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "owl_heard": true
+   },
+   "lacks": [
+    "wave_done"
+   ],
+   "note": "signalet blokerer ikke animationen"
+  },
+  {
+   "do": "advance",
+   "ms": 100
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "wave_done": true
+   }
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "none": true
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "expect": "signalCount",
+   "entity": "owl",
+   "name": "hello",
+   "count": 1
+  },
+  {
+   "do": "run",
+   "entry": "g#anim_loop"
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "idle_done": true
+   },
+   "note": "loop: Done, så snart loopet er etableret (TS-F04)"
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "name": "idle",
+   "status": "looping",
+   "frame": 4
+  },
+  {
+   "do": "advance",
+   "ms": 250
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "name": "idle",
+   "status": "looping",
+   "frame": 6
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "do": "seekAnimation",
+   "entity": "hero",
+   "animation": "march",
+   "at": 1,
+   "note": "startAt(1): signalet 'early' springes stille over (TS-F03)"
+  },
+  {
+   "do": "advance",
+   "ms": 1000
+  },
+  {
+   "expect": "signalCount",
+   "entity": "owl",
+   "name": "early",
+   "count": 0
+  },
+  {
+   "expect": "signalCount",
+   "entity": "owl",
+   "name": "late",
+   "count": 1
+  },
+  {
+   "do": "run",
+   "entry": "g#anim_timeout"
+  },
+  {
+   "do": "advance",
+   "ms": 499
+  },
+  {
+   "expect": "globals",
+   "lacks": [
+    "slow_done"
+   ]
+  },
+  {
+   "do": "advance",
+   "ms": 1
+  },
+  {
+   "expect": "warning",
+   "code": "W-COMMAND-TIMEOUT",
+   "note": "TS-F01: maxDuration bruges som timeout"
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "slow_done": true
+   }
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "none": true
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "do": "run",
+   "entry": "g#sound_finite"
+  },
+  {
+   "do": "advance",
+   "ms": 599
+  },
+  {
+   "expect": "globals",
+   "lacks": [
+    "chirp_done"
+   ]
+  },
+  {
+   "do": "advance",
+   "ms": 1
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "chirp_done": true
+   },
+   "note": "to gentagelser à 300 ms, ét svar"
+  },
+  {
+   "do": "run",
+   "entry": "g#sound_loops"
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "loops_started": true
+   },
+   "note": "loop-lyd fuldføres straks (TS-F04)"
+  },
+  {
+   "expect": "sounds",
+   "equals": [
+    "hall:hum",
+    "hall:theme"
+   ]
+  },
+  {
+   "do": "run",
+   "entry": "g#stop_hum"
+  },
+  {
+   "expect": "sounds",
+   "equals": [
+    "hall:theme"
+   ],
+   "fading": 1,
+   "note": "anden sound_stop er en sikker no-op"
+  },
+  {
+   "do": "advance",
+   "ms": 500
+  },
+  {
+   "expect": "sounds",
+   "fading": 0
+  },
+  {
+   "do": "run",
+   "entry": "g#hum_only"
+  },
+  {
+   "do": "run",
+   "entry": "g#doomed"
+  },
+  {
+   "expect": "sounds",
+   "equals": [
+    "hall:theme",
+    "hall:hum",
+    "owl:chirp"
+   ]
+  },
+  {
+   "expect": "mediaPending",
+   "count": 1
+  },
+  {
+   "do": "cancelRuns",
+   "reason": "scenario"
+  },
+  {
+   "expect": "sounds",
+   "equals": [
+    "hall:theme",
+    "hall:hum"
+   ]
+  },
+  {
+   "expect": "animation",
+   "entity": "hero",
+   "none": true
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "do": "advance",
+   "ms": 1000
+  },
+  {
+   "expect": "globals",
+   "lacks": [
+    "doomed_done"
+   ]
+  },
+  {
+   "expect": "idle"
+  },
+  {
+   "do": "run",
+   "entry": "g#doomed_cut"
+  },
+  {
+   "expect": "modal",
+   "value": true
+  },
+  {
+   "expect": "cutscene",
+   "state": "playing",
+   "name": "longone"
+  },
+  {
+   "do": "cancelRuns",
+   "reason": "scenario"
+  },
+  {
+   "expect": "modal",
+   "value": false
+  },
+  {
+   "expect": "cutscene",
+   "state": "idle"
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "do": "advance",
+   "ms": 6000
+  },
+  {
+   "expect": "globals",
+   "lacks": [
+    "long_done"
+   ],
+   "note": "TS-F02: intet sent svar efter annullering"
+  },
+  {
+   "expect": "idle"
+  },
+  {
+   "do": "run",
+   "entry": "g#cut_intro"
+  },
+  {
+   "expect": "modal",
+   "value": true
+  },
+  {
+   "expect": "cutscene",
+   "state": "playing",
+   "name": "intro",
+   "variant": "da",
+   "frame": 0
+  },
+  {
+   "do": "advance",
+   "ms": 300
+  },
+  {
+   "expect": "cutscene",
+   "frame": 1
+  },
+  {
+   "do": "skipCutscene",
+   "expectSkipped": false,
+   "note": "før skipAfterMs ignoreres skip"
+  },
+  {
+   "do": "advance",
+   "ms": 700
+  },
+  {
+   "do": "skipCutscene",
+   "expectSkipped": true
+  },
+  {
+   "expect": "cutscene",
+   "state": "idle"
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "intro_done": true
+   }
+  },
+  {
+   "expect": "modal",
+   "value": false
+  },
+  {
+   "do": "setLanguage",
+   "language": "en"
+  },
+  {
+   "do": "run",
+   "entry": "g#cut_intro"
+  },
+  {
+   "expect": "cutscene",
+   "state": "playing",
+   "variant": "default",
+   "note": "en mangler → default (TS-F06)"
+  },
+  {
+   "do": "advance",
+   "ms": 1500
+  },
+  {
+   "expect": "cutscene",
+   "state": "idle"
+  },
+  {
+   "expect": "modal",
+   "value": false
+  },
+  {
+   "do": "run",
+   "entry": "g#cut_storm"
+  },
+  {
+   "expect": "warning",
+   "code": "W-CUTSCENE-LANG",
+   "note": "hverken en eller default → første variant + advarsel (TS-F06)"
+  },
+  {
+   "expect": "cutscene",
+   "variant": "sv"
+  },
+  {
+   "do": "advance",
+   "ms": 200
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "storm_done": true
+   }
+  },
+  {
+   "do": "run",
+   "entry": "g#cut_finale"
+  },
+  {
+   "do": "advance",
+   "ms": 400
+  },
+  {
+   "expect": "globals",
+   "equals": {
+    "finale_done": true
+   }
+  },
+  {
+   "expect": "cutscene",
+   "state": "held",
+   "name": "finale",
+   "frame": 1
+  },
+  {
+   "expect": "modal",
+   "value": false
+  },
+  {
+   "do": "run",
+   "entry": "g#clear"
+  },
+  {
+   "expect": "cutscene",
+   "state": "idle"
+  },
+  {
+   "do": "run",
+   "entry": "g#leave"
+  },
+  {
+   "do": "runUntilIdle"
+  },
+  {
+   "expect": "actorScene",
+   "actor": "hero",
+   "equals": "yard"
+  },
+  {
+   "expect": "sounds",
+   "equals": [
+    "hall:theme"
+   ],
+   "note": "TS-F05: hum fader ud; theme (persistAcrossScenes) overlever"
+  },
+  {
+   "do": "advance",
+   "ms": 500
+  },
+  {
+   "expect": "sounds",
+   "fading": 0
+  },
+  {
+   "expect": "idle"
+  },
+  {
+   "expect": "mediaPending",
+   "count": 0
+  },
+  {
+   "expect": "modal",
+   "value": false
+  },
+  {
+   "do": "newGame"
+  },
+  {
+   "expect": "sounds",
+   "equals": []
+  },
+  {
+   "expect": "cutscene",
+   "state": "idle"
+  }
+ ]
+}

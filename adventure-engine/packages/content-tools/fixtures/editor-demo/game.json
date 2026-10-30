@@ -1,0 +1,17 @@
+{
+  "defaultLanguage": "da",
+  "entry": "game#start",
+  "formatVersion": 1,
+  "globals": {
+    "lamp_lit": false
+  },
+  "id": "lantern-demo",
+  "languages": [
+    "da",
+    "en"
+  ],
+  "player": {
+    "actor": "mira"
+  },
+  "version": "0.1.0"
+}
