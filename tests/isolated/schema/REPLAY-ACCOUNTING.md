@@ -51,9 +51,8 @@ Eksperimentet kørte alle filer med den første baseline (`ci-baseline-8-tables`
   indeholder INSERT.
 - **Tvilling med to tidsstempler:** 41 navne. Den første kopi anvendes, og testen kræver, at
   skema-tvillingerne er token-ækvivalente.
-- **Ikke anvendt i produktionen:** `20261029120000_difficulty_scale_b` (niveaumotoren, PR #371).
-  Den springes over (ejerbeslutning om migrationen udestår). Den bygger på A, som nu er anvendt
-  (se "Anvendt i produktionen efter planens første version").
+- **Ikke anvendt i produktionen:** ingen lige nu. A og B er anvendt og verificeret og anvendes
+  derfor også her (se "Anvendt i produktionen efter planens første version").
 
 ## Anvendt i produktionen efter planens første version
 En fil fjernes fra `NOT_IN_PRODUCTION`, først når den er anvendt **og** verificeret i produktionen.
@@ -62,8 +61,9 @@ Filen selv ændres aldrig.
 | Repo-fil | Produktionspost | Anvendt | Verificeret | Afspilning nu |
 |---|---|---|---|---|
 | `20261020120000_difficulty_scale_a.sql` | `20261030045204 difficulty_scale_a` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (ejergodkendt) | Ja, læsende 2026-10-30: 0 af 2.143 opgaver uden niveau, backfill lig formlen, `difficulty_level_from_grade_band` md5-identisk med filen og kun `service_role`, `student_subject_level` med RLS og én SELECT-politik, `authenticated` kun SELECT, `anon` intet | **Anvendes**, efter #351 (`20261019150000_question_format_mix`) |
+| `20261029120000_difficulty_scale_b.sql` | `20261030094958 difficulty_scale_b` | 2026-10-30 via `apply_migration`, filen ordret fra `main` (SHA-256 `9fb5ffd33df32f8342cda143cc28c32b25478ec0332b2261925cf8ca21a96a1c`, lig SHA-256 af den sætning, migrationsloggen gemte; ejergodkendt) | Ja, læsende 2026-10-30: `student_level_fold_log` med RLS og 0 policies, kun `postgres` og `service_role` i ACL; begge indeks som i filen; de tre funktioner `SECURITY INVOKER` med låst `search_path`, EXECUTE kun for `service_role`, md5 som i filen; 0 rækker i `student_subject_level` og `student_level_fold_log`; A og #351 uændrede | **Anvendes**, efter A |
 
-B (`20261029120000_difficulty_scale_b`) er **ikke** anvendt og springes stadig over.
+Rækkefølgen i afspilningen er #351 → A → B, som i produktionen.
 
 ## Repositoryet er foran produktionen (anvendes alligevel)
 Ejerbeslutning 2026-10-28 (mulighed B): den isolerede CI tester repositoryets kode mod det skema,
