@@ -1,6 +1,8 @@
 # Niveaumotoren (sværhedsskala 1–10.000): udrulning, tilbagerulning og query-planer
 
-**Status (2026-10-22):** forberedt, **intet anvendt eller deployet**. Arkitektur:
+**Status (2026-10-30):** #351 er anvendt (`20261022053442 question_format_mix`, 2026-10-22). Migration
+A er anvendt og verificeret (`20261030045204 difficulty_scale_a`, 2026-10-30, trin 4). Migration B er
+**ikke** anvendt, og niveaumotoren er **ikke** deployet (`get-next-question` er version 179). Arkitektur:
 [`docs/ARCHITECTURE.md` §6 "Difficulty scale 1–10.000"](../ARCHITECTURE.md). Design og beslutninger:
 `docs/difficulty-scale-design.md` (B1–B8, E1–E5, vej A).
 
@@ -16,7 +18,7 @@ Hvert trin herunder kræver **sin egen ejergodkendelse**. Migrationer anvendes k
 | 1 | Godkend og anvend `20261019150000_question_format_mix` (#351) | Security review | §2.1 |
 | 2 | Verificér funktioner, tabel, RLS og rettigheder | Trin 1 | §2.1 |
 | 3 | Deploy `get-next-question` fra `main` med `QUESTION_MIX_ENGINE` **ikke sat** og `LEVEL_ENGINE` **ikke sat**; smoke-test den hidtidige adfærd | Trin 2. Diff live mod repo først (kendt drift i nøgle-resolveren) | §2.2 |
-| 4 | Godkend og anvend `20261020120000_difficulty_scale_a` | Trin 3. Optællingen af opgaver uden niveau er gjort 2026-10-22: 0 mangler klassetrin/bånd | §2.3 |
+| 4 | Godkend og anvend `20261020120000_difficulty_scale_a` | Trin 3. Optællingen af opgaver uden niveau er gjort 2026-10-22: 0 mangler klassetrin/bånd | §2.3. **Udført 2026-10-30:** produktionspost `20261030045204 difficulty_scale_a`, verificeret (§2.3) |
 | 5 | Først derefter: godkend og anvend `20261029120000_difficulty_scale_b`, deploy `get-next-question` med niveaumotoren (flaget stadig ikke sat), og behandl `LEVEL_ENGINE=v1` som en særskilt beslutning | Trin 4 | §2.4–§2.6 |
 | 6 | Indholdet (#358–#365) indsættes **inaktivt**; stikprøvekontrol (E5); aktivering pr. portion | Trin 5, niveaumotoren kører | §2.7 |
 
@@ -54,6 +56,12 @@ SELECT count(*) FILTER (WHERE difficulty_level IS NULL) AS uden_niveau, count(*)
 SELECT has_table_privilege('authenticated','public.student_subject_level','UPDATE');             -- false
 SELECT has_function_privilege('authenticated','public.difficulty_level_from_grade_band(integer,integer)','EXECUTE'); -- false
 ```
+
+**Resultat 2026-10-30** (læsende, efter `20261030045204 difficulty_scale_a`): 0 af 2.143 uden niveau;
+backfill lig formlen for alle rækker; niveau 143–9.857; `authenticated` har kun SELECT på
+`student_subject_level` (ingen UPDATE, INSERT, DELETE, TRUNCATE eller MAINTAIN), `anon` intet;
+`difficulty_level_from_grade_band` kan kun kaldes af `service_role`, og kroppen er md5-identisk med
+filen. B's objekter findes ikke. #351's fire funktioner er uændrede.
 
 ### 2.4 Efter migration B (trin 5)
 ```sql

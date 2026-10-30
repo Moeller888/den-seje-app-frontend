@@ -54,6 +54,14 @@ test("the replayed schema has production's key objects", async () => {
   // 20260826000000's schema part: 'cancelled' is a valid job status.
   const chk = await one(db, `SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'generation_jobs_status_valid'`);
   assert.match(chk.d, /cancelled/);
+  // 20261020120000 (A) is applied in production (remote 20261030045204); B (20261029120000) is not.
+  // The md5 is the body production reported on 2026-10-30.
+  const lvl = await one(db, `SELECT md5(prosrc) m FROM pg_proc WHERE oid = 'public.difficulty_level_from_grade_band(integer,integer)'::regprocedure`);
+  assert.equal(lvl.m, "3c6504217ad747cbdbda4d1482ccd6fb");
+  assert.ok((await one(db, `SELECT to_regclass('public.student_subject_level') IS NOT NULL AS ok`)).ok, "student_subject_level");
+  assert.ok((await one(db, `SELECT to_regclass('public.idx_questions_objective_level') IS NOT NULL AS ok`)).ok, "idx_questions_objective_level");
+  assert.equal((await one(db, `SELECT to_regclass('public.student_level_fold_log') IS NULL AS absent`)).absent, true, "B is not replayed");
+  assert.equal((await one(db, `SELECT count(*)::int n FROM pg_proc WHERE proname IN ('advance_student_level', 'get_level_questions_for_student', 'request_repeat_level_question_for_student')`)).n, 0);
 });
 
 test("no real question row lands: the content filter was on for the whole replay and is gone afterwards", async () => {

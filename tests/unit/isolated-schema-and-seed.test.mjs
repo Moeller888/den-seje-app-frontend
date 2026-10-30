@@ -34,6 +34,19 @@ test("every timestamped migration gets exactly one decision; every non-apply has
   assert.equal(s.apply + s.skip + s.blocked, s.total);
 });
 
+test("the level scale follows production: #351 and A are replayed in that order, B is not", () => {
+  // A is applied in production (remote 20261030045204, verified 2026-10-30); B is not applied.
+  const decision = (f) => plan.find((p) => p.file === f);
+  const order = plan.filter((p) => p.action === "apply").map((p) => p.file);
+  assert.equal(decision("20261019150000_question_format_mix.sql").action, "apply");
+  assert.equal(decision("20261020120000_difficulty_scale_a.sql").action, "apply");
+  assert.ok(order.indexOf("20261019150000_question_format_mix.sql") < order.indexOf("20261020120000_difficulty_scale_a.sql"));
+  assert.equal(NOT_IN_PRODUCTION["20261020120000_difficulty_scale_a.sql"], undefined);
+  const b = decision("20261029120000_difficulty_scale_b.sql");
+  assert.equal(b.action, "skip");
+  assert.match(b.reason, /^not applied in production/);
+});
+
 test("the empty base migration (D-110 root) is skipped as empty", () => {
   const p = plan.find((x) => x.file === "20260317165405_remote_schema.sql");
   assert.ok(p && p.action === "skip" && p.reason.startsWith("empty file"));
