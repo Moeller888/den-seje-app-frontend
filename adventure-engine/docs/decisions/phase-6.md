@@ -155,7 +155,14 @@ pnpm content schema --out <mappe> [--check] [--json]
 - **Dubletter:** de genkendes på hash og gemmes ikke igen.
 - **Kontrol:** filer, der mangler eller er ændret (`E-ASSET-FILE`, `E-ASSET-HASH`), forkert type (`E-ASSET-TYPE`), dubletter og ubrugte assets. Type- og referencematch mellem indhold og manifest kontrolleres af motorens `validateAssets`.
 - **Proveniens:** kilde, licens og ophav er valgfri felter.
-- **Aldrig importeret (`E-ASSET-FORBIDDEN`):** SWF (også på magic bytes), XML, gemte spil, JSON, scripts og HTML. SVG med `<script>`, event-handlere, `javascript:` eller `foreignObject` afvises også.
+- **Aldrig importeret (`E-ASSET-FORBIDDEN`):** SWF (også på magic bytes), XML, gemte spil, JSON, scripts og HTML.
+- **SVG: allowlist (opfølgning, `docs/release-readiness.md` §17, `content-tools/src/svg.ts`):** en lille, streng tokenizer uden ny afhængighed. Alt, den ikke genkender, afvises.
+  - **Tilladt:** ét rodelement `<svg>`, en `<?xml …?>`-erklæring helt først, kommentarer, former, paths, tekst, grupper, `use`, gradienter, mønstre, clip paths, masker, markører og filterprimitiver; attributter for geometri, farve, tekst og filtre; `xmlns` kun med SVG-navnerummet og `xmlns:xlink` kun med XLink; `style` kun med præsentationsegenskaber.
+  - **Referencer:** `href`/`xlink:href` skal være `#id`, og `url(…)` skal være `url(#id)`. Tegnreferencer afkodes og mellemrum fjernes før kontrollen.
+  - **Funktioner:** kun farver (`rgb`, `rgba`, `hsl`, `hsla`), transformationer og `url(#id)`; `image-set(`, `cross-fade(` m.fl. kan hente filer uden `url(` og afvises.
+  - **Kodning:** en `<?xml …?>`-erklæring må kun angive version 1.0 og UTF-8, og kontroltegn afvises; ellers kunne en browser læse filens bytes anderledes end kontrollen (en ISO-2022-JP-escape kunne skjule en `onload`).
+  - **Afvist bl.a.:** `<script>`, `<style>`, `<foreignObject>`, `<image>`, `<a>`, animationselementer, `on…`-attributter i alle stavemåder, andre navnerum og præfikser, navne med forkerte store/små bogstaver, `DOCTYPE`, `ENTITY`, CDATA, processing instructions (fx `xml-stylesheet`), ukendte eller uafsluttede tegnreferencer, CSS-escapes og alle eksterne, `data:`- og `javascript:`-referencer.
+  - **Konsekvens:** SVG'er fra tegneprogrammer skal eksporteres som "almindelig"/optimeret SVG (uden fx `inkscape:`-attributter og `<metadata>`). Alle 25 SVG'er i projektet består.
 - **Preview:** sker kun med `<img>`, `<audio>` og `<video>`, så fremmed script kører aldrig.
 - **Fonte:** registreres som projekt-assets, men indgår ikke i runtime-manifestet, fordi spilformatet ikke har fonte.
 - **Spritesheets:** rammegitteret (frameWidth, frameHeight, frames, columns) defineres i editoren og vises med nummererede rammer. Animationerne under Medier bruger numrene.
@@ -307,3 +314,12 @@ Den afsluttende gennemgang (`docs/release-readiness.md` §16) tilføjede:
 - Id'er, der bliver filnavne, må ikke kun adskille sig ved store/små bogstaver fra et andet id, fordi Windows og macOS ser dem som én fil. Editorens Gem sletter aldrig en sti, der lige er skrevet med andre store/små bogstaver.
 - CR-01 finder også denylist-poster med æ, ø, å osv. i binære filer.
 - SVG-tegnreferencer uden for Unicode bliver U+FFFD i stedet for at give en fejl.
+
+## 17. Opfølgninger efter PR #469
+
+Rettet i `fix/adventure-engine-followups` (detaljer i `docs/release-readiness.md` §17):
+
+- **F4:** én fejlet IndexedDB-transaktion giver én fejlmeddelelse, og resultatet hører til den konkrete skrivning (fase 5 §13).
+- **F5:** forbindelserne for "Gemt"/`data-last-save` og `devBuild` → `allowSaveChecksumMismatch` ligger nu i rene, unit-testede funktioner (`writeFeedback`, `engineDevOptions`) med E2E-test af en fejlet skrivning.
+- **Slot-status:** en slot er kun `ok`, når indholdet kan indlæse savet (fase 5 §7).
+- **SVG:** bloklisten er erstattet af en allowlist (§8).

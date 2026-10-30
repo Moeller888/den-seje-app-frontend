@@ -65,14 +65,17 @@ function saveText(e: Engine, global?: number): string {
 }
 
 describe("slots: atomic writes and backups (spec 05 E5, TS-E09)", () => {
-  it("first write mirrors to .bak; later writes keep the previous version as .bak; reads verify", () => {
+  it("first write mirrors to .bak; later writes keep the previous version as .bak; reads verify", async () => {
     const store = new MemoryStorage();
     const slots = new SlotManager(store, "harbour");
     const e = engine();
     const v1 = saveText(e, 1);
     const v2 = saveText(e, 2);
     expect(slots.read("slot1")).toEqual({ state: "empty" });
-    expect(slots.write("slot1", v1)).toEqual({ ok: true });
+    const first = slots.write("slot1", v1);
+    expect(first).toEqual({ ok: true, committed: expect.any(Promise) });
+    // A synchronous store has committed already.
+    await expect(first.ok && first.committed).resolves.toBe(true);
     expect(store.keys("engine:harbour:")).toEqual(["engine:harbour:slot1", "engine:harbour:slot1.bak"]);
     expect(store.get("engine:harbour:slot1.bak")).toBe(v1);
     slots.write("slot1", v2);
@@ -105,17 +108,18 @@ describe("slots: atomic writes and backups (spec 05 E5, TS-E09)", () => {
     const slots = new SlotManager(store, "harbour");
     slots.write("slot2", old);
     slots.damage("slot2", old.slice(0, 40));
-    expect(slots.read("slot2")).toEqual({ state: "corrupt", backup: old });
+    expect(slots.read("slot2")).toEqual({ state: "corrupt", backup: old, reason: "damaged" });
     expect(slots.offersBackup("slot2")).toBe(true);
-    expect(slots.restoreBackup("slot2")).toEqual({ ok: true });
+    expect(slots.restoreBackup("slot2")).toEqual({ ok: true, committed: expect.any(Promise) });
     expect(slots.read("slot2")).toEqual({ state: "ok", raw: old });
     expect(slots.restoreBackup("slot2")).toEqual({ ok: false, message: "no backup to restore" });
     store.set("engine:harbour:slot2.bak", "garbage");
     slots.damage("slot2", "x");
-    expect([slots.read("slot2"), slots.offersBackup("slot2")]).toEqual([{ state: "corrupt", backup: null }, false]);
+    expect([slots.read("slot2"), slots.offersBackup("slot2")]).toEqual([{ state: "corrupt", backup: null, reason: "damaged" }, false]);
     slots.write("slot3", old);
     store.remove("engine:harbour:slot3");
-    expect(slots.read("slot3")).toEqual({ state: "corrupt", backup: old });
+    // A missing main file next to its .bak counts as damaged.
+    expect(slots.read("slot3")).toEqual({ state: "corrupt", backup: old, reason: "damaged" });
     store.failAfterWrites(0);
     expect(slots.restoreBackup("slot3").ok).toBe(false);
     expect(slots.used()).toEqual(["slot2", "slot3"]);
@@ -125,6 +129,87 @@ describe("slots: atomic writes and backups (spec 05 E5, TS-E09)", () => {
     expect(slots.used()).toEqual(["auto", "slot2", "slot3", "zzz"]);
     slots.remove("slot2");
     expect(slots.read("slot2")).toEqual({ state: "empty" });
+  });
+});
+
+describe("slot status: intact is not enough (follow-up)", () => {
+  it("an intact save the content cannot load is not ok; a loadable .bak is offered; verdicts are cached", () => {
+    const e = engine();
+    const good = saveText(e, 1);
+    const stale = saveText(e, 2);
+    const checked: string[] = [];
+    const store = new MemoryStorage();
+    const slots = new SlotManager(store, "harbour", {
+      loadable: (raw) => {
+        checked.push(raw);
+        return raw !== stale;
+      },
+    });
+    slots.write("slot1", good);
+    // The checksum matches, but this content can no longer load it (e.g. after a content update).
+    store.set("engine:harbour:slot1", stale);
+    expect(slots.read("slot1")).toEqual({ state: "corrupt", backup: good, reason: "unloadable" });
+    expect(slots.offersBackup("slot1")).toBe(true);
+    // Listing again parses nothing again.
+    const before = checked.length;
+    for (let i = 0; i < 5; i++) slots.read("slot1");
+    expect(checked.length).toBe(before);
+    expect(checked.filter((r) => r === stale)).toHaveLength(1);
+    // A new save never moves an unloadable main file into .bak over a loadable one.
+    const next = saveText(e, 3);
+    expect(slots.write("slot1", next).ok).toBe(true);
+    expect(store.get("engine:harbour:slot1.bak")).toBe(good);
+    // Both unloadable: no backup is offered.
+    store.set("engine:harbour:slot2", stale);
+    store.set("engine:harbour:slot2.bak", stale);
+    expect(slots.read("slot2")).toEqual({ state: "corrupt", backup: null, reason: "unloadable" });
+    // Damaged bytes are reported as damaged, without asking the content.
+    const asked = checked.length;
+    store.set("engine:harbour:slot3", "{");
+    expect(slots.read("slot3")).toEqual({ state: "corrupt", backup: null, reason: "damaged" });
+    expect(checked.length).toBe(asked);
+  });
+
+  it("review: a loadable check that throws counts as unloadable and never breaks the listing or a new save", () => {
+    const store = new MemoryStorage();
+    const e = engine();
+    const bad = saveText(e, 1);
+    const slots = new SlotManager(store, "harbour", {
+      loadable: (raw) => {
+        if (raw === bad) throw new Error("migration bug");
+        return true;
+      },
+    });
+    store.set("engine:harbour:slot1", bad);
+    expect(slots.read("slot1")).toEqual({ state: "corrupt", backup: null, reason: "unloadable" });
+    const next = saveText(e, 2);
+    expect(slots.write("slot1", next).ok).toBe(true);
+    expect(slots.read("slot1")).toEqual({ state: "ok", raw: next });
+  });
+
+  it("the verdict cache stays bounded", () => {
+    let calls = 0;
+    const store = new MemoryStorage();
+    const slots = new SlotManager(store, "harbour", {
+      loadable: () => {
+        calls++;
+        return true;
+      },
+    });
+    const e = engine();
+    const texts = Array.from({ length: 40 }, (_, i) => saveText(e, i + 1));
+    for (const t of texts) {
+      store.set("engine:harbour:slot1", t);
+      expect(slots.read("slot1").state).toBe("ok");
+    }
+    expect(calls).toBe(40);
+    // The first texts were dropped when the cache filled up and are checked again; the last ones are not.
+    store.set("engine:harbour:slot1", texts[0] as string);
+    slots.read("slot1");
+    expect(calls).toBe(41);
+    store.set("engine:harbour:slot1", texts[39] as string);
+    slots.read("slot1");
+    expect(calls).toBe(41);
   });
 });
 
@@ -152,7 +237,17 @@ describe("browser stores with fakes", () => {
   });
 
   /** A tiny in-memory IndexedDB: requests and transactions complete in microtasks. */
-  function fakeIdb(options: { failOpen?: boolean; failTx?: boolean; failRead?: boolean; throwTxOnce?: boolean; preset?: Record<string, unknown> } = {}) {
+  function fakeIdb(
+    options: {
+      failOpen?: boolean;
+      failTx?: boolean;
+      failRead?: boolean;
+      throwTxOnce?: boolean;
+      preset?: Record<string, unknown>;
+      /** Fail matching transactions as browsers do: `error` and then `abort` are both fired. */
+      failWhen?: (ops: readonly string[]) => boolean;
+    } = {},
+  ) {
     let throwNext = options.throwTxOnce === true;
     const records = new Map<string, unknown>(Object.entries(options.preset ?? {}));
     const commits: string[][] = [];
@@ -198,6 +293,11 @@ describe("browser stores with fakes", () => {
         if (mode === "readwrite") {
           queueMicrotask(() => {
             if (options.failTx === true) return tx.onerror?.();
+            if (options.failWhen?.(ops) === true) {
+              tx.onerror?.();
+              tx.onabort?.();
+              return;
+            }
             for (const op of ops) {
               const [verb, rest] = op.split(" ") as [string, string];
               if (verb === "put") records.set(rest.split("=")[0] as string, rest.slice(rest.indexOf("=") + 1));
@@ -258,6 +358,81 @@ describe("browser stores with fakes", () => {
     expect(await store.flush()).toBe(true);
     expect(idb.records.get("b")).toBe("2");
     expect(idb.records.has("a")).toBe(false);
+  });
+
+  it("F4: a transaction that fires both error and abort is reported once", async () => {
+    const store = await IndexedDbMirror.open(fakeIdb({ failWhen: () => true }).factory);
+    const errors: unknown[] = [];
+    store.onError = (e) => errors.push(e);
+    store.set("engine:harbour:settings", "{}");
+    expect(await store.flush()).toBe(false);
+    expect(errors).toHaveLength(1);
+    // A batch reports to its caller only, once, and never through onError as well.
+    expect(await store.transaction(() => store.set("x", "1"))).toBe(false);
+    expect(errors).toHaveLength(1);
+  });
+
+  it("F4: a failed settings write does not make the next successful save look failed", async () => {
+    const store = await IndexedDbMirror.open(fakeIdb({ failWhen: (ops) => ops.some((op) => op.includes(":settings=")) }).factory);
+    const errors: unknown[] = [];
+    store.onError = (e) => errors.push(e);
+    new SettingsStore(store, "harbour").update({ muted: true });
+    const w = new SlotManager(store, "harbour").write("slot1", saveText(engine(), 1));
+    expect(w.ok).toBe(true);
+    expect(w.ok && (await w.committed)).toBe(true);
+    // The settings failure is reported once, on its own.
+    expect(errors).toHaveLength(1);
+  });
+
+  it("F4: a flush whose result is ignored neither hides nor moves a failure", async () => {
+    const idb = fakeIdb({ failWhen: (ops) => ops.some((op) => op.includes("slot1")) });
+    const store = await IndexedDbMirror.open(idb.factory);
+    const errors: unknown[] = [];
+    store.onError = (e) => errors.push(e);
+    const slots = new SlotManager(store, "harbour");
+    const failed = slots.write("slot1", saveText(engine(), 1));
+    // A flush nobody looks at (restoreBackup or an import used to do this) …
+    void store.flush();
+    // … and a later, successful write of another slot.
+    const good = slots.write("slot2", saveText(engine(), 1));
+    expect(failed.ok && (await failed.committed)).toBe(false);
+    expect(good.ok && (await good.committed)).toBe(true);
+    // The slot write was tracked by its caller, so onError stays silent; flush itself keeps no state.
+    expect(errors).toEqual([]);
+    expect(await store.flush()).toBe(true);
+    expect(idb.records.has("engine:harbour:slot2")).toBe(true);
+    expect(idb.records.has("engine:harbour:slot1")).toBe(false);
+  });
+
+  it("F4: flush covers exactly the commits still pending when it is called", async () => {
+    let failNext = true;
+    const store = await IndexedDbMirror.open(
+      fakeIdb({
+        failWhen: () => {
+          const f = failNext;
+          failNext = false;
+          return f;
+        },
+      }).factory,
+    );
+    store.set("a", "1");
+    const first = store.flush();
+    store.set("b", "2");
+    const second = store.flush();
+    expect(await first).toBe(false);
+    // The second flush also waits for "a" (still pending when it was called) and therefore sees its failure …
+    expect(await second).toBe(false);
+    // … but a flush after everything settled starts clean.
+    expect(await store.flush()).toBe(true);
+    // A nested transaction joins its outer batch and shares its result.
+    let inner: Promise<boolean> | null = null;
+    const outer = store.transaction(() => {
+      store.set("c", "3");
+      inner = store.transaction(() => store.set("d", "4"));
+    });
+    expect(await outer).toBe(true);
+    expect(await (inner as unknown as Promise<boolean>)).toBe(true);
+    expect(await store.transaction(() => {})).toBe(true);
   });
 
   it("IndexedDbMirror: failed open rejects (the app falls back to localStorage); failed commits are reported", async () => {
@@ -373,14 +548,17 @@ describe("slot and store edge cases", () => {
     expect(slots.used()).toEqual(["slot1", "alpha", "beta", "gamma"]);
   });
 
-  it("restoreBackup runs as one transaction where the store has them", () => {
+  it("restoreBackup runs as one transaction where the store has them", async () => {
     const store = new MemoryStorage();
     const calls: string[] = [];
     const tx = Object.assign(Object.create(store) as MemoryStorage, { transaction: (fn: () => void) => (calls.push("tx"), fn()) });
     const slots = new SlotManager(tx, "harbour");
     slots.write("slot1", saveText(engine(), 1));
     slots.damage("slot1", "x");
-    expect(slots.restoreBackup("slot1")).toEqual({ ok: true });
+    const r = slots.restoreBackup("slot1");
+    expect(r).toEqual({ ok: true, committed: expect.any(Promise) });
+    // A store whose transaction returns nothing has committed synchronously.
+    await expect(r.ok && r.committed).resolves.toBe(true);
     expect(calls).toEqual(["tx", "tx"]);
   });
 });
