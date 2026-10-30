@@ -65,6 +65,8 @@ export function isActiveSlot(slot, slotCount) {
 }
 
 export const PROVISION_CONFIRMATION_PREFIX = "provision-slot-";
+// The exact `confirm_production` value every manual run of the production-facing suite needs (D-261).
+export const PRODUCTION_CONFIRMATION = "production-e2e";
 
 // The exact `confirm_provisioning` value that authorises a manual run on an inactive slot.
 export function provisionConfirmation(slot) {
@@ -126,8 +128,14 @@ export function selectSlot({ eventName, prNumber, dispatchSlot, dispatchConfirma
 // from the dispatch inputs on its own and requires it to equal the slot the job is about to use
 // (E2E_SLOT), so a rejected dispatch, or a classify job that failed or disagreed, stops the run
 // before npm ci, global setup or any Supabase call. Non-dispatch events pass untouched.
-export function dispatchGuard({ eventName, dispatchSlot, confirmation, slotCount, jobSlot } = {}) {
+export function dispatchGuard({ eventName, productionConfirmation, dispatchSlot, confirmation, slotCount, jobSlot } = {}) {
   if (eventName !== "workflow_dispatch") return { ok: true, message: `not a manual dispatch (${String(eventName)}); nothing to check` };
+  // D-261: the suite runs against PRODUCTION and resets the live test accounts. Since it no longer
+  // runs on push, a manual dispatch is the only way in, and it must say so: exactly the confirmation,
+  // no trimming, no case folding. Checked first, so a missing confirmation is reported as such.
+  if (productionConfirmation !== PRODUCTION_CONFIRMATION) {
+    return { ok: false, message: `manual dispatch rejected: this suite runs against production; set confirm_production to exactly ${PRODUCTION_CONFIRMATION}` };
+  }
   const r = resolveDispatch({ dispatchSlot, confirmation, slotCount });
   if (!r.ok) return { ok: false, message: `manual dispatch rejected: ${r.reason}` };
   if (jobSlot !== String(r.slot)) {

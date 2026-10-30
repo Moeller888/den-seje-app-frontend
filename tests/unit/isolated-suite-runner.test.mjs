@@ -285,9 +285,18 @@ test("D1 plan: exactly one run per push to main and per PR; dispatch on main sti
 test("D1 isolation: no step is conditioned on the event or branch, so a push to main runs every safety layer a PR runs", () => {
   const wf = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
   const job = wf.slice(wf.indexOf("\n  isolated-e2e:\n"));
-  for (const cond of job.split("\n").filter((l) => /^\s+if:/.test(l))) {
+  // D-261: exactly one step may depend on the event — the cache WRITE on a push to main, which is an
+  // actions/cache/save step and no check. Every safety layer and every test step stays event-free.
+  const SAVE = "      - name: Save Playwright browser and apt cache\n";
+  const save = job.slice(job.indexOf(SAVE), job.indexOf("\n      - ", job.indexOf(SAVE) + SAVE.length));
+  assert.ok(job.includes(SAVE) && save.includes("        uses: actions/cache/save@v4\n"), "the exception is the cache save step");
+  assert.ok(job.indexOf(SAVE) > job.indexOf("npx playwright install --with-deps") && job.indexOf(SAVE) < job.indexOf("egress-firewall.sh lock"),
+    "it saves right after the install, before the egress lock");
+  const conds = job.replace(save, "").split("\n").filter((l) => /^\s+if:/.test(l));
+  for (const cond of conds) {
     assert.doesNotMatch(cond, /event_name|github\.ref|ref_name|main/, cond);
   }
+  assert.equal(job.split("\n").filter((l) => /^\s+if:.*event_name/.test(l)).length, 1, "one event-conditioned step, no more");
   for (const layer of ["isolation-guard.mjs", "egress-blackhole.mjs --verify", "negative-controls.sh pre-lock",
     "egress-firewall.sh lock", "negative-controls.sh post-lock",
     "tests/isolated/run-suite.mjs"]) assert.ok(job.includes(layer), layer); // run-suite starts the tripwire

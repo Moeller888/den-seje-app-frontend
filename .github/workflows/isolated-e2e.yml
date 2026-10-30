@@ -135,8 +135,10 @@ jobs:
         if: needs.plan.outputs.scope != 'docs-md'
         run: npm ci
 
-      # Browsers + apt .debs from the main workflow's cache entry (same key, same paths — read only;
-      # main writes it). The Ubuntu mirror stalled here for 12+ minutes on a miss.
+      # Browsers + apt .debs from main's cache entry (same key, same paths as playwright.yml). The Ubuntu
+      # mirror stalled here for 12+ minutes on a miss. Since D-261 playwright.yml no longer runs on push,
+      # so a push to main of THIS workflow writes the entry on a miss (the key changes with every runner
+      # image); pull requests and dispatches only read it.
       - name: Playwright and runner image versions
         if: needs.plan.outputs.scope != 'docs-md'
         id: pwver
@@ -145,6 +147,7 @@ jobs:
           echo "key=pw-browsers-apt-${ImageOS:-unknown}-${ImageVersion:-unknown}-playwright-${v}" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser and apt cache
         if: needs.plan.outputs.scope != 'docs-md'
+        id: pwcache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -156,12 +159,27 @@ jobs:
         timeout-minutes: 15
         run: |
           set -euo pipefail
+          # Keep what apt downloads, so a miss on main can refill the cache (same as playwright.yml).
+          printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+            | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-debs > /dev/null
           mkdir -p ~/.cache/pw-apt
           seeded=$(find ~/.cache/pw-apt -maxdepth 1 -name '*.deb' | wc -l)
           if [ "$seeded" -gt 0 ]; then sudo cp ~/.cache/pw-apt/*.deb /var/cache/apt/archives/; fi
           echo "apt: seeded ${seeded} cached .deb file(s)"
           npx playwright install --with-deps
+          find /var/cache/apt/archives -maxdepth 1 -name '*.deb' -exec cp {} ~/.cache/pw-apt/ \;
           docker pull curlimages/curl:8.11.1 > /dev/null
+      # Only a push to main writes the ~557 MB entry, and only on a miss — nine PRs saving their own would
+      # evict it from the 10 GB cache. Runs before the egress lock; it carries no secret and changes
+      # nothing the suite reads.
+      - name: Save Playwright browser and apt cache
+        if: needs.plan.outputs.scope != 'docs-md' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/pw-apt
+          key: ${{ steps.pwver.outputs.key }}
 
       - uses: supabase/setup-cli@v1
         if: needs.plan.outputs.scope != 'docs-md'
