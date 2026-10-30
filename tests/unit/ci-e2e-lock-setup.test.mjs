@@ -64,11 +64,12 @@ test("the install step seeds apt from the cache, keeps what it downloads, and is
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
 
-test("the lock itself is unchanged: always() except on pull requests (D-241 step C), shared group fallback, FIFO queue, no cancel-in-progress", () => {
+test("the lock itself is unchanged: the job runs only on manual dispatch (D-241 step C, D-261), shared group fallback, FIFO queue, no cancel-in-progress", () => {
   const head = TEST_JOB.slice(0, TEST_JOB.indexOf("    steps:\n"));
-  // Still reports on every push to main and dispatch, whatever classify did; pull requests are covered by
-  // the required `isolated-e2e (run 1)` instead and no longer take the shared lock.
-  assert.ok(head.includes("    if: always() && github.event_name != 'pull_request'\n"), "push/dispatch always report; PRs skip the lock");
+  // Reports on every manual dispatch, whatever classify did. Pull requests are covered by the required
+  // `isolated-e2e (run 1)`, and a push to main by isolated-e2e.yml + production-smoke.yml (D-261), so no
+  // automatic run takes the shared lock.
+  assert.ok(head.includes("    if: always() && github.event_name == 'workflow_dispatch'\n"), "only a manual dispatch runs the production-facing suite");
   assert.ok(head.includes("|| 'e2e-shared-supabase'"));
   assert.ok(head.includes("cancel-in-progress: false") && head.includes("queue: max"));
   assert.ok(head.includes("    permissions:\n      contents: read\n      pull-requests: read\n      actions: read\n"), "read-only token");
@@ -170,17 +171,27 @@ test("fast modes are untouched: no stale check, no pull, no suite, no refusal, g
   }
 });
 
-test("cache: a pull request restores but never saves; a push on a miss saves", () => {
+test("cache (step level, dormant since D-261): a pull request restores but never saves; a push on a miss would save", () => {
   const pr = simulate({ event: "pull_request", mode: "full" });
   assert.ok(pr.ran.includes("Restore Playwright browser and apt cache") && !pr.ran.includes("Save Playwright browser and apt cache"));
   const push = simulate({ event: "push", mode: "full" });
   assert.ok(push.ran.includes("Save Playwright browser and apt cache"));
+  // …but the job never runs on push any more (next test); main's entry is written by isolated-e2e.yml.
+  const iso = readFileSync(new URL("../../.github/workflows/isolated-e2e.yml", import.meta.url), "utf8").split("\r\n").join("\n");
+  assert.ok(iso.includes("        if: needs.plan.outputs.scope != 'docs-md' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'\n        uses: actions/cache/save@v4\n"));
 });
 
-test("push to main runs the suite (the stale check never calls a push superseded)", () => {
-  const r = simulate({ event: "push", mode: "full", stale: "false" });
-  assert.ok(r.ran.includes("Run Playwright tests"));
-  assert.equal(r.red, false);
+// The JOB-level condition, evaluated per event with the same evaluator as the steps.
+const JOB_IF = /\n    if: (.+)\n/.exec(TEST_JOB.slice(0, TEST_JOB.indexOf("    steps:\n")))[1];
+const jobRuns = (event, classifyFailed = false) => evaluate(JOB_IF, { event, failed: classifyFailed, outputs: {} });
+
+test("D-261: push and pull_request never run the production-facing suite; only a manual dispatch does, even after a failed classify", () => {
+  assert.equal(jobRuns("push"), false, "push to main");
+  assert.equal(jobRuns("pull_request"), false, "pull request");
+  for (const ev of ["schedule", "merge_group", "pull_request_target", ""]) assert.equal(jobRuns(ev), false, ev);
+  assert.equal(jobRuns("workflow_dispatch"), true);
+  assert.equal(jobRuns("workflow_dispatch", true), true, "always(): a dispatch still reports (red) when classify failed");
+  // The stale check still never calls a push superseded by the PR rules (dormant main-push path, kept for a revert).
   assert.equal(decideSuperseded({ eventName: "push", eventHeadSha: "a".repeat(40), pr: { state: "open", head: { sha: "b".repeat(40) } } }).superseded, false);
 });
 

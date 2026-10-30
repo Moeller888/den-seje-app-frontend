@@ -135,6 +135,12 @@ test("workflow: the check runs on both paths, only the exact value skips, the gu
     const n = name(s);
     if (/^actions\/(checkout|setup-node)@/.test(n) || n.startsWith("Guard —")) { assert.doesNotMatch(s, /\n        if:/, n); continue; }
     if (n.startsWith("Docs-only fast path")) { assert.match(s, /\n        if: needs\.plan\.outputs\.scope == 'docs-md'\n/); continue; }
+    // D-261: the one step that writes main's Playwright cache — skipped on docs-md like the rest, and
+    // additionally only on a miss of a push to main. Not a check: skipping it never skips a test.
+    if (n === "Save Playwright browser and apt cache") {
+      assert.ok(s.includes("\n        if: needs.plan.outputs.scope != 'docs-md' && steps.pwcache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'\n"), n);
+      continue;
+    }
     // Every other step: skipped ONLY for the exact value "docs-md"; any other value runs it.
     assert.match(s, /\n        if: (?:(?:always|failure)\(\) && )?needs\.plan\.outputs\.scope != 'docs-md'\n/, n);
   }

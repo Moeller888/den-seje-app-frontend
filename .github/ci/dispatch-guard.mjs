@@ -6,6 +6,7 @@ import { dispatchGuard } from "./e2e-slot.mjs";
 
 const verdict = dispatchGuard({
   eventName: process.env.GITHUB_EVENT_NAME,
+  productionConfirmation: process.env.DISPATCH_PRODUCTION_CONFIRMATION,
   dispatchSlot: process.env.DISPATCH_SLOT,
   confirmation: process.env.DISPATCH_CONFIRMATION,
   slotCount: process.env.E2E_SLOT_COUNT,
