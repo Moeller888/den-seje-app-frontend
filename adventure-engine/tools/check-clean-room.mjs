@@ -17,7 +17,9 @@
  * is trimmed; empty lines and lines starting with "#" are ignored; entries
  * need at least 3 characters. Matching is a case-insensitive literal substring
  * test: per line in text files (reported with the line number), and over the
- * raw bytes in binary files (ASCII case-insensitive, reported as "binary").
+ * raw bytes in binary files (reported as "binary"): there ASCII letters match
+ * in any case, and an entry with other letters (æ, ø, å …) matches as written,
+ * in lower case and in upper case.
  * Reports name the file, the line and the entry's number in the denylist,
  * never the entry itself.
  *
@@ -108,7 +110,10 @@ export function parseDenylist(text) {
     const line = raw.trim();
     if (line === "" || line.startsWith("#")) return;
     if ([...line].length < 3) throw new Error(`denylist line ${i + 1}: entries need at least 3 characters`);
-    entries.push({ n: entries.length + 1, line: i + 1, lower: line.toLowerCase() });
+    // Binary needles: the UTF-8 bytes of the entry as written, in lower and in upper case, each read as
+    // latin1 and lower-cased exactly like the file bytes (so a byte such as 0xC3 is folded on both sides).
+    const binary = [...new Set([line, line.toLowerCase(), line.toUpperCase()].map((v) => Buffer.from(v, "utf8").toString("latin1").toLowerCase()))];
+    entries.push({ n: entries.length + 1, line: i + 1, lower: line.toLowerCase(), binary });
   });
   return entries;
 }
@@ -127,9 +132,9 @@ export function scanDenylist(root, entries) {
           for (const e of entries) if (l.includes(e.lower)) hits.push({ file: rel, line: i + 1, entry: e.n });
         });
     } else {
-      // Binary: ASCII case-insensitive search over the raw bytes (latin1 keeps every byte as one character).
+      // Binary: search over the raw bytes (latin1 keeps every byte as one character), folded like the needles.
       const raw = buf.toString("latin1").toLowerCase();
-      for (const e of entries) if (raw.includes(Buffer.from(e.lower, "utf8").toString("latin1"))) hits.push({ file: rel, line: null, entry: e.n });
+      for (const e of entries) if (e.binary.some((needle) => raw.includes(needle))) hits.push({ file: rel, line: null, entry: e.n });
     }
   }
   return hits;

@@ -8,6 +8,7 @@
 
 import type { EdgeDef, Expr, GraphDef, NodeDef, NodeType, Value } from "@adventure-engine/content";
 import { NODE_PARAMS } from "@adventure-engine/content";
+import { caseClash } from "./limits.ts";
 import type { Project } from "./project.ts";
 
 /** Every node id of the project (one shared id space, spec 02 B2.1). */
@@ -55,6 +56,8 @@ const mapNode = (p: Project, nodeId: string, f: (n: NodeDef) => NodeDef): Projec
 
 export function addGraph(p: Project, id: string, kind: "logic" | "dialog"): Project {
   if (p.graphs.some((g) => g.id === id)) throw new RangeError(`graph "${id}" exists`);
+  const clash = caseClash(p.graphs.map((g) => g.id), id);
+  if (clash !== undefined) throw new RangeError(`graph "${id}" differs from "${clash}" only in upper/lower case`);
   return { ...p, graphs: [...p.graphs, { id, kind, nodes: [] }] };
 }
 

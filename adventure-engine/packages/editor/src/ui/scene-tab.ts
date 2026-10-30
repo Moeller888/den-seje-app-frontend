@@ -139,7 +139,8 @@ function newSceneForm(ctx: Ctx): HTMLElement {
           msg.textContent = "Brug små bogstaver, tal, - og _.";
           return;
         }
-        if (ctx.store.project.scenes.some((s) => s.id === name)) {
+        // Also apart from case: "Attic" and "attic" would be one file on Windows and macOS.
+        if (ctx.store.project.scenes.some((s) => s.id.toLowerCase() === name)) {
           msg.textContent = `Scenen "${name}" findes allerede.`;
           return;
         }

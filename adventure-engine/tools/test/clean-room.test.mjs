@@ -68,6 +68,23 @@ describe("CR-01: external denylist", () => {
     expect([isGenerated("node_modules"), isGenerated("packages/app/dist"), isGenerated("src/dist"), isGenerated("packages/app/src/dist")]).toEqual([true, true, false, false]);
   });
 
+  it("binary files: entries with letters such as æ, ø and å match as written, in lower and in upper case (final review F1)", () => {
+    // Invented words; the UTF-8 lead byte of ø/Ø (0xC3) must be folded the same way on both sides.
+    const deny = parseDenylist("Knøfflebrø\nÆrtekvæld\nGrüffelwå\n");
+    const bin = (text) => Buffer.concat([Buffer.from([0x89, 0x50, 0]), Buffer.from(text, "utf8"), Buffer.from([0])]);
+    const dir = project("binary-non-ascii", {
+      "a.bin": bin("xx knøfflebrø xx"),
+      "b.bin": bin("XX ÆRTEKVÆLD XX"),
+      "c.bin": bin("Grüffelwå"),
+      "d.bin": bin("knoefflebroe aertekvaeld"),
+    });
+    expect(scanDenylist(dir, deny)).toEqual([
+      { file: "a.bin", line: null, entry: 1 },
+      { file: "b.bin", line: null, entry: 2 },
+      { file: "c.bin", line: null, entry: 3 },
+    ]);
+  });
+
   it("runCr01: SKIP without a denylist, ERROR when required, PASS/FAIL with one; values are not printed", () => {
     const clean = project("clean", { "src/a.ts": "export const ok = true;\n" });
     const dirty = project("dirty", { "src/a.ts": "// Fnordelwick\n" });

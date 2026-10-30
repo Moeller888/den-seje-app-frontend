@@ -250,6 +250,15 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
     }
     return v as T;
   };
+  // Windows and macOS do not tell "Attic.json" from "attic.json": such a project could not be saved there without losing a file.
+  const caseClashes = (dir: string, names: Iterable<string>): void => {
+    const seen = new Map<string, string>();
+    for (const name of [...names].sort()) {
+      const first = seen.get(name.toLowerCase());
+      if (first === undefined) seen.set(name.toLowerCase(), name);
+      else add(ProjectCode.FileName, "error", `${dir}/${name}.json`, "", `"${name}" differs from "${first}" only in upper/lower case; on Windows and macOS they would be one file`);
+    }
+  };
   const ordered = <T extends { readonly id: string }>(dir: "scenes" | "graphs"): T[] => {
     const byId = new Map<string, T>();
     for (const [path, value] of parsed) {
@@ -263,6 +272,7 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
       if (item.id !== stem(path)) add(ProjectCode.FileName, "error", path, "id", `id "${String(item.id)}" must match the file name "${stem(path)}"`);
       byId.set(stem(path), item);
     }
+    caseClashes(dir, byId.keys());
     const order = Array.isArray(project.order?.[dir]) ? (project.order[dir] as unknown[]).filter((x): x is string => typeof x === "string") : [];
     const out: T[] = [];
     const seen = new Set<string>();
@@ -297,6 +307,7 @@ export function readProject(files: ProjectFiles, options: ReadOptions = {}): Rea
     }
     Object.defineProperty(i18n, stem(path), { value: value as Record<string, string>, enumerable: true, writable: true, configurable: true });
   }
+  caseClashes("i18n", Object.keys(i18n));
   const manifest = parsed.get("assets.manifest.json");
   if (typeof manifest === "object" && manifest !== null && !Array.isArray(manifest)) {
     for (const key of Object.keys(manifest).sort()) {

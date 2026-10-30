@@ -102,8 +102,11 @@ export async function writeDirectory(root: FsDirHandle, files: ReadonlyMap<strin
       throw err;
     }
   }
+  // On Windows and macOS "scenes/Attic.json" and "scenes/attic.json" are one file: a path that was
+  // just written under another case is never deleted.
+  const written = new Set([...files.keys()].map((p) => p.toLowerCase()));
   for (const path of previous) {
-    if (files.has(path)) continue;
+    if (written.has(path.toLowerCase())) continue;
     const { dir, name } = await dirFor(root, path);
     await dir.removeEntry(name).catch(() => undefined);
   }

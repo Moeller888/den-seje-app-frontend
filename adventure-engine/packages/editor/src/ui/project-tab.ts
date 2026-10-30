@@ -4,7 +4,7 @@
  * content order of scenes and graphs.
  */
 
-import type { Project } from "@adventure-engine/content-tools";
+import { caseClash, type Project } from "@adventure-engine/content-tools";
 import { announce, button, el, field, heading, numberInput, select, textInput } from "../dom.ts";
 import { hasFsAccess } from "../io.ts";
 import { clean } from "./scene-tab.ts";
@@ -80,6 +80,13 @@ export function renderProject(ctx: Ctx): HTMLElement {
     const bad = list.find((l) => !/^[a-z]{2,3}(-[A-Za-z0-9]{1,8})?$/.test(l));
     if (bad !== undefined || list.length === 0) {
       announce(bad === undefined ? "Angiv mindst ét sprog." : `"${bad}" er ikke en gyldig sprogkode (fx da, en eller en-GB).`);
+      return;
+    }
+    // i18n/<lang>.json: "en-GB" and "en-gb" would be one file on Windows and macOS (saving would delete it).
+    const before = ctx.store.project.game.languages;
+    const clashing = list.find((l, i) => caseClash([...list.slice(0, i), ...before], l) !== undefined);
+    if (clashing !== undefined) {
+      announce(`"${clashing}" adskiller sig kun ved store/små bogstaver fra et andet sprog. Fjern det gamle sprog og gem først.`);
       return;
     }
     ctx.apply("Ret sprog", (q) => ({ ...q, game: { ...q.game, languages: list }, i18n: Object.fromEntries(list.map((l) => [l, q.i18n[l] ?? {}])) }));

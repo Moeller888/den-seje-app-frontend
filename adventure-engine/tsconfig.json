@@ -29,5 +29,7 @@
     "packages/scenario-runner/src/**/*.ts",
     "packages/*/test/**/*.ts",
     "vitest.config.ts"
-  ]
+  ],
+  "//": "Tests of DOM code (editor folder I/O) are typechecked with tsconfig.browser.json.",
+  "exclude": ["packages/editor/test/io.test.ts"]
 }

@@ -301,3 +301,9 @@ Fund og rettelser står i `docs/release-readiness.md` §15. Kort sagt gør rette
 - En annulleret `game.save` giver et fejlet gem.
 - Back-forward-cache river ikke spillet ned.
 - Der er en separat CI-workflow for `adventure-engine/`.
+
+Den afsluttende gennemgang (`docs/release-readiness.md` §16) tilføjede:
+
+- Id'er, der bliver filnavne, må ikke kun adskille sig ved store/små bogstaver fra et andet id, fordi Windows og macOS ser dem som én fil. Editorens Gem sletter aldrig en sti, der lige er skrevet med andre store/små bogstaver.
+- CR-01 finder også denylist-poster med æ, ø, å osv. i binære filer.
+- SVG-tegnreferencer uden for Unicode bliver U+FFFD i stedet for at give en fejl.

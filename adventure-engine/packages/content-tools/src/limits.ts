@@ -22,6 +22,17 @@ export const IMPORT_LIMITS = {
  */
 export const FILE_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 
+/**
+ * File systems on Windows and macOS do not tell upper and lower case apart, so
+ * two file-name ids that differ only in case would be one file there. Returns
+ * an id of `ids` other than `id` that equals it apart from case, if any.
+ */
+export function caseClash(ids: Iterable<string>, id: string): string | undefined {
+  const low = id.toLowerCase();
+  for (const x of ids) if (x !== id && x.toLowerCase() === low) return x;
+  return undefined;
+}
+
 /** Asset ids (keys of assets.manifest.json). */
 export const ASSET_ID = /^[a-z0-9][a-z0-9._-]*$/;
 

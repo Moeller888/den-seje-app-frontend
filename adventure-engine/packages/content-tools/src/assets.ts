@@ -40,9 +40,9 @@ export function detectAsset(name: string, bytes: Uint8Array): Detected | { reado
     }
     if (!/<svg[\s>]/i.test(text)) return null;
     // Character references are decoded and whitespace removed first, so "&#106;avascript:" or "java\tscript:" cannot hide.
-    const plain = text
-      .replace(/&#x([0-9a-f]+);?/gi, (_, h: string) => String.fromCodePoint(Number.parseInt(h, 16) % 0x110000))
-      .replace(/&#([0-9]+);?/g, (_, d: string) => String.fromCodePoint(Number(d) % 0x110000));
+    // A reference beyond U+10FFFF (or too long to be a number) becomes U+FFFD, as in a browser, and never throws.
+    const char = (cp: number): string => (Number.isInteger(cp) && cp <= 0x10ffff ? String.fromCodePoint(cp) : "�");
+    const plain = text.replace(/&#x([0-9a-f]+);?/gi, (_, h: string) => char(Number.parseInt(h, 16))).replace(/&#([0-9]+);?/g, (_, d: string) => char(Number(d)));
     const compact = plain.replace(/[\s\u0000-\u001f]+/g, "");
     if (/<([\w.-]+:)?script\b|\bon[a-z]+\s*=|<([\w.-]+:)?foreignObject\b/i.test(plain) || /(java|vb)script:|data:text\/html/i.test(compact)) {
       return { forbidden: "SVG pictures with scripts, event handlers or embedded HTML are not imported" };

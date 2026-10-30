@@ -7,7 +7,8 @@ import { detectAsset } from "../src/assets.ts";
 import { buildManifest, validateProject } from "../src/build.ts";
 import { runCli, writeAtomic, writeInside } from "../src/cli.ts";
 import { validateSchema } from "../src/jsonschema.ts";
-import { FILE_ID } from "../src/limits.ts";
+import { addGraph } from "../src/graph.ts";
+import { FILE_ID, caseClash } from "../src/limits.ts";
 import { encodeText, ownedFiles, projectToFiles, readProject, type Project } from "../src/project.ts";
 import { rename } from "../src/refs.ts";
 import { SCHEMAS, type Schema } from "../src/schema.ts";
@@ -155,6 +156,45 @@ describe("low: SVG script filter", () => {
     ];
     for (const c of cases) expect(detectAsset("x.svg", encodeText(c)), c).toHaveProperty("forbidden");
     expect(detectAsset("x.svg", encodeText('<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>'))).toMatchObject({ type: "image/svg+xml" });
+  });
+});
+
+describe("final review F2: ids that differ only in case would be one file on Windows and macOS", () => {
+  it("rename refuses a case-only rename and an id that clashes with another one apart from case", () => {
+    const p = fx().project;
+    expect(rename(p, { kind: "scene", id: "attic" }, "Attic")).toMatchObject({ ok: false, message: expect.stringContaining("upper/lower case") });
+    expect(rename(p, { kind: "graph", id: "lamp" }, "LAMP").ok).toBe(false);
+    const other = p.scenes.find((s) => s.id !== "attic")?.id as string;
+    expect(rename(p, { kind: "scene", id: "attic" }, other.toUpperCase()).ok).toBe(false);
+    expect(caseClash(["attic", "cellar"], "Attic")).toBe("attic");
+    expect(caseClash(["attic"], "attic")).toBeUndefined();
+  });
+
+  it("addGraph refuses a graph id that equals an existing one apart from case", () => {
+    expect(() => addGraph(fx().project, "LAMP", "logic")).toThrow(/upper\/lower case/);
+  });
+
+  it("a project with scene, graph or language files that differ only in case is not assembled", () => {
+    const files = new Map(fx().files);
+    const scene = JSON.parse(new TextDecoder().decode(files.get("scenes/attic.json"))) as Record<string, unknown>;
+    files.set("scenes/Attic.json", encodeText(JSON.stringify({ ...scene, id: "Attic" })));
+    files.set("i18n/DA.json", files.get("i18n/da.json") as Uint8Array);
+    const r = readProject(files);
+    expect(r.project).toBeNull();
+    const clashes = r.problems.filter((x) => x.code === "E-PROJECT-FILE" && x.message.includes("upper/lower case")).map((x) => x.file);
+    expect(clashes.sort()).toEqual(["i18n/da.json", "scenes/attic.json"]);
+  });
+});
+
+describe("final review F3: SVG character references never throw", () => {
+  it("references beyond U+10FFFF or too long to be a number become U+FFFD instead of a RangeError", () => {
+    for (const ref of [`&#x${"f".repeat(300)};`, `&#${"9".repeat(400)};`, "&#x110000;", "&#1114112;"]) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg"><a href="${ref}"><rect width="1" height="1"/></a></svg>`;
+      expect(() => detectAsset("x.svg", encodeText(svg)), ref).not.toThrow();
+      expect(detectAsset("x.svg", encodeText(svg)), ref).toMatchObject({ type: "image/svg+xml" });
+    }
+    // The decoding itself still works for real references.
+    expect(detectAsset("x.svg", encodeText('<svg><a href="&#x10FFFF;&#106;avascript:x">x</a></svg>'))).toHaveProperty("forbidden");
   });
 });
 

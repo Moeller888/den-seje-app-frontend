@@ -33,18 +33,18 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 
 | Område | Hvordan | Resultat |
 |---|---|---|
-| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **437 bestået** (40 filer) |
+| Unit og property (Vitest + fast-check) | `pnpm test` / `pnpm coverage` | **444 bestået** (41 filer) |
 | Scenarier med goldens | `pnpm scenarios` | **9/9 PASS** |
 | Content-CLI | validate, build, `--check`, format, schema i unit-tests og manuelt på fixturen | grøn |
-| Clean-room-script og build-grænse | `tools/test/clean-room.test.mjs` (syntetisk denylist) og `tools/test/build-boundary.test.mjs` | 10/10 |
+| Clean-room-script, build-grænse og editorens mappe-skrivning | `tools/test/clean-room.test.mjs` (syntetisk denylist), `tools/test/build-boundary.test.mjs` og `packages/editor/test/io.test.ts` (mappe uden forskel på store/små bogstaver) | 13/13 |
 | Typecheck | headless og browser-tsconfig | grøn |
 | Lint og CR-02 | `pnpm lint` | grøn |
 | E2E (Playwright, én worker, sekventielt) | spil, editor og devtools | se §5 |
-| CI | `.github/workflows/adventure-engine.yml` (se §15) | ny |
+| CI | `.github/workflows/adventure-engine.yml` (se §15) | grøn på GitHub for `20b1868`: `check` og `e2e (chromium)`; `CR-01`-jobbet sprunget over (variablen er ikke sat) |
 
 ## 4. Coverage
 
-`pnpm coverage`: **99,49 % lines, 96,87 % branches, 99,79 % functions**. Alle tærskler i `vitest.config.ts` er opfyldt.
+`pnpm coverage`: **99,50 % lines, 96,88 % branches, 99,79 % functions**. Alle tærskler i `vitest.config.ts` er opfyldt.
 
 - 100 % for runtime, scheduler, expression, modal, geometri, media, audio, save-pakken, save-format, schema, JSON Schema-validator og polygon/nav-preview.
 - `content-tools` samlet: 99,2 % lines og 95,6 % branches.
@@ -52,7 +52,7 @@ content-tools, app (Game), save ← editor (separat webapp; preview kører Game)
 
 ## 5. Browserresultater
 
-Efter rettelserne fra kodegennemgangen (§15), kørt i den isolerede worktree på PR-branchen (et frisk LF-checkout): Chromium **45 bestået**, Firefox **39 bestået** + 6 skips, WebKit **39 bestået** + 6 skips, uden fejl, retries eller ændrede timeouts.
+Efter rettelserne fra kodegennemgangen (§15) og den afsluttende gennemgang (§16), kørt i den isolerede worktree på PR-branchen (et frisk LF-checkout): Chromium **45 bestået**, Firefox **39 bestået** + 6 skips, WebKit **39 bestået** + 6 skips, uden fejl, retries eller ændrede timeouts.
 
 Første release-gennemgang:
 
@@ -160,11 +160,11 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 
 ## 12. Release blockers
 
-- **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15).
+- **Ingen tekniske blockers for en lokal commit.** Fundene fra kodegennemgangen af PR #469 er rettet (§15), og F1–F3 fra den afsluttende gennemgang er rettet (§16).
+- **CI:** den nye workflow har kørt grønt på GitHub (`check` og `e2e (chromium)` for `20b1868`). Dens E2E-job kører på Linux uden skærmbilledtests (baselines er lavet på Windows); Firefox og WebKit køres kun ved manuel start og er endnu ikke kørt i CI.
 - **Før en offentlig udgivelse:**
   1. CR-01 skal køres med den eksterne denylist (`REQUIRE_CLEAN_ROOM_DENYLIST=1`).
   2. Dev-værktøjerne bør opgraderes (§10).
-  3. Den nye CI-workflow skal have kørt grønt på GitHub; dens E2E-job kører på Linux uden skærmbilledtests (baselines er lavet på Windows).
 
 ## 13. Buildartefakter
 
@@ -178,6 +178,8 @@ Se `docs/decisions/phase-4.md` §22, `phase-5.md` §13 og §15 samt `phase-6.md`
 
 ## 14. Anbefaling
 
+*Anbefalingen fra første release-gennemgang; den aktuelle status står i §12, §15 og §16.*
+
 **KLAR TIL COMMIT** (lokal commit). Fase 1–6 kan gemmes som en ren, reviewbar første version efter commit-planen i slutrapporten. Alle tests er grønne i alle tre browsere. Der er ikke staged, committet eller pushet.
 
 CR-01 er **ikke** bestået, fordi den eksterne denylist mangler. Det skal fremgå af commitbeskeden og løses før en offentlig udgivelse.
@@ -189,16 +191,16 @@ En uafhængig read-only gennemgang af PR #469 fandt nedenstående. Alle fund er 
 | Fund | Rettelse | Regressionstest |
 |---|---|---|
 | **H1** `content format` kunne skrive uden for projektmappen via et scene- eller graf-id | Id'er, der bliver filnavne (scener, grafer, sprog), skal matche `FILE_ID` (`^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$`) i schema, `readProject`, `rename` og `projectToFiles`. CLI'en skriver kun via `writeInside`, der afviser stier uden for roden | `content-tools/test/review-fixes.test.ts` |
-| **H2** Editorens Gem slettede uregistrerede filer under `assets/` | Kun filer, editoren ejer (egne JSON-filer og assets registreret i manifestet), kan slettes (`ownedFiles`) | `review-fixes.test.ts` |
+| **H2** Editorens Gem slettede uregistrerede filer under `assets/` | Kun filer, editoren ejer (egne JSON-filer og assets registreret i manifestet), kan slettes (`ownedFiles`) | `review-fixes.test.ts`, `editor/test/io.test.ts` (sletning i `writeDirectory`) |
 | **H3** En synkront kastende IndexedDB-transaktion stoppede alle senere gem uden at sige det | Commit-kæden kan ikke forgiftes; fejl rapporteres via `onError`; `flush()` returnerer `false` efter en fejlet commit | `save/test/save-package.test.ts` |
-| **H4** Clean-room-scriptet kunne give falsk PASS (`.py`, `.gitignore`, mapper ved navn `dist`/`coverage` alle steder) | Tekst afgøres efter indhold (ingen NUL-byte), binære filer matches uden forskel på store/små ASCII-bogstaver, genererede mapper springes kun over ved deres kendte stier, CR-02 scanner alle tekstfiler, symlinks følges ikke | `tools/test/clean-room.test.mjs` |
+| **H4** Clean-room-scriptet kunne give falsk PASS (`.py`, `.gitignore`, mapper ved navn `dist`/`coverage` alle steder) | Tekst afgøres efter indhold (ingen NUL-byte), binære filer matches uden forskel på store/små ASCII-bogstaver (poster med æ, ø, å osv.: se F1 i §16), genererede mapper springes kun over ved deres kendte stier, CR-02 scanner alle tekstfiler, symlinks følges ikke | `tools/test/clean-room.test.mjs` |
 | **M1** Omdøbning tillod `/`, `..` og `__proto__` | Se H1; sprogkoder i projektfanen valideres | `review-fixes.test.ts` |
 | **M2** Projekter med schemafejl blev samlet og kunne få validatoren til at kaste | Enhver fejl ved læsning giver intet projekt; editorens validering kaster aldrig; atlas har maksimum 4096 rammer (og højst 256 vises) | `review-fixes.test.ts` |
 | **M3** En dybt indlejret save gav stack overflow og sort skærm | Saves dybere end 64 niveauer afvises, før noget behandles rekursivt; `loadRaw` fanger uventede fejl og gendanner skærmen | `core/test/save.test.ts` |
 | **M4** `?dev=1` slog checksum-tjekket fra i produktion | Ny `EngineOptions.allowSaveChecksumMismatch`; spillet sætter den kun i et udviklingsbuild (`AppSettings.devBuild`) | `save.test.ts`, `app/test/models.test.ts` |
 | **M5** Et annulleret `game.save` blev rapporteret som gemt | Svarer `{ok:false, reason:"cancelled"}` | `save.test.ts` |
 | **M6** Spillet frøs efter back-forward-cache | `pagehide` river kun ned, når siden ikke gemmes i cachen | – (ræsonneret; ikke testbart i Playwright) |
-| **M7** "Gemt" blev vist, selvom commit til IndexedDB fejlede | "Gemt" og `data-last-save` vises først, når `flush()` bekræfter skrivningen | `save-package.test.ts` |
+| **M7** "Gemt" blev vist, selvom commit til IndexedDB fejlede | "Gemt" og `data-last-save` vises først, når `flush()` bekræfter skrivningen | `save-package.test.ts` tester kun, at `flush()` svarer `false`; forbindelsen i `game.ts` er ikke unit-testet (F5 i §16) |
 | **M8** Værtens CI kørte ingen adventure-engine-test | Ny workflow `.github/workflows/adventure-engine.yml` | – |
 | Lav: `i18n/__proto__.json`, asset-id `__proto__`, felter som `constructor` | Afvises eller gemmes som almindelige nøgler; skemaopslag bruger egne nøgler | `review-fixes.test.ts` |
 | Lav: SVG-filteret kunne omgås | Tegnreferencer afkodes og whitespace fjernes før kontrol; navnerumspræfikser fanges | `review-fixes.test.ts` |
@@ -216,3 +218,17 @@ En uafhængig read-only gennemgang af PR #469 fandt nedenstående. Alle fund er 
   - `e2e`: Chromium på pull requests, alle tre browsere ved manuel start.
   - `cr01`: kun når repository-variablen `REQUIRE_CLEAN_ROOM_DENYLIST` er `1`, med listen fra secret `CLEAN_ROOM_DENYLIST`.
 - **Ikke required:** workflowen er ikke en required check. Med path-filteret får PR'er uden ændringer i `adventure-engine/` den aldrig, så den skal ikke gøres required uden at fjerne filteret.
+
+## 16. Afsluttende gennemgang af rettelserne (`b883fcf..20b1868`)
+
+En afsluttende read-only gennemgang af rettelserne i §15 fandt tre fund, der nu er rettet med regressionstests, og to lave fund, der er udskudt.
+
+| Fund | Rettelse | Regressionstest |
+|---|---|---|
+| **F1** (middel, regression fra H4) CR-01 fandt ikke denylist-poster med æ, ø, å eller andre ikke-ASCII-bogstaver i binære filer, heller ikke skrevet præcis som posten | Søgeteksterne for binære filer foldes på samme måde som filens bytes. ASCII-bogstaver matcher i alle kombinationer af store og små; andre bogstaver matcher, som posten er skrevet, med små og med store bogstaver | `tools/test/clean-room.test.mjs` |
+| **F2** (middel, datatab, fandtes før rettelserne) En omdøbning, der kun ændrer store/små bogstaver (`attic` → `Attic`, `en-GB` → `en-gb`), slettede filen ved Gem på Windows og macOS | `writeDirectory` sletter aldrig en sti, der lige er skrevet med andre store/små bogstaver. `rename`, `addGraph`, "Opret scene" og sprogfeltet afviser id'er, der kun adskiller sig ved store/små bogstaver fra et andet id. `readProject` afviser projekter med sådanne filer | `editor/test/io.test.ts`, `content-tools/test/review-fixes.test.ts` |
+| **F3** (lav) En meget lang taltegnreference i en SVG (`&#x` + 300 × `f`) fik import og validering til at kaste `RangeError` | Referencer ud over U+10FFFF bliver U+FFFD, som i en browser; der kastes aldrig | `review-fixes.test.ts` |
+
+**Senere opfølgninger (ikke rettet her):**
+- **F4** (lav): en fejlet IndexedDB-transaktion udløser både `onerror` og `onabort`, så der kan komme to–tre fejlmeddelelser for ét gem. Flaget bag `flush()` er fælles for alle skrivninger: en fejlet indstillingsskrivning (`save/src/settings.ts`), der ikke selv kalder `flush()`, får det næste gem til at melde fejl, og `flush()`-kald uden brug af svaret (`restoreBackup`, import) nulstiller flaget. Fejlen vises stadig via `onError`, og der tabes ingen data.
+- **F5** (lav, testdækning): forbindelsen i `game.ts` er ikke unit-testet for M7 ("Gemt" først efter `flush()` → `true`) og M4 (spillet sender `devBuild` videre som `allowSaveChecksumMismatch`); `game.ts` er DOM-kode uden for Vitest-dækningen. Sletningen i `writeDirectory` er nu testet (`editor/test/io.test.ts`).

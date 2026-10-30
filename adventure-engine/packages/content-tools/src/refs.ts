@@ -7,7 +7,7 @@
  */
 
 import type { ContainerRef, Expr, GraphDef, NodeDef } from "@adventure-engine/content";
-import { ASSET_ID, FILE_ID } from "./limits.ts";
+import { ASSET_ID, FILE_ID, caseClash } from "./limits.ts";
 import type { Project } from "./project.ts";
 
 export type RefKind = "scene" | "entity" | "portal" | "graph" | "entry" | "node" | "textKey" | "asset" | "sound" | "animation" | "spot" | "variant" | "var";
@@ -329,6 +329,12 @@ export function rename(p: Project, t: RefTarget, to: string): RenameResult {
   if (rule !== undefined && !rule.test(to)) return { ok: false, message: `"${to}" does not match ${rule.source}` };
   if ((t.kind === "spot" || t.kind === "variant") && t.scope === undefined) return { ok: false, message: `renaming a ${t.kind} needs its scene or entity` };
   if (to === t.id) return { ok: true, project: p, changed: 0 };
+  // Scene and graph ids are file names: "attic" → "Attic", or an id that equals another one apart from case,
+  // would be one file on Windows and macOS (saving would delete the scene).
+  if (t.kind === "scene" || t.kind === "graph") {
+    const clash = caseClash((t.kind === "scene" ? p.scenes : p.graphs).map((x) => x.id), to);
+    if (clash !== undefined) return { ok: false, message: `"${to}" differs from "${clash}" only in upper/lower case; on Windows and macOS they would be one file` };
+  }
   const newTarget = t.kind === "entry" ? `${graphOfRef(t.id)}#${to}` : to;
   if (isDefined(p, { ...t, id: newTarget })) return { ok: false, message: `"${to}" is already used` };
   let out: Project = p;
