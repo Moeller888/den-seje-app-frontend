@@ -70,7 +70,7 @@ test("D-257 composition never hides a hole, not even under a construction line; 
   assert.equal(C1.secondOutline(outl, t, cl).ok, false); assert.equal(C1.secondOutline(material({ neck: 11, cuff: 9 }), t, cl).ok, true);
 });
 
-test("D-257 the R1C plan authorises nothing: one new call id, a separate budget, the frozen canvas and prompt, no adapter", () => {
+test("D-257 the R1C plan authorises nothing by itself: one new call id, a separate budget, the frozen canvas and prompt; its only adapter is D-258's", () => {
   const p = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "r1", "r1c-plan-v1.json"), "utf8"));
   const a = JSON.parse(readFileSync(join(REPO, "tools", "avatar", "fixtures", "northstar-wardrobe", "r1", "r1-authorisation-v1.json"), "utf8"));
   assert.equal(p.authorisesImageRequest, false); assert.equal(p.activePermissions, 0); assert.match(p.status, /^PLAN ONLY — NOT AUTHORISED/);
@@ -79,7 +79,9 @@ test("D-257 the R1C plan authorises nothing: one new call id, a separate budget,
   const prompt = p.promptFrame.replace("{noun}", p.call.noun).replace("{design}", p.call.design); assert.equal(createHash("sha256").update(prompt, "utf8").digest("hex"), p.call.prompt.sha256); assert.ok(!/[{}]|undefined/.test(prompt));
   assert.match(prompt, /Do not draw any outline/); assert.match(p.frozen.canvas.sha256, /^[0-9a-f]{64}$/); assert.equal(p.frozen.cut.spec.bleed, C1.CUT_SPECS["tee-hip"].bleed);
   const d = p.cost.documented, per = (d.usage.imageInputTokens * d.price.imageInputPerM + d.usage.textInputTokensMax * d.price.textInputPerM + d.usage.imageOutputTokens * d.price.imageOutputPerM) / 1e6; assert.equal(p.cost.perCallMax, +per.toFixed(4));
-  assert.ok(!readdirSync(join(REPO, "tools", "avatar")).some((f) => /send.*r1c|r1c.*send/i.test(f)), "no send adapter exists for R1C");
+  // the plan never authorises by itself: R1C's only send adapter is D-258's, taking its authority from D-258's own authorisation file
+  const ad = readdirSync(join(REPO, "tools", "avatar")).filter((f) => /send.*r1c|r1c.*send/i.test(f)); assert.deepEqual(ad, ["openai-send-northstar-r1c-d258.mjs"]);
+  const src = readFileSync(join(REPO, "tools", "avatar", ad[0]), "utf8"); assert.match(src, /const DECISION = "D-258";/); assert.match(src, /r1c-authorisation-v1\.json/); assert.match(src, /get\(plan, "authorisesImageRequest"\) !== false/);
 });
 
 test("D-257 the illustration refuses to write inside the repository", () => {

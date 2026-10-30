@@ -385,6 +385,17 @@ art layer behind them can be upgraded without a rewrite.
   - **No per-layer changes.** The figure always scales as one; no layer is scaled or moved on its own.
   - **Verified.** `tools/avatar/verify-framing-d195.mjs` covers every layer, lid and tier and checks the flag-off baseline.
   - **Status.** Off by default; enabling it needs a separate owner decision. See `project-state.md` **D-196**.
+- **R1C authorised — D-258: one one-shot call, R1C-1, NOT EXECUTED (the execution is a separate owner instruction).**
+  - **Adapter and evaluation.** `openai-send-northstar-r1c-d258.mjs` follows the D-235/D-255 pattern, with Image 1 the bleed
+    canvas v2 and Image 2 C. `northstar-r1c-evaluate.mjs` runs the placement, the automatic checks, the sheets and the record.
+  - **Placement.** s1 against the cut's core grown by the ESTIMATED bleed b (0–30 px). A fixed 16 px reference turned a wider or
+    narrower bleed into a wrong scale.
+  - **Canvas v2.** No drawn lines (v1 carried the template's own rib line, seams and hem stitch) and no dark ring in the bleed.
+  - **Line detector.** Contrast, a thin valley, and an axis rule. It finds brown lines, not colour steps, shadows or corners.
+    Holes are counted before the lines.
+  - **Proven locally.** Checked on 4 positive and 7 negative constructed examples and on R1-1. Visual criteria are never
+    automatic passes.
+  - **Cost.** About $0.07 (prices re-verified 2026-10-30). See `docs/decisions/D-258.md`.
 - **D-255 closed and r1-c1 proposed — D-257 (no call; one call proposed, not authorised).**
   - **Closed.** R1-1 is spent (technically rejected). R1-2 and R1-3 are CLOSED_UNUSED, with no claims; the adapter refuses all
     three.
