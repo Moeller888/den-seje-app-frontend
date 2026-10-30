@@ -33,7 +33,7 @@ const enlarge = (s, k) => { const w = s.w * k, h = s.h * k, px = new Uint8Clampe
 /** DEMONSTRATIVE EXTRACTION from R1C-1's own picture: the body fabric (the largest square inside its fabric, away from its edge,
  *  the rib and the pocket), the rib (the largest square of trim-coloured pixels near its neck) and the pocket (the largest closed
  *  line component on its chest, with the area inside its outline as alpha). */
-function pocketOf(out) {
+export function pocketOf(out) {
   const m = S1.maskOf(out), g = S1.geometry(m), lines = RC.lineMask(out);
   // the pocket: line components in the upper half, right of centre; the largest; inside = not reachable from its box border
   const seen = new Uint8Array(N); let best = null;
@@ -51,7 +51,7 @@ function pocketOf(out) {
   const pocket = { w: pw, h: ph, px: new Uint8ClampedArray(pw * ph * 4) }; for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) { const i = (py0 + y) * W + px0 + x; pocket.px.set([out[i * 4], out[i * 4 + 1], out[i * 4 + 2], outside[y * pw + x] ? 0 : 255], (y * pw + x) * 4); }
   return { pocket, box: best.box };
 }
-function fromR1C(out) {
+export function fromR1C(out) {
   const m = S1.maskOf(out), g = S1.geometry(m), lines = RC.lineMask(out), pk = pocketOf(out), [px0, py0, px1, py1] = pk ? pk.box : [-100, -100, -100, -100];
   // the body fabric: inside the garment eroded 30 px, below the neck rib, outside the pocket's box (grown 20 px)
   const er = Mo.not(Mo.dilate(Mo.not(m), 30)), body = new Uint8Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; if (er[i] && y > g.bbox[1] + g.height * 0.25 && !(x > px0 - 20 && x < px1 + 20 && y > py0 - 20 && y < py1 + 20)) body[i] = 1; }
@@ -62,7 +62,7 @@ function fromR1C(out) {
   return { body: M1.swatchFrom(out, M1.largestSquare(body, 192)), rib: M1.swatchFrom(out, M1.largestSquare(ribEr, 24)), pocket: pk ? pk.pocket : null, pocketBox: pk ? pk.box : null };
 }
 /** From an item extracted by the production pipeline (d240) from its pinned raw: the largest square inside its fabric (eroded 6 px). */
-function fromItem(env, id, layerKey) {
+export function fromItem(env, id, layerKey) {
   const it = inputs("all").find((x) => x.id === id), b = readFileSync(join(ART, ...it.raw.split("/"))); if (sha(b) !== it.rawSha256) throw new Error(id + ": raw not pinned");
   const r0 = IP.processItem(env.w, env.base, env.T, it.category, Uint8ClampedArray.from(decodePng(b).px), { itemId: id }), L = r0.layers[layerKey];
   const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (L[i * 4 + 3] >= 250) m[i] = 1; const er = Mo.not(Mo.dilate(Mo.not(m), 6));
