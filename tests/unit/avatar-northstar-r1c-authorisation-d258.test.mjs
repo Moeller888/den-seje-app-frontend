@@ -40,9 +40,13 @@ const HAVE = !!C_BUF && sha256(C_BUF) === C_SHA && existsSync(CANVAS_FILE) && sh
 const SKIP = HAVE ? false : "C and the bleed canvas are private (D-127 §2); set ITEM_PILOT_C_PATH and keep the canvas outside the clones to run the mocked sends";
 const isInside = (c, p) => { const r = relative(p, c); return r === "" || (!r.startsWith("..") && !isAbsolute(r)); };
 
-test("D-258 authorisation: one unspent one-shot call of the frozen plan, a separate budget, no reserve, retry, fallback or D-255 permission; the token in D-258's status", () => {
+test("D-258 authorisation: one one-shot call of the frozen plan (spent and received, D-259), a separate budget, no reserve, retry, fallback or D-255 permission; the token in D-258's status", () => {
   assert.deepEqual([AUTH.decision, AUTH.meta.authorisesImageRequest, AUTH.budget.authorised, AUTH.budget.reserve, AUTH.budget.retries, AUTH.budget.fallback, AUTH.budget.reusesEarlierPermissions], ["D-258", false, 1, 0, 0, false, false]);
-  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order, e.mandateState, e.outcome]), [[ID, 1, "UNSPENT", "NOT YET ATTEMPTED"]]); assert.equal(PLAN.call.callId, ID);
+  assert.deepEqual(AUTH.calls.map((e) => [e.callId, e.order]), [[ID, 1]]);
+  // the recorded execution and closure (D-259): the one call spent once and received, technically rejected; nothing open
+  assert.deepEqual([AUTH.calls[0].mandateState, AUTH.calls[0].outcome, AUTH.calls[0].result.httpStatus, AUTH.calls[0].recordedBy], ["SPENT", "RECEIVED_FOR_BF_CHECK", 200, "D-259"]);
+  assert.match(AUTH.calls[0].result.imageSha256, /^[0-9a-f]{64}$/); assert.match(AUTH.calls[0].result.evaluation, /^technically rejected/);
+  assert.deepEqual([AUTH.budget.actuallySent, AUTH.budget.closed.by, AUTH.budget.closed.spent, AUTH.budget.closed.uncertain, AUTH.budget.closed.refusedBeforeSend], [1, "D-259", 1, 0, 0]); assert.equal(PLAN.call.callId, ID);
   assert.ok(!D255.calls.some((e) => e.callId === ID)); for (const e of D255.calls) assert.ok(!SRC.includes(e.callId), e.callId + " is not known here");
   assert.deepEqual(D255.calls.map((e) => e.mandateState), ["SPENT", "CLOSED_UNUSED", "CLOSED_UNUSED"], "D-255 stays closed");
   assert.equal(AUTH.frozen.plan.sha256, sha256(readFileSync(repoFile(PLAN_REL)))); assert.equal(AUTH.frozen.prompt.sha256, PLAN.call.prompt.sha256);
@@ -143,6 +147,9 @@ function sandbox({ base: mod, canvas } = {}) {
   const cd = join(sb.home, "Documents", "DenSejeApp-artefacts", "d-202-northstar-base-figure"); mkdirSync(cd, { recursive: true }); writeFileSync(join(cd, "d202-base-figure-v2.image-1.png"), C_BUF);
   const rd = join(sb.out, "references", "tee-hip-bleed-v2"); mkdirSync(rd, { recursive: true }); writeFileSync(join(rd, CANVAS.name), canvas || readFileSync(CANVAS_FILE));
   for (const rel of TRACKED) { const dst = join(sb.repo, ...rel.split("/")); mkdirSync(dirname(dst), { recursive: true }); copyFileSync(repoFile(rel), dst); }
+  // the sandbox starts from the authorisation as merged by D-258: the recorded execution (D-259) is undone in the copy only
+  { const cp = join(sb.repo, ...AUTH_REL.split("/")), c = JSON.parse(readFileSync(cp, "utf8")); delete c.budget.actuallySent; delete c.budget.closed;
+    for (const e of c.calls) { e.mandateState = "UNSPENT"; e.outcome = "NOT YET ATTEMPTED"; delete e.result; delete e.recordedBy; } writeFileSync(cp, JSON.stringify(c, null, 2) + "\n"); }
   if (mod) mod(sb);
   sgit(sb, ["init", "-q", "-b", "main"]); sgit(sb, ["add", "-A"]); sgit(sb, ["commit", "-q", "-m", "base"]); sgit(sb, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
   return sb; }
@@ -165,4 +172,9 @@ test("an uncertain dispatch is spent and never resent; the stop file, a changed 
   const stop = sandbox({ base: (s) => { mkdirSync(s.out, { recursive: true }); writeFileSync(join(s.out, "R1C-STOP.json"), "{}\n"); } }); refused(stop, run(stop, [...argsOf(ID), ...SEND], KEY), "stopped");
   const wrong = sandbox({ canvas: png(1024, 1536) }); refused(wrong, run(wrong, [...argsOf(ID), ...SEND], KEY), "reference-canvas");
   const noToken = sandbox({ base: (s) => { const p = join(s.repo, ...DECISION_REL.split("/")); writeFileSync(p, readFileSync(p, "utf8").replace("D-258 R1C: 1 CALL AUTHORISED", "D-258 R1C: PREPARED")); } }); refused(noToken, run(noToken, [...argsOf(ID), ...SEND], KEY), "decision");
+});
+
+test("after D-259 the spent call is refused before any claim: the authorisation as recorded admits no further send", { skip: SKIP }, () => {
+  const sb = sandbox({ base: (x) => copyFileSync(repoFile(AUTH_REL), join(x.repo, ...AUTH_REL.split("/"))) });
+  refused(sb, run(sb, [...argsOf(ID), ...SEND], KEY), "authorisation");
 });
