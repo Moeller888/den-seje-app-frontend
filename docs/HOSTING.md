@@ -163,6 +163,8 @@ Cloudflare læser `_redirects` som konfiguration og serverer den aldrig som fil.
 CLOUDFLARE DASHBOARD — PRÆCISE VÆRDIER
 ----------------------------------------
 
+Målværdier, som de skal stå, når PR #378 er merget og ejeren har ændret dashboardet:
+
 ```
 Production branch:   main
 Build command:       node tools/cloudflare-build-static.mjs
@@ -171,10 +173,19 @@ Non-production branch deploy command:      node tools/cloudflare-deploy.mjs
 Build variable:      SKIP_DEPENDENCY_INSTALL=1
 ```
 
-**Begge deploy-kommandoer er `node tools/cloudflare-deploy.mjs`** (indført 2026-10-22). Før stod
-der `npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions
-upload` for alle andre branches. Det fjernede oplæsningens secrets to gange (19/10 og igen senest
-21/10):
+**Status (2026-10-31): dashboardet er IKKE ændret endnu.** Det står stadig på de gamle kommandoer:
+`npx --yes wrangler@4.118.0 deploy` for main og Cloudflares standard `npx wrangler versions upload`
+for alle andre branches. De to deploy-kommandoer må først sættes til `node tools/cloudflare-deploy.mjs`
+**efter** merge, ellers fejler main-buildet, fordi scriptet ikke findes på main endnu. Opdatér denne
+statuslinje, når ændringen er foretaget og verificeret.
+
+Workeren bruger Cloudflares **ældre preview-model** for andre branches end main: hver branch-build
+bliver en version af produktions-Workeren med produktionens indstillinger. Den nyere model (Worker
+Previews, `npx wrangler preview`, egne preview-indstillinger) er ikke slået til, og skiftet dertil
+kan ikke fortrydes. I dashboardet kan feltet derfor hedde enten "Non-production branch deploy
+command" eller "Preview command".
+
+De gamle kommandoer fjernede oplæsningens secrets to gange (19/10 og igen senest 21/10):
 
 1. Hver ny version — både `wrangler deploy` og `wrangler versions upload` — kopierer secrets fra
    den **nyeste** version, ikke fra den deployede.

@@ -3,14 +3,46 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  planFor, secretNamesOf, missingSecrets, latestVersionId, deployedVersionIds,
+  main, planFor, secretNamesOf, missingSecrets, latestVersionId, deployedVersionIds,
   REQUIRED_SECRETS, WRANGLER, PRODUCTION_BRANCH,
 } from "../../tools/cloudflare-deploy.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const SCRIPT = join(REPO, "tools", "cloudflare-deploy.mjs");
+
+// A fake Wrangler: records every call and answers the read commands from `state`. A secret binding
+// carries a `text` value here on purpose, so the tests can prove no value ever reaches the log.
+const LEAK = "do-not-print-this-value";
+const full = () => ({ resources: { bindings: [
+  { type: "assets", name: "ASSETS" },
+  ...REQUIRED_SECRETS.map((name) => ({ type: "secret_text", name, text: LEAK })),
+] } });
+const assetsOnly = () => ({ resources: { bindings: [{ type: "assets", name: "ASSETS" }] } });
+function fakeWrangler({ latest = full(), deployed = full() } = {}) {
+  const calls = [];
+  const run = (args) => {
+    calls.push(args.join(" "));
+    if (args[0] === "versions" && args[1] === "list") {
+      return [{ id: "old", metadata: { created_on: "2026-10-01T00:00:00Z" } },
+        { id: "latest", metadata: { created_on: "2026-10-30T00:00:00Z" } }];
+    }
+    if (args[0] === "versions" && args[1] === "view") return args[2] === "latest" ? latest : deployed;
+    if (args[0] === "deployments") return { versions: [{ version_id: "served", percentage: 100 }] };
+    return null;
+  };
+  return { run, calls };
+}
+function captureLog(fn) {
+  const lines = [];
+  const orig = console.log;
+  console.log = (...a) => lines.push(a.join(" "));
+  try { fn(); } finally { console.log = orig; }
+  return lines.join("\n");
+}
 
 test("only main deploys; every other branch validates without uploading", () => {
   assert.equal(PRODUCTION_BRANCH, "main");
@@ -88,8 +120,81 @@ test("the script never prints or forwards secret values", () => {
   assert.doesNotMatch(src, /\.text\b|\.value\b/);
 });
 
+test("a non-main branch only runs a dry run: no version list, no upload, no deploy", () => {
+  for (const branch of ["feat/x", "security/claude-code-permissions", "main-old", "Main"]) {
+    const w = fakeWrangler();
+    main({ WORKERS_CI_BRANCH: branch }, w.run);
+    assert.deepEqual(w.calls, ["deploy --dry-run"], branch);
+  }
+});
+
+test("a missing branch calls Wrangler not at all", () => {
+  for (const branch of [undefined, "", "  "]) {
+    const w = fakeWrangler();
+    assert.throws(() => main({ WORKERS_CI_BRANCH: branch }, w.run), /WORKERS_CI_BRANCH/);
+    assert.deepEqual(w.calls, []);
+  }
+});
+
+test("main: a latest version without the secrets stops BEFORE deploy", () => {
+  const w = fakeWrangler({ latest: assetsOnly() });
+  assert.throws(() => main({ WORKERS_CI_BRANCH: "main" }, w.run), /latest .*missing secret\(s\): AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, TTS_ADMIN_TOKEN/);
+  assert.ok(!w.calls.includes("deploy"), "deploy must not run");
+  assert.deepEqual(w.calls, ["versions list --name den-seje-app-frontend --json",
+    "versions view latest --name den-seje-app-frontend --json"]);
+});
+
+test("main: a served version without the secrets fails the build after deploy", () => {
+  const w = fakeWrangler({ deployed: assetsOnly() });
+  assert.throws(() => main({ WORKERS_CI_BRANCH: "main" }, w.run), /deployed version served is missing secret/);
+  assert.ok(w.calls.includes("deploy"));
+});
+
+test("main: Wrangler output that is not a version fails closed before deploy", () => {
+  const w = fakeWrangler({ latest: null });
+  assert.throws(() => main({ WORKERS_CI_BRANCH: "main" }, w.run), /bindings/);
+  assert.ok(!w.calls.includes("deploy"));
+});
+
+test("main: the happy path is preflight, deploy, post-check, in that order", () => {
+  const w = fakeWrangler();
+  captureLog(() => main({ WORKERS_CI_BRANCH: "main" }, w.run));
+  assert.deepEqual(w.calls, [
+    "versions list --name den-seje-app-frontend --json",
+    "versions view latest --name den-seje-app-frontend --json",
+    "deploy",
+    "deployments status --name den-seje-app-frontend --json",
+    "versions view served --name den-seje-app-frontend --json",
+  ]);
+});
+
+test("no secret value reaches the log or an error, on any path", () => {
+  const ok = fakeWrangler();
+  const log = captureLog(() => main({ WORKERS_CI_BRANCH: "main" }, ok.run));
+  assert.doesNotMatch(log, new RegExp(LEAK));
+  assert.match(log, /all 3 required secrets present/);
+  const partial = { resources: { bindings: [{ type: "secret_text", name: "AZURE_SPEECH_KEY", text: LEAK }] } };
+  const bad = fakeWrangler({ latest: partial });
+  try { main({ WORKERS_CI_BRANCH: "main" }, bad.run); assert.fail("expected a throw"); }
+  catch (e) { assert.doesNotMatch(e.message, new RegExp(LEAK)); }
+});
+
+test("CLI: without WORKERS_CI_BRANCH it exits 1 before starting Wrangler", () => {
+  const env = { ...process.env };
+  delete env.WORKERS_CI_BRANCH;
+  env.PATH = ""; // a Wrangler start would fail differently; the branch check must come first
+  const r = spawnSync(process.execPath, [SCRIPT], { env, encoding: "utf8" });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /deploy failed: WORKERS_CI_BRANCH is not set/);
+});
+
 test("HOSTING.md names this script as the deploy command for every branch", () => {
   const doc = readFileSync(join(REPO, "docs", "HOSTING.md"), "utf8");
   assert.match(doc, /^Deploy command:\s+node tools\/cloudflare-deploy\.mjs$/m);
   assert.match(doc, /^Non-production branch deploy command:\s+node tools\/cloudflare-deploy\.mjs$/m);
+});
+
+test("HOSTING.md does not claim the dashboard change has already been made", () => {
+  const doc = readFileSync(join(REPO, "docs", "HOSTING.md"), "utf8");
+  assert.doesNotMatch(doc, /indført 2026-10-22/);
 });

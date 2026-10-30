@@ -89,8 +89,8 @@ function wrangler(args, { json }) {
   }
 }
 
-function assertSecrets(label, versionId) {
-  const version = wrangler(["versions", "view", versionId, "--name", WORKER_NAME, "--json"], { json: true });
+function assertSecrets(run, label, versionId) {
+  const version = run(["versions", "view", versionId, "--name", WORKER_NAME, "--json"], { json: true });
   const missing = missingSecrets(secretNamesOf(version));
   if (missing.length > 0) {
     throw new Error(`${label} version ${versionId} is missing secret(s): ${missing.join(", ")}. ` +
@@ -99,18 +99,19 @@ function assertSecrets(label, versionId) {
   console.log(`${label} version ${versionId}: all ${REQUIRED_SECRETS.length} required secrets present`);
 }
 
-export function main(env) {
+// `run` is the Wrangler runner; tests pass a recorder so every path is checked without the network.
+export function main(env, run = wrangler) {
   const plan = planFor(env.WORKERS_CI_BRANCH);
   if (plan === "validate-only") {
     console.log(`branch "${env.WORKERS_CI_BRANCH}": validate only, no version is uploaded`);
-    wrangler(["deploy", "--dry-run"], { json: false });
+    run(["deploy", "--dry-run"], { json: false });
     return;
   }
-  const list = wrangler(["versions", "list", "--name", WORKER_NAME, "--json"], { json: true });
-  assertSecrets("latest (the one deploy inherits from)", latestVersionId(list));
-  wrangler(["deploy"], { json: false });
-  const status = wrangler(["deployments", "status", "--name", WORKER_NAME, "--json"], { json: true });
-  for (const id of deployedVersionIds(status)) assertSecrets("deployed", id);
+  const list = run(["versions", "list", "--name", WORKER_NAME, "--json"], { json: true });
+  assertSecrets(run, "latest (the one deploy inherits from)", latestVersionId(list));
+  run(["deploy"], { json: false });
+  const status = run(["deployments", "status", "--name", WORKER_NAME, "--json"], { json: true });
+  for (const id of deployedVersionIds(status)) assertSecrets(run, "deployed", id);
 }
 
 const invoked = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
